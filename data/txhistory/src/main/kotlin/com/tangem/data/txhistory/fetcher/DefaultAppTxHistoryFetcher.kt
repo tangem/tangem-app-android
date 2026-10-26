@@ -75,6 +75,7 @@ internal class DefaultAppTxHistoryFetcher @Inject constructor(
                     is TxHistoryFetchTrigger.WalletSelected -> trigger.walletId
                     is TxHistoryFetchTrigger.TokenDetailsOpen -> trigger.walletId
                     is TxHistoryFetchTrigger.TokenDetailsPTR -> trigger.walletId
+                    is TxHistoryFetchTrigger.JointHistoryPoll -> trigger.walletId
                 }
                 if (walletsFlow.value[walletId]?.isMultiCurrency == true) {
                     getOrPutFetcher(walletId).invoke(trigger)

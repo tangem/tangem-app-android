@@ -3272,6 +3272,7 @@
   <string name="tangempay_withdraw_bank_geo_country_selected">País selecionado</string>
   <string name="tangempay_withdraw_bank_geo_state_selected">Estado selecionado</string>
   <string name="tangempay_withdraw_bank_geo_state_title">Estado</string>
+  <string name="tangempay_withdraw_bank_network_fee_unreachable">Não foi possível carregar as informações sobre a taxa de rede. Verifique sua conexão com a internet ou toque para atualizar.</string>
   <string name="tangempay_withdraw_bank_offramp_unavailable">Off-ramp indisponível</string>
   <string name="tangempay_withdraw_bank_placeholder_address_line1">Ex.: Ebunike St., Apto. 32</string>
   <string name="tangempay_withdraw_bank_placeholder_bank_name">Ex.: Goldman Sachs</string>
@@ -4005,6 +4006,8 @@
   <string name="yield_module_incentive_chart_sheet_title">Rendimento incentivado</string>
   <string name="yield_module_incentives_provider">Merkl</string>
   <string name="yield_module_main_promo_button">Experimentar o modo de rendimento</string>
+  <string name="yield_module_main_promo_subtitle">Coloque suas moedas ociosas para render. Sem bloqueios, saque a qualquer momento.</string>
+  <string name="yield_module_main_promo_title">Obtenha rendimentos com suas criptomoedas de até %1$s%% APY</string>
   <string name="yield_module_main_screen_promo_banner_message">Habilitar %1$s%% APY sobre o seu saldo</string>
   <string name="yield_module_main_view_approve_notification_description">A aprovação do seu token no Modo Yield foi revogada. Abra o token para conceder permissão novamente.</string>
   <string name="yield_module_main_view_approve_notification_title">É necessária a aprovação do token.</string>

@@ -7,6 +7,7 @@ import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.navigation.AppNavigationProvider
 import com.tangem.core.decompose.navigation.DefaultAppNavigationProvider
 import com.tangem.core.decompose.navigation.DefaultRouter
+import com.tangem.core.decompose.navigation.NavigationFailureHandler
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.decompose.utils.ComponentCoroutineScope
@@ -20,6 +21,7 @@ class DefaultAppComponentContext(
     override val messageSender: UiMessageSender,
     override val activity: AppCompatActivity,
     private val replaceRouter: Router? = null,
+    private val navigationFailureHandler: NavigationFailureHandler = NavigationFailureHandler.None,
 ) : AppComponentContext, ComponentContext by componentContext {
 
     override val tags: HashMap<String, Any> = HashMap()
@@ -31,7 +33,7 @@ class DefaultAppComponentContext(
 
     override val router: Router
         get() = replaceRouter ?: instanceKeeper.getOrCreate(key = ROUTER_KEY) {
-            DefaultRouter(navigationProvider, dispatchers)
+            DefaultRouter(navigationProvider, dispatchers, navigationFailureHandler)
         }
 }
 

@@ -34,82 +34,99 @@ internal class JoinTangemPayWaitlistUseCaseTest {
     @BeforeEach
     fun resetMocks() {
         clearMocks(waitlistRepository, onboardingRepository, paymentAccountStatusFetcher)
+        coEvery { waitlistRepository.join(any(), any(), any(), any()) } returns Unit.right()
         coEvery { onboardingRepository.disableTangemPay(any()) } returns Unit.right()
         coEvery { paymentAccountStatusFetcher(any<UserWalletId>()) } returns Unit.right()
     }
 
     @Test
-    fun `GIVEN repository succeeds WHEN invoke THEN returns Right and passes arguments`() = runTest {
-        // GIVEN
-        coEvery { waitlistRepository.join(USER_WALLET_ID, ENTRY, IDEMPOTENCY_KEY) } returns Unit.right()
+    fun `GIVEN several products WHEN invoke THEN joins each product with entry`() = runTest {
+        // Act
+        val actual = useCase(
+            userWalletId = USER_WALLET_ID,
+            products = PRODUCTS,
+            entry = ENTRY,
+            idempotencyKey = IDEMPOTENCY_KEY,
+        )
 
-        // WHEN
-        val actual = useCase(userWalletId = USER_WALLET_ID, entry = ENTRY, idempotencyKey = IDEMPOTENCY_KEY)
-
-        // THEN
+        // Assert
         assertThat(actual).isEqualTo(Unit.right())
-        coVerify(exactly = 1) { waitlistRepository.join(USER_WALLET_ID, ENTRY, IDEMPOTENCY_KEY) }
+        PRODUCTS.forEach { product ->
+            coVerify(exactly = 1) { waitlistRepository.join(USER_WALLET_ID, product, ENTRY, any()) }
+        }
     }
 
     @Test
-    fun `GIVEN repository fails WHEN invoke THEN returns Left with the same error`() = runTest {
-        // GIVEN
+    fun `GIVEN several products WHEN invoke twice THEN keys are unique per product and stable between calls`() =
+        runTest {
+            // Arrange
+            val keys = mutableListOf<Pair<TangemPayProduct, String>>()
+            coEvery { waitlistRepository.join(any(), any(), any(), any()) } answers {
+                keys += secondArg<TangemPayProduct>() to arg<String>(3)
+                Unit.right()
+            }
+
+            // Act
+            repeat(2) {
+                useCase(
+                    userWalletId = USER_WALLET_ID,
+                    products = PRODUCTS,
+                    entry = ENTRY,
+                    idempotencyKey = IDEMPOTENCY_KEY,
+                )
+            }
+
+            // Assert
+            val keysByProduct = keys.groupBy(keySelector = { it.first }, valueTransform = { it.second })
+            assertThat(keysByProduct.values.map { it.toSet().size }).containsExactly(1, 1)
+            assertThat(keysByProduct.values.map { it.first() }.toSet()).hasSize(PRODUCTS.size)
+        }
+
+    @Test
+    fun `GIVEN one product join fails WHEN invoke THEN returns Left and tangem pay not disabled`() = runTest {
+        // Arrange
         coEvery {
-            waitlistRepository.join(USER_WALLET_ID, ENTRY, IDEMPOTENCY_KEY)
+            waitlistRepository.join(USER_WALLET_ID, TangemPayProduct.PAYMENT_ACCOUNT, ENTRY, any())
         } returns VisaApiError.Unspecified.left()
 
-        // WHEN
-        val actual = useCase(userWalletId = USER_WALLET_ID, entry = ENTRY, idempotencyKey = IDEMPOTENCY_KEY)
+        // Act
+        val actual = useCase(
+            userWalletId = USER_WALLET_ID,
+            products = PRODUCTS,
+            entry = ENTRY,
+            idempotencyKey = IDEMPOTENCY_KEY,
+        )
 
-        // THEN
+        // Assert
         assertThat(actual).isEqualTo(VisaApiError.Unspecified.left())
-        coVerify(exactly = 1) { waitlistRepository.join(USER_WALLET_ID, ENTRY, IDEMPOTENCY_KEY) }
-    }
-
-    @Test
-    fun `GIVEN no user wallet WHEN invoke THEN passes null userWalletId and tangem pay not disabled`() = runTest {
-        // GIVEN
-        coEvery { waitlistRepository.join(null, ENTRY, IDEMPOTENCY_KEY) } returns Unit.right()
-
-        // WHEN
-        val actual = useCase(userWalletId = null, entry = ENTRY, idempotencyKey = IDEMPOTENCY_KEY)
-
-        // THEN
-        assertThat(actual).isEqualTo(Unit.right())
-        coVerify(exactly = 1) { waitlistRepository.join(null, ENTRY, IDEMPOTENCY_KEY) }
         coVerify(exactly = 0) { onboardingRepository.disableTangemPay(any()) }
     }
 
     @Test
-    fun `GIVEN entry without region WHEN invoke THEN passes entry unchanged`() = runTest {
-        // GIVEN
-        val entry = ENTRY.copy(
-            product = TangemPayProduct.PAYMENT_ACCOUNT,
-            regionCode = null,
-            isMarketingConsentGiven = false,
-        )
-        coEvery { waitlistRepository.join(USER_WALLET_ID, entry, IDEMPOTENCY_KEY) } returns Unit.right()
-
-        // WHEN
-        val actual = useCase(userWalletId = USER_WALLET_ID, entry = entry, idempotencyKey = IDEMPOTENCY_KEY)
-
-        // THEN
-        assertThat(actual).isEqualTo(Unit.right())
-        coVerify(exactly = 1) { waitlistRepository.join(USER_WALLET_ID, entry, IDEMPOTENCY_KEY) }
-    }
-
-    @Test
-    fun `GIVEN user wallet WHEN join succeeds THEN tangem pay disabled and status refetched`() = runTest {
-        // Arrange
-        coEvery { waitlistRepository.join(USER_WALLET_ID, ENTRY, IDEMPOTENCY_KEY) } returns Unit.right()
-
+    fun `GIVEN no user wallet WHEN invoke THEN passes null userWalletId and tangem pay not disabled`() = runTest {
         // Act
-        val actual = useCase(userWalletId = USER_WALLET_ID, entry = ENTRY, idempotencyKey = IDEMPOTENCY_KEY)
+        val actual = useCase(userWalletId = null, products = PRODUCTS, entry = ENTRY, idempotencyKey = IDEMPOTENCY_KEY)
 
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
+        coVerify(exactly = PRODUCTS.size) { waitlistRepository.join(null, any(), ENTRY, any()) }
+        coVerify(exactly = 0) { onboardingRepository.disableTangemPay(any()) }
+    }
+
+    @Test
+    fun `GIVEN user wallet WHEN all joins succeed THEN tangem pay disabled once and status refetched`() = runTest {
+        // Act
+        val actual = useCase(
+            userWalletId = USER_WALLET_ID,
+            products = PRODUCTS,
+            entry = ENTRY,
+            idempotencyKey = IDEMPOTENCY_KEY,
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+        coVerify(exactly = 1) { onboardingRepository.disableTangemPay(USER_WALLET_ID) }
         coVerifyOrder {
-            waitlistRepository.join(USER_WALLET_ID, ENTRY, IDEMPOTENCY_KEY)
             onboardingRepository.disableTangemPay(USER_WALLET_ID)
             paymentAccountStatusFetcher(USER_WALLET_ID)
         }
@@ -118,39 +135,28 @@ internal class JoinTangemPayWaitlistUseCaseTest {
     @Test
     fun `GIVEN disabling tangem pay fails WHEN join succeeds THEN returns Right without refetch`() = runTest {
         // Arrange
-        coEvery { waitlistRepository.join(USER_WALLET_ID, ENTRY, IDEMPOTENCY_KEY) } returns Unit.right()
         coEvery { onboardingRepository.disableTangemPay(USER_WALLET_ID) } returns VisaApiError.Unspecified.left()
 
         // Act
-        val actual = useCase(userWalletId = USER_WALLET_ID, entry = ENTRY, idempotencyKey = IDEMPOTENCY_KEY)
+        val actual = useCase(
+            userWalletId = USER_WALLET_ID,
+            products = PRODUCTS,
+            entry = ENTRY,
+            idempotencyKey = IDEMPOTENCY_KEY,
+        )
 
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
         coVerify(exactly = 0) { paymentAccountStatusFetcher(any<UserWalletId>()) }
     }
 
-    @Test
-    fun `GIVEN user wallet WHEN join fails THEN tangem pay not disabled`() = runTest {
-        // Arrange
-        coEvery {
-            waitlistRepository.join(USER_WALLET_ID, ENTRY, IDEMPOTENCY_KEY)
-        } returns VisaApiError.Unspecified.left()
-
-        // Act
-        val actual = useCase(userWalletId = USER_WALLET_ID, entry = ENTRY, idempotencyKey = IDEMPOTENCY_KEY)
-
-        // Assert
-        assertThat(actual).isEqualTo(VisaApiError.Unspecified.left())
-        coVerify(exactly = 0) { onboardingRepository.disableTangemPay(any()) }
-    }
-
     private companion object {
         val USER_WALLET_ID = UserWalletId("aabbcc112233")
         const val IDEMPOTENCY_KEY = "idempotency-key-1"
+        val PRODUCTS = TangemPayProduct.entries
 
         val ENTRY = TangemPayWaitlistEntry(
             email = "user@tangem.com",
-            product = TangemPayProduct.BANKING_ACCOUNT,
             countryCode = "US",
             regionCode = "CA",
             isMarketingConsentGiven = true,

@@ -26,8 +26,10 @@ import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
+import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.FindMoneyAccountCreationOrderUseCase
+import com.tangem.domain.pay.usecase.GetCustomerSummaryUseCase
 import com.tangem.domain.pay.usecase.StartTangemPayOrderPollingUseCase
 import com.tangem.domain.moneyaccount.repository.MoneyAccountActivationRepository
 import com.tangem.domain.moneyaccount.repository.MoneyAccountRepository
@@ -200,15 +202,13 @@ internal interface MoneyAccountDataModule {
 
         @Provides
         fun provideRestoreMoneyAccountOrderUseCase(
-            orderRepository: MoneyAccountOrderRepository,
-            trackOrder: TrackMoneyAccountOrderUseCase,
-            findMoneyAccountCreationOrderUseCase: FindMoneyAccountCreationOrderUseCase,
+            getCustomerSummaryUseCase: GetCustomerSummaryUseCase,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
             moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
         ): RestoreMoneyAccountOrderUseCase {
             return RestoreMoneyAccountOrderUseCase(
-                trackOrder = trackOrder,
-                findMoneyAccountCreationOrderUseCase = findMoneyAccountCreationOrderUseCase,
-                moneyAccountOrderRepository = orderRepository,
+                getCustomerSummaryUseCase = getCustomerSummaryUseCase,
+                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
                 moneyAccountStatusFetcher = moneyAccountStatusFetcher,
             )
         }

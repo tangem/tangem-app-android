@@ -9,8 +9,6 @@ internal sealed class MarketsListAnalyticsEvent(
     params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = "Markets", event = event, params = params) {
 
-    class BottomSheetOpened : MarketsListAnalyticsEvent(event = "Markets Screen Opened")
-
     data class SortBy(
         val sortByTypeUM: SortByTypeUM,
         val interval: MarketsListUM.TrendInterval,

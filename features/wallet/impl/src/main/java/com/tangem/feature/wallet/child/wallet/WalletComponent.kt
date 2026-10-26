@@ -42,6 +42,7 @@ import com.tangem.features.jointaccount.main.JointAccountMainBlockComponent
 import com.tangem.features.feed.v2.FeedV2Component
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.promobanners.api.PromoBannersFeatureToggles
+import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsBottomSheetComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
 import com.tangem.features.send.api.NetworkSelectionComponent
@@ -78,6 +79,7 @@ internal class WalletComponent @AssistedInject constructor(
     private val yieldSupplyDepositedWarningComponent: YieldSupplyDepositedWarningComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
     private val promoBannersFeatureToggles: PromoBannersFeatureToggles,
+    private val walletFeatureToggles: WalletFeatureToggles,
     private val networkSelectionComponentFactory: NetworkSelectionComponent.Factory,
     private val tokenActionsComponentFactory: TokenActionsComponent.Factory,
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
@@ -210,11 +212,12 @@ internal class WalletComponent @AssistedInject constructor(
                     )
                 }
                 is WalletDialogConfig.TangemPayWaitlist -> {
+                    // TODO v_rodionov: [REDACTED_TASK_KEY] - remove it
                     tangemPayWaitlistComponentFactory.create(
                         context = childByContext(componentContext),
                         params = TangemPayWaitlistComponent.Params(
                             userWalletId = dialogConfig.userWalletId,
-                            product = TangemPayProduct.BANKING_ACCOUNT,
+                            products = listOf(TangemPayProduct.BANKING_ACCOUNT),
                             countryCode = dialogConfig.countryCode,
                             regionCode = null,
                             onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
@@ -237,6 +240,7 @@ internal class WalletComponent @AssistedInject constructor(
                             actions = dialogConfig.actionList,
                             onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
                             tokenRowUM = dialogConfig.tokenRowUM,
+                            tokenRowState = dialogConfig.tokenRowState,
                             offsetX = dialogConfig.offsetX,
                             offsetY = dialogConfig.offsetY,
                         ),
@@ -362,6 +366,7 @@ internal class WalletComponent @AssistedInject constructor(
             collectiblesComponent = collectiblesWalletBlockComponent,
             modifier = modifier.trackUserInteraction(model.userInteractionTracker),
             isHideMarketingWhileSystemEnabled = promoBannersFeatureToggles.isHideMarketingBannersWhileSystemEnabled,
+            isRedesignedAccountRowsEnabled = walletFeatureToggles.isRedesignedAccountRowsEnabled,
             isShtorkaBlurEnabled = { isShtorkaBlurEnabled },
             isShtorkaPartialExpansionSupported = isShtorkaPartialExpansionSupported,
             shtorkaHeaderContent = { sheetExpansion, onExpandSheet ->
