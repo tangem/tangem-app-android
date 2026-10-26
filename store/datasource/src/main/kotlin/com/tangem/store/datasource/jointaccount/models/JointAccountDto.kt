@@ -25,8 +25,8 @@ data class JointAccountDto(
      * (case-insensitively), never by trusting the backend
      * @property role     `creator` | `member` — only the creator sends invites. Raw string, same reasoning as
      * [JointAccountDto.status]
-     * @property inviteId the invite this member redeemed to take the slot; `null` for the creator, who never had
-     * one, and absent in pre-v1.3 responses
+     * @property slot     `0` for the creator, the slot of the invite the member redeemed otherwise. Only the
+     * creator of a `pending` account sees it in the `GET` list: every other response carries `null` (v1.6)
      * @property signature the member's `/confirm` signature; `null` until the member confirms, absent in pre-v1.5
      * responses
      */
@@ -35,16 +35,17 @@ data class JointAccountDto(
         @Json(name = "name") val name: String,
         @Json(name = "address") val address: String,
         @Json(name = "role") val role: String,
-        @Json(name = "inviteId") val inviteId: String? = null,
+        @Json(name = "slot") val slot: Int? = null,
         @Json(name = "signature") val signature: String? = null,
     )
 
     /**
-     * @property id 32 random bytes as upper-case hex — the only secret guarding a pending account: whoever holds it
-     * can take the slot
+     * @property slot      the slot the invite was issued for, `1..membersCount - 1`
+     * @property expiresAt ISO 8601 by the server clock; an expired invite stays listed until the slot is reissued
      */
     @JsonClass(generateAdapter = true)
     data class Invite(
-        @Json(name = "id") val id: String,
+        @Json(name = "slot") val slot: Int,
+        @Json(name = "expiresAt") val expiresAt: String,
     )
 }
