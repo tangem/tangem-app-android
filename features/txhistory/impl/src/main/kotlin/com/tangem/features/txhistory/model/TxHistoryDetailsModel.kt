@@ -59,6 +59,7 @@ import com.tangem.features.txhistory.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -269,11 +270,15 @@ internal class TxHistoryDetailsModel @Inject constructor(
      * Only a completed deal gets the widget: the survey vendor caps API calls per day and a swap in flight
      * is re-opened many times while the user watches its status. The flow keeps collecting, so the slot
      * still appears by itself once a deal watched from this screen completes.
+     *
+     * The lookup starts [RATING_ENTER_DELAY_MILLIS] after the screen does, so the card never grows the sheet
+     * while it is still animating open — it lands on a settled sheet instead.
      */
     fun activateRatingForSwap() {
         if (isRatingActivationStarted) return
         isRatingActivationStarted = true
         txHistoryInfo
+            .onStart { delay(RATING_ENTER_DELAY_MILLIS) }
             .mapNotNull { it as? ExpressTx.Swap }
             .filter { swap -> swap.tx.status.isRateable }
             .map { swap ->
@@ -454,6 +459,9 @@ internal class TxHistoryDetailsModel @Inject constructor(
             .getOrNull()
     }
 }
+
+/** How long the rating slot waits before it may appear, covering the sheet's opening animation. */
+private const val RATING_ENTER_DELAY_MILLIS = 1000L
 
 /** The per-wallet sources the details converter needs, combined apart from the already five-wide `uiState` combine. */
 private data class DetailsInputs(
