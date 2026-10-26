@@ -41,4 +41,6 @@ class DummyRouter : Router {
     }
 
     override suspend fun contains(route: Route): Boolean = false
+
+    override fun defaultCompletionHandler(isSuccess: Boolean, errorMessage: String) = Unit
 }
