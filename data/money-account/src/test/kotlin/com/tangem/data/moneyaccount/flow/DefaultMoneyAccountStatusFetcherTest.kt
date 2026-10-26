@@ -236,8 +236,8 @@ internal class DefaultMoneyAccountStatusFetcherTest {
                 cryptoCurrency = cryptoCurrency,
                 balance = balance,
                 customerId = CUSTOMER_ID,
-                isBankOfframpAvailable = model.expected,
                 productInstanceId = PRODUCT_INSTANCE_ID,
+                isBankOfframpAvailable = model.expected,
             ),
         )
     }
