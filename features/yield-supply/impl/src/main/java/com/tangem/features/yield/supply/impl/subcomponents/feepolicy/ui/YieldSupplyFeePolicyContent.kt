@@ -53,13 +53,13 @@ internal fun YieldSupplyFeePolicyContent(
         Text(
             text = stringResourceSafe(R.string.yield_module_fee_policy_sheet_title),
             style = TangemTheme.typography.h3,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         SpacerH8()
         Text(
             text = stringResourceSafe(R.string.yield_module_fee_policy_sheet_description, tokenSymbol),
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 16.dp),
         )
@@ -83,7 +83,7 @@ internal fun YieldSupplyFeePolicyContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(14.dp))
-                    .background(TangemTheme.colors.background.action)
+                    .background(TangemTheme.colors3.bg.secondary)
                     .padding(horizontal = 16.dp),
             ) {
                 val currentFee = when (yieldSupplyFeeUM) {
@@ -103,7 +103,7 @@ internal fun YieldSupplyFeePolicyContent(
                 }
                 HorizontalDivider(
                     thickness = 0.5.dp,
-                    color = TangemTheme.colors.stroke.primary,
+                    color = TangemTheme.colors3.border.secondary,
                 )
                 YieldSupplyFeeRow(
                     title = resourceReference(R.string.yield_module_fee_policy_sheet_max_fee_title),
@@ -116,7 +116,7 @@ internal fun YieldSupplyFeePolicyContent(
         Text(
             text = stringResourceSafe(R.string.yield_module_fee_policy_tangem_service_fee_title),
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
@@ -154,7 +154,7 @@ private fun MinFeeNote(yieldSupplyFeeUM: YieldSupplyFeeUM) {
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(14.dp))
-                .background(TangemTheme.colors.background.action)
+                .background(TangemTheme.colors3.bg.secondary)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
         )
     }
@@ -191,7 +191,7 @@ private fun YieldSupplyFeePolicyContent_Preview() {
                 estimatedFiatValue = stringReference("$8.50"),
             ),
             tokenSymbol = "USDT",
-            modifier = Modifier.background(TangemTheme.colors.background.primary),
+            modifier = Modifier.background(TangemTheme.colors3.bg.primary),
         )
     }
 }

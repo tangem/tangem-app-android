@@ -100,7 +100,7 @@ inline fun <reified T : StoryConfig> StoriesContainer(
                     painter = rememberVectorPainter(
                         image = ImageVector.vectorResource(R.drawable.ic_close_24),
                     ),
-                    tint = TangemTheme.colors.icon.constant,
+                    tint = TangemTheme.colors3.icon.staticDark,
                     contentDescription = null,
                     modifier = Modifier
                         .align(Alignment.End)

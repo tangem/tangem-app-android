@@ -31,7 +31,7 @@ internal fun WcSpendAllowanceItem(
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(14.dp))
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .fillMaxWidth()
             .padding(end = 12.dp, bottom = 12.dp)
             .clickable { onClickAllowToSpend() },
@@ -66,7 +66,7 @@ internal fun WcSpendAllowanceItem(
                     Text(
                         text = amount,
                         style = TangemTheme.typography.body1,
-                        color = TangemTheme.colors.text.primary1,
+                        color = TangemTheme.colors3.text.primary,
                     )
                 }
             }
@@ -78,7 +78,7 @@ internal fun WcSpendAllowanceItem(
                 Text(
                     text = stringResourceSafe(R.string.manage_tokens_edit),
                     style = TangemTheme.typography.body1,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                 )
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -86,7 +86,7 @@ internal fun WcSpendAllowanceItem(
                 Icon(
                     painter = painterResource(id = R.drawable.ic_edit_new_12),
                     contentDescription = null,
-                    tint = TangemTheme.colors.icon.informative,
+                    tint = TangemTheme.colors3.icon.secondary,
                 )
             }
         }

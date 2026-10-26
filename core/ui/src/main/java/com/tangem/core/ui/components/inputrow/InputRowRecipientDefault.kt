@@ -37,7 +37,7 @@ fun InputRowRecipientDefault(
     title: TextReference,
     value: String,
     modifier: Modifier = Modifier,
-    titleColor: Color = TangemTheme.colors.text.secondary,
+    titleColor: Color = TangemTheme.colors3.text.secondary,
     showDivider: Boolean = false,
 ) {
     DividerContainer(
@@ -64,12 +64,12 @@ fun InputRowRecipientDefault(
                         .align(Alignment.CenterVertically)
                         .clip(RoundedCornerShape(18.dp))
                         .size(36.dp)
-                        .background(TangemTheme.colors.background.tertiary),
+                        .background(TangemTheme.colors3.bg.primary),
                 )
                 Text(
                     text = value,
                     style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                     modifier = Modifier
                         .padding(start = 12.dp)
                         .weight(1f)
@@ -90,7 +90,7 @@ private fun InputRowRecipientPreview() {
             value = "0x391316d97a07027a0702c8A002c8A0C25d8470",
             title = TextReference.Res(R.string.send_recipient),
             showDivider = true,
-            modifier = Modifier.background(TangemTheme.colors.background.primary),
+            modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
         )
     }
 }

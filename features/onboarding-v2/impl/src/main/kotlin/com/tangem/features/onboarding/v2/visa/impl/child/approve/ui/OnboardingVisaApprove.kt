@@ -46,7 +46,7 @@ internal fun OnboardingVisaApprove(state: OnboardingVisaApproveUM, modifier: Mod
             Text(
                 text = stringResourceSafe(R.string.visa_onboarding_tangem_approve_title),
                 style = TangemTheme.typography.h2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 textAlign = TextAlign.Center,
             )
 
@@ -55,7 +55,7 @@ internal fun OnboardingVisaApprove(state: OnboardingVisaApproveUM, modifier: Mod
             Text(
                 text = stringResourceSafe(R.string.visa_onboarding_tangem_approve_description),
                 style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
             )
         }

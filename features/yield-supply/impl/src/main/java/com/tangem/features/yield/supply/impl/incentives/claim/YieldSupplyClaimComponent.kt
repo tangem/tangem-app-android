@@ -69,7 +69,7 @@ internal class YieldSupplyClaimComponent(
 
         TangemModalBottomSheetWithFooter<TangemBottomSheetConfigContent.Empty>(
             config = config,
-            containerColor = TangemTheme.colors.background.tertiary,
+            containerColor = TangemTheme.colors3.bg.primary,
             title = {
                 TangemModalBottomSheetTitle(
                     title = resourceReference(R.string.yield_module_claim_sheet_title),

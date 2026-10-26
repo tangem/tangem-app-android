@@ -31,7 +31,7 @@ fun AccountLabel(
     iconSize: AccountIconSize,
     modifier: Modifier = Modifier,
     nameStyle: TextStyle = TangemTheme.typography.subtitle2,
-    nameColor: Color = TangemTheme.colors.text.tertiary,
+    nameColor: Color = TangemTheme.colors3.text.secondary,
 ) {
     Row(
         modifier = modifier,

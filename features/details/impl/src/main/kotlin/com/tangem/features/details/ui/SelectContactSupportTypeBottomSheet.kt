@@ -22,7 +22,7 @@ internal fun SelectContactSupportTypeBottomSheet(config: TangemBottomSheetConfig
     TangemBottomSheet<SelectContactSupportTypeBS>(
         config = config,
         titleText = resourceReference(R.string.common_contact_support),
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
         content = { Content(it) },
     )
 }
@@ -45,7 +45,7 @@ private fun Content(content: SelectContactSupportTypeBS) {
                         lastIndex = SelectContactSupportTypeBS.Option.entries.lastIndex,
                         addDefaultPadding = false,
                     )
-                    .background(TangemTheme.colors.background.action)
+                    .background(TangemTheme.colors3.bg.secondary)
                     .clickable { content.onOptionClick(type) },
                 showDivider = index != SelectContactSupportTypeBS.Option.entries.lastIndex,
             ) {

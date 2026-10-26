@@ -17,7 +17,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 internal fun AddressSyncContent(modifier: Modifier = Modifier, childContent: @Composable (Modifier) -> Unit = {}) {
     Column(
         modifier = modifier
-            .background(color = TangemTheme.colors.background.secondary)
+            .background(color = TangemTheme.colors3.bg.primary)
             .fillMaxSize()
             .imePadding()
             .systemBarsPadding(),

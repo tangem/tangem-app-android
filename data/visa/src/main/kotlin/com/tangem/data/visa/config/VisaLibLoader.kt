@@ -27,11 +27,11 @@ internal class VisaLibLoader @Inject constructor(
     suspend fun getOrCreateProvider(): VisaContractInfoProvider = provider ?: createProvider()
 
     private suspend fun createProvider(): VisaContractInfoProvider = createMutex.withLock {
-        if (provider != null) return@withLock requireNotNull(provider)
+        provider?.let { return@withLock it }
 
         val config = getOrLoadConfig()
 
-        provider = VisaContractInfoProvider.Builder(
+        VisaContractInfoProvider.Builder(
             isTestnetRpcEnabled = VisaConstants.USE_TEST_ENV,
             bridgeProcessorAddress = if (VisaConstants.USE_TEST_ENV) {
                 config.testnet.bridgeProcessor
@@ -46,20 +46,17 @@ internal class VisaLibLoader @Inject constructor(
             isNetworkLoggingEnabled = BuildConfig.LOG_ENABLED,
             dispatchers = dispatchers,
         ).build()
-
-        return requireNotNull(provider) {
-            "Visa provider is not created"
-        }
+            .also { provider = it }
     }
 
     private suspend fun getOrLoadConfig(): VisaConfig = createMutex2.withLock {
-        if (config != null) return@withLock requireNotNull(config)
+        config?.let { return@withLock it }
 
-        config = assetLoader.load(fileName = VISA_CONFIG_FILE_NAME, deserializer = VisaConfig.serializer())
-
-        return@withLock requireNotNull(config) {
-            "Visa config is not loaded"
-        }
+        val loadedConfig = requireNotNull(
+            assetLoader.load(fileName = VISA_CONFIG_FILE_NAME, deserializer = VisaConfig.serializer()),
+        ) { "Visa config is not loaded" }
+        config = loadedConfig
+        loadedConfig
     }
 
     companion object {

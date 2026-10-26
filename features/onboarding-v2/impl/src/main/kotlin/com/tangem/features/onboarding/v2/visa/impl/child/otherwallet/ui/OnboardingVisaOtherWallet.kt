@@ -47,7 +47,7 @@ internal fun OnboardingVisaOtherWallet(state: OnboardingVisaOtherWalletUM, modif
                 Text(
                     text = stringResourceSafe(R.string.visa_onboarding_wallet_connect_title),
                     style = TangemTheme.typography.h2,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                     textAlign = TextAlign.Center,
                 )
 
@@ -56,7 +56,7 @@ internal fun OnboardingVisaOtherWallet(state: OnboardingVisaOtherWalletUM, modif
                 Text(
                     text = stringResourceSafe(R.string.visa_onboarding_wallet_connect_description),
                     style = TangemTheme.typography.body1,
-                    color = TangemTheme.colors.text.secondary,
+                    color = TangemTheme.colors3.text.secondary,
                     textAlign = TextAlign.Center,
                 )
             }
@@ -94,13 +94,13 @@ private fun IconBlock(modifier: Modifier = Modifier) {
         Box(
             modifier = Modifier
                 .size(64.dp)
-                .background(TangemTheme.colors.button.primary, TangemTheme.shapes.roundedCorners8),
+                .background(TangemTheme.colors3.bg.inverse, TangemTheme.shapes.roundedCorners8),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = ImageVector.vectorResource(id = R.drawable.ic_tangem_24),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.primary2,
+                tint = TangemTheme.colors3.icon.inverse,
                 modifier = Modifier.size(38.dp),
             )
         }
@@ -114,13 +114,13 @@ private fun IconBlock(modifier: Modifier = Modifier) {
         Box(
             modifier = Modifier
                 .size(64.dp)
-                .background(TangemTheme.colors.background.tertiary, TangemTheme.shapes.roundedCorners8),
+                .background(TangemTheme.colors3.bg.primary, TangemTheme.shapes.roundedCorners8),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = ImageVector.vectorResource(id = R.drawable.ic_web_24),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.primary1,
+                tint = TangemTheme.colors3.icon.primary,
                 modifier = Modifier.size(48.dp),
             )
         }
