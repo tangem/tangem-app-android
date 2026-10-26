@@ -8,18 +8,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.account.AccountIcon
 import com.tangem.core.ui.components.account.AccountIconSize
-import com.tangem.core.ui.components.account.PaymentAccountIcon
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawFromUM
 
 /**
- * "From · Payment account" header shared by the amount and confirm steps; a non-null [balance] renders
+ * "From · <source account>" header shared by the amount and confirm steps; a non-null [balance] renders
  * trailing, right-aligned.
  */
 @Composable
-internal fun BankFromRow(balance: String?, modifier: Modifier = Modifier) {
+internal fun BankFromRow(from: BankWithdrawFromUM, balance: String?, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -30,10 +32,10 @@ internal fun BankFromRow(balance: String?, modifier: Modifier = Modifier) {
             style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
         )
-        PaymentAccountIcon(size = AccountIconSize.ExtraSmall)
+        AccountIcon(name = from.title, icon = from.icon, size = AccountIconSize.ExtraSmall)
         Text(
             modifier = if (balance != null) Modifier.weight(1f) else Modifier,
-            text = stringResourceSafe(R.string.tangempay_payment_account),
+            text = from.title.resolveReference(),
             style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.secondary,
         )
