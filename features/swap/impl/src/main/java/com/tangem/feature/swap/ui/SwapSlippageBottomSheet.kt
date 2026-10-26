@@ -173,7 +173,8 @@ private fun SlippageValue(content: SwapSlippageBottomSheetConfig) {
         is SwapSlippageBottomSheetConfig.Value.ReadOnly -> TangemMessageBanner(
             modifier = Modifier.padding(horizontal = 24.dp),
             title = valueState.info,
-            variant = TangemMessageBanner.Variant.Info,
+            variant = TangemMessageBanner.Variant.Default,
+            showGlowRing = false,
         )
     }
 }
