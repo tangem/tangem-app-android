@@ -51,6 +51,7 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
         coEvery { accountRepository.saveAccount(any(), any()) } returns Unit
         coEvery { hotDelegate.provision(any()) } returns DELEGATE.right()
         coEvery { hotDelegate.forget(any()) } just runs
+        coEvery { accountRepository.registerAccount(any()) } returns Unit.right()
     }
 
     @Test
@@ -123,7 +124,7 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
     }
 
     @Test
-    fun `GIVEN the card refuses WHEN invoked THEN the account is not recorded`() = runTest {
+    fun `GIVEN the card refuses WHEN invoked THEN the account is recorded neither remotely nor locally`() = runTest {
         // Arrange
         coEvery { ownerDeriver.storedOwner(WALLET_ID) } returns null
         coEvery { gachaVaultRepository.deriveOwnerAndSetUpVault(any(), any(), any()) } returns
@@ -134,6 +135,7 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(CollectiblesAccountError.CardError(code = 50002, message = "50002").left())
+        coVerify(exactly = 0) { accountRepository.registerAccount(any()) }
         coVerify(exactly = 0) { accountRepository.saveAccount(any(), any()) }
     }
 
@@ -218,6 +220,57 @@ internal class CreateOrReactivateCollectiblesAccountUseCaseTest {
 
         // Assert
         coVerify(exactly = 0) { accountStatusFetcher(any()) }
+    }
+
+    @Test
+    fun `GIVEN a wallet WHEN invoked THEN the backend record goes after the vault and before the local one`() =
+        runTest {
+            // Arrange
+            coEvery { ownerDeriver.storedOwner(WALLET_ID) } returns OWNER
+            coEvery { gachaVaultRepository.initOrUpdateVault(any(), any(), any()) } returns Unit.right()
+
+            // Act
+            val actual = createUseCase(testScope = this)(userWallet)
+
+            // Assert
+            assertThat(actual).isEqualTo(Unit.right())
+            coVerifyOrder {
+                hotDelegate.provision(any())
+                gachaVaultRepository.initOrUpdateVault(userWallet, DELEGATE, any())
+                accountRepository.registerAccount(WALLET_ID)
+                accountRepository.saveAccount(WALLET_ID, ONBOARDED)
+            }
+        }
+
+    @Test
+    fun `GIVEN the backend refuses the record WHEN invoked THEN the onboarding is not finished`() = runTest {
+        // Arrange
+        val failure = CollectiblesAccountError.RegistrationFailed(IllegalStateException("PUT /accounts failed"))
+        coEvery { ownerDeriver.storedOwner(WALLET_ID) } returns OWNER
+        coEvery { gachaVaultRepository.initOrUpdateVault(any(), any(), any()) } returns Unit.right()
+        coEvery { accountRepository.registerAccount(WALLET_ID) } returns failure.left()
+
+        // Act
+        val actual = createUseCase(testScope = this)(userWallet)
+
+        // Assert
+        assertThat(actual).isEqualTo(failure.left())
+        coVerify(exactly = 0) { accountRepository.saveAccount(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN an account awaiting an update WHEN invoked THEN the backend is not asked`() = runTest {
+        // Arrange
+        coEvery { accountRepository.getStatusSync(WALLET_ID) } returns UPDATE_REQUIRED
+        coEvery { ownerDeriver.storedOwner(WALLET_ID) } returns OWNER
+        coEvery { gachaVaultRepository.initOrUpdateVault(any(), any(), any()) } returns Unit.right()
+
+        // Act
+        val actual = createUseCase(testScope = this)(userWallet)
+
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+        coVerify(exactly = 0) { accountRepository.registerAccount(any()) }
     }
 
     private fun createUseCase(testScope: TestScope) = CreateOrReactivateCollectiblesAccountUseCase(
