@@ -56,24 +56,24 @@ fun TangemTopSnackbar(snackbarMessage: SnackbarMessage, modifier: Modifier = Mod
     val shape = RoundedCornerShape(24.dp)
     Column(
         modifier = modifier
-            .shadow(elevation = TangemTheme.dimens.elevation4, shape = shape, clip = false)
+            .shadow(elevation = 4.dp, shape = shape, clip = false)
             .background(color = TangemTheme.colors2.controls.backgroundDefault, shape = shape)
             .clip(shape)
             .hazeEffectTangem()
-            .sizeIn(minHeight = TangemTheme.dimens2.x11)
-            .padding(start = TangemTheme.dimens2.x4, end = TangemTheme.dimens2.x3)
-            .padding(vertical = TangemTheme.dimens2.x2),
+            .sizeIn(minHeight = 44.dp)
+            .padding(start = 16.dp, end = 12.dp)
+            .padding(vertical = 8.dp),
         verticalArrangement = Arrangement.Center,
     ) {
         Row(
-            modifier = Modifier.padding(top = if (isTextOverflowing) TangemTheme.dimens2.x3 else 0.dp),
+            modifier = Modifier.padding(top = if (isTextOverflowing) 12.dp else 0.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (snackbarMessage.startIconId != null) {
                 Icon(
                     painter = painterResource(id = snackbarMessage.startIconId),
                     contentDescription = null,
-                    modifier = Modifier.size(TangemTheme.dimens2.x5),
+                    modifier = Modifier.size(20.dp),
                     tint = if (snackbarMessage.isIconTinted) {
                         TangemTheme.colors2.graphic.neutral.secondary
                     } else {
@@ -81,7 +81,7 @@ fun TangemTopSnackbar(snackbarMessage: SnackbarMessage, modifier: Modifier = Mod
                     },
                 )
 
-                SpacerW(TangemTheme.dimens2.x2)
+                SpacerW(8.dp)
             }
 
             CompositionLocalProvider(LocalDensity provides fixedFontScaleDensity) {
@@ -99,7 +99,7 @@ fun TangemTopSnackbar(snackbarMessage: SnackbarMessage, modifier: Modifier = Mod
                 )
             }
 
-            SpacerW(TangemTheme.dimens2.x4)
+            SpacerW(16.dp)
 
             if (hasAction && !isTextOverflowing) {
                 SecondaryTangemButton(
@@ -116,8 +116,8 @@ fun TangemTopSnackbar(snackbarMessage: SnackbarMessage, modifier: Modifier = Mod
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
-                        top = TangemTheme.dimens2.x4,
-                        bottom = TangemTheme.dimens2.x1,
+                        top = 16.dp,
+                        bottom = 4.dp,
                     ),
                 contentAlignment = Alignment.CenterEnd,
             ) {
@@ -138,8 +138,8 @@ fun TangemTopSnackbar(snackbarMessage: SnackbarMessage, modifier: Modifier = Mod
 private fun Preview_TangemTopSnackbar_WithAction() {
     TangemThemePreviewRedesign {
         Column(
-            modifier = Modifier.padding(TangemTheme.dimens.spacing16),
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             TangemTopSnackbar(
                 snackbarMessage = SnackbarMessage(
@@ -169,8 +169,8 @@ private fun Preview_TangemTopSnackbar_WithAction() {
 private fun Preview_TangemTopSnackbar_NoAction() {
     TangemThemePreviewRedesign {
         Column(
-            modifier = Modifier.padding(TangemTheme.dimens.spacing16),
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             TangemTopSnackbar(
                 snackbarMessage = SnackbarMessage(

@@ -18,7 +18,7 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.walletconnect.transaction.routes.WcTransactionRoutes
 
-internal abstract class WcCommonTransactionComponentDelegate(
+internal open class WcCommonTransactionComponentDelegate(
     private val appComponentContext: AppComponentContext,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 

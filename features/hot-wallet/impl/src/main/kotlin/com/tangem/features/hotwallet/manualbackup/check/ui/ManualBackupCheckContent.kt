@@ -77,8 +77,8 @@ internal fun ManualBackupCheckContent(state: ManualBackupCheckUM, modifier: Modi
                 .imePadding()
                 .fillMaxWidth(),
             text = stringResourceSafe(id = R.string.common_continue),
-            enabled = state.completeButtonEnabled,
-            showProgress = state.completeButtonProgress,
+            enabled = state.isCompleteButtonEnabled,
+            showProgress = state.isCompleteButtonInProgress,
             onClick = state.onCompleteButtonClick,
         )
     }
@@ -98,7 +98,7 @@ private fun Fields(state: ManualBackupCheckUM, modifier: Modifier = Modifier) {
                     value = field.word,
                     onValueChange = field.onChange,
                     label = field.index.toString(),
-                    isError = field.error,
+                    isError = field.isError,
                     keyboardOptions = KeyboardOptions(
                         autoCorrectEnabled = false,
                         keyboardType = KeyboardType.Password,
@@ -127,23 +127,23 @@ private fun Preview() {
                         index = 2,
                         word = TextFieldValue(text = "word"),
                         onChange = {},
-                        error = false,
+                        isError = false,
                     ),
                     ManualBackupCheckUM.WordField(
                         index = 7,
                         word = TextFieldValue(text = "wor"),
                         onChange = {},
-                        error = true,
+                        isError = true,
                     ),
                     ManualBackupCheckUM.WordField(
                         index = 11,
                         word = TextFieldValue(text = "word"),
                         onChange = {},
-                        error = false,
+                        isError = false,
                     ),
                 ),
-                completeButtonEnabled = false,
-                completeButtonProgress = false,
+                isCompleteButtonEnabled = false,
+                isCompleteButtonInProgress = false,
             ),
         )
     }

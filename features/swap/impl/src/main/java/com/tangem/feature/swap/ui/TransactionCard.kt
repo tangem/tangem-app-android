@@ -205,10 +205,7 @@ private fun TransactionCardEmpty(
                 )
             }
             if (onChangeTokenClick != null) {
-                ChooseTokenPulseButton(
-                    isPulseEnabled = cardState.isPulseAnimationEnabled,
-                    onClick = onChangeTokenClick,
-                )
+                ChooseTokenPulseButton(onClick = onChangeTokenClick)
             }
         }
     }

@@ -6,13 +6,13 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = true)
 data class PolymarketPositionsResponse(
     @Json(name = "positions") val positions: List<PolymarketOpenPositionDto>,
-    @Json(name = "hasNext") val hasNext: Boolean,
+    @Json(name = "nextCursor") val nextCursor: String? = null,
 )
 
 @JsonClass(generateAdapter = true)
 data class PolymarketClosedPositionsResponse(
     @Json(name = "positions") val positions: List<PolymarketClosedPositionDto>,
-    @Json(name = "hasNext") val hasNext: Boolean,
+    @Json(name = "nextCursor") val nextCursor: String? = null,
 )
 
 @JsonClass(generateAdapter = true)
@@ -50,6 +50,8 @@ data class PolymarketOpenPositionDto(
     @Json(name = "period") val period: String? = null,
     @Json(name = "ended") val isEnded: Boolean? = null,
     @Json(name = "dataFetchedAt") val dataFetchedAt: String? = null,
+    @Json(name = "version") val version: String? = null,
+    @Json(name = "resolutionSource") val resolutionSource: String? = null,
 )
 
 @JsonClass(generateAdapter = true)
@@ -67,4 +69,5 @@ data class PolymarketClosedPositionDto(
     @Json(name = "icon") val icon: String? = null,
     @Json(name = "endDate") val endDate: String? = null,
     @Json(name = "outcomeIndex") val outcomeIndex: Int? = null,
+    @Json(name = "resolutionSource") val resolutionSource: String? = null,
 )

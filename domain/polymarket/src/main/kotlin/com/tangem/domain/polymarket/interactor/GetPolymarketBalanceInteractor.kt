@@ -6,6 +6,7 @@ import com.tangem.domain.polymarket.PolymarketCredentialsLock
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketAuthError
+import com.tangem.domain.polymarket.model.PolymarketClobAsset
 import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.InvalidatePolymarketCredentialsUseCase
@@ -42,6 +43,7 @@ class GetPolymarketBalanceInteractor(
         val refresh = polymarketRepository.syncBalanceAllowance(
             ownerAddress = addresses.ownerAddress,
             credentials = credentials,
+            asset = PolymarketClobAsset.Collateral,
         )
 
         if (refresh.leftOrNull() == PolymarketAuthError.InvalidSignature) {

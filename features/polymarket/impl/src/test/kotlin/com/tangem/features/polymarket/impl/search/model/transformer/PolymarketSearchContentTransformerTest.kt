@@ -1,15 +1,14 @@
 package com.tangem.features.polymarket.impl.search.model.transformer
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketSearchBatchListState
-import com.tangem.domain.polymarket.model.PolymarketMarket
-import com.tangem.domain.polymarket.model.PolymarketOutcome
-import com.tangem.domain.polymarket.model.PolymarketStatus
+import com.tangem.features.polymarket.impl.createPolymarketEvent
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
+import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedFooterUM
 import com.tangem.features.polymarket.impl.search.ui.state.PolymarketSearchUM
 import com.tangem.pagination.Batch
+import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.BeforeEach
@@ -22,11 +21,13 @@ import org.junit.jupiter.params.ParameterizedTest
 internal class PolymarketSearchContentTransformerTest {
 
     private var reloadClicks = 0
+    private var nextPageRetryClicks = 0
 
     // The class is PER_CLASS, so the counter would leak between tests.
     @BeforeEach
     fun resetRecordedClicks() {
         reloadClicks = 0
+        nextPageRetryClicks = 0
     }
 
     private fun transform(
@@ -37,6 +38,7 @@ internal class PolymarketSearchContentTransformerTest {
         isQueryActive = isQueryActive,
         eventUMConverter = PolymarketEventUMConverter(onEventClick = {}, onOutcomeClick = { _, _, _ -> }),
         onReloadClick = { reloadClicks++ },
+        onNextPageRetryClick = { nextPageRetryClicks++ },
     ).transform(prevState = PREV_STATE)
 
     @Test
@@ -126,7 +128,45 @@ internal class PolymarketSearchContentTransformerTest {
         val actual = transform(state)
 
         // Assert
-        assertThat((actual.content as PolymarketSearchUM.ContentUM.Results).isLoadingNextPage).isTrue()
+        assertThat((actual.content as PolymarketSearchUM.ContentUM.Results).footer)
+            .isEqualTo(PolymarketFeedFooterUM.Loading)
+    }
+
+    @Test
+    fun `GIVEN a failed next page WHEN transform THEN loaded events stay with a retry footer`() {
+        // Arrange
+        val state = PolymarketSearchBatchListState(
+            data = listOf(Batch(key = 0, data = listOf(createEvent()))),
+            status = PaginationStatus.Paginating(
+                lastResult = BatchFetchResult.Error(IllegalStateException("HTTP 500")),
+            ),
+        )
+
+        // Act
+        val content = transform(state).content as PolymarketSearchUM.ContentUM.Results
+        (content.footer as PolymarketFeedFooterUM.Error).onRetryClick()
+
+        // Assert
+        assertThat(content.events.map { it.id }).containsExactly("event-1")
+        assertThat(nextPageRetryClicks).isEqualTo(1)
+        assertThat(reloadClicks).isEqualTo(0)
+    }
+
+    @Test
+    fun `GIVEN successful pagination WHEN transform THEN no retry footer is shown`() {
+        // Arrange
+        val state = PolymarketSearchBatchListState(
+            data = listOf(Batch(key = 0, data = listOf(createEvent()))),
+            status = PaginationStatus.Paginating(
+                lastResult = BatchFetchResult.Success(data = listOf(createEvent()), isEmpty = false, isLast = false),
+            ),
+        )
+
+        // Act
+        val content = transform(state).content as PolymarketSearchUM.ContentUM.Results
+
+        // Assert
+        assertThat(content.footer).isEqualTo(PolymarketFeedFooterUM.None)
     }
 
     @Test
@@ -166,49 +206,9 @@ internal class PolymarketSearchContentTransformerTest {
 
     internal data class LoadingModel(val status: PaginationStatus<List<PolymarketEvent>>)
 
-    private fun createEvent(id: String = "event-1"): PolymarketEvent = PolymarketEvent(
+    private fun createEvent(id: String = "event-1"): PolymarketEvent = createPolymarketEvent(
         id = id,
         slug = "$id-slug",
-        title = "Event title",
-        description = "Event description",
-        rulesUrl = "https://polymarket.com/rules",
-        iconUrl = null,
-        imageUrl = null,
-        status = PolymarketStatus.ACTIVE,
-        startDate = null,
-        endDate = null,
-        volume = null,
-        volume24h = null,
-        liquidity = null,
-        totalMarketsCount = 1,
-        isNegRisk = false,
-        isLive = false,
-        displayMode = PolymarketDisplayMode.PLAIN_MARKETS,
-        markets = listOf(
-            PolymarketMarket(
-                id = "market-1",
-                conditionId = null,
-                eventId = id,
-                title = "Market question",
-                slug = "market-slug",
-                description = "Market description",
-                groupItemTitle = null,
-                iconUrl = null,
-                imageUrl = null,
-                status = PolymarketStatus.ACTIVE,
-                isNegRisk = false,
-                isAcceptingOrders = true,
-                startDate = null,
-                endDate = null,
-                startDateIso = null,
-                endDateIso = null,
-                volume = null,
-                volume24h = null,
-                liquidity = null,
-                orderIndex = 0,
-                outcomes = listOf(PolymarketOutcome(assetId = "asset-1", title = "Yes", probability = null)),
-            ),
-        ),
     )
 
     private companion object {

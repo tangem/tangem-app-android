@@ -36,18 +36,17 @@ fun Modifier.softLayerShadow(
 
     val paint = Paint().apply {
         this.color = color.copy(alpha = 0f)
+    }
+    paint.asFrameworkPaint().apply {
+        isDither = true
+        isAntiAlias = true
 
-        asFrameworkPaint().apply {
-            isDither = true
-            isAntiAlias = true
-
-            setShadowLayer(
-                radiusPx,
-                offset.x.toPx(),
-                offset.y.toPx(),
-                color.toArgb(),
-            )
-        }
+        setShadowLayer(
+            radiusPx,
+            offset.x.toPx(),
+            offset.y.toPx(),
+            color.toArgb(),
+        )
     }
     val shapeOutline = shape.createOutline(
         size = size,

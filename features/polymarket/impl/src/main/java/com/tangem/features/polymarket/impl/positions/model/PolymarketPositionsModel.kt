@@ -4,6 +4,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
 import com.tangem.domain.polymarket.model.PolymarketPositionsFilter
@@ -30,6 +31,7 @@ internal class PolymarketPositionsModel @Inject constructor(
     private val router: Router,
     override val dispatchers: CoroutineDispatcherProvider,
     private val loader: PolymarketPositionsLoader,
+    private val urlOpener: UrlOpener,
 ) : Model() {
 
     private val params = paramsContainer.require<PolymarketPositionsComponent.Params>()
@@ -141,7 +143,9 @@ internal class PolymarketPositionsModel @Inject constructor(
 
     private fun openFinishedPosition(position: PolymarketPosition.Closed) {
         if (uiState.value.selectedTab != Tab.Finished) return
-        uiState.update { it.copy(finishedPosition = finishedPositionConverter.convert(position)) }
+        val content = finishedPositionConverter.convert(position)
+            .copy(onResolutionSourceClick = urlOpener::openUrl)
+        uiState.update { it.copy(finishedPosition = content) }
     }
 
     private fun dismissFinishedPosition() {

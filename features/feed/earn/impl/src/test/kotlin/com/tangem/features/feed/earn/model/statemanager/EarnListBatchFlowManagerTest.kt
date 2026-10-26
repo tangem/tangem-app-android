@@ -333,8 +333,8 @@ internal class EarnListBatchFlowManagerTest {
         status = PaginationStatus.Paginating(
             lastResult = BatchFetchResult.Success(
                 data = batches.lastOrNull()?.data.orEmpty(),
-                empty = false,
-                last = false,
+                isEmpty = false,
+                isLast = false,
             ),
         ),
     )

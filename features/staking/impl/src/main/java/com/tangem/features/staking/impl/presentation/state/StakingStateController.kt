@@ -83,7 +83,7 @@ internal class StakingStateController @Inject constructor(
             confirmationState = StakingStates.ConfirmationState.Empty(),
             isBalanceHidden = false,
             bottomSheetConfig = null,
-            actionType = StakingActionCommonType.Enter(skipEnterAmount = false),
+            actionType = StakingActionCommonType.Enter(shouldSkipEnterAmount = false),
             buttonsState = NavigationButtonsState.Empty,
             balanceState = null,
             isColdWalletInteractionIconVisible = true,

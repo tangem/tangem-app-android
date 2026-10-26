@@ -175,7 +175,6 @@ dependencies {
     implementation(projects.domain.quotes)
     implementation(projects.domain.notifications)
     implementation(projects.domain.notifications.models)
-    implementation(projects.domain.feed.search)
     implementation(projects.domain.swap)
     implementation(projects.domain.swap.models)
     implementation(projects.domain.walletManager)
@@ -190,7 +189,6 @@ dependencies {
     implementation(projects.domain.assetsdiscovery)
     implementation(projects.domain.search)
     implementation(projects.domain.socialLogin)
-    implementation(projects.domain.feed.search)
     implementation(projects.domain.cloudBackup)
 
     implementation(projects.common)
@@ -285,7 +283,6 @@ dependencies {
     implementation(projects.data.news)
     implementation(projects.data.earn)
     implementation(projects.data.search)
-    implementation(projects.data.feed.search)
 
     implementation(projects.common.ui)
 
@@ -380,8 +377,6 @@ dependencies {
     implementation(projects.features.createWalletSelection.impl)
     implementation(projects.features.createWalletStart.api)
     implementation(projects.features.createWalletStart.impl)
-    implementation(projects.features.home.api)
-    implementation(projects.features.home.impl)
     implementation(projects.features.introduction.api)
     implementation(projects.features.introduction.impl)
     implementation(projects.features.account.api)
@@ -534,7 +529,6 @@ dependencies {
     androidTestImplementation(deps.test.hilt)
     androidTestImplementation(deps.arrow.core)
     androidTestImplementation(deps.kotlin.coroutines)
-    androidTestImplementation(deps.kotlin.datetime)
     androidTestImplementation(deps.okHttp)
     androidTestImplementation(deps.jodatime)
     // Decodes QR codes in UI tests (QrCodeUtils); no main source references it.
@@ -561,7 +555,6 @@ dependencies {
     implementation(deps.androidx.savedState)
     implementation(deps.arrow.core)
     implementation(deps.kotlin.coroutines)
-    implementation(deps.kotlin.datetime)
     implementation(deps.moshi)
     implementation(deps.okHttp)
     implementation(deps.haze)

@@ -12,6 +12,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.components.RectangleShimmer
@@ -20,7 +21,7 @@ import com.tangem.core.ui.res.TangemTheme
 
 @Composable
 internal fun NFTLogo(imageUrl: String?, @DrawableRes networkIconId: Int, background: Color = Color.Transparent) {
-    val networkBadgeOffset = TangemTheme.dimens.spacing6
+    val networkBadgeOffset = 6.dp
 
     Box(
         modifier = Modifier,
@@ -28,14 +29,14 @@ internal fun NFTLogo(imageUrl: String?, @DrawableRes networkIconId: Int, backgro
         SubcomposeAsyncImage(
             modifier = Modifier
                 .align(Alignment.CenterStart)
-                .size(TangemTheme.dimens.size36)
+                .size(36.dp)
                 .clip(TangemTheme.shapes.roundedCorners8),
             model = ImageRequest.Builder(LocalContext.current)
                 .data(imageUrl)
                 .crossfade(true)
                 .build(),
             loading = {
-                RectangleShimmer(radius = TangemTheme.dimens.radius8)
+                RectangleShimmer(radius = 8.dp)
             },
             error = {
                 Box(

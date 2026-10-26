@@ -100,8 +100,8 @@ internal class DefaultMarketsTokenRepository(
 
                 return BatchFetchResult.Success(
                     data = tokenMarketListWithMaxApy.tokens,
-                    last = isLast,
-                    empty = res.tokens.isEmpty(),
+                    isLast = isLast,
+                    isEmpty = res.tokens.isEmpty(),
                     total = res.total,
                 )
             }
@@ -344,8 +344,8 @@ internal class DefaultMarketsTokenRepository(
 
             BatchFetchResult.Success(
                 data = MarketCategoryConverter.convert(value = response).categories,
-                empty = response.categories.isEmpty(),
-                last = response.categories.size < request.limit,
+                isEmpty = response.categories.isEmpty(),
+                isLast = response.categories.size < request.limit,
                 total = response.total,
             )
         },

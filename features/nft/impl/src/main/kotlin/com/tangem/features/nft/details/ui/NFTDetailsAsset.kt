@@ -10,11 +10,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.bottomFade
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.nft.details.entity.NFTAssetUM
 import com.tangem.features.nft.impl.R
@@ -34,20 +34,20 @@ internal fun NFTDetailsAsset(
         WindowInsets.systemBars.getBottom(density = this).toDp()
     }
 
-    val bottomPadding = TangemTheme.dimens.spacing76 + bottomBarHeight
+    val bottomPadding = 76.dp + bottomBarHeight
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .bottomFade(),
     ) {
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .verticalScroll(scrollState)
                 .padding(
-                    start = TangemTheme.dimens.spacing16,
-                    top = TangemTheme.dimens.spacing16,
-                    end = TangemTheme.dimens.spacing16,
+                    start = 16.dp,
+                    top = 16.dp,
+                    end = 16.dp,
                     bottom = bottomPadding,
                 )
                 .fillMaxSize(),
@@ -59,16 +59,16 @@ internal fun NFTDetailsAsset(
             )
             NFTDetailsInfoGroup(
                 modifier = Modifier
-                    .padding(top = TangemTheme.dimens.spacing12),
+                    .padding(top = 12.dp),
                 state = state.topInfo,
                 onReadMoreClick = onReadMoreClick,
             )
             NFTDetailsBlocksGroup(
                 modifier = Modifier
-                    .padding(top = TangemTheme.dimens.spacing12),
+                    .padding(top = 12.dp),
                 items = state.traits,
                 title = resourceReference(R.string.nft_details_traits),
-                action = if (state.showAllTraitsButton) {
+                action = if (state.shouldShowAllTraitsButton) {
                     {
                         NFTBlocksGroupAction(
                             text = resourceReference(R.string.common_see_all),
@@ -82,7 +82,7 @@ internal fun NFTDetailsAsset(
             )
             NFTDetailsBlocksGroup(
                 modifier = Modifier
-                    .padding(top = TangemTheme.dimens.spacing12),
+                    .padding(top = 12.dp),
                 items = state.baseInfoItems,
                 title = resourceReference(R.string.nft_details_base_information),
                 action = {
@@ -132,7 +132,7 @@ private class NFTAssetProvider : CollectionPreviewParameterProvider<NFTAssetUM>(
                 rarity = NFTAssetUM.Rarity.Content(
                     rank = "Top 1% rarity",
                     label = "115.28",
-                    showDivider = true,
+                    shouldShowDivider = true,
                     onRankClick = { },
                     onLabelClick = { },
                 ),
@@ -141,56 +141,56 @@ private class NFTAssetProvider : CollectionPreviewParameterProvider<NFTAssetUM>(
                 NFTAssetUM.BlockItem(
                     title = stringReference("Tier"),
                     value = "Infinite",
-                    showInfoButton = false,
+                    shouldShowInfoButton = false,
                 ),
                 NFTAssetUM.BlockItem(
                     title = stringReference("Phygital Toy"),
                     value = "None",
-                    showInfoButton = false,
+                    shouldShowInfoButton = false,
                 ),
                 NFTAssetUM.BlockItem(
                     title = stringReference("Class"),
                     value = "CYBER",
-                    showInfoButton = false,
+                    shouldShowInfoButton = false,
                 ),
                 NFTAssetUM.BlockItem(
                     title = stringReference("Accessory"),
                     value = "No accessory",
-                    showInfoButton = false,
+                    shouldShowInfoButton = false,
                 ),
                 NFTAssetUM.BlockItem(
                     title = stringReference("Sneakers"),
                     value = "Boots",
-                    showInfoButton = false,
+                    shouldShowInfoButton = false,
                 ),
                 NFTAssetUM.BlockItem(
                     title = stringReference("Artist"),
                     value = "DJ Dragoon",
-                    showInfoButton = false,
+                    shouldShowInfoButton = false,
                 ),
             ),
-            showAllTraitsButton = true,
+            shouldShowAllTraitsButton = true,
             baseInfoItems = persistentListOf(
                 NFTAssetUM.BlockItem(
                     title = resourceReference(R.string.nft_details_token_standard),
                     value = "ERC-721",
-                    showInfoButton = true,
+                    shouldShowInfoButton = true,
                 ),
                 NFTAssetUM.BlockItem(
                     title = resourceReference(R.string.nft_details_contract_address),
                     value = "0x6811f2fgd892ac83f719",
                     valueTextEllipsis = TextEllipsis.Middle,
-                    showInfoButton = true,
+                    shouldShowInfoButton = true,
                 ),
                 NFTAssetUM.BlockItem(
                     title = resourceReference(R.string.nft_details_token_id),
                     value = "100200273",
-                    showInfoButton = true,
+                    shouldShowInfoButton = true,
                 ),
                 NFTAssetUM.BlockItem(
                     title = resourceReference(R.string.nft_details_chain),
                     value = "Ethereum",
-                    showInfoButton = true,
+                    shouldShowInfoButton = true,
                 ),
             ),
         ),

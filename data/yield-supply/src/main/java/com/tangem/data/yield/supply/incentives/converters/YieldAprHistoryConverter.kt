@@ -20,8 +20,8 @@ internal object YieldAprHistoryConverter {
         return YieldAprHistory.Point(
             date = LocalDate.parse(dto.date.orEmpty()),
             baseApy = dto.baseApy.orZero(),
-            rewardsApr = dto.rewardsApr.orZero(),
-            totalApyEst = dto.totalApyEst.orZero(),
+            rewardsApy = dto.grossRewardsApy.orZero(),
+            totalApyEst = dto.grossTotalApyEst.orZero(),
             isCarriedForward = dto.isCarriedForward == true,
         )
     }

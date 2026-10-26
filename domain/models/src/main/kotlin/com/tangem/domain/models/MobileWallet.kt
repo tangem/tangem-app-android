@@ -22,10 +22,10 @@ data class MobileWallet(
 ) {
 
     val extendedPublicKey: ExtendedPublicKey?
-        get() = chainCode?.let {
+        get() = chainCode?.let { existingChainCode ->
             ExtendedPublicKey(
                 publicKey = publicKey,
-                chainCode = it,
+                chainCode = existingChainCode,
             )
         }
 

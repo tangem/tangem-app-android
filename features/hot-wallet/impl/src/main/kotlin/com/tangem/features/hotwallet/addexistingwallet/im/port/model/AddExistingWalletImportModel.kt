@@ -61,7 +61,7 @@ internal class AddExistingWalletImportModel @Inject constructor(
             modelScope = modelScope,
             mnemonicRepository = mnemonicRepository,
             updateUiState = { block -> uiState.update { block(it) } },
-            readyToImport = { ready -> uiState.update { it.copy(readyToImport = ready) } },
+            readyToImport = { ready -> uiState.update { it.copy(isReadyToImport = ready) } },
             importWallet = { mnemonic: Mnemonic, passphrase: String? ->
                 importWallet(
                     mnemonic = mnemonic,
@@ -107,7 +107,7 @@ internal class AddExistingWalletImportModel @Inject constructor(
 
     private fun setImportProgress(progress: Boolean) {
         uiState.update {
-            it.copy(importWalletProgress = progress)
+            it.copy(isImportWalletInProgress = progress)
         }
     }
 

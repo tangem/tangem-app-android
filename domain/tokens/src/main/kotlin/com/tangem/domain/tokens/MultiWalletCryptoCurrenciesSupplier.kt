@@ -14,8 +14,7 @@ import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer as Producer
  *
 [REDACTED_AUTHOR]
  */
-@Suppress("UnnecessaryAbstractClass")
-abstract class MultiWalletCryptoCurrenciesSupplier(
+open class MultiWalletCryptoCurrenciesSupplier(
     override val factory: FlowProducer.Factory<Producer.Params, Producer>,
     override val keyCreator: (Producer.Params) -> String,
 ) : FlowCachingSupplier<Producer, Producer.Params, Set<CryptoCurrency>>()

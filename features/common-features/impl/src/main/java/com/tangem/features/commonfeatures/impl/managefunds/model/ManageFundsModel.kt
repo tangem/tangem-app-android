@@ -5,7 +5,6 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.markets.action.CryptoCurrencyData
 import com.tangem.common.ui.markets.action.TokenActionsBSContentUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -15,6 +14,7 @@ import com.tangem.core.analytics.models.event.TransferAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -62,7 +62,7 @@ internal class ManageFundsModel @Inject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val appRouter: AppRouter,
+    private val router: Router,
     private val getJointOperationSlotUseCase: GetJointOperationSlotUseCase,
     private val messageSender: UiMessageSender,
     override val dispatchers: CoroutineDispatcherProvider,
@@ -154,7 +154,7 @@ internal class ManageFundsModel @Inject constructor(
     override fun onBottomActionClick(bottomAction: BottomAction) {
         val request = tokenActionsTrigger.value
         if (bottomAction == BottomAction.GoToToken && request != null) {
-            appRouter.push(
+            router.push(
                 AppRoute.CurrencyDetails(
                     userWalletId = request.userWallet.walletId,
                     currency = request.status.currency,

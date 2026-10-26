@@ -4,7 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.balance.BalanceContribution
-import com.tangem.domain.models.staking.BalanceItem
+import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.staking.BalanceType
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.StakingID
@@ -12,8 +12,7 @@ import com.tangem.domain.models.staking.YieldBalanceItem
 import com.tangem.domain.models.yield.supply.YieldSupplyContribution
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.test.core.ProvideTestModels
-import io.mockk.every
-import io.mockk.mockk
+import com.tangem.test.mock.staking.MockStaking
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -35,7 +34,7 @@ internal class StakingBalanceContributionExtTest {
 
     @ParameterizedTest
     @ProvideTestModels
-    fun stakingBalanceData(model: AccessorTestModel) {
+    fun `GIVEN contributions WHEN stakingBalanceData THEN returns staking Data or null`(model: AccessorTestModel) {
         // Act
         val actual = model.value.stakingBalanceData
 
@@ -74,7 +73,7 @@ internal class StakingBalanceContributionExtTest {
         fun `GIVEN only a yield contribution WHEN stakingSource THEN actual`() {
             // Arrange — yield rides the network status, so it must not register as staking staleness
             val staleYield = YieldSupplyContribution(
-                status = mockk<YieldSupplyStatus>(relaxed = true),
+                status = YIELD_SUPPLY_STATUS,
                 source = StatusSource.ONLY_CACHE,
             )
 
@@ -84,8 +83,7 @@ internal class StakingBalanceContributionExtTest {
 
         @Test
         fun `GIVEN a non-Data contribution WHEN stakingSource THEN actual`() {
-            // Arrange — Empty carries a source of its own, but the accessor narrows it away, as the factory does
-            // Act & Assert
+            // Act & Assert — Empty carries a source of its own, but the accessor narrows it away, as the factory does
             assertThat(value(contributions = listOf(EMPTY)).stakingSource).isEqualTo(StatusSource.ACTUAL)
         }
     }
@@ -142,7 +140,9 @@ internal class StakingBalanceContributionExtTest {
             yieldSupplyStatus = null,
             hasCurrentNetworkTransactions = false,
             pendingTransactions = emptySet(),
-            networkAddress = mockk(relaxed = true),
+            networkAddress = NetworkAddress.Single(
+                defaultAddress = NetworkAddress.Address(value = "0x1", type = NetworkAddress.Address.Type.Primary),
+            ),
             sources = CryptoCurrencyStatus.Sources(),
             contributions = contributions,
         )
@@ -152,21 +152,11 @@ internal class StakingBalanceContributionExtTest {
 
         val STAKING_ID = StakingID(integrationId = "integration", address = "0x1")
 
-        /**
-         * Real [StakingBalance.Data] instances, never mocks: `totalDeltaCryptoAmount()` is a member function, so
-         * MockK intercepts it and a relaxed mock returns a mocked `BigDecimal` — an assertion could pass while
-         * testing nothing. [com.tangem.domain.models.staking.BalanceItem] is a plain carrier and is safe to mock.
-         */
         val STAKE_KIT = StakingBalance.Data.StakeKit(
             stakingId = STAKING_ID,
             source = StatusSource.ACTUAL,
             balance = YieldBalanceItem(
-                items = listOf(
-                    mockk<BalanceItem>(relaxed = true) {
-                        every { amount } returns BigDecimal.ONE
-                        every { type } returns BalanceType.STAKED
-                    },
-                ),
+                items = listOf(MockStaking.balanceItem(type = BalanceType.STAKED, amount = BigDecimal.ONE)),
                 integrationId = "integration",
             ),
         )
@@ -177,8 +167,15 @@ internal class StakingBalanceContributionExtTest {
             accounts = emptyList(),
         )
 
+        val YIELD_SUPPLY_STATUS = YieldSupplyStatus(
+            isActive = true,
+            isInitialized = true,
+            isAllowedToSpend = true,
+            effectiveProtocolBalance = BigDecimal.ONE,
+        )
+
         val YIELD_SUPPLY = YieldSupplyContribution(
-            status = mockk<YieldSupplyStatus>(relaxed = true),
+            status = YIELD_SUPPLY_STATUS,
             source = StatusSource.ACTUAL,
         )
 

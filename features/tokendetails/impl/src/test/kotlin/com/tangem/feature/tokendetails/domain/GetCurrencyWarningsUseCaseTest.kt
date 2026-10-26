@@ -94,7 +94,7 @@ class GetCurrencyWarningsUseCaseTest {
         coEvery { currenciesRepository.getFeePaidCurrency(any(), any()) } returns FeePaidCurrency.Coin
         coEvery { currenciesRepository.isNetworkFeeZero(any(), any()) } returns false
         every { currencyChecksRepository.isNetworkSupportedForGaslessTx(any()) } returns false
-        coEvery { isTronGaslessSupportedUseCase.isTokenSupported(any(), any()) } returns false
+        coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns false
     }
 
     @AfterEach
@@ -305,7 +305,7 @@ class GetCurrencyWarningsUseCaseTest {
         runTest {
             // Arrange
             givenTokenWithEmptyCoin()
-            coEvery { isTronGaslessSupportedUseCase.isTokenSupported(any(), any()) } returns false
+            coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns false
 
             // Act
             val result = useCase.invoke(userWalletId, tokenStatus, derivationPath).first()
@@ -388,7 +388,7 @@ class GetCurrencyWarningsUseCaseTest {
 
     private fun givenGaslessSupportedTokenWithEmptyCoin() {
         givenTokenWithEmptyCoin()
-        coEvery { isTronGaslessSupportedUseCase.isTokenSupported(any(), any()) } returns true
+        coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
     }
 
     private fun coin(name: String = "Polkadot", symbol: String = "DOT"): CryptoCurrency.Coin {

@@ -31,7 +31,7 @@ internal class UpdateCountryItemsTransformer(
 
     private fun List<OnrampCountry>.toUiModels(): List<CountryItemState.WithContent> {
         return map { country ->
-            if (country.onrampAvailable) {
+            if (country.isOnrampAvailable) {
                 CountryItemState.WithContent.Content(
                     id = country.id,
                     flagUrl = country.image,

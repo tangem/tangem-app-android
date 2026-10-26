@@ -149,26 +149,26 @@ internal class InitializeWalletsTransformer(
         if (isSingleWalletWithToken) return persistentListOf()
 
         val firstButton = WalletManageButton.AddFunds(
-            enabled = false,
-            dimContent = false,
+            isEnabled = false,
+            shouldDimContent = false,
             onClick = {},
         )
 
-        val lastButton = WalletManageButton.Transfer(enabled = false, dimContent = false, onClick = {})
+        val lastButton = WalletManageButton.Transfer(isEnabled = false, shouldDimContent = false, onClick = {})
 
         return persistentListOf(
             firstButton,
-            WalletManageButton.Swap(enabled = false, dimContent = false, onClick = {}),
+            WalletManageButton.Swap(isEnabled = false, shouldDimContent = false, onClick = {}),
             lastButton,
         )
     }
 
     private fun createSingleWalletDisabledButtons(): PersistentList<WalletManageButton> {
         return persistentListOf(
-            WalletManageButton.Receive(enabled = false, dimContent = false, onClick = {}, onLongClick = null),
-            WalletManageButton.Send(enabled = false, dimContent = false, onClick = {}),
-            WalletManageButton.Buy(enabled = false, dimContent = false, onClick = {}),
-            WalletManageButton.Sell(enabled = false, dimContent = false, onClick = {}),
+            WalletManageButton.Receive(isEnabled = false, shouldDimContent = false, onClick = {}, onLongClick = null),
+            WalletManageButton.Send(isEnabled = false, shouldDimContent = false, onClick = {}),
+            WalletManageButton.Buy(isEnabled = false, shouldDimContent = false, onClick = {}),
+            WalletManageButton.Sell(isEnabled = false, shouldDimContent = false, onClick = {}),
         )
     }
 

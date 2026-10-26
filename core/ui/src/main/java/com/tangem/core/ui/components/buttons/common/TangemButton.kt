@@ -184,7 +184,7 @@ private inline fun RowScope.ButtonContentContainer(
 private val MinButtonContentSize: Dp
     @Composable
     @ReadOnlyComposable
-    get() = TangemTheme.dimens.size20
+    get() = 20.dp
 
 @Composable
 @ReadOnlyComposable

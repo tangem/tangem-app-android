@@ -49,12 +49,14 @@ data class JointAccount(
      * @property role     only the creator sends invites and activates the account
      * @property inviteId the invite this member redeemed to take the slot; `null` for the creator, who never had
      * one, and for data cached before the backend started reporting it
+     * @property isVerified the member confirmed the final composition; `false` until the backend reports it
      */
     data class Member(
         val name: String,
         val address: String,
         val role: Role,
         val inviteId: String? = null,
+        val isVerified: Boolean = false,
     )
 
     /** [UNKNOWN] is a backend value this build does not know. */

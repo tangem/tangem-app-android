@@ -25,6 +25,7 @@ import com.tangem.utils.logging.TangemLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
+import kotlin.time.Duration.Companion.seconds
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -74,7 +75,12 @@ internal class CredentialManagerGoogleIdTokenProvider @Inject constructor(
                 val activity = foregroundActivityProvider.foregroundActivity
                     ?: return@withContext GoogleIdTokenError.Unknown(NoForegroundActivityException()).left()
 
-                val response = credentialManager.getCredential(context = activity, request = request)
+                val response = awaitUnlessUiLost(activity.lifecycle, LOST_UI_RESULT_GRACE_PERIOD) {
+                    credentialManager.getCredential(context = activity, request = request)
+                } ?: run {
+                    logger.i("Google sign-in UI is lost, the sign-in is canceled")
+                    return@withContext GoogleIdTokenError.Canceled.left()
+                }
                 extractGoogleIdToken(response.credential)
                     .onLeft { logger.e("Google id token extraction failed: $it") }
             }
@@ -101,6 +107,7 @@ internal class CredentialManagerGoogleIdTokenProvider @Inject constructor(
 
     private companion object {
         const val TAG = "CredentialManagerGoogleIdTokenProvider"
+        val LOST_UI_RESULT_GRACE_PERIOD = 2.seconds
     }
 }
 

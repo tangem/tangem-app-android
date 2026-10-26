@@ -1,6 +1,8 @@
 package com.tangem.domain.transaction.usecase.gasless
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.blockchains.tron.TronTransactionExtras
+import com.tangem.blockchain.blockchains.tron.tokenmethods.TronApprovalTokenCallData
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
@@ -11,7 +13,12 @@ import com.tangem.domain.transaction.TronGaslessTransactionRepository
 import com.tangem.domain.transaction.error.GaslessServiceException
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.TronActivationRefusal
+import com.tangem.domain.transaction.models.GaslessProtocolData
+import com.tangem.domain.transaction.models.tron.TronGaslessApprove
+import com.tangem.domain.transaction.models.tron.TronGaslessApproveEstimateParams
 import com.tangem.domain.transaction.models.tron.TronGaslessQuote
+import com.tangem.domain.transaction.models.tron.TronGaslessSwap
+import com.tangem.domain.transaction.models.tron.TronGaslessSwapEstimateParams
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -19,6 +26,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -85,7 +93,7 @@ internal class GetTronGaslessFeeUseCaseTest {
         // Assert
         val extended = result.getOrNull()
         assertThat(extended).isNotNull()
-        assertThat(extended!!.tronGaslessQuote).isEqualTo(quote)
+        assertThat(extended!!.gaslessProtocolData).isEqualTo(GaslessProtocolData.Tron(quote = quote))
         assertThat(extended.feeTokenId).isEqualTo(usdtToken.id)
         assertThat(extended.transactionFee.normal.amount.value).isEquivalentAccordingToCompareTo(BigDecimal("2.75"))
         assertThat(extended.transactionFee.normal.amount.currencySymbol).isEqualTo(usdtToken.symbol)
@@ -162,4 +170,121 @@ internal class GetTronGaslessFeeUseCaseTest {
 
     private fun serviceError(refusal: TronActivationRefusal?, httpCode: Int = 422) =
         GaslessServiceException(httpCode = httpCode, message = "error", tronActivationRefusal = refusal)
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ForSwap {
+
+        private val swap = TronGaslessSwap(
+            fromAddress = "TFrom",
+            tokenContract = usdtContract,
+            amount = BigInteger("50000000"),
+            routerAddress = "TRouter",
+            callDataHex = "4c279d6b",
+            spenderAddress = "TRouter",
+        )
+
+        @Test
+        fun `GIVEN swap estimate succeeds WHEN forSwap THEN fee carries the swap quote`() = runTest {
+            // Arrange
+            val swapQuote = quote.copy(quotedToAddress = "TRouter", quotedSwap = swap)
+            coEvery { repository.estimateSwap(any()) } returns swapQuote
+
+            // Act
+            val result = useCase.forSwap(userWalletId = userWalletId, swap = swap, feeToken = usdtToken)
+
+            // Assert
+            val extended = result.getOrNull()
+            assertThat(extended?.gaslessProtocolData).isEqualTo(GaslessProtocolData.Tron(quote = swapQuote))
+            assertThat(extended?.transactionFee?.normal?.amount?.value)
+                .isEquivalentAccordingToCompareTo(BigDecimal("2.75"))
+            coVerify(exactly = 1) {
+                repository.estimateSwap(
+                    TronGaslessSwapEstimateParams(
+                        userWalletId = userWalletId,
+                        swap = swap,
+                        feeTokenContract = usdtContract,
+                    ),
+                )
+            }
+            coVerify(exactly = 0) { repository.estimate(any()) }
+        }
+
+        @Test
+        fun `GIVEN swap estimate fails WHEN forSwap THEN gasless data error`() = runTest {
+            // Arrange
+            val failure = IllegalStateException("TRON_SWAP_NOT_ALLOWED")
+            coEvery { repository.estimateSwap(any()) } throws failure
+
+            // Act
+            val result = useCase.forSwap(userWalletId = userWalletId, swap = swap, feeToken = usdtToken)
+
+            // Assert
+            assertThat(result.leftOrNull()).isEqualTo(GetFeeError.GaslessError.DataError(failure))
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ForApprove {
+
+        private val usdt = Token(symbol = "USDT", contractAddress = usdtContract, decimals = 6)
+
+        private fun approval(approvedValue: BigDecimal?) = TransactionData.Uncompiled(
+            amount = Amount(token = usdt, value = BigDecimal.ZERO),
+            fee = null,
+            sourceAddress = "TFrom",
+            destinationAddress = usdtContract,
+            extras = TronTransactionExtras(
+                callData = TronApprovalTokenCallData(
+                    spenderAddress = "TRouter",
+                    amount = approvedValue?.let { Amount(token = usdt, value = it) },
+                ),
+            ),
+        )
+
+        @Test
+        fun `GIVEN exact approval WHEN invoke THEN quotes the approval instead of a transfer`() = runTest {
+            // Arrange
+            val approve = TronGaslessApprove(
+                fromAddress = "TFrom",
+                tokenContract = usdtContract,
+                amount = BigInteger("3000000"),
+                spenderAddress = "TRouter",
+            )
+            val approveQuote = quote.copy(quotedApprove = approve)
+            coEvery { repository.estimateApprove(any()) } returns approveQuote
+
+            // Act
+            val result = useCase(
+                userWalletId = userWalletId,
+                transactionData = approval(approvedValue = BigDecimal("3")),
+                feeToken = usdtToken,
+            )
+
+            // Assert
+            assertThat(
+                result.getOrNull()?.gaslessProtocolData,
+            ).isEqualTo(GaslessProtocolData.Tron(quote = approveQuote))
+            coVerify(exactly = 1) {
+                repository.estimateApprove(
+                    TronGaslessApproveEstimateParams(
+                        userWalletId = userWalletId,
+                        approve = approve,
+                        feeTokenContract = usdtContract,
+                    ),
+                )
+            }
+            coVerify(exactly = 0) { repository.estimate(any()) }
+        }
+
+        @Test
+        fun `GIVEN unlimited approval WHEN tronGaslessApproveOrNull THEN null`() {
+            // Act
+            val actual = approval(approvedValue = null).tronGaslessApproveOrNull()
+
+            // Assert
+            assertThat(actual).isNull()
+        }
+    }
 }

@@ -2,7 +2,6 @@ package com.tangem.feature.wallet.presentation.wallet.ui
 
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -10,7 +9,6 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListScope
@@ -19,17 +17,12 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusState
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
@@ -43,18 +36,14 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.tangem.core.ui.components.background.northernlights.NorthernLightsBackground
-import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheetDraggableHeader
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
 import com.tangem.core.ui.components.containers.pullToRefresh.getPullToRefreshIndicatorOffset
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.rememberIsKeyboardVisible
-import com.tangem.core.ui.components.sheetscaffold.*
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingTopBar
 import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
@@ -63,7 +52,6 @@ import com.tangem.core.ui.ds2.shtorka.TangemShtorka
 import com.tangem.core.ui.ds2.shtorka.TangemShtorkaState
 import com.tangem.core.ui.ds2.shtorka.rememberTangemShtorkaState
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.softLayerShadow
 import com.tangem.core.ui.res.*
 import com.tangem.core.ui.utils.TangemSharedTransitionLayout
 import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData
@@ -111,7 +99,6 @@ internal fun WalletScreen(
     collectiblesComponent: CollectiblesWalletBlockComponent,
     jointAccountComponent: JointAccountMainBlockComponent,
     modifier: Modifier = Modifier,
-    isNewShtorkaEnabled: Boolean = false,
     @RemoveWithToggle("TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED")
     isHideMarketingWhileSystemEnabled: Boolean = false,
     isShtorkaBlurEnabled: () -> Boolean = { true },
@@ -119,8 +106,6 @@ internal fun WalletScreen(
     promoBannersBlockComponent: PromoBannersBlockComponent? = null,
     shtorkaHeaderContent: @Composable (sheetExpansion: State<ShtorkaExpansion>, onExpandSheet: () -> Unit) -> Unit,
     shtorkaContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
-    legacyBottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
-    bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
 ) {
     // It means that screen is still initializing
@@ -169,14 +154,11 @@ internal fun WalletScreen(
         collectiblesComponent = collectiblesComponent,
         jointAccountComponent = jointAccountComponent,
         behavior = behavior,
-        isNewShtorkaEnabled = isNewShtorkaEnabled,
         isHideMarketingWhileSystemEnabled = isHideMarketingWhileSystemEnabled,
         isShtorkaBlurEnabled = isShtorkaBlurEnabled,
         isShtorkaPartialExpansionSupported = isShtorkaPartialExpansionSupported,
         shtorkaHeaderContent = shtorkaHeaderContent,
         shtorkaContent = shtorkaContent,
-        legacyBottomSheetContent = legacyBottomSheetContent,
-        bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
         onBottomSheetStateChange = onBottomSheetStateChange,
         modifier = modifier,
         listStates = remember(listStates) { listStates.toImmutableMap() },
@@ -208,17 +190,14 @@ private fun WalletContent(
     behavior: TangemCollapsingAppBarBehavior,
     listStates: ImmutableMap<Int, LazyListState>,
     modifier: Modifier = Modifier,
-    isNewShtorkaEnabled: Boolean = false,
     @RemoveWithToggle("TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED")
     isHideMarketingWhileSystemEnabled: Boolean = false,
     isShtorkaBlurEnabled: () -> Boolean = { true },
     isShtorkaPartialExpansionSupported: Boolean = false,
     promoBannersBlockComponent: PromoBannersBlockComponent? = null,
-    bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     shtorkaHeaderContent: @Composable (sheetExpansion: State<ShtorkaExpansion>, onExpandSheet: () -> Unit) -> Unit,
     shtorkaContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
-    legacyBottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
 ) {
     var walletBalance by remember { mutableStateOf<TextReference?>(TextReference.EMPTY) }
     var pullToRefreshConfig by remember {
@@ -228,17 +207,14 @@ private fun WalletContent(
     }
     var subtitleBottom by remember { mutableStateOf(0.dp) }
 
-    BaseScaffoldWithMarkets(
+    ShtorkaScaffoldWithMarkets(
         modifier = modifier,
         state = state,
-        isNewShtorkaEnabled = isNewShtorkaEnabled,
-        isShtorkaBlurEnabled = isShtorkaBlurEnabled,
-        isShtorkaPartialExpansionSupported = isShtorkaPartialExpansionSupported,
+        isBlurEnabled = isShtorkaBlurEnabled,
+        isPartialExpansionSupported = isShtorkaPartialExpansionSupported,
         shtorkaHeaderContent = shtorkaHeaderContent,
-        bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
         onBottomSheetStateChange = onBottomSheetStateChange,
-        shtorkaContent = shtorkaContent,
-        legacyBottomSheetContent = legacyBottomSheetContent,
+        bottomSheetContent = shtorkaContent,
         appBarContent = {
             WalletTopBar(
                 topBarConfig = state.topBarConfig,
@@ -256,7 +232,7 @@ private fun WalletContent(
             bottom = paddingValues.calculateBottomPadding() +
                 marketsHintHeight +
                 collapsedBodyOverhang +
-                TangemTheme.dimens2.x2,
+                8.dp,
         )
 
         val selectedWalletIndex by rememberUpdatedState(state.selectedWalletIndex)
@@ -452,7 +428,7 @@ private fun WalletContent(
                     .padding(bottom = 8.dp)
                     .padding(horizontal = 12.dp)
                     .fillMaxWidth(),
-                isVisible = state.showMarketsOnboarding,
+                isVisible = state.shouldShowMarketsOnboarding,
                 availableHeight = maxHeight,
                 sheetTopInset = 12.dp,
                 sheetTopOffset = remember(sheet) { sheet::topOffset },
@@ -461,150 +437,6 @@ private fun WalletContent(
                     { organizeButtonBounds[walletsPagerState.currentPage] }
                 },
             )
-        }
-    }
-}
-
-/** Hosts the wallet content under the feed sheet — the legacy bottom sheet or the DS3 shtorka. */
-@Suppress("LongParameterList")
-@Composable
-private fun BaseScaffoldWithMarkets(
-    state: WalletScreenState,
-    isNewShtorkaEnabled: Boolean,
-    isShtorkaPartialExpansionSupported: Boolean,
-    bottomSheetHeaderHeightProvider: () -> Dp,
-    onBottomSheetStateChange: (BottomSheetState) -> Unit,
-    modifier: Modifier = Modifier,
-    isShtorkaBlurEnabled: () -> Boolean = { true },
-    shtorkaHeaderContent: @Composable (sheetExpansion: State<ShtorkaExpansion>, onExpandSheet: () -> Unit) -> Unit,
-    appBarContent: @Composable () -> Unit,
-    shtorkaContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
-    legacyBottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
-    content: @Composable (PaddingValues, WalletSheetHandle) -> Unit,
-) {
-    if (isNewShtorkaEnabled) {
-        ShtorkaScaffoldWithMarkets(
-            state = state,
-            isBlurEnabled = isShtorkaBlurEnabled,
-            isPartialExpansionSupported = isShtorkaPartialExpansionSupported,
-            shtorkaHeaderContent = shtorkaHeaderContent,
-            onBottomSheetStateChange = onBottomSheetStateChange,
-            appBarContent = appBarContent,
-            bottomSheetContent = shtorkaContent,
-            modifier = modifier,
-            content = content,
-        )
-    } else {
-        LegacySheetScaffoldWithMarkets(
-            state = state,
-            bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
-            onBottomSheetStateChange = onBottomSheetStateChange,
-            appBarContent = appBarContent,
-            bottomSheetContent = legacyBottomSheetContent,
-            modifier = modifier,
-            content = content,
-        )
-    }
-}
-
-@Suppress("LongParameterList", "LongMethod")
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private inline fun LegacySheetScaffoldWithMarkets(
-    state: WalletScreenState,
-    bottomSheetHeaderHeightProvider: () -> Dp,
-    modifier: Modifier = Modifier,
-    noinline onBottomSheetStateChange: (BottomSheetState) -> Unit,
-    crossinline appBarContent: @Composable () -> Unit,
-    crossinline bottomSheetContent: @Composable (onExpandSheet: () -> Unit) -> Unit,
-    crossinline content: @Composable (PaddingValues, WalletSheetHandle) -> Unit,
-) {
-    val density = LocalDensity.current
-    val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(density = this).toDp() }
-    val peekHeight = bottomSheetHeaderHeightProvider() + 12.dp + bottomBarHeight
-
-    val coroutineScope = rememberCoroutineScope()
-
-    val bottomSheetState = rememberTangemStandardBottomSheetState()
-    val scaffoldState = rememberTangemBottomSheetScaffoldState(bottomSheetState = bottomSheetState)
-    val sheetHandle = remember(bottomSheetState) { LegacyWalletSheetHandle(bottomSheetState) }
-
-    val expandedBackground = TangemTheme.colors3.bg.primary
-    val collapsedBackground = TangemTheme.colors3.bg.secondary
-    val background by animateColorAsState(
-        targetValue = if (bottomSheetState.targetValue == TangemSheetValue.Expanded) {
-            expandedBackground
-        } else {
-            collapsedBackground
-        },
-        label = "bottomSheetBackground",
-    )
-
-    CompositionLocalProvider(
-        LocalMainBottomSheetColor provides remember { mutableStateOf(background) }.apply { value = background },
-    ) {
-        val backgroundColor by LocalMainBottomSheetColor.current
-        var isSearchFieldFocused by remember { mutableStateOf(false) }
-        val isNavBarVisible = remember { mutableStateOf(true) }
-
-        BottomSheetStateEffects(
-            bottomSheetState = bottomSheetState,
-            onBottomSheetStateChange = onBottomSheetStateChange,
-            navigationBarVisible = isNavBarVisible,
-            isSearchFieldFocused = isSearchFieldFocused,
-        )
-
-        Box(modifier = modifier) {
-            TangemBottomSheetScaffold(
-                containerColor = Color.Unspecified,
-                scaffoldState = scaffoldState,
-                sheetPeekHeight = peekHeight,
-                bottomSheet = {
-                    BottomSheet(
-                        bottomSheetState = bottomSheetState,
-                        backgroundColor = backgroundColor,
-                        peekHeight = peekHeight,
-                        onFocusChange = { focusState ->
-                            isSearchFieldFocused = focusState.isFocused
-                        },
-                    ) {
-                        bottomSheetContent {
-                            coroutineScope.launch { bottomSheetState.expand() }
-                        }
-                    }
-                },
-                content = { paddingValues ->
-                    content(paddingValues, sheetHandle)
-                    appBarContent()
-
-                    BottomSheetScrim(
-                        color = Color.Black.copy(alpha = .40f),
-                        visible = bottomSheetState.targetValue == TangemSheetValue.Expanded,
-                        onDismissRequest = {
-                            coroutineScope.launch { bottomSheetState.partialExpand() }
-                        },
-                    )
-                },
-            )
-
-            AnimatedVisibility(
-                modifier = Modifier.align(Alignment.BottomCenter),
-                visible = isNavBarVisible.value,
-            ) {
-                Box(
-                    Modifier
-                        .align(Alignment.BottomCenter)
-                        .background(backgroundColor)
-                        .height(bottomBarHeight)
-                        .fillMaxWidth(),
-                )
-            }
-        }
-
-        LaunchedEffect(state.showMarketsOnboarding, bottomSheetState.targetValue) {
-            if (state.showMarketsOnboarding && bottomSheetState.targetValue == TangemSheetValue.Expanded) {
-                state.onDismissMarketsTooltip()
-            }
         }
     }
 }
@@ -729,8 +561,8 @@ private fun ShtorkaScaffoldWithMarkets(
             }
         }
 
-        LaunchedEffect(state.showMarketsOnboarding, isExpanded) {
-            if (state.showMarketsOnboarding && isExpanded) {
+        LaunchedEffect(state.shouldShowMarketsOnboarding, isExpanded) {
+            if (state.shouldShowMarketsOnboarding && isExpanded) {
                 state.onDismissMarketsTooltip()
             }
         }
@@ -769,76 +601,6 @@ private fun ShtorkaStateEffects(
 }
 
 @Composable
-private fun BottomSheet(
-    bottomSheetState: TangemSheetState,
-    backgroundColor: Color,
-    peekHeight: Dp,
-    onFocusChange: (FocusState) -> Unit,
-    bottomSheetContent: @Composable () -> Unit,
-) {
-    val isKeyboardVisible by rememberIsKeyboardVisible()
-    val coroutineScope = rememberCoroutineScope()
-    val density = LocalDensity.current
-    val statusBarHeight = with(density) { WindowInsets.statusBars.getTop(density = this).toDp() }
-
-    val maxHeight = LocalWindowSize.current.height
-    val shape = RoundedCornerShape(
-        topStart = 32.dp,
-        topEnd = 32.dp,
-    )
-    CustomBottomSheet(
-        state = bottomSheetState,
-        peekHeight = peekHeight,
-        content = {
-            // hide bottom sheet when back pressed
-            BackHandler(
-                isKeyboardVisible.not() &&
-                    bottomSheetState.currentValue == TangemSheetValue.Expanded,
-            ) {
-                coroutineScope.launch { bottomSheetState.partialExpand() }
-            }
-
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    // expand bottom sheet when clicked on the drag handle
-                    .clickable(
-                        enabled = bottomSheetState.currentValue == TangemSheetValue.PartiallyExpanded,
-                        indication = null,
-                        interactionSource = null,
-                    ) {
-                        coroutineScope.launch { bottomSheetState.expand() }
-                    }
-                    .sizeIn(maxHeight = maxHeight - statusBarHeight),
-            ) {
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        TangemBottomSheetDraggableHeader()
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .softLayerShadow(
-                                    radius = 8.dp,
-                                    spread = 0.dp,
-                                    color = Color.Black.copy(alpha = if (LocalIsInDarkTheme.current) .24f else .12f),
-                                    shape = shape,
-                                    offset = DpOffset(x = 0.dp, y = (-6).dp),
-                                    isAlphaContentClip = true,
-                                )
-                                .clip(shape)
-                                .background(backgroundColor)
-                                .onFocusChanged(onFocusChange),
-                        ) {
-                            bottomSheetContent()
-                        }
-                    }
-                }
-            }
-        },
-    )
-}
-
-@Composable
 private fun BottomSheetScrim(color: Color, visible: Boolean, onDismissRequest: () -> Unit) {
     val alpha by animateFloatAsState(
         targetValue = if (visible) 1f else 0f,
@@ -862,58 +624,6 @@ private fun BottomSheetScrim(color: Color, visible: Boolean, onDismissRequest: (
             .then(dismissSheet),
     ) {
         drawRect(color = color, alpha = alpha)
-    }
-}
-
-@Suppress("CyclomaticComplexMethod", "MagicNumber", "LongMethod")
-@Composable
-private fun BottomSheetStateEffects(
-    bottomSheetState: TangemSheetState,
-    navigationBarVisible: MutableState<Boolean>,
-    onBottomSheetStateChange: (BottomSheetState) -> Unit,
-    isSearchFieldFocused: Boolean,
-) {
-    LaunchedEffect(bottomSheetState.targetValue) {
-        when (bottomSheetState.targetValue) {
-            TangemSheetValue.Hidden,
-            TangemSheetValue.Expanded,
-            -> navigationBarVisible.value = false
-            TangemSheetValue.PartiallyExpanded,
-            -> navigationBarVisible.value = true
-        }
-    }
-
-    // expand bottom sheet when keyboard appears
-    val isKeyboardVisible by rememberIsKeyboardVisible()
-
-    LaunchedEffect(isKeyboardVisible) {
-        if (isKeyboardVisible && isSearchFieldFocused) {
-            bottomSheetState.expand()
-        }
-    }
-
-    val keyboardController = LocalSoftwareKeyboardController.current
-    // hide keyboard when bottom sheet is about to be hidden
-    LaunchedEffect(Unit) {
-        snapshotFlow {
-            bottomSheetState.currentValue == TangemSheetValue.Expanded &&
-                bottomSheetState.targetValue == TangemSheetValue.PartiallyExpanded
-        }.collect { sheetHasBeenHidden ->
-            if (sheetHasBeenHidden) {
-                keyboardController?.hide()
-            }
-        }
-    }
-
-    val isSheetHidden = bottomSheetState.targetValue == TangemSheetValue.PartiallyExpanded
-    LaunchedEffect(isSheetHidden) {
-        onBottomSheetStateChange(
-            if (isSheetHidden) {
-                BottomSheetState.COLLAPSED
-            } else {
-                BottomSheetState.EXPANDED
-            },
-        )
     }
 }
 
@@ -992,10 +702,6 @@ private fun WalletScreen2_Preview(@PreviewParameter(WalletScreen2PreviewProvider
             },
             shtorkaHeaderContent = { _, _ -> },
             shtorkaContent = {},
-            legacyBottomSheetContent = {
-                Text("Markets Content")
-            },
-            bottomSheetHeaderHeightProvider = { 10.dp },
             onBottomSheetStateChange = {},
         )
     }
