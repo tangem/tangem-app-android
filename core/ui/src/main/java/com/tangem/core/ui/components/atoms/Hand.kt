@@ -29,7 +29,7 @@ fun Hand(modifier: Modifier = Modifier) {
                 .width(32.dp)
                 .height(4.dp)
                 .background(
-                    color = TangemTheme.colors.icon.inactive,
+                    color = TangemTheme.colors3.icon.tertiary,
                     shape = TangemTheme.shapes.roundedCornersSmall,
                 ),
         )
@@ -46,7 +46,7 @@ val handComposableComponentHeight: Dp
 private fun HandSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(TangemTheme.colors.background.primary)
+            .background(TangemTheme.colors3.bg.primary)
             .padding(12.dp),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {

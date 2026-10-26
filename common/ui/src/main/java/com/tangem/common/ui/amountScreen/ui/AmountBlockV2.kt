@@ -101,7 +101,7 @@ private fun AmountBlockV2(
     Column(
         modifier = modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .conditional(onClick != null) {
                 clickable(
                     enabled = !isClickDisabled && !isEditingDisabled,
@@ -116,7 +116,7 @@ private fun AmountBlockV2(
             Text(
                 text = balance.resolveReference(),
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
         Row(
@@ -133,7 +133,7 @@ private fun AmountBlockV2(
                 Text(
                     text = firstAmount,
                     style = TangemTheme.typography.h2,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                     maxLines = 1,
                     autoSize = TextAutoSize.StepBased(maxFontSize = TangemTheme.typography.h2.fontSize),
                     modifier = Modifier.testTag(BaseAmountBlockTestTags.PRIMARY_AMOUNT),
@@ -144,7 +144,7 @@ private fun AmountBlockV2(
                     Text(
                         text = secondAmount,
                         style = TangemTheme.typography.body2,
-                        color = TangemTheme.colors.text.tertiary,
+                        color = TangemTheme.colors3.text.secondary,
                         maxLines = 1,
                         autoSize = TextAutoSize.StepBased(maxFontSize = TangemTheme.typography.body2.fontSize),
                         modifier = Modifier.testTag(BaseAmountBlockTestTags.SECONDARY_AMOUNT),
@@ -164,7 +164,7 @@ private fun AmountBlockV2(
                 Text(
                     text = currencyTitle,
                     style = TangemTheme.typography.subtitle2,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                 )
             }
         }

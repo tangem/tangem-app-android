@@ -29,7 +29,7 @@ fun TangemSwitch(
     modifier: Modifier = Modifier,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     checkedColor: Color = TangemTheme.colors.control.checked,
-    uncheckedColor: Color = TangemTheme.colors.icon.informative,
+    uncheckedColor: Color = TangemTheme.colors3.icon.secondary,
     size: Dp = 48.dp,
     checked: Boolean = false,
     enabled: Boolean = true,

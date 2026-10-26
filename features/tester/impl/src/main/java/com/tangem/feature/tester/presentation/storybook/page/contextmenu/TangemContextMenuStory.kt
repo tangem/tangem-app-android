@@ -29,7 +29,7 @@ internal fun TangemContextMenuStory(state: TangemContextMenuStoryState, modifier
         modifier = modifier
             .statusBarsPadding()
             .fillMaxSize()
-            .background(TangemTheme.colors2.surface.level1)
+            .background(TangemTheme.colors3.bg.primary)
             .hazeSourceTangem(state = hazeState, zIndex = -1f),
     ) {
         item("context_menu") {
@@ -43,7 +43,7 @@ internal fun TangemContextMenuStory(state: TangemContextMenuStoryState, modifier
                 Text(
                     text = "TangemContextMenu",
                     style = TangemTheme.typography2.headingSemibold17,
-                    color = TangemTheme.colors2.text.neutral.primary,
+                    color = TangemTheme.colors3.text.primary,
                 )
 
                 Box {
@@ -65,7 +65,7 @@ internal fun TangemContextMenuStory(state: TangemContextMenuStoryState, modifier
                         )
                         HorizontalDivider(
                             thickness = 0.5.dp,
-                            color = TangemTheme.colors2.border.neutral.quaternary,
+                            color = TangemTheme.colors3.border.secondary,
                         )
                         TangemContextMenuCheckboxItem(
                             title = TextReference.Str("Group tokens"),

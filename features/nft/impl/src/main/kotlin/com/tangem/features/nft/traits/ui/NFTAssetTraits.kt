@@ -18,7 +18,7 @@ internal fun NFTAssetTraits(state: NFTAssetTraitsUM, modifier: Modifier = Modifi
 
     Column(
         modifier = modifier
-            .background(TangemTheme.colors.background.secondary),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         TangemTopAppBar(
             modifier = Modifier,
