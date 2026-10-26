@@ -6,6 +6,8 @@ import com.tangem.common.routing.deeplink.DeepLinkHandler
 import com.tangem.common.routing.deeplink.DeepLinkRequest
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.data.card.sdk.CardSdkProvider
+import com.tangem.domain.marketing.MarketingFeatureToggles
+import com.tangem.domain.marketing.MarketingUidBindingRepository
 import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
 import com.tangem.feature.usedesk.api.UseDeskFeatureToggles
 import com.tangem.feature.usedesk.api.deeplink.SupportDeepLinkHandler
@@ -37,6 +39,9 @@ import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.features.wallet.deeplink.PromoDeeplinkHandler
 import com.tangem.features.wallet.deeplink.WalletDeepLinkHandler
 import com.tangem.features.walletconnect.components.deeplink.WalletConnectDeepLinkHandler
+import com.tangem.test.core.TestAppCoroutineScope
+import io.mockk.clearMocks
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -177,6 +182,8 @@ internal class DeepLinkFactoryTest {
     private val deepLinkFeatureToggles = mockk<DeepLinkFeatureToggles> {
         every { isHandlerRegistryEnabled } returns false
     }
+    private val marketingFeatureToggles = mockk<MarketingFeatureToggles>()
+    private val marketingUidBindingRepository = mockk<MarketingUidBindingRepository>(relaxed = true)
     private val registeredWalletHandler = mockk<DeepLinkHandler>(relaxed = true) {
         every { isEnabled } returns true
         every { isOpenableFromPush } returns true
@@ -235,6 +242,9 @@ internal class DeepLinkFactoryTest {
         jointAccountInviteDeepLink = jointAccountInviteDeepLinkFactory,
         urlOpener = urlOpener,
         deepLinkFeatureToggles = deepLinkFeatureToggles,
+        marketingFeatureToggles = marketingFeatureToggles,
+        marketingUidBindingRepository = marketingUidBindingRepository,
+        appCoroutineScope = TestAppCoroutineScope(),
         deepLinkHandlers = mapOf(
             "tangem://main" to registeredWalletHandler,
             "https://tangem.com/joint-account/join" to registeredJointAccountInviteHandler,
@@ -259,6 +269,8 @@ internal class DeepLinkFactoryTest {
         every { mockedUri.fragment } returns null // No fragment in this URI
         every { mockedUri.userInfo } returns null
 
+        clearMocks(marketingUidBindingRepository)
+        every { marketingFeatureToggles.isUidBindingEnabled } returns true
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -1188,6 +1200,59 @@ internal class DeepLinkFactoryTest {
         val isHandled: Boolean,
     )
 
+    @Test
+    fun `GIVEN link to a known target WHEN bindMarketingUid THEN the first non-empty uid is bound`() {
+        // Arrange
+        val uri = marketingUidUri(host = "main", uids = listOf("", "spring-campaign", "other"))
+
+        // Act
+        deepLinkFactory.bindMarketingUid(uri)
+
+        // Assert
+        coVerify(exactly = 1) { marketingUidBindingRepository.bind("spring-campaign") }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideNotBoundMarketingUidModels")
+    fun `GIVEN link without a bindable uid WHEN bindMarketingUid THEN nothing is bound`(
+        model: NotBoundMarketingUidModel,
+    ) {
+        // Arrange
+        every { marketingFeatureToggles.isUidBindingEnabled } returns model.isToggleOn
+        val uri = marketingUidUri(scheme = model.scheme, host = model.host, uids = model.uids)
+
+        // Act
+        deepLinkFactory.bindMarketingUid(uri)
+
+        // Assert
+        coVerify(exactly = 0) { marketingUidBindingRepository.bind(any()) }
+    }
+
+    private fun marketingUidUri(scheme: String = "tangem", host: String?, uids: List<String>): Uri {
+        val isOpaque = host == null
+        return mockk(relaxed = true) {
+            every { this@mockk.scheme } returns scheme
+            every { this@mockk.host } returns host
+            every { pathSegments } returns emptyList()
+            every { this@mockk.isOpaque } returns isOpaque
+            if (isOpaque) {
+                every { getQueryParameters(any()) } throws UnsupportedOperationException()
+            } else {
+                every { getQueryParameters("uid") } returns uids
+            }
+        }
+    }
+
+    data class NotBoundMarketingUidModel(
+        val name: String,
+        val scheme: String = "tangem",
+        val host: String? = "main",
+        val uids: List<String> = listOf("spring-campaign"),
+        val isToggleOn: Boolean = true,
+    ) {
+        override fun toString(): String = name
+    }
+
     data class WebFallbackModel(
         val scheme: String,
         val host: String,
@@ -1289,6 +1354,15 @@ internal class DeepLinkFactoryTest {
                 source = DeeplinkSource.External,
                 isHandled = false,
             ),
+        )
+
+        @JvmStatic
+        fun provideNotBoundMarketingUidModels(): List<NotBoundMarketingUidModel> = listOf(
+            NotBoundMarketingUidModel(name = "toggle off", isToggleOn = false),
+            NotBoundMarketingUidModel(name = "no uid", uids = emptyList()),
+            NotBoundMarketingUidModel(name = "empty uid", uids = listOf("")),
+            NotBoundMarketingUidModel(name = "unknown target", host = "not_a_route"),
+            NotBoundMarketingUidModel(name = "opaque wc link", scheme = "wc", host = null),
         )
 
         @JvmStatic
