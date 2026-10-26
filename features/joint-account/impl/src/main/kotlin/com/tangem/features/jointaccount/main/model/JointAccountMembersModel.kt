@@ -16,8 +16,10 @@ import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
+import com.tangem.domain.jointaccount.model.JointAccountInviteIssueError
 import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
+import com.tangem.domain.jointaccount.usecase.IssueJointAccountInviteUseCase
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
@@ -70,6 +72,7 @@ internal class JointAccountMembersModel @Inject constructor(
     private val jointAccountListFetcher: SingleJointAccountListFetcher,
     private val pollingCoordinator: JointAccountPollingCoordinator,
     private val singleAccountSupplier: SingleAccountSupplier,
+    private val issueJointAccountInviteUseCase: IssueJointAccountInviteUseCase,
     private val ownerAddressResolver: JointOwnerAddressResolver,
     private val stateController: JointAccountMembersStateController,
     private val inviteSharing: JointAccountInviteSharing,
@@ -89,6 +92,9 @@ internal class JointAccountMembersModel @Inject constructor(
 
     private val isResumed = MutableStateFlow(false)
 
+    /** One invite is issued at a time */
+    private val issuingSlot = MutableStateFlow<Int?>(null)
+
     private val resolvedAccountFlow: Flow<JointAccount?> = compromiseWatcher.verified(
         userWalletId = params.userWalletId,
         accounts = jointAccountListSupplier(userWalletId = params.userWalletId)
@@ -101,6 +107,7 @@ internal class JointAccountMembersModel @Inject constructor(
 
     private val converterCallbacks = JointAccountToMembersUMConverter.Callbacks(
         onMemberInfoClick = ::onMemberInfoClick,
+        onInviteClick = ::onInviteClick,
         onConfirmAddressClick = ::onConfirmAddressClick,
         onApprovalsInfoClick = ::onApprovalsInfoClick,
         onCloseClick = ::onCloseClick,
@@ -129,13 +136,15 @@ internal class JointAccountMembersModel @Inject constructor(
 
                 combine(
                     flow = ownJointAccountFlow(cryptoAccountId = account.cryptoAccountId),
-                    flow2 = expiryTicks(account = account),
-                ) { ownAccount, _ ->
+                    flow2 = issuingSlot,
+                    flow3 = expiryTicks(account = account),
+                ) { ownAccount, issuingSlot, _ ->
                     ResolvedAccount(
                         account = account,
                         ownAddress = ownAccount?.ownAddress,
                         name = ownAccount?.name,
                         icon = ownAccount?.icon,
+                        issuingSlot = issuingSlot,
                     )
                 }
             }
@@ -160,6 +169,7 @@ internal class JointAccountMembersModel @Inject constructor(
             accountName = name,
             accountIcon = icon,
             nowMillis = currentTimeProvider.nowMillis(),
+            issuingSlot = issuingSlot,
         )
     }
 
@@ -265,6 +275,38 @@ internal class JointAccountMembersModel @Inject constructor(
         )
     }
 
+    /** A live invite is reissued too: the backend retires the old code. A refused slot only redraws from the list */
+    private fun onInviteClick(cryptoAccountId: String, slot: Int, accountName: TextReference) {
+        if (!issuingSlot.compareAndSet(expect = null, update = slot)) return
+
+        modelScope.launch {
+            try {
+                issueJointAccountInviteUseCase(
+                    userWalletId = params.userWalletId,
+                    cryptoAccountId = cryptoAccountId,
+                    slot = slot,
+                )
+                    .onRight { invite ->
+                        bottomSheetNavigation.activate(
+                            JointAccountMembersSheetConfig.InviteMember(
+                                message = inviteSharing.message(inviteId = invite.id, accountName = accountName),
+                            ),
+                        )
+                    }
+                    .onLeft { error ->
+                        TangemLogger.e("Failed to issue the invite of slot $slot", error.cause)
+                        if (error is JointAccountInviteIssueError.Failed) {
+                            uiMessageSender.send(
+                                SnackbarMessage(message = resourceReference(CoreUiR.string.common_unknown_error)),
+                            )
+                        }
+                    }
+            } finally {
+                issuingSlot.value = null
+            }
+        }
+    }
+
     private fun onConfirmAddressClick(cryptoAccountId: String) {
         router.push(JointAccountMembersRoute.ConfirmAddress(cryptoAccountId = cryptoAccountId))
     }
@@ -286,6 +328,7 @@ internal class JointAccountMembersModel @Inject constructor(
         val ownAddress: String?,
         val name: AccountName?,
         val icon: CryptoPortfolioIcon?,
+        val issuingSlot: Int?,
     )
 
     private data class OwnJointAccount(

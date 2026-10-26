@@ -5,8 +5,10 @@ import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountConfirmationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationResult
+import com.tangem.domain.jointaccount.model.JointAccountInviteIssueError
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
+import com.tangem.domain.jointaccount.model.JointAccountIssuedInvite
 import com.tangem.domain.jointaccount.model.JointAccountJoinPayload
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
@@ -95,6 +97,13 @@ interface JointAccountRepository {
         walletId: UserWalletId,
         inviteId: String,
     ): Either<JointAccountInvitePreviewError, JointAccountInvitePreview>
+
+    /** Replaces the previous code of [slot]. A 403, 404 or 409 is `SlotUnavailable`; the function never throws */
+    suspend fun issueInvite(
+        userWalletId: UserWalletId,
+        cryptoAccountId: String,
+        slot: Int,
+    ): Either<JointAccountInviteIssueError, JointAccountIssuedInvite>
 
     /**
      * Registers a [safeTx] for collective signing, [signature] counting as the initiator's first one.

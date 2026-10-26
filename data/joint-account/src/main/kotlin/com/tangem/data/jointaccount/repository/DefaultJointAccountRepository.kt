@@ -23,14 +23,17 @@ import com.tangem.data.jointaccount.converter.JointOperationSignErrorConverter
 import com.tangem.data.jointaccount.converter.SafeTxConverter
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.store.datasource.jointaccount.models.CreateJointOperationRequest
+import com.tangem.store.datasource.jointaccount.models.IssueJointAccountInviteRequest
 import com.tangem.store.datasource.jointaccount.models.SignJointOperationRequest
 import com.tangem.store.datasource.jointaccount.JointAccountApi
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountConfirmationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationResult
+import com.tangem.domain.jointaccount.model.JointAccountInviteIssueError
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
+import com.tangem.domain.jointaccount.model.JointAccountIssuedInvite
 import com.tangem.domain.jointaccount.model.JointAccountJoinPayload
 import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
@@ -42,6 +45,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
+import java.time.OffsetDateTime
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -203,6 +207,40 @@ internal class DefaultJointAccountRepository @Inject constructor(
         )
     }
 
+    override suspend fun issueInvite(
+        userWalletId: UserWalletId,
+        cryptoAccountId: String,
+        slot: Int,
+    ): Either<JointAccountInviteIssueError, JointAccountIssuedInvite> = withContext(dispatchers.io) {
+        safeApiCall(
+            call = {
+                val dto = jointAccountApi.issueJointAccountInvite(
+                    walletId = userWalletId.stringValue,
+                    body = IssueJointAccountInviteRequest(cryptoAccountId = cryptoAccountId, slot = slot),
+                ).bind()
+
+                Either
+                    .catch {
+                        JointAccountIssuedInvite(
+                            id = dto.id,
+                            slot = dto.slot,
+                            expiresAtMillis = OffsetDateTime.parse(dto.expiresAt).toInstant().toEpochMilli(),
+                        )
+                    }
+                    .mapLeft { JointAccountInviteIssueError.Failed(cause = it) }
+            },
+            onError = { error ->
+                val isSlotUnavailable = error is ApiResponseError.HttpException &&
+                    error.code in SLOT_UNAVAILABLE_CODES
+                if (isSlotUnavailable) {
+                    JointAccountInviteIssueError.SlotUnavailable(cause = error).left()
+                } else {
+                    JointAccountInviteIssueError.Failed(cause = error).left()
+                }
+            },
+        )
+    }
+
     override suspend fun createOperation(
         userWalletId: UserWalletId,
         safeAddress: String,
@@ -289,5 +327,6 @@ internal class DefaultJointAccountRepository @Inject constructor(
         const val TAG = "JointAccountRepository"
         const val NO_JOINT_ACCOUNTS = 0
         val DEAD_INVITE_CODES = setOf(Code.CONFLICT, Code.NOT_FOUND)
+        val SLOT_UNAVAILABLE_CODES = setOf(Code.FORBIDDEN, Code.NOT_FOUND, Code.CONFLICT)
     }
 }
