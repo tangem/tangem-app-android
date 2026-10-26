@@ -5,6 +5,7 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.pay.model.bankofframp.BankRail
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawFromUM
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderUM
 import kotlinx.collections.immutable.ImmutableList
 
@@ -53,6 +54,7 @@ internal sealed interface TangemPayBankWithdrawPreviewUM {
      */
     @Immutable
     data class AmountCardUM(
+        val from: BankWithdrawFromUM,
         val balance: String?,
         val amount: String,
         val icon: CurrencyIconState,
