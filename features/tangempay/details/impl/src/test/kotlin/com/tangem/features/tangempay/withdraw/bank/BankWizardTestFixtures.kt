@@ -93,11 +93,14 @@ internal fun moneyAccountStatus(
 internal fun activeMoneyAccount(
     token: CryptoCurrency.Token = paymentToken(),
     balance: MoneyAccountStatusValue.Balance? = moneyAccountBalance(),
+    isBankOfframpAvailable: Boolean? = true,
 ): MoneyAccountStatusValue.Account.Active = MoneyAccountStatusValue.Account.Active(
     source = StatusSource.ACTUAL,
     cryptoCurrency = token,
     balance = balance,
     customerId = "cust_1",
+    productInstanceId = "instance-1",
+    isBankOfframpAvailable = isBankOfframpAvailable,
 )
 
 internal fun moneyAccountBalance(

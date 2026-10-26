@@ -44,7 +44,7 @@ internal class KycRejectedModel @Inject constructor(
                     styledResourceReference(
                         id = R.string.tangempay_kyc_rejected_description_span,
                         spanStyleReference = {
-                            TangemTheme.typography.body2.copy(TangemTheme.colors.text.accent).toSpanStyle()
+                            TangemTheme.typography.body2.copy(TangemTheme.colors3.text.accent.blue).toSpanStyle()
                                 .copy(textDecoration = TextDecoration.None)
                         },
                         onClick = {

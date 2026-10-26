@@ -40,7 +40,7 @@ internal fun SellRedirectGeneratorScreen(state: SellRedirectGeneratorUM) {
                 modifier = Modifier.statusBarsPadding(),
             )
         },
-        containerColor = TangemTheme.colors.background.secondary,
+        containerColor = TangemTheme.colors3.bg.primary,
     ) { paddingValues ->
         SelectionContainer {
             LazyColumn(
@@ -80,7 +80,7 @@ private fun EmptyMessage() {
         text = "No cached sells found. Start a Sell (off-ramp) in the app to register one, then refresh here. " +
             "Records are single-use and expire after an hour.",
         style = TangemTheme.typography.body2,
-        color = TangemTheme.colors.text.secondary,
+        color = TangemTheme.colors3.text.secondary,
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
     )
 }
@@ -102,7 +102,7 @@ private fun DeepLinkItem(item: SellRedirectGeneratorUM.DeepLinkItemUM) {
             Text(
                 text = "Expired — this deeplink is no longer valid",
                 style = TangemTheme.typography.caption1,
-                color = TangemTheme.colors.text.warning,
+                color = TangemTheme.colors3.text.accent.red,
                 modifier = Modifier.padding(top = 4.dp),
             )
         }
@@ -110,7 +110,7 @@ private fun DeepLinkItem(item: SellRedirectGeneratorUM.DeepLinkItemUM) {
         Text(
             text = item.deepLink,
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.padding(top = 4.dp),
         )
 
@@ -143,12 +143,12 @@ private fun Field(label: String, value: String) {
         Text(
             text = "$label:",
             style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
         )
         Text(
             text = value,
             style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
     }
 }

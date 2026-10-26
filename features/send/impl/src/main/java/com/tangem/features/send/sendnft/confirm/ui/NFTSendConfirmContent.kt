@@ -72,7 +72,7 @@ private fun LazyListScope.blocks(
             feeSelectorBlockComponent.Content(
                 modifier = Modifier
                     .clip(TangemTheme.shapes.roundedCornersXMedium)
-                    .background(TangemTheme.colors.background.action),
+                    .background(TangemTheme.colors3.bg.secondary),
             )
         }
     }

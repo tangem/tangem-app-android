@@ -55,7 +55,7 @@ internal fun PushNotificationsContent(
     val argumentTwoTitleRes = R.string.user_push_notification_agreement_argument_two_title_v2
     val argumentTwoSubtitleRes = R.string.user_push_notification_agreement_argument_two_subtitle_v2
 
-    Column(modifier = Modifier.background(TangemTheme.colors.background.primary)) {
+    Column(modifier = Modifier.background(TangemTheme.colors3.bg.primary)) {
         ShowcaseContent(
             headerIconRes = R.drawable.ic_notification_56,
             headerText = resourceReference(R.string.user_push_notification_agreement_header),
