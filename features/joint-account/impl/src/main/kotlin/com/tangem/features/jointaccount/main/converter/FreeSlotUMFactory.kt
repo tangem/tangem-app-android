@@ -13,13 +13,9 @@ import org.joda.time.format.DateTimeFormat
 import org.joda.time.format.DateTimeFormatter
 import java.util.Locale
 
-/**
- * Builds the free-slot rows. The slot state is the backend's: an issued invite shows its deadline, an expired one
- * reads "Invite expired". No row offers a button yet: a code can only come from issuing one.
- */
+/** Builds the free-slot rows; no row offers a button yet, a code can only come from issuing one */
 internal class FreeSlotUMFactory {
 
-    /** @property slots the slot numbers to draw, in order; [invites] are looked up by slot */
     data class Input(
         val slots: List<Int>,
         val invites: List<JointAccountInvite>,

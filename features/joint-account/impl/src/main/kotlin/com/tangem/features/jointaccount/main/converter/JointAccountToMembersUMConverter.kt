@@ -219,10 +219,7 @@ internal class JointAccountToMembersUMConverter(
         )
     }
 
-    /**
-     * The creator sees the real slot numbers and draws the free ones by them; everyone else is told only how many
-     * members joined, so the free rows are numbered after the joined ones.
-     */
+    /** Only the creator knows the slot numbers; everyone else numbers the free rows after the joined ones */
     private fun freeSlots(input: Input, phase: MembersScreenPhase): List<MemberUM.FreeSlot> {
         val account = input.account
         val slots = if (account.hasRevealedSlots) {

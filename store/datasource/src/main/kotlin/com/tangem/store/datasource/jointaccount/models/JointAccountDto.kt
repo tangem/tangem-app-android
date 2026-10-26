@@ -25,8 +25,8 @@ data class JointAccountDto(
      * (case-insensitively), never by trusting the backend
      * @property role     `creator` | `member` — only the creator sends invites. Raw string, same reasoning as
      * [JointAccountDto.status]
-     * @property slot     `0` for the creator, the slot of the invite the member redeemed otherwise. Only the
-     * creator of a `pending` account sees it in the `GET` list: every other response carries `null` (v1.6)
+     * @property slot     `0` for the creator; only the creator of a `pending` account sees it in the `GET` list,
+     * every other response carries `null` (v1.6)
      * @property signature the member's `/confirm` signature; `null` until the member confirms, absent in pre-v1.5
      * responses
      */
@@ -40,7 +40,6 @@ data class JointAccountDto(
     )
 
     /**
-     * @property slot      the slot the invite was issued for, `1..membersCount - 1`
      * @property expiresAt ISO 8601 by the server clock; an expired invite stays listed until the slot is reissued
      */
     @JsonClass(generateAdapter = true)
