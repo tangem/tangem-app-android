@@ -134,7 +134,7 @@ internal fun TangemHoldToConfirmButton(
         isPreviousLoading = isLoading
     }
 
-    val fillColor = TangemTheme.colors3.icon.tertiary.copy(alpha = 0.15f)
+    val fillColor = TangemTheme.colors.icon.inactive.copy(alpha = 0.15f)
     val buttonHeight = size.toHeightDp()
     val contentPadding = size.toContentPadding(icon = TangemButtonIconPosition.None)
 
