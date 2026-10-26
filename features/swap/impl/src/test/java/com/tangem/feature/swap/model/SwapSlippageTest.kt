@@ -40,7 +40,11 @@ internal class SwapSlippageTest {
         @ProvideTestModels
         fun parseValid(model: ParseValidModel) {
             // Act
-            val actual = SwapSlippage.parseValid(model.input, createProvider(slippage = BigDecimal("0.5")))
+            val actual = SwapSlippage.parseValid(
+                value = model.input,
+                provider = createProvider(slippage = BigDecimal("0.5")),
+                defaultPercent = BigDecimal(model.defaultPercent),
+            )
 
             // Assert
             assertThat(actual?.toPlainString()).isEqualTo(model.expected)
@@ -55,6 +59,9 @@ internal class SwapSlippageTest {
             ParseValidModel(input = "0", expected = null),
             ParseValidModel(input = "", expected = null),
             ParseValidModel(input = "abc", expected = null),
+            ParseValidModel(input = "0.1", defaultPercent = "0.05", expected = "0.1"),
+            ParseValidModel(input = "0.5", defaultPercent = "0.05", expected = null),
+            ParseValidModel(input = "2", defaultPercent = "1", expected = "2"),
         )
     }
 
@@ -86,7 +93,7 @@ internal class SwapSlippageTest {
 
     data class IsLowModel(val percent: String, val expected: Boolean)
 
-    data class ParseValidModel(val input: String, val expected: String?)
+    data class ParseValidModel(val input: String, val expected: String?, val defaultPercent: String = "0.5")
 
     private fun createProvider(slippage: BigDecimal) = SwapProvider(
         providerId = "1inch",
