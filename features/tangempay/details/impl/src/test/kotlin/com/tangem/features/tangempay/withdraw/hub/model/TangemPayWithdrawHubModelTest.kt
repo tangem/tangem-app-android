@@ -18,8 +18,10 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.pay.TangemPayCurrencyFactory
+import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
@@ -63,6 +65,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -79,6 +82,8 @@ internal class TangemPayWithdrawHubModelTest {
     private val getBankOfframpOptionsUseCase: GetBankOfframpOptionsUseCase = mockk()
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
     private val moneyAccountStatusSupplier: MoneyAccountStatusSupplier = mockk()
+    private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk()
+    private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher = mockk()
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
@@ -103,6 +108,8 @@ internal class TangemPayWithdrawHubModelTest {
             getBankOfframpOptionsUseCase,
             paymentAccountStatusSupplier,
             moneyAccountStatusSupplier,
+            paymentAccountStatusFetcher,
+            moneyAccountStatusFetcher,
             analytics,
         )
         statusFlow.resetReplayCache()
@@ -114,6 +121,8 @@ internal class TangemPayWithdrawHubModelTest {
         coEvery { getBankOfframpOptionsUseCase(userWalletId, any()) } returns offrampOptions().right()
         every { paymentAccountStatusSupplier(userWalletId) } returns statusFlow
         every { moneyAccountStatusSupplier(userWalletId) } returns flowOf(moneyAccountStatus(userWalletId))
+        coEvery { paymentAccountStatusFetcher(userWalletId) } returns Unit.right()
+        coEvery { moneyAccountStatusFetcher(userWalletId) } returns Unit.right()
         every {
             getRecentTokenTransfersUseCase(userWalletId, TokenTransferJournal.PAYMENT_ACCOUNT)
         } returns tokenRecentsFlow
@@ -275,6 +284,21 @@ internal class TangemPayWithdrawHubModelTest {
 
         // Assert
         coVerify(exactly = 1) { getBankOfframpOptionsUseCase(userWalletId, testModel.expectedProductInstanceId) }
+        model.onDestroy()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideRefreshModels")
+    fun `GIVEN source account WHEN withdraw sent THEN that account refreshed`(testModel: RefreshModel) {
+        // Arrange
+        val model = createModel(sourceAccount = testModel.sourceAccount)
+
+        // Act
+        model.onWithdrawSent()
+
+        // Assert
+        coVerify(exactly = testModel.expectedPaymentRefreshes) { paymentAccountStatusFetcher(userWalletId) }
+        coVerify(exactly = testModel.expectedMoneyRefreshes) { moneyAccountStatusFetcher(userWalletId) }
         model.onDestroy()
     }
 
@@ -664,7 +688,28 @@ internal class TangemPayWithdrawHubModelTest {
             paymentAccountStatusSupplier = paymentAccountStatusSupplier,
             moneyAccountStatusSupplier = moneyAccountStatusSupplier,
         ),
+        paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+        moneyAccountStatusFetcher = moneyAccountStatusFetcher,
         analytics = analytics,
+    )
+
+    private fun provideRefreshModels(): List<RefreshModel> = listOf(
+        RefreshModel(
+            sourceAccount = BankWithdrawSourceAccount.Payment(userWalletId),
+            expectedPaymentRefreshes = 1,
+            expectedMoneyRefreshes = 0,
+        ),
+        RefreshModel(
+            sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, PRODUCT_INSTANCE_ID),
+            expectedPaymentRefreshes = 0,
+            expectedMoneyRefreshes = 1,
+        ),
+    )
+
+    internal data class RefreshModel(
+        val sourceAccount: BankWithdrawSourceAccount,
+        val expectedPaymentRefreshes: Int,
+        val expectedMoneyRefreshes: Int,
     )
 
     private fun provideTestModels(): List<ProductInstanceModel> = listOf(

@@ -13,14 +13,19 @@ import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderRequest
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderState
 import com.tangem.domain.pay.model.bankofframp.BankOfframpRecipient
+import com.tangem.domain.pay.model.bankofframp.BankOfframpRoute
+import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
+import com.tangem.domain.pay.model.bankofframp.OfframpEta
+import com.tangem.domain.pay.model.bankofframp.OfframpFee
 import com.tangem.domain.pay.repository.BankOfframpOrderRepository
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.math.BigDecimal
 
 /**
  * In-memory stand-in for placing a withdrawal while the order endpoints of the bank off-ramp BFF are still
- * being agreed. Recipients and routes already come from the backend.
+ * being agreed. Recipients and rails already come from the backend.
  *
  * Orders move `Processing → AwaitingSignature` by wall-clock age and `→ Completed` once signed; a few request
  * values trigger each backend error or outcome so every path is testable from the UI. Only the details the
@@ -33,7 +38,9 @@ internal class MockBankOfframpOrderRepository(
 
     private val mutex = Mutex()
     private val orders = mutableMapOf<String, MockOrder>()
+    private val routes = mutableMapOf<String, BankOfframpRoute>()
     private var nextOrderIndex = 1
+    private var nextBankAccountIndex = 1
 
     override suspend fun createOrder(
         userWalletId: UserWalletId,
@@ -86,6 +93,35 @@ internal class MockBankOfframpOrderRepository(
             }
         }
     }
+
+    override suspend fun createRoute(
+        userWalletId: UserWalletId,
+        productInstanceId: String,
+        rail: BankRail,
+        recipient: BankOfframpRecipient,
+        idempotencyKey: String,
+    ): Either<BankOfframpError, BankOfframpRoute> = mutex.withLock {
+        either {
+            (recipient as? BankOfframpRecipient.New)?.details?.triggeredError()?.let { raise(it) }
+            routes.getOrPut(idempotencyKey) { createMockRoute(rail = rail, recipient = recipient) }
+        }
+    }
+
+    private fun createMockRoute(rail: BankRail, recipient: BankOfframpRecipient) = BankOfframpRoute(
+        depositAddress = FAKE_ROUTE_DEPOSIT_ADDRESS,
+        fee = when (rail) {
+            BankRail.ACH -> ACH_FEE
+            BankRail.WIRE -> WIRE_FEE
+        },
+        eta = when (rail) {
+            BankRail.ACH -> ACH_ETA
+            BankRail.WIRE -> WIRE_ETA
+        },
+        bankAccountId = when (recipient) {
+            is BankOfframpRecipient.Saved -> recipient.bankAccountId
+            is BankOfframpRecipient.New -> "$NEW_BANK_ACCOUNT_ID_PREFIX${nextBankAccountIndex++}"
+        },
+    )
 
     private fun stateOf(orderId: String, order: MockOrder): BankOfframpOrderState {
         val isProcessing = currentTimeMillis() - order.createdAtMillis < AWAITING_SIGNATURE_DELAY_MILLIS
@@ -151,5 +187,12 @@ internal class MockBankOfframpOrderRepository(
         const val FAILED_TRIGGER_CENTS = 88_800L
         const val STUCK_TRIGGER_CENTS = 99_900L
         const val BLOCKED_BUSINESS_NAME = "Blocked"
+        const val NEW_BANK_ACCOUNT_ID_PREFIX = "mock-bank-account-new-"
+        const val FAKE_ROUTE_DEPOSIT_ADDRESS = "0x0000000000000000000000000000000000000003"
+        const val USD = "USD"
+        val ACH_FEE = OfframpFee(name = "ACH", amount = BigDecimal("1.50"), currency = USD, description = null)
+        val ACH_ETA = OfframpEta(minDays = 1, maxDays = 3)
+        val WIRE_FEE = OfframpFee(name = "FedWire", amount = BigDecimal("15.00"), currency = USD, description = null)
+        val WIRE_ETA = OfframpEta(minDays = 0, maxDays = 1)
     }
 }
