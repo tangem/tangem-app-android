@@ -14,6 +14,6 @@ class GetBankOfframpOptionsUseCase(
         userWalletId: UserWalletId,
         productInstanceId: String?,
     ): Either<BankOfframpError, BankOfframpOptions> {
-        return repository.getOptions(userWalletId)
+        return repository.getOptions(userWalletId = userWalletId, productInstanceId = productInstanceId)
     }
 }
