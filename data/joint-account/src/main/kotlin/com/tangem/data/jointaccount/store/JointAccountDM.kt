@@ -59,5 +59,6 @@ internal data class JointAccountDM(
         val address: String,
         val state: String,
         val at: String? = null,
+        val signature: String? = null,
     )
 }

@@ -149,7 +149,7 @@ internal class DefaultManageFundsComponent @AssistedInject constructor(
                             TangemBottomSheetType.Modal
                         }
                 },
-                containerColor = TangemTheme.colors2.surface.level2,
+                containerColor = TangemTheme.colors3.bg.primary,
                 title = {
                     ManageFundsBottomSheetTitle(
                         route = route,

@@ -42,6 +42,7 @@ import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -158,7 +159,7 @@ internal class ReferralModel @Inject constructor(
     private fun loadReferralData() {
         uiState = uiState.copy(referralInfoState = ReferralInfoState.Loading)
         modelScope.launch {
-            runCatching {
+            runSuspendCatching {
                 referralInteractor.getReferralStatus(params.userWalletId).apply {
                     referralData.value = this
                 }
@@ -181,7 +182,7 @@ internal class ReferralModel @Inject constructor(
                     uiState = uiState.copy(referralInfoState = lastInfoState)
                     return@launch
                 }
-                runCatching { referralInteractor.startReferral(accountId) }
+                runSuspendCatching { referralInteractor.startReferral(accountId) }
                     .onSuccess { referral ->
                         analyticsEventHandler.send(ReferralEvents.ParticipateSuccessful())
                         referralData.value = referral

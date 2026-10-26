@@ -158,7 +158,7 @@ private fun DropdownMenuContent(
                 .width(IntrinsicSize.Max)
                 .verticalScroll(rememberScrollState())
                 .clip(RoundedCornerShape(20.dp))
-                .background(TangemTheme.colors2.contextMenu.background)
+                .background(TangemTheme.colors3.bg.transparent.primary)
                 .testTag(PopUpMenuTestTags.CONTAINER),
             content = content,
         )
@@ -318,7 +318,7 @@ private fun TangemContextMenu_Preview() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(TangemTheme.colors2.surface.level1)
+                .background(TangemTheme.colors3.bg.primary)
                 .hazeSourceTangem(state = hazeState, zIndex = -1f),
         ) {
             TangemContextMenu(
@@ -333,7 +333,7 @@ private fun TangemContextMenu_Preview() {
                 )
                 HorizontalDivider(
                     thickness = 0.5.dp,
-                    color = TangemTheme.colors2.border.neutral.quaternary,
+                    color = TangemTheme.colors3.border.secondary,
                 )
                 TangemContextMenuCheckboxItem(
                     title = stringReference("Group tokens"),

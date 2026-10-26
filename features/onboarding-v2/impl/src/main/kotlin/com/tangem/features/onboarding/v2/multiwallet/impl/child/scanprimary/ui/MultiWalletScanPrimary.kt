@@ -35,7 +35,7 @@ internal fun MultiWalletScanPrimary(isRing: Boolean, onScanPrimaryClick: () -> U
             Text(
                 modifier = Modifier.padding(top = 16.dp),
                 text = stringResourceSafe(R.string.onboarding_title_scan_origin_card),
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 textAlign = TextAlign.Center,
                 style = TangemTheme.typography.h2,
             )
@@ -43,7 +43,7 @@ internal fun MultiWalletScanPrimary(isRing: Boolean, onScanPrimaryClick: () -> U
             Text(
                 modifier = Modifier.padding(top = 12.dp),
                 text = stringResourceSafe(R.string.onboarding_subtitle_scan_primary),
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
                 style = TangemTheme.typography.body1,
             )

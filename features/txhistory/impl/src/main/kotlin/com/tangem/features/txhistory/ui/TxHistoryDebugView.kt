@@ -33,6 +33,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_copy_24
 import com.tangem.domain.txhistory.model.ExpressTx
+import com.tangem.domain.txhistory.model.JointOperationTx
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
@@ -130,6 +131,7 @@ val TxHistoryInfo.debugSubtype: String
         is OnChainTx.TangemPay -> "OnChainTx.TangemPay"
         is ExpressTx.Swap -> "ExpressTx.Swap"
         is ExpressTx.Onramp -> "ExpressTx.Onramp"
+        is JointOperationTx -> "JointOperationTx"
     }
 
 /** Whether the row is backed by one provider record or by a group of them merged under one hash. */
@@ -144,11 +146,13 @@ private fun TxHistoryInfo.bsdkTxInfo(): TxInfo? = when (this) {
     is OnChainTx.BSDK -> txInfo
     is OnChainTx.TangemPay -> null
     is ExpressTx -> (txInfo as? OnChainTx.BSDK)?.txInfo
+    is JointOperationTx -> (txInfo as? OnChainTx.BSDK)?.txInfo
 }
 
 val TxHistoryInfo.debugMatchedOnChainLeg: String
     get() = when (this) {
         is ExpressTx -> txInfo?.debugSubtype ?: "null (unmatched or not loaded yet)"
+        is JointOperationTx -> txInfo?.debugSubtype ?: "null (unmatched or not loaded yet)"
         is OnChainTx -> "$debugSubtype (self)"
     }
 

@@ -48,7 +48,7 @@ internal fun NotificationSettingRow(
                     modifier = Modifier.weight(1f),
                     text = stringResourceSafe(id = toggle.titleRes),
                     style = TangemTheme.typography.subtitle1,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                 )
                 TangemSwitch(
                     checked = toggle.isOn,
@@ -75,7 +75,7 @@ private fun SubtitleText(base: TextReference, showMoreInfo: Boolean, onMoreInfoC
                 id = R.string.push_notifications_more_info,
                 spanStyleReference = {
                     TangemTheme.typography.caption2
-                        .copy(color = TangemTheme.colors.text.accent)
+                        .copy(color = TangemTheme.colors3.text.accent.blue)
                         .toSpanStyle()
                 },
                 onClick = onMoreInfoClick,
@@ -88,6 +88,6 @@ private fun SubtitleText(base: TextReference, showMoreInfo: Boolean, onMoreInfoC
         modifier = Modifier.padding(horizontal = 16.dp),
         text = reference.resolveAnnotatedReference(),
         style = TangemTheme.typography.caption2,
-        color = TangemTheme.colors.text.tertiary,
+        color = TangemTheme.colors3.text.secondary,
     )
 }

@@ -65,11 +65,11 @@ private fun LazyListScope.warningOrSearchBar(state: TokenListUM, itemModifier: M
                     is NotificationUM.Warning.OnrampErrorNotification -> {
                         Notification(
                             config = warning.config,
-                            containerColor = TangemTheme.colors.background.primary,
+                            containerColor = TangemTheme.colors3.bg.secondary,
                         )
                     }
                     else -> {
-                        Notification(config = warning.config, containerColor = TangemTheme.colors.button.disabled)
+                        Notification(config = warning.config, containerColor = TangemTheme.colors3.bg.disabled)
                     }
                 }
             }
@@ -118,7 +118,7 @@ private fun LazyListScope.tokensList(items: ImmutableList<TokensListItemUM>, isB
                     .roundedShapeItemDecoration(
                         currentIndex = index,
                         lastIndex = items.lastIndex,
-                        backgroundColor = TangemTheme.colors.background.primary,
+                        backgroundColor = TangemTheme.colors3.bg.secondary,
                     )
                     .testTag(BuyTokenScreenTestTags.LAZY_LIST_ITEM)
                     .semantics { lazyListItemPosition = index },
@@ -151,7 +151,7 @@ internal fun LazyListScope.portfolioTokensList(portfolio: TokensListItemUM.Portf
                     .roundedShapeItemDecoration(
                         currentIndex = indexWithHeader,
                         lastIndex = tokens.lastIndex.inc(),
-                        backgroundColor = TangemTheme.colors.background.primary,
+                        backgroundColor = TangemTheme.colors3.bg.secondary,
                     )
                     .conditional(tokenIndex == tokens.lastIndex) {
                         Modifier.padding(bottom = 8.dp)
@@ -178,7 +178,7 @@ private fun LazyListScope.portfolioItem(
                 .roundedShapeItemDecoration(
                     currentIndex = 0,
                     lastIndex = portfolio.tokens.lastIndex.inc(),
-                    backgroundColor = TangemTheme.colors.background.primary,
+                    backgroundColor = TangemTheme.colors3.bg.secondary,
                 )
                 .then(modifier),
         )
@@ -191,7 +191,7 @@ private fun LazyListScope.portfolioItem(
 private fun Preview_TokenList(@PreviewParameter(PreviewTokenListUMProvider::class) state: TokenListUM) {
     TangemThemePreview {
         LazyColumn(
-            modifier = Modifier.background(color = TangemTheme.colors.background.secondary),
+            modifier = Modifier.background(color = TangemTheme.colors3.bg.primary),
         ) {
             onrampTokenList(
                 state = state,
