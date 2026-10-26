@@ -9,7 +9,9 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.pay.TangemPayCurrencyFactory
+import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.pay.usecase.bankofframp.GetBankOfframpOptionsUseCase
@@ -55,6 +57,8 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
     private val getRecentTokenTransfersUseCase: GetRecentTokenTransfersUseCase,
     private val getBankOfframpOptionsUseCase: GetBankOfframpOptionsUseCase,
     private val bankWithdrawSourcesObserver: BankWithdrawSourcesObserver,
+    private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+    private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
     private val analytics: AnalyticsEventHandler,
 ) : Model() {
 
@@ -144,6 +148,17 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
         bankWithdrawSourcesObserver.observe(params.sourceAccount, options).collect { resolved ->
             state.update { current ->
                 current.copy(options = resolved?.let(OptionsState::Ready) ?: OptionsState.Unavailable)
+            }
+        }
+    }
+
+    fun onWithdrawSent() {
+        modelScope.launch {
+            when (params.sourceAccount) {
+                is BankWithdrawSourceAccount.Payment -> paymentAccountStatusFetcher(params.userWalletId)
+                is BankWithdrawSourceAccount.Money -> moneyAccountStatusFetcher(params.userWalletId)
+            }.onLeft { error ->
+                TangemLogger.withTag(TAG).e("Failed to refresh the source account after a bank withdraw: $error")
             }
         }
     }
