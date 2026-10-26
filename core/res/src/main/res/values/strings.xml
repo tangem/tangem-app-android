@@ -501,6 +501,7 @@
   <string name="common_from">From</string>
   <string name="common_from_account">From account</string>
   <string name="common_from_address">From address</string>
+  <string name="common_from_lowercase">from</string>
   <string name="common_from_wallet">From wallet</string>
   <string name="common_from_wallet_name">From %s</string>
   <string name="common_generate_addresses">Synchronize addresses</string>
@@ -1620,6 +1621,7 @@
   <string name="mcp_intent_cant_reach_title">Can’t reach intent</string>
   <string name="mcp_intent_proceed">Proceed</string>
   <string name="mcp_intent_processed_title">This intent has already been processed</string>
+  <string name="mcp_intent_unknown_agent_name">AI</string>
   <string name="mcp_send_intent_cant_reach_title">Can’t reach intent</string>
   <string name="mcp_send_intent_offer_description">The agent is asking to send from your account. You’ll review the details next.</string>
   <string name="mcp_send_intent_offer_title">%1$s Agent wants to send %2$s</string>
@@ -3276,6 +3278,7 @@
   <string name="tangempay_withdraw_bank_geo_country_selected">Selected country</string>
   <string name="tangempay_withdraw_bank_geo_state_selected">Selected state</string>
   <string name="tangempay_withdraw_bank_geo_state_title">State</string>
+  <string name="tangempay_withdraw_bank_network_fee_unreachable">Network fee info unreachable. Check your internet connection or tap to refresh</string>
   <string name="tangempay_withdraw_bank_offramp_unavailable">Off-ramp unavailable</string>
   <string name="tangempay_withdraw_bank_placeholder_address_line1">Eg., Ebunike st., Apt. 32</string>
   <string name="tangempay_withdraw_bank_placeholder_bank_name">Eg., Goldman Sachs</string>
@@ -3433,6 +3436,7 @@
   <string name="transaction_history_transaction_for_address">for: %s</string>
   <string name="transaction_history_transaction_from_address">from: %s</string>
   <string name="transaction_history_transaction_from_for_address">from: %1$s for %2$s</string>
+  <string name="transaction_history_transaction_from_from_address">from: %1$s from %2$s</string>
   <string name="transaction_history_transaction_to_address">to: %s</string>
   <string name="transaction_history_transaction_to_for_address">to: %1$s for %2$s</string>
   <string name="transaction_history_transaction_validator">validator: %s</string>
@@ -3720,6 +3724,7 @@
   <string name="warning_express_not_enough_fee_for_token_tx_title">Unable to cover %s fee</string>
   <string name="warning_express_notification_invalid_reserve_amount_title">The amount to receive must be at least %s</string>
   <string name="warning_express_pair_unavailable_message">This may occur because the provider is currently unable to exchange your selected pair. Please wait a moment and try again. (Code %s)</string>
+  <string name="warning_express_pair_unavailable_message_v2">The provider can’t exchange your selected pair right now. Please choose another provider. (Code %s)</string>
   <string name="warning_express_pair_unavailable_title">Selected pair temporarily unavailable</string>
   <string name="warning_express_providers_fca_warning_description">Some providers are not authorized by the UK Financial Conduct Authority. You should avoid dealing with them.</string>
   <string name="warning_express_providers_fca_warning_title">FCA Warning List</string>

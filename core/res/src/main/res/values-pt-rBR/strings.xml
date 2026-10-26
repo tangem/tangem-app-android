@@ -37,8 +37,8 @@
   <string name="account_details_archive_joint_description">Isso apenas oculta a conta para você e desativa as notificações dela. Os outros membros continuam tendo acesso, e você pode recuperá-la a qualquer momento.</string>
   <string name="account_details_archiving">Arquivando...</string>
   <plurals name="account_details_joint_members_count">
-    <item quantity="one">pessoa</item>
-    <item quantity="other">pessoas</item>
+    <item quantity="one">%d pessoa</item>
+    <item quantity="other">%d pessoas</item>
   </plurals>
   <string name="account_details_joint_members_progress">%1$s/%2$s pessoas</string>
   <string name="account_details_joint_networks_info">Texto sobre redes.</string>
@@ -495,6 +495,7 @@
   <string name="common_fee_selector_option_slow">Lento</string>
   <string name="common_fee_selector_title">Velocidade e taxa</string>
   <string name="common_finish">Terminar</string>
+  <string name="common_for">para</string>
   <string name="common_forget">Esquecer</string>
   <string name="common_free">Grátis</string>
   <string name="common_from">De</string>
@@ -1226,6 +1227,9 @@
   <string name="joint_account_invite_member_title">Convidar membro</string>
   <string name="joint_account_invite_member_verifies_subtitle">Começa a funcionar quando todos concluem a verificação.</string>
   <string name="joint_account_invite_member_verifies_title">Em seguida, cada um de vocês faz a verificação</string>
+  <string name="joint_account_invite_members_about_signatures_description">Todas as transações dessa conta precisam da aprovação de %1$s de %2$s membros. Cada membro assina usando sua própria carteira. A transação só é enviada após reunir assinaturas suficientes.</string>
+  <string name="joint_account_invite_members_about_signatures_title">Sobre as assinaturas</string>
+  <string name="joint_account_invite_members_approvals_value">%1$s de %2$s</string>
   <plurals name="joint_account_invite_members_awaiting_to_join">
     <item quantity="one">Aguardando a entrada de %d membro</item>
     <item quantity="other">Aguardando a entrada de %d membros</item>
@@ -1243,12 +1247,16 @@
     <item quantity="other">Convide mais %d membros</item>
   </plurals>
   <string name="joint_account_invite_members_invited">Convidado</string>
+  <string name="joint_account_invite_members_joined_progress">%1$s de %2$s membros entraram</string>
   <string name="joint_account_invite_members_member">Membro</string>
   <string name="joint_account_invite_members_member_info">Informações do membro</string>
+  <string name="joint_account_invite_members_member_number">Membro %1$d</string>
   <string name="joint_account_invite_members_new_member">Novo membro</string>
   <string name="joint_account_invite_members_not_invited">Não convidado</string>
   <string name="joint_account_invite_members_other_members">Outros membros</string>
   <string name="joint_account_invite_members_re_invite">Convidar novamente</string>
+  <string name="joint_account_invite_members_required_approvals">Aprovações necessárias</string>
+  <string name="joint_account_invite_members_resend">Reenviar</string>
   <string name="joint_account_invite_members_safety_first_point_subtitle">Qualquer pessoa que abrir o link poderá participar e assinar. Envie-o somente à pessoa correta — nunca o publique</string>
   <string name="joint_account_invite_members_safety_first_point_title">O link funciona como uma chave</string>
   <string name="joint_account_invite_members_safety_second_point_subtitle">Todos os membros podem aprovar transações em conjunto com os demais. Convide apenas pessoas em quem você confia</string>
@@ -1258,12 +1266,17 @@
   <string name="joint_account_invite_members_safety_third_point_subtitle">Quando alguém entrar, verifique se o endereço pertence à pessoa correta — confirme diretamente com ela</string>
   <string name="joint_account_invite_members_safety_third_point_title">Verifique quem entrou</string>
   <string name="joint_account_invite_members_safety_title">Compartilhe os convites com segurança</string>
+  <plurals name="joint_account_invite_members_still_need_to_join">
+    <item quantity="one">%d membro ainda precisa entrar</item>
+    <item quantity="other">%d membros ainda precisam entrar</item>
+  </plurals>
   <string name="joint_account_invite_members_subtitle">%1$s de %2$s entraram, incluindo você</string>
   <string name="joint_account_invite_members_title">Convidar membros</string>
   <string name="joint_account_invite_members_to_join">Convide membros para participar</string>
   <string name="joint_account_invite_members_until">Até %s</string>
   <string name="joint_account_invite_members_until_today">Até hoje, às %s</string>
   <string name="joint_account_invite_members_until_tomorrow">Até amanhã, às %s</string>
+  <string name="joint_account_invite_members_verify_account">Verificar conta</string>
   <string name="joint_account_invite_members_waiting_title">Aguardando membros</string>
   <string name="joint_account_invite_members_waiting_to_join">Aguardando para participar</string>
   <string name="joint_account_invite_share_title">Convite para %s</string>
@@ -1602,9 +1615,21 @@
   <string name="mcp_connection_request_notifications_description">Você receberá uma notificação para aprovar cada transação. Sem as notificações, o agente não poderá se conectar.</string>
   <string name="mcp_connection_success_description">%s agora pode visualizar seus saldos e solicitar aprovações de transações. Revogue o acesso a qualquer momento em Conexões.</string>
   <string name="mcp_connection_success_title">Agente conectado</string>
+  <string name="mcp_intent_cant_reach_title">Não foi possível acessar a intenção</string>
+  <string name="mcp_intent_proceed">Continuar</string>
+  <string name="mcp_intent_processed_title">Esta intenção já foi processada</string>
+  <string name="mcp_intent_unknown_agent_name">IA</string>
+  <string name="mcp_send_intent_cant_reach_title">Não foi possível acessar a intenção</string>
+  <string name="mcp_send_intent_offer_description">O agente está solicitando enviar fundos da sua conta. Você poderá revisar os detalhes na próxima etapa.</string>
+  <string name="mcp_send_intent_offer_title">O agente %1$s quer enviar %2$s</string>
+  <string name="mcp_send_intent_processed_subtitle">Enviar %1$s</string>
   <string name="mcp_session_revoke_access">Revogar acesso</string>
   <string name="mcp_session_revoke_failed">Não foi possível revogar o acesso</string>
   <string name="mcp_session_title">MCP conectado</string>
+  <string name="mcp_swap_intent_cant_reach_title">Não foi possível acessar a intenção</string>
+  <string name="mcp_swap_intent_offer_description">O agente está solicitando realizar uma troca a partir da sua conta. Você poderá revisar os detalhes na próxima etapa.</string>
+  <string name="mcp_swap_intent_offer_title">O agente %1$s quer trocar %2$s por %3$s</string>
+  <string name="mcp_swap_intent_processed_subtitle">Trocar %1$s por %2$s</string>
   <string name="mobile_wallet_requires_min_os_warning_body">Você precisa atualizar para %1$s antes de criar uma carteira móvel</string>
   <string name="mobile_wallet_requires_min_os_warning_title">A carteira digital requer %1$s ou mais tarde</string>
   <string name="money_account_add_funds_bank_description">Receba USD de uma conta bancária via ACH/Wire ou SPEI</string>
@@ -1642,6 +1667,9 @@
   <string name="money_account_onboarding_transfers_card_caption">Dinheiro entrando. Dinheiro saindo.</string>
   <string name="money_account_onboarding_transfers_card_subtitle">com uma conta dedicada com dados bancários</string>
   <string name="money_account_onboarding_transfers_card_title">Envie e receba pagamentos em moeda fiduciária</string>
+  <string name="money_account_send_bank_transfer_unavailable">Indisponível</string>
+  <string name="money_account_send_unavailable_description">Tente novamente em 5 minutos</string>
+  <string name="money_account_send_unavailable_title">Operação temporariamente indisponível</string>
   <string name="news_all_news">Todas as notícias</string>
   <string name="news_like">Gosto</string>
   <plurals name="news_published_hours_ago">
@@ -3041,6 +3069,8 @@
   <string name="tangempay_onboarding_security_title">Privacidade incomparável</string>
   <string name="tangempay_onboarding_setup_wallet_description">E vincularemos o Tangem Pay a essa carteira</string>
   <string name="tangempay_onboarding_setup_wallet_title">Vamos configurar uma carteira</string>
+  <string name="tangempay_onboarding_success_description">A ativação dos produtos pode levar alguns minutos para ser concluída</string>
+  <string name="tangempay_onboarding_success_title">O Tangem Pay está sendo ativado</string>
   <string name="tangempay_onboarding_title">Obtenha seu cartão Tangem Pay em minutos</string>
   <string name="tangempay_order_card_error_active_order">Um pedido de cartão já está em andamento.</string>
   <string name="tangempay_order_card_error_insufficient_balance">Não há dinheiro suficiente para a entrega. Adicione fundos e tente novamente.</string>
@@ -3242,6 +3272,7 @@
   <string name="tangempay_withdraw_bank_geo_country_selected">País selecionado</string>
   <string name="tangempay_withdraw_bank_geo_state_selected">Estado selecionado</string>
   <string name="tangempay_withdraw_bank_geo_state_title">Estado</string>
+  <string name="tangempay_withdraw_bank_network_fee_unreachable">Não foi possível carregar as informações sobre a taxa de rede. Verifique sua conexão com a internet ou toque para atualizar.</string>
   <string name="tangempay_withdraw_bank_offramp_unavailable">Off-ramp indisponível</string>
   <string name="tangempay_withdraw_bank_placeholder_address_line1">Ex.: Ebunike St., Apto. 32</string>
   <string name="tangempay_withdraw_bank_placeholder_bank_name">Ex.: Goldman Sachs</string>
@@ -3399,6 +3430,7 @@
   <string name="transaction_history_transaction_for_address">para: %s</string>
   <string name="transaction_history_transaction_from_address">de: %s</string>
   <string name="transaction_history_transaction_from_for_address">de: %1$s para %2$s</string>
+  <string name="transaction_history_transaction_from_from_address">de: %1$s de %2$s</string>
   <string name="transaction_history_transaction_to_address">para: %s</string>
   <string name="transaction_history_transaction_to_for_address">de: %1$s para %2$s</string>
   <string name="transaction_history_transaction_validator">validador: %s</string>
@@ -3973,6 +4005,9 @@
   <string name="yield_module_incentive_chart_powered_by_title">Desenvolvido por Merkl</string>
   <string name="yield_module_incentive_chart_sheet_title">Rendimento incentivado</string>
   <string name="yield_module_incentives_provider">Merkl</string>
+  <string name="yield_module_main_promo_button">Experimentar o modo de rendimento</string>
+  <string name="yield_module_main_promo_subtitle">Coloque suas moedas ociosas para render. Sem bloqueios, saque a qualquer momento.</string>
+  <string name="yield_module_main_promo_title">Obtenha rendimentos com suas criptomoedas de até %1$s%% APY</string>
   <string name="yield_module_main_screen_promo_banner_message">Habilitar %1$s%% APY sobre o seu saldo</string>
   <string name="yield_module_main_view_approve_notification_description">A aprovação do seu token no Modo Yield foi revogada. Abra o token para conceder permissão novamente.</string>
   <string name="yield_module_main_view_approve_notification_title">É necessária a aprovação do token.</string>

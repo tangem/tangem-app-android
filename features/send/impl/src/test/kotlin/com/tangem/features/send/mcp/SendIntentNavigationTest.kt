@@ -1,5 +1,7 @@
 package com.tangem.features.send.mcp
 
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.features.send.impl.R
 import android.os.SystemClock
 import arrow.core.Either
 import arrow.core.right
@@ -206,7 +208,8 @@ internal class SendIntentNavigationTest : SendModelTestBase() {
         verify(exactly = 1) { onSendTransaction() }
         verify(exactly = if (isDuplicateBelow) 0 else 1) { router.pop(any()) }
         if (isDuplicateBelow) {
-            assertThat((model.sheet.value as SendIntentUM.Status).title.toString()).contains("reach intent")
+            assertThat((model.sheet.value as SendIntentUM.Status).title)
+                .isEqualTo(resourceReference(R.string.mcp_send_intent_cant_reach_title))
         }
         assertThat(sendingModel.uiState.value.confirmUM).isInstanceOf(ConfirmUM.Success::class.java)
         model.onDestroy()
