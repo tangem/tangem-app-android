@@ -10,6 +10,7 @@ import com.tangem.common.routing.entity.CollectiblesStartRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
@@ -220,6 +221,7 @@ internal class DefaultWalletRouter @Inject constructor(
         tokenActionList: ImmutableList<TokenActionButtonUM>,
         offset: Offset,
         tokenRowUM: TangemTokenRowUM?,
+        tokenRowState: TangemTokenRow.State?,
     ) {
         dialogNavigation.activate(
             configuration = WalletDialogConfig.TokenActionList(
@@ -227,6 +229,7 @@ internal class DefaultWalletRouter @Inject constructor(
                 offsetX = offset.x,
                 offsetY = offset.y,
                 tokenRowUM = tokenRowUM,
+                tokenRowState = tokenRowState,
             ),
         )
     }
