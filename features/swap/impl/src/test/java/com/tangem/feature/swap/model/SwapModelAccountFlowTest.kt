@@ -2364,6 +2364,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
                 fiatRate = BigDecimal.ONE,
             ),
             customerId = "customer",
+            productInstanceId = "instance",
         )
 
     private fun stubResolvedTopUpPair(

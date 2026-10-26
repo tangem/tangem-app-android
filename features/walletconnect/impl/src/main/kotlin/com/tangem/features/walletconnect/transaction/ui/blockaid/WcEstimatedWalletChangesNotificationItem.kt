@@ -28,7 +28,7 @@ internal fun WcEstimatedWalletChangesNotificationItem(
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(14.dp))
-            .background(color = TangemTheme.colors.background.action)
+            .background(color = TangemTheme.colors3.bg.secondary)
             .fillMaxWidth()
             .animateContentSize(),
     ) {
@@ -43,7 +43,7 @@ internal fun WcEstimatedWalletChangesNotificationItem(
                 .padding(start = 12.dp, end = 12.dp, bottom = 14.dp),
             text = description?.resolveReference()
                 ?: stringResourceSafe(R.string.wc_estimated_wallet_changes_not_simulated),
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography.body2,
         )
     }
@@ -56,7 +56,7 @@ private fun WcEstimatedWalletChangesNotLoadedItems() {
     TangemThemePreview {
         Box(
             modifier = Modifier
-                .background(TangemTheme.colors.background.tertiary),
+                .background(TangemTheme.colors3.bg.primary),
         ) {
             WcEstimatedWalletChangesNotificationItem()
         }

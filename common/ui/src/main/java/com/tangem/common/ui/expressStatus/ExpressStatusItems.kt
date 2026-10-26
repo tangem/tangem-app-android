@@ -43,9 +43,9 @@ fun LazyListScope.expressTransactionsItems(
         val itemInfo = expressTxs[index].info
         val (iconRes, tint) = when (itemInfo.iconState) {
             ExpressTransactionStateIconUM.Warning ->
-                R.drawable.ic_attention_default_24 to TangemTheme.colors2.graphic.status.attention
+                R.drawable.ic_attention_default_24 to TangemTheme.colors3.icon.accent.yellow
             ExpressTransactionStateIconUM.Error ->
-                R.drawable.ic_alert_circle_24 to TangemTheme.colors2.graphic.status.warning
+                R.drawable.ic_alert_circle_24 to TangemTheme.colors3.icon.accent.red
             ExpressTransactionStateIconUM.None -> null to null
         }
         ExpressTransactionItem(
@@ -69,7 +69,7 @@ private fun ExpressTransactionItem(
         modifier = modifier
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors2.surface.level3)
+            .background(TangemTheme.colors3.bg.secondary)
             .clickable(onClick = info.onClick)
             .padding(16.dp)
             .testTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM),
@@ -180,12 +180,12 @@ private fun ExpressTransactionItemPreview() {
             ExpressTransactionItem(
                 state = PreviewExpressTransactionState,
                 infoIconRes = R.drawable.ic_attention_default_24,
-                infoIconTint = TangemTheme.colors2.graphic.status.attention,
+                infoIconTint = TangemTheme.colors3.icon.accent.yellow,
             )
             ExpressTransactionItem(
                 state = PreviewExpressTransactionState,
                 infoIconRes = R.drawable.ic_alert_circle_24,
-                infoIconTint = TangemTheme.colors2.graphic.status.warning,
+                infoIconTint = TangemTheme.colors3.icon.accent.red,
             )
         }
     }

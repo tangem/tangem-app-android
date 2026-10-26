@@ -18,6 +18,7 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.pay.TangemPayCurrencyFactory
@@ -36,6 +37,7 @@ import com.tangem.domain.pay.usecase.recents.GetRecentTokenTransfersUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
+import com.tangem.features.tangempay.withdraw.bank.activeMoneyAccount
 import com.tangem.features.tangempay.withdraw.bank.availableNetwork
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
@@ -47,6 +49,7 @@ import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import com.tangem.features.tangempay.withdraw.hub.recentBankAccounts
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.BankSectionUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.RecentsUM
+import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.SwapSectionUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.TokenRecentsUM
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.MockAccounts
@@ -90,6 +93,8 @@ internal class TangemPayWithdrawHubModelTest {
     private val statusFlow = MutableSharedFlow<AccountStatus.Payment>(replay = 1)
     private val tokenRecentsFlow = MutableStateFlow<List<RecentTokenTransfer>>(emptyList())
     private val opened = mutableListOf<Pair<BankWithdrawEntry, StateFlow<BankWithdrawOptions>>>()
+
+    private val moneySourceAccount = BankWithdrawSourceAccount.Money(userWalletId, PRODUCT_INSTANCE_ID)
 
     private val loadFailure: Either<BankOfframpError, RecentBankAccounts> =
         BankOfframpError.Unknown(cause = null).left()
@@ -155,7 +160,7 @@ internal class TangemPayWithdrawHubModelTest {
         )
 
         // Act
-        model.uiState.value.swapSection.withinPortfolio.onClick()
+        model.swapSection().withinPortfolio.onClick()
 
         // Assert
         verify(exactly = 1) { router.push(expectedRoute) }
@@ -170,7 +175,7 @@ internal class TangemPayWithdrawHubModelTest {
         val model = createModel()
 
         // Act
-        model.uiState.value.swapSection.withinPortfolio.onClick()
+        model.swapSection().withinPortfolio.onClick()
 
         // Assert
         verify(exactly = 1) { uiMessageSender.send(any<BottomSheetMessage>()) }
@@ -185,7 +190,7 @@ internal class TangemPayWithdrawHubModelTest {
         val model = createModel()
 
         // Assert
-        assertThat(model.uiState.value.swapSection.recents).isEqualTo(TokenRecentsUM.Empty)
+        assertThat(model.swapSection().recents).isEqualTo(TokenRecentsUM.Empty)
         model.onDestroy()
     }
 
@@ -198,7 +203,7 @@ internal class TangemPayWithdrawHubModelTest {
         val model = createModel()
 
         // Assert
-        val recents = model.uiState.value.swapSection.recents
+        val recents = model.swapSection().recents
         assertThat(recents).isInstanceOf(TokenRecentsUM.Content::class.java)
         assertThat((recents as TokenRecentsUM.Content).tokens.map { it.id })
             .containsExactly(RECENT_CURRENCY_ID_VALUE)
@@ -612,6 +617,70 @@ internal class TangemPayWithdrawHubModelTest {
         model.onDestroy()
     }
 
+    @ParameterizedTest
+    @MethodSource("provideMoneyBankOptionModels")
+    fun `GIVEN money account WHEN a bank option clicked THEN withdraw option selected is sent and wizard opened`(
+        testModel: MoneyBankOptionModel,
+    ) {
+        // Arrange
+        coEvery { getRecentBankAccountsUseCase(userWalletId) } returns
+            recentBankAccounts(recents = listOf(bankAccount(id = "acc-1")), hasMoreAccounts = true).right()
+        val model = createModel(sourceAccount = moneySourceAccount)
+
+        // Act
+        testModel.click(model)
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(
+                MoneyAccountAnalyticsEvents.WithdrawOptionSelected(
+                    method = MoneyAccountAnalyticsEvents.WithdrawMethod.BANK_TRANSFER,
+                ),
+            )
+        }
+        verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents>()) }
+        assertThat(opened.single().first).isEqualTo(testModel.expectedEntry)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN money account WHEN model created THEN no swap section and nothing of the payment account loaded`() {
+        // Act
+        val model = createModel(sourceAccount = moneySourceAccount)
+
+        // Assert
+        assertThat(model.uiState.value.swapSection).isNull()
+        verify(exactly = 0) { analytics.send(any()) }
+        verify(exactly = 0) { getRecentTokenTransfersUseCase(any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN money account without bank transfer WHEN model created THEN no bank section and nothing requested`() {
+        // Act
+        val model = createModel(sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, productInstanceId = null))
+
+        // Assert
+        assertThat(model.uiState.value.bankSection).isNull()
+        coVerify(exactly = 0) { getBankOfframpOptionsUseCase(any(), any()) }
+        coVerify(exactly = 0) { getRecentBankAccountsUseCase(any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN money account without bank off-ramp channel WHEN model created THEN bank section unavailable`() {
+        // Arrange
+        every { moneyAccountStatusSupplier(userWalletId) } returns
+            flowOf(moneyAccountStatus(userWalletId, activeMoneyAccount(isBankOfframpAvailable = false)))
+
+        // Act
+        val model = createModel(sourceAccount = moneySourceAccount)
+
+        // Assert
+        assertThat(model.bankContent().isAvailable).isFalse()
+        model.onDestroy()
+    }
+
     private fun emitStatusValue(value: PaymentAccountStatusValue) {
         statusFlow.resetReplayCache()
         val status = AccountStatus.Payment(account = Account.Payment(userWalletId), value = value)
@@ -626,13 +695,15 @@ internal class TangemPayWithdrawHubModelTest {
         assertThat(statusFlow.tryEmit(status)).isTrue()
     }
 
+    private fun TangemPayWithdrawHubModel.swapSection(): SwapSectionUM = checkNotNull(uiState.value.swapSection)
+
     private fun TangemPayWithdrawHubModel.bankContent(): BankSectionUM.Content =
         uiState.value.bankSection as BankSectionUM.Content
 
     private fun TangemPayWithdrawHubModel.recents(): RecentsUM = bankContent().recents
 
     private fun TangemPayWithdrawHubModel.tokenRecents(): TokenRecentsUM.Content =
-        uiState.value.swapSection.recents as TokenRecentsUM.Content
+        swapSection().recents as TokenRecentsUM.Content
 
     private fun recentTransfer(): RecentTokenTransfer {
         val currency = CryptoCurrency.Coin(
@@ -721,6 +792,30 @@ internal class TangemPayWithdrawHubModelTest {
             sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, PRODUCT_INSTANCE_ID),
             expectedProductInstanceId = PRODUCT_INSTANCE_ID,
         ),
+    )
+
+    private fun provideMoneyBankOptionModels(): List<MoneyBankOptionModel> = listOf(
+        MoneyBankOptionModel(
+            click = { it.bankContent().toPersonalAccount.onClick() },
+            expectedEntry = BankWithdrawEntry.NewPersonal,
+        ),
+        MoneyBankOptionModel(
+            click = { it.bankContent().toBusinessAccount.onClick() },
+            expectedEntry = BankWithdrawEntry.NewBusiness,
+        ),
+        MoneyBankOptionModel(
+            click = { (it.recents() as RecentsUM.Content).onRecipientClick("acc-1") },
+            expectedEntry = BankWithdrawEntry.Saved(bankAccountId = "acc-1"),
+        ),
+        MoneyBankOptionModel(
+            click = { requireNotNull((it.recents() as RecentsUM.Content).onSeeAllClick).invoke() },
+            expectedEntry = BankWithdrawEntry.SeeAll,
+        ),
+    )
+
+    internal data class MoneyBankOptionModel(
+        val click: (TangemPayWithdrawHubModel) -> Unit,
+        val expectedEntry: BankWithdrawEntry,
     )
 
     internal data class ProductInstanceModel(

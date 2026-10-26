@@ -72,7 +72,7 @@ private fun BaseGroupTitleItem(
             Text(
                 text = text.resolveReference(),
                 style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
         },
         modifier = modifier,
@@ -91,7 +91,7 @@ private fun DraggableIcon(reorderableTokenListState: ReorderableLazyListState) {
                 image = ImageVector.vectorResource(id = R.drawable.ic_group_drop_24),
             ),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
         )
     }
 }
@@ -113,12 +113,12 @@ private fun NetworkTitleItemPreview(@PreviewParameter(GroupTitleItemProvider::cl
             DraggableGroupTitleItem(
                 state = state,
                 reorderableTokenListState = rememberReorderableLazyListState(onMove = { _, _ -> }),
-                modifier = Modifier.background(color = TangemTheme.colors.background.primary),
+                modifier = Modifier.background(color = TangemTheme.colors3.bg.secondary),
             )
         } else {
             GroupTitleItem(
                 state = state,
-                modifier = Modifier.background(color = TangemTheme.colors.background.primary),
+                modifier = Modifier.background(color = TangemTheme.colors3.bg.secondary),
             )
         }
     }

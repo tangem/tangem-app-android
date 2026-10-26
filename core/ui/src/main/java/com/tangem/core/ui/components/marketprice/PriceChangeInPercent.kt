@@ -65,12 +65,12 @@ private fun PriceChangeInPercentV2(
                 },
             ),
             tint = if (isDisabled) {
-                TangemTheme.colors2.graphic.neutral.tertiary
+                TangemTheme.colors3.icon.secondary
             } else {
                 when (type) {
-                    PriceChangeType.UP -> TangemTheme.colors2.markers.iconBlue
-                    PriceChangeType.DOWN -> TangemTheme.colors2.markers.iconRed
-                    PriceChangeType.NEUTRAL -> TangemTheme.colors2.markers.iconGray
+                    PriceChangeType.UP -> TangemTheme.colors3.icon.accent.blue
+                    PriceChangeType.DOWN -> TangemTheme.colors3.icon.accent.red
+                    PriceChangeType.NEUTRAL -> TangemTheme.colors3.icon.secondary
                 }
             },
             contentDescription = null,
@@ -79,12 +79,12 @@ private fun PriceChangeInPercentV2(
         Text(
             text = valueInPercent,
             color = if (isDisabled) {
-                TangemTheme.colors2.text.status.disabled
+                TangemTheme.colors3.text.tertiary
             } else {
                 when (type) {
-                    PriceChangeType.UP -> TangemTheme.colors2.text.status.accent
-                    PriceChangeType.DOWN -> TangemTheme.colors2.text.status.warning
-                    PriceChangeType.NEUTRAL -> TangemTheme.colors2.text.neutral.tertiary
+                    PriceChangeType.UP -> TangemTheme.colors3.text.accent.blue
+                    PriceChangeType.DOWN -> TangemTheme.colors3.text.accent.red
+                    PriceChangeType.NEUTRAL -> TangemTheme.colors3.text.secondary
                 }
             },
             style = textStyle,

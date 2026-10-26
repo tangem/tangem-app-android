@@ -28,7 +28,7 @@ internal fun RootDetectedWarningContent(modifier: Modifier = Modifier, onContinu
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(TangemTheme.colors.background.primary)
+            .background(TangemTheme.colors3.bg.primary)
             .statusBarsPadding()
             .padding(horizontal = 16.dp),
     ) {
@@ -60,7 +60,7 @@ private fun InfoBlock(modifier: Modifier = Modifier) {
     ) {
         HighlightedIcon(
             icon = R.drawable.ic_alert_circle_24,
-            iconTint = TangemTheme.colors.icon.warning,
+            iconTint = TangemTheme.colors3.icon.accent.red,
         )
 
         SpacerH(20.dp)
@@ -68,7 +68,7 @@ private fun InfoBlock(modifier: Modifier = Modifier) {
         Text(
             text = stringResourceSafe(R.string.root_detected_warning_title),
             style = TangemTheme.typography.h2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
         )
 
@@ -78,7 +78,7 @@ private fun InfoBlock(modifier: Modifier = Modifier) {
             modifier = Modifier.padding(horizontal = 24.dp),
             text = stringResourceSafe(R.string.root_detected_warning_description),
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
         )
     }

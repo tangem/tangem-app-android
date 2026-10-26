@@ -27,7 +27,7 @@ internal fun SelectPaymentMethodBottomSheet(config: TangemBottomSheetConfig) {
     TangemBottomSheet<PaymentMethodsBottomSheetConfig>(
         config = config,
         addBottomInsets = true,
-        containerColor = TangemTheme.colors.background.primary,
+        containerColor = TangemTheme.colors3.bg.primary,
         titleText = resourceReference(R.string.onramp_pay_with),
         content = { contentConfig ->
             SelectPaymentMethodBottomSheetContent(
@@ -93,7 +93,7 @@ private fun PaymentMethodItem(paymentMethod: PaymentMethodUM, isSelected: Boolea
         Text(
             text = paymentMethod.method.name,
             style = TangemTheme.typography.subtitle2,
-            color = if (isSelected) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.secondary,
+            color = if (isSelected) TangemTheme.colors3.text.primary else TangemTheme.colors3.text.secondary,
         )
     }
 }

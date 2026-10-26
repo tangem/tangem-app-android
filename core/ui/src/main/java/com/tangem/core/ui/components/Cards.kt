@@ -39,7 +39,7 @@ fun CardWithIcon(
 ) {
     Surface(
         shape = RoundedCornerShape(12.dp),
-        color = TangemTheme.colors.background.primary,
+        color = TangemTheme.colors3.bg.secondary,
         tonalElevation = 2.dp,
         shadowElevation = 2.dp,
     ) {
@@ -69,7 +69,7 @@ fun CardWithIcon(
 internal fun IconWithTitleAndDescription(
     title: String,
     description: String?,
-    iconBackground: Color = TangemTheme.colors.background.secondary,
+    iconBackground: Color = TangemTheme.colors3.bg.primary,
     icon: @Composable () -> Unit,
     additionalContent: @Composable () -> Unit = {},
 ) {
@@ -107,14 +107,14 @@ internal fun IconWithTitleAndDescription(
         ) {
             Text(
                 text = title,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 style = TangemTheme.typography.subtitle1,
             )
             if (description != null) {
                 SpacerH4()
                 Text(
                     text = description,
-                    color = TangemTheme.colors.text.secondary,
+                    color = TangemTheme.colors3.text.secondary,
                     style = TangemTheme.typography.body2,
                 )
             }
@@ -137,7 +137,7 @@ private fun Preview_CardWithIcon() {
                 Icon(
                     painterResource(id = R.drawable.ic_clock_24),
                     contentDescription = null,
-                    tint = TangemTheme.colors.icon.primary1,
+                    tint = TangemTheme.colors3.icon.primary,
                 )
             },
         )
