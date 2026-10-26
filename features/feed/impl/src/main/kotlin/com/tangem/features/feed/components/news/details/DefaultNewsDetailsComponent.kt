@@ -52,7 +52,7 @@ internal class DefaultNewsDetailsComponent(
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_back_28),
                     contentDescription = null,
-                    tint = TangemTheme.colors2.graphic.neutral.primary,
+                    tint = TangemTheme.colors3.icon.primary,
                     modifier = Modifier
                         .size(44.dp)
                         .clip(CircleShape)
@@ -68,7 +68,7 @@ internal class DefaultNewsDetailsComponent(
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_share_new_24),
                     contentDescription = null,
-                    tint = TangemTheme.colors2.graphic.neutral.primary,
+                    tint = TangemTheme.colors3.icon.primary,
                     modifier = Modifier
                         .size(44.dp)
                         .clip(CircleShape)

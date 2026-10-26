@@ -51,7 +51,7 @@ fun SendingText(footerText: TextReference, modifier: Modifier = Modifier) {
             text = footerText.resolveAnnotatedReference(),
             textAlign = TextAlign.Center,
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)

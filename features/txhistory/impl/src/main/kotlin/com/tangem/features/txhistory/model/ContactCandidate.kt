@@ -1,9 +1,11 @@
 package com.tangem.features.txhistory.model
 
+import com.tangem.domain.jointaccount.model.FinishedJointOperation
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.txhistory.model.ExpressTx
+import com.tangem.domain.txhistory.model.JointOperationTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 
@@ -29,6 +31,7 @@ internal fun TxHistoryInfo.contactCandidate(
     val candidate = when (this) {
         is OnChainTx.BSDK -> txInfo.transferCandidate(networkId = currency.network.id.rawId)
         is ExpressTx.Swap -> swapPayoutCandidate()
+        is JointOperationTx -> executedRecipientCandidate(networkId = currency.network.id.rawId)
         is OnChainTx.TangemPay, is ExpressTx.Onramp -> null
     } ?: return null
 
@@ -45,6 +48,13 @@ private fun TxInfo.transferCandidate(networkId: Network.RawID): ContactCandidate
     val address = (interactionAddressType as? TxInfo.InteractionAddressType.User)?.address ?: return null
 
     return ContactCandidate(address = address, networkId = networkId)
+}
+
+/** The recipient of a joint transfer that went through; a failed or cancelled one sent nothing to save. */
+private fun JointOperationTx.executedRecipientCandidate(networkId: Network.RawID): ContactCandidate? {
+    if (operation.status != FinishedJointOperation.Status.EXECUTED) return null
+
+    return ContactCandidate(address = transfer.intent.recipient, networkId = networkId)
 }
 
 /**

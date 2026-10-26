@@ -57,14 +57,14 @@ fun Wallet1ChooseOption(
                     Text(
                         text = item.title.resolveReference(),
                         style = TangemTheme.typography.h2,
-                        color = TangemTheme.colors.text.primary1,
+                        color = TangemTheme.colors3.text.primary,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(top = 16.dp),
                     )
                     Text(
                         text = item.subtitle.resolveReference(),
                         style = TangemTheme.typography.body1,
-                        color = TangemTheme.colors.text.secondary,
+                        color = TangemTheme.colors3.text.secondary,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(top = 12.dp),
                     )
@@ -100,8 +100,8 @@ fun Wallet1ChooseOption(
 
 @Composable
 private fun Dots(count: Int, selectedIndex: Int, modifier: Modifier = Modifier) {
-    val generalColor = TangemTheme.colors.icon.informative
-    val selectedColor = TangemTheme.colors.icon.primary1
+    val generalColor = TangemTheme.colors3.icon.secondary
+    val selectedColor = TangemTheme.colors3.icon.primary
 
     Row(
         modifier = modifier,

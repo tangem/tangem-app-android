@@ -29,7 +29,7 @@ fun ChooseAddressBottomSheet(config: TangemBottomSheetConfig) {
 @Composable
 private fun ChooseAddressBottomSheetContent(content: ChooseAddressBottomSheetConfig) {
     Column(
-        modifier = Modifier.background(TangemTheme.colors.background.primary),
+        modifier = Modifier.background(TangemTheme.colors3.bg.primary),
     ) {
         content.addressModels.forEach { addressModel ->
             SimpleSettingsRow(

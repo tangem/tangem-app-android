@@ -22,7 +22,7 @@ internal fun NFTDetails(state: NFTDetailsUM, modifier: Modifier = Modifier) {
 
     Box(
         modifier = modifier
-            .background(TangemTheme.colors.background.secondary),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),

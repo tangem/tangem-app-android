@@ -6,11 +6,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.feature.swap.mcp.model.ExchangeIntentButtonUM
 import com.tangem.feature.swap.mcp.model.ExchangeIntentUM
+import com.tangem.feature.swap.presentation.R
 
 /**
  * An intent the wallet cannot offer: the status of the intent over the one action it carries.
@@ -35,9 +37,12 @@ private fun ExchangeIntentProcessedContentPreview() {
         ExchangeIntentStatusContent(
             state = ExchangeIntentUM.Status(
                 variant = TangemModalStatus.Variant.Info,
-                title = stringReference("This intent has already been processed"),
-                subtitle = stringReference("Swap 42.00 USDT to POL"),
-                primaryButton = ExchangeIntentButtonUM(text = stringReference("Got it"), onClick = {}),
+                title = resourceReference(R.string.mcp_intent_processed_title),
+                subtitle = resourceReference(
+                    R.string.mcp_swap_intent_processed_subtitle,
+                    wrappedList("42.00 USDT", "POL"),
+                ),
+                primaryButton = ExchangeIntentButtonUM(text = resourceReference(R.string.common_got_it), onClick = {}),
             ),
             modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
         )
@@ -52,9 +57,12 @@ private fun ExchangeIntentCantReachContentPreview() {
         ExchangeIntentStatusContent(
             state = ExchangeIntentUM.Status(
                 variant = TangemModalStatus.Variant.Warning,
-                title = stringReference("Can’t reach intent"),
+                title = resourceReference(R.string.mcp_swap_intent_cant_reach_title),
                 subtitle = null,
-                primaryButton = ExchangeIntentButtonUM(text = stringReference("Try again"), onClick = {}),
+                primaryButton = ExchangeIntentButtonUM(
+                    text = resourceReference(R.string.alert_button_try_again),
+                    onClick = {},
+                ),
             ),
             modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
         )

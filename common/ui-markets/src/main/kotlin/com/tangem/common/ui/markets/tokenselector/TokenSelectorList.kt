@@ -134,7 +134,7 @@ private fun WalletHeaderSection(section: TokenSelectorSectionUM.WalletHeader, ho
         Text(
             text = section.walletName,
             style = TangemTheme.typography2.subheadlineMedium14,
-            color = TangemTheme.colors2.text.neutral.primary,
+            color = TangemTheme.colors3.text.primary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -164,7 +164,7 @@ private fun TokenGroupAccountHeaderRow(data: AccountHeaderData, modifier: Modifi
         Text(
             text = data.accountName.resolveReference(),
             style = TangemTheme.typography2.captionMedium12,
-            color = TangemTheme.colors2.text.neutral.primary,
+            color = TangemTheme.colors3.text.primary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )

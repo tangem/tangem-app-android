@@ -64,7 +64,7 @@ internal fun CustomTokenFormContent(model: CustomTokenFormUM, modifier: Modifier
         modifier = modifier
             .imePadding()
             .fillMaxSize()
-            .background(color = TangemTheme.colors.background.secondary),
+            .background(color = TangemTheme.colors3.bg.primary),
     ) {
         Box(
             modifier = Modifier
@@ -134,7 +134,7 @@ private fun FormContent(model: CustomTokenFormUM, modifier: Modifier = Modifier)
             Notification(
                 modifier = Modifier.testTag(AddCustomTokenScreenTestTags.WARNING_NOTIFICATION),
                 config = notification.config,
-                containerColor = TangemTheme.colors.button.disabled,
+                containerColor = TangemTheme.colors3.bg.disabled,
             )
         }
     }
@@ -145,7 +145,7 @@ private fun TokenForm(tokenForm: CustomTokenFormUM.TokenFormUM, modifier: Modifi
     Column(
         modifier = modifier
             .background(
-                color = TangemTheme.colors.background.action,
+                color = TangemTheme.colors3.bg.secondary,
                 shape = TangemTheme.shapes.roundedCornersXMedium,
             ),
     ) {
@@ -168,16 +168,16 @@ private fun TextField(model: TextInputFieldUM, modifier: Modifier = Modifier, fi
             val color by animateColorAsState(
                 targetValue = when {
                     !model.isEnabled -> {
-                        TangemTheme.colors.text.disabled
+                        TangemTheme.colors3.text.tertiary
                     }
                     model.error != null -> {
-                        TangemTheme.colors.text.warning
+                        TangemTheme.colors3.text.accent.red
                     }
                     model.isEnabled || model.value.isNotBlank() || model.isFocused -> {
-                        TangemTheme.colors.text.tertiary
+                        TangemTheme.colors3.text.secondary
                     }
                     else -> {
-                        TangemTheme.colors.text.disabled
+                        TangemTheme.colors3.text.tertiary
                     }
                 },
                 label = "Field label color",
@@ -192,9 +192,9 @@ private fun TextField(model: TextInputFieldUM, modifier: Modifier = Modifier, fi
         content = {
             val color by animateColorAsState(
                 targetValue = if (model.isEnabled) {
-                    TangemTheme.colors.text.primary1
+                    TangemTheme.colors3.text.primary
                 } else {
-                    TangemTheme.colors.text.disabled
+                    TangemTheme.colors3.text.tertiary
                 },
                 label = "Field value color",
             )
@@ -229,7 +229,7 @@ private fun ClickableField(model: ClickableFieldUM, modifier: Modifier = Modifie
             Text(
                 text = model.label.resolveReference(),
                 style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
         },
         content = {
@@ -237,7 +237,7 @@ private fun ClickableField(model: ClickableFieldUM, modifier: Modifier = Modifie
                 modifier = Modifier.padding(bottom = 12.dp),
                 text = model.value.resolveReference(),
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
         },
     )

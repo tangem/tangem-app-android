@@ -65,7 +65,7 @@ private fun OnrampAmountButtons(state: OnrampAmountButtonUMState) {
             is OnrampAmountButtonUMState.Loaded -> {
                 if (keyboard is Keyboard.Opened) {
                     LazyRow(
-                        modifier = Modifier.background(color = TangemTheme.colors.button.secondary),
+                        modifier = Modifier.background(color = TangemTheme.colors3.bg.transparent.secondary),
                         contentPadding = PaddingValues(
                             vertical = 10.dp,
                             horizontal = 8.dp,
@@ -94,7 +94,7 @@ private fun AmountButton(button: OnrampAmountButtonUM, modifier: Modifier = Modi
         modifier = modifier
             .sizeIn(minHeight = 24.dp, minWidth = 62.dp)
             .background(
-                color = TangemTheme.colors.field.primary,
+                color = TangemTheme.colors3.bg.tertiary,
                 shape = RoundedCornerShape(16.dp),
             )
             .clickable(
@@ -109,7 +109,7 @@ private fun AmountButton(button: OnrampAmountButtonUM, modifier: Modifier = Modi
         Text(
             text = "${button.value}${button.currency}",
             style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
     }
 }

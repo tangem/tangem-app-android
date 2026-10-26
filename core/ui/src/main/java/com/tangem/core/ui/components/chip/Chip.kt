@@ -27,17 +27,17 @@ import com.tangem.core.ui.res.TangemThemePreview
 fun Chip(state: ChipUM, modifier: Modifier = Modifier) {
     val backgroundColor by animateColorAsState(
         targetValue = if (state.isSelected) {
-            TangemTheme.colors.button.primary
+            TangemTheme.colors3.bg.inverse
         } else {
-            TangemTheme.colors.button.secondary
+            TangemTheme.colors3.bg.transparent.secondary
         },
     )
 
     val textColor by animateColorAsState(
         targetValue = if (state.isSelected) {
-            TangemTheme.colors.text.primary2
+            TangemTheme.colors3.text.inverse.primary
         } else {
-            TangemTheme.colors.text.primary1
+            TangemTheme.colors3.text.primary
         },
     )
 
@@ -71,7 +71,7 @@ private fun ChipPreview() {
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
-                .background(TangemTheme.colors.background.primary)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(16.dp),
         ) {
             FlowRow(

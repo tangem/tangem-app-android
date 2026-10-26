@@ -55,7 +55,7 @@ fun TangemDeviceIcon(state: DeviceIconUM, modifier: Modifier = Modifier) {
             mainColor = Color.Unspecified,
             secondColor = Color.Unspecified.takeIf { state.cardsCount > 1 },
             thirdColor = Color.Unspecified.takeIf { state.cardsCount > 2 },
-            tColor = TangemTheme.colors2.graphic.neutral.secondary,
+            tColor = TangemTheme.colors3.icon.secondary,
         )
         DeviceIconUM.Mobile -> Icon(
             modifier = modifier,
@@ -177,7 +177,7 @@ private fun TangemDeviceIcon_Preview() {
     TangemThemePreviewRedesign {
         Column(
             modifier = Modifier
-                .background(TangemTheme.colors.background.primary)
+                .background(TangemTheme.colors3.bg.secondary)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -193,7 +193,7 @@ private fun TangemDeviceIcon_Preview() {
                     Text(
                         text = label,
                         style = TangemTheme.typography.body1,
-                        color = TangemTheme.colors.text.primary1,
+                        color = TangemTheme.colors3.text.primary,
                     )
                 }
             }

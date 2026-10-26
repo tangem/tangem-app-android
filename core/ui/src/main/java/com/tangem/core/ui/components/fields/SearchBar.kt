@@ -89,9 +89,9 @@ fun SearchBar(
         singleLine = true,
         maxLines = 1,
         textStyle = TangemTheme.typography.body2.copy(
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         ),
-        cursorBrush = SolidColor(TangemTheme.colors.icon.primary1),
+        cursorBrush = SolidColor(TangemTheme.colors3.icon.primary),
         decorationBox = @Composable { innerTextField ->
             DecorationBox(
                 state = state,
@@ -132,7 +132,7 @@ private fun DecorationBox(
                     .size(20.dp)
                     .testTag(SearchBarTestTags.ICON),
                 painter = painterResource(id = R.drawable.ic_search_24),
-                tint = TangemTheme.colors.icon.informative,
+                tint = TangemTheme.colors3.icon.secondary,
                 contentDescription = null,
             )
         },
@@ -147,7 +147,7 @@ private fun DecorationBox(
         placeholder = {
             Text(
                 text = state.placeholderText.resolveReference(),
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 style = TangemTheme.typography.body2,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -180,7 +180,7 @@ private fun ClearButton(
             Icon(
                 modifier = Modifier.size(20.dp),
                 painter = painterResource(id = R.drawable.ic_close_24),
-                tint = TangemTheme.colors.icon.informative,
+                tint = TangemTheme.colors3.icon.secondary,
                 contentDescription = null,
             )
         }
@@ -190,22 +190,22 @@ private fun ClearButton(
 object TangemSearchBarDefaults {
     val defaultTextFieldColors: TextFieldColors
         @Composable @Stable get() = TextFieldDefaults.colors().copy(
-            focusedContainerColor = TangemTheme.colors.field.primary,
-            unfocusedContainerColor = TangemTheme.colors.field.primary,
-            focusedTextColor = TangemTheme.colors.text.primary1,
-            unfocusedTextColor = TangemTheme.colors.text.primary1,
-            cursorColor = TangemTheme.colors.icon.primary1,
+            focusedContainerColor = TangemTheme.colors3.bg.tertiary,
+            unfocusedContainerColor = TangemTheme.colors3.bg.tertiary,
+            focusedTextColor = TangemTheme.colors3.text.primary,
+            unfocusedTextColor = TangemTheme.colors3.text.primary,
+            cursorColor = TangemTheme.colors3.icon.primary,
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
             disabledIndicatorColor = Color.Transparent,
         )
     val secondaryTextFieldColors: TextFieldColors
         @Composable @Stable get() = TextFieldDefaults.colors().copy(
-            focusedContainerColor = TangemTheme.colors.field.focused,
-            unfocusedContainerColor = TangemTheme.colors.field.focused,
-            focusedTextColor = TangemTheme.colors.text.primary1,
-            unfocusedTextColor = TangemTheme.colors.text.primary1,
-            cursorColor = TangemTheme.colors.icon.primary1,
+            focusedContainerColor = TangemTheme.colors3.bg.transparent.secondary,
+            unfocusedContainerColor = TangemTheme.colors3.bg.transparent.secondary,
+            focusedTextColor = TangemTheme.colors3.text.primary,
+            unfocusedTextColor = TangemTheme.colors3.text.primary,
+            cursorColor = TangemTheme.colors3.icon.primary,
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
             disabledIndicatorColor = Color.Transparent,

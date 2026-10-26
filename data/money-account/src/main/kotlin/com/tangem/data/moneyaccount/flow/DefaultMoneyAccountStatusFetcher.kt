@@ -102,6 +102,7 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
                     cryptoCurrency = cryptoCurrency,
                     balance = balance,
                     customerId = customerInfo.customerId,
+                    productInstanceId = instance.id,
                     isBankOfframpAvailable = channels?.contains(TangemPayEligibilityType.BANK_OFFRAMP),
                 )
             }

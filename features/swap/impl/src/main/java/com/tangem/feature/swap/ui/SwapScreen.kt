@@ -53,7 +53,7 @@ internal fun SwapScreen(
         modifier = Modifier.systemBarsPadding(),
         topBar = { SwapTopBar(stateHolder = stateHolder) },
         contentWindowInsets = WindowInsetsZero,
-        containerColor = TangemTheme.colors.background.secondary,
+        containerColor = TangemTheme.colors3.bg.primary,
     ) { scaffoldPaddings ->
 
         SwapScreenContent(
@@ -98,7 +98,7 @@ private fun SwapTopBar(stateHolder: SwapStateHolder) {
         Box(modifier = Modifier.align(Alignment.TopEnd)) {
             TangemDropdownMenu(
                 expanded = shouldShowModeMenu,
-                modifier = Modifier.background(TangemTheme.colors.background.primary),
+                modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
                 offset = DpOffset(x = 20.dp, y = 44.dp),
                 onDismissRequest = { shouldShowModeMenu = false },
                 content = {
@@ -138,13 +138,13 @@ private fun SwapUiModeMenuItem(title: String, isSelected: Boolean, onClick: () -
         Text(
             text = title,
             style = TangemTheme.typography.button,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             modifier = Modifier.weight(1f),
         )
         if (isSelected) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_check_24),
-                tint = TangemTheme.colors.icon.primary1,
+                tint = TangemTheme.colors3.icon.primary,
                 contentDescription = null,
                 modifier = Modifier.size(16.dp),
             )

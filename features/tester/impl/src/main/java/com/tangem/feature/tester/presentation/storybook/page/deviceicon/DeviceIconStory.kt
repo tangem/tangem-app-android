@@ -29,7 +29,7 @@ internal fun DeviceIconStory(modifier: Modifier = Modifier) {
         modifier = modifier
             .statusBarsPadding()
             .fillMaxSize()
-            .background(TangemTheme.colors2.surface.level1),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         item("section_cards") {
             SectionTitle(text = "Cards")
@@ -139,7 +139,7 @@ internal fun DeviceIconStory(modifier: Modifier = Modifier) {
                         Text(
                             text = "${size}dp",
                             style = TangemTheme.typography.caption2,
-                            color = TangemTheme.colors.text.tertiary,
+                            color = TangemTheme.colors3.text.secondary,
                         )
                     }
                 }
@@ -153,11 +153,11 @@ private fun SectionTitle(text: String) {
     Text(
         text = text,
         style = TangemTheme.typography.subtitle1,
-        color = TangemTheme.colors.text.primary1,
+        color = TangemTheme.colors3.text.primary,
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
     )
     HorizontalDivider(
-        color = TangemTheme.colors2.border.neutral.secondary,
+        color = TangemTheme.colors3.border.tertiary,
         modifier = Modifier.padding(horizontal = 16.dp),
     )
 }
@@ -178,7 +178,7 @@ private fun DeviceIconRow(label: String, state: DeviceIconUM) {
         Text(
             text = label,
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
         )
     }
 }

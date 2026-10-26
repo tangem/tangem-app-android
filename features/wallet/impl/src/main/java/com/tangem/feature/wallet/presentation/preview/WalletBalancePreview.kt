@@ -20,7 +20,7 @@ internal object WalletBalancePreview {
             stringReference("1,234"),
             styledStringReference(
                 ".56",
-                { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
+                { SpanStyle(color = TangemTheme.colors3.text.secondary) },
             ),
             stringReference(" $"),
         ),
@@ -46,7 +46,7 @@ internal object WalletBalancePreview {
             stringReference("1,234"),
             styledStringReference(
                 ".56",
-                { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
+                { SpanStyle(color = TangemTheme.colors3.text.secondary) },
             ),
             stringReference(" $"),
         ),

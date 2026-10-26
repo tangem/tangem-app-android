@@ -1,7 +1,6 @@
 package com.tangem.features.walletconnect.transaction.components.chain
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
@@ -19,11 +18,11 @@ internal class WcAddNetworkComponent(
 
     @Composable
     override fun BottomSheet() {
-        val content by model.uiState.collectAsStateWithLifecycle()
+        val content = model.uiState.collectAsStateWithLifecycle().value
 
         if (content != null) {
             WcAddEthereumChainModalBottomSheetContent(
-                state = content!!.transaction,
+                state = content.transaction,
                 onClickTransactionRequest = model::showTransactionRequest,
                 onBack = router::pop,
                 onDismiss = ::dismiss,

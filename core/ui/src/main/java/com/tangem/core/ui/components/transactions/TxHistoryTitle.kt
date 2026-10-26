@@ -29,7 +29,7 @@ import com.tangem.core.ui.test.TransactionHistoryBlockTestTags
 fun TxHistoryTitle(onExploreClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
-            .background(TangemTheme.colors.background.primary)
+            .background(TangemTheme.colors3.bg.secondary)
             .padding(top = 12.dp)
             .padding(horizontal = 12.dp)
             .fillMaxWidth()
@@ -39,7 +39,7 @@ fun TxHistoryTitle(onExploreClick: () -> Unit, modifier: Modifier = Modifier) {
     ) {
         Text(
             text = stringResourceSafe(id = R.string.common_transactions),
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography.subtitle2,
             modifier = Modifier.testTag(TransactionHistoryBlockTestTags.TITLE_TEXT),
         )
@@ -54,12 +54,12 @@ fun TxHistoryTitle(onExploreClick: () -> Unit, modifier: Modifier = Modifier) {
             Icon(
                 modifier = Modifier.size(size = 20.dp),
                 painter = painterResource(id = R.drawable.ic_compass_24),
-                tint = TangemTheme.colors.icon.informative,
+                tint = TangemTheme.colors3.icon.secondary,
                 contentDescription = null,
             )
             Text(
                 text = stringResourceSafe(id = R.string.common_explorer),
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 style = TangemTheme.typography.subtitle2,
                 modifier = Modifier.testTag(TransactionHistoryBlockTestTags.EXPLORER_TEXT),
             )

@@ -186,7 +186,7 @@ private fun AmountCard(amount: TangemPayBankWithdrawPreviewUM.AmountCardUM) {
                     ?: Modifier,
             ),
     ) {
-        BankFromRow(balance = amount.balance, modifier = Modifier.fillMaxWidth())
+        BankFromRow(from = amount.from, balance = amount.balance, modifier = Modifier.fillMaxWidth())
         TangemRow(
             verticalAlignment = TangemRowVerticalAlignment.Center,
             titleSlot = {

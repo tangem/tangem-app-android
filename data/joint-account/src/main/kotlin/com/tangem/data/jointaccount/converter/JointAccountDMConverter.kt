@@ -48,6 +48,7 @@ internal class JointAccountDMConverter @Inject constructor() : TwoWayConverter<J
                         address = signature.address,
                         state = signature.state.toRawString(),
                         at = signature.at,
+                        signature = signature.signature,
                     )
                 },
                 to = operation.safeTx.to,
@@ -111,6 +112,7 @@ internal class JointAccountDMConverter @Inject constructor() : TwoWayConverter<J
                 address = signature.address,
                 state = signature.state.toSignatureState(),
                 at = signature.at,
+                signature = signature.signature,
             )
         },
     )

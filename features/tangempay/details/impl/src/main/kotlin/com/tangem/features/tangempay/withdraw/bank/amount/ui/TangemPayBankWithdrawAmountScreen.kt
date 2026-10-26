@@ -69,6 +69,7 @@ import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.RouteRowUM
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.SourceRowUM
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawFromUM
 import com.tangem.features.tangempay.withdraw.bank.ui.BankFromRow
 import com.tangem.features.tangempay.withdraw.bank.ui.BankRouteRow
 import com.tangem.features.tangempay.withdraw.bank.ui.ChevronDownIcon
@@ -106,9 +107,10 @@ internal fun TangemPayBankWithdrawAmountScreen(state: TangemPayBankWithdrawAmoun
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             AmountCard(
+                from = state.from,
                 amount = state.amount,
                 source = state.source,
-                onSourceClick = { dismissKeyboardThen(state.source.onClick) },
+                onSourceClick = state.source.onClick?.let { onSourceClick -> { dismissKeyboardThen(onSourceClick) } },
             )
             RouteRow(
                 route = state.route,
@@ -158,9 +160,10 @@ private const val KEYBOARD_HIDE_TIMEOUT_MILLIS = 500L
 
 @Composable
 private fun AmountCard(
+    from: BankWithdrawFromUM,
     amount: TangemPayBankWithdrawAmountUM.AmountFieldUM,
     source: SourceRowUM,
-    onSourceClick: () -> Unit,
+    onSourceClick: (() -> Unit)?,
 ) {
     Column(
         modifier = Modifier
@@ -170,7 +173,7 @@ private fun AmountCard(
             .background(TangemTheme.colors3.bg.secondary),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        BankFromRow(balance = null)
+        BankFromRow(from = from, balance = null)
         AmountInput(amount = amount, modifier = Modifier.weight(1f))
         HorizontalDivider(
             modifier = Modifier.padding(horizontal = 16.dp),
@@ -277,7 +280,7 @@ private fun AmountPlaceholder(currencySymbol: String) {
 }
 
 @Composable
-private fun SourceRow(source: SourceRowUM, onClick: () -> Unit) {
+private fun SourceRow(source: SourceRowUM, onClick: (() -> Unit)?) {
     TangemRow(
         modifier = Modifier.testTag(TangemPayTestTags.BANK_WITHDRAW_SOURCE_ROW),
         verticalAlignment = TangemRowVerticalAlignment.Center,
@@ -296,7 +299,7 @@ private fun SourceRow(source: SourceRowUM, onClick: () -> Unit) {
                     text = resourceReference(R.string.send_max_amount),
                     onClick = source.onMaxClick,
                 )
-                ChevronDownIcon()
+                if (onClick != null) ChevronDownIcon()
             }
         },
         onClick = onClick,
@@ -330,5 +333,6 @@ private class AmountPreviewProvider : PreviewParameterProvider<TangemPayBankWith
         TangemPayBankWithdrawAmountPreviewData.empty,
         TangemPayBankWithdrawAmountPreviewData.content,
         TangemPayBankWithdrawAmountPreviewData.contentWithError,
+        TangemPayBankWithdrawAmountPreviewData.moneyAccount,
     )
 }

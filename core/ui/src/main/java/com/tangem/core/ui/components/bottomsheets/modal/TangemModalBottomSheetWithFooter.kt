@@ -48,7 +48,7 @@ import com.tangem.core.ui.utils.toPx
 @Composable
 inline fun <reified T : TangemBottomSheetConfigContent> TangemModalBottomSheetWithFooter(
     config: TangemBottomSheetConfig,
-    containerColor: Color = TangemTheme.colors.background.primary,
+    containerColor: Color = TangemTheme.colors3.bg.primary,
     skipPartiallyExpanded: Boolean = true,
     noinline onBack: (() -> Unit)? = null,
     crossinline title: @Composable BoxScope.(T) -> Unit = {},
@@ -213,7 +213,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
                         .background(
                             brush = Brush.verticalGradient(
                                 colors = listOf(
-                                    TangemTheme.colors.background.secondary.copy(alpha = 0.9F),
+                                    TangemTheme.colors3.bg.primary.copy(alpha = 0.9F),
                                     Color.Transparent,
                                 ),
                             ),
@@ -231,7 +231,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
                 if (scrollState.canScrollForward && scrollState.maxValue != Int.MAX_VALUE) {
                     BottomFade(
                         modifier = Modifier.align(Alignment.BottomCenter),
-                        backgroundColor = TangemTheme.colors.background.primary,
+                        backgroundColor = TangemTheme.colors3.bg.primary,
                     )
                 }
                 Box(
@@ -258,7 +258,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
         onBack = onBack,
         dragHandle = null,
         content = bsContent,
-        scrimColor = TangemTheme.colors.overlay.secondary,
+        scrimColor = TangemTheme.colors3.overlay.modal,
         peekHeightDp = maxHeight,
     )
 }
@@ -285,26 +285,26 @@ private fun TangemModalBottomSheetWithFooter_Preview() {
                         modifier = Modifier
                             .size(56.dp)
                             .clip(RoundedCornerShape(100))
-                            .background(TangemTheme.colors.icon.informative.copy(alpha = 0.1f))
+                            .background(TangemTheme.colors3.icon.secondary.copy(alpha = 0.1f))
                             .padding(12.dp),
                         painter = rememberVectorPainter(
                             ImageVector.vectorResource(R.drawable.ic_alert_24),
                         ),
-                        tint = TangemTheme.colors.icon.informative,
+                        tint = TangemTheme.colors3.icon.secondary,
                         contentDescription = null,
                     )
                     SpacerH24()
                     Text(
                         text = "Unsuported networks",
                         style = TangemTheme.typography.h3,
-                        color = TangemTheme.colors.text.primary1,
+                        color = TangemTheme.colors3.text.primary,
                         textAlign = TextAlign.Center,
                     )
                     SpacerH8()
                     Text(
                         text = "Tangem does not currently support a required network by React App.",
                         style = TangemTheme.typography.body2,
-                        color = TangemTheme.colors.text.secondary,
+                        color = TangemTheme.colors3.text.secondary,
                         textAlign = TextAlign.Center,
                     )
                     SpacerH(48.dp)
@@ -319,7 +319,7 @@ private fun TangemModalBottomSheetWithFooter_Preview() {
                             "pharetra. Morbi sed faucibus leo. Praesent elementum pretium posuere. Morbi et felis a " +
                             "turpis pellentesque rhoncus.",
                         style = TangemTheme.typography.body1,
-                        color = TangemTheme.colors.text.secondary,
+                        color = TangemTheme.colors3.text.secondary,
                         textAlign = TextAlign.Center,
                     )
                 }

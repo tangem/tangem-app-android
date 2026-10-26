@@ -55,7 +55,7 @@ fun AddTokenContent(state: AddTokenUM, modifier: Modifier = Modifier) {
         TokenItem(
             modifier = Modifier
                 .clip(RoundedCornerShape(14.dp))
-                .background(color = TangemTheme.colors.background.action),
+                .background(color = TangemTheme.colors3.bg.secondary),
             state = state.tokenToAdd,
             isBalanceHidden = false,
         )
@@ -64,13 +64,13 @@ fun AddTokenContent(state: AddTokenUM, modifier: Modifier = Modifier) {
         Column(
             modifier = Modifier
                 .clip(RoundedCornerShape(14.dp))
-                .background(color = TangemTheme.colors.background.action),
+                .background(color = TangemTheme.colors3.bg.secondary),
         ) {
             PortfolioSelectRow(state.portfolio)
             HorizontalDivider(
                 modifier = Modifier.padding(horizontal = 12.dp),
                 thickness = 0.5.dp,
-                color = TangemTheme.colors.stroke.primary,
+                color = TangemTheme.colors3.border.secondary,
             )
             NetworkRow(state.network)
         }
@@ -96,7 +96,7 @@ private fun NetworkRow(state: AddTokenUM.Network, modifier: Modifier = Modifier)
             modifier = Modifier.weight(1f),
             text = stringResourceSafe(R.string.wc_common_networks),
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         SpacerW12()
         Icon(
@@ -111,7 +111,7 @@ private fun NetworkRow(state: AddTokenUM.Network, modifier: Modifier = Modifier)
             modifier = Modifier.padding(horizontal = 4.dp),
             text = state.name.resolveReference(),
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         if (state.isEditable) {
             Icon(
@@ -120,7 +120,7 @@ private fun NetworkRow(state: AddTokenUM.Network, modifier: Modifier = Modifier)
                     .testTag(WalletConnectBottomSheetTestTags.NETWORKS_SELECTOR_ICON),
                 painter = painterResource(id = R.drawable.ic_select_18_24),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.informative,
+                tint = TangemTheme.colors3.icon.secondary,
             )
         }
     }

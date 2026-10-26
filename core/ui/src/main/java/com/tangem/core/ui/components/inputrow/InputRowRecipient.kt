@@ -78,9 +78,9 @@ fun InputRowRecipient(
     resolvedAddress: String? = null,
 ) {
     val (titleText, color) = if (isError && error != null) {
-        error to TangemTheme.colors.text.warning
+        error to TangemTheme.colors3.text.accent.red
     } else {
-        title to TangemTheme.colors.text.tertiary
+        title to TangemTheme.colors3.text.secondary
     }
     DividerContainer(
         modifier = modifier,
@@ -143,8 +143,8 @@ fun InputRowRecipient(
                     PasteButton(
                         isPasteButtonVisible = value.isBlank(),
                         onClick = onPasteClick,
-                        backgroundColorEnabled = TangemTheme.colors.button.secondary,
-                        textColor = TangemTheme.colors.text.primary1,
+                        backgroundColorEnabled = TangemTheme.colors3.bg.transparent.secondary,
+                        textColor = TangemTheme.colors3.text.primary,
                         modifier = Modifier
                             .padding(start = 8.dp)
                             .testTag(SendAddressScreenTestTags.ADDRESS_PASTE_BUTTON),
@@ -171,8 +171,8 @@ private fun QrButton(visible: Boolean, onQrCodeClick: () -> Unit, modifier: Modi
         TangemIconButton(
             iconRes = R.drawable.ic_scan_16,
             onClick = onQrCodeClick,
-            background = TangemTheme.colors.button.secondary,
-            iconTint = TangemTheme.colors.text.primary1,
+            background = TangemTheme.colors3.bg.transparent.secondary,
+            iconTint = TangemTheme.colors3.text.primary,
         )
     }
 }
@@ -196,11 +196,11 @@ private fun RowScope.InputIcon(isLoading: Boolean, value: String) {
             .align(CenterVertically)
             .clip(RoundedCornerShape(18.dp))
             .size(36.dp)
-            .background(TangemTheme.colors.background.tertiary),
+            .background(TangemTheme.colors3.bg.primary),
     ) { showIndicator ->
         if (showIndicator) {
             CircularProgressIndicator(
-                color = TangemTheme.colors.icon.informative,
+                color = TangemTheme.colors3.icon.secondary,
                 modifier = Modifier
                     .padding(8.dp),
             )
@@ -225,12 +225,12 @@ private fun ResolvedAddressRow(isLoading: Boolean, resolvedAddress: String?) {
                 HorizontalDivider(
                     thickness = 0.5.dp,
                     modifier = Modifier.padding(top = 12.dp, bottom = 12.dp),
-                    color = TangemTheme.colors.stroke.primary,
+                    color = TangemTheme.colors3.border.secondary,
                 )
                 Text(
                     text = state.address,
                     style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                     modifier = Modifier.testTag(SendAddressScreenTestTags.RESOLVED_ADDRESS),
                 )
             }
@@ -263,7 +263,7 @@ private fun InputRowRecipientPreview(
             onPasteClick = {},
             onClearClick = {},
             onQrCodeClick = {},
-            modifier = Modifier.background(TangemTheme.colors.background.primary),
+            modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
             resolvedAddress = value.resolvedAddress,
         )
     }

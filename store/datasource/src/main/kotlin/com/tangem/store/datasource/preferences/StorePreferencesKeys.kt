@@ -125,6 +125,9 @@ class StorePreferencesKeys @Inject constructor() {
     val pushNotificationFirstActivationDoneWalletIdsKey: Preferences.Key<Set<String>> =
         stringSetPreferencesKey(name = "pushNotificationFirstActivationDoneWalletIds")
 
+    val addressesSharingWalletIdsKey: Preferences.Key<Set<String>> =
+        stringSetPreferencesKey(name = "addressesSharingWalletIds")
+
     val tronNetworkFeeNotificationShowCountKey: Preferences.Key<Int> =
         intPreferencesKey(name = "tronNetworkFeeNotificationShowCount")
 

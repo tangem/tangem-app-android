@@ -32,11 +32,13 @@ import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
 import com.tangem.domain.jointaccount.repository.JointAccountSupportedNetworksRepository
 import com.tangem.domain.jointaccount.repository.JointOwnerKeysRepository
 import com.tangem.data.jointaccount.signing.DefaultJointOperationSigner
+import com.tangem.data.jointaccount.signing.DefaultJointSignatureRecoverer
 import com.tangem.domain.jointaccount.producer.SingleJointAccountListProducer
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.safe.JointTransferPayloadCodec
 import com.tangem.domain.jointaccount.safe.SafeAddressCalculator
 import com.tangem.domain.jointaccount.signing.JointOperationSigner
+import com.tangem.domain.jointaccount.signing.JointSignatureRecoverer
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Binds
@@ -100,6 +102,10 @@ internal interface JointAccountDataModule {
     @Binds
     @Singleton
     fun bindJointOperationSigner(signer: DefaultJointOperationSigner): JointOperationSigner
+
+    @Binds
+    @Singleton
+    fun bindJointSignatureRecoverer(recoverer: DefaultJointSignatureRecoverer): JointSignatureRecoverer
 
     @Binds
     @Singleton

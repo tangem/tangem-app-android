@@ -1,7 +1,8 @@
 package com.tangem.feature.swap.mcp.model
 
 import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.feature.swap.presentation.R
 import com.tangem.utils.converter.Converter
 import javax.inject.Inject
 
@@ -13,17 +14,12 @@ internal class ExchangeIntentCantReachConverter @Inject constructor() :
 
     override fun convert(value: Input): ExchangeIntentUM.Status = ExchangeIntentUM.Status(
         variant = TangemModalStatus.Variant.Warning,
-        title = Texts.TITLE,
+        title = resourceReference(R.string.mcp_swap_intent_cant_reach_title),
         subtitle = null,
         primaryButton = value.onRetry
-            ?.let { onRetry -> ExchangeIntentButtonUM(text = Texts.TRY_AGAIN, onClick = onRetry) }
-            ?: ExchangeIntentButtonUM(text = Texts.GOT_IT, onClick = value.onClose),
+            ?.let { onRetry ->
+                ExchangeIntentButtonUM(text = resourceReference(R.string.alert_button_try_again), onClick = onRetry)
+            }
+            ?: ExchangeIntentButtonUM(text = resourceReference(R.string.common_got_it), onClick = value.onClose),
     )
-
-    // TODO: [REDACTED_TASK_KEY] Replace English placeholders with Lokalise-backed resources.
-    private object Texts {
-        val TITLE = stringReference("Can’t reach intent")
-        val GOT_IT = stringReference("Got it")
-        val TRY_AGAIN = stringReference("Try again")
-    }
 }
