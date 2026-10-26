@@ -311,60 +311,60 @@ enum class TangemBadgeColor {
 @ReadOnlyComposable
 @Composable
 private fun getIconColor(type: TangemBadgeType, color: TangemBadgeColor) = when (color) {
-    TangemBadgeColor.Gray -> TangemTheme.colors2.markers.iconGray
+    TangemBadgeColor.Gray -> TangemTheme.colors3.icon.secondary
     TangemBadgeColor.Blue -> when (type) {
         TangemBadgeType.Outline,
         TangemBadgeType.Tinted,
-        -> TangemTheme.colors2.markers.iconBlue
-        TangemBadgeType.Solid -> TangemTheme.colors2.graphic.neutral.primaryInvertedConstant
+        -> TangemTheme.colors3.icon.accent.blue
+        TangemBadgeType.Solid -> TangemTheme.colors3.icon.staticDark
     }
     TangemBadgeColor.Red -> when (type) {
         TangemBadgeType.Outline,
         TangemBadgeType.Tinted,
-        -> TangemTheme.colors2.markers.iconRed
-        TangemBadgeType.Solid -> TangemTheme.colors2.graphic.neutral.primaryInvertedConstant
+        -> TangemTheme.colors3.icon.accent.red
+        TangemBadgeType.Solid -> TangemTheme.colors3.icon.staticDark
     }
     TangemBadgeColor.Green -> when (type) {
         TangemBadgeType.Outline,
         TangemBadgeType.Tinted,
-        -> TangemTheme.colors2.markers.iconGreen
-        TangemBadgeType.Solid -> TangemTheme.colors2.graphic.neutral.primaryInvertedConstant
+        -> TangemTheme.colors3.icon.accent.green
+        TangemBadgeType.Solid -> TangemTheme.colors3.icon.staticDark
     }
     TangemBadgeColor.GreenAlt -> when (type) {
         TangemBadgeType.Outline,
         TangemBadgeType.Tinted,
-        -> TangemTheme.colors2.markers.iconGreenAlt
-        TangemBadgeType.Solid -> TangemTheme.colors2.graphic.neutral.primaryInvertedConstant
+        -> TangemTheme.colors3.icon.accent.green
+        TangemBadgeType.Solid -> TangemTheme.colors3.icon.staticDark
     }
 }
 
 @ReadOnlyComposable
 @Composable
 private fun getTextColor(type: TangemBadgeType, color: TangemBadgeColor) = when (color) {
-    TangemBadgeColor.Gray -> TangemTheme.colors2.markers.textGray
+    TangemBadgeColor.Gray -> TangemTheme.colors3.text.secondary
     TangemBadgeColor.Blue -> when (type) {
         TangemBadgeType.Outline,
         TangemBadgeType.Tinted,
-        -> TangemTheme.colors2.markers.textBlue
-        TangemBadgeType.Solid -> TangemTheme.colors2.text.neutral.primaryInvertedConstant
+        -> TangemTheme.colors3.text.status.info
+        TangemBadgeType.Solid -> TangemTheme.colors3.text.staticDark.primary
     }
     TangemBadgeColor.Red -> when (type) {
         TangemBadgeType.Outline,
         TangemBadgeType.Tinted,
-        -> TangemTheme.colors2.markers.textRed
-        TangemBadgeType.Solid -> TangemTheme.colors2.text.neutral.primaryInvertedConstant
+        -> TangemTheme.colors3.text.status.error
+        TangemBadgeType.Solid -> TangemTheme.colors3.text.staticDark.primary
     }
     TangemBadgeColor.Green -> when (type) {
         TangemBadgeType.Outline,
         TangemBadgeType.Tinted,
-        -> TangemTheme.colors2.markers.textGreen
-        TangemBadgeType.Solid -> TangemTheme.colors2.text.neutral.primaryInvertedConstant
+        -> TangemTheme.colors3.text.status.success
+        TangemBadgeType.Solid -> TangemTheme.colors3.text.staticDark.primary
     }
     TangemBadgeColor.GreenAlt -> when (type) {
         TangemBadgeType.Outline,
         TangemBadgeType.Tinted,
-        -> TangemTheme.colors2.markers.textGreenAlt
-        TangemBadgeType.Solid -> TangemTheme.colors2.text.neutral.primaryInvertedConstant
+        -> TangemTheme.colors3.text.status.success
+        TangemBadgeType.Solid -> TangemTheme.colors3.text.staticDark.primary
     }
 }
 
@@ -374,30 +374,30 @@ private fun getTextColor(type: TangemBadgeType, color: TangemBadgeColor) = when 
 private fun Modifier.getBackgroundColor(type: TangemBadgeType, color: TangemBadgeColor, shape: Shape) = when (type) {
     TangemBadgeType.Solid -> background(
         when (color) {
-            TangemBadgeColor.Gray -> TangemTheme.colors2.markers.backgroundSolidGray
-            TangemBadgeColor.Blue -> TangemTheme.colors2.markers.backgroundSolidBlue
-            TangemBadgeColor.Red -> TangemTheme.colors2.markers.backgroundSolidRed
-            TangemBadgeColor.Green -> TangemTheme.colors2.markers.backgroundSolidGreen
-            TangemBadgeColor.GreenAlt -> TangemTheme.colors2.markers.backgroundSolidGreenAlt
+            TangemBadgeColor.Gray -> TangemTheme.colors3.bg.tertiary
+            TangemBadgeColor.Blue -> TangemTheme.colors3.bg.accent.blue
+            TangemBadgeColor.Red -> TangemTheme.colors3.bg.accent.red
+            TangemBadgeColor.Green -> TangemTheme.colors3.bg.accent.green
+            TangemBadgeColor.GreenAlt -> TangemTheme.colors3.bg.accent.green
         },
     )
     TangemBadgeType.Tinted -> background(
         when (color) {
-            TangemBadgeColor.Gray -> TangemTheme.colors2.markers.backgroundTintedGray
-            TangemBadgeColor.Blue -> TangemTheme.colors2.markers.backgroundTintedBlue
-            TangemBadgeColor.Red -> TangemTheme.colors2.markers.backgroundTintedRed
-            TangemBadgeColor.Green -> TangemTheme.colors2.markers.backgroundTintedGreen
-            TangemBadgeColor.GreenAlt -> TangemTheme.colors2.markers.backgroundTintedGreenAlt
+            TangemBadgeColor.Gray -> TangemTheme.colors3.bg.transparent.primary
+            TangemBadgeColor.Blue -> TangemTheme.colors3.bg.status.infoSubtle
+            TangemBadgeColor.Red -> TangemTheme.colors3.bg.status.errorSubtle
+            TangemBadgeColor.Green -> TangemTheme.colors3.bg.status.successSubtle
+            TangemBadgeColor.GreenAlt -> TangemTheme.colors3.bg.status.successSubtle
         },
     )
     TangemBadgeType.Outline -> {
         border(
             color = when (color) {
-                TangemBadgeColor.Gray -> TangemTheme.colors2.markers.borderGray
-                TangemBadgeColor.Blue -> TangemTheme.colors2.markers.borderTintedBlue
-                TangemBadgeColor.Red -> TangemTheme.colors2.markers.borderTintedRed
-                TangemBadgeColor.Green -> TangemTheme.colors2.markers.borderTintedGreen
-                TangemBadgeColor.GreenAlt -> TangemTheme.colors2.markers.borderTintedGreenAlt
+                TangemBadgeColor.Gray -> TangemTheme.colors3.border.secondary
+                TangemBadgeColor.Blue -> TangemTheme.colors3.border.status.infoSubtle
+                TangemBadgeColor.Red -> TangemTheme.colors3.border.status.errorSubtle
+                TangemBadgeColor.Green -> TangemTheme.colors3.border.status.successSubtle
+                TangemBadgeColor.GreenAlt -> TangemTheme.colors3.border.status.successSubtle
             },
             shape = shape,
             width = 1.dp,
@@ -414,7 +414,7 @@ private fun TangemBadge_Preview(@PreviewParameter(TangemBadgePreviewProvider::cl
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
-                .background(TangemTheme.colors2.surface.level1)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(8.dp),
         ) {
             repeat(3) { yIndex ->

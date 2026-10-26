@@ -57,12 +57,12 @@ internal fun TokenRowPromoBanner(promoBannerUM: TangemTokenRowUM.PromoBannerUM.C
         promoBannerUM.onPromoShown()
     }
     val bgColor = when (promoBannerUM.type) {
-        TangemTokenRowUM.PromoBannerUM.Content.Type.Yield -> TangemTheme.colors2.markers.backgroundTintedGreenAlt
-        TangemTokenRowUM.PromoBannerUM.Content.Type.Staking -> TangemTheme.colors2.markers.backgroundTintedBlue
+        TangemTokenRowUM.PromoBannerUM.Content.Type.Yield -> TangemTheme.colors3.bg.status.successSubtle
+        TangemTokenRowUM.PromoBannerUM.Content.Type.Staking -> TangemTheme.colors3.bg.status.infoSubtle
     }
     val contentColor = when (promoBannerUM.type) {
-        TangemTokenRowUM.PromoBannerUM.Content.Type.Yield -> TangemTheme.colors2.markers.textGreenAlt
-        TangemTokenRowUM.PromoBannerUM.Content.Type.Staking -> TangemTheme.colors2.markers.textBlue
+        TangemTokenRowUM.PromoBannerUM.Content.Type.Yield -> TangemTheme.colors3.text.status.success
+        TangemTokenRowUM.PromoBannerUM.Content.Type.Staking -> TangemTheme.colors3.text.status.info
     }
     val badgeColor = when (promoBannerUM.type) {
         TangemTokenRowUM.PromoBannerUM.Content.Type.Yield -> TangemBadgeColor.GreenAlt
@@ -131,7 +131,7 @@ private fun Preview_TokenRowPromoBanner(
             promoBannerUM = TangemTokenRowPreviewData.promoBannerUM.copy(type = promoType),
             modifier = Modifier
                 .fillMaxWidth()
-                .background(TangemTheme.colors2.surface.level1),
+                .background(TangemTheme.colors3.bg.primary),
         )
     }
 }

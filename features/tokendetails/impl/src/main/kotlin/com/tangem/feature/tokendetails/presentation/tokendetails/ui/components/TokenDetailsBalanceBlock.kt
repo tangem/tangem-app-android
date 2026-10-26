@@ -76,7 +76,7 @@ internal fun TokenDetailsBalanceBlock(
             shouldDisplayNetwork = true,
             iconSize = CurrencyIconSize,
             networkBadgeSize = NetworkBadgeSize,
-            networkBadgeBackground = TangemTheme.colors2.surface.level2,
+            networkBadgeBackground = TangemTheme.colors3.bg.primary,
         )
         SpacerH(12.dp)
         when (balanceBlockUM) {
@@ -133,19 +133,19 @@ private fun ContentBody(state: TokenDetailsBalanceBlockUM.Content, isBalanceHidd
                 Text(
                     text = currentType.text.resolveReference(),
                     style = TangemTheme.typography2.subheadlineMedium14,
-                    color = TangemTheme.colors2.text.neutral.primary,
+                    color = TangemTheme.colors3.text.primary,
                 )
                 Icon(
                     imageVector = ImageVector.vectorResource(R.drawable.ic_sort_24),
                     contentDescription = null,
-                    tint = TangemTheme.colors2.graphic.neutral.secondary,
+                    tint = TangemTheme.colors3.icon.secondary,
                     modifier = Modifier.size(20.dp),
                 )
             }
             TokenBalanceTypeUM.Single -> Text(
                 text = currentType.text.resolveReference(),
                 style = TangemTheme.typography2.subheadlineMedium14,
-                color = TangemTheme.colors2.text.neutral.primary,
+                color = TangemTheme.colors3.text.primary,
             )
         }
     }
@@ -155,7 +155,7 @@ private fun ContentBody(state: TokenDetailsBalanceBlockUM.Content, isBalanceHidd
         yieldBalance = state.displayYieldSupplyFiatBalance,
         fallbackBalance = state.displayFiatBalance,
         style = TangemTheme.typography2.titleRegular44,
-        color = TangemTheme.colors2.text.neutral.primary,
+        color = TangemTheme.colors3.text.primary,
         isBalanceHidden = isBalanceHidden,
     )
     SpacerH(10.dp)
@@ -163,7 +163,7 @@ private fun ContentBody(state: TokenDetailsBalanceBlockUM.Content, isBalanceHidd
         yieldBalance = state.displayYieldSupplyCryptoBalance,
         fallbackBalance = state.displayCryptoBalance,
         style = TangemTheme.typography2.bodySemibold16,
-        color = TangemTheme.colors2.text.neutral.secondary,
+        color = TangemTheme.colors3.text.secondary,
         isBalanceHidden = isBalanceHidden,
     )
 }
@@ -259,7 +259,7 @@ private fun LoadingBody() {
     Text(
         text = TokenBalanceTypeUM.Type.ALL.text.resolveReference(),
         style = TangemTheme.typography2.calloutSemibold15,
-        color = TangemTheme.colors2.text.neutral.secondary,
+        color = TangemTheme.colors3.text.secondary,
     )
     SpacerH(8.dp)
     TextShimmer(
@@ -280,13 +280,13 @@ private fun ErrorBody() {
     Text(
         text = "—",
         style = TangemTheme.typography2.titleRegular44,
-        color = TangemTheme.colors2.text.neutral.primary,
+        color = TangemTheme.colors3.text.primary,
     )
     SpacerH(10.dp)
     Text(
         text = "—",
         style = TangemTheme.typography2.bodySemibold16,
-        color = TangemTheme.colors2.text.neutral.secondary,
+        color = TangemTheme.colors3.text.secondary,
     )
 }
 
@@ -301,7 +301,7 @@ private fun TokenDetailsBalanceBlock_Preview(
         TokenDetailsBalanceBlock(
             balanceBlockUM = params,
             isBalanceHidden = false,
-            modifier = Modifier.background(TangemTheme.colors2.surface.level2),
+            modifier = Modifier.background(TangemTheme.colors3.bg.primary),
         )
     }
 }
@@ -312,7 +312,7 @@ private class PreviewProvider : PreviewParameterProvider<TokenDetailsBalanceBloc
         text = stringReference("Add funds"),
         tangemIconUM = TangemIconUM.Icon(
             iconRes = R.drawable.ic_arrow_down_24,
-            tintReference = { TangemTheme.colors2.graphic.neutral.primary },
+            tintReference = { TangemTheme.colors3.icon.primary },
         ),
         onClick = { },
         isEnabled = true,
@@ -323,7 +323,7 @@ private class PreviewProvider : PreviewParameterProvider<TokenDetailsBalanceBloc
         text = stringReference("Swap"),
         tangemIconUM = TangemIconUM.Icon(
             iconRes = R.drawable.ic_exchange_default_24,
-            tintReference = { TangemTheme.colors2.graphic.neutral.primary },
+            tintReference = { TangemTheme.colors3.icon.primary },
         ),
         onClick = { },
         isEnabled = true,
@@ -334,7 +334,7 @@ private class PreviewProvider : PreviewParameterProvider<TokenDetailsBalanceBloc
         text = stringReference("Transfer"),
         tangemIconUM = TangemIconUM.Icon(
             iconRes = R.drawable.ic_arrow_up_24,
-            tintReference = { TangemTheme.colors2.graphic.neutral.primary },
+            tintReference = { TangemTheme.colors3.icon.primary },
         ),
         onClick = { },
         isEnabled = true,

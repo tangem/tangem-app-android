@@ -16,6 +16,7 @@ import com.tangem.domain.walletconnect.model.*
 import com.tangem.domain.walletconnect.model.sdkcopy.WcAppMetaData
 import com.tangem.domain.walletconnect.usecase.pair.WcPairState
 import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -198,7 +199,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
     private suspend fun buildProposalState(
         sessionProposal: Wallet.Model.SessionProposal,
         verifyContext: Wallet.Model.VerifyContext,
-    ): Either<WcPairError, WcPairState.Proposal> = runCatching {
+    ): Either<WcPairError, WcPairState.Proposal> = runSuspendCatching {
         val proposalAccountNetwork = associateNetworksDelegate.associateAccounts(sessionProposal)
         // Display URL: shown to the user and logged to analytics. getDappOriginUrl() returns the
         // Verify-attested origin (verifyContext.origin), or the verify.walletconnect.org fallback

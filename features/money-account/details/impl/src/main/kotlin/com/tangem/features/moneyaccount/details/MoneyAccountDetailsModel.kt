@@ -103,7 +103,10 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     private fun onSendClick() {
         val account = currentState ?: return
         if (account.balance == null) return
-        router.push(AppRoute.Send(userWalletId = params.userWalletId, currency = account.cryptoCurrency))
+        val bankTransferProductInstanceId = (account as? MoneyAccountStatusValue.Account.Active)
+            ?.takeIf { it.isBankOfframpAvailable == true }
+            ?.productInstanceId
+        router.push(MoneyAccountDetailsRoute.WithdrawHub(productInstanceId = bankTransferProductInstanceId))
     }
 
     override fun onSwapClick() {

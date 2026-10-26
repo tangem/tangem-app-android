@@ -49,10 +49,10 @@ fun InputRowDefault(
     text: TextReference,
     modifier: Modifier = Modifier,
     title: TextReference? = null,
-    titleColor: Color = TangemTheme.colors.text.secondary,
-    textColor: Color = TangemTheme.colors.text.primary1,
+    titleColor: Color = TangemTheme.colors3.text.secondary,
+    textColor: Color = TangemTheme.colors3.text.primary,
     iconRes: Int? = null,
-    iconTint: Color = TangemTheme.colors.icon.informative,
+    iconTint: Color = TangemTheme.colors3.icon.secondary,
     onIconClick: (() -> Unit)? = null,
     showDivider: Boolean = false,
 ) {
@@ -122,7 +122,7 @@ private fun InputRowDefaultPreview(
             text = TextReference.Str(data.text),
             iconRes = data.iconRes,
             showDivider = data.shouldShowDivider,
-            modifier = Modifier.background(TangemTheme.colors.background.action),
+            modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
         )
     }
 }

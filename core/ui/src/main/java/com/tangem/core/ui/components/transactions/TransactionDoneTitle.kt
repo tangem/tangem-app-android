@@ -47,7 +47,7 @@ fun TransactionDoneTitle(title: TextReference, subtitle: TextReference, modifier
         Text(
             text = title.resolveReference(),
             style = TangemTheme.typography.h3,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             modifier = Modifier
                 .padding(top = 16.dp)
                 .testTag(TransactionSuccessScreenTestTags.TITLE),
@@ -55,7 +55,7 @@ fun TransactionDoneTitle(title: TextReference, subtitle: TextReference, modifier
         Text(
             text = subtitle.resolveReference(),
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .padding(top = 4.dp)
@@ -74,7 +74,7 @@ private fun TransactionDoneTitlePreview() {
             title = resourceReference(R.string.sent_transaction_sent_title),
             subtitle = stringReference("0"),
             modifier = Modifier
-                .background(TangemTheme.colors.background.tertiary)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(16.dp),
         )
     }

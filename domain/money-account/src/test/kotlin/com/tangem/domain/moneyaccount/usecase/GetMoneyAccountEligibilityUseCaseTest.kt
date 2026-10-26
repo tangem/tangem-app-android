@@ -212,6 +212,7 @@ internal class GetMoneyAccountEligibilityUseCaseTest {
         cryptoCurrency = mockk(),
         balance = null,
         customerId = CUSTOMER_ID,
+        productInstanceId = "instance",
     )
 
     private fun mockStatus(wallet: UserWallet, status: MoneyAccountStatusValue) {

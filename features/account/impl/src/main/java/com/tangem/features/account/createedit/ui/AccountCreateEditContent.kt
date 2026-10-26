@@ -61,7 +61,7 @@ internal fun AccountCreateEditContent(
 
     Column(
         modifier = modifier
-            .background(color = TangemTheme.colors.background.secondary)
+            .background(color = TangemTheme.colors3.bg.primary)
             .fillMaxSize()
             .systemBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -123,7 +123,7 @@ private fun AccountSummary(account: Account, isCreateMode: Boolean) {
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
             .fillMaxWidth()
-            .background(TangemTheme.colors.background.action),
+            .background(TangemTheme.colors3.bg.secondary),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Spacer(modifier = Modifier.height(24.dp))
@@ -140,7 +140,7 @@ private fun AccountSummary(account: Account, isCreateMode: Boolean) {
         Text(
             text = stringResourceSafe(R.string.account_form_name),
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
         Spacer(modifier = Modifier.height(2.dp))
 
@@ -187,7 +187,7 @@ private fun AccountColor(colorsState: AccountCreateEditUM.Colors) {
         Modifier
             .clip(RoundedCornerShape(16.dp))
             .fillMaxWidth()
-            .background(TangemTheme.colors.background.action),
+            .background(TangemTheme.colors3.bg.secondary),
     ) {
         val contentPadding = PaddingValues(horizontal = 8.dp, vertical = 12.dp)
         FlowRow(
@@ -239,7 +239,7 @@ private fun AccountIcons(iconsState: AccountCreateEditUM.Icons) {
         Modifier
             .clip(RoundedCornerShape(16.dp))
             .fillMaxWidth()
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .padding(8.dp),
     ) {
         FlowRow(
@@ -262,13 +262,13 @@ private fun AccountIcons(iconsState: AccountCreateEditUM.Icons) {
                         val iconTint: Color
                         val backgroundTint: Color
                         if (index == 0) {
-                            borderColor = TangemTheme.colors.icon.accent
-                            iconTint = TangemTheme.colors.icon.accent
-                            backgroundTint = TangemTheme.colors.icon.accent.copy(alpha = 0.1f)
+                            borderColor = TangemTheme.colors3.icon.accent.blue
+                            iconTint = TangemTheme.colors3.icon.accent.blue
+                            backgroundTint = TangemTheme.colors3.bg.accent.blueSubtle
                         } else {
-                            borderColor = TangemTheme.colors.icon.informative
-                            iconTint = TangemTheme.colors.icon.secondary
-                            backgroundTint = TangemTheme.colors.field.focused
+                            borderColor = TangemTheme.colors3.icon.secondary
+                            iconTint = TangemTheme.colors3.icon.secondary
+                            backgroundTint = TangemTheme.colors3.bg.transparent.secondary
                         }
                         Box(
                             contentAlignment = Alignment.Center,
@@ -293,11 +293,11 @@ private fun AccountIcons(iconsState: AccountCreateEditUM.Icons) {
                         val iconTint: Color
                         val backgroundTint: Color
                         if (index == 0) {
-                            iconTint = TangemTheme.colors.icon.accent
-                            backgroundTint = TangemTheme.colors.icon.accent.copy(alpha = 0.1f)
+                            iconTint = TangemTheme.colors3.icon.accent.blue
+                            backgroundTint = TangemTheme.colors3.bg.accent.blueSubtle
                         } else {
-                            iconTint = TangemTheme.colors.text.tertiary
-                            backgroundTint = TangemTheme.colors.field.focused
+                            iconTint = TangemTheme.colors3.text.secondary
+                            backgroundTint = TangemTheme.colors3.bg.transparent.secondary
                         }
                         Box(
                             contentAlignment = Alignment.Center,
@@ -324,7 +324,7 @@ private fun DerivationInfo(text: TextReference) {
         modifier = Modifier.padding(horizontal = 8.dp),
         text = text.resolveReference(),
         style = TangemTheme.typography.caption2,
-        color = TangemTheme.colors.text.tertiary,
+        color = TangemTheme.colors3.text.secondary,
     )
 }
 

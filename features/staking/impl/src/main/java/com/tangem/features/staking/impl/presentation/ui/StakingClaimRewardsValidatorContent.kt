@@ -34,7 +34,7 @@ internal fun StakingClaimRewardsValidatorContent(
     if (state !is StakingStates.RewardsValidatorsState.Data) return
     Column(
         modifier = modifier // This function shouldn't itself apply fillMaxSize(); callers should avoid passing it here
-            .background(TangemTheme.colors.background.secondary)
+            .background(TangemTheme.colors3.bg.primary)
             .padding(horizontal = 12.dp)
             .verticalScroll(rememberScrollState()),
     ) {
@@ -50,7 +50,7 @@ internal fun StakingClaimRewardsValidatorContent(
                     onImageError = { ValidatorImagePlaceholder() },
                     modifier = Modifier
                         .roundedShapeItemDecoration(index, state.rewards.lastIndex, false)
-                        .background(TangemTheme.colors.background.action)
+                        .background(TangemTheme.colors3.bg.secondary)
                         .clickable(
                             enabled = item.pendingActions.isNotEmpty(),
                             onClick = {
@@ -74,7 +74,7 @@ private fun BalanceState.getAprTextColored() = combinedReference(
         appendSpace()
         appendColored(
             text = target?.rewardInfo?.rate?.orZero().format { percent() },
-            color = TangemTheme.colors.text.accent,
+            color = TangemTheme.colors3.text.accent.blue,
         )
     },
 )

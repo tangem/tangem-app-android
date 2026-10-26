@@ -57,7 +57,7 @@ fun TangemTopSnackbar(snackbarMessage: SnackbarMessage, modifier: Modifier = Mod
     Column(
         modifier = modifier
             .shadow(elevation = 4.dp, shape = shape, clip = false)
-            .background(color = TangemTheme.colors2.controls.backgroundDefault, shape = shape)
+            .background(color = TangemTheme.colors3.bg.tertiary, shape = shape)
             .clip(shape)
             .hazeEffectTangem()
             .sizeIn(minHeight = 44.dp)
@@ -75,7 +75,7 @@ fun TangemTopSnackbar(snackbarMessage: SnackbarMessage, modifier: Modifier = Mod
                     contentDescription = null,
                     modifier = Modifier.size(20.dp),
                     tint = if (snackbarMessage.isIconTinted) {
-                        TangemTheme.colors2.graphic.neutral.secondary
+                        TangemTheme.colors3.icon.secondary
                     } else {
                         Color.Unspecified
                     },
@@ -88,7 +88,7 @@ fun TangemTopSnackbar(snackbarMessage: SnackbarMessage, modifier: Modifier = Mod
                 Text(
                     text = snackbarMessage.message.resolveReference(),
                     modifier = Modifier.weight(1f, fill = false),
-                    color = TangemTheme.colors2.text.neutral.secondary,
+                    color = TangemTheme.colors3.text.secondary,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 2,
                     style = TangemTheme.typography2.captionMedium13,

@@ -18,21 +18,24 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.tangempay.components.TangemPayWithdrawHubComponent
 import com.tangem.features.tangempay.eligibility.TangemPayCountrySelectorComponent
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
-import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.TangemPayBankWithdrawComponent
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.hub.model.TangemPayWithdrawHubModel
 import com.tangem.features.tangempay.withdraw.hub.navigation.TangemPayWithdrawHubRoute
 import com.tangem.features.tangempay.withdraw.hub.ui.TangemPayWithdrawHubScreen
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.StateFlow
 
-internal class TangemPayWithdrawHubComponent(
-    appComponentContext: AppComponentContext,
-    private val params: Params,
+internal class DefaultTangemPayWithdrawHubComponent @AssistedInject constructor(
+    @Assisted appComponentContext: AppComponentContext,
+    @Assisted private val params: TangemPayWithdrawHubComponent.Params,
     private val countrySelectorFactory: TangemPayCountrySelectorComponent.Factory,
-) : ComposableContentComponent, AppComponentContext by appComponentContext {
+) : TangemPayWithdrawHubComponent, AppComponentContext by appComponentContext {
 
     private val model: TangemPayWithdrawHubModel = getOrCreateModel(
         params = TangemPayWithdrawHubModel.Params(
@@ -81,6 +84,8 @@ internal class TangemPayWithdrawHubComponent(
                 sourceAccount = params.sourceAccount,
                 entry = config.entry,
                 options = config.options,
+                onCloseFlow = router::pop,
+                onWithdrawSent = model::onWithdrawSent,
             ),
             countrySelectorFactory = countrySelectorFactory,
         )
@@ -98,5 +103,11 @@ internal class TangemPayWithdrawHubComponent(
         }
     }
 
-    data class Params(val sourceAccount: BankWithdrawSourceAccount)
+    @AssistedFactory
+    interface Factory : TangemPayWithdrawHubComponent.Factory {
+        override fun create(
+            context: AppComponentContext,
+            params: TangemPayWithdrawHubComponent.Params,
+        ): DefaultTangemPayWithdrawHubComponent
+    }
 }

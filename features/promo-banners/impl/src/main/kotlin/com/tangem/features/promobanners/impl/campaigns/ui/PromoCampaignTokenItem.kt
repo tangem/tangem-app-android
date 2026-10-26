@@ -75,7 +75,7 @@ internal fun PromoCampaignTokenItem(
                         .padding(vertical = 2.dp)
                         .alignByBaseline(),
                     text = selectedAccount.name.resolveReference(),
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
                     style = TangemTheme.typography.caption1,
@@ -104,7 +104,7 @@ private fun Preview_PromoCampaignTokenItem_WithAccount() {
                 .background(TangemTheme.colors3.bg.primary)
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(24.dp))
-                .background(TangemTheme.colors.background.primary),
+                .background(TangemTheme.colors3.bg.secondary),
             selectedToken = CampaignPreviewData.tokenItem,
             selectedAccount = CampaignPreviewData.selectedAccount,
         )
@@ -121,7 +121,7 @@ private fun Preview_PromoCampaignTokenItem_NoAccount() {
                 .background(TangemTheme.colors3.bg.primary)
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(24.dp))
-                .background(TangemTheme.colors.background.primary),
+                .background(TangemTheme.colors3.bg.secondary),
             selectedToken = CampaignPreviewData.tokenItem,
             selectedAccount = null,
         )

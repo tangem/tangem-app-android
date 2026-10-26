@@ -186,7 +186,7 @@ private fun TransactionCardEmpty(
             ) {
                 Text(
                     text = cardState.amountField?.value.orEmpty(),
-                    color = TangemTheme.colors.text.disabled,
+                    color = TangemTheme.colors3.text.tertiary,
                     style = TangemTheme.typography.h2,
                     autoSize = TextAutoSize.StepBased(
                         minFontSize = 16.sp,
@@ -197,7 +197,7 @@ private fun TransactionCardEmpty(
                 )
                 Text(
                     text = cardState.amountEquivalent.resolveAnnotatedReference(),
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                     style = TangemTheme.typography.body2,
                     modifier = Modifier
                         .defaultMinSize(minHeight = 20.dp)
@@ -298,9 +298,9 @@ private fun Header(
             .testTag(SwapTokenScreenTestTags.SWAP_BLOCK_HEADER),
     ) {
         val titleColor = if (type.inputError is TransactionCardType.InputError.Empty) {
-            TangemTheme.colors.text.tertiary
+            TangemTheme.colors3.text.secondary
         } else {
-            TangemTheme.colors.text.warning
+            TangemTheme.colors3.text.accent.red
         }
         AccountTitle(
             accountTitleUM = type.accountTitleUM,
@@ -314,7 +314,7 @@ private fun Header(
             ) { balanceText ->
                 Text(
                     text = balanceText.resolveReference().orMaskWithStars(isBalanceHidden),
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                     style = TangemTheme.typography.body2,
                     modifier = Modifier.testTag(SwapTokenScreenTestTags.BALANCE),
                 )
@@ -359,7 +359,7 @@ private fun Content(cardData: SwapCardState.SwapCardData, priceImpact: PriceImpa
                     if (value != null) {
                         Text(
                             text = value,
-                            color = TangemTheme.colors.text.primary1,
+                            color = TangemTheme.colors3.text.primary,
                             style = TangemTheme.typography.h2,
                             autoSize = TextAutoSize.StepBased(
                                 minFontSize = 16.sp,
@@ -432,7 +432,7 @@ internal fun AmountInputField(
         value = amountField.value,
         decimals = activeAmount.decimals,
         onValueChange = amountField.onValueChange,
-        textStyle = TangemTheme.typography.h2.copy(color = TangemTheme.colors.text.primary1),
+        textStyle = TangemTheme.typography.h2.copy(color = TangemTheme.colors3.text.primary),
         isEnabled = type.isEnabled,
         isAutoResize = true,
         visualTransformation = AmountVisualTransformation(
@@ -441,11 +441,11 @@ internal fun AmountInputField(
             symbol = cardData.amountCurrencyOverride?.symbol
                 ?: activeAmount.currencySymbol.takeIf { amountField.isFiatValue },
             decimals = activeAmount.decimals,
-            symbolColor = TangemTheme.colors.text.disabled,
+            symbolColor = TangemTheme.colors3.text.tertiary,
         ),
         colors = AmountTextFieldColors(
-            textColor = TangemTheme.colors.text.primary1,
-            disabledTextColor = TangemTheme.colors.text.disabled,
+            textColor = TangemTheme.colors3.text.primary,
+            disabledTextColor = TangemTheme.colors3.text.tertiary,
             backgroundColor = Color.Unspecified,
         ),
         isValuePasted = amountField.isValuePasted,
@@ -480,7 +480,7 @@ private fun ReceiveAmountEquivalent(
         AnimatedContent(targetState = amountEquivalent, label = "") { amount ->
             Text(
                 text = amount.resolveAnnotatedReference(),
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 style = TangemTheme.typography.body2,
                 modifier = Modifier.testTag(SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT),
             )
@@ -495,9 +495,9 @@ private fun ReceiveAmountEquivalent(
                     painter = painterResource(id = R.drawable.ic_information_24),
                     contentDescription = null,
                     tint = when (priceImpact.type) {
-                        PriceImpact.Type.HIGH -> TangemTheme.colors.text.warning
-                        PriceImpact.Type.MEDIUM -> TangemTheme.colors.text.attention
-                        else -> TangemTheme.colors.text.tertiary
+                        PriceImpact.Type.HIGH -> TangemTheme.colors3.text.accent.red
+                        PriceImpact.Type.MEDIUM -> TangemTheme.colors3.text.accent.yellow
+                        else -> TangemTheme.colors3.text.secondary
                     },
                     modifier = Modifier
                         .align(Alignment.CenterVertically)
@@ -553,7 +553,7 @@ private fun SwapAmountEquivalent(
         AnimatedContent(targetState = amountEquivalent, label = "") { amount ->
             Text(
                 text = amount.resolveAnnotatedReference(),
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 style = TangemTheme.typography.body2,
                 modifier = Modifier.testTag(SwapTokenScreenTestTags.SWAP_FIAT_AMOUNT),
             )
@@ -577,7 +577,7 @@ fun Token(currencyIconState: CurrencyIconState, tokenSymbol: TextReference) {
         SpacerH4()
         Text(
             text = tokenSymbol.resolveReference(),
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             maxLines = 1,
             style = TangemTheme.typography.subtitle2,
             textAlign = TextAlign.Center,
@@ -604,7 +604,7 @@ fun ChangeTokenSelector() {
                 .size(20.dp)
                 .testTag(SwapTokenScreenTestTags.SELECT_TOKEN_ICON),
             painter = painterResource(id = R.drawable.ic_chevron_24),
-            tint = TangemTheme.colors.icon.secondary,
+            tint = TangemTheme.colors3.icon.secondary,
             contentDescription = null,
         )
     }

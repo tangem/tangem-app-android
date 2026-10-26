@@ -124,7 +124,7 @@ private fun ListItemWithIcon(
             EllipsisText(
                 text = title,
                 style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 textAlign = TextAlign.Justify,
                 ellipsis = TextEllipsis.Middle,
                 modifier = Modifier.testTag(SendAddressScreenTestTags.RECENT_ADDRESS_TITLE),
@@ -134,11 +134,11 @@ private fun ListItemWithIcon(
                     Icon(
                         painter = painterResource(id = subtitleIconRes),
                         contentDescription = null,
-                        tint = TangemTheme.colors.icon.informative,
+                        tint = TangemTheme.colors3.icon.secondary,
                         modifier = Modifier
                             .padding(end = 2.dp)
                             .size(16.dp)
-                            .background(TangemTheme.colors.background.tertiary, CircleShape)
+                            .background(TangemTheme.colors3.bg.primary, CircleShape)
                             .padding(2.dp)
                             .testTag(SendAddressScreenTestTags.RECENT_ADDRESS_TRANSACTION_ICON),
                     )
@@ -154,7 +154,7 @@ private fun ListItemWithIcon(
                 EllipsisText(
                     text = text,
                     style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                     ellipsis = TextEllipsis.OffsetEnd(offsetEnd = offset),
                     modifier = Modifier.testTag(SendAddressScreenTestTags.RECENT_ADDRESS_TEXT),
                 )

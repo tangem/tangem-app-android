@@ -196,7 +196,7 @@ private fun BoxScope.AmountFieldCurrencyInfo(
             painter = rememberVectorPainter(
                 ImageVector.vectorResource(R.drawable.ic_exchange_vertical_24),
             ),
-            tint = TangemTheme.colors.icon.accent,
+            tint = TangemTheme.colors3.icon.accent.blue,
             contentDescription = null,
             modifier = Modifier
                 .size(16.dp)
@@ -237,7 +237,7 @@ private fun AmountFieldCurrencyIcon(amountUM: AmountState.Data) {
             Text(
                 text = text,
                 style = TangemTheme.typography.caption2.copy(textDirection = TextDirection.ContentOrLtr),
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.testTag(SendScreenTestTags.EQUIVALENT_INPUT_AMOUNT),
             )
@@ -275,7 +275,7 @@ private fun AmountFieldError(
         label = "Error field appearance animation",
     ) {
         val errorText = remember(this, error) { error }
-        val color = if (isError) TangemTheme.colors.text.warning else TangemTheme.colors.text.attention
+        val color = if (isError) TangemTheme.colors3.text.accent.red else TangemTheme.colors3.text.accent.yellow
         Text(
             text = errorText.resolveReference(),
             style = TangemTheme.typography.caption2,
@@ -341,7 +341,7 @@ private fun AmountFieldV2_Preview(@PreviewParameter(AmountFieldV2PreviewProvider
             onValuePastedTriggerDismiss = { },
             onCurrencyChange = {},
             reserveSpaceForError = false,
-            modifier = Modifier.background(TangemTheme.colors.background.action),
+            modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
         )
     }
 }

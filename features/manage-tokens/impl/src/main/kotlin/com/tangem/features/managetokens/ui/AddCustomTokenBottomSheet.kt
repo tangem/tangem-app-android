@@ -35,7 +35,7 @@ internal fun AddCustomTokenBottomSheet(config: TangemBottomSheetConfig, content:
         title = { model ->
             Title(model)
         },
-        containerColor = TangemTheme.colors.background.secondary,
+        containerColor = TangemTheme.colors3.bg.primary,
         content = {
             val contentModifier = Modifier
                 .padding(horizontal = 16.dp)

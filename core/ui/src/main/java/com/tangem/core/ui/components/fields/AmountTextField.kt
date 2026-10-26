@@ -120,9 +120,9 @@ val TangemAmountTextFieldColors: AmountTextFieldColors
     @Composable
     @ReadOnlyComposable
     get() = AmountTextFieldColors(
-        textColor = TangemTheme.colors.text.primary1,
-        disabledTextColor = TangemTheme.colors.text.disabled,
-        backgroundColor = TangemTheme.colors.background.action,
+        textColor = TangemTheme.colors3.text.primary,
+        disabledTextColor = TangemTheme.colors3.text.tertiary,
+        backgroundColor = TangemTheme.colors3.bg.secondary,
     )
 
 @Immutable
@@ -198,7 +198,7 @@ private fun AmountTextFieldPreview(
             onValueChange = { text = it },
             colors = TangemAmountTextFieldColors,
             textStyle = TangemTheme.typography.h2.copy(
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 textAlign = TextAlign.Center,
             ),
             modifier = Modifier.fillMaxWidth(),

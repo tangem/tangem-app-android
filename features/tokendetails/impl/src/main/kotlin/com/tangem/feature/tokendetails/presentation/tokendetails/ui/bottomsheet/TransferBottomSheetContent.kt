@@ -114,7 +114,7 @@ private fun ActionRow(
 private fun TailLoader() {
     CircularProgressIndicator(
         modifier = Modifier.size(20.dp),
-        color = TangemTheme.colors2.graphic.neutral.tertiary,
+        color = TangemTheme.colors3.icon.secondary,
         strokeWidth = 2.dp,
     )
 }

@@ -34,7 +34,7 @@ internal fun TangemMessageStory(state: TangemMessageStory, modifier: Modifier = 
         modifier = modifier
             .fillMaxSize()
             .statusBarsPadding()
-            .background(TangemTheme.colors2.surface.level1),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         stickyHeader("effect_toggle") {
             EffectToggle(
@@ -42,7 +42,7 @@ internal fun TangemMessageStory(state: TangemMessageStory, modifier: Modifier = 
                 onSelect = state.onEffectChange,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(TangemTheme.colors2.surface.level1)
+                    .background(TangemTheme.colors3.bg.primary)
                     .padding(horizontal = 16.dp, vertical = 8.dp),
             )
         }
@@ -107,7 +107,7 @@ internal fun TangemMessageStory(state: TangemMessageStory, modifier: Modifier = 
                                 type = TangemButtonType.Primary,
                                 tangemIconUM = TangemIconUM.Icon(
                                     iconRes = R.drawable.ic_tangem_24,
-                                    tintReference = { TangemTheme.colors2.graphic.neutral.primary },
+                                    tintReference = { TangemTheme.colors3.icon.primary },
                                 ),
                                 onClick = {},
                             ),
@@ -173,10 +173,10 @@ private fun EffectToggle(
     Row(
         modifier = modifier
             .clip(shape)
-            .background(TangemTheme.colors2.surface.level2)
+            .background(TangemTheme.colors3.bg.primary)
             .border(
                 width = 1.dp,
-                color = TangemTheme.colors2.border.neutral.secondary,
+                color = TangemTheme.colors3.border.tertiary,
                 shape = shape,
             )
             .padding(4.dp),
@@ -202,9 +202,9 @@ private fun EffectChip(label: String, selected: Boolean, onClick: () -> Unit, mo
             .clip(chipShape)
             .background(
                 if (selected) {
-                    TangemTheme.colors2.surface.level3
+                    TangemTheme.colors3.bg.secondary
                 } else {
-                    TangemTheme.colors2.surface.level2
+                    TangemTheme.colors3.bg.primary
                 },
             )
             .clickable(onClick = onClick)
@@ -214,9 +214,9 @@ private fun EffectChip(label: String, selected: Boolean, onClick: () -> Unit, mo
             text = label,
             style = TangemTheme.typography.caption2,
             color = if (selected) {
-                TangemTheme.colors.text.primary1
+                TangemTheme.colors3.text.primary
             } else {
-                TangemTheme.colors.text.secondary
+                TangemTheme.colors3.text.secondary
             },
         )
     }
@@ -233,7 +233,7 @@ private fun VariantSection(label: String, content: @Composable ColumnScope.() ->
         Text(
             text = label,
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
         )
         content()
     }

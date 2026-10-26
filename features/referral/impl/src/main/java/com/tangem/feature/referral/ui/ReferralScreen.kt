@@ -73,7 +73,7 @@ internal fun ReferralScreen(stateHolder: ReferralStateHolder) {
                 onBackClick = stateHolder.headerState.onBackClicked,
             )
         },
-        containerColor = TangemTheme.colors.background.secondary,
+        containerColor = TangemTheme.colors3.bg.primary,
     ) { paddingValues ->
         ReferralContent(
             stateHolder = stateHolder,
@@ -140,7 +140,7 @@ private fun Header() {
         Text(
             text = stringResourceSafe(id = R.string.referral_title),
             modifier = Modifier.padding(horizontal = 50.dp),
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
             maxLines = 2,
             style = TangemTheme.typography.h2,
@@ -241,7 +241,7 @@ private fun Condition(@DrawableRes iconResId: Int, infoBlock: @Composable () -> 
         Box(
             modifier = Modifier
                 .background(
-                    color = TangemTheme.colors.button.secondary,
+                    color = TangemTheme.colors3.bg.transparent.secondary,
                     shape = RoundedCornerShape(16.dp),
                 )
                 .size(56.dp),
@@ -251,7 +251,7 @@ private fun Condition(@DrawableRes iconResId: Int, infoBlock: @Composable () -> 
                 painter = painterResource(id = iconResId),
                 contentDescription = null,
                 modifier = Modifier.size(28.dp),
-                tint = TangemTheme.colors.icon.primary1,
+                tint = TangemTheme.colors3.icon.primary,
             )
         }
         infoBlock()
@@ -267,7 +267,7 @@ private fun InfoForYou(award: String, networkName: String, address: String? = nu
                 network = networkName,
                 address = if (!address.isNullOrBlank()) " $address" else "",
             ),
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography.body2,
             modifier = Modifier.testTag(ReferralProgramScreenTestTags.INFO_FOR_YOU_TEXT),
         )
@@ -289,7 +289,7 @@ private fun formatAwardConditionsString(quantity: String, network: String, addre
             append(rawString.substring(startIndex, index))
 
             // applies style on ^^-wrapped parts
-            withStyle(SpanStyle(color = TangemTheme.colors.text.primary1)) {
+            withStyle(SpanStyle(color = TangemTheme.colors3.text.primary)) {
                 append(matchedValue)
             }
 
@@ -310,7 +310,7 @@ private fun InfoForYourFriend(discount: String) {
         Text(
             text = buildAnnotatedString {
                 append(stringResourceSafe(id = R.string.referral_point_discount_description_prefix))
-                withStyle(SpanStyle(color = TangemTheme.colors.text.primary1)) {
+                withStyle(SpanStyle(color = TangemTheme.colors3.text.primary)) {
                     append(
                         String.format(
                             stringResourceSafe(id = R.string.referral_point_discount_description_value),
@@ -321,7 +321,7 @@ private fun InfoForYourFriend(discount: String) {
                 append(" ")
                 append(stringResourceSafe(id = R.string.referral_point_discount_description_suffix))
             },
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography.body2,
         )
     }
@@ -332,7 +332,7 @@ private fun ConditionInfo(title: String, subtitleContent: @Composable () -> Unit
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(
             text = title,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             style = TangemTheme.typography.subtitle1,
             modifier = Modifier.testTag(ReferralProgramScreenTestTags.INFO_FOR_YOUR_FRIEND_TEXT),
         )
@@ -367,7 +367,7 @@ private fun NonParticipateAccountAwardBlock(accountAward: AccountAward) {
         modifier = Modifier
             .padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(color = TangemTheme.colors.background.primary),
+            .background(color = TangemTheme.colors3.bg.secondary),
     ) {
         Text(
             modifier = Modifier.padding(
@@ -377,7 +377,7 @@ private fun NonParticipateAccountAwardBlock(accountAward: AccountAward) {
             ),
             text = stringResourceSafe(R.string.referral_address_for_rewards),
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -389,7 +389,7 @@ private fun NonParticipateAccountAwardBlock(accountAward: AccountAward) {
 
         HorizontalDivider(
             thickness = 0.5.dp,
-            color = TangemTheme.colors.stroke.primary,
+            color = TangemTheme.colors3.border.secondary,
             modifier = Modifier.padding(horizontal = 12.dp),
         )
         PortfolioSelectRow(accountAward.accountSelectUM)

@@ -42,8 +42,8 @@ fun TangemIconButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     shape: RoundedCornerShape = RoundedCornerShape(24.dp),
-    background: Color = TangemTheme.colors.button.secondary,
-    iconTint: Color = TangemTheme.colors.icon.secondary,
+    background: Color = TangemTheme.colors3.bg.transparent.secondary,
+    iconTint: Color = TangemTheme.colors3.icon.secondary,
     innerPadding: Dp = 4.dp,
 ) {
     Icon(

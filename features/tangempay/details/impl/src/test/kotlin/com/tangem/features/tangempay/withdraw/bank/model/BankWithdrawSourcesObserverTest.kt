@@ -279,6 +279,14 @@ internal class BankWithdrawSourcesObserverTest {
                 ),
             ),
             MoneyNoOptionsModel(
+                description = "bank off-ramp channel not granted",
+                value = activeMoneyAccount(token = usdcPolygon, isBankOfframpAvailable = false),
+            ),
+            MoneyNoOptionsModel(
+                description = "bank off-ramp channel unknown",
+                value = activeMoneyAccount(token = usdcPolygon, isBankOfframpAvailable = null),
+            ),
+            MoneyNoOptionsModel(
                 description = "balance not loaded",
                 value = activeMoneyAccount(token = usdcPolygon, balance = null),
             ),

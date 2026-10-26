@@ -68,13 +68,13 @@ internal fun StoryBookListScreen(state: StoryBookUM, modifier: Modifier = Modifi
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(TangemTheme.colors.background.primary),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         stickyHeader {
             AppBarWithBackButton(
                 onBackClick = state.onBackClick,
                 text = "Storybook",
-                containerColor = TangemTheme.colors.background.primary,
+                containerColor = TangemTheme.colors3.bg.primary,
             )
         }
 

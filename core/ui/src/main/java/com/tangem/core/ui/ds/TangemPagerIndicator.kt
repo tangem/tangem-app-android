@@ -389,7 +389,7 @@ private fun TangemPagerIndicator_Preview(@PreviewParameter(TangemPagerIndicatorP
     TangemThemePreviewRedesign {
         Column(
             Modifier
-                .background(TangemTheme.colors2.surface.level1)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
@@ -398,7 +398,7 @@ private fun TangemPagerIndicator_Preview(@PreviewParameter(TangemPagerIndicatorP
                     pagerState = rememberPagerState(index) { params },
                     colors = TangemPagerIndicatorColors.copy(
                         overlay = if (index % 2 == 0) {
-                            TangemTheme.colors2.tabs.backgroundSecondary
+                            TangemTheme.colors3.bg.transparent.secondary
                         } else {
                             null
                         },

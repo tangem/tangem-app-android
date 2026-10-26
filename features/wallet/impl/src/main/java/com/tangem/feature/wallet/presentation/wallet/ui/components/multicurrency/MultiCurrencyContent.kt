@@ -565,7 +565,7 @@ private fun LazyListScope.contentItems(
                     .roundedShapeItemDecoration(
                         currentIndex = index,
                         lastIndex = items.lastIndex,
-                        backgroundColor = TangemTheme.colors.background.primary,
+                        backgroundColor = TangemTheme.colors3.bg.secondary,
                         radius = 18.dp,
                     )
                     .testTag(MainScreenTestTags.TOKEN_LIST_ITEM)

@@ -277,7 +277,7 @@ private fun SectionLabel(text: String) {
         modifier = Modifier.padding(top = 16.dp),
         text = text,
         style = TangemTheme.typography.subtitle1,
-        color = TangemTheme.colors.text.primary1,
+        color = TangemTheme.colors3.text.primary,
     )
 }
 

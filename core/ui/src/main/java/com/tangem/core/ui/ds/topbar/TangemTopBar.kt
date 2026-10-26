@@ -144,7 +144,7 @@ fun TangemTopBar(
                     val wrappedSubtitle = remember(this) { requireNotNull(subtitle) }
                     Text(
                         text = wrappedSubtitle.resolveAnnotatedReference(),
-                        color = TangemTheme.colors2.text.neutral.secondary,
+                        color = TangemTheme.colors3.text.secondary,
                         style = TangemTheme.typography2.bodyRegular15,
                         textAlign = TextAlign.Center,
                         maxLines = 1,
@@ -282,14 +282,14 @@ private fun TangemTopBarTitle(title: TextReference?, @DrawableRes titleIconRes: 
                     Icon(
                         imageVector = ImageVector.vectorResource(id = wrappedTitleIconRes),
                         contentDescription = null,
-                        tint = TangemTheme.colors2.graphic.neutral.primary,
+                        tint = TangemTheme.colors3.icon.primary,
                         modifier = Modifier.size(16.dp),
                     )
                 }
 
                 Text(
                     text = title.resolveAnnotatedReference(),
-                    color = TangemTheme.colors2.text.neutral.primary,
+                    color = TangemTheme.colors3.text.primary,
                     style = TangemTheme.typography2.headingSemibold17,
                     textAlign = TextAlign.Center,
                     maxLines = 1,
@@ -314,7 +314,7 @@ private fun TangemTopBar_Preview(@PreviewParameter(PreviewProvider::class) param
             subtitle = params.subtitle,
             titleIconRes = params.titleIconRes,
             type = TangemTopBarType.BottomSheet,
-            modifier = Modifier.background(TangemTheme.colors2.surface.level1),
+            modifier = Modifier.background(TangemTheme.colors3.bg.primary),
             startContent = params.startActionUM?.let { { TangemTopBarActionContent(it) } },
             endContent = if (params.endActions.isNotEmpty()) {
                 {
@@ -434,7 +434,7 @@ private class PreviewProvider : PreviewParameterProvider<TangemTopBarPreviewData
                     styledStringReference(
                         value = ".30",
                         spanStyleReference = {
-                            TangemTheme.typography.caption1.copy(TangemTheme.colors2.text.neutral.secondary)
+                            TangemTheme.typography.caption1.copy(TangemTheme.colors3.text.secondary)
                                 .toSpanStyle()
                         },
                     ),
@@ -446,7 +446,7 @@ private class PreviewProvider : PreviewParameterProvider<TangemTopBarPreviewData
                     styledStringReference(
                         value = ".30",
                         spanStyleReference = {
-                            TangemTheme.typography.caption1.copy(TangemTheme.colors2.text.neutral.secondary)
+                            TangemTheme.typography.caption1.copy(TangemTheme.colors3.text.secondary)
                                 .toSpanStyle()
                         },
                     ),

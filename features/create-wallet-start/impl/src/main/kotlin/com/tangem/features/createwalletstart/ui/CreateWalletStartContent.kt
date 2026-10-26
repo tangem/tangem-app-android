@@ -68,7 +68,7 @@ internal fun CreateWalletStartContent(state: CreateWalletStartUM, modifier: Modi
                 IconButton(onClick = state.onBackClick) {
                     Icon(
                         painter = painterResource(R.drawable.ic_back_24),
-                        tint = TangemTheme.colors.icon.primary1,
+                        tint = TangemTheme.colors3.icon.primary,
                         contentDescription = null,
                     )
                 }
@@ -92,7 +92,7 @@ internal fun CreateWalletStartContent(state: CreateWalletStartUM, modifier: Modi
                             ),
                         text = state.title.resolveReference(),
                         style = TangemTheme.typography.h2,
-                        color = TangemTheme.colors.text.primary1,
+                        color = TangemTheme.colors3.text.primary,
                         textAlign = TextAlign.Center,
                     )
                     Text(
@@ -105,7 +105,7 @@ internal fun CreateWalletStartContent(state: CreateWalletStartUM, modifier: Modi
                             ),
                         text = state.description.resolveReference(),
                         style = TangemTheme.typography.body2,
-                        color = TangemTheme.colors.text.primary1,
+                        color = TangemTheme.colors3.text.primary,
                         textAlign = TextAlign.Center,
                     )
                     FlowRow(
@@ -183,7 +183,7 @@ internal fun CreateWalletStartContent(state: CreateWalletStartUM, modifier: Modi
                         Text(
                             text = stringResourceSafe(R.string.common_or),
                             style = TangemTheme.typography.caption1,
-                            color = TangemTheme.colors.text.secondary,
+                            color = TangemTheme.colors3.text.secondary,
                             textAlign = TextAlign.Center,
                         )
                         DashedGradientLine(
@@ -205,7 +205,7 @@ internal fun CreateWalletStartContent(state: CreateWalletStartUM, modifier: Modi
                                 ),
                             text = state.otherMethodDescription.resolveReference(),
                             style = TangemTheme.typography.subtitle2,
-                            color = TangemTheme.colors.text.tertiary,
+                            color = TangemTheme.colors3.text.secondary,
                             textAlign = TextAlign.Center,
                         )
                     }
@@ -222,12 +222,12 @@ internal fun CreateWalletStartContent(state: CreateWalletStartUM, modifier: Modi
                         Text(
                             text = state.otherMethodTitle.resolveReference(),
                             style = TangemTheme.typography.subtitle1,
-                            color = TangemTheme.colors.text.primary1,
+                            color = TangemTheme.colors3.text.primary,
                             textAlign = TextAlign.Center,
                         )
                         Icon(
                             painter = painterResource(id = R.drawable.ic_chevron_right_18x24),
-                            tint = TangemTheme.colors.icon.primary1,
+                            tint = TangemTheme.colors3.icon.primary,
                             contentDescription = null,
                         )
                     }
@@ -250,7 +250,7 @@ internal fun CreateWalletStartContent(state: CreateWalletStartUM, modifier: Modi
                 Text(
                     text = stringResourceSafe(R.string.welcome_create_wallet_already_have),
                     style = TangemTheme.typography.caption1,
-                    color = TangemTheme.colors.text.secondary,
+                    color = TangemTheme.colors3.text.secondary,
                 )
                 Spacer(modifier = Modifier.size(4.dp))
                 Row(
@@ -264,13 +264,13 @@ internal fun CreateWalletStartContent(state: CreateWalletStartUM, modifier: Modi
                     Text(
                         text = stringResourceSafe(R.string.wallet_create_scan_title),
                         style = TangemTheme.typography.caption1,
-                        color = TangemTheme.colors.text.primary1,
+                        color = TangemTheme.colors3.text.primary,
                     )
                     Spacer(modifier = Modifier.size(2.dp))
                     Icon(
                         modifier = Modifier.size(16.dp),
                         painter = painterResource(id = R.drawable.ic_tangem_24),
-                        tint = TangemTheme.colors.icon.primary1,
+                        tint = TangemTheme.colors3.icon.primary,
                         contentDescription = null,
                     )
                 }
@@ -357,7 +357,7 @@ private fun AdaptiveScrollableContent(
 private fun DashedGradientLine(modifier: Modifier = Modifier) {
     val density = LocalDensity.current
 
-    val strokeColor = TangemTheme.colors.stroke.primary
+    val strokeColor = TangemTheme.colors3.border.secondary
 
     Canvas(modifier = modifier) {
         val strokePx = with(density) { 4.dp.toPx() }
@@ -397,13 +397,13 @@ private fun FeatureItem(@DrawableRes iconResId: Int, text: TextReference) {
         Icon(
             modifier = Modifier.size(16.dp),
             painter = painterResource(iconResId),
-            tint = TangemTheme.colors.icon.accent,
+            tint = TangemTheme.colors3.icon.accent.blue,
             contentDescription = null,
         )
         Text(
             text = text.resolveReference(),
             style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
         )
     }
 }

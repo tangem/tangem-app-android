@@ -41,14 +41,14 @@ internal fun StakingFeeBlock(feeState: FeeState) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .padding(12.dp)
             .testTag(StakingSendDetailsScreenTestTags.NETWORK_FEE_BLOCK),
     ) {
         Text(
             text = stringResourceSafe(R.string.common_network_fee_title),
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.padding(bottom = 4.dp),
         )
 
@@ -133,7 +133,7 @@ private fun BoxScope.FeeError(feeState: FeeState) {
         if (state == FeeState.Error) {
             Text(
                 text = DASH_SIGN,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 style = TangemTheme.typography.body1,
             )
         }
