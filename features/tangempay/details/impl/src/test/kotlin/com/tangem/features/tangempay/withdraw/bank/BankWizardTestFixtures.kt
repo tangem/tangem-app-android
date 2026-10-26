@@ -8,6 +8,7 @@ import com.tangem.domain.models.account.PaymentNetworkStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.model.bankofframp.OfframpDestination
@@ -16,8 +17,10 @@ import com.tangem.domain.pay.model.bankofframp.OfframpFee
 import com.tangem.domain.pay.model.bankofframp.OfframpSource
 import com.tangem.domain.pay.model.bankofframp.OfframpToken
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSource
+import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import com.tangem.test.mock.MockAccounts
 import io.mockk.every
 import io.mockk.mockk
@@ -167,3 +170,12 @@ internal fun bankWithdrawOptions(
     maxAmount = maxAmount,
     currency = currency,
 )
+
+internal fun savedRecipientDraft(recipient: BankAccount? = bankAccount(id = "acc-1")): BankWithdrawDraft =
+    BankWithdrawDraft(
+        entry = BankWithdrawEntry.Saved("acc-1"),
+        recipient = recipient,
+        amount = BigDecimal("500"),
+        source = bankWithdrawSource(),
+        destination = offrampDestination(),
+    )
