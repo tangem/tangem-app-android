@@ -24,6 +24,16 @@ internal class DefaultSwapFeatureToggles @Inject constructor(
             toggle = FeatureToggles.TWI_1850_TRON_GASLESS_DEX_SWAP_ENABLED,
         )
 
+    override val isTronClientEnergyEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(
+            toggle = FeatureToggles.TWI_1858_TRON_CLIENT_ENERGY_ENABLED,
+        )
+
+    override val isTronLowerFeeTypeEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(
+            toggle = FeatureToggles.AND_17201_TRON_LOWER_FEE_TYPE_ENABLED,
+        )
+
     override val isCustomSlippageEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(
             toggle = FeatureToggles.TWI_1674_SWAP_CUSTOM_SLIPPAGE_ENABLED,
