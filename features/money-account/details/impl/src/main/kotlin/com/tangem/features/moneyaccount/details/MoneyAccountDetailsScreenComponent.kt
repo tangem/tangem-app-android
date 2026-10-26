@@ -6,6 +6,8 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.decompose.context.AppComponentContext
@@ -13,11 +15,18 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.moneyaccount.details.addfunds.options.MoneyAccountAddFundsOptionsComponent
 import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
 import com.tangem.features.tangempay.components.TangemPayBankingDetailsErrorComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.onEach
 
 internal class MoneyAccountDetailsScreenComponent(
     appComponentContext: AppComponentContext,
@@ -29,9 +38,11 @@ internal class MoneyAccountDetailsScreenComponent(
 
     private val model: MoneyAccountDetailsModel = getOrCreateModel(params = params)
 
+    private val txHistorySlotNavigation = SlotNavigation<CryptoCurrency.Token>()
+
     private val txHistorySlot = childSlot(
         key = "txHistorySlot",
-        source = model.txHistorySlotNavigation,
+        source = txHistorySlotNavigation,
         serializer = null,
         childFactory = { currency, ctx ->
             txHistoryComponentFactory.create(
@@ -52,6 +63,14 @@ internal class MoneyAccountDetailsScreenComponent(
         handleBackButton = false,
         childFactory = ::bottomSheetChild,
     )
+
+    init {
+        model.uiState
+            .mapNotNull { state -> state.txHistoryCurrency }
+            .distinctUntilChanged()
+            .onEach { currency -> txHistorySlotNavigation.activate(currency) }
+            .launchIn(componentScope)
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {
