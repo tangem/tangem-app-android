@@ -48,7 +48,7 @@ internal fun DestinationBlock(
         modifier = Modifier
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .clickable(enabled = !isClickDisabled && !isEditingDisabled, onClick = onClick)
             .padding(12.dp)
             .testTag(SendConfirmScreenTestTags.RECIPIENT_BLOCK),
@@ -78,7 +78,7 @@ private fun AddressWithMemoBlock(
     Text(
         text = stringResourceSafe(R.string.send_recipient),
         style = TangemTheme.typography.subtitle2,
-        color = TangemTheme.colors.text.tertiary,
+        color = TangemTheme.colors3.text.secondary,
     )
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -91,7 +91,7 @@ private fun AddressWithMemoBlock(
             Text(
                 text = address.value,
                 style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 modifier = Modifier.testTag(SendConfirmScreenTestTags.RECIPIENT_ADDRESS),
             )
             val blockchainAddress = address.briefBlockchainAddress
@@ -99,7 +99,7 @@ private fun AddressWithMemoBlock(
                 Text(
                     text = blockchainAddress,
                     style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                     modifier = Modifier.testTag(SendConfirmScreenTestTags.BLOCKCHAIN_ADDRESS),
                 )
             }
@@ -117,7 +117,7 @@ private fun AddressWithMemoBlock(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(RoundedCornerShape(18.dp))
-                    .background(TangemTheme.colors.background.tertiary)
+                    .background(TangemTheme.colors3.bg.primary)
                     .testTag(SendConfirmScreenTestTags.RECIPIENT_ADDRESS_ICON),
             )
         }
@@ -127,7 +127,7 @@ private fun AddressWithMemoBlock(
         Text(
             text = stringResourceSafe(R.string.send_memo, memo.value),
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier
                 .padding(top = 8.dp)
                 .testTag(SendConfirmScreenTestTags.RECIPIENT_MEMO),

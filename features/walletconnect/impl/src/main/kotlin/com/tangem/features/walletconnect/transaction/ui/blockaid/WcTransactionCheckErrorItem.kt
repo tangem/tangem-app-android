@@ -36,16 +36,16 @@ internal fun WcTransactionCheckErrorItem(notification: BlockAidNotificationUM, m
             BlockAidNotificationUM.Type.WARNING -> TangemColorPalette.Dark1.copy(alpha = 0.1f)
         },
         titleColor = when (notification.type) {
-            BlockAidNotificationUM.Type.ERROR -> TangemTheme.colors.text.warning
-            BlockAidNotificationUM.Type.WARNING -> TangemTheme.colors.text.primary1
+            BlockAidNotificationUM.Type.ERROR -> TangemTheme.colors3.text.accent.red
+            BlockAidNotificationUM.Type.WARNING -> TangemTheme.colors3.text.primary
         },
         subtitleColor = when (notification.type) {
-            BlockAidNotificationUM.Type.ERROR -> TangemTheme.colors.text.primary1
-            BlockAidNotificationUM.Type.WARNING -> TangemTheme.colors.text.tertiary
+            BlockAidNotificationUM.Type.ERROR -> TangemTheme.colors3.text.primary
+            BlockAidNotificationUM.Type.WARNING -> TangemTheme.colors3.text.secondary
         },
         iconTint = when (notification.type) {
-            BlockAidNotificationUM.Type.ERROR -> TangemTheme.colors.icon.warning
-            BlockAidNotificationUM.Type.WARNING -> TangemTheme.colors.icon.attention
+            BlockAidNotificationUM.Type.ERROR -> TangemTheme.colors3.icon.accent.red
+            BlockAidNotificationUM.Type.WARNING -> TangemTheme.colors3.icon.accent.yellow
         },
     )
 }
@@ -57,7 +57,7 @@ private fun WcTransactionCheckErrorItemPreview() {
     TangemThemePreview {
         Box(
             modifier = Modifier
-                .background(TangemTheme.colors.background.tertiary),
+                .background(TangemTheme.colors3.bg.primary),
         ) {
             WcTransactionCheckErrorItem(
                 BlockAidNotificationUM(

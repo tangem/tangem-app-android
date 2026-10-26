@@ -43,7 +43,7 @@ internal fun NetworksAvailableForNotificationsListBS(
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
         onBack = onBack,
         title = {
             TangemModalBottomSheetTitle(
@@ -75,7 +75,7 @@ private fun NetworksAvailableForNotificationsListBottomSheetContent(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.background(TangemTheme.colors.background.primary),
+        modifier = modifier.background(TangemTheme.colors3.bg.primary),
     ) {
         Header()
         SpacerH24()
@@ -88,7 +88,7 @@ private fun ColumnScope.Header() {
     Icon(
         painter = painterResource(id = R.drawable.ic_notification_48),
         contentDescription = null,
-        tint = TangemTheme.colors.icon.accent,
+        tint = TangemTheme.colors3.icon.accent.blue,
         modifier = Modifier
             .align(Alignment.CenterHorizontally)
             .size(56.dp),
@@ -96,7 +96,7 @@ private fun ColumnScope.Header() {
     Text(
         text = stringResourceSafe(R.string.push_transactions_notifications_title),
         style = TangemTheme.typography.h2,
-        color = TangemTheme.colors.text.primary1,
+        color = TangemTheme.colors3.text.primary,
         textAlign = TextAlign.Center,
         modifier = Modifier
             .align(Alignment.CenterHorizontally)
@@ -109,7 +109,7 @@ private fun ColumnScope.Header() {
     Text(
         text = stringResourceSafe(R.string.push_transactions_notifications_description),
         style = TangemTheme.typography.body2,
-        color = TangemTheme.colors.text.secondary,
+        color = TangemTheme.colors3.text.secondary,
         textAlign = TextAlign.Center,
         modifier = Modifier
             .align(Alignment.CenterHorizontally)
@@ -132,7 +132,7 @@ private fun Networks(
             modifier = Modifier.padding(top = 12.dp, bottom = 4.dp, start = 12.dp, end = 12.dp),
             text = stringResourceSafe(R.string.common_supported_networks),
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
         if (isLoading) {
             repeat(SHIMMERS_COUNT) {

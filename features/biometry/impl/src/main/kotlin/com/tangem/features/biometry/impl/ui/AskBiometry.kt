@@ -69,7 +69,7 @@ private fun Header(onCloseClick: () -> Unit, modifier: Modifier = Modifier) {
             Icon(
                 modifier = Modifier.size(24.dp),
                 painter = painterResource(id = R.drawable.ic_close_24),
-                tint = TangemTheme.colors.icon.secondary,
+                tint = TangemTheme.colors3.icon.secondary,
                 contentDescription = stringResourceSafe(id = R.string.common_cancel),
             )
         }
@@ -87,13 +87,13 @@ private fun Title(modifier: Modifier = Modifier) {
         Icon(
             modifier = Modifier.size(56.dp),
             painter = painterResource(id = R.drawable.ic_fingerprint_24),
-            tint = TangemTheme.colors.icon.primary1,
+            tint = TangemTheme.colors3.icon.primary,
             contentDescription = null,
         )
         Text(
             text = stringResourceSafe(id = R.string.save_user_wallet_agreement_header_biometrics),
             style = TangemTheme.typography.h2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
         )
     }
@@ -131,7 +131,7 @@ private fun Footer(state: AskBiometryUM, modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxWidth(fraction = .7f),
             text = stringResourceSafe(R.string.save_user_wallet_agreement_notice),
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
         )
 
@@ -165,7 +165,7 @@ private fun DescriptionItem(iconPainter: Painter, title: String, description: St
         Icon(
             modifier = Modifier.size(24.dp),
             painter = iconPainter,
-            tint = TangemTheme.colors.icon.primary1,
+            tint = TangemTheme.colors3.icon.primary,
             contentDescription = null,
         )
         SpacerW24()
@@ -173,13 +173,13 @@ private fun DescriptionItem(iconPainter: Painter, title: String, description: St
             Text(
                 text = title,
                 style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
             SpacerH4()
             Text(
                 text = description,
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
     }

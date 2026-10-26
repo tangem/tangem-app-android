@@ -305,7 +305,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
                     tangemIconUM = tangemIcon?.let {
                         TangemIconUM.Icon(
                             iconRes = tangemIcon,
-                            tintReference = { TangemTheme.colors2.graphic.neutral.primaryInverted },
+                            tintReference = { TangemTheme.colors3.icon.inverse },
                         )
                     },
                     onClick = onGenerateClick,
@@ -386,7 +386,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
                     text = buttonText,
                     tangemIconUM = TangemIconUM.Icon(
                         iconRes = R.drawable.ic_tangem_24,
-                        tintReference = { TangemTheme.colors2.graphic.neutral.primaryInverted },
+                        tintReference = { TangemTheme.colors3.icon.inverse },
                     ),
                     onClick = onRefreshClick,
                     type = TangemButtonType.Primary,

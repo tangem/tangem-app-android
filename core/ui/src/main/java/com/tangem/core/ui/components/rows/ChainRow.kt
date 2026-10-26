@@ -81,7 +81,7 @@ inline fun ChainRowContainer(
 private fun Preview_ChainRow(@PreviewParameter(ChainRowParameterProvider::class) state: ChainRowUM) {
     TangemThemePreview {
         ChainRow(
-            modifier = Modifier.background(TangemTheme.colors.background.primary),
+            modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
             model = state,
             action = {
                 TangemSwitch(onCheckedChange = {}, checked = false)

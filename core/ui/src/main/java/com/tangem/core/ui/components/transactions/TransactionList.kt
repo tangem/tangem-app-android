@@ -124,7 +124,7 @@ fun PendingTxsBlock(pendingTxs: ImmutableList<TransactionState>, isBalanceHidden
             .padding(top = 12.dp)
             .padding(horizontal = 16.dp)
             .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
-            .background(color = TangemTheme.colors.background.primary),
+            .background(color = TangemTheme.colors3.bg.secondary),
         verticalArrangement = Arrangement.spacedBy(space = 8.dp),
         horizontalAlignment = Alignment.Start,
     ) {

@@ -43,13 +43,13 @@ fun PagerIndicator(pagerState: PagerState, modifier: Modifier = Modifier, hasBac
     val colors = if (hasBackground) {
         PagerIndicatorColors(
             active = TangemTheme.colors.control.key,
-            inactive = TangemTheme.colors.text.tertiary,
-            overlay = TangemTheme.colors.overlay.secondary,
+            inactive = TangemTheme.colors3.text.secondary,
+            overlay = TangemTheme.colors3.overlay.modal,
         )
     } else {
         PagerIndicatorColors(
-            active = TangemTheme.colors.icon.primary1,
-            inactive = TangemTheme.colors.icon.inactive,
+            active = TangemTheme.colors3.icon.primary,
+            inactive = TangemTheme.colors3.icon.tertiary,
             overlay = Color.Transparent,
         )
     }
@@ -280,7 +280,7 @@ private fun PagerIndicatorPreviewV() {
     TangemThemePreview {
         Column(
             Modifier
-                .background(TangemTheme.colors.background.primary)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
@@ -297,7 +297,7 @@ private fun PagerIndicator6ItemsPreview() {
     TangemThemePreview {
         Column(
             Modifier
-                .background(TangemTheme.colors.background.primary)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
@@ -314,7 +314,7 @@ private fun PagerIndicator7ItemsPreview() {
     TangemThemePreview {
         Column(
             Modifier
-                .background(TangemTheme.colors.background.primary)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
@@ -331,7 +331,7 @@ private fun PagerIndicator10ItemsPreview() {
     TangemThemePreview {
         Column(
             Modifier
-                .background(TangemTheme.colors.background.primary)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
@@ -348,7 +348,7 @@ private fun PagerIndicatorSmallCountsPreview() {
     TangemThemePreview {
         Column(
             Modifier
-                .background(TangemTheme.colors.background.primary)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {

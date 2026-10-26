@@ -24,7 +24,7 @@ internal fun AddressSyncLoading(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .size(30.dp)
                 .padding(4.dp),
-            color = TangemTheme.colors.icon.accent,
+            color = TangemTheme.colors3.icon.accent.blue,
         )
     }
 }

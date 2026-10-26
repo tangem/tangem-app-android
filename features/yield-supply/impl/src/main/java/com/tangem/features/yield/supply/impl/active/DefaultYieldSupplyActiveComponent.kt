@@ -111,7 +111,7 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
 
         Column(
             modifier = Modifier
-                .background(TangemTheme.colors.background.tertiary)
+                .background(TangemTheme.colors3.bg.primary)
                 .fillMaxSize()
                 .systemBarsPadding(),
         ) {
@@ -128,7 +128,7 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
                 )
 
                 Fade(
-                    backgroundColor = TangemTheme.colors.background.tertiary,
+                    backgroundColor = TangemTheme.colors3.bg.primary,
                     modifier = Modifier.align(Alignment.BottomCenter),
                 )
             }

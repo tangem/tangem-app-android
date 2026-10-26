@@ -40,12 +40,12 @@ internal fun MultiWalletSeedPhraseStart(state: MultiWalletSeedPhraseUM.Start, mo
                 modifier = Modifier.size(56.dp),
                 imageVector = ImageVector.vectorResource(R.drawable.ic_onboarding_text_edit_56),
                 contentDescription = null,
-                tint = TangemTheme.colors.text.tertiary,
+                tint = TangemTheme.colors3.text.secondary,
             )
             Box(
                 modifier = Modifier
                     .background(
-                        color = TangemTheme.colors.icon.warning.copy(alpha = 0.12f),
+                        color = TangemTheme.colors3.icon.accent.red.copy(alpha = 0.12f),
                         shape = RoundedCornerShape(8.dp),
                     ),
             ) {
@@ -53,7 +53,7 @@ internal fun MultiWalletSeedPhraseStart(state: MultiWalletSeedPhraseUM.Start, mo
                     modifier = Modifier
                         .padding(horizontal = 12.dp, vertical = 4.dp),
                     text = stringResourceSafe(id = R.string.onboarding_seed_phrase_intro_legacy),
-                    color = TangemTheme.colors.text.warning,
+                    color = TangemTheme.colors3.text.accent.red,
                     style = TangemTheme.typography.body1,
                 )
             }
@@ -74,13 +74,13 @@ private fun BodyContent(state: MultiWalletSeedPhraseUM.Start, modifier: Modifier
         Text(
             text = stringResourceSafe(id = R.string.onboarding_seed_intro_title),
             style = TangemTheme.typography.h2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         Text(
             text = stringResourceSafe(id = R.string.onboarding_seed_intro_message),
             style = TangemTheme.typography.body1
                 .copy(lineBreak = LineBreak.Paragraph),
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .padding(horizontal = 32.dp)
@@ -104,7 +104,7 @@ private fun ReadMoreBlock(state: MultiWalletSeedPhraseUM.Start, modifier: Modifi
                 .clip(shape)
                 .border(
                     width = 1.dp,
-                    color = TangemTheme.colors.stroke.primary,
+                    color = TangemTheme.colors3.border.secondary,
                     shape = shape,
                 )
                 .clickable(onClick = state.onLearnMoreClicked)
@@ -114,13 +114,13 @@ private fun ReadMoreBlock(state: MultiWalletSeedPhraseUM.Start, modifier: Modifi
             Icon(
                 imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_top_right_24),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.primary1,
+                tint = TangemTheme.colors3.icon.primary,
             )
             SpacerW8()
             Text(
                 modifier = Modifier.align(Alignment.CenterVertically),
                 style = TangemTheme.typography.button,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 text = stringResourceSafe(id = R.string.onboarding_seed_button_read_more),
             )
         }

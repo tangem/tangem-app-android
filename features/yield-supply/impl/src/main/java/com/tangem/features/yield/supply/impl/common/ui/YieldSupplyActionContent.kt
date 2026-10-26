@@ -50,13 +50,13 @@ internal fun YieldSupplyActionContent(
         Text(
             text = yieldSupplyActionUM.title.resolveReference(),
             style = TangemTheme.typography.h3,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         SpacerH8()
         Text(
             text = yieldSupplyActionUM.subtitle.resolveReference(),
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 16.dp),
         )
@@ -70,13 +70,13 @@ internal fun YieldSupplyActionContent(
                         withLink(link = LinkAnnotation.Clickable("LINK_TAG") { onFooterClick() }) {
                             appendColored(
                                 text = yieldSupplyActionUM.footerLink.resolveReference(),
-                                color = TangemTheme.colors.icon.accent,
+                                color = TangemTheme.colors3.icon.accent.blue,
                             )
                         }
                     } else {
                         appendColored(
                             text = yieldSupplyActionUM.footerLink.resolveReference(),
-                            color = TangemTheme.colors.text.disabled,
+                            color = TangemTheme.colors3.text.tertiary,
                         )
                     }
                 },
@@ -97,7 +97,7 @@ internal fun YieldSupplyActionContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(14.dp))
-                        .background(TangemTheme.colors.background.action)
+                        .background(TangemTheme.colors3.bg.secondary)
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                 )
             }
@@ -119,7 +119,7 @@ private fun YieldSupplyActionContent_Preview(
             onFooterClick = {},
             yieldSupplyNotificationsComponent = ComposableContentComponent.EMPTY,
             enableFooterClick = false,
-            modifier = Modifier.background(TangemTheme.colors.background.tertiary),
+            modifier = Modifier.background(TangemTheme.colors3.bg.primary),
         ) {
             CurrencyIcon(
                 state = CurrencyIconState.Loading,

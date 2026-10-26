@@ -44,7 +44,7 @@ internal fun OnrampAmountContent(state: OnrampMainComponentUM.Content, modifier:
         modifier = modifier
             .fillMaxWidth()
             .background(
-                color = TangemTheme.colors.background.action,
+                color = TangemTheme.colors3.bg.secondary,
                 shape = RoundedCornerShape(size = 16.dp),
             )
             .padding(vertical = 24.dp, horizontal = 16.dp)
@@ -77,7 +77,7 @@ private fun OnrampHeaderTitle() {
     Text(
         text = stringResourceSafe(R.string.onramp_you_will_pay_title),
         style = TangemTheme.typography.subtitle2,
-        color = TangemTheme.colors.text.tertiary,
+        color = TangemTheme.colors3.text.secondary,
     )
 }
 
@@ -105,7 +105,7 @@ private fun OnrampAmountField(amountField: AmountFieldModel, currencyCode: Strin
         keyboardOptions = amountField.keyboardOptions,
         keyboardActions = amountField.keyboardActions,
         textStyle = TangemTheme.typography.head.copy(
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
         ),
         isEnabled = !amountField.isError,
@@ -145,7 +145,7 @@ private fun OnrampAmountSecondary(state: OnrampSecondaryFieldErrorUM.Error) {
     ) {
         Text(
             text = state.error.resolveReference(),
-            color = TangemTheme.colors.text.warning,
+            color = TangemTheme.colors3.text.accent.red,
             style = TangemTheme.typography.caption2,
             textAlign = TextAlign.Center,
         )
@@ -157,7 +157,7 @@ private fun OnrampCurrencyIcon(currencyUM: OnrampCurrencyUM, modifier: Modifier 
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(14.dp))
-            .background(TangemTheme.colors.button.secondary)
+            .background(TangemTheme.colors3.bg.transparent.secondary)
             .clickable(onClick = currencyUM.onClick)
             .padding(horizontal = 6.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -173,7 +173,7 @@ private fun OnrampCurrencyIcon(currencyUM: OnrampCurrencyUM, modifier: Modifier 
         )
         Text(
             text = currencyUM.code,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             style = TangemTheme.typography.body2.copy(fontWeight = FontWeight.SemiBold),
             textAlign = TextAlign.Center,
         )
@@ -182,7 +182,7 @@ private fun OnrampCurrencyIcon(currencyUM: OnrampCurrencyUM, modifier: Modifier 
                 .size(16.dp)
                 .testTag(BuyTokenDetailsScreenTestTags.EXPAND_FIAT_LIST_BUTTON),
             painter = painterResource(id = R.drawable.ic_chevron_24),
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
             contentDescription = null,
         )
     }

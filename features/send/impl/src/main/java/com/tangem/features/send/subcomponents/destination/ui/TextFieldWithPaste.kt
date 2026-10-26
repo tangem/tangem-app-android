@@ -39,16 +39,16 @@ internal fun TextFieldWithPaste(
     isValuePasted: Boolean = false,
 ) {
     val (title, color) = when {
-        isError && error != null -> error to TangemTheme.colors.text.warning
-        isReadOnly -> label to TangemTheme.colors.text.tertiary
-        else -> label to TangemTheme.colors.text.secondary
+        isError && error != null -> error to TangemTheme.colors3.text.accent.red
+        isReadOnly -> label to TangemTheme.colors3.text.secondary
+        else -> label to TangemTheme.colors3.text.secondary
     }
-    val placeholderColor = if (isReadOnly) TangemTheme.colors.text.tertiary else TangemTheme.colors.text.disabled
+    val placeholderColor = if (isReadOnly) TangemTheme.colors3.text.secondary else TangemTheme.colors3.text.tertiary
     FooterContainer(modifier, footer) {
         Box(
             modifier = Modifier
                 .background(
-                    color = TangemTheme.colors.background.action,
+                    color = TangemTheme.colors3.bg.secondary,
                     shape = TangemTheme.shapes.roundedCornersXMedium,
                 )
                 .padding(end = 12.dp),
@@ -102,8 +102,8 @@ internal fun TextFieldWithPaste(
                 PasteButton(
                     isPasteButtonVisible = value.isBlank(),
                     onClick = onPasteClick,
-                    backgroundColorEnabled = TangemTheme.colors.button.secondary,
-                    textColor = TangemTheme.colors.text.primary1,
+                    backgroundColorEnabled = TangemTheme.colors3.bg.transparent.secondary,
+                    textColor = TangemTheme.colors3.text.primary,
                     modifier = Modifier
                         .padding(start = 8.dp)
                         .testTag(SendAddressScreenTestTags.DESTINATION_TAG_PASTE_BUTTON),

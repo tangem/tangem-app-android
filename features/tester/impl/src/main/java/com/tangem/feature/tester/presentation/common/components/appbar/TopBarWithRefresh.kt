@@ -13,6 +13,6 @@ internal fun TopBarWithRefresh(state: TopBarWithRefreshUM) {
         text = stringResourceSafe(state.titleResId),
         iconRes = R.drawable.ic_refresh_24.takeIf { state.refreshButton.isVisible },
         onIconClick = state.refreshButton.onRefreshClick,
-        backgroundColor = TangemTheme.colors.background.primary,
+        backgroundColor = TangemTheme.colors3.bg.primary,
     )
 }

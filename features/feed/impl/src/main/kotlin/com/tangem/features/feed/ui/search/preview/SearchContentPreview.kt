@@ -424,7 +424,7 @@ private fun SearchContentPreviewHost(
         modifier = modifier
             .height(previewHeightDp.dp)
             .fillMaxWidth()
-            .background(TangemTheme.colors.background.primary),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         SearchContent(
             content = scenario.content,

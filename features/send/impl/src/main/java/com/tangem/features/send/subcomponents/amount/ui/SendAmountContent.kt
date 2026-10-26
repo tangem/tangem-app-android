@@ -36,7 +36,7 @@ fun SendAmountContent(
     isSendWithSwapAvailable: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.background(TangemTheme.colors.background.tertiary)) {
+    Column(modifier = modifier.background(TangemTheme.colors3.bg.primary)) {
         AmountScreenContent(
             amountState = amountState,
             clickIntents = clickIntents,
@@ -75,7 +75,7 @@ private fun SendConvertTokenButton(onConvertToAnother: () -> Unit) {
             Icon(
                 imageVector = ImageVector.vectorResource(R.drawable.ic_convert_24),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.informative,
+                tint = TangemTheme.colors3.icon.secondary,
                 modifier = Modifier
                     .size(20.dp)
                     .background(TangemTheme.colors.control.default, CircleShape)
@@ -84,7 +84,7 @@ private fun SendConvertTokenButton(onConvertToAnother: () -> Unit) {
             Text(
                 text = stringResourceSafe(com.tangem.common.ui.R.string.send_amount_convert_to_another_token),
                 style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
     }
