@@ -129,7 +129,6 @@ internal class JointAccountToMembersUMConverter(
         )
     }
 
-    /** The next screen signs through the creator's activation until the verification flow exists */
     private fun footer(
         phase: MembersScreenPhase,
         input: Input,
@@ -137,7 +136,7 @@ internal class JointAccountToMembersUMConverter(
     ): JointAccountMembersUM.FooterUM? {
         val account = input.account
         val button = JointAccountMembersUM.ConfirmButtonUM(
-            isEnabled = phase.stage == MembersScreenPhase.Stage.Confirming && phase.isThisDeviceCreator,
+            isEnabled = phase.stage == MembersScreenPhase.Stage.Confirming,
             onClick = { callbacks.onConfirmAddressClick(account.cryptoAccountId) },
         )
 
@@ -207,10 +206,14 @@ internal class JointAccountToMembersUMConverter(
             name = name,
             isYou = isOwn,
             isCreator = member.role == JointAccount.Role.CREATOR,
-            status = when {
-                phase.stage != MembersScreenPhase.Stage.Confirming -> MemberStatusUM.Joined
-                member.isVerified -> MemberStatusUM.Confirmed
-                else -> MemberStatusUM.NotConfirmed
+            status = when (phase.stage) {
+                MembersScreenPhase.Stage.Collecting -> MemberStatusUM.Joined
+                MembersScreenPhase.Stage.Confirming -> if (member.isVerified) {
+                    MemberStatusUM.Confirmed
+                } else {
+                    MemberStatusUM.NotConfirmed
+                }
+                MembersScreenPhase.Stage.Completed -> MemberStatusUM.None
             },
             onInfoClick = { callbacks.onMemberInfoClick(avatar, name, member.address) },
         )

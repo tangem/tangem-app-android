@@ -25,44 +25,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 
 @Composable
-fun TrendingLoadingArticle(modifier: Modifier = Modifier) {
-    BlockCard(
-        modifier = modifier,
-        colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors3.bg.secondary),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-        ) {
-            ArticleShimmerLine(
-                style = TangemTheme.typography3.caption.medium,
-                width = 46.dp,
-            )
-            SpacerH(8.dp)
-            ArticleShimmerLine(
-                style = TangemTheme.typography3.heading.small,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            SpacerH(48.dp)
-            ArticleShimmerLine(
-                style = TangemTheme.typography3.caption.medium,
-                width = 46.dp,
-            )
-            SpacerH(12.dp)
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                ArticleTagShimmer(width = 58.dp)
-                ArticleTagShimmer(width = 58.dp)
-                ArticleTagShimmer(width = 58.dp)
-            }
-        }
-    }
-}
-
-@Composable
 fun DefaultLoadingArticle(modifier: Modifier = Modifier) {
     BlockCard(
         modifier = modifier,
@@ -118,15 +80,6 @@ private fun ArticleTagShimmer(width: Dp, modifier: Modifier = Modifier) {
         radius = 999.dp,
         modifier = modifier.size(width = width, height = 24.dp),
     )
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun TrendingLoadingArticlePreview() {
-    TangemThemePreviewRedesign {
-        TrendingLoadingArticle()
-    }
 }
 
 @Preview(showBackground = true, widthDp = 360)

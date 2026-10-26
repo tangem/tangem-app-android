@@ -7,6 +7,7 @@ import com.arkivanov.decompose.router.stack.replaceCurrent
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.navigation.withDefaultCompletion
 import com.tangem.core.decompose.utils.stack
 import kotlinx.coroutines.withContext
 import kotlin.reflect.KClass
@@ -30,7 +31,7 @@ inline fun <reified T : Route> AppComponentContext.InnerRouter(
 
     override fun push(route: Route, onComplete: (Boolean) -> Unit) {
         if (route is T) {
-            stackNavigation.pushNew(route, onComplete)
+            stackNavigation.pushNew(route, withDefaultCompletion(onComplete) { "Unable to push $route" })
         } else {
             fallBackRouter.push(route, onComplete)
         }
@@ -38,7 +39,11 @@ inline fun <reified T : Route> AppComponentContext.InnerRouter(
 
     override fun replaceCurrent(route: Route, onComplete: (Boolean) -> Unit) {
         if (route is T) {
-            stackNavigation.replaceCurrent(route, { onComplete(true) })
+            val onCompleteOrReport = withDefaultCompletion(onComplete) {
+                "Unable to replace a current route with $route"
+            }
+
+            stackNavigation.replaceCurrent(route, { onCompleteOrReport(true) })
         } else {
             fallBackRouter.replaceCurrent(route, onComplete)
         }
@@ -47,10 +52,11 @@ inline fun <reified T : Route> AppComponentContext.InnerRouter(
     override fun replaceAll(vararg routes: Route, onComplete: (Boolean) -> Unit) {
         if (routes.any { it is T }) {
             val newRoutes = routes.toList().filterIsInstance<T>()
+            val onCompleteOrReport = withDefaultCompletion(onComplete) { "Unable to replace routes with $newRoutes" }
 
             stackNavigation.navigate(
                 transformer = { newRoutes },
-                onComplete = { newStack, _ -> onComplete(newStack == newRoutes) },
+                onComplete = { newStack, _ -> onCompleteOrReport(newStack == newRoutes) },
             )
         } else {
             fallBackRouter.replaceAll(*routes, onComplete = onComplete)
@@ -98,7 +104,6 @@ inline fun <reified T : Route> AppComponentContext.InnerRouter(
     ) {
         if (T::class.java.isAssignableFrom(routeClass.java)) {
             val matches: (Route) -> Boolean = { route -> routeClass.safeCast(route)?.let(predicate) == true }
-
             stackNavigation.navigate(
                 transformer = { stack -> stack.dropLastWhile { !matches(it) }.ifEmpty { stack } },
                 onComplete = { newStack, _ -> onComplete(newStack.lastOrNull()?.let(matches) == true) },
@@ -110,6 +115,7 @@ inline fun <reified T : Route> AppComponentContext.InnerRouter(
 
     override fun navigate(transformer: (stack: List<Route>) -> List<Route>, onComplete: (Boolean) -> Unit) {
         var isApplied = false
+        val onCompleteOrReport = withDefaultCompletion(onComplete) { "Unable to rebuild the stack" }
         stackNavigation.navigate(
             transformer = { stack ->
                 val newStack = transformer(stack)
@@ -120,8 +126,12 @@ inline fun <reified T : Route> AppComponentContext.InnerRouter(
                     stack
                 }
             },
-            onComplete = { _, _ -> onComplete(isApplied) },
+            onComplete = { _, _ -> onCompleteOrReport(isApplied) },
         )
+    }
+
+    override fun defaultCompletionHandler(isSuccess: Boolean, errorMessage: String) {
+        fallBackRouter.defaultCompletionHandler(isSuccess, errorMessage)
     }
 
     override suspend fun contains(route: Route): Boolean {
