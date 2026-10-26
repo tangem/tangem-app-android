@@ -71,7 +71,7 @@ internal class UpdateStakingNotificationTransformerRegionTest {
         networkRawId: String = "solana",
         symbol: String = "SOL",
         isCoin: Boolean = true,
-        stakingBalance: StakingBalance = mockk(relaxed = true),
+        stakingBalance: StakingBalance? = null,
     ): CryptoCurrencyStatus {
         val network = mockk<Network>(relaxed = true) {
             every { rawId } returns networkRawId
@@ -84,7 +84,7 @@ internal class UpdateStakingNotificationTransformerRegionTest {
             every { id.isCoin } returns isCoin
         }
         val value = mockk<CryptoCurrencyStatus.Value>(relaxed = true) {
-            every { this@mockk.stakingBalance } returns stakingBalance
+            every { contributions } returns listOfNotNull(stakingBalance)
             every { fiatRate } returns BigDecimal.ONE
             every { yieldSupplyStatus } returns null
         }
@@ -109,7 +109,7 @@ internal class UpdateStakingNotificationTransformerRegionTest {
             every { totalRewards } returns BigDecimal.ZERO
         }
         val value = mockk<CryptoCurrencyStatus.Value>(relaxed = true) {
-            every { this@mockk.stakingBalance } returns stakingBalance
+            every { contributions } returns listOfNotNull(stakingBalance)
             every { fiatRate } returns BigDecimal.ONE
             every { yieldSupplyStatus } returns null
         }

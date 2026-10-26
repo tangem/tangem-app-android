@@ -6,6 +6,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.orZero
+import com.tangem.utils.isNullOrZero
 
 /**
  * Converter from [QuotesResponse.Quote] to [QuoteStatus]
@@ -23,12 +24,16 @@ internal class QuoteStatusConverter(
 
         return QuoteStatus(
             rawCurrencyId = CryptoCurrency.RawID(currencyId),
-            value = QuoteStatus.Data(
-                source = source,
-                fiatRate = quote.price.orZero(),
-                priceChange = quote.priceChange24h.orZero().movePointLeft(2),
-                fiatRateUSD = quote.priceUsd.orZero(),
-            ),
+            value = if (quote.price.isNullOrZero()) {
+                QuoteStatus.Empty
+            } else {
+                QuoteStatus.Data(
+                    source = source,
+                    fiatRate = quote.price.orZero(),
+                    priceChange = quote.priceChange24h.orZero().movePointLeft(2),
+                    fiatRateUSD = quote.priceUsd.orZero(),
+                )
+            },
         )
     }
 }

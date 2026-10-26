@@ -8,8 +8,11 @@ import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
+import com.tangem.domain.polymarket.model.PolymarketTeam
+import com.tangem.grow.datasource.polymarket.models.PolymarketTeamDto
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
+import java.time.Instant
 
 internal object PolymarketEventConverter : Converter<PolymarketEventDto, PolymarketEvent> {
 
@@ -37,10 +40,25 @@ internal object PolymarketEventConverter : Converter<PolymarketEventDto, Polymar
             liquidity = value.liquidity?.let(BigDecimal::valueOf),
             totalMarketsCount = value.totalMarketsCount,
             isNegRisk = value.isNegRisk,
+            isLive = value.isLive,
             displayMode = convertDisplayMode(displayMode = value.displayMode, isNegRisk = value.isNegRisk),
             markets = value.markets.map(::convertMarket),
+            gameId = value.gameId,
+            score = value.score,
+            period = value.period,
+            isEnded = value.isEnded,
+            dataFetchedAt = value.dataFetchedAt?.let(Instant::parse),
+            teams = value.teams?.map(::convertTeam),
         )
     }
+
+    private fun convertTeam(dto: PolymarketTeamDto): PolymarketTeam = PolymarketTeam(
+        name = dto.name,
+        abbreviation = dto.abbreviation,
+        alias = dto.alias,
+        logoUrl = dto.logo,
+        ordering = dto.ordering,
+    )
 
     private fun convertMarket(dto: PolymarketMarketDto): PolymarketMarket {
         return PolymarketMarket(

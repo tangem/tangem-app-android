@@ -12,6 +12,6 @@ internal class CollectiblesOwnerDerivationPathTest {
     @Test
     fun `GIVEN the owner derivation path WHEN read THEN it is the one vaults were created with`() {
         // Assert
-        assertThat(COLLECTIBLES_OWNER_DERIVATION_PATH).isEqualTo("m/44'/501'/999700'/0'/0'")
+        assertThat(COLLECTIBLES_OWNER_DERIVATION_PATH).isEqualTo("m/44'/501'/999799'/0'/0'")
     }
 }

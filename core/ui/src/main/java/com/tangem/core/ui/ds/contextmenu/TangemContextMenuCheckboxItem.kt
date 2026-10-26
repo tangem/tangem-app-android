@@ -5,7 +5,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.ds.checkbox.TangemCheckbox
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.clickableSingle
@@ -16,13 +18,13 @@ import com.tangem.core.ui.res.TangemTheme
  * Item with checkbox for [TangemContextMenu].
  */
 @Composable
-fun TangemContextMenuCheckboxItem(title: TextReference, isChecked: Boolean, onClick: () -> Unit) {
+fun TangemContextMenuCheckboxItem(title: TextReference, isChecked: Boolean, onClick: () -> Unit, width: Dp = 238.dp) {
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .width(238.dp)
+            .width(width)
             .clickableSingle(onClick = onClick)
             .padding(
                 vertical = TangemTheme.dimens2.x2_5,
@@ -35,6 +37,7 @@ fun TangemContextMenuCheckboxItem(title: TextReference, isChecked: Boolean, onCl
             color = TangemTheme.colors2.text.neutral.primary,
             maxLines = 1,
         )
+        SpacerW(8.dp)
         TangemCheckbox(
             modifier = Modifier,
             isRounded = true,

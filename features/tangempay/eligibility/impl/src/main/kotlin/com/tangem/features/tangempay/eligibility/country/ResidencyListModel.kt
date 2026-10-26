@@ -1,9 +1,7 @@
 package com.tangem.features.tangempay.eligibility.country
 
 import androidx.compose.runtime.Stable
-import com.arkivanov.decompose.router.slot.SlotNavigation
-import com.arkivanov.decompose.router.slot.activate
-import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -15,19 +13,20 @@ import com.tangem.core.ui.ds2.search.TangemSearch
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayCountry
 import com.tangem.domain.models.pay.TangemPayEligibility
 import com.tangem.domain.models.pay.TangemPayRegion
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.pay.TangemPayCustomerResidency
+import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.CheckTangemPayEligibilityUseCase
+import com.tangem.domain.pay.usecase.ClearTangemPayCustomerResidencyUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayCountriesUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayRegionsUseCase
+import com.tangem.domain.pay.usecase.StoreTangemPayCustomerResidencyUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.eligibility.EligibilityInnerRoute
-import com.tangem.features.tangempay.eligibility.TangemPayEligibilityComponent
-import com.tangem.features.tangempay.eligibility.onboarding.PaymentAccountOnboardingLauncher
-import com.tangem.features.tangempay.eligibility.TangemPayWalletSelectorComponent
-import com.tangem.features.tangempay.eligibility.country.ResidencyListUM.Content
+import com.tangem.features.tangempay.eligibility.country.ResidencyListComponent.Step
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -44,75 +43,49 @@ internal class ResidencyListModel @Inject constructor(
     private val getCountriesUseCase: GetTangemPayCountriesUseCase,
     private val getRegionsUseCase: GetTangemPayRegionsUseCase,
     private val checkEligibilityUseCase: CheckTangemPayEligibilityUseCase,
-    private val onboardingLauncher: PaymentAccountOnboardingLauncher,
+    private val storeCustomerResidencyUseCase: StoreTangemPayCustomerResidencyUseCase,
+    private val clearCustomerResidencyUseCase: ClearTangemPayCustomerResidencyUseCase,
+    private val onboardingRepository: OnboardingRepository,
     private val uiMessageSender: UiMessageSender,
     private val analytics: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
-) : Model(), TangemPayWalletSelectorComponent.Listener {
+) : Model() {
 
-    private val params = paramsContainer.require<TangemPayEligibilityComponent.Params>()
-
-    val bottomSheetNavigation: SlotNavigation<ResidencyBottomSheetConfig> = SlotNavigation()
+    private val params = paramsContainer.require<ResidencyListComponent.Params>()
 
     val uiState: StateFlow<ResidencyListUM>
         field = MutableStateFlow(getInitialState())
 
-    private var step: Step = Step.Countries
     private var data: ResidencyListData = ResidencyListData.Loading
-    private var countries: List<TangemPayCountry> = emptyList()
     private var checkingItemId: String? = null
     private var continuingItemId: String? = null
 
     init {
-        analytics.send(TangemPayAnalyticsEvents.Eligibility.CountrySelectScreenOpened())
-        showCountries()
-    }
-
-    private fun showCountries() {
-        step = Step.Countries
-        uiState.update { state ->
-            state.copy(
-                title = resourceReference(R.string.tangempay_residency_title_country),
-                search = state.search.copy(query = "", isActive = false),
-                onBackClick = null,
-            )
+        when (val step = params.step) {
+            Step.Countries -> {
+                analytics.send(TangemPayAnalyticsEvents.Eligibility.CountrySelectScreenOpened())
+                loadCountries()
+            }
+            is Step.Regions -> {
+                analytics.send(TangemPayAnalyticsEvents.Eligibility.StateScreenOpened())
+                loadRegions(step)
+            }
         }
-        loadCountries()
     }
 
     private fun loadCountries() {
         setLoading()
         modelScope.launch {
-            if (countries.isNotEmpty()) {
-                setCountriesLoaded()
-                return@launch
-            }
             getCountriesUseCase()
                 .onLeft { setFailed(onRetry = ::loadCountries) }
-                .onRight { loaded ->
-                    countries = loaded
-                    setCountriesLoaded()
-                }
+                .onRight(::setCountriesLoaded)
         }
     }
 
-    private fun showRegions(country: TangemPayCountry) {
-        analytics.send(TangemPayAnalyticsEvents.Eligibility.StateScreenOpened())
-        step = Step.Regions(country)
-        uiState.update { state ->
-            state.copy(
-                title = resourceReference(R.string.tangempay_residency_title_state),
-                search = state.search.copy(query = "", isActive = false),
-                onBackClick = ::showCountries,
-            )
-        }
-        loadRegions(country)
-    }
-
-    private fun loadRegions(country: TangemPayCountry) {
+    private fun loadRegions(country: Step.Regions) {
         setLoading()
         modelScope.launch {
-            getRegionsUseCase(country.code)
+            getRegionsUseCase(country.countryCode)
                 .onLeft { setFailed(onRetry = { loadRegions(country) }) }
                 .onRight { setRegionsLoaded(country, it) }
         }
@@ -126,41 +99,56 @@ internal class ResidencyListModel @Inject constructor(
             ),
         )
         checkEligibility(itemId = country.code, countryCode = country.code, regionCode = null) { eligibility ->
-            sendEligibilityCheckResult(eligibility = eligibility, country = country, region = null)
             when {
-                !eligibility.isAvailable -> openRegionUnavailableScreen(eligibility)
-                country.hasRegions -> showRegions(country)
-                else -> continueOnboarding(itemId = country.code)
+                !eligibility.isAvailable -> {
+                    sendAnalyticsEventEligibilityCheckResult(eligibility = eligibility, countryName = country.name)
+                    openRegionUnavailableScreen(itemId = country.code, eligibility = eligibility)
+                }
+                country.hasRegions -> {
+                    openRegionsScreen(country)
+                }
+                else -> {
+                    sendAnalyticsEventEligibilityCheckResult(eligibility = eligibility, countryName = country.name)
+                    continueOnboarding(itemId = country.code)
+                }
             }
         }
     }
 
-    private fun onRegionClick(country: TangemPayCountry, region: TangemPayRegion, fromSuggested: Boolean) {
+    private fun onRegionClick(country: Step.Regions, region: TangemPayRegion, fromSuggested: Boolean) {
         analytics.send(
             TangemPayAnalyticsEvents.Eligibility.StateSelected(
                 state = region.name,
                 isSuggested = fromSuggested,
             ),
         )
-        checkEligibility(itemId = region.code, countryCode = country.code, regionCode = region.code) { eligibility ->
-            sendEligibilityCheckResult(eligibility = eligibility, country = country, region = region)
+        checkEligibility(
+            itemId = region.code,
+            countryCode = country.countryCode,
+            regionCode = region.code,
+        ) { eligibility ->
+            sendAnalyticsEventEligibilityCheckResult(
+                eligibility = eligibility,
+                countryName = country.countryName,
+                region = region,
+            )
             if (eligibility.isAvailable) {
                 continueOnboarding(itemId = region.code)
             } else {
-                openRegionUnavailableScreen(eligibility)
+                openRegionUnavailableScreen(itemId = region.code, eligibility = eligibility)
             }
         }
     }
 
-    private fun sendEligibilityCheckResult(
+    private fun sendAnalyticsEventEligibilityCheckResult(
         eligibility: TangemPayEligibility,
-        country: TangemPayCountry,
-        region: TangemPayRegion?,
+        countryName: String,
+        region: TangemPayRegion? = null,
     ) {
         analytics.send(
             TangemPayAnalyticsEvents.Eligibility.EligibilityCheckResult(
                 isEligible = eligibility.isAvailable,
-                country = country.name,
+                country = countryName,
                 state = region?.name,
             ),
         )
@@ -186,12 +174,7 @@ internal class ResidencyListModel @Inject constructor(
 
             result.fold(
                 ifLeft = {
-                    uiMessageSender.send(
-                        DialogMessage(
-                            title = resourceReference(R.string.common_something_went_wrong),
-                            message = resourceReference(R.string.common_try_again_later),
-                        ),
-                    )
+                    showError()
                     updateContent()
                 },
                 ifRight = { eligibility -> onChecked(eligibility) },
@@ -202,31 +185,29 @@ internal class ResidencyListModel @Inject constructor(
     private suspend fun continueOnboarding(itemId: String) {
         continuingItemId = itemId
         updateContent()
-        val userWalletId = params.userWalletId
-        if (userWalletId != null) {
-            onboardingLauncher.openKyc(userWalletId)
-        } else {
-            onboardingLauncher.start(
-                onWalletSelectionRequired = ::openWalletSelector,
-                onFailed = ::releaseContinuing,
-            )
-        }
+        clearCustomerResidencyUseCase(params.userWalletId)
+        onboardingRepository.getCustomerInfo(params.userWalletId).fold(
+            ifLeft = {
+                releaseContinuing()
+                showError()
+            },
+            ifRight = { customerInfo ->
+                if (customerInfo.kycStatus == KycStatus.APPROVED) {
+                    router.replaceAll(AppRoute.Wallet)
+                } else {
+                    router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(userWalletId = params.userWalletId))
+                }
+            },
+        )
     }
 
-    private fun openWalletSelector(walletsIds: List<UserWalletId>) {
-        bottomSheetNavigation.activate(ResidencyBottomSheetConfig.WalletSelector(walletsIds = walletsIds))
-    }
-
-    override fun onWalletSelected(userWalletId: UserWalletId) {
-        bottomSheetNavigation.dismiss()
-        modelScope.launch {
-            onboardingLauncher.continueWith(userWalletId = userWalletId, onFailed = ::releaseContinuing)
-        }
-    }
-
-    override fun onWalletSelectorDismiss() {
-        bottomSheetNavigation.dismiss()
-        releaseContinuing()
+    private fun showError() {
+        uiMessageSender.send(
+            DialogMessage(
+                title = resourceReference(R.string.common_something_went_wrong),
+                message = resourceReference(R.string.common_try_again_later),
+            ),
+        )
     }
 
     private fun releaseContinuing() {
@@ -236,7 +217,19 @@ internal class ResidencyListModel @Inject constructor(
 
     private fun isBusy(): Boolean = checkingItemId != null || continuingItemId != null
 
-    private fun openRegionUnavailableScreen(eligibility: TangemPayEligibility) {
+    private fun openRegionsScreen(country: TangemPayCountry) {
+        updateContent()
+        router.push(EligibilityInnerRoute.Regions(countryCode = country.code, countryName = country.name))
+    }
+
+    private suspend fun openRegionUnavailableScreen(itemId: String, eligibility: TangemPayEligibility) {
+        continuingItemId = itemId
+        updateContent()
+        storeCustomerResidencyUseCase(
+            userWalletId = params.userWalletId,
+            residency = TangemPayCustomerResidency(countryCode = eligibility.country, regionCode = eligibility.region),
+        )
+        continuingItemId = null
         analytics.send(TangemPayAnalyticsEvents.Eligibility.RegionNotAvailableScreenOpened())
         updateContent()
         router.push(
@@ -262,7 +255,7 @@ internal class ResidencyListModel @Inject constructor(
         updateContent()
     }
 
-    private fun setCountriesLoaded() {
+    private fun setCountriesLoaded(countries: List<TangemPayCountry>) {
         data = ResidencyListData.Loaded(
             suggested = countries.filter(TangemPayCountry::isSuggested).map { country ->
                 toItem(country = country, fromSuggested = true)
@@ -272,7 +265,7 @@ internal class ResidencyListModel @Inject constructor(
         updateContent()
     }
 
-    private fun setRegionsLoaded(country: TangemPayCountry, regions: List<TangemPayRegion>) {
+    private fun setRegionsLoaded(country: Step.Regions, regions: List<TangemPayRegion>) {
         data = ResidencyListData.Loaded(
             suggested = regions.filter(TangemPayRegion::isSuggested).map { region ->
                 toItem(country = country, region = region, fromSuggested = true)
@@ -322,7 +315,7 @@ internal class ResidencyListModel @Inject constructor(
     }
 
     private fun toItem(
-        country: TangemPayCountry,
+        country: Step.Regions,
         region: TangemPayRegion,
         fromSuggested: Boolean,
     ): ResidencyListUM.ItemUM {
@@ -337,7 +330,10 @@ internal class ResidencyListModel @Inject constructor(
 
     private fun getInitialState(): ResidencyListUM {
         return ResidencyListUM(
-            title = resourceReference(R.string.tangempay_residency_title_country),
+            title = when (params.step) {
+                Step.Countries -> resourceReference(R.string.tangempay_residency_title_country)
+                is Step.Regions -> resourceReference(R.string.tangempay_residency_title_state)
+            },
             search = TangemSearch.State(
                 placeholderText = resourceReference(R.string.common_search),
                 query = "",
@@ -347,23 +343,25 @@ internal class ResidencyListModel @Inject constructor(
                 onCloseClick = null,
             ),
             content = ResidencyListUM.Content.Loading,
-            onBackClick = null,
-            onCloseClick = router::pop,
+            onBackClick = when (params.step) {
+                Step.Countries -> null
+                is Step.Regions -> ::navigateBack
+            },
+            onCloseClick = params.onCloseClick,
         )
     }
 
-    private fun suggestedSectionTitle(): TextReference = when (step) {
+    private fun navigateBack() {
+        router.pop()
+    }
+
+    private fun suggestedSectionTitle(): TextReference = when (params.step) {
         Step.Countries -> resourceReference(R.string.tangempay_residency_suggested_country)
         is Step.Regions -> resourceReference(R.string.tangempay_residency_suggested_state)
     }
 
-    private fun allSectionTitle(): TextReference = when (step) {
+    private fun allSectionTitle(): TextReference = when (params.step) {
         Step.Countries -> resourceReference(R.string.tangempay_residency_all_country)
         is Step.Regions -> resourceReference(R.string.tangempay_residency_all_state)
-    }
-
-    private sealed interface Step {
-        data object Countries : Step
-        data class Regions(val country: TangemPayCountry) : Step
     }
 }

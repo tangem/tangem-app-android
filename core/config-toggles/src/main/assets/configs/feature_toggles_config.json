@@ -16,10 +16,6 @@
         "version": "6.4"
     },
     {
-        "name": "NEW_CARD_SCANNING_ENABLED",
-        "version": "undefined"
-    },
-    {
         "name": "VISA_ONBOARDING_ENABLED",
         "version": "undefined"
     },
@@ -32,8 +28,12 @@
         "version": "undefined"
     },
     {
+        "name": "AND_18021_WALLETCONNECT_ON_DEMAND_INIT_ENABLED",
+        "version": "6.5"
+    },
+    {
         "name": "TWI_1326_YIELD_DEX_TRANSFER_ENABLED",
-        "version": "undefined"
+        "version": "6.5"
     },
     {
         "name": "ADDRESS_SYNC_ENABLED",
@@ -97,7 +97,7 @@
     },
     {
         "name": "TWI_1477_RWA_AND_CATEGORIES_ENABLED",
-        "version": "undefined"
+        "version": "6.5"
     },
     {
         "name": "TWI_1747_INTRODUCTION_REDESIGN_ENABLED",
@@ -121,10 +121,54 @@
     },
     {
         "name": "TWI_1771_PAY_RESIDENCY_STEP_ENABLED",
-        "version": "undefined"
+        "version": "6.5"
+    },
+    {
+        "name": "TWI_1753_VISA_ONRAMP_V2_ENABLED",
+        "version": "6.5"
     },
     {
         "name": "TWI_1520_MERKL_INCENTIVES_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TWI_1705_PROMO_CAMPAIGNS_V2_ENABLED",
+        "version": "6.5"
+    },
+    {
+        "name": "TWI_1062_GOOGLE_WALLET_PUSH_PROVISIONING_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1062_GOOGLE_WALLET_BUTTON_ALWAYS_SHOWN",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1357_HARDWARE_UPGRADE_STORIES_AB_ENABLED",
+        "version": "6.5"
+    },
+    {
+        "name": "TWI_1721_MCP_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_18183_DEEPLINK_HANDLER_REGISTRY_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_18288_KOTLINX_DATASTORE_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1674_SWAP_CUSTOM_SLIPPAGE_ENABLED",
+        "version": "6.5"
+    },
+    {
+        "name": "TWI_1700_POLYMARKET_PHASE_TWO_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED",
+        "version": "6.5"
     }
 ]

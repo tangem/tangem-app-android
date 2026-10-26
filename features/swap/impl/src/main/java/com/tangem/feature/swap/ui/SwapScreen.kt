@@ -22,9 +22,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
@@ -37,7 +38,6 @@ import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
 import com.tangem.feature.swap.domain.models.domain.SwapUIMode
 import com.tangem.feature.swap.models.SwapStateHolder
-import com.tangem.feature.swap.models.states.ChooseProviderBottomSheetConfig
 import com.tangem.feature.swap.presentation.R
 import com.tangem.features.marketing.api.MarketingBannerComponent
 
@@ -60,11 +60,7 @@ internal fun SwapScreen(
             state = stateHolder,
             feeBlock = if (feeSelectorBlockComponent != null) {
                 @Composable { modifier: Modifier ->
-                    feeSelectorBlockComponent.Content(
-                        modifier = modifier
-                            .clip(TangemTheme.shapes.roundedCornersXMedium)
-                            .background(TangemTheme.colors.background.action),
-                    )
+                    feeSelectorBlockComponent.Content(modifier = modifier)
                 }
             } else {
                 null
@@ -82,14 +78,6 @@ internal fun SwapScreen(
                 .padding(scaffoldPaddings)
                 .testTag(SwapTokenScreenTestTags.CONTAINER),
         )
-
-        if (stateHolder.bottomSheetConfig != null) {
-            val config = stateHolder.bottomSheetConfig
-
-            when (config.content) {
-                is ChooseProviderBottomSheetConfig -> ChooseProviderBottomSheet(config = config)
-            }
-        }
     }
 }
 
@@ -111,7 +99,7 @@ private fun SwapTopBar(stateHolder: SwapStateHolder) {
             TangemDropdownMenu(
                 expanded = shouldShowModeMenu,
                 modifier = Modifier.background(TangemTheme.colors.background.primary),
-                offset = DpOffset(x = TangemTheme.dimens.spacing20, y = 44.dp),
+                offset = DpOffset(x = 20.dp, y = 44.dp),
                 onDismissRequest = { shouldShowModeMenu = false },
                 content = {
                     SwapUiModeMenuItem(
@@ -142,6 +130,7 @@ private fun SwapUiModeMenuItem(title: String, isSelected: Boolean, onClick: () -
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
+            .semantics { selected = isSelected }
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),

@@ -1,16 +1,16 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class ImagesResponse(
-    @Json(name = "result") val result: List<Image>,
+    @SerialName("result") val result: List<Image>,
 ) {
 
-    @JsonClass(generateAdapter = true)
+    @Serializable
     data class Image(
-        @Json(name = "type") val type: String?,
-        @Json(name = "url") val url: String?,
+        @SerialName("type") val type: String?,
+        @SerialName("url") val url: String?,
     )
 }

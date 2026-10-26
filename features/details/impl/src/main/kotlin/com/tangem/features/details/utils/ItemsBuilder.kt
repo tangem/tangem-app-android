@@ -3,6 +3,7 @@ package com.tangem.features.details.utils
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.features.mcp.api.McpFeatureToggles
 import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWalletId
@@ -22,6 +23,7 @@ private const val MONEY_ACCOUNT_ITEM_ID = "get_money_account"
 internal class ItemsBuilder @Inject constructor(
     private val router: Router,
     private val hotWalletRestrictionManager: HotWalletRestrictionManager,
+    private val mcpFeatureToggles: McpFeatureToggles,
 ) {
 
     @Suppress("LongParameterList")
@@ -48,7 +50,7 @@ internal class ItemsBuilder @Inject constructor(
     }.toImmutableList()
 
     fun addTangemPayItem(items: ImmutableList<DetailsItemUM>, onClick: () -> Unit): ImmutableList<DetailsItemUM> {
-        return items.toMutableList().map { block ->
+        return removeTangemPayItem(items).map { block ->
             if (block.id == "shop" && block is DetailsItemUM.Basic) {
                 val newItems = block
                     .items
@@ -59,6 +61,10 @@ internal class ItemsBuilder @Inject constructor(
                 block
             }
         }.toImmutableList()
+    }
+
+    fun hasTangemPayItem(items: ImmutableList<DetailsItemUM>): Boolean = items.any { block ->
+        block is DetailsItemUM.Basic && block.items.any { it.id == TANGEM_PAY_ITEM_ID }
     }
 
     fun removeTangemPayItem(items: ImmutableList<DetailsItemUM>): ImmutableList<DetailsItemUM> {
@@ -72,7 +78,7 @@ internal class ItemsBuilder @Inject constructor(
     }
 
     fun addMoneyAccountItem(items: ImmutableList<DetailsItemUM>, onClick: () -> Unit): ImmutableList<DetailsItemUM> {
-        return items.map { block ->
+        return removeMoneyAccountItem(items).map { block ->
             if (block.id == "shop" && block is DetailsItemUM.Basic) {
                 val newItems = block
                     .items
@@ -113,6 +119,7 @@ internal class ItemsBuilder @Inject constructor(
     ): DetailsItemUM.WalletActionBlock.Item.WalletConnect {
         return DetailsItemUM.WalletActionBlock.Item.WalletConnect(
             onClick = { router.push(AppRoute.WalletConnectSessions(userWalletId)) },
+            isMcpEnabled = mcpFeatureToggles.isMcpEnabled,
         )
     }
 

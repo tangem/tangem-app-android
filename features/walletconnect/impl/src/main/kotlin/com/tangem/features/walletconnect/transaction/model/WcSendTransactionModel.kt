@@ -36,6 +36,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError.UserCancelledError
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
+import com.tangem.domain.walletconnect.WC_TAG
 import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.WcAnalyticEvents.SignatureRequestReceived.EmulationStatus
 import com.tangem.domain.walletconnect.WcAnalyticEvents.SolanaLargeTransaction
@@ -64,6 +65,7 @@ import com.tangem.features.walletconnect.transaction.routes.WcTransactionRoutes
 import com.tangem.features.walletconnect.transaction.ui.blockaid.WcSendAndReceiveBlockAidUiConverter
 import com.tangem.features.walletconnect.utils.WcNotificationsFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
@@ -103,6 +105,7 @@ internal class WcSendTransactionModel @Inject constructor(
     internal var feeStateConfiguration: FeeStateConfiguration = FeeStateConfiguration.None
     private var useCase: WcSignUseCase<*> by Delegates.notNull()
     private var signState: WcSignState<*>? = null
+    private var targetStatus: WcTransactionTargetCheck.Status = WcTransactionTargetCheck.Status.Clear
     private var wcApproval: WcApproval? = null
     private var psbtOutputs: List<WcPsbtOutput>? = null
     private var sign: () -> Unit = {}
@@ -148,15 +151,18 @@ internal class WcSendTransactionModel @Inject constructor(
                     combine(
                         useCase.invoke(),
                         useCase.securityStatus,
-                    ) { signState, securityCheck -> signState to securityCheck }
+                        (useCase as? WcTransactionTargetCheck)?.targetStatus
+                            ?: flowOf(WcTransactionTargetCheck.Status.Clear),
+                    ) { signState, securityCheck, targetStatus -> Triple(signState, securityCheck, targetStatus) }
                         .distinctUntilChanged()
-                        .collectLatest { (signState, securityCheck) ->
+                        .collectLatest { (signState, securityCheck, targetStatus) ->
                             if (signingIsDone(signState, useCase)) return@collectLatest
 
                             securityStatusState.value = securityCheck
                             sendSignatureReceivedAnalytics(useCase, securityCheck)
 
                             this@WcSendTransactionModel.signState = signState
+                            this@WcSendTransactionModel.targetStatus = targetStatus
                             val isSecurityCheckContent = securityCheck is Lce.Content
                             val isApprovalMethod = isSecurityCheckContent &&
                                 securityCheck.content is BlockAidTransactionCheck.Result.Approval
@@ -223,11 +229,14 @@ internal class WcSendTransactionModel @Inject constructor(
             feeSelectorUM = feeSelectorUM,
             onFeeReload = ::triggerFeeReload,
         )
-        _uiState.update {
-            it?.copy(
+        val isSendEnabled = !targetStatus.isSigningBlocked &&
+            feeSelectorUM is FeeSelectorUM.Content &&
+            feeErrorNotification == null
+        _uiState.update { state ->
+            state?.copy(
                 feeSelectorUM = feeSelectorUM,
-                transaction = it.transaction.copy(
-                    sendEnabled = feeSelectorUM is FeeSelectorUM.Content && feeErrorNotification == null,
+                transaction = state.transaction.copy(
+                    sendEnabled = isSendEnabled,
                     feeErrorNotification = feeErrorNotification,
                 ),
             )
@@ -297,6 +306,7 @@ internal class WcSendTransactionModel @Inject constructor(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 onFeeReload = ::triggerFeeReload,
                 securityCheck = securityCheck.getOrNull(),
+                targetStatus = targetStatus,
                 psbtOutputs = psbtOutputs,
                 portfolioName = portfolioNameDelegate.createAccountTitleUM(useCase.session),
             ),
@@ -346,6 +356,12 @@ internal class WcSendTransactionModel @Inject constructor(
 
     // Before change, make sure you are align with WcTransactionRequestButtons
     private fun onSign(securityCheck: BlockAidTransactionCheck.Result?) {
+        if (targetStatus.isSigningBlocked) {
+            TangemLogger.withTag(WC_TAG).i(
+                "Signing ${useCase.rawSdkRequest.request.method} is blocked by the target check: $targetStatus",
+            )
+            return
+        }
         when (securityCheck?.result?.validation) {
             ValidationResult.UNSAFE -> showMaliciousAlert(securityCheck.result.description)
             ValidationResult.WARNING -> showWarningAlert(securityCheck.result.description)

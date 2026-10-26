@@ -14,6 +14,10 @@ dependencies {
     implementation(projects.core.utils)
     // endregion
 
+    // region Kotlin
+    api(deps.kotlin.coroutines)
+    // endregion
+
     // region DI
     implementation(deps.hilt.android)
     // endregion
