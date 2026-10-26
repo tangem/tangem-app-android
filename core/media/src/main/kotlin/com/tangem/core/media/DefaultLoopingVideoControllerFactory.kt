@@ -1,7 +1,6 @@
 package com.tangem.core.media
 
 import android.content.Context
-import android.provider.Settings
 import androidx.annotation.OptIn
 import androidx.annotation.RawRes
 import androidx.media3.common.MediaItem
@@ -49,8 +48,4 @@ internal class DefaultLoopingVideoControllerFactory @Inject constructor(
             teardownScheduler = MainThreadVideoTeardownScheduler(),
         )
     }
-
-    // The closest Android has to Reduce Motion.
-    private fun Context.isSystemAnimationsEnabled(): Boolean =
-        Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) != 0f
 }
