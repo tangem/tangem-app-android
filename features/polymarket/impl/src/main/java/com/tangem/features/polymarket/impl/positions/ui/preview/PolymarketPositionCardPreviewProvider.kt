@@ -49,6 +49,10 @@ private fun activeCases(): List<PolymarketPositionCardPreviewCase> {
             active.copy(priceChange = priceChange("$0.00 (0%)", TangemPriceChange.Direction.Neutral)),
         ),
         PolymarketPositionCardPreviewCase(
+            "Active - sub-cent P&L",
+            active.copy(priceChange = priceChange("<$0.01 (12.34%)", TangemPriceChange.Direction.Neutral)),
+        ),
+        PolymarketPositionCardPreviewCase(
             "Active - custom outcome",
             active.copy(outcomeLabel = stringReference("Draw"), outcomeVariant = TangemMessageBubble.Variant.Neutral),
         ),

@@ -32,13 +32,13 @@ fun TextAnimatedCounter(
         for (i in text.indices) {
             val oldChar = oldText.getOrNull(i)
             val newChar = text[i]
-            val char = if (oldChar == newChar) {
+            val targetChar = if (oldChar == newChar) {
                 oldText[i]
             } else {
                 text[i]
             }
             AnimatedContent(
-                targetState = char,
+                targetState = targetChar,
                 transitionSpec = {
                     slideInVertically { it }.togetherWith(slideOutVertically { -it })
                 },

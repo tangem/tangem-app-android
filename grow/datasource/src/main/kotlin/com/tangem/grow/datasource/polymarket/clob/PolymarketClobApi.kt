@@ -23,7 +23,8 @@ interface PolymarketClobApi {
     suspend fun deriveApiKey(@HeaderMap headers: Map<String, String>): ApiResponse<PolymarketApiKeyResponse>
 
     /**
-     * Refreshes the CLOB's cached collateral balance and allowance for the authenticated deposit wallet.
+     * Refreshes the CLOB's cached balance and allowance of the authenticated deposit wallet for one asset:
+     * the collateral, or the outcome token [tokenId] of a `CONDITIONAL` / `CONDITIONAL-V2` [assetType].
      * L2-authenticated; the response body is not consumed.
      */
     @GET("balance-allowance/update")
@@ -31,6 +32,7 @@ interface PolymarketClobApi {
         @HeaderMap headers: Map<String, String>,
         @Query("asset_type") assetType: String,
         @Query("signature_type") signatureType: Int,
+        @Query("token_id") tokenId: String?,
     ): ApiResponse<Unit>
 
     /**

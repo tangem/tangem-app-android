@@ -56,10 +56,14 @@ internal class ForgetWalletModelTest {
     private val paramsContainer: ParamsContainer = mockk()
 
     private val walletId = UserWalletId("011")
+    private val hotWallet: UserWallet.Hot = mockk { every { walletId } returns this@ForgetWalletModelTest.walletId }
     private val fileId = "file-1"
+
+    private var pinnedWalletId: String? = null
 
     @BeforeEach
     fun setUp() {
+        pinnedWalletId = null
         clearMocks(
             router,
             deleteWalletUseCase,
@@ -73,8 +77,12 @@ internal class ForgetWalletModelTest {
             analyticsEventHandler,
         )
         coEvery { deleteWalletUseCase(walletId) } returns true.right()
-        coEvery { revokeSocialRecoveryUseCase(walletId) } returns Unit.right()
+        coEvery { revokeSocialRecoveryUseCase(hotWallet) } returns Unit.right()
         coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+        coEvery { cloudBackupRepository.withAccountOf<Any?>(any(), any()) } coAnswers {
+            pinnedWalletId = firstArg()
+            secondArg<suspend () -> Any?>().invoke().also { pinnedWalletId = null }
+        }
     }
 
     @Test
@@ -82,16 +90,23 @@ internal class ForgetWalletModelTest {
         runTest {
             // Arrange
             every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns true
-            coEvery { cloudBackupRepository.findBackups() } returns listOf(backup(walletId = "011")).right()
-            coEvery { deleteCloudBackupWithRetryUseCase(fileId) } returns Unit.right()
+            val calledFor = mutableListOf<String?>()
+            coEvery { cloudBackupRepository.findBackups() } answers {
+                calledFor += pinnedWalletId
+                listOf(backup(walletId = "011")).right()
+            }
+            coEvery { deleteCloudBackupWithRetryUseCase(fileId) } answers {
+                calledFor += pinnedWalletId
+                Unit.right()
+            }
 
             // Act
             confirmForget(createModel(this, deleteCloudBackup = true))
 
             // Assert
             coVerify(exactly = 1) { deleteWalletUseCase(walletId) }
-            coVerify(exactly = 1) { cloudBackupRepository.findBackups() }
-            coVerify(exactly = 1) { deleteCloudBackupWithRetryUseCase(fileId) }
+            // found and deleted in the wallet's own account
+            assertThat(calledFor).containsExactly("011", "011")
             coVerify(exactly = 1) { setCloudBackupStateUseCase("011", isBackedUp = false) }
             verify(exactly = 1) {
                 analyticsEventHandler.send(ofType<WalletSettingsAnalyticEvents.WalletForgotten>())
@@ -287,6 +302,7 @@ internal class ForgetWalletModelTest {
     @Test
     fun `GIVEN social deletion WHEN confirmed THEN the recovery is revoked before the wallet is deleted`() = runTest {
         // Arrange
+        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(hotWallet)
         every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns false
 
         // Act
@@ -294,7 +310,7 @@ internal class ForgetWalletModelTest {
 
         // Assert
         coVerifyOrder {
-            revokeSocialRecoveryUseCase(walletId)
+            revokeSocialRecoveryUseCase(hotWallet)
             deleteWalletUseCase(walletId)
         }
         verify(exactly = 1) { analyticsEventHandler.send(ofType<WalletSettingsAnalyticEvents.WalletDeleted>()) }
@@ -305,8 +321,9 @@ internal class ForgetWalletModelTest {
     fun `GIVEN social deletion AND revoke fails WHEN confirmed THEN the wallet is kept and the error shown`() =
         runTest {
             // Arrange
+            coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(hotWallet)
             every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns false
-            coEvery { revokeSocialRecoveryUseCase(walletId) } returns SocialLoginError.NetworkError.left()
+            coEvery { revokeSocialRecoveryUseCase(hotWallet) } returns SocialLoginError.NetworkError.left()
             val model = createModel(this, deleteCloudBackup = false, deleteSocialRecovery = true)
             val sentMessages = mutableListOf<UiMessage>()
             every { uiMessageSender.send(capture(sentMessages)) } just Runs
@@ -317,7 +334,7 @@ internal class ForgetWalletModelTest {
             // Assert
             coVerify(exactly = 0) { deleteWalletUseCase(any()) }
             verify(exactly = 1) {
-                analyticsEventHandler.send(WalletSettingsAnalyticEvents.DeleteWalletError(errorMessage = "Unbind failed: NetworkError"))
+                analyticsEventHandler.send(WalletSettingsAnalyticEvents.DeleteWalletError(errorMessage = "Network error"))
             }
             assertThat(sentMessages.filterIsInstance<DialogMessage>().last().title)
                 .isEqualTo(resourceReference(R.string.common_something_went_wrong))
@@ -326,8 +343,48 @@ internal class ForgetWalletModelTest {
         }
 
     @Test
+    fun `GIVEN social deletion AND the wallet is not listed WHEN confirmed THEN the wallet is kept and the error shown`() =
+        runTest {
+            // Arrange
+            every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns false
+            val sentMessages = mutableListOf<UiMessage>()
+            every { uiMessageSender.send(capture(sentMessages)) } just Runs
+
+            // Act
+            confirmForget(createModel(this, deleteCloudBackup = false, deleteSocialRecovery = true), sentMessages)
+
+            // Assert
+            coVerify(exactly = 0) { revokeSocialRecoveryUseCase(any()) }
+            coVerify(exactly = 0) { deleteWalletUseCase(any()) }
+            assertThat(sentMessages.filterIsInstance<DialogMessage>().last().title)
+                .isEqualTo(resourceReference(R.string.common_something_went_wrong))
+        }
+
+    @Test
+    fun `GIVEN social deletion AND the wallet list unreadable WHEN confirmed THEN the wallet is kept and the error shown`() =
+        runTest {
+            // Arrange
+            every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns false
+            coEvery { userWalletsListRepository.userWalletsSync() } throws IllegalStateException("unreadable")
+            val sentMessages = mutableListOf<UiMessage>()
+            every { uiMessageSender.send(capture(sentMessages)) } just Runs
+            val model = createModel(this, deleteCloudBackup = false, deleteSocialRecovery = true)
+
+            // Act
+            confirmForget(model, sentMessages)
+
+            // Assert
+            coVerify(exactly = 0) { revokeSocialRecoveryUseCase(any()) }
+            coVerify(exactly = 0) { deleteWalletUseCase(any()) }
+            assertThat(sentMessages.filterIsInstance<DialogMessage>().last().title)
+                .isEqualTo(resourceReference(R.string.common_something_went_wrong))
+            assertThat(model.uiState.value.isInProgress).isFalse()
+        }
+
+    @Test
     fun `GIVEN social deletion AND local deletion fails WHEN confirmed THEN the error is reported`() = runTest {
         // Arrange
+        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(hotWallet)
         every { hotWalletFeatureToggles.isGoogleDriveBackupEnabled } returns false
         coEvery { deleteWalletUseCase(walletId) } returns DeleteWalletError.UnableToDelete.left()
 
@@ -337,7 +394,7 @@ internal class ForgetWalletModelTest {
         // Assert
         verify(exactly = 1) {
             analyticsEventHandler.send(
-                WalletSettingsAnalyticEvents.DeleteWalletError(errorMessage = "Local deletion failed: UnableToDelete"),
+                WalletSettingsAnalyticEvents.DeleteWalletError(errorMessage = "Local deletion error"),
             )
         }
         verify(exactly = 0) { analyticsEventHandler.send(ofType<WalletSettingsAnalyticEvents.WalletDeleted>()) }

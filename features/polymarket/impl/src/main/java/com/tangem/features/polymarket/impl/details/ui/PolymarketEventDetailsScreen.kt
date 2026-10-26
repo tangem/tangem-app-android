@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.ds2.badge.TangemBadge
 // import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.Back
 import com.tangem.core.ui.ds2.button.TangemButton
@@ -55,6 +56,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketDetailsMarketUM
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketDetailsOutcomeUM
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketEventDetailsUM
+import com.tangem.features.polymarket.impl.common.toResolutionSourceUM
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketSubcategoryTabUM
 import kotlinx.collections.immutable.persistentListOf
 
@@ -200,13 +202,18 @@ private fun CollapsedBar(state: PolymarketEventDetailsUM.Content, modifier: Modi
         verticalAlignment = Alignment.CenterVertically,
     ) {
         EventIcon(iconUrl = state.iconUrl, size = 40.dp)
-        Text(
-            text = state.title.resolveReference(),
-            color = TangemTheme.colors3.text.primary,
-            style = TangemTheme.typography3.body.medium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = state.title.resolveReference(),
+                color = TangemTheme.colors3.text.primary,
+                style = TangemTheme.typography3.body.medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            state.categoryLabel?.let { category ->
+                TangemBadge(text = category, size = TangemBadge.Size.X4)
+            }
+        }
     }
 }
 
@@ -240,11 +247,13 @@ private fun ContentState(
         marketCards(markets = state.activeMarkets)
 
         if (state.closedMarkets.isNotEmpty()) {
-            item(key = KEY_CLOSED_CHIP) {
-                ClosedMarketsChip(
-                    count = state.closedMarkets.size,
-                    onClick = state.onClosedMarketsClick,
-                )
+            if (state.activeMarkets.isNotEmpty()) {
+                item(key = KEY_CLOSED_CHIP) {
+                    ClosedMarketsChip(
+                        count = state.closedMarkets.size,
+                        onClick = state.onClosedMarketsClick,
+                    )
+                }
             }
 
             if (state.isClosedMarketsExpanded) {
@@ -312,6 +321,7 @@ private fun PolymarketEventDetailsScreenPreview() {
 private fun previewContent(): PolymarketEventDetailsUM.Content {
     return PolymarketEventDetailsUM.Content(
         title = stringReference("Who will win FIFA World Cup 2026 in the USA?"),
+        categoryLabel = stringReference("Sports"),
         iconUrl = null,
         totalVolume = stringReference("\$6.3M"),
         change24h = PriceChangeState.Content(valueInPercent = "2.08%", type = PriceChangeType.UP),
@@ -336,6 +346,7 @@ private fun previewContent(): PolymarketEventDetailsUM.Content {
         isDescriptionExpanded = false,
         resolutionDate = stringReference("Jul 11, 2026, 6:00 PM ET"),
         marketOpenedDate = stringReference("Jul 11, 2026, 6:00 PM ET"),
+        resolutionSource = "https://www.fifa.com".toResolutionSourceUM(),
         onShareClick = {},
         onClosedMarketsClick = {},
         onReadMoreClick = {},

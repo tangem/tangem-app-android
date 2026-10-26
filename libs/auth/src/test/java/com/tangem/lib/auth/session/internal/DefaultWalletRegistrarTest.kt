@@ -21,6 +21,7 @@ import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.nonce.AuthNonceDecryptor
 import com.tangem.lib.auth.performance.NonceRequestType
 import com.tangem.lib.auth.session.WalletNonce
+import com.tangem.lib.auth.session.AuthError
 import com.tangem.lib.auth.session.WalletRegistrationError
 import com.tangem.lib.auth.session.WalletSignatureBundle
 import com.tangem.lib.auth.session.WalletSigner
@@ -38,6 +39,7 @@ import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mockk.verify
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
@@ -47,6 +49,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.io.IOException
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DefaultWalletRegistrarTest {
@@ -405,6 +408,23 @@ class DefaultWalletRegistrarTest {
     }
 
     @Test
+    fun `GIVEN a wallet registered elsewhere WHEN markRegistered THEN the next register is skipped`() = runTest {
+        // Arrange
+        preferencesDataStore.edit {
+            it[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY] = setOf(OTHER_WALLET_ID)
+        }
+
+        // Act
+        val result = registrar.markRegistered(WALLET_ID)
+        registrar.register(WALLET_ID, mobileSigner)
+
+        // Assert
+        assertThat(result.isRight()).isTrue()
+        assertThat(registeredIds()).containsExactly(WALLET_ID, OTHER_WALLET_ID)
+        coVerify(exactly = 0) { authApi.registerWallet(any()) }
+    }
+
+    @Test
     fun `prepare builds the request without posting or persisting anything`() = runTest {
         stubHappyPath()
         val nonce = registrar.requestNonce().getOrNull()!!
@@ -577,6 +597,74 @@ class DefaultWalletRegistrarTest {
         assertThat(registeredIds()).containsExactly(OTHER_WALLET_ID)
         coVerify(exactly = 0) { store.save(any()) }
     }
+
+    @Test
+    fun `GIVEN social recovery erased WHEN unregister gets 404 THEN it fails and clears the marker`() = runTest {
+        // Arrange — the backend leaves the binding of a wallet not registered on this device untouched
+        preferencesDataStore.edit {
+            it[AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY] = setOf(WALLET_ID, OTHER_WALLET_ID)
+        }
+        @Suppress("UNCHECKED_CAST")
+        coEvery { authApi.unregisterWallet(any()) } returns ApiResponse.Error(
+            cause = ApiResponseError.HttpException(
+                code = ApiResponseError.HttpException.Code.NOT_FOUND,
+                message = "Wallet is not registered for this device",
+                errorBody = null,
+            ),
+        ) as ApiResponse<TokenApiResponse>
+
+        // Act
+        val result = registrar.unregister(walletId = WALLET_ID, shouldDeleteSocialRecovery = true)
+
+        // Assert
+        assertThat((result.leftOrNull() as? WalletRegistrationError.Api)?.cause)
+            .isInstanceOf(AuthError.NotFound::class.java)
+        assertThat(registeredIds()).containsExactly(OTHER_WALLET_ID)
+        coVerify(exactly = 0) { store.save(any()) }
+    }
+
+    @Test
+    fun `GIVEN social recovery erased AND marker not cleared WHEN unregister gets 404 THEN the API error is kept`() =
+        runTest {
+            // Arrange — PersistenceFailed would read as "erased on the server" to the social recovery client
+            val failingPreferences = object : DataStore<Preferences> {
+                override val data: Flow<Preferences> = preferencesDataStore.data
+                override suspend fun updateData(transform: suspend (Preferences) -> Preferences): Preferences =
+                    throw IOException("disk full")
+            }
+            val failingRegistrar = DefaultWalletRegistrar(
+                authApi = authApi,
+                store = store,
+                deviceKeyManager = deviceKeyManager,
+                nonceDecryptor = nonceDecryptor,
+                signedRequestPayload = signedRequestPayload,
+                attestationProvider = attestationProvider,
+                errorConverter = errorConverter,
+                appPreferencesStore = createAppPreferencesStore(
+                    moshi = Moshi.Builder().build(),
+                    dispatchers = dispatchers,
+                    preferencesDataStore = failingPreferences,
+                ),
+                nonceRequestTracker = { _, request -> request() },
+                locks = locks,
+                dispatchers = dispatchers,
+            )
+            @Suppress("UNCHECKED_CAST")
+            coEvery { authApi.unregisterWallet(any()) } returns ApiResponse.Error(
+                cause = ApiResponseError.HttpException(
+                    code = ApiResponseError.HttpException.Code.NOT_FOUND,
+                    message = "Wallet is not registered for this device",
+                    errorBody = null,
+                ),
+            ) as ApiResponse<TokenApiResponse>
+
+            // Act
+            val result = failingRegistrar.unregister(walletId = WALLET_ID, shouldDeleteSocialRecovery = true)
+
+            // Assert
+            assertThat((result.leftOrNull() as? WalletRegistrationError.Api)?.cause)
+                .isInstanceOf(AuthError.NotFound::class.java)
+        }
 
     @Test
     fun `unregister surfaces API error and keeps the marker`() = runTest {

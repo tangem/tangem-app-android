@@ -82,10 +82,10 @@ internal class TokenDetailsLoadedBalanceConverter(
                 cryptoBalance = status.value.amount,
                 fiatBalance = status.value.fiatAmount,
                 displayFiatBalance = formatFiatAmount(
-                    status.value,
-                    stakingFiatAmount,
-                    currentState.selectedBalanceType,
-                    appCurrencyProvider(),
+                    status = status.value,
+                    stakingFiatAmount = stakingFiatAmount,
+                    selectedBalanceType = currentState.selectedBalanceType,
+                    appCurrency = appCurrencyProvider(),
                 ),
                 displayCryptoBalance = formatCryptoAmount(
                     status,

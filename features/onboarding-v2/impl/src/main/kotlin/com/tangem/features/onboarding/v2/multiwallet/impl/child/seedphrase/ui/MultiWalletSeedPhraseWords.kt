@@ -64,28 +64,28 @@ internal fun MultiWalletSeedPhraseWords(
 @Composable
 private fun SegmentSeedBlock(state: MultiWalletSeedPhraseUM.GenerateSeedPhrase, modifier: Modifier = Modifier) {
     SegmentedButtons(
-        modifier = modifier.padding(horizontal = TangemTheme.dimens.spacing76),
+        modifier = modifier.padding(horizontal = 76.dp),
         config = persistentListOf(GeneratedWordsType.Words12, GeneratedWordsType.Words24),
         initialSelectedItem = state.option,
-        onClick = {
+        onClick = { wordsType ->
             when {
-                state.option == GeneratedWordsType.Words12 && it == GeneratedWordsType.Words24 -> {
-                    state.onOptionChange(it)
+                state.option == GeneratedWordsType.Words12 && wordsType == GeneratedWordsType.Words24 -> {
+                    state.onOptionChange(wordsType)
                 }
-                state.option == GeneratedWordsType.Words24 && it == GeneratedWordsType.Words12 -> {
-                    state.onOptionChange(it)
+                state.option == GeneratedWordsType.Words24 && wordsType == GeneratedWordsType.Words12 -> {
+                    state.onOptionChange(wordsType)
                 }
             }
         },
-    ) {
+    ) { wordsType ->
         Text(
             text = pluralStringResourceSafe(
                 id = R.plurals.onboarding_seed_generate_words_count,
-                count = it.length,
-                it.length,
+                count = wordsType.length,
+                wordsType.length,
             ),
             modifier = Modifier
-                .padding(vertical = TangemTheme.dimens.spacing10)
+                .padding(vertical = 10.dp)
                 .fillMaxWidth(),
             style = TangemTheme.typography.subtitle2,
             color = TangemTheme.colors.text.primary1,
@@ -99,7 +99,7 @@ private fun SegmentSeedBlock(state: MultiWalletSeedPhraseUM.GenerateSeedPhrase, 
 private fun TitleBlock(state: MultiWalletSeedPhraseUM.GenerateSeedPhrase, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .padding(horizontal = TangemTheme.dimens.size36)
+            .padding(horizontal = 36.dp)
             .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -130,9 +130,9 @@ private fun Preview() {
     TangemThemePreview {
         MultiWalletSeedPhraseWords(
             state = MultiWalletSeedPhraseUM.GenerateSeedPhrase(
-                words = List(24) {
+                words = List(24) { index ->
                     EnumeratedTwoColumnGridItem(
-                        index = it + 1,
+                        index = index + 1,
                         mnemonic = "word1",
                     )
                 }.toImmutableList(),

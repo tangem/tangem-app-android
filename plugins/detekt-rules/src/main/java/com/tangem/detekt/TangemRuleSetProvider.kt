@@ -1,5 +1,6 @@
 package com.tangem.detekt
 
+import com.tangem.detekt.rules.AppRouterInComponentTree
 import com.tangem.detekt.rules.UnsafeStringResourceUsage
 import io.gitlab.arturbosch.detekt.api.Config
 import io.gitlab.arturbosch.detekt.api.RuleSet
@@ -14,6 +15,7 @@ class TangemRuleSetProvider : RuleSetProvider {
             id = ruleSetId,
             rules = listOf(
                 UnsafeStringResourceUsage(config),
+                AppRouterInComponentTree(config),
             )
         )
     }

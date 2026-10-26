@@ -55,8 +55,8 @@ interface CloudBackupRepository {
     suspend fun getAccountInfo(interactive: Boolean = false): Either<CloudBackupError, CloudBackupAccount>
 
     /**
-     * Forgets the authorized cloud account, revoking the granted access (best-effort) so the next
-     * authorization prompts the account picker again. Used to switch accounts.
+     * Forgets the authorized cloud account on this device to let the user switch accounts. The grant is not
+     * revoked: it covers the account on every device, social recovery's hidden folder included.
      */
     suspend fun signOut()
 
@@ -79,6 +79,12 @@ interface CloudBackupRepository {
     /** Reactive variant of [isBackedUp] */
     fun isBackedUpFlow(walletId: String): Flow<Boolean>
 
-    /** Records whether [walletId] has a cloud backup */
+    /** Also remembers the account for [withAccountOf], so call it right after the backup was written or found */
     suspend fun setBackedUp(walletId: String, backedUp: Boolean)
+
+    /**
+     * Runs [block] in the account [walletId] was backed up to. For operations without a screen: after an app
+     * restart Google would pick the account itself and look for the backup in the wrong one.
+     */
+    suspend fun <T> withAccountOf(walletId: String, block: suspend () -> T): T
 }

@@ -32,7 +32,7 @@ internal fun OnboardingDone(
 ) {
     val composition by rememberLottieComposition(spec = LottieCompositionSpec.RawRes(R.raw.anim_confetti))
     val progress by animateLottieCompositionAsState(composition)
-    var showConfetti by remember { mutableStateOf(false) }
+    var shouldShowConfetti by remember { mutableStateOf(false) }
 
     Column(
         modifier
@@ -87,7 +87,7 @@ internal fun OnboardingDone(
         )
     }
 
-    if (showConfetti) {
+    if (shouldShowConfetti) {
         FullScreen(notTouchable = true) {
             LottieAnimation(
                 composition = composition,
@@ -97,12 +97,12 @@ internal fun OnboardingDone(
     }
 
     LaunchedEffect(Unit) {
-        showConfetti = true
+        shouldShowConfetti = true
     }
 
     LaunchedEffect(progress == 1f) {
         if (progress == 1f) {
-            showConfetti = false
+            shouldShowConfetti = false
         }
     }
 }

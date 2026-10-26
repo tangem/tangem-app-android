@@ -78,15 +78,31 @@ internal class CashbackContentTest {
                 expected = CashbackContent.Widget(cashback),
             ),
             ResolveModel(
-                description = "enabled alt_block -> menu entry",
-                summary = enabledSummary(CashbackDisplayMode.ALT_BLOCK),
-                expected = CashbackContent.MenuEntry(cashback),
+                description = "enabled alt_block, zero amount -> menu entry",
+                summary = enabledSummary(CashbackDisplayMode.ALT_BLOCK, confirmedAmount = BigDecimal("0.00")),
+                expected = CashbackContent.MenuEntry(cashback.copy(confirmedAmount = BigDecimal("0.00"))),
             ),
             ResolveModel(
-                description = "enabled alt_block, refresh failed -> cached menu entry",
+                description = "enabled alt_block, zero amount, refresh failed -> cached menu entry",
+                summary = enabledSummary(CashbackDisplayMode.ALT_BLOCK, confirmedAmount = BigDecimal.ZERO),
+                refreshState = CashbackRefreshState(isFailed = true),
+                expected = CashbackContent.MenuEntry(cashback.copy(confirmedAmount = BigDecimal.ZERO)),
+            ),
+            ResolveModel(
+                description = "enabled alt_block, positive amount -> widget",
+                summary = enabledSummary(CashbackDisplayMode.ALT_BLOCK),
+                expected = CashbackContent.Widget(cashback),
+            ),
+            ResolveModel(
+                description = "enabled alt_block, negative amount -> widget",
+                summary = enabledSummary(CashbackDisplayMode.ALT_BLOCK, confirmedAmount = BigDecimal("-3.20")),
+                expected = CashbackContent.Widget(cashback.copy(confirmedAmount = BigDecimal("-3.20"))),
+            ),
+            ResolveModel(
+                description = "enabled alt_block, positive amount, refresh failed -> cached widget",
                 summary = enabledSummary(CashbackDisplayMode.ALT_BLOCK),
                 refreshState = CashbackRefreshState(isFailed = true),
-                expected = CashbackContent.MenuEntry(cashback),
+                expected = CashbackContent.Widget(cashback),
             ),
             ResolveModel(
                 description = "deactivated, not dismissed -> deactivation banner",
@@ -182,8 +198,13 @@ internal class CashbackContentTest {
         )
     }
 
-    private fun enabledSummary(displayMode: CashbackDisplayMode): CashbackSummary.Enabled =
-        CashbackSummary.Enabled(displayMode = displayMode, cashback = cashback)
+    private fun enabledSummary(
+        displayMode: CashbackDisplayMode,
+        confirmedAmount: BigDecimal = cashback.confirmedAmount,
+    ): CashbackSummary.Enabled = CashbackSummary.Enabled(
+        displayMode = displayMode,
+        cashback = cashback.copy(confirmedAmount = confirmedAmount),
+    )
 
     internal data class ResolveModel(
         val description: String,

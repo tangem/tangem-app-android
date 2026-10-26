@@ -3,6 +3,11 @@ package com.tangem.features.polymarket.impl.placeprediction.model
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.polymarket.model.PolymarketEvent
+import kotlinx.coroutines.CompletableDeferred
+import com.tangem.features.polymarket.impl.createPolymarketOutcome
+import com.tangem.features.polymarket.impl.createPolymarketMarket
+import com.tangem.features.polymarket.impl.createPolymarketEvent
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketPositionsError
@@ -22,6 +27,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceeds
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
+import io.mockk.CapturingSlot
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -31,6 +37,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -84,6 +91,72 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
                 )
             }
             assertThat(model.uiState.value.quote).isInstanceOf(QuoteUM.Content::class.java)
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a legacy asset id of a moved market WHEN the amount is entered THEN the current token is quoted`() =
+            runTest {
+                // Arrange
+                coEvery { getEventUseCase(eventId = EVENT_ID) } returns createPolymarketEvent(
+                    id = EVENT_ID,
+                    markets = listOf(
+                        createPolymarketMarket(
+                            id = MARKET_ID,
+                            eventId = EVENT_ID,
+                            outcomes = listOf(
+                                createPolymarketOutcome(assetId = "asset-v2", title = "Yes", legacyAssetId = ASSET_ID),
+                            ),
+                        ),
+                    ),
+                ).right()
+                val model = createAmountModel(testScope = this)
+                advanceUntilIdle()
+                model.onResume()
+
+                // Act
+                model.onAmountChange(value = "10")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+                // Assert
+                assertThat(model.uiState.value.market.outcomeTitle).isEqualTo("Yes")
+                coVerify(exactly = 1) {
+                    getQuoteUseCase(
+                        request = PredictionOrderQuoteRequest(
+                            marketId = MARKET_ID,
+                            assetId = "asset-v2",
+                            side = PredictionOrderSide.BUY,
+                            amount = BigDecimal("10"),
+                            slippagePercent = DEFAULT_SLIPPAGE_PERCENT,
+                        ),
+                    )
+                }
+                coVerify(exactly = 0) { getQuoteUseCase(request = match { it.assetId == ASSET_ID }) }
+                assertThat((model.uiState.value.quote as QuoteUM.Content).signable.assetId).isEqualTo("asset-v2")
+
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN the event is still loading WHEN resumed THEN no price is polled until the market lands`() = runTest {
+            // Arrange
+            val event = CompletableDeferred<PolymarketEvent>()
+            coEvery { getEventUseCase(eventId = EVENT_ID) } coAnswers { event.await().right() }
+            val model = createAmountModel(testScope = this)
+            model.onResume()
+            runCurrent()
+
+            // Act
+            val polledWhileLoading = runCatching {
+                coVerify(exactly = 0) { getPriceUseCase(assetId = any(), side = any()) }
+            }.isSuccess
+            event.complete(createEvent())
+            runCurrent()
+
+            // Assert
+            assertThat(polledWhileLoading).isTrue()
+            coVerify(exactly = 1) { getPriceUseCase(assetId = ASSET_ID, side = PredictionOrderSide.SELL) }
 
             model.onDestroy()
         }
@@ -273,6 +346,59 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
                     ),
                 )
             assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN no liquidity WHEN quote refresh pending THEN notification stays up`() = runTest {
+            // Arrange
+            val quote = createQuote(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY)
+            coEvery { getQuoteUseCase(request = any()) } returns quote.right()
+            val model = createAmountModel(testScope = this)
+            advanceUntilIdle()
+            model.onResume()
+            model.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            val unavailable = model.uiState.value
+            coEvery { getQuoteUseCase(request = any()) } coAnswers {
+                delay(timeMillis = QUOTE_POLL_INTERVAL_MILLIS)
+                quote.right()
+            }
+
+            // Act
+            advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+
+            // Assert
+            assertThat(model.uiState.value).isEqualTo(unavailable)
+            assertThat(unavailable.notifications).contains(PredictionNotificationUM.NoLiquidity)
+            coVerify(exactly = 2) { getQuoteUseCase(request = any()) }
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN quote failed WHEN quote refresh pending THEN error notification stays up`() = runTest {
+            // Arrange
+            coEvery { getQuoteUseCase(request = any()) } returns PredictionOrderQuoteError.Network.left()
+            val model = createAmountModel(testScope = this)
+            advanceUntilIdle()
+            model.onResume()
+            model.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            val failed = model.uiState.value
+            coEvery { getQuoteUseCase(request = any()) } coAnswers {
+                delay(timeMillis = QUOTE_POLL_INTERVAL_MILLIS)
+                PredictionOrderQuoteError.Network.left()
+            }
+
+            // Act
+            advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+
+            // Assert
+            assertThat(model.uiState.value).isEqualTo(failed)
+            assertThat(failed.notifications).contains(PredictionNotificationUM.QuoteFailed)
+            coVerify(exactly = 2) { getQuoteUseCase(request = any()) }
 
             model.onDestroy()
         }
@@ -681,6 +807,55 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             assertThat(model.uiState.value.slippage.isDefault).isFalse()
 
             model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a minimum raised by a wider slippage WHEN slippage narrowed back THEN the lower minimum applies`() =
+            runTest {
+                // Arrange
+                coEvery { getQuoteUseCase(request = any()) } answers {
+                    val request = firstArg<PredictionOrderQuoteRequest>()
+                    if (request.slippagePercent == BigDecimal("10")) {
+                        createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_AMOUNT)
+                            .copy(worstCasePrice = BigDecimal("0.82"))
+                            .right()
+                    } else {
+                        createQuote().copy(worstCasePrice = BigDecimal("0.77")).right()
+                    }
+                }
+                val route = slot<PlacePredictionRoute.Slippage>()
+                every { router.push(capture(route), any()) } returns Unit
+                val model = createAmountModel(testScope = this)
+                advanceUntilIdle()
+                model.onResume()
+                model.onAmountChange(value = "3.85")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+                applySlippage(model = model, route = route, percent = BigDecimal("10"))
+                assertThat(model.uiState.value.amountCaption)
+                    .isEqualTo(AmountCaptionUM.BelowMinimum(minAmount = BigDecimal("4.10")))
+
+                // Act
+                applySlippage(model = model, route = route, percent = DEFAULT_SLIPPAGE_PERCENT)
+
+                // Assert
+                assertThat(model.uiState.value.minAmount).isEqualTo(BigDecimal("3.85"))
+                assertThat(model.uiState.value.amountCaption)
+                    .isNotInstanceOf(AmountCaptionUM.BelowMinimum::class.java)
+                assertThat(model.uiState.value.quote).isInstanceOf(QuoteUM.Content::class.java)
+
+                model.onDestroy()
+            }
+
+        private fun TestScope.applySlippage(
+            model: PlacePredictionAmountModel,
+            route: CapturingSlot<PlacePredictionRoute.Slippage>,
+            percent: BigDecimal,
+        ) {
+            model.onSlippageClick()
+            model.onPause()
+            route.captured.onConfirm(percent)
+            model.onResume()
+            advanceTimeBy(delayTimeMillis = 1)
         }
 
         @Test

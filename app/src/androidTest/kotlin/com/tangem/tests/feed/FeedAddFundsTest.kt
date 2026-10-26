@@ -1,6 +1,7 @@
 package com.tangem.tests.feed
 
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.configtoggle.FeatureToggles
@@ -8,6 +9,7 @@ import com.tangem.scenarios.addNewCardWallet
 import com.tangem.scenarios.addNewCardWalletWithoutSync
 import com.tangem.scenarios.expandFeed
 import com.tangem.scenarios.openMainScreen
+import com.tangem.scenarios.openMainScreenWithExistingHotWallet
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.accounts.onAccountInfoEditorScreen
 import com.tangem.screens.accounts.onJointAccountCompositionScreen
@@ -175,11 +177,8 @@ class FeedAddFundsTest : BaseTestCase() {
                 setWireMockScenarioState(userTokensScenario, jointAccountReadyState)
             },
         ).run {
-            step("Open 'Main' screen") {
-                openMainScreen()
-            }
-            step("Synchronize addresses") {
-                synchronizeAddresses()
+            step("Open 'Main' screen with existing hot wallet") {
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Expand feed") {
                 expandFeed()

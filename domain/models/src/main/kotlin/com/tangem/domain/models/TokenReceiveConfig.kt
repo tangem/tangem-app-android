@@ -2,6 +2,7 @@ package com.tangem.domain.models
 
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -9,7 +10,7 @@ data class TokenReceiveConfig(
     val shouldShowWarning: Boolean,
     val cryptoCurrency: CryptoCurrency,
     val userWalletId: UserWalletId,
-    val showMemoDisclaimer: Boolean,
+    @SerialName("showMemoDisclaimer") val shouldShowMemoDisclaimer: Boolean,
     val receiveAddress: List<ReceiveAddressModel>,
     val tokenReceiveNotification: List<TokenReceiveNotification> = emptyList(),
     val asset: Asset = Asset.Currency,

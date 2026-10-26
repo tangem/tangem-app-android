@@ -9,12 +9,12 @@ internal class PinCodeChangeTransformer(
 ) : Transformer<TangemPayChangePinUM> {
 
     override fun transform(prevState: TangemPayChangePinUM): TangemPayChangePinUM {
-        val valid = PinCodeValidation.validate(pinCode = newPin)
+        val isValid = PinCodeValidation.validate(pinCode = newPin)
         // Do not show error yet if user didn't fill all 4 spaces
-        val isError = PinCodeValidation.validateLength(pinCode = newPin) && !valid
+        val isError = PinCodeValidation.validateLength(pinCode = newPin) && !isValid
         return prevState.copy(
             pinCode = newPin,
-            submitButtonEnabled = valid,
+            isSubmitButtonEnabled = isValid,
             error = if (isError) {
                 resourceReference(R.string.visa_onboarding_pin_validation_error_message)
             } else {

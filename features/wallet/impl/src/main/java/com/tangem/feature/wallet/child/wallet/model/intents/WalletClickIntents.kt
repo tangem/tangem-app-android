@@ -157,10 +157,10 @@ internal class WalletClickIntents @Inject constructor(
             walletContentFetcher(userWalletId = userWallet.walletId, forceUpdate = true)
 
             buildList {
-                async { rampStateManager.fetchSellServiceData() }.let(::add)
-                async { fetchHotCryptoUseCase() }.let(::add)
-                async { tangemPayIntents.onPullToRefresh() }.let(::add)
-                async { yieldSupplyApyUpdateUseCase() }.let(::add)
+                add(async { rampStateManager.fetchSellServiceData() })
+                add(async { fetchHotCryptoUseCase() })
+                add(async { tangemPayIntents.onPullToRefresh() })
+                add(async { yieldSupplyApyUpdateUseCase() })
             }
                 .awaitAll()
 

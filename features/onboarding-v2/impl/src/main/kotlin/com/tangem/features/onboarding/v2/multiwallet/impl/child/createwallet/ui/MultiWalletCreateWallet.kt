@@ -106,7 +106,7 @@ internal fun MultiWalletCreateWallet(state: MultiWalletCreateWalletUM, modifier:
             onClick = state.onCreateWalletClick,
         )
 
-        if (state.showOtherOptionsButton) {
+        if (state.shouldShowOtherOptionsButton) {
             SecondaryButton(
                 modifier = Modifier
                     .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
@@ -130,7 +130,7 @@ private fun MultiWalletCreateWalletDialog(state: MultiWalletCreateWalletUM) {
             ),
             dismissButton = DialogButtonUM(
                 title = state.dialog.dismissButtonText.resolveReference(),
-                isWarning = state.dialog.dismissWarningColor,
+                isWarning = state.dialog.isDismissWarningColor,
                 onClick = state.dialog.onDismissButtonClick,
             ),
             onDismissDialog = state.dialog.onDismiss,
@@ -147,7 +147,7 @@ private fun Preview() {
                 title = stringReference("Title"),
                 bodyText = stringReference("Body body body"),
                 onCreateWalletClick = {},
-                showOtherOptionsButton = true,
+                shouldShowOtherOptionsButton = true,
                 onOtherOptionsClick = {},
                 onTermsOfUseClick = {},
                 dialog = null,

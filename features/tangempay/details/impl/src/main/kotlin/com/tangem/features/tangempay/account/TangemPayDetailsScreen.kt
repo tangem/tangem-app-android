@@ -137,7 +137,7 @@ internal fun TangemPayDetailsScreen(
                     state = listState,
                     contentPadding = PaddingValues(
                         top = topBarTotalHeight,
-                        bottom = TangemTheme.dimens2.x4 + bottomBarHeight,
+                        bottom = 16.dp + bottomBarHeight,
                     ),
                 ) {
                     payDetailsBody(state = state, buttonsHazeState = buttonsHazeState)
@@ -146,7 +146,7 @@ internal fun TangemPayDetailsScreen(
                             SpacerH12()
                             CashbackBlock(
                                 state = cashbackState,
-                                modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
+                                modifier = Modifier.padding(horizontal = 16.dp),
                             )
                         }
                     }
@@ -218,7 +218,7 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM, buttonsHazeS
             SpacerH12()
             MessageBanner(
                 banner = state.messageBanner,
-                modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
+                modifier = Modifier.padding(horizontal = 16.dp),
             )
         }
     }
@@ -229,7 +229,7 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM, buttonsHazeS
             item("reissuingBannerBlock") {
                 SpacerH12()
                 TangemMessageBanner(
-                    modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
+                    modifier = Modifier.padding(horizontal = 16.dp),
                     title = resourceReference(R.string.tangempay_reissue_card_in_progress),
                     showGlowRing = false,
                     description = resourceReference(R.string.tangempay_reissue_card_in_progress_description),
@@ -240,7 +240,7 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM, buttonsHazeS
             item("issuingBannerBlock") {
                 SpacerH12()
                 TangemMessageBanner(
-                    modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
+                    modifier = Modifier.padding(horizontal = 16.dp),
                     title = resourceReference(R.string.tangempay_issuing_new_digital_card_title),
                     showGlowRing = false,
                     description = resourceReference(R.string.tangempay_reissue_card_in_progress_description),
@@ -259,7 +259,7 @@ private fun LazyListScope.payDetailsBody(state: TangemPayDetailsUM, buttonsHazeS
             item("activatingBannerBlock") {
                 SpacerH12()
                 TangemMessageBanner(
-                    modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4),
+                    modifier = Modifier.padding(horizontal = 16.dp),
                     title = resourceReference(R.string.tangempay_card_activation_in_progress),
                     showGlowRing = false,
                     description = resourceReference(R.string.tangempay_reissue_card_in_progress_description),
@@ -394,10 +394,10 @@ private fun BalanceBlock(
     Column(
         modifier
             .fillMaxWidth()
-            .padding(horizontal = TangemTheme.dimens2.x4)
-            .padding(top = TangemTheme.dimens2.x12),
+            .padding(horizontal = 16.dp)
+            .padding(top = 48.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         AnimatedContent(
             targetState = state,
@@ -411,7 +411,7 @@ private fun BalanceBlock(
         }
 
         Text(
-            modifier = Modifier.padding(vertical = TangemTheme.dimens2.x1),
+            modifier = Modifier.padding(vertical = 4.dp),
             text = stringResourceSafe(R.string.token_details_balance_total),
             color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography3.caption.medium,
@@ -422,7 +422,7 @@ private fun BalanceBlock(
             is TangemPayDetailsBalanceBlockState.Content -> {
                 if (state.isInactive) {
                     TangemBadge(
-                        modifier = Modifier.padding(vertical = TangemTheme.dimens2.x1),
+                        modifier = Modifier.padding(vertical = 4.dp),
                         text = resourceReference(R.string.tangempay_status_inactive),
                         variant = TangemBadge.Variant.Outline,
                         status = TangemBadge.Status.Warning,
@@ -483,8 +483,8 @@ private fun CardsBlock(
         modifier = modifier.fillMaxWidth(),
         state = rememberLazyListState(),
         contentPadding = PaddingValues(
-            horizontal = TangemTheme.dimens2.x4,
-            vertical = TangemTheme.dimens2.x3,
+            horizontal = 16.dp,
+            vertical = 12.dp,
         ),
         horizontalArrangement = Arrangement.Center,
     ) {
@@ -498,7 +498,7 @@ private fun CardsBlock(
                 isEnabled = item.isEnabled,
                 isFrozen = item.isFrozen,
             )
-            SpacerW(TangemTheme.dimens2.x2)
+            SpacerW(8.dp)
         }
         item {
             TangemPayAddCardView(
@@ -517,7 +517,7 @@ private fun LazyItemScope.ActionBlock(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = TangemTheme.dimens2.x3),
+            .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {

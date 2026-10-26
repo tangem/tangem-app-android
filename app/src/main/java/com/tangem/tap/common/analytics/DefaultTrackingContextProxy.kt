@@ -1,89 +1,119 @@
 package com.tangem.tap.common.analytics
 
-import com.tangem.core.abtests.manager.ABTestsManager
-import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.api.AnalyticsUserIdHandler
+import com.tangem.core.analytics.api.ParamsInterceptor
+import com.tangem.core.analytics.api.ParamsInterceptorHolder
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
-import com.tangem.tap.common.extensions.addContext
-import com.tangem.tap.common.extensions.addHotWalletContext
-import com.tangem.tap.common.extensions.eraseContext
-import com.tangem.tap.common.extensions.removeContext
-import com.tangem.tap.common.extensions.setContext
-import com.tangem.tap.common.extensions.setHotWalletContext
-import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.domain.models.wallet.hashedStringValue
+import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
+import com.tangem.tap.common.analytics.paramsInterceptor.HotWalletContextInterceptor
+import com.tangem.tap.common.analytics.paramsInterceptor.LinkedCardContextInterceptor
 
 /**
 [REDACTED_AUTHOR]
  */
-internal class DefaultTrackingContextProxy(private val abTestsManager: ABTestsManager) : TrackingContextProxy {
+internal class DefaultTrackingContextProxy(
+    private val paramsInterceptorHolder: ParamsInterceptorHolder,
+    private val userIdHandler: AnalyticsUserIdHandler,
+    private val observers: Set<TrackingContextProxy.Observer>,
+    private val cardContextInterceptorFactory: CardContextInterceptor.Factory,
+) : TrackingContextProxy {
 
     override fun setContext(scanResponse: ScanResponse) {
-        val userWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
-
-        abTestsManager.setUserProperties(
-            userId = userWalletId?.hashedStringValue,
-            batch = scanResponse.card.batchId,
-            productType = scanResponse.productType.name,
-            firmware = scanResponse.card.firmwareVersion.stringValue,
-        )
+        observers.forEach { it.setContext(scanResponse) }
     }
 
     override fun setContext(userWallet: UserWallet) {
-        Analytics.setContext(userWallet)
+        userIdHandler.setUserId(userWallet.walletId.stringValue)
 
         when (userWallet) {
             is UserWallet.Cold -> {
-                setColdWalletUserProperties(userWallet)
+                paramsInterceptorHolder.removeParamsInterceptor(HotWalletContextInterceptor.id())
+                paramsInterceptorHolder.addParamsInterceptor(createLinkedCardContext(userWallet.scanResponse))
             }
             is UserWallet.Hot -> {
-                setHotWalletUserProperties(userWallet)
+                paramsInterceptorHolder.removeParamsInterceptor(LinkedCardContextInterceptor.id())
+                paramsInterceptorHolder.addParamsInterceptor(HotWalletContextInterceptor())
             }
         }
+
+        observers.forEach { it.setContext(userWallet) }
     }
 
+    /** Adds a new context and keeps the previous one as its parent, see [removeContext]. */
     override fun addContext(userWallet: UserWallet) {
-        Analytics.addContext(userWallet)
+        val currentContext = removeCurrentContext()
+
+        val newContext = when (userWallet) {
+            is UserWallet.Cold -> createLinkedCardContext(userWallet.scanResponse, parent = currentContext)
+            is UserWallet.Hot -> HotWalletContextInterceptor(parent = currentContext)
+        }
+
+        userIdHandler.setUserId(userWallet.walletId.stringValue)
+        paramsInterceptorHolder.addParamsInterceptor(newContext)
+
+        observers.forEach { it.addContext(userWallet) }
     }
 
     override fun setHotWalletContext() {
-        Analytics.setHotWalletContext()
+        paramsInterceptorHolder.addParamsInterceptor(HotWalletContextInterceptor())
+
+        observers.forEach { it.setHotWalletContext() }
     }
 
     override fun eraseContext() {
-        Analytics.eraseContext()
-        abTestsManager.removeUserProperties()
+        userIdHandler.clearUserId()
+        paramsInterceptorHolder.removeParamsInterceptor(LinkedCardContextInterceptor.id())
+        paramsInterceptorHolder.removeParamsInterceptor(HotWalletContextInterceptor.id())
+
+        observers.forEach { it.eraseContext() }
     }
 
+    /** Adds a new context and keeps the previous one as its parent, see [removeContext]. */
     override fun addContext(scanResponse: ScanResponse) {
-        Analytics.addContext(scanResponse)
+        val userWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
+        if (userWalletId != null) {
+            userIdHandler.setUserId(userWalletId.stringValue)
+        }
+
+        val newContext = createLinkedCardContext(scanResponse, parent = removeCurrentContext())
+        paramsInterceptorHolder.addParamsInterceptor(newContext)
+
+        observers.forEach { it.addContext(scanResponse) }
     }
 
     override fun addHotWalletContext() {
-        Analytics.addHotWalletContext()
+        paramsInterceptorHolder.addParamsInterceptor(HotWalletContextInterceptor(parent = removeCurrentContext()))
+
+        observers.forEach { it.addHotWalletContext() }
     }
 
+    /** Removes the current context and restores its parent, if any. */
     override fun removeContext() {
-        Analytics.removeContext()
+        val previousContext = when (val currentContext = removeCurrentContext()) {
+            is LinkedCardContextInterceptor -> currentContext.parent
+            is HotWalletContextInterceptor -> currentContext.parent
+            else -> null
+        }
+        previousContext?.let(paramsInterceptorHolder::addParamsInterceptor)
+
+        observers.forEach { it.removeContext() }
     }
 
-    private fun setColdWalletUserProperties(userWallet: UserWallet.Cold) {
-        abTestsManager.setUserProperties(
-            userId = userWallet.walletId.hashedStringValue,
-            batch = userWallet.scanResponse.card.batchId,
-            productType = userWallet.scanResponse.productType.name,
-            firmware = userWallet.scanResponse.card.firmwareVersion.stringValue,
+    private fun createLinkedCardContext(
+        scanResponse: ScanResponse,
+        parent: ParamsInterceptor? = null,
+    ): LinkedCardContextInterceptor {
+        return LinkedCardContextInterceptor(
+            contextInterceptor = cardContextInterceptorFactory.create(scanResponse),
+            parent = parent,
         )
     }
 
-    private fun setHotWalletUserProperties(userWallet: UserWallet.Hot) {
-        abTestsManager.setUserProperties(
-            userId = userWallet.walletId.hashedStringValue,
-            batch = null,
-            productType = AnalyticsParam.ProductType.MobileWallet.value,
-            firmware = null,
-        )
+    private fun removeCurrentContext(): ParamsInterceptor? {
+        return paramsInterceptorHolder.removeParamsInterceptor(LinkedCardContextInterceptor.id())
+            ?: paramsInterceptorHolder.removeParamsInterceptor(HotWalletContextInterceptor.id())
     }
 }

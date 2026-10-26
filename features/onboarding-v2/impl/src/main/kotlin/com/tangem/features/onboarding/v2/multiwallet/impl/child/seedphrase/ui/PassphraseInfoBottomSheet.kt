@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -42,8 +43,8 @@ fun PassphraseInfoBottomSheetContent(onDismiss: () -> Unit) {
         Icon(
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
-                .padding(top = TangemTheme.dimens.size40)
-                .size(TangemTheme.dimens.size48),
+                .padding(top = 40.dp)
+                .size(48.dp),
             painter = painterResource(id = R.drawable.ic_information_24),
             tint = TangemTheme.colors.icon.accent,
             contentDescription = null,
@@ -52,7 +53,7 @@ fun PassphraseInfoBottomSheetContent(onDismiss: () -> Unit) {
         Text(
             text = stringResourceSafe(id = R.string.common_passphrase),
             modifier = Modifier
-                .padding(top = TangemTheme.dimens.size40)
+                .padding(top = 40.dp)
                 .align(Alignment.CenterHorizontally),
             color = TangemTheme.colors.text.primary1,
             style = TangemTheme.typography.h2,
@@ -61,8 +62,8 @@ fun PassphraseInfoBottomSheetContent(onDismiss: () -> Unit) {
         Text(
             text = stringResourceSafe(id = R.string.onboarding_bottom_sheet_passphrase_description),
             modifier = Modifier
-                .padding(top = TangemTheme.dimens.size16)
-                .padding(horizontal = TangemTheme.dimens.size24)
+                .padding(top = 16.dp)
+                .padding(horizontal = 24.dp)
                 .align(Alignment.CenterHorizontally),
             color = TangemTheme.colors.text.secondary,
             style = TangemTheme.typography.body2,
@@ -71,9 +72,9 @@ fun PassphraseInfoBottomSheetContent(onDismiss: () -> Unit) {
 
         PrimaryButton(
             modifier = Modifier
-                .padding(horizontal = TangemTheme.dimens.size16)
-                .padding(top = TangemTheme.dimens.size40)
-                .padding(bottom = TangemTheme.dimens.size32)
+                .padding(horizontal = 16.dp)
+                .padding(top = 40.dp)
+                .padding(bottom = 32.dp)
                 .fillMaxWidth(),
             text = stringResourceSafe(id = R.string.common_ok),
             onClick = onDismiss,

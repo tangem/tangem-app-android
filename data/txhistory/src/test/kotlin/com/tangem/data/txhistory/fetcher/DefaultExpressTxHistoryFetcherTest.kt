@@ -10,8 +10,8 @@ import com.tangem.grow.datasource.express.models.response.ExpressPagination
 import com.tangem.grow.datasource.express.models.response.ExpressPaginationDelta
 import com.tangem.grow.datasource.onramp.models.response.OnrampHistoryDeltaResponse
 import com.tangem.grow.datasource.onramp.models.response.OnrampHistoryResponse
-import com.tangem.store.datasource.txhistory.db.dao.ExpressSyncStateDao
-import com.tangem.store.datasource.txhistory.db.entity.express.ExpressSyncStateEntity
+import com.tangem.store.datasource.txhistory.db.dao.HistorySyncStateDao
+import com.tangem.store.datasource.txhistory.db.entity.sync.HistorySyncStateEntity
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
 import com.tangem.test.mock.MockAccounts
@@ -28,14 +28,14 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultExpressTxHistoryFetcherTest {
 
-    private val expressSyncStateDao: ExpressSyncStateDao = mockk()
+    private val historySyncStateDao: HistorySyncStateDao = mockk()
     private val expressHistoryRepository: DefaultExpressHistoryRepository = mockk()
 
     private val coin: CryptoCurrency = MockCryptoCurrencyFactory().ethereum
 
     @BeforeEach
     fun setup() {
-        clearMocks(expressSyncStateDao, expressHistoryRepository)
+        clearMocks(historySyncStateDao, expressHistoryRepository)
     }
 
     @Test
@@ -63,7 +63,7 @@ internal class DefaultExpressTxHistoryFetcherTest {
 
     @Test
     fun `continues exchange initial pagination while hasMore is true`() = runTest {
-        every { expressSyncStateDao.observe(any(), WALLET_ID.stringValue) } returns flowOf(null)
+        every { historySyncStateDao.observe(any(), WALLET_ID.stringValue) } returns flowOf(null)
         // 1st call: initial fetch in fetchExchange (pagination ignored)
         // 2nd call: pagination loop, hasMore = true -> continue
         // 3rd call: pagination loop, hasMore = false -> stop
@@ -89,7 +89,7 @@ internal class DefaultExpressTxHistoryFetcherTest {
 
     @Test
     fun `skips initial pagination when it is already completed`() = runTest {
-        every { expressSyncStateDao.observe(any(), WALLET_ID.stringValue) } returns flowOf(completedSyncState())
+        every { historySyncStateDao.observe(any(), WALLET_ID.stringValue) } returns flowOf(completedSyncState())
         coEvery { expressHistoryRepository.fetchExchangeHistoryDelta(WALLET_ID, any()) } returns
             exchangeDeltaResponse(hasMore = false)
         coEvery { expressHistoryRepository.fetchOnrampHistoryDelta(WALLET_ID, any()) } returns
@@ -136,7 +136,7 @@ internal class DefaultExpressTxHistoryFetcherTest {
     }
 
     private fun stubAllSuccess(hasMore: Boolean) {
-        every { expressSyncStateDao.observe(any(), WALLET_ID.stringValue) } returns flowOf(null)
+        every { historySyncStateDao.observe(any(), WALLET_ID.stringValue) } returns flowOf(null)
         coEvery { expressHistoryRepository.fetchExchangeHistory(WALLET_ID, any()) } returns exchangeResponse(hasMore)
         coEvery { expressHistoryRepository.fetchExchangeHistoryDelta(WALLET_ID, any()) } returns
             exchangeDeltaResponse(hasMore)
@@ -153,7 +153,7 @@ internal class DefaultExpressTxHistoryFetcherTest {
     private fun createFetcher(utils: DefaultTxHistoryFetcherUtils) = DefaultExpressTxHistoryFetcher(
         walletId = WALLET_ID,
         utils = utils,
-        expressSyncStateDao = expressSyncStateDao,
+        historySyncStateDao = historySyncStateDao,
         expressHistoryRepository = expressHistoryRepository,
     )
 
@@ -174,8 +174,8 @@ internal class DefaultExpressTxHistoryFetcherTest {
 
     private fun paginationDelta(hasMore: Boolean) = ExpressPaginationDelta(startCursor = null, hasMore = hasMore)
 
-    private fun completedSyncState() = ExpressSyncStateEntity(
-        type = ExpressSyncStateEntity.Type.EXCHANGE.name,
+    private fun completedSyncState() = HistorySyncStateEntity(
+        type = HistorySyncStateEntity.Type.EXCHANGE.name,
         userWalletId = WALLET_ID.stringValue,
         isInitialCompleted = true,
         afterCursor = null,

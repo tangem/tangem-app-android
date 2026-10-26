@@ -44,15 +44,18 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
     @Assisted private val onWalletClick: (UserWalletId) -> Unit,
     @Assisted private val messageSender: UiMessageSender,
-    @Assisted("onlyMultiCurrency") private val onlyMultiCurrency: Boolean,
+    @Assisted("onlyMultiCurrency") private val isOnlyMultiCurrency: Boolean,
     @Assisted("isAuthMode") private val isAuthMode: Boolean,
     @Assisted("isClickableIfLocked") private val isClickableIfLocked: Boolean,
     private val userWalletImageFetcher: UserWalletImageFetcher,
     dispatchers: CoroutineDispatcherProvider,
 ) : UserWalletsFetcher {
 
-    private val walletsFlow =
-        if (onlyMultiCurrency) getWalletsUseCase().map { it.filter { it.isMultiCurrency } } else getWalletsUseCase()
+    private val walletsFlow = if (isOnlyMultiCurrency) {
+        getWalletsUseCase().map { wallets -> wallets.filter { it.isMultiCurrency } }
+    } else {
+        getWalletsUseCase()
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override val userWallets: Flow<ImmutableList<UserWalletItemUM>> = walletsFlow.transformLatest { wallets ->

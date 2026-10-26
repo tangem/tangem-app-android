@@ -50,11 +50,17 @@ import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.AllowanceInfo
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
+import com.tangem.domain.transaction.models.GaslessProtocolData
+import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.domain.transaction.models.isGasless
+import com.tangem.domain.transaction.models.tron.canPayNativeFee
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendTronGaslessTransactionUseCase
+import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.YieldModuleAddressProvider
@@ -72,6 +78,7 @@ import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.lib.crypto.BlockchainFeeUtils.patchIntegratedApprovalPriorityFee
 import com.tangem.feature.swap.domain.tron.TronSwapPayload
 import com.tangem.feature.swap.domain.tron.toTransactionExtras
+import com.tangem.feature.swap.domain.tron.toTronGaslessSwapOrNull
 import com.tangem.feature.swap.domain.tron.tronSwapPayload
 import com.tangem.lib.crypto.BlockchainUtils.isPsbtSwapSupported
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
@@ -109,7 +116,6 @@ internal class SwapInteractorImpl @Inject constructor(
     private val currenciesRepository: CurrenciesRepository,
     private val validateTransactionUseCase: ValidateTransactionUseCase,
     private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase,
-    private val createAndSendTronGaslessTransactionUseCase: CreateAndSendTronGaslessTransactionUseCase,
     private val getCurrencyCheckUseCase: GetCurrencyCheckUseCase,
     private val getAssetRequirementsUseCase: GetAssetRequirementsUseCase,
     private val amountFormatter: AmountFormatter,
@@ -123,6 +129,8 @@ internal class SwapInteractorImpl @Inject constructor(
     private val swapFeatureToggles: SwapFeatureToggles,
     private val yieldModuleAddressProvider: YieldModuleAddressProvider,
     private val recordTokenTransferFromSwapUseCase: RecordTokenTransferFromSwapUseCase,
+    private val createAndSendTronGaslessTransactionUseCase: CreateAndSendTronGaslessTransactionUseCase,
+    private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
 ) : SwapInteractor {
 
     private val getSelectedAppCurrencyUseCase by lazy(LazyThreadSafetyMode.NONE) {
@@ -920,7 +928,17 @@ internal class SwapInteractorImpl @Inject constructor(
         integratedApproval: IntegratedApprovalData?,
     ): SwapTransactionState {
         val networkId = fromSwapCurrencyStatus.currency.network.rawId
+        val tronGaslessFee = fee?.tronGaslessFeeOrNull()
         return when {
+            fee != null && tronGaslessFee != null -> onSwapTronGaslessDex(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                toSwapCurrencyStatus = toSwapCurrencyStatus,
+                provider = swapProvider,
+                swapData = swapData,
+                amountToSwap = amountToSwap,
+                swapFee = fee,
+                tronGaslessFee = tronGaslessFee,
+            )
             isSolana(networkId) -> onSwapSolanaDex(
                 provider = swapProvider,
                 swapData = swapData,
@@ -1076,6 +1094,58 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
+    @Suppress("LongParameterList")
+    private suspend fun onSwapTronGaslessDex(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+        provider: SwapProvider,
+        swapData: SwapDataModel,
+        amountToSwap: String,
+        swapFee: SwapFee,
+        tronGaslessFee: TransactionFeeExtended,
+    ): SwapTransactionState {
+        val amountDecimal = requireNotNull(toBigDecimalOrNull(amountToSwap)) { "wrong amount format" }
+        val dexTransaction = swapData.transaction as ExpressTransactionModel.DEX
+        val soldToken = fromSwapCurrencyStatus.currency as? CryptoCurrency.Token
+            ?: return SwapTransactionState.Error.UnknownError
+        val swap = dexTransaction.toTronGaslessSwapOrNull(soldToken = soldToken)
+            ?: return SwapTransactionState.Error.UnknownError
+
+        val swapTxData = createPlainDexTransaction(
+            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+            dexTransaction = dexTransaction,
+            swapFee = swapFee,
+            tronPayload = dexTransaction.tronSwapPayload(),
+        ).getOrElse { error ->
+            TangemLogger.e("Failed to create Tron gasless swap tx data", error)
+            return SwapTransactionState.Error.UnknownError
+        }
+
+        return createAndSendTronGaslessTransactionUseCase.sendSwap(
+            userWallet = fromSwapCurrencyStatus.userWallet,
+            swap = swap,
+            swapTransaction = swapTxData,
+            fee = tronGaslessFee,
+        ).fold(
+            ifLeft = { error -> SwapTransactionState.Error.TransactionError(error) },
+            ifRight = { txHash ->
+                finalizeDexSwapSuccess(
+                    fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                    toSwapCurrencyStatus = toSwapCurrencyStatus,
+                    provider = provider,
+                    swapData = swapData,
+                    amount = SwapAmount(amountDecimal, fromSwapCurrencyStatus.currency.decimals),
+                    txHash = txHash,
+                    payInAddress = getPayoutAddress(swapTxData),
+                )
+            },
+        )
+    }
+
+    private fun SwapFee.tronGaslessFeeOrNull(): TransactionFeeExtended? =
+        (transactionFeeResult as? TransactionFeeResult.LoadedExtended)?.fee
+            ?.takeIf { it.gaslessProtocolData is GaslessProtocolData.Tron }
+
     /**
      * [REDACTED_TASK_KEY] — selects the approval [Fee] matching the user-picked [FeeBucket] tier. Mirrors
      * the bucket-to-field mapping used by `GiveApprovalModel.sendApprovalTransaction`:
@@ -1182,13 +1252,6 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
-    /**
-     * Branch selection:
-     *  - Tron gasless path: the loaded fee carries a `tronGaslessQuote` → `createAndSendTronGaslessTransactionUseCase`.
-     *  - Gasless token path: `swapFee.transactionFeeResult is LoadedExtended && selectedFeeToken.currency is Token`
-     *    → `createAndSendGaslessTransactionUseCase`.
-     *  - Otherwise → `sendTransactionUseCase` with `swapFee.fee`.
-     */
     @Suppress("LongMethod", "LongParameterList", "CanBeNonNullable")
     private suspend fun onSwapCex(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
@@ -1285,22 +1348,22 @@ internal class SwapInteractorImpl @Inject constructor(
             return SwapTransactionState.Error.UnknownError
         }
 
-        val feeExtended = (fee.transactionFeeResult as? TransactionFeeResult.LoadedExtended)?.fee
-        val result = when {
-            feeExtended?.tronGaslessQuote != null -> createAndSendTronGaslessTransactionUseCase(
-                userWallet = userWallet,
-                network = fromSwapCurrencyStatus.currency.network,
+        val extendedFee = (fee.transactionFeeResult as? TransactionFeeResult.LoadedExtended)?.fee
+        val result = if (extendedFee?.isGasless == true) {
+            createAndSendGaslessTransactionUseCase.invoke(
                 transactionData = txData,
-                fee = feeExtended,
+                userWallet = userWallet,
+                fee = extendedFee,
             )
-            feeExtended != null && fee.selectedFeeToken.currency is CryptoCurrency.Token -> {
-                createAndSendGaslessTransactionUseCase.invoke(
-                    transactionData = txData,
-                    userWallet = userWallet,
-                    fee = feeExtended,
-                )
+        } else {
+            // A TRX transfer the balance cannot cover is rejected by the node without burning anything.
+            if (fromSwapCurrencyStatus.currency is CryptoCurrency.Token &&
+                isTron(fromSwapCurrencyStatus.currency.network.rawId)
+            ) {
+                checkTronNativeFeeAtDeposit(fromSwapCurrencyStatus = fromSwapCurrencyStatus, txData = txData)
+                    ?.let { return it }
             }
-            else -> sendTransactionUseCase(
+            sendTransactionUseCase(
                 txData = txData,
                 userWallet = userWallet,
                 network = fromSwapCurrencyStatus.currency.network,
@@ -1616,6 +1679,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 swapData = swapData,
                 selectedFeeToken = selectedFeeToken,
                 permissionState = quotesLoadedState.permissionState,
+                isGasless = isGasless,
             )
             ResolvedFlow.CexLike -> loadCexSwapFee(
                 fromStatus = fromStatus,
@@ -1638,6 +1702,7 @@ internal class SwapInteractorImpl @Inject constructor(
         swapData: SwapDataModel?,
         selectedFeeToken: CryptoCurrencyStatus?,
         permissionState: PermissionDataState,
+        isGasless: Boolean,
     ): Either<GetFeeError, SwapFee> {
         val transaction = swapData?.transaction as? ExpressTransactionModel.DEX
             ?: return GetFeeError.UnknownError.left()
@@ -1667,6 +1732,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 transaction = transaction,
                 selectedToken = selectedFeeToken,
                 permissionState = effectivePermissionState,
+                isGasless = isGasless,
             )
         }
 
@@ -1763,6 +1829,34 @@ internal class SwapInteractorImpl @Inject constructor(
                 fromCurrencyId = fromSwapCurrencyStatus.currency.id,
                 spenderAddress = spenderAddress,
             ),
+        )
+    }
+
+    /**
+     * The shown fee was quoted earlier against a placeholder address; by now the account's energy or TRX may have
+     * been spent, and a transaction whose TRX cannot cover the burn runs out of energy on-chain.
+     */
+    private suspend fun checkTronNativeFeeAtDeposit(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        txData: TransactionData.Uncompiled,
+    ): SwapTransactionState.Error? {
+        val reestimatedFee = getFeeUseCase(
+            userWallet = fromSwapCurrencyStatus.userWallet,
+            network = fromSwapCurrencyStatus.currency.network,
+            transactionData = txData,
+        ).getOrElse { error ->
+            TangemLogger.e("Tron CEX swap fee re-estimation failed ($error), sending with the quoted fee")
+            return null
+        }
+
+        val nativeStatus = resolveNativeFeeTokenStatus(fromSwapCurrencyStatus)
+            ?.takeIf { it.currency is CryptoCurrency.Coin && it.value.amount != null }
+            ?: return null
+        if (nativeStatus.canPayNativeFee(reestimatedFee)) return null
+
+        TangemLogger.e("Tron CEX swap refused: TRX balance does not cover the fee at the deposit address")
+        return SwapTransactionState.Error.TransactionError(
+            SendTransactionError.DataError("Not enough TRX to pay the network fee"),
         )
     }
 
@@ -2077,7 +2171,8 @@ internal class SwapInteractorImpl @Inject constructor(
                         val permissionState = state.permissionState
                         val balanceStatus = if (
                             permissionState is PermissionDataState.PermissionRequired &&
-                            quoteBalanceStatus is SwapBalanceStatus.Pending
+                            quoteBalanceStatus is SwapBalanceStatus.Pending &&
+                            !isTronGaslessApprovalAvailable(fromSwapCurrencyStatus)
                         ) {
                             checkSeparateApprovalFeeCoverage(
                                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
@@ -2508,6 +2603,14 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
+    /** A Tron approval of a token the gasless service relays is paid in that token, so TRX need not cover it. */
+    private suspend fun isTronGaslessApprovalAvailable(fromSwapCurrencyStatus: SwapCurrencyStatus): Boolean {
+        if (!swapFeatureToggles.isTronGaslessDexSwapEnabled) return false
+        val token = fromSwapCurrencyStatus.currency as? CryptoCurrency.Token ?: return false
+        return isTron(token.network.rawId) &&
+            isTronGaslessSupportedUseCase(token.network, token)
+    }
+
     /**
      * Guard for the separate-approval flow: [PermissionDataState.PermissionRequired]
      * sends a standalone approve transaction paid in the network's fee coin, so the coin balance
@@ -2649,8 +2752,15 @@ internal class SwapInteractorImpl @Inject constructor(
         // When the user explicitly picked a non-native fee token (gasless flow),
         // the balance check must verify the chosen token's balance, not the network's native coin.
         if (selectedFeeToken != null && selectedFeeToken.currency is CryptoCurrency.Token) {
-            val feeTokenBalance = selectedFeeToken.value.amount ?: BigDecimal.ZERO
-            return if (feeTokenBalance > fee.multiply(percentsToFeeIncrease)) {
+            val isFeeInSwappedToken = selectedFeeToken.currency.id == fromCurrency.id &&
+                fromSwapCurrencyStatus.account !is Account.Payment
+            val spentFromFeeToken = if (isFeeInSwappedToken) {
+                spendAmount.value
+            } else {
+                BigDecimal.ZERO
+            }
+            val feeTokenBalance = (selectedFeeToken.value.amount ?: BigDecimal.ZERO) - spentFromFeeToken
+            return if (feeTokenBalance >= fee.multiply(percentsToFeeIncrease)) {
                 FeeBalanceState.Enough
             } else {
                 FeeBalanceState.NotEnough(

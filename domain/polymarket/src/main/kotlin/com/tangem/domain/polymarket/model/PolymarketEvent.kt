@@ -11,6 +11,7 @@ import java.time.Instant
  * @property title event title
  * @property description event description, also used as the resolution criteria text
  * @property rulesUrl link to the Polymarket rules of the event
+ * @property resolutionSource optional information source used to resolve the event, as a URL or plain text
  * @property iconUrl optional event icon
  * @property imageUrl optional event image
  * @property status lifecycle status of the event
@@ -56,4 +57,5 @@ data class PolymarketEvent(
     val isEnded: Boolean? = null,
     val dataFetchedAt: Instant? = null,
     val teams: List<PolymarketTeam>? = null,
+    val resolutionSource: String? = null,
 )

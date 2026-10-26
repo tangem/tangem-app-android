@@ -108,7 +108,7 @@ private fun AccountTypeItem(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(color = TangemTheme.colors3.bg.opaque.secondary)
+                    .background(color = TangemTheme.colors3.bg.transparent.secondary)
                     .padding(10.dp),
             )
         },

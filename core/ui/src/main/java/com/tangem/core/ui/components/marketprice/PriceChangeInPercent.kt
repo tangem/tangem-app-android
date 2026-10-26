@@ -12,6 +12,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -50,11 +51,11 @@ private fun PriceChangeInPercentV2(
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens2.x0_5),
+        horizontalArrangement = Arrangement.spacedBy(space = 2.dp),
     ) {
         Icon(
             modifier = Modifier
-                .size(TangemTheme.dimens2.x3)
+                .size(12.dp)
                 .align(Alignment.CenterVertically),
             imageVector = ImageVector.vectorResource(
                 id = when (type) {

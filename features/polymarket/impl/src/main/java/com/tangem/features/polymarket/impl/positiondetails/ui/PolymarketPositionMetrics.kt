@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
@@ -29,6 +30,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_info_16
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
+import com.tangem.features.polymarket.impl.common.ui.polymarketPnlColor
 import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketPositionDetailsUM.Metrics
 import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketPositionDetailsUM.Pnl
 
@@ -37,7 +39,7 @@ internal fun PolymarketPositionMetrics(state: Metrics, onPnlClick: (Pnl) -> Unit
     val metrics = listOf(
         R.string.prediction_positions_quantity to state.quantity,
         R.string.prediction_positions_price_changes to state.priceChanges,
-        R.string.prediction_positions_unrealized_pnl to state.unrealizedPnl,
+        R.string.prediction_positions_unrealized_pnl to state.unrealizedPnl.value,
         R.string.prediction_positions_realized_pnl to state.realizedPnl,
     )
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
@@ -54,6 +56,11 @@ internal fun PolymarketPositionMetrics(state: Metrics, onPnlClick: (Pnl) -> Unit
                             value = value,
                             onPnlClick = onPnlClick,
                             modifier = Modifier.weight(1f).fillMaxHeight(),
+                            valueColor = if (title == R.string.prediction_positions_unrealized_pnl) {
+                                state.unrealizedPnl.direction.polymarketPnlColor()
+                            } else {
+                                TangemTheme.colors3.text.primary
+                            },
                         )
                     }
                 }
@@ -63,7 +70,13 @@ internal fun PolymarketPositionMetrics(state: Metrics, onPnlClick: (Pnl) -> Unit
 }
 
 @Composable
-private fun PositionMetric(title: Int, value: TextReference, onPnlClick: (Pnl) -> Unit, modifier: Modifier = Modifier) {
+private fun PositionMetric(
+    title: Int,
+    value: TextReference,
+    onPnlClick: (Pnl) -> Unit,
+    valueColor: Color,
+    modifier: Modifier = Modifier,
+) {
     val pnl = when (title) {
         R.string.prediction_positions_unrealized_pnl -> Pnl.Unrealized
         R.string.prediction_positions_realized_pnl -> Pnl.Realized
@@ -82,7 +95,7 @@ private fun PositionMetric(title: Int, value: TextReference, onPnlClick: (Pnl) -
             Text(
                 text = value.resolveReference(),
                 style = TangemTheme.typography3.body.medium,
-                color = TangemTheme.colors3.text.primary,
+                color = valueColor,
             )
             Row(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),

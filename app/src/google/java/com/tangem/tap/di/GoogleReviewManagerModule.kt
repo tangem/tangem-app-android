@@ -1,5 +1,6 @@
 package com.tangem.tap.di
 
+import com.tangem.core.decompose.utils.ForegroundActivityProvider
 import com.tangem.core.navigation.review.ReviewManager
 import com.tangem.tap.GoogleReviewManager
 import dagger.Module
@@ -14,7 +15,7 @@ internal class GoogleReviewManagerModule {
 
     @Singleton
     @Provides
-    fun provideGoogleReviewManager(): ReviewManager {
-        return GoogleReviewManager()
+    fun provideGoogleReviewManager(foregroundActivityProvider: ForegroundActivityProvider): ReviewManager {
+        return GoogleReviewManager(foregroundActivityProvider)
     }
 }

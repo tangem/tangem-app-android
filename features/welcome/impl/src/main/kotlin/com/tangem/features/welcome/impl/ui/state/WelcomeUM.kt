@@ -15,7 +15,7 @@ internal sealed class WelcomeUM {
 
     data class SelectWallet(
         val wallets: ImmutableList<UserWalletItemUM> = persistentListOf(),
-        val showUnlockWithBiometricButton: Boolean = false,
+        val shouldShowUnlockWithBiometricButton: Boolean = false,
         val addWalletBottomSheet: TangemBottomSheetConfig = TangemBottomSheetConfig.Empty,
         val onUnlockWithBiometricClick: () -> Unit = {},
         val addWalletClick: () -> Unit = {},

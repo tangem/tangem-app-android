@@ -12,6 +12,7 @@ internal class PolymarketApprovalCallsTest {
 
     private val collateral = "0xC011a7E12a19f7B1f670d46F03B03f3342E82DFB"
     private val conditionalTokens = "0x4D97DCd97eC945f40cF65F87097ACe5EA0476045"
+    private val positionManager = "0x006F54F7f9A22e0000CC2AB60031000000ae9fEF"
 
     @Test
     fun `GIVEN Polygon network WHEN read CHAIN_ID THEN it is 137`() {
@@ -19,14 +20,15 @@ internal class PolymarketApprovalCallsTest {
     }
 
     @Test
-    fun `GIVEN the batch WHEN build THEN it is the 13 calls the validator expects`() {
+    fun `GIVEN the batch WHEN build THEN it is the 17 calls the validator expects`() {
         // Act
         val calls = PolymarketApprovalCalls.build()
 
         // Assert
         assertThat(calls).hasSize(EXPECTED_CALL_COUNT)
         assertThat(calls.count { it.target == collateral }).isEqualTo(EXPECTED_APPROVE_COUNT)
-        assertThat(calls.count { it.target == conditionalTokens }).isEqualTo(EXPECTED_SET_APPROVAL_COUNT)
+        assertThat(calls.count { it.target == conditionalTokens }).isEqualTo(EXPECTED_CONDITIONAL_TOKENS_COUNT)
+        assertThat(calls.count { it.target == positionManager }).isEqualTo(EXPECTED_POSITION_MANAGER_COUNT)
         assertThat(calls.map { it.value }.toSet()).containsExactly("0")
     }
 
@@ -89,9 +91,10 @@ internal class PolymarketApprovalCallsTest {
     )
 
     /**
-     * The set and the order Polymarket's own client writes on chain, read back from 80 consecutive
-     * deposit-wallet approval transactions on Polygon (all 80 identical) — an oracle outside our code, per
-     * the rule that a known-answer vector must come from the chain, the vendor or the backend.
+     * Calls 0–12 are the set and the order Polymarket's own client writes on chain, read back from 80 consecutive
+     * deposit-wallet approval transactions on Polygon (all 80 identical); calls 13–16 encode the V2 grants from
+     * the backend's client migration guide — oracles outside our code, per the rule that a known-answer vector
+     * must come from the chain, the vendor or the backend.
      */
     private fun provideTestModels() = listOf(
         CallModel(
@@ -172,12 +175,37 @@ internal class PolymarketApprovalCallsTest {
                 "00000000000000000000000012121212006e4cd160d18e3f00711da5c3372600" +
                 "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
         ),
+        CallModel(
+            index = 13, target = positionManager, spenderLabel = "exchangeV3",
+            data = "0xa22cb465" +
+                "000000000000000000000000e3333700ca9d93003f00f0f71f8515005f6c00aa" +
+                "0000000000000000000000000000000000000000000000000000000000000001",
+        ),
+        CallModel(
+            index = 14, target = positionManager, spenderLabel = "routerV3",
+            data = "0xa22cb465" +
+                "00000000000000000000000012121212006e4cd160d18e3f00711da5c3372600" +
+                "0000000000000000000000000000000000000000000000000000000000000001",
+        ),
+        CallModel(
+            index = 15, target = conditionalTokens, spenderLabel = "binaryModule",
+            data = "0xa22cb465" +
+                "0000000000000000000000001000008dd9001b968442c1000017eae6e0da00ba" +
+                "0000000000000000000000000000000000000000000000000000000000000001",
+        ),
+        CallModel(
+            index = 16, target = conditionalTokens, spenderLabel = "negRiskModule",
+            data = "0xa22cb465" +
+                "000000000000000000000000200000900045e3b6259600682756002200028933" +
+                "0000000000000000000000000000000000000000000000000000000000000001",
+        ),
     )
 
     private companion object {
-        const val EXPECTED_CALL_COUNT = 13
+        const val EXPECTED_CALL_COUNT = 17
         const val EXPECTED_APPROVE_COUNT = 8
-        const val EXPECTED_SET_APPROVAL_COUNT = 5
+        const val EXPECTED_CONDITIONAL_TOKENS_COUNT = 7
+        const val EXPECTED_POSITION_MANAGER_COUNT = 2
         const val BOTH_ALLOWANCE_KINDS = 2
         const val SELECTOR_HEX_LENGTH = 10
         const val WORD_HEX_LENGTH = 64

@@ -12,7 +12,6 @@ import com.tangem.features.mcp.api.deeplink.McpIntentDeepLinkHandler
 import com.tangem.features.mcp.impl.DefaultMcpComponentFactory
 import com.tangem.features.mcp.impl.deeplink.DefaultMcpDeepLinkHandler
 import com.tangem.features.mcp.impl.deeplink.DefaultMcpIntentDeepLinkHandler
-import com.tangem.features.mcp.impl.intent.model.McpIntentModel
 import com.tangem.features.mcp.impl.pair.model.McpPairModel
 import dagger.Binds
 import dagger.Module
@@ -73,9 +72,4 @@ internal interface ModelModule {
     @IntoMap
     @ClassKey(McpPairModel::class)
     fun provideModel(model: McpPairModel): Model
-
-    @Binds
-    @IntoMap
-    @ClassKey(McpIntentModel::class)
-    fun provideIntentModel(model: McpIntentModel): Model
 }

@@ -89,7 +89,7 @@ fun InputRowRecipient(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(TangemTheme.dimens.spacing12),
+                .padding(12.dp),
         ) {
             AnimatedContent(targetState = titleText, label = "Title Change") { title ->
                 Text(
@@ -101,11 +101,11 @@ fun InputRowRecipient(
             }
             Box(
                 modifier = Modifier
-                    .padding(top = TangemTheme.dimens.spacing8),
+                    .padding(top = 8.dp),
             ) {
                 Row(
                     verticalAlignment = CenterVertically,
-                    modifier = Modifier.heightIn(TangemTheme.dimens.size40),
+                    modifier = Modifier.heightIn(40.dp),
                 ) {
                     InputIcon(
                         isLoading = isLoading,
@@ -118,7 +118,7 @@ fun InputRowRecipient(
                         singleLine = singleLine,
                         isValuePasted = isValuePasted,
                         modifier = Modifier
-                            .padding(start = TangemTheme.dimens.spacing12)
+                            .padding(start = 12.dp)
                             .weight(1f)
                             .align(CenterVertically)
                             .testTag(SendAddressScreenTestTags.ADDRESS_TEXT_FIELD),
@@ -127,7 +127,7 @@ fun InputRowRecipient(
                         onClick = onClearClick,
                         modifier = Modifier
                             .align(CenterVertically)
-                            .padding(start = TangemTheme.dimens.spacing8)
+                            .padding(start = 8.dp)
                             .testTag(SendAddressScreenTestTags.CROSS_ICON),
                     )
                 }
@@ -146,7 +146,7 @@ fun InputRowRecipient(
                         backgroundColorEnabled = TangemTheme.colors.button.secondary,
                         textColor = TangemTheme.colors.text.primary1,
                         modifier = Modifier
-                            .padding(start = TangemTheme.dimens.spacing8)
+                            .padding(start = 8.dp)
                             .testTag(SendAddressScreenTestTags.ADDRESS_PASTE_BUTTON),
                     )
                 }
@@ -194,15 +194,15 @@ private fun RowScope.InputIcon(isLoading: Boolean, value: String) {
         label = "Indicator Show Change",
         modifier = Modifier
             .align(CenterVertically)
-            .clip(RoundedCornerShape(TangemTheme.dimens.radius18))
-            .size(TangemTheme.dimens.size36)
+            .clip(RoundedCornerShape(18.dp))
+            .size(36.dp)
             .background(TangemTheme.colors.background.tertiary),
     ) { showIndicator ->
         if (showIndicator) {
             CircularProgressIndicator(
                 color = TangemTheme.colors.icon.informative,
                 modifier = Modifier
-                    .padding(TangemTheme.dimens.spacing8),
+                    .padding(8.dp),
             )
         } else {
             IdentIcon(address = value)

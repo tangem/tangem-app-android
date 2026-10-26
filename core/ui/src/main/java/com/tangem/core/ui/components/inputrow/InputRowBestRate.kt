@@ -63,18 +63,18 @@ fun InputRowBestRate(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .padding(TangemTheme.dimens.spacing12)
+                .padding(12.dp)
                 .testTag(TransactionSuccessScreenTestTags.PROVIDER_BLOCK),
         ) {
             InputRowAsyncImage(
                 imageUrl = imageUrl,
                 modifier = Modifier
-                    .size(TangemTheme.dimens.spacing40)
+                    .size(40.dp)
                     .testTag(TransactionSuccessScreenTestTags.PROVIDER_ICON),
             )
             Column(
                 modifier = Modifier
-                    .padding(start = TangemTheme.dimens.spacing12),
+                    .padding(start = 12.dp),
             ) {
                 InnerTitle(
                     title = title,
@@ -95,7 +95,7 @@ fun InputRowBestRate(
                     contentDescription = null,
                     tint = TangemTheme.colors.icon.informative,
                     modifier = Modifier
-                        .padding(vertical = TangemTheme.dimens.spacing10)
+                        .padding(vertical = 10.dp)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = ripple(bounded = false),
@@ -120,7 +120,7 @@ private fun InnerTitle(title: TextReference, titleExtra: TextReference, showTag:
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
             modifier = Modifier
-                .padding(start = TangemTheme.dimens.spacing4),
+                .padding(start = 4.dp),
         )
         if (showTag) {
             Text(
@@ -128,12 +128,12 @@ private fun InnerTitle(title: TextReference, titleExtra: TextReference, showTag:
                 style = TangemTheme.typography.caption1,
                 color = TangemTheme.colors.icon.accent,
                 modifier = Modifier
-                    .padding(start = TangemTheme.dimens.spacing4)
+                    .padding(start = 4.dp)
                     .background(
                         color = TangemTheme.colors.icon.accent.copy(alpha = 0.1f),
-                        shape = RoundedCornerShape(TangemTheme.dimens.radius20),
+                        shape = RoundedCornerShape(20.dp),
                     )
-                    .padding(horizontal = TangemTheme.dimens.spacing6),
+                    .padding(horizontal = 6.dp),
             )
         }
     }

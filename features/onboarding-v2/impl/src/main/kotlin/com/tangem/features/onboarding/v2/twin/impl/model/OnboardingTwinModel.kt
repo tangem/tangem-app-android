@@ -1,7 +1,6 @@
 package com.tangem.features.onboarding.v2.twin.impl.model
 
 import com.tangem.utils.logging.TangemLogger
-import com.tangem.Message
 import com.tangem.common.CompletionResult
 import com.tangem.common.KeyPair
 import com.tangem.common.core.TangemError
@@ -85,7 +84,7 @@ internal class OnboardingTwinModel @Inject constructor(
             Mode.RecreateWallet -> {
                 OnboardingTwinUM.ResetWarning(
                     onAcceptClick = { toggle ->
-                        update<OnboardingTwinUM.ResetWarning> { it.copy(acceptToggle = toggle) }
+                        update<OnboardingTwinUM.ResetWarning> { it.copy(isAcceptToggled = toggle) }
                     },
                     onContinueClick = {
                         navigateToFirstScan()
@@ -118,10 +117,10 @@ internal class OnboardingTwinModel @Inject constructor(
 
     fun onBack() {
         val state = _uiState.value
-        val twinningInProgress = state is OnboardingTwinUM.ScanCard &&
+        val isTwinningInProgress = state is OnboardingTwinUM.ScanCard &&
             (state.step == OnboardingTwinUM.ScanCard.Step.Second || state.step == OnboardingTwinUM.ScanCard.Step.Third)
 
-        if (twinningInProgress) {
+        if (isTwinningInProgress) {
             uiMessageSender.send(TwinProcessNotCompleted)
         } else {
             uiMessageSender.send(
@@ -149,12 +148,6 @@ internal class OnboardingTwinModel @Inject constructor(
 
             val result = tangemSdkManager.createFirstTwinWallet(
                 cardId = params.scanResponse.card.cardId,
-                initialMessage = Message(
-                    tangemSdkManager.getString(
-                        R.string.twins_recreate_title_format,
-                        firstCardTwinNumber.number,
-                    ),
-                ),
             )
 
             when (result) {
@@ -209,23 +202,10 @@ internal class OnboardingTwinModel @Inject constructor(
     private fun createSecondWallet(firstPublicKey: String) {
         setLoading(true)
         modelScope.launch {
-            val secondCardNumber = firstCardTwinNumber.pairNumber().number
             val result = tangemSdkManager.createSecondTwinWallet(
                 firstPublicKey = firstPublicKey,
                 firstCardId = params.scanResponse.card.cardId,
                 issuerKeys = getIssuerKeys(),
-                preparingMessage = Message(
-                    tangemSdkManager.getString(R.string.twins_recreate_title_preparing),
-                ),
-                creatingWalletMessage = Message(
-                    tangemSdkManager.getString(R.string.twins_recreate_title_creating_wallet),
-                ),
-                initialMessage = Message(
-                    tangemSdkManager.getString(
-                        R.string.twins_recreate_title_format,
-                        secondCardNumber,
-                    ),
-                ),
             )
 
             when (result) {
@@ -276,12 +256,6 @@ internal class OnboardingTwinModel @Inject constructor(
                 secondCardPublicKey = secondCardPublicKey,
                 issuerKeyPair = getIssuerKeys(),
                 cardId = params.scanResponse.card.cardId,
-                initialMessage = Message(
-                    tangemSdkManager.getString(
-                        R.string.twins_recreate_title_format,
-                        firstCardTwinNumber.number,
-                    ),
-                ),
             )
 
             when (result) {
@@ -387,8 +361,10 @@ internal class OnboardingTwinModel @Inject constructor(
     }
 
     private suspend fun getIssuerKeys(): KeyPair {
+        val cardIssuer = params.scanResponse.card.issuer
+        val issuerPublicKey = cardIssuer.publicKey.toHexString()
         val issuer = issuersConfigStorage.getConfig()
-            .first { it.publicKey == params.scanResponse.card.issuer.publicKey.toHexString() }
+            .first { it.publicKey == issuerPublicKey }
 
         return KeyPair(
             publicKey = issuer.publicKey.hexToBytes(),

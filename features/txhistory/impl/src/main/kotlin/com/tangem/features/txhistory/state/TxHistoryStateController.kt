@@ -3,7 +3,6 @@ package com.tangem.features.txhistory.state
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.features.txhistory.entity.TxHistoryItemsUM
-import com.tangem.features.txhistory.entity.TxHistoryUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,13 +16,6 @@ import javax.inject.Inject
  */
 @ModelScoped
 internal class TxHistoryStateController @Inject constructor() {
-
-    /**
-     * Pre-redesign state. Kept only to satisfy consumers that still read the legacy UI (they are
-     * dead at runtime while the redesign is enabled); no longer populated.
-     */
-    val legacyUiState: StateFlow<TxHistoryUM> =
-        MutableStateFlow(TxHistoryUM.Loading(isBalanceHidden = true, onExploreClick = {})).asStateFlow()
 
     private val _uiState: MutableStateFlow<TxHistoryItemsUM> =
         MutableStateFlow(TxHistoryItemsUM.Loading(isBalanceHidden = true, onExploreClick = {}))

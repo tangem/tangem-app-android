@@ -45,6 +45,11 @@ internal class TxHistoryTitleConverter(private val currency: CryptoCurrency) {
         is TransactionType.Staking.Withdraw -> tx.pillTitle(WithdrawSpec)
         is TransactionType.YieldSupply.Enter -> tx.pillTitle(YieldEnterSpec)
         is TransactionType.YieldSupply.Exit -> tx.pillTitle(YieldExitSpec)
+        is TransactionType.IncentiveClaim -> if (currency is CryptoCurrency.Coin) {
+            tx.pillTitle(IncentiveClaimSpec)
+        } else {
+            tx.transferTitle(isOwnTransfer = false)
+        }
         // endregion
 
         // region Content

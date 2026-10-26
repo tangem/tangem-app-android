@@ -6,8 +6,6 @@ import arrow.core.toOption
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
-import com.tangem.core.configtoggle.FeatureToggles
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.swap.converter.SwapDataConverter
@@ -58,7 +56,6 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
     private val dataSignatureVerifier: DataSignatureVerifier,
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
-    private val featureTogglesManager: FeatureTogglesManager,
     private val walletManagersFacade: WalletManagersFacade,
     @NetworkMoshi moshi: Moshi,
 ) : SwapRepositoryV2 {
@@ -66,11 +63,6 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
     private val swapDataConverter = SwapDataConverter()
     private val tokenInfoConverter = TokenInfoConverter()
     private val txDetailsMoshiAdapter = moshi.adapter(TxDetails::class.java)
-
-    private val isExpressCategoriesGeoBlockingEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(
-            toggle = FeatureToggles.TWI_1643_EXPRESS_CATEGORIES_GEO_BLOCKING_ENABLED,
-        )
 
     override suspend fun getPairs(
         primarySwapCurrencyStatus: SwapCurrencyStatus,
@@ -297,7 +289,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             fromTokenAmount = fromTokenAmount,
             allowanceContract = response.allowanceContract,
             quoteId = response.quoteId,
-            isRestricted = response.isRestricted && isExpressCategoriesGeoBlockingEnabled,
+            isRestricted = response.isRestricted,
         )
     }
 

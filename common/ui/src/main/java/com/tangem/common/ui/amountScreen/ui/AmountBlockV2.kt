@@ -108,7 +108,7 @@ private fun AmountBlockV2(
                     onClick = requireNotNull(onClick),
                 )
             }
-            .padding(TangemTheme.dimens.spacing16),
+            .padding(16.dp),
     ) {
         Row {
             AccountTitle(accountTitleUM)

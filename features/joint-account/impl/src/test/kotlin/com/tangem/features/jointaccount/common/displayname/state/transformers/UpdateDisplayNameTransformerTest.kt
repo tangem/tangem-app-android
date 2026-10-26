@@ -89,7 +89,7 @@ internal class UpdateDisplayNameTransformerTest {
         return JointAccountDisplayNameUM(
             name = name,
             buttonText = buttonText,
-            buttonIconRes = null,
+            buttonIcon = null,
             isButtonEnabled = isButtonEnabled,
             isButtonLoading = false,
             onNameChange = onNameChange,

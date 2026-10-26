@@ -26,6 +26,7 @@ import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.GaslessYieldRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
+import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.raiseIllegalStateError
 import com.tangem.domain.utils.convertToSdkAmount
@@ -195,6 +196,7 @@ internal class TokenFeeCalculator(
             TransactionFeeExtended(
                 transactionFee = TransactionFee.Single(normal = fee),
                 feeTokenId = tokenForPayFee.id,
+                gaslessProtocolData = GaslessProtocolData.Evm,
                 // Per-call gas limits for the v2 gasless meta-tx (bound into the EIP-712 hash).
                 // Main = the user's transaction execution gas; withdraw = the appended yield-withdraw
                 // sub-call gas, present only on the yield path where a batch is built.

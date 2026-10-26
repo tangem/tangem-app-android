@@ -93,9 +93,9 @@ internal class TesterAccountsViewModel @Inject constructor(
                 isAccountsShown = false,
                 accounts = persistentListOf(),
                 onDismiss = {
-                    uiState.update {
-                        it.copy(
-                            accountListBottomSheetConfig = it.accountListBottomSheetConfig.copy(
+                    uiState.update { state ->
+                        state.copy(
+                            accountListBottomSheetConfig = state.accountListBottomSheetConfig.copy(
                                 isAccountsShown = false,
                             ),
                         )

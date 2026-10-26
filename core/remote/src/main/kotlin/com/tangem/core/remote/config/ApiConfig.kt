@@ -10,7 +10,6 @@ typealias ApiConfigs = Map<String, @JvmSuppressWildcards ApiConfig>
 [REDACTED_AUTHOR]
  */
 // Base type for configs declared in other modules; keep it a class, not an interface.
-@Suppress("UnnecessaryAbstractClass")
 abstract class ApiConfig {
 
     /** Default environment */
