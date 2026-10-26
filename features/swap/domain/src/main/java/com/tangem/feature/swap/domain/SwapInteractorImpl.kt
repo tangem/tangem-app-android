@@ -1357,7 +1357,8 @@ internal class SwapInteractorImpl @Inject constructor(
             )
         } else {
             // A TRX transfer the balance cannot cover is rejected by the node without burning anything.
-            if (fromSwapCurrencyStatus.currency is CryptoCurrency.Token &&
+            if (isTronNativeFeeAutoPicked() &&
+                fromSwapCurrencyStatus.currency is CryptoCurrency.Token &&
                 isTron(fromSwapCurrencyStatus.currency.network.rawId)
             ) {
                 checkTronNativeFeeAtDeposit(fromSwapCurrencyStatus = fromSwapCurrencyStatus, txData = txData)
@@ -1831,6 +1832,9 @@ internal class SwapInteractorImpl @Inject constructor(
             ),
         )
     }
+
+    private fun isTronNativeFeeAutoPicked(): Boolean =
+        swapFeatureToggles.isTronClientEnergyEnabled || swapFeatureToggles.isTronLowerFeeTypeEnabled
 
     /**
      * The shown fee was quoted earlier against a placeholder address; by now the account's energy or TRX may have
