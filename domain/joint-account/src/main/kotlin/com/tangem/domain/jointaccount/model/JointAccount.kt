@@ -14,8 +14,7 @@ import com.tangem.domain.models.StatusSource
  * @property members         taken slots, ordered by join time, the creator first. The app finds itself in the list
  * by comparing [Member.address] against the address derived from the card (lowercased), never by trusting the
  * backend. Free slots are `membersCount - members.size`
- * @property invites         the issued and unredeemed invites of a pending account, without their codes. Only the
- * creator receives them, and only while the account is pending; everyone else gets an empty list
+ * @property invites         issued, unredeemed invites without their codes; the creator of a pending account only
  * @property source          freshness of this data: [StatusSource.ACTUAL] right after a successful fetch,
  * [StatusSource.CACHE] when restored from persistence, [StatusSource.ONLY_CACHE] when a refresh failed
  * @property inFlightOperations the account's non-terminal operations keyed by chain — at most one per network
@@ -34,14 +33,11 @@ data class JointAccount(
     val inFlightOperations: Map<Long, JointOperation> = emptyMap(),
 ) {
 
-    /**
-     * The backend fills [Member.slot] only in the list it returns to the creator of a pending account. Who the creator
-     * is comes from [Member.role]; this only says whether the slot numbers are known.
-     */
+    /** The backend reveals [Member.slot] to the creator of a pending account only; the creator is [Member.role] */
     val hasRevealedSlots: Boolean
         get() = members.any { it.slot != null }
 
-    /** Slot numbers free to invite into: `1..membersCount - 1` minus the taken ones. Empty unless [hasRevealedSlots] */
+    /** `1..membersCount - 1` minus the taken ones; empty unless [hasRevealedSlots] */
     val freeSlots: List<Int>
         get() {
             if (!hasRevealedSlots) return emptyList()
@@ -65,8 +61,7 @@ data class JointAccount(
      * @property name     the member's display name, 1..25 chars
      * @property address  the member's owner address in the Safe, lower-case hex — compare case-insensitively
      * @property role     only the creator sends invites
-     * @property slot     `0` for the creator, the slot the member joined through otherwise; `null` whenever the
-     * backend withholds it — see [hasRevealedSlots]
+     * @property slot     `0` for the creator; `null` whenever the backend withholds it, see [hasRevealedSlots]
      * @property signature the member's confirmation signature, lower-case hex; `null` until the member confirms
      */
     data class Member(
