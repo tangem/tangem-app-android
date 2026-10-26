@@ -32,7 +32,7 @@ internal object SwapUtils {
                 formatArgs = wrappedList(expressError.code),
             )
             is ExpressError.ExchangeNotPossibleError -> resourceReference(
-                id = R.string.warning_express_pair_unavailable_message,
+                id = R.string.warning_express_pair_unavailable_message_v2,
                 formatArgs = wrappedList(expressError.code),
             )
             is ExpressError.UnknownError -> resourceReference(R.string.common_unknown_error)
