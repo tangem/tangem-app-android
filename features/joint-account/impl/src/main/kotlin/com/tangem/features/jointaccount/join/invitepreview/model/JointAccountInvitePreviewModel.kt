@@ -173,8 +173,6 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     private fun load(walletId: UserWalletId?) {
         loadJob?.cancel()
         loadJob = modelScope.launch {
-            // The answer is per wallet (409 when this wallet already holds a slot), but the account it previews is
-            // the same, so a pick in the selector refreshes the content in place instead of going back to the loader
             if (uiState.value !is JointAccountInvitePreviewUM.Content) {
                 stateController.update(SetLoadingTransformer(onCloseClick = ::onCloseClick))
             }
