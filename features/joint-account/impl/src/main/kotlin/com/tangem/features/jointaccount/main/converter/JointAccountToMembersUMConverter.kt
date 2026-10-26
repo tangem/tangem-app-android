@@ -9,7 +9,6 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.jointaccount.model.JointAccount
-import com.tangem.domain.jointaccount.model.JointAccountInvite
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
@@ -26,14 +25,9 @@ import kotlinx.collections.immutable.toImmutableList
 internal class JointAccountToMembersUMConverter(
     private val callbacks: Callbacks,
 ) : Converter<JointAccountToMembersUMConverter.Input, JointAccountMembersUM> {
-    /**
-     * @property invites    only the creating device ever receives them
-     * @property ownAddress `null` while the wallet's key is not derived yet
-     */
+    /** @property ownAddress `null` while the wallet's key is not derived yet */
     data class Input(
         val account: JointAccount,
-        val invites: List<JointAccountInvite>,
-        val sharedInvites: Set<String>,
         val ownAddress: String?,
         val accountName: AccountName? = null,
         val accountIcon: CryptoPortfolioIcon? = null,
@@ -46,17 +40,14 @@ internal class JointAccountToMembersUMConverter(
             name: TextReference,
             address: String,
         ) -> Unit,
-        val onInviteClick: (inviteId: String, accountName: TextReference) -> Unit,
         val onConfirmAddressClick: (cryptoAccountId: String) -> Unit,
         val onApprovalsInfoClick: (threshold: Int, total: Int) -> Unit,
         val onCloseClick: () -> Unit,
     )
 
-    private val freeSlotFactory = FreeSlotUMFactory(onInviteClick = callbacks.onInviteClick)
-
     override fun convert(value: Input): JointAccountMembersUM {
         val account = value.account
-        val phase = account.toPhase(ownAddress = value.ownAddress, invites = value.invites)
+        val phase = account.toPhase(ownAddress = value.ownAddress)
 
         val joined = account.members.mapIndexed { index, member ->
             joinedMember(
@@ -146,7 +137,7 @@ internal class JointAccountToMembersUMConverter(
                 hint = collectingHint(
                     phase = phase,
                     freeSlots = freeSlots,
-                    isAnyInviteShared = input.sharedInvites.isNotEmpty(),
+                    isAnyInviteIssued = account.invites.isNotEmpty() || account.members.size > 1,
                 ),
                 button = button,
             )
@@ -166,11 +157,11 @@ internal class JointAccountToMembersUMConverter(
         }
     }
 
-    /** "Invite K members" only before any invite was ever shared; a redeemed invite stays in the shared set */
+    /** "Invite K members" only before any invite was issued; a joined member counts, their invite left the list */
     private fun collectingHint(
         phase: MembersScreenPhase,
         freeSlots: List<MemberUM.FreeSlot>,
-        isAnyInviteShared: Boolean,
+        isAnyInviteIssued: Boolean,
     ): TextReference {
         if (freeSlots.isEmpty()) return resourceReference(CoreUiR.string.joint_account_invite_members_everyone_joined)
 
@@ -183,7 +174,7 @@ internal class JointAccountToMembersUMConverter(
             )
         }
 
-        val id = if (!isAnyInviteShared) {
+        val id = if (!isAnyInviteIssued) {
             CoreUiR.plurals.joint_account_invite_members_invite_count
         } else {
             CoreUiR.plurals.joint_account_invite_members_invite_more
@@ -228,20 +219,23 @@ internal class JointAccountToMembersUMConverter(
         )
     }
 
+    /**
+     * The creator sees the real slot numbers and draws the free ones by them; everyone else is told only how many
+     * members joined, so the free rows are numbered after the joined ones.
+     */
     private fun freeSlots(input: Input, phase: MembersScreenPhase): List<MemberUM.FreeSlot> {
         val account = input.account
-        val redeemedInvites = account.members
-            .mapNotNull { member -> member.inviteId?.lowercase() }
-            .toSet()
+        val slots = if (account.hasRevealedSlots) {
+            account.freeSlots
+        } else {
+            (account.members.size until account.membersCount).toList()
+        }
 
-        return freeSlotFactory.create(
+        return FreeSlotUMFactory().create(
             input = FreeSlotUMFactory.Input(
-                freeSlotsCount = (account.membersCount - account.members.size).coerceAtLeast(minimumValue = 0),
-                firstSlotNumber = account.members.size,
-                invites = input.invites.filterNot { invite -> invite.id.lowercase() in redeemedInvites },
-                sharedInvites = input.sharedInvites,
+                slots = slots,
+                invites = account.invites,
                 canInvite = phase.stage != MembersScreenPhase.Stage.Completed && phase.isThisDeviceCreator,
-                accountName = input.accountName?.toUM()?.value,
                 nowMillis = input.nowMillis,
             ),
         )
@@ -267,8 +261,8 @@ private data class MembersScreenPhase(
     }
 }
 
-/** Until the own address is derived, the invites the device holds mark the creator: only its device receives them */
-private fun JointAccount.toPhase(ownAddress: String?, invites: List<JointAccountInvite>): MembersScreenPhase {
+/** The creator is the member with that role; until the own address is derived, the revealed slots stand in */
+private fun JointAccount.toPhase(ownAddress: String?): MembersScreenPhase {
     val stage = when (status) {
         JointAccount.Status.PENDING -> MembersScreenPhase.Stage.Collecting
         JointAccount.Status.CONFIRMING -> MembersScreenPhase.Stage.Confirming
@@ -282,7 +276,7 @@ private fun JointAccount.toPhase(ownAddress: String?, invites: List<JointAccount
     val isThisDeviceCreator = if (ownAddress != null && creator != null) {
         creator.address.equals(ownAddress, ignoreCase = true)
     } else {
-        invites.isNotEmpty()
+        hasRevealedSlots
     }
 
     return MembersScreenPhase(
