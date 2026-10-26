@@ -48,6 +48,7 @@ internal class MoneyAccountDetailsStateFactory(
         onBackClick = onBackClick,
         onAddFundsClick = onAddFundsClick,
         onSendClick = onSendClick,
+        txHistoryCurrency = null,
     )
 
     fun createAccountState(account: MoneyAccountStatusValue.Account): MoneyAccountDetailsUM {
@@ -68,6 +69,7 @@ internal class MoneyAccountDetailsStateFactory(
                     isBalanceFlickering = account.source == StatusSource.CACHE,
                 )
             },
+            txHistoryCurrency = account.cryptoCurrency,
         )
     }
 }
