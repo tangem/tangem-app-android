@@ -102,8 +102,8 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
                     cryptoCurrency = cryptoCurrency,
                     balance = balance,
                     customerId = customerInfo.customerId,
-                    isBankOfframpAvailable = channels?.contains(TangemPayEligibilityType.BANK_OFFRAMP),
                     productInstanceId = instance.id,
+                    isBankOfframpAvailable = channels?.contains(TangemPayEligibilityType.BANK_OFFRAMP),
                 )
             }
             else -> MoneyAccountStatusValue.Onboarding.Activating(

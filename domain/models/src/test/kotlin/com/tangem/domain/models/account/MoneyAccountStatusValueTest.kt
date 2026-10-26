@@ -28,6 +28,7 @@ internal class MoneyAccountStatusValueTest {
         cryptoCurrency = cryptoCurrency,
         balance = balance,
         customerId = "customer",
+        productInstanceId = "instance",
     )
 
     @Test

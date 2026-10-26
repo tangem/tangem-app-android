@@ -96,6 +96,7 @@ internal fun activeMoneyAccount(
     cryptoCurrency = token,
     balance = balance,
     customerId = "cust_1",
+    productInstanceId = "instance-1",
     isBankOfframpAvailable = isBankOfframpAvailable,
 )
 
