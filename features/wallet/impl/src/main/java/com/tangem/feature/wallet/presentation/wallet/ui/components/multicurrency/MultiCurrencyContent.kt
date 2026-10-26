@@ -64,7 +64,6 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokensListItemUM2
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListUM
-import com.tangem.features.jointaccount.main.JointAccountMainBlockComponent
 import kotlinx.collections.immutable.ImmutableList
 
 /**
@@ -108,7 +107,6 @@ internal fun LazyListScope.tokensListItems(
  */
 internal fun LazyListScope.tokensListItems2(
     walletTokensListUM: WalletTokensListUM,
-    jointAccountComponent: JointAccountMainBlockComponent,
     modifier: Modifier = Modifier,
     isBalanceHidden: Boolean,
     isRedesignedAccountRowsEnabled: Boolean = false,
@@ -151,7 +149,6 @@ internal fun LazyListScope.tokensListItems2(
                     is TokensListItemUM2.JointPending -> jointPendingItem(
                         listItem = listItem,
                         index = index,
-                        jointAccountComponent = jointAccountComponent,
                         isBalanceHidden = isBalanceHidden,
                         modifier = modifier,
                     )
@@ -225,19 +222,19 @@ private fun LazyListScope.tokenItem(
 private fun LazyListScope.jointPendingItem(
     listItem: TokensListItemUM2.JointPending,
     index: Int,
-    jointAccountComponent: JointAccountMainBlockComponent,
     isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    with(jointAccountComponent) {
-        jointAccountMainContent(
-            key = listItem.accountId,
+    item(key = listItem.id, contentType = TokensListItemUM2.JointPending::class.java) {
+        TangemAccountRow(
+            avatar = listItem.avatar,
             state = listItem.state,
             isBalanceHidden = isBalanceHidden,
             modifier = modifier
                 .padding(top = if (index == 0) 12.dp else 8.dp)
                 .testTag(MainScreenTestTags.ACCOUNT_LIST_ITEM)
-                .semantics { lazyListItemPosition = index },
+                .semantics { lazyListItemPosition = index }
+                .animateContentSize(),
         )
     }
 }
