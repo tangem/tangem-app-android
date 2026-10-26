@@ -26,10 +26,10 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.*
-import kotlin.time.Duration.Companion.minutes
 
 /**
 [REDACTED_AUTHOR]
@@ -554,6 +554,34 @@ class DefaultAccountsCRUDRepositoryTest {
         }
 
         @Test
+        fun `GIVEN an archived collectibles record WHEN fetchArchivedAccounts THEN it is left out`() = runTest {
+            // Arrange
+            val accountDTO = WalletAccountDTO(
+                id = accountId.value,
+                name = "Archived Account",
+                derivationIndex = 0,
+                icon = CryptoPortfolioIcon.Icon.Wallet.name,
+                iconColor = CryptoPortfolioIcon.Color.DullLavender.name,
+                totalNetworks = 0,
+                totalTokens = 0,
+            )
+            val apiResponse = mockk<GetWalletArchivedAccountsResponse> {
+                every { this@mockk.accounts } returns listOf(accountDTO, collectiblesRecord())
+            }
+            coEvery { archivedAccountsETagStore.getSyncOrNull() } returns emptyMap()
+            coEvery {
+                walletAccountsApi.getArchivedAccounts(userWalletId.stringValue, null)
+            } returns ApiResponse.Success(apiResponse)
+
+            // Act
+            repository.fetchArchivedAccounts(userWalletId)
+
+            // Assert
+            Truth.assertThat(archivedAccountsStore.getSyncOrNull())
+                .containsExactly(ArchivedAccountConverter(userWalletId).convert(accountDTO))
+        }
+
+        @Test
         fun `fetchArchivedAccounts should throw exception if API returns error`() = runTest {
             // Arrange
             val eTag = "etag123"
@@ -766,6 +794,17 @@ class DefaultAccountsCRUDRepositoryTest {
                 accountsResponseStore.data
             }
         }
+    }
+
+    private fun collectiblesRecord(): WalletAccountDTO {
+        return WalletAccountDTO(
+            id = AccountId.forCollectiblesAccount(userWalletId = userWalletId).value,
+            name = "Collectibles",
+            derivationIndex = DerivationIndex.Collectibles.value,
+            icon = CryptoPortfolioIcon.Icon.Package.name,
+            iconColor = CryptoPortfolioIcon.Color.Azure.name,
+            type = WalletAccountDTO.Type.COLLECTIBLES,
+        )
     }
 
     private companion object {
