@@ -33,16 +33,16 @@ fun SimpleDialogTextField(
     placeholder: String? = null,
 ) {
     val strokeColor = if (isError) {
-        TangemTheme.colors.icon.warning
+        TangemTheme.colors3.icon.accent.red
     } else {
-        TangemTheme.colors.stroke.primary
+        TangemTheme.colors3.border.secondary
     }
     Column {
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
             textStyle = TangemTheme.typography.body1,
-            cursorBrush = SolidColor(TangemTheme.colors.text.primary1),
+            cursorBrush = SolidColor(TangemTheme.colors3.text.primary),
             singleLine = true,
             readOnly = !isEnabled,
             modifier = Modifier
@@ -69,7 +69,7 @@ fun SimpleDialogTextField(
                             Text(
                                 text = placeholder,
                                 style = TangemTheme.typography.body1,
-                                color = TangemTheme.colors.text.disabled,
+                                color = TangemTheme.colors3.text.tertiary,
                             )
                         }
                     }
@@ -86,7 +86,7 @@ fun SimpleDialogTextField(
                 Text(
                     text = errorText,
                     style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.warning,
+                    color = TangemTheme.colors3.text.accent.red,
                     modifier = Modifier
                         .padding(
                             horizontal = 24.dp,

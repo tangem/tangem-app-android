@@ -38,7 +38,7 @@ internal fun OnrampSelectToken(
     LazyColumn(
         modifier = modifier
             .nestedScroll(nestedScrollConnection)
-            .background(TangemTheme.colors.background.secondary)
+            .background(TangemTheme.colors3.bg.primary)
             .imePadding()
             .systemBarsPadding()
             .testTag(BuyTokenScreenTestTags.LAZY_LIST),
@@ -48,7 +48,7 @@ internal fun OnrampSelectToken(
                 onBackClick = state.onBackClick,
                 text = stringResourceSafe(id = state.titleResId),
                 iconRes = R.drawable.ic_close_24,
-                containerColor = TangemTheme.colors.background.secondary,
+                containerColor = TangemTheme.colors3.bg.primary,
             )
         }
 

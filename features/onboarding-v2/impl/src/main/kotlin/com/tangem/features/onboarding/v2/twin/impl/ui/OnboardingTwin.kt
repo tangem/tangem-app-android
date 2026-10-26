@@ -76,7 +76,7 @@ private fun ResetWarning(state: OnboardingTwinUM.ResetWarning, modifier: Modifie
         ) {
             Text(
                 text = stringResourceSafe(R.string.common_warning),
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 textAlign = TextAlign.Center,
                 style = TangemTheme.typography.h2,
             )
@@ -85,7 +85,7 @@ private fun ResetWarning(state: OnboardingTwinUM.ResetWarning, modifier: Modifie
 
             Text(
                 text = stringResourceSafe(R.string.twins_recreate_warning),
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
                 style = TangemTheme.typography.body1,
             )
@@ -115,7 +115,7 @@ private fun ResetWarning(state: OnboardingTwinUM.ResetWarning, modifier: Modifie
                             tint = if (checked) {
                                 TangemTheme.colors.control.checked
                             } else {
-                                TangemTheme.colors.icon.secondary
+                                TangemTheme.colors3.icon.secondary
                             },
                         )
                     }
@@ -123,7 +123,7 @@ private fun ResetWarning(state: OnboardingTwinUM.ResetWarning, modifier: Modifie
 
                 Text(
                     text = stringResourceSafe(R.string.common_understand),
-                    color = TangemTheme.colors.text.secondary,
+                    color = TangemTheme.colors3.text.secondary,
                     textAlign = TextAlign.Center,
                     style = TangemTheme.typography.body1,
                 )
@@ -157,7 +157,7 @@ private fun ScanCard(state: OnboardingTwinUM.ScanCard, modifier: Modifier = Modi
         ) {
             Text(
                 text = stringResourceSafe(R.string.twins_recreate_title_format, state.cardNumber),
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 textAlign = TextAlign.Center,
                 style = TangemTheme.typography.h2,
             )
@@ -166,7 +166,7 @@ private fun ScanCard(state: OnboardingTwinUM.ScanCard, modifier: Modifier = Modi
 
             Text(
                 text = stringResourceSafe(R.string.onboarding_twins_interrupt_warning),
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
                 style = TangemTheme.typography.body1,
             )
@@ -200,7 +200,7 @@ private fun Welcome(state: OnboardingTwinUM.Welcome, modifier: Modifier = Modifi
         ) {
             Text(
                 text = stringResourceSafe(R.string.twins_onboarding_subtitle),
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 textAlign = TextAlign.Center,
                 style = TangemTheme.typography.h2,
             )
@@ -209,7 +209,7 @@ private fun Welcome(state: OnboardingTwinUM.Welcome, modifier: Modifier = Modifi
 
             Text(
                 text = stringResourceSafe(R.string.twins_onboarding_description_format, state.pairCardNumber),
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
                 style = TangemTheme.typography.body1,
             )

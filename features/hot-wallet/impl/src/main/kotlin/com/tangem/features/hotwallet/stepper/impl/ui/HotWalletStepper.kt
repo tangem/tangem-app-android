@@ -55,7 +55,7 @@ internal fun HotWalletStepper(
                 null
             },
             title = state.title,
-            containerColor = TangemTheme.colors.background.primary,
+            containerColor = TangemTheme.colors3.bg.primary,
             titleAlignment = Alignment.CenterHorizontally,
         )
 
@@ -65,8 +65,8 @@ internal fun HotWalletStepper(
                 .height(4.dp)
                 .fillMaxWidth(),
             progress = { animatedIndicatorFraction },
-            color = TangemTheme.colors.icon.primary1,
-            backgroundColor = TangemTheme.colors.icon.primary1.copy(alpha = 0.4f),
+            color = TangemTheme.colors3.icon.primary,
+            backgroundColor = TangemTheme.colors3.icon.primary.copy(alpha = 0.4f),
             strokeCap = StrokeCap.Round,
         )
     }
@@ -80,7 +80,7 @@ private fun HotWalletStepper_Preview() {
         Box(
             Modifier
                 .fillMaxSize()
-                .background(TangemTheme.colors.background.primary),
+                .background(TangemTheme.colors3.bg.primary),
         ) {
             HotWalletStepper(
                 modifier = Modifier.align(Alignment.TopCenter),

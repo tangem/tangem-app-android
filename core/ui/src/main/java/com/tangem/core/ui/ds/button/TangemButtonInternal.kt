@@ -65,7 +65,7 @@ internal fun TangemButtonInternal(
     isEnabled: Boolean = true,
     isLoading: Boolean = false,
     hasPadding: Boolean = true,
-    contentColor: Color = TangemTheme.colors2.text.neutral.primary,
+    contentColor: Color = TangemTheme.colors3.text.primary,
     size: TangemButtonSize = TangemButtonSize.X15,
     onLongClick: (() -> Unit)? = null,
 ) {
@@ -168,7 +168,7 @@ private fun ButtonContent(
             Text(
                 text = wrappedText.resolveReference(),
                 style = textStyle,
-                color = TangemTheme.colors2.text.status.disabled,
+                color = TangemTheme.colors3.text.tertiary,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -199,7 +199,7 @@ private fun Modifier.buttonClickable(isEnabled: Boolean, onClick: () -> Unit, on
 private inline fun ProvideButtonRippleConfiguration(crossinline content: @Composable () -> Unit) {
     CompositionLocalProvider(
         LocalRippleConfiguration provides RippleConfiguration(
-            color = TangemTheme.colors2.overlay.overlaySecondary,
+            color = TangemTheme.colors3.overlay.modal,
             RippleAlpha(
                 pressedAlpha = 0.4f,
                 focusedAlpha = 0.4f,

@@ -32,13 +32,13 @@ internal fun LazyListScope.swapMarketsListItems(state: SwapMarketState) {
             text = buildAnnotatedString {
                 append(state.marketsTitle.resolveReference())
                 if (totalCount != null && state.shouldAssetsCount) {
-                    withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
+                    withStyle(SpanStyle(color = TangemTheme.colors3.text.secondary)) {
                         append(" $totalCount")
                     }
                 }
             },
             style = TangemTheme.typography2.headingSemibold20,
-            color = TangemTheme.colors2.text.neutral.primary,
+            color = TangemTheme.colors3.text.primary,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         )
     }
@@ -79,7 +79,7 @@ internal fun LazyListScope.swapMarketsListItems(state: SwapMarketState) {
                     modifier = Modifier.roundedShapeItemDecoration(
                         currentIndex = index,
                         lastIndex = state.items.lastIndex,
-                        backgroundColor = TangemTheme.colors.background.primary,
+                        backgroundColor = TangemTheme.colors3.bg.secondary,
                     ),
                 )
             }
@@ -135,7 +135,7 @@ private fun SearchNothingFoundText(modifier: Modifier = Modifier) {
         Text(
             text = stringResourceSafe(R.string.markets_search_token_no_result_title),
             style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
     }
 }

@@ -19,7 +19,7 @@ internal fun regionUnavailableBottomSheet(
 ) = bottomSheetMessage {
     val contactSupportLink = styledResourceReference(
         id = R.string.common_contact_support,
-        spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.primary) },
+        spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.primary) },
         onClick = onContactSupportClick,
     )
     infoBlock {

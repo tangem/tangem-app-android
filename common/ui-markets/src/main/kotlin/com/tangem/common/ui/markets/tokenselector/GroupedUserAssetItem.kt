@@ -23,7 +23,7 @@ import com.tangem.core.ui.res.TangemTheme
 fun GroupedUserAssetItem(item: UserAssetItemUM.Grouped, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.background(
-            color = TangemTheme.colors2.surface.level3,
+            color = TangemTheme.colors3.bg.secondary,
             shape = RoundedCornerShape(20.dp),
         ),
     ) {
@@ -42,7 +42,7 @@ fun GroupedUserAssetItem(item: UserAssetItemUM.Grouped, modifier: Modifier = Mod
                     modifier = Modifier.layoutId(TangemRowLayoutId.START_TOP),
                     text = item.tokenName,
                     style = TangemTheme.typography2.bodyMedium16,
-                    color = TangemTheme.colors2.text.neutral.primary,
+                    color = TangemTheme.colors3.text.primary,
                     maxLines = 1,
                     overflow = TextOverflow.MiddleEllipsis,
                 )
@@ -51,7 +51,7 @@ fun GroupedUserAssetItem(item: UserAssetItemUM.Grouped, modifier: Modifier = Mod
                     modifier = Modifier.layoutId(TangemRowLayoutId.START_BOTTOM),
                     text = pluralStringResourceSafe(R.plurals.common_tokens_count, item.tokensCount, item.tokensCount),
                     style = TangemTheme.typography2.captionMedium12,
-                    color = TangemTheme.colors2.text.neutral.secondary,
+                    color = TangemTheme.colors3.text.secondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -70,7 +70,7 @@ fun GroupedUserAssetItem(item: UserAssetItemUM.Grouped, modifier: Modifier = Mod
                         type = TangemButtonType.Secondary,
                         tangemIconUM = TangemIconUM.Icon(
                             iconRes = R.drawable.ic_chevron_24,
-                            tintReference = { TangemTheme.colors2.graphic.neutral.primary },
+                            tintReference = { TangemTheme.colors3.icon.primary },
                         ),
                         shape = TangemButtonShape.Rounded,
                         size = TangemButtonSize.X10,

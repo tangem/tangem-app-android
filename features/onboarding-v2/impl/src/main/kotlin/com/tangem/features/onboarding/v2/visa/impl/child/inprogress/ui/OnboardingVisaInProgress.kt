@@ -57,7 +57,7 @@ internal fun OnboardingVisaInProgress(
             Text(
                 text = stringResourceSafe(R.string.visa_onboarding_in_progress_title),
                 style = TangemTheme.typography.h2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 textAlign = TextAlign.Center,
             )
             SpacerH12()
@@ -69,7 +69,7 @@ internal fun OnboardingVisaInProgress(
                         stringResourceSafe(R.string.visa_onboarding_in_progress_issuer_description)
                 },
                 style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
             )
         }

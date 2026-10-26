@@ -25,14 +25,14 @@ import com.tangem.features.addressbook.list.ui.state.AddressBookChipUM
 @Composable
 internal fun AddressBookChip(state: AddressBookChipUM, modifier: Modifier = Modifier) {
     val backgroundColor = if (state.isSelected) {
-        TangemTheme.colors2.tabs.backgroundPrimary
+        TangemTheme.colors3.bg.inverse
     } else {
-        TangemTheme.colors2.tabs.backgroundSecondary
+        TangemTheme.colors3.bg.transparent.secondary
     }
     val textColor = if (state.isSelected) {
-        TangemTheme.colors2.tabs.textPrimary
+        TangemTheme.colors3.text.inverse.primary
     } else {
-        TangemTheme.colors2.tabs.textSecondary
+        TangemTheme.colors3.text.secondary
     }
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -61,7 +61,7 @@ internal fun AddressBookChip(state: AddressBookChipUM, modifier: Modifier = Modi
                     .size(20.dp),
                 painter = painterResource(id = state.iconRes),
                 contentDescription = null,
-                tint = TangemTheme.colors2.graphic.neutral.tertiaryConstant,
+                tint = TangemTheme.colors3.icon.secondary,
             )
         }
     }

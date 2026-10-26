@@ -72,7 +72,7 @@ fun PinTextField(
         singleLine = true,
         textStyle = TangemTheme.typography.body1,
         maxLines = 1,
-        cursorBrush = SolidColor(TangemTheme.colors.text.primary1),
+        cursorBrush = SolidColor(TangemTheme.colors3.text.primary),
         decorationBox = { innerTextField ->
             Box(modifier = Modifier.width(0.dp)) {
                 innerTextField()
@@ -136,19 +136,19 @@ private fun CellDecoration(
             val color = when (pinTextColor) {
                 PinTextColor.Primary -> {
                     if (isPasswordVisual) {
-                        TangemTheme.colors.icon.informative
+                        TangemTheme.colors3.icon.secondary
                     } else {
-                        TangemTheme.colors.text.primary1
+                        TangemTheme.colors3.text.primary
                     }
                 }
-                PinTextColor.WrongCode -> TangemTheme.colors.icon.warning
-                PinTextColor.Success -> TangemTheme.colors.icon.accent
+                PinTextColor.WrongCode -> TangemTheme.colors3.icon.accent.red
+                PinTextColor.Success -> TangemTheme.colors3.icon.accent.blue
             }
 
             Box(
                 modifier = Modifier
                     .background(
-                        color = TangemTheme.colors.field.primary,
+                        color = TangemTheme.colors3.bg.tertiary,
                         shape = RoundedCornerShape(8.dp),
                     ),
                 contentAlignment = Alignment.Center,

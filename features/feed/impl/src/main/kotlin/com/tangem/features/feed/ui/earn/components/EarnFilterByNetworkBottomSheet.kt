@@ -192,7 +192,7 @@ private fun PreviewV2() {
     TangemThemePreviewRedesign(
         alwaysShowBottomSheets = true,
     ) {
-        Box(Modifier.background(TangemTheme.colors.background.secondary)) {
+        Box(Modifier.background(TangemTheme.colors3.bg.primary)) {
             EarnFilterByNetworkBottomSheet(
                 TangemBottomSheetConfig(
                     isShown = true,
