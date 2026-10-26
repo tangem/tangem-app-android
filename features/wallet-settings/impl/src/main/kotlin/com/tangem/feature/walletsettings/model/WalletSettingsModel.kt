@@ -115,6 +115,7 @@ internal class WalletSettingsModel @Inject constructor(
     val bottomSheetNavigation: SlotNavigation<WalletSettingsBSConfig> = SlotNavigation()
 
     private val upgradeJobHolder = JobHolder()
+    private val forgetWalletJobHolder = JobHolder()
 
     private val isJointAccountEnabled: Boolean
         get() = jointAccountFeatureToggles.isJointAccountEnabled
@@ -162,7 +163,11 @@ internal class WalletSettingsModel @Inject constructor(
                 .distinctUntilChanged()
                 .conflate(),
             flow2 = walletCardItemDelegate.cardItemFlow(wallet),
-            flow3 = accountItemsDelegate.loadAccount(wallet, onAddAccountClick = ::onAddAccountClick),
+            flow3 = accountItemsDelegate.loadAccount(
+                wallet = wallet,
+                onAddAccountClick = ::onAddAccountClick,
+                pushRoute = ::pushRoute,
+            ),
             flow4 = isWalletBackedUpUseCase.flow(wallet),
             flow5 = isSocialWalletFlow(wallet),
         ) { nftEnabled, cardItem, accountList, isWalletBackedUp, isSocialWallet ->
@@ -254,7 +259,7 @@ internal class WalletSettingsModel @Inject constructor(
             onReferralClick = { onReferralClick(userWallet) },
             onManageTokensClick = {
                 analyticsEventHandler.send(Settings.ButtonManageTokens())
-                router.push(
+                pushRoute(
                     AppRoute.ManageTokens(
                         source = Source.SETTINGS,
                         accountId = AccountId.forMainCryptoPortfolio(userWalletId = userWallet.walletId),
@@ -270,40 +275,50 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onNotificationSettingsClick() {
-        router.push(AppRoute.PushNotificationSettings(userWalletId = params.userWalletId))
+        pushRoute(AppRoute.PushNotificationSettings(userWalletId = params.userWalletId))
     }
 
-    private fun forgetWallet(onForgotten: () -> Unit = {}) = modelScope.launch {
-        val userWallet = getUserWalletUseCase(params.userWalletId)
-            .getOrNull()
+    private fun forgetWallet(onForgotten: () -> Unit = {}) {
+        if (forgetWalletJobHolder.isActive) return
+        upgradeJobHolder.cancel()
 
-        if (userWallet is UserWallet.Hot) {
-            startAssetsDiscoveryUseCase.cancel(params.userWalletId)
-        }
+        modelScope.launch {
+            val userWallet = getUserWalletUseCase(params.userWalletId)
+                .getOrNull()
 
-        val hasUserWallets = deleteWalletUseCase(params.userWalletId).getOrElse { error ->
-            TangemLogger.e("Unable to delete wallet: $error")
+            if (userWallet is UserWallet.Hot) {
+                startAssetsDiscoveryUseCase.cancel(params.userWalletId)
+            }
 
-            messageSender.send(
-                message = SnackbarMessage(resourceReference(R.string.common_unknown_error)),
-            )
+            val hasUserWallets = deleteWalletUseCase(params.userWalletId).getOrElse { error ->
+                TangemLogger.e("Unable to delete wallet: $error")
 
-            return@launch
-        }
+                messageSender.send(
+                    message = SnackbarMessage(resourceReference(R.string.common_unknown_error)),
+                )
 
-        onForgotten()
+                return@launch
+            }
 
-        if (hasUserWallets) {
-            router.pop()
-        } else {
-            router.replaceAll(AppRoute.Home(entryReason = AppRoute.Home.EntryReason.LastWalletForgotten))
-        }
+            onForgotten()
+
+            if (hasUserWallets) {
+                router.pop()
+            } else {
+                router.replaceAll(AppRoute.Home(entryReason = AppRoute.Home.EntryReason.LastWalletForgotten))
+            }
+        }.saveIn(forgetWalletJobHolder)
+    }
+
+    private fun pushRoute(route: AppRoute) {
+        if (forgetWalletJobHolder.isActive) return
+        router.push(route)
     }
 
     private fun onLinkMoreCardsClick(scanResponse: ScanResponse) {
         trackingContextProxy.addContext(scanResponse)
 
-        router.push(
+        pushRoute(
             AppRoute.Onboarding(
                 scanResponse = scanResponse,
                 mode = AppRoute.Onboarding.Mode.AddBackupWallet1,
@@ -377,7 +392,7 @@ internal class WalletSettingsModel @Inject constructor(
                 DialogMessage(message = resourceReference(R.string.alert_demo_feature_disabled)),
             )
         } else {
-            router.push(AppRoute.ReferralProgram(userWallet.walletId))
+            pushRoute(AppRoute.ReferralProgram(userWallet.walletId))
         }
     }
 
@@ -389,7 +404,7 @@ internal class WalletSettingsModel @Inject constructor(
                 showMakeBackupAtFirstAlertBS(userWallet)
             } else {
                 unlockWalletIfNeedAndProceed { _ ->
-                    router.push(
+                    pushRoute(
                         route = AppRoute.UpdateAccessCode(
                             userWalletId = params.userWalletId,
                             source = AnalyticsParam.ScreensSources.WalletSettings.value,
@@ -401,6 +416,8 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onUpgradeWalletClick() {
+        if (forgetWalletJobHolder.isActive) return
+
         modelScope.launch {
             hardwareUpgradeLauncher.launch(
                 userWalletId = params.userWalletId,
@@ -416,7 +433,7 @@ internal class WalletSettingsModel @Inject constructor(
 
     private fun onBackupClick() {
         analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonBackup())
-        router.push(
+        pushRoute(
             AppRoute.WalletBackup(
                 userWalletId = params.userWalletId,
                 isColdWalletOptionShown = false,
@@ -425,7 +442,7 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onCardSettingsClick() {
-        router.push(AppRoute.CardSettings(params.userWalletId))
+        pushRoute(AppRoute.CardSettings(params.userWalletId))
     }
 
     private fun showMakeBackupAtFirstAlertBS(userWallet: UserWallet.Hot) {
@@ -435,7 +452,7 @@ internal class WalletSettingsModel @Inject constructor(
                     source = AnalyticsParam.ScreensSources.WalletSettings.value,
                     action = WalletSettingsAnalyticEvents.NoticeBackupFirst.Action.AccessCode,
                     cloudBackupState = resolveCloudBackupState(userWallet),
-                    isBackedUp = manualBackupState(userWallet.backedUp),
+                    isBackedUp = manualBackupState(userWallet.isBackedUp),
                     isSocialBackedUp = socialBackupState(),
                 ),
             )
@@ -452,7 +469,7 @@ internal class WalletSettingsModel @Inject constructor(
             primaryButton {
                 text = resourceReference(R.string.hw_backup_need_action)
                 onClick {
-                    router.push(
+                    pushRoute(
                         AppRoute.WalletBackup(
                             userWalletId = params.userWalletId,
                             isColdWalletOptionShown = false,
@@ -490,6 +507,8 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onAddAccountClick(isAddCryptoAccountEnabled: Boolean, isAddJointAccountEnabled: Boolean) {
+        if (forgetWalletJobHolder.isActive) return
+
         if (isJointAccountEnabled) {
             bottomSheetNavigation.activate(
                 WalletSettingsBSConfig.AddAccountType(
@@ -516,7 +535,7 @@ internal class WalletSettingsModel @Inject constructor(
         analyticsEventHandler.send(JointAccountAnalyticsEvent.ButtonCreateJointAccount(source = source))
         bottomSheetNavigation.dismiss()
         if (isEnabled) {
-            router.push(AppRoute.JointAccountCreation(userWalletId = params.userWalletId, source = source))
+            pushRoute(AppRoute.JointAccountCreation(userWalletId = params.userWalletId, source = source))
         } else {
             analyticsEventHandler.send(JointAccountAnalyticsEvent.NoticeAccountsLimitReached(LimitSource.Create))
             accountItemsDelegate.canNotAddAccountDialog()
@@ -524,7 +543,7 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun openCreateCryptoAccount() {
-        router.push(AppRoute.CreateAccount(params.userWalletId))
+        pushRoute(AppRoute.CreateAccount(params.userWalletId))
     }
 
     private fun onAccountReorder(fromIndex: Int, toIndex: Int) {
@@ -582,7 +601,7 @@ internal class WalletSettingsModel @Inject constructor(
             event = WalletSettingsAnalyticEvents.ForgetWalletRequest(
                 source = AnalyticsParam.ScreensSources.WalletSettings.value,
                 cloudBackupState = resolveCloudBackupState(userWallet),
-                isBackedUp = userWallet.backedUp,
+                isBackedUp = userWallet.isBackedUp,
             ),
         )
 
@@ -621,14 +640,14 @@ internal class WalletSettingsModel @Inject constructor(
                 secondaryButton {
                     text = resourceReference(R.string.hw_remove_wallet_forget_and_delete_backup)
                     onClick {
-                        router.push(AppRoute.ForgetWallet(userWallet.walletId, shouldDeleteCloudBackup = true))
+                        pushRoute(AppRoute.ForgetWallet(userWallet.walletId, shouldDeleteCloudBackup = true))
                         closeBs()
                     }
                 }
                 primaryButton {
                     text = resourceReference(R.string.hw_remove_wallet_action_forget_title)
                     onClick {
-                        router.push(AppRoute.ForgetWallet(userWallet.walletId, shouldDeleteCloudBackup = false))
+                        pushRoute(AppRoute.ForgetWallet(userWallet.walletId, shouldDeleteCloudBackup = false))
                         closeBs()
                     }
                 }
@@ -673,7 +692,7 @@ internal class WalletSettingsModel @Inject constructor(
                     secondaryButton {
                         text = resourceReference(R.string.hw_remove_wallet_notification_action_forget)
                         onClick {
-                            router.push(AppRoute.ForgetWallet(userWallet.walletId))
+                            pushRoute(AppRoute.ForgetWallet(userWallet.walletId))
                             closeBs()
                         }
                     }
@@ -681,19 +700,19 @@ internal class WalletSettingsModel @Inject constructor(
                     secondaryButton {
                         text = resourceReference(R.string.hw_remove_wallet_notification_action_forget_anyway)
                         onClick {
-                            router.push(AppRoute.ForgetWallet(userWallet.walletId))
+                            pushRoute(AppRoute.ForgetWallet(userWallet.walletId))
                             closeBs()
                         }
                     }
                 }
                 // The seed phrase itself only when it was saved: a social-only wallet has no phrase the user
                 // has seen, so it goes to the backup options instead.
-                if (userWallet.backedUp) {
+                if (userWallet.isBackedUp) {
                     primaryButton {
                         text = resourceReference(R.string.hw_remove_wallet_notification_action_backup_view_v2)
                         onClick {
                             unlockWalletIfNeedAndProceed {
-                                router.push(AppRoute.ViewPhrase(userWallet.walletId))
+                                pushRoute(AppRoute.ViewPhrase(userWallet.walletId))
                             }
                             closeBs()
                         }
@@ -702,7 +721,7 @@ internal class WalletSettingsModel @Inject constructor(
                     primaryButton {
                         text = resourceReference(R.string.hw_remove_wallet_notification_action_backup_go)
                         onClick {
-                            router.push(
+                            pushRoute(
                                 AppRoute.WalletBackup(
                                     userWalletId = userWallet.walletId,
                                     isColdWalletOptionShown = false,
@@ -761,16 +780,16 @@ internal class WalletSettingsModel @Inject constructor(
                 secondaryButton {
                     text = resourceReference(R.string.social_wallet_delete_anyway)
                     onClick {
-                        router.push(AppRoute.ForgetWallet(userWallet.walletId, shouldDeleteSocialRecovery = true))
+                        pushRoute(AppRoute.ForgetWallet(userWallet.walletId, shouldDeleteSocialRecovery = true))
                         closeBs()
                     }
                 }
-                if (userWallet.backedUp) {
+                if (userWallet.isBackedUp) {
                     primaryButton {
                         text = resourceReference(R.string.hw_remove_wallet_notification_action_backup_view_v2)
                         onClick {
                             unlockWalletIfNeedAndProceed {
-                                router.push(AppRoute.ViewPhrase(userWallet.walletId))
+                                pushRoute(AppRoute.ViewPhrase(userWallet.walletId))
                             }
                             closeBs()
                         }
@@ -779,7 +798,7 @@ internal class WalletSettingsModel @Inject constructor(
                     primaryButton {
                         text = resourceReference(R.string.hw_remove_wallet_notification_action_backup_go)
                         onClick {
-                            router.push(
+                            pushRoute(
                                 AppRoute.WalletBackup(
                                     userWalletId = userWallet.walletId,
                                     isColdWalletOptionShown = false,

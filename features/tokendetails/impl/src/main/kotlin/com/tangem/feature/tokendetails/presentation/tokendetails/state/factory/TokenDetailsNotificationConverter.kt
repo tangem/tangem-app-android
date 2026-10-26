@@ -71,7 +71,7 @@ internal class TokenDetailsNotificationConverter(
                 networkName = warning.coinCurrency.network.name,
                 feeCurrencyName = warning.coinCurrency.name,
                 feeCurrencySymbol = warning.coinCurrency.symbol,
-                mergeFeeNetworkName = warning.coinCurrency.shouldMergeFeeNetworkName(),
+                shouldMergeFeeNetworkName = warning.coinCurrency.shouldMergeFeeNetworkName(),
                 onBuyClick = { clickIntents.onBuyCoinClick(warning.coinCurrency) },
             )
             is CryptoCurrencyWarning.CustomTokenNotEnoughForFee -> {
@@ -82,7 +82,7 @@ internal class TokenDetailsNotificationConverter(
                         networkName = feeCurrency.network.name,
                         feeCurrencyName = warning.feeCurrencyName,
                         feeCurrencySymbol = warning.feeCurrencySymbol,
-                        mergeFeeNetworkName = warning.currency.shouldMergeFeeNetworkName(),
+                        shouldMergeFeeNetworkName = warning.currency.shouldMergeFeeNetworkName(),
                         onBuyClick = { clickIntents.onBuyCoinClick(feeCurrency) },
                     )
                 } else {

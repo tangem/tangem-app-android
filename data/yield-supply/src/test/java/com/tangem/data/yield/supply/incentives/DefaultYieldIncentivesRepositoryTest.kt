@@ -29,6 +29,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -42,33 +43,6 @@ internal class DefaultYieldIncentivesRepositoryTest {
     @BeforeEach
     fun resetMocks() {
         clearMocks(api)
-    }
-
-    @Test
-    fun `GIVEN 400 response WHEN getIncentives THEN feature absent`() = runTest {
-        // Arrange
-        val repository = createRepository(testScope = this)
-        coEvery { api.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS) } returns badRequest()
-
-        // Act
-        val actual = repository.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS)
-
-        // Assert
-        assertThat(actual).isEqualTo(YieldIncentivesError.FeatureAbsent.left())
-    }
-
-    @Test
-    fun `GIVEN network error WHEN getIncentives THEN unavailable`() = runTest {
-        // Arrange
-        val repository = createRepository(testScope = this)
-        coEvery { api.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS) } returns
-            networkError()
-
-        // Act
-        val actual = repository.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS)
-
-        // Assert
-        assertThat(actual).isEqualTo(YieldIncentivesError.Unavailable.left())
     }
 
     @Test
@@ -279,6 +253,119 @@ internal class DefaultYieldIncentivesRepositoryTest {
         coVerify(exactly = 1) { api.getClaimHistory(chainId = CHAIN_ID, userAddress = ADDRESS) }
     }
 
+    @Test
+    fun `GIVEN cached user data WHEN invalidateUserCache THEN both endpoints are fetched again`() = runTest {
+        // Arrange
+        val repository = createRepository(testScope = this)
+        coEvery { api.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS) } returns
+            success(incentivesResponse())
+        coEvery { api.getClaimHistory(chainId = CHAIN_ID, userAddress = ADDRESS) } returns
+            success(YieldClaimHistoryResponse(chainId = CHAIN_ID, claims = null))
+        repository.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS)
+        repository.getClaimHistory(chainId = CHAIN_ID, userAddress = ADDRESS)
+
+        // Act
+        repository.invalidateUserCache(chainId = CHAIN_ID, userAddress = ADDRESS.uppercase())
+        repository.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS)
+        repository.getClaimHistory(chainId = CHAIN_ID, userAddress = ADDRESS)
+
+        // Assert
+        coVerify(exactly = 2) { api.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS) }
+        coVerify(exactly = 2) { api.getClaimHistory(chainId = CHAIN_ID, userAddress = ADDRESS) }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ErrorResponses {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN an error response WHEN an endpoint is called THEN it maps to the domain error`(model: ErrorModel) =
+            runTest {
+                // Arrange
+                val repository = createRepository(testScope = this)
+                model.endpoint.stub(api, model.cause)
+
+                // Act
+                val actual = model.endpoint.call(repository)
+
+                // Assert
+                assertThat(actual).isEqualTo(model.expected.left())
+            }
+
+        private fun provideTestModels() = endpoints().flatMap { endpoint ->
+            listOf(
+                ErrorModel(endpoint, ApiResponseError.NetworkException(), YieldIncentivesError.Unavailable),
+                ErrorModel(
+                    endpoint = endpoint,
+                    cause = httpError(ApiResponseError.HttpException.Code.INTERNAL_SERVER_ERROR),
+                    expected = YieldIncentivesError.Unavailable,
+                ),
+                ErrorModel(
+                    endpoint = endpoint,
+                    cause = httpError(ApiResponseError.HttpException.Code.BAD_REQUEST),
+                    expected = YieldIncentivesError.FeatureAbsent,
+                ),
+            )
+        }
+
+        private fun endpoints() = listOf(
+            Endpoint(
+                name = "getIncentives",
+                stub = { api, cause ->
+                    coEvery {
+                        api.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS)
+                    } returns errorResponse(cause)
+                },
+                call = { it.getIncentives(chainId = CHAIN_ID, userAddress = ADDRESS) },
+            ),
+            Endpoint(
+                name = "getAprHistory",
+                stub = { api, cause ->
+                    coEvery {
+                        api.getAprHistory(chainId = CHAIN_ID, tokenAddress = TOKEN, days = 30)
+                    } returns errorResponse(cause)
+                },
+                call = { it.getAprHistory(chainId = CHAIN_ID, tokenAddress = TOKEN, days = 30) },
+            ),
+            Endpoint(
+                name = "getClaimCalldata",
+                stub = { api, cause ->
+                    coEvery {
+                        api.getClaimCalldata(chainId = CHAIN_ID, userAddress = ADDRESS)
+                    } returns errorResponse(cause)
+                },
+                call = { it.getClaimCalldata(chainId = CHAIN_ID, userAddress = ADDRESS) },
+            ),
+            Endpoint(
+                name = "getClaimHistory",
+                stub = { api, cause ->
+                    coEvery {
+                        api.getClaimHistory(chainId = CHAIN_ID, userAddress = ADDRESS)
+                    } returns errorResponse(cause)
+                },
+                call = { it.getClaimHistory(chainId = CHAIN_ID, userAddress = ADDRESS) },
+            ),
+        )
+
+        private fun httpError(code: ApiResponseError.HttpException.Code) =
+            ApiResponseError.HttpException(code = code, message = null, errorBody = null)
+    }
+
+    internal data class Endpoint(
+        val name: String,
+        val stub: (YieldIncentivesApi, ApiResponseError) -> Unit,
+        val call: suspend (YieldIncentivesRepository) -> Either<YieldIncentivesError, Any>,
+    ) {
+        override fun toString(): String = name
+    }
+
+    internal data class ErrorModel(
+        val endpoint: Endpoint,
+        val cause: ApiResponseError,
+        val expected: YieldIncentivesError,
+    )
+
     private fun createRepository(testScope: TestScope, isMerklIncentivesEnabled: Boolean = true) =
         DefaultYieldIncentivesRepository(
             api = api,
@@ -303,8 +390,6 @@ internal class DefaultYieldIncentivesRepositoryTest {
             errorBody = null,
         ),
     )
-
-    private fun <T : Any> networkError(): ApiResponse<T> = errorResponse(ApiResponseError.NetworkException())
 
     @Suppress("UNCHECKED_CAST")
     private fun <T : Any> errorResponse(cause: ApiResponseError): ApiResponse<T> =

@@ -9,6 +9,7 @@ internal fun SocialRecoveryError.toDomainError(): SocialLoginError = when (this)
     SocialRecoveryError.BindingConflict -> SocialLoginError.BindingConflict
     // the backend has no dedicated code for an expired nonce, so it reads as any other server failure
     SocialRecoveryError.NonceExpired,
+    SocialRecoveryError.WalletNotRegistered,
     SocialRecoveryError.NoActiveSession,
     SocialRecoveryError.DeviceKeyUnavailable,
     -> SocialLoginError.ServerError()

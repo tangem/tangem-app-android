@@ -437,7 +437,7 @@ private fun FeeValueContent(preDot: TextReference, postDot: TextReference?, elli
                 color = textColor,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
-                    .padding(horizontal = TangemTheme.dimens.spacing4)
+                    .padding(horizontal = 4.dp)
                     .testTag(SelectNetworkFeeBottomSheetTestTags.DOT_SIGN),
             )
             Text(

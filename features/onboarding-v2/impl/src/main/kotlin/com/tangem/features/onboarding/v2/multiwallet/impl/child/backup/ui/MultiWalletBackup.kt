@@ -44,7 +44,7 @@ fun MultiWalletBackup(state: MultiWalletBackupUM, modifier: Modifier = Modifier)
             dismissButton = if (dialog.cancelText != null && dialog.onCancel != null) {
                 DialogButtonUM(
                     title = dialog.cancelText.resolveReference(),
-                    isWarning = dialog.warningCancelColor,
+                    isWarning = dialog.isWarningCancelColor,
                     onClick = dialog.onCancel,
                 )
             } else {
@@ -87,8 +87,8 @@ private fun ColumnScope.Content(state: MultiWalletBackupUM) {
             .padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
             .fillMaxWidth(),
         iconResId = R.drawable.ic_tangem_24,
-        enabled = state.addBackupButtonEnabled,
-        showProgress = state.addBackupButtonLoading,
+        enabled = state.isAddBackupButtonEnabled,
+        showProgress = state.isAddBackupButtonLoading,
         text = stringResourceSafe(R.string.onboarding_button_add_backup_card),
         onClick = state.onAddBackupClick,
     )
@@ -98,7 +98,7 @@ private fun ColumnScope.Content(state: MultiWalletBackupUM) {
             .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
             .fillMaxWidth(),
         text = stringResourceSafe(R.string.onboarding_button_finalize_backup),
-        enabled = state.finalizeButtonEnabled,
+        enabled = state.isFinalizeButtonEnabled,
         onClick = state.onFinalizeButtonClick,
     )
 }

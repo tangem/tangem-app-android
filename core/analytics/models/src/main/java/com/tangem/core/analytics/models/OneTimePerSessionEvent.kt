@@ -9,8 +9,6 @@ package com.tangem.core.analytics.models
  * - **null** (default): One time per session — event is sent only once during the application session.
  * - **non-null**: Time-based throttling — event is not sent if less than [throttleSeconds] seconds
  *   have passed since the last send for this [oneTimeEventId].
- *
- * @see Analytics.send
  */
 interface OneTimePerSessionEvent {
     /**

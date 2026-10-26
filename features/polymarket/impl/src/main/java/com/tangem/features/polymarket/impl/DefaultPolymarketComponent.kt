@@ -115,6 +115,7 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
                 userWalletId = configuration.userWalletId,
                 marketId = configuration.marketId,
                 assetId = configuration.assetId,
+                categoryLabel = configuration.categoryLabel,
             ),
         )
         is PolymarketRoute.PlacePrediction -> PlacePredictionComponent(

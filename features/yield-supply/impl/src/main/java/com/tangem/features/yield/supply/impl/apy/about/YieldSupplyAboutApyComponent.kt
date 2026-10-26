@@ -19,14 +19,14 @@ internal class YieldSupplyAboutApyComponent(
     override fun BottomSheet() {
         YieldSupplyAboutApyContent(
             baseApy = params.baseApy,
-            rewardsApr = params.rewardsApr,
+            rewardsApy = params.rewardsApy,
             onDismiss = params.onDismiss,
         )
     }
 
     data class Params(
         val baseApy: BigDecimal,
-        val rewardsApr: BigDecimal,
+        val rewardsApy: BigDecimal,
         val onDismiss: () -> Unit,
     )
 }

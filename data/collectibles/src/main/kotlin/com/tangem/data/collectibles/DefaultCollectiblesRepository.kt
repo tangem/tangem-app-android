@@ -1,5 +1,8 @@
 package com.tangem.data.collectibles
 
+import com.tangem.data.collectibles.converter.CollectibleBuybackOfferConverter
+import com.tangem.data.collectibles.converter.CollectibleBuybackStatusConverter
+import com.tangem.data.collectibles.converter.CollectibleBuybackTxConverter
 import com.tangem.data.collectibles.converter.MachineCategoriesConverter
 import com.tangem.data.collectibles.converter.MachineConverter
 import com.tangem.data.collectibles.converter.MachineNftConverter
@@ -19,7 +22,9 @@ import com.tangem.domain.collectibles.models.*
 import com.tangem.domain.collectibles.repository.CollectiblesRepository
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.grow.datasource.collectibles.CollectiblesApi
+import com.tangem.grow.datasource.collectibles.models.request.BuybackTxSentRequestBody
 import com.tangem.grow.datasource.collectibles.models.request.CollectibleTxRequestBody
+import com.tangem.grow.datasource.collectibles.models.request.GenerateBuybackDataRequestBody
 import com.tangem.grow.datasource.collectibles.models.request.GeneratePurchaseTxRequestBody
 import com.tangem.grow.datasource.collectibles.models.request.PurchaseTxSentRequestBody
 import com.tangem.grow.datasource.collectibles.models.response.CollectibleTxResponse
@@ -140,6 +145,57 @@ internal class DefaultCollectiblesRepository @Inject constructor(
                 body = CollectibleTxRequestBody(txId = txId),
                 includeNftWon = true,
             ).getOrThrow().toState()
+        }
+
+    override suspend fun getBuybackOffer(userWalletId: UserWalletId, nftAddress: String): CollectibleBuybackOffer? =
+        withContext(dispatchers.io) {
+            val response = collectiblesApi.getBuybackAvailability(
+                userWalletId = userWalletId.stringValue,
+                nftAddress = nftAddress,
+            ).getOrThrow()
+
+            CollectibleBuybackOfferConverter.convert(response)
+        }
+
+    override suspend fun generateBuybackTx(
+        userWalletId: UserWalletId,
+        params: GenerateBuybackTxParams,
+    ): CollectibleBuybackTx = withContext(dispatchers.io) {
+        val response = errorResolver.getOrThrow(
+            collectiblesApi.generateBuybackData(
+                userWalletId = userWalletId.stringValue,
+                body = GenerateBuybackDataRequestBody(
+                    fromAddress = params.fromAddress,
+                    nftAddress = params.nftAddress,
+                    toAddress = params.toAddress,
+                ),
+            ),
+        )
+
+        CollectibleBuybackTxConverter.convert(response)
+    }
+
+    override suspend fun reportBuybackTxSent(
+        userWalletId: UserWalletId,
+        buybackId: String,
+        txHash: String,
+    ): CollectibleBuybackStatus = withContext(dispatchers.io) {
+        val response = collectiblesApi.buybackTxSent(
+            userWalletId = userWalletId.stringValue,
+            body = BuybackTxSentRequestBody(buybackId = buybackId, txHash = txHash),
+        ).getOrThrow()
+
+        CollectibleBuybackStatusConverter.convert(response.status)
+    }
+
+    override suspend fun getBuybackStatus(userWalletId: UserWalletId, buybackId: String): CollectibleBuybackStatus =
+        withContext(dispatchers.io) {
+            val response = collectiblesApi.getBuybackStatus(
+                userWalletId = userWalletId.stringValue,
+                buybackId = buybackId,
+            ).getOrThrow()
+
+            CollectibleBuybackStatusConverter.convert(response.status)
         }
 
     private fun CollectibleTxResponse.toState() = CollectibleTxState(

@@ -39,12 +39,14 @@ data class SwapCurrencyStatus(
 
 /**
  * Whether the account can receive a swap but never fund one: it holds its currency at an address of an
- * integration's own, so the wallet has no key that could spend it. A prediction withdrawal is the exception —
- * there the debit is not signed with a wallet key but submitted as a signed batch through our backend, so the
- * account is the source.
+ * integration's own, so the wallet has no key that could spend it. The Money account is target-only by product
+ * rule instead: its address is the wallet's own, but spending from it is not offered yet. A prediction withdrawal
+ * is the exception — there the debit is not signed with a wallet key but submitted as a signed batch through our
+ * backend, so the account is the source.
  *
  * @param isPredictionWithdraw whether the swap screen was opened to withdraw from the prediction account
  */
 fun Account.isSwapTargetOnly(isPredictionWithdraw: Boolean): Boolean = this is Account.Joint ||
     this is Account.Collectibles ||
+    this is Account.Money ||
     this is Account.Prediction && !isPredictionWithdraw

@@ -29,7 +29,7 @@ private fun detailsCases(): Map<String, Content> {
             ),
             metrics = positive.metrics.copy(
                 priceChanges = stringReference("64¢ → 57¢"),
-                unrealizedPnl = stringReference("−$87.50"),
+                unrealizedPnl = pnl("−$87.50", TangemPriceChange.Direction.Down),
             ),
         ),
         "Unchanged P&L" to positive.copy(
@@ -39,7 +39,7 @@ private fun detailsCases(): Map<String, Content> {
             ),
             metrics = positive.metrics.copy(
                 priceChanges = stringReference("64¢ → 64¢"),
-                unrealizedPnl = stringReference("$0.00"),
+                unrealizedPnl = pnl("$0.00", TangemPriceChange.Direction.Neutral),
             ),
         ),
         "Partially sold" to positive.copy(metrics = positive.metrics.copy(realizedPnl = stringReference("+$420.00"))),
@@ -60,7 +60,7 @@ private fun detailsCases(): Map<String, Content> {
             ),
             metrics = positive.metrics.copy(
                 quantity = stringReference("1,250,000.00"),
-                unrealizedPnl = stringReference("+$87,500.00"),
+                unrealizedPnl = pnl("+$87,500.00", TangemPriceChange.Direction.Up),
             ),
             information = positive.information.copy(invested = stringReference("$800,000.00")),
         ),
@@ -109,7 +109,7 @@ private fun positionDetails() = Content.Data(
     metrics = PolymarketPositionDetailsUM.Metrics(
         quantity = stringReference("1,250.00"),
         priceChanges = stringReference("64¢ → 71¢"),
-        unrealizedPnl = stringReference("+$87.50"),
+        unrealizedPnl = pnl("+$87.50", TangemPriceChange.Direction.Up),
         realizedPnl = stringReference("$0.00"),
     ),
     information = PolymarketPositionDetailsUM.Information(

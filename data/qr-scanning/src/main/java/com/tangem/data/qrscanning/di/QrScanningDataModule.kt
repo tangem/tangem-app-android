@@ -6,6 +6,7 @@ import com.tangem.data.qrscanning.parser.QrContentClassifierParser
 import com.tangem.data.qrscanning.parser.SolanaPaymentUriParser
 import com.tangem.data.qrscanning.parser.TronPaymentUriParser
 import com.tangem.data.qrscanning.repository.DefaultQrScanningEventsRepository
+import com.tangem.domain.qrscanning.QrDeepLinkMatcher
 import com.tangem.domain.qrscanning.repository.QrScanningEventsRepository
 import dagger.Module
 import dagger.Provides
@@ -19,7 +20,7 @@ internal object QrScanningDataModule {
 
     @Provides
     @Singleton
-    fun provideQrScanningEventsRepository(): QrScanningEventsRepository {
+    fun provideQrScanningEventsRepository(deepLinkMatcher: QrDeepLinkMatcher): QrScanningEventsRepository {
         val blockchainDataProvider = QrContentClassifierParser.DefaultBlockchainDataProvider()
         return DefaultQrScanningEventsRepository(
             qrContentClassifierParser = QrContentClassifierParser(
@@ -30,6 +31,7 @@ internal object QrScanningDataModule {
                     SolanaPaymentUriParser(blockchainDataProvider),
                     Bip321PaymentUriParser(blockchainDataProvider),
                 ),
+                deepLinkMatcher = deepLinkMatcher,
             ),
         )
     }

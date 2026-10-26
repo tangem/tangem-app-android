@@ -23,6 +23,7 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.serialization)
+    implementation(deps.androidx.datastore)
     implementation(deps.androidx.activity)
 
     implementation(deps.okHttp)
