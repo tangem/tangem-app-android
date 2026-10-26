@@ -23,11 +23,6 @@ class WalletConnectPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         useUnmergedTree = true
     }
 
-    val walletName: KNode = child {
-        hasTestTag(WalletConnectScreenTestTags.WALLET_NAME)
-        useUnmergedTree = true
-    }
-
     val appIcon: KNode = child {
         hasTestTag(WalletConnectScreenTestTags.APP_ICON)
         useUnmergedTree = true

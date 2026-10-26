@@ -21,9 +21,10 @@ internal class PushDeeplinkPolicyTest {
     data class Model(val scheme: String?, val host: String?, val expected: Boolean)
 
     private fun provideTestModels() = listOf(
-        // Blocked — the sell redirect (Send prefill) and WalletConnect pairing
+        // Blocked — the sell redirect (Send prefill), WalletConnect pairing and MCP agent authorization
         Model(scheme = "tangem", host = "redirect_sell", expected = false),
         Model(scheme = "tangem", host = "wc", expected = false),
+        Model(scheme = "tangem", host = "mcp.authorization", expected = false),
         Model(scheme = "wc", host = null, expected = false),
         Model(scheme = "wc", host = "anything", expected = false),
         Model(scheme = "WC", host = null, expected = false),
@@ -39,6 +40,7 @@ internal class PushDeeplinkPolicyTest {
         Model(scheme = "tangem", host = "onboard-visa", expected = true),
         Model(scheme = "tangem", host = "survey", expected = true),
         Model(scheme = "tangem", host = "pay-app-main", expected = true),
+        Model(scheme = "tangem", host = "intent", expected = true),
         Model(scheme = "https", host = "tangem.com", expected = true),
         // Allowed — this policy only denies the sensitive routes above. An unknown host is not harmless on its
         // own any more: for a push it now reaches DeepLinkFactory's web fallback, where the host allowlist

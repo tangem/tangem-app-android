@@ -11,6 +11,8 @@ android {
     namespace = "com.tangem.data.swap"
 }
 dependencies {
+    implementation(projects.core.local)
+    implementation(projects.core.remote)
 
     // region Kotlin
     implementation(deps.kotlin.coroutines)
@@ -55,6 +57,7 @@ dependencies {
     api(projects.domain.swap)
     implementation(projects.domain.core)
     implementation(projects.domain.tokens)
+    implementation(projects.domain.walletManager)
     runtimeOnly(projects.domain.staking)
     runtimeOnly(projects.domain.wallets)
     // endregion

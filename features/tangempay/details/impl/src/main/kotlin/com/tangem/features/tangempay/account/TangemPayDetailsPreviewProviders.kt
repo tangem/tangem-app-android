@@ -2,7 +2,6 @@ package com.tangem.features.tangempay.account
 
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
@@ -13,6 +12,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.styledStringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_down_24
 import com.tangem.core.ui.res.generated.icons.ic_error_20
 import com.tangem.domain.models.pay.TangemPayCardType
 import com.tangem.features.tangempay.details.impl.R
@@ -34,11 +34,10 @@ internal class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<T
                 actionButtons = persistentListOf(
                     TangemPayActionButtonUM(
                         action = TangemPayAction.AddFunds,
-                        config = ActionButtonConfig(
-                            text = resourceReference(id = R.string.common_receive),
-                            iconResId = R.drawable.ic_arrow_down_24,
-                            onClick = {},
-                        ),
+                        text = resourceReference(id = R.string.common_receive),
+                        icon = TangemIconUM.Icon(imageVector = Icons.ic_arrow_down_24),
+                        onClick = {},
+                        isEnabled = true,
                     ),
                 ),
                 fiatBalance = combinedReference(

@@ -1,7 +1,9 @@
 package com.tangem.spend.datasource.pay.models.response
 
-import com.squareup.moshi.Json
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class CardBalanceResponse(
-    @Json(name = "result") val result: BalanceResponse?,
+    @SerialName("result") val result: BalanceResponse?,
 )

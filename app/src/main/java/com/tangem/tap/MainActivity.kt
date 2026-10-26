@@ -60,6 +60,7 @@ import com.tangem.google.auth.GoogleAuthActivityResultBridge
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.sdk.api.TangemSdkManager
+import com.tangem.spend.pushProvisioning.PushProvisioningActivityBridge
 import com.tangem.tap.common.ActivityResultCallbackHolder
 import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.analytics.events.Push
@@ -70,6 +71,7 @@ import com.tangem.tap.features.main.MainViewModel
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.utils.DeepLinkFactory
+import com.tangem.tap.routing.utils.DeepLinkFeatureToggles
 import com.tangem.tap.routing.utils.DeeplinkSource
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -92,10 +94,6 @@ internal var lockUserWalletsTimer: LockUserWalletsTimer? = null
 private val coroutineContext: CoroutineContext
     get() = SupervisorJob() + Dispatchers.IO + FeatureCoroutineExceptionHandler.create("scope")
 val scope = CoroutineScope(coroutineContext)
-
-private val mainCoroutineContext: CoroutineContext
-    get() = SupervisorJob() + Dispatchers.Main + FeatureCoroutineExceptionHandler.create("mainScope")
-val mainScope = CoroutineScope(mainCoroutineContext)
 
 @Suppress("LargeClass")
 @AndroidEntryPoint
@@ -155,6 +153,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     internal lateinit var deeplinkFactory: DeepLinkFactory
 
     @Inject
+    internal lateinit var deepLinkFeatureToggles: DeepLinkFeatureToggles
+
+    @Inject
     internal lateinit var testerMenuLauncher: TesterMenuLauncher
 
     @Inject
@@ -171,6 +172,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     internal lateinit var googleAuthActivityResultBridge: Lazy<GoogleAuthActivityResultBridge>
+
+    @Inject
+    internal lateinit var pushProvisioningActivityBridge: PushProvisioningActivityBridge
 
     @Inject
     internal lateinit var hotWalletFeatureToggles: HotWalletFeatureToggles
@@ -297,12 +301,17 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         lockUserWalletsTimer = LockUserWalletsTimer(
             context = this,
             settingsRepository = settingsRepository,
-            coroutineScope = mainScope,
+            // Rethrows like the former global main scope: a failure must not leave the wallets unlocked
+            coroutineScope = appScope +
+                dispatchers.main +
+                FeatureCoroutineExceptionHandler.create(from = "lockUserWalletsTimer"),
             userWalletsListRepository = userWalletsListRepository,
             clearAllHotWalletContextualUnlockUseCase = clearAllHotWalletContextualUnlockUseCase,
             passwordRequester = passwordRequester,
             appRouter = appRouter,
         )
+
+        pushProvisioningActivityBridge.attach(activity = this)
 
         if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
             // registerForActivityResult unregisters itself on destroy; the bridge is the only holder
@@ -380,6 +389,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
             googleAuthActivityResultBridge.get().unregisterLauncher()
         }
+        pushProvisioningActivityBridge.detach(activity = this)
         // workaround: kill process when activity destroy to avoid state when lock() wallets
         // and navigation to unlock screen was skipped because system kills activity but not process
         if (BuildConfig.BUILD_TYPE != MOCKED_BUILD_TYPE) {
@@ -428,7 +438,8 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        onActivityResultCallbacks.forEach { it(requestCode, resultCode, data) }
+        pushProvisioningActivityBridge.onActivityResult(requestCode = requestCode, resultCode = resultCode, data = data)
+        onActivityResultCallbacks.toList().forEach { it(requestCode, resultCode, data) }
     }
 
     override fun addOnActivityResultCallback(callback: OnActivityResultCallback) {
@@ -470,8 +481,11 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
                 launchDeepLink(externalDeepLink, isFromOnNewIntent, DeeplinkSource.External)
             // A deep link reconstructed from a notification payload must pass the push policy. If it is
             // present but blocked, stop — there is deliberately no second chance for the same payload.
+            // With the handler registry the policy is applied by the handlers themselves.
             extrasDeepLink != null ->
-                if (PushDeeplinkPolicy.isOpenableFromPush(scheme = extrasDeepLink.scheme, host = extrasDeepLink.host)) {
+                if (deepLinkFeatureToggles.isHandlerRegistryEnabled ||
+                    PushDeeplinkPolicy.isOpenableFromPush(scheme = extrasDeepLink.scheme, host = extrasDeepLink.host)
+                ) {
                     launchDeepLink(extrasDeepLink, isFromOnNewIntent, DeeplinkSource.Push)
                 }
         }

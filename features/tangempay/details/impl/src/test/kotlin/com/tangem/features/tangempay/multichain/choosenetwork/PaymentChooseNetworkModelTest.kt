@@ -17,6 +17,7 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.CreatePaymentNetworkContractUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.features.tangempay.OUTCOME_UNKNOWN_ERRORS
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -34,6 +35,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import kotlin.time.Duration.Companion.seconds
 
 internal class PaymentChooseNetworkModelTest {
@@ -67,7 +70,7 @@ internal class PaymentChooseNetworkModelTest {
     fun `GIVEN NotIssued row tapped WHEN contract creation is in flight THEN row shows Loading and reentry is guarded`() =
         runTest {
             // Arrange
-            coEvery { createContractUseCase(WALLET_ID, polygon) } coAnswers { awaitCancellation() }
+            coEvery { createContractUseCase(WALLET_ID, polygon, any()) } coAnswers { awaitCancellation() }
             val model = createModel(testScope = this)
             statusFlow.emit(paymentStatus(listOf(notIssued)))
             advanceUntilIdle()
@@ -80,7 +83,7 @@ internal class PaymentChooseNetworkModelTest {
 
             // Assert
             assertThat(model.uiState.value.fastWay.single().state).isEqualTo(PaymentNetworkItemUM.State.Loading)
-            coVerify(exactly = 1) { createContractUseCase(WALLET_ID, polygon) }
+            coVerify(exactly = 1) { createContractUseCase(WALLET_ID, polygon, any()) }
             model.onDestroy()
         }
 
@@ -88,7 +91,7 @@ internal class PaymentChooseNetworkModelTest {
     fun `GIVEN contract creation fails WHEN NotIssued row tapped THEN row shows Error and retry re-invokes use case`() =
         runTest {
             // Arrange
-            coEvery { createContractUseCase(WALLET_ID, polygon) } returns VisaApiError.Unspecified.left()
+            coEvery { createContractUseCase(WALLET_ID, polygon, any()) } returns VisaApiError.Unspecified.left()
             val model = createModel(testScope = this)
             statusFlow.emit(paymentStatus(listOf(notIssued)))
             advanceUntilIdle()
@@ -107,7 +110,7 @@ internal class PaymentChooseNetworkModelTest {
             advanceUntilIdle()
 
             // Assert
-            coVerify(exactly = 2) { createContractUseCase(WALLET_ID, polygon) }
+            coVerify(exactly = 2) { createContractUseCase(WALLET_ID, polygon, any()) }
             model.onDestroy()
         }
 
@@ -115,7 +118,7 @@ internal class PaymentChooseNetworkModelTest {
     fun `GIVEN row is Loading WHEN network becomes Available THEN override cleared and Receive auto-opens`() =
         runTest {
             // Arrange
-            coEvery { createContractUseCase(WALLET_ID, polygon) } returns Unit.right()
+            coEvery { createContractUseCase(WALLET_ID, polygon, any()) } returns Unit.right()
             val model = createModel(testScope = this)
             statusFlow.emit(paymentStatus(listOf(notIssued)))
             advanceUntilIdle()
@@ -141,7 +144,7 @@ internal class PaymentChooseNetworkModelTest {
     fun `GIVEN contract created WHEN network never flips to Available THEN row shows Error after pending timeout`() =
         runTest {
             // Arrange
-            coEvery { createContractUseCase(WALLET_ID, polygon) } returns Unit.right()
+            coEvery { createContractUseCase(WALLET_ID, polygon, any()) } returns Unit.right()
             val model = createModel(testScope = this)
             statusFlow.emit(paymentStatus(listOf(notIssued)))
             advanceUntilIdle()
@@ -193,7 +196,7 @@ internal class PaymentChooseNetworkModelTest {
     @Test
     fun `GIVEN NotIssued row WHEN tapped THEN it is reported as a Fast Way click too`() = runTest {
         // Arrange
-        coEvery { createContractUseCase(WALLET_ID, polygon) } coAnswers { awaitCancellation() }
+        coEvery { createContractUseCase(WALLET_ID, polygon, any()) } coAnswers { awaitCancellation() }
         val model = createModel(testScope = this)
         statusFlow.emit(paymentStatus(listOf(notIssued)))
         advanceUntilIdle()
@@ -242,7 +245,7 @@ internal class PaymentChooseNetworkModelTest {
     fun `GIVEN contract creation keeps failing WHEN row tapped and retried THEN every error display is reported`() =
         runTest {
             // Arrange
-            coEvery { createContractUseCase(WALLET_ID, polygon) } returns VisaApiError.Unspecified.left()
+            coEvery { createContractUseCase(WALLET_ID, polygon, any()) } returns VisaApiError.Unspecified.left()
             val model = createModel(testScope = this)
             statusFlow.emit(paymentStatus(listOf(notIssued)))
             advanceUntilIdle()
@@ -261,6 +264,100 @@ internal class PaymentChooseNetworkModelTest {
             }
             model.onDestroy()
         }
+
+    @ParameterizedTest
+    @MethodSource(OUTCOME_UNKNOWN_ERRORS)
+    fun `GIVEN outcome unknown WHEN the row is retried THEN the same idempotency key is reused`(error: VisaApiError) =
+        runTest {
+            // Arrange
+            val idempotencyKeys = mutableListOf<String>()
+            coEvery { createContractUseCase(WALLET_ID, polygon, capture(idempotencyKeys)) } returns error.left()
+            val model = createModel(testScope = this)
+            statusFlow.emit(paymentStatus(listOf(notIssued)))
+            advanceUntilIdle()
+            model.uiState.value.fastWay.single().onClick()
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.fastWay.single().onRetry?.invoke()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(idempotencyKeys).hasSize(2)
+            assertThat(idempotencyKeys.toSet()).hasSize(1)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a definitive error WHEN the row is retried THEN a new idempotency key is used`() = runTest {
+        // Arrange
+        val idempotencyKeys = mutableListOf<String>()
+        coEvery {
+            createContractUseCase(WALLET_ID, polygon, capture(idempotencyKeys))
+        } returns VisaApiError.Unspecified.left()
+        val model = createModel(testScope = this)
+        statusFlow.emit(paymentStatus(listOf(notIssued)))
+        advanceUntilIdle()
+        model.uiState.value.fastWay.single().onClick()
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.fastWay.single().onRetry?.invoke()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(idempotencyKeys).hasSize(2)
+        assertThat(idempotencyKeys.toSet()).hasSize(2)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN contract created WHEN retried after the pending timeout THEN a new idempotency key is used`() = runTest {
+        // Arrange
+        val idempotencyKeys = mutableListOf<String>()
+        coEvery { createContractUseCase(WALLET_ID, polygon, capture(idempotencyKeys)) } returns Unit.right()
+        val model = createModel(testScope = this)
+        statusFlow.emit(paymentStatus(listOf(notIssued)))
+        advanceUntilIdle()
+        model.uiState.value.fastWay.single().onClick()
+        advanceTimeBy(91.seconds)
+
+        // Act
+        model.uiState.value.fastWay.single().onRetry?.invoke()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(idempotencyKeys).hasSize(2)
+        assertThat(idempotencyKeys.toSet()).hasSize(2)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN outcome unknown on two rows WHEN the first row is retried THEN it reuses its own key`() = runTest {
+        // Arrange
+        val arbitrum = network(networkName = "Arbitrum", networkRawId = "arbitrum")
+        val idempotencyKeys = mutableListOf<String>()
+        coEvery {
+            createContractUseCase(WALLET_ID, any(), capture(idempotencyKeys))
+        } returns VisaApiError.ServerUnavailable.left()
+        val model = createModel(testScope = this)
+        statusFlow.emit(paymentStatus(listOf(notIssued, PaymentNetworkStatus.NotIssued(arbitrum, chainId = 2L))))
+        advanceUntilIdle()
+        model.uiState.value.fastWay.first { it.id == "polygon" }.onClick()
+        advanceUntilIdle()
+        model.uiState.value.fastWay.first { it.id == "arbitrum" }.onClick()
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.fastWay.first { it.id == "polygon" }.onRetry?.invoke()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(idempotencyKeys).hasSize(3)
+        assertThat(idempotencyKeys[1]).isNotEqualTo(idempotencyKeys[0])
+        assertThat(idempotencyKeys[2]).isEqualTo(idempotencyKeys[0])
+        model.onDestroy()
+    }
 
     private fun createModel(testScope: TestScope): PaymentChooseNetworkModel {
         return PaymentChooseNetworkModel(

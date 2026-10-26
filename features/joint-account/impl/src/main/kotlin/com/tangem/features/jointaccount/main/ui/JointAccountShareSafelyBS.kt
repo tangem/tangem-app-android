@@ -4,9 +4,9 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -14,25 +14,22 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.bottomsheets.LocalBottomSheetContentScrollable
-import com.tangem.core.ui.components.bottomsheets.LocalTangemBottomSheetContentBottomInset
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
+import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetType
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.footer.TangemFooter
+import com.tangem.core.ui.ds2.modal.TangemModal
+import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
-import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -46,55 +43,41 @@ import com.tangem.core.ui.R as CoreUiR
 
 @Composable
 internal fun JointAccountShareSafelyBS(onDismiss: () -> Unit, modifier: Modifier = Modifier) {
-    TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
+    TangemModal<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
             isShown = true,
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        type = TangemBottomSheetType.Modal,
-        containerColor = TangemTheme.colors3.bg.secondary,
+        scrollableContent = false,
         title = {
-            TangemTopNavigation(
+            TangemModal.TopNavigation(
                 title = resourceReference(CoreUiR.string.joint_account_invite_members_safety_sheet_title),
-                contentAlign = TangemTopNavigation.ContentAlign.Center,
                 onClose = onDismiss,
             )
         },
         content = {
-            Content(modifier = modifier)
-        },
-        footer = {
-            TangemButton(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(all = 16.dp),
-                variant = TangemButton.Variant.Primary,
-                size = TangemButton.Size.X12,
-                text = resourceReference(CoreUiR.string.common_got_it),
-                onClick = onDismiss,
-            )
+            Box(modifier = modifier.weight(weight = 1f, fill = false)) {
+                Content()
+                Footer(
+                    onGotItClick = onDismiss,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth(),
+                )
+            }
         },
     )
 }
 
 @Composable
 private fun Content(modifier: Modifier = Modifier) {
-    val bottomInset = LocalTangemBottomSheetContentBottomInset.current
-    val scrollState = rememberScrollState()
-    val contentScrollable = LocalBottomSheetContentScrollable.current
-
-    if (contentScrollable != null) {
-        LaunchedEffect(scrollState) {
-            snapshotFlow { scrollState.canScrollForward || scrollState.canScrollBackward }
-                .collect { isScrollable -> contentScrollable.value = isScrollable }
-        }
-    }
-
-    Column(modifier = modifier.fillMaxWidth().padding(
-        horizontal = 8.dp,
-        vertical = 10.dp,
-    ).verticalScroll(scrollState)) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 8.dp, vertical = 10.dp),
+    ) {
         ShareSafelyPointRow(
             icon = Icons.ic_lightning_24,
             title = resourceReference(CoreUiR.string.joint_account_invite_members_safety_first_point_title),
@@ -116,9 +99,33 @@ private fun Content(modifier: Modifier = Modifier) {
                 CoreUiR.string.joint_account_invite_members_safety_third_point_subtitle,
             ),
         )
-        Spacer(modifier = Modifier.height(bottomInset))
+        SpacerH(FOOTER_HEIGHT)
     }
 }
+
+@Composable
+private fun Footer(onGotItClick: () -> Unit, modifier: Modifier = Modifier) {
+    TangemFooter(
+        modifier = modifier,
+        windowInsets = WindowInsets(0),
+        contentPadding = PaddingValues(all = FOOTER_PADDING),
+        // inside a modal the fade samples the screen behind the sheet, not the list under it
+        blurBackground = false,
+    ) {
+        TangemButton(
+            modifier = Modifier.fillMaxWidth(),
+            variant = TangemButton.Variant.Primary,
+            size = TangemButton.Size.X12,
+            text = resourceReference(CoreUiR.string.common_got_it),
+            onClick = onGotItClick,
+        )
+    }
+}
+
+private val FOOTER_PADDING = 16.dp
+
+/** Scroll reserve under the last row: the footer's [TangemButton.Size.X12] button and its padding */
+private val FOOTER_HEIGHT = FOOTER_PADDING * 2 + 48.dp
 
 @Composable
 private fun ShareSafelyPointRow(
@@ -163,12 +170,7 @@ private fun ShareSafelyPointIcon(icon: ImageVector, modifier: Modifier = Modifie
 private fun Preview_JointAccountShareSafely() {
     TangemThemePreviewRedesign {
         Column(modifier = Modifier.background(TangemTheme.colors3.bg.secondary)) {
-            TangemTopNavigation(
-                title = stringReference("Sharing safely"),
-                contentAlign = TangemTopNavigation.ContentAlign.Center,
-                blurBackground = false,
-                onClose = {},
-            )
+            TangemModal.TopNavigation(title = stringReference("Sharing safely"), onClose = {})
             Content()
             TangemButton(
                 modifier = Modifier

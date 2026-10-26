@@ -1,11 +1,21 @@
 package com.tangem.features.send.send.joint
 
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.blockchain.common.transaction.Fee
 import arrow.core.left
 import arrow.core.right
+import arrow.core.some
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.features.send.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.jointaccount.gas.JointGasTokenResolver
 import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
+import com.tangem.domain.jointaccount.model.SafeGasToken
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
@@ -37,6 +47,7 @@ internal class JointSendDelegateTest {
     private val gasBuilder: SafeTxGasBuilder = mockk()
     private val createJointOperationUseCase: CreateJointOperationUseCase = mockk()
     private val networkReader: JointNetworkReader = mockk()
+    private val gasTokenResolver: JointGasTokenResolver = mockk()
 
     private val payloadCodec: JointTransferPayloadCodec = mockk {
         every { encode(any()) } returns SafeInnerCall(to = FIXTURE_RECIPIENT, value = BigInteger.ONE, data = "0x")
@@ -49,13 +60,20 @@ internal class JointSendDelegateTest {
         createJointOperationUseCase = createJointOperationUseCase,
         payloadCodec = payloadCodec,
         networkReader = networkReader,
+        gasTokenResolver = gasTokenResolver,
     )
 
     private val userWalletId = UserWalletId("0011223344556677")
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(jointAccountListSupplier, getAccountCurrencyStatusUseCase, gasBuilder, createJointOperationUseCase)
+        clearMocks(
+            jointAccountListSupplier,
+            getAccountCurrencyStatusUseCase,
+            gasBuilder,
+            createJointOperationUseCase,
+            gasTokenResolver,
+        )
     }
 
     @Test
@@ -66,19 +84,24 @@ internal class JointSendDelegateTest {
             recipient = FIXTURE_RECIPIENT,
             amountWei = BigInteger("1000000000000000000"),
         )
-        coEvery { createJointOperationUseCase(account, fixtureCoin.network, expectedIntent) } returns Unit.right()
+        coEvery {
+            createJointOperationUseCase(account, fixtureCoin.network, expectedIntent, SafeGasToken.Coin)
+        } returns Unit.right()
 
         // Act
         val actual = delegate.createOperation(
             account = account,
             currency = fixtureCoin,
-            amountUM = createAmountData(crypto = BigDecimal.ONE),
+            amount = BigDecimal.ONE,
             destinationUM = createDestinationContent(),
+            feeToken = null,
         )
 
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
-        coVerify(exactly = 1) { createJointOperationUseCase(account, fixtureCoin.network, expectedIntent) }
+        coVerify(exactly = 1) {
+            createJointOperationUseCase(account, fixtureCoin.network, expectedIntent, SafeGasToken.Coin)
+        }
     }
 
     @Test
@@ -88,20 +111,21 @@ internal class JointSendDelegateTest {
             val actual = delegate.createOperation(
                 account = mockk(),
                 currency = fixtureCoin,
-                amountUM = AmountState.Empty,
-                destinationUM = createDestinationContent(),
+                amount = BigDecimal.ONE,
+                destinationUM = DestinationUM.Empty(),
+                feeToken = null,
             )
 
             // Assert
             assertThat(actual).isEqualTo(JointOperationCreateError.InvalidPayload.left())
-            coVerify(exactly = 0) { createJointOperationUseCase(any(), any(), any()) }
+            coVerify(exactly = 0) { createJointOperationUseCase(any(), any(), any(), any()) }
         }
 
     @Test
     fun `GIVEN a complete form WHEN the fee is loaded THEN the safe tx is mapped to a single fee`() = runTest {
         // Arrange
         val safeTx = createSafeTx()
-        coEvery { gasBuilder.build(userWalletId, fixtureCoin.network, any()) } returns safeTx.right()
+        coEvery { gasBuilder.build(userWalletId, fixtureCoin.network, any(), SafeGasToken.Coin) } returns safeTx.right()
 
         // Act
         val actual = delegate.loadFee(
@@ -133,7 +157,7 @@ internal class JointSendDelegateTest {
     fun `GIVEN the build fails WHEN the fee is loaded THEN the cause is wrapped into a data error`() = runTest {
         // Arrange
         val cause = IllegalStateException("node is down")
-        coEvery { gasBuilder.build(userWalletId, fixtureCoin.network, any()) } returns cause.left()
+        coEvery { gasBuilder.build(userWalletId, fixtureCoin.network, any(), SafeGasToken.Coin) } returns cause.left()
 
         // Act
         val actual = delegate.loadFee(
@@ -145,6 +169,251 @@ internal class JointSendDelegateTest {
 
         // Assert
         assertThat(actual).isEqualTo(GetFeeError.DataError(cause).left())
+    }
+
+    @Test
+    fun `GIVEN no fee token picked WHEN the extended fee is loaded THEN the coin pays it and is the native fee`() =
+        runTest {
+            // Arrange
+            val safeTx = createSafeTx()
+            coEvery { gasBuilder.build(userWalletId, fixtureUsdc.network, any(), SafeGasToken.Coin) } returns
+                safeTx.right()
+
+            // Act
+            val actual = loadFeeExtended(feeCurrencyStatus = null)
+
+            // Assert
+            val coinFee = JointSendFeeConverter(network = fixtureUsdc.network).convert(safeTx)
+            val expected = TransactionFeeExtended(
+                transactionFee = coinFee,
+                feeTokenId = fixtureCoin.id,
+                nativeFee = coinFee,
+            )
+            assertThat(actual).isEqualTo(expected.right())
+        }
+
+    @Test
+    fun `GIVEN a smart gas token picked WHEN the extended fee is loaded THEN the refund is quoted in it`() = runTest {
+        // Arrange
+        val safeTx = createSafeTx(gasPrice = BigInteger.valueOf(20_000_000_000))
+        coEvery { gasBuilder.build(userWalletId, fixtureUsdc.network, any(), SafeGasToken.Coin) } returns safeTx.right()
+        coEvery {
+            gasTokenResolver.resolve(fixtureUsdc.network, fixtureUsdc.contractAddress, fixtureUsdc.id.rawCurrencyId)
+        } returns USDC_GAS_TOKEN.right()
+
+        // Act
+        val actual = loadFeeExtended(feeCurrencyStatus = usdcStatus(balance = BigDecimal("100")))
+
+        // Assert
+        val fee = actual.getOrNull()!!
+        assertThat(fee.feeTokenId).isEqualTo(fixtureUsdc.id)
+        assertThat(fee.nativeFee).isEqualTo(JointSendFeeConverter(network = fixtureUsdc.network).convert(safeTx))
+        val tokenFee = fee.transactionFee.normal as Fee.Ethereum.TokenCurrency
+        // 20 gwei × 2 000 USDC per coin = 40 base units per gas; (150 000 + 110 000) × 40 = 10.4 USDC
+        assertThat(tokenFee.amount.value).isEqualTo(BigDecimal("10.400000"))
+        assertThat(tokenFee.amount.currencySymbol).isEqualTo(fixtureUsdc.symbol)
+    }
+
+    @Test
+    fun `GIVEN token balance below the token fee WHEN the extended fee is loaded THEN not enough funds`() = runTest {
+        // Arrange
+        coEvery { gasBuilder.build(userWalletId, fixtureUsdc.network, any(), SafeGasToken.Coin) } returns
+            createSafeTx(gasPrice = BigInteger.valueOf(20_000_000_000)).right()
+        coEvery { gasTokenResolver.resolve(any(), any(), any()) } returns USDC_GAS_TOKEN.right()
+
+        // Act
+        val actual = loadFeeExtended(feeCurrencyStatus = usdcStatus(balance = BigDecimal("10")))
+
+        // Assert
+        assertThat(actual).isEqualTo(GetFeeError.GaslessError.NotEnoughFunds.left())
+    }
+
+    @Test
+    fun `GIVEN a token outside smart gas WHEN the extended fee is loaded THEN a gasless error`() = runTest {
+        // Arrange
+        coEvery { gasBuilder.build(userWalletId, fixtureUsdc.network, any(), SafeGasToken.Coin) } returns
+            createSafeTx().right()
+        coEvery { gasTokenResolver.resolve(any(), any(), any()) } returns null.right()
+
+        // Act
+        val actual = loadFeeExtended(feeCurrencyStatus = usdcStatus(balance = BigDecimal("100")))
+
+        // Assert
+        assertThat(actual.leftOrNull()).isInstanceOf(GetFeeError.GaslessError.DataError::class.java)
+    }
+
+    @Test
+    fun `GIVEN nothing picked and too little coin WHEN the extended fee is loaded THEN a smart gas token pays it`() =
+        runTest {
+            // Arrange
+            val safeTx = createSafeTx(gasPrice = BigInteger.valueOf(20_000_000_000))
+            coEvery { gasBuilder.build(userWalletId, fixtureUsdc.network, any(), SafeGasToken.Coin) } returns
+                safeTx.right()
+            coEvery { gasTokenResolver.resolve(any(), any(), any()) } returns USDC_GAS_TOKEN.right()
+            val account = stubJointAccount(usdcStatus(balance = BigDecimal("100")))
+
+            // Act
+            val actual = loadFeeExtended(feeCurrencyStatus = null, coinBalance = BigDecimal.ZERO, account = account)
+
+            // Assert
+            val fee = actual.getOrNull()!!
+            assertThat(fee.feeTokenId).isEqualTo(fixtureUsdc.id)
+            assertThat(fee.nativeFee).isEqualTo(JointSendFeeConverter(network = fixtureUsdc.network).convert(safeTx))
+        }
+
+    @Test
+    fun `GIVEN nothing picked and no token covers the fee WHEN the extended fee is loaded THEN the coin stays`() =
+        runTest {
+            // Arrange
+            val safeTx = createSafeTx(gasPrice = BigInteger.valueOf(20_000_000_000))
+            coEvery { gasBuilder.build(userWalletId, fixtureUsdc.network, any(), SafeGasToken.Coin) } returns
+                safeTx.right()
+            coEvery { gasTokenResolver.resolve(any(), any(), any()) } returns USDC_GAS_TOKEN.right()
+            val account = stubJointAccount(usdcStatus(balance = BigDecimal("10")))
+
+            // Act
+            val actual = loadFeeExtended(feeCurrencyStatus = null, coinBalance = BigDecimal.ZERO, account = account)
+
+            // Assert
+            assertThat(actual.getOrNull()?.feeTokenId).isEqualTo(fixtureCoin.id)
+        }
+
+    @Test
+    fun `GIVEN several tokens WHEN the extended fee is loaded THEN the largest balance smart gas token that covers it pays`() =
+        runTest {
+            // Arrange
+            val dai = createTestToken(id = "dai", contractAddress = "0x6b175474e89094c44da98b954eedeac495271d0f")
+            val usdt = createTestToken(id = "tether", contractAddress = "0xdac17f958d2ee523a2c4ec7cd6994597ae4a7c55")
+            coEvery { gasBuilder.build(userWalletId, fixtureUsdc.network, any(), SafeGasToken.Coin) } returns
+                createSafeTx(gasPrice = BigInteger.valueOf(20_000_000_000)).right()
+            coEvery { gasTokenResolver.resolve(any(), dai.contractAddress, any()) } returns null.right()
+            coEvery { gasTokenResolver.resolve(any(), fixtureUsdc.contractAddress, any()) } returns
+                USDC_GAS_TOKEN.right()
+            coEvery { gasTokenResolver.resolve(any(), usdt.contractAddress, any()) } returns
+                USDC_GAS_TOKEN.copy(address = usdt.contractAddress).right()
+            val account = stubJointAccount(
+                tokenStatus(token = usdt, balance = BigDecimal("50")),
+                tokenStatus(token = dai, balance = BigDecimal("1000")),
+                usdcStatus(balance = BigDecimal("100")),
+            )
+
+            // Act
+            val actual = loadFeeExtended(feeCurrencyStatus = null, coinBalance = BigDecimal.ZERO, account = account)
+
+            // Assert
+            assertThat(actual.getOrNull()?.feeTokenId).isEqualTo(fixtureUsdc.id)
+        }
+
+    @Test
+    fun `GIVEN only another account holds enough of the token WHEN the extended fee is loaded THEN the coin stays`() =
+        runTest {
+            // Arrange
+            coEvery { gasBuilder.build(userWalletId, fixtureUsdc.network, any(), SafeGasToken.Coin) } returns
+                createSafeTx(gasPrice = BigInteger.valueOf(20_000_000_000)).right()
+            coEvery { gasTokenResolver.resolve(any(), any(), any()) } returns USDC_GAS_TOKEN.right()
+            val account = stubJointAccount(
+                usdcStatus(balance = BigDecimal("10")),
+                otherAccountStatuses = listOf(usdcStatus(balance = BigDecimal("10000"))),
+            )
+
+            // Act
+            val actual = loadFeeExtended(feeCurrencyStatus = null, coinBalance = BigDecimal.ZERO, account = account)
+
+            // Assert
+            assertThat(actual.getOrNull()?.feeTokenId).isEqualTo(fixtureCoin.id)
+        }
+
+    @Test
+    fun `GIVEN the coin picked and too little coin WHEN the extended fee is loaded THEN the coin stays`() = runTest {
+        // Arrange
+        coEvery { gasBuilder.build(userWalletId, fixtureUsdc.network, any(), SafeGasToken.Coin) } returns
+            createSafeTx().right()
+
+        // Act
+        val actual = loadFeeExtended(feeCurrencyStatus = coinStatus(BigDecimal.ZERO), coinBalance = BigDecimal.ZERO)
+
+        // Assert
+        assertThat(actual.getOrNull()?.feeTokenId).isEqualTo(fixtureCoin.id)
+        coVerify(exactly = 0) { getAccountCurrencyStatusUseCase.invokeSync(any(), any<List<CryptoCurrency>>()) }
+    }
+
+    private suspend fun loadFeeExtended(
+        feeCurrencyStatus: CryptoCurrencyStatus?,
+        coinBalance: BigDecimal = BigDecimal("1000"),
+        account: Account.Joint = stubJointAccount(),
+    ) = delegate.loadFeeExtended(
+        userWalletId = userWalletId,
+        account = account,
+        currency = fixtureUsdc,
+        feeCoinStatus = coinStatus(coinBalance),
+        feeCurrencyStatus = feeCurrencyStatus,
+        amountUM = createAmountData(crypto = BigDecimal.ONE),
+        destinationUM = createDestinationContent(),
+    )
+
+    /** A joint account holding the coin and the tokens of [tokenStatuses], whose statuses the lookup returns */
+    private fun stubJointAccount(
+        vararg tokenStatuses: CryptoCurrencyStatus,
+        otherAccountStatuses: List<CryptoCurrencyStatus> = emptyList(),
+    ): Account.Joint {
+        val tokens = tokenStatuses.map { it.currency }
+        val jointAccountId: AccountId = mockk()
+        val account: Account.Joint = mockk {
+            every { accountId } returns jointAccountId
+            every { cryptoCurrencies } returns listOf(fixtureCoin) + tokens
+        }
+        val otherAccount: Account.CryptoPortfolio = mockk { every { accountId } returns mockk() }
+        coEvery { getAccountCurrencyStatusUseCase.invokeSync(userWalletId, any<List<CryptoCurrency>>()) } returns
+            mapOf(otherAccount to otherAccountStatuses, account to tokenStatuses.toList()).some()
+        return account
+    }
+
+    private fun createTestToken(id: String, contractAddress: String): CryptoCurrency.Token =
+        MockCryptoCurrencyFactory().createToken(
+            blockchain = Blockchain.Ethereum,
+            id = id,
+            contractAddress = contractAddress,
+            symbol = id.uppercase(),
+            decimals = 6,
+        )
+
+    private fun tokenStatus(token: CryptoCurrency.Token, balance: BigDecimal): CryptoCurrencyStatus = mockk {
+        every { currency } returns token
+        every { value } returns mockk<CryptoCurrencyStatus.Loaded> { every { amount } returns balance }
+    }
+
+    private fun coinStatus(balance: BigDecimal): CryptoCurrencyStatus = mockk {
+        every { currency } returns fixtureCoin
+        every { value } returns mockk<CryptoCurrencyStatus.Loaded> { every { amount } returns balance }
+    }
+
+    private fun usdcStatus(balance: BigDecimal): CryptoCurrencyStatus = mockk {
+        every { currency } returns fixtureUsdc
+        every { value } returns mockk<CryptoCurrencyStatus.Loaded> { every { amount } returns balance }
+    }
+
+    @Test
+    fun `GIVEN a smart gas token picked WHEN the operation is created THEN the use case gets it`() = runTest {
+        // Arrange
+        val account: Account.Joint = mockk()
+        val gasToken = USDC_GAS_TOKEN
+        coEvery {
+            gasTokenResolver.resolve(fixtureUsdc.network, fixtureUsdc.contractAddress, fixtureUsdc.id.rawCurrencyId)
+        } returns gasToken.right()
+        coEvery { createJointOperationUseCase(account, fixtureUsdc.network, any(), gasToken) } returns Unit.right()
+
+        // Act
+        val actual = delegate.createOperation(
+            account = account,
+            currency = fixtureUsdc,
+            amount = BigDecimal.ONE,
+            destinationUM = createDestinationContent(),
+            feeToken = fixtureUsdc,
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+        coVerify(exactly = 1) { createJointOperationUseCase(account, fixtureUsdc.network, any(), gasToken) }
     }
 
     @Test
@@ -164,4 +433,14 @@ internal class JointSendDelegateTest {
         // Assert
         assertThat(actual).isSameInstanceAs(stored)
     }
+
+    private companion object {
+        val USDC_GAS_TOKEN = SafeGasToken.Token(
+            address = fixtureUsdc.contractAddress,
+            decimals = fixtureUsdc.decimals,
+            coinDecimals = 18,
+            nativeToTokenRate = BigDecimal("2000"),
+        )
+    }
+
 }

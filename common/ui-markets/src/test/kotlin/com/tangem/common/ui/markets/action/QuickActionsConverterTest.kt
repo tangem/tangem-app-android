@@ -296,6 +296,53 @@ internal class QuickActionsConverterTest {
     }
 
     @Test
+    fun `GIVEN express unreachable swap WHEN context is AddFunds THEN swap is not marked disabled`() {
+        // Arrange
+        val actions = listOf(
+            TokenActionsState.ActionState.Buy(ScenarioUnavailabilityReason.None),
+            TokenActionsState.ActionState.Swap(
+                ScenarioUnavailabilityReason.ExpressUnreachable("Polygon"),
+                shouldShowBadge = false,
+            ),
+            TokenActionsState.ActionState.Receive(ScenarioUnavailabilityReason.None),
+        )
+
+        // Act
+        val result = QuickActionsConverter.quickActions(
+            cryptoData = cryptoData(actions),
+            tokenActionsHandler = mockk(relaxed = true),
+            context = TokenActionsContext.AddFunds,
+        )
+
+        // Assert
+        assertThat(result.disabledActions).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN express unreachable swap WHEN context is Transfer THEN swap stays enabled and swapAndSend row stays`() {
+        // Arrange
+        val actions = listOf(
+            TokenActionsState.ActionState.Send(ScenarioUnavailabilityReason.None),
+            TokenActionsState.ActionState.Swap(
+                ScenarioUnavailabilityReason.ExpressUnreachable("Polygon"),
+                shouldShowBadge = false,
+            ),
+            TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.None),
+        )
+
+        // Act
+        val result = QuickActionsConverter.quickActions(
+            cryptoData = cryptoData(actions),
+            tokenActionsHandler = mockk(relaxed = true),
+            context = TokenActionsContext.Transfer,
+        )
+
+        // Assert
+        assertThat(result.disabledActions).isEmpty()
+        assertThat(result.actions).hasSize(4)
+    }
+
+    @Test
     fun `GIVEN unavailable swap WHEN unavailabilityReason for SendWithSwap THEN inherits the swap reason`() {
         // Arrange
         val actions = listOf(

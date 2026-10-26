@@ -4,7 +4,9 @@ import android.net.Uri
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.utils.pushIfAbsent
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
+import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -21,6 +23,7 @@ internal class DefaultJointAccountInviteDeepLinkHandler @AssistedInject construc
     @Assisted private val deeplinkUri: Uri,
     private val appRouter: AppRouter,
     private val jointAccountFeatureToggles: JointAccountFeatureToggles,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : JointAccountInviteDeepLinkHandler {
 
     init {
@@ -47,13 +50,20 @@ internal class DefaultJointAccountInviteDeepLinkHandler @AssistedInject construc
         }
 
         scope.launch {
-            appRouter.pushIfAbsent(AppRoute.JointAccountJoin(inviteId = inviteId))
+            val route = AppRoute.JointAccountJoin(inviteId = inviteId)
+            if (route !in appRouter.stack) analyticsEventHandler.send(JointAccountAnalyticsEvent.InviteLinkOpened())
+            appRouter.pushIfAbsent(route)
         }
     }
 
     @AssistedFactory
     interface Factory : JointAccountInviteDeepLinkHandler.Factory {
         override fun create(coroutineScope: CoroutineScope, deeplinkUri: Uri): DefaultJointAccountInviteDeepLinkHandler
+    }
+
+    companion object {
+        const val DEEPLINK_KEY =
+            "https://tangem.com/$PATH_SEGMENT_JOINT_ACCOUNT/$PATH_SEGMENT_JOIN"
     }
 }
 

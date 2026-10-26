@@ -21,6 +21,7 @@ internal class ExpressProviderConverter : Converter<ExchangeProvider, ExpressPro
             slippage = value.slippage,
             isExchangeOnlyWithinSingleAddress = value.isExchangeOnlyWithinSingleAddress,
             isExtraIdSupported = value.isExtraIdSupported,
+            isCustomSlippageSupported = value.isCustomSlippageSupported,
         )
     }
 

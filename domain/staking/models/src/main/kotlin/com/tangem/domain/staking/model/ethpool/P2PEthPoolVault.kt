@@ -1,5 +1,6 @@
 package com.tangem.domain.staking.model.ethpool
 
+import com.squareup.moshi.JsonClass
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import kotlinx.serialization.Serializable
 
@@ -8,6 +9,7 @@ import kotlinx.serialization.Serializable
  * Simplified version for vault list display
  * Analogue of stakekit yield
  */
+@JsonClass(generateAdapter = true)
 @Serializable
 data class P2PEthPoolVault(
     val vaultAddress: String,

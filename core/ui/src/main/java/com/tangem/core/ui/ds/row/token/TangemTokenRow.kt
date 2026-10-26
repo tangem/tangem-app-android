@@ -12,6 +12,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
@@ -97,12 +98,16 @@ fun TangemTokenRow(
                     .testTag(tag = TokenElementsTestTags.TOKEN_NON_FIAT_BLOCK),
             )
 
+            val promoBannerStartPadding = when (tokenRowUM.promoBannerUM) {
+                is TangemTokenRowUM.PromoBannerUM.Warning -> 48.dp
+                else -> 40.dp
+            }
             TokenRowPromoBanner(
                 promoBannerUM = tokenRowUM.promoBannerUM,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.EXTRA_BOTTOM)
                     .testTag(tag = TokenElementsTestTags.TOKEN_YIELD_PROMO_BANNER)
-                    .padding(start = TangemTheme.dimens2.x10, bottom = TangemTheme.dimens2.x2)
+                    .padding(start = promoBannerStartPadding, bottom = TangemTheme.dimens2.x2)
                     .fillMaxWidth(),
             )
         },

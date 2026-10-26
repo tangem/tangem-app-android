@@ -115,11 +115,15 @@ is TangemFooStory -> TangemFooStory(state = storyState)   // stateless: TangemFo
 
 ### E. Register in the list screen (target-specific)
 
-- **Target 1 (DS):** in `page/ds/DsComponentsListScreen.kt` add the factory import and a row to
-  `buildDsStories()`:
+- **Target 1 (DS):** in `page/ds/DsComponentsListScreen.kt` add the factory import, the component
+  import, and a row to `buildDsStories()`:
   ```kotlin
-  DsStoryItem(title = "🔘 TangemFoo", factory = tangemFooStoryFactory),
+  DsStoryItem(title = "🔘 TangemFoo", version = TangemFoo.version, factory = tangemFooStoryFactory),
   ```
+  `version` is the `DsVersion` declared in `object TangemFoo` — the list row and the story page both
+  render it. Pass `version = null` only for entries that showcase tokens rather than a component
+  (e.g. "Text styles"). A DS component with no `version` yet means the component itself is
+  incomplete — add it there first (`.claude/rules/codestyle/design-system.md` → Versioning).
 - **Target 2 (other):** in `ui/StoryBookListScreen.kt` add the factory import and a row to
   `buildStories()`:
   ```kotlin
@@ -145,6 +149,6 @@ Components →) your entry, and confirm the preview + every control works.
 - [ ] `Build.kt` factory name is `<camelCaseName>StoryFactory`.
 - [ ] Page composable shares the entity's simple name; both imported in `StoryBookScreen.kt`.
 - [ ] `when` branch added in `StoryBookScreen.kt` (`is` prefix for stateful, bare for stateless).
-- [ ] Registered in the correct list screen with an emoji-prefixed title.
+- [ ] Registered in the correct list screen with an emoji-prefixed title (DS list: with `version`).
 - [ ] Live preview pinned at top, controls below (STORYBOOK.md layout rule).
 - [ ] `:features:tester:impl:assembleGoogleDebug` passes.

@@ -13,13 +13,16 @@ dependencies {
     api(deps.kotlin.coroutines)
 
     /** Core */
+    api(projects.core.analytics.models)
     api(projects.core.decompose)
+    implementation(projects.core.remote)
     api(projects.core.ui)
 
     /** Domain */
     api(projects.domain.models)
 
     /** Common */
+    api(projects.common.routing)
     api(projects.common.ui)
 
     /** Compose */
@@ -29,4 +32,8 @@ dependencies {
 
     /** Other */
     api(deps.kotlin.immutable.collections)
+    implementation(deps.kotlin.serialization)
+
+    /** Tests */
+    testImplementation(projects.test.core)
 }

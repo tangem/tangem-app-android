@@ -58,6 +58,7 @@ internal class PolymarketEventConverterTest {
                 liquidity = BigDecimal("910.25"),
                 totalMarketsCount = 24,
                 isNegRisk = true,
+                isLive = false,
                 displayMode = PolymarketDisplayMode.GROUPED_OUTCOMES,
                 markets = listOf(
                     PolymarketMarket(
@@ -286,6 +287,7 @@ internal class PolymarketEventConverterTest {
         liquidity = liquidity,
         totalMarketsCount = 24,
         isNegRisk = isNegRisk,
+        isLive = false,
         displayMode = displayMode,
         markets = markets,
     )
