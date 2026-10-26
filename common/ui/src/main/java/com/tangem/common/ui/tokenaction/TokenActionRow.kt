@@ -65,7 +65,7 @@ fun TokenActionRow(
     TangemRowContainer(
         modifier = modifier
             .clip(RoundedCornerShape(20.dp))
-            .background(color = TangemTheme.colors2.surface.level3)
+            .background(color = TangemTheme.colors3.bg.secondary)
             .clickableWithHaptic(
                 onClick = onClick,
                 onLongClick = onLongClick,
@@ -127,23 +127,23 @@ private fun Tail(content: @Composable () -> Unit) {
 
 @Composable
 private fun accentColor(isEnabled: Boolean): Color = if (isEnabled) {
-    TangemTheme.colors2.graphic.status.accent
+    TangemTheme.colors3.icon.accent.blue
 } else {
-    TangemTheme.colors2.graphic.neutral.quaternary
+    TangemTheme.colors3.icon.tertiary
 }
 
 @Composable
 private fun titleColor(isEnabled: Boolean): Color = if (isEnabled) {
-    TangemTheme.colors2.text.neutral.primary
+    TangemTheme.colors3.text.primary
 } else {
-    TangemTheme.colors2.text.status.disabled
+    TangemTheme.colors3.text.tertiary
 }
 
 @Composable
 private fun descriptionColor(isEnabled: Boolean): Color = if (isEnabled) {
-    TangemTheme.colors2.text.neutral.secondary
+    TangemTheme.colors3.text.secondary
 } else {
-    TangemTheme.colors2.text.status.disabled
+    TangemTheme.colors3.text.tertiary
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -170,9 +170,9 @@ private fun DefaultTokenActionRowChevron(isEnabled: Boolean) {
         modifier = Modifier.size(24.dp),
         imageVector = ImageVector.vectorResource(R.drawable.ic_chevron_small_right_24),
         tint = if (isEnabled) {
-            TangemTheme.colors2.graphic.neutral.tertiary
+            TangemTheme.colors3.icon.secondary
         } else {
-            TangemTheme.colors2.graphic.neutral.quaternary
+            TangemTheme.colors3.icon.tertiary
         },
         contentDescription = null,
     )

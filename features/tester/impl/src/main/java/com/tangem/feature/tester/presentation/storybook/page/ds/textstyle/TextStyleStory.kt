@@ -39,7 +39,7 @@ internal fun TextStyleStory(state: TextStyleStory, modifier: Modifier = Modifier
         modifier = modifier
             .statusBarsPadding()
             .fillMaxSize()
-            .background(TangemTheme.colors2.surface.level1),
+            .background(TangemTheme.colors3.bg.primary),
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         ComponentPreview(style = state.style, textScale = state.textScale)
@@ -62,7 +62,7 @@ private fun ComponentPreview(style: TextStyleStory.Style, textScale: Float) {
             .height(320.dp)
             .padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(TangemTheme.colors2.surface.level2)
+            .background(TangemTheme.colors3.bg.primary)
             .padding(24.dp),
     ) {
         CompositionLocalProvider(LocalDensity provides scaledDensity) {
@@ -101,17 +101,17 @@ private fun StyleSelector(selected: TextStyleStory.Style, onSelect: (TextStyleSt
         Text(
             text = "Text style",
             style = TangemTheme.typography.subtitle1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         val shape = RoundedCornerShape(50)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(shape)
-                .background(TangemTheme.colors2.surface.level2)
+                .background(TangemTheme.colors3.bg.primary)
                 .border(
                     width = 1.dp,
-                    color = TangemTheme.colors2.border.neutral.secondary,
+                    color = TangemTheme.colors3.border.tertiary,
                     shape = shape,
                 )
                 .padding(4.dp),
@@ -140,7 +140,7 @@ private fun TextScaleSlider(value: Float, onChange: (Float) -> Unit) {
         Text(
             text = "Text scale: ${"%.2f".format(value)}x",
             style = TangemTheme.typography.subtitle1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         Slider(
             modifier = Modifier.fillMaxWidth(),
@@ -149,11 +149,11 @@ private fun TextScaleSlider(value: Float, onChange: (Float) -> Unit) {
             valueRange = 0.5f..2f,
             steps = 14,
             colors = SliderDefaults.colors(
-                thumbColor = TangemTheme.colors.text.accent,
-                activeTrackColor = TangemTheme.colors.text.accent,
-                activeTickColor = TangemTheme.colors2.surface.level3,
-                inactiveTrackColor = TangemTheme.colors2.surface.level3,
-                inactiveTickColor = TangemTheme.colors.text.accent,
+                thumbColor = TangemTheme.colors3.text.accent.blue,
+                activeTrackColor = TangemTheme.colors3.text.accent.blue,
+                activeTickColor = TangemTheme.colors3.bg.secondary,
+                inactiveTrackColor = TangemTheme.colors3.bg.secondary,
+                inactiveTickColor = TangemTheme.colors3.text.accent.blue,
             ),
         )
     }
@@ -167,7 +167,7 @@ private fun StyleChip(label: String, selected: Boolean, onClick: () -> Unit, mod
         modifier = modifier
             .clip(chipShape)
             .background(
-                if (selected) TangemTheme.colors2.surface.level3 else TangemTheme.colors2.surface.level2,
+                if (selected) TangemTheme.colors3.bg.secondary else TangemTheme.colors3.bg.primary,
             )
             .clickable(onClick = onClick)
             .padding(vertical = 8.dp, horizontal = 4.dp),
@@ -175,7 +175,7 @@ private fun StyleChip(label: String, selected: Boolean, onClick: () -> Unit, mod
         Text(
             text = label,
             style = TangemTheme.typography.caption2,
-            color = if (selected) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.secondary,
+            color = if (selected) TangemTheme.colors3.text.primary else TangemTheme.colors3.text.secondary,
         )
     }
 }

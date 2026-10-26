@@ -78,7 +78,7 @@ internal class TokenDetailsSkeletonStateConverter(
             add(
                 TangemDropdownMenuItem(
                     title = TextReference.Res(id = R.string.token_details_hide_token),
-                    textColor = themedColor { TangemTheme.colors.text.warning },
+                    textColor = themedColor { TangemTheme.colors3.text.accent.red },
                     onClick = clickIntents::onHideClick,
                 ),
             )
@@ -98,7 +98,7 @@ internal class TokenDetailsSkeletonStateConverter(
             add(
                 TangemDropdownMenuItem(
                     title = resourceReference(R.string.token_details_generate_xpub),
-                    textColor = themedColor { TangemTheme.colors.text.primary1 },
+                    textColor = themedColor { TangemTheme.colors3.text.primary },
                     onClick = clickIntents::onGenerateExtendedKey,
                 ),
             )

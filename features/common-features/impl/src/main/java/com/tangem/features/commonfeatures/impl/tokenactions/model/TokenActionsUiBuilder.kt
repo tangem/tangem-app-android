@@ -212,7 +212,7 @@ internal class TokenActionsUiBuilder @Inject constructor(
                         fiat(
                             fiatCurrencyCode = appCurrency.code,
                             fiatCurrencySymbol = appCurrency.symbol,
-                            spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
+                            spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.secondary) },
                         ).price()
                     },
                 )
@@ -226,7 +226,7 @@ internal class TokenActionsUiBuilder @Inject constructor(
                     fiat(
                         fiatCurrencyCode = appCurrency.code,
                         fiatCurrencySymbol = appCurrency.symbol,
-                        spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
+                        spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.secondary) },
                     ).price()
                 },
             )

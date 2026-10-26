@@ -53,7 +53,7 @@ internal fun CustomTokenSelectorContent(model: CustomTokenSelectorUM, modifier: 
     LazyColumn(
         modifier = modifier
             .testTag(AddCustomTokenScreenTestTags.SELECTOR_LIST)
-            .background(color = TangemTheme.colors.background.secondary)
+            .background(color = TangemTheme.colors3.bg.primary)
             .bottomFade(),
         contentPadding = PaddingValues(
             bottom = 96.dp + bottomBarHeight,
@@ -88,7 +88,7 @@ internal fun CustomTokenSelectorContent(model: CustomTokenSelectorUM, modifier: 
                         }
                     },
                 )
-                .background(color = TangemTheme.colors.background.primary)
+                .background(color = TangemTheme.colors3.bg.secondary)
                 .clickable(onClick = { item.onSelectedStateChange(true) })
                 .padding(horizontal = 4.dp)
 
@@ -135,7 +135,7 @@ private fun Header(header: CustomTokenSelectorUM.HeaderUM, modifier: Modifier = 
                         .fillMaxWidth()
                         .heightIn(min = 36.dp)
                         .background(
-                            color = TangemTheme.colors.background.primary,
+                            color = TangemTheme.colors3.bg.secondary,
                             shape = TangemTheme.shapes.bottomSheet,
                         ),
                 ) {
@@ -145,7 +145,7 @@ private fun Header(header: CustomTokenSelectorUM.HeaderUM, modifier: Modifier = 
                             .padding(horizontal = 12.dp),
                         text = stringResourceSafe(R.string.add_custom_token_choose_network),
                         style = TangemTheme.typography.subtitle2,
-                        color = TangemTheme.colors.text.tertiary,
+                        color = TangemTheme.colors3.text.secondary,
                     )
                 }
             }
@@ -197,14 +197,14 @@ private fun CustomDerivationButton(
                 Text(
                     text = stringResourceSafe(id = R.string.custom_token_custom_derivation),
                     style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.secondary,
+                    color = TangemTheme.colors3.text.secondary,
                 )
                 Text(
                     modifier = Modifier.padding(bottom = 12.dp),
                     text = enteredDerivationPath
                         ?: stringResourceSafe(id = R.string.custom_token_custom_derivation_title),
                     style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                 )
             }
         },
@@ -226,14 +226,14 @@ private fun DerivationPathItem(model: DerivationPathUM, modifier: Modifier = Mod
                 Text(
                     text = model.networkName.resolveReference(),
                     style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.secondary,
+                    color = TangemTheme.colors3.text.secondary,
                 )
 
                 Text(
                     modifier = Modifier.padding(bottom = 12.dp),
                     text = model.value,
                     style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                 )
             }
         },
@@ -251,7 +251,7 @@ private fun SelectedIcon(isVisible: Boolean, modifier: Modifier = Modifier) {
     ) {
         Icon(
             painter = painterResource(id = R.drawable.ic_check_24),
-            tint = TangemTheme.colors.icon.accent,
+            tint = TangemTheme.colors3.icon.accent.blue,
             contentDescription = null,
         )
     }

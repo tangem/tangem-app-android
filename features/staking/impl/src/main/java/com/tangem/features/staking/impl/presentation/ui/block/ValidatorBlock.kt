@@ -43,7 +43,7 @@ internal fun ValidatorBlock(validatorState: StakingStates.ValidatorState, isClic
         modifier = Modifier
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .clickable(
                 enabled = state.isClickable && isClickable,
                 interactionSource = remember { MutableInteractionSource() },
@@ -55,7 +55,7 @@ internal fun ValidatorBlock(validatorState: StakingStates.ValidatorState, isClic
         Text(
             text = stringResourceSafe(R.string.staking_validator),
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.padding(start = 12.dp, top = 12.dp, end = 12.dp, bottom = 4.dp),
         )
 
@@ -74,13 +74,13 @@ internal fun ValidatorBlock(validatorState: StakingStates.ValidatorState, isClic
             Text(
                 text = state.chosenTarget.name,
                 style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
             SpacerWMax()
             Text(
                 text = state.getInfoTitleNeutral().resolveReference(),
                 style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
     }
@@ -97,7 +97,7 @@ private fun StakingStates.ValidatorState.Data.getInfoTitleColored() = combinedRe
         appendSpace()
         appendColored(
             text = chosenTarget.rewardInfo?.rate.orZero().format { percent() },
-            color = TangemTheme.colors.text.accent,
+            color = TangemTheme.colors3.text.accent.blue,
         )
     },
 )

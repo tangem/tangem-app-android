@@ -41,7 +41,7 @@ internal fun TokenInfoBlock(state: TokenInfoBlockState, modifier: Modifier = Mod
             Text(
                 text = state.name,
                 style = TangemTheme.typography.head,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 modifier = Modifier.testTag(TokenDetailsScreenTestTags.TOKEN_TITLE),
             )
             NetworkInfoText(state.currency)
@@ -67,7 +67,7 @@ private fun NetworkInfoText(currency: TokenInfoBlockState.Currency) {
         TokenInfoBlockState.Currency.Native -> {
             Text(
                 text = stringResourceSafe(id = R.string.common_main_network),
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 style = TangemTheme.typography.caption2,
             )
         }
@@ -82,7 +82,7 @@ private fun NetworkInfoText(currency: TokenInfoBlockState.Currency) {
                     Text(
                         text = state.normalText,
                         style = TangemTheme.typography.caption2,
-                        color = TangemTheme.colors.text.tertiary,
+                        color = TangemTheme.colors3.text.secondary,
                     )
                 }
 
@@ -96,7 +96,7 @@ private fun NetworkInfoText(currency: TokenInfoBlockState.Currency) {
                 Text(
                     text = state.boldText,
                     style = TangemTheme.typography.caption1,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                 )
             }
         }
@@ -146,7 +146,7 @@ private fun Preview_TokenInfoBlock(
     state: TokenInfoBlockState,
 ) {
     TangemThemePreview {
-        TokenInfoBlock(state, Modifier.background(TangemTheme.colors.background.secondary))
+        TokenInfoBlock(state, Modifier.background(TangemTheme.colors3.bg.primary))
     }
 }
 

@@ -85,13 +85,13 @@ fun RowIcon(
                 modifier = Modifier
                     .align(Alignment.Center)
                     .background(
-                        color = TangemTheme.colors.button.secondary,
+                        color = TangemTheme.colors3.bg.transparent.secondary,
                         shape = CircleShape,
                     )
                     .alpha(if (isEnabled) 1f else DISABLED_ICON_ALPHA)
                     .size(22.dp),
                 painter = painterResource(id = resId),
-                tint = TangemTheme.colors.icon.informative,
+                tint = TangemTheme.colors3.icon.secondary,
                 contentDescription = null,
             )
         }
@@ -108,7 +108,7 @@ private fun Badge(modifier: Modifier = Modifier) {
         modifier = modifier
             .size(8.dp)
             .background(
-                color = TangemTheme.colors.background.primary,
+                color = TangemTheme.colors3.bg.secondary,
                 shape = CircleShape,
             ),
         contentAlignment = Alignment.Center,
@@ -117,7 +117,7 @@ private fun Badge(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .size(5.dp)
                 .background(
-                    color = TangemTheme.colors.icon.accent,
+                    color = TangemTheme.colors3.icon.accent.blue,
                     shape = CircleShape,
                 ),
         )
@@ -131,7 +131,7 @@ private fun Badge(modifier: Modifier = Modifier) {
 private fun Preview_BlockchainRow(@PreviewParameter(BlockchainRowParameterProvider::class) state: BlockchainRowUM) {
     TangemThemePreview {
         ArrowRow(
-            modifier = Modifier.background(TangemTheme.colors.background.primary),
+            modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
             isLastItem = false,
             content = {
                 BlockchainRow(

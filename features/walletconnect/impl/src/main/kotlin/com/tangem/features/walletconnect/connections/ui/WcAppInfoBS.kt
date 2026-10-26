@@ -55,7 +55,7 @@ internal fun WcAppInfoModalBottomSheet(state: WcAppInfoUM, onBack: () -> Unit, o
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
         onBack = onBack,
         title = {
             TangemModalBottomSheetTitle(
@@ -95,7 +95,7 @@ private fun WcAppInfoModalBottomSheetContent(state: WcAppInfoUM.Content, modifie
     Column(modifier = modifier) {
         val blocksModifier = Modifier
             .clip(RoundedCornerShape(14.dp))
-            .background(color = TangemTheme.colors.background.action)
+            .background(color = TangemTheme.colors3.bg.secondary)
             .fillMaxWidth()
         WcAppInfoFirstBlock(modifier = blocksModifier, state = state)
         state.notification?.let { notification ->
@@ -107,13 +107,13 @@ private fun WcAppInfoModalBottomSheetContent(state: WcAppInfoUM.Content, modifie
                     WcAppInfoSecurityNotification.UnknownDomain -> null
                 },
                 titleColor = when (notification) {
-                    WcAppInfoSecurityNotification.SecurityRisk -> TangemTheme.colors.text.warning
-                    WcAppInfoSecurityNotification.UnknownDomain -> TangemTheme.colors.text.primary1
+                    WcAppInfoSecurityNotification.SecurityRisk -> TangemTheme.colors3.text.accent.red
+                    WcAppInfoSecurityNotification.UnknownDomain -> TangemTheme.colors3.text.primary
                 },
-                subtitleColor = TangemTheme.colors.text.primary1,
+                subtitleColor = TangemTheme.colors3.text.primary,
                 iconTint = when (notification) {
-                    WcAppInfoSecurityNotification.SecurityRisk -> TangemTheme.colors.icon.warning
-                    WcAppInfoSecurityNotification.UnknownDomain -> TangemTheme.colors.icon.attention
+                    WcAppInfoSecurityNotification.SecurityRisk -> TangemTheme.colors3.icon.accent.red
+                    WcAppInfoSecurityNotification.UnknownDomain -> TangemTheme.colors3.icon.accent.yellow
                 },
             )
         }
@@ -136,7 +136,7 @@ private fun WcAppInfoFirstBlock(state: WcAppInfoUM.Content, modifier: Modifier =
             subtitle = state.appSubtitle,
             verifiedDAppState = state.verifiedDAppState,
         )
-        HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors.stroke.primary)
+        HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors3.border.secondary)
         ConnectionRequestBlock(
             modifier = Modifier
                 .fillMaxWidth()
@@ -163,7 +163,7 @@ private fun ConnectionRequestBlock(expanded: Boolean, modifier: Modifier = Modif
                 .testTag(WalletConnectBottomSheetTestTags.CONNECTION_REQUEST_ICON),
             painter = painterResource(R.drawable.ic_connect_new_24),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.accent,
+            tint = TangemTheme.colors3.icon.accent.blue,
         )
         Text(
             modifier = Modifier
@@ -172,7 +172,7 @@ private fun ConnectionRequestBlock(expanded: Boolean, modifier: Modifier = Modif
                 .testTag(WalletConnectBottomSheetTestTags.CONNECTION_REQUEST_TEXT),
             text = stringResourceSafe(R.string.wc_connection_request),
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         Icon(
             modifier = Modifier
@@ -181,7 +181,7 @@ private fun ConnectionRequestBlock(expanded: Boolean, modifier: Modifier = Modif
                 .testTag(WalletConnectBottomSheetTestTags.CONNECTION_REQUEST_CHEVRON),
             painter = painterResource(if (expanded) R.drawable.ic_chevron_up_24 else R.drawable.ic_chevron_24),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
         )
     }
 }
@@ -192,36 +192,36 @@ private fun ConnectionRequestDescription(modifier: Modifier = Modifier) {
         Text(
             text = stringResourceSafe(R.string.wc_connection_reqeust_would_like),
             style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
         ConnectionRequestDescriptionRow(
             iconPainter = painterResource(R.drawable.ic_check_24),
-            tint = TangemTheme.colors.icon.accent,
+            tint = TangemTheme.colors3.icon.accent.blue,
             text = stringResourceSafe(R.string.wc_connection_reqeust_can_view_balance),
-            backgroundColor = TangemTheme.colors.icon.accent,
+            backgroundColor = TangemTheme.colors3.icon.accent.blue,
         )
         ConnectionRequestDescriptionRow(
             iconPainter = painterResource(R.drawable.ic_check_24),
-            tint = TangemTheme.colors.icon.accent,
+            tint = TangemTheme.colors3.icon.accent.blue,
             text = stringResourceSafe(R.string.wc_connection_reqeust_request_approval),
-            backgroundColor = TangemTheme.colors.icon.accent,
+            backgroundColor = TangemTheme.colors3.icon.accent.blue,
         )
         HorizontalDivider(
             modifier = Modifier.padding(top = 12.dp),
             thickness = 0.5.dp,
-            color = TangemTheme.colors.stroke.primary,
+            color = TangemTheme.colors3.border.secondary,
         )
         Text(
             modifier = Modifier.padding(top = 12.dp),
             text = stringResourceSafe(R.string.wc_connection_reqeust_will_not),
             style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
         ConnectionRequestDescriptionRow(
             iconPainter = painterResource(R.drawable.ic_close_24),
-            tint = TangemTheme.colors.icon.warning,
+            tint = TangemTheme.colors3.icon.accent.red,
             text = stringResourceSafe(R.string.wc_connection_reqeust_cant_sign),
-            backgroundColor = TangemTheme.colors.icon.warning,
+            backgroundColor = TangemTheme.colors3.icon.accent.red,
         )
     }
 }
@@ -260,7 +260,7 @@ private fun ConnectionRequestDescriptionRow(
             modifier = Modifier.fillMaxWidth(),
             text = text,
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
     }
 }
@@ -272,7 +272,7 @@ private fun WcAppInfoSecondBlock(state: WcAppInfoUM.Content, modifier: Modifier 
             .fillMaxWidth()
             .padding(12.dp)
         PortfolioRowItem(portfolioSelectRow = state.portfolioSelectRow)
-        HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors.stroke.primary)
+        HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors3.border.secondary)
         SelectNetworksBlock(
             modifier = Modifier
                 .clickable(onClick = state.onNetworksClick)
@@ -282,19 +282,19 @@ private fun WcAppInfoSecondBlock(state: WcAppInfoUM.Content, modifier: Modifier 
         when (state.networksInfo) {
             is WcNetworksInfo.ContainsAllRequiredNetworks -> Unit
             is WcNetworksInfo.NoneNetworksAdded -> {
-                HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors.stroke.primary)
+                HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors3.border.secondary)
                 Notification(
                     config = NotificationConfig(
                         iconResId = R.drawable.ic_alert_circle_24,
                         title = resourceReference(R.string.wc_specify_networks_title),
                         subtitle = resourceReference(R.string.wc_specify_networks_subtitle),
                     ),
-                    iconTint = TangemTheme.colors.icon.attention,
-                    containerColor = TangemTheme.colors.background.action,
+                    iconTint = TangemTheme.colors3.icon.accent.yellow,
+                    containerColor = TangemTheme.colors3.bg.secondary,
                 )
             }
             is WcNetworksInfo.MissingRequiredNetworkInfo -> {
-                HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors.stroke.primary)
+                HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors3.border.secondary)
                 Notification(
                     config = NotificationConfig(
                         iconResId = R.drawable.ic_alert_circle_24,
@@ -304,8 +304,8 @@ private fun WcAppInfoSecondBlock(state: WcAppInfoUM.Content, modifier: Modifier 
                             wrappedList(state.networksInfo.networks),
                         ),
                     ),
-                    iconTint = TangemTheme.colors.icon.attention,
-                    containerColor = TangemTheme.colors.background.action,
+                    iconTint = TangemTheme.colors3.icon.accent.yellow,
+                    containerColor = TangemTheme.colors3.bg.secondary,
                 )
             }
         }
@@ -321,7 +321,7 @@ private fun PortfolioRowItem(portfolioSelectRow: PortfolioSelectUM, modifier: Mo
                 .testTag(WalletConnectBottomSheetTestTags.WALLET_ICON),
             painter = painterResource(R.drawable.ic_wallet_new_24),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.accent,
+            tint = TangemTheme.colors3.icon.accent.blue,
         )
         SpacerW4()
     }
@@ -339,7 +339,7 @@ private fun SelectNetworksBlock(networksInfo: WcNetworksInfo, modifier: Modifier
                 .testTag(WalletConnectBottomSheetTestTags.NETWORKS_ICON),
             painter = painterResource(R.drawable.ic_network_new_24),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.accent,
+            tint = TangemTheme.colors3.icon.accent.blue,
         )
         Text(
             modifier = Modifier
@@ -348,7 +348,7 @@ private fun SelectNetworksBlock(networksInfo: WcNetworksInfo, modifier: Modifier
                 .testTag(WalletConnectBottomSheetTestTags.NETWORKS_TITLE),
             text = stringResourceSafe(R.string.wc_common_networks),
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         when (networksInfo) {
             is WcNetworksInfo.ContainsAllRequiredNetworks -> NetworkIcons(items = networksInfo.items)
@@ -361,7 +361,7 @@ private fun SelectNetworksBlock(networksInfo: WcNetworksInfo, modifier: Modifier
                 .testTag(WalletConnectBottomSheetTestTags.NETWORKS_SELECTOR_ICON),
             painter = painterResource(id = R.drawable.ic_select_18_24),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
         )
     }
 }
@@ -385,7 +385,7 @@ private fun NetworkIcons(items: ImmutableList<WcNetworkInfoItem>, modifier: Modi
                     .padding(start = 16.dp.times(index))
                     .border(
                         width = 2.dp,
-                        color = TangemTheme.colors.background.action,
+                        color = TangemTheme.colors3.bg.secondary,
                         shape = CircleShape,
                     )
                     .padding(2.dp)
@@ -400,20 +400,20 @@ private fun NetworkIcons(items: ImmutableList<WcNetworkInfoItem>, modifier: Modi
                     .padding(start = 48.dp)
                     .border(
                         width = 2.dp,
-                        color = TangemTheme.colors.background.action,
+                        color = TangemTheme.colors3.bg.secondary,
                         shape = CircleShape,
                     )
                     .padding(2.dp)
-                    .background(color = TangemTheme.colors.background.action)
+                    .background(color = TangemTheme.colors3.bg.secondary)
                     .size(20.dp)
                     .clip(CircleShape)
-                    .background(color = TangemTheme.colors.icon.primary1.copy(alpha = 0.1F)),
+                    .background(color = TangemTheme.colors3.icon.primary.copy(alpha = 0.1F)),
             ) {
                 Text(
                     modifier = Modifier.align(Alignment.Center),
                     text = "+$remainingCount",
                     style = TangemTheme.typography.overline,
-                    color = TangemTheme.colors.text.secondary,
+                    color = TangemTheme.colors3.text.secondary,
                 )
             }
         }
@@ -453,7 +453,7 @@ private fun WcAppInfoModalBottomSheetLoading(state: WcAppInfoUM.Loading, modifie
     Column(modifier = modifier) {
         val blocksModifier = Modifier
             .clip(RoundedCornerShape(14.dp))
-            .background(color = TangemTheme.colors.background.action)
+            .background(color = TangemTheme.colors3.bg.secondary)
             .fillMaxWidth()
         WcAppInfoFirstLoadingBlock(blocksModifier)
         WcAppInfoSecondLoadingBlock(
@@ -469,7 +469,7 @@ private fun WcAppInfoModalBottomSheetLoading(state: WcAppInfoUM.Loading, modifie
 private fun WcAppInfoFirstLoadingBlock(modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         WcLoadingAppInfoItem()
-        HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors.stroke.primary)
+        HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors3.border.secondary)
         Row(
             modifier = Modifier.padding(all = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -477,14 +477,14 @@ private fun WcAppInfoFirstLoadingBlock(modifier: Modifier = Modifier) {
         ) {
             CircularProgressIndicator(
                 modifier = Modifier.size(24.dp),
-                color = TangemTheme.colors.icon.accent,
+                color = TangemTheme.colors3.icon.accent.blue,
                 strokeWidth = 2.dp,
                 strokeCap = StrokeCap.Square,
             )
             Text(
                 text = "Connecting...",
                 style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
         }
     }
@@ -498,7 +498,7 @@ private fun WcAppInfoSecondLoadingBlock(portfolioName: TextReference, modifier: 
                 modifier = Modifier.size(24.dp),
                 painter = painterResource(R.drawable.ic_wallet_new_24),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.accent,
+                tint = TangemTheme.colors3.icon.accent.blue,
             )
             Text(
                 modifier = Modifier
@@ -506,17 +506,17 @@ private fun WcAppInfoSecondLoadingBlock(portfolioName: TextReference, modifier: 
                     .weight(1f),
                 text = portfolioName.resolveReference(),
                 style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
             TextShimmer(style = TangemTheme.typography.body1, radius = 8.dp, text = "Wallet 2.0")
         }
-        HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors.stroke.primary)
+        HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors3.border.secondary)
         Row(modifier = Modifier.padding(all = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 modifier = Modifier.size(24.dp),
                 painter = painterResource(R.drawable.ic_network_new_24),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.accent,
+                tint = TangemTheme.colors3.icon.accent.blue,
             )
             Text(
                 modifier = Modifier
@@ -524,7 +524,7 @@ private fun WcAppInfoSecondLoadingBlock(portfolioName: TextReference, modifier: 
                     .weight(1f),
                 text = stringResourceSafe(R.string.wc_common_networks),
                 style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
             WcAppInfoLoadingNetworkIcons()
         }
@@ -541,7 +541,7 @@ private fun WcAppInfoLoadingNetworkIcons(modifier: Modifier = Modifier) {
                     .padding(start = 16.dp.times(index))
                     .border(
                         width = 2.dp,
-                        color = TangemTheme.colors.background.action,
+                        color = TangemTheme.colors3.bg.secondary,
                         shape = CircleShape,
                     )
                     .padding(2.dp)
@@ -590,7 +590,7 @@ private fun WcAppInfoBottomSheetPreview(@PreviewParameter(WcAppInfoStateProvider
         WcAppInfoModalBottomSheet(
             state = state,
             modifier = Modifier
-                .background(TangemTheme.colors.background.tertiary)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(horizontal = 16.dp),
         )
     }

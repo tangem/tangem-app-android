@@ -81,7 +81,7 @@ internal fun YieldSupplyApyContent(
             content = TangemBottomSheetConfigContent.Empty,
         ),
         onBack = onBackClick,
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
         title = {
             TangemModalBottomSheetTitle(
                 title = resourceReference(
@@ -118,7 +118,7 @@ internal fun YieldSupplyApyContent(
                 val chartModifier = if (incentive == null) {
                     Modifier
                         .clip(RoundedCornerShape(14.dp))
-                        .background(TangemTheme.colors.background.action)
+                        .background(TangemTheme.colors3.bg.secondary)
                         .padding(12.dp)
                 } else {
                     Modifier
@@ -154,14 +154,14 @@ private fun PlainRateDescription() {
     Text(
         text = stringResourceSafe(R.string.yield_module_rate_info_sheet_description),
         style = TangemTheme.typography.body2,
-        color = TangemTheme.colors.text.secondary,
+        color = TangemTheme.colors3.text.secondary,
         textAlign = TextAlign.Center,
     )
     SpacerH12()
     val inlineIconId = "aaveIcon"
     Text(
         style = TangemTheme.typography.body2,
-        color = TangemTheme.colors.text.tertiary,
+        color = TangemTheme.colors3.text.secondary,
         textAlign = TextAlign.Center,
         text = buildAnnotatedString {
             append(stringResourceSafe(R.string.yield_module_rate_info_sheet_powered_by))
@@ -192,13 +192,13 @@ private fun PoweredByMerkl(modifier: Modifier = Modifier) {
         Text(
             text = stringResourceSafe(R.string.yield_module_incentive_chart_powered_by_title),
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         SpacerH2()
         Text(
             text = stringResourceSafe(R.string.yield_module_incentive_chart_powered_by_description),
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
     }
 }
@@ -250,7 +250,7 @@ private fun PlainApyChart(
             Text(
                 text = stringResourceSafe(R.string.yield_module_historical_returns),
                 style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
             SpacerH2()
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -259,7 +259,7 @@ private fun PlainApyChart(
                 Text(
                     text = stringResourceSafe(R.string.yield_module_supply_apr),
                     style = TangemTheme.typography.subtitle2,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                 )
             }
         }
@@ -271,7 +271,7 @@ private fun PlainApyChart(
             SpacerH12()
             Box(
                 modifier = Modifier
-                    .background(TangemTheme.colors.stroke.primary)
+                    .background(TangemTheme.colors3.border.secondary)
                     .fillMaxWidth()
                     .height(1.dp),
             )
@@ -281,7 +281,7 @@ private fun PlainApyChart(
                     modifier = Modifier.weight(1.0f),
                     text = stringResourceSafe(R.string.yield_module_earn_sheet_current_apy_title),
                     style = TangemTheme.typography.body1,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                 )
                 SpacerW12()
                 if (apy == null) {
@@ -289,7 +289,7 @@ private fun PlainApyChart(
                 } else {
                     Icon(
                         painter = painterResource(R.drawable.ic_arrow_up_8),
-                        tint = TangemTheme.colors.text.accent,
+                        tint = TangemTheme.colors3.text.accent.blue,
                         contentDescription = null,
                         modifier = Modifier
                             .padding(end = 6.dp)
@@ -298,7 +298,7 @@ private fun PlainApyChart(
                     Text(
                         text = apy.resolveReference(),
                         style = TangemTheme.typography.body1,
-                        color = TangemTheme.colors.text.accent,
+                        color = TangemTheme.colors3.text.accent.blue,
                     )
                 }
             }
@@ -389,7 +389,7 @@ private fun AccentDot(modifier: Modifier = Modifier) {
         modifier = modifier
             .padding(4.dp)
             .size(8.dp)
-            .background(color = TangemTheme.colors.icon.accent, shape = CircleShape),
+            .background(color = TangemTheme.colors3.bg.accent.blue, shape = CircleShape),
     )
 }
 

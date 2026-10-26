@@ -8,6 +8,8 @@ import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
+import com.tangem.core.ui.res.generated.darkColors3
+import com.tangem.core.ui.res.generated.lightColors3
 import com.tangem.core.ui.windowsize.rememberWindowSizePreview
 
 @Composable
@@ -29,8 +31,12 @@ fun TangemThemePreview(
                 isDark = isDarkTheme,
                 typography = typography,
                 windowSize = rememberWindowSizePreview(maxWidth, maxHeight),
-                content = content,
-            )
+            ) {
+                CompositionLocalProvider(
+                    LocalTangemColors3 provides if (isDarkTheme) darkColors3() else lightColors3(),
+                    content = content,
+                )
+            }
         }
     }
 }
