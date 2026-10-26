@@ -45,7 +45,7 @@ internal class DefaultSendAmountComponent @AssistedInject constructor(
             } else {
                 R.drawable.ic_close_24
             },
-            backgroundColor = TangemTheme.colors.background.tertiary,
+            backgroundColor = TangemTheme.colors3.bg.primary,
             modifier = Modifier.height(56.dp),
         )
     }

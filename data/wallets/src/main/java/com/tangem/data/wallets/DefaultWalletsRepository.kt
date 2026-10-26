@@ -186,6 +186,17 @@ internal class DefaultWalletsRepository(
         }
     }
 
+    override suspend fun isAddressesSharingRequired(userWalletId: UserWalletId): Boolean =
+        appPreferencesStore.getSyncOrNull(storePreferencesKeys.addressesSharingWalletIdsKey)
+            ?.contains(userWalletId.stringValue) == true
+
+    override suspend fun setAddressesSharingRequired(userWalletId: UserWalletId) {
+        appPreferencesStore.editData { preferences ->
+            val key = storePreferencesKeys.addressesSharingWalletIdsKey
+            preferences[key] = preferences.getOrDefault(key, emptySet()) + userWalletId.stringValue
+        }
+    }
+
     override suspend fun setWalletName(walletId: UserWalletId, walletName: String) = withContext(dispatchers.io) {
         val userWallet = userWalletsListRepository.getSyncOrNull(id = walletId)
 

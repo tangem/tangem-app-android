@@ -13,7 +13,7 @@ import com.tangem.core.ui.res.TangemTheme
 internal fun DynamicAddressesBottomSheet(config: TangemBottomSheetConfig) {
     TangemModalBottomSheet<DynamicAddressesBottomSheetConfig>(
         config = config,
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
         title = {
             TangemTopNavigation(
                 windowInsets = WindowInsets(0),

@@ -18,9 +18,9 @@ internal fun ValidatorImagePlaceholder() {
     Icon(
         painter = rememberVectorPainter(ImageVector.vectorResource(R.drawable.ic_staking_filled_18)),
         contentDescription = null,
-        tint = TangemTheme.colors.icon.inactive,
+        tint = TangemTheme.colors3.icon.tertiary,
         modifier = Modifier
-            .background(TangemTheme.colors.icon.primary1, CircleShape)
+            .background(TangemTheme.colors3.icon.primary, CircleShape)
             .padding(9.dp),
     )
 }

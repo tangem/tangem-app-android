@@ -85,7 +85,7 @@ internal object OrganizeTokensPreview {
                                     styledStringReference(
                                         value = "TKN$tokenNumber",
                                         spanStyleReference = {
-                                            SpanStyle(color = TangemTheme.colors2.text.neutral.secondary)
+                                            SpanStyle(color = TangemTheme.colors3.text.secondary)
                                         },
                                     ),
                                 ),

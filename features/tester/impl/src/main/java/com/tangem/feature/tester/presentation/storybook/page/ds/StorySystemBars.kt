@@ -15,7 +15,7 @@ import com.tangem.core.ui.res.TangemTheme
 @Composable
 internal fun TransparentSystemBarsEffect() {
     val systemUiController = rememberSystemUiController()
-    val restoreColor = TangemTheme.colors.background.secondary
+    val restoreColor = TangemTheme.colors3.bg.primary
     val isDarkIcons = !isSystemInDarkTheme()
     SideEffect {
         systemUiController.setStatusBarColor(color = Color.Transparent, darkIcons = isDarkIcons)
