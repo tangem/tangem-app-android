@@ -5,6 +5,11 @@ import kotlin.reflect.KClass
 /**
  * Interface for a router in the application.
  * It provides methods for navigating through the application by stack.
+ *
+ * An operation called without its own `onComplete` gets [NoCompletion], and the router reports to
+ * [defaultCompletionHandler] when a push, a replace or [navigate] fails. A pop that has nothing to pop is not a
+ * failure. The root router also catches and reports a throwing operation; a nested stack still throws. Pass
+ * [NoCompletion] through when delegating an operation, so the router that runs it still recognizes it.
  */
 interface Router {
 
@@ -14,7 +19,7 @@ interface Router {
      * @param route The route to push.
      * @param onComplete The callback to be invoked when the operation is complete.
      */
-    fun push(route: Route, onComplete: (isSuccess: Boolean) -> Unit = {})
+    fun push(route: Route, onComplete: (isSuccess: Boolean) -> Unit = NoCompletion)
 
     /**
      * Replaces a current route with a new one.
@@ -22,7 +27,7 @@ interface Router {
      * @param route The route to replace a current one.
      * @param onComplete The callback to be invoked when the operation is complete.
      */
-    fun replaceCurrent(route: Route, onComplete: (isSuccess: Boolean) -> Unit = {})
+    fun replaceCurrent(route: Route, onComplete: (isSuccess: Boolean) -> Unit = NoCompletion)
 
     /**
      * Replaces ***all*** routes in the navigation stack with the specified [routes].
@@ -30,14 +35,14 @@ interface Router {
      * @param routes The routes to replace the current stack with.
      * @param onComplete The callback to be invoked when the operation is complete.
      */
-    fun replaceAll(vararg routes: Route, onComplete: (isSuccess: Boolean) -> Unit = {})
+    fun replaceAll(vararg routes: Route, onComplete: (isSuccess: Boolean) -> Unit = NoCompletion)
 
     /**
      * Pops the top route from the navigation stack.
      *
      * @param onComplete The callback to be invoked when the operation is complete.
      */
-    fun pop(onComplete: (isSuccess: Boolean) -> Unit = {})
+    fun pop(onComplete: (isSuccess: Boolean) -> Unit = NoCompletion)
 
     /**
      * Pops routes from the navigation stack until the specified [route] is found.
@@ -45,7 +50,7 @@ interface Router {
      * @param route The route to pop to.
      * @param onComplete The callback to be invoked when the operation is complete.
      */
-    fun popTo(route: Route, onComplete: (isSuccess: Boolean) -> Unit = {})
+    fun popTo(route: Route, onComplete: (isSuccess: Boolean) -> Unit = NoCompletion)
 
     /**
      * Pops routes from the navigation stack until the ***first*** specified [routeClass] is found.
@@ -53,7 +58,7 @@ interface Router {
      * @param routeClass The route class to pop to.
      * @param onComplete The callback to be invoked when the operation is complete.
      */
-    fun popTo(routeClass: KClass<out Route>, onComplete: (isSuccess: Boolean) -> Unit = {})
+    fun popTo(routeClass: KClass<out Route>, onComplete: (isSuccess: Boolean) -> Unit = NoCompletion)
 
     /**
      * Pops routes from the navigation stack until the ***last*** route of [routeClass] that satisfies [predicate].
@@ -66,7 +71,7 @@ interface Router {
     fun <R : Route> popToMatching(
         routeClass: KClass<R>,
         predicate: (R) -> Boolean,
-        onComplete: (isSuccess: Boolean) -> Unit = {},
+        onComplete: (isSuccess: Boolean) -> Unit = NoCompletion,
     )
 
     /**
@@ -76,7 +81,10 @@ interface Router {
      * @param transformer Builds the new stack from the current one.
      * @param onComplete The callback to be invoked when the operation is complete.
      */
-    fun navigate(transformer: (stack: List<Route>) -> List<Route>, onComplete: (isSuccess: Boolean) -> Unit = {})
+    fun navigate(
+        transformer: (stack: List<Route>) -> List<Route>,
+        onComplete: (isSuccess: Boolean) -> Unit = NoCompletion,
+    )
 
     /**
      * Checks whether the [route] is in the navigation stack, including the stacks this router falls back to.
@@ -84,4 +92,18 @@ interface Router {
      * @param route The route to look for.
      */
     suspend fun contains(route: Route): Boolean
+
+    /**
+     * Handles the result of an operation called without its own `onComplete`.
+     *
+     * @param isSuccess Whether the operation succeeded.
+     * @param errorMessage Describes the operation if it failed.
+     */
+    fun defaultCompletionHandler(isSuccess: Boolean, errorMessage: String)
+
+    companion object {
+
+        /** Default `onComplete` of every operation; a router recognizes it by identity. */
+        val NoCompletion: (isSuccess: Boolean) -> Unit = {}
+    }
 }
