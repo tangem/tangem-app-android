@@ -66,6 +66,7 @@ dependencies {
     api(projects.core.navigation)
     api(projects.core.ui)
     api(projects.core.utils)
+    implementation(projects.core.configToggles)
     implementation(projects.core.res)
 
     implementation(projects.libs.crypto)
