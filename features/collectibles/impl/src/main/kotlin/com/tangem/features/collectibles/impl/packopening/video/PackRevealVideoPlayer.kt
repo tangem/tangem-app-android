@@ -1,28 +1,23 @@
 package com.tangem.features.collectibles.impl.packopening.video
 
 import android.view.SurfaceView
+import com.tangem.core.media.VideoLoadState
 import com.tangem.features.collectibles.impl.packopening.video.source.PackRevealAsset
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.StateFlow
 
-/**
- * The media half of the reveal: the full video, played once, and the skip sound for a skip or a fallback.
- * Failures never throw: the animation must not gate the reward.
- */
+/** The reveal video and the skip sound. Failures never throw: the animation must not gate the reward. */
 internal interface PackRevealVideoPlayer {
 
-    /** Whether the full video is loaded and prepared. */
     val videoLoadState: StateFlow<VideoLoadState>
 
-    /** Renders the video into [surfaceView]. */
     fun attachSurface(surfaceView: SurfaceView)
 
-    /** Stops rendering into [surfaceView]. */
     fun detachSurface(surfaceView: SurfaceView)
 
-    /** Downloads and prepares the skip sound. */
     suspend fun preloadSkipSound(url: String?)
 
-    /** Downloads and prepares [asset], replacing the previous video until [start]; cancel an unfinished call first. */
+    /** Replaces the previous video until [start]; cancel an unfinished call first. */
     suspend fun preloadVideo(asset: PackRevealAsset?)
 
     /** Plays the full video; without a ready one it goes straight to the card. */
@@ -34,23 +29,20 @@ internal interface PackRevealVideoPlayer {
     /** Jumps to the burst, mutes the video and plays the skip sound; false once the burst has begun. */
     fun skipToReveal(): Boolean
 
-    /** Releases both players. */
-    fun release()
+    /** Whether the screen is in front. */
+    fun setRunning(isRunning: Boolean)
 
-    enum class VideoLoadState { Loading, Ready, Failed }
+    fun release()
 
     interface Listener {
 
-        /** The full video reached the card, or failed while playing; at most once, only after [start]. */
+        /** The full video reached the card, or never will; at most once, only after [start], on the main thread. */
         fun onCardRevealReached()
-
-        /** A load or playback failure, for logging. */
-        fun onError(error: Throwable)
     }
 
     interface Factory {
 
-        /** Creates a player reporting to [listener]. */
-        fun create(listener: Listener): PackRevealVideoPlayer
+        /** [scope] runs on the main thread. */
+        fun create(scope: CoroutineScope, listener: Listener): PackRevealVideoPlayer
     }
 }

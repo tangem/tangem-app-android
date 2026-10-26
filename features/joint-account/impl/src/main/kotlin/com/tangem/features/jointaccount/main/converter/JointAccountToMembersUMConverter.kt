@@ -206,10 +206,14 @@ internal class JointAccountToMembersUMConverter(
             name = name,
             isYou = isOwn,
             isCreator = member.role == JointAccount.Role.CREATOR,
-            status = when {
-                phase.stage != MembersScreenPhase.Stage.Confirming -> MemberStatusUM.Joined
-                member.isVerified -> MemberStatusUM.Confirmed
-                else -> MemberStatusUM.NotConfirmed
+            status = when (phase.stage) {
+                MembersScreenPhase.Stage.Collecting -> MemberStatusUM.Joined
+                MembersScreenPhase.Stage.Confirming -> if (member.isVerified) {
+                    MemberStatusUM.Confirmed
+                } else {
+                    MemberStatusUM.NotConfirmed
+                }
+                MembersScreenPhase.Stage.Completed -> MemberStatusUM.None
             },
             onInfoClick = { callbacks.onMemberInfoClick(avatar, name, member.address) },
         )

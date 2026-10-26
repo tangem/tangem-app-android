@@ -5,7 +5,7 @@ import com.tangem.domain.models.network.Network
 import java.math.BigDecimal
 
 /**
- * A payment-account token holding a positive balance, [isAvailable] when the off-ramp accepts it. Only available tokens
+ * A source-account token holding a positive balance, [isAvailable] when the off-ramp accepts it. Only available tokens
  * can be withdrawn from; the rest are listed but cannot be picked.
  */
 internal data class BankWithdrawSource(
