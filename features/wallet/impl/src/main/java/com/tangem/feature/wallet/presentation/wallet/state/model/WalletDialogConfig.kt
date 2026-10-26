@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state.model
 
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
@@ -12,6 +13,7 @@ import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.yield.supply.api.promobottomsheet.YieldModePromoOffer
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import java.math.BigDecimal
 
 /**
@@ -38,6 +40,7 @@ internal sealed interface WalletDialogConfig {
     data class TokenActionList(
         val actionList: ImmutableList<TokenActionButtonUM>,
         val tokenRowUM: TangemTokenRowUM?,
+        @Transient val tokenRowState: TangemTokenRow.State? = null,
         val offsetY: Float,
         val offsetX: Float,
     ) : WalletDialogConfig
