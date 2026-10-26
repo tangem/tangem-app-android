@@ -349,6 +349,59 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         }
 
         @Test
+        fun `GIVEN no liquidity WHEN quote refresh pending THEN notification stays up`() = runTest {
+            // Arrange
+            val quote = createQuote(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY)
+            coEvery { getQuoteUseCase(request = any()) } returns quote.right()
+            val model = createAmountModel(testScope = this)
+            advanceUntilIdle()
+            model.onResume()
+            model.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            val unavailable = model.uiState.value
+            coEvery { getQuoteUseCase(request = any()) } coAnswers {
+                delay(timeMillis = QUOTE_POLL_INTERVAL_MILLIS)
+                quote.right()
+            }
+
+            // Act
+            advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+
+            // Assert
+            assertThat(model.uiState.value).isEqualTo(unavailable)
+            assertThat(unavailable.notifications).contains(PredictionNotificationUM.NoLiquidity)
+            coVerify(exactly = 2) { getQuoteUseCase(request = any()) }
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN quote failed WHEN quote refresh pending THEN error notification stays up`() = runTest {
+            // Arrange
+            coEvery { getQuoteUseCase(request = any()) } returns PredictionOrderQuoteError.Network.left()
+            val model = createAmountModel(testScope = this)
+            advanceUntilIdle()
+            model.onResume()
+            model.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            val failed = model.uiState.value
+            coEvery { getQuoteUseCase(request = any()) } coAnswers {
+                delay(timeMillis = QUOTE_POLL_INTERVAL_MILLIS)
+                PredictionOrderQuoteError.Network.left()
+            }
+
+            // Act
+            advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+
+            // Assert
+            assertThat(model.uiState.value).isEqualTo(failed)
+            assertThat(failed.notifications).contains(PredictionNotificationUM.QuoteFailed)
+            coVerify(exactly = 2) { getQuoteUseCase(request = any()) }
+
+            model.onDestroy()
+        }
+
+        @Test
         fun `GIVEN below min order size WHEN quote loaded THEN figures are kept AND button disabled`() = runTest {
             // Arrange
             coEvery { getQuoteUseCase(request = any()) } returns
