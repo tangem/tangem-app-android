@@ -102,20 +102,34 @@ data class JointAccountMembersUM(
         ) : MemberUM
     }
 
-    /** The status badge of a joined member: "Joined" while collecting, the confirmation state while confirming. */
-    enum class MemberStatusUM(val text: TextReference, val badgeStatus: TangemBadge.Status) {
-        Joined(
-            text = TextReference.Res(R.string.joint_account_members_role_joined),
-            badgeStatus = TangemBadge.Status.Info,
-        ),
-        NotConfirmed(
-            text = TextReference.Res(R.string.joint_account_members_status_not_confirmed),
-            badgeStatus = TangemBadge.Status.Neutral,
-        ),
-        Confirmed(
-            text = TextReference.Res(R.string.joint_account_members_status_confirmed),
-            badgeStatus = TangemBadge.Status.Info,
-        ),
+    /**
+     * The end slot of a joined member row: "Joined" while collecting, the confirmation state while confirming,
+     * [None] once the roster is complete and the row has nothing left to report.
+     */
+    @Immutable
+    sealed interface MemberStatusUM {
+
+        data object None : MemberStatusUM
+
+        sealed interface Badge : MemberStatusUM {
+            val text: TextReference
+            val badgeStatus: TangemBadge.Status
+        }
+
+        data object Joined : Badge {
+            override val text = TextReference.Res(R.string.joint_account_members_role_joined)
+            override val badgeStatus = TangemBadge.Status.Info
+        }
+
+        data object NotConfirmed : Badge {
+            override val text = TextReference.Res(R.string.joint_account_members_status_not_confirmed)
+            override val badgeStatus = TangemBadge.Status.Neutral
+        }
+
+        data object Confirmed : Badge {
+            override val text = TextReference.Res(R.string.joint_account_members_status_confirmed)
+            override val badgeStatus = TangemBadge.Status.Info
+        }
     }
 
     @Immutable

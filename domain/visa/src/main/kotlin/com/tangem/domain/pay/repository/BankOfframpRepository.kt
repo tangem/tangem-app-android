@@ -16,5 +16,8 @@ interface BankOfframpRepository {
 
     suspend fun getBankAccounts(userWalletId: UserWalletId): Either<BankOfframpError, List<BankAccount>>
 
-    suspend fun getOptions(userWalletId: UserWalletId): Either<BankOfframpError, BankOfframpOptions>
+    suspend fun getOptions(
+        userWalletId: UserWalletId,
+        productInstanceId: String?,
+    ): Either<BankOfframpError, BankOfframpOptions>
 }

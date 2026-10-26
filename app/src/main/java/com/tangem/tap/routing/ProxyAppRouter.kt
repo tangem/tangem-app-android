@@ -2,12 +2,9 @@ package com.tangem.tap.routing
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
-import com.tangem.core.analytics.api.AnalyticsExceptionHandler
-import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
+import com.tangem.core.decompose.navigation.NavigationFailureHandler
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.tap.routing.configurator.AppRouterConfig
-import com.tangem.utils.logging.TangemLogger
-import com.tangem.wallet.R
 import kotlin.reflect.KClass
 
 /**
@@ -16,10 +13,8 @@ import kotlin.reflect.KClass
  */
 internal class ProxyAppRouter(
     private val config: AppRouterConfig,
-    private val analyticsExceptionHandler: AnalyticsExceptionHandler,
+    private val navigationFailureHandler: NavigationFailureHandler,
 ) : AppRouter {
-
-    private val logger = TangemLogger.withTag("AppRouter")
 
     private val innerRouter: Router
         get() = requireNotNull(config.componentRouter) {
@@ -56,17 +51,6 @@ internal class ProxyAppRouter(
     }
 
     override fun defaultCompletionHandler(isSuccess: Boolean, errorMessage: String) {
-        if (!isSuccess) {
-            analyticsExceptionHandler.sendException(ExceptionAnalyticsEvent(RuntimeException(errorMessage)))
-            logger.w(errorMessage)
-
-            with(receiver = config.snackbarHandler ?: return) {
-                showSnackbar(
-                    text = R.string.common_unknown_error,
-                    buttonTitle = R.string.common_ok,
-                    action = { dismissSnackbar() },
-                )
-            }
-        }
+        if (!isSuccess) navigationFailureHandler.onNavigationFailed(errorMessage)
     }
 }
