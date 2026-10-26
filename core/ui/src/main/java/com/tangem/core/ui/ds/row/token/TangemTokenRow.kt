@@ -72,7 +72,7 @@ fun TangemTokenRow(
                 endContentUM = tokenRowUM.topEndContentUM,
                 isBalanceHidden = isBalanceHidden,
                 textStyle = TangemTheme.typography2.bodySemibold16,
-                textColor = TangemTheme.colors2.text.neutral.primary,
+                textColor = TangemTheme.colors3.text.primary,
                 placeholderWidth = 80.dp,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.END_TOP)
@@ -83,7 +83,7 @@ fun TangemTokenRow(
                 endContentUM = tokenRowUM.bottomEndContentUM,
                 isBalanceHidden = isBalanceHidden,
                 textStyle = TangemTheme.typography2.captionSemibold12,
-                textColor = TangemTheme.colors2.text.neutral.secondary,
+                textColor = TangemTheme.colors3.text.secondary,
                 placeholderWidth = 44.dp,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.END_BOTTOM)
@@ -176,7 +176,7 @@ fun TangemTokenRow(
                 endContentUM = tokenRowUM.topEndContentUM,
                 isBalanceHidden = isBalanceHidden,
                 textStyle = TangemTheme.typography2.bodySemibold16,
-                textColor = TangemTheme.colors2.text.neutral.primary,
+                textColor = TangemTheme.colors3.text.primary,
                 placeholderWidth = 80.dp,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.END_TOP)
@@ -187,7 +187,7 @@ fun TangemTokenRow(
                 endContentUM = tokenRowUM.bottomEndContentUM,
                 isBalanceHidden = isBalanceHidden,
                 textStyle = TangemTheme.typography2.captionSemibold12,
-                textColor = TangemTheme.colors2.text.neutral.secondary,
+                textColor = TangemTheme.colors3.text.secondary,
                 placeholderWidth = 44.dp,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.END_BOTTOM)
@@ -216,7 +216,7 @@ private fun TangemTokenRow_Preview(
         TangemTokenRow(
             tokenRowUM = tokenRowUM,
             isBalanceHidden = false,
-            modifier = Modifier.background(TangemTheme.colors2.surface.level1),
+            modifier = Modifier.background(TangemTheme.colors3.bg.primary),
         )
     }
 }

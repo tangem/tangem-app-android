@@ -71,12 +71,12 @@ fun StatusTangemButton(
 ) {
     val statusColor = type.getStatusColor()
     val contentColor = when {
-        isEnabled -> TangemTheme.colors2.text.neutral.primaryInvertedConstant
-        else -> TangemTheme.colors2.text.status.disabled
+        isEnabled -> TangemTheme.colors3.text.staticDark.primary
+        else -> TangemTheme.colors3.text.tertiary
     }
     val backgroundModifier = when {
         isEnabled -> Modifier.background(statusColor)
-        else -> Modifier.background(TangemTheme.colors2.button.backgroundDisabled)
+        else -> Modifier.background(TangemTheme.colors3.bg.disabled)
     }
     TangemButtonInternal(
         onClick = onClick,
@@ -96,9 +96,9 @@ fun StatusTangemButton(
 @ReadOnlyComposable
 @Composable
 private fun TangemButtonType.getStatusColor() = when (this) {
-    TangemButtonType.Accent -> TangemTheme.colors2.button.backgroundAccent
-    TangemButtonType.Positive -> TangemTheme.colors2.button.backgroundPositive
-    else -> TangemTheme.colors2.button.backgroundPrimary
+    TangemButtonType.Accent -> TangemTheme.colors3.bg.accent.blue
+    TangemButtonType.Positive -> TangemTheme.colors3.bg.accent.blue
+    else -> TangemTheme.colors3.bg.inverse
 }
 
 // region Preview
@@ -112,7 +112,7 @@ private fun StatusTangemButton_Preview(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(TangemTheme.colors2.surface.level1),
+                .background(TangemTheme.colors3.bg.primary),
         ) {
             params.statuses.fastForEach { (isEnabled, isLoading) ->
                 Row(
@@ -139,9 +139,9 @@ private fun StatusTangemButton_Preview(
                                         iconRes = R.drawable.ic_tangem_24,
                                         tintReference = {
                                             if (isEnabled) {
-                                                TangemTheme.colors2.graphic.neutral.primaryInvertedConstant
+                                                TangemTheme.colors3.icon.staticDark
                                             } else {
-                                                TangemTheme.colors2.graphic.neutral.quaternary
+                                                TangemTheme.colors3.icon.tertiary
                                             }
                                         },
                                     ),

@@ -38,7 +38,7 @@ fun SingleUserAssetItem(shouldUsePriceBlock: Boolean, item: UserAssetItemUM.Sing
                 modifier = Modifier.layoutId(TangemRowLayoutId.START_TOP),
                 text = item.tokenName,
                 style = TangemTheme.typography2.bodyMedium16,
-                color = TangemTheme.colors2.text.neutral.primary,
+                color = TangemTheme.colors3.text.primary,
                 maxLines = 1,
                 overflow = TextOverflow.MiddleEllipsis,
             )
@@ -55,7 +55,7 @@ fun SingleUserAssetItem(shouldUsePriceBlock: Boolean, item: UserAssetItemUM.Sing
                     modifier = Modifier.layoutId(TangemRowLayoutId.START_BOTTOM),
                     text = item.networkName,
                     style = TangemTheme.typography2.captionMedium12,
-                    color = TangemTheme.colors2.text.neutral.secondary,
+                    color = TangemTheme.colors3.text.secondary,
                     maxLines = 1,
                     overflow = TextOverflow.MiddleEllipsis,
                 )
@@ -91,9 +91,9 @@ private fun PriceBlock(
                 text = fiatRate,
                 style = TangemTheme.typography2.captionMedium12,
                 color = if (isDisabled) {
-                    TangemTheme.colors2.text.status.disabled
+                    TangemTheme.colors3.text.tertiary
                 } else {
-                    TangemTheme.colors2.text.neutral.secondary
+                    TangemTheme.colors3.text.secondary
                 },
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

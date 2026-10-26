@@ -187,7 +187,7 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
                                 }
                                 .size(16.dp)
                                 .testTag(TangemPayTestTags.CARD_FROZEN_BADGE),
-                            color = TangemTheme.colors.text.constantWhite,
+                            color = TangemTheme.colors3.text.staticDark.primary,
                             strokeWidth = 1.dp,
                         )
                         TangemPayCardFrozenState.Unfrozen -> Unit
@@ -666,9 +666,9 @@ private fun TangemPayCardDetailsCustomButton(
         onClick = onClick,
         colors = ButtonColors(
             containerColor = CustomCardBlockColor,
-            contentColor = TangemTheme.colors.text.constantWhite,
-            disabledContainerColor = TangemTheme.colors.text.constantWhite,
-            disabledContentColor = TangemTheme.colors.text.constantWhite,
+            contentColor = TangemTheme.colors3.text.staticDark.primary,
+            disabledContainerColor = TangemTheme.colors3.text.staticDark.primary,
+            disabledContentColor = TangemTheme.colors3.text.staticDark.primary,
         ),
         enabled = true,
         showProgress = showProgress,
@@ -686,7 +686,7 @@ private fun TangemPayCardDetailsBlockPreview(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(TangemTheme.colors.background.primary),
+                .background(TangemTheme.colors3.bg.primary),
         ) {
             TangemPayCard(
                 state = state,

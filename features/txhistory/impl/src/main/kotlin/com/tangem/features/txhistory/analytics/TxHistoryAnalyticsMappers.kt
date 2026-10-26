@@ -3,6 +3,7 @@ package com.tangem.features.txhistory.analytics
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.txhistory.model.ExpressTx
+import com.tangem.domain.txhistory.model.JointOperationTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
@@ -21,6 +22,7 @@ internal fun TxHistoryInfo.toAnalyticsType(): String = when (this) {
     is ExpressTx.Onramp -> "Onramp"
     is OnChainTx.TangemPay -> txInfo.toAnalyticsType()
     is OnChainTx.BSDK -> txInfo.type.toAnalyticsType(isOutgoing = txInfo.isOutgoing)
+    is JointOperationTx -> "Send"
 }
 
 private fun TangemPayTxHistoryItem.toAnalyticsType(): String = when (this) {
@@ -54,6 +56,7 @@ internal fun TxHistoryInfo.toAnalyticsStatus(): String = when (this) {
     is OnChainTx.TangemPay -> null
     is ExpressTx.Swap -> ExpressExchangeStatusToUiStatusConverter().convert(tx.status)
     is ExpressTx.Onramp -> ExpressOnrampStatusToUiStatusConverter().convert(tx.status)
+    is JointOperationTx -> operation.status.toUiStatus()
 }.toAnalyticsStatusString()
 
 private fun Status?.toAnalyticsStatusString(): String = when (this) {

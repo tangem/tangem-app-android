@@ -88,7 +88,7 @@ private fun SegmentSeedBlock(state: MultiWalletSeedPhraseUM.GenerateSeedPhrase, 
                 .padding(vertical = 10.dp)
                 .fillMaxWidth(),
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
         )
     }
@@ -106,7 +106,7 @@ private fun TitleBlock(state: MultiWalletSeedPhraseUM.GenerateSeedPhrase, modifi
         Text(
             text = stringResourceSafe(id = R.string.onboarding_seed_generate_title),
             style = TangemTheme.typography.h2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -117,7 +117,7 @@ private fun TitleBlock(state: MultiWalletSeedPhraseUM.GenerateSeedPhrase, modifi
                 state.option.length,
             ),
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )

@@ -45,7 +45,7 @@ internal fun FeeSelectorModalBottomSheet(
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
         onBack = if (childStack.backStack.isNotEmpty()) onBack else null,
         title = {
             FeeTitle(
