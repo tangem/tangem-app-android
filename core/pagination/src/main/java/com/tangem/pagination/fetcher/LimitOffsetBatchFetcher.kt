@@ -47,9 +47,9 @@ class LimitOffsetBatchFetcher<TRequestParams : Any, TData>(
 
         val res = runCatching {
             subFetcher.fetch(request = req, lastResult = null, isFirstBatchFetching = true)
-        }.getOrElse {
+        }.getOrElse { throwable ->
             currentCoroutineContext().ensureActive()
-            BatchFetchResult.Error(it)
+            BatchFetchResult.Error(throwable)
         }
 
         lastRequest.value = req
@@ -64,7 +64,7 @@ class LimitOffsetBatchFetcher<TRequestParams : Any, TData>(
         requireNotNull(last)
 
         val req = if (lastResult is BatchFetchResult.Success) {
-            if (lastResult.last && overrideRequestParams == null) {
+            if (lastResult.isLast && overrideRequestParams == null) {
                 return BatchFetchResult.Error(EndOfPaginationException())
             }
 
@@ -79,9 +79,9 @@ class LimitOffsetBatchFetcher<TRequestParams : Any, TData>(
 
         val res = runCatching {
             subFetcher.fetch(request = req, lastResult = lastResult, isFirstBatchFetching = false)
-        }.getOrElse {
+        }.getOrElse { throwable ->
             currentCoroutineContext().ensureActive()
-            BatchFetchResult.Error(it)
+            BatchFetchResult.Error(throwable)
         }
 
         lastRequest.value = req

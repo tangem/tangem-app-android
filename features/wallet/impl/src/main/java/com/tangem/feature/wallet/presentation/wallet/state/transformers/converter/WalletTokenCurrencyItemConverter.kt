@@ -280,21 +280,21 @@ internal class WalletTokenCurrencyItemConverter(
         val currency = currencyStatus.currency
         val isTokenCurrency = currency is CryptoCurrency.Token
         val isCurrencyStatusLoaded = currencyStatus.value is CryptoCurrencyStatus.Loaded
-        val isApyInfoNotNull = earnApyInfo != null && earnApyInfo.apy != null
-
-        if (!isTokenCurrency || !isCurrencyStatusLoaded || !isApyInfoNotNull) {
+        if (!isTokenCurrency || !isCurrencyStatusLoaded || earnApyInfo == null) {
             return TangemTokenRowUM.PromoBannerUM.Empty
         }
 
         return TangemTokenRowUM.PromoBannerUM.Content(
             title = resourceReference(
                 R.string.yield_module_main_screen_promo_banner_message,
-                wrappedList(earnApyInfo.apy),
+                wrappedList(earnApyInfo.rate.formatEarnRate()),
             ),
             iconRes = R.drawable.ic_yield_mode_mini_12,
             type = TangemTokenRowUM.PromoBannerUM.Content.Type.Yield,
             onPromoBannerClick = {
-                clickIntents.onYieldPromoClicked(accountId, currencyStatus, earnApyInfo.apy)
+                // The earn screen takes the rate in percent, as the backend reports it
+                val apyPercent = earnApyInfo.rate.movePointRight(EarnApyConverter.PERCENT_POINT_SHIFT).toPlainString()
+                clickIntents.onYieldPromoClicked(accountId, currencyStatus, apyPercent)
             },
             onCloseClick = clickIntents::onYieldPromoCloseClick,
             onPromoShown = {

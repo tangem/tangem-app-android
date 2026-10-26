@@ -48,7 +48,7 @@ internal class DefaultWcRequestUseCaseFactory @Inject constructor(
             ?.getCoinName().orEmpty()
         val event = WcAnalyticEvents.SignatureRequestReceivedFailed(
             rawRequest = request,
-            errorCode = error.code().orEmpty(),
+            errorCode = error.code(),
             blockchain = blockchainName,
             errorMessage = error.message,
         )

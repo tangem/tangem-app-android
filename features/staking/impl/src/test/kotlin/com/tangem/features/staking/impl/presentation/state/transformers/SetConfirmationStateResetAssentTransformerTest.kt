@@ -163,7 +163,7 @@ internal class SetConfirmationStateResetAssentTransformerTest {
         confirmationState = confirmationState,
         isBalanceHidden = false,
         bottomSheetConfig = null,
-        actionType = StakingActionCommonType.Enter(skipEnterAmount = false),
+        actionType = StakingActionCommonType.Enter(shouldSkipEnterAmount = false),
         buttonsState = NavigationButtonsState.Empty,
         balanceState = null,
         isColdWalletInteractionIconVisible = true,

@@ -1,10 +1,15 @@
 package com.tangem.grow.datasource.collectibles
 
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.grow.datasource.collectibles.models.request.BuybackTxSentRequestBody
 import com.tangem.grow.datasource.collectibles.models.request.CollectibleTxRequestBody
+import com.tangem.grow.datasource.collectibles.models.request.GenerateBuybackDataRequestBody
 import com.tangem.grow.datasource.collectibles.models.request.GeneratePurchaseTxRequestBody
 import com.tangem.grow.datasource.collectibles.models.request.PurchaseTxSentRequestBody
+import com.tangem.grow.datasource.collectibles.models.response.BuybackAvailabilityResponse
+import com.tangem.grow.datasource.collectibles.models.response.BuybackStatusResponse
 import com.tangem.grow.datasource.collectibles.models.response.CollectibleTxResponse
+import com.tangem.grow.datasource.collectibles.models.response.GenerateBuybackDataResponse
 import com.tangem.grow.datasource.collectibles.models.response.GeneratePurchaseTxResponse
 import com.tangem.grow.datasource.collectibles.models.response.MachineCategoriesResponse
 import com.tangem.grow.datasource.collectibles.models.response.MachineNftsResponse
@@ -14,7 +19,7 @@ import com.tangem.lib.auth.api.RequiresSessionAuth
 import retrofit2.http.*
 
 /**
- * Collector Crypt gacha API: machine catalog and collectible purchase transactions.
+ * Collector Crypt gacha API: machine catalog, collectible purchase and buyback transactions.
  *
  * Every endpoint is session-protected, so each method carries [RequiresSessionAuth].
  */
@@ -83,4 +88,32 @@ interface CollectiblesApi {
         @Body body: CollectibleTxRequestBody,
         @Query("includeNftWon") includeNftWon: Boolean,
     ): ApiResponse<CollectibleTxResponse>
+
+    @RequiresSessionAuth
+    @GET("api/v1/buyback/available")
+    suspend fun getBuybackAvailability(
+        @Header("user-id") userWalletId: String,
+        @Query("nftAddress") nftAddress: String,
+    ): ApiResponse<BuybackAvailabilityResponse>
+
+    @RequiresSessionAuth
+    @POST("api/v1/buyback/buyback-data")
+    suspend fun generateBuybackData(
+        @Header("user-id") userWalletId: String,
+        @Body body: GenerateBuybackDataRequestBody,
+    ): ApiResponse<GenerateBuybackDataResponse>
+
+    @RequiresSessionAuth
+    @POST("api/v1/buyback/buyback-tx-sent")
+    suspend fun buybackTxSent(
+        @Header("user-id") userWalletId: String,
+        @Body body: BuybackTxSentRequestBody,
+    ): ApiResponse<BuybackStatusResponse>
+
+    @RequiresSessionAuth
+    @GET("api/v1/buyback/status")
+    suspend fun getBuybackStatus(
+        @Header("user-id") userWalletId: String,
+        @Query("buybackId") buybackId: String,
+    ): ApiResponse<BuybackStatusResponse>
 }

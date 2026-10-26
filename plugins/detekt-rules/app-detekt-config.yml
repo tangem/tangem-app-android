@@ -1,3 +1,5 @@
 tangem-rules:
   UnsafeStringResourceUsage:
     active: true
+  AppRouterInComponentTree:
+    active: true

@@ -13,9 +13,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.res.TangemTheme
 
 private const val GAP_WIDTH = 1f
 private const val ALPHA = 0.9f
@@ -71,7 +71,7 @@ private fun IdentIconPreview() {
         IdentIcon(
             address = "0xfb6916095ca1df60bb79ce92ce3ea74c37c5d359",
             modifier = Modifier
-                .size(TangemTheme.dimens.size40),
+                .size(40.dp),
         )
     }
 }

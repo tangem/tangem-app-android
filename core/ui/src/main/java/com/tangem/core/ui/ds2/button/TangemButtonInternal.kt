@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -23,12 +24,14 @@ import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.animation.TangemTransition
 import com.tangem.core.ui.ds2.loader.TangemLoader
+import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.BaseButtonTestTags
 
 /**
- * Inner content of [TangemButton]: an icon-text-icon row with a cross-fading loader overlay.
+ * Inner content of [TangemButton]: an icon-text-icon row with a cross-fading loader overlay. With
+ * [isLoaderInline] the loader takes the trailing icon slot instead, after the loading message.
  *
  * Designed to be hosted inside a [com.tangem.core.ui.ds2.surface.TangemSurface] which owns sizing,
  * shape, color, border and click handling. This composable only renders the content.
@@ -39,6 +42,7 @@ internal fun TangemButtonInternal(
     isIconOnly: Boolean,
     isEnabled: Boolean,
     isLoading: Boolean,
+    isLoaderInline: Boolean,
     iconStart: TangemIconUM?,
     iconEnd: TangemIconUM?,
     text: TextReference?,
@@ -49,8 +53,10 @@ internal fun TangemButtonInternal(
     val resolvedIconStart = iconStart?.resolveTint(colorTokens, isEnabled)
     val resolvedIconEnd = iconEnd?.resolveTint(colorTokens, isEnabled)
 
-    val contentAlpha by animateFloatAsState(if (isLoading) 0f else 1f, label = "contentAlpha")
-    val loaderAlpha by animateFloatAsState(if (isLoading) 1f else 0f, label = "loaderAlpha")
+    val isLoaderOverlay = isLoading && !isLoaderInline
+    val contentAlpha by animateFloatAsState(if (isLoaderOverlay) 0f else 1f, label = "contentAlpha")
+    val loaderAlpha by animateFloatAsState(if (isLoaderOverlay) 1f else 0f, label = "loaderAlpha")
+    val loaderColor = if (isEnabled) colorTokens.iconTint else colorTokens.disabledIconTint
 
     Box(
         modifier = modifier
@@ -73,6 +79,8 @@ internal fun TangemButtonInternal(
                     vertical = sizeTokens.containerVerticalPadding,
                 ),
             isEnabled = isEnabled,
+            isLoaderInline = isLoaderInline,
+            loaderColor = loaderColor,
             iconStart = resolvedIconStart,
             iconEnd = resolvedIconEnd,
             text = text,
@@ -85,14 +93,15 @@ internal fun TangemButtonInternal(
                 modifier = Modifier
                     .align(Alignment.Center)
                     .alpha(loaderAlpha),
-                color = if (isEnabled) colorTokens.iconTint else colorTokens.disabledIconTint,
+                color = loaderColor,
             )
         }
     }
 }
 
 /**
- * Row of `[iconStart] [text] [iconEnd]` where each slot animates in/out independently.
+ * Row of `[iconStart] [text] [iconEnd]` where each slot animates in/out independently. With
+ * [isLoaderInline] the end slot shows the loader and the start slot is hidden.
  *
  * Last non-null values are cached so that `AnimatedVisibility` exit transitions still have content
  * to render once the caller flips a slot back to `null`.
@@ -101,6 +110,8 @@ internal fun TangemButtonInternal(
 @Composable
 private fun ContentRow(
     isEnabled: Boolean,
+    isLoaderInline: Boolean,
+    loaderColor: Color,
     iconStart: TangemIconUM?,
     iconEnd: TangemIconUM?,
     text: TextReference?,
@@ -117,7 +128,7 @@ private fun ContentRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         AnimatedVisibility(
-            visible = iconStart != null,
+            visible = iconStart != null && !isLoaderInline,
             enter = TangemTransition.SlotEnterHorizontally,
             exit = TangemTransition.SlotExitHorizontally,
         ) {
@@ -135,45 +146,55 @@ private fun ContentRow(
             exit = TangemTransition.SlotExitHorizontally,
         ) {
             displayedText?.let { textRef ->
-                CompositionLocalProvider(LocalDensity provides cappedFontScaleDensity()) {
-                    Text(
-                        modifier = Modifier
-                            .padding(horizontal = sizeTokens.textPadding)
-                            .testTag(BaseButtonTestTags.TEXT),
-                        text = textRef.resolveReference(),
-                        textAlign = TextAlign.Center,
-                        color = if (isEnabled) colorTokens.textColor else colorTokens.disabledTextColor,
-                        style = TangemTheme.typography3.body.medium.copy(
-                            platformStyle = PlatformTextStyle(includeFontPadding = false),
-                            lineHeightStyle = LineHeightStyle(
-                                alignment = LineHeightStyle.Alignment.Center,
-                                trim = LineHeightStyle.Trim.Both,
-                            ),
-                        ),
-                        maxLines = 1,
-                        softWrap = false,
-                        overflow = TextOverflow.Ellipsis,
-                        autoSize = TextAutoSize.StepBased(
-                            minFontSize = TangemTheme.typography3.caption.medium.fontSize,
-                            maxFontSize = TangemTheme.typography3.body.medium.fontSize,
-                        ),
-                    )
-                }
+                ButtonLabel(text = textRef, isEnabled = isEnabled, colorTokens = colorTokens, sizeTokens = sizeTokens)
             }
         }
 
         AnimatedVisibility(
-            visible = iconEnd != null,
+            visible = iconEnd != null || isLoaderInline,
             enter = TangemTransition.SlotEnterHorizontally,
             exit = TangemTransition.SlotExitHorizontally,
         ) {
-            displayedIconEnd?.let { icon ->
-                TangemIcon(
-                    modifier = Modifier.size(sizeTokens.iconSize),
-                    tangemIconUM = icon,
-                )
+            if (isLoaderInline) {
+                TangemLoader(color = loaderColor, size = sizeTokens.loaderSize)
+            } else {
+                displayedIconEnd?.let { icon ->
+                    TangemIcon(
+                        modifier = Modifier.size(sizeTokens.iconSize),
+                        tangemIconUM = icon,
+                    )
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun ButtonLabel(text: TextReference, isEnabled: Boolean, colorTokens: ColorTokens, sizeTokens: SizeTokens) {
+    CompositionLocalProvider(LocalDensity provides cappedFontScaleDensity()) {
+        Text(
+            modifier = Modifier
+                .padding(horizontal = sizeTokens.textPadding)
+                .wrapContentHeight(unbounded = true)
+                .testTag(BaseButtonTestTags.TEXT),
+            text = text.resolveReference(),
+            textAlign = TextAlign.Center,
+            color = if (isEnabled) colorTokens.textColor else colorTokens.disabledTextColor,
+            style = sizeTokens.textStyle.copy(
+                platformStyle = PlatformTextStyle(includeFontPadding = false),
+                lineHeightStyle = LineHeightStyle(
+                    alignment = LineHeightStyle.Alignment.Center,
+                    trim = LineHeightStyle.Trim.Both,
+                ),
+            ),
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Ellipsis,
+            autoSize = TextAutoSize.StepBased(
+                minFontSize = TangemTheme.typography3.caption.medium.fontSize,
+                maxFontSize = sizeTokens.textStyle.fontSize,
+            ),
+        )
     }
 }
 
@@ -256,10 +277,10 @@ internal fun TangemButton.Variant.tokens(): ColorTokens {
             focusRingColor = TangemTheme.colors3.interaction.focusRing.brand,
         )
         TangemButton.Variant.Secondary -> ColorTokens(
-            backgroundColor = TangemTheme.colors3.bg.opaque.primary,
+            backgroundColor = TangemTheme.colors3.bg.transparent.primary,
             textColor = TangemTheme.colors3.text.primary,
             iconTint = TangemTheme.colors3.icon.primary,
-            disabledBackgroundColor = TangemTheme.colors3.bg.opaque.primary,
+            disabledBackgroundColor = TangemTheme.colors3.bg.transparent.primary,
             disabledTextColor = TangemTheme.colors3.text.primary,
             disabledIconTint = TangemTheme.colors3.icon.primary,
             focusRingColor = TangemTheme.colors3.interaction.focusRing.brand,
@@ -336,11 +357,14 @@ internal data class SizeTokens(
     val minWidth: Dp,
     val minSizeIconOnly: Dp,
     val textPadding: Dp,
+    val textStyle: TextStyle,
     val containerHorizontalPadding: Dp,
     val containerVerticalPadding: Dp,
     val iconSize: Dp,
+    val loaderSize: TangemLoaderSize,
 )
 
+@Suppress("LongMethod")
 @Composable
 @ReadOnlyComposable
 internal fun TangemButton.Size.tokens(): SizeTokens {
@@ -350,63 +374,77 @@ internal fun TangemButton.Size.tokens(): SizeTokens {
             minWidth = 88.dp,
             minSizeIconOnly = 56.dp,
             textPadding = 8.dp,
+            textStyle = TangemTheme.typography3.body.medium,
             containerHorizontalPadding = 16.dp,
             containerVerticalPadding = 16.dp,
             iconSize = 24.dp,
+            loaderSize = TangemLoaderSize.X24,
         )
         TangemButton.Size.X12 -> SizeTokens(
             minHeight = 48.dp,
             minWidth = 80.dp,
             minSizeIconOnly = 48.dp,
             textPadding = 8.dp,
+            textStyle = TangemTheme.typography3.body.medium,
             containerHorizontalPadding = 12.dp,
             containerVerticalPadding = 12.dp,
             iconSize = 24.dp,
+            loaderSize = TangemLoaderSize.X24,
         )
         TangemButton.Size.X11 -> SizeTokens(
             minHeight = 44.dp,
             minWidth = 72.dp,
             minSizeIconOnly = 44.dp,
             textPadding = 6.dp,
+            textStyle = TangemTheme.typography3.body.medium,
             containerHorizontalPadding = 12.dp,
             containerVerticalPadding = 12.dp,
             iconSize = 20.dp,
+            loaderSize = TangemLoaderSize.X20,
         )
         TangemButton.Size.X10 -> SizeTokens(
             minHeight = 40.dp,
             minWidth = 64.dp,
             minSizeIconOnly = 40.dp,
             textPadding = 6.dp,
+            textStyle = TangemTheme.typography3.body.medium,
             containerHorizontalPadding = 10.dp,
             containerVerticalPadding = 10.dp,
             iconSize = 20.dp,
+            loaderSize = TangemLoaderSize.X20,
         )
         TangemButton.Size.X9 -> SizeTokens(
             minHeight = 36.dp,
             minWidth = 56.dp,
             minSizeIconOnly = 36.dp,
             textPadding = 6.dp,
+            textStyle = TangemTheme.typography3.body.medium,
             containerHorizontalPadding = 8.dp,
             containerVerticalPadding = 8.dp,
             iconSize = 20.dp,
+            loaderSize = TangemLoaderSize.X20,
         )
         TangemButton.Size.X8 -> SizeTokens(
             minHeight = 32.dp,
             minWidth = 48.dp,
             minSizeIconOnly = 32.dp,
             textPadding = 6.dp,
+            textStyle = TangemTheme.typography3.body.medium,
             containerHorizontalPadding = 6.dp,
             containerVerticalPadding = 6.dp,
             iconSize = 20.dp,
+            loaderSize = TangemLoaderSize.X20,
         )
         TangemButton.Size.X7 -> SizeTokens(
             minHeight = 28.dp,
             minWidth = 40.dp,
             minSizeIconOnly = 28.dp,
-            textPadding = 6.dp,
+            textPadding = 4.dp,
+            textStyle = TangemTheme.typography3.subheading.medium,
             containerHorizontalPadding = 6.dp,
             containerVerticalPadding = 4.dp,
             iconSize = 16.dp,
+            loaderSize = TangemLoaderSize.X16,
         )
     }
 }

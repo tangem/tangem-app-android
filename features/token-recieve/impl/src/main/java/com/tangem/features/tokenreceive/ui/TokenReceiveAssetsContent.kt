@@ -76,7 +76,7 @@ internal fun TokenReceiveAssetsContent(assetsUM: ReceiveAssetsUM) {
         AddressBlock(assetsUM = assetsUM)
         SpacerH(16.dp)
         Info(
-            showMemoDisclaimer = assetsUM.showMemoDisclaimer,
+            showMemoDisclaimer = assetsUM.shouldShowMemoDisclaimer,
             notificationConfigs = assetsUM.notificationConfigs,
             currencyIconState = assetsUM.currencyIconState,
         )
@@ -88,7 +88,7 @@ private fun LoadingBlock(modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = TangemTheme.colors3.bg.opaque.primary),
+        colors = CardDefaults.cardColors(containerColor = TangemTheme.colors3.bg.transparent.primary),
     ) {
         Box(
             modifier = Modifier
@@ -137,9 +137,9 @@ private fun AddressBlock(assetsUM: ReceiveAssetsUM) {
     PrimaryAddressesItems(
         addresses = assetsUM.addresses.fastFilter { it.type is ReceiveAddress.Type.Primary }.toImmutableList(),
         currencyIconState = assetsUM.currencyIconState,
-        onShareClick = {
+        onShareClick = { address ->
             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-            assetsUM.onShareClick(it)
+            assetsUM.onShareClick(address)
         },
         onCopyClick = { address ->
             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -332,7 +332,7 @@ private fun EnsItem(onCopyClick: () -> Unit, address: String, modifier: Modifier
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = TangemTheme.colors3.bg.opaque.primary),
+        colors = CardDefaults.cardColors(containerColor = TangemTheme.colors3.bg.transparent.primary),
     ) {
         Row(
             modifier = Modifier

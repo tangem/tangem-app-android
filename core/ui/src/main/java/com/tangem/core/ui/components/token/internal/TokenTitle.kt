@@ -31,7 +31,7 @@ fun TokenTitle(
             ContentTitle(state = state, modifier = modifier, textStyle = textStyle)
         }
         is TokenTitleState.Loading -> {
-            RectangleShimmer(modifier = modifier.placeholderSize(), radius = TangemTheme.dimens.radius4)
+            RectangleShimmer(modifier = modifier.placeholderSize(), radius = 4.dp)
         }
         is TokenTitleState.Locked -> {
             LockedRectangle(modifier = modifier.placeholderSize())
@@ -44,7 +44,7 @@ fun TokenTitle(
 private fun ContentTitle(state: TokenTitleState.Content, textStyle: TextStyle, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing6),
+        horizontalArrangement = Arrangement.spacedBy(space = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         /*
@@ -65,7 +65,7 @@ private fun ContentTitle(state: TokenTitleState.Content, textStyle: TextStyle, m
 
         YieldSupplyApyLabel(
             apy = state.earnApy,
-            isActive = state.earnApyIsActive,
+            isActive = state.isEarnApyActive,
             modifier = Modifier
                 .align(alignment = Alignment.CenterVertically),
         )
@@ -123,6 +123,6 @@ private fun PendingTransactionImage(hasPending: Boolean, modifier: Modifier = Mo
 
 private fun Modifier.placeholderSize(): Modifier = composed {
     return@composed this
-        .padding(vertical = TangemTheme.dimens.spacing4)
-        .size(width = TangemTheme.dimens.size70, height = TangemTheme.dimens.size12)
+        .padding(vertical = 4.dp)
+        .size(width = 70.dp, height = 12.dp)
 }

@@ -13,6 +13,7 @@ import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.features.polymarket.impl.common.formatPolymarketPrice
 import com.tangem.features.polymarket.impl.common.formatPolymarketVolume
+import com.tangem.features.polymarket.impl.common.toResolutionSourceUM
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketDetailsMarketUM
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketDetailsOutcomeUM
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketEventDetailsUM
@@ -48,30 +49,36 @@ internal class PolymarketEventDetailsContentTransformer(
     private val onOutcomeClick: (marketId: String, assetId: String) -> Unit,
     private val onClosedMarketsClick: () -> Unit,
     private val onReadMoreClick: () -> Unit,
+    private val onResolutionSourceClick: (String) -> Unit = {},
+    private val categoryLabel: String? = null,
 ) : Transformer<PolymarketEventDetailsUM> {
 
     override fun transform(prevState: PolymarketEventDetailsUM): PolymarketEventDetailsUM {
         val markets = event.markets.sortedBy(PolymarketMarket::orderIndex)
+        val activeMarkets = markets
+            .filter { it.status == PolymarketStatus.ACTIVE || it.status == PolymarketStatus.UNKNOWN }
         return PolymarketEventDetailsUM.Content(
             title = stringReference(event.title),
+            categoryLabel = categoryLabel?.takeIf(String::isNotBlank)?.let(::stringReference),
             iconUrl = event.iconUrl,
             totalVolume = stringReference(event.volume.formatPolymarketVolume()),
             change24h = transformChange24h(volume = event.volume, volume24h = event.volume24h),
             // The BFF does not serve subcategories yet; the UI hides the row while the list is empty.
             subcategories = persistentListOf(),
-            activeMarkets = markets
-                .filter { it.status == PolymarketStatus.ACTIVE || it.status == PolymarketStatus.UNKNOWN }
+            activeMarkets = activeMarkets
                 .map { transformMarket(market = it, isTradable = true) }
                 .toImmutableList(),
             closedMarkets = markets
                 .filter { it.status == PolymarketStatus.CLOSED }
                 .map { transformMarket(market = it, isTradable = false) }
                 .toImmutableList(),
-            isClosedMarketsExpanded = isClosedMarketsExpanded,
+            isClosedMarketsExpanded = isClosedMarketsExpanded || activeMarkets.isEmpty(),
             description = event.description.takeIf(String::isNotBlank)?.let(::stringReference),
             isDescriptionExpanded = isDescriptionExpanded,
             resolutionDate = stringReference(formatEasternDate(raw = event.endDate)),
             marketOpenedDate = stringReference(formatEasternDate(raw = event.startDate)),
+            resolutionSource = event.resolutionSource.toResolutionSourceUM(),
+            onResolutionSourceClick = onResolutionSourceClick,
             onShareClick = { onShareClick(event.slug) },
             onClosedMarketsClick = onClosedMarketsClick,
             onReadMoreClick = onReadMoreClick,

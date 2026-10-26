@@ -1,0 +1,40 @@
+package com.tangem.store.datasource.txhistory.db.entity.sync
+
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+
+/**
+ * Persisted cursor-paged sync state of the backend-sourced tx histories: express and joint operations.
+ *
+ * Stored inside [com.tangem.store.datasource.txhistory.db.TxHistoryDatabase] on purpose: if the history tables are
+ * dropped (e.g. destructive migration), the sync state is wiped together with them and the history is re-synced
+ * from scratch.
+ */
+@Entity(
+    tableName = "history_sync_state",
+    primaryKeys = ["type", "user_wallet_id"],
+)
+data class HistorySyncStateEntity(
+
+    @ColumnInfo(name = "type")
+    val type: String,
+
+    @ColumnInfo(name = "user_wallet_id")
+    val userWalletId: String,
+
+    @ColumnInfo(name = "is_initial_completed")
+    val isInitialCompleted: Boolean,
+
+    @ColumnInfo(name = "after_cursor")
+    val afterCursor: String?,
+
+    @ColumnInfo(name = "delta_cursor")
+    val deltaCursor: String?,
+) {
+
+    enum class Type {
+        EXCHANGE,
+        ONRAMP,
+        JOINT_OPERATION,
+    }
+}

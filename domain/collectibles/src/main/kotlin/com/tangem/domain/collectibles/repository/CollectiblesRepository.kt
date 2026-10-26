@@ -34,4 +34,18 @@ interface CollectiblesRepository {
 
     /** The card may come later than the opening: the answer can be `pack-opened` without it. */
     suspend fun openPack(userWalletId: UserWalletId, txId: String): CollectibleTxState
+
+    /** `null` while the backend has no offer for [nftAddress] yet. */
+    suspend fun getBuybackOffer(userWalletId: UserWalletId, nftAddress: String): CollectibleBuybackOffer?
+
+    suspend fun generateBuybackTx(userWalletId: UserWalletId, params: GenerateBuybackTxParams): CollectibleBuybackTx
+
+    /** Reports the hash of the buyback transaction sent on chain; the backend then starts watching it. */
+    suspend fun reportBuybackTxSent(
+        userWalletId: UserWalletId,
+        buybackId: String,
+        txHash: String,
+    ): CollectibleBuybackStatus
+
+    suspend fun getBuybackStatus(userWalletId: UserWalletId, buybackId: String): CollectibleBuybackStatus
 }
