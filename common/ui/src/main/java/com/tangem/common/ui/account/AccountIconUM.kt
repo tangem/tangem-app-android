@@ -10,10 +10,7 @@ sealed class AccountIconUM {
 
     data object Payment : AccountIconUM()
 
-    data object Money : AccountIconUM() {
-        val icon: Icon = Icon.Safe
-        val color: Color = Color.VitalGreen
-    }
+    data object Money : AccountIconUM()
 
     data object Prediction : AccountIconUM()
 

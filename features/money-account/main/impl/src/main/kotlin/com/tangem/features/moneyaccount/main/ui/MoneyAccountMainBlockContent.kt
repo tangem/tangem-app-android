@@ -18,15 +18,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import com.tangem.common.ui.account.AccountIcon
-import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.TextShimmer
-import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.text.applyBladeBrush
+import com.tangem.core.ui.ds2.avatar.TangemAvatar
 import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.assets.il_account_safe
+import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
 import com.tangem.features.moneyaccount.main.impl.R
@@ -139,10 +139,12 @@ private fun MoneyAccountUnavailable(modifier: Modifier = Modifier) {
 
 @Composable
 private fun MoneyAccountIcon() {
-    AccountIcon(
-        name = TextReference.EMPTY,
-        icon = AccountIconUM.Money,
-        size = AccountIconSize.Default,
+    TangemAvatar(
+        state = TangemAvatar.UiState.Account(
+            imageVector = Icons.il_account_safe,
+            color = TangemAvatar.FillColor.Money,
+        ),
+        size = TangemAvatar.Size.X40,
     )
 }
 
