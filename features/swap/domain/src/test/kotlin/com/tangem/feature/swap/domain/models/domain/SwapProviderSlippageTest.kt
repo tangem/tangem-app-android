@@ -33,6 +33,48 @@ internal class SwapProviderSlippageTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class PairDefaultSlippage {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun pairDefaultSlippage(model: PairDefaultSlippageModel) {
+            // Arrange
+            val provider = buildSwapProvider(providerId = PROVIDER_ID, slippage = model.providerSlippage)
+
+            // Act
+            val actual = provider.pairDefaultSlippage(model.quoteDefaults)
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            PairDefaultSlippageModel(
+                providerSlippage = BigDecimal("2"),
+                quoteDefaults = mapOf(PROVIDER_ID to BigDecimal("0.05")),
+                expected = BigDecimal("0.05"),
+            ),
+            PairDefaultSlippageModel(
+                providerSlippage = BigDecimal("2"),
+                quoteDefaults = mapOf("other-provider" to BigDecimal("0.05")),
+                expected = BigDecimal("2"),
+            ),
+            PairDefaultSlippageModel(
+                providerSlippage = BigDecimal("2"),
+                quoteDefaults = mapOf(PROVIDER_ID to BigDecimal.ZERO),
+                expected = BigDecimal("2"),
+            ),
+            PairDefaultSlippageModel(
+                providerSlippage = null,
+                quoteDefaults = mapOf(PROVIDER_ID to BigDecimal("0.05")),
+                expected = BigDecimal("0.05"),
+            ),
+            PairDefaultSlippageModel(providerSlippage = null, quoteDefaults = emptyMap(), expected = null),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class AcceptsSlippage {
 
         @ParameterizedTest
@@ -45,7 +87,11 @@ internal class SwapProviderSlippageTest {
             )
 
             // Act
-            val actual = provider.acceptsSlippage(BigDecimal(model.percent))
+            val actual = if (model.pairDefault != null) {
+                provider.acceptsSlippage(BigDecimal(model.percent), defaultPercent = model.pairDefault)
+            } else {
+                provider.acceptsSlippage(BigDecimal(model.percent))
+            }
 
             // Assert
             assertThat(actual).isEqualTo(model.expected)
@@ -60,6 +106,34 @@ internal class SwapProviderSlippageTest {
             AcceptsSlippageModel(isSupported = false, providerDefault = BigDecimal("0.5"), percent = "0.7", expected = false),
             AcceptsSlippageModel(isSupported = true, providerDefault = null, percent = "0.7", expected = false),
             AcceptsSlippageModel(isSupported = true, providerDefault = BigDecimal.ZERO, percent = "0.7", expected = false),
+            AcceptsSlippageModel(
+                isSupported = true,
+                providerDefault = BigDecimal("2"),
+                pairDefault = BigDecimal("0.05"),
+                percent = "0.1",
+                expected = true,
+            ),
+            AcceptsSlippageModel(
+                isSupported = true,
+                providerDefault = BigDecimal("2"),
+                pairDefault = BigDecimal("0.05"),
+                percent = "0.11",
+                expected = false,
+            ),
+            AcceptsSlippageModel(
+                isSupported = true,
+                providerDefault = BigDecimal("0.5"),
+                pairDefault = BigDecimal("1"),
+                percent = "2",
+                expected = true,
+            ),
+            AcceptsSlippageModel(
+                isSupported = false,
+                providerDefault = BigDecimal("2"),
+                pairDefault = BigDecimal("0.05"),
+                percent = "0.1",
+                expected = false,
+            ),
         )
     }
 
@@ -93,12 +167,23 @@ internal class SwapProviderSlippageTest {
 
     data class DefaultSlippageModel(val providerSlippage: BigDecimal?, val expected: BigDecimal?)
 
+    data class PairDefaultSlippageModel(
+        val providerSlippage: BigDecimal?,
+        val quoteDefaults: Map<String, BigDecimal>,
+        val expected: BigDecimal?,
+    )
+
     data class AcceptsSlippageModel(
         val isSupported: Boolean,
         val providerDefault: BigDecimal?,
         val percent: String,
         val expected: Boolean,
+        val pairDefault: BigDecimal? = null,
     )
 
     data class AcceptedSlippageOrNullModel(val isSupported: Boolean, val custom: BigDecimal?, val expected: BigDecimal?)
+
+    private companion object {
+        const val PROVIDER_ID = "provider"
+    }
 }
