@@ -6,11 +6,13 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BASE_CHAIN_ID
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
+import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.USDC_BASE
 import com.tangem.features.tangempay.withdraw.bank.amount.TangemPayBankWithdrawAmountComponent
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.SheetUM
@@ -309,7 +311,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN source row clicked WHEN token selected THEN source changes and sheet closes`() {
         // Arrange
         val model = createModel()
-        model.uiState.value.source.onClick()
+        model.uiState.value.source.onClick?.invoke()
         val sheet = model.uiState.value.sheet as SheetUM.Tokens
         assertThat(sheet.items.map { it.symbol to it.isSelected }).containsExactly(
             "USDC" to true,
@@ -355,7 +357,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN sheet opened WHEN dismissed THEN sheet closes`() {
         // Arrange
         val model = createModel()
-        model.uiState.value.source.onClick()
+        model.uiState.value.source.onClick?.invoke()
 
         // Act
         model.uiState.value.sheet.onDismiss()
@@ -372,7 +374,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel(options = options)
 
         // Act
-        model.uiState.value.source.onClick()
+        model.uiState.value.source.onClick?.invoke()
 
         // Assert
         val sheet = model.uiState.value.sheet as SheetUM.Tokens
@@ -413,7 +415,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel(options = options, isBalanceHidden = true)
 
         // Act
-        model.uiState.value.source.onClick()
+        model.uiState.value.source.onClick?.invoke()
 
         // Assert
         val sheet = model.uiState.value.sheet as SheetUM.Tokens
@@ -691,7 +693,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel()
 
         // Act
-        model.uiState.value.source.onClick()
+        model.uiState.value.source.onClick?.invoke()
 
         // Assert
         verifyOrder {
@@ -707,7 +709,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN source sheet opened WHEN the selected source picked again THEN CoinInSelectionSheetClicked not sent`() {
         // Arrange
         val model = createModel()
-        model.uiState.value.source.onClick()
+        model.uiState.value.source.onClick?.invoke()
         val sheet = model.uiState.value.sheet as SheetUM.Tokens
 
         // Act
@@ -722,7 +724,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN source sheet opened WHEN another source picked THEN CoinInSelectionSheetClicked is sent`() {
         // Arrange
         val model = createModel()
-        model.uiState.value.source.onClick()
+        model.uiState.value.source.onClick?.invoke()
         val sheet = model.uiState.value.sheet as SheetUM.Tokens
 
         // Act
@@ -892,6 +894,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         return TangemPayBankWithdrawAmountModel(
             paramsContainer = MutableParamsContainer(
                 TangemPayBankWithdrawAmountComponent.Params(
+                    sourceAccount = BankWithdrawSourceAccount.Payment(UserWalletId("011")),
                     draft = draftFlow,
                     options = optionsFlow,
                     step = step,
