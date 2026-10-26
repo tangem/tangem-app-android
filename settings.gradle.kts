@@ -472,8 +472,6 @@ include(":features:joint-account:api")
 include(":features:joint-account:impl")
 
 /* Money Account */
-include(":features:money-account:onboarding:api")
-include(":features:money-account:onboarding:impl")
 
 include(":features:money-account:main:api")
 include(":features:money-account:main:impl")

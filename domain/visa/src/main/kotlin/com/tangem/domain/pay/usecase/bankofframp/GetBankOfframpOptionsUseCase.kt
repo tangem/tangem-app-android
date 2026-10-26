@@ -10,7 +10,10 @@ class GetBankOfframpOptionsUseCase(
     private val repository: BankOfframpRepository,
 ) {
 
-    suspend operator fun invoke(userWalletId: UserWalletId): Either<BankOfframpError, BankOfframpOptions> {
-        return repository.getOptions(userWalletId)
+    suspend operator fun invoke(
+        userWalletId: UserWalletId,
+        productInstanceId: String?,
+    ): Either<BankOfframpError, BankOfframpOptions> {
+        return repository.getOptions(userWalletId = userWalletId, productInstanceId = productInstanceId)
     }
 }

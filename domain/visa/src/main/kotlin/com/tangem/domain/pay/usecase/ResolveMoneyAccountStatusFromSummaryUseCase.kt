@@ -35,6 +35,7 @@ class ResolveMoneyAccountStatusFromSummaryUseCase {
             MoneyAccountActivationState.NotStarted,
             MoneyAccountActivationState.Unavailable,
             is MoneyAccountActivationState.AwaitingKyc,
+            is MoneyAccountActivationState.Failed,
             -> {
                 MoneyAccountStatusValue.Empty
             }
@@ -44,10 +45,6 @@ class ResolveMoneyAccountStatusFromSummaryUseCase {
                     source = StatusSource.ACTUAL,
                     customerId = summary.customerId,
                 )
-            }
-
-            is MoneyAccountActivationState.Failed -> {
-                MoneyAccountStatusValue.Error.Unavailable
             }
 
             MoneyAccountActivationState.Deactivated,

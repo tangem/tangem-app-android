@@ -20,6 +20,7 @@ dependencies {
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.express)
     implementation(projects.domain.express.models)
+    implementation(projects.domain.jointAccount)
     implementation(projects.domain.wallets)
     implementation(projects.domain.onramp)
     implementation(projects.domain.onramp.models)
@@ -74,6 +75,7 @@ dependencies {
 
     // region Domain models
     implementation(projects.domain.express.models)
+    implementation(projects.domain.jointAccount)
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory.models)

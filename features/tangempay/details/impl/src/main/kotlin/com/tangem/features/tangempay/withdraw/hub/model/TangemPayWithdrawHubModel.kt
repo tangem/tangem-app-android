@@ -7,11 +7,11 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.pay.TangemPayCurrencyFactory
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.pay.usecase.bankofframp.GetBankOfframpOptionsUseCase
@@ -20,11 +20,10 @@ import com.tangem.domain.pay.usecase.recents.GetRecentTokenTransfersUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
-import com.tangem.features.tangempay.common.balanceOrNull
-import com.tangem.features.tangempay.common.networksOrNull
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
+import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
-import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptionsFactory
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSourcesObserver
 import com.tangem.features.tangempay.withdraw.buildWithdrawSwapRoute
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUMFactory
@@ -57,11 +56,18 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
     private val getRecentBankAccountsUseCase: GetRecentBankAccountsUseCase,
     private val getRecentTokenTransfersUseCase: GetRecentTokenTransfersUseCase,
     private val getBankOfframpOptionsUseCase: GetBankOfframpOptionsUseCase,
-    private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+    private val bankWithdrawSourcesObserver: BankWithdrawSourcesObserver,
+    private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+    private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
     private val analytics: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<Params>()
+
+    private val productInstanceId: String? = when (val account = params.sourceAccount) {
+        is BankWithdrawSourceAccount.Payment -> null
+        is BankWithdrawSourceAccount.Money -> account.productInstanceId
+    }
 
     private val cryptoCurrency: CryptoCurrency.Token = tangemPayCurrencyFactory.create(params.userWalletId)
 
@@ -119,7 +125,7 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
     private fun loadOptions() {
         state.update { it.copy(options = OptionsState.Loading) }
         modelScope.launch {
-            getBankOfframpOptionsUseCase(params.userWalletId).fold(
+            getBankOfframpOptionsUseCase(params.userWalletId, productInstanceId).fold(
                 ifLeft = { error ->
                     TangemLogger.withTag(TAG).e("Failed to load bank offramp options: $error")
                     state.update { it.copy(options = OptionsState.Unavailable) }
@@ -139,23 +145,20 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
 
     /** Balances move while the hub is open, so the tokens the wizard may start from are resolved on every update. */
     private suspend fun observeAvailableSources(options: BankOfframpOptions) {
-        paymentAccountStatusSupplier(params.userWalletId).collect { status ->
-            val networks = status.networksOrNull()
-            if (networks == null) {
-                // Only a loading account is still going to produce networks; any other state without them never
-                // will, and leaving the section in Loading would hide the retry behind an endless shimmer.
-                if (status.value !is PaymentAccountStatusValue.Loading) {
-                    state.update { it.copy(options = OptionsState.Unavailable) }
-                }
-                return@collect
-            }
-            val resolved = BankWithdrawOptionsFactory.create(
-                options = options,
-                networks = networks,
-                balanceCurrencyCode = status.balanceOrNull()?.fiatBalance?.currency,
-            )
+        bankWithdrawSourcesObserver.observe(params.sourceAccount, options).collect { resolved ->
             state.update { current ->
                 current.copy(options = resolved?.let(OptionsState::Ready) ?: OptionsState.Unavailable)
+            }
+        }
+    }
+
+    fun onWithdrawSent() {
+        modelScope.launch {
+            when (params.sourceAccount) {
+                is BankWithdrawSourceAccount.Payment -> paymentAccountStatusFetcher(params.userWalletId)
+                is BankWithdrawSourceAccount.Money -> moneyAccountStatusFetcher(params.userWalletId)
+            }.onLeft { error ->
+                TangemLogger.withTag(TAG).e("Failed to refresh the source account after a bank withdraw: $error")
             }
         }
     }
@@ -214,9 +217,11 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
     }
 
     data class Params(
-        val userWalletId: UserWalletId,
+        val sourceAccount: BankWithdrawSourceAccount,
         val onOpenBankWithdraw: (entry: BankWithdrawEntry, options: StateFlow<BankWithdrawOptions>) -> Unit,
-    )
+    ) {
+        val userWalletId: UserWalletId get() = sourceAccount.userWalletId
+    }
 }
 
 private const val TAG = "TangemPayWithdrawHubModel"

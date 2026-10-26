@@ -359,6 +359,25 @@ internal class JointAccountToMembersUMConverterTest {
         }
 
         @Test
+        fun `GIVEN active account WHEN convert THEN no member row has a status badge`() {
+            // Arrange
+            val input = input(
+                account = pendingAccount(members = listOf(creator, member.copy(signature = SIGNATURE)))
+                    .copy(status = JointAccount.Status.ACTIVE),
+                invites = emptyList(),
+            )
+
+            // Act
+            val statuses = converter.convert(input).joined.map { it.status }
+
+            // Assert
+            assertThat(statuses).containsExactly(
+                JointAccountMembersUM.MemberStatusUM.None,
+                JointAccountMembersUM.MemberStatusUM.None,
+            )
+        }
+
+        @Test
         fun `GIVEN active account of the creator WHEN convert THEN it looks the same as any other member`() {
             // Arrange
             val creatorInput = input(
@@ -392,6 +411,10 @@ internal class JointAccountToMembersUMConverterTest {
             // Assert
             assertThat(state.topBar).isInstanceOf(JointAccountMembersUM.TopBarUM.Titled::class.java)
             assertThat(state.header).isNull()
+            assertThat(state.joined.map { it.status }).containsExactly(
+                JointAccountMembersUM.MemberStatusUM.None,
+                JointAccountMembersUM.MemberStatusUM.None,
+            )
         }
 
         private fun provideTestModels() = listOf(JointAccount.Status.CANCELLED, JointAccount.Status.UNKNOWN)
