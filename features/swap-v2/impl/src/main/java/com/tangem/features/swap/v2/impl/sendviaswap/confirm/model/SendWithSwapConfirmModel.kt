@@ -639,7 +639,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
             isIconVisible = isReadyToSend && !isHoldToConfirm,
             isHapticClick = isReadyToSend,
             isHoldToConfirm = isHoldToConfirm,
-            isEnabled = confirmUM.isPrimaryButtonEnabled,
+            isEnabled = confirmUM.isPrimaryButtonEnabled && confirmData.fee != null,
             onClick = {
                 when (confirmUM) {
                     is ConfirmUM.Content -> if (confirmUM.isTransactionInProcess) {
