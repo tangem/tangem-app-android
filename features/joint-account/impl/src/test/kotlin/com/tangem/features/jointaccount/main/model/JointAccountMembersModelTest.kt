@@ -31,6 +31,7 @@ import com.tangem.features.jointaccount.main.entity.JointAccountMembersSheetConf
 import com.tangem.features.jointaccount.main.navigation.JointAccountMembersRoute
 import com.tangem.features.jointaccount.main.state.JointAccountMembersStateController
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
+import com.tangem.utils.time.CurrentTimeProvider
 import com.tangem.test.mock.MockAccounts
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -75,6 +76,7 @@ internal class JointAccountMembersModelTest {
     private val jointAccountListFetcher: SingleJointAccountListFetcher = mockk(relaxed = true)
     private val pollingCoordinator: JointAccountPollingCoordinator = mockk()
     private val ownerAddressResolver: JointOwnerAddressResolver = mockk()
+    private val clock = FakeCurrentTimeProvider()
     private val singleAccountSupplier: SingleAccountSupplier = mockk()
     private val compositionVerifier: JointAccountCompositionVerifier = mockk()
     private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
@@ -82,6 +84,7 @@ internal class JointAccountMembersModelTest {
 
     @BeforeEach
     fun resetMocks() {
+        clock.nowMillis = NOW
         clearMocks(
             router,
             closeFlow,
@@ -367,25 +370,68 @@ internal class JointAccountMembersModelTest {
     }
 
     @Test
-    fun `GIVEN a live invite WHEN its deadline passes while the screen is on top THEN the slot reads Expired`() =
+    fun `GIVEN two live invites WHEN their deadlines pass while the screen is on top THEN each slot reads Expired in turn`() =
         runTest {
             // Arrange
-            val invite = JointAccountInvite(slot = 1, expiresAtMillis = System.currentTimeMillis() + EXPIRES_IN_MILLIS)
-            stub(account = pendingAccount(members = listOf(creator)).copy(invites = listOf(invite)))
+            val invites = listOf(
+                JointAccountInvite(slot = 1, expiresAtMillis = NOW + FIRST_DEADLINE_IN_MILLIS),
+                JointAccountInvite(slot = 2, expiresAtMillis = NOW + SECOND_DEADLINE_IN_MILLIS),
+            )
+            stub(account = pendingAccount(members = listOf(creator)).copy(invites = invites))
             val model = createModel()
             model.onResume()
             runCurrent()
-            val before = model.uiState.value.freeSlots.first().status
+            val before = model.uiState.value.freeSlots.map { it.status }
 
             // Act
-            Thread.sleep(EXPIRES_IN_MILLIS + 10)
-            advanceTimeBy(EXPIRES_IN_MILLIS + 10)
-            runCurrent()
+            advanceClock(byMillis = FIRST_DEADLINE_IN_MILLIS)
+            val afterFirst = model.uiState.value.freeSlots.map { it.status }
+            advanceClock(byMillis = SECOND_DEADLINE_IN_MILLIS - FIRST_DEADLINE_IN_MILLIS)
+            val afterSecond = model.uiState.value.freeSlots.map { it.status }
 
             // Assert
-            assertThat(before).isInstanceOf(JointAccountMembersUM.SlotStatusUM.Invited::class.java)
-            assertThat(model.uiState.value.freeSlots.first().status).isEqualTo(JointAccountMembersUM.SlotStatusUM.Expired)
+            assertThat(before.map { it.javaClass }).containsExactly(
+                JointAccountMembersUM.SlotStatusUM.Invited::class.java,
+                JointAccountMembersUM.SlotStatusUM.Invited::class.java,
+            ).inOrder()
+            assertThat(afterFirst.map { it.javaClass }).containsExactly(
+                JointAccountMembersUM.SlotStatusUM.Expired::class.java,
+                JointAccountMembersUM.SlotStatusUM.Invited::class.java,
+            ).inOrder()
+            assertThat(afterSecond).containsExactly(
+                JointAccountMembersUM.SlotStatusUM.Expired,
+                JointAccountMembersUM.SlotStatusUM.Expired,
+            ).inOrder()
         }
+
+    @Test
+    fun `GIVEN an invite expired while the screen was paused WHEN resumed THEN the slot reads Expired`() = runTest {
+        // Arrange
+        val invite = JointAccountInvite(slot = 1, expiresAtMillis = NOW + FIRST_DEADLINE_IN_MILLIS)
+        stub(account = pendingAccount(members = listOf(creator)).copy(invites = listOf(invite)))
+        val model = createModel()
+        model.onResume()
+        runCurrent()
+        model.onPause()
+        runCurrent()
+        clock.nowMillis = NOW + SECOND_DEADLINE_IN_MILLIS
+        val whilePaused = model.uiState.value.freeSlots.first().status
+
+        // Act
+        model.onResume()
+        runCurrent()
+
+        // Assert
+        assertThat(whilePaused).isInstanceOf(JointAccountMembersUM.SlotStatusUM.Invited::class.java)
+        assertThat(model.uiState.value.freeSlots.first().status).isEqualTo(JointAccountMembersUM.SlotStatusUM.Expired)
+    }
+
+    /** The fake clock and the test scheduler move together, as the wall clock and `delay` do in production */
+    private fun TestScope.advanceClock(byMillis: Long) {
+        clock.nowMillis += byMillis
+        advanceTimeBy(byMillis)
+        runCurrent()
+    }
 
     private fun <C : Any> SlotNavigation<C>.trackSlot(): List<C?> {
         val tracked = mutableListOf<C?>()
@@ -524,6 +570,7 @@ internal class JointAccountMembersModelTest {
             singleAccountSupplier = singleAccountSupplier,
             stateController = JointAccountMembersStateController(),
             inviteSharing = JointAccountInviteSharing(shareManager = shareManager),
+            currentTimeProvider = clock,
             compromiseWatcher = JointAccountCompromiseWatcher(
                 singleAccountListSupplier = singleAccountListSupplier,
                 compositionVerifier = compositionVerifier,
@@ -540,7 +587,9 @@ internal class JointAccountMembersModelTest {
         val ACCOUNT_ID = "a1".repeat(n = 32)
         val OTHER_ACCOUNT_ID = "b2".repeat(n = 32)
         const val THREE_SLOTS = 3
-        const val EXPIRES_IN_MILLIS = 50L
+        const val NOW = 1_700_000_000_000L
+        const val FIRST_DEADLINE_IN_MILLIS = 60_000L
+        const val SECOND_DEADLINE_IN_MILLIS = 120_000L
         const val INVITE_MESSAGE = "Join my joint account “Family savings” in Tangem\n" +
             "https://tangem.com/joint-account/join/invite-a"
         const val SAFE_ADDRESS = "0x5afe000000000000000000000000000000000001"
@@ -558,4 +607,8 @@ internal class JointAccountMembersModelTest {
             slot = 1,
         )
     }
+}
+
+private class FakeCurrentTimeProvider(var nowMillis: Long = 1_700_000_000_000L) : CurrentTimeProvider {
+    override fun nowMillis(): Long = nowMillis
 }
