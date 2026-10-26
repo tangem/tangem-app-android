@@ -121,7 +121,7 @@ internal class DefaultHotCryptoComponent @AssistedInject constructor(
                 onDismissRequest = ::dismiss,
                 content = TangemBottomSheetConfigContent.Empty,
             ),
-            containerColor = TangemTheme.colors.background.tertiary,
+            containerColor = TangemTheme.colors3.bg.primary,
             title = { _ ->
                 AnimatedContent(targetState = contentStack.value) { stack ->
                     BottomSheetTitle(

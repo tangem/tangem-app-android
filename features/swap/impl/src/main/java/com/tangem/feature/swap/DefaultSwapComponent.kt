@@ -234,7 +234,7 @@ internal class DefaultSwapComponent @AssistedInject constructor(
 
         Children(
             stack = stackState,
-            modifier = Modifier.background(TangemTheme.colors.background.secondary),
+            modifier = Modifier.background(TangemTheme.colors3.bg.primary),
             animation = stackAnimation { fade() },
         ) { child ->
             child.instance.Content(Modifier)

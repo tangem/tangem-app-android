@@ -28,7 +28,7 @@ import kotlinx.collections.immutable.persistentListOf
 fun OptionsBottomSheet(
     config: TangemBottomSheetConfig,
     title: TextReference,
-    containerColor: androidx.compose.ui.graphics.Color = TangemTheme.colors.background.tertiary,
+    containerColor: androidx.compose.ui.graphics.Color = TangemTheme.colors3.bg.primary,
 ) {
     TangemBottomSheet<OptionsBottomSheetContent>(
         config = config,
@@ -60,7 +60,7 @@ private fun OptionsBottomSheetContent(content: OptionsBottomSheetContent) {
                         lastIndex = content.options.size - 1,
                         addDefaultPadding = false,
                     )
-                    .background(TangemTheme.colors.background.action)
+                    .background(TangemTheme.colors3.bg.secondary)
                     .clickable { content.onOptionClick(option.key) },
             )
         }

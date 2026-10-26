@@ -51,7 +51,7 @@ internal fun TokenActionsContent(state: TokenActionsUM, modifier: Modifier = Mod
         TokenItem(
             modifier = Modifier
                 .clip(RoundedCornerShape(14.dp))
-                .background(color = TangemTheme.colors.background.action),
+                .background(color = TangemTheme.colors3.bg.secondary),
             state = state.token,
             isBalanceHidden = false,
         )
@@ -60,7 +60,7 @@ internal fun TokenActionsContent(state: TokenActionsUM, modifier: Modifier = Mod
         Column(
             modifier = Modifier
                 .clip(RoundedCornerShape(14.dp))
-                .background(TangemTheme.colors.background.action),
+                .background(TangemTheme.colors3.bg.secondary),
         ) {
             state.quickActions.actions.fastForEach { actionUM ->
                 key(actionUM.title) {
@@ -115,12 +115,12 @@ private fun ActionRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        val containerColor = TangemTheme.colors.background.action
+        val containerColor = TangemTheme.colors3.bg.secondary
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .background(
-                    color = TangemTheme.colors.icon.accent.copy(alpha = 0.1f),
+                    color = TangemTheme.colors3.bg.accent.blueSubtle,
                     shape = CircleShape,
                 )
                 .size(36.dp)
@@ -135,7 +135,7 @@ private fun ActionRow(
                 modifier = Modifier.requiredSize(16.dp),
                 imageVector = ImageVector.vectorResource(id = state.icon),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.accent,
+                tint = TangemTheme.colors3.icon.accent.blue,
             )
         }
         Column(
@@ -144,12 +144,12 @@ private fun ActionRow(
             Text(
                 text = state.title.resolveReference(),
                 style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
             Text(
                 text = state.description.resolveReference(),
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
     }

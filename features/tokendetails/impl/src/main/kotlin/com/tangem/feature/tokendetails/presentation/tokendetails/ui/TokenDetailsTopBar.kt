@@ -83,7 +83,7 @@ internal fun TokenDetailsTopBar(topAppBarUM: TokenDetailsTopAppBarUM, modifier: 
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = topAppBarUM.subtitle.resolveAnnotatedReference(),
-                color = TangemTheme.colors2.text.neutral.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 style = TangemTheme.typography2.captionSemibold12,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
@@ -119,7 +119,7 @@ private fun TokenDetailsOverflowMenu(
                 if (menuItem.isDestructive && index > 0) {
                     HorizontalDivider(
                         thickness = 0.5.dp,
-                        color = TangemTheme.colors2.border.neutral.quaternary,
+                        color = TangemTheme.colors3.border.secondary,
                     )
                 }
                 TokenDetailsMenuItem(
@@ -182,7 +182,7 @@ private fun TokenDetailsTitle(titleState: TitleState) {
         is TitleState.Simple -> {
             Text(
                 text = titleState.tokenName,
-                color = TangemTheme.colors2.text.neutral.primary,
+                color = TangemTheme.colors3.text.primary,
                 style = appearance.style,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
@@ -361,7 +361,7 @@ private fun FullPhraseTitle(
     style: TextStyle,
     inlineContent: ImmutableMap<String, InlineTextContent>,
 ) {
-    val tertiaryColor = TangemTheme.colors2.text.neutral.tertiary
+    val tertiaryColor = TangemTheme.colors3.text.secondary
     val fullText = remember(segments, tokenName, secondaryName, tertiaryColor) {
         buildAnnotatedString {
             for (segment in segments) {
@@ -379,7 +379,7 @@ private fun FullPhraseTitle(
     Text(
         text = fullText,
         inlineContent = inlineContent,
-        color = TangemTheme.colors2.text.neutral.primary,
+        color = TangemTheme.colors3.text.primary,
         style = style,
         textAlign = TextAlign.Center,
         maxLines = 1,
@@ -436,7 +436,7 @@ private fun FallbackTokenWithIconTitle(tokenName: String, appearance: TitleAppea
     ) {
         Text(
             text = tokenName,
-            color = TangemTheme.colors2.text.neutral.primary,
+            color = TangemTheme.colors3.text.primary,
             style = appearance.style,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
