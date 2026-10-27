@@ -1,5 +1,7 @@
 package com.tangem.feature.swap.mcp.model
 
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.feature.swap.presentation.R
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus
 import com.tangem.core.ui.extensions.stringReference
@@ -23,9 +25,9 @@ internal class ExchangeIntentCantReachConverterTest {
 
         // Assert
         assertThat(actual.variant).isEqualTo(TangemModalStatus.Variant.Warning)
-        assertThat(actual.title).isEqualTo(stringReference("Can’t reach intent"))
+        assertThat(actual.title).isEqualTo(resourceReference(R.string.mcp_swap_intent_cant_reach_title))
         assertThat(actual.subtitle).isNull()
-        assertThat(actual.primaryButton.text).isEqualTo(stringReference("Got it"))
+        assertThat(actual.primaryButton.text).isEqualTo(resourceReference(R.string.common_got_it))
         assertThat(closed).isTrue()
         assertThat(retried).isFalse()
     }
@@ -43,7 +45,7 @@ internal class ExchangeIntentCantReachConverterTest {
         actual.primaryButton.onClick()
 
         // Assert
-        assertThat(actual.primaryButton.text).isEqualTo(stringReference("Try again"))
+        assertThat(actual.primaryButton.text).isEqualTo(resourceReference(R.string.alert_button_try_again))
         assertThat(retried).isTrue()
         assertThat(closed).isFalse()
     }

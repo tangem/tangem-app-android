@@ -66,9 +66,7 @@ sealed class ExpressError : Throwable() {
 
     data class InvalidPayoutAddressError(override val code: Int = 992) : ExpressError()
 
-    data object UnknownError : ExpressError() {
-        override val code: Int = -1
-    }
+    data class UnknownError(override val code: Int = -1) : ExpressError()
 
     data class TooLargeSolanaTransactionError(override val code: Int = -2) : ExpressError() {
         override val message: String = "tooLargeSolanaTransaction"

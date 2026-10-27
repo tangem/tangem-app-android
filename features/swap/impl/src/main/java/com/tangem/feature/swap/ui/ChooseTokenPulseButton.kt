@@ -107,7 +107,7 @@ private fun PulsingChooseTokenPill(onClick: () -> Unit, modifier: Modifier = Mod
         ),
         label = "choose_token_pulse_alpha",
     )
-    val emphasisColor = TangemTheme.colors.text.tertiary
+    val emphasisColor = TangemTheme.colors3.text.secondary
 
     Box(
         modifier = modifier
@@ -116,7 +116,7 @@ private fun PulsingChooseTokenPill(onClick: () -> Unit, modifier: Modifier = Mod
                 minHeight = 24.dp,
             )
             .clip(shape)
-            .background(color = TangemTheme.colors.button.secondary, shape = shape)
+            .background(color = TangemTheme.colors3.bg.transparent.secondary, shape = shape)
             // Emphasis overlay is read in the draw phase, so the breath repaints without recomposing.
             .drawBehind { drawRect(color = emphasisColor, alpha = emphasisAlpha) }
             .clickable(onClick = onClick)
@@ -133,7 +133,7 @@ private fun PulsingChooseTokenPill(onClick: () -> Unit, modifier: Modifier = Mod
             Text(
                 modifier = Modifier.padding(vertical = 4.dp),
                 text = resourceReference(R.string.common_choose_token).resolveReference(),
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 maxLines = 1,
                 style = TangemTheme.typography.button,
             )
@@ -141,7 +141,7 @@ private fun PulsingChooseTokenPill(onClick: () -> Unit, modifier: Modifier = Mod
             Icon(
                 modifier = Modifier.size(16.dp),
                 painter = painterResource(id = R.drawable.ic_chevron_24),
-                tint = TangemTheme.colors.icon.secondary,
+                tint = TangemTheme.colors3.icon.secondary,
                 contentDescription = null,
             )
         }
@@ -157,7 +157,7 @@ private fun ChooseTokenPulseButton_Preview() {
     TangemThemePreview {
         Column(
             modifier = Modifier
-                .background(TangemTheme.colors.background.primary)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {

@@ -62,7 +62,7 @@ fun AmountBlock(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .clickable(enabled = !isClickDisabled && !isEditingDisabled, onClick = onClick)
             .padding(16.dp),
     ) {
@@ -75,7 +75,7 @@ fun AmountBlock(
         Text(
             text = firstAmount,
             style = TangemTheme.typography.h2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
             autoSize = TextAutoSize.StepBased(
                 maxFontSize = TangemTheme.typography.h2.fontSize,
@@ -88,7 +88,7 @@ fun AmountBlock(
         Text(
             text = secondAmount,
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()

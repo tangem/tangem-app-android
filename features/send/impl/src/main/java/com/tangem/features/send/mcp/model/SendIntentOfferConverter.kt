@@ -2,11 +2,13 @@ package com.tangem.features.send.mcp.model
 
 import com.tangem.common.ui.extensions.networkIconResId
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
-import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.mcp.models.McpAgent
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.transaction.models.SendIntent
+import com.tangem.features.send.impl.R
 import com.tangem.utils.converter.Converter
 import javax.inject.Inject
 
@@ -30,20 +32,27 @@ internal class SendIntentOfferConverter @Inject constructor(
         val amountText = amountTextConverter.convert(
             SendIntentAmountTextConverter.Input(amount = value.intent.amount, currency = value.currency),
         ) ?: return null
-        val agentIdentity = value.agent.origin ?: value.agent.name ?: Texts.UNKNOWN_AGENT_NAME
+        val agentIdentity = (value.agent.origin ?: value.agent.name)?.let(::stringReference)
+            ?: resourceReference(R.string.mcp_intent_unknown_agent_name)
 
         return SendIntentUM.Offer(
             token = value.currency.toTokenIcon(),
-            title = Texts.offerTitle(agentIdentity = agentIdentity, amount = amountText),
+            title = resourceReference(
+                id = R.string.mcp_send_intent_offer_title,
+                formatArgs = wrappedList(agentIdentity, amountText),
+            ),
             agent = value.agent.toAgentUM(),
-            description = Texts.OFFER_DESCRIPTION,
-            primaryButton = SendIntentButtonUM(text = Texts.PROCEED, onClick = value.onProceed),
+            description = resourceReference(R.string.mcp_send_intent_offer_description),
+            primaryButton = SendIntentButtonUM(
+                text = resourceReference(R.string.mcp_intent_proceed),
+                onClick = value.onProceed,
+            ),
         )
     }
 
     private fun McpAgent.toAgentUM(): SendIntentAgentUM = origin
         ?.let { SendIntentAgentUM.Verified(iconUrl = iconUrl, label = stringReference(it)) }
-        ?: SendIntentAgentUM.Unknown(iconUrl = iconUrl, label = Texts.UNKNOWN_AGENT)
+        ?: SendIntentAgentUM.Unknown(iconUrl = iconUrl, label = resourceReference(R.string.mcp_intent_host))
 
     private fun CryptoCurrency.toTokenIcon() = TangemTokenIcon.UiState.Token(
         TangemTokenIcon.State(
@@ -51,18 +60,4 @@ internal class SendIntentOfferConverter @Inject constructor(
             topIcon = networkIconResId.takeIf { this is CryptoCurrency.Token },
         ),
     )
-
-    // TODO: [REDACTED_TASK_KEY] Replace English placeholders with Lokalise-backed resources.
-    private object Texts {
-        const val UNKNOWN_AGENT_NAME = "Unknown"
-
-        val UNKNOWN_AGENT = stringReference(UNKNOWN_AGENT_NAME)
-        val OFFER_DESCRIPTION = stringReference(
-            "The agent is asking to send from your account. You’ll review the details next.",
-        )
-        val PROCEED = stringReference("Proceed")
-
-        fun offerTitle(agentIdentity: String, amount: String): TextReference =
-            stringReference("$agentIdentity Agent wants to send $amount")
-    }
 }
