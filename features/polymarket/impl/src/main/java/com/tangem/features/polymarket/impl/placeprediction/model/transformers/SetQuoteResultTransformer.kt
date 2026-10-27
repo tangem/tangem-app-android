@@ -25,7 +25,7 @@ internal class SetQuoteResultTransformer(
         val quote = result.fold(ifLeft = ::toError, ifRight = ::toQuote)
         val updatedState = prevState.copy(
             quote = quote,
-            market = if (quote is QuoteUM.Error && prevState.order is OrderSideUM.Sell) {
+            market = if (quote.hasNoLiquidity() || quote is QuoteUM.Error && prevState.order is OrderSideUM.Sell) {
                 prevState.market.copy(isPriceUnavailable = true)
             } else {
                 prevState.market
@@ -40,6 +40,9 @@ internal class SetQuoteResultTransformer(
             updatedState.recomputeGate()
         }
     }
+
+    private fun QuoteUM.hasNoLiquidity(): Boolean =
+        this is QuoteUM.Unavailable && status == PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY
 
     private fun toError(error: PredictionOrderQuoteError): QuoteUM.Error = QuoteUM.Error(
         reason = when (error) {
