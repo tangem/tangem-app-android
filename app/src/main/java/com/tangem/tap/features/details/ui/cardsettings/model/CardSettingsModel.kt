@@ -26,7 +26,7 @@ import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.sdk.api.TangemSdkManager
-import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.features.details.ui.cardsettings.CardInfo
 import com.tangem.tap.features.details.ui.cardsettings.CardSettingsScreenState
@@ -115,7 +115,7 @@ internal class CardSettingsModel @Inject constructor(
     private fun scanCard() = modelScope.launch {
         scanCardProcessor.scan(
             config = ScanConfig(
-                analyticsSource = com.tangem.core.analytics.models.AnalyticsParam.ScreensSources.CardSettings,
+                analyticsSource = AnalyticsParam.ScreensSources.CardSettings,
                 shouldConfirmWalletOwnership = false,
                 canRequestAccessCodeFromRepository = true,
                 shouldUpdateCardIdDisplayFormat = false,

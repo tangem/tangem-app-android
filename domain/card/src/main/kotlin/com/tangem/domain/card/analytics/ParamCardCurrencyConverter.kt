@@ -10,16 +10,13 @@ class ParamCardCurrencyConverter : Converter<CardTypesResolver, WalletType?> {
     override fun convert(value: CardTypesResolver): WalletType? {
         if (value.isMultiwalletAllowed()) return WalletType.MultiCurrency
 
-        val type = when {
-            value.isTangemNote() -> AnalyticsParam.CurrencyType.Blockchain(value.getBlockchain())
-            value.isTangemTwins() -> AnalyticsParam.CurrencyType.Blockchain(Blockchain.Bitcoin)
-            value.getBlockchain() != Blockchain.Unknown -> AnalyticsParam.CurrencyType.Blockchain(value.getBlockchain())
-            value.getPrimaryToken() != null -> {
-                AnalyticsParam.CurrencyType.Token(requireNotNull(value.getPrimaryToken()))
-            }
-            else -> null
+        val currency = when {
+            value.isTangemNote() -> value.getBlockchain().currency
+            value.isTangemTwins() -> Blockchain.Bitcoin.currency
+            value.getBlockchain() != Blockchain.Unknown -> value.getBlockchain().currency
+            else -> value.getPrimaryToken()?.symbol
         } ?: return null
 
-        return WalletType.SingleCurrency(type.value)
+        return WalletType.SingleCurrency(currency)
     }
 }
