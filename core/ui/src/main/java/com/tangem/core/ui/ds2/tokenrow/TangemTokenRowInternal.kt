@@ -78,7 +78,8 @@ internal enum class TokenRowLayoutId {
  * - END slots take the free space left after guaranteeing the START side its minimum width
  *   (30% of the row for the top line, 32% for the bottom line).
  * - START slots fill the remaining width, never shrinking below that minimum.
- * - A line with no counterpart on the other axis is vertically centered in the main area.
+ * - The start and end columns are each vertically centered in the main area, so a two-line column
+ *   is centered on the icon and a single line sits at the icon's center.
  * - EXTRA_BOTTOM is placed below the main content, within the horizontal paddings, with a 4dp gap:
  *   the 8dp tip of a message bubble fills the rest of the 12dp spacing.
  */
@@ -181,6 +182,9 @@ internal fun TokenRowContainer(
                 constraints = constraints.copy(minWidth = 0, maxWidth = layoutWidth),
             )
 
+            val startColumnHeight = columnHeight(startTopPlaceable, startBottomPlaceable, verticalPadding)
+            val endColumnHeight = columnHeight(endTopPlaceable, endBottomPlaceable, verticalPadding)
+
             val mainLayoutHeight = maxOf(
                 headPlaceable.heightOrZero(),
                 tailPlaceable.heightOrZero(),
@@ -196,6 +200,9 @@ internal fun TokenRowContainer(
 
             val layoutHeight = mainLayoutHeight + contentPadding + mainContentBottomPadding
 
+            val startBlockTop = (mainLayoutHeight - startColumnHeight).div(other = 2)
+            val endBlockTop = (mainLayoutHeight - endColumnHeight).div(other = 2)
+
             layout(width = constraints.maxWidth, height = layoutHeight) {
                 headPlaceable?.placeRelative(
                     x = contentPadding,
@@ -204,37 +211,29 @@ internal fun TokenRowContainer(
 
                 startTopPlaceable?.placeRelative(
                     x = contentPadding + headPlaceable.widthOrZero(),
-                    y = contentPadding + if (startBottomPlaceable == null) {
-                        (mainLayoutHeight - startTopPlaceable.height).div(2)
-                    } else {
-                        0
-                    },
+                    y = contentPadding + startBlockTop,
                 )
 
                 startBottomPlaceable?.placeRelative(
                     x = contentPadding + headPlaceable.widthOrZero(),
-                    y = contentPadding + if (startTopPlaceable == null) {
-                        (mainLayoutHeight - startBottomPlaceable.height).div(2)
+                    y = contentPadding + startBlockTop + if (startTopPlaceable == null) {
+                        0
                     } else {
-                        startTopPlaceable.heightOrZero() + verticalPadding
+                        startTopPlaceable.height + verticalPadding
                     },
                 )
 
                 endTopPlaceable?.placeRelative(
                     x = layoutWidth - endTopPlaceable.widthOrZero() - tailPlaceable.widthOrZero() + contentPadding,
-                    y = contentPadding + if (endBottomPlaceable == null) {
-                        (mainLayoutHeight - endTopPlaceable.height).div(2)
-                    } else {
-                        0
-                    },
+                    y = contentPadding + endBlockTop,
                 )
 
                 endBottomPlaceable?.placeRelative(
                     x = layoutWidth - endBottomPlaceable.widthOrZero() - tailPlaceable.widthOrZero() + contentPadding,
-                    y = contentPadding + if (endTopPlaceable == null) {
-                        (mainLayoutHeight - endBottomPlaceable.height).div(2)
+                    y = contentPadding + endBlockTop + if (endTopPlaceable == null) {
+                        0
                     } else {
-                        endTopPlaceable.heightOrZero() + verticalPadding
+                        endTopPlaceable.height + verticalPadding
                     },
                 )
 
@@ -262,6 +261,10 @@ private fun List<Measurable>.measure(layoutId: TokenRowLayoutId, constraints: Co
 private fun Placeable?.widthOrZero(): Int = this?.width ?: 0
 
 private fun Placeable?.heightOrZero(): Int = this?.height ?: 0
+
+private fun columnHeight(top: Placeable?, bottom: Placeable?, gap: Int): Int {
+    return top.heightOrZero() + bottom.heightOrZero() + if (top != null && bottom != null) gap else 0
+}
 
 @Composable
 private fun WithTokenRowRipple(enabled: Boolean, content: @Composable () -> Unit) {
@@ -413,7 +416,7 @@ internal fun TokenRowTitleContent(
                 modifier = Modifier.alignByBaseline(),
             )
         }
-        if (badge != null) {
+        if (badge != null && !hasPending) {
             TangemBadge(
                 text = badge.text,
                 variant = TangemBadge.Variant.Tinted,
@@ -471,7 +474,7 @@ internal fun TokenRowBalanceContent(
         horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (showContractWarning) {
+        if (showContractWarning && !showUpdateWarning) {
             Icon(
                 imageVector = Icons.ic_warning_20_filled,
                 contentDescription = null,

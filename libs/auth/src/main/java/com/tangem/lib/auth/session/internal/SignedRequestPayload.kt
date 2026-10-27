@@ -1,9 +1,11 @@
 package com.tangem.lib.auth.session.internal
 
 import android.util.Base64
+import com.tangem.core.remote.config.ApiConfig.Companion.RELEASE_BUILD_TYPE
 import com.tangem.lib.auth.api.models.request.AuthenticationPayload
 import com.tangem.lib.auth.api.models.request.DeviceMetadata
 import com.tangem.lib.auth.api.models.request.RegisterPayload
+import com.tangem.libs.auth.BuildConfig
 import com.tangem.utils.info.AppInfoProvider
 import javax.inject.Inject
 
@@ -13,22 +15,40 @@ import javax.inject.Inject
  * identical field shapes — the canonicalisation is parameterised by primitives and exposed via
  * type-specific overloads, so the two DTOs don't need to share a common interface.
  */
-internal class SignedRequestPayload @Inject constructor(
+internal class SignedRequestPayload(
     private val appInfoProvider: AppInfoProvider,
+    private val buildType: String,
 ) {
 
     /** Snapshot of [appInfoProvider]'s device facts as the network DTO. */
     val deviceMetadata: DeviceMetadata
-        get() = DeviceMetadata(
-            deviceModel = appInfoProvider.device,
-            // Backend contract is lowercase `android`/`ios`; AppInfoProvider returns `"Android"`.
-            os = appInfoProvider.platform.lowercase(),
-            osVersion = appInfoProvider.osVersion,
-            appVersion = appInfoProvider.appVersion,
-            userAgent = with(appInfoProvider) { "Tangem/$appVersion ($device; $platform $osVersion)" },
-            locale = appInfoProvider.language,
-            timezone = appInfoProvider.timezone,
-        )
+        get() {
+            val appVersion = appVersionWithBuildType()
+            return DeviceMetadata(
+                deviceModel = appInfoProvider.device,
+                // Backend contract is lowercase `android`/`ios`; AppInfoProvider returns `"Android"`.
+                os = appInfoProvider.platform.lowercase(),
+                osVersion = appInfoProvider.osVersion,
+                appVersion = appVersion,
+                userAgent = with(appInfoProvider) { "Tangem/$appVersion ($device; $platform $osVersion)" },
+                locale = appInfoProvider.language,
+                timezone = appInfoProvider.timezone,
+            )
+        }
+
+    @Inject
+    constructor(appInfoProvider: AppInfoProvider) : this(appInfoProvider, BuildConfig.BUILD_TYPE)
+
+    /**
+     * The backend picks the Play Integrity package by the build type after the last `-` of the app
+     * version and treats a version without it as a release build. Only the debug build type has no
+     * version name suffix, so it is appended here.
+     */
+    private fun appVersionWithBuildType(): String {
+        val appVersion = appInfoProvider.appVersion
+        val suffix = "-$buildType"
+        return if (buildType == RELEASE_BUILD_TYPE || appVersion.endsWith(suffix)) appVersion else appVersion + suffix
+    }
 
     /** @see canonicalize */
     fun canonicalize(payload: AuthenticationPayload): ByteArray = canonicalize(

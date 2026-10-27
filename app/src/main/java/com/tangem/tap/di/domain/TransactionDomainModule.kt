@@ -499,6 +499,7 @@ internal object TransactionDomainModule {
         gaslessTransactionRepository: GaslessTransactionRepository,
         gaslessYieldRepository: GaslessYieldRepository,
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+        nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
         currencyChecksRepository: CurrencyChecksRepository,
         resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
     ): EstimateFeeForTokenUseCase {
@@ -508,6 +509,7 @@ internal object TransactionDomainModule {
             walletManagersFacade = walletManagersFacade,
             demoConfig = DemoConfig,
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+            nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
             currencyChecksRepository = currencyChecksRepository,
             resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
         )
@@ -520,6 +522,7 @@ internal object TransactionDomainModule {
         gaslessTransactionRepository: GaslessTransactionRepository,
         gaslessYieldRepository: GaslessYieldRepository,
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+        nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
         estimateFeeUseCase: EstimateFeeUseCase,
         currencyChecksRepository: CurrencyChecksRepository,
         resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
@@ -530,6 +533,7 @@ internal object TransactionDomainModule {
             walletManagersFacade = walletManagersFacade,
             demoConfig = DemoConfig,
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+            nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
             estimateFeeUseCase = estimateFeeUseCase,
             currencyChecksRepository = currencyChecksRepository,
             resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,

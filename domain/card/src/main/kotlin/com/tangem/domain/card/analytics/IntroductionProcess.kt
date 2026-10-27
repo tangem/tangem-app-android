@@ -13,13 +13,13 @@ sealed class IntroductionProcess(
     /**
      * Tracks the user opening the Introduction Process screen.
      *
-     * @param entryReason why the screen appeared; mandatory on the redesigned Welcome screen, absent on the legacy one.
+     * @param entryReason why the screen appeared
      */
     class ScreenOpened(
-        entryReason: EntryReason? = null,
+        entryReason: EntryReason,
     ) : IntroductionProcess(
         event = "Introduction Process Screen Opened",
-        params = buildMap { entryReason?.let { put(AnalyticsParam.ENTRY_REASON, it.value) } },
+        params = mapOf(AnalyticsParam.ENTRY_REASON to entryReason.value),
     ), CriticalEvent {
         enum class EntryReason(val value: String) {
             FirstLaunch("First Launch"),
@@ -90,9 +90,6 @@ sealed class IntroductionProcess(
     class ButtonBuyTangem : IntroductionProcess("Button - Buy Tangem")
     class ButtonHardwareWallet : IntroductionProcess("Button - Hardware Wallet")
     class ButtonSignInWithCard : IntroductionProcess("Button - Sign In With Card")
-    class ButtonTokensList : IntroductionProcess("Button - Tokens List")
-    class ButtonBuyCards : IntroductionProcess("Button - Buy Cards")
-    class ButtonScanCardLegacy : IntroductionProcess("Button - Scan Card")
 
     /**
      * Carries its own Product Type: no mobile wallet context is installed when the I have a wallet sheet sends it, and
@@ -119,7 +116,6 @@ sealed class IntroductionProcess(
         },
     ), CriticalEvent {
         enum class ScreenType(val value: String) {
-            Cold("Cold Wallet"),
             Hot("Mobile Wallet"),
         }
     }

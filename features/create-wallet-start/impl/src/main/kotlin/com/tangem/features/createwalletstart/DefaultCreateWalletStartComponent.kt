@@ -15,7 +15,7 @@ import dagger.assisted.AssistedInject
 
 internal class DefaultCreateWalletStartComponent @AssistedInject constructor(
     @Assisted private val context: AppComponentContext,
-    @Assisted private val params: CreateWalletStartComponent.Params,
+    @Assisted private val params: Unit,
 ) : CreateWalletStartComponent, AppComponentContext by context {
 
     private val model: CreateWalletStartModel = getOrCreateModel(params)
@@ -34,9 +34,6 @@ internal class DefaultCreateWalletStartComponent @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory : CreateWalletStartComponent.Factory {
-        override fun create(
-            context: AppComponentContext,
-            params: CreateWalletStartComponent.Params,
-        ): DefaultCreateWalletStartComponent
+        override fun create(context: AppComponentContext, params: Unit): DefaultCreateWalletStartComponent
     }
 }
