@@ -20,7 +20,6 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.AmountPresetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.MIN_QUOTABLE_AMOUNT
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.toStatusRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
@@ -85,10 +84,8 @@ internal class PlacePredictionOrderModel @Inject constructor(
     }
 
     override fun onMaxClick() {
-        val max = when (val order = uiState.value.order) {
-            is OrderSideUM.Buy -> maxBuyAmount(balance = order.balance ?: return)?.toCollateralInput()
-            is OrderSideUM.Sell -> (order.position as? SellPositionUM.Held)?.available?.toPlainString()
-        } ?: return
+        val order = uiState.value.order as? OrderSideUM.Buy ?: return
+        val max = maxBuyAmount(balance = order.balance ?: return)?.toCollateralInput() ?: return
 
         enterAmount(value = max)
     }
