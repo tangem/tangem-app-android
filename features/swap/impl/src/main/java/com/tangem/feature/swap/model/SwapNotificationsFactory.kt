@@ -542,7 +542,7 @@ internal fun ExpressDataError.toExpressError(): ExpressError = when (this) {
     is ExpressDataError.InvalidRequestIdError -> ExpressError.InvalidRequestIdError(code)
     is ExpressDataError.InvalidPayoutAddressError -> ExpressError.InvalidPayoutAddressError(code)
     is ExpressDataError.UnknownErrorWithCode -> ExpressError.InternalError(code)
-    is ExpressDataError.UnknownError -> ExpressError.UnknownError
+    is ExpressDataError.UnknownError -> ExpressError.UnknownError()
     is ExpressDataError.TooLargeSolanaTransactionError -> ExpressError.TooLargeSolanaTransactionError()
     is ExpressDataError.DexActiveSupplyError -> ExpressError.DexActiveSupplyError()
 }
