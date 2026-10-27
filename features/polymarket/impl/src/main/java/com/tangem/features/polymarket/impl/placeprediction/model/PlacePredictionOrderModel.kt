@@ -6,6 +6,8 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.utils.parseBigDecimalOrNull
+import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
 import com.tangem.features.polymarket.impl.common.formatPolymarketEnteredAmount
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketAddFundsComponent
@@ -13,6 +15,7 @@ import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetC
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountPresetUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.MIN_QUOTABLE_AMOUNT
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
@@ -78,7 +81,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
     }
 
     override fun onPresetClick(preset: AmountPresetUM) {
-        onAmountChange(value = preset.amount)
+        enterAmount(amount = preset.amount.parseBigDecimalOrNull() ?: return)
     }
 
     override fun onMaxClick() {
@@ -87,7 +90,14 @@ internal class PlacePredictionOrderModel @Inject constructor(
             is OrderSideUM.Sell -> (order.position as? SellPositionUM.Held)?.available
         } ?: return
 
-        onAmountChange(value = max.toPlainString())
+        enterAmount(amount = max)
+    }
+
+    private fun enterAmount(amount: BigDecimal) {
+        val current = uiState.value.amountValue.parseBigDecimalOrNull()
+        if (current != null && current.compareTo(amount) == 0) return
+
+        onAmountChange(value = amount.toPlainString())
     }
 
     override fun onSlippageClick() {
@@ -143,10 +153,14 @@ internal class PlacePredictionOrderModel @Inject constructor(
     }
 
     override fun onPolymarketTermsClick() {
+        if (isSubmitting()) return
+
         urlOpener.openUrl(PolymarketLegalUrls.polymarketTerms)
     }
 
     override fun onTangemTermsClick() {
+        if (isSubmitting()) return
+
         urlOpener.openUrl(PolymarketLegalUrls.TANGEM_TERMS)
     }
 
@@ -169,9 +183,12 @@ internal class PlacePredictionOrderModel @Inject constructor(
         val feeCap = latestFeeRate()?.let { feeRate ->
             balance.divide(BigDecimal.ONE.add(feeRate), MathContext.DECIMAL128)
         }
-        val max = (feeCap?.min(balanceCap) ?: balanceCap).setScale(AMOUNT_DECIMALS, RoundingMode.FLOOR)
+        val max = (feeCap?.min(balanceCap) ?: balanceCap).setScale(
+            PolymarketConst.COLLATERAL_DISPLAY_DECIMALS,
+            RoundingMode.FLOOR,
+        )
 
-        return max.takeIf { it >= MIN_MAX_AMOUNT }?.stripTrailingZeros()
+        return max.takeIf { it >= MIN_QUOTABLE_AMOUNT }?.stripTrailingZeros()
     }
 
     private fun latestFeeRate(): BigDecimal? {
@@ -190,7 +207,5 @@ internal class PlacePredictionOrderModel @Inject constructor(
     private companion object {
         val BUY_PRESET_AMOUNTS = listOf(BigDecimal(100), BigDecimal(500), BigDecimal(1_000), BigDecimal(5_000))
         val MAX_BALANCE_SHARE = BigDecimal("0.9")
-        val MIN_MAX_AMOUNT = BigDecimal("0.01")
-        const val AMOUNT_DECIMALS = 2
     }
 }

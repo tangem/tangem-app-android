@@ -178,6 +178,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 assertThat(fundingSheet.configuration).isNull()
                 verify(exactly = 0) { router.push(any(), any()) }
                 verify(exactly = 0) { messageSender.send(any()) }
+                verify(exactly = 0) { urlOpener.openUrl(any()) }
                 coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
             }
 
@@ -234,6 +235,61 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             coVerify(exactly = 2) { getQuoteUseCase(request = any()) }
         }
+
+        @Test
+        fun `GIVEN a typed amount with cents WHEN the equal preset clicked THEN the quote stays priced`() =
+            runOrderTest {
+                // Arrange
+                val model = createQuotedModel()
+                model.onAmountChange(value = "100.00")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+                // Act
+                model.onPresetClick(preset = model.amountPresets.first())
+
+                // Assert
+                assertThat(model.uiState.value.amountValue).isEqualTo("100.00")
+                assertThat(model.uiState.value.quote).isInstanceOf(QuoteUM.Content::class.java)
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+                coVerify(exactly = 2) { getQuoteUseCase(request = any()) }
+            }
+
+        @Test
+        fun `GIVEN the max typed with a comma WHEN max clicked THEN the quote stays priced`() = runOrderTest {
+            // Arrange
+            coEvery { getQuoteUseCase(request = any()) } returns createQuote().copy(
+                fees = PredictionOrderFees(
+                    market = BigDecimal("1.2"),
+                    builder = BigDecimal.ZERO,
+                    total = BigDecimal("1.2"),
+                ),
+            ).right()
+            val model = createQuotedModel()
+            model.onAmountChange(value = "89,28")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+            // Act
+            model.onMaxClick()
+
+            // Assert
+            assertThat(model.uiState.value.amountValue).isEqualTo("89,28")
+            assertThat(model.uiState.value.quote).isInstanceOf(QuoteUM.Content::class.java)
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            coVerify(exactly = 2) { getQuoteUseCase(request = any()) }
+        }
+
+        @Test
+        fun `GIVEN a typed amount WHEN a decimal separator is typed after it THEN the field keeps it`() =
+            runOrderTest {
+                // Arrange
+                val model = createQuotedModel()
+
+                // Act
+                model.onAmountChange(value = "10.")
+
+                // Assert
+                assertThat(model.uiState.value.amountValue).isEqualTo("10.")
+            }
     }
 
     @Nested
@@ -413,6 +469,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             block()
         } finally {
             models.forEach(Model::onDestroy)
+            models.clear()
         }
     }
 
@@ -433,6 +490,8 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         AddFunds(apply = PlacePredictionOrderModel::onAddFundsClick),
         Swap(apply = PlacePredictionOrderModel::onSwapClick),
         Receive(apply = PlacePredictionOrderModel::onReceiveClick),
+        PolymarketTerms(apply = PlacePredictionOrderModel::onPolymarketTermsClick),
+        TangemTerms(apply = PlacePredictionOrderModel::onTangemTermsClick),
     }
 
     private companion object {
