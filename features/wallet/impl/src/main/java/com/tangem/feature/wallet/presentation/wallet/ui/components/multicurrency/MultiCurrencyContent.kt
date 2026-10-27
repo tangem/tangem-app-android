@@ -29,7 +29,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.lerp
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.common.ui.tokens.NonContentItemContent
@@ -53,6 +52,8 @@ import com.tangem.core.ui.ds2.accountrow.Section
 import com.tangem.core.ui.ds2.accountrow.Shimmer
 import com.tangem.core.ui.ds2.accountrow.TangemAccountRow
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.expandable.EXPANDABLE_ROW_REVEAL_DURATION_MILLIS
+import com.tangem.core.ui.ds2.expandable.ExpandableRowRevealItem
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow as TangemTokenRowV2
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
@@ -406,7 +407,7 @@ private fun LazyListScope.accountItemV2(
             animationSpec = if (listItem.isExpanded) {
                 snap()
             } else {
-                snap(delayMillis = minOf(50 * maxOf(listItem.tokenList.lastIndex, 0), 250) + 150)
+                snap(delayMillis = EXPANDABLE_ROW_REVEAL_DURATION_MILLIS)
             },
             label = "lastIndex",
         )
@@ -430,13 +431,7 @@ private fun LazyListScope.accountItemV2(
     }
 
     if (listItem.tokenList.isEmpty()) {
-        nonContentAccountItem(
-            groupKey = listItem.id,
-            isExpanded = listItem.isExpanded,
-            onEmptyClick = listItem.onEmptyClick,
-            radius = 24.dp,
-            modifier = modifier,
-        )
+        emptyAccountItemV2(listItem = listItem, modifier = modifier)
         return
     }
 
@@ -445,9 +440,10 @@ private fun LazyListScope.accountItemV2(
         key = { _, item -> item.id },
         contentType = { _, item -> item::class.java },
         itemContent = { tokenIndex, item ->
-            SlideInItemVisibility(
-                currentIndex = tokenIndex + 1,
-                lastIndex = lastIndex,
+            ExpandableRowRevealItem(
+                isExpanded = listItem.isExpanded,
+                index = tokenIndex,
+                count = listItem.tokenList.size,
                 modifier = modifier
                     .animateItem(fadeInSpec = null, placementSpec = null, fadeOutSpec = null)
                     .roundedShapeItemDecoration(
@@ -458,7 +454,6 @@ private fun LazyListScope.accountItemV2(
                         backgroundColor = TangemTheme.colors3.bg.secondary,
                         groupKey = listItem.id,
                     ),
-                visible = listItem.isExpanded,
             ) {
                 val itemModifier = Modifier
                     .testTag(MainScreenTestTags.TOKEN_LIST_ITEM)
@@ -478,6 +473,35 @@ private fun LazyListScope.accountItemV2(
             }
         },
     )
+}
+
+private fun LazyListScope.emptyAccountItemV2(listItem: TokensListItemUM2.AccountV2, modifier: Modifier) {
+    item(
+        key = "$NON_CONTENT_TOKENS_LIST_KEY account-${listItem.id}",
+        contentType = "$NON_CONTENT_TOKENS_LIST_KEY account",
+    ) {
+        ExpandableRowRevealItem(
+            isExpanded = listItem.isExpanded,
+            index = 0,
+            count = 1,
+            modifier = modifier
+                .animateItem(fadeInSpec = null, placementSpec = null, fadeOutSpec = null)
+                .roundedShapeItemDecoration(
+                    radius = 24.dp,
+                    addDefaultPadding = false,
+                    currentIndex = 1,
+                    lastIndex = 1,
+                    backgroundColor = TangemTheme.colors3.bg.secondary,
+                    groupKey = listItem.id,
+                ),
+        ) {
+            NonContentItemContentV2(
+                modifier = Modifier.padding(vertical = 36.dp),
+                textColor = TangemTheme.colors3.text.secondary,
+                onClick = listItem.onEmptyClick,
+            )
+        }
+    }
 }
 
 @Composable
@@ -565,7 +589,7 @@ private fun LazyListScope.contentItems(
                     .roundedShapeItemDecoration(
                         currentIndex = index,
                         lastIndex = items.lastIndex,
-                        backgroundColor = TangemTheme.colors.background.primary,
+                        backgroundColor = TangemTheme.colors3.bg.secondary,
                         radius = 18.dp,
                     )
                     .testTag(MainScreenTestTags.TOKEN_LIST_ITEM)
@@ -733,25 +757,9 @@ private fun LazyListScope.nonContentItem2(onEmptyClick: () -> Unit, modifier: Mo
 }
 
 private fun LazyListScope.nonContentAccountItem(listItem: TokensListItemUM2.Portfolio, modifier: Modifier = Modifier) {
-    nonContentAccountItem(
-        groupKey = listItem.id,
-        isExpanded = listItem.isExpanded,
-        onEmptyClick = listItem.onEmptyClick,
-        radius = if (listItem.isExpanded) 24.dp else 20.dp,
-        modifier = modifier,
-    )
-}
-
-private fun LazyListScope.nonContentAccountItem(
-    groupKey: String,
-    isExpanded: Boolean,
-    onEmptyClick: () -> Unit,
-    radius: Dp,
-    modifier: Modifier = Modifier,
-) {
     item(
-        key = "$NON_CONTENT_TOKENS_LIST_KEY account-$groupKey",
-        contentType = "$NON_CONTENT_TOKENS_LIST_KEY account-$groupKey",
+        key = "$NON_CONTENT_TOKENS_LIST_KEY account-${listItem.id}",
+        contentType = "$NON_CONTENT_TOKENS_LIST_KEY account-${listItem.id}",
     ) {
         SlideInItemVisibility(
             currentIndex = 1,
@@ -759,19 +767,19 @@ private fun LazyListScope.nonContentAccountItem(
             modifier = modifier
                 .animateItem(fadeInSpec = null, placementSpec = null, fadeOutSpec = null)
                 .roundedShapeItemDecoration(
-                    radius = radius,
+                    radius = if (listItem.isExpanded) 24.dp else 20.dp,
                     addDefaultPadding = false,
                     currentIndex = 1,
                     lastIndex = 1,
                     backgroundColor = TangemTheme.colors3.bg.secondary,
-                    groupKey = groupKey,
+                    groupKey = listItem.id,
                 ),
-            visible = isExpanded,
+            visible = listItem.isExpanded,
         ) {
             NonContentItemContentV2(
                 modifier = Modifier.padding(vertical = 36.dp),
                 textColor = TangemTheme.colors3.text.secondary,
-                onClick = onEmptyClick,
+                onClick = listItem.onEmptyClick,
             )
         }
     }

@@ -25,20 +25,20 @@ internal fun StakingTosText(onTermsOfServiceClick: () -> Unit, onPrivacyPolicyCl
         append(tosText.substringBefore(termsOfUse))
 
         pushStringAnnotation(TERMS_OF_USE_KEY, "")
-        appendColored(termsOfUse, TangemTheme.colors.text.accent)
+        appendColored(termsOfUse, TangemTheme.colors3.text.accent.blue)
         pop()
 
         append(tosText.substringAfter(termsOfUse).substringBefore(privacyPolicy))
 
         pushStringAnnotation(PRIVACY_POLICY_KEY, "")
-        appendColored(privacyPolicy, TangemTheme.colors.text.accent)
+        appendColored(privacyPolicy, TangemTheme.colors3.text.accent.blue)
         pop()
     }
 
     ClickableText(
         text = clickableAnnotation,
         style = TangemTheme.typography.caption2.copy(
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
         ),
         onClick = { offset ->

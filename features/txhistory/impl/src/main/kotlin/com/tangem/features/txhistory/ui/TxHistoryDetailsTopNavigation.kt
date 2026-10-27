@@ -125,7 +125,7 @@ private fun TxHistoryDetailsOverflowMenu(
                 if (item.isDestructive && index > 0) {
                     HorizontalDivider(
                         thickness = 0.5.dp,
-                        color = TangemTheme.colors2.border.neutral.quaternary,
+                        color = TangemTheme.colors3.border.secondary,
                     )
                 }
                 val onAction = item.action.asOnClick()

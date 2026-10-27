@@ -72,7 +72,7 @@ fun SwapChooseProviderContent(
     ) {
         HorizontalDivider(
             thickness = 0.5.dp,
-            color = TangemTheme.colors.stroke.primary,
+            color = TangemTheme.colors3.border.secondary,
             modifier = Modifier.padding(horizontal = 12.dp),
         )
         Row {
@@ -80,14 +80,14 @@ fun SwapChooseProviderContent(
                 painter = rememberVectorPainter(
                     ImageVector.vectorResource(R.drawable.ic_stack_new_24),
                 ),
-                tint = TangemTheme.colors.icon.accent,
+                tint = TangemTheme.colors3.icon.accent.blue,
                 contentDescription = null,
                 modifier = Modifier.padding(start = 12.dp, top = 12.dp, bottom = 12.dp),
             )
             Text(
                 text = stringResourceSafe(R.string.express_provider),
                 style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 modifier = Modifier.padding(start = 8.dp, top = 12.dp, bottom = 12.dp),
             )
             SpacerWMax()
@@ -117,14 +117,14 @@ private fun FcaProviderWarning(modifier: Modifier = Modifier) {
         Icon(
             modifier = Modifier.size(16.dp),
             painter = painterResource(id = R.drawable.ic_warning_16),
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
             contentDescription = null,
         )
         SpacerW8()
         Text(
             text = stringResourceSafe(R.string.express_provider_in_fca_warning_list),
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
     }
 }
@@ -154,7 +154,7 @@ private fun ProviderInfo(
         Text(
             text = expressProvider?.name.orEmpty(),
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier
                 .padding(start = 6.dp)
                 .constrainAs(nameRef) {
@@ -169,7 +169,7 @@ private fun ProviderInfo(
             painter = rememberVectorPainter(
                 ImageVector.vectorResource(R.drawable.ic_select_18_24),
             ),
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
             contentDescription = null,
             modifier = Modifier
                 .padding(start = 4.dp)
@@ -305,16 +305,16 @@ private fun ConstraintLayoutScope.BestRateBadge(
                 top.linkTo(ref.bottom, topMargin)
                 visibility = if (isBestRate) Visibility.Visible else Visibility.Gone
             }
-            .background(TangemTheme.colors.stroke.transparency, RoundedCornerShape(120.dp))
+            .background(TangemTheme.colors3.bg.secondary, RoundedCornerShape(120.dp))
             .padding(1.5.dp)
-            .background(TangemTheme.colors.icon.accent, RoundedCornerShape(120.dp)),
+            .background(TangemTheme.colors3.bg.accent.blue, RoundedCornerShape(120.dp)),
     ) {
         Icon(
             painter = rememberVectorPainter(
                 ImageVector.vectorResource(R.drawable.ic_rounded_star_24),
             ),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.constant,
+            tint = TangemTheme.colors3.icon.staticDark,
             modifier = Modifier
                 .padding(iconHorizontalPaddings, iconVerticalPaddings)
                 .size(iconSize)
@@ -332,7 +332,7 @@ private fun ConstraintLayoutScope.BestRateBadge(
             Text(
                 text = stringResourceSafe(R.string.express_provider_best_rate),
                 style = TangemTheme.typography.caption1,
-                color = TangemTheme.colors.text.constantWhite,
+                color = TangemTheme.colors3.text.staticDark.primary,
             )
         }
     }
@@ -359,7 +359,7 @@ private fun rememberBestRateAnimationSpec(animateState: MutableTransitionState<B
 private fun SwapChooseProviderContent_Preview() {
     TangemThemePreview {
         Box(
-            modifier = Modifier.background(TangemTheme.colors.background.tertiary),
+            modifier = Modifier.background(TangemTheme.colors3.bg.primary),
         ) {
             SwapChooseProviderContent(
                 isSingleProvider = false,

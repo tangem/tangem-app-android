@@ -9,7 +9,7 @@ Complete navigation map of the app based on `AppRoute` sealed class and feature-
 | # | Route | Path | Description |
 |---|-------|------|-------------|
 | 1 | `Initial` | `/initial` | App entry point (splash) |
-| 2 | `Home` | `/home` | Stories/home screen with launch mode |
+| 2 | `Home` | `/home` | Introduction (start) screen with launch mode |
 | 3 | `Welcome` | `/welcome` | Welcome screen for returning users |
 | 4 | `Disclaimer` | `/disclaimer` | Terms of service / disclaimer |
 | 5 | `Wallet` | `/wallet` | Main wallet portfolio screen |
@@ -45,7 +45,7 @@ Complete navigation map of the app based on `AppRoute` sealed class and feature-
 | 35 | `NFT` | `/nft/{walletId}` | NFT collection list |
 | 36 | `NFTSend` | `/send/nft/{walletId}/{collection}/{assetId}` | Send NFT |
 | 37 | `CreateWalletSelection` | `/create_wallet_selection` | Choose wallet creation type |
-| 38 | `CreateWalletStart` | `/create_wallet_start` | Wallet creation intro (cold/hot) |
+| 38 | `CreateWalletStart` | `/create_wallet_start` | Mobile wallet creation intro (AppsFlyer referral) |
 | 39 | `CreateHardwareWallet` | `/create_hardware_wallet` | Create hardware wallet flow |
 | 40 | `CreateMobileWallet` | `/create_mobile_wallet` | Create mobile (hot) wallet |
 | 41 | `UpgradeWallet` | `/upgrade_wallet/{walletId}` | Upgrade hot wallet to hardware |
@@ -80,9 +80,10 @@ Each entry shows: **Source route** → target routes it can navigate to (via `pu
 
 | Target | Method | Trigger |
 |--------|--------|---------|
-| `ManageTokens(STORIES)` | push | After scan, manage tokens |
-| `CreateWalletStart` | push | Create wallet from home |
+| `AddExistingWallet` | push | "I have a wallet" sheet → import |
+| `PushNotification(FirstSignIn)` | replaceAll | After card scan, when push permission should be asked |
 | `Wallet` | replaceAll | After wallet saved / already saved |
+| `Usedesk` | push | Support chat from a social login error |
 
 ### Welcome
 
@@ -96,8 +97,8 @@ Each entry shows: **Source route** → target routes it can navigate to (via `pu
 
 | Target | Method | Trigger |
 |--------|--------|---------|
-| `PushNotification(Stories)` | push | After accepting TOS (stories flow) |
-| `Home()` | replaceAll | After accepting TOS (non-stories flow) |
+| `PushNotification(Stories)` | replaceAll | After accepting TOS, when push permission should be asked |
+| `Home()` | replaceAll | After accepting TOS otherwise |
 
 ### Wallet (main portfolio)
 
@@ -107,7 +108,7 @@ Each entry shows: **Source route** → target routes it can navigate to (via `pu
 | `ManageTokens(ACCOUNT)` | push | Manage tokens for account |
 | `Onboarding` | push | Continue backup / onboarding |
 | `CurrencyDetails` | push | Tap on a token |
-| `Home` | push | Open stories |
+| `Stories` | push | Open promo stories |
 | `NFT` | push | Open NFT collection |
 | `TangemPayOnboarding` | push | Tangem Pay banner |
 | `TangemPayDetails` | push | Tangem Pay card details |
@@ -180,7 +181,8 @@ Each entry shows: **Source route** → target routes it can navigate to (via `pu
 | Target | Method | Trigger |
 |--------|--------|---------|
 | `CreateMobileWallet` | push | Create mobile wallet |
-| `Wallet` | replaceAll | After wallet creation completes |
+| `Onboarding(AddressSync)` | replaceAll | After a new card is scanned (address sync enabled) |
+| `Wallet` | replaceAll | After a card is scanned (already saved, or address sync disabled) |
 
 ### CreateMobileWallet
 

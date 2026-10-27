@@ -88,6 +88,7 @@ internal class JointOperationHistoryResponseTest {
                             address = "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
                             vote = "approve",
                             votedAt = "2026-10-15T09:58:12.000Z",
+                            signature = "0x5b0c1b",
                         ),
                     ),
                     cryptoAccountId = "A7B3C9D2",

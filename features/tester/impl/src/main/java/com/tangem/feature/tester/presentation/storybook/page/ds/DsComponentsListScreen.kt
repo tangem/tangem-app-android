@@ -119,7 +119,7 @@ internal fun DsComponentsListStory(
         modifier = modifier
             .statusBarsPadding()
             .fillMaxSize()
-            .background(TangemTheme.colors.background.primary),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         items(items = stories, key = { it.title }) { item ->
             PrimaryButton(

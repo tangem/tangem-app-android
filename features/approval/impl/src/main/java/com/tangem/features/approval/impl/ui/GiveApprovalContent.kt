@@ -61,7 +61,7 @@ internal fun GiveApprovalContent(
     ) {
         Text(
             text = amountFooter.resolveReference(),
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography.body2,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 24.dp),
@@ -135,7 +135,7 @@ private fun ApprovalInfo(
                 block = {
                     appendColored(
                         text = stringResourceSafe(R.string.common_learn_more),
-                        color = TangemTheme.colors.text.accent,
+                        color = TangemTheme.colors3.text.accent.blue,
                     )
                 },
             )
@@ -161,7 +161,7 @@ private fun ApprovalInfo(
         feeSelectorBlockComponent.Content(
             modifier = Modifier
                 .clip(TangemTheme.shapes.roundedCornersXMedium)
-                .background(TangemTheme.colors.background.action),
+                .background(TangemTheme.colors3.bg.secondary),
         )
     }
 }
@@ -179,7 +179,7 @@ private fun AmountItem(
         modifier = Modifier
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(),
@@ -201,21 +201,21 @@ private fun AmountItem(
         ) {
             Text(
                 text = stringResourceSafe(id = R.string.give_permission_rows_amount, currency),
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 style = TangemTheme.typography.subtitle1,
                 maxLines = 1,
             )
             SpacerWMax()
             Text(
                 text = approveType.text.resolveReference(),
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 style = TangemTheme.typography.body1,
                 maxLines = 1,
             )
             Icon(
                 painter = rememberVectorPainter(ImageVector.vectorResource(id = R.drawable.ic_chevron_24)),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.informative,
+                tint = TangemTheme.colors3.icon.secondary,
                 modifier = Modifier.padding(start = 2.dp),
             )
         }
@@ -248,7 +248,7 @@ private fun DropdownSelector(
     val offsetX = amountSize.width - dropDownWidth.width
 
     MaterialTheme(
-        colorScheme = MaterialTheme.colorScheme.copy(surface = TangemTheme.colors.background.action),
+        colorScheme = MaterialTheme.colorScheme.copy(surface = TangemTheme.colors3.bg.secondary),
         shapes = MaterialTheme.shapes.copy(extraSmall = RoundedCornerShape(16.dp)),
     ) {
         DropdownMenu(
@@ -260,11 +260,11 @@ private fun DropdownSelector(
             },
             modifier = Modifier
                 .wrapContentSize()
-                .background(TangemTheme.colors.background.action)
+                .background(TangemTheme.colors3.bg.secondary)
                 .onSizeChanged { dropDownWidth = it },
         ) {
             items.forEach { item ->
-                val color = if (item == selectedType) TangemTheme.colors.icon.accent else Color.Transparent
+                val color = if (item == selectedType) TangemTheme.colors3.icon.accent.blue else Color.Transparent
 
                 DropdownMenuItem(
                     modifier = Modifier.fillMaxWidth(),
@@ -279,7 +279,7 @@ private fun DropdownSelector(
                                         id = R.string.give_permission_unlimited,
                                     )
                                 },
-                                color = TangemTheme.colors.text.primary1,
+                                color = TangemTheme.colors3.text.primary,
                                 style = TangemTheme.typography.body1,
                                 maxLines = 1,
                             )

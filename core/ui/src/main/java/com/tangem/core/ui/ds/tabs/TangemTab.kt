@@ -44,14 +44,14 @@ fun TangemTab(
 ) {
     val shape = RoundedCornerShape(100.dp)
     val backgroundColor = if (isChecked) {
-        TangemTheme.colors2.tabs.backgroundPrimary
+        TangemTheme.colors3.bg.inverse
     } else {
-        TangemTheme.colors2.tabs.backgroundSecondary
+        TangemTheme.colors3.bg.transparent.secondary
     }
     val textColor = if (isChecked) {
-        TangemTheme.colors2.tabs.textPrimary
+        TangemTheme.colors3.text.inverse.primary
     } else {
-        TangemTheme.colors2.tabs.textSecondary
+        TangemTheme.colors3.text.secondary
     }
     Box(
         modifier = modifier
@@ -90,7 +90,7 @@ private fun TangemTab_Preview() {
     TangemThemePreviewRedesign {
         Column(
             verticalArrangement = Arrangement.spacedBy(24.dp),
-            modifier = Modifier.background(TangemTheme.colors2.surface.level1),
+            modifier = Modifier.background(TangemTheme.colors3.bg.primary),
         ) {
             TangemTab(
                 text = stringReference("Tab Title"),
