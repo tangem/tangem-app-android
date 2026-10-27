@@ -20,9 +20,11 @@ class TangemColors3 internal constructor(
     val overlay: Overlay,
     val interaction: Interaction,
     val glow: Glow,
+    val account: Account,
     val material: Material,
     val materialInverted: MaterialInverted,
     val materialModal: MaterialModal,
+    val materialMenu: MaterialMenu,
 ) {
 
     @Stable
@@ -1008,6 +1010,66 @@ class TangemColors3 internal constructor(
     }
 
     @Stable
+    class Account internal constructor(
+        vitalGreen: Color,
+        ufoGreen: Color,
+        caribbeanBlue: Color,
+        azureBlue: Color,
+        palatinateBlue: Color,
+        candyGrapeFizz: Color,
+        dullLavender: Color,
+        fuchsiaNebula: Color,
+        sweetDesire: Color,
+        mexicanPink: Color,
+        pelati: Color,
+        pattypan: Color,
+        visa: Color,
+    ) {
+        var vitalGreen by mutableStateOf(vitalGreen)
+            private set
+        var ufoGreen by mutableStateOf(ufoGreen)
+            private set
+        var caribbeanBlue by mutableStateOf(caribbeanBlue)
+            private set
+        var azureBlue by mutableStateOf(azureBlue)
+            private set
+        var palatinateBlue by mutableStateOf(palatinateBlue)
+            private set
+        var candyGrapeFizz by mutableStateOf(candyGrapeFizz)
+            private set
+        var dullLavender by mutableStateOf(dullLavender)
+            private set
+        var fuchsiaNebula by mutableStateOf(fuchsiaNebula)
+            private set
+        var sweetDesire by mutableStateOf(sweetDesire)
+            private set
+        var mexicanPink by mutableStateOf(mexicanPink)
+            private set
+        var pelati by mutableStateOf(pelati)
+            private set
+        var pattypan by mutableStateOf(pattypan)
+            private set
+        var visa by mutableStateOf(visa)
+            private set
+
+        fun update(other: Account) {
+            vitalGreen = other.vitalGreen
+            ufoGreen = other.ufoGreen
+            caribbeanBlue = other.caribbeanBlue
+            azureBlue = other.azureBlue
+            palatinateBlue = other.palatinateBlue
+            candyGrapeFizz = other.candyGrapeFizz
+            dullLavender = other.dullLavender
+            fuchsiaNebula = other.fuchsiaNebula
+            sweetDesire = other.sweetDesire
+            mexicanPink = other.mexicanPink
+            pelati = other.pelati
+            pattypan = other.pattypan
+            visa = other.visa
+        }
+    }
+
+    @Stable
     class Material internal constructor(
         val tint: Tint,
         val fill: Fill,
@@ -1229,6 +1291,80 @@ class TangemColors3 internal constructor(
         }
     }
 
+    @Stable
+    class MaterialMenu internal constructor(
+        val tint: Tint,
+        val fill: Fill,
+        val border: Border,
+    ) {
+
+        @Stable
+        class Tint internal constructor(
+            glass: Color,
+            blur: Color,
+            solid: Color,
+        ) {
+            var glass by mutableStateOf(glass)
+                private set
+            var blur by mutableStateOf(blur)
+                private set
+            var solid by mutableStateOf(solid)
+                private set
+
+            fun update(other: Tint) {
+                glass = other.glass
+                blur = other.blur
+                solid = other.solid
+            }
+        }
+
+        @Stable
+        class Fill internal constructor(
+            glass: Color,
+            blur: Color,
+            solid: Color,
+        ) {
+            var glass by mutableStateOf(glass)
+                private set
+            var blur by mutableStateOf(blur)
+                private set
+            var solid by mutableStateOf(solid)
+                private set
+
+            fun update(other: Fill) {
+                glass = other.glass
+                blur = other.blur
+                solid = other.solid
+            }
+        }
+
+        @Stable
+        class Border internal constructor(
+            start: Color,
+            mid: Color,
+            end: Color,
+        ) {
+            var start by mutableStateOf(start)
+                private set
+            var mid by mutableStateOf(mid)
+                private set
+            var end by mutableStateOf(end)
+                private set
+
+            fun update(other: Border) {
+                start = other.start
+                mid = other.mid
+                end = other.end
+            }
+        }
+
+        fun update(other: MaterialMenu) {
+            tint.update(other.tint)
+            fill.update(other.fill)
+            border.update(other.border)
+        }
+    }
+
     fun update(other: TangemColors3) {
         text.update(other.text)
         bg.update(other.bg)
@@ -1237,8 +1373,10 @@ class TangemColors3 internal constructor(
         overlay.update(other.overlay)
         interaction.update(other.interaction)
         glow.update(other.glow)
+        account.update(other.account)
         material.update(other.material)
         materialInverted.update(other.materialInverted)
         materialModal.update(other.materialModal)
+        materialMenu.update(other.materialMenu)
     }
 }
