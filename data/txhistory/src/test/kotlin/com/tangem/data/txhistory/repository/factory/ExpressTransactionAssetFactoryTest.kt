@@ -125,16 +125,70 @@ internal class ExpressTransactionAssetFactoryTest {
     }
 
     @Test
-    fun `GIVEN no account holds the leg address WHEN create THEN falls back to any matching copy`() = runTest {
-        // Arrange — a send-and-swap payout, or addresses not loaded yet: any copy still carries the name and icon.
-        val custom = ethereumCoin(isCustom = true)
+    fun `GIVEN no account holds the leg address WHEN create THEN builds the coin instead of taking a custom copy`() =
+        runTest {
+            // Arrange — a send-and-swap payout, or addresses not loaded yet: which copy the leg sat on is unknown,
+            // so a custom-derivation twin must not lend the leg its custom flag.
+            val custom = ethereumCoin(isCustom = true)
+            givenPortfolio(statusAt(custom, address = "some-other-address"))
+
+            // Act
+            val result = factory.create(
+                userWalletId = userWallet.walletId,
+                historyCurrency = cachedToken,
+                outgoingSwaps = listOf(coinToTokenSwap()),
+                incomingSwaps = emptyList(),
+                onramps = emptyList(),
+            )
+
+            // Assert
+            val actual = result[ExpressLegKey(COIN_ASSET_ID, FROM_ADDRESS)]
+            assertThat(actual).isNotEqualTo(custom)
+            assertThat(actual?.isCustom).isFalse()
+        }
+
+    @Test
+    fun `GIVEN unmatched leg of a cached token WHEN create THEN prefers the cached token over a custom copy`() =
+        runTest {
+            // Arrange — a swap paid in from the yield-module contract: no account holds that address, and the only
+            // portfolio copy of the asset sits on a custom derivation.
+            val tokenId = ExpressAsset.ID(networkId = "ethereum", contractAddress = TOKEN_CONTRACT)
+            coEvery { tokenInfoRepository.getCachedTokens(userWallet.walletId, any()) } returns
+                mapOf(tokenId to cachedToken)
+            givenPortfolio(statusAt(customEthereumToken(), address = "some-other-address"))
+
+            // Act
+            val result = factory.create(
+                userWalletId = userWallet.walletId,
+                historyCurrency = ethereum,
+                outgoingSwaps = listOf(coinToTokenSwap()),
+                incomingSwaps = emptyList(),
+                onramps = emptyList(),
+            )
+
+            // Assert
+            assertThat(result[ExpressLegKey(tokenId, PAYOUT_ADDRESS)]).isEqualTo(cachedToken)
+        }
+
+    @Test
+    fun `GIVEN unmatched leg of an uncached token WHEN create THEN keeps the portfolio copy`() = runTest {
+        // Arrange — a hand-added token carries no rawCurrencyId, so it never reaches the token-info cache. It is
+        // custom by definition and its copy is the only source of a name and an icon.
+        val custom = customEthereumToken()
         givenPortfolio(statusAt(custom, address = "some-other-address"))
 
         // Act
-        val result = factory.create(userWallet.walletId, cachedToken, listOf(coinToTokenSwap()), emptyList(), emptyList())
+        val result = factory.create(
+            userWalletId = userWallet.walletId,
+            historyCurrency = ethereum,
+            outgoingSwaps = listOf(coinToTokenSwap()),
+            incomingSwaps = emptyList(),
+            onramps = emptyList(),
+        )
 
         // Assert
-        assertThat(result[ExpressLegKey(COIN_ASSET_ID, FROM_ADDRESS)]).isEqualTo(custom)
+        val tokenId = ExpressAsset.ID(networkId = "ethereum", contractAddress = TOKEN_CONTRACT)
+        assertThat(result[ExpressLegKey(tokenId, PAYOUT_ADDRESS)]).isEqualTo(custom)
     }
 
     private fun givenPortfolio(vararg statuses: CryptoCurrencyStatus) {
@@ -162,6 +216,18 @@ internal class ExpressTransactionAssetFactoryTest {
         return coin.copy(
             network = coin.network.copy(
                 id = coin.network.id.copy(derivationPath = derivationPath),
+                derivationPath = derivationPath,
+            ),
+            isCustom = true,
+        )
+    }
+
+    /** The custom-derivation copy of [cachedToken], as another account holds it. */
+    private fun customEthereumToken(): CryptoCurrency.Token {
+        val derivationPath = Network.DerivationPath.Custom(value = "m/44'/60'/1'/0/0")
+        return cachedToken.copy(
+            network = cachedToken.network.copy(
+                id = cachedToken.network.id.copy(derivationPath = derivationPath),
                 derivationPath = derivationPath,
             ),
             isCustom = true,
