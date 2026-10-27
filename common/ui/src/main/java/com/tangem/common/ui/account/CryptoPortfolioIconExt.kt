@@ -1,8 +1,11 @@
 package com.tangem.common.ui.account
 
 import androidx.annotation.DrawableRes
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 import com.tangem.core.ui.R
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 
 /** Extension function to get the UI color associated with an [CryptoPortfolioIcon.Color] */
@@ -20,6 +23,26 @@ fun CryptoPortfolioIcon.Color.getUiColor(): Color {
         CryptoPortfolioIcon.Color.Pattypan -> Color(color = 0xFFF0B90B)
         CryptoPortfolioIcon.Color.UFOGreen -> Color(color = 0xFF32CB77)
         CryptoPortfolioIcon.Color.VitalGreen -> Color(color = 0xFF15865B)
+    }
+}
+
+@Composable
+@ReadOnlyComposable
+fun CryptoPortfolioIcon.Color.getDsColor(): Color {
+    val account = TangemTheme.colors3.account
+    return when (this) {
+        CryptoPortfolioIcon.Color.Azure -> account.azureBlue
+        CryptoPortfolioIcon.Color.CaribbeanBlue -> account.caribbeanBlue
+        CryptoPortfolioIcon.Color.DullLavender -> account.dullLavender
+        CryptoPortfolioIcon.Color.CandyGrapeFizz -> account.candyGrapeFizz
+        CryptoPortfolioIcon.Color.SweetDesire -> account.sweetDesire
+        CryptoPortfolioIcon.Color.PalatinateBlue -> account.palatinateBlue
+        CryptoPortfolioIcon.Color.FuchsiaNebula -> account.fuchsiaNebula
+        CryptoPortfolioIcon.Color.MexicanPink -> account.mexicanPink
+        CryptoPortfolioIcon.Color.Pelati -> account.pelati
+        CryptoPortfolioIcon.Color.Pattypan -> account.pattypan
+        CryptoPortfolioIcon.Color.UFOGreen -> account.ufoGreen
+        CryptoPortfolioIcon.Color.VitalGreen -> account.vitalGreen
     }
 }
 
