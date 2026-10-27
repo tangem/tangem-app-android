@@ -218,7 +218,7 @@ internal class MoneyAccountDetailsModelTest {
             verify(exactly = 1) { analytics.send(ofType<MoneyAccountAnalyticsEvents.DetailsErrorSupportTapped>()) }
             coVerify(exactly = 1) {
                 sendFeedbackEmailUseCase(
-                    FeedbackEmailType.Visa.DirectUserRequest(
+                    FeedbackEmailType.Visa.MoneyAccountRequest(
                         walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId),
                         customerId = CUSTOMER_ID,
                     ),
