@@ -23,10 +23,10 @@ import com.tangem.features.tokenreceive.entity.ReceiveAddress.Type.Primary
 import com.tangem.features.tokenreceive.entity.TokenReceiveStateFactory
 import com.tangem.features.tokenreceive.route.TokenReceiveRoutes
 import com.tangem.features.tokenreceive.ui.state.TokenReceiveUM
-import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -45,15 +45,12 @@ internal class TokenReceiveModel @Inject constructor(
 
     val params = paramsContainer.require<TokenReceiveComponent.Params>()
 
-    private val tokenReceiveStateFactory: TokenReceiveStateFactory by lazy {
-        TokenReceiveStateFactory(
-            cryptoCurrency = params.config.cryptoCurrency,
-            addresses = params.config.receiveAddress,
-            tokenReceiveNotification = params.config.tokenReceiveNotification,
-            currentStateProvider = Provider { state.value },
-            tokenReceiveType = params.config.type,
-        )
-    }
+    private val tokenReceiveStateFactory = TokenReceiveStateFactory(
+        cryptoCurrency = params.config.cryptoCurrency,
+        addresses = params.config.receiveAddress,
+        tokenReceiveNotification = params.config.tokenReceiveNotification,
+        tokenReceiveType = params.config.type,
+    )
 
     val stackNavigation = StackNavigation<TokenReceiveRoutes>()
 
@@ -114,7 +111,7 @@ internal class TokenReceiveModel @Inject constructor(
     }
 
     private suspend fun load() = withContext(dispatchers.default) {
-        state.value = tokenReceiveStateFactory.getLoadingState()
+        state.update(tokenReceiveStateFactory::getLoadingState)
         val reverseResolveResult =
             if (params.config.cryptoCurrency.network.nameResolvingType == Network.NameResolvingType.ENS) {
                 getReverseResolvedEnsAddressUseCase(
@@ -125,7 +122,7 @@ internal class TokenReceiveModel @Inject constructor(
             } else {
                 emptyList()
             }
-        state.value = tokenReceiveStateFactory.getLoadedState(reverseResolveResult)
+        state.update { tokenReceiveStateFactory.getLoadedState(currentState = it, ensAddress = reverseResolveResult) }
     }
 
     private fun sendCopyActionAnalytic(receiveAddress: ReceiveAddress, source: TokenReceiveCopyActionSource) {

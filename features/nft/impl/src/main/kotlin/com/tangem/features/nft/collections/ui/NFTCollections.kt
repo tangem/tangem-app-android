@@ -19,7 +19,7 @@ internal fun NFTCollections(state: NFTCollectionsStateUM, modifier: Modifier = M
 
     Column(
         modifier = modifier
-            .background(TangemTheme.colors.background.secondary),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         AppBarWithBackButton(
             modifier = Modifier,

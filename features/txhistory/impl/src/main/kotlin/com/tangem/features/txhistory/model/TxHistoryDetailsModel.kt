@@ -4,6 +4,14 @@ import android.content.Context
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.pushNew
+import com.tangem.common.ui.cosign.CosignRequestRowUM
+import com.tangem.common.ui.cosign.SignatureProgressUM
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.features.txhistory.joint.operation.route.JointOperationRoutes
+import com.tangem.features.txhistory.joint.operation.signers.FinishedJointOperationSigners
+import com.tangem.features.txhistory.joint.operation.signers.ui.state.JointOperationSignersUM
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.routing.AppRoute
@@ -59,6 +67,7 @@ import com.tangem.features.txhistory.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -76,6 +85,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -101,6 +111,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
     getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     ownerLookupProducer: TxHistoryOwnerLookupProducer,
+    finishedJointOperationSigners: FinishedJointOperationSigners,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -108,6 +119,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
 
     private val shareTextConverter = ExpressTxToShareTextConverter()
     private val txHistoryInfo = params.historyTxListManager.txExpressHistoryItemFlow(params.txId)
+        .shareIn(modelScope, SharingStarted.WhileSubscribed(), replay = 1)
 
     /**
      * Known staking targets (StakeKit validators and P2P vaults) keyed by on-chain address, used to resolve the target
@@ -142,12 +154,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
 
     private var isRatingActivationStarted = false
 
-    /**
-     * One-shot guard for the screen-opened analytics, sent from the [uiState] combine below instead of a dedicated
-     * `.first()` collection of [txHistoryInfo]: that flow is cold and re-triggers its own standalone express-tx
-     * subscription per collector (see `DefaultHistoryTxListManager.txExpressHistoryItemFlow`), so a second collector
-     * would double the load for a tx not yet in the paginated list.
-     */
+    /** One-shot guard for the screen-opened analytics, sent from the [uiState] combine below */
     private var isScreenOpenedAnalyticsSent = false
 
     init {
@@ -159,6 +166,17 @@ internal class TxHistoryDetailsModel @Inject constructor(
             refundCurrency.value = addRefundTokenToPortfolio(refundAssetId)
         }
     }
+
+    val stackNavigation = StackNavigation<JointOperationRoutes>()
+
+    /** Who answered the viewed joint operation, drawn by the signers screen; fed while [uiState] is collected */
+    val signersState: StateFlow<JointOperationSignersUM?>
+        field = MutableStateFlow(null)
+
+    private val jointSignatures: Flow<FinishedJointOperationSigners.Signatures?> = finishedJointOperationSigners
+        .observe(userWalletId = params.userWalletId, currency = params.currency, txHistoryInfo = txHistoryInfo)
+        .onEach { signersState.value = it?.signers }
+        .flowOn(dispatchers.io)
 
     private val networkTokensFlow: Flow<Set<CryptoCurrency.Token>> = flow {
         emit(getCachedTokenInfoUseCase(params.userWalletId, params.currency.network.rawId))
@@ -193,12 +211,14 @@ internal class TxHistoryDetailsModel @Inject constructor(
             flow2 = isAddressBookCompatibleUseCase(params.userWalletId),
             flow3 = networkTokensFlow,
             flow4 = fiatConversionFlow,
-        ) { lookup, isCompatible, tokens, fiatConversion ->
+            flow5 = jointSignatures,
+        ) { lookup, isCompatible, tokens, fiatConversion, jointSignatures ->
             DetailsInputs(
                 lookup = lookup,
                 isAddressBookCompatible = isCompatible,
                 networkTokens = tokens,
                 fiatConversion = fiatConversion,
+                jointSignatures = jointSignatures,
             )
         }
 
@@ -238,7 +258,10 @@ internal class TxHistoryDetailsModel @Inject constructor(
             onAddContact = contactCandidate?.let { candidate -> { openContactCreation(candidate) } },
             networkTokens = inputs.networkTokens,
             fiatConversion = inputs.fiatConversion,
-        ).convert(txInfo).also { um ->
+        ).convert(txInfo).withCosign(
+            signatures = inputs.jointSignatures,
+            onSignersClick = { stackNavigation.pushNew(JointOperationRoutes.Signers) },
+        ).also { um ->
             if (!isScreenOpenedAnalyticsSent) {
                 isScreenOpenedAnalyticsSent = true
                 sendScreenOpenedAnalytics(txInfo = txInfo, title = um.header.title)
@@ -269,11 +292,15 @@ internal class TxHistoryDetailsModel @Inject constructor(
      * Only a completed deal gets the widget: the survey vendor caps API calls per day and a swap in flight
      * is re-opened many times while the user watches its status. The flow keeps collecting, so the slot
      * still appears by itself once a deal watched from this screen completes.
+     *
+     * The lookup starts [RATING_ENTER_DELAY_MILLIS] after the screen does, so the card never grows the sheet
+     * while it is still animating open — it lands on a settled sheet instead.
      */
     fun activateRatingForSwap() {
         if (isRatingActivationStarted) return
         isRatingActivationStarted = true
         txHistoryInfo
+            .onStart { delay(RATING_ENTER_DELAY_MILLIS) }
             .mapNotNull { it as? ExpressTx.Swap }
             .filter { swap -> swap.tx.status.isRateable }
             .map { swap ->
@@ -455,13 +482,35 @@ internal class TxHistoryDetailsModel @Inject constructor(
     }
 }
 
+/** How long the rating slot waits before it may appear, covering the sheet's opening animation. */
+private const val RATING_ENTER_DELAY_MILLIS = 1000L
+
 /** The per-wallet sources the details converter needs, combined apart from the already five-wide `uiState` combine. */
 private data class DetailsInputs(
     val lookup: TxHistoryLookupContext,
     val isAddressBookCompatible: Boolean,
     val networkTokens: Set<CryptoCurrency.Token>,
     val fiatConversion: FiatConversion,
+    val jointSignatures: FinishedJointOperationSigners.Signatures?,
 )
+
+private fun TxHistoryDetailsUM.withCosign(
+    signatures: FinishedJointOperationSigners.Signatures?,
+    onSignersClick: () -> Unit,
+): TxHistoryDetailsUM {
+    if (this !is TxHistoryDetailsUM.SingleAsset || signatures == null) return this
+
+    return copy(
+        cosign = CosignRequestRowUM(
+            title = resourceReference(
+                id = R.string.joint_operation_signatures_progress,
+                formatArgs = wrappedList(signatures.collected, signatures.threshold),
+            ),
+            progress = SignatureProgressUM(collected = signatures.collected, total = signatures.threshold),
+            onInfoClick = onSignersClick,
+        ),
+    )
+}
 
 /** Identity of the rating slot: re-activation is needed only when one of these deal fields changes. */
 private data class RatingKey(

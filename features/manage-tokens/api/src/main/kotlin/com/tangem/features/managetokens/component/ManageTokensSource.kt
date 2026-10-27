@@ -5,7 +5,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.serialization.Serializable
 
 enum class ManageTokensSource(val analyticsName: String) {
-    STORIES(analyticsName = "Stories"),
     ONBOARDING(analyticsName = "Onboarding"),
     SETTINGS(analyticsName = "Wallet Settings"),
     ACCOUNT(analyticsName = "Account"),

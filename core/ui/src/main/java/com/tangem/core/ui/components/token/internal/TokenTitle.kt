@@ -77,7 +77,7 @@ private fun CurrencyNameText(name: String, isAvailable: Boolean, textStyle: Text
     Text(
         text = name,
         modifier = modifier,
-        color = if (isAvailable) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.tertiary,
+        color = if (isAvailable) TangemTheme.colors3.text.primary else TangemTheme.colors3.text.secondary,
         overflow = TextOverflow.Ellipsis,
         maxLines = 1,
         style = textStyle,
@@ -90,7 +90,7 @@ private fun YieldSupplyApyLabel(apy: TextReference?, isActive: Boolean, modifier
         Box(
             modifier = Modifier.background(
                 color = if (isActive) {
-                    TangemTheme.colors.text.accent.copy(alpha = 0.1f)
+                    TangemTheme.colors3.text.accent.blue.copy(alpha = 0.1f)
                 } else {
                     TangemTheme.colors.control.default
                 },
@@ -101,9 +101,9 @@ private fun YieldSupplyApyLabel(apy: TextReference?, isActive: Boolean, modifier
                 text = apy?.resolveReference().orEmpty(),
                 style = TangemTheme.typography.caption1,
                 color = if (isActive) {
-                    TangemTheme.colors.text.accent
+                    TangemTheme.colors3.text.accent.blue
                 } else {
-                    TangemTheme.colors.text.secondary
+                    TangemTheme.colors3.text.secondary
                 },
                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
             )

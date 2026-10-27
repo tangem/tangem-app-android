@@ -60,8 +60,7 @@ private class FullScreenLayout(
     uniqueId: UUID,
 ) : AbstractComposeView(composeView.context) {
 
-    private val windowManager =
-        composeView.context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    private val windowManager = composeView.context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
 
     private val params = createLayoutParams()
 
@@ -111,7 +110,7 @@ private class FullScreenLayout(
 
     fun show() {
         if (isViewShowing) dismiss()
-        windowManager.addView(this, params)
+        windowManager?.addView(this, params)
 
         if (isFocusable.not()) {
             params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
@@ -121,7 +120,7 @@ private class FullScreenLayout(
             params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
         }
 
-        windowManager.updateViewLayout(this, params)
+        windowManager?.updateViewLayout(this, params)
         isViewShowing = true
     }
 
@@ -141,7 +140,7 @@ private class FullScreenLayout(
     fun dismiss() {
         if (!isViewShowing) return
         disposeComposition()
-        windowManager.removeViewImmediate(this)
+        windowManager?.removeViewImmediate(this)
         isViewShowing = false
     }
 

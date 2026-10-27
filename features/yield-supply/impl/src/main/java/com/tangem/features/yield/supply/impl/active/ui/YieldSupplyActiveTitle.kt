@@ -25,7 +25,7 @@ internal fun YieldSupplyActiveTitle(onCloseClick: () -> Unit) {
         Icon(
             imageVector = ImageVector.vectorResource(R.drawable.ic_close_24),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.primary1,
+            tint = TangemTheme.colors3.icon.primary,
             modifier = Modifier
                 .padding(16.dp)
                 .clickable(
@@ -40,7 +40,7 @@ internal fun YieldSupplyActiveTitle(onCloseClick: () -> Unit) {
             Text(
                 text = stringResourceSafe(R.string.yield_module_earn_sheet_title),
                 style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
             Row(
@@ -50,12 +50,12 @@ internal fun YieldSupplyActiveTitle(onCloseClick: () -> Unit) {
                 Text(
                     text = stringResourceSafe(R.string.yield_module_status_active),
                     style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                 )
                 Box(
                     modifier = Modifier
                         .size(8.dp)
-                        .background(TangemTheme.colors.icon.accent, CircleShape),
+                        .background(TangemTheme.colors3.bg.accent.blue, CircleShape),
                 )
             }
         }

@@ -138,5 +138,9 @@
     {
         "name": "AND_18663_REDESIGNED_ACCOUNT_ROWS_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TWI_1732_MARKETING_UID_BINDING_ENABLED",
+        "version": "undefined"
     }
 ]

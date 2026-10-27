@@ -1,11 +1,16 @@
 package com.tangem.data.txhistory.repository
 
+import arrow.core.Either
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.core.remote.response.ETAG_HEADER
 import com.tangem.data.txhistory.repository.converter.FinishedJointOperationConverter
 import com.tangem.data.txhistory.repository.converter.JointOperationEntityConverter
+import com.tangem.data.txhistory.repository.converter.JointOperationRecordConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.domain.jointaccount.model.FinishedJointOperation
+import com.tangem.domain.jointaccount.model.JointOperationFetchResult
+import com.tangem.domain.jointaccount.model.JointOperationRecord
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.repository.JointOperationHistoryRepository
@@ -35,6 +40,7 @@ internal class DefaultJointOperationHistoryRepository @Inject constructor(
 
     private val entityConverter = JointOperationEntityConverter()
     private val finishedConverter = FinishedJointOperationConverter()
+    private val recordConverter = JointOperationRecordConverter(finishedConverter)
 
     suspend fun fetchHistory(userWalletId: UserWalletId, limit: Int = DEFAULT_LIMIT): JointOperationHistoryResponse {
         val state = syncState(userWalletId)
@@ -53,14 +59,19 @@ internal class DefaultJointOperationHistoryRepository @Inject constructor(
     suspend fun fetchHistoryDelta(
         userWalletId: UserWalletId,
         limit: Int = DEFAULT_LIMIT,
-    ): JointOperationHistoryDeltaResponse {
-        val state = checkNotNull(syncState(userWalletId)) { "The joint operation history walk has not started yet" }
+    ): JointOperationHistoryDeltaResponse? {
+        val state = syncState(userWalletId) ?: return null
 
-        val response = jointAccountApi.getJointOperationHistoryDelta(
+        val apiResponse = jointAccountApi.getJointOperationHistoryDelta(
             walletId = userWalletId.stringValue,
             beforeCursor = state.deltaCursor,
             limit = limit,
-        ).getOrResetSyncState(userWalletId)
+        )
+        apiResponse.refusedCursorCause()?.let { cause ->
+            resetSyncState(userWalletId, cause)
+            return null
+        }
+        val response = apiResponse.getOrThrow()
 
         store(userWalletId, response.items)
         response.pagination.startCursor?.let { cursor ->
@@ -105,18 +116,63 @@ internal class DefaultJointOperationHistoryRepository @Inject constructor(
         .map { it.toSet() }
         .distinctUntilChanged()
 
+    override fun observeOperation(userWalletId: UserWalletId, operationId: String): Flow<JointOperationRecord?> =
+        jointOperationDao.observeById(userWalletId = userWalletId.stringValue, operationId = operationId)
+            .distinctUntilChanged()
+            .map { entity ->
+                entity?.let { stored ->
+                    runCatching { recordConverter.convert(stored) }
+                        .onFailure { TangemLogger.e("Dropped the joint operation $operationId", it) }
+                        .getOrNull()
+                }
+            }
+
+    override suspend fun fetchOperation(
+        userWalletId: UserWalletId,
+        operationId: String,
+        eTag: String?,
+    ): Either<Throwable, JointOperationFetchResult> = Either.catch {
+        val response = jointAccountApi.getJointOperation(
+            walletId = userWalletId.stringValue,
+            operationId = operationId,
+            eTag = eTag,
+        )
+
+        when (response) {
+            is ApiResponse.Success -> {
+                store(userWalletId, listOf(response.data))
+                JointOperationFetchResult.Updated(eTag = response.headers[ETAG_HEADER]?.firstOrNull())
+            }
+            is ApiResponse.Error -> when ((response.cause as? ApiResponseError.HttpException)?.code) {
+                ApiResponseError.HttpException.Code.NOT_MODIFIED -> JointOperationFetchResult.NotModified
+                ApiResponseError.HttpException.Code.BAD_REQUEST,
+                ApiResponseError.HttpException.Code.NOT_FOUND,
+                ApiResponseError.HttpException.Code.FORBIDDEN,
+                -> JointOperationFetchResult.Gone
+                else -> throw response.cause
+            }
+        }
+    }
+
     /**
      * The backend answers a cursor it no longer accepts with 400. Dropping the sync state makes the next sync walk
      * the history from the start instead of failing on that cursor forever.
      */
     private suspend fun <T : Any> ApiResponse<T>.getOrResetSyncState(userWalletId: UserWalletId): T {
-        if (this is ApiResponse.Error &&
-            (cause as? ApiResponseError.HttpException)?.code == ApiResponseError.HttpException.Code.BAD_REQUEST
-        ) {
-            TangemLogger.e("Joint operation history refused the cursor, the sync starts over", cause)
-            historySyncStateDao.delete(type = SYNC_TYPE.name, userWalletId = userWalletId.stringValue)
-        }
+        refusedCursorCause()?.let { cause -> resetSyncState(userWalletId, cause) }
         return getOrThrow()
+    }
+
+    private fun ApiResponse<*>.refusedCursorCause(): ApiResponseError? {
+        val cause = (this as? ApiResponse.Error)?.cause
+        val isBadRequest = (cause as? ApiResponseError.HttpException)?.code ==
+            ApiResponseError.HttpException.Code.BAD_REQUEST
+        return cause.takeIf { isBadRequest }
+    }
+
+    private suspend fun resetSyncState(userWalletId: UserWalletId, cause: ApiResponseError) {
+        TangemLogger.e("Joint operation history refused the cursor, the sync starts over", cause)
+        historySyncStateDao.delete(type = SYNC_TYPE.name, userWalletId = userWalletId.stringValue)
     }
 
     private suspend fun store(userWalletId: UserWalletId, items: List<JointOperationHistoryItemDto>) {

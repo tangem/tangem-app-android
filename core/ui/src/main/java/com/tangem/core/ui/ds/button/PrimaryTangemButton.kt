@@ -71,14 +71,14 @@ fun PrimaryTangemButton(
     shape: TangemButtonShape = TangemButtonShape.Default,
 ) {
     val backgroundModifier = if (isEnabled) {
-        Modifier.background(TangemTheme.colors2.button.backgroundPrimary)
+        Modifier.background(TangemTheme.colors3.bg.inverse)
     } else {
-        Modifier.background(TangemTheme.colors2.button.backgroundDisabled)
+        Modifier.background(TangemTheme.colors3.bg.disabled)
     }
     val contentColor = if (isEnabled) {
-        TangemTheme.colors2.text.neutral.primaryInverted
+        TangemTheme.colors3.text.inverse.primary
     } else {
-        TangemTheme.colors2.text.status.disabled
+        TangemTheme.colors3.text.tertiary
     }
 
     TangemButtonInternal(
@@ -109,7 +109,7 @@ private fun PrimaryTangemButton_Preview(
         Row(
             horizontalArrangement = Arrangement.spacedBy(21.dp),
             modifier = Modifier
-                .background(TangemTheme.colors2.surface.level1)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(8.dp),
         ) {
             repeat(4) { yIndex ->
@@ -127,9 +127,9 @@ private fun PrimaryTangemButton_Preview(
                                 iconRes = R.drawable.ic_tangem_24,
                                 tintReference = {
                                     if (isEnabled) {
-                                        TangemTheme.colors2.graphic.neutral.primaryInverted
+                                        TangemTheme.colors3.icon.inverse
                                     } else {
-                                        TangemTheme.colors2.graphic.neutral.quaternary
+                                        TangemTheme.colors3.icon.tertiary
                                     }
                                 },
                             ),

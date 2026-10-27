@@ -63,7 +63,7 @@ internal fun WcCustomAllowanceContent(
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
         onBack = onBack,
         title = {
             TangemModalBottomSheetTitle(
@@ -75,7 +75,7 @@ internal fun WcCustomAllowanceContent(
         content = {
             Column(
                 modifier = Modifier
-                    .background(TangemTheme.colors.background.tertiary)
+                    .background(TangemTheme.colors3.bg.primary)
                     .fillMaxWidth()
                     .padding(16.dp),
             ) {
@@ -91,14 +91,14 @@ internal fun WcCustomAllowanceContent(
                     modifier = Modifier
                         .padding(top = 16.dp)
                         .clip(RoundedCornerShape(14.dp))
-                        .background(TangemTheme.colors.background.action)
+                        .background(TangemTheme.colors3.bg.secondary)
                         .padding(16.dp)
                         .fillMaxWidth(),
                 ) {
                     Text(
                         text = stringResourceSafe(R.string.wc_unlimited_amount),
                         style = TangemTheme.typography.body1,
-                        color = TangemTheme.colors.text.primary1,
+                        color = TangemTheme.colors3.text.primary,
                         modifier = Modifier.weight(1f),
                     )
                     TangemSwitch(
@@ -135,7 +135,7 @@ private fun AmountTextField(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .clip(RoundedCornerShape(14.dp))
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .padding(end = 8.dp, top = 4.dp, bottom = 4.dp)
             .fillMaxWidth(),
     ) {
@@ -147,7 +147,7 @@ private fun AmountTextField(
                 Text(
                     text = stringResourceSafe(R.string.send_amount_label),
                     style = TangemTheme.typography.subtitle2,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                 )
             },
             textStyle = TangemTheme.typography.body1,
@@ -156,16 +156,16 @@ private fun AmountTextField(
             colors = TextFieldDefaults.colors(
                 unfocusedContainerColor = Color.Transparent,
                 focusedContainerColor = Color.Transparent,
-                focusedTextColor = TangemTheme.colors.text.primary1,
-                unfocusedTextColor = TangemTheme.colors.text.primary1,
-                focusedPlaceholderColor = TangemTheme.colors.text.disabled,
-                unfocusedPlaceholderColor = TangemTheme.colors.text.disabled,
+                focusedTextColor = TangemTheme.colors3.text.primary,
+                unfocusedTextColor = TangemTheme.colors3.text.primary,
+                focusedPlaceholderColor = TangemTheme.colors3.text.tertiary,
+                unfocusedPlaceholderColor = TangemTheme.colors3.text.tertiary,
                 disabledContainerColor = Color.Transparent,
-                disabledTextColor = TangemTheme.colors.text.disabled,
+                disabledTextColor = TangemTheme.colors3.text.tertiary,
                 disabledIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
-                cursorColor = TangemTheme.colors.icon.primary1,
+                cursorColor = TangemTheme.colors3.icon.primary,
             ),
         )
 
@@ -202,7 +202,7 @@ private fun TokenWithNetworkIcon(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .size(18.dp)
-                    .border(2.dp, TangemTheme.colors.background.action, CircleShape)
+                    .border(2.dp, TangemTheme.colors3.bg.secondary, CircleShape)
                     .padding(2.dp),
                 painter = painterResource(networkIconRes),
                 contentDescription = null,
@@ -224,7 +224,7 @@ internal fun PreviewWcCustomAllowanceContent(
                 onDismissRequest = {},
                 content = state,
             ),
-            containerColor = TangemTheme.colors.background.tertiary,
+            containerColor = TangemTheme.colors3.bg.primary,
             title = {
                 TangemModalBottomSheetTitle(
                     title = resourceReference(R.string.wc_custom_allowance_title),

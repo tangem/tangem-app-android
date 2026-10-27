@@ -176,7 +176,7 @@ internal class WalletTokenCurrencyItemConverter(
                         fiat(
                             fiatCurrencyCode = appCurrency.code,
                             fiatCurrencySymbol = appCurrency.symbol,
-                            spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
+                            spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.secondary) },
                         )
                     },
                     isFlickering = currencyStatus.value.isFlickering(),
@@ -184,14 +184,14 @@ internal class WalletTokenCurrencyItemConverter(
                         addIf(
                             element = TangemIconUM.Icon(
                                 iconRes = R.drawable.ic_attention_default_24,
-                                tintReference = { TangemTheme.colors2.graphic.status.attention },
+                                tintReference = { TangemTheme.colors3.icon.accent.yellow },
                             ),
                             condition = yieldSupply?.isActive == true && !yieldSupply.isAllowedToSpend,
                         )
                         addIf(
                             element = TangemIconUM.Icon(
                                 iconRes = R.drawable.ic_error_sync_default_24,
-                                tintReference = { TangemTheme.colors2.graphic.neutral.tertiary },
+                                tintReference = { TangemTheme.colors3.icon.secondary },
                             ),
                             condition = currencyStatus.value.sources.total == StatusSource.ONLY_CACHE,
                         )
@@ -228,24 +228,24 @@ internal class WalletTokenCurrencyItemConverter(
             is CryptoCurrencyStatus.MissedDerivation -> TangemTokenRowUM.EndContentUM.Content(
                 text = styledResourceReference(
                     id = R.string.common_no_address,
-                    spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.status.attention) },
+                    spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.accent.yellow) },
                 ),
                 endIcons = persistentListOf(
                     TangemIconUM.Icon(
                         iconRes = R.drawable.ic_attention_default_24,
-                        tintReference = { TangemTheme.colors2.graphic.status.attention },
+                        tintReference = { TangemTheme.colors3.icon.accent.yellow },
                     ),
                 ),
             )
             is CryptoCurrencyStatus.Unreachable -> TangemTokenRowUM.EndContentUM.Content(
                 text = styledResourceReference(
                     id = R.string.common_unreachable,
-                    spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.status.attention) },
+                    spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.accent.yellow) },
                 ),
                 endIcons = persistentListOf(
                     TangemIconUM.Icon(
                         iconRes = R.drawable.ic_attention_default_24,
-                        tintReference = { TangemTheme.colors2.graphic.status.attention },
+                        tintReference = { TangemTheme.colors3.icon.accent.yellow },
                     ),
                 ),
             )

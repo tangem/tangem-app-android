@@ -113,7 +113,7 @@ internal fun NFTDetailsGroupTitle(text: TextReference, modifier: Modifier = Modi
         modifier = modifier,
         text = text.resolveReference(),
         style = TangemTheme.typography.subtitle2,
-        color = TangemTheme.colors.text.tertiary,
+        color = TangemTheme.colors3.text.secondary,
     )
 }
 
@@ -147,7 +147,7 @@ internal fun NFTDetailsGroupBlock(
                     .weight(1f, fill = false),
                 text = title.resolveReference(),
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 ellipsis = titleEllipsis,
             )
             if (showInfoButton) {
@@ -157,7 +157,7 @@ internal fun NFTDetailsGroupBlock(
                         .size(16.dp),
                     painter = painterResource(R.drawable.ic_information_24),
                     contentDescription = null,
-                    tint = TangemTheme.colors.icon.informative,
+                    tint = TangemTheme.colors3.icon.secondary,
                 )
             }
         }
@@ -177,7 +177,7 @@ internal fun NFTDetailsGroupBlock(
                 },
             text = value.resolveReference(),
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             ellipsis = valueEllipsis,
         )
     }
@@ -205,7 +205,7 @@ internal fun NFTBlocksGroupAction(
         startIcon()
         Text(
             text = text.resolveReference(),
-            color = TangemTheme.colors.text.accent,
+            color = TangemTheme.colors3.text.accent.blue,
             style = TangemTheme.typography.subtitle2,
         )
     }
@@ -216,7 +216,7 @@ internal fun NFTBlocksGroupActionIcon(@DrawableRes iconRes: Int, modifier: Modif
     Icon(
         modifier = modifier.size(size = 16.dp),
         painter = painterResource(id = iconRes),
-        tint = TangemTheme.colors.icon.accent,
+        tint = TangemTheme.colors3.icon.accent.blue,
         contentDescription = null,
     )
 }

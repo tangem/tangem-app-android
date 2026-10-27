@@ -71,7 +71,7 @@ private fun PaymentMethod(methodUM: AllOffersPaymentMethodUM, modifier: Modifier
         modifier = modifier
             .fillMaxWidth()
             .background(
-                color = TangemTheme.colors.background.action,
+                color = TangemTheme.colors3.bg.secondary,
                 shape = RoundedCornerShape(14.dp),
             )
             .clickable(
@@ -133,7 +133,7 @@ private fun UnavailablePaymentMethodInfoBlock(
         Text(
             text = paymentMethodName,
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.testTag(SelectPaymentMethodBottomSheetTestTags.PAYMENT_METHOD_NAME),
         )
         SpacerH(2.dp)
@@ -144,7 +144,7 @@ private fun UnavailablePaymentMethodInfoBlock(
         Text(
             text = stringResourceSafe(messageResId, errorAmount),
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.testTag(SelectPaymentMethodBottomSheetTestTags.UP_TO_TEXT),
         )
     }
@@ -161,7 +161,7 @@ private fun PaymentMethodInfoBlock(
         Text(
             text = paymentMethodName,
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             modifier = Modifier.testTag(SelectPaymentMethodBottomSheetTestTags.PAYMENT_METHOD_NAME),
         )
         SpacerH(2.dp)
@@ -172,14 +172,14 @@ private fun PaymentMethodInfoBlock(
             Text(
                 text = stringResourceSafe(R.string.onramp_up_to_rate),
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 modifier = Modifier.testTag(SelectPaymentMethodBottomSheetTestTags.UP_TO_TEXT),
             )
 
             Text(
                 text = rate,
                 style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 modifier = Modifier.testTag(SelectPaymentMethodBottomSheetTestTags.TOKEN_AMOUNT),
             )
 
@@ -195,13 +195,13 @@ private fun PaymentMethodInfoBlock(
                     Text(
                         modifier = Modifier
                             .background(
-                                color = TangemTheme.colors.text.warning.copy(alpha = 0.1f),
+                                color = TangemTheme.colors3.text.accent.red.copy(alpha = 0.1f),
                                 shape = RoundedCornerShape(4.dp),
                             )
                             .padding(horizontal = 4.dp),
                         text = diff.resolveReference(),
                         style = TangemTheme.typography.caption1,
-                        color = TangemTheme.colors.text.warning,
+                        color = TangemTheme.colors3.text.accent.red,
                     )
                 }
             }
@@ -217,7 +217,7 @@ private fun ProvidersCountBlockInfo(providersCount: Int) {
                 .size(10.dp)
                 .testTag(SelectPaymentMethodBottomSheetTestTags.PROVIDER_COUNT_ICON),
             imageVector = ImageVector.vectorResource(R.drawable.ic_clock_24),
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
             contentDescription = null,
         )
         SpacerW(4.dp)
@@ -228,7 +228,7 @@ private fun ProvidersCountBlockInfo(providersCount: Int) {
                 providersCount,
             ),
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.testTag(SelectPaymentMethodBottomSheetTestTags.PROVIDER_COUNT_TEXT),
         )
     }
@@ -242,7 +242,7 @@ private fun TimingBlockInfo(speed: PaymentMethodType.PaymentSpeed) {
                 .size(10.dp)
                 .testTag(SelectPaymentMethodBottomSheetTestTags.TIMING_ICON),
             imageVector = ImageVector.vectorResource(R.drawable.ic_staking_24),
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
             contentDescription = null,
         )
         SpacerW(4.dp)
@@ -256,7 +256,7 @@ fun BorderedRow(content: @Composable RowScope.() -> Unit) {
         modifier = Modifier
             .border(
                 width = 1.dp,
-                color = TangemTheme.colors.stroke.primary,
+                color = TangemTheme.colors3.border.secondary,
                 shape = RoundedCornerShape(6.dp),
             )
             .padding(horizontal = 4.dp),

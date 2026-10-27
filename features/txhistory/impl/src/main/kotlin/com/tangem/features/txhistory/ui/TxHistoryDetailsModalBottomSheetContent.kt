@@ -1,6 +1,12 @@
 package com.tangem.features.txhistory.ui
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -43,6 +49,10 @@ import com.tangem.core.ui.res.generated.icons.ic_copy_24
 import com.tangem.core.ui.res.generated.icons.ic_globe_24
 import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_20
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
+import com.tangem.features.txhistory.joint.operation.route.JointOperationRoutes
+import com.tangem.features.txhistory.joint.operation.signers.ui.JointOperationSignersContent
+import com.tangem.features.txhistory.joint.operation.signers.ui.JointOperationSignersTopNavigation
+import com.tangem.features.txhistory.joint.operation.signers.ui.state.JointOperationSignersUM
 import kotlinx.collections.immutable.persistentListOf
 
 /**
@@ -54,6 +64,9 @@ import kotlinx.collections.immutable.persistentListOf
  *
  * @param state Sheet state. `null` keeps the sheet hidden (the modal renders its empty placeholder).
  * @param onDismiss Invoked on close / dismiss request.
+ * @param route Which screen of the sheet is shown: the details card or, for a joint operation, its [signers].
+ * @param signers Who answered the joint operation; the signers screen draws nothing without it.
+ * @param onBack Invoked on the system back and the signers screen's back button.
  * @param ratingContent Optional provider-rating (CSAT) card, rendered between the exchange block and the info rows
  *  of the two-asset body. It receives the modifier carrying its place in the layout and is expected to apply it only
  *  to what it draws, so a card that has nothing left to show (an already-rated deal) leaves no gap behind. `null`
@@ -63,6 +76,9 @@ import kotlinx.collections.immutable.persistentListOf
 internal fun TxHistoryDetailsModalBottomSheetContent(
     state: TxHistoryDetailsUM?,
     onDismiss: () -> Unit,
+    route: JointOperationRoutes = JointOperationRoutes.Operation,
+    signers: JointOperationSignersUM? = null,
+    onBack: () -> Unit = onDismiss,
     ratingContent: (@Composable (Modifier) -> Unit)? = null,
 ) {
     TangemModal<TxHistoryDetailsUM>(
@@ -71,10 +87,40 @@ internal fun TxHistoryDetailsModalBottomSheetContent(
             onDismissRequest = onDismiss,
             content = state ?: TangemBottomSheetConfigContent.Empty,
         ),
-        title = { um -> TxHistoryDetailsTopNavigation(header = um.header, onCloseClick = onDismiss) },
-        content = { um -> TxHistoryDetailsContent(state = um, ratingContent = ratingContent) },
+        onBack = onBack,
+        title = { um ->
+            when (route) {
+                JointOperationRoutes.Operation -> TxHistoryDetailsTopNavigation(
+                    header = um.header,
+                    onCloseClick = onDismiss,
+                )
+                JointOperationRoutes.Signers -> JointOperationSignersTopNavigation(
+                    membersCount = signers?.membersCount,
+                    onBackClick = onBack,
+                    onCloseClick = onDismiss,
+                )
+            }
+        },
+        content = { um ->
+            AnimatedContent(
+                targetState = route,
+                transitionSpec = {
+                    fadeIn(tween(durationMillis = ANIMATION_MILLIS)) togetherWith
+                        fadeOut(tween(durationMillis = ANIMATION_MILLIS))
+                },
+                modifier = Modifier.animateContentSize(),
+                label = "TxHistoryDetailsRoute",
+            ) { shown ->
+                when (shown) {
+                    JointOperationRoutes.Operation -> TxHistoryDetailsContent(state = um, ratingContent = ratingContent)
+                    JointOperationRoutes.Signers -> signers?.let { JointOperationSignersContent(state = it) }
+                }
+            }
+        },
     )
 }
+
+private const val ANIMATION_MILLIS = 100
 
 // region Preview
 

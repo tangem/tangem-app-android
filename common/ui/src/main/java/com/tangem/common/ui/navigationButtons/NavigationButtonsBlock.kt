@@ -120,7 +120,7 @@ fun NavigationPrimaryButton(primaryButton: NavigationButton?, modifier: Modifier
                 }
                 val color = if (button.isDimmed) {
                     TangemButtonsDefaults.secondaryButtonColors
-                        .copy(contentColor = TangemTheme.colors.text.tertiary)
+                        .copy(contentColor = TangemTheme.colors3.text.secondary)
                 } else {
                     TangemButtonsDefaults.primaryButtonColors
                 }
@@ -162,11 +162,11 @@ private fun PreviousButton(prevButton: NavigationButton?) {
                 painter = rememberVectorPainter(
                     image = ImageVector.vectorResource(button.iconRes),
                 ),
-                tint = TangemTheme.colors.icon.primary1,
+                tint = TangemTheme.colors3.icon.primary,
                 contentDescription = null,
                 modifier = Modifier
                     .clip(RoundedCornerShape(16.dp))
-                    .background(TangemTheme.colors.button.secondary)
+                    .background(TangemTheme.colors3.bg.transparent.secondary)
                     .clickable(onClick = button.onClick)
                     .padding(12.dp)
                     .testTag(SendScreenTestTags.PREVIOUS_BUTTON),
@@ -236,7 +236,7 @@ private fun InfoText(footerText: TextReference?, modifier: Modifier = Modifier) 
         val text = remember(this) { requireNotNull(footerText) }
         Text(
             text = text.resolveReference(),
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography.caption2,
             textAlign = TextAlign.Center,
             modifier = Modifier

@@ -23,15 +23,17 @@ import com.tangem.data.jointaccount.converter.JointOperationSignErrorConverter
 import com.tangem.data.jointaccount.converter.SafeTxConverter
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.store.datasource.jointaccount.models.CreateJointOperationRequest
+import com.tangem.store.datasource.jointaccount.models.IssueJointAccountInviteRequest
 import com.tangem.store.datasource.jointaccount.models.SignJointOperationRequest
 import com.tangem.store.datasource.jointaccount.JointAccountApi
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountConfirmationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationResult
-import com.tangem.domain.jointaccount.model.JointAccountInvite
+import com.tangem.domain.jointaccount.model.JointAccountInviteIssueError
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
+import com.tangem.domain.jointaccount.model.JointAccountIssuedInvite
 import com.tangem.domain.jointaccount.model.JointAccountJoinPayload
 import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
@@ -39,21 +41,17 @@ import com.tangem.domain.jointaccount.model.JointOperationRejectError
 import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
-import com.tangem.domain.jointaccount.store.JointAccountInvitesStore
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.withContext
+import java.time.OffsetDateTime
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
 internal class DefaultJointAccountRepository @Inject constructor(
     private val jointAccountApi: JointAccountApi,
     private val walletAccountsFetcher: WalletAccountsFetcher,
-    private val invitesStore: JointAccountInvitesStore,
     private val converter: JointAccountDtoConverter,
     private val previewConverter: JointAccountInvitePreviewDtoConverter,
     private val safeTxConverter: SafeTxConverter,
@@ -94,12 +92,6 @@ internal class DefaultJointAccountRepository @Inject constructor(
                             signature = signature,
                         ),
                     ).bind()
-
-                    storeInvites(
-                        userWalletId = userWalletId,
-                        cryptoAccountId = response.cryptoAccountId,
-                        invites = response.invites.orEmpty().map { it.id },
-                    )
 
                     JointAccountCreationResult.Created(account = converter.convert(value = response))
                 },
@@ -215,60 +207,38 @@ internal class DefaultJointAccountRepository @Inject constructor(
         )
     }
 
-    /**
-     * An unreadable store must not take the screen down with it: the members of the account are worth showing
-     * even when the invite actions cannot be offered. As in [storeInvites], the failure is logged without its
-     * content — an invite id is a secret.
-     */
-    override suspend fun getInvites(userWalletId: UserWalletId, cryptoAccountId: String): List<JointAccountInvite> {
-        return withContext(dispatchers.io) {
-            runSuspendCatching {
-                invitesStore.get(userWalletId = userWalletId, cryptoAccountId = cryptoAccountId)
-                    .orEmpty()
-                    .map { inviteId -> JointAccountInvite(id = inviteId) }
-            }.getOrElse { throwable ->
-                logger.e(messageString = "Failed to read the stored invites", throwable = throwable)
-                emptyList()
-            }
-        }
-    }
+    override suspend fun issueInvite(
+        userWalletId: UserWalletId,
+        cryptoAccountId: String,
+        slot: Int,
+    ): Either<JointAccountInviteIssueError, JointAccountIssuedInvite> = withContext(dispatchers.io) {
+        safeApiCall(
+            call = {
+                val dto = jointAccountApi.issueJointAccountInvite(
+                    walletId = userWalletId.stringValue,
+                    body = IssueJointAccountInviteRequest(cryptoAccountId = cryptoAccountId, slot = slot),
+                ).bind()
 
-    override fun getSharedInvites(userWalletId: UserWalletId, cryptoAccountId: String): Flow<Set<String>> {
-        return invitesStore.observeShared(userWalletId = userWalletId, cryptoAccountId = cryptoAccountId)
-            .catch { throwable ->
-                logger.e(messageString = "Failed to read the shared invites", throwable = throwable)
-                emit(emptySet())
-            }
-    }
-
-    override suspend fun markInviteShared(userWalletId: UserWalletId, cryptoAccountId: String, inviteId: String) {
-        withContext(dispatchers.io) {
-            runSuspendCatching {
-                invitesStore.markShared(
-                    userWalletId = userWalletId,
-                    cryptoAccountId = cryptoAccountId,
-                    inviteId = inviteId,
-                )
-            }.onFailure { throwable ->
-                logger.e(messageString = "Failed to record a shared invite", throwable = throwable)
-            }
-        }
-    }
-
-    /**
-     * A failure here must not fail the creation: the account already exists on the backend, and reporting an
-     * error would send the user into a retry that can only end in a conflict. The invites are lost — the
-     * backend returns them once — so the fact is logged, never their content: an invite id is a secret.
-     */
-    private suspend fun storeInvites(userWalletId: UserWalletId, cryptoAccountId: String, invites: List<String>) {
-        runSuspendCatching {
-            invitesStore.store(userWalletId = userWalletId, cryptoAccountId = cryptoAccountId, invites = invites)
-        }.onFailure { throwable ->
-            logger.e(
-                messageString = "Failed to persist the invites of the created joint account",
-                throwable = throwable,
-            )
-        }
+                Either
+                    .catch {
+                        JointAccountIssuedInvite(
+                            id = dto.id,
+                            slot = dto.slot,
+                            expiresAtMillis = OffsetDateTime.parse(dto.expiresAt).toInstant().toEpochMilli(),
+                        )
+                    }
+                    .mapLeft { JointAccountInviteIssueError.Failed(cause = it) }
+            },
+            onError = { error ->
+                val isSlotUnavailable = error is ApiResponseError.HttpException &&
+                    error.code in SLOT_UNAVAILABLE_CODES
+                if (isSlotUnavailable) {
+                    JointAccountInviteIssueError.SlotUnavailable(cause = error).left()
+                } else {
+                    JointAccountInviteIssueError.Failed(cause = error).left()
+                }
+            },
+        )
     }
 
     override suspend fun createOperation(
@@ -357,5 +327,6 @@ internal class DefaultJointAccountRepository @Inject constructor(
         const val TAG = "JointAccountRepository"
         const val NO_JOINT_ACCOUNTS = 0
         val DEAD_INVITE_CODES = setOf(Code.CONFLICT, Code.NOT_FOUND)
+        val SLOT_UNAVAILABLE_CODES = setOf(Code.FORBIDDEN, Code.NOT_FOUND, Code.CONFLICT)
     }
 }

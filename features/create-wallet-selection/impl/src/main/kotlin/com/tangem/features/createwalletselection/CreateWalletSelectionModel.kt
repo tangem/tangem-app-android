@@ -22,10 +22,8 @@ import com.tangem.features.createwalletselection.entity.CreateWalletSelectionUM
 import com.tangem.features.createwalletselection.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -64,23 +62,9 @@ internal class CreateWalletSelectionModel @Inject constructor(
                     ),
                 ),
                 onBuyClick = ::onBuyClick,
-                shouldShowAlreadyHaveWallet = true,
                 onWhatToChooseClick = ::onWhatToChooseClick,
             ),
         )
-
-    init {
-        // temporarily disabled by timer and enabled by default
-        // showAlreadyHaveWalletWithDelay()
-    }
-
-    @Suppress("UnusedPrivateMember")
-    private fun showAlreadyHaveWalletWithDelay() {
-        modelScope.launch {
-            delay(SHOW_ALREADY_HAVE_WALLET_DELAY)
-            uiState.update { it.copy(shouldShowAlreadyHaveWallet = true) }
-        }
-    }
 
     private fun onMobileWalletClick() {
         trackingContextProxy.addHotWalletContext()
@@ -115,9 +99,5 @@ internal class CreateWalletSelectionModel @Inject constructor(
         modelScope.launch {
             urlOpener.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.WhatWalletToChoose))
         }
-    }
-
-    companion object {
-        private const val SHOW_ALREADY_HAVE_WALLET_DELAY = 3000L
     }
 }

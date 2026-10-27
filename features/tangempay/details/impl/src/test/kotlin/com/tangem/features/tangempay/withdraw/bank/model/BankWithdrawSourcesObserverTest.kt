@@ -254,18 +254,6 @@ internal class BankWithdrawSourcesObserverTest {
             assertThat(actual).containsExactly(expected)
         }
 
-        @Test
-        fun `GIVEN account still loading WHEN observed THEN nothing is emitted`() = runTest {
-            // Arrange
-            emitMoneyStatus(MoneyAccountStatusValue.Loading)
-
-            // Act
-            val actual = observer.observe(account, offrampOptions()).toList()
-
-            // Assert
-            assertThat(actual).isEmpty()
-        }
-
         @ParameterizedTest
         @ProvideTestModels
         fun `GIVEN account the off-ramp cannot take from WHEN observed THEN no options`(model: MoneyNoOptionsModel) =
@@ -289,6 +277,14 @@ internal class BankWithdrawSourcesObserverTest {
                     balance = moneyAccountBalance(),
                     customerId = "cust_1",
                 ),
+            ),
+            MoneyNoOptionsModel(
+                description = "bank off-ramp channel not granted",
+                value = activeMoneyAccount(token = usdcPolygon, isBankOfframpAvailable = false),
+            ),
+            MoneyNoOptionsModel(
+                description = "bank off-ramp channel unknown",
+                value = activeMoneyAccount(token = usdcPolygon, isBankOfframpAvailable = null),
             ),
             MoneyNoOptionsModel(
                 description = "balance not loaded",

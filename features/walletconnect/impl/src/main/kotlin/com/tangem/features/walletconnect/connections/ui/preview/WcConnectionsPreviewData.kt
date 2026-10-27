@@ -76,7 +76,7 @@ internal object WcConnectionsPreviewData {
             startButtonUM = TopAppBarButtonUM.Back(onBackClicked = {}),
             disconnectAllItem = TangemDropdownMenuItem(
                 title = resourceReference(R.string.wc_disconnect_all),
-                textColor = themedColor { TangemTheme.colors.text.warning },
+                textColor = themedColor { TangemTheme.colors3.text.accent.red },
                 onClick = {},
             ),
         ),

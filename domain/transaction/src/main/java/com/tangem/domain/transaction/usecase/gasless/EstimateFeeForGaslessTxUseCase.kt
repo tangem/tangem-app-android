@@ -9,6 +9,7 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCoinStatus
 import com.tangem.domain.demo.models.DemoConfig
@@ -34,6 +35,7 @@ class EstimateFeeForGaslessTxUseCase(
     private val gaslessTransactionRepository: GaslessTransactionRepository,
     private val gaslessYieldRepository: GaslessYieldRepository,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
     private val estimateFeeUseCase: EstimateFeeUseCase,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
@@ -59,9 +61,13 @@ class EstimateFeeForGaslessTxUseCase(
                     val accountStatusList = singleAccountStatusListSupplier.getSyncOrNull(userWallet.walletId)
                         ?: raiseIllegalStateError("AccountStatusList is null for ${userWallet.walletId}")
 
-                    val nativeCurrencyStatus = accountStatusList.getCoinStatus(network).getOrElse {
-                        raiseIllegalStateError("No native currency found: ${network.id}")
-                    }
+                    val feeCurrencies = resolveNetworkFeeCurrencies(
+                        nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
+                        userWalletId = userWallet.walletId,
+                        network = network,
+                        portfolioCoinStatus = accountStatusList.getCoinStatus(network).getOrNull(),
+                    )
+                    val nativeCurrencyStatus = feeCurrencies.nativeCurrencyStatus
 
                     if (!currencyChecksRepository.isNetworkSupportedForGaslessTx(network)) {
                         estimateFeeUseCase.invoke(
@@ -87,6 +93,19 @@ class EstimateFeeForGaslessTxUseCase(
                         amount = amount,
                         txTokenCurrencyStatus = sendingTokenCurrencyStatus,
                     ).bind()
+
+                    val nonPortfolioFeeToken = feeCurrencies.nonPortfolioFeeToken
+                    if (nonPortfolioFeeToken != null) {
+                        return@either findTokensToPayFee(
+                            userWallet = userWallet,
+                            walletManager = walletManager,
+                            initialTxFee = initialFee,
+                            nativeCurrencyStatus = nativeCurrencyStatus,
+                            networkCurrenciesStatuses = listOf(nonPortfolioFeeToken),
+                            sendingTokenCurrencyStatus = sendingTokenCurrencyStatus,
+                            amount = amount,
+                        ).bind().copy(nativeFee = initialFee)
+                    }
 
                     selectFeePaymentStrategy(
                         userWallet = userWallet,

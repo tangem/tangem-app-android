@@ -60,9 +60,9 @@ fun InputRowImageInfo(
     infoSubtitle: TextReference? = null,
     imageUrl: String? = null,
     @DrawableRes iconRes: Int? = null,
-    subtitleColor: Color = TangemTheme.colors.text.primary1,
-    captionColor: Color = TangemTheme.colors.text.tertiary,
-    iconTint: Color = TangemTheme.colors.icon.informative,
+    subtitleColor: Color = TangemTheme.colors3.text.primary,
+    captionColor: Color = TangemTheme.colors3.text.secondary,
+    iconTint: Color = TangemTheme.colors3.icon.secondary,
     isGrayscaleImage: Boolean = false,
     @DrawableRes subtitleEndIconRes: Int? = null,
     @DrawableRes iconEndRes: Int? = null,
@@ -77,7 +77,7 @@ fun InputRowImageInfo(
             Text(
                 text = title.resolveReference(),
                 style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
         InputRowImageBase(
@@ -107,13 +107,13 @@ fun InputRowImageInfo(
                     Text(
                         text = infoTitle.resolveAnnotatedReference(),
                         style = TangemTheme.typography.body2,
-                        color = TangemTheme.colors.text.primary1,
+                        color = TangemTheme.colors3.text.primary,
                     )
                 } else {
                     EllipsisText(
                         text = infoTitle.resolveReference(),
                         style = TangemTheme.typography.body2,
-                        color = TangemTheme.colors.text.primary1,
+                        color = TangemTheme.colors3.text.primary,
                     )
                 }
                 if (infoSubtitle != null) {
@@ -121,13 +121,13 @@ fun InputRowImageInfo(
                         Text(
                             text = infoSubtitle.resolveAnnotatedReference(),
                             style = TangemTheme.typography.caption2,
-                            color = TangemTheme.colors.text.tertiary,
+                            color = TangemTheme.colors3.text.secondary,
                         )
                     } else {
                         EllipsisText(
                             text = infoSubtitle.resolveReference(),
                             style = TangemTheme.typography.caption2,
-                            color = TangemTheme.colors.text.tertiary,
+                            color = TangemTheme.colors3.text.secondary,
                         )
                     }
                 }

@@ -58,11 +58,11 @@ private fun AuditLabelInternal(textReference: TextReference, type: AuditLabelUM.
 @Composable
 private fun getTextColorByType(type: AuditLabelUM.Type): Color {
     return when (type) {
-        AuditLabelUM.Type.Prohibition -> TangemTheme.colors.text.warning
-        AuditLabelUM.Type.Warning -> TangemTheme.colors.text.attention
-        AuditLabelUM.Type.Permit -> TangemTheme.colors.text.accent
-        AuditLabelUM.Type.Info -> TangemTheme.colors.text.primary2
-        AuditLabelUM.Type.General -> TangemTheme.colors.text.secondary
+        AuditLabelUM.Type.Prohibition -> TangemTheme.colors3.text.accent.red
+        AuditLabelUM.Type.Warning -> TangemTheme.colors3.text.accent.yellow
+        AuditLabelUM.Type.Permit -> TangemTheme.colors3.text.accent.blue
+        AuditLabelUM.Type.Info -> TangemTheme.colors3.text.inverse.primary
+        AuditLabelUM.Type.General -> TangemTheme.colors3.text.secondary
     }
 }
 
@@ -70,10 +70,10 @@ private fun getTextColorByType(type: AuditLabelUM.Type): Color {
 @Composable
 private fun getBackgroundColorByType(type: AuditLabelUM.Type): Color {
     return when (type) {
-        AuditLabelUM.Type.Prohibition -> TangemTheme.colors.text.warning.copy(alpha = 0.1f)
-        AuditLabelUM.Type.Warning -> TangemTheme.colors.text.attention.copy(alpha = 0.1f)
-        AuditLabelUM.Type.Permit -> TangemTheme.colors.text.accent.copy(alpha = 0.1f)
-        AuditLabelUM.Type.Info -> TangemTheme.colors.text.accent
+        AuditLabelUM.Type.Prohibition -> TangemTheme.colors3.text.accent.red.copy(alpha = 0.1f)
+        AuditLabelUM.Type.Warning -> TangemTheme.colors3.text.accent.yellow.copy(alpha = 0.1f)
+        AuditLabelUM.Type.Permit -> TangemTheme.colors3.text.accent.blue.copy(alpha = 0.1f)
+        AuditLabelUM.Type.Info -> TangemTheme.colors3.text.accent.blue
         AuditLabelUM.Type.General -> TangemTheme.colors.control.default
     }
 }

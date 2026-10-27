@@ -9,7 +9,9 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.mcp.models.McpAgent
@@ -27,6 +29,7 @@ import com.tangem.feature.swap.mcp.holdings.ExchangeIntentHoldings
 import com.tangem.feature.swap.mcp.holdings.ExchangeIntentHoldingsResolver
 import com.tangem.feature.swap.mcp.ExchangeIntentAmountConverter
 import com.tangem.feature.swap.mcp.ExchangeIntentSwapRouteConverter
+import com.tangem.feature.swap.presentation.R
 import com.tangem.features.swap.mcp.ExchangeIntentComponent
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -46,13 +49,18 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.parallel.ResourceLock
+import org.junit.jupiter.api.parallel.Resources
 import org.junit.jupiter.params.ParameterizedTest
+import java.util.Locale
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@ResourceLock(Resources.LOCALE)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class ExchangeIntentModelTest {
 
@@ -83,8 +91,12 @@ internal class ExchangeIntentModelTest {
     /** Root stack the [router] falls back to; the model navigates it only through [Router.navigate]. */
     private var rootStack: List<Route> = emptyList()
 
+    private lateinit var originalLocale: Locale
+
     @BeforeEach
     fun resetMocks() {
+        originalLocale = Locale.getDefault()
+        Locale.setDefault(Locale.US)
         clearMocks(
             router,
             getExchangeIntentUseCase,
@@ -102,6 +114,11 @@ internal class ExchangeIntentModelTest {
         coEvery { holdingsResolver.resolve(walletId, any()) } returns ExchangeIntentHoldings.Both(from = usdt, to = pol)
         coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns intent.right()
         coEvery { mcpRepository.getAgent(any()) } returns claude
+    }
+
+    @AfterEach
+    fun restoreLocale() {
+        Locale.setDefault(originalLocale)
     }
 
     @Test
@@ -138,7 +155,12 @@ internal class ExchangeIntentModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.shownOffer().title.toString()).contains("${claude.origin} Agent")
+        assertThat(model.shownOffer().title).isEqualTo(
+            resourceReference(
+                R.string.mcp_swap_intent_offer_title,
+                wrappedList(stringReference("mcp.claude.com"), "42.00\u00a0USDT", "POL"),
+            ),
+        )
         model.onDestroy()
     }
 
@@ -153,7 +175,12 @@ internal class ExchangeIntentModelTest {
         runCurrent()
 
         // Assert
-        assertThat(model.shownOffer().title.toString()).contains("Unknown Agent")
+        assertThat(model.shownOffer().title).isEqualTo(
+            resourceReference(
+                R.string.mcp_swap_intent_offer_title,
+                wrappedList(resourceReference(R.string.mcp_intent_unknown_agent_name), "42.00\u00a0USDT", "POL"),
+            ),
+        )
         model.onDestroy()
     }
 
@@ -174,9 +201,9 @@ internal class ExchangeIntentModelTest {
 
         // Assert
         assertThat(status.variant).isEqualTo(TangemModalStatus.Variant.Warning)
-        assertThat(status.title).isEqualTo(stringReference("Can’t reach intent"))
+        assertThat(status.title).isEqualTo(resourceReference(R.string.mcp_swap_intent_cant_reach_title))
         assertThat(status.subtitle).isNull()
-        assertThat(status.primaryButton.text).isEqualTo(stringReference("Got it"))
+        assertThat(status.primaryButton.text).isEqualTo(resourceReference(R.string.common_got_it))
         verify(exactly = 1) { router.pop(any()) }
         exchangeIntentModel.onDestroy()
     }
@@ -283,7 +310,7 @@ internal class ExchangeIntentModelTest {
         // Assert
         val status = model.shownStatus()
         assertThat(status.variant).isEqualTo(TangemModalStatus.Variant.Warning)
-        assertThat(status.primaryButton.text).isEqualTo(stringReference("Try again"))
+        assertThat(status.primaryButton.text).isEqualTo(resourceReference(R.string.alert_button_try_again))
         verify(exactly = 0) { router.pop(any()) }
         model.onDestroy()
     }
@@ -350,7 +377,7 @@ internal class ExchangeIntentModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.shownStatus().primaryButton.text).isEqualTo(stringReference("Try again"))
+        assertThat(model.shownStatus().primaryButton.text).isEqualTo(resourceReference(R.string.alert_button_try_again))
         coVerify(exactly = 2) { getExchangeIntentUseCase(walletId, INTENT_ID) }
         verify(exactly = 0) { router.pop(any()) }
         model.onDestroy()

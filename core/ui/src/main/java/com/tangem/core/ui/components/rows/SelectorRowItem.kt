@@ -43,9 +43,9 @@ fun SelectorRowItem(
 ) {
     val iconTint by animateColorAsState(
         targetValue = if (isSelected) {
-            TangemTheme.colors.icon.accent
+            TangemTheme.colors3.icon.accent.blue
         } else {
-            TangemTheme.colors.icon.informative
+            TangemTheme.colors3.icon.secondary
         },
         label = "Selector icon tint change",
     )
@@ -79,7 +79,7 @@ fun SelectorRowItem(
             Text(
                 text = title.resolveReference(),
                 style = textStyle,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 modifier = Modifier.padding(start = 8.dp),
             )
             if (preDot != null) {
@@ -97,7 +97,7 @@ fun SelectorRowItem(
                     .fillMaxWidth()
                     .height(1.dp)
                     .padding(horizontal = 12.dp)
-                    .background(TangemTheme.colors.stroke.primary)
+                    .background(TangemTheme.colors3.border.secondary)
                     .align(Alignment.BottomCenter),
             )
         }
@@ -119,7 +119,7 @@ private fun RowScope.SelectorValueContent(
     EllipsisText(
         text = preDot.resolveReference(),
         style = textStyle,
-        color = TangemTheme.colors.text.primary1,
+        color = TangemTheme.colors3.text.primary,
         textAlign = TextAlign.End,
         ellipsis = ellipsis,
         modifier = Modifier
@@ -130,14 +130,14 @@ private fun RowScope.SelectorValueContent(
         Text(
             text = StringsSigns.DOT,
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 4.dp),
         )
         Text(
             text = postDot.resolveReference(),
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
     }
 }
