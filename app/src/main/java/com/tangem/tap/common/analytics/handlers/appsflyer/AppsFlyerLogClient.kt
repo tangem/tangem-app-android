@@ -1,6 +1,6 @@
 package com.tangem.tap.common.analytics.handlers.appsflyer
 
-import com.tangem.tap.common.analytics.AnalyticsEventsLogger
+import com.tangem.core.analytics.AnalyticsEventsLogger
 
 internal class AppsFlyerLogClient : AppsFlyerAnalyticsClient {
 
