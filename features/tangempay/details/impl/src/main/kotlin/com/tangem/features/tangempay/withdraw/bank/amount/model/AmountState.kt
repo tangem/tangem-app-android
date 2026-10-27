@@ -8,11 +8,21 @@ import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawAmountResul
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawSource
+import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
 import java.util.Currency
 
 internal enum class AmountSheet { TOKENS, ROUTES }
+
+internal sealed interface NetworkFeeState {
+
+    data object Loading : NetworkFeeState
+
+    data object Unreachable : NetworkFeeState
+
+    data class Loaded(val fee: BigDecimal) : NetworkFeeState
+}
 
 /** Raw inputs of the Amount step; [resolve] turns them into the selection the UI and the Continue action work with. */
 internal data class AmountState(
@@ -20,6 +30,7 @@ internal data class AmountState(
     val selectedSourceId: String? = null,
     val selectedRail: BankRail? = null,
     val sheet: AmountSheet? = null,
+    val networkFee: NetworkFeeState = NetworkFeeState.Loading,
 ) {
 
     fun resolve(draft: BankWithdrawDraft, options: BankWithdrawOptions): AmountSelection {
@@ -30,6 +41,7 @@ internal data class AmountState(
             ?: options.sources.first(BankWithdrawSource::isAvailable)
         val displayValue = displayValue(draft = draft, currency = options.currency)
         val amount = displayValue.parseBigDecimalOrNull()
+        val fees = destination.fee.amount + (networkFee as? NetworkFeeState.Loaded)?.fee.orZero()
         return AmountSelection(
             currency = options.currency,
             minAmount = options.minAmount,
@@ -37,7 +49,7 @@ internal data class AmountState(
             maxInputAmount = BankWithdrawAmountValidator.maxInputAmount(
                 maxAmount = options.maxAmount,
                 balance = source.fiatBalance,
-                fee = destination.fee.amount,
+                fee = fees,
             ),
             sources = options.sources,
             destinations = options.destinations,
@@ -50,7 +62,7 @@ internal data class AmountState(
                 minAmount = options.minAmount,
                 maxAmount = options.maxAmount,
                 balance = source.fiatBalance,
-                fee = destination.fee.amount,
+                fee = fees,
             ),
         )
     }

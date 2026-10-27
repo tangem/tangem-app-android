@@ -2,9 +2,11 @@ package com.tangem.features.send.mcp.model
 
 import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.transaction.models.SendIntent
+import com.tangem.features.send.impl.R
 import com.tangem.utils.converter.Converter
 import javax.inject.Inject
 
@@ -20,9 +22,9 @@ internal class SendIntentProcessedConverter @Inject constructor(
 
     override fun convert(value: Input): SendIntentUM.Status = SendIntentUM.Status(
         variant = TangemModalStatus.Variant.Info,
-        title = Texts.TITLE,
+        title = resourceReference(R.string.mcp_intent_processed_title),
         subtitle = value.toSubtitle(),
-        primaryButton = SendIntentButtonUM(text = Texts.GOT_IT, onClick = value.onClose),
+        primaryButton = SendIntentButtonUM(text = resourceReference(R.string.common_got_it), onClick = value.onClose),
     )
 
     private fun Input.toSubtitle(): TextReference? {
@@ -31,12 +33,8 @@ internal class SendIntentProcessedConverter @Inject constructor(
             SendIntentAmountTextConverter.Input(amount = intent.amount, currency = currency),
         )
 
-        return amountText?.let { stringReference("Send $it") }
-    }
-
-    // TODO: [REDACTED_TASK_KEY] Replace English placeholders with Lokalise-backed resources.
-    private object Texts {
-        val TITLE = stringReference("This intent has already been processed")
-        val GOT_IT = stringReference("Got it")
+        return amountText?.let { text ->
+            resourceReference(id = R.string.mcp_send_intent_processed_subtitle, formatArgs = wrappedList(text))
+        }
     }
 }

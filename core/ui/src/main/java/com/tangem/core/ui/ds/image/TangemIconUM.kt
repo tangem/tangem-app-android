@@ -48,7 +48,7 @@ sealed interface TangemIconUM {
 
         constructor(
             @DrawableRes iconRes: Int,
-            tintReference: ColorReference2 = ColorReference2 { TangemTheme.colors2.graphic.neutral.primary },
+            tintReference: ColorReference2 = ColorReference2 { TangemTheme.colors3.icon.primary },
         ) : this(Either.Left(iconRes), tintReference)
 
         constructor(
@@ -136,7 +136,7 @@ fun TangemIcon(tangemIconUM: TangemIconUM, modifier: Modifier = Modifier) {
         )
         TangemIconUM.Empty -> Box(
             modifier = modifier
-                .background(TangemTheme.colors2.skeleton.backgroundPrimary, shape = CircleShape),
+                .background(TangemTheme.colors3.bg.transparent.secondary, shape = CircleShape),
         )
     }
 }

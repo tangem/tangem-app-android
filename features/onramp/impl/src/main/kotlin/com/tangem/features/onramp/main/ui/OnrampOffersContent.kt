@@ -50,7 +50,7 @@ internal fun OnrampOffersContent(state: OnrampOffersBlockUM, linkedMarketingBann
                             modifier = Modifier.padding(start = 12.dp),
                             text = stringResourceSafe(R.string.onramp_recently_used_title),
                             style = TangemTheme.typography.subtitle2,
-                            color = TangemTheme.colors.text.tertiary,
+                            color = TangemTheme.colors3.text.secondary,
                         )
 
                         SpacerH(8.dp)
@@ -69,7 +69,7 @@ internal fun OnrampOffersContent(state: OnrampOffersBlockUM, linkedMarketingBann
                             modifier = Modifier.padding(start = 12.dp),
                             text = stringResourceSafe(R.string.onramp_recommended_title),
                             style = TangemTheme.typography.subtitle2,
-                            color = TangemTheme.colors.text.tertiary,
+                            color = TangemTheme.colors3.text.secondary,
                         )
                         SpacerH(8.dp)
                     }
@@ -131,7 +131,7 @@ internal fun Offer(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier, 
         modifier = modifier
             .fillMaxWidth()
             .background(
-                color = TangemTheme.colors.background.action,
+                color = TangemTheme.colors3.bg.secondary,
                 shape = shape,
             )
             .padding(12.dp),
@@ -159,7 +159,7 @@ internal fun Offer(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier, 
             )
         }
         SpacerH(10.dp)
-        HorizontalDivider(color = TangemTheme.colors.stroke.primary)
+        HorizontalDivider(color = TangemTheme.colors3.border.secondary)
         SpacerH(12.dp)
         PaymentBlockInOffer(
             paymentMethod = onrampOfferUM.paymentMethod,
@@ -175,7 +175,7 @@ private fun OfferHeader(advantage: OnrampOfferAdvantagesUM) {
             Text(
                 text = stringResourceSafe(R.string.express_provider_great_rate),
                 style = TangemTheme.typography.caption1,
-                color = TangemTheme.colors.icon.accent,
+                color = TangemTheme.colors3.icon.accent.blue,
                 modifier = Modifier.testTag(OnrampOffersBlockTestTags.BEST_RATE_TITLE),
             )
         }
@@ -183,20 +183,20 @@ private fun OfferHeader(advantage: OnrampOfferAdvantagesUM) {
             Text(
                 modifier = Modifier
                     .background(
-                        color = TangemTheme.colors.background.secondary,
+                        color = TangemTheme.colors3.bg.primary,
                         shape = RoundedCornerShape(4.dp),
                     )
                     .padding(horizontal = 4.dp),
                 text = stringResourceSafe(R.string.common_not_available),
                 style = TangemTheme.typography.caption1,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
         OnrampOfferAdvantagesUM.Default -> {
             Text(
                 text = stringResourceSafe(R.string.onramp_title_you_get),
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
         OnrampOfferAdvantagesUM.BestRate -> {
@@ -206,14 +206,14 @@ private fun OfferHeader(advantage: OnrampOfferAdvantagesUM) {
             ) {
                 Icon(
                     imageVector = ImageVector.vectorResource(R.drawable.ic_best_rate_16),
-                    tint = TangemTheme.colors.icon.accent,
+                    tint = TangemTheme.colors3.icon.accent.blue,
                     contentDescription = null,
                     modifier = Modifier.testTag(OnrampOffersBlockTestTags.BEST_RATE_ICON),
                 )
                 Text(
                     text = stringResourceSafe(R.string.express_provider_best_rate),
                     style = TangemTheme.typography.caption1,
-                    color = TangemTheme.colors.icon.accent,
+                    color = TangemTheme.colors3.icon.accent.blue,
                     modifier = Modifier.testTag(OnrampOffersBlockTestTags.BEST_RATE_TITLE),
                 )
             }
@@ -222,7 +222,7 @@ private fun OfferHeader(advantage: OnrampOfferAdvantagesUM) {
             Text(
                 text = stringResourceSafe(R.string.onramp_offer_type_fastet),
                 style = TangemTheme.typography.caption1,
-                color = TangemTheme.colors.icon.attention,
+                color = TangemTheme.colors3.icon.accent.yellow,
             )
         }
         is OnrampOfferAdvantagesUM.Unavailable -> {
@@ -233,7 +233,7 @@ private fun OfferHeader(advantage: OnrampOfferAdvantagesUM) {
             Text(
                 text = stringResourceSafe(textResId, ""),
                 style = TangemTheme.typography.caption1,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
     }
@@ -248,7 +248,7 @@ private fun RateBlock(rate: String, diff: TextReference?, isOfferUnavailable: Bo
         Text(
             text = rate,
             style = TangemTheme.typography.subtitle1,
-            color = if (isOfferUnavailable) TangemTheme.colors.text.tertiary else TangemTheme.colors.text.primary1,
+            color = if (isOfferUnavailable) TangemTheme.colors3.text.secondary else TangemTheme.colors3.text.primary,
             modifier = Modifier.testTag(OnrampOffersBlockTestTags.OFFER_TOKEN_AMOUNT),
         )
 
@@ -256,13 +256,13 @@ private fun RateBlock(rate: String, diff: TextReference?, isOfferUnavailable: Bo
             Text(
                 modifier = Modifier
                     .background(
-                        color = TangemTheme.colors.text.warning.copy(alpha = 0.1f),
+                        color = TangemTheme.colors3.text.accent.red.copy(alpha = 0.1f),
                         shape = RoundedCornerShape(4.dp),
                     )
                     .padding(horizontal = 4.dp),
                 text = diff.resolveReference(),
                 style = TangemTheme.typography.caption1,
-                color = TangemTheme.colors.text.warning,
+                color = TangemTheme.colors3.text.accent.red,
             )
         }
     }
@@ -276,7 +276,7 @@ private fun PaymentBlockInOffer(paymentMethod: OnrampPaymentMethod, providerName
                 .size(16.dp)
                 .testTag(OnrampOffersBlockTestTags.TIMING_ICON),
             imageVector = ImageVector.vectorResource(R.drawable.ic_clock_24),
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
             contentDescription = null,
         )
 
@@ -286,14 +286,14 @@ private fun PaymentBlockInOffer(paymentMethod: OnrampPaymentMethod, providerName
 
         SpacerW(6.dp)
 
-        DrawDot(color = TangemTheme.colors.text.tertiary)
+        DrawDot(color = TangemTheme.colors3.text.secondary)
 
         SpacerW(6.dp)
 
         Text(
             text = stringResourceSafe(R.string.onramp_via_provider, providerName),
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.testTag(OnrampOffersBlockTestTags.PROVIDER_NAME),
         )
 
@@ -302,7 +302,7 @@ private fun PaymentBlockInOffer(paymentMethod: OnrampPaymentMethod, providerName
         Text(
             text = stringResourceSafe(R.string.onramp_pay_with),
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.testTag(OnrampOffersBlockTestTags.PAY_WITH),
         )
 
@@ -360,7 +360,7 @@ internal fun TimingBlock(speed: PaymentMethodType.PaymentSpeed) {
     Text(
         text = timingText,
         style = TangemTheme.typography.caption2,
-        color = TangemTheme.colors.text.tertiary,
+        color = TangemTheme.colors3.text.secondary,
         modifier = Modifier.testTag(OnrampOffersBlockTestTags.TIMING_TEXT),
     )
 }
@@ -393,14 +393,14 @@ private fun LoadingBlock(modifier: Modifier = Modifier) {
         Text(
             text = stringResourceSafe(R.string.onramp_fetching_best_rates),
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
 
         SpacerH(8.dp)
 
         CircularProgressIndicator(
             modifier = Modifier.size(20.dp),
-            color = TangemTheme.colors.icon.informative,
+            color = TangemTheme.colors3.icon.secondary,
             strokeWidth = 2.dp,
         )
     }

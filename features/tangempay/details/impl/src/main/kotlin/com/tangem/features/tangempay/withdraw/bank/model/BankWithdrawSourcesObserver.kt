@@ -55,6 +55,7 @@ internal class BankWithdrawSourcesObserver @Inject constructor(
     ): Flow<BankWithdrawOptions?> = moneyAccountStatusSupplier(userWalletId)
         .map { status ->
             val active = status.value as? MoneyAccountStatusValue.Account.Active ?: return@map null
+            if (active.isBankOfframpAvailable != true) return@map null
             BankWithdrawOptionsFactory.create(
                 destinations = offramp.destinations,
                 sources = listOfNotNull(
