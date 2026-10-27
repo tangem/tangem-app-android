@@ -2,7 +2,7 @@ package com.tangem.tap.common.analytics.handlers.opentelemetry
 
 import android.app.Application
 import com.google.common.truth.Truth.assertThat
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
+import com.tangem.core.analytics.config.AnalyticsEnvironmentConfig
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.test.core.ProvideTestModels
@@ -41,7 +41,13 @@ internal class OpenTelemetryMetricsHolderTest {
         }
         return OpenTelemetryMetricsHolder(
             application = application,
-            environmentConfig = EnvironmentConfig(otlpApiKey = apiKey),
+            config = AnalyticsEnvironmentConfig(
+                amplitudeApiKey = "",
+                amplitudeApiKeyDev = null,
+                appsFlyerApiKey = "",
+                customerIoCdpApiKey = null,
+                otlpApiKey = apiKey,
+            ),
             settingsRepository = settingsRepository,
             dispatchers = dispatchers,
             appScope = appScope,

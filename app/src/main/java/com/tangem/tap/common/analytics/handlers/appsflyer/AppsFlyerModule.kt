@@ -1,7 +1,7 @@
 package com.tangem.tap.common.analytics.handlers.appsflyer
 
 import com.tangem.core.analytics.api.AnalyticsHandler
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
+import com.tangem.core.analytics.config.AnalyticsEnvironmentConfig
 import com.tangem.domain.common.LogConfig
 import com.tangem.utils.logging.TangemLogger
 import dagger.Module
@@ -19,7 +19,7 @@ internal object AppsFlyerModule {
     @Singleton
     @IntoSet
     fun provideAppsFlyerHandler(
-        environmentConfig: EnvironmentConfig,
+        config: AnalyticsEnvironmentConfig,
         appsFlyerClientFactory: AppsFlyerClient.Factory,
     ): AnalyticsHandler {
         val client = if (LogConfig.analyticsHandlers.isAppsflyerLogEnabled) {
@@ -27,7 +27,7 @@ internal object AppsFlyerModule {
             AppsFlyerLogClient()
         } else {
             TangemLogger.withTag("AppsFlyer").i("AppsFlyer log disabled, real client created")
-            appsFlyerClientFactory.create(apiKey = environmentConfig.appsFlyerApiKey)
+            appsFlyerClientFactory.create(apiKey = config.appsFlyerApiKey)
         }
 
         return AppsFlyerAnalyticsHandler(client)
