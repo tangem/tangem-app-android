@@ -52,6 +52,7 @@ internal fun PredictionAmountBlock(
     onAddFundsClick: () -> Unit,
     modifier: Modifier = Modifier,
     isEnabled: Boolean = true,
+    captionStyle: PredictionAmountCaptionStyle = PredictionAmountCaptionStyle.Amount,
     footer: (@Composable () -> Unit)? = null,
 ) {
     TangemSurface(modifier = modifier, color = TangemTheme.colors3.bg.secondary, shape = PolymarketCardShape) {
@@ -60,6 +61,7 @@ internal fun PredictionAmountBlock(
                 amountValue = amountValue,
                 isAmountFromFraction = isAmountFromFraction,
                 amountCaption = amountCaption,
+                captionStyle = captionStyle,
                 isEnabled = isEnabled,
                 onAmountChange = onAmountChange,
             )
@@ -110,11 +112,13 @@ internal fun PredictionAmountBlock(
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun AmountSection(
     amountValue: String,
     isAmountFromFraction: Boolean,
     amountCaption: AmountCaptionUM?,
+    captionStyle: PredictionAmountCaptionStyle,
     isEnabled: Boolean,
     onAmountChange: (String) -> Unit,
 ) {
@@ -160,12 +164,20 @@ private fun AmountSection(
                 symbolColor = amountColor,
             ),
         )
-        AmountCaptionSlot(amountCaption = amountCaption)
+        AmountCaptionSlot(amountCaption = amountCaption, style = captionStyle)
     }
 }
 
+internal enum class PredictionAmountCaptionStyle(
+    val toWinStatus: TangemBadge.Status,
+    val isPayoutShownWithShortfall: Boolean,
+) {
+    Amount(toWinStatus = TangemBadge.Status.Success, isPayoutShownWithShortfall = false),
+    Order(toWinStatus = TangemBadge.Status.Info, isPayoutShownWithShortfall = true),
+}
+
 @Composable
-private fun AmountCaptionSlot(amountCaption: AmountCaptionUM?) {
+private fun AmountCaptionSlot(amountCaption: AmountCaptionUM?, style: PredictionAmountCaptionStyle) {
     AnimatedContent(
         targetState = amountCaption,
         transitionSpec = { fadeIn() togetherWith fadeOut() using null },
@@ -173,13 +185,18 @@ private fun AmountCaptionSlot(amountCaption: AmountCaptionUM?) {
         label = "amountCaption",
     ) { caption ->
         when (caption) {
-            is AmountCaptionUM.Shortfall -> Text(
-                modifier = Modifier.padding(top = CAPTION_GAP),
-                text = caption.error.text.resolveReference(),
-                style = TangemTheme.typography3.caption.medium,
-                color = TangemTheme.colors3.text.status.error,
-                textAlign = TextAlign.Center,
-            )
+            is AmountCaptionUM.Shortfall -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    modifier = Modifier.padding(top = CAPTION_GAP),
+                    text = caption.error.text.resolveReference(),
+                    style = TangemTheme.typography3.caption.medium,
+                    color = TangemTheme.colors3.text.status.error,
+                    textAlign = TextAlign.Center,
+                )
+                if (style.isPayoutShownWithShortfall && caption.payout != null) {
+                    ToWinBadge(payout = caption.payout, status = style.toWinStatus)
+                }
+            }
             is AmountCaptionUM.BelowMinimum -> Text(
                 modifier = Modifier.padding(top = CAPTION_GAP),
                 text = stringResourceSafe(
@@ -190,20 +207,25 @@ private fun AmountCaptionSlot(amountCaption: AmountCaptionUM?) {
                 color = TangemTheme.colors3.text.status.error,
                 textAlign = TextAlign.Center,
             )
-            is AmountCaptionUM.ToWin -> TangemBadge(
-                modifier = Modifier.padding(top = CAPTION_GAP),
-                text = stringReference(
-                    stringResourceSafe(
-                        R.string.prediction_place_to_win,
-                        caption.payout.formatPolymarketMoney(),
-                    ),
-                ),
-                status = TangemBadge.Status.Success,
-                size = TangemBadge.Size.X6,
-            )
+            is AmountCaptionUM.ToWin -> ToWinBadge(payout = caption.payout, status = style.toWinStatus)
             null -> Unit
         }
     }
+}
+
+@Composable
+private fun ToWinBadge(payout: BigDecimal, status: TangemBadge.Status) {
+    TangemBadge(
+        modifier = Modifier.padding(top = CAPTION_GAP),
+        text = stringReference(
+            stringResourceSafe(
+                R.string.prediction_place_to_win,
+                payout.formatPolymarketMoney(),
+            ),
+        ),
+        status = status,
+        size = TangemBadge.Size.X6,
+    )
 }
 
 private val CAPTION_GAP = 12.dp
