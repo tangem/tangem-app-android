@@ -1,7 +1,10 @@
 package com.tangem.domain.jointaccount.model
 
-/** An unused invite of a joint account slot; [expiresAtMillis] is `null` until the backend reports a TTL */
+/** An issued, unredeemed invite as the list reports it: without the code */
 data class JointAccountInvite(
-    val id: String,
-    val expiresAtMillis: Long? = null,
-)
+    val slot: Int,
+    val expiresAtMillis: Long,
+) {
+
+    fun isExpired(nowMillis: Long): Boolean = expiresAtMillis <= nowMillis
+}

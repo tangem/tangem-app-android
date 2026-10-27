@@ -51,7 +51,7 @@ internal class CheckPolymarketGeoblockUseCaseTest {
     @Test
     fun `GIVEN no connection WHEN invoke THEN returns Network`() = runTest {
         // Arrange
-        coEvery { polymarketRepository.checkGeoblock() } returns DataError.NetworkError.NoInternetConnection.left()
+        coEvery { polymarketRepository.checkGeoblock() } returns DataError.NetworkError.NoInternetConnection().left()
 
         // Act
         val actual = useCase()

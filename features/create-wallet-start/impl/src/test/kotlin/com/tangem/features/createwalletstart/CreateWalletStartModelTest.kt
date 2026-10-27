@@ -10,8 +10,6 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.analytics.utils.TrackingContextProxy
-import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
@@ -85,8 +83,8 @@ internal class CreateWalletStartModelTest {
     }
 
     @Test
-    fun `GIVEN ColdWallet mode WHEN onScanClick THEN ButtonScanCard event sent AND scan called`() = runTest {
-        val model = createModel(testScope = this, mode = CreateWalletStartComponent.Mode.ColdWallet)
+    fun `GIVEN screen opened WHEN onScanClick THEN ButtonScanCard event sent AND scan called`() = runTest {
+        val model = createModel(testScope = this)
         advanceUntilIdle()
 
         model.uiState.value.onScanClick.invoke()
@@ -112,41 +110,14 @@ internal class CreateWalletStartModelTest {
     }
 
     @Test
-    fun `GIVEN HotWallet mode WHEN onScanClick THEN ButtonScanCard event sent AND scan called`() = runTest {
-        val model = createModel(testScope = this, mode = CreateWalletStartComponent.Mode.HotWallet)
-        advanceUntilIdle()
-
-        model.uiState.value.onScanClick.invoke()
-        advanceUntilIdle()
-
-        verify {
-            analyticsEventHandler.send(
-                match<IntroductionProcess.ButtonScanCard> {
-                    it.source == AnalyticsParam.ScreensSources.CreateWalletIntro
-                },
-            )
-        }
-        coVerify {
-            scanCardProcessor.scan(
-                config = match {
-                    it == ScanConfig(
-                        analyticsSource = AnalyticsParam.ScreensSources.CreateWalletIntro,
-                        callback = it.callback,
-                    )
-                },
-            )
-        }
-    }
-
-    @Test
-    fun `GIVEN ColdWallet AND hot wallet not supported WHEN otherMethodClick THEN dialog sent`() = runTest {
+    fun `GIVEN hot wallet not supported WHEN onPrimaryButtonClick THEN dialog sent`() = runTest {
         every { isHotWalletCreationSupported() } returns false
         every { isHotWalletCreationSupported.getLeastVersionName() } returns "13"
 
-        val model = createModel(testScope = this, mode = CreateWalletStartComponent.Mode.ColdWallet)
+        val model = createModel(testScope = this)
         advanceUntilIdle()
 
-        model.uiState.value.otherMethodClick.invoke()
+        model.uiState.value.onPrimaryButtonClick.invoke()
         advanceUntilIdle()
 
         verify { trackingContextProxy.addHotWalletContext() }
@@ -160,11 +131,11 @@ internal class CreateWalletStartModelTest {
     }
 
     @Test
-    fun `GIVEN HotWallet AND hot wallet supported WHEN onPrimaryButtonClick THEN CreateMobileWallet pushed`() =
+    fun `GIVEN hot wallet supported WHEN onPrimaryButtonClick THEN CreateMobileWallet pushed`() =
         runTest {
             every { isHotWalletCreationSupported() } returns true
 
-            val model = createModel(testScope = this, mode = CreateWalletStartComponent.Mode.HotWallet)
+            val model = createModel(testScope = this)
             advanceUntilIdle()
 
             model.uiState.value.onPrimaryButtonClick.invoke()
@@ -188,35 +159,13 @@ internal class CreateWalletStartModelTest {
         }
 
     @Test
-    fun `GIVEN ColdWallet mode WHEN onPrimaryButtonClick THEN buy link opened`() = runTest {
+    fun `GIVEN buy link generated WHEN otherMethodClick THEN buy link opened`() = runTest {
         val testUrl = "https://buy.tangem.com"
         coEvery {
             generateBuyTangemCardLinkUseCase.invoke(GenerateBuyTangemCardLinkUseCase.Source.Creation)
         } returns testUrl
 
-        val model = createModel(testScope = this, mode = CreateWalletStartComponent.Mode.ColdWallet)
-        advanceUntilIdle()
-
-        model.uiState.value.onPrimaryButtonClick.invoke()
-        advanceUntilIdle()
-
-        verify {
-            analyticsEventHandler.send(
-                match<Basic.ButtonBuy> { true },
-            )
-        }
-        coVerify { generateBuyTangemCardLinkUseCase.invoke(GenerateBuyTangemCardLinkUseCase.Source.Creation) }
-        verify { urlOpener.openUrl(testUrl) }
-    }
-
-    @Test
-    fun `GIVEN HotWallet mode WHEN onBuyClick THEN buy link opened`() = runTest {
-        val testUrl = "https://buy.tangem.com"
-        coEvery {
-            generateBuyTangemCardLinkUseCase.invoke(GenerateBuyTangemCardLinkUseCase.Source.Creation)
-        } returns testUrl
-
-        val model = createModel(testScope = this, mode = CreateWalletStartComponent.Mode.HotWallet)
+        val model = createModel(testScope = this)
         advanceUntilIdle()
 
         model.uiState.value.otherMethodClick.invoke()
@@ -234,7 +183,7 @@ internal class CreateWalletStartModelTest {
     @Test
     fun `WHEN scanCard THEN access code policy set AND scanProcessor called`() = runTest {
         coEvery { settingsRepository.shouldSaveAccessCodes() } returns true
-        val model = createModel(testScope = this, mode = CreateWalletStartComponent.Mode.ColdWallet)
+        val model = createModel(testScope = this)
         advanceUntilIdle()
 
         model.uiState.value.onScanClick.invoke()
@@ -262,7 +211,7 @@ internal class CreateWalletStartModelTest {
             firstArg<ScanConfig>().callback.onFailure(error)
         }
 
-        val model = createModel(testScope = this, mode = CreateWalletStartComponent.Mode.ColdWallet)
+        val model = createModel(testScope = this)
         advanceUntilIdle()
 
         model.uiState.value.onScanClick.invoke()
@@ -280,7 +229,7 @@ internal class CreateWalletStartModelTest {
             firstArg<ScanConfig>().callback.onFailure(error)
         }
 
-        val model = createModel(testScope = this, mode = CreateWalletStartComponent.Mode.ColdWallet)
+        val model = createModel(testScope = this)
         advanceUntilIdle()
 
         model.uiState.value.onScanClick.invoke()
@@ -298,7 +247,7 @@ internal class CreateWalletStartModelTest {
             firstArg<ScanConfig>().callback.onFailure(error)
         }
 
-        val model = createModel(testScope = this, mode = CreateWalletStartComponent.Mode.ColdWallet)
+        val model = createModel(testScope = this)
         advanceUntilIdle()
 
         model.uiState.value.onScanClick.invoke()
@@ -316,7 +265,7 @@ internal class CreateWalletStartModelTest {
             firstArg<ScanConfig>().callback.onSuccess(testScanResponse)
         }
 
-        val model = createModel(testScope = this, mode = CreateWalletStartComponent.Mode.ColdWallet)
+        val model = createModel(testScope = this)
         advanceUntilIdle()
 
         model.uiState.value.onScanClick.invoke()
@@ -345,7 +294,7 @@ internal class CreateWalletStartModelTest {
                 firstArg<ScanConfig>().callback.onSuccess(testScanResponse)
             }
 
-            val model = createModel(testScope = this, mode = CreateWalletStartComponent.Mode.ColdWallet)
+            val model = createModel(testScope = this)
             advanceUntilIdle()
 
             model.uiState.value.onScanClick.invoke()
@@ -374,7 +323,7 @@ internal class CreateWalletStartModelTest {
             firstArg<ScanConfig>().callback.onSuccess(testScanResponse)
         }
 
-        val model = createModel(testScope = this, mode = CreateWalletStartComponent.Mode.ColdWallet)
+        val model = createModel(testScope = this)
         advanceUntilIdle()
 
         model.uiState.value.onScanClick.invoke()
@@ -397,7 +346,7 @@ internal class CreateWalletStartModelTest {
                 firstArg<ScanConfig>().callback.onSuccess(testScanResponse)
             }
 
-            val model = createModel(testScope = this, mode = CreateWalletStartComponent.Mode.ColdWallet)
+            val model = createModel(testScope = this)
             advanceUntilIdle()
 
             model.uiState.value.onScanClick.invoke()
@@ -419,7 +368,7 @@ internal class CreateWalletStartModelTest {
                 firstArg<ScanConfig>().callback.onSuccess(testScanResponse)
             }
 
-            val model = createModel(testScope = this, mode = CreateWalletStartComponent.Mode.ColdWallet)
+            val model = createModel(testScope = this)
             advanceUntilIdle()
 
             model.uiState.value.onScanClick.invoke()
@@ -446,7 +395,7 @@ internal class CreateWalletStartModelTest {
         val refcode = "referralCode"
         coEvery { appsFlyerRepository.getConversionData() } returns AppsFlyerConversionData(refcode = refcode, campaign = null)
 
-        createModel(testScope = this, mode = CreateWalletStartComponent.Mode.ColdWallet)
+        createModel(testScope = this)
         advanceUntilIdle()
 
         verify {
@@ -457,38 +406,8 @@ internal class CreateWalletStartModelTest {
     }
 
     @Test
-    fun `WHEN ColdWallet WHEN get model THEN correct resources`() = runTest {
-        val model = createModel(testScope = this, mode = CreateWalletStartComponent.Mode.ColdWallet)
-        val state = model.uiState.value
-        assert(state.title == resourceReference(R.string.common_tangem_wallet))
-        assert(state.description == resourceReference(R.string.welcome_create_wallet_hardware_description))
-        assert(
-            state.featureItems == persistentListOf(
-                CreateWalletStartUM.FeatureItem(
-                    iconResId = R.drawable.ic_shield_check_16,
-                    text = resourceReference(R.string.welcome_create_wallet_feature_class),
-                ),
-                CreateWalletStartUM.FeatureItem(
-                    iconResId = R.drawable.ic_flash_16,
-                    text = resourceReference(R.string.welcome_create_wallet_feature_delivery),
-                ),
-                CreateWalletStartUM.FeatureItem(
-                    iconResId = R.drawable.ic_sparkles_16,
-                    text = resourceReference(R.string.welcome_create_wallet_feature_use),
-                )
-            )
-        )
-        assert(state.imageResId == R.drawable.img_hardware_wallet)
-        assert(state.shouldShowScanSecondaryButton)
-        assert(state.primaryButtonText == resourceReference(R.string.details_buy_wallet))
-        assert(state.otherMethodTitle == resourceReference(R.string.welcome_create_wallet_mobile_title))
-        assert(state.otherMethodDescription == null)
-        assert(state.isScanInProgress.not())
-    }
-
-    @Test
-    fun `WHEN HotWallet WHEN get model THEN correct resources`() = runTest {
-        val model = createModel(testScope = this, mode = CreateWalletStartComponent.Mode.HotWallet)
+    fun `GIVEN mobile wallet intro WHEN model created THEN correct resources`() = runTest {
+        val model = createModel(testScope = this)
         val state = model.uiState.value
         assert(state.title == resourceReference(R.string.hw_mobile_wallet))
         assert(state.description == resourceReference(R.string.welcome_create_wallet_mobile_description_full))
@@ -509,7 +428,6 @@ internal class CreateWalletStartModelTest {
             )
         )
         assert(state.imageResId == R.drawable.img_mobile_wallet)
-        assert(state.shouldShowScanSecondaryButton.not())
         assert(state.primaryButtonText == resourceReference(R.string.welcome_create_wallet_mobile_title))
         assert(state.otherMethodTitle == resourceReference(R.string.welcome_create_wallet_use_hardware_title))
         assert(state.otherMethodDescription == resourceReference(R.string.welcome_create_wallet_use_hardware_description))
@@ -518,13 +436,8 @@ internal class CreateWalletStartModelTest {
 
     private fun createModel(
         testScope: TestScope,
-        mode: CreateWalletStartComponent.Mode,
-        paramsContainer: ParamsContainer = MutableParamsContainer(
-            value = CreateWalletStartComponent.Params(mode = mode)
-        ),
     ): CreateWalletStartModel {
         return CreateWalletStartModel(
-            paramsContainer = paramsContainer,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             router = router,
             scanCardProcessor = scanCardProcessor,
