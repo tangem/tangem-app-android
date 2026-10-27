@@ -21,6 +21,7 @@ import com.tangem.domain.jointaccount.safe.SafeDeployment
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.signing.JointOperationSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
+import com.tangem.domain.jointaccount.verifier.JointAccountCompositionVerifier
 import com.tangem.domain.jointaccount.verifier.JointOperationVerifier
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -52,6 +53,7 @@ internal class SignJointOperationUseCaseTest {
     private val compositionChecker: SafeCompositionChecker = mockk()
     private val refundReceiverProvider: JointRefundReceiverProvider = mockk()
     private val gasTokenResolver: JointGasTokenResolver = mockk()
+    private val compositionVerifier: JointAccountCompositionVerifier = mockk()
     private val network: Network = mockk()
 
     private val useCase = SignJointOperationUseCase(
@@ -66,6 +68,7 @@ internal class SignJointOperationUseCaseTest {
         compositionChecker = compositionChecker,
         refundReceiverProvider = refundReceiverProvider,
         gasTokenResolver = gasTokenResolver,
+        compositionVerifier = compositionVerifier,
     )
 
     private val account = MockAccounts.createJointAccount(ownerKeyIndex = 3)
@@ -86,8 +89,10 @@ internal class SignJointOperationUseCaseTest {
             compositionChecker,
             refundReceiverProvider,
             gasTokenResolver,
+            compositionVerifier,
         )
         coEvery { fetcher.invoke(params = any()) } returns Unit.right()
+        coEvery { compositionVerifier.isVerified(account = any(), jointAccount = any()) } returns true
         coEvery {
             gasTokenResolver.resolve(network = network, address = NATIVE, rawCurrencyId = null)
         } returns SafeGasToken.Coin.right()
@@ -229,6 +234,24 @@ internal class SignJointOperationUseCaseTest {
         assertThat(actual).isEqualTo(reason.left())
         coVerify(exactly = 0) { signer.signOperation(any(), any(), any(), any(), any()) }
         coVerify(exactly = 0) { repository.signOperation(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN the composition does not verify WHEN invoke THEN nothing is verified or signed`() = runTest {
+        // Arrange
+        coEvery { compositionVerifier.isVerified(account = any(), jointAccount = any()) } returns false
+
+        // Act
+        val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            JointOperationSignError.VerificationFailed(
+                reason = JointOperationSignError.VerificationFailed.Reason.COMPOSITION_MISMATCH,
+            ).left(),
+        )
+        coVerify(exactly = 0) { verifier.verify(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { signer.signOperation(any(), any(), any(), any(), any()) }
     }
 
     @Test
