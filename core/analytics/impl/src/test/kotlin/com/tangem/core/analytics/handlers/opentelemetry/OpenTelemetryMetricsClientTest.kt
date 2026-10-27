@@ -1,4 +1,4 @@
-package com.tangem.tap.common.analytics.handlers.opentelemetry
+package com.tangem.core.analytics.handlers.opentelemetry
 
 import android.app.Application
 import android.content.ComponentCallbacks2
@@ -39,6 +39,7 @@ internal class OpenTelemetryMetricsClientTest {
         return OpenTelemetryMetricsClient(
             application = application,
             apiKey = "test-key",
+            appVersion = "1.0.0",
             settingsRepository = settingsRepository,
             scope = this,
             dispatchers = dispatchers,
@@ -93,7 +94,9 @@ internal class OpenTelemetryMetricsClientTest {
     fun `GIVEN exported batch WHEN inspecting resource THEN only app coordinates country and language attached`() =
         runTest {
             // Arrange
-            val client = withDefaultLocale(Locale.GERMANY) { createClient(userCountry = UserCountry.Other(code = "de")) }
+            val client = withDefaultLocale(
+                Locale.GERMANY,
+            ) { createClient(userCountry = UserCountry.Other(code = "de")) }
             client.getMeter().counterBuilder("app_test_event").build().add(1)
 
             // Act
