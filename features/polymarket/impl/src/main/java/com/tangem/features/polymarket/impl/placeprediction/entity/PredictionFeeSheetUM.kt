@@ -16,8 +16,20 @@ internal data class PredictionFeeSheetUM(val title: TextReference, val rows: Imm
         val description: TextReference? = null,
     )
 
-    enum class Heading(@StringRes val titleRes: Int, @StringRes val sellOrderRowTitleRes: Int) {
-        Fee(titleRes = R.string.prediction_place_fee, sellOrderRowTitleRes = R.string.prediction_fee_sheet_order),
-        Total(titleRes = R.string.prediction_fee_sheet_total, sellOrderRowTitleRes = R.string.prediction_close_title),
+    enum class Heading(
+        @StringRes val titleRes: Int,
+        @StringRes val buyOrderRowTitleRes: Int,
+        @StringRes val sellOrderRowTitleRes: Int,
+    ) {
+        Fee(
+            titleRes = R.string.prediction_place_fee,
+            buyOrderRowTitleRes = R.string.prediction_fee_sheet_order,
+            sellOrderRowTitleRes = R.string.prediction_fee_sheet_order,
+        ),
+        Total(
+            titleRes = R.string.prediction_fee_sheet_total,
+            buyOrderRowTitleRes = R.string.prediction_fee_sheet_order,
+            sellOrderRowTitleRes = R.string.prediction_close_title,
+        ),
     }
 }
