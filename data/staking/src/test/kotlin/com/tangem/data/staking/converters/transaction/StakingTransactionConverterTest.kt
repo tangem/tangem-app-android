@@ -1,8 +1,8 @@
 package com.tangem.data.staking.converters.transaction
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.models.staking.NetworkType
-import com.tangem.domain.models.staking.YieldToken
+import com.tangem.domain.staking.model.NetworkType
+import com.tangem.domain.staking.model.YieldToken
 import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransactionStatus

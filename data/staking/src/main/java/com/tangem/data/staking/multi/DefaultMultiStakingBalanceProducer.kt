@@ -5,7 +5,7 @@ import arrow.core.some
 import com.tangem.data.staking.store.P2PEthPoolBalancesStore
 import com.tangem.data.staking.store.StakeKitBalancesStore
 import com.tangem.domain.core.flow.FlowProducerTools
-import com.tangem.domain.models.staking.StakingBalance
+import com.tangem.domain.staking.model.StakingBalance
 import com.tangem.domain.staking.multi.MultiStakingBalanceProducer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted

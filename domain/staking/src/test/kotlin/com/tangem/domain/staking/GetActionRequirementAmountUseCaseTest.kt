@@ -1,7 +1,7 @@
 package com.tangem.domain.staking
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.models.staking.action.StakingActionType
+import com.tangem.domain.staking.model.action.StakingActionType
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test

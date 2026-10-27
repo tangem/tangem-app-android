@@ -8,8 +8,8 @@ import com.tangem.core.ui.utils.SECONDS_IN_HOUR
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.*
-import com.tangem.domain.models.staking.action.StakingActionType
+import com.tangem.domain.staking.model.*
+import com.tangem.domain.staking.model.action.StakingActionType
 import com.tangem.domain.staking.model.Period
 import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.stakingBalanceData

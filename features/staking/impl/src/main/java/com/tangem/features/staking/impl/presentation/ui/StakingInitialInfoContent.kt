@@ -49,8 +49,8 @@ import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.StakingDetailsScreenTestTags
-import com.tangem.domain.models.staking.BalanceType
-import com.tangem.domain.models.staking.RewardBlockType
+import com.tangem.domain.staking.model.BalanceType
+import com.tangem.domain.staking.model.RewardBlockType
 import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.staking.impl.R

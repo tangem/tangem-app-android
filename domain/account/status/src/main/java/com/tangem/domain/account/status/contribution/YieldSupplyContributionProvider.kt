@@ -1,5 +1,7 @@
 package com.tangem.domain.account.status.contribution
 
+import com.tangem.domain.models.currency.balance.BalanceContributionProvider
+import com.tangem.domain.models.currency.balance.ContributionResolver
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.yield.supply.YieldSupplyContribution

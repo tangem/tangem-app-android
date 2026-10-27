@@ -5,7 +5,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.domain.blockaid.BlockAidVerifier
-import com.tangem.domain.models.staking.NetworkType
+import com.tangem.domain.staking.model.NetworkType
 import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
 import com.tangem.domain.staking.verification.StakingBlockAidRequestFactory
 import com.tangem.domain.staking.verification.StakingTransactionRecognizer

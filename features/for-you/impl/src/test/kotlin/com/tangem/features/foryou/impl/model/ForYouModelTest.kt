@@ -41,7 +41,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.earn.*
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.staking.StakingBalance
+import com.tangem.domain.staking.model.StakingBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingAvailability

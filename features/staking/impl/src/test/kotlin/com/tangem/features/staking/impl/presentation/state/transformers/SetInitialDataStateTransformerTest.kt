@@ -17,7 +17,7 @@ import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.StakingBalanceEntry
+import com.tangem.domain.staking.model.StakingBalanceEntry
 import com.tangem.domain.staking.model.CooldownPeriod
 import com.tangem.domain.staking.model.Period
 import com.tangem.domain.staking.model.StakingIntegration

@@ -15,8 +15,8 @@ import com.tangem.domain.models.earn.EarnToken
 import com.tangem.domain.models.earn.EarnTokenWithCurrency
 import com.tangem.domain.models.earn.EarnType
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.staking.StakingBalance
-import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.staking.model.StakingBalance
+import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.features.foryou.impl.entity.EarnOpportunitiesUM
