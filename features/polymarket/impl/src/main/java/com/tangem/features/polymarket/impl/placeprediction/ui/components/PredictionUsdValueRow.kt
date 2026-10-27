@@ -31,11 +31,11 @@ import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 
 @Composable
-internal fun PredictionTotalRow(
+internal fun PredictionUsdValueRow(
     value: String,
     isLoading: Boolean,
+    @StringRes titleRes: Int,
     modifier: Modifier = Modifier,
-    @StringRes titleRes: Int = R.string.prediction_fee_sheet_total,
     divider: Boolean = false,
     onClick: (() -> Unit)? = null,
 ) {
@@ -43,7 +43,7 @@ internal fun PredictionTotalRow(
         modifier = modifier,
         divider = divider,
         verticalAlignment = TangemRowVerticalAlignment.Center,
-        titleSlot = { TotalTitle(titleRes = titleRes, showInfo = onClick != null) },
+        titleSlot = { ValueTitle(titleRes = titleRes, showInfo = onClick != null) },
         valueSlot = {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
@@ -72,7 +72,7 @@ internal fun PredictionTotalRow(
 }
 
 @Composable
-private fun TotalTitle(@StringRes titleRes: Int, showInfo: Boolean) {
+private fun ValueTitle(@StringRes titleRes: Int, showInfo: Boolean) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(space = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -97,7 +97,7 @@ private val LoadingValueWidth = 64.dp
 @Preview(name = "Light", showBackground = true, widthDp = 360)
 @Preview(name = "Dark", showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun PredictionTotalRowPreview() {
+private fun PredictionUsdValueRowPreview() {
     TangemThemePreviewRedesign {
         Column(
             modifier = Modifier
@@ -106,10 +106,15 @@ private fun PredictionTotalRowPreview() {
             verticalArrangement = Arrangement.spacedBy(space = 12.dp),
         ) {
             TangemSurface(color = TangemTheme.colors3.bg.secondary, shape = PolymarketCardShape) {
-                PredictionTotalRow(value = "$1.40", isLoading = false, onClick = {})
+                PredictionUsdValueRow(
+                    value = "$1.40",
+                    isLoading = false,
+                    titleRes = R.string.prediction_fee_sheet_total,
+                    onClick = {},
+                )
             }
             TangemSurface(color = TangemTheme.colors3.bg.secondary, shape = PolymarketCardShape) {
-                PredictionTotalRow(value = "", isLoading = true)
+                PredictionUsdValueRow(value = "", isLoading = true, titleRes = R.string.prediction_fee_sheet_total)
             }
         }
     }
