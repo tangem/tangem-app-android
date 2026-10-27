@@ -147,6 +147,10 @@ sealed class MainScreenAnalyticsEvent(
 
     class NoticeOsUpdate : MainScreenAnalyticsEvent(event = "Notice - OS Update")
 
+    class ButtonLater : MainScreenAnalyticsEvent(event = "Button - Later")
+
+    class ButtonOpenSettings : MainScreenAnalyticsEvent(event = "Button - Open Settings")
+
     data class ButtonUpdateApp(val source: UpdateSource) : MainScreenAnalyticsEvent(
         event = "Button - Update App",
         params = mapOf(AnalyticsParam.SOURCE to source.value),
