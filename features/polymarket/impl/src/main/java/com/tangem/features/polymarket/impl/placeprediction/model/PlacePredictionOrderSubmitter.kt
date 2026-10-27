@@ -70,7 +70,7 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
 ) {
 
     suspend fun submit(prepared: PreparedPrediction): PlaceResultUM? {
-        if (uiState.value.submit !is SubmitUM.Idle) return null
+        if (uiState.value.submit !is SubmitUM.Idle || !uiState.value.isPrimaryButtonEnabled) return null
         uiState.update(SetSubmitTransformer(submit = SubmitUM.Signing))
         return place(frozen = prepared.quote, isNegRisk = prepared.isNegRisk)
     }

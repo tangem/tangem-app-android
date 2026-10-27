@@ -965,6 +965,33 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         }
 
         @Test
+        fun `GIVEN the position is gone WHEN place clicked again THEN the position is not read again`() = runTest {
+            // Arrange
+            coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
+            val amountModel = createAmountModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+            amountModel.onResume()
+            amountModel.onAmountChange(value = "12.80")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            val model = createSummaryModel(testScope = this, amountModel = amountModel)
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns null.right()
+            amountModel.onPause()
+            model.onPlaceClick()
+            advanceUntilIdle()
+            clearMocks(positionsRepository, answers = false)
+
+            // Act
+            model.onPlaceClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) { positionsRepository.getPosition(addresses = any(), id = any()) }
+            coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+
+            model.onDestroy()
+        }
+
+        @Test
         fun `GIVEN the position cannot be re-read WHEN place clicked THEN the user is told instead of nothing`() = runTest {
             // Arrange
             coEvery { getQuoteUseCase(any(), request = any()) } returns createSellQuote().right()
