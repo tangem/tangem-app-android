@@ -22,6 +22,7 @@ import com.tangem.data.polymarket.error.ProblemDetailParser
 import com.tangem.data.polymarket.signer.Base64UrlCodec
 import com.tangem.data.polymarket.signer.PolymarketHmacSigner
 import com.tangem.data.polymarket.signer.PolymarketL2HeaderBuilder
+import com.tangem.test.core.assertEitherLeft
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ApiResponseError.HttpException.Code
@@ -257,7 +258,7 @@ internal class DefaultPolymarketRepositoryTest {
         val result = repository.getCategories()
 
         // Assert
-        assertThat(result).isEqualTo(DataError.NetworkError.NoInternetConnection.left())
+        assertEitherLeft(result, DataError.NetworkError.NoInternetConnection())
     }
 
     @Test
@@ -581,7 +582,7 @@ internal class DefaultPolymarketRepositoryTest {
         val actual = repository.checkGeoblock()
 
         // Assert
-        assertThat(actual).isEqualTo(DataError.NetworkError.NoInternetConnection.left())
+        assertEitherLeft(actual, DataError.NetworkError.NoInternetConnection())
     }
 
     @Test
@@ -605,7 +606,7 @@ internal class DefaultPolymarketRepositoryTest {
         val actual = repository.getRelayerNonce(OWNER)
 
         // Assert
-        assertThat(actual).isEqualTo(DataError.NetworkError.NoInternetConnection.left())
+        assertEitherLeft(actual, DataError.NetworkError.NoInternetConnection())
     }
 
     @Test
@@ -618,7 +619,7 @@ internal class DefaultPolymarketRepositoryTest {
         val actual = repository.getRelayerNonce(OWNER)
 
         // Assert
-        assertThat(actual).isEqualTo(DataError.NetworkError.NoInternetConnection.left())
+        assertEitherLeft(actual, DataError.NetworkError.NoInternetConnection())
     }
 
     @Test

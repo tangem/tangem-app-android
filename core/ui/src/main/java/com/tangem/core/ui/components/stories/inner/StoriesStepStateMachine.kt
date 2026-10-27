@@ -7,7 +7,6 @@ import kotlinx.collections.immutable.ImmutableList
 
 class StoriesStepStateMachine<T>(
     private val stories: ImmutableList<T>,
-    private val isRepeatable: Boolean,
 ) {
 
     private val _currentIndex = mutableIntStateOf(FIRST_INDEX)
@@ -20,11 +19,7 @@ class StoriesStepStateMachine<T>(
         get() = stories[currentIndex.intValue.coerceIn(FIRST_INDEX, steps)]
 
     fun nextStory() {
-        _currentIndex.intValue = if (currentIndex.intValue == steps && isRepeatable) {
-            FIRST_INDEX
-        } else {
-            currentIndex.intValue.inc().coerceAtMost(stories.size)
-        }
+        _currentIndex.intValue = currentIndex.intValue.inc().coerceAtMost(stories.size)
     }
 
     fun prevStory() {

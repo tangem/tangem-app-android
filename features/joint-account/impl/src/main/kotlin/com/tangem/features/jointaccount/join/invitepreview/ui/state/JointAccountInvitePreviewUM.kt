@@ -16,6 +16,7 @@ internal sealed interface JointAccountInvitePreviewUM {
         val creatorName: String,
         val creatorAddress: String,
         val wallet: WalletUM?,
+        val isContinueLoading: Boolean = false,
         val onRequiredApprovalsClick: () -> Unit,
         val onCreatorInfoClick: () -> Unit,
         val onContinueClick: () -> Unit,

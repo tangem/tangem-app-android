@@ -151,14 +151,8 @@ abstract class BaseTestCase : TestCase(
                     value = false
                 )
             }
-            appPreferencesStore.editData { mutablePreferences ->
-                mutablePreferences.set(
-                    key = storePreferencesKeys.getShouldShowInitialPermissionScreen(PUSH_PERMISSION),
-                    value = false
-                )
-            }
             // Since [REDACTED_TASK_KEY] the ask also lives inside onboarding (AddressSyncStep.ASK_NOTIFICATIONS),
-            // which reads this key instead — without it the import flow stops on the Notifications step.
+            // which reads this key — without it the import flow stops on the Notifications step.
             appPreferencesStore.editData { mutablePreferences ->
                 mutablePreferences.set(
                     key = storePreferencesKeys.getShouldShowPermission(PUSH_PERMISSION),

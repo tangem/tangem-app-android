@@ -2,7 +2,6 @@ package com.tangem.spend.datasource.visa
 
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.spend.datasource.pay.models.request.RefreshTokenByCardIdRequest
-import com.tangem.spend.datasource.pay.models.request.RefreshTokenByCardWalletRequest
 import com.tangem.spend.datasource.pay.models.request.SetPinCodeRequest
 import com.tangem.spend.datasource.visa.models.request.ActivationByCardWalletRequest
 import com.tangem.spend.datasource.visa.models.request.ActivationByCustomerWalletRequest
@@ -17,19 +16,12 @@ import com.tangem.spend.datasource.visa.models.request.GetCustomerWalletAcceptan
 import com.tangem.spend.datasource.visa.models.response.CardActivationRemoteStateResponse
 import com.tangem.spend.datasource.visa.models.response.GenerateNonceResponse
 import com.tangem.spend.datasource.visa.models.response.JWTResponse
-import com.tangem.spend.datasource.visa.models.response.VisaCustomerInfo
 import com.tangem.spend.datasource.visa.models.response.VisaDataToSignResponse
-import com.tangem.spend.datasource.visa.models.response.VisaTxHistoryResponse
 import retrofit2.http.Body
-import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
-import retrofit2.http.Query
 
 interface VisaApi {
-
-    @POST("v1/auth/token/refresh")
-    suspend fun refreshCardWalletAccessToken(@Body request: RefreshTokenByCardWalletRequest): ApiResponse<JWTResponse>
 
     @POST("v1/auth/challenge")
     suspend fun generateNonceByCardId(@Body request: GenerateNoneByCardIdRequest): ApiResponse<GenerateNonceResponse>
@@ -86,19 +78,4 @@ interface VisaApi {
         @Header("Authorization") authHeader: String,
         @Body body: SetPinCodeRequest,
     ): ApiResponse<Unit>
-
-    @GET("customer/info")
-    suspend fun getCustomerInfo(
-        @Header("Authorization") authHeader: String,
-        @Query("card_id") cardId: String,
-    ): ApiResponse<VisaCustomerInfo>
-
-    @GET("product_instance/transactions")
-    suspend fun getTxHistory(
-        @Header("Authorization") authHeader: String,
-        @Query("customer_id") customerId: String,
-        @Query("product_instance_id") productInstanceId: String,
-        @Query("limit") limit: Int,
-        @Query("offset") offset: Int,
-    ): ApiResponse<VisaTxHistoryResponse>
 }

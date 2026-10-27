@@ -15,7 +15,7 @@ import com.tangem.data.pay.flow.DefaultPaymentAccountStatusFetcher
 import com.tangem.data.pay.flow.DefaultPaymentAccountStatusProducer
 import com.tangem.data.pay.repository.*
 import com.tangem.data.pay.store.CashbackSummaryStore
-import com.tangem.data.pay.store.DefaultPaymentAccountRecentsStore
+import com.tangem.data.pay.store.DefaultAccountRecentsStore
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCurrencyStatusUseCase
@@ -27,8 +27,6 @@ import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.moneyaccount.repository.MoneyAccountOrderRepository
-import com.tangem.domain.moneyaccount.repository.MoneyAccountRepository
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
@@ -83,10 +81,6 @@ internal interface TangemPayDataModule {
     @Binds
     @Singleton
     fun bindIssueCardRepository(repository: DefaultIssueCardRepository): TangemPayIssueCardRepository
-
-    @Binds
-    @Singleton
-    fun bindMoneyAccountOrderRepository(repository: DefaultMoneyAccountOrderRepository): MoneyAccountOrderRepository
 
     @Binds
     @Singleton
@@ -351,10 +345,10 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
-        fun provideGetTangemPayProductsAvailabilityUseCase(
+        fun provideGetTangemPayProductsAvailabilityForCustomerUseCase(
             checkTangemPayEligibilityForCustomerUseCase: CheckTangemPayEligibilityForCustomerUseCase,
-        ): GetTangemPayProductsAvailabilityUseCase {
-            return GetTangemPayProductsAvailabilityUseCase(checkTangemPayEligibilityForCustomerUseCase)
+        ): GetTangemPayProductsAvailabilityForCustomerUseCase {
+            return GetTangemPayProductsAvailabilityForCustomerUseCase(checkTangemPayEligibilityForCustomerUseCase)
         }
 
         @Provides
@@ -669,12 +663,6 @@ internal interface TangemPayDataModule {
 
         @Provides
         @Singleton
-        fun provideMoneyAccountFeesRepository(repository: DefaultMoneyAccountRepository): MoneyAccountRepository {
-            return repository
-        }
-
-        @Provides
-        @Singleton
         fun provideTangemPayResidencyRepository(
             repository: DefaultTangemPayResidencyRepository,
         ): TangemPayResidencyRepository = CachingTangemPayResidencyRepository(origin = repository)
@@ -708,12 +696,12 @@ internal interface TangemPayDataModule {
 
         @Provides
         @Singleton
-        fun providePaymentAccountRecentsStore(
+        fun provideAccountRecentsStore(
             prefs: AppPreferencesStore,
             spendPreferencesKeys: SpendPreferencesKeys,
             @NetworkJson json: Json,
-        ): PaymentAccountRecentsStore {
-            return DefaultPaymentAccountRecentsStore(
+        ): AccountRecentsStore {
+            return DefaultAccountRecentsStore(
                 prefs = prefs,
                 spendPreferencesKeys = spendPreferencesKeys,
                 json = json,
@@ -722,7 +710,7 @@ internal interface TangemPayDataModule {
 
         @Provides
         fun provideGetRecentTokenTransfersUseCase(
-            recentsStore: PaymentAccountRecentsStore,
+            recentsStore: AccountRecentsStore,
             singleAccountListSupplier: SingleAccountListSupplier,
         ): GetRecentTokenTransfersUseCase {
             return GetRecentTokenTransfersUseCase(
@@ -733,14 +721,14 @@ internal interface TangemPayDataModule {
 
         @Provides
         fun provideRecordTokenTransferFromSwapUseCase(
-            recentsStore: PaymentAccountRecentsStore,
+            recentsStore: AccountRecentsStore,
         ): RecordTokenTransferFromSwapUseCase {
             return RecordTokenTransferFromSwapUseCase(recentsStore = recentsStore)
         }
 
         @Provides
         fun provideRecordTokenTransferFromSendUseCase(
-            recentsStore: PaymentAccountRecentsStore,
+            recentsStore: AccountRecentsStore,
             paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
         ): RecordTokenTransferFromSendUseCase {
             return RecordTokenTransferFromSendUseCase(

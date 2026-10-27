@@ -2,7 +2,6 @@ package com.tangem.feature.wallet.child.wallet.model.intents
 
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute.*
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.common.ui.userwallet.handle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -10,6 +9,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic.ButtonSupport
 import com.tangem.core.analytics.models.event.AssetsDiscoveryAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.review.ReviewManager
 import com.tangem.core.navigation.url.AppStoreOpener
@@ -127,7 +127,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
     private val stakingIdFactory: StakingIdFactory,
-    private val appRouter: AppRouter,
+    private val navigationRouter: Router,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val setShouldShowNotificationUseCase: SetShouldShowNotificationUseCase,
     private val notificationsRepository: NotificationsRepository,
@@ -297,7 +297,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             )
         }
 
-        appRouter.push(route)
+        navigationRouter.push(route)
     }
 
     override fun onAllowPermissions() {
@@ -427,7 +427,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onYieldBoostBannerClick(userWalletId: UserWalletId) {
-        appRouter.push(
+        navigationRouter.push(
             Stories(
                 storyId = StoryContentIds.STORY_FIRST_TIME_YIELD_PROMO.id,
                 nextScreen = Earn(preselectedEarnType = PreselectedEarnType.Yield),

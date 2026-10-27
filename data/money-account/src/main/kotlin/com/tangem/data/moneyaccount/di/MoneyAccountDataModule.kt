@@ -2,7 +2,6 @@ package com.tangem.data.moneyaccount.di
 
 import android.content.Context
 import androidx.datastore.dataStoreFile
-import com.tangem.core.local.datastore.DeleteObsoleteFileMigration
 import com.tangem.data.moneyaccount.converter.MoneyAccountStatusValueDMConverter
 import com.tangem.data.moneyaccount.currency.DefaultMoneyAccountCurrencyFactory
 import com.tangem.data.moneyaccount.currency.MoneyAccountCurrenciesProvider
@@ -14,39 +13,30 @@ import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
-import com.tangem.domain.moneyaccount.repository.MoneyAccountOrderRepository
 import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusProducer
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
-import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.pay.usecase.FindMoneyAccountCreationOrderUseCase
 import com.tangem.domain.pay.usecase.GetCustomerSummaryUseCase
-import com.tangem.domain.pay.usecase.StartTangemPayOrderPollingUseCase
+import com.tangem.domain.pay.usecase.GetTangemPayProductsAvailabilityForCustomerUseCase
 import com.tangem.domain.moneyaccount.repository.MoneyAccountActivationRepository
-import com.tangem.domain.moneyaccount.repository.MoneyAccountRepository
 import com.tangem.domain.moneyaccount.usecase.ActivateMoneyAccountUseCase
-import com.tangem.domain.moneyaccount.usecase.CreateMoneyAccountOrderUseCase
-import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountFeeTableUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBalanceUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBankCredentialsUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountCryptoCurrencyStatusUseCase
-import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountEligibilityUseCase
-import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountStatusUseCase
-import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountSuitableWalletsUseCase
+import com.tangem.domain.moneyaccount.usecase.GetTangemPayProductsAvailabilityUseCase
+import com.tangem.domain.moneyaccount.usecase.IsMoneyAccountPathOccupiedUseCase
 import com.tangem.domain.moneyaccount.usecase.RestoreMoneyAccountOrderUseCase
 import com.tangem.domain.moneyaccount.usecase.StartTangemPayOnboardingUseCase
 import com.tangem.domain.pay.usecase.CreateOnboardingOrderUseCase
-import com.tangem.domain.moneyaccount.usecase.TrackMoneyAccountOrderUseCase
-import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Binds
 import dagger.Module
@@ -104,11 +94,7 @@ internal interface MoneyAccountDataModule {
                         serializer = MapSerializer(String.serializer(), MoneyAccountStatusValueDM.serializer()),
                         json = KotlinxDataStoreSerializer.jsonBuilder { classDiscriminator = "__type" },
                     ),
-                    produceFile = { context.dataStoreFile(fileName = "money_account_statuses_v2") },
-                    migrations = listOf(
-                        DeleteObsoleteFileMigration { context.dataStoreFile(fileName = "money_account_statuses") },
-                        DeleteObsoleteFileMigration { context.dataStoreFile(fileName = "virtual_account_statuses") },
-                    ),
+                    produceFile = { context.dataStoreFile(fileName = "money_account_statuses") },
                     scope = scope,
                 ),
                 converter = converter,
@@ -149,14 +135,6 @@ internal interface MoneyAccountDataModule {
 
         @Provides
         @Singleton
-        fun provideGetMoneyAccountSuitableWalletsUseCase(
-            userWalletsListRepository: UserWalletsListRepository,
-        ): GetMoneyAccountSuitableWalletsUseCase {
-            return GetMoneyAccountSuitableWalletsUseCase(userWalletsListRepository = userWalletsListRepository)
-        }
-
-        @Provides
-        @Singleton
         fun provideGetMoneyAccountBalanceUseCase(
             singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
             singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
@@ -168,35 +146,6 @@ internal interface MoneyAccountDataModule {
                 singleNetworkStatusSupplier = singleNetworkStatusSupplier,
                 singleQuoteStatusFetcher = singleQuoteStatusFetcher,
                 singleQuoteStatusSupplier = singleQuoteStatusSupplier,
-            )
-        }
-
-        @Provides
-        @Singleton
-        fun provideTrackMoneyAccountOrderUseCase(
-            orderRepository: MoneyAccountOrderRepository,
-            startPolling: StartTangemPayOrderPollingUseCase,
-            moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
-            appCoroutineScope: AppCoroutineScope,
-        ): TrackMoneyAccountOrderUseCase {
-            return TrackMoneyAccountOrderUseCase(
-                orderRepository = orderRepository,
-                startPolling = startPolling,
-                moneyAccountStatusFetcher = moneyAccountStatusFetcher,
-                appCoroutineScope = appCoroutineScope,
-            )
-        }
-
-        @Provides
-        fun provideCreateMoneyAccountOrderUseCase(
-            orderRepository: MoneyAccountOrderRepository,
-            trackOrder: TrackMoneyAccountOrderUseCase,
-            findMoneyAccountCreationOrderUseCase: FindMoneyAccountCreationOrderUseCase,
-        ): CreateMoneyAccountOrderUseCase {
-            return CreateMoneyAccountOrderUseCase(
-                orderRepository = orderRepository,
-                trackOrder = trackOrder,
-                findMoneyAccountCreationOrderUseCase = findMoneyAccountCreationOrderUseCase,
             )
         }
 
@@ -214,17 +163,6 @@ internal interface MoneyAccountDataModule {
         }
 
         @Provides
-        fun provideGetMoneyAccountStatusUseCase(
-            moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
-            moneyAccountStatusSupplier: MoneyAccountStatusSupplier,
-        ): GetMoneyAccountStatusUseCase {
-            return GetMoneyAccountStatusUseCase(
-                moneyAccountStatusFetcher = moneyAccountStatusFetcher,
-                moneyAccountStatusSupplier = moneyAccountStatusSupplier,
-            )
-        }
-
-        @Provides
         @Singleton
         fun provideGetMoneyAccountCryptoCurrencyStatusUseCase(
             moneyAccountStatusSupplier: MoneyAccountStatusSupplier,
@@ -233,19 +171,20 @@ internal interface MoneyAccountDataModule {
         }
 
         @Provides
-        fun provideGetMoneyAccountEligibilityUseCase(
-            getMoneyAccountSuitableWalletsUseCase: GetMoneyAccountSuitableWalletsUseCase,
-            getMoneyAccountStatusUseCase: GetMoneyAccountStatusUseCase,
-            deviceSecurityInfoProvider: DeviceSecurityInfoProvider,
-            onboardingRepository: OnboardingRepository,
+        fun provideIsMoneyAccountPathOccupiedUseCase(
             singleAccountListSupplier: SingleAccountListSupplier,
-        ): GetMoneyAccountEligibilityUseCase {
-            return GetMoneyAccountEligibilityUseCase(
-                getMoneyAccountSuitableWalletsUseCase = getMoneyAccountSuitableWalletsUseCase,
-                getMoneyAccountStatusUseCase = getMoneyAccountStatusUseCase,
-                deviceSecurityInfoProvider = deviceSecurityInfoProvider,
-                onboardingRepository = onboardingRepository,
-                singleAccountListSupplier = singleAccountListSupplier,
+        ): IsMoneyAccountPathOccupiedUseCase {
+            return IsMoneyAccountPathOccupiedUseCase(singleAccountListSupplier = singleAccountListSupplier)
+        }
+
+        @Provides
+        fun provideGetTangemPayProductsAvailabilityUseCase(
+            getTangemPayProductsAvailabilityForCustomerUseCase: GetTangemPayProductsAvailabilityForCustomerUseCase,
+            isMoneyAccountPathOccupiedUseCase: IsMoneyAccountPathOccupiedUseCase,
+        ): GetTangemPayProductsAvailabilityUseCase {
+            return GetTangemPayProductsAvailabilityUseCase(
+                getTangemPayProductsAvailabilityForCustomerUseCase = getTangemPayProductsAvailabilityForCustomerUseCase,
+                isMoneyAccountPathOccupiedUseCase = isMoneyAccountPathOccupiedUseCase,
             )
         }
 
@@ -254,14 +193,6 @@ internal interface MoneyAccountDataModule {
             onboardingRepository: OnboardingRepository,
         ): GetMoneyAccountBankCredentialsUseCase {
             return GetMoneyAccountBankCredentialsUseCase(onboardingRepository = onboardingRepository)
-        }
-
-        @Provides
-        @Singleton
-        fun provideGetMoneyAccountFeeTableUseCase(
-            moneyAccountRepository: MoneyAccountRepository,
-        ): GetMoneyAccountFeeTableUseCase {
-            return GetMoneyAccountFeeTableUseCase(moneyAccountRepository = moneyAccountRepository)
         }
     }
 }

@@ -392,7 +392,6 @@ internal class MoneyAccountDetailsModelTest {
 
     private fun provideNonAccountStatuses() = listOf(
         MoneyAccountStatusValue.Error.Unavailable,
-        MoneyAccountStatusValue.Error.NotSynced,
         MoneyAccountStatusValue.Error.ExposedDevice,
         MoneyAccountStatusValue.Empty,
         MoneyAccountStatusValue.NotCreated,
