@@ -8,7 +8,9 @@ import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionOrderFailure
 import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.models.StatusSource
+import com.tangem.features.polymarket.impl.common.FakeSlotHost
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
+import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -164,6 +166,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                     SIGNED_ORDER.right()
                 }
                 val model = createQuotedModel()
+                val fundingSheet = FakeSlotHost(model.fundingSheetNavigation)
                 model.onPlaceClick()
 
                 // Act
@@ -172,7 +175,9 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
 
                 // Assert
                 assertThat(model.uiState.value.amountValue).isEqualTo("10")
+                assertThat(fundingSheet.configuration).isNull()
                 verify(exactly = 0) { router.push(any(), any()) }
+                verify(exactly = 0) { messageSender.send(any()) }
                 coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
             }
 
@@ -192,6 +197,42 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
 
             // Assert
             verify(exactly = 0) { router.pop(any()) }
+        }
+    }
+
+    @Nested
+    inner class RepeatedAmount {
+
+        @Test
+        fun `GIVEN a priced amount WHEN the same amount is entered again THEN the quote stays priced`() =
+            runOrderTest {
+                // Arrange
+                val model = createQuotedModel()
+
+                // Act
+                model.onAmountChange(value = "10")
+
+                // Assert
+                assertThat(model.uiState.value.quote).isInstanceOf(QuoteUM.Content::class.java)
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+                coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+            }
+
+        @Test
+        fun `GIVEN max is priced WHEN max clicked again THEN the quote stays priced`() = runOrderTest {
+            // Arrange
+            val model = createQuotedModel()
+            model.onMaxClick()
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+            // Act
+            model.onMaxClick()
+
+            // Assert
+            assertThat(model.uiState.value.amountValue).isEqualTo("90")
+            assertThat(model.uiState.value.quote).isInstanceOf(QuoteUM.Content::class.java)
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            coVerify(exactly = 2) { getQuoteUseCase(request = any()) }
         }
     }
 
@@ -389,7 +430,9 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         Preset(apply = { it.onPresetClick(preset = it.amountPresets.first()) }),
         Max(apply = PlacePredictionOrderModel::onMaxClick),
         Slippage(apply = PlacePredictionOrderModel::onSlippageClick),
-        QuoteRetry(apply = PlacePredictionOrderModel::onQuoteRetryClick),
+        AddFunds(apply = PlacePredictionOrderModel::onAddFundsClick),
+        Swap(apply = PlacePredictionOrderModel::onSwapClick),
+        Receive(apply = PlacePredictionOrderModel::onReceiveClick),
     }
 
     private companion object {
