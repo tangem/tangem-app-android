@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.core.analytics.models.AnalyticsEvent
@@ -56,6 +57,7 @@ import com.tangem.domain.polymarket.model.PredictionWithdrawDestination
 import com.tangem.domain.polymarket.model.PredictionWithdrawalReceipt
 import com.tangem.domain.polymarket.model.PreparedPredictionWithdrawal
 import com.tangem.domain.swap.models.SwapCurrencyStatus
+import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.feature.swap.buildSwapCurrencyStatus
 import com.tangem.feature.swap.domain.models.SwapAmount
@@ -403,10 +405,13 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         model.onDestroy()
     }
 
-    @Test
-    fun `GIVEN Withdraw flow WHEN to selector settings THEN the payment account is hidden`() = runTest {
-        // Arrange & Act — withdrawing into the same account is not an operation the user can make.
-        val model = createModel(accountFlow = AccountFlow.Withdraw)
+    @ParameterizedTest
+    @MethodSource("provideWithdrawFlows")
+    fun `GIVEN a withdraw flow WHEN to selector settings THEN the payment account is hidden`(
+        accountFlow: AccountFlow,
+    ) = runTest {
+        // Arrange & Act
+        val model = createModel(accountFlow = accountFlow)
         advanceUntilIdle()
 
         // Assert
@@ -451,10 +456,13 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         model.onDestroy()
     }
 
-    @Test
-    fun `GIVEN Withdraw flow WHEN filterTangemPayProviders THEN only CEX providers kept`() = runTest {
+    @ParameterizedTest
+    @MethodSource("provideProviderFilters")
+    fun `GIVEN an account flow and a pair source WHEN providers are filtered THEN only the allowed types are kept`(
+        filter: ProviderFilter,
+    ) = runTest {
         // Arrange
-        val model = createModel(accountFlow = AccountFlow.Withdraw)
+        val model = createModel(accountFlow = filter.accountFlow)
         val cexProvider = swapProvider(id = "cex-1", type = ExchangeProviderType.CEX)
         val dexProvider = swapProvider(id = "dex-1", type = ExchangeProviderType.DEX)
         val pair = SwapPairLeast(
@@ -462,42 +470,23 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             to = LeastTokenInfo(contractAddress = "0xto", network = "ethereum"),
             providers = listOf(cexProvider, dexProvider),
         )
+        val from = swapCurrencyStatus(account = filter.createSourceAccount(userWalletId))
+        val to = swapCurrencyStatus()
+        every {
+            swapInteractor.extractFromSwapCurrencyFromPair(pair, from, to)
+        } returns from.takeIf { filter.isPairSourceMatched }
 
         // Act
         val result = invokeFilterTangemPayProviders(
             model = model,
             pairs = listOf(pair),
-            fromSwapCurrencyStatus = swapCurrencyStatus(),
-            toSwapCurrencyStatus = swapCurrencyStatus(),
+            fromSwapCurrencyStatus = from,
+            toSwapCurrencyStatus = to,
         )
 
         // Assert
-        assertThat(result).hasSize(1)
-        assertThat(result.single().providers).containsExactly(cexProvider)
-    }
-
-    @Test
-    fun `GIVEN TopUp flow WHEN filterTangemPayProviders THEN providers unfiltered`() = runTest {
-        // Arrange
-        val model = createModel(accountFlow = AccountFlow.TopUp)
-        val cexProvider = swapProvider(id = "cex-1", type = ExchangeProviderType.CEX)
-        val dexProvider = swapProvider(id = "dex-1", type = ExchangeProviderType.DEX)
-        val pair = SwapPairLeast(
-            from = LeastTokenInfo(contractAddress = "0xfrom", network = "ethereum"),
-            to = LeastTokenInfo(contractAddress = "0xto", network = "ethereum"),
-            providers = listOf(cexProvider, dexProvider),
-        )
-
-        // Act
-        val result = invokeFilterTangemPayProviders(
-            model = model,
-            pairs = listOf(pair),
-            fromSwapCurrencyStatus = swapCurrencyStatus(),
-            toSwapCurrencyStatus = swapCurrencyStatus(),
-        )
-
-        // Assert — TopUp is not a withdrawal, so no CEX-only filter applies.
-        assertThat(result.single().providers).containsExactly(cexProvider, dexProvider)
+        assertThat(result.single().providers.map(SwapProvider::type)).containsExactlyElementsIn(filter.expectedTypes)
+        model.onDestroy()
     }
 
     // -------------------------------------------------------------------------
@@ -970,7 +959,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         topUp: AccountTopUp,
     ) = runTest {
         // Arrange
-        stubResolvedTopUpPair(toAccount = topUp.createAccount(userWalletId))
+        stubResolvedAccountPair(toAccount = topUp.createAccount(userWalletId))
 
         // Act
         val model = createModel(accountFlow = topUp.accountFlow)
@@ -990,7 +979,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         topUp: AccountTopUp,
     ) = runTest {
         // Arrange
-        val (from, _) = stubResolvedTopUpPair(toAccount = topUp.createAccount(userWalletId))
+        val (from, _) = stubResolvedAccountPair(toAccount = topUp.createAccount(userWalletId))
 
         // Act
         val model = createModel(accountFlow = topUp.accountFlow)
@@ -1045,10 +1034,101 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         }
 
     @Test
+    fun `GIVEN a money withdraw WHEN the state is built THEN the account is a locked source titled Withdraw`() =
+        runTest {
+            // Arrange
+            stubResolvedAccountPair(
+                fromAccount = Account.Money(userWalletId),
+                toAccount = Account.Personal.createMainAccount(userWalletId),
+            )
+
+            // Act
+            val model = createModel(accountFlow = AccountFlow.MoneyWithdraw)
+            advanceUntilIdle()
+
+            // Assert
+            val sendCard = model.uiState.sendCardData as SwapCardState.SwapCardData
+            assertThat(sendCard.isSelectionLocked).isTrue()
+            assertThat(sendCard.type.accountTitleUM).isEqualTo(
+                AccountTitleUM.Account(
+                    prefixText = resourceReference(R.string.swapping_from_account_title),
+                    name = resourceReference(R.string.money_account_main_name),
+                    icon = AccountIconUM.Money,
+                ),
+            )
+            assertThat(model.uiState.titleId).isEqualTo(R.string.tangempay_card_details_withdraw)
+            assertThat(model.uiState.changeCardsButtonState).isEqualTo(ChangeCardsButtonState.HIDDEN)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a money withdraw WHEN the tokens resolve THEN the fee is paid in the account token`() = runTest {
+        // Arrange
+        val (from, _) = stubResolvedAccountPair(
+            fromAccount = Account.Money(userWalletId),
+            toAccount = Account.Personal.createMainAccount(userWalletId),
+        )
+
+        // Act
+        val model = createModel(accountFlow = AccountFlow.MoneyWithdraw)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.dataState.feePaidCryptoCurrency).isSameInstanceAs(from.status)
+        coVerify(exactly = 0) {
+            getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId = any(), cryptoCurrencyStatus = any())
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a money withdraw WHEN the network coin fee is requested THEN it is refused`() = runTest {
+        // Arrange
+        stubResolvedAccountPair(
+            fromAccount = Account.Money(userWalletId),
+            toAccount = Account.Personal.createMainAccount(userWalletId),
+        )
+        every { swapTransferInteractor.shouldTransferInsteadOfSwap(any(), any()) } returns true
+        stubTransferState()
+        stubTransferStateBuilderPassthrough()
+        coEvery { swapTransferInteractor.loadFee(any(), any(), any()) } returns mockk<TransactionFee>().right()
+        val model = createModel(accountFlow = AccountFlow.MoneyWithdraw, dispatchers = deferredDispatchers())
+        advanceUntilIdle()
+        model.enterAmount("5")
+        advanceUntilIdle()
+
+        // Act
+        val result = model.feeSelectorRepository.loadFee()
+
+        // Assert
+        assertThat(result).isEqualTo(GetFeeError.UnknownError.left())
+        coVerify(exactly = 0) { swapTransferInteractor.loadFee(any(), any(), any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN a money withdraw WHEN the transfer is sent THEN the account is read again`() = runTest {
+        // Arrange
+        val model = createTopUpTransferModel(
+            accountFlow = AccountFlow.MoneyWithdraw,
+            toAccount = Account.Personal.createMainAccount(userWalletId),
+            fromAccount = Account.Money(userWalletId),
+        )
+
+        // Act
+        model.uiState.swapButton.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(userWalletId)) }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN a prediction top-up WHEN the state is built THEN the receive card shows the prediction account in USD`() =
         runTest {
             // Arrange
-            val (_, collateral) = stubResolvedTopUpPair()
+            val (_, collateral) = stubResolvedAccountPair()
 
             // Act
             val model = createModel(accountFlow = AccountFlow.PredictionTopUp)
@@ -1074,7 +1154,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     fun `GIVEN a collectibles top-up WHEN the state is built THEN the receive card shows the vault in USD and is locked`() =
         runTest {
             // Arrange
-            val (_, vault) = stubResolvedTopUpPair(toAccount = Account.Collectibles(userWalletId))
+            val (_, vault) = stubResolvedAccountPair(toAccount = Account.Collectibles(userWalletId))
 
             // Act
             val model = createModel(accountFlow = AccountFlow.CollectiblesTopUp)
@@ -1101,7 +1181,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     fun `GIVEN a prediction top-up WHEN the prediction balance changes THEN the receive card shows the new USD balance`() =
         runTest {
             // Arrange
-            val (_, collateral) = stubResolvedTopUpPair()
+            val (_, collateral) = stubResolvedAccountPair()
             val updatedAmount = BigDecimal("7.5")
             val updatedCollateralStatus = collateral.status.copy(
                 value = mockk<CryptoCurrencyStatus.Value>(relaxed = true) {
@@ -1137,7 +1217,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     fun `GIVEN a collectibles top-up WHEN the vault balance changes THEN the receive card shows the new USD balance`() =
         runTest {
             // Arrange
-            val (_, vault) = stubResolvedTopUpPair(toAccount = Account.Collectibles(userWalletId))
+            val (_, vault) = stubResolvedAccountPair(toAccount = Account.Collectibles(userWalletId))
             val updatedAmount = BigDecimal("7.5")
             val updatedVaultStatus = vault.status.copy(
                 value = mockk<CryptoCurrencyStatus.Value>(relaxed = true) {
@@ -1171,7 +1251,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     @Test
     fun `GIVEN a prediction top-up WHEN the state is built THEN the send card stays selectable`() = runTest {
         // Arrange
-        stubResolvedTopUpPair()
+        stubResolvedAccountPair()
 
         // Act
         val model = createModel(accountFlow = AccountFlow.PredictionTopUp)
@@ -1218,7 +1298,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
     @Test
     fun `GIVEN a prediction top-up WHEN reverse is clicked THEN the pair does not flip`() = runTest {
         // Arrange
-        val (from, collateral) = stubResolvedTopUpPair()
+        val (from, collateral) = stubResolvedAccountPair()
         val model = createModel(accountFlow = AccountFlow.PredictionTopUp)
         advanceUntilIdle()
 
@@ -2157,8 +2237,9 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         accountFlow: AccountFlow?,
         feeType: AnalyticsParam.FeeType = AnalyticsParam.FeeType.Normal,
         toAccount: Account = Account.Prediction(userWalletId),
+        fromAccount: Account = mockk<Account.CryptoPortfolio>(relaxed = true),
     ): SwapModel {
-        val from = swapCurrencyStatus()
+        val from = swapCurrencyStatus(account = fromAccount)
         val collateral = swapCurrencyStatus(currency = usdcPolygonToken(), account = toAccount)
         coEvery {
             initialCurrenciesResolver.invoke(
@@ -2307,7 +2388,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         accountFlow: AccountFlow?,
         toAccount: Account = Account.Prediction(userWalletId),
     ): SwapModel {
-        stubResolvedTopUpPair(toAccount)
+        stubResolvedAccountPair(toAccount)
         val provider = swapProvider(id = "changelly", type = ExchangeProviderType.CEX)
         every { swapTransferInteractor.shouldTransferInsteadOfSwap(any(), any()) } returns false
         coEvery { swapInteractor.getUnfulfilledReceiveRequirement(any()) } returns null
@@ -2367,11 +2448,12 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             productInstanceId = "instance",
         )
 
-    private fun stubResolvedTopUpPair(
+    private fun stubResolvedAccountPair(
         toAccount: Account = Account.Prediction(userWalletId),
+        fromAccount: Account = Account.Personal.createMainAccount(userWalletId),
     ): Pair<SwapCurrencyStatus, SwapCurrencyStatus> {
         val wallet = accountFlowUserWallet()
-        val from = buildSwapCurrencyStatus(wallet)
+        val from = buildSwapCurrencyStatus(wallet).copy(account = fromAccount)
         val to = buildSwapCurrencyStatus(wallet).copy(account = toAccount)
         coEvery {
             initialCurrenciesResolver.invoke(
@@ -2808,12 +2890,60 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
         return method.invoke(model, pairs, fromSwapCurrencyStatus, toSwapCurrencyStatus) as List<SwapPairLeast>
     }
 
+    class ProviderFilter(
+        val accountFlow: AccountFlow,
+        val source: String,
+        val createSourceAccount: (UserWalletId) -> Account,
+        val expectedTypes: List<ExchangeProviderType>,
+        val isPairSourceMatched: Boolean = true,
+    ) {
+        override fun toString(): String = "$accountFlow from $source"
+    }
+
     private companion object {
         @JvmStatic
         fun provideTransferFeeTypes() = listOf(
             AnalyticsParam.FeeType.Normal,
             AnalyticsParam.FeeType.Custom,
             AnalyticsParam.FeeType.Fixed,
+        )
+
+        @JvmStatic
+        fun provideWithdrawFlows() = listOf(AccountFlow.Withdraw, AccountFlow.MoneyWithdraw)
+
+        @JvmStatic
+        fun provideProviderFilters() = listOf(
+            ProviderFilter(
+                accountFlow = AccountFlow.Withdraw,
+                source = "portfolio",
+                createSourceAccount = { userWalletId -> Account.Personal.createMainAccount(userWalletId) },
+                expectedTypes = listOf(ExchangeProviderType.CEX),
+            ),
+            ProviderFilter(
+                accountFlow = AccountFlow.TopUp,
+                source = "portfolio",
+                createSourceAccount = { userWalletId -> Account.Personal.createMainAccount(userWalletId) },
+                expectedTypes = listOf(ExchangeProviderType.CEX, ExchangeProviderType.DEX),
+            ),
+            ProviderFilter(
+                accountFlow = AccountFlow.MoneyTopUp,
+                source = "portfolio",
+                createSourceAccount = { userWalletId -> Account.Personal.createMainAccount(userWalletId) },
+                expectedTypes = listOf(ExchangeProviderType.CEX, ExchangeProviderType.DEX),
+            ),
+            ProviderFilter(
+                accountFlow = AccountFlow.MoneyWithdraw,
+                source = "money account",
+                createSourceAccount = { userWalletId -> Account.Money(userWalletId) },
+                expectedTypes = listOf(ExchangeProviderType.CEX),
+            ),
+            ProviderFilter(
+                accountFlow = AccountFlow.MoneyWithdraw,
+                source = "money account the pair does not match",
+                createSourceAccount = { userWalletId -> Account.Money(userWalletId) },
+                expectedTypes = listOf(ExchangeProviderType.CEX),
+                isPairSourceMatched = false,
+            ),
         )
 
         @JvmStatic
