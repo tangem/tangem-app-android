@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -28,7 +29,12 @@ internal fun PredictionOrderDetailsCard(
     TangemSurface(modifier = modifier, color = TangemTheme.colors3.bg.secondary, shape = PolymarketCardShape) {
         Column {
             PredictionSlippageRow(slippage = slippage, divider = true, onClick = onSlippageClick)
-            PredictionTotalRow(value = total, isLoading = isTotalLoading, onClick = onTotalClick)
+            PredictionUsdValueRow(
+                value = total,
+                isLoading = isTotalLoading,
+                titleRes = R.string.prediction_fee_sheet_total,
+                onClick = onTotalClick,
+            )
         }
     }
 }
