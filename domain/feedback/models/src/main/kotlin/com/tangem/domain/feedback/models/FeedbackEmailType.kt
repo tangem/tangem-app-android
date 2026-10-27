@@ -74,6 +74,11 @@ sealed interface FeedbackEmailType {
             override val customerId: String,
         ) : Visa()
 
+        data class MoneyAccountRequest(
+            override val walletMetaInfo: WalletMetaInfo,
+            override val customerId: String,
+        ) : Visa()
+
         data class Activation(
             override val walletMetaInfo: WalletMetaInfo,
             override val customerId: String,
