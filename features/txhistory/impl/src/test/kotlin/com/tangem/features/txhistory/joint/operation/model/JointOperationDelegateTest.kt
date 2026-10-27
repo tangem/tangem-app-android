@@ -103,7 +103,7 @@ internal class JointOperationDelegateTest {
         every {
             transferResolver.resolve(safeTx = any(), currencies = any(), network = any(), safeAddress = any())
         } returns JointOperationTransfer(currency = jointCurrency, intent = TRANSFER_INTENT)
-        every { signersResolver.signers(jointAccount = any(), operation = any()) } returns SIGNERS
+        every { signersResolver.signers(jointAccount = any(), operation = any<JointOperation>()) } returns SIGNERS
         every {
             signersResolver.canSign(jointAccount = any(), operation = any(), ownerAddress = any())
         } returns true

@@ -6,14 +6,18 @@ import com.tangem.core.remote.json.NetworkJsonFactory
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.recents.TokenTransferJournal
+import com.tangem.domain.pay.model.recents.TokenTransferJournal.PAYMENT_ACCOUNT
 import com.tangem.spend.datasource.preferences.SpendPreferencesKeys
 import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.test.core.datastore.createAppPreferencesStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 
-internal class DefaultPaymentAccountRecentsStoreTest {
+internal class DefaultAccountRecentsStoreTest {
 
     private var nowMillis = 100L
     private val spendPreferencesKeys = SpendPreferencesKeys()
@@ -21,7 +25,7 @@ internal class DefaultPaymentAccountRecentsStoreTest {
         dispatchers = TestingCoroutineDispatcherProvider(),
         preferencesDataStore = MockStateDataStore(default = emptyPreferences()),
     )
-    private val store = DefaultPaymentAccountRecentsStore(
+    private val store = DefaultAccountRecentsStore(
         prefs = prefs,
         spendPreferencesKeys = spendPreferencesKeys,
         json = NetworkJsonFactory.create(),
@@ -31,7 +35,7 @@ internal class DefaultPaymentAccountRecentsStoreTest {
     @Test
     fun `GIVEN empty store WHEN getUsage THEN empty map`() = runTest {
         // Act
-        val actual = store.getUsage(WALLET_A)
+        val actual = store.getUsage(WALLET_A, PAYMENT_ACCOUNT)
 
         // Assert
         assertThat(actual).isEmpty()
@@ -41,12 +45,12 @@ internal class DefaultPaymentAccountRecentsStoreTest {
     fun `GIVEN two pairs used WHEN getUsage THEN both timestamps kept`() = runTest {
         // Arrange
         nowMillis = 100L
-        store.markUsed(WALLET_A, accountId = ACCOUNT_1, currencyId = COIN_ID)
+        store.markUsed(WALLET_A, PAYMENT_ACCOUNT, accountId = ACCOUNT_1, currencyId = COIN_ID)
         nowMillis = 200L
-        store.markUsed(WALLET_A, accountId = ACCOUNT_2, currencyId = TOKEN_ID)
+        store.markUsed(WALLET_A, PAYMENT_ACCOUNT, accountId = ACCOUNT_2, currencyId = TOKEN_ID)
 
         // Act
-        val actual = store.getUsage(WALLET_A)
+        val actual = store.getUsage(WALLET_A, PAYMENT_ACCOUNT)
 
         // Assert
         assertThat(actual).containsExactly(ACCOUNT_1 to COIN_ID, 100L, ACCOUNT_2 to TOKEN_ID, 200L)
@@ -56,24 +60,43 @@ internal class DefaultPaymentAccountRecentsStoreTest {
     fun `GIVEN the same pair used twice WHEN getUsage THEN latest timestamp wins`() = runTest {
         // Arrange
         nowMillis = 100L
-        store.markUsed(WALLET_A, accountId = ACCOUNT_1, currencyId = COIN_ID)
+        store.markUsed(WALLET_A, PAYMENT_ACCOUNT, accountId = ACCOUNT_1, currencyId = COIN_ID)
         nowMillis = 300L
-        store.markUsed(WALLET_A, accountId = ACCOUNT_1, currencyId = COIN_ID)
+        store.markUsed(WALLET_A, PAYMENT_ACCOUNT, accountId = ACCOUNT_1, currencyId = COIN_ID)
 
         // Act
-        val actual = store.getUsage(WALLET_A)
+        val actual = store.getUsage(WALLET_A, PAYMENT_ACCOUNT)
 
         // Assert
         assertThat(actual).containsExactly(ACCOUNT_1 to COIN_ID, 300L)
     }
 
+    @ParameterizedTest
+    @EnumSource(TokenTransferJournal::class)
+    fun `GIVEN a pair used in one journal WHEN getUsage THEN only that journal holds it`(
+        journal: TokenTransferJournal,
+    ) = runTest {
+        // Arrange
+        nowMillis = 100L
+        store.markUsed(WALLET_A, journal, accountId = ACCOUNT_1, currencyId = COIN_ID)
+
+        // Act
+        val usageByJournal = TokenTransferJournal.entries.associateWith { store.getUsage(WALLET_A, it) }
+
+        // Assert
+        val expected = TokenTransferJournal.entries.associateWith { entry ->
+            if (entry == journal) mapOf(ACCOUNT_1 to COIN_ID to 100L) else emptyMap()
+        }
+        assertThat(usageByJournal).isEqualTo(expected)
+    }
+
     @Test
     fun `GIVEN usage on one wallet WHEN getUsage for another THEN empty`() = runTest {
         // Arrange
-        store.markUsed(WALLET_A, accountId = ACCOUNT_1, currencyId = COIN_ID)
+        store.markUsed(WALLET_A, PAYMENT_ACCOUNT, accountId = ACCOUNT_1, currencyId = COIN_ID)
 
         // Act
-        val actual = store.getUsage(WALLET_B)
+        val actual = store.getUsage(WALLET_B, PAYMENT_ACCOUNT)
 
         // Assert
         assertThat(actual).isEmpty()
@@ -88,7 +111,7 @@ internal class DefaultPaymentAccountRecentsStoreTest {
         }
 
         // Act
-        val actual = store.getUsage(WALLET_A)
+        val actual = store.getUsage(WALLET_A, PAYMENT_ACCOUNT)
 
         // Assert
         assertThat(actual).containsExactly(ACCOUNT_1 to COIN_ID, 100L)
@@ -109,7 +132,7 @@ internal class DefaultPaymentAccountRecentsStoreTest {
         }
 
         // Act
-        val actual = store.getUsage(WALLET_A)
+        val actual = store.getUsage(WALLET_A, PAYMENT_ACCOUNT)
 
         // Assert
         assertThat(actual).isEmpty()
@@ -124,7 +147,7 @@ internal class DefaultPaymentAccountRecentsStoreTest {
         }
 
         // Act
-        val actual = store.getUsage(WALLET_A)
+        val actual = store.getUsage(WALLET_A, PAYMENT_ACCOUNT)
 
         // Assert
         assertThat(actual).isEmpty()
@@ -140,10 +163,10 @@ internal class DefaultPaymentAccountRecentsStoreTest {
         nowMillis = 400L
 
         // Act
-        store.markUsed(WALLET_A, accountId = ACCOUNT_1, currencyId = COIN_ID)
+        store.markUsed(WALLET_A, PAYMENT_ACCOUNT, accountId = ACCOUNT_1, currencyId = COIN_ID)
 
         // Assert
-        assertThat(store.getUsage(WALLET_A)).containsExactly(ACCOUNT_1 to COIN_ID, 400L)
+        assertThat(store.getUsage(WALLET_A, PAYMENT_ACCOUNT)).containsExactly(ACCOUNT_1 to COIN_ID, 400L)
     }
 
     private companion object {

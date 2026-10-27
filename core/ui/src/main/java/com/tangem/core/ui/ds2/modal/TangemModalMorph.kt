@@ -98,10 +98,11 @@ internal class ModalMorphGeometry {
     var isFocused: Boolean by mutableStateOf(false)
 
     /**
-     * 0..1 share of the focus-driven expansion: a card with a focused field grows to the full
-     * height (and back when focus clears), regardless of its content height — the iOS
-     * keyboard-detent behavior. Independent of [animatedFullness] so a focus change mid-morph
-     * cannot jump the card height.
+     * 0..1 share of the keyboard the card makes room for: a card with a focused field grows by the
+     * keyboard's overlap (and back when focus clears), so its content ends right above the
+     * keyboard instead of the card stretching to the full height. The share gates the IME inset, so
+     * a card with nothing focused ignores a keyboard opened for another modal. Independent of
+     * [animatedFullness] so a focus change mid-morph cannot jump the card height.
      */
     val focusExpansion = Animatable(initialValue = 0f)
 
@@ -122,7 +123,7 @@ internal class ModalMorphGeometry {
 
     /**
      * Gap (px) between the card's bottom edge and the window's bottom edge — the resting margin plus the
-     * navigation-bar clearance that has not moved inside the card yet. [modalCardFill] subtracts it from the IME
+     * navigation-bar clearance that has not moved inside the card yet. The carve subtracts it from the IME
      * inset, which is measured from the window bottom. Plain value, like [contentBottomInset].
      */
     var cardBottomMargin: Int = 0
@@ -198,7 +199,8 @@ private val ModalMorphAnimationSpec: AnimationSpec<Float> = spring(stiffness = S
  * Animates [ModalMorphGeometry] between its measured targets: the first target is adopted without
  * animation — a modal whose content is full-height from the start opens already edge-to-edge — and
  * every later change (content growing to the screen height or shrinking back) plays the morph.
- * A field gaining or losing focus plays the same spring on [ModalMorphGeometry.focusExpansion].
+ * A field gaining or losing focus plays the same spring on [ModalMorphGeometry.focusExpansion], so the
+ * room the card makes for the keyboard follows the focus rather than appearing at once.
  */
 @Composable
 @PublishedApi
@@ -252,10 +254,32 @@ internal fun modalMorphTarget(intrinsicHeight: Int, maxHeight: Int): Float {
  * of the keyboard that overlaps the card, whichever is taller. The IME inset already spans the navigation bar and is
  * measured from the window bottom, so the card's own [cardBottomMargin] above that edge is taken off it — adding
  * the two would float the content a navigation bar above the keyboard.
+ *
+ * [modalCardLayout] adds the strip to the card height and [modalCardFill] carves it back out, so the content keeps
+ * its natural height and ends right above the keyboard.
  */
 @PublishedApi
 internal fun modalContentBottomCarve(navClearance: Int, imeBottom: Int, cardBottomMargin: Int, cardHeight: Int): Int {
     return max(navClearance, imeBottom - cardBottomMargin).coerceIn(0, cardHeight.coerceAtLeast(0))
+}
+
+/**
+ * Height of a card carrying [contentHeight] of content and the [contentCarve] strip it keeps clear at the bottom,
+ * capped at [maxCardHeight]. A card only ever grows as far as its own content needs — a keyboard under short
+ * content stretches the card just enough to reach over it, never to the full height.
+ */
+@PublishedApi
+internal fun modalCardHeight(contentHeight: Int, contentCarve: Int, maxCardHeight: Int): Int {
+    return (contentHeight + contentCarve).coerceIn(0, maxCardHeight.coerceAtLeast(0))
+}
+
+/**
+ * How much of [imeBottom] the card has to make room for: the keyboard counts only for the card holding the
+ * focus, and only as far as [focusExpansion] has run — so the modal under the one being typed in ignores it.
+ */
+@PublishedApi
+internal fun modalKeyboardInset(imeBottom: Int, focusExpansion: Float): Int {
+    return (imeBottom * focusExpansion).roundToInt().coerceAtLeast(0)
 }
 
 /**
@@ -301,17 +325,23 @@ internal fun combinedOpenProgress(openProgress: Float, backProgress: Float): Flo
  * the measured target lands in [ModalMorphGeometry.target] and the layout renders the spring-driven
  * value chasing it (see [ModalMorphAnimationEffect]), re-measuring per animation frame.
  *
- * A focused field (see [ModalMorphGeometry.isFocused]) expands the card to the full height
- * regardless of its content height — the height rides [ModalMorphGeometry.focusExpansion] between
- * the natural and the full height, and the edge-to-edge chrome follows whichever of the two
- * drivers is further along.
+ * A focused field (see [ModalMorphGeometry.isFocused]) makes the card taller by the part of the
+ * keyboard that overlaps it, which [modalCardFill] then carves back out: the content keeps its own
+ * height and lands right above the keyboard, instead of the card stretching to the full height and
+ * leaving a void between the content and the keyboard. The allowance rides
+ * [ModalMorphGeometry.focusExpansion], so a card with nothing focused — the modal under the one
+ * being typed in — ignores the keyboard altogether.
  *
  * The content height is probed via intrinsic measurement, so the modal content must support
  * intrinsics (the built-in scrollable wrapper does; avoid a top-level lazy list as direct
  * content). [geometry] receives the resulting flatten progress for the shape and opacity.
  */
 @PublishedApi
-internal fun Modifier.modalCardLayout(geometry: ModalMorphGeometry, windowInsets: WindowInsets): Modifier {
+internal fun Modifier.modalCardLayout(
+    geometry: ModalMorphGeometry,
+    windowInsets: WindowInsets,
+    imeInsets: WindowInsets,
+): Modifier {
     return layout { measurable, constraints ->
         val maxWidth = constraints.maxWidth
         // The status bar is the only height limit: a card as tall as its content gets it.
@@ -330,9 +360,7 @@ internal fun Modifier.modalCardLayout(geometry: ModalMorphGeometry, windowInsets
 
         val target = modalMorphTarget(intrinsicHeight = intrinsicHeight, maxHeight = maxHeight)
         if (geometry.target != target) geometry.target = target
-        val contentFullness = if (geometry.isAnimationDriven) geometry.animatedFullness.value else target
-        val focusExpansion = geometry.focusExpansion.value
-        val fullness = max(contentFullness, focusExpansion)
+        val fullness = if (geometry.isAnimationDriven) geometry.animatedFullness.value else target
         if (geometry.flatten != fullness) geometry.flatten = fullness
 
         val navBottom = windowInsets.getBottom(this)
@@ -345,8 +373,21 @@ internal fun Modifier.modalCardLayout(geometry: ModalMorphGeometry, windowInsets
         geometry.cardBottomMargin = bottomInset
 
         val maxCardHeight = (maxHeight - bottomInset).coerceAtLeast(0)
-        val naturalHeight = (contentHeight + navInset).coerceAtMost(maxCardHeight)
-        val cardHeight = lerp(naturalHeight, maxCardHeight, focusExpansion)
+        val contentCarve = modalContentBottomCarve(
+            navClearance = navInset,
+            imeBottom = modalKeyboardInset(
+                imeBottom = imeInsets.getBottom(this),
+                focusExpansion = geometry.focusExpansion.value,
+            ),
+            cardBottomMargin = bottomInset,
+            cardHeight = maxCardHeight,
+        )
+
+        val cardHeight = modalCardHeight(
+            contentHeight = contentHeight,
+            contentCarve = contentCarve,
+            maxCardHeight = maxCardHeight,
+        )
         val cardWidth = (maxWidth - 2 * sideInset).coerceAtLeast(0)
 
         val placeable = measurable.measure(Constraints.fixed(cardWidth, cardHeight))
@@ -367,8 +408,11 @@ internal fun Modifier.modalCardLayout(geometry: ModalMorphGeometry, windowInsets
  *
  * The bottom of the card carves out [ModalMorphGeometry.contentBottomInset] — the navigation-bar
  * clearance an edge-to-edge card provides *inside* instead of as a bottom margin — or, while the
- * keyboard is up, the part of [imeInsets] that overlaps the card (see [modalContentBottomCarve]).
- * The inset is read during measurement, so the content follows the keyboard animation frame by frame.
+ * keyboard is up and the card holds the focus, the part of [imeInsets] that overlaps the card (see
+ * [modalContentBottomCarve]). [modalCardLayout] carries the same strip in the card height, so carving
+ * it leaves the content at its own height, ending right above the keyboard. The insets are read here
+ * during measurement, so the content follows the keyboard animation frame by frame even on the frames
+ * where the card height no longer moves.
  *
  * Intrinsic queries pass straight through to the content — deliberately without the inset — so the
  * height probe of [modalCardLayout] reads the content's own intrinsics (a `Column` computes those
@@ -404,7 +448,10 @@ private class ModalCardFillNode(
         val cardHeight = constraints.maxHeight
         val bottomInset = modalContentBottomCarve(
             navClearance = geometry.contentBottomInset,
-            imeBottom = imeInsets.getBottom(this),
+            imeBottom = modalKeyboardInset(
+                imeBottom = imeInsets.getBottom(this),
+                focusExpansion = geometry.focusExpansion.value,
+            ),
             cardBottomMargin = geometry.cardBottomMargin,
             cardHeight = cardHeight,
         )
