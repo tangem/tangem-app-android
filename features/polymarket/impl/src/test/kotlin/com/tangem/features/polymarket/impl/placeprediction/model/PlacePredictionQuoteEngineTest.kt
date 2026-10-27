@@ -1,11 +1,14 @@
 package com.tangem.features.polymarket.impl.placeprediction.model
 
+import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -65,26 +68,18 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
     }
 
     @Test
-    fun `GIVEN price request pending WHEN engine held before it answers THEN state unchanged`() = runTest {
+    fun `GIVEN balance emitted before hold WHEN delivered after hold THEN balance not applied`() = runTest {
         // Arrange
-        val price = CompletableDeferred<Unit>()
-        coEvery { getPriceUseCase(assetId = any(), side = any()) } coAnswers {
-            price.await()
-            BigDecimal("0.91").right()
-        }
         val (engine, uiState) = createEngine()
         advanceUntilIdle()
-        engine.onResume()
-        runCurrent()
-        val before = uiState.value
+        statusFlow.value = activeStatus(balance = BigDecimal("50"))
 
         // Act
         engine.holdForSubmit()
-        price.complete(Unit)
-        runCurrent()
+        advanceUntilIdle()
 
         // Assert
-        assertThat(uiState.value).isEqualTo(before)
+        assertThat((uiState.value.order as OrderSideUM.Buy).balance).isEqualTo(BigDecimal("100"))
     }
 
     @Test
@@ -171,6 +166,111 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
 
         // Assert
         coVerify(exactly = 0) { getPriceUseCase(assetId = any(), side = any()) }
+    }
+
+    @Test
+    fun `GIVEN engine held WHEN funding window opens THEN awaiting funds not applied`() = runTest {
+        // Arrange
+        val (engine, uiState) = createEngine()
+        advanceUntilIdle()
+        engine.holdForSubmit()
+
+        // Act
+        isFundingOpen.value = true
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(uiState.value.isAwaitingFunds).isFalse()
+    }
+
+    @Test
+    fun `GIVEN funding window opened while held WHEN released THEN awaiting funds applied`() = runTest {
+        // Arrange
+        val (engine, uiState) = createEngine()
+        advanceUntilIdle()
+        engine.holdForSubmit()
+        isFundingOpen.value = true
+        advanceUntilIdle()
+
+        // Act
+        engine.release()
+
+        // Assert
+        assertThat(uiState.value.isAwaitingFunds).isTrue()
+    }
+
+    @Test
+    fun `GIVEN engine held WHEN trading permission answered on resume THEN permission not applied`() = runTest {
+        // Arrange
+        coEvery { checkGeoblockUseCase() } returns PolymarketOnboardingError.Network.left()
+        val (engine, uiState) = createEngine()
+        advanceUntilIdle()
+        coEvery { checkGeoblockUseCase() } returns false.right()
+        engine.holdForSubmit()
+
+        // Act
+        engine.onResume()
+        runCurrent()
+
+        // Assert
+        assertThat(uiState.value.tradingPermission).isEqualTo(TradingPermissionUM.Unknown)
+
+        engine.onPause()
+    }
+
+    @Test
+    fun `GIVEN trading permission answered while held WHEN released THEN permission applied`() = runTest {
+        // Arrange
+        coEvery { checkGeoblockUseCase() } returns PolymarketOnboardingError.Network.left()
+        val (engine, uiState) = createEngine()
+        advanceUntilIdle()
+        coEvery { checkGeoblockUseCase() } returns false.right()
+        engine.holdForSubmit()
+        engine.onResume()
+        runCurrent()
+
+        // Act
+        engine.release()
+
+        // Assert
+        assertThat(uiState.value.tradingPermission).isEqualTo(TradingPermissionUM.Allowed)
+
+        engine.onPause()
+    }
+
+    @Test
+    fun `GIVEN sell position lost and engine held WHEN quote retried THEN position not reloaded`() = runTest {
+        // Arrange
+        coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns null.right()
+        val (engine, uiState) = createEngine(params = SELL_PARAMS)
+        advanceUntilIdle()
+        engine.holdForSubmit()
+
+        // Act
+        engine.retryQuote()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat((uiState.value.order as OrderSideUM.Sell).position).isEqualTo(SellPositionUM.NotHeld)
+        coVerify(exactly = 1) { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) }
+    }
+
+    @Test
+    fun `GIVEN resumed engine not held WHEN released THEN no extra price request`() = runTest {
+        // Arrange
+        val (engine, _) = createEngine()
+        advanceUntilIdle()
+        engine.onResume()
+        runCurrent()
+
+        // Act
+        engine.release()
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 1) { getPriceUseCase(assetId = any(), side = any()) }
+
+        engine.onPause()
     }
 
     private fun TestScope.createEngine(
