@@ -5,6 +5,8 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
@@ -48,6 +50,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.parallel.ResourceLock
@@ -67,6 +70,7 @@ internal class SendIntentModelTest {
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val sourceResolver: SendIntentSourceResolver = mockk()
     private val mcpRepository: McpRepository = mockk()
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val amountTextConverter = SendIntentAmountTextConverter()
     private val offerConverter = SendIntentOfferConverter(amountTextConverter)
     private val processedConverter = SendIntentProcessedConverter(amountTextConverter)
@@ -100,6 +104,7 @@ internal class SendIntentModelTest {
             userWalletsListRepository,
             sourceResolver,
             mcpRepository,
+            analyticsEventHandler,
         )
         rootStack = emptyList()
         every { router.navigate(any(), any()) } answers {
@@ -243,7 +248,7 @@ internal class SendIntentModelTest {
             coEvery { getSendIntentUseCase(INTENT_ID) } returns ApiResponseError.NetworkException().left()
         },
         CloseModel(description = "wallet does not send from the intent address") {
-            coEvery { sourceResolver.resolve(walletId, any()) } returns SendIntentSource.NotFound
+            coEvery { sourceResolver.resolve(walletId, any()) } returns SendIntentSource.TokenMissing
         },
         CloseModel(description = "accounts of the wallet cannot be read") {
             coEvery { sourceResolver.resolve(walletId, any()) } returns null
@@ -317,7 +322,7 @@ internal class SendIntentModelTest {
         runTest {
             // Arrange
             coEvery { getSendIntentUseCase(INTENT_ID) } returns intent.copy(isHandled = true).right()
-            coEvery { sourceResolver.resolve(walletId, any()) } returns SendIntentSource.NotFound
+            coEvery { sourceResolver.resolve(walletId, any()) } returns SendIntentSource.TokenMissing
 
             // Act
             val model = createModel(testScope = this)
@@ -589,6 +594,152 @@ internal class SendIntentModelTest {
         model.onDestroy()
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Analytics {
+
+        @Test
+        fun `GIVEN open intent WHEN offer is shown THEN screen opened names the agent and the token`() = runTest {
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sentEvents()).containsExactly(
+                "[MCP Intent] Intent Screen Opened" to mapOf(
+                    "Intent Type" to "send",
+                    "Agent Name" to "mcp.claude.com",
+                    "Blockchain" to usdt.network.name,
+                    "Token" to usdt.symbol,
+                    "Intent Id" to INTENT_ID,
+                ),
+            )
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN intent that is not offered WHEN its sheet is shown THEN load failed carries the reason`(
+            testModel: LoadFailedModel,
+        ) = runTest {
+            // Arrange
+            testModel.arrange()
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sentEvents()).containsExactly(loadFailed(testModel.expectedReason, testModel.expectedErrorCode))
+            model.onDestroy()
+        }
+
+        private fun provideTestModels() = listOf(
+            LoadFailedModel("intent not found", "Not Found", "INTENT_NOT_FOUND") {
+                coEvery { getSendIntentUseCase(INTENT_ID) } returns SendIntentError.NotFound(INTENT_ID).left()
+            },
+            LoadFailedModel("completed by the service", "Already Processed", "INTENT_ALREADY_COMPLETED") {
+                coEvery { getSendIntentUseCase(INTENT_ID) } returns SendIntentError.AlreadyCompleted(INTENT_ID).left()
+            },
+            LoadFailedModel("no connection", "Unreachable") {
+                coEvery { getSendIntentUseCase(INTENT_ID) } returns SendIntentError.Unreachable(INTENT_ID).left()
+            },
+            LoadFailedModel("malformed amount from the service", "Invalid Amount") {
+                coEvery { getSendIntentUseCase(INTENT_ID) } returns
+                    SendIntentError.MalformedAmount(INTENT_ID, "many").left()
+            },
+            LoadFailedModel("unknown read error", "Unknown") {
+                coEvery { getSendIntentUseCase(INTENT_ID) } returns ApiResponseError.NetworkException().left()
+            },
+            LoadFailedModel("already carried out", "Already Processed") {
+                coEvery { getSendIntentUseCase(INTENT_ID) } returns intent.copy(isHandled = true).right()
+            },
+            LoadFailedModel("token not in the wallet", "Token Missing") {
+                coEvery { sourceResolver.resolve(walletId, any()) } returns SendIntentSource.TokenMissing
+            },
+            LoadFailedModel("token held at other addresses", "Wrong Wallet") {
+                coEvery { sourceResolver.resolve(walletId, any()) } returns SendIntentSource.OtherSender
+            },
+            LoadFailedModel("accounts unreadable", "Unknown") {
+                coEvery { sourceResolver.resolve(walletId, any()) } returns null
+            },
+            LoadFailedModel("amount does not fit the decimals", "Invalid Amount") {
+                coEvery { getSendIntentUseCase(INTENT_ID) } returns intent.copy(amount = BigDecimal("0.1234565")).right()
+            },
+        )
+
+        @Test
+        fun `GIVEN offer WHEN proceed twice and send opens THEN continue is sent once`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            val proceed = model.shownOffer().primaryButton.onClick
+
+            // Act
+            proceed()
+            proceed()
+
+            // Assert
+            assertThat(sentEvents().filter { it.first == "[MCP Intent] Button - Continue" }).containsExactly(
+                "[MCP Intent] Button - Continue" to mapOf("Intent Type" to "send", "Intent Id" to INTENT_ID),
+            )
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN offer WHEN send cannot be opened THEN load failed is sent instead of continue`() = runTest {
+            // Arrange
+            every { router.navigate(any(), any()) } answers { secondArg<(Boolean) -> Unit>().invoke(false) }
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.shownOffer().primaryButton.onClick()
+
+            // Assert
+            assertThat(sentEvents().last()).isEqualTo(loadFailed(reason = "Send Not Opened"))
+            assertThat(sentEvents().map { it.first }).doesNotContain("[MCP Intent] Button - Continue")
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN no wallet is selected WHEN model created THEN no analytics is sent`() = runTest {
+            // Arrange
+            coEvery { userWalletsListRepository.selectedUserWalletSync() } returns null
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sentEvents()).isEmpty()
+            model.onDestroy()
+        }
+
+        private fun loadFailed(reason: String, errorCode: String? = null) =
+            "[MCP Intent] Intent Load Failed" to buildMap {
+                put("Intent Type", "send")
+                put("Reason", reason)
+                errorCode?.let { put("Error Code", it) }
+                put("Intent Id", INTENT_ID)
+            }
+    }
+
+    data class LoadFailedModel(
+        val description: String,
+        val expectedReason: String,
+        val expectedErrorCode: String? = null,
+        val arrange: () -> Unit,
+    ) {
+        override fun toString() = description
+    }
+
+    private fun sentEvents(): List<Pair<String, Map<String, String>>> {
+        val events = mutableListOf<AnalyticsEvent>()
+        verify(atLeast = 0) { analyticsEventHandler.send(capture(events)) }
+        return events.map { it.id to it.params }
+    }
+
     private fun SendIntentModel.shownOffer(): SendIntentUM.Offer = sheet.value as SendIntentUM.Offer
 
     private fun SendIntentModel.shownStatus(): SendIntentUM.Status = sheet.value as SendIntentUM.Status
@@ -608,6 +759,7 @@ internal class SendIntentModelTest {
         processedConverter = processedConverter,
         cantReachConverter = cantReachConverter,
         sendRouteConverter = sendRouteConverter,
+        analyticsEventHandler = analyticsEventHandler,
         paramsContainer = MutableParamsContainer(value = SendIntentComponent.Params(intentId = INTENT_ID)),
     )
 
