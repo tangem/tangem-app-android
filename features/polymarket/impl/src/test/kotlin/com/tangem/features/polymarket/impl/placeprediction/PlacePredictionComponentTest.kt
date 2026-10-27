@@ -31,6 +31,7 @@ import com.tangem.features.polymarket.impl.placeprediction.model.QUOTE_DEBOUNCE_
 import com.tangem.features.polymarket.impl.placeprediction.model.QUOTE_POLL_INTERVAL_MILLIS
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import dagger.hilt.EntryPoints
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -234,6 +235,38 @@ internal class PlacePredictionComponentTest : PlacePredictionModelTestBase() {
         verify(exactly = 1) { router.pop(any()) }
         lifecycle.destroy()
     }
+
+    @Test
+    fun `GIVEN signing on the order screen WHEN the app pauses and resumes THEN nothing is requested until it ends`() =
+        runTest {
+            // Arrange
+            val signature = CompletableDeferred<Unit>()
+            coEvery { signOrderInteractor(any()) } coAnswers {
+                signature.await()
+                PredictionOrderFailure.Signing(PolymarketSigningError.UserCancelled).left()
+            }
+            createComponent(this, isQuickOrderEnabled = true)
+            runCurrent()
+            val order = models.filterIsInstance<PlacePredictionOrderModel>().single()
+            order.onAmountChange("10")
+            advanceTimeBy(QUOTE_DEBOUNCE_MILLIS + 1)
+            order.onPlaceClick()
+            runCurrent()
+            clearMocks(getQuoteUseCase, getPriceUseCase, answers = false)
+
+            // Act
+            lifecycle.pause()
+            lifecycle.resume()
+            advanceTimeBy(QUOTE_POLL_INTERVAL_MILLIS * 3)
+
+            // Assert
+            coVerify(exactly = 0) { getQuoteUseCase(any()) }
+            coVerify(exactly = 0) { getPriceUseCase(assetId = any(), side = any()) }
+            signature.complete(Unit)
+            runCurrent()
+            coVerify(exactly = 1) { getQuoteUseCase(any()) }
+            lifecycle.destroy()
+        }
 
     private fun createComponent(scope: TestScope, isQuickOrderEnabled: Boolean = false) {
         val params = slot<ParamsContainer>()
