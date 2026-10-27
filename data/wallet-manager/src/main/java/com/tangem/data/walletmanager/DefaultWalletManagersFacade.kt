@@ -13,6 +13,7 @@ import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.common.address.EstimationFeeAddressFactory
 import com.tangem.blockchain.common.pagination.Page
+import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.smartcontract.SmartContractCallDataProviderFactory
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
@@ -97,6 +98,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     private val cryptoCurrencyTypeConverter by lazy { CryptoCurrencyTypeConverter() }
     private val requirementsConditionConverter by lazy { SdkRequirementsConditionConverter() }
     private val estimationFeeAddressFactory by lazy { EstimationFeeAddressFactory() }
+    private val yieldSendUpgradeDecisions = YieldSendUpgradeDecisions()
 
     private val wmInitializationMutexes = ConcurrentHashMap<String, Mutex>()
 
@@ -835,7 +837,9 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                     amount = amount,
                 )
                 if (yieldModuleFeatureToggles.isYieldModuleV3Enabled && isYieldModuleUpgradeAllowed) {
-                    walletManager.wrapWithYieldModuleUpgradeIfAvailable(sendCallData)
+                    walletManager.wrapWithYieldModuleUpgradeIfAvailable(sendCallData).also { estimatedCallData ->
+                        yieldSendUpgradeDecisions.remember(userWalletId, network, estimatedCallData)
+                    }
                 } else {
                     sendCallData
                 }
@@ -848,6 +852,22 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             destination = destination,
             callData = callData,
         )
+    }
+
+    override suspend fun wrapYieldSendWithModuleUpgrade(
+        userWalletId: UserWalletId,
+        network: Network,
+        callData: SmartContractCallData,
+    ): SmartContractCallData = withContext(dispatchers.io) {
+        yieldSendUpgradeDecisions.applyTo(userWalletId, network, callData)?.let { return@withContext it }
+
+        val walletManager = getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = network.toBlockchain(),
+            derivationPath = network.derivationPath.value,
+        ) ?: return@withContext callData
+
+        walletManager.wrapWithYieldModuleUpgradeIfAvailable(callData)
     }
 
     @Deprecated("Will be removed in future")
