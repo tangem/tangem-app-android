@@ -16,6 +16,7 @@ import kotlinx.collections.immutable.toPersistentList
 /**
  * Removes the hidden providers from quotes and currencies, then recalculates [SwapAmountUM.Content.swapRateMode]
  * from the remaining ones and moves the selected From/To field and rate type to what that mode still supports.
+ * Returns the same state instance when the providers are already removed, so a replayed set is a no-op.
  */
 internal class SwapAmountHideProvidersTransformer(
     private val providerIds: Set<String>,
@@ -25,8 +26,10 @@ internal class SwapAmountHideProvidersTransformer(
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {
         if (prevState !is SwapAmountUM.Content) return prevState
 
-        val quotes = prevState.swapQuotes.filterNot { quote -> quote.provider?.providerId in providerIds }
         val swapCurrencies = prevState.swapCurrencies.withoutProviders()
+        if (swapCurrencies == prevState.swapCurrencies) return prevState
+
+        val quotes = prevState.swapQuotes.filterNot { quote -> quote.provider?.providerId in providerIds }
         val swapRateMode = prevState.getSwapRateMode(swapCurrencies)
         return prevState.copy(
             swapCurrencies = swapCurrencies,

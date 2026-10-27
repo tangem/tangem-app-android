@@ -542,18 +542,16 @@ internal class SwapAmountModel @Inject constructor(
 
     private fun subscribeOnHiddenProvidersUpdates() {
         hiddenProvidersSubscriberJob = params.hiddenProviderIdsFlow
-            // Skips the replay on start: the state pushed from the parent already has these providers filtered out,
-            // and the immediate quotes reload would race with initCurrencies() (uninitialized boundaries)
-            .drop(1)
             .filter { hiddenProviderIds -> hiddenProviderIds.isNotEmpty() }
             .onEach { hiddenProviderIds ->
+                val prevState = uiState.value
                 uiState.transformerUpdate(
                     SwapAmountHideProvidersTransformer(
                         providerIds = hiddenProviderIds,
                         isBalanceHidden = params.isBalanceHidingFlow.value,
                     ),
                 )
-                startLoadingQuotesTask(isSilentReload = false)
+                if (uiState.value !== prevState) startLoadingQuotesTask(isSilentReload = false)
             }
             .launchIn(modelScope)
     }
