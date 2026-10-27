@@ -422,6 +422,28 @@ internal class TangemPayBankWithdrawModelTest {
     }
 
     @Test
+    fun `GIVEN amount confirmed WHEN destination changed THEN draft keeps amount source and the new destination`() {
+        // Arrange
+        val model = createModel(BankWithdrawEntry.NewPersonal)
+        model.onAmountConfirmed(achAmountResult())
+        val repriced = offrampDestination(fee = BigDecimal("1.50"), minDays = 2, maxDays = 4)
+
+        // Act
+        model.onDestinationChanged(repriced)
+
+        // Assert
+        assertThat(model.draft.value).isEqualTo(
+            BankWithdrawDraft(
+                entry = BankWithdrawEntry.NewPersonal,
+                amount = BigDecimal("500"),
+                source = bankWithdrawSource(),
+                destination = repriced,
+            ),
+        )
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN new personal entry WHEN model created THEN countries and us regions prefetched`() {
         // Act
         val model = createModel(BankWithdrawEntry.NewPersonal)
