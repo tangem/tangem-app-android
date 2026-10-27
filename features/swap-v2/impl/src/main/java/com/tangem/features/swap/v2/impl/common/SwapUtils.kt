@@ -19,7 +19,13 @@ internal object SwapUtils {
         // ExpressProviderType.DEX, // TODO disable until implemented in Send with Swap
     )
 
-    fun getExpressErrorMessage(expressError: ExpressError): TextReference {
+    fun getExpressErrorMessage(expressError: ExpressError, providerName: String? = null): TextReference {
+        if (providerName != null && expressError is ExpressError.ExchangeProviderAddressBannedByAmlError) {
+            return resourceReference(
+                id = R.string.express_error_transaction_cannot_be_created,
+                formatArgs = wrappedList(providerName, expressError.code),
+            )
+        }
         return when (expressError) {
             is ExpressError.InternalError -> resourceReference(
                 id = R.string.express_error_swap_unavailable,

@@ -72,6 +72,7 @@ internal class SwapNotificationsModel @Inject constructor(
 
     private suspend fun buildNotifications() {
         val notifications = buildList {
+            addUnsupportedPairNotification()
             addInsufficientFundsNotification()
             addExpressErrorNotification()
             maybeAddRegionRestrictionError()
@@ -147,6 +148,13 @@ internal class SwapNotificationsModel @Inject constructor(
         }
         if (totalRequired > balance) {
             add(SwapNotificationUM.Error.InsufficientFunds)
+        }
+    }
+
+    /** An empty quote means no provider is left, e.g. all were hidden */
+    private fun MutableList<NotificationUM>.addUnsupportedPairNotification() {
+        if (notificationData.quote is SwapQuoteUM.Empty) {
+            add(SwapNotificationUM.Warning.UnsupportedPair)
         }
     }
 

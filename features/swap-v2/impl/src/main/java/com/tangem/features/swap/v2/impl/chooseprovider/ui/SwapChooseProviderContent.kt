@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
@@ -59,6 +60,7 @@ fun SwapChooseProviderContent(
     onFinishAnimation: () -> Unit,
     showFCAWarning: Boolean,
     modifier: Modifier = Modifier,
+    isProviderUnavailable: Boolean = false,
 ) {
     Column(
         modifier = modifier.clickable(
@@ -91,6 +93,7 @@ fun SwapChooseProviderContent(
             SpacerWMax()
             ProviderInfo(
                 expressProvider = expressProvider,
+                isProviderUnavailable = isProviderUnavailable,
                 isBestRate = isBestRate,
                 isSingleProvider = isSingleProvider,
                 showBestRateAnimation = showBestRateAnimation,
@@ -126,9 +129,11 @@ private fun FcaProviderWarning(modifier: Modifier = Modifier) {
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun ProviderInfo(
     expressProvider: ExpressProvider?,
+    isProviderUnavailable: Boolean,
     isBestRate: Boolean,
     isSingleProvider: Boolean,
     showBestRateAnimation: Boolean,
@@ -137,30 +142,14 @@ private fun ProviderInfo(
 ) {
     ConstraintLayout(modifier = modifier) {
         val (imageRef, nameRef, iconRef) = createRefs()
-        SubcomposeAsyncImage(
-            model = ImageRequest.Builder(context = LocalContext.current)
-                .data(expressProvider?.imageLarge)
-                .crossfade(enable = true)
-                .allowHardware(false)
-                .build(),
-            loading = { RectangleShimmer(radius = 4.dp) },
-            error = {
-                Box(
-                    modifier = Modifier.background(
-                        color = TangemColorPalette.Light1,
-                        shape = RoundedCornerShape(4.dp),
-                    ),
-                )
+        ProviderImage(
+            expressProvider = expressProvider,
+            isProviderUnavailable = isProviderUnavailable,
+            modifier = Modifier.constrainAs(imageRef) {
+                start.linkTo(parent.start)
+                top.linkTo(parent.top, 14.dp)
+                bottom.linkTo(parent.bottom, 14.dp)
             },
-            contentDescription = null,
-            modifier = Modifier
-                .size(20.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .constrainAs(imageRef) {
-                    start.linkTo(parent.start)
-                    top.linkTo(parent.top, 14.dp)
-                    bottom.linkTo(parent.bottom, 14.dp)
-                },
         )
         Text(
             text = expressProvider?.name.orEmpty(),
@@ -197,6 +186,44 @@ private fun ProviderInfo(
             isBestRate = isBestRate && !isSingleProvider,
             ref = imageRef,
             onFinishAnimation = onFinishAnimation,
+        )
+    }
+}
+
+@Composable
+private fun ProviderImage(
+    expressProvider: ExpressProvider?,
+    isProviderUnavailable: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val imageModifier = modifier
+        .size(20.dp)
+        .clip(RoundedCornerShape(4.dp))
+    if (isProviderUnavailable) {
+        Icon(
+            painter = painterResource(id = R.drawable.ic_alert_circle_red_20),
+            tint = Color.Unspecified,
+            contentDescription = null,
+            modifier = imageModifier,
+        )
+    } else {
+        SubcomposeAsyncImage(
+            model = ImageRequest.Builder(context = LocalContext.current)
+                .data(expressProvider?.imageLarge)
+                .crossfade(enable = true)
+                .allowHardware(false)
+                .build(),
+            loading = { RectangleShimmer(radius = 4.dp) },
+            error = {
+                Box(
+                    modifier = Modifier.background(
+                        color = TangemColorPalette.Light1,
+                        shape = RoundedCornerShape(4.dp),
+                    ),
+                )
+            },
+            contentDescription = null,
+            modifier = imageModifier,
         )
     }
 }
