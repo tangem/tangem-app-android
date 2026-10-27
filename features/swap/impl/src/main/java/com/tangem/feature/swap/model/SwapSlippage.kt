@@ -3,6 +3,7 @@ package com.tangem.feature.swap.model
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.swap.models.SwapCurrencyStatus
@@ -36,6 +37,9 @@ internal object SwapSlippage {
     fun isLow(percent: BigDecimal, defaultPercent: BigDecimal): Boolean {
         return percent.multiply(PRESET_FACTOR) < defaultPercent
     }
+
+    /** Custom slippage is offered only for swaps into the wallet's own portfolio accounts. */
+    fun isCustomAvailableFor(toAccount: Account): Boolean = toAccount is Account.Personal
 }
 
 sealed interface SwapSlippageState {
