@@ -123,6 +123,7 @@ internal class NFTSendConfirmComponent @AssistedInject constructor(
                 fee = model.confirmData.fee,
                 feeError = model.confirmData.feeError,
                 feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
+                isNFTTransfer = true,
             ),
         ),
     )
