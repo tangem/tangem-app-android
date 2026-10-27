@@ -5,10 +5,10 @@ import com.appsflyer.AppsFlyerLib
 import com.appsflyer.attribution.AppsFlyerRequestListener
 import com.tangem.core.analytics.api.EventLogger
 import com.tangem.core.analytics.api.UserIdHolder
+import com.tangem.core.analytics.converters.UnderscoreAnalyticsEventConverter
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.tap.common.analytics.appsflyer.AppsFlyerDeepLinkListener
 import com.tangem.tap.common.analytics.appsflyer.TangemAFConversionListener
-import com.tangem.tap.common.analytics.handlers.firebase.UnderscoreAnalyticsEventConverter
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
