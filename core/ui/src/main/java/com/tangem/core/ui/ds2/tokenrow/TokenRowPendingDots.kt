@@ -37,10 +37,12 @@ import kotlin.math.min
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=9069-3158)
  *
- * The idle dot fades to [IDLE_ALPHA] and shrinks to [IDLE_SCALE]. Scaling happens in the draw layer,
- * so the indicator keeps a constant footprint and never reflows the title line it sits in.
+ * The dots are centred in a 16dp frame, the size of the Pending Status icon in Figma, so the first
+ * dot starts 6dp after a 4dp gap. The idle dot fades to [IDLE_ALPHA] and shrinks to [IDLE_SCALE].
+ * Scaling happens in the draw layer, so the indicator keeps a constant footprint and never reflows
+ * the title line it sits in.
  *
- * @param modifier Modifier applied to the dots row.
+ * @param modifier Modifier applied to the 16dp frame.
  * @param color Dot color. Highlighted dots use it as is, the idle one at [IDLE_ALPHA].
  */
 @Composable
@@ -60,24 +62,30 @@ internal fun TokenRowPendingDots(modifier: Modifier = Modifier, color: Color = T
         label = "TokenRowPendingDotsIdlePosition",
     )
 
-    Row(
-        modifier = modifier.progressSemantics(),
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    Box(
+        modifier = modifier
+            .size(16.dp)
+            .progressSemantics(),
+        contentAlignment = Alignment.Center,
     ) {
-        repeat(DOT_COUNT) { index ->
-            Box(
-                modifier = Modifier
-                    .size(3.dp)
-                    .graphicsLayer {
-                        val idleness = idleness(dotIndex = index, idlePosition = idlePosition)
-                        val scale = lerp(start = 1f, stop = IDLE_SCALE, fraction = idleness)
-                        scaleX = scale
-                        scaleY = scale
-                        alpha = lerp(start = 1f, stop = IDLE_ALPHA, fraction = idleness)
-                    }
-                    .background(color = color, shape = CircleShape),
-            )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            repeat(DOT_COUNT) { index ->
+                Box(
+                    modifier = Modifier
+                        .size(3.dp)
+                        .graphicsLayer {
+                            val idleness = idleness(dotIndex = index, idlePosition = idlePosition)
+                            val scale = lerp(start = 1f, stop = IDLE_SCALE, fraction = idleness)
+                            scaleX = scale
+                            scaleY = scale
+                            alpha = lerp(start = 1f, stop = IDLE_ALPHA, fraction = idleness)
+                        }
+                        .background(color = color, shape = CircleShape),
+                )
+            }
         }
     }
 }
