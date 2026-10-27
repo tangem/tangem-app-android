@@ -28,6 +28,16 @@ dependencies {
     implementation(platform(deps.firebase.bom))
     implementation(deps.firebase.analytics)
     implementation(deps.firebase.crashlytics)
+    implementation(platform(deps.otel.bom))
+    implementation(deps.otel.api)
+    implementation(deps.otel.sdk.common)
+    implementation(deps.otel.sdk.metrics)
+    implementation(deps.otel.exporter.otlp) {
+        // OTel is compiled against OkHttp 5, whose okhttp-jvm artifact duplicates the OkHttp 4
+        // classes already on the classpath; the sender runs on the project-wide OkHttp 4.12.
+        exclude(group = "com.squareup.okhttp3", module = "okhttp-jvm")
+    }
+    implementation(deps.otel.disk.buffering)
     // endregion
 
     // region AndroidX
@@ -47,6 +57,7 @@ dependencies {
 
     // region Domain
     implementation(projects.domain.analytics)
+    implementation(projects.domain.settings)
     // endregion
 
     // region Tests
