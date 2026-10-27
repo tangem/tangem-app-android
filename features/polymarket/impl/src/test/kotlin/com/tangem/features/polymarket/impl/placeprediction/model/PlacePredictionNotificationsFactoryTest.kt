@@ -483,7 +483,7 @@ internal class PlacePredictionNotificationsFactoryTest {
         @Test
         fun `GIVEN a covered amount awaiting its quote WHEN the gate runs THEN only the while-quoting flag is on`() {
             // Arrange
-            val state = createState(balance = BigDecimal("100"), quote = QuoteUM.Loading)
+            val state = createState(balance = BigDecimal("100"), quote = QuoteUM.Loading, isAwaitingFreshQuote = true)
 
             // Act
             val actual = state.recomputeGate()
@@ -496,7 +496,19 @@ internal class PlacePredictionNotificationsFactoryTest {
         @Test
         fun `GIVEN an amount above the balance awaiting its quote WHEN the gate runs THEN it stays blocked`() {
             // Arrange
-            val state = createState(balance = BigDecimal("5"), quote = QuoteUM.Loading)
+            val state = createState(balance = BigDecimal("5"), quote = QuoteUM.Loading, isAwaitingFreshQuote = true)
+
+            // Act
+            val actual = state.recomputeGate()
+
+            // Assert
+            assertThat(actual.isPrimaryButtonEnabledWhileQuoting).isFalse()
+        }
+
+        @Test
+        fun `GIVEN a reload of an amount already quoted WHEN the gate runs THEN the while-quoting flag is off`() {
+            // Arrange
+            val state = createState(balance = BigDecimal("100"), quote = QuoteUM.Loading, isAwaitingFreshQuote = false)
 
             // Act
             val actual = state.recomputeGate()
@@ -533,7 +545,11 @@ internal class PlacePredictionNotificationsFactoryTest {
         @Test
         fun `GIVEN the region is restricted WHEN the gate runs while quoting THEN it stays blocked`() {
             // Arrange
-            val state = createState(quote = QuoteUM.Loading, tradingPermission = TradingPermissionUM.Restricted)
+            val state = createState(
+                quote = QuoteUM.Loading,
+                isAwaitingFreshQuote = true,
+                tradingPermission = TradingPermissionUM.Restricted,
+            )
 
             // Act
             val actual = state.recomputeGate()
@@ -545,7 +561,7 @@ internal class PlacePredictionNotificationsFactoryTest {
         @Test
         fun `GIVEN an order is being signed WHEN the gate runs while quoting THEN it stays blocked`() {
             // Arrange
-            val state = createState(quote = QuoteUM.Loading, submit = SubmitUM.Signing)
+            val state = createState(quote = QuoteUM.Loading, isAwaitingFreshQuote = true, submit = SubmitUM.Signing)
 
             // Act
             val actual = state.recomputeGate()
@@ -564,6 +580,7 @@ internal class PlacePredictionNotificationsFactoryTest {
             val state = createState(
                 amountValue = amount,
                 quote = QuoteUM.Loading,
+                isAwaitingFreshQuote = true,
                 order = OrderSideUM.Sell(
                     position = SellPositionUM.Held(available = BigDecimal("10")),
                     proceeds = SharesProceedsUM.Unavailable,
@@ -589,6 +606,7 @@ internal class PlacePredictionNotificationsFactoryTest {
         priceError: PriceErrorUM? = null,
         isMarketAcceptingOrders: Boolean = true,
         order: OrderSideUM? = null,
+        isAwaitingFreshQuote: Boolean = false,
     ): PlacePredictionUM = PlacePredictionUM(
         priceError = priceError,
         market = MarketHeaderUM(
@@ -609,6 +627,7 @@ internal class PlacePredictionNotificationsFactoryTest {
         notifications = persistentListOf(),
         submit = submit,
         isPrimaryButtonEnabled = false,
+        isAwaitingFreshQuote = isAwaitingFreshQuote,
     )
 
     private fun createQuote(
