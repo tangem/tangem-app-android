@@ -54,12 +54,15 @@ internal fun StandaloneCtaMarketingBanner(
                 .padding(12.dp),
         ) {
             StandaloneCtaHeader(banner = banner, onDismiss = onDismiss)
-            SpacerH(12.dp)
-            PrimaryButton(
-                modifier = Modifier.fillMaxWidth(),
-                text = banner.buttonText.orEmpty(),
-                onClick = onClick,
-            )
+            val buttonText = banner.buttonText
+            if (!buttonText.isNullOrBlank()) {
+                SpacerH(12.dp)
+                PrimaryButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = buttonText,
+                    onClick = onClick,
+                )
+            }
         }
 
         if (banner.hasGlow) {
@@ -157,6 +160,7 @@ private class StandaloneCtaMarketingBannerPreviewProvider : PreviewParameterProv
             waitlist,
             waitlist.copy(isDismissible = true, hasGlow = false),
             waitlist.copy(subtitle = null, hasGlow = false),
+            waitlist.copy(buttonText = null, hasGlow = false),
         )
 }
 
