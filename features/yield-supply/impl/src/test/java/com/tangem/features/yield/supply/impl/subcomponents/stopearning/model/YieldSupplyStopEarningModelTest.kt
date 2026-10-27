@@ -5,6 +5,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.MerklClaimCallData
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.core.analytics.models.AnalyticsEvent
@@ -494,6 +495,45 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
             }
 
         @Test
+        fun `GIVEN a claim wrapped in a module upgrade WHEN withdrawing THEN the claim hash is followed`() = runTest {
+            // Arrange
+            val callData = MerklClaimCallData.fromHex(CLAIM_CALL_DATA)
+            val upgradeClaimTransaction = claimTransaction.copy(
+                extras = EthereumTransactionExtras(
+                    callData = EthereumYieldSupplyUpgradeToAndCallCallData(
+                        newImplementation = LATEST_IMPLEMENTATION,
+                        innerCallData = callData,
+                    ),
+                ),
+            )
+            coEvery {
+                withdrawalClaimPreparer.prepare(userWallet = any(), cryptoCurrencyStatus = any())
+            } returns readyPreClaim(transactionData = upgradeClaimTransaction)
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Act
+            model.onClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sentBatch().first()).isEqualTo(upgradeClaimTransaction)
+            verify {
+                claimTracker.track(
+                    userWalletId = userWalletId,
+                    cryptoCurrency = token,
+                    chainId = CHAIN_ID,
+                    userAddress = SOURCE_ADDRESS,
+                    transactionHash = CLAIM_HASH,
+                    claimedRewards = listOf(MockYieldSupply.reward()),
+                    origin = YieldSupplyClaimOrigin.Withdrawal,
+                )
+            }
+
+            model.onDestroy()
+        }
+
+        @Test
         fun `GIVEN the fee currency is not found WHEN the fee loads THEN the withdrawal goes without the claim`() =
             runTest {
                 // Arrange
@@ -547,8 +587,11 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
             return sent.captured
         }
 
-        private fun readyPreClaim(preparedAt: TimeMark = TestTimeSource().markNow()) = YieldPreClaim.Ready(
-            transactionData = claimTransaction,
+        private fun readyPreClaim(
+            preparedAt: TimeMark = TestTimeSource().markNow(),
+            transactionData: TransactionData.Uncompiled = claimTransaction,
+        ) = YieldPreClaim.Ready(
+            transactionData = transactionData,
             chainId = CHAIN_ID,
             userAddress = SOURCE_ADDRESS,
             token = token,
@@ -586,6 +629,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
     )
 
     private companion object {
+        const val LATEST_IMPLEMENTATION = "0x5555555555555555555555555555555555555555"
         const val BLOG_URL = "https://tangem.com/blog"
         const val CHAIN_ID = 1
         const val CLAIM_HASH = "0xclaim"
