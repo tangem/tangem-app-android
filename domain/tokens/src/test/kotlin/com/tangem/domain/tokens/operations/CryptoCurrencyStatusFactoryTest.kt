@@ -15,11 +15,11 @@ import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.network.NetworkStatus.Amount
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.quote.QuoteStatus
-import com.tangem.domain.models.staking.BalanceItem
-import com.tangem.domain.models.staking.BalanceType
-import com.tangem.domain.models.staking.StakingBalance
-import com.tangem.domain.models.staking.StakingID
-import com.tangem.domain.models.staking.YieldBalanceItem
+import com.tangem.domain.staking.model.BalanceItem
+import com.tangem.domain.staking.model.BalanceType
+import com.tangem.domain.staking.model.StakingBalance
+import com.tangem.domain.staking.model.StakingID
+import com.tangem.domain.staking.model.YieldBalanceItem
 import com.tangem.domain.models.yield.supply.YieldSupplyContribution
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import io.mockk.every

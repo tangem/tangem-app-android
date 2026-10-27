@@ -3,8 +3,8 @@ package com.tangem.data.staking.store
 import com.tangem.common.test.data.staking.MockP2PEthPoolAccountResponseFactory
 import com.tangem.data.staking.converters.ethpool.P2PEthPoolStakingAccountConverter
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.staking.StakingBalance
-import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.staking.model.StakingBalance
+import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolAccountResponse
 import com.tangem.test.mock.staking.MockStaking

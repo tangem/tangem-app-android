@@ -1,7 +1,7 @@
 package com.tangem.data.staking.verification
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.models.staking.NetworkType
+import com.tangem.domain.staking.model.NetworkType
 import org.junit.jupiter.api.Test
 
 /**

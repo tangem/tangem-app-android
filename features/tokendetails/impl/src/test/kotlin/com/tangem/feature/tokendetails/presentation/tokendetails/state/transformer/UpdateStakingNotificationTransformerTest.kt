@@ -11,8 +11,8 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.staking.*
-import com.tangem.domain.models.staking.BalanceType
+import com.tangem.domain.staking.model.*
+import com.tangem.domain.staking.model.BalanceType
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.StakingOption

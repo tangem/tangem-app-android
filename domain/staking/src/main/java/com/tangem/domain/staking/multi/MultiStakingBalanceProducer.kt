@@ -1,7 +1,7 @@
 package com.tangem.domain.staking.multi
 
 import com.tangem.domain.core.flow.FlowProducer
-import com.tangem.domain.models.staking.StakingBalance
+import com.tangem.domain.staking.model.StakingBalance
 import com.tangem.domain.models.wallet.UserWalletId
 
 /**
