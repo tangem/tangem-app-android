@@ -12,6 +12,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.bankofframp.BankAccountType
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
+import com.tangem.domain.pay.model.bankofframp.OfframpDestination
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -48,6 +49,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -63,15 +65,18 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val onOrderCreated: (BankOfframpOrderResult) -> Unit = {}
+    private val onDestinationChanged: (OfframpDestination) -> Unit = {}
     private val onCloseFlow: () -> Unit = mockk(relaxed = true)
     private var completedCount = 0
+    private var outcomeUnknownCount = 0
 
     @BeforeEach
     fun resetMocks() {
         clearMocks(router, uiMessageSender, completion, completionFactory, getUserWalletUseCase, analytics, onCloseFlow)
         completedCount = 0
+        outcomeUnknownCount = 0
         every { getUserWalletUseCase(userWalletId) } returns mockk<UserWallet.Cold>().right()
-        every { completionFactory.create(any(), any(), any()) } returns completion
+        every { completionFactory.create(any(), any(), any(), any()) } returns completion
         completionInFlight()
     }
 
@@ -101,12 +106,12 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     }
 
     @Test
-    fun `GIVEN source account WHEN model created THEN completion created for it with the order callback`() {
+    fun `GIVEN source account WHEN model created THEN completion created for it with the draft callbacks`() {
         // Act
         val model = createModel()
 
         // Assert
-        verify(exactly = 1) { completionFactory.create(sourceAccount, any(), onOrderCreated) }
+        verify(exactly = 1) { completionFactory.create(sourceAccount, any(), onOrderCreated, onDestinationChanged) }
         model.onDestroy()
     }
 
@@ -456,6 +461,24 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     }
 
     @ParameterizedTest
+    @MethodSource("provideOutcomeUnknownModels")
+    fun `GIVEN failure WHEN send THEN source account refresh requested only for an unknown transfer outcome`(
+        testModel: OutcomeUnknownModel,
+    ) {
+        // Arrange
+        completionReports(CompletionState.Sending, CompletionState.Failed(testModel.failure))
+        val model = createModel()
+
+        // Act
+        summary(model).onSendClick()
+
+        // Assert
+        assertThat(outcomeUnknownCount).isEqualTo(testModel.expectedRefreshRequests)
+        assertThat(completedCount).isEqualTo(0)
+        model.onDestroy()
+    }
+
+    @ParameterizedTest
     @ProvideTestModels
     fun `GIVEN failure WHEN send THEN SendErrorScreenOpened is sent`(failure: PreviewFailure) {
         // Arrange
@@ -550,6 +573,13 @@ internal class TangemPayBankWithdrawPreviewModelTest {
 
     private fun provideTestModels() = PreviewFailure.entries
 
+    private fun provideOutcomeUnknownModels() = listOf(
+        OutcomeUnknownModel(failure = PreviewFailure.General, expectedRefreshRequests = 0),
+        OutcomeUnknownModel(failure = PreviewFailure.TransferOutcomeUnknown, expectedRefreshRequests = 1),
+    )
+
+    internal data class OutcomeUnknownModel(val failure: PreviewFailure, val expectedRefreshRequests: Int)
+
     private fun completionInFlight() {
         coEvery { completion.complete(any(), any()) } coAnswers {
             secondArg<(CompletionState) -> Unit>().invoke(CompletionState.Sending)
@@ -588,7 +618,9 @@ internal class TangemPayBankWithdrawPreviewModelTest {
                     sourceAccount = sourceAccount,
                     draft = MutableStateFlow(draft),
                     onOrderCreated = onOrderCreated,
+                    onDestinationChanged = onDestinationChanged,
                     onCompleted = { completedCount++ },
+                    onTransferOutcomeUnknown = { outcomeUnknownCount++ },
                     onCloseFlow = onCloseFlow,
                 ),
             ),
