@@ -281,6 +281,7 @@ internal abstract class PlacePredictionModelTestBase {
         dispatchers = dispatchers,
         quoteEngineFactory = createQuoteEngineFactory(dispatchers = dispatchers, router = router),
         orderSubmitterFactory = createOrderSubmitterFactory(testScope = testScope, dispatchers = dispatchers),
+        timeSource = testScope.testScheduler.timeSource,
     ).also(models::add)
 
     protected fun createStatusModel(

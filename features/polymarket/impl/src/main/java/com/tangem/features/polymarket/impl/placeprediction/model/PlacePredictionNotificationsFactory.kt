@@ -83,15 +83,18 @@ internal fun PlacePredictionUM.recomputeGate(): PlacePredictionUM {
     }
     val notifications = PlacePredictionNotificationsFactory.build(state = priced)
 
+    val isPlaceableApartFromQuote = notifications.none { it.isBlocking } &&
+        !isBelowMinAmount &&
+        submit is SubmitUM.Idle &&
+        tradingPermission == TradingPermissionUM.Allowed &&
+        priced.order.allowsPlacing(entered = entered)
+
     return priced.copy(
         notifications = notifications,
-        isPrimaryButtonEnabled = notifications.none { it.isBlocking } &&
+        isPrimaryButtonEnabled = isPlaceableApartFromQuote &&
             quote is QuoteUM.Content &&
-            priced.order.isPlaceable(status = quote.status) &&
-            !isBelowMinAmount &&
-            submit is SubmitUM.Idle &&
-            tradingPermission == TradingPermissionUM.Allowed &&
-            priced.order.allowsPlacing(entered = entered),
+            priced.order.isPlaceable(status = quote.status),
+        isPrimaryButtonEnabledWhileQuoting = isPlaceableApartFromQuote && quote is QuoteUM.Loading,
     )
 }
 
