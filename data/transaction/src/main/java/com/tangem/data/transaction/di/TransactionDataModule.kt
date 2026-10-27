@@ -3,12 +3,14 @@ package com.tangem.data.transaction.di
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.transaction.*
 import com.tangem.data.transaction.error.DefaultFeeErrorResolver
+import com.tangem.data.transaction.toggles.DefaultYieldModuleFeatureToggles
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.grow.datasource.gasless.GaslessTxServiceApi
 import com.tangem.grow.datasource.gasless.GaslessTxServiceApiV2
 import com.tangem.grow.datasource.gasless.TronGaslessApi
 import com.tangem.grow.datasource.gasless.models.GaslessErrorResponse
 import com.squareup.moshi.Moshi
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.domain.demo.models.DemoConfig
@@ -32,12 +34,20 @@ internal object TransactionDataModule {
         tangemTechApi: TangemTechApi,
         walletManagersFacade: WalletManagersFacade,
         dispatchers: CoroutineDispatcherProvider,
+        yieldModuleFeatureToggles: YieldModuleFeatureToggles,
     ): TransactionRepository {
         return DefaultTransactionRepository(
             tangemTechApi = tangemTechApi,
             walletManagersFacade = walletManagersFacade,
             dispatchers = dispatchers,
+            yieldModuleFeatureToggles = yieldModuleFeatureToggles,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldModuleFeatureToggles(featureTogglesManager: FeatureTogglesManager): YieldModuleFeatureToggles {
+        return DefaultYieldModuleFeatureToggles(featureTogglesManager)
     }
 
     @Provides
