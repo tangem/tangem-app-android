@@ -53,6 +53,7 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
         sourceAccount = params.sourceAccount,
         scope = modelScope,
         onOrderCreated = params.onOrderCreated,
+        onDestinationChanged = params.onDestinationChanged,
     )
 
     private val umFactory = TangemPayBankWithdrawPreviewUMFactory(
@@ -120,11 +121,16 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
             CompletionState.WithdrawalInProgress -> uiMessageSender.send(
                 TangemPayMessagesFactory.createErrorMessage(errorType = TangemPayDetailsErrorType.WithdrawInProgress),
             )
-            is CompletionState.Failed -> analytics.send(TangemPayAnalyticsEvents.Offramp.SendErrorScreenOpened())
+            is CompletionState.Failed -> onCompletionFailed(completionState.failure)
             CompletionState.Idle,
             CompletionState.Sending,
             -> Unit
         }
+    }
+
+    private fun onCompletionFailed(failure: PreviewFailure) {
+        analytics.send(TangemPayAnalyticsEvents.Offramp.SendErrorScreenOpened())
+        if (failure == PreviewFailure.TransferOutcomeUnknown) params.onTransferOutcomeUnknown()
     }
 
     private fun onBackClick() {
