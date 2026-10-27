@@ -11,54 +11,36 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 import com.tangem.core.analytics.models.AnalyticsParam.Key.WALLETS_COUNT
 import com.tangem.domain.promo.models.PromoCampaign
 import com.tangem.domain.promo.models.PromoMatchMode
-import com.tangem.features.promobanners.impl.campaigns.entity.CampaignType
 
-/**
- * Hardcoded [CampaignType]s keep their legacy values; a backend [PromoCampaign] is identified by its [PromoCampaign.name],
- * which, unlike the id, is the same on every environment.
- */
+/** A [PromoCampaign] is identified by its [PromoCampaign.name], which, unlike the id, is the same on every environment. */
 internal sealed class PromoCampaignsAnalyticsEvent(
     event: String,
     params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = "Promotion", event = event, params = params) {
 
-    class PromotionScreenOpened private constructor(
-        params: Map<String, String>,
-    ) : PromoCampaignsAnalyticsEvent(event = "Promotion Screen Opened", params = params) {
+    class PromotionScreenOpened(campaign: PromoCampaign) : PromoCampaignsAnalyticsEvent(
+        event = "Promotion Screen Opened",
+        params = mapOf(
+            SCREEN to campaign.name,
+            CAMPAIGN to campaign.name,
+            MATCH_MODE to campaign.matchMode.analyticsName,
+            PAYOUT to if (campaign.payout.isNeeded) "Yes" else "No",
+        ),
+    )
 
-        constructor(campaignType: CampaignType) : this(mapOf(SCREEN to campaignType.analyticsName))
-
-        constructor(campaign: PromoCampaign) : this(
-            mapOf(
-                SCREEN to campaign.name,
-                CAMPAIGN to campaign.name,
-                MATCH_MODE to campaign.matchMode.analyticsName,
-                PAYOUT to if (campaign.payout.isNeeded) "Yes" else "No",
-            ),
-        )
-    }
-
-    class EnrollButtonClicked private constructor(
-        params: Map<String, String>,
-    ) : PromoCampaignsAnalyticsEvent(event = "Enroll Button Clicked", params = params) {
-
-        constructor(campaignType: CampaignType, token: String, blockchain: String) : this(
-            mapOf(
-                CAMPAIGN to campaignType.analyticsName,
-                TOKEN_PARAM to token,
-                BLOCKCHAIN to blockchain,
-            ),
-        )
-
-        constructor(campaign: PromoCampaign, payoutToken: PayoutToken?, walletsCount: Int) : this(
-            buildMap {
-                put(CAMPAIGN, campaign.name)
-                putPayoutToken(payoutToken)
-                put(MATCH_MODE, campaign.matchMode.analyticsName)
-                put(WALLETS_COUNT, walletsCount.toString())
-            },
-        )
-    }
+    class EnrollButtonClicked(
+        campaign: PromoCampaign,
+        payoutToken: PayoutToken?,
+        walletsCount: Int,
+    ) : PromoCampaignsAnalyticsEvent(
+        event = "Enroll Button Clicked",
+        params = buildMap {
+            put(CAMPAIGN, campaign.name)
+            putPayoutToken(payoutToken)
+            put(MATCH_MODE, campaign.matchMode.analyticsName)
+            put(WALLETS_COUNT, walletsCount.toString())
+        },
+    )
 
     class AlreadyEnrolledScreenOpened(campaign: String, source: Source) : PromoCampaignsAnalyticsEvent(
         event = "Already Enrolled Screen Opened",
@@ -122,12 +104,6 @@ internal sealed class PromoCampaignsAnalyticsEvent(
         }
     }
 }
-
-internal val CampaignType.analyticsName: String
-    get() = when (this) {
-        is CampaignType.WhaleSwapCashback -> "Cashback"
-        is CampaignType.ReactivationCashback -> "Reactivation"
-    }
 
 private val PromoMatchMode.analyticsName: String
     get() = when (this) {

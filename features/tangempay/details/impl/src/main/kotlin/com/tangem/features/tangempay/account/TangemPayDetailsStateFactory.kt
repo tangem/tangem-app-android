@@ -36,7 +36,6 @@ internal class TangemPayDetailsStateFactory(
     private val onBack: () -> Unit,
     private val onOpenMenu: () -> Unit,
     private val intents: TangemPayDetailIntents,
-    private val isVisaOnrampV2Enabled: () -> Boolean,
 ) {
     private val notificationFactory = TangemPayDetailsNotificationFactory(intents = intents)
 
@@ -129,7 +128,6 @@ internal class TangemPayDetailsStateFactory(
     }
 
     private fun createBankTransferOnrampBanner(virtualAccount: VirtualAccountOnramp?): MessageBannerUM? {
-        if (!isVisaOnrampV2Enabled()) return null
         return when (virtualAccount) {
             VirtualAccountOnramp.Processing -> MessageBannerUM(
                 state = notificationFactory.createBankTransferOnrampCreatingBannerState(),
