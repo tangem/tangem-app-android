@@ -31,6 +31,7 @@ import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.Joi
 import com.tangem.features.jointaccount.join.invitepreview.entity.JointAccountInvitePreviewSheetConfig
 import com.tangem.features.jointaccount.join.invitepreview.state.JointAccountInvitePreviewStateController
 import com.tangem.features.jointaccount.join.invitepreview.state.transformers.SetContentTransformer
+import com.tangem.features.jointaccount.join.invitepreview.state.transformers.SetContinueLoadingTransformer
 import com.tangem.features.jointaccount.join.invitepreview.state.transformers.SetFailedTransformer
 import com.tangem.features.jointaccount.join.invitepreview.state.transformers.SetInvalidLinkTransformer
 import com.tangem.features.jointaccount.join.invitepreview.state.transformers.SetLoadingTransformer
@@ -173,7 +174,9 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     private fun load(walletId: UserWalletId?) {
         loadJob?.cancel()
         loadJob = modelScope.launch {
-            if (uiState.value !is JointAccountInvitePreviewUM.Content) {
+            if (uiState.value is JointAccountInvitePreviewUM.Content) {
+                stateController.update(SetContinueLoadingTransformer())
+            } else {
                 stateController.update(SetLoadingTransformer(onCloseClick = ::onCloseClick))
             }
 
@@ -302,6 +305,8 @@ internal class JointAccountInvitePreviewModel @Inject constructor(
     }
 
     private fun onContinueClick() {
+        val state = uiState.value as? JointAccountInvitePreviewUM.Content ?: return
+        if (state.isContinueLoading) return
         val walletId = selectedWallet.value?.walletId ?: return
 
         params.draftHolder.setSelectedWallet(walletId)
