@@ -72,7 +72,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
     fun isSubmitting(): Boolean = orderSubmitter.isSubmitting()
 
     override fun onAmountChange(value: String) {
-        if (isSubmitting()) return
+        if (isSubmitting() || value == uiState.value.amountValue) return
 
         quoteEngine.onAmountChange(value = value)
     }
@@ -102,8 +102,6 @@ internal class PlacePredictionOrderModel @Inject constructor(
     }
 
     override fun onFeeClick() {
-        if (isSubmitting()) return
-
         feeSheet.onFeeClick()
     }
 
@@ -130,8 +128,6 @@ internal class PlacePredictionOrderModel @Inject constructor(
     }
 
     override fun onQuoteRetryClick() {
-        if (isSubmitting()) return
-
         quoteEngine.retryQuote()
     }
 
@@ -179,10 +175,11 @@ internal class PlacePredictionOrderModel @Inject constructor(
     }
 
     private fun latestFeeRate(): BigDecimal? {
-        val quote = (uiState.value.quote as? QuoteUM.Content)?.signable?.quote ?: return null
-        if (quote.notional.signum() <= 0) return null
+        val quote = uiState.value.quote as? QuoteUM.Content ?: return null
+        val notional = quote.signable.quote.notional
+        if (notional.signum() <= 0) return null
 
-        return quote.fees.total.divide(quote.notional, MathContext.DECIMAL128)
+        return quote.feeTotal.divide(notional, MathContext.DECIMAL128)
     }
 
     private fun toPreset(amount: BigDecimal): AmountPresetUM = AmountPresetUM(
