@@ -51,6 +51,7 @@ internal fun PredictionAmountBlock(
     onAmountChange: (String) -> Unit,
     onAddFundsClick: () -> Unit,
     modifier: Modifier = Modifier,
+    isEnabled: Boolean = true,
 ) {
     TangemSurface(modifier = modifier, color = TangemTheme.colors3.bg.secondary, shape = PolymarketCardShape) {
         Column {
@@ -58,6 +59,7 @@ internal fun PredictionAmountBlock(
                 amountValue = amountValue,
                 isAmountFromFraction = isAmountFromFraction,
                 amountCaption = amountCaption,
+                isEnabled = isEnabled,
                 onAmountChange = onAmountChange,
             )
             HorizontalDivider(
@@ -91,7 +93,7 @@ internal fun PredictionAmountBlock(
                         variant = TangemButton.Variant.Secondary,
                         size = TangemButton.Size.X7,
                         text = resourceReference(R.string.common_add_funds),
-                        isEnabled = isAddFundsEnabled,
+                        isEnabled = isEnabled && isAddFundsEnabled,
                         onClick = onAddFundsClick,
                     )
                 },
@@ -105,6 +107,7 @@ private fun AmountSection(
     amountValue: String,
     isAmountFromFraction: Boolean,
     amountCaption: AmountCaptionUM?,
+    isEnabled: Boolean,
     onAmountChange: (String) -> Unit,
 ) {
     val amountColor by animateColorAsState(
@@ -134,6 +137,7 @@ private fun AmountSection(
             decimals = PolymarketConst.COLLATERAL_DISPLAY_DECIMALS,
             onValueChange = onAmountChange,
             isValuePasted = isAmountFromFraction,
+            isEnabled = isEnabled,
             textStyle = TangemTheme.typography3.display.medium.copy(textAlign = TextAlign.Center),
             colors = AmountTextFieldColors(
                 textColor = amountColor,
