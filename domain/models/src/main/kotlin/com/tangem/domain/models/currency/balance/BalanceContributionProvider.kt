@@ -1,7 +1,6 @@
-package com.tangem.domain.account.status.contribution
+package com.tangem.domain.models.currency.balance
 
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.currency.balance.BalanceContribution
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWallet
 import kotlinx.coroutines.flow.Flow
@@ -9,8 +8,8 @@ import kotlinx.coroutines.flow.Flow
 /**
  * Source of one kind of extra balance — staking, yield supply, and whatever comes next.
  *
- * Registered with Hilt `@Binds @IntoSet`, so introducing a balance type means adding a provider: neither the
- * status producer nor `domain/models` has to change.
+ * Registered with a Hilt `@IntoSet` binding in the balance type's own module, so introducing a balance type means
+ * adding a provider there: neither the status producer nor `domain/models` has to change.
  *
  * A provider subscribes only to **its own** data source and emits a [ContributionResolver] per frame. It is the
  * producer — which already holds a consistent snapshot of network statuses — that asks the resolver about each

@@ -1,6 +1,6 @@
-package com.tangem.domain.models.staking
+package com.tangem.domain.staking.model
 
-import com.tangem.domain.models.staking.StakingEntryType.Companion.fromBalanceType
+import com.tangem.domain.staking.model.StakingEntryType.Companion.fromBalanceType
 
 fun BalanceItem.toStakingBalanceEntry(validatorName: String? = null): StakingBalanceEntry {
     return StakingBalanceEntry(

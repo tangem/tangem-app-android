@@ -26,6 +26,7 @@ dependencies {
 
     // region Domain
     api(projects.domain.models)
+    api(projects.domain.staking.models)
     // endregion
 
     // region Libs
