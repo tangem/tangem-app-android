@@ -123,6 +123,8 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
     private var isHeld = false
 
+    private var isResumeSkipped = false
+
     init {
         uiState.update(SetCollateralTransformer(currency = getPolymarketCollateralCurrencyUseCase()))
         when (val params = params) {
@@ -136,7 +138,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
     fun onResume() {
         isResumed = true
-        if (!isHeld) resumeSources()
+        if (isHeld) isResumeSkipped = true else resumeSources()
     }
 
     private fun resumeSources() {
@@ -192,16 +194,25 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         return PreparedPrediction(params = params, state = state, isNegRisk = isNegRisk, positionId = positionId)
     }
 
-    fun holdForSubmit() {
+    suspend fun <T> holdDuring(block: suspend () -> T): T {
         isHeld = true
         quoteJobHolder.cancel()
+        return try {
+            block()
+        } finally {
+            release()
+        }
     }
 
-    fun release() {
-        if (!isHeld) return
-
+    private fun release() {
         isHeld = false
-        if (isResumed) resumeSources()
+        val wasResumeSkipped = isResumeSkipped
+        isResumeSkipped = false
+        when {
+            !isResumed -> Unit
+            wasResumeSkipped -> resumeSources()
+            else -> restartQuoteLoop(withDebounce = false)
+        }
     }
 
     private fun loadTradingAllowance() {
@@ -249,8 +260,8 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
     private fun observeFundingWindow() {
         predictionFundingWindow.isOpen(userWalletId = params.userWalletId)
-            .flowOn(dispatchers.default)
             .onEach { isOpen -> uiState.update(SetAwaitingFundsTransformer(isAwaitingFunds = isOpen)) }
+            .flowOn(dispatchers.default)
             .launchIn(scope)
     }
 

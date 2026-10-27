@@ -15,7 +15,7 @@ import io.mockk.coVerify
 import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -29,7 +29,7 @@ import java.math.BigDecimal
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
 
-    private val engineJob = Job()
+    private val engineJob = SupervisorJob()
 
     @AfterEach
     fun cancelEngine() {
@@ -42,18 +42,21 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
         stubFailedResumeSources()
         val (engine, _) = createEngine()
         advanceUntilIdle()
-        engine.holdForSubmit()
 
         // Act
-        engine.onResume()
-        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 2)
+        engine.holdDuring {
+            engine.onResume()
+            advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 2)
 
-        // Assert
-        coVerify(exactly = 0) { getPriceUseCase(assetId = any(), side = any()) }
-        coVerify(exactly = 0) { getQuoteUseCase(request = any()) }
-        coVerify(exactly = 1) { checkGeoblockUseCase() }
-        coVerify(exactly = 1) { refreshRequisites(USER_WALLET_ID) }
-        verify(exactly = 0) { balancePoller.subscribe(userWalletId = any()) }
+            // Assert
+            coVerify(exactly = 0) { getPriceUseCase(assetId = any(), side = any()) }
+            coVerify(exactly = 0) { getQuoteUseCase(request = any()) }
+            coVerify(exactly = 1) { checkGeoblockUseCase() }
+            coVerify(exactly = 1) { refreshRequisites(USER_WALLET_ID) }
+            verify(exactly = 0) { balancePoller.subscribe(userWalletId = any()) }
+        }
+
+        engine.onPause()
     }
 
     @Test
@@ -61,28 +64,31 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
         // Arrange
         val (engine, _) = createEngine(params = SELL_PARAMS)
         advanceUntilIdle()
-        engine.holdForSubmit()
 
         // Act
-        engine.onResume()
-        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 2)
+        engine.holdDuring {
+            engine.onResume()
+            advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 2)
 
-        // Assert
-        coVerify(exactly = 1) { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) }
+            // Assert
+            coVerify(exactly = 1) { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) }
+        }
+
+        engine.onPause()
     }
 
     @Test
-    fun `GIVEN engine resumed while held WHEN released THEN sources re-read once AND loop restarts`() = runTest {
+    fun `GIVEN engine resumed while held WHEN hold ends THEN sources re-read once AND loop restarts`() = runTest {
         // Arrange
         stubFailedResumeSources()
         val (engine, _) = createEngine()
         advanceUntilIdle()
-        engine.holdForSubmit()
-        engine.onResume()
-        runCurrent()
 
         // Act
-        engine.release()
+        engine.holdDuring {
+            engine.onResume()
+            runCurrent()
+        }
         runCurrent()
 
         // Assert
@@ -95,16 +101,16 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
     }
 
     @Test
-    fun `GIVEN sell engine resumed while held WHEN released THEN position reloaded`() = runTest {
+    fun `GIVEN sell engine resumed while held WHEN hold ends THEN position reloaded`() = runTest {
         // Arrange
         val (engine, _) = createEngine(params = SELL_PARAMS)
         advanceUntilIdle()
-        engine.holdForSubmit()
-        engine.onResume()
-        runCurrent()
 
         // Act
-        engine.release()
+        engine.holdDuring {
+            engine.onResume()
+            runCurrent()
+        }
         runCurrent()
 
         // Assert
@@ -114,15 +120,76 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
     }
 
     @Test
-    fun `GIVEN paused engine held WHEN released THEN nothing requested`() = runTest {
+    fun `GIVEN sell engine resumed before hold WHEN hold ends THEN sources not re-read`() = runTest {
+        // Arrange
+        val (engine, _) = createEngine(params = SELL_PARAMS)
+        advanceUntilIdle()
+        engine.onResume()
+        runCurrent()
+
+        // Act
+        engine.holdDuring { runCurrent() }
+        runCurrent()
+
+        // Assert
+        verify(exactly = 1) { balancePoller.subscribe(userWalletId = USER_WALLET_ID) }
+        coVerify(exactly = 2) { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) }
+
+        engine.onPause()
+    }
+
+    @Test
+    fun `GIVEN resumed engine WHEN held THEN loop pauses AND one loop resumes after`() = runTest {
+        // Arrange
+        val (engine, _) = createEngine()
+        advanceUntilIdle()
+        engine.onResume()
+        runCurrent()
+
+        // Act
+        engine.holdDuring {
+            advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 2)
+
+            // Assert
+            coVerify(exactly = 1) { getPriceUseCase(assetId = any(), side = any()) }
+        }
+        runCurrent()
+        coVerify(exactly = 2) { getPriceUseCase(assetId = any(), side = any()) }
+        advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+        coVerify(exactly = 3) { getPriceUseCase(assetId = any(), side = any()) }
+        coVerify(exactly = 0) { getQuoteUseCase(request = any()) }
+
+        engine.onPause()
+    }
+
+    @Test
+    fun `GIVEN resumed engine WHEN held block throws THEN engine released`() = runTest {
+        // Arrange
+        val (engine, _) = createEngine()
+        advanceUntilIdle()
+        engine.onResume()
+        runCurrent()
+
+        // Act
+        val failure = runCatching { engine.holdDuring { error("Submission failed") } }.exceptionOrNull()
+        runCurrent()
+
+        // Assert
+        assertThat(failure).isInstanceOf(IllegalStateException::class.java)
+        coVerify(exactly = 2) { getPriceUseCase(assetId = any(), side = any()) }
+
+        engine.onPause()
+    }
+
+    @Test
+    fun `GIVEN paused engine WHEN hold ends THEN nothing requested`() = runTest {
         // Arrange
         stubFailedResumeSources()
         val (engine, _) = createEngine()
         advanceUntilIdle()
-        engine.holdForSubmit()
 
         // Act
-        engine.release()
+        engine.holdDuring { runCurrent() }
         runCurrent()
 
         // Assert
@@ -133,35 +200,17 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
     }
 
     @Test
-    fun `GIVEN resumed engine not held WHEN released THEN nothing extra requested`() = runTest {
-        // Arrange
-        val (engine, _) = createEngine()
-        advanceUntilIdle()
-        engine.onResume()
-        runCurrent()
-
-        // Act
-        engine.release()
-        runCurrent()
-
-        // Assert
-        coVerify(exactly = 1) { getPriceUseCase(assetId = any(), side = any()) }
-        verify(exactly = 1) { balancePoller.subscribe(userWalletId = USER_WALLET_ID) }
-
-        engine.onPause()
-    }
-
-    @Test
     fun `GIVEN sell position lost and engine held WHEN quote retried THEN position not reloaded`() = runTest {
         // Arrange
         coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns null.right()
         val (engine, uiState) = createEngine(params = SELL_PARAMS)
         advanceUntilIdle()
-        engine.holdForSubmit()
 
         // Act
-        engine.retryQuote()
-        advanceUntilIdle()
+        engine.holdDuring {
+            engine.retryQuote()
+            advanceUntilIdle()
+        }
 
         // Assert
         assertThat((uiState.value.order as OrderSideUM.Sell).position).isEqualTo(SellPositionUM.NotHeld)
@@ -177,10 +226,9 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
         engine.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         assertThat(uiState.value.isPrimaryButtonEnabled).isTrue()
-        engine.holdForSubmit()
 
         // Act
-        val prepared = engine.prepare()
+        val prepared = engine.holdDuring { engine.prepare() }
 
         // Assert
         assertThat(prepared).isNull()
@@ -193,14 +241,16 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
         // Arrange
         val (engine, uiState) = createEngine()
         advanceUntilIdle()
-        engine.holdForSubmit()
 
         // Act
-        statusFlow.value = activeStatus(balance = BigDecimal("50"))
-        advanceUntilIdle()
+        val balance = engine.holdDuring {
+            statusFlow.value = activeStatus(balance = BigDecimal("50"))
+            advanceUntilIdle()
+            (uiState.value.order as OrderSideUM.Buy).balance
+        }
 
         // Assert
-        assertThat((uiState.value.order as OrderSideUM.Buy).balance).isEqualTo(BigDecimal("50"))
+        assertThat(balance).isEqualTo(BigDecimal("50"))
     }
 
     @Test
@@ -208,14 +258,16 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
         // Arrange
         val (engine, uiState) = createEngine()
         advanceUntilIdle()
-        engine.holdForSubmit()
 
         // Act
-        isFundingOpen.value = true
-        advanceUntilIdle()
+        val isAwaitingFunds = engine.holdDuring {
+            isFundingOpen.value = true
+            advanceUntilIdle()
+            uiState.value.isAwaitingFunds
+        }
 
         // Assert
-        assertThat(uiState.value.isAwaitingFunds).isTrue()
+        assertThat(isAwaitingFunds).isTrue()
     }
 
     private fun stubFailedResumeSources() {
