@@ -1,6 +1,7 @@
 package com.tangem.domain.pay.usecase.bankofframp
 
 import arrow.core.Either
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
@@ -12,8 +13,8 @@ class GetBankOfframpOptionsUseCase(
 
     suspend operator fun invoke(
         userWalletId: UserWalletId,
-        productInstanceId: String?,
+        product: TangemPayProduct,
     ): Either<BankOfframpError, BankOfframpOptions> {
-        return repository.getOptions(userWalletId = userWalletId, productInstanceId = productInstanceId)
+        return repository.getOptions(userWalletId = userWalletId, product = product)
     }
 }
