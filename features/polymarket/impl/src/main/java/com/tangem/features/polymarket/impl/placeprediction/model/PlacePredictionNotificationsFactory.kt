@@ -94,7 +94,9 @@ internal fun PlacePredictionUM.recomputeGate(): PlacePredictionUM {
         isPrimaryButtonEnabled = isPlaceableApartFromQuote &&
             quote is QuoteUM.Content &&
             priced.order.isPlaceable(status = quote.status),
-        isPrimaryButtonEnabledWhileQuoting = isPlaceableApartFromQuote && quote is QuoteUM.Loading,
+        isPrimaryButtonEnabledWhileQuoting = isPlaceableApartFromQuote &&
+            quote is QuoteUM.Loading &&
+            isAwaitingFreshQuote,
     )
 }
 
