@@ -63,6 +63,7 @@ internal class GetAccountFeesUseCaseTest {
         name = "ACH",
         paymentMethodId = "ACH",
         group = group,
+        calculationType = AccountFee.CalculationType.FIXED,
         amount = BigDecimal.ONE,
         currency = "USD",
     )
