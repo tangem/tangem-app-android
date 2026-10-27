@@ -1,18 +1,30 @@
 plugins {
-    alias(deps.plugins.kotlin.jvm)
+    alias(deps.plugins.android.library)
+    alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.hilt.android)
     id("configuration")
+}
+
+android {
+    namespace = "com.tangem.core.analytics.impl"
 }
 
 dependencies {
 
     // region DI
-    implementation(deps.hilt.core)
+    implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
     // endregion
 
     // region Kotlin
     implementation(deps.kotlin.coroutines)
+    // endregion
+
+    // region Analytics SDKs
+    implementation(deps.amplitude)
+    implementation(deps.customerio.analytics)
+    implementation(deps.customerio.messaging)
     // endregion
 
     // region Tangem
@@ -30,9 +42,6 @@ dependencies {
     // endregion
 
     // region Tests
-    testImplementation(deps.test.junit5)
-    testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
-    testImplementation(deps.test.coroutine)
+    testImplementation(projects.test.core)
     // endregion
 }

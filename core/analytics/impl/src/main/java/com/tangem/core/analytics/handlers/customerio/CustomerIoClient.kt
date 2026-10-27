@@ -1,4 +1,4 @@
-package com.tangem.tap.common.analytics.handlers.customerio
+package com.tangem.core.analytics.handlers.customerio
 
 import android.app.Application
 import com.tangem.utils.logging.TangemLogger
