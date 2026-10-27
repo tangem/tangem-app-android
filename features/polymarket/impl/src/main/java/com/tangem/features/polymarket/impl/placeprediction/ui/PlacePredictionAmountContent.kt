@@ -40,15 +40,13 @@ import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionAmountIntents
-import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionAmountBlock
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionAmountFractionsRow
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionMarketBlock
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionNotificationsBlock
-import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionSharesBlock
+import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionOrderAmountInput
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionSlippageRow
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlacePredictionPreviewIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlacePredictionPreviewProvider
-import java.math.BigDecimal
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.flowTitle
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -124,31 +122,6 @@ internal fun PlacePredictionAmountContent(
 
 private fun PlacePredictionUM.hasFractionsToOffer(): Boolean =
     (order as? OrderSideUM.Buy)?.balance?.let { it.signum() > 0 } == true
-
-@Composable
-internal fun PredictionOrderAmountInput(
-    state: PlacePredictionUM,
-    onAmountChange: (String) -> Unit,
-    onAddFundsClick: () -> Unit,
-) {
-    when (val order = state.order) {
-        is OrderSideUM.Buy -> PredictionAmountBlock(
-            amountValue = state.amountValue,
-            isAmountFromFraction = state.isAmountFromFraction,
-            amountCaption = state.amountCaption,
-            balance = order.balance,
-            isAddFundsEnabled = order.isAddFundsEnabled,
-            onAmountChange = onAmountChange,
-            onAddFundsClick = onAddFundsClick,
-        )
-        is OrderSideUM.Sell -> PredictionSharesBlock(
-            selected = state.amountValue.toBigDecimalOrNull() ?: BigDecimal.ZERO,
-            position = order.position,
-            proceeds = order.proceeds,
-            onAmountChange = onAmountChange,
-        )
-    }
-}
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 800)
 @Preview(showBackground = true, widthDp = 360, heightDp = 800, uiMode = Configuration.UI_MODE_NIGHT_YES)

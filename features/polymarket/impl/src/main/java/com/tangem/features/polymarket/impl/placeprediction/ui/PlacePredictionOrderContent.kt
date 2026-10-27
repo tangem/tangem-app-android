@@ -36,6 +36,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.canShowFeeBrea
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionOrderIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionAmountPresets
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionNotificationsBlock
+import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionOrderAmountInput
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionOrderDetailsCard
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionOrderHeader
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionPlaceButton
@@ -53,7 +54,6 @@ internal fun PlacePredictionOrderContent(
     modifier: Modifier = Modifier,
 ) {
     var footerHeight by remember { mutableIntStateOf(0) }
-    val isIdle = state.submit is SubmitUM.Idle
 
     TangemTopBarScaffold(
         modifier = modifier,
@@ -74,7 +74,7 @@ internal fun PlacePredictionOrderContent(
             ) {
                 PredictionPlaceButton(
                     order = state.order,
-                    isLoading = !isIdle,
+                    isLoading = state.isSubmitting(),
                     isEnabled = state.isPrimaryButtonEnabled,
                     onClick = intents::onPlaceClick,
                 )
@@ -111,12 +111,13 @@ private fun OrderBody(
                 state = state,
                 onAmountChange = intents::onAmountChange,
                 onAddFundsClick = intents::onAddFundsClick,
+                isEnabled = !state.isSubmitting(),
             )
         }
         if (presets.isNotEmpty()) {
             PredictionAmountPresets(
                 presets = presets,
-                isEnabled = state.submit is SubmitUM.Idle,
+                isEnabled = !state.isSubmitting(),
                 onPresetClick = intents::onPresetClick,
                 onMaxClick = intents::onMaxClick,
             )
@@ -127,7 +128,7 @@ private fun OrderBody(
         ) {
             PredictionOrderDetailsCard(
                 slippage = state.slippage,
-                total = (state.quote as? QuoteUM.Content)?.total?.formatPolymarketMoney().orEmpty(),
+                total = (state.quote as? QuoteUM.Content)?.feeTotal?.formatPolymarketMoney().orEmpty(),
                 isTotalLoading = state.quote is QuoteUM.Loading,
                 onSlippageClick = intents::onSlippageClick,
                 onTotalClick = intents::onFeeClick.takeIf { state.canShowFeeBreakdown() },
@@ -139,6 +140,16 @@ private fun OrderBody(
         }
         Spacer(modifier = Modifier.height(with(LocalDensity.current) { footerHeight.toDp() }))
     }
+}
+
+private fun PlacePredictionUM.isSubmitting(): Boolean = when (submit) {
+    SubmitUM.Signing,
+    SubmitUM.Posting,
+    SubmitUM.AwaitingFill,
+    -> true
+    SubmitUM.Idle,
+    is SubmitUM.Result,
+    -> false
 }
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 800)
