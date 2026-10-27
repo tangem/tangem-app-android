@@ -76,6 +76,19 @@ internal class YieldSendUpgradeDecisionsTest {
         assertThat(actual).isNull()
     }
 
+    @Test
+    fun `GIVEN forgotten decision WHEN applyTo THEN no decision`() {
+        // Arrange
+        decisions.remember(userWalletId, ethereum, wrappedCallData)
+        decisions.forget(userWalletId, ethereum)
+
+        // Act
+        val actual = decisions.applyTo(userWalletId, ethereum, sendCallData)
+
+        // Assert
+        assertThat(actual).isNull()
+    }
+
     @ParameterizedTest
     @ProvideTestModels
     fun `GIVEN estimate for another wallet or network WHEN applyTo THEN no decision`(model: OtherSendModel) {

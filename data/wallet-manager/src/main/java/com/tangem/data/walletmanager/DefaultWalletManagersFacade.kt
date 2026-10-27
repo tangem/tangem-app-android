@@ -867,7 +867,13 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             derivationPath = network.derivationPath.value,
         ) ?: return@withContext callData
 
-        walletManager.wrapWithYieldModuleUpgradeIfAvailable(callData)
+        walletManager.wrapWithYieldModuleUpgradeIfAvailable(callData).also { pricedCallData ->
+            yieldSendUpgradeDecisions.remember(userWalletId, network, pricedCallData)
+        }
+    }
+
+    override fun resetYieldSendUpgradeDecision(userWalletId: UserWalletId, network: Network) {
+        yieldSendUpgradeDecisions.forget(userWalletId, network)
     }
 
     @Deprecated("Will be removed in future")
