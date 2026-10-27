@@ -7,12 +7,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
@@ -43,7 +43,7 @@ internal fun PredictionTotalRow(
         modifier = modifier,
         divider = divider,
         verticalAlignment = TangemRowVerticalAlignment.Center,
-        titleSlot = { TotalTitle(titleRes = titleRes) },
+        titleSlot = { TotalTitle(titleRes = titleRes, showInfo = onClick != null) },
         valueSlot = {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
@@ -54,7 +54,10 @@ internal fun PredictionTotalRow(
                     size = TangemBadge.Size.X6,
                 )
                 if (isLoading) {
-                    TangemShimmer(style = TangemTheme.typography3.body.medium, textAlign = TextAlign.End)
+                    TangemShimmer(
+                        style = TangemTheme.typography3.body.medium,
+                        modifier = Modifier.width(LoadingValueWidth),
+                    )
                 } else {
                     Text(
                         text = value,
@@ -69,7 +72,7 @@ internal fun PredictionTotalRow(
 }
 
 @Composable
-private fun TotalTitle(@StringRes titleRes: Int) {
+private fun TotalTitle(@StringRes titleRes: Int, showInfo: Boolean) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(space = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -79,13 +82,17 @@ private fun TotalTitle(@StringRes titleRes: Int) {
             style = TangemTheme.typography3.body.medium,
             color = TangemTheme.colors3.text.primary,
         )
-        Icon(
-            imageVector = Icons.ic_info_16,
-            contentDescription = null,
-            tint = TangemTheme.colors3.icon.tertiary,
-        )
+        if (showInfo) {
+            Icon(
+                imageVector = Icons.ic_info_16,
+                contentDescription = null,
+                tint = TangemTheme.colors3.icon.tertiary,
+            )
+        }
     }
 }
+
+private val LoadingValueWidth = 64.dp
 
 @Preview(name = "Light", showBackground = true, widthDp = 360)
 @Preview(name = "Dark", showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)

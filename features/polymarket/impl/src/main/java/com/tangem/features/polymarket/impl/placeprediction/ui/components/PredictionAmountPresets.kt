@@ -3,10 +3,10 @@ package com.tangem.features.polymarket.impl.placeprediction.ui.components
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -29,12 +29,13 @@ internal fun PredictionAmountPresets(
     onMaxClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    LazyRow(
-        modifier = modifier,
-        contentPadding = PresetsPadding,
+    Row(
+        modifier = modifier
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(space = 4.dp),
     ) {
-        items(items = presets, key = { it.amount }) { preset ->
+        presets.forEach { preset ->
             TangemButton(
                 variant = TangemButton.Variant.Secondary,
                 size = TangemButton.Size.X8,
@@ -43,20 +44,15 @@ internal fun PredictionAmountPresets(
                 onClick = { onPresetClick(preset) },
             )
         }
-        item(key = MAX_KEY) {
-            TangemButton(
-                variant = TangemButton.Variant.Secondary,
-                size = TangemButton.Size.X8,
-                text = resourceReference(R.string.send_max_amount),
-                isEnabled = isEnabled,
-                onClick = onMaxClick,
-            )
-        }
+        TangemButton(
+            variant = TangemButton.Variant.Secondary,
+            size = TangemButton.Size.X8,
+            text = resourceReference(R.string.send_max_amount),
+            isEnabled = isEnabled,
+            onClick = onMaxClick,
+        )
     }
 }
-
-private val PresetsPadding = PaddingValues(horizontal = 16.dp)
-private const val MAX_KEY = "max"
 
 @Preview(name = "Light", showBackground = true, widthDp = 360)
 @Preview(name = "Dark", showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
