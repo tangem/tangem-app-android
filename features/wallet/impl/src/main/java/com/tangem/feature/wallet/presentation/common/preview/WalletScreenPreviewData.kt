@@ -182,7 +182,7 @@ internal object WalletScreenPreviewData {
             onItemClick = {},
         ),
         tangemPayMainUM = TangemPayMainUM.Loading,
-        moneyAccountMainUM = MoneyAccountMainUM.Loading,
+        moneyAccountMainUM = MoneyAccountMainUM.Empty,
         polymarketWalletBlockUM = PolymarketWalletBlockUM.Hidden,
         collectiblesWalletBlockUM = CollectiblesWalletBlockUM.Hidden,
     )

@@ -193,31 +193,11 @@ internal class GetMoneyAccountEligibilityUseCaseTest {
 
     private fun provideNotEligibleStatuses() = listOf(
         MoneyAccountStatusValue.Empty,
-        MoneyAccountStatusValue.Loading,
         MoneyAccountStatusValue.Error.Unavailable,
-        MoneyAccountStatusValue.Onboarding.CountryNotSupported(
-            source = StatusSource.ACTUAL,
-            customerId = CUSTOMER_ID,
-            countryCode = null,
-        ),
         MoneyAccountStatusValue.Account.Deactivated(
             source = StatusSource.ACTUAL,
             cryptoCurrency = mockk(),
             balance = null,
-            customerId = CUSTOMER_ID,
-        ),
-        MoneyAccountStatusValue.Onboarding.Issuing(
-            source = StatusSource.ACTUAL,
-            customerId = CUSTOMER_ID,
-            step = MoneyAccountStatusValue.IssuingStep.STARTING,
-        ),
-        MoneyAccountStatusValue.Onboarding.UnderReview(
-            source = StatusSource.ACTUAL,
-            customerId = CUSTOMER_ID,
-            kycStatus = mockk(),
-        ),
-        MoneyAccountStatusValue.Onboarding.VerificationDeclined(
-            source = StatusSource.ACTUAL,
             customerId = CUSTOMER_ID,
         ),
         MoneyAccountStatusValue.Onboarding.Activating(

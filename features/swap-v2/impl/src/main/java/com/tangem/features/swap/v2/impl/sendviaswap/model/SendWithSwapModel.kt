@@ -153,7 +153,7 @@ internal class SendWithSwapModel @Inject constructor(
             ifLeft = { error ->
                 TangemLogger.e(error.toString())
                 swapAlertFactory.getGenericErrorState(
-                    expressError = ExpressError.UnknownError,
+                    expressError = ExpressError.UnknownError(),
                     onFailedTxEmailClick = {
                         modelScope.launch {
                             swapAlertFactory.onFailedTxEmailClick(
