@@ -5,6 +5,7 @@ plugins {
 
 dependencies {
     implementation(projects.domain.marketing.models)
+    api(projects.domain.models)
 
     implementation(deps.kotlin.coroutines)
     implementation(deps.arrow.core)
