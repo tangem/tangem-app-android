@@ -160,12 +160,7 @@ internal abstract class PlacePredictionModelTestBase {
 
     protected fun createAmountModel(
         testScope: TestScope,
-        params: PlacePredictionComponent.Params = PlacePredictionComponent.Params.Buy(
-            userWalletId = USER_WALLET_ID,
-            eventId = EVENT_ID,
-            marketId = MARKET_ID,
-            assetId = ASSET_ID,
-        ),
+        params: PlacePredictionComponent.Params = BUY_PARAMS,
         router: Router = this.router,
     ): PlacePredictionAmountModel {
         val dispatchers = testScope.createTestingCoroutineDispatcherProvider()
