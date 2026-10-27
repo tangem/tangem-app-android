@@ -12,6 +12,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyExitCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyInitTokenCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.MerklClaimCallData
 import com.tangem.blockchainsdk.models.UpdateWalletManagerResult.Address
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
@@ -165,6 +166,12 @@ internal class TransactionDataToTxHistoryItemConverterTest {
                 currency = coin,
                 expected = TxInfo.TransactionType.IncentiveClaim,
             ),
+            // A claim on an outdated module is sent inside upgradeToAndCall and stays a claim
+            FallbackModel(
+                transaction = merklClaim(isUpgradeWrapped = true),
+                currency = coin,
+                expected = TxInfo.TransactionType.IncentiveClaim,
+            ),
             // An ordinary transfer keeps its type whatever it moved
             FallbackModel(
                 transaction = transaction(
@@ -199,11 +206,17 @@ internal class TransactionDataToTxHistoryItemConverterTest {
         extras = EthereumTransactionExtras(callData = callData),
     )
 
-    private fun merklClaim(): TransactionData.Uncompiled = transaction(
-        amount = Amount(token = sdkUsdc, value = BigDecimal.ZERO),
-        fee = coinFee(BigDecimal("0.01")),
-        extras = EthereumTransactionExtras(callData = MerklClaimCallData.fromHex(MERKL_CLAIM_CALL_DATA)),
-    )
+    private fun merklClaim(isUpgradeWrapped: Boolean = false): TransactionData.Uncompiled {
+        val callData = MerklClaimCallData.fromHex(MERKL_CLAIM_CALL_DATA)
+        return transaction(
+            amount = Amount(token = sdkUsdc, value = BigDecimal.ZERO),
+            fee = coinFee(BigDecimal("0.01")),
+            extras = EthereumTransactionExtras(callData = if (isUpgradeWrapped) upgradeWrapped(callData) else callData),
+        )
+    }
+
+    private fun upgradeWrapped(callData: SmartContractCallData): SmartContractCallData =
+        EthereumYieldSupplyUpgradeToAndCallCallData(newImplementation = LATEST_IMPLEMENTATION, innerCallData = callData)
 
     private fun transaction(
         amount: Amount,
@@ -225,6 +238,7 @@ internal class TransactionDataToTxHistoryItemConverterTest {
     private val sdkUsdc = Token(name = "USD Coin", symbol = "USDC", contractAddress = USDC_CONTRACT, decimals = 6)
 
     private companion object {
+        const val LATEST_IMPLEMENTATION = "0x5555555555555555555555555555555555555555"
         const val USDC_CONTRACT = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
         const val RECIPIENT_ADDRESS = "0x2222222222222222222222222222222222222222"
         const val OWN_ADDRESS = "0x3333333333333333333333333333333333333333"
