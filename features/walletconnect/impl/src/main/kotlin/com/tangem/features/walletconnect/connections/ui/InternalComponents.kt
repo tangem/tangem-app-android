@@ -94,7 +94,7 @@ internal fun WcAppInfoItem(
                         .weight(1f, fill = false)
                         .testTag(WalletConnectBottomSheetTestTags.APP_NAME),
                     text = title,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                     style = TangemTheme.typography.h3,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -112,7 +112,7 @@ internal fun WcAppInfoItem(
             }
             Text(
                 text = subtitle,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 style = TangemTheme.typography.body2,
                 modifier = Modifier.testTag(WalletConnectBottomSheetTestTags.APP_URL),
             )
@@ -143,7 +143,7 @@ internal fun WcNetworkInfoItem(@DrawableRes icon: Int, name: String, symbol: Str
                 .testTag(WalletConnectDetailsBottomSheetTestTags.NETWORK_NAME),
             text = name,
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -153,7 +153,7 @@ internal fun WcNetworkInfoItem(@DrawableRes icon: Int, name: String, symbol: Str
                 .testTag(WalletConnectDetailsBottomSheetTestTags.NETWORK_SYMBOL),
             text = symbol,
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
     }
 }

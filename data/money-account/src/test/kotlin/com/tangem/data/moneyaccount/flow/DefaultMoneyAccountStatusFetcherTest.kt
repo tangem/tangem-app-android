@@ -1,5 +1,6 @@
 package com.tangem.data.moneyaccount.flow
 
+import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
@@ -11,6 +12,7 @@ import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
+import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
@@ -23,6 +25,7 @@ import com.tangem.domain.pay.usecase.GetCustomerSummaryUseCase
 import com.tangem.domain.pay.usecase.ResolveMoneyAccountStatusFromSummaryUseCase
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.security.DeviceSecurityInfoProvider
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -33,6 +36,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -75,6 +79,9 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         coEvery { getCustomerSummaryUseCase(USER_WALLET_ID, CachePolicy.REFRESH) } returns summary.right()
         every { resolveMoneyAccountStatusFromSummaryUseCase(summary) } returns null
         coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo().right()
+        coEvery {
+            onboardingRepository.fetchCustomerEligibility(USER_WALLET_ID)
+        } returns VisaApiError.ServerUnavailable.left()
     }
 
     @Test
@@ -173,6 +180,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
                 cryptoCurrency = cryptoCurrency,
                 balance = balance,
                 customerId = CUSTOMER_ID,
+                productInstanceId = PRODUCT_INSTANCE_ID,
             ),
         )
     }
@@ -195,9 +203,44 @@ internal class DefaultMoneyAccountStatusFetcherTest {
                     cryptoCurrency = cryptoCurrency,
                     balance = null,
                     customerId = CUSTOMER_ID,
+                    productInstanceId = PRODUCT_INSTANCE_ID,
                 ),
             )
         }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN active product instance AND channels WHEN invoke THEN bank off-ramp availability is stored`(
+        model: ChannelsModel,
+    ) = runTest {
+        // Arrange
+        val balance = MoneyAccountStatusValue.Balance(
+            cryptoAmount = BigDecimal.TEN,
+            depositAddress = "0xdeposit",
+            currencyCode = "USD",
+            fiatRate = BigDecimal.ONE,
+        )
+        coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo(
+            accountStatus = CustomerInfo.ProductInstance.Status.ACTIVE,
+        ).right()
+        coEvery { getMoneyAccountBalanceUseCase(USER_WALLET_ID, cryptoCurrency) } returns balance.right()
+        coEvery { onboardingRepository.fetchCustomerEligibility(USER_WALLET_ID) } returns model.channels
+
+        // Act
+        fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
+
+        // Assert
+        verifyStored(
+            MoneyAccountStatusValue.Account.Active(
+                source = StatusSource.ACTUAL,
+                cryptoCurrency = cryptoCurrency,
+                balance = balance,
+                customerId = CUSTOMER_ID,
+                productInstanceId = PRODUCT_INSTANCE_ID,
+                isBankOfframpAvailable = model.expected,
+            ),
+        )
+    }
 
     @Test
     fun `GIVEN deactivated product instance WHEN invoke THEN deactivated account is stored`() = runTest {
@@ -311,6 +354,23 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         status = status,
         specificationDataType = CustomerInfo.ProductInstance.SpecificationDataType.ACCOUNT,
         paymentAccountType = CustomerInfo.ProductInstance.PaymentAccountType.COLLATERAL_BANKING_ACCOUNT,
+    )
+
+    private fun provideTestModels() = listOf(
+        ChannelsModel(
+            channels = listOf(
+                TangemPayEligibilityType.VISA_VIRTUAL_ACCOUNT,
+                TangemPayEligibilityType.BANK_OFFRAMP,
+            ).right(),
+            expected = true,
+        ),
+        ChannelsModel(channels = listOf(TangemPayEligibilityType.VISA_VIRTUAL_ACCOUNT).right(), expected = false),
+        ChannelsModel(channels = VisaApiError.ServerUnavailable.left(), expected = null),
+    )
+
+    data class ChannelsModel(
+        val channels: Either<VisaApiError, List<TangemPayEligibilityType>>,
+        val expected: Boolean?,
     )
 
     private companion object {

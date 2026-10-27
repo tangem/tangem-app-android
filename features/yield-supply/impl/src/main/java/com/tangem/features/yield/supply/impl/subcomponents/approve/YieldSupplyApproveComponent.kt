@@ -69,7 +69,7 @@ internal class YieldSupplyApproveComponent(
                 onDismissRequest = params.callback::onDismissClick,
                 content = TangemBottomSheetConfigContent.Empty,
             ),
-            containerColor = TangemTheme.colors.background.tertiary,
+            containerColor = TangemTheme.colors3.bg.primary,
             title = {
                 TangemModalBottomSheetTitle(
                     endIconRes = R.drawable.ic_close_24,
@@ -109,12 +109,12 @@ internal class YieldSupplyApproveComponent(
                     Box(
                         modifier = Modifier
                             .size(56.dp)
-                            .background(TangemTheme.colors.icon.accent.copy(0.1f), CircleShape),
+                            .background(TangemTheme.colors3.bg.accent.blue.copy(0.1f), CircleShape),
                     ) {
                         Icon(
                             imageVector = ImageVector.vectorResource(R.drawable.ic_check_circle_24),
                             contentDescription = null,
-                            tint = TangemTheme.colors.icon.accent,
+                            tint = TangemTheme.colors3.icon.accent.blue,
                             modifier = Modifier
                                 .padding(12.dp)
                                 .size(32.dp),

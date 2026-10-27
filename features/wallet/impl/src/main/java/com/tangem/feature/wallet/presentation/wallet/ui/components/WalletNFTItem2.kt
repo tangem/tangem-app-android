@@ -164,13 +164,13 @@ private fun WalletNFTItemFailed(modifier: Modifier = Modifier) {
                 .layoutId(TangemRowLayoutId.HEAD)
                 .size(40.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(TangemTheme.colors2.skeleton.backgroundPrimary),
+                .background(TangemTheme.colors3.bg.transparent.secondary),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 modifier = Modifier.size(20.dp),
                 painter = painterResource(R.drawable.ic_error_sync_24),
-                tint = TangemTheme.colors.icon.informative,
+                tint = TangemTheme.colors3.icon.secondary,
                 contentDescription = null,
             )
         }
@@ -206,7 +206,7 @@ private fun WalletNFTItemLoading(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .size(40.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(TangemTheme.colors2.skeleton.backgroundPrimary)
+                .background(TangemTheme.colors3.bg.transparent.secondary)
                 .layoutId(TangemRowLayoutId.HEAD),
         )
         TextShimmer(

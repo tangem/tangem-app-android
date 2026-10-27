@@ -27,7 +27,7 @@ import java.util.UUID
 fun TxHistoryGroupTitle(config: TxHistoryItemState.GroupTitle, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .background(TangemTheme.colors.background.primary)
+            .background(TangemTheme.colors3.bg.secondary)
             .padding(
                 vertical = 8.dp,
                 horizontal = 12.dp,
@@ -38,7 +38,7 @@ fun TxHistoryGroupTitle(config: TxHistoryItemState.GroupTitle, modifier: Modifie
     ) {
         Text(
             text = config.title,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography.body2,
         )
     }

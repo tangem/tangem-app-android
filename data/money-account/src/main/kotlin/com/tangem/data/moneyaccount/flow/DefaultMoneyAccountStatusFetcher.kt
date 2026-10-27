@@ -8,6 +8,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.MoneyAccountStatusValue
+import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
@@ -74,11 +75,14 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
     private suspend fun fetchAccount(userWalletId: UserWalletId): MoneyAccountStatusValue = coroutineScope {
         val cryptoCurrency = moneyAccountCurrencyFactory.create(userWalletId)
         val balanceDeferred = async { getMoneyAccountBalanceUseCase.invoke(userWalletId, cryptoCurrency) }
+        val channelsDeferred = async { onboardingRepository.fetchCustomerEligibility(userWalletId) }
         val customerInfo = onboardingRepository.getCustomerInfo(userWalletId).getOrElse {
             balanceDeferred.cancel()
+            channelsDeferred.cancel()
             return@coroutineScope MoneyAccountStatusValue.Empty
         }
         val balance = balanceDeferred.await().getOrNull()
+        val channels = channelsDeferred.await().getOrNull()
         val instance = customerInfo.moneyAccountProductInstance
         val isFormer = customerInfo.state == CustomerInfo.State.FORMER
 
@@ -98,6 +102,8 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
                     cryptoCurrency = cryptoCurrency,
                     balance = balance,
                     customerId = customerInfo.customerId,
+                    productInstanceId = instance.id,
+                    isBankOfframpAvailable = channels?.contains(TangemPayEligibilityType.BANK_OFFRAMP),
                 )
             }
             else -> MoneyAccountStatusValue.Onboarding.Activating(

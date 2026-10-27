@@ -27,7 +27,7 @@ import com.tangem.features.onboarding.v2.impl.R
 fun PassphraseInfoBottomSheet(config: TangemBottomSheetConfig) {
     TangemBottomSheet(
         config = config,
-        containerColor = TangemTheme.colors.background.primary,
+        containerColor = TangemTheme.colors3.bg.primary,
     ) { _: TangemBottomSheetConfigContent.Empty ->
         PassphraseInfoBottomSheetContent(config.onDismissRequest)
     }
@@ -37,7 +37,7 @@ fun PassphraseInfoBottomSheet(config: TangemBottomSheetConfig) {
 fun PassphraseInfoBottomSheetContent(onDismiss: () -> Unit) {
     Column(
         modifier = Modifier
-            .background(color = TangemTheme.colors.background.primary)
+            .background(color = TangemTheme.colors3.bg.primary)
             .fillMaxWidth(),
     ) {
         Icon(
@@ -46,7 +46,7 @@ fun PassphraseInfoBottomSheetContent(onDismiss: () -> Unit) {
                 .padding(top = 40.dp)
                 .size(48.dp),
             painter = painterResource(id = R.drawable.ic_information_24),
-            tint = TangemTheme.colors.icon.accent,
+            tint = TangemTheme.colors3.icon.accent.blue,
             contentDescription = null,
         )
 
@@ -55,7 +55,7 @@ fun PassphraseInfoBottomSheetContent(onDismiss: () -> Unit) {
             modifier = Modifier
                 .padding(top = 40.dp)
                 .align(Alignment.CenterHorizontally),
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             style = TangemTheme.typography.h2,
         )
 
@@ -65,7 +65,7 @@ fun PassphraseInfoBottomSheetContent(onDismiss: () -> Unit) {
                 .padding(top = 16.dp)
                 .padding(horizontal = 24.dp)
                 .align(Alignment.CenterHorizontally),
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography.body2,
             textAlign = TextAlign.Center,
         )

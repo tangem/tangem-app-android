@@ -22,7 +22,7 @@ fun AppBarWithBackButtonAndIcon(
     @DrawableRes backIconRes: Int? = null,
     @DrawableRes iconRes: Int? = null,
     onIconClick: (() -> Unit)? = null,
-    backgroundColor: Color = TangemTheme.colors.background.secondary,
+    backgroundColor: Color = TangemTheme.colors3.bg.primary,
 ) {
     TangemTopAppBar(
         modifier = modifier,

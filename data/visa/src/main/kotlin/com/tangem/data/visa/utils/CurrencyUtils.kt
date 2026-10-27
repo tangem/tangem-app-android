@@ -3,10 +3,6 @@ package com.tangem.data.visa.utils
 import java.util.Currency
 import java.util.Locale
 
-internal fun findCurrencyByNumericCode(code: Int) =
-    Currency.getAvailableCurrencies().firstOrNull { it.numericCode == code }
-        ?: Currency.getInstance(VisaConstants.fiatCurrency.code)
-
 private val usdCurrency: Currency by lazy { Currency.getInstance(Locale.US) }
 
 internal fun getJavaCurrencyOrNull(code: String): Currency? = runCatching { Currency.getInstance(code) }.getOrNull()

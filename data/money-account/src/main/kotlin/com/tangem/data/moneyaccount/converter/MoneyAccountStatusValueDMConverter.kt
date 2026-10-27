@@ -23,6 +23,7 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
             )
             is MoneyAccountStatusValue.Account.Active -> MoneyAccountStatusValueDM.ActiveAccount(
                 customerId = value.customerId,
+                productInstanceId = value.productInstanceId,
                 balance = value.balance?.toDM(),
             )
             is MoneyAccountStatusValue.Account.Deactivated -> MoneyAccountStatusValueDM.Deactivated(
@@ -43,12 +44,15 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
                 source = StatusSource.CACHE,
                 customerId = value.customerId,
             )
-            is MoneyAccountStatusValueDM.ActiveAccount -> MoneyAccountStatusValue.Account.Active(
-                source = StatusSource.CACHE,
-                cryptoCurrency = moneyAccountCurrencyFactory.create(userWalletId),
-                balance = value.balance?.toDomain(),
-                customerId = value.customerId,
-            )
+            is MoneyAccountStatusValueDM.ActiveAccount -> value.productInstanceId?.let { productInstanceId ->
+                MoneyAccountStatusValue.Account.Active(
+                    source = StatusSource.CACHE,
+                    cryptoCurrency = moneyAccountCurrencyFactory.create(userWalletId),
+                    balance = value.balance?.toDomain(),
+                    customerId = value.customerId,
+                    productInstanceId = productInstanceId,
+                )
+            } ?: MoneyAccountStatusValue.Error.Unavailable
             is MoneyAccountStatusValueDM.Deactivated -> MoneyAccountStatusValue.Account.Deactivated(
                 source = StatusSource.CACHE,
                 cryptoCurrency = moneyAccountCurrencyFactory.create(userWalletId),

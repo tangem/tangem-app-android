@@ -42,7 +42,7 @@ fun ExpressProvider(
         verticalArrangement = Arrangement.spacedBy(2.dp),
         modifier = Modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action),
+            .background(TangemTheme.colors3.bg.secondary),
     ) {
         Row(
             modifier = Modifier
@@ -53,7 +53,7 @@ fun ExpressProvider(
             Text(
                 text = stringResourceSafe(id = R.string.express_provider),
                 style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
             SpacerWMax()
             if (!providerTxId.isNullOrEmpty()) {
@@ -75,7 +75,7 @@ fun ExpressProvider(
                             .align(Alignment.CenterVertically),
                         painter = painterResource(id = R.drawable.ic_copy_24),
                         contentDescription = null,
-                        tint = TangemTheme.colors.text.tertiary,
+                        tint = TangemTheme.colors3.text.secondary,
                     )
                     Text(
                         modifier = Modifier.align(Alignment.CenterVertically),
@@ -83,7 +83,7 @@ fun ExpressProvider(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         style = TangemTheme.typography.body2,
-                        color = TangemTheme.colors.text.tertiary,
+                        color = TangemTheme.colors3.text.secondary,
                     )
                 }
             }

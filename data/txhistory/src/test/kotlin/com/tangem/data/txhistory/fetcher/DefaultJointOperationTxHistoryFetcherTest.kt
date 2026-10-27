@@ -115,6 +115,21 @@ internal class DefaultJointOperationTxHistoryFetcherTest {
     }
 
     @Test
+    fun `GIVEN delta drops the sync state WHEN polled THEN the delta is not retried`() = runTest {
+        // Arrange
+        coEvery { repository.syncState(WALLET_ID) } returns completedSyncState()
+        coEvery { repository.fetchHistoryDelta(WALLET_ID, any()) } returns null
+        val fetcher = createFetcher(createUtils())
+
+        // Act
+        fetcher.invoke(TxHistoryFetchTrigger.JointHistoryPoll(walletId = WALLET_ID))
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { repository.fetchHistoryDelta(WALLET_ID, any()) }
+    }
+
+    @Test
     fun `GIVEN wallet without joint accounts WHEN triggered THEN nothing is fetched`() = runTest {
         // Arrange
         coEvery { singleAccountListSupplier.getSyncOrNull(WALLET_ID) } returns

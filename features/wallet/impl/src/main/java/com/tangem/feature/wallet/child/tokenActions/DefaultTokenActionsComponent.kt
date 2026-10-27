@@ -44,7 +44,7 @@ internal class DefaultTokenActionsComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        if (params.tokenRowUM == null) {
+        if (params.tokenRowUM == null && params.tokenRowState == null) {
             dismiss()
         } else {
             val isBalanceHidden by isBalanceHiddenFlow.collectAsStateWithLifecycle()
@@ -53,6 +53,7 @@ internal class DefaultTokenActionsComponent @AssistedInject constructor(
             }
             TokenActionContent(
                 tokenRowUM = params.tokenRowUM,
+                tokenRowState = params.tokenRowState,
                 isBalanceHidden = isBalanceHidden,
                 offset = offset,
                 actions = params.actions,

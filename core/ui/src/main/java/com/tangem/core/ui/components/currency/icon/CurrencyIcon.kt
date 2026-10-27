@@ -130,7 +130,7 @@ private fun LockedIcon(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .matchParentSize()
                 .background(
-                    color = TangemTheme.colors.field.primary,
+                    color = TangemTheme.colors3.bg.tertiary,
                     shape = CircleShape,
                 ),
         )
@@ -141,7 +141,7 @@ private fun LockedIcon(modifier: Modifier = Modifier) {
 private fun EmptyIcon(@DrawableRes resId: Int, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.background(
-            color = TangemTheme.colors.button.secondary,
+            color = TangemTheme.colors3.bg.transparent.secondary,
             shape = CircleShape,
         ),
         contentAlignment = Alignment.Center,
@@ -150,7 +150,7 @@ private fun EmptyIcon(@DrawableRes resId: Int, modifier: Modifier = Modifier) {
             painter = painterResource(resId),
             contentDescription = null,
             modifier = Modifier.size(size = 24.dp),
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
         )
     }
 }

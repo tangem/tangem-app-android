@@ -379,6 +379,44 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
+    fun `GIVEN failed NetworkFee WHEN convert THEN header and amount read confirmed`() {
+        // Arrange — the gas was spent whatever the call it paid for did ([REDACTED_TASK_KEY])
+        val tx = txInfo(
+            type = TransactionType.NetworkFee(amount = null, address = USER_ADDRESS),
+            amount = BigDecimal.ZERO,
+            isOutgoing = true,
+            status = TxInfo.TransactionStatus.Failed,
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.000015"), decimals = 18),
+        )
+
+        // Act
+        val details = converter.convert(tx)
+
+        // Assert
+        assertThat(details.header.status).isEqualTo(TransactionItemUM.Content.Status.Confirmed)
+        assertThat(details.amountBlock.isFailed).isFalse()
+        assertThat(details.amountBlock.amount.resolveString()).contains(StringsSigns.MINUS_SIGN)
+    }
+
+    @Test
+    fun `GIVEN unconfirmed NetworkFee WHEN convert THEN header still reads pending`() {
+        // Arrange
+        val tx = txInfo(
+            type = TransactionType.NetworkFee(amount = null, address = USER_ADDRESS),
+            amount = BigDecimal.ZERO,
+            isOutgoing = true,
+            status = TxInfo.TransactionStatus.Unconfirmed,
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.000015"), decimals = 18),
+        )
+
+        // Act
+        val details = converter.convert(tx)
+
+        // Assert
+        assertThat(details.header.status).isEqualTo(TransactionItemUM.Content.Status.Unconfirmed)
+    }
+
+    @Test
     fun `GIVEN NetworkFee for an untracked token WHEN convert THEN no counterparty card`() {
         // Arrange — the asset cannot be named, and the recipient must not stand in for it
         val tx = txInfo(

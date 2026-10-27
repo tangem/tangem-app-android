@@ -44,7 +44,7 @@ internal fun WcEstimatedWalletChangeRow(item: WcEstimatedWalletChangeUM, modifie
                 Text(
                     text = item.title.resolveReference(),
                     style = TangemTheme.typography.body1,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -54,7 +54,7 @@ internal fun WcEstimatedWalletChangeRow(item: WcEstimatedWalletChangeUM, modifie
                 Text(
                     text = item.description,
                     style = TangemTheme.typography.body1,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                     textAlign = TextAlign.End,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,

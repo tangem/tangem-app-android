@@ -49,10 +49,10 @@ private fun DescriptionItemV2(
 ) {
     if (hasFullDescription) {
         val text = buildAnnotatedString {
-            withStyle(SpanStyle(color = TangemTheme.colors2.text.neutral.tertiary)) {
+            withStyle(SpanStyle(color = TangemTheme.colors3.text.secondary)) {
                 append(description.resolveReference())
             }
-            withStyle(SpanStyle(color = TangemTheme.colors2.text.neutral.primary)) {
+            withStyle(SpanStyle(color = TangemTheme.colors3.text.primary)) {
                 append(
                     " " + stringResourceSafe(R.string.common_read_more).replace(
                         ' ',
@@ -77,7 +77,7 @@ private fun DescriptionItemV2(
             modifier = modifier,
             text = description.resolveReference(),
             style = TangemTheme.typography2.bodyMedium16,
-            color = TangemTheme.colors2.text.neutral.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
     }
 }

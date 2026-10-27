@@ -27,9 +27,9 @@ fun RowScope.TokenRowPriceChangeContent(
     isAvailable: Boolean = true,
 ) {
     val color = when (priceChangeState.type) {
-        PriceChangeType.UP -> TangemTheme.colors2.graphic.status.accent
-        PriceChangeType.DOWN -> TangemTheme.colors2.graphic.status.warning
-        PriceChangeType.NEUTRAL -> TangemTheme.colors2.graphic.neutral.tertiary
+        PriceChangeType.UP -> TangemTheme.colors3.icon.accent.blue
+        PriceChangeType.DOWN -> TangemTheme.colors3.icon.accent.red
+        PriceChangeType.NEUTRAL -> TangemTheme.colors3.icon.secondary
     }
 
     AnimatedContent(
@@ -67,7 +67,7 @@ fun RowScope.TokenRowPriceChangeContent(
                 textColor = if (isAvailable) {
                     color
                 } else {
-                    TangemTheme.colors2.text.status.disabled
+                    TangemTheme.colors3.text.tertiary
                 },
             ),
         )

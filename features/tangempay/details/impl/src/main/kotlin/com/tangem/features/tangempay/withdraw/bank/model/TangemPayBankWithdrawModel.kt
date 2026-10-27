@@ -5,7 +5,6 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.model.bankofframp.BankAccountType
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
@@ -26,14 +25,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPayBankWithdrawModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getBankAccountsUseCase: GetBankAccountsUseCase,
-    private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val getTangemPayCountriesUseCase: GetTangemPayCountriesUseCase,
     private val getTangemPayRegionsUseCase: GetTangemPayRegionsUseCase,
     private val analytics: AnalyticsEventHandler,
@@ -94,14 +91,9 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
         draft.update { it.copy(order = result) }
     }
 
-    /** The transfer is on its way, so the balance is refetched. */
     fun onOrderSigned() {
         analytics.send(TangemPayAnalyticsEvents.Offramp.SendSuccessScreenShowed(rail = draft.value.destination?.rail))
-        modelScope.launch {
-            paymentAccountStatusFetcher(params.userWalletId).onLeft { error ->
-                TangemLogger.withTag(TAG).e("Failed to refresh the payment account after a bank withdraw: $error")
-            }
-        }
+        params.onWithdrawSent()
     }
 
     /** The wizard's address steps open two pickers; warming them here keeps the first tap instant. */

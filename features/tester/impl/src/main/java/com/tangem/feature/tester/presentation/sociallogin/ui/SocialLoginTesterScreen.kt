@@ -32,7 +32,7 @@ internal fun SocialLoginTesterScreen(state: SocialLoginTesterUM) {
                 modifier = Modifier.statusBarsPadding(),
             )
         },
-        containerColor = TangemTheme.colors.background.secondary,
+        containerColor = TangemTheme.colors3.bg.primary,
     ) { paddingValues ->
         SelectionContainer {
             LazyColumn(
@@ -73,12 +73,12 @@ private fun StatusRow(row: SocialLoginTesterUM.StatusRow) {
         Text(
             text = row.label,
             style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
         )
         Text(
             text = row.value,
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
     }
 }

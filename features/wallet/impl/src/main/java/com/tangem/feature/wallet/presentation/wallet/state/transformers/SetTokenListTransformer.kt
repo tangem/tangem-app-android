@@ -32,8 +32,8 @@ internal class SetTokenListTransformer(
     private val shouldShowMainPromo: Boolean,
     private val isAccountsModeEnabled: Boolean,
     private val isHotBackedUp: Boolean? = null,
-    private val accountIdsWithInvites: Set<String> = emptySet(),
     private val jointPendingOperations: List<JointPendingOperation> = emptyList(),
+    private val isRedesignedAccountRowsEnabled: Boolean = false,
 ) : WalletStateTransformer(userWallet.walletId) {
 
     private val tangemPayConverter by lazy {
@@ -218,8 +218,8 @@ internal class SetTokenListTransformer(
             shouldShowMainPromo = shouldShowMainPromo,
             isAccountsModeEnabled = isAccountsModeEnabled,
             expandedAccounts = params.expandedAccounts,
-            accountIdsWithInvites = accountIdsWithInvites,
             jointPendingOperations = jointPendingOperations,
+            isRedesignedAccountRowsEnabled = isRedesignedAccountRowsEnabled,
         ).convert(value = params.accountList)
     }
 }

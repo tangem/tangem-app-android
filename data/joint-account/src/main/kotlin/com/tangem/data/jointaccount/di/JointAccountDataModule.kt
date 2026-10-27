@@ -6,7 +6,6 @@ import com.tangem.domain.jointaccount.gas.JointGasTokenResolver
 import com.tangem.domain.jointaccount.gas.JointRefundReceiverProvider
 import android.content.Context
 import androidx.datastore.dataStoreFile
-import com.tangem.common.services.secure.SecureStorage
 import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.jointaccount.address.DefaultJointAccountSafeAddressResolver
@@ -21,7 +20,6 @@ import com.tangem.data.jointaccount.producer.DefaultSingleJointAccountListProduc
 import com.tangem.data.jointaccount.safe.DefaultJointTransferPayloadCodec
 import com.tangem.data.jointaccount.safe.DefaultSafeAddressCalculator
 import com.tangem.data.jointaccount.repository.DefaultJointAccountRepository
-import com.tangem.data.jointaccount.store.DefaultJointAccountInvitesStore
 import com.tangem.data.jointaccount.store.JointAccountDM
 import com.tangem.data.jointaccount.store.JointAccountsStore
 import com.tangem.datasource.utils.AppDataStoreFactory
@@ -34,16 +32,15 @@ import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
 import com.tangem.domain.jointaccount.repository.JointAccountSupportedNetworksRepository
 import com.tangem.domain.jointaccount.repository.JointOwnerKeysRepository
 import com.tangem.data.jointaccount.signing.DefaultJointOperationSigner
+import com.tangem.data.jointaccount.signing.DefaultJointSignatureRecoverer
 import com.tangem.domain.jointaccount.producer.SingleJointAccountListProducer
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.safe.JointTransferPayloadCodec
 import com.tangem.domain.jointaccount.safe.SafeAddressCalculator
 import com.tangem.domain.jointaccount.signing.JointOperationSigner
-import com.tangem.domain.jointaccount.store.JointAccountInvitesStore
+import com.tangem.domain.jointaccount.signing.JointSignatureRecoverer
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
-import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.utils.coroutines.AppCoroutineScope
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -54,7 +51,6 @@ import dagger.multibindings.IntoSet
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.json.Json
 import javax.inject.Singleton
 
 @Module
@@ -109,6 +105,10 @@ internal interface JointAccountDataModule {
 
     @Binds
     @Singleton
+    fun bindJointSignatureRecoverer(recoverer: DefaultJointSignatureRecoverer): JointSignatureRecoverer
+
+    @Binds
+    @Singleton
     fun bindJointOwnerAddressResolver(resolver: DefaultJointOwnerAddressResolver): JointOwnerAddressResolver
 
     @Binds
@@ -144,25 +144,6 @@ internal interface JointAccountDataModule {
                 ),
                 converter = converter,
                 scope = scope,
-            )
-        }
-
-        @Provides
-        @Singleton
-        fun provideJointAccountInvitesStore(
-            @ApplicationContext context: Context,
-            dispatchers: CoroutineDispatcherProvider,
-        ): JointAccountInvitesStore {
-            val secureStorage: SecureStorage = AndroidSecureStorageV2(
-                appContext = context,
-                useStrongBox = false,
-                name = "joint_account_invites_storage",
-            )
-
-            return DefaultJointAccountInvitesStore(
-                secureStorage = secureStorage,
-                json = Json { ignoreUnknownKeys = true },
-                dispatchers = dispatchers,
             )
         }
 

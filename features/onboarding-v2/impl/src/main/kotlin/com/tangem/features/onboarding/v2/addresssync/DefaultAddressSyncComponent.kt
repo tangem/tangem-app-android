@@ -88,7 +88,7 @@ internal class DefaultAddressSyncComponent(
                 Children(
                     stack = childStack,
                     modifier = Modifier.background(
-                        color = TangemTheme.colors.background.primary,
+                        color = TangemTheme.colors3.bg.primary,
                     ),
                 ) { child ->
                     child.instance.Content(Modifier)

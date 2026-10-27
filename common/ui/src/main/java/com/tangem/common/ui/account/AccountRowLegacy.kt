@@ -93,7 +93,7 @@ private fun Title(title: TextReference, badge: TangemBadgeUM?) {
                 .testTag(AccountRowTestTags.TITLE),
             text = title.resolveReference(),
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -115,7 +115,7 @@ private fun Title(title: TextReference, badge: TangemBadgeUM?) {
 private fun Subtitle(subtitle: TextReference) {
     Text(
         modifier = Modifier.testTag(AccountRowTestTags.SUBTITLE),
-        color = TangemTheme.colors.text.tertiary,
+        color = TangemTheme.colors3.text.secondary,
         style = TangemTheme.typography.caption2,
         text = subtitle.resolveReference(),
         maxLines = 1,
@@ -140,7 +140,7 @@ private fun Sample() {
     val subtitle = resourceReference(R.string.account_form_name)
     fun icon(letter: Boolean = false) = AccountIconPreviewData.randomAccountIcon(letter)
     Column(
-        modifier = Modifier.background(TangemTheme.colors.background.primary),
+        modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         AccountRowLegacy(title = name, subtitle = info, icon = icon())

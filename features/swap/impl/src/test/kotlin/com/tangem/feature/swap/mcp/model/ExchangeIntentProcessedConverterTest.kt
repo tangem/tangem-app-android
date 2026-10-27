@@ -2,7 +2,8 @@ package com.tangem.feature.swap.mcp.model
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.swap.models.ExchangeIntent
 import com.tangem.domain.swap.models.SwapAmountType
@@ -11,6 +12,7 @@ import com.tangem.feature.swap.mcp.createCoin
 import com.tangem.feature.swap.mcp.createExchangeIntent
 import com.tangem.feature.swap.mcp.createNetwork
 import com.tangem.feature.swap.mcp.createToken
+import com.tangem.feature.swap.presentation.R
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -54,13 +56,18 @@ internal class ExchangeIntentProcessedConverterTest {
         val actual = convert(intent = intent)
 
         // Assert
-        assertThat(actual.subtitle).isEqualTo(stringReference(model.expectedSubtitle))
+        assertThat(actual.subtitle).isEqualTo(
+            resourceReference(
+                R.string.mcp_swap_intent_processed_subtitle,
+                wrappedList(model.expectedFrom, model.expectedTo),
+            ),
+        )
     }
 
     @Suppress("unused")
     private fun provideTestModels() = listOf(
-        SubtitleModel(SwapAmountType.From, "42000000", "Swap 42.00 USDT to POL"),
-        SubtitleModel(SwapAmountType.To, "2500000000000000000", "Swap USDT to 2.50 POL"),
+        SubtitleModel(SwapAmountType.From, "42000000", "42.00\u00a0USDT", "POL"),
+        SubtitleModel(SwapAmountType.To, "2500000000000000000", "USDT", "2.50\u00a0POL"),
     )
 
     @Test
@@ -92,8 +99,8 @@ internal class ExchangeIntentProcessedConverterTest {
 
         // Assert
         assertThat(actual.variant).isEqualTo(TangemModalStatus.Variant.Info)
-        assertThat(actual.title).isEqualTo(stringReference("This intent has already been processed"))
-        assertThat(actual.primaryButton.text).isEqualTo(stringReference("Got it"))
+        assertThat(actual.title).isEqualTo(resourceReference(R.string.mcp_intent_processed_title))
+        assertThat(actual.primaryButton.text).isEqualTo(resourceReference(R.string.common_got_it))
         assertThat(closed).isTrue()
     }
 
@@ -105,5 +112,10 @@ internal class ExchangeIntentProcessedConverterTest {
         ExchangeIntentProcessedConverter.Input(intent = intent, from = from, to = pol, onClose = onClose),
     )
 
-    data class SubtitleModel(val amountType: SwapAmountType, val amount: String, val expectedSubtitle: String)
+    data class SubtitleModel(
+        val amountType: SwapAmountType,
+        val amount: String,
+        val expectedFrom: String,
+        val expectedTo: String,
+    )
 }

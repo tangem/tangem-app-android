@@ -643,9 +643,9 @@ internal class StateBuilder(
                             spanStyleReference = {
                                 SpanStyle(
                                     color = when (priceImpact.type) {
-                                        PriceImpact.Type.HIGH -> TangemTheme.colors.text.warning
-                                        PriceImpact.Type.MEDIUM -> TangemTheme.colors.text.attention
-                                        else -> TangemTheme.colors.text.tertiary
+                                        PriceImpact.Type.HIGH -> TangemTheme.colors3.text.accent.red
+                                        PriceImpact.Type.MEDIUM -> TangemTheme.colors3.text.accent.yellow
+                                        else -> TangemTheme.colors3.text.secondary
                                     },
                                 )
                             },

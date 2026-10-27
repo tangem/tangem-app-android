@@ -144,13 +144,13 @@ internal class DefaultHistoryTxListManagerTest {
         ResolutionModel(
             name = "crypto portfolio with empty tx history",
             isCryptoPortfolio = true,
-            itemsCount = Either.Left(TxHistoryStateError.EmptyTxHistories),
+            itemsCount = Either.Left(TxHistoryStateError.EmptyTxHistories()),
             expected = OnChainSource.BSDK,
         ),
         ResolutionModel(
             name = "crypto portfolio without tx history support",
             isCryptoPortfolio = true,
-            itemsCount = Either.Left(TxHistoryStateError.TxHistoryNotImplemented),
+            itemsCount = Either.Left(TxHistoryStateError.TxHistoryNotImplemented()),
             expected = OnChainSource.IndexTable,
         ),
         ResolutionModel(
@@ -164,14 +164,14 @@ internal class DefaultHistoryTxListManagerTest {
             name = "money account with empty tx history",
             isCryptoPortfolio = false,
             isMoneyAccount = true,
-            itemsCount = Either.Left(TxHistoryStateError.EmptyTxHistories),
+            itemsCount = Either.Left(TxHistoryStateError.EmptyTxHistories()),
             expected = OnChainSource.BSDK,
         ),
         ResolutionModel(
             name = "money account without tx history support",
             isCryptoPortfolio = false,
             isMoneyAccount = true,
-            itemsCount = Either.Left(TxHistoryStateError.TxHistoryNotImplemented),
+            itemsCount = Either.Left(TxHistoryStateError.TxHistoryNotImplemented()),
             expected = OnChainSource.IndexTable,
         ),
         ResolutionModel(

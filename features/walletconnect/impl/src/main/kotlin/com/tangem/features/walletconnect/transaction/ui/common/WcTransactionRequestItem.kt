@@ -22,7 +22,7 @@ internal fun WcTransactionRequestItem(@DrawableRes iconRes: Int, modifier: Modif
             modifier = Modifier.size(24.dp),
             painter = painterResource(iconRes),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.accent,
+            tint = TangemTheme.colors3.icon.accent.blue,
         )
         Text(
             modifier = Modifier
@@ -30,7 +30,7 @@ internal fun WcTransactionRequestItem(@DrawableRes iconRes: Int, modifier: Modif
                 .weight(1f),
             text = stringResourceSafe(R.string.wc_transaction_request),
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         Icon(
             modifier = Modifier
@@ -38,7 +38,7 @@ internal fun WcTransactionRequestItem(@DrawableRes iconRes: Int, modifier: Modif
                 .size(width = 18.dp, height = 24.dp),
             painter = painterResource(R.drawable.ic_chevron_right_24),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
         )
     }
 }

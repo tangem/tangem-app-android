@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.withdraw.hub.model
 
 import androidx.compose.runtime.Stable
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -9,8 +10,12 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.pay.TangemPayCurrencyFactory
+import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
+import com.tangem.domain.pay.model.recents.TokenTransferJournal
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.pay.usecase.bankofframp.GetBankOfframpOptionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetRecentBankAccountsUseCase
@@ -55,6 +60,8 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
     private val getRecentTokenTransfersUseCase: GetRecentTokenTransfersUseCase,
     private val getBankOfframpOptionsUseCase: GetBankOfframpOptionsUseCase,
     private val bankWithdrawSourcesObserver: BankWithdrawSourcesObserver,
+    private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+    private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
     private val analytics: AnalyticsEventHandler,
 ) : Model() {
 
@@ -65,31 +72,50 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
         is BankWithdrawSourceAccount.Money -> account.productInstanceId
     }
 
+    private val isBankTransferOffered: Boolean = when (val account = params.sourceAccount) {
+        is BankWithdrawSourceAccount.Payment -> true
+        is BankWithdrawSourceAccount.Money -> account.productInstanceId != null
+    }
+
     private val cryptoCurrency: CryptoCurrency.Token = tangemPayCurrencyFactory.create(params.userWalletId)
 
     private val umFactory = TangemPayWithdrawHubUMFactory(
+        sourceAccount = params.sourceAccount,
         callbacks = TangemPayWithdrawHubUMFactory.Callbacks(
             onBackClick = ::onBackClick,
             onWithinPortfolioClick = ::onWithinPortfolioClick,
             onRecentTokenClick = ::onRecentTokenClick,
             onToPersonalAccountClick = {
-                analytics.send(TangemPayAnalyticsEvents.Offramp.ToPersonalAccountClicked())
-                openBankWithdraw(entry = BankWithdrawEntry.NewPersonal)
+                onBankOptionClick(
+                    paymentAccountEvent = TangemPayAnalyticsEvents.Offramp.ToPersonalAccountClicked(),
+                    entry = BankWithdrawEntry.NewPersonal,
+                )
             },
             onToBusinessAccountClick = {
-                analytics.send(TangemPayAnalyticsEvents.Offramp.ToBusinessAccountClicked())
-                openBankWithdraw(entry = BankWithdrawEntry.NewBusiness)
+                onBankOptionClick(
+                    paymentAccountEvent = TangemPayAnalyticsEvents.Offramp.ToBusinessAccountClicked(),
+                    entry = BankWithdrawEntry.NewBusiness,
+                )
             },
-            onRecentRecipientClick = ::onRecentRecipientClick,
+            onRecentRecipientClick = { bankAccountId ->
+                onBankOptionClick(
+                    paymentAccountEvent = TangemPayAnalyticsEvents.Offramp.SavedContactClicked(),
+                    entry = BankWithdrawEntry.Saved(bankAccountId = bankAccountId),
+                )
+            },
             onSeeAllClick = {
-                analytics.send(TangemPayAnalyticsEvents.Offramp.SavedContactsSeeAllClicked())
-                openBankWithdraw(entry = BankWithdrawEntry.SeeAll)
+                onBankOptionClick(
+                    paymentAccountEvent = TangemPayAnalyticsEvents.Offramp.SavedContactsSeeAllClicked(),
+                    entry = BankWithdrawEntry.SeeAll,
+                )
             },
             onRetryRecentsClick = ::loadRecents,
         ),
     )
 
-    private val state = MutableStateFlow(WithdrawHubState())
+    private val state = MutableStateFlow(
+        WithdrawHubState(options = if (isBankTransferOffered) OptionsState.Loading else OptionsState.NotOffered),
+    )
 
     private val recentsJobHolder = JobHolder()
     private val optionsJobHolder = JobHolder()
@@ -98,13 +124,17 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
         field = MutableStateFlow(umFactory.create(state.value))
 
     init {
-        analytics.send(TangemPayAnalyticsEvents.Offramp.BankTransferSheetOpened())
         state
             .onEach { uiState.value = umFactory.create(it) }
             .launchIn(modelScope)
-        loadRecents()
-        loadOptions()
-        observeTokenRecents()
+        if (isBankTransferOffered) {
+            loadRecents()
+            loadOptions()
+        }
+        if (params.sourceAccount is BankWithdrawSourceAccount.Payment) {
+            analytics.send(TangemPayAnalyticsEvents.Offramp.BankTransferSheetOpened())
+            observeTokenRecents()
+        }
     }
 
     private fun loadRecents() {
@@ -132,7 +162,10 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
     }
 
     private fun observeTokenRecents() {
-        getRecentTokenTransfersUseCase(params.userWalletId)
+        getRecentTokenTransfersUseCase(
+            userWalletId = params.userWalletId,
+            journal = TokenTransferJournal.PAYMENT_ACCOUNT,
+        )
             .onEach { transfers ->
                 state.update { it.copy(tokenRecents = TokenRecentsState.Loaded(transfers = transfers)) }
             }
@@ -144,6 +177,17 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
         bankWithdrawSourcesObserver.observe(params.sourceAccount, options).collect { resolved ->
             state.update { current ->
                 current.copy(options = resolved?.let(OptionsState::Ready) ?: OptionsState.Unavailable)
+            }
+        }
+    }
+
+    fun onWithdrawSent() {
+        modelScope.launch {
+            when (params.sourceAccount) {
+                is BankWithdrawSourceAccount.Payment -> paymentAccountStatusFetcher(params.userWalletId)
+                is BankWithdrawSourceAccount.Money -> moneyAccountStatusFetcher(params.userWalletId)
+            }.onLeft { error ->
+                TangemLogger.withTag(TAG).e("Failed to refresh the source account after a bank withdraw: $error")
             }
         }
     }
@@ -182,9 +226,16 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
         }
     }
 
-    private fun onRecentRecipientClick(bankAccountId: String) {
-        analytics.send(TangemPayAnalyticsEvents.Offramp.SavedContactClicked())
-        openBankWithdraw(entry = BankWithdrawEntry.Saved(bankAccountId = bankAccountId))
+    private fun onBankOptionClick(paymentAccountEvent: AnalyticsEvent, entry: BankWithdrawEntry) {
+        analytics.send(
+            when (params.sourceAccount) {
+                is BankWithdrawSourceAccount.Payment -> paymentAccountEvent
+                is BankWithdrawSourceAccount.Money -> MoneyAccountAnalyticsEvents.WithdrawOptionSelected(
+                    method = MoneyAccountAnalyticsEvents.WithdrawMethod.BANK_TRANSFER,
+                )
+            },
+        )
+        openBankWithdraw(entry = entry)
     }
 
     /**

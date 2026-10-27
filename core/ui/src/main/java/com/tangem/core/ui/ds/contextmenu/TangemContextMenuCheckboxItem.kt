@@ -34,7 +34,7 @@ fun TangemContextMenuCheckboxItem(title: TextReference, isChecked: Boolean, onCl
         Text(
             text = title.resolveReference(),
             style = TangemTheme.typography2.headingSemibold17,
-            color = TangemTheme.colors2.text.neutral.primary,
+            color = TangemTheme.colors3.text.primary,
             maxLines = 1,
         )
         SpacerW(8.dp)

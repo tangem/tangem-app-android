@@ -46,7 +46,7 @@ fun TangemRowTail(
                 imageVector = ImageVector.vectorResource(animatedState.iconRes),
                 contentDescription = null,
                 modifier = modifier,
-                tint = TangemTheme.colors2.graphic.neutral.tertiaryConstant,
+                tint = TangemTheme.colors3.icon.secondary,
             )
         }
     }
@@ -63,7 +63,7 @@ private fun DraggableImage(@DrawableRes iconRes: Int, dragHandleModifier: Modifi
     ) {
         Icon(
             imageVector = ImageVector.vectorResource(iconRes),
-            tint = TangemTheme.colors2.graphic.neutral.tertiaryConstant,
+            tint = TangemTheme.colors3.icon.secondary,
             contentDescription = null,
         )
     }
@@ -73,7 +73,7 @@ private fun DraggableImage(@DrawableRes iconRes: Int, dragHandleModifier: Modifi
 private fun ContentText(text: TextReference, modifier: Modifier = Modifier) {
     Text(
         text = text.resolveAnnotatedReference(),
-        color = TangemTheme.colors2.text.neutral.tertiary,
+        color = TangemTheme.colors3.text.secondary,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         style = TangemTheme.typography2.captionRegular12,

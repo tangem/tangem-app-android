@@ -31,9 +31,9 @@ internal sealed class WalletActionButtons(
                 iconRes = iconRes,
                 tintReference = {
                     if (isEnabled) {
-                        TangemTheme.colors2.graphic.neutral.primary
+                        TangemTheme.colors3.icon.primary
                     } else {
-                        TangemTheme.colors2.graphic.neutral.quaternary
+                        TangemTheme.colors3.icon.tertiary
                     }
                 },
             ),
