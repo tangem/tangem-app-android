@@ -9,7 +9,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 
-class GetTangemPayProductsAvailabilityUseCase(
+class GetTangemPayProductsAvailabilityForCustomerUseCase(
     private val checkTangemPayEligibilityForCustomerUseCase: CheckTangemPayEligibilityForCustomerUseCase,
 ) {
     suspend operator fun invoke(userWalletId: UserWalletId): Either<VisaApiError, Set<TangemPayProduct>> {

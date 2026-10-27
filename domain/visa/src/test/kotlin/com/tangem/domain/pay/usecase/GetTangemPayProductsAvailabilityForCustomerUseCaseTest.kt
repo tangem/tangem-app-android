@@ -15,11 +15,11 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-internal class GetTangemPayProductsAvailabilityUseCaseTest {
+internal class GetTangemPayProductsAvailabilityForCustomerUseCaseTest {
 
     private val checkTangemPayEligibilityForCustomerUseCase: CheckTangemPayEligibilityForCustomerUseCase = mockk()
 
-    private val useCase = GetTangemPayProductsAvailabilityUseCase(
+    private val useCase = GetTangemPayProductsAvailabilityForCustomerUseCase(
         checkTangemPayEligibilityForCustomerUseCase = checkTangemPayEligibilityForCustomerUseCase,
     )
 
