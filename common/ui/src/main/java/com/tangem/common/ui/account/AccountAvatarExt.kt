@@ -30,20 +30,19 @@ fun Account.CryptoPortfolio.toAvatarState(): TangemAvatar.UiState = TangemAvatar
     color = icon.color.toFillColor(),
 )
 
-// TODO([REDACTED_TASK_KEY]): replace with the account-avatar colour DS tokens once they are added
 fun CryptoPortfolioIcon.Color.toFillColor(): TangemAvatar.FillColor = when (this) {
-    CryptoPortfolioIcon.Color.Azure -> TangemAvatar.FillColor.DarkBlue
-    CryptoPortfolioIcon.Color.CaribbeanBlue -> TangemAvatar.FillColor.LightBlue
-    CryptoPortfolioIcon.Color.DullLavender -> TangemAvatar.FillColor.Lavender
-    CryptoPortfolioIcon.Color.CandyGrapeFizz -> TangemAvatar.FillColor.Violet
-    CryptoPortfolioIcon.Color.SweetDesire -> TangemAvatar.FillColor.LightPurple
-    CryptoPortfolioIcon.Color.PalatinateBlue -> TangemAvatar.FillColor.DarkBlue
-    CryptoPortfolioIcon.Color.FuchsiaNebula -> TangemAvatar.FillColor.DarkPurple
-    CryptoPortfolioIcon.Color.MexicanPink -> TangemAvatar.FillColor.Pink
-    CryptoPortfolioIcon.Color.Pelati -> TangemAvatar.FillColor.Red
-    CryptoPortfolioIcon.Color.Pattypan -> TangemAvatar.FillColor.Yellow
-    CryptoPortfolioIcon.Color.UFOGreen -> TangemAvatar.FillColor.LightGreen
-    CryptoPortfolioIcon.Color.VitalGreen -> TangemAvatar.FillColor.DarkGreen
+    CryptoPortfolioIcon.Color.Azure -> TangemAvatar.FillColor.AzureBlue
+    CryptoPortfolioIcon.Color.CaribbeanBlue -> TangemAvatar.FillColor.CaribbeanBlue
+    CryptoPortfolioIcon.Color.DullLavender -> TangemAvatar.FillColor.DullLavender
+    CryptoPortfolioIcon.Color.CandyGrapeFizz -> TangemAvatar.FillColor.CandyGrapeFizz
+    CryptoPortfolioIcon.Color.SweetDesire -> TangemAvatar.FillColor.SweetDesire
+    CryptoPortfolioIcon.Color.PalatinateBlue -> TangemAvatar.FillColor.PalatinateBlue
+    CryptoPortfolioIcon.Color.FuchsiaNebula -> TangemAvatar.FillColor.FuchsiaNebula
+    CryptoPortfolioIcon.Color.MexicanPink -> TangemAvatar.FillColor.MexicanPink
+    CryptoPortfolioIcon.Color.Pelati -> TangemAvatar.FillColor.Pelati
+    CryptoPortfolioIcon.Color.Pattypan -> TangemAvatar.FillColor.Pattypan
+    CryptoPortfolioIcon.Color.UFOGreen -> TangemAvatar.FillColor.UfoGreen
+    CryptoPortfolioIcon.Color.VitalGreen -> TangemAvatar.FillColor.VitalGreen
 }
 
 @Suppress("CyclomaticComplexMethod")

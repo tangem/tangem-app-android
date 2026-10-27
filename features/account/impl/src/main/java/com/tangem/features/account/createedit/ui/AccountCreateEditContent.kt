@@ -134,6 +134,7 @@ private fun AccountSummary(account: Account, isCreateMode: Boolean) {
             size = AccountIconSize.Large,
             modifier = Modifier
                 .testTag(AccountInfoEditScreenTestTags.SELECTED_ICON),
+            iconColor = account.portfolioIcon.color.getDsColor(),
         )
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -211,18 +212,18 @@ private fun AccountColor(colorsState: AccountCreateEditUM.Colors) {
                         Box(
                             modifier = Modifier
                                 .size(47.dp)
-                                .border(2.dp, color.getUiColor(), shape = CircleShape),
+                                .border(2.dp, color.getDsColor(), shape = CircleShape),
                         )
                         Box(
                             modifier = Modifier
                                 .size(36.dp)
-                                .background(color = color.getUiColor(), shape = CircleShape),
+                                .background(color = color.getDsColor(), shape = CircleShape),
                         )
                     } else {
                         Box(
                             modifier = Modifier
                                 .size(40.dp)
-                                .background(color = color.getUiColor(), shape = CircleShape),
+                                .background(color = color.getDsColor(), shape = CircleShape),
                         )
                     }
                 }
