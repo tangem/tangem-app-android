@@ -355,7 +355,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
 
         if (dataSignatureVerifier.verifySignature(response.signature, response.txDetailsJson)) {
             val txDetails = parseTxDetails(response.txDetailsJson)
-                ?: throw ExpressError.UnknownError
+                ?: throw ExpressError.UnknownError()
             if (txDetails.requestId != requestId) {
                 throw ExpressError.InvalidRequestIdError()
             }
