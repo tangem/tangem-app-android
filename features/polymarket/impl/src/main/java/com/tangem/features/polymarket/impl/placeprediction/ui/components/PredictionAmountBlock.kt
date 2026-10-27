@@ -14,9 +14,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -172,60 +170,76 @@ private fun AmountSection(
     }
 }
 
-internal enum class PredictionAmountCaptionStyle(
-    val toWinStatus: TangemBadge.Status,
-    val isPayoutShownWithShortfall: Boolean,
-) {
-    Amount(toWinStatus = TangemBadge.Status.Success, isPayoutShownWithShortfall = false),
-    Order(toWinStatus = TangemBadge.Status.Info, isPayoutShownWithShortfall = true),
+internal enum class PredictionAmountCaptionStyle {
+    Amount,
+    Order,
 }
 
 @Composable
 private fun AmountCaptionSlot(amountCaption: AmountCaptionUM?, style: PredictionAmountCaptionStyle) {
+    when (style) {
+        PredictionAmountCaptionStyle.Amount -> AmountScreenCaption(amountCaption = amountCaption)
+        PredictionAmountCaptionStyle.Order -> OrderScreenCaption(amountCaption = amountCaption)
+    }
+}
+
+@Composable
+private fun AmountScreenCaption(amountCaption: AmountCaptionUM?) {
     AnimatedContent(
         targetState = amountCaption,
         transitionSpec = { fadeIn() togetherWith fadeOut() using null },
         contentAlignment = Alignment.Center,
         label = "amountCaption",
-        contentKey = { caption -> caption?.let { it::class } },
+        contentKey = { caption -> (caption as? AmountCaptionUM.Shortfall)?.copy(payout = null) ?: caption },
     ) { caption ->
         when (caption) {
-            is AmountCaptionUM.Shortfall -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    modifier = Modifier.padding(top = CAPTION_GAP),
-                    text = caption.error.text.resolveReference(),
-                    style = TangemTheme.typography3.caption.medium,
-                    color = TangemTheme.colors3.text.status.error,
-                    textAlign = TextAlign.Center,
-                )
-                if (style.isPayoutShownWithShortfall) {
-                    ShortfallPayoutBadge(payout = caption.payout, status = style.toWinStatus)
-                }
-            }
-            is AmountCaptionUM.BelowMinimum -> Text(
-                modifier = Modifier.padding(top = CAPTION_GAP),
-                text = stringResourceSafe(
-                    R.string.prediction_place_min_amount_error,
-                    caption.minAmount.formatPolymarketMoney(),
-                ),
-                style = TangemTheme.typography3.caption.medium,
-                color = TangemTheme.colors3.text.status.error,
-                textAlign = TextAlign.Center,
-            )
-            is AmountCaptionUM.ToWin -> ToWinBadge(payout = caption.payout, status = style.toWinStatus)
+            is AmountCaptionUM.Shortfall,
+            is AmountCaptionUM.BelowMinimum,
+            -> CaptionErrorText(caption = caption)
+            is AmountCaptionUM.ToWin -> ToWinBadge(payout = caption.payout, status = TangemBadge.Status.Success)
             null -> Unit
         }
     }
 }
 
 @Composable
-private fun ShortfallPayoutBadge(payout: BigDecimal?, status: TangemBadge.Status) {
-    var lastPayout by remember { mutableStateOf(payout) }
-    if (payout != null) lastPayout = payout
-
-    AnimatedVisibility(visible = payout != null, enter = fadeIn(), exit = fadeOut()) {
-        lastPayout?.let { ToWinBadge(payout = it, status = status) }
+private fun OrderScreenCaption(amountCaption: AmountCaptionUM?) {
+    val errorCaption = amountCaption.takeIf { it is AmountCaptionUM.Shortfall || it is AmountCaptionUM.BelowMinimum }
+    val payout = when (amountCaption) {
+        is AmountCaptionUM.ToWin -> amountCaption.payout
+        is AmountCaptionUM.Shortfall -> amountCaption.payout
+        else -> null
     }
+    val shownErrorCaption = rememberLastNonNull(errorCaption)
+    val shownPayout = rememberLastNonNull(payout)
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        AnimatedVisibility(visible = errorCaption != null, enter = fadeIn(), exit = fadeOut()) {
+            shownErrorCaption?.let { CaptionErrorText(caption = it) }
+        }
+        AnimatedVisibility(visible = payout != null, enter = fadeIn(), exit = fadeOut()) {
+            shownPayout?.let { ToWinBadge(payout = it, status = TangemBadge.Status.Info) }
+        }
+    }
+}
+
+@Composable
+private fun CaptionErrorText(caption: AmountCaptionUM) {
+    val text = when (caption) {
+        is AmountCaptionUM.Shortfall -> caption.error.text.resolveReference()
+        is AmountCaptionUM.BelowMinimum -> stringResourceSafe(
+            R.string.prediction_place_min_amount_error,
+            caption.minAmount.formatPolymarketMoney(),
+        )
+        is AmountCaptionUM.ToWin -> return
+    }
+    Text(
+        modifier = Modifier.padding(top = CAPTION_GAP),
+        text = text,
+        style = TangemTheme.typography3.caption.medium,
+        color = TangemTheme.colors3.text.status.error,
+        textAlign = TextAlign.Center,
+    )
 }
 
 @Composable
@@ -241,6 +255,21 @@ private fun ToWinBadge(payout: BigDecimal, status: TangemBadge.Status) {
         status = status,
         size = TangemBadge.Size.X6,
     )
+}
+
+@Composable
+private fun <T : Any> rememberLastNonNull(value: T?): T? {
+    val holder = remember { LastNonNull<T>() }
+    return holder.update(value)
+}
+
+private class LastNonNull<T : Any> {
+    private var last: T? = null
+
+    fun update(value: T?): T? {
+        if (value != null) last = value
+        return last
+    }
 }
 
 private val CAPTION_GAP = 12.dp
