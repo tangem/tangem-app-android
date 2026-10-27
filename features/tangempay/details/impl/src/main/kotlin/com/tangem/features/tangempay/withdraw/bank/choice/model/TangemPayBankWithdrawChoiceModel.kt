@@ -10,6 +10,7 @@ import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.withdraw.bank.choice.TangemPayBankWithdrawChoiceComponent
 import com.tangem.features.tangempay.withdraw.bank.choice.state.TangemPayBankWithdrawChoiceUM
 import com.tangem.features.tangempay.withdraw.bank.choice.state.TangemPayBankWithdrawChoiceUMFactory
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawAnalytics
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,10 +26,12 @@ internal class TangemPayBankWithdrawChoiceModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-    private val analytics: AnalyticsEventHandler,
+    analytics: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankWithdrawChoiceComponent.Params>()
+
+    private val withdrawAnalytics = BankWithdrawAnalytics(sourceAccount = params.sourceAccount, analytics = analytics)
 
     private val umFactory = TangemPayBankWithdrawChoiceUMFactory(
         config = params.config,
@@ -50,7 +53,7 @@ internal class TangemPayBankWithdrawChoiceModel @Inject constructor(
 
     init {
         if (isTransferTypeStep) {
-            analytics.send(TangemPayAnalyticsEvents.Offramp.PersonalAccountTypeScreenOpened())
+            withdrawAnalytics.sendPaymentAccountOnly(TangemPayAnalyticsEvents.Offramp.PersonalAccountTypeScreenOpened())
         }
 
         combine(params.draft, selectedId) { draft, selected -> umFactory.create(draft = draft, selectedId = selected) }
@@ -67,7 +70,7 @@ internal class TangemPayBankWithdrawChoiceModel @Inject constructor(
         val selected = selectedId.value ?: return
 
         if (isTransferTypeStep) {
-            analytics.send(
+            withdrawAnalytics.sendPaymentAccountOnly(
                 TangemPayAnalyticsEvents.Offramp.PersonalAccountTypeContinueClicked(
                     isThirdParty = BankWithdrawChoices.isThirdParty(selectedId = selected),
                 ),

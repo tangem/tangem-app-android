@@ -103,6 +103,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     private fun onSendClick() {
         val account = currentState ?: return
         if (account.balance == null) return
+        analytics.send(MoneyAccountAnalyticsEvents.SendClicked())
         val bankTransferProductInstanceId = (account as? MoneyAccountStatusValue.Account.Active)
             ?.takeIf { it.isBankOfframpAvailable == true }
             ?.productInstanceId
