@@ -16,7 +16,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.canShowFeeBrea
 internal fun PredictionDetailsBlock(state: PlacePredictionUM, onFeeClick: () -> Unit, modifier: Modifier = Modifier) {
     TangemSurface(modifier = modifier, color = TangemTheme.colors3.bg.secondary, shape = PolymarketCardShape) {
         Column {
-            PredictionTotalRow(
+            PredictionUsdValueRow(
                 titleRes = R.string.prediction_place_fee,
                 value = (state.quote as? QuoteUM.Content)?.feeTotal?.formatPolymarketMoney().orEmpty(),
                 isLoading = false,
