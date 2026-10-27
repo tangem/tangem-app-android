@@ -36,8 +36,8 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
   entry (feed, search, event, Buy more, Close) shows the restrictions modal instead of opening. A failed check
   keeps the last answer and counts as allowed only when there is none; the amount step still checks on its own.
 - Main returns here (`replaceAll(Onboarding)`) the moment the stored credentials are gone, even from under a
-  child: nothing above Main can sign without them. So the order summary answers an `Unauthorized`
-  placement with no dialog and leaves the gate to explain it.
+  child: nothing above Main can sign without them. So the submitting step (Summary or Order) answers an
+  `Unauthorized` placement with no dialog and leaves the gate to explain it.
 
 ## Main screen
 
@@ -78,8 +78,8 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
   the 2-decimal grid — the BFF quotes a whole-position sale at the position's own precision. Display cuts
   to 2 decimals, never more than held; a count below 0.01 keeps its precision so a remainder is not shown
   as `0`. Steps move in whole shares; 100 % is the position itself, so a full close reaches the last fraction.
-- **Ambiguous orders.** A transport or inconclusive HTTP error does not prove rejection. Summary shows
-  the existing error dialog with Support; keep balance/position refreshes and never resubmit
+- **Ambiguous orders.** A transport or inconclusive HTTP error does not prove rejection. The submitting
+  step (Summary or Order) shows the existing error dialog with Support; keep balance/position refreshes and never resubmit
   automatically, because the order may already be live.
 - **Position indexing.** `/positions/outcome` answers `null` until the position is indexed — for several
   seconds even for an outcome the wallet already held. Details shows Unavailable at once on a first `null`
