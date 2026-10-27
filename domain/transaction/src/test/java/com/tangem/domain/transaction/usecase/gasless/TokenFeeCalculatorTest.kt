@@ -63,6 +63,7 @@ class TokenFeeCalculatorTest {
             gaslessTransactionRepository = gaslessTransactionRepository,
             demoConfig = demoConfig,
             gaslessYieldRepository = gaslessYieldRepository,
+            yieldModuleFeatureToggles = mockk { every { isYieldModuleV3Enabled } returns true },
         )
 
         mockWalletManager = mockk()
@@ -131,7 +132,14 @@ class TokenFeeCalculatorTest {
         val tokenStatus = createMockTokenStatus()
         val expectedFee = createMockTransactionFee()
 
-        coEvery { walletManagersFacade.estimateFee(any(), any(), any()) } returns Result.Success(expectedFee)
+        coEvery {
+            walletManagersFacade.estimateFee(
+                amount = any(),
+                userWalletId = any(),
+                network = any(),
+                isYieldModuleUpgradeAllowed = false,
+            )
+        } returns Result.Success(expectedFee)
 
         // When
         val result = tokenFeeCalculator.estimateInitialFee(
@@ -155,7 +163,12 @@ class TokenFeeCalculatorTest {
         val failure = Result.Failure(BlockchainSdkError.NPError("Estimation failed"))
 
         coEvery {
-            walletManagersFacade.estimateFee(any(), any(), any())
+            walletManagersFacade.estimateFee(
+                amount = any(),
+                userWalletId = any(),
+                network = any(),
+                isYieldModuleUpgradeAllowed = false,
+            )
         } returns failure
 
         // When
@@ -175,7 +188,14 @@ class TokenFeeCalculatorTest {
         val amount = BigDecimal("100")
         val tokenStatus = createMockTokenStatus()
 
-        coEvery { walletManagersFacade.estimateFee(any(), any(), any()) } returns null
+        coEvery {
+            walletManagersFacade.estimateFee(
+                amount = any(),
+                userWalletId = any(),
+                network = any(),
+                isYieldModuleUpgradeAllowed = false,
+            )
+        } returns null
 
         // When
         val result = tokenFeeCalculator.estimateInitialFee(
