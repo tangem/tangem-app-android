@@ -15,9 +15,7 @@ import com.tangem.domain.walletconnect.config.WalletConnectConfig
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
-import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.logging.TangemLogger
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -33,7 +31,7 @@ import kotlin.coroutines.resume
  * already-live session are plain functions that assume it is up.
  *
  * Initialization costs ~400 ms, most of it Keystore IPC and the SQLCipher key derivation behind the SDK's
- * own storage, which is why with on-demand init it no longer runs during `Application.onCreate`.
+ * own storage, which is why it does not run during `Application.onCreate`.
  */
 internal class WcSdk(
     private val application: Application,
@@ -52,27 +50,6 @@ internal class WcSdk(
     @Volatile
     var isInitialized: Boolean = false
         private set
-
-    /**
-     * Starts the SDK right away on the calling thread, which must be the main one. Called from
-     * `Application.onCreate`, before the first activity exists, so the SDK sees every activity from the start.
-     */
-    @RemoveWithToggle(
-        toggleName = "AND_18021_WALLETCONNECT_ON_DEMAND_INIT_ENABLED",
-        description = "Only the toggle-off path starts the SDK synchronously. Fold start() back into initialize().",
-    )
-    fun initializeNow() {
-        val started = CompletableDeferred<Result<Unit>>()
-        synchronized(lock) {
-            if (initialization != null) return
-            initialization = started
-        }
-        runCatching { start(onResult = { started.complete(it) }) }
-            .onFailure { error ->
-                TangemLogger.withTag(WC_TAG).e("Failed to start WalletConnect", error)
-                started.complete(Result.failure(error))
-            }
-    }
 
     suspend fun ensureInitialized() {
         if (isInitialized) return
@@ -241,36 +218,32 @@ internal class WcSdk(
     // SDK expects; what changed is when this runs, not where.
     private suspend fun initialize(): Result<Unit> = withContext(dispatchers.main) {
         suspendCancellableCoroutine { continuation ->
-            start(onResult = { result -> if (continuation.isActive) continuation.resume(result) })
-        }
-    }
+            CoreClient.initialize(
+                relayServerUrl = "wss://$RELAY_URL?projectId=${config.projectId}",
+                connectionType = ConnectionType.AUTOMATIC,
+                application = application,
+                metaData = appMetaData(),
+            ) { error ->
+                TangemLogger.withTag(WC_TAG).e("Error while initializing client: $error")
+            }
 
-    private fun start(onResult: (Result<Unit>) -> Unit) {
-        CoreClient.initialize(
-            relayServerUrl = "wss://$RELAY_URL?projectId=${config.projectId}",
-            connectionType = ConnectionType.AUTOMATIC,
-            application = application,
-            metaData = appMetaData(),
-        ) { error ->
-            TangemLogger.withTag(WC_TAG).e("Error while initializing client: $error")
+            WalletKit.initialize(
+                Wallet.Params.Init(core = CoreClient),
+                onSuccess = {
+                    WalletKit.setWalletDelegate(walletDelegate())
+                    observers().forEach { it.onWcSdkInit() }
+                    // Recorded here, not after the await: the caller may be cancelled before it resumes,
+                    // and a second initialization would register the observers twice.
+                    isInitialized = true
+                    TangemLogger.withTag(WC_TAG).i("onWcSdkInit")
+                    if (continuation.isActive) continuation.resume(Result.success(Unit))
+                },
+                onError = { error ->
+                    TangemLogger.withTag(WC_TAG).e("Error while initializing Web3Wallet: $error")
+                    if (continuation.isActive) continuation.resume(Result.failure(error.throwable))
+                },
+            )
         }
-
-        WalletKit.initialize(
-            Wallet.Params.Init(core = CoreClient),
-            onSuccess = {
-                WalletKit.setWalletDelegate(walletDelegate())
-                observers().forEach { it.onWcSdkInit() }
-                // Recorded here, not after the await: the caller may be cancelled before it resumes,
-                // and a second initialization would register the observers twice.
-                isInitialized = true
-                TangemLogger.withTag(WC_TAG).i("onWcSdkInit")
-                onResult(Result.success(Unit))
-            },
-            onError = { error ->
-                TangemLogger.withTag(WC_TAG).e("Error while initializing Web3Wallet: $error")
-                onResult(Result.failure(error.throwable))
-            },
-        )
     }
 
     private fun appMetaData() = Core.Model.AppMetaData(

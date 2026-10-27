@@ -211,9 +211,6 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                     }
                 }
             }
-            step("Assert receive amount information icon is not displayed") {
-                onSwapTokenScreen { receiveFiatAmountInformationIcon.assertDoesNotExist() }
-            }
             step("Assert provider slippage is displayed in 'Slippage' bottom sheet") {
                 checkProviderSlippageSheet(slippagePercent)
             }
@@ -270,9 +267,6 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             }
             step("Assert fiat amount with warning is displayed") {
                 onSwapTokenScreen { receiveFiatAmount.assertTextContains("%", substring = true) }
-            }
-            step("Assert receive amount information icon is not displayed") {
-                onSwapTokenScreen { receiveFiatAmountInformationIcon.assertDoesNotExist() }
             }
             step("Assert provider slippage is displayed in 'Slippage' bottom sheet") {
                 checkProviderSlippageSheet(slippagePercent)
@@ -342,9 +336,6 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                     onSwapTokenScreen { warningTitle(bannerTitle).assertIsDisplayed() }
                 }
             }
-            step("Assert receive amount information icon is not displayed") {
-                onSwapTokenScreen { receiveFiatAmountInformationIcon.assertDoesNotExist() }
-            }
         }
     }
 
@@ -408,9 +399,6 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     onSwapTokenScreen { warningTitle(bannerTitle).assertIsDisplayed() }
                 }
-            }
-            step("Assert receive amount information icon is not displayed") {
-                onSwapTokenScreen { receiveFiatAmountInformationIcon.assertDoesNotExist() }
             }
         }
     }

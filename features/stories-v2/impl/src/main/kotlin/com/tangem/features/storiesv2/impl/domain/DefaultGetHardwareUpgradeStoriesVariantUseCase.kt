@@ -3,23 +3,17 @@ package com.tangem.features.storiesv2.impl.domain
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.features.storiesv2.GetHardwareUpgradeStoriesVariantUseCase
 import com.tangem.features.storiesv2.HardwareUpgradeStoriesVariant
-import com.tangem.features.storiesv2.StoriesV2FeatureToggles
 import javax.inject.Inject
 
 internal class DefaultGetHardwareUpgradeStoriesVariantUseCase @Inject constructor(
-    private val featureToggles: StoriesV2FeatureToggles,
     private val abTestsManager: ABTestsManager,
 ) : GetHardwareUpgradeStoriesVariantUseCase {
 
     override suspend fun invoke(): HardwareUpgradeStoriesVariant {
-        if (!featureToggles.isHardwareUpgradeStoriesAbEnabled) return HardwareUpgradeStoriesVariant.CONTROL
-
         return abTestsManager.getValue(key = AMPLITUDE_ID, defaultValue = CONTROL_VALUE).toVariant()
     }
 
     override fun peek(): HardwareUpgradeStoriesVariant {
-        if (!featureToggles.isHardwareUpgradeStoriesAbEnabled) return HardwareUpgradeStoriesVariant.CONTROL
-
         return abTestsManager.peekValue(key = AMPLITUDE_ID).toVariant()
     }
 
