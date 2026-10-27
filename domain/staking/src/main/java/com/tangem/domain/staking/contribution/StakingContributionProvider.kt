@@ -1,12 +1,14 @@
-package com.tangem.domain.account.status.contribution
+package com.tangem.domain.staking.contribution
 
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.balance.BalanceContribution
+import com.tangem.domain.models.currency.balance.BalanceContributionProvider
+import com.tangem.domain.models.currency.balance.ContributionResolver
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.network.getAddress
-import com.tangem.domain.models.staking.StakingBalance
-import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.staking.model.StakingBalance
+import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.staking.StakingIdFactory
@@ -18,7 +20,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
 
 /**
  * Exposes staking balances as [BalanceContribution]s.
@@ -27,10 +28,8 @@ import javax.inject.Inject
  * currency and its address, picking one balance when several share an id, narrowing a StakeKit balance to the
  * items that belong to this currency, and resolving the per-network "is the stake already inside the network
  * balance?" rule.
- *
- * [REDACTED_TODO_COMMENT]
  */
-internal class StakingContributionProvider @Inject constructor(
+class StakingContributionProvider(
     private val stakingBalanceSupplier: MultiStakingBalanceSupplier,
     private val stakingIdFactory: StakingIdFactory,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,

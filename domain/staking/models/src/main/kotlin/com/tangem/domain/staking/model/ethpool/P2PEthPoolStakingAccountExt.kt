@@ -1,5 +1,9 @@
-package com.tangem.domain.models.staking
+package com.tangem.domain.staking.model.ethpool
 
+import com.tangem.domain.staking.model.StakingBalanceEntry
+import com.tangem.domain.staking.model.StakingEntryActions
+import com.tangem.domain.staking.model.StakingEntryType
+import com.tangem.domain.staking.model.ValidatorInfo
 import java.math.BigDecimal
 
 val P2PEthPoolStakingAccount.unstakingAssets: BigDecimal
