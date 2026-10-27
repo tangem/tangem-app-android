@@ -1,21 +1,24 @@
 package com.tangem.data.marketing
 
+import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.data.common.wallet.WalletServerBinder
 import com.tangem.datasource.api.marketing.models.BindMarketingUidWalletsBody
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.marketing.MarketingFeatureToggles
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.test.core.ProvideTestModels
+import io.mockk.Runs
 import io.mockk.clearMocks
 import io.mockk.coEvery
-import io.mockk.confirmVerified
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
@@ -23,7 +26,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.params.ParameterizedTest
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultMarketingUidBindingRepositoryTest {
@@ -31,6 +33,7 @@ internal class DefaultMarketingUidBindingRepositoryTest {
     private val tangemTechApi: TangemTechApi = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val featureToggles: MarketingFeatureToggles = mockk()
+    private val walletServerBinder: WalletServerBinder = mockk()
 
     private val defaultWallet = wallet(WALLET_ID)
     private val userWallets = MutableStateFlow<List<UserWallet>?>(null)
@@ -39,16 +42,18 @@ internal class DefaultMarketingUidBindingRepositoryTest {
         tangemTechApi = tangemTechApi,
         userWalletsListRepository = userWalletsListRepository,
         featureToggles = featureToggles,
+        walletServerBinder = walletServerBinder,
     )
 
     @BeforeEach
     fun setUp() {
-        clearMocks(tangemTechApi, userWalletsListRepository, featureToggles)
+        clearMocks(tangemTechApi, userWalletsListRepository, featureToggles, walletServerBinder)
         userWallets.value = listOf(defaultWallet)
 
         every { featureToggles.isUidBindingEnabled } returns true
         every { userWalletsListRepository.userWallets } returns userWallets
         coEvery { tangemTechApi.bindMarketingUidWallets(any(), any()) } returns success()
+        coEvery { walletServerBinder.awaitBound(any()) } just Runs
     }
 
     @Test
@@ -81,6 +86,7 @@ internal class DefaultMarketingUidBindingRepositoryTest {
                 body = BindMarketingUidWalletsBody(walletIds = listOf(WALLET_ID, otherId, shortId)),
             )
         }
+        coVerify(exactly = 0) { walletServerBinder.awaitBound(any()) }
     }
 
     @Test
@@ -106,13 +112,10 @@ internal class DefaultMarketingUidBindingRepositoryTest {
         coVerify(exactly = 1) { tangemTechApi.bindMarketingUidWallets(UID, any()) }
     }
 
-    @ParameterizedTest
-    @ProvideTestModels
-    fun `GIVEN no wallet yet WHEN the first wallet appears THEN the binding is sent with it`(
-        model: NoWalletModel,
-    ) = runTest {
+    @Test
+    fun `GIVEN list not loaded WHEN it loads with a wallet THEN sent without asking the server`() = runTest {
         // Arrange
-        userWallets.value = model.wallets
+        userWallets.value = null
         launch { repository.bind(UID) }
         runCurrent()
 
@@ -124,16 +127,30 @@ internal class DefaultMarketingUidBindingRepositoryTest {
         coVerify(exactly = 1) {
             tangemTechApi.bindMarketingUidWallets(UID, BindMarketingUidWalletsBody(walletIds = listOf(WALLET_ID)))
         }
-        confirmVerified(tangemTechApi)
+        coVerify(exactly = 0) { walletServerBinder.awaitBound(any()) }
     }
 
-    private fun provideTestModels() = listOf(
-        NoWalletModel(name = "list not loaded", wallets = null),
-        NoWalletModel(name = "empty list", wallets = emptyList()),
-    )
+    @Test
+    fun `GIVEN no wallet WHEN the first wallet appears THEN sent once the server has it`() = runTest {
+        // Arrange
+        val serverHasWallet = CompletableDeferred<Unit>()
+        val sentBodies = mutableListOf<BindMarketingUidWalletsBody>()
+        coEvery { walletServerBinder.awaitBound(UserWalletId(WALLET_ID)) } coAnswers { serverHasWallet.await() }
+        coEvery { tangemTechApi.bindMarketingUidWallets(UID, capture(sentBodies)) } returns success()
+        userWallets.value = emptyList()
+        launch { repository.bind(UID) }
+        runCurrent()
 
-    data class NoWalletModel(val name: String, val wallets: List<UserWallet>?) {
-        override fun toString(): String = name
+        // Act
+        userWallets.value = listOf(defaultWallet)
+        runCurrent()
+        val sentBeforeServerHasWallet = sentBodies.toList()
+        serverHasWallet.complete(Unit)
+        runCurrent()
+
+        // Assert
+        assertThat(sentBeforeServerHasWallet).isEmpty()
+        assertThat(sentBodies).containsExactly(BindMarketingUidWalletsBody(walletIds = listOf(WALLET_ID)))
     }
 
     private fun wallet(id: String): UserWallet = mockk<UserWallet.Hot> {
