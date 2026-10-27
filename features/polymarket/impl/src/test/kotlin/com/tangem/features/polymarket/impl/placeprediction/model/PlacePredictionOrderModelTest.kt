@@ -4,6 +4,8 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionOrderFailure
 import com.tangem.domain.polymarket.model.PredictionOrderFees
@@ -538,6 +540,25 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         } finally {
             models.forEach(Model::onDestroy)
             models.clear()
+        }
+    }
+
+    @Nested
+    inner class FeeSheet {
+
+        @Test
+        fun `GIVEN a priced quote WHEN fee clicked THEN the sheet is titled total`() = runOrderTest {
+            // Arrange
+            val model = createQuotedModel()
+            val slot = FakeSlotHost(model.feeSheet.navigation)
+
+            // Act
+            model.onFeeClick()
+
+            // Assert
+            assertThat(slot.configuration).isEqualTo(Unit)
+            assertThat(model.feeSheet.state.value?.title)
+                .isEqualTo(resourceReference(R.string.prediction_fee_sheet_total))
         }
     }
 
