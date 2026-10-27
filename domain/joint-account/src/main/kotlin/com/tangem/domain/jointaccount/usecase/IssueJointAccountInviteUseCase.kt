@@ -5,6 +5,7 @@ import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccountInviteIssueError
 import com.tangem.domain.jointaccount.model.JointAccountIssuedInvite
 import com.tangem.domain.jointaccount.repository.JointAccountRepository
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.logging.TangemLogger
 
@@ -15,18 +16,24 @@ class IssueJointAccountInviteUseCase(
 ) {
 
     suspend operator fun invoke(
-        userWalletId: UserWalletId,
-        cryptoAccountId: String,
+        accountId: AccountId,
         slot: Int,
     ): Either<JointAccountInviteIssueError, JointAccountIssuedInvite> {
-        val result = repository.issueInvite(userWalletId = userWalletId, cryptoAccountId = cryptoAccountId, slot = slot)
+        val result = repository.issueInvite(
+            userWalletId = accountId.userWalletId,
+            cryptoAccountId = accountId.value,
+            slot = slot,
+        )
+        val isSlotStateStale = result.isRight() || result.leftOrNull() is JointAccountInviteIssueError.SlotUnavailable
 
-        if (result.isRight() || result.leftOrNull() is JointAccountInviteIssueError.SlotUnavailable) {
-            fetcher(params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId)).onLeft {
-                TangemLogger.e("Failed to refetch the joint accounts of $userWalletId after issuing an invite", it)
-            }
-        }
+        if (isSlotStateStale) refetch(userWalletId = accountId.userWalletId)
 
         return result
+    }
+
+    private suspend fun refetch(userWalletId: UserWalletId) {
+        fetcher(params = SingleJointAccountListFetcher.Params(userWalletId = userWalletId)).onLeft {
+            TangemLogger.e("Failed to refetch the joint accounts of $userWalletId after issuing an invite", it)
+        }
     }
 }
