@@ -196,9 +196,8 @@ interface WalletManagersFacade {
     ): Result<TransactionFee>?
 
     /**
-     * Wraps a yield send into the module upgrade the way a yield send was last priced for this wallet and network,
-     * by [estimateFee] or by an earlier call, so a transfer built again for sending matches its gas limit. Without
-     * a recent decision the module version is checked now; a failed check leaves [callData] as is.
+     * Wraps a yield send into the module upgrade the way it was last priced for this wallet and network; without
+     * a recent decision the module version is checked now, and a failed check leaves [callData] as is.
      */
     suspend fun wrapYieldSendWithModuleUpgrade(
         userWalletId: UserWalletId,
@@ -206,7 +205,7 @@ interface WalletManagersFacade {
         callData: SmartContractCallData,
     ): SmartContractCallData
 
-    /** Drops the decision of [wrapYieldSendWithModuleUpgrade] once a module upgrade is sent, as it no longer holds. */
+    /** Called once a module upgrade is sent, which outdates the decision of [wrapYieldSendWithModuleUpgrade]. */
     fun resetYieldSendUpgradeDecision(userWalletId: UserWalletId, network: Network)
 
     /**

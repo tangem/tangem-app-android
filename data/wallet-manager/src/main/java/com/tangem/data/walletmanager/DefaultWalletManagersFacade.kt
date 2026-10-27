@@ -87,6 +87,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     private val jointRefundReceiverProvider: JointRefundReceiverProvider,
     blockchainSDKFactory: BlockchainSDKFactory,
     private val yieldModuleFeatureToggles: YieldModuleFeatureToggles,
+    private val yieldSendUpgradeDecisions: YieldSendUpgradeDecisions,
 ) : WalletManagersFacade {
 
     private val demoConfig by lazy { DemoConfig }
@@ -98,7 +99,6 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     private val cryptoCurrencyTypeConverter by lazy { CryptoCurrencyTypeConverter() }
     private val requirementsConditionConverter by lazy { SdkRequirementsConditionConverter() }
     private val estimationFeeAddressFactory by lazy { EstimationFeeAddressFactory() }
-    private val yieldSendUpgradeDecisions = YieldSendUpgradeDecisions()
 
     private val wmInitializationMutexes = ConcurrentHashMap<String, Mutex>()
 
@@ -837,8 +837,8 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                     amount = amount,
                 )
                 if (yieldModuleFeatureToggles.isYieldModuleV3Enabled && isYieldModuleUpgradeAllowed) {
-                    walletManager.wrapWithYieldModuleUpgradeIfAvailable(sendCallData).also { estimatedCallData ->
-                        yieldSendUpgradeDecisions.remember(userWalletId, network, estimatedCallData)
+                    yieldSendUpgradeDecisions.remember(userWalletId, network) {
+                        walletManager.wrapWithYieldModuleUpgradeIfAvailable(sendCallData)
                     }
                 } else {
                     sendCallData
@@ -867,8 +867,8 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             derivationPath = network.derivationPath.value,
         ) ?: return@withContext callData
 
-        walletManager.wrapWithYieldModuleUpgradeIfAvailable(callData).also { pricedCallData ->
-            yieldSendUpgradeDecisions.remember(userWalletId, network, pricedCallData)
+        yieldSendUpgradeDecisions.remember(userWalletId, network) {
+            walletManager.wrapWithYieldModuleUpgradeIfAvailable(callData)
         }
     }
 

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import kotlinx.coroutines.test.runTest
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
@@ -37,9 +38,9 @@ internal class YieldSendUpgradeDecisionsTest {
     }
 
     @Test
-    fun `GIVEN wrapped estimate WHEN applyTo THEN call is wrapped into the same implementation`() {
+    fun `GIVEN wrapped estimate WHEN applyTo THEN call is wrapped into the same implementation`() = runTest {
         // Arrange
-        decisions.remember(userWalletId, ethereum, wrappedCallData)
+        decisions.remember(userWalletId, ethereum) { wrappedCallData }
 
         // Act
         val actual = decisions.applyTo(userWalletId, ethereum, sendCallData)
@@ -52,9 +53,9 @@ internal class YieldSendUpgradeDecisionsTest {
     }
 
     @Test
-    fun `GIVEN bare estimate WHEN applyTo THEN call is left bare`() {
+    fun `GIVEN bare estimate WHEN applyTo THEN call is left bare`() = runTest {
         // Arrange
-        decisions.remember(userWalletId, ethereum, CompiledSmartContractCallData(byteArrayOf(9)))
+        decisions.remember(userWalletId, ethereum) { CompiledSmartContractCallData(byteArrayOf(9)) }
 
         // Act
         val actual = decisions.applyTo(userWalletId, ethereum, sendCallData)
@@ -64,9 +65,9 @@ internal class YieldSendUpgradeDecisionsTest {
     }
 
     @Test
-    fun `GIVEN estimate older than its lifetime WHEN applyTo THEN no decision`() {
+    fun `GIVEN estimate older than its lifetime WHEN applyTo THEN no decision`() = runTest {
         // Arrange
-        decisions.remember(userWalletId, ethereum, wrappedCallData)
+        decisions.remember(userWalletId, ethereum) { wrappedCallData }
         nowMillis += (5.minutes + 1.seconds).inWholeMilliseconds
 
         // Act
@@ -77,9 +78,9 @@ internal class YieldSendUpgradeDecisionsTest {
     }
 
     @Test
-    fun `GIVEN forgotten decision WHEN applyTo THEN no decision`() {
+    fun `GIVEN forgotten decision WHEN applyTo THEN no decision`() = runTest {
         // Arrange
-        decisions.remember(userWalletId, ethereum, wrappedCallData)
+        decisions.remember(userWalletId, ethereum) { wrappedCallData }
         decisions.forget(userWalletId, ethereum)
 
         // Act
@@ -89,11 +90,40 @@ internal class YieldSendUpgradeDecisionsTest {
         assertThat(actual).isNull()
     }
 
+    @Test
+    fun `GIVEN decision forgotten while it is priced WHEN applyTo THEN no decision`() = runTest {
+        // Arrange
+        decisions.remember(userWalletId, ethereum) {
+            decisions.forget(userWalletId, ethereum)
+            wrappedCallData
+        }
+
+        // Act
+        val actual = decisions.applyTo(userWalletId, ethereum, sendCallData)
+
+        // Assert
+        assertThat(actual).isNull()
+    }
+
+    @Test
+    fun `GIVEN decision priced after forget WHEN applyTo THEN call follows the new decision`() = runTest {
+        // Arrange
+        decisions.remember(userWalletId, ethereum) { wrappedCallData }
+        decisions.forget(userWalletId, ethereum)
+        decisions.remember(userWalletId, ethereum) { CompiledSmartContractCallData(byteArrayOf(9)) }
+
+        // Act
+        val actual = decisions.applyTo(userWalletId, ethereum, sendCallData)
+
+        // Assert
+        assertThat(actual).isSameInstanceAs(sendCallData)
+    }
+
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN estimate for another wallet or network WHEN applyTo THEN no decision`(model: OtherSendModel) {
+    fun `GIVEN estimate for another wallet or network WHEN applyTo THEN no decision`(model: OtherSendModel) = runTest {
         // Arrange
-        decisions.remember(model.userWalletId, model.network, wrappedCallData)
+        decisions.remember(model.userWalletId, model.network) { wrappedCallData }
 
         // Act
         val actual = decisions.applyTo(userWalletId, ethereum, sendCallData)
