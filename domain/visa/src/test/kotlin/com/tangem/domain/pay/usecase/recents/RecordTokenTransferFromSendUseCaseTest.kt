@@ -8,7 +8,8 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.repository.PaymentAccountRecentsStore
+import com.tangem.domain.pay.model.recents.TokenTransferJournal
+import com.tangem.domain.pay.repository.AccountRecentsStore
 import com.tangem.test.mock.MockAccounts
 import io.mockk.clearMocks
 import io.mockk.coVerify
@@ -21,7 +22,7 @@ import org.junit.jupiter.api.Test
 
 internal class RecordTokenTransferFromSendUseCaseTest {
 
-    private val recentsStore: PaymentAccountRecentsStore = mockk(relaxed = true)
+    private val recentsStore: AccountRecentsStore = mockk(relaxed = true)
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
 
     private val useCase = RecordTokenTransferFromSendUseCase(
@@ -55,7 +56,12 @@ internal class RecordTokenTransferFromSendUseCaseTest {
         // Assert
         val expectedCurrencyId = currency.id
         coVerify(exactly = 1) {
-            recentsStore.markUsed(userWalletId = WALLET, accountId = account.accountId, currencyId = expectedCurrencyId)
+            recentsStore.markUsed(
+                userWalletId = WALLET,
+                journal = TokenTransferJournal.PAYMENT_ACCOUNT,
+                accountId = account.accountId,
+                currencyId = expectedCurrencyId,
+            )
         }
     }
 
@@ -73,7 +79,7 @@ internal class RecordTokenTransferFromSendUseCaseTest {
         )
 
         // Assert
-        coVerify(exactly = 0) { recentsStore.markUsed(any(), any(), any()) }
+        coVerify(exactly = 0) { recentsStore.markUsed(any(), any(), any(), any()) }
     }
 
     @Test
@@ -94,7 +100,12 @@ internal class RecordTokenTransferFromSendUseCaseTest {
         // Assert
         val expectedCurrencyId = currency.id
         coVerify(exactly = 1) {
-            recentsStore.markUsed(userWalletId = WALLET, accountId = account.accountId, currencyId = expectedCurrencyId)
+            recentsStore.markUsed(
+                userWalletId = WALLET,
+                journal = TokenTransferJournal.PAYMENT_ACCOUNT,
+                accountId = account.accountId,
+                currencyId = expectedCurrencyId,
+            )
         }
     }
 
@@ -112,7 +123,7 @@ internal class RecordTokenTransferFromSendUseCaseTest {
         )
 
         // Assert
-        coVerify(exactly = 0) { recentsStore.markUsed(any(), any(), any()) }
+        coVerify(exactly = 0) { recentsStore.markUsed(any(), any(), any(), any()) }
     }
 
     @Test
@@ -133,7 +144,7 @@ internal class RecordTokenTransferFromSendUseCaseTest {
         )
 
         // Assert
-        coVerify(exactly = 0) { recentsStore.markUsed(any(), any(), any()) }
+        coVerify(exactly = 0) { recentsStore.markUsed(any(), any(), any(), any()) }
     }
 
     private fun stubLoaded(networks: List<PaymentNetworkStatus>) {

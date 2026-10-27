@@ -20,13 +20,9 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.userwallet.UserWalletItem
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
-import com.tangem.core.ui.R.*
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.block.TangemBlockCardColors
-import com.tangem.core.ui.components.bottomsheets.OptionsBottomSheet
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.welcome.impl.R
@@ -104,8 +100,6 @@ internal fun AnimatedContentScope.WelcomeSelectWallet(state: WelcomeUM.SelectWal
             actualWallets = state.wallets
         }
     }
-
-    AddWalletBottomSheet(state.addWalletBottomSheet)
 }
 
 @Suppress("MagicNumber")
@@ -180,13 +174,4 @@ private fun AnimatedContentScope.TitleText(modifier: Modifier = Modifier) {
             color = TangemTheme.colors3.text.secondary,
         )
     }
-}
-
-@Composable
-fun AddWalletBottomSheet(config: TangemBottomSheetConfig) {
-    OptionsBottomSheet(
-        config = config,
-        title = resourceReference(string.auth_info_add_wallet_title),
-        containerColor = TangemTheme.colors3.bg.primary,
-    )
 }

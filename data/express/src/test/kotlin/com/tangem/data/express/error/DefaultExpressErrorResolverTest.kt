@@ -46,7 +46,7 @@ internal class DefaultExpressErrorResolverTest {
         val actual = resolver.resolve(exception)
 
         // Assert
-        assertThat(actual).isEqualTo(ExpressError.UnknownError)
+        assertThat(actual).isEqualTo(ExpressError.UnknownError())
     }
 
     @Test
@@ -58,7 +58,7 @@ internal class DefaultExpressErrorResolverTest {
         val actual = resolver.resolve(exception)
 
         // Assert
-        assertThat(actual).isEqualTo(ExpressError.UnknownError)
+        assertThat(actual).isEqualTo(ExpressError.UnknownError())
     }
 
     @Test
@@ -70,7 +70,7 @@ internal class DefaultExpressErrorResolverTest {
         val actual = resolver.resolve(exception)
 
         // Assert
-        assertThat(actual).isEqualTo(ExpressError.UnknownError)
+        assertThat(actual).isEqualTo(ExpressError.UnknownError())
     }
 
     private fun httpException(errorBody: String?) = ApiResponseError.HttpException(
