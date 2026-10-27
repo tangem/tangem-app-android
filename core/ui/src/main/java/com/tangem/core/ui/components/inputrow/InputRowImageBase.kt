@@ -57,12 +57,12 @@ fun InputRowImageBase(
     imageUrl: String? = null,
     @DrawableRes iconResVector: Int? = null,
     @DrawableRes iconResWebp: Int? = null,
-    subtitleColor: Color = TangemTheme.colors.text.primary1,
-    captionColor: Color = TangemTheme.colors.text.tertiary,
-    iconTint: Color = TangemTheme.colors.icon.informative,
+    subtitleColor: Color = TangemTheme.colors3.text.primary,
+    captionColor: Color = TangemTheme.colors3.text.secondary,
+    iconTint: Color = TangemTheme.colors3.icon.secondary,
     isGrayscaleImage: Boolean = false,
     @DrawableRes iconEndRes: Int? = null,
-    endIconTint: Color = TangemTheme.colors.icon.informative,
+    endIconTint: Color = TangemTheme.colors3.icon.secondary,
     onImageError: (@Composable () -> Unit)? = null,
     subtitleExtraContent: (@Composable RowScope.() -> Unit)? = null,
     extraContent: (@Composable RowScope.() -> Unit)? = null,
@@ -134,7 +134,7 @@ fun InputRowImageBase(
 }
 
 @Composable
-private fun RowScope.InputRowEndIcon(iconRes: Int?, tint: Color = TangemTheme.colors.icon.informative) {
+private fun RowScope.InputRowEndIcon(iconRes: Int?, tint: Color = TangemTheme.colors3.icon.secondary) {
     AnimatedVisibility(
         visible = iconRes != null,
         label = "End icon visibility animation",

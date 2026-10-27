@@ -33,6 +33,12 @@ internal class JointOperationConverterTest {
                     vote = "reject",
                     votedAt = "2026-09-07T10:00:00Z",
                 ),
+                JointOperationDto.VoteDto(
+                    address = "0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf",
+                    vote = "approve",
+                    votedAt = "2026-09-07T09:00:00Z",
+                    signature = "0x" + "AB".repeat(n = 64) + "1B",
+                ),
             ),
         )
 
@@ -64,6 +70,12 @@ internal class JointOperationConverterTest {
                         address = "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
                         state = JointOperation.MemberSignature.State.DECLINED,
                         at = "2026-09-07T10:00:00Z",
+                    ),
+                    JointOperation.MemberSignature(
+                        address = "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+                        state = JointOperation.MemberSignature.State.SIGNED,
+                        at = "2026-09-07T09:00:00Z",
+                        signature = "0x" + "ab".repeat(n = 64) + "1b",
                     ),
                 ),
             ),

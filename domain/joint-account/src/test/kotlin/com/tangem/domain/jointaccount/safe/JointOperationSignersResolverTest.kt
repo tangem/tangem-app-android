@@ -1,6 +1,7 @@
 package com.tangem.domain.jointaccount.safe
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.jointaccount.model.FinishedJointOperation
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationSignerState
@@ -137,6 +138,34 @@ internal class JointOperationSignersResolverTest {
 
         // Assert
         assertThat(actual).isFalse()
+    }
+
+    @Test
+    fun `GIVEN a finished operation WHEN signers are resolved THEN the roster is joined with its votes`() {
+        // Arrange
+        val operation = FinishedJointOperation(
+            operationId = "3f1a2b4c-5d6e-7f80-91a2-b3c4d5e6f708",
+            chainId = 137,
+            safeAddress = "0x5afe000000000000000000000000000000000001",
+            safeTx = mockk(),
+            status = FinishedJointOperation.Status.CANCELLED,
+            initiator = ALICE,
+            signatures = listOf(signature(address = BOB, state = DECLINED, at = "2026-09-08T15:36:00Z")),
+            createdAt = "2026-09-08T15:30:00Z",
+            finishedAtMillis = 0,
+            txHash = null,
+        )
+
+        // Act
+        val actual = resolver.signers(jointAccount = jointAccount(), operation = operation)
+
+        // Assert
+        assertThat(actual).containsExactly(
+            JointOperationSignerState(member = alice, answer = Answer.CREATED, at = "2026-09-08T15:30:00Z"),
+            JointOperationSignerState(member = bob, answer = Answer.DECLINED, at = "2026-09-08T15:36:00Z"),
+            JointOperationSignerState(member = carol, answer = Answer.WAITING, at = null),
+            JointOperationSignerState(member = dave, answer = Answer.WAITING, at = null),
+        ).inOrder()
     }
 
     private fun jointAccount() = JointAccount(

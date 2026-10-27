@@ -52,7 +52,12 @@ internal object TangemPayBankWithdrawAmountPreviewData {
         onClick = {},
     )
 
-    val empty = TangemPayBankWithdrawAmountUM(
+    private val moneyAccountFrom = BankWithdrawFromUM(
+        title = resourceReference(R.string.money_account_main_name),
+        icon = AccountIconUM.Money,
+    )
+
+    val empty = TangemPayBankWithdrawAmountUM.Content(
         header = header,
         from = from,
         amount = amount.copy(value = ""),
@@ -64,7 +69,7 @@ internal object TangemPayBankWithdrawAmountPreviewData {
         onContinueClick = {},
     )
 
-    val content = TangemPayBankWithdrawAmountUM(
+    val content = TangemPayBankWithdrawAmountUM.Content(
         header = header,
         from = from,
         amount = amount,
@@ -85,10 +90,20 @@ internal object TangemPayBankWithdrawAmountPreviewData {
     )
 
     val moneyAccount = content.copy(
-        from = BankWithdrawFromUM(
-            title = resourceReference(R.string.money_account_main_name),
-            icon = AccountIconUM.Money,
-        ),
+        from = moneyAccountFrom,
         source = source.copy(onClick = null),
+    )
+
+    val loading = TangemPayBankWithdrawAmountUM.Loading(
+        header = header,
+        from = moneyAccountFrom,
+        currencySymbol = "$",
+        onBackClick = {},
+    )
+
+    val feeUnreachable = TangemPayBankWithdrawAmountUM.FeeUnreachable(
+        header = header,
+        onRetryClick = {},
+        onBackClick = {},
     )
 }

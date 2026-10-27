@@ -49,19 +49,19 @@ internal fun StakingBalanceBlock(
                 Text(
                     text = state.fiatValue.orMaskWithStars(isBalanceHidden).resolveReference(),
                     style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                     modifier = Modifier.testTag(TokenDetailsScreenTestTags.STAKING_FIAT_AMOUNT),
                 )
                 Text(
                     text = StringsSigns.DOT,
                     style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                     modifier = Modifier.testTag(TokenDetailsScreenTestTags.STAKING_DOT),
                 )
                 Text(
                     text = state.cryptoValue.orMaskWithStars(isBalanceHidden).resolveReference(),
                     style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                     modifier = Modifier.testTag(TokenDetailsScreenTestTags.STAKING_TOKEN_AMOUNT),
                 )
             }
@@ -69,7 +69,7 @@ internal fun StakingBalanceBlock(
                 Text(
                     text = state.rewardValue.orMaskWithStars(isBalanceHidden).resolveReference(),
                     style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                     modifier = Modifier.testTag(TokenDetailsScreenTestTags.STAKING_REWARD_VALUE),
                 )
             }
@@ -77,7 +77,7 @@ internal fun StakingBalanceBlock(
         Icon(
             painter = painterResource(id = R.drawable.ic_chevron_right_24),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
             modifier = Modifier.testTag(TokenDetailsScreenTestTags.STAKING_CHEVRON_ICON),
         )
     }
@@ -92,18 +92,18 @@ private fun StakingBalanceTitleRow(isBetaMode: Boolean, modifier: Modifier = Mod
         Text(
             text = stringResourceSafe(R.string.staking_native),
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
         if (isBetaMode) {
             Text(
                 text = StringsSigns.DOT,
                 style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
             Text(
                 text = stringResourceSafe(R.string.beta_mode_warning_title),
                 style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
     }

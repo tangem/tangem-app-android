@@ -87,7 +87,7 @@ private fun TypographyContent(state: TypographyStoryState, modifier: Modifier = 
             .navigationBarsPadding()
             .padding(top = 48.dp)
             .fillMaxSize()
-            .background(TangemTheme.colors2.surface.level1),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         item(key = "toggle") {
             Row(
@@ -100,7 +100,7 @@ private fun TypographyContent(state: TypographyStoryState, modifier: Modifier = 
                 Text(
                     text = "Force fontScale = 1.0",
                     style = TangemTheme.typography2.bodyMedium16,
-                    color = TangemTheme.colors2.text.neutral.primary,
+                    color = TangemTheme.colors3.text.primary,
                 )
                 Switch(
                     checked = state.isFontScaleDefault,
@@ -111,7 +111,7 @@ private fun TypographyContent(state: TypographyStoryState, modifier: Modifier = 
         itemsIndexed(items = items, key = { _, item -> item.name }) { index, item ->
             Row(
                 modifier = Modifier
-                    .border(width = 1.dp, color = TangemTheme.colors2.surface.level2)
+                    .border(width = 1.dp, color = TangemTheme.colors3.bg.primary)
                     .height(if (index == 0) 48.dp else 44.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -119,14 +119,14 @@ private fun TypographyContent(state: TypographyStoryState, modifier: Modifier = 
                 Text(
                     text = "Lorem ipsum",
                     style = item.style,
-                    color = TangemTheme.colors2.text.neutral.primary,
+                    color = TangemTheme.colors3.text.primary,
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
 
                 Text(
                     text = item.name,
                     style = TangemTheme.typography2.captionRegular12,
-                    color = TangemTheme.colors2.text.neutral.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                     textAlign = TextAlign.End,
                     modifier = Modifier
                         .fillMaxWidth()

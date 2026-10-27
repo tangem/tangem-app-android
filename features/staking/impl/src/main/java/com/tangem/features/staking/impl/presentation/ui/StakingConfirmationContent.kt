@@ -48,7 +48,7 @@ internal fun StakingConfirmationContent(
     val isTransactionInProgress = state.notifications.any { it is StakingNotification.Warning.TransactionInProgress }
     Column(
         modifier = Modifier
-            .background(TangemTheme.colors.background.secondary)
+            .background(TangemTheme.colors3.bg.primary)
             .padding(horizontal = 16.dp)
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -86,7 +86,7 @@ internal fun StakingConfirmationContent(
 @Composable
 private fun Preview_StakingConfirmationContent() {
     TangemThemePreview {
-        Column(Modifier.background(TangemTheme.colors.background.primary)) {
+        Column(Modifier.background(TangemTheme.colors3.bg.primary)) {
             StakingConfirmationContent(
                 amountState = AmountStatePreviewData.amountState,
                 state = ConfirmationStatePreviewData.assentStakingState,

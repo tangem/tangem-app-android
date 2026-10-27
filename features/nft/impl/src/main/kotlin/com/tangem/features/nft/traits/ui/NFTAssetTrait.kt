@@ -17,14 +17,14 @@ internal fun NFTAssetTrait(state: NFTAssetTraitUM, modifier: Modifier = Modifier
         Text(
             text = state.name,
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
         Text(
             modifier = Modifier
                 .padding(top = 4.dp),
             text = state.value,
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
     }
 }
