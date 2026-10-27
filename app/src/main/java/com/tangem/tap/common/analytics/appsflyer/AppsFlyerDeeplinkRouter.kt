@@ -137,14 +137,13 @@ class AppsFlyerDeeplinkRouter @Inject constructor(
     }
 
     private suspend fun routeReferral(currentRoute: AppRoute) {
-        // Referral targets fresh installs: go straight to hot wallet creation (skips stories). The deep link
-        // is NOT cleared here — it stays as referral attribution (read by GetAppsFlyerDeeplinkUseCase, cleared
-        // on wallet creation); replaceAll keeps it off the back stack.
+        // Referral targets fresh installs: go straight to hot wallet creation. The deep link is NOT cleared
+        // here — ClearReferralInstallUseCase clears it on wallet creation; replaceAll keeps it off the back stack.
         if (!isFreshInstallEntry(currentRoute)) return
         if (userWalletsListRepository.userWalletsSync().isNotEmpty()) return
 
         TangemLogger.i("[Referral] Routing AppsFlyer referral deep link to hot wallet creation")
-        appRouter.replaceAll(AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.HotWallet))
+        appRouter.replaceAll(AppRoute.CreateWalletStart)
     }
 }
 
@@ -152,11 +151,10 @@ internal fun isFreshInstallEntry(currentRoute: AppRoute?): Boolean = when (curre
     // A Home reached by forgetting the last wallet is a return, not an install entry: a link left pending by an
     // earlier session must not hijack it.
     is AppRoute.Home -> currentRoute.entryReason == AppRoute.Home.EntryReason.Launch
-    is AppRoute.Stories -> true
     else -> false
 }
 
-// Mirrors DeepLinkFactory.checkRoutingReadiness (minus Home and Stories, which fresh-install links need) plus
+// Mirrors DeepLinkFactory.checkRoutingReadiness (minus Home and Stories, which these links may route from) plus
 // the Tangem Pay flows these links open, so a pending link never stacks a second one on top of them.
 internal fun isNavigationBlocked(currentRoute: AppRoute?): Boolean = when (currentRoute) {
     null,

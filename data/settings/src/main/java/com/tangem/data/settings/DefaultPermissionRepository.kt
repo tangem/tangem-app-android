@@ -15,20 +15,6 @@ internal class DefaultPermissionRepository(
     private val context: Context,
 ) : PermissionRepository {
 
-    override suspend fun shouldInitiallyShowPermissionScreen(permission: String): Boolean {
-        return appPreferencesStore.getSyncOrDefault(
-            key = storePreferencesKeys.getShouldShowInitialPermissionScreen(permission),
-            default = true,
-        )
-    }
-
-    override suspend fun neverInitiallyShowPermissionScreen(permission: String) {
-        appPreferencesStore.store(
-            key = storePreferencesKeys.getShouldShowInitialPermissionScreen(permission),
-            value = false,
-        )
-    }
-
     override suspend fun shouldAskPermission(permission: String): Boolean {
         return appPreferencesStore.getSyncOrDefault(storePreferencesKeys.getShouldShowPermission(permission), true)
     }

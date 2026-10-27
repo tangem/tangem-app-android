@@ -1,7 +1,0 @@
-<?xml version="1.0" ?>
-<SmellBaseline>
-  <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>UnnecessaryEventHandlerParameter:SendDoneButtons.kt$onShareClick: (String) -&gt; Unit</ID>
-  </CurrentIssues>
-</SmellBaseline>
