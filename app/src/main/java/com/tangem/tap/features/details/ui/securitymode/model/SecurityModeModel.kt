@@ -10,7 +10,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.sdk.api.TangemSdkManager
-import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.analytics.events.TangemSdkErrorEvent
 import com.tangem.tap.features.details.redux.SecurityOption
@@ -113,8 +112,8 @@ internal class SecurityModeModel @Inject constructor(
     }
 }
 
-private fun SecurityOption.toAnalyticsSecurityMode(): AnalyticsParam.SecurityMode = when (this) {
-    SecurityOption.AccessCode -> AnalyticsParam.SecurityMode.AccessCode
-    SecurityOption.PassCode -> AnalyticsParam.SecurityMode.Passcode
-    SecurityOption.LongTap -> AnalyticsParam.SecurityMode.LongTap
+private fun SecurityOption.toAnalyticsSecurityMode(): Settings.CardSettings.SecurityModeChanged.Mode = when (this) {
+    SecurityOption.AccessCode -> Settings.CardSettings.SecurityModeChanged.Mode.AccessCode
+    SecurityOption.PassCode -> Settings.CardSettings.SecurityModeChanged.Mode.Passcode
+    SecurityOption.LongTap -> Settings.CardSettings.SecurityModeChanged.Mode.LongTap
 }

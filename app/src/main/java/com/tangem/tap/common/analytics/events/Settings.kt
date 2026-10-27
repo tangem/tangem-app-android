@@ -42,10 +42,16 @@ sealed class Settings(
             params = mapOf("Type" to type.value),
         )
 
-        class SecurityModeChanged(mode: AnalyticsParam.SecurityMode) : CardSettings(
+        class SecurityModeChanged(mode: Mode) : CardSettings(
             event = "Security Mode Changed",
             params = mapOf("Mode" to mode.value),
-        )
+        ) {
+            enum class Mode(val value: String) {
+                AccessCode("Access Code"),
+                Passcode("Passcode"),
+                LongTap("Long Tap"),
+            }
+        }
 
         class AccessCodeRecoveryChanged(status: AnalyticsParam.AccessCodeRecoveryStatus) : CardSettings(
             event = "Access Code Recovery Changed",
@@ -75,10 +81,16 @@ sealed class Settings(
             params = mapOf("Currency Type" to currencyType),
         )
 
-        class ThemeSwitched(theme: AnalyticsParam.AppTheme) : AppSettings(
+        class ThemeSwitched(theme: Theme) : AppSettings(
             event = "App Theme Switched",
             params = mapOf("State" to theme.value),
-        )
+        ) {
+            enum class Theme(val value: String) {
+                System("System"),
+                Dark("Dark"),
+                Light("Light"),
+            }
+        }
 
         class EnableBiometrics : AppSettings(event = "Notice - Enable Biometric")
 
