@@ -10,7 +10,6 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
-import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionStatus
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySendCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.unwrapYieldModuleUpgrade
@@ -55,14 +54,22 @@ internal class DefaultTransactionRepositoryTest {
             every { walletManager.wallet } returns wallet
             every { wallet.address } returns OWNER_ADDRESS
             coEvery { walletManager.getYieldModuleAddress() } returns MODULE_ADDRESS
-            coEvery { walletManager.checkModuleVersionStatus() } returns YieldModuleVersionStatus.UpgradeAvailable(
-                currentImplementation = CURRENT_IMPLEMENTATION,
-                latestImplementation = LATEST_IMPLEMENTATION,
-            )
+            coEvery {
+                walletManagersFacade.wrapYieldSendWithModuleUpgrade(
+                    userWalletId = userWalletId,
+                    network = network,
+                    callData = any(),
+                )
+            } answers {
+                EthereumYieldSupplyUpgradeToAndCallCallData(
+                    newImplementation = LATEST_IMPLEMENTATION,
+                    innerCallData = thirdArg(),
+                )
+            }
         }
 
         @Test
-        fun `GIVEN yield send and toggle on and upgrade available WHEN createTransferTransaction THEN send is wrapped`() =
+        fun `GIVEN yield send and toggle on WHEN createTransferTransaction THEN sends the call wrapped by the facade`() =
             runTest {
                 // Arrange
                 val repository = createRepository(isToggleEnabled = true)
@@ -78,7 +85,7 @@ internal class DefaultTransactionRepositoryTest {
             }
 
         @Test
-        fun `GIVEN yield send and toggle off WHEN createTransferTransaction THEN bare send without version check`() =
+        fun `GIVEN yield send and toggle off WHEN createTransferTransaction THEN bare send without upgrade decision`() =
             runTest {
                 // Arrange
                 val repository = createRepository(isToggleEnabled = false)
@@ -88,7 +95,7 @@ internal class DefaultTransactionRepositoryTest {
 
                 // Assert
                 assertThat(actual.callData()).isInstanceOf(EthereumYieldSupplySendCallData::class.java)
-                coVerify(exactly = 0) { walletManager.checkModuleVersionStatus() }
+                coVerify(exactly = 0) { walletManagersFacade.wrapYieldSendWithModuleUpgrade(any(), any(), any()) }
             }
 
         @Test
@@ -101,7 +108,7 @@ internal class DefaultTransactionRepositoryTest {
 
             // Assert
             assertThat(actual.callData()).isNotInstanceOf(EthereumYieldSupplyUpgradeToAndCallCallData::class.java)
-            coVerify(exactly = 0) { walletManager.checkModuleVersionStatus() }
+            coVerify(exactly = 0) { walletManagersFacade.wrapYieldSendWithModuleUpgrade(any(), any(), any()) }
         }
     }
 
@@ -130,7 +137,6 @@ internal class DefaultTransactionRepositoryTest {
         const val OWNER_ADDRESS = "0x1111111111111111111111111111111111111111"
         const val MODULE_ADDRESS = "0x2222222222222222222222222222222222222222"
         const val DESTINATION_ADDRESS = "0x3333333333333333333333333333333333333333"
-        const val CURRENT_IMPLEMENTATION = "0x4444444444444444444444444444444444444444"
         const val LATEST_IMPLEMENTATION = "0x5555555555555555555555555555555555555555"
 
         val userWalletId = UserWalletId(stringValue = "011")

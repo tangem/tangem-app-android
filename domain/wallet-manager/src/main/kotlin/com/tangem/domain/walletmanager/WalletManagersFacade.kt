@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.common.pagination.Page
+import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
@@ -193,6 +194,17 @@ interface WalletManagersFacade {
         network: Network,
         isYieldModuleUpgradeAllowed: Boolean,
     ): Result<TransactionFee>?
+
+    /**
+     * Wraps a yield send into the module upgrade the way [estimateFee] last priced it for this wallet and network,
+     * so the sent call matches its gas limit. Without a recent estimate the module version is checked now; a failed
+     * check leaves [callData] as is.
+     */
+    suspend fun wrapYieldSendWithModuleUpgrade(
+        userWalletId: UserWalletId,
+        network: Network,
+        callData: SmartContractCallData,
+    ): SmartContractCallData
 
     /**
      * Validates transaction
