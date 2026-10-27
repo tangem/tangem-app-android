@@ -42,9 +42,26 @@ internal sealed interface WcConnections {
 internal data class WcWalletConnectionsUM(
     val userWalletId: String,
     val walletName: String,
-    val agents: ImmutableList<McpAgentInfo>,
+    val agents: WcAgentsUM,
     val dAppGroups: ImmutableList<WcDAppGroupUM>,
 )
+
+/**
+ * State of the Connected Agents section.
+ *
+ * The agent list is read for every wallet at once, so [Loading] and [Error] are the same for all of
+ * them — only [Content] is the wallet's own.
+ */
+internal sealed interface WcAgentsUM {
+
+    data object Loading : WcAgentsUM
+
+    /** The list could not be read. [isReloading] is the owner's retry, still running. */
+    data class Error(val isReloading: Boolean, val onReloadClick: () -> Unit) : WcAgentsUM
+
+    /** An empty list hides the section: the wallet has no agents, which is not worth a heading. */
+    data class Content(val agents: ImmutableList<McpAgentInfo>) : WcAgentsUM
+}
 
 /** dApps of one account — or of the whole wallet when accounts are off, and then [title] is null. */
 internal data class WcDAppGroupUM(
