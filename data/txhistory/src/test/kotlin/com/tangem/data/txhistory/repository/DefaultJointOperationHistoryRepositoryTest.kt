@@ -3,8 +3,8 @@ package com.tangem.data.txhistory.repository
 import arrow.core.right
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ETAG_HEADER
+import com.tangem.domain.jointaccount.model.JointOperationFetchResult
 import com.tangem.domain.jointaccount.model.JointOperationRecord
-import com.tangem.domain.txhistory.repository.JointOperationHistoryRepository.FetchResult
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.params.ParameterizedTest
 import com.google.common.truth.Truth.assertThat
@@ -378,7 +378,7 @@ internal class DefaultJointOperationHistoryRepositoryTest {
             val actual = repository.fetchOperation(WALLET_ID, operationId = "1", eTag = "old")
 
             // Assert
-            assertThat(actual).isEqualTo(FetchResult.Updated(eTag = "new").right())
+            assertThat(actual).isEqualTo(JointOperationFetchResult.Updated(eTag = "new").right())
             coVerify { jointOperationDao.upsert(listOf(toEntity(item))) }
         }
 
@@ -401,10 +401,16 @@ internal class DefaultJointOperationHistoryRepositoryTest {
             }
 
         private fun provideTestModels() = listOf(
-            ErrorModel(code = ApiResponseError.HttpException.Code.NOT_MODIFIED, expected = FetchResult.NotModified),
-            ErrorModel(code = ApiResponseError.HttpException.Code.BAD_REQUEST, expected = FetchResult.Gone),
-            ErrorModel(code = ApiResponseError.HttpException.Code.NOT_FOUND, expected = FetchResult.Gone),
-            ErrorModel(code = ApiResponseError.HttpException.Code.FORBIDDEN, expected = FetchResult.Gone),
+            ErrorModel(
+                code = ApiResponseError.HttpException.Code.NOT_MODIFIED,
+                expected = JointOperationFetchResult.NotModified,
+            ),
+            ErrorModel(
+                code = ApiResponseError.HttpException.Code.BAD_REQUEST,
+                expected = JointOperationFetchResult.Gone,
+            ),
+            ErrorModel(code = ApiResponseError.HttpException.Code.NOT_FOUND, expected = JointOperationFetchResult.Gone),
+            ErrorModel(code = ApiResponseError.HttpException.Code.FORBIDDEN, expected = JointOperationFetchResult.Gone),
             ErrorModel(code = ApiResponseError.HttpException.Code.INTERNAL_SERVER_ERROR, expected = null),
         )
     }
@@ -417,7 +423,7 @@ internal class DefaultJointOperationHistoryRepositoryTest {
         ApiResponseError.HttpException(ApiResponseError.HttpException.Code.BAD_REQUEST, message = null, errorBody = null),
     ) as ApiResponse<T>
 
-    data class ErrorModel(val code: ApiResponseError.HttpException.Code, val expected: FetchResult?)
+    data class ErrorModel(val code: ApiResponseError.HttpException.Code, val expected: JointOperationFetchResult?)
 
     private fun stubSyncState(state: HistorySyncStateEntity?) {
         every {

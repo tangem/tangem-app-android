@@ -19,7 +19,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 /** The answers to a finished operation, read against the account's current roster and threshold */
@@ -49,7 +48,6 @@ internal class FinishedJointOperationSigners @Inject constructor(
                     observe(userWalletId = userWalletId, currency = currency, operation = operation)
                 }
             }
-            .onStart { emit(null) }
             .distinctUntilChanged()
     }
 
