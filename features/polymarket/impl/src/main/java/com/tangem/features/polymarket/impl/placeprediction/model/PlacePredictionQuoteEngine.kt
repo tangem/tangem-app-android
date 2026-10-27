@@ -52,16 +52,13 @@ import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.Transformer
-import com.tangem.utils.transformer.update
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
@@ -107,6 +104,10 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
     private val tradingPermission = MutableStateFlow<TradingPermissionUM?>(value = null)
 
+    private val isFundingWindowOpen = MutableStateFlow<Boolean?>(value = null)
+
+    private val isAddFundsEnabled = MutableStateFlow<Boolean?>(value = null)
+
     private val isHeld = MutableStateFlow(false)
 
     val addFunds = PlacePredictionAddFunds(
@@ -127,7 +128,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
     private var isResumed = false
 
     init {
-        uiState.update(SetCollateralTransformer(currency = getPolymarketCollateralCurrencyUseCase()))
+        apply(SetCollateralTransformer(currency = getPolymarketCollateralCurrencyUseCase()))
         when (val params = params) {
             is PlacePredictionComponent.Params.Buy -> loadMarket(params = params)
             is PlacePredictionComponent.Params.Sell -> loadPosition(params = params)
@@ -154,7 +155,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
     }
 
     fun onAmountChange(value: String) {
-        uiState.update(SetAmountTransformer(value = value))
+        apply(SetAmountTransformer(value = value))
         restartQuoteLoop(withDebounce = true)
     }
 
@@ -166,7 +167,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
     fun applySlippage(percent: BigDecimal) {
         if (uiState.value.slippage.percent.compareTo(percent) == 0) return
 
-        uiState.update { state ->
+        apply { state ->
             SetAmountTransformer(value = state.amountValue)
                 .transform(state.copy(slippage = SlippageUM.of(percent = percent), minAmount = null))
         }
@@ -174,7 +175,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
     }
 
     fun retryQuote() {
-        if (reloadPositionIfLost()) return
+        if (isHeld.value || reloadPositionIfLost()) return
 
         restartQuoteLoop(withDebounce = false)
     }
@@ -194,8 +195,18 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
     }
 
     fun release() {
+        if (!isHeld.value) return
+
         isHeld.value = false
+        resyncDroppedUpdates()
         if (isResumed) refresh()
+    }
+
+    private fun resyncDroppedUpdates() {
+        apply(SetBalanceTransformer(balance = activeStatus.value.actualBalance()))
+        tradingPermission.value?.let { apply(SetTradingPermissionTransformer(permission = it)) }
+        isFundingWindowOpen.value?.let { apply(SetAwaitingFundsTransformer(isAwaitingFunds = it)) }
+        isAddFundsEnabled.value?.let { apply(SetAddFundsAvailabilityTransformer(isEnabled = it)) }
     }
 
     private fun refresh() {
@@ -203,9 +214,16 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         restartQuoteLoop(withDebounce = false)
     }
 
-    private fun applyUnlessHeld(transformer: Transformer<PlacePredictionUM>) {
-        if (!isHeld.value) uiState.update(transformer)
+    private fun apply(transformer: Transformer<PlacePredictionUM>) {
+        apply(transform = transformer::transform)
     }
+
+    private fun apply(transform: (PlacePredictionUM) -> PlacePredictionUM) {
+        if (!isHeld.value) uiState.update(transform)
+    }
+
+    private fun PredictionAccountStatusValue.Active?.actualBalance(): BigDecimal? =
+        this?.takeIf { it.source == StatusSource.ACTUAL }?.balance
 
     private fun loadTradingAllowance() {
         if (tradingAllowanceJobHolder.isActive) return
@@ -221,7 +239,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
             }
 
             tradingPermission.value = permission
-            uiState.update(SetTradingPermissionTransformer(permission = permission))
+            apply(SetTradingPermissionTransformer(permission = permission))
         }.saveIn(tradingAllowanceJobHolder)
     }
 
@@ -232,12 +250,9 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
             .launchIn(scope)
 
         activeStatus
-            .map { status -> status?.takeIf { it.source == StatusSource.ACTUAL }?.balance }
-            .combine(isHeld) { balance, isHeld -> balance to isHeld }
-            .filter { (_, isHeld) -> !isHeld }
-            .map { (balance, _) -> balance }
+            .map { status -> status.actualBalance() }
             .distinctUntilChanged()
-            .onEach { balance -> uiState.update(SetBalanceTransformer(balance = balance)) }
+            .onEach { balance -> apply(SetBalanceTransformer(balance = balance)) }
             .launchIn(scope)
 
         if (params.side != PredictionOrderSide.BUY) return
@@ -249,13 +264,19 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
             .launchIn(scope)
 
         addFunds.isEnabled(permission = tradingPermission)
-            .onEach { isEnabled -> uiState.update(SetAddFundsAvailabilityTransformer(isEnabled = isEnabled)) }
+            .onEach { isEnabled ->
+                isAddFundsEnabled.value = isEnabled
+                apply(SetAddFundsAvailabilityTransformer(isEnabled = isEnabled))
+            }
             .launchIn(scope)
     }
 
     private fun observeFundingWindow() {
         predictionFundingWindow.isOpen(userWalletId = params.userWalletId)
-            .onEach { isOpen -> uiState.update(SetAwaitingFundsTransformer(isAwaitingFunds = isOpen)) }
+            .onEach { isOpen ->
+                isFundingWindowOpen.value = isOpen
+                apply(SetAwaitingFundsTransformer(isAwaitingFunds = isOpen))
+            }
             .flowOn(dispatchers.default)
             .launchIn(scope)
     }
@@ -274,7 +295,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
             isTradedAssetResolved = true
             positionId = market.conditionId?.let { PolymarketPositionId(conditionId = it, assetId = outcome.assetId) }
 
-            uiState.update(SetMarketTransformer(market = market, outcome = outcome))
+            apply(SetMarketTransformer(market = market, outcome = outcome))
 
             restartQuoteLoop(withDebounce = false)
         }
@@ -287,13 +308,13 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
         if (position is SellPositionUM.Loading || position is SellPositionUM.Held) return false
 
-        uiState.update(SetSellPositionStateTransformer(position = SellPositionUM.Loading))
+        apply(SetSellPositionStateTransformer(position = SellPositionUM.Loading))
         loadPosition(params = params)
         return true
     }
 
     private fun failPosition(position: SellPositionUM) {
-        applyUnlessHeld(SetSellPositionStateTransformer(position = position))
+        apply(SetSellPositionStateTransformer(position = position))
         restartQuoteLoop(withDebounce = false)
     }
 
@@ -327,11 +348,9 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
                 },
             )
 
-            if (isHeld.value) return@launch
-
             isNegRiskMarket = position.isNegRisk
 
-            uiState.update(SetPositionTransformer(position = position))
+            apply(SetPositionTransformer(position = position))
 
             restartQuoteLoop(withDebounce = false)
         }.saveIn(positionJobHolder)
@@ -368,15 +387,15 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
             ifLeft = { error ->
                 when (error) {
                     PredictionPriceError.MarketClosed -> {
-                        uiState.update(SetPriceErrorTransformer(error = PriceErrorUM.MarketClosed))
+                        apply(SetPriceErrorTransformer(error = PriceErrorUM.MarketClosed))
                         false
                     }
                     PredictionPriceError.InvalidAsset -> {
-                        uiState.update(SetPriceErrorTransformer(error = PriceErrorUM.Unknown))
+                        apply(SetPriceErrorTransformer(error = PriceErrorUM.Unknown))
                         false
                     }
                     PredictionPriceError.EmptyBook -> {
-                        uiState.update(SetPriceErrorTransformer(error = PriceErrorUM.EmptyBook))
+                        apply(SetPriceErrorTransformer(error = PriceErrorUM.EmptyBook))
                         true
                     }
                     PredictionPriceError.Network,
@@ -385,7 +404,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
                 }
             },
             ifRight = { price ->
-                applyUnlessHeld(SetOutcomePriceTransformer(price = price))
+                apply(SetOutcomePriceTransformer(price = price))
                 true
             },
         )
@@ -396,7 +415,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         val amount = state.enteredAmount() ?: return
         if (!state.isQuotable()) return
 
-        uiState.update(SetQuoteLoadingTransformer)
+        apply(SetQuoteLoadingTransformer)
 
         val result = withContext(dispatchers.default) {
             getPredictionOrderQuoteUseCase( userWalletId = params.userWalletId,
@@ -410,7 +429,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
             )
         }
 
-        uiState.update(
+        apply(
             SetQuoteResultTransformer(
                 result = result,
                 receivedAtMillis = System.currentTimeMillis(),
