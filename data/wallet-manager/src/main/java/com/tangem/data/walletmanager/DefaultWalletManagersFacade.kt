@@ -25,6 +25,7 @@ import com.tangem.blockchain.tokenbalance.models.TokenBalance
 import com.tangem.blockchain.transactionhistory.TransactionHistoryProvider
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryRequest
 import com.tangem.blockchain.yieldsupply.YieldSupplyContractCallDataProviderFactory
+import com.tangem.blockchain.yieldsupply.wrapWithYieldModuleUpgradeIfAvailable
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.blockchainsdk.models.UpdateWalletManagerResult
 import com.tangem.blockchainsdk.utils.fromNetworkId
@@ -49,6 +50,7 @@ import com.tangem.domain.models.network.isJoint
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.GaslessTransactionRepository
+import com.tangem.domain.transaction.YieldModuleFeatureToggles
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryState
@@ -83,6 +85,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     private val getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
     private val jointRefundReceiverProvider: JointRefundReceiverProvider,
     blockchainSDKFactory: BlockchainSDKFactory,
+    private val yieldModuleFeatureToggles: YieldModuleFeatureToggles,
 ) : WalletManagersFacade {
 
     private val demoConfig by lazy { DemoConfig }
@@ -793,6 +796,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         amount: Amount,
         userWalletId: UserWalletId,
         network: Network,
+        isYieldModuleUpgradeAllowed: Boolean,
     ): Result<TransactionFee>? = withContext(dispatchers.io) {
         val blockchain = network.toBlockchain()
         val derivationPath = network.derivationPath.value
@@ -824,11 +828,18 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 amount = amount,
                 blockchain = blockchain,
             )
-            is AmountType.TokenYieldSupply -> YieldSupplyContractCallDataProviderFactory.getSendCallData(
-                tokenContractAddress = amountType.token.contractAddress,
-                destinationAddress = estimationFeeAddressFactory.makeAddress(blockchain),
-                amount = amount,
-            )
+            is AmountType.TokenYieldSupply -> {
+                val sendCallData = YieldSupplyContractCallDataProviderFactory.getSendCallData(
+                    tokenContractAddress = amountType.token.contractAddress,
+                    destinationAddress = estimationFeeAddressFactory.makeAddress(blockchain),
+                    amount = amount,
+                )
+                if (yieldModuleFeatureToggles.isYieldModuleV3Enabled && isYieldModuleUpgradeAllowed) {
+                    walletManager.wrapWithYieldModuleUpgradeIfAvailable(sendCallData)
+                } else {
+                    sendCallData
+                }
+            }
             else -> null
         }
 

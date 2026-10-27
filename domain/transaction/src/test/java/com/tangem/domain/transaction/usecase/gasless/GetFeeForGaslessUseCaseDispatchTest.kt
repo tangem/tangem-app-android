@@ -130,6 +130,7 @@ internal class GetFeeForGaslessUseCaseDispatchTest {
                 transactionData = transactionData,
                 nativeCurrencyStatus = nativeStatus,
                 accountStatusList = accountStatusList,
+                nativeTransactionData = transactionData,
                 sentAmount = null,
             )
         } returns expected.right()
@@ -197,6 +198,7 @@ internal class GetFeeForGaslessUseCaseDispatchTest {
                 transactionData = transactionData,
                 nativeCurrencyStatus = accountCoinStatus,
                 accountStatusList = accountStatusList,
+                nativeTransactionData = transactionData,
                 sentAmount = null,
             )
         } returns expected.right()
@@ -223,6 +225,7 @@ internal class GetFeeForGaslessUseCaseDispatchTest {
                 transactionData = transactionData,
                 nativeCurrencyStatus = accountCoinStatus,
                 tokenCurrencyStatus = accountTokenStatus,
+                nativeTransactionData = transactionData,
                 sentAmount = null,
             )
         } returns expected.right()
@@ -233,6 +236,38 @@ internal class GetFeeForGaslessUseCaseDispatchTest {
         // Assert
         assertThat(actual).isEqualTo(expected.right())
     }
+
+    @Test
+    fun `GIVEN upgrade-wrapped yield send paid by a non-portfolio token WHEN invoke THEN resolver gets bare yield send and the original for native fee`() =
+        runTest {
+            // Arrange
+            val wrapped = wrappedYieldSendTransaction()
+            val expected = TransactionFeeExtended(
+                transactionFee = nativeFee,
+                feeTokenId = accountTokenStatus.currency.id,
+            )
+            every { currencyChecksRepository.isNetworkSupportedForGaslessTx(accountNetwork) } returns true
+            coEvery {
+                nonPortfolioCurrenciesProvider.getStatuses(userWalletId, accountNetwork)
+            } returns listOf(accountCoinStatus, accountTokenStatus)
+            coEvery {
+                evmGaslessFeeResolver.resolveWithSelectedFeeToken(
+                    userWallet = userWallet,
+                    network = accountNetwork,
+                    transactionData = bareYieldSendTransaction(),
+                    nativeCurrencyStatus = accountCoinStatus,
+                    tokenCurrencyStatus = accountTokenStatus,
+                    nativeTransactionData = wrapped,
+                    sentAmount = null,
+                )
+            } returns expected.right()
+
+            // Act
+            val actual = sut(userWallet = userWallet, network = accountNetwork, transactionData = wrapped)
+
+            // Assert
+            assertThat(actual).isEqualTo(expected.right())
+        }
 
     @Test
     fun `GIVEN a network without a coin anywhere WHEN invoke THEN data error`() = runTest {
@@ -247,4 +282,63 @@ internal class GetFeeForGaslessUseCaseDispatchTest {
         verify { evmGaslessFeeResolver wasNot Called }
         verify { tronGaslessFeeResolver wasNot Called }
     }
+
+    @Test
+    fun `GIVEN upgrade-wrapped yield send on EVM gasless network WHEN invoke THEN resolver gets bare yield send and the original for native fee`() =
+        runTest {
+            // Arrange
+            val wrapped = wrappedYieldSendTransaction()
+            val expected = TransactionFeeExtended(
+                transactionFee = nativeFee,
+                feeTokenId = coin.id,
+                nativeFee = nativeFee,
+            )
+            every { currencyChecksRepository.isNetworkSupportedForGaslessTx(network) } returns true
+            coEvery {
+                evmGaslessFeeResolver.resolveWithAutoFeeToken(
+                    userWallet = userWallet,
+                    network = network,
+                    transactionData = bareYieldSendTransaction(),
+                    nativeCurrencyStatus = nativeStatus,
+                    accountStatusList = accountStatusList,
+                    nativeTransactionData = wrapped,
+                    sentAmount = null,
+                )
+            } returns expected.right()
+
+            // Act
+            val actual = sut(userWallet = userWallet, network = network, transactionData = wrapped)
+
+            // Assert
+            assertThat(actual).isEqualTo(expected.right())
+        }
+
+    @Test
+    fun `GIVEN upgrade-wrapped yield send on network without gasless WHEN invoke THEN native fee is for wrapped send`() =
+        runTest {
+            // Arrange
+            val wrapped = wrappedYieldSendTransaction()
+            every { currencyChecksRepository.isNetworkSupportedForGaslessTx(network) } returns false
+            coEvery { getFeeUseCase.invoke(userWallet, network, wrapped) } returns nativeFee.right()
+            coEvery {
+                tronGaslessFeeResolver.resolveWithAutoFeeToken(
+                    userWalletId = userWalletId,
+                    network = network,
+                    transactionData = wrapped,
+                    nativeCurrencyStatus = nativeStatus,
+                    accountStatusList = accountStatusList,
+                    sentCurrencyStatus = null,
+                    loadNativeFee = any(),
+                    onNativeFeePreferred = any(),
+                )
+            } returns null
+
+            // Act
+            val actual = sut(userWallet = userWallet, network = network, transactionData = wrapped)
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                TransactionFeeExtended(transactionFee = nativeFee, feeTokenId = coin.id, nativeFee = nativeFee).right(),
+            )
+        }
 }

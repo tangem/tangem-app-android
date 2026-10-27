@@ -18,6 +18,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.GaslessYieldRepository
+import com.tangem.domain.transaction.YieldModuleFeatureToggles
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
@@ -35,6 +36,7 @@ class EstimateFeeForTokenUseCase(
     private val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
+    private val yieldModuleFeatureToggles: YieldModuleFeatureToggles,
 ) {
 
     private val tokenFeeCalculator = TokenFeeCalculator(
@@ -42,6 +44,7 @@ class EstimateFeeForTokenUseCase(
         gaslessTransactionRepository = gaslessTransactionRepository,
         demoConfig = demoConfig,
         gaslessYieldRepository = gaslessYieldRepository,
+        yieldModuleFeatureToggles = yieldModuleFeatureToggles,
     )
 
     suspend operator fun invoke(
@@ -68,6 +71,13 @@ class EstimateFeeForTokenUseCase(
                         ?: raiseIllegalStateError(
                             error = "only Fee.Ethereum supported, but was different",
                         )
+
+                    val nativeInitialFee = tokenFeeCalculator.estimateNativeFee(
+                        userWallet = userWallet,
+                        amount = amount,
+                        txTokenCurrencyStatus = sendingTokenCurrencyStatus,
+                        initialFee = initialTxFee,
+                    ).bind()
 
                     val accountStatusList = singleAccountStatusListSupplier.getSyncOrNull(userWallet.walletId)
                         ?: raiseIllegalStateError("AccountStatusList is null for ${userWallet.walletId}")
@@ -100,12 +110,12 @@ class EstimateFeeForTokenUseCase(
                             tokenFeeExtended = tokenFeeExtended,
                             amount = amount,
                             nativeFeeResult = TransactionFeeExtended(
-                                transactionFee = initialTxFee,
+                                transactionFee = nativeInitialFee,
                                 feeTokenId = nativeCurrencyStatus.currency.id,
                             ),
-                        ).copy(nativeFee = initialTxFee)
+                        ).copy(nativeFee = nativeInitialFee)
                     } else {
-                        tokenFeeExtended.copy(nativeFee = initialTxFee)
+                        tokenFeeExtended.copy(nativeFee = nativeInitialFee)
                     }
                 },
                 catch = {

@@ -1,6 +1,18 @@
 package com.tangem.data.walletmanager
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.smartcontract.SmartContractCallData
+import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.blockchain.extensions.Result
+import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionStatus
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySendCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
 import com.tangem.blockchainsdk.models.UpdateWalletManagerResult
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.data.walletmanager.store.WalletManagersStore
@@ -9,16 +21,24 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.Called
+import io.mockk.clearMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import java.math.BigDecimal
 
 /**
- * A joint network reads through the Safe wallet manager, so without the wallet behind it there is nothing to build:
- * an update is unreachable and a lookup gets `null`, in every build.
+ * Joint networks read through the Safe wallet manager, so without the wallet behind them an update is unreachable
+ * and a lookup gets `null`; the nested `EstimateFee` group covers the module-upgrade flag.
  */
 internal class DefaultWalletManagersFacadeTest {
 
@@ -35,6 +55,7 @@ internal class DefaultWalletManagersFacadeTest {
         getCachedTokenInfoUseCase = mockk(),
         jointRefundReceiverProvider = { SafeTestFixtures.REFUND_RECEIVER },
         blockchainSDKFactory = mockk(),
+        yieldModuleFeatureToggles = mockk { every { isYieldModuleV3Enabled } returns false },
     )
 
     private val userWalletId = UserWalletId("011")
@@ -72,5 +93,120 @@ internal class DefaultWalletManagersFacadeTest {
 
         // Assert
         assertThat(actual).isNull()
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class EstimateFee {
+
+        private val walletManager: EthereumWalletManager = mockk()
+        private val ethereumNetwork = MockCryptoCurrencyFactory().ethereum.network
+        private val sentCallData = slot<SmartContractCallData>()
+
+        private val yieldSupplyAmount = Amount(
+            currencySymbol = TOKEN.symbol,
+            value = BigDecimal.ONE,
+            decimals = TOKEN.decimals,
+            type = AmountType.TokenYieldSupply(
+                token = TOKEN,
+                isActive = true,
+                isInitialized = true,
+                isAllowedToSpend = true,
+            ),
+        )
+
+        @BeforeEach
+        fun resetMocks() {
+            clearMocks(walletManagersStore, userWalletsListRepository, walletManager)
+            sentCallData.clear()
+
+            every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(SafeTestFixtures.hotWallet()))
+            coEvery {
+                walletManagersStore.getSyncOrNull(
+                    userWalletId = userWalletId,
+                    blockchain = Blockchain.Ethereum,
+                    derivationPath = ethereumNetwork.derivationPath.value,
+                )
+            } returns walletManager
+            coEvery { walletManager.getYieldModuleAddress() } returns MODULE_ADDRESS
+            coEvery { walletManager.checkModuleVersionStatus() } returns YieldModuleVersionStatus.UpgradeAvailable(
+                currentImplementation = CURRENT_IMPLEMENTATION,
+                latestImplementation = LATEST_IMPLEMENTATION,
+            )
+            coEvery {
+                walletManager.estimateFee(amount = any(), destination = any(), callData = capture(sentCallData))
+            } returns Result.Success(TransactionFee.Single(normal = Fee.Common(amount = yieldSupplyAmount)))
+        }
+
+        @Test
+        fun `GIVEN yield send and toggle on and upgrade available WHEN estimateFee THEN estimates wrapped send`() =
+            runTest {
+                // Arrange
+                val facade = createFacade(isToggleEnabled = true)
+
+                // Act
+                facade.estimateFee(amount = yieldSupplyAmount, userWalletId = userWalletId, network = ethereumNetwork)
+
+                // Assert
+                assertThat(sentCallData.captured).isInstanceOf(EthereumYieldSupplyUpgradeToAndCallCallData::class.java)
+            }
+
+        @Test
+        fun `GIVEN yield send and upgrade not allowed WHEN estimateFee THEN estimates bare send`() = runTest {
+            // Arrange
+            val facade = createFacade(isToggleEnabled = true)
+
+            // Act
+            facade.estimateFee(
+                amount = yieldSupplyAmount,
+                userWalletId = userWalletId,
+                network = ethereumNetwork,
+                isYieldModuleUpgradeAllowed = false,
+            )
+
+            // Assert
+            assertThat(sentCallData.captured).isInstanceOf(EthereumYieldSupplySendCallData::class.java)
+            coVerify(exactly = 0) { walletManager.checkModuleVersionStatus() }
+        }
+
+        @Test
+        fun `GIVEN yield send and toggle off WHEN estimateFee THEN estimates bare send without version check`() =
+            runTest {
+                // Arrange
+                val facade = createFacade(isToggleEnabled = false)
+
+                // Act
+                facade.estimateFee(amount = yieldSupplyAmount, userWalletId = userWalletId, network = ethereumNetwork)
+
+                // Assert
+                assertThat(sentCallData.captured).isInstanceOf(EthereumYieldSupplySendCallData::class.java)
+                coVerify(exactly = 0) { walletManager.checkModuleVersionStatus() }
+            }
+
+        private fun createFacade(isToggleEnabled: Boolean) = DefaultWalletManagersFacade(
+            walletManagersStore = walletManagersStore,
+            userWalletsListRepository = userWalletsListRepository,
+            assetLoader = mockk(),
+            dispatchers = TestingCoroutineDispatcherProvider(),
+            gaslessTransactionRepository = mockk(),
+            jointAccountSafeAddressResolver = { mockk() },
+            getCachedTokenInfoUseCase = mockk(),
+            jointRefundReceiverProvider = { SafeTestFixtures.REFUND_RECEIVER },
+            blockchainSDKFactory = mockk(),
+            yieldModuleFeatureToggles = mockk { every { isYieldModuleV3Enabled } returns isToggleEnabled },
+        )
+    }
+
+    private companion object {
+        const val MODULE_ADDRESS = "0x2222222222222222222222222222222222222222"
+        const val CURRENT_IMPLEMENTATION = "0x4444444444444444444444444444444444444444"
+        const val LATEST_IMPLEMENTATION = "0x5555555555555555555555555555555555555555"
+
+        val TOKEN = Token(
+            name = "USD Coin",
+            symbol = "USDC",
+            contractAddress = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+            decimals = 6,
+        )
     }
 }

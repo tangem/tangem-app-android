@@ -81,7 +81,12 @@ internal class EstimateFeeForTokenUseCaseTest {
             walletManagersFacade.getOrCreateWalletManager(userWalletId = any(), network = any())
         } returns walletManager
         coEvery {
-            walletManagersFacade.estimateFee(amount = any(), userWalletId = any(), network = any())
+            walletManagersFacade.estimateFee(
+                amount = any(),
+                userWalletId = any(),
+                network = any(),
+                isYieldModuleUpgradeAllowed = any(),
+            )
         } returns Result.Success(INITIAL_TX_FEE)
         coEvery { gaslessTransactionRepository.getTokenFeeReceiverAddress() } returns FEE_RECEIVER
         every { gaslessTransactionRepository.getBaseGasForTransaction() } returns BigInteger("21000")
@@ -255,9 +260,154 @@ internal class EstimateFeeForTokenUseCaseTest {
             assertThat(result).isEqualTo(portfolioFee)
         }
 
+    @Test
+    fun `GIVEN yield send WHEN estimate THEN token fee uses bare estimate and native fee the upgrade-allowed one`() =
+        runTest {
+            // Arrange
+            val bareFee = ethereumFee(gasLimit = 100_000L, value = "0.000004")
+            val upgradeAllowedFee = ethereumFee(gasLimit = 160_000L, value = "0.000006")
+            givenEstimates(bare = bareFee, wrappedAllowed = upgradeAllowedFee)
+            val feeTokenStatus = tokenStatus(balance = TOKEN_BALANCE, yieldSupplyStatus = null)
+            coEvery {
+                walletManager.getGasLimit(any(), FEE_RECEIVER, any())
+            } returns Result.Success(BigInteger("60000"))
+
+            // Act
+            val result = createUseCase().invoke(
+                userWallet = userWallet,
+                feeTokenCurrencyStatus = feeTokenStatus,
+                sendingTokenCurrencyStatus = tokenStatus(
+                    balance = TOKEN_BALANCE,
+                    yieldSupplyStatus = activeYieldStatus(effectiveProtocolBalance = TOKEN_BALANCE),
+                ),
+                amount = SWAP_AMOUNT,
+            )
+
+            // Assert
+            val feeExtended = result.getOrNull()
+            assertThat(feeExtended?.mainTransactionGasLimit).isEqualTo(BigInteger("140000"))
+            assertThat(feeExtended?.nativeFee).isEqualTo(upgradeAllowedFee)
+        }
+
+    @Test
+    fun `GIVEN yield send and fee plan fallback WHEN estimate THEN returned native fee is the upgrade-allowed one`() =
+        runTest {
+            // Arrange
+            val bareFee = ethereumFee(gasLimit = 100_000L, value = "0.000004")
+            val upgradeAllowedFee = ethereumFee(gasLimit = 160_000L, value = "0.000006")
+            givenEstimates(bare = bareFee, wrappedAllowed = upgradeAllowedFee)
+            val yieldStatus = activeYieldStatus(effectiveProtocolBalance = TOKEN_BALANCE)
+            val feeTokenStatus = tokenStatus(balance = TOKEN_BALANCE, yieldSupplyStatus = yieldStatus)
+            coEvery {
+                resolveGaslessFeePlanUseCase(any(), any(), any(), any(), any())
+            } returns Either.Left(GetFeeError.GaslessError.NotEnoughFunds)
+
+            // Act
+            val result = createUseCase().invoke(
+                userWallet = userWallet,
+                feeTokenCurrencyStatus = feeTokenStatus,
+                sendingTokenCurrencyStatus = feeTokenStatus,
+                amount = SWAP_AMOUNT,
+            )
+
+            // Assert
+            val feeExtended = result.getOrNull()
+            assertThat(feeExtended?.transactionFee).isEqualTo(upgradeAllowedFee)
+            assertThat(feeExtended?.nativeFee).isEqualTo(upgradeAllowedFee)
+        }
+
+    @Test
+    fun `GIVEN plain token send WHEN estimate THEN fee is estimated once`() = runTest {
+        // Arrange
+        val feeTokenStatus = tokenStatus(balance = TOKEN_BALANCE, yieldSupplyStatus = null)
+        coEvery {
+            walletManager.getGasLimit(any(), FEE_RECEIVER, any())
+        } returns Result.Success(BigInteger("60000"))
+
+        // Act
+        val result = createUseCase().invoke(
+            userWallet = userWallet,
+            feeTokenCurrencyStatus = feeTokenStatus,
+            sendingTokenCurrencyStatus = feeTokenStatus,
+            amount = SWAP_AMOUNT,
+        )
+
+        // Assert
+        assertThat(result.getOrNull()?.nativeFee).isEqualTo(INITIAL_TX_FEE)
+        coVerify(exactly = 1) {
+            walletManagersFacade.estimateFee(
+                amount = any(),
+                userWalletId = any(),
+                network = any(),
+                isYieldModuleUpgradeAllowed = any(),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN yield send and module V3 toggle off WHEN estimate THEN fee is estimated once`() = runTest {
+        // Arrange
+        val bareFee = ethereumFee(gasLimit = 100_000L, value = "0.000004")
+        givenEstimates(bare = bareFee, wrappedAllowed = ethereumFee(gasLimit = 160_000L, value = "0.000006"))
+        val feeTokenStatus = tokenStatus(balance = TOKEN_BALANCE, yieldSupplyStatus = null)
+        coEvery {
+            walletManager.getGasLimit(any(), FEE_RECEIVER, any())
+        } returns Result.Success(BigInteger("60000"))
+
+        // Act
+        val result = createUseCase(isToggleEnabled = false).invoke(
+            userWallet = userWallet,
+            feeTokenCurrencyStatus = feeTokenStatus,
+            sendingTokenCurrencyStatus = tokenStatus(
+                balance = TOKEN_BALANCE,
+                yieldSupplyStatus = activeYieldStatus(effectiveProtocolBalance = TOKEN_BALANCE),
+            ),
+            amount = SWAP_AMOUNT,
+        )
+
+        // Assert
+        assertThat(result.getOrNull()?.nativeFee).isEqualTo(bareFee)
+        coVerify(exactly = 1) {
+            walletManagersFacade.estimateFee(
+                amount = any(),
+                userWalletId = any(),
+                network = any(),
+                isYieldModuleUpgradeAllowed = any(),
+            )
+        }
+    }
+
     // region Fixtures
 
-    private fun createUseCase() = EstimateFeeForTokenUseCase(
+    private fun givenEstimates(bare: TransactionFee, wrappedAllowed: TransactionFee) {
+        coEvery {
+            walletManagersFacade.estimateFee(
+                amount = any(),
+                userWalletId = any(),
+                network = any(),
+                isYieldModuleUpgradeAllowed = false,
+            )
+        } returns Result.Success(bare)
+        coEvery {
+            walletManagersFacade.estimateFee(
+                amount = any(),
+                userWalletId = any(),
+                network = any(),
+                isYieldModuleUpgradeAllowed = true,
+            )
+        } returns Result.Success(wrappedAllowed)
+    }
+
+    private fun ethereumFee(gasLimit: Long, value: String) = TransactionFee.Single(
+        normal = Fee.Ethereum.EIP1559(
+            amount = Amount(currencySymbol = "ETH", value = BigDecimal(value), decimals = 18),
+            gasLimit = BigInteger.valueOf(gasLimit),
+            maxFeePerGas = BigInteger("7020000"),
+            priorityFee = BigInteger("1020000"),
+        ),
+    )
+
+    private fun createUseCase(isToggleEnabled: Boolean = true) = EstimateFeeForTokenUseCase(
         gaslessTransactionRepository = gaslessTransactionRepository,
         gaslessYieldRepository = gaslessYieldRepository,
         walletManagersFacade = walletManagersFacade,
@@ -266,6 +416,7 @@ internal class EstimateFeeForTokenUseCaseTest {
         nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
         currencyChecksRepository = currencyChecksRepository,
         resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
+        yieldModuleFeatureToggles = mockk { every { isYieldModuleV3Enabled } returns isToggleEnabled },
     )
 
     private fun accountStatusList(

@@ -348,6 +348,7 @@ internal object TransactionDomainModule {
         gaslessTransactionRepository: GaslessTransactionRepository,
         gaslessYieldRepository: GaslessYieldRepository,
         resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
+        yieldModuleFeatureToggles: YieldModuleFeatureToggles,
     ): EvmGaslessFeeResolver {
         return EvmGaslessFeeResolver(
             walletManagersFacade = walletManagersFacade,
@@ -355,6 +356,7 @@ internal object TransactionDomainModule {
             gaslessTransactionRepository = gaslessTransactionRepository,
             gaslessYieldRepository = gaslessYieldRepository,
             resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
+            yieldModuleFeatureToggles = yieldModuleFeatureToggles,
         )
     }
 
@@ -502,6 +504,7 @@ internal object TransactionDomainModule {
         nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
         currencyChecksRepository: CurrencyChecksRepository,
         resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
+        yieldModuleFeatureToggles: YieldModuleFeatureToggles,
     ): EstimateFeeForTokenUseCase {
         return EstimateFeeForTokenUseCase(
             gaslessTransactionRepository = gaslessTransactionRepository,
@@ -512,6 +515,7 @@ internal object TransactionDomainModule {
             nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
             currencyChecksRepository = currencyChecksRepository,
             resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
+            yieldModuleFeatureToggles = yieldModuleFeatureToggles,
         )
     }
 
@@ -526,6 +530,7 @@ internal object TransactionDomainModule {
         estimateFeeUseCase: EstimateFeeUseCase,
         currencyChecksRepository: CurrencyChecksRepository,
         resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
+        yieldModuleFeatureToggles: YieldModuleFeatureToggles,
     ): EstimateFeeForGaslessTxUseCase {
         return EstimateFeeForGaslessTxUseCase(
             gaslessTransactionRepository = gaslessTransactionRepository,
@@ -537,6 +542,7 @@ internal object TransactionDomainModule {
             estimateFeeUseCase = estimateFeeUseCase,
             currencyChecksRepository = currencyChecksRepository,
             resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
+            yieldModuleFeatureToggles = yieldModuleFeatureToggles,
         )
     }
 

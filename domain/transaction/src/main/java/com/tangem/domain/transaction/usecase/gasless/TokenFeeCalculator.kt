@@ -24,6 +24,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.GaslessYieldRepository
+import com.tangem.domain.transaction.YieldModuleFeatureToggles
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
 import com.tangem.domain.transaction.models.GaslessProtocolData
@@ -41,6 +42,7 @@ internal class TokenFeeCalculator(
     private val gaslessTransactionRepository: GaslessTransactionRepository,
     private val demoConfig: DemoConfig,
     private val gaslessYieldRepository: GaslessYieldRepository,
+    private val yieldModuleFeatureToggles: YieldModuleFeatureToggles,
 ) {
 
     suspend fun calculateInitialFee(
@@ -71,6 +73,41 @@ internal class TokenFeeCalculator(
         amount: BigDecimal,
         txTokenCurrencyStatus: CryptoCurrencyStatus,
     ): Either<GetFeeError, TransactionFee> {
+        return estimateFee(
+            userWallet = userWallet,
+            amount = amount,
+            txTokenCurrencyStatus = txTokenCurrencyStatus,
+            isYieldModuleUpgradeAllowed = false,
+        )
+    }
+
+    /**
+     * The fee when the network coin pays: a yield send then goes out wrapped in the module upgrade, which the
+     * relayer-executed [initialFee] does not cover. Any other send reuses [initialFee] without another request.
+     */
+    suspend fun estimateNativeFee(
+        userWallet: UserWallet,
+        amount: BigDecimal,
+        txTokenCurrencyStatus: CryptoCurrencyStatus,
+        initialFee: TransactionFee,
+    ): Either<GetFeeError, TransactionFee> {
+        val isYieldSend = amount.convertToSdkAmount(txTokenCurrencyStatus).type is AmountType.TokenYieldSupply
+        if (!yieldModuleFeatureToggles.isYieldModuleV3Enabled || !isYieldSend) return Either.Right(initialFee)
+
+        return estimateFee(
+            userWallet = userWallet,
+            amount = amount,
+            txTokenCurrencyStatus = txTokenCurrencyStatus,
+            isYieldModuleUpgradeAllowed = true,
+        )
+    }
+
+    private suspend fun estimateFee(
+        userWallet: UserWallet,
+        amount: BigDecimal,
+        txTokenCurrencyStatus: CryptoCurrencyStatus,
+        isYieldModuleUpgradeAllowed: Boolean,
+    ): Either<GetFeeError, TransactionFee> {
         return either {
             val network = txTokenCurrencyStatus.currency.network
             val amountData = amount.convertToSdkAmount(txTokenCurrencyStatus)
@@ -86,6 +123,7 @@ internal class TokenFeeCalculator(
                     amount = amountData,
                     userWalletId = userWallet.walletId,
                     network = network,
+                    isYieldModuleUpgradeAllowed = isYieldModuleUpgradeAllowed,
                 )
             }
 

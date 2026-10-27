@@ -82,6 +82,7 @@ class GetFeeForGaslessUseCase(
                             transactionData = transactionData.unwrapYieldModuleUpgrade(),
                             nativeCurrencyStatus = nativeCurrencyStatus,
                             tokenCurrencyStatus = nonPortfolioFeeToken,
+                            nativeTransactionData = transactionData,
                             sentAmount = sentAmount,
                         ).bind()
                         else -> evmGaslessFeeResolver.resolveWithAutoFeeToken(
@@ -90,6 +91,7 @@ class GetFeeForGaslessUseCase(
                             transactionData = transactionData.unwrapYieldModuleUpgrade(),
                             nativeCurrencyStatus = nativeCurrencyStatus,
                             accountStatusList = accountStatusList,
+                            nativeTransactionData = transactionData,
                             sentAmount = sentAmount,
                         ).bind()
                     }
