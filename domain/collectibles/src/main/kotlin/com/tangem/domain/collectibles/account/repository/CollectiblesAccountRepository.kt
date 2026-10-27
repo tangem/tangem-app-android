@@ -27,6 +27,18 @@ interface CollectiblesAccountRepository {
      */
     suspend fun saveAccount(userWalletId: UserWalletId, status: CollectiblesAccountStatusValue)
 
+    /**
+     * Records that `update_vault` was just broadcast for [userWalletId]. Until it lands the vault still answers to
+     * the old delegate, and that must not read as a reason to relink again.
+     */
+    fun markRelinkSent(userWalletId: UserWalletId)
+
+    /** Whether a relink of [userWalletId] was broadcast recently enough that it may still land. */
+    fun isRelinkPending(userWalletId: UserWalletId): Boolean
+
+    /** Drops the relink mark of [userWalletId] once the vault answers to this device. */
+    fun clearRelinkPending(userWalletId: UserWalletId)
+
     /** Removes whatever is recorded for [userWalletId]. */
     suspend fun clearAccount(userWalletId: UserWalletId)
 }
