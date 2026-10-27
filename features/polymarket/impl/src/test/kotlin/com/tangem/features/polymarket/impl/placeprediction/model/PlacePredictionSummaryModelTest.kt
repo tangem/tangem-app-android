@@ -30,9 +30,9 @@ import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
@@ -797,7 +797,6 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             // Assert
             assertThat(slot.configuration).isEqualTo(Unit)
             assertThat(model.feeSheet.state.value).isEqualTo(expected)
-            assertThat(model.feeSheet.state.value?.title).isEqualTo(resourceReference(R.string.prediction_place_fee))
 
             model.onDestroy()
         }
