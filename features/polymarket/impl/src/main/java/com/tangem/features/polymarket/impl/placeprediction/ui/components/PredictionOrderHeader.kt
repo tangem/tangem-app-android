@@ -49,11 +49,7 @@ internal fun PredictionOrderHeader(market: MarketHeaderUM, modifier: Modifier = 
                 horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = stringResourceSafe(R.string.prediction_place_you_vote),
-                    style = TangemTheme.typography3.caption.medium,
-                    color = TangemTheme.colors3.text.secondary,
-                )
+                PredictionYouVoteLabel()
                 PredictionOutcomeBadge(title = market.outcomeTitle, accent = market.outcomeAccent)
                 market.priceLabel()?.let {
                     PredictionPriceBadge(text = it, isEntryToLive = market.entryPrice != null)
@@ -61,6 +57,16 @@ internal fun PredictionOrderHeader(market: MarketHeaderUM, modifier: Modifier = 
             }
         }
     }
+}
+
+@Composable
+internal fun PredictionYouVoteLabel(modifier: Modifier = Modifier) {
+    Text(
+        modifier = modifier,
+        text = stringResourceSafe(R.string.prediction_place_you_vote),
+        style = TangemTheme.typography3.caption.medium,
+        color = TangemTheme.colors3.text.secondary,
+    )
 }
 
 @Composable
