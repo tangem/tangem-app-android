@@ -218,9 +218,6 @@ internal class AppSettingsModel @Inject constructor(
     }
 
     private fun onBiometricAuthenticationToggled(isChecked: Boolean) {
-        // TODO : Uncomment and implement analytics event when ready
-        // val param = if (isChecked) AnalyticsParam.OnOffState.On else AnalyticsParam.OnOffState.Off
-        // analyticsEventHandler.send(Settings.AppSettings.BiometricAuthenticationChanged(param))
         if (isChecked) {
             toggleBiometricsAuthentication(enable = true)
         } else {
@@ -237,9 +234,6 @@ internal class AppSettingsModel @Inject constructor(
     }
 
     private fun onRequireAccessCodeToggled(isChecked: Boolean) {
-        // TODO : Uncomment and implement analytics event when ready
-        // val param = if (isChecked) AnalyticsParam.OnOffState.On else AnalyticsParam.OnOffState.Off
-        // analyticsEventHandler.send(Settings.AppSettings.RequireAccessCodeChanged(param))
         if (isChecked) {
             uiMessageSender.send(
                 dialogsFactory.createEnableRequireAccessCodeAlert(
