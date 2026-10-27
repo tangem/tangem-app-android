@@ -18,6 +18,7 @@ import com.tangem.grow.datasource.yield.local.YieldMarketsStore
 import com.tangem.data.yield.supply.store.YieldBoostPromoStore
 import com.tangem.data.yield.supply.store.YieldBoostStatusStore
 import com.tangem.domain.transaction.GaslessYieldRepository
+import com.tangem.domain.transaction.YieldModuleFeatureToggles
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.YieldModuleAddressProvider
 import com.tangem.domain.yield.supply.YieldSupplyRepository
@@ -40,10 +41,12 @@ internal object YieldSupplyDataModule {
     fun providerYieldSupplyTransactionRepository(
         walletManagersFacade: WalletManagersFacade,
         dispatchers: CoroutineDispatcherProvider,
+        yieldModuleFeatureToggles: YieldModuleFeatureToggles,
     ): YieldSupplyTransactionRepository {
         return DefaultYieldSupplyTransactionRepository(
             walletManagersFacade = walletManagersFacade,
             dispatchers = dispatchers,
+            yieldModuleFeatureToggles = yieldModuleFeatureToggles,
         )
     }
 
