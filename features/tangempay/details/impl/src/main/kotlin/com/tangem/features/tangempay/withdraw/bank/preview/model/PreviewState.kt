@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.withdraw.bank.preview.model
 
+import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.features.tangempay.withdraw.bank.preview.completion.CompletionState
 
 internal data class PreviewState(
@@ -15,4 +16,23 @@ internal data class PreviewState(
 }
 
 /** Outcomes that replace the summary with a full-screen result; only [General] offers Retry. */
-internal enum class PreviewFailure { RecipientRegion, SenderRegion, Business, UnsupportedConfiguration, General }
+internal enum class PreviewFailure {
+    RecipientRegion,
+    SenderRegion,
+    Business,
+    UnsupportedConfiguration,
+    General,
+    TransferOutcomeUnknown,
+}
+
+internal fun BankOfframpError.toFailure(): PreviewFailure = when (this) {
+    BankOfframpError.RecipientRegionUnsupported -> PreviewFailure.RecipientRegion
+    BankOfframpError.SenderRegionUnsupported -> PreviewFailure.SenderRegion
+    BankOfframpError.BusinessUnsupported -> PreviewFailure.Business
+    BankOfframpError.UnsupportedConfiguration -> PreviewFailure.UnsupportedConfiguration
+    BankOfframpError.Validation,
+    BankOfframpError.PollingTimeout,
+    BankOfframpError.WithdrawalInProgress,
+    is BankOfframpError.Unknown,
+    -> PreviewFailure.General
+}
