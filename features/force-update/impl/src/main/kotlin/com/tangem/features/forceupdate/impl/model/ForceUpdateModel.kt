@@ -9,6 +9,7 @@ import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent.ButtonUpd
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.navigation.url.AppStoreOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.appupdate.model.AppUpdateState
@@ -31,6 +32,7 @@ import javax.inject.Inject
 internal class ForceUpdateModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val appStoreOpener: AppStoreOpener,
+    private val settingsManager: SettingsManager,
     private val forceUpdateContinuation: ForceUpdateContinuation,
     private val getAppUpdateStateUseCase: GetAppUpdateStateUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
@@ -56,6 +58,7 @@ internal class ForceUpdateModel @Inject constructor(
             description = resourceReference(R.string.force_update_warning_message),
             onUpdateClick = ::onUpdateClick,
             onLaterClick = null,
+            onOpenSettingsClick = null,
             onSupportClick = { onSupportClick(source = AnalyticsParam.ScreensSources.CritUpdate) },
         )
         ForceUpdateComponent.Mode.Brick -> ForceUpdateUM(
@@ -65,6 +68,7 @@ internal class ForceUpdateModel @Inject constructor(
             description = resourceReference(R.string.force_update_brick_description),
             onUpdateClick = null,
             onLaterClick = null,
+            onOpenSettingsClick = null,
             onSupportClick = { onSupportClick(source = AnalyticsParam.ScreensSources.UnsupportedDevice) },
         )
         ForceUpdateComponent.Mode.OsTooOld -> ForceUpdateUM(
@@ -74,6 +78,7 @@ internal class ForceUpdateModel @Inject constructor(
             description = resourceReference(R.string.force_update_os_description),
             onUpdateClick = null,
             onLaterClick = ::onLaterClick,
+            onOpenSettingsClick = ::onOpenSettingsClick,
             onSupportClick = null,
         )
     }
@@ -84,7 +89,13 @@ internal class ForceUpdateModel @Inject constructor(
     }
 
     private fun onLaterClick() {
+        analyticsEventHandler.send(MainScreenAnalyticsEvent.ButtonLater())
         forceUpdateContinuation.dismiss()
+    }
+
+    private fun onOpenSettingsClick() {
+        analyticsEventHandler.send(MainScreenAnalyticsEvent.ButtonOpenSettings())
+        settingsManager.openSystemSettings()
     }
 
     private fun onSupportClick(source: AnalyticsParam.ScreensSources) {
