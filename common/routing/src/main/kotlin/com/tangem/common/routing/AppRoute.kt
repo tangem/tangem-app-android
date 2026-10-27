@@ -182,7 +182,6 @@ sealed class AppRoute(val path: String) : Route {
          * ManageTokens screen launched from Onboarding by another route. See `OnboardingRoute.ManageTokens`.
          */
         enum class Source {
-            STORIES,
             SETTINGS,
             ACCOUNT,
             WALLET,
@@ -314,7 +313,7 @@ sealed class AppRoute(val path: String) : Route {
         val nextRoute: AppRoute? = null,
     ) : AppRoute(path = "/push_notification") {
         enum class Source {
-            /** Launch-time ask, before any wallet exists: the legacy onboarding and the ToS screen. */
+            /** Launch-time ask after accepting the ToS on the Disclaimer screen, before any wallet exists. */
             Stories,
 
             /** Bottom sheet on the wallet screen. */
@@ -471,14 +470,7 @@ sealed class AppRoute(val path: String) : Route {
     object CreateWalletSelection : AppRoute(path = "/create_wallet_selection")
 
     @Serializable
-    data class CreateWalletStart(
-        val mode: Mode,
-    ) : AppRoute(path = "/create_wallet_start") {
-        enum class Mode {
-            ColdWallet,
-            HotWallet,
-        }
-    }
+    data object CreateWalletStart : AppRoute(path = "/create_wallet_start")
 
     @Serializable
     data class CreateHardwareWallet(
