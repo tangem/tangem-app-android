@@ -56,7 +56,6 @@ internal class RecentTransactionOwnershipTest {
         // from the explorer.
         OwnershipModel(transaction = merklClaim(), currency = coin, expected = true),
         OwnershipModel(transaction = merklClaim(), currency = usdc, expected = false),
-        // A claim on an outdated module is sent inside upgradeToAndCall and stays a claim
         OwnershipModel(transaction = merklClaim(isUpgradeWrapped = true), currency = coin, expected = true),
         OwnershipModel(transaction = merklClaim(isUpgradeWrapped = true), currency = usdc, expected = false),
         // Plain transfers keep being matched by their own amount.
