@@ -19,6 +19,7 @@ class PolymarketClob : ApiConfig() {
 
     companion object {
         const val KEY = "PolymarketClob"
+        const val MARKET_SOCKET_URL = "wss://ws-subscriptions-clob.polymarket.com/ws/market"
         val ID = ApiConfig.ID(KEY)
     }
 }
