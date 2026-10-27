@@ -36,6 +36,8 @@ sealed class ExpressDataError : Throwable() {
 
     data class ExchangeInvalidAddressError(override val code: Int) : ExpressDataError()
 
+    data class ExchangeProviderAddressBannedByAmlError(override val code: Int) : ExpressDataError()
+
     data class ExchangeInvalidFromDecimalsError(
         override val code: Int,
         val receivedFromDecimals: Int,
