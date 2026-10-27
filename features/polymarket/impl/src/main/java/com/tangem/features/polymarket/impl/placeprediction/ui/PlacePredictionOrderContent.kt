@@ -44,6 +44,7 @@ import com.tangem.features.polymarket.impl.placeprediction.ui.components.Predict
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlacePredictionOrderPreviewProvider
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlacePredictionPreviewIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PreviewAmountPresets
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
@@ -74,7 +75,7 @@ internal fun PlacePredictionOrderContent(
             ) {
                 PredictionPlaceButton(
                     order = state.order,
-                    isLoading = state.isSubmitting(),
+                    isLoading = state.submit !is SubmitUM.Idle,
                     isEnabled = state.isPrimaryButtonEnabled,
                     onClick = intents::onPlaceClick,
                 )
@@ -99,6 +100,8 @@ private fun OrderBody(
     contentPadding: PaddingValues,
     footerHeight: Int,
 ) {
+    val isIdle = state.submit is SubmitUM.Idle
+
     Column(
         modifier = Modifier
             .imePadding()
@@ -111,13 +114,13 @@ private fun OrderBody(
                 state = state,
                 onAmountChange = intents::onAmountChange,
                 onAddFundsClick = intents::onAddFundsClick,
-                isEnabled = !state.isSubmitting(),
+                isEnabled = isIdle,
             )
         }
         if (presets.isNotEmpty()) {
             PredictionAmountPresets(
                 presets = presets,
-                isEnabled = !state.isSubmitting(),
+                isEnabled = isIdle,
                 onPresetClick = intents::onPresetClick,
                 onMaxClick = intents::onMaxClick,
             )
@@ -128,10 +131,10 @@ private fun OrderBody(
         ) {
             PredictionOrderDetailsCard(
                 slippage = state.slippage,
-                total = (state.quote as? QuoteUM.Content)?.feeTotal?.formatPolymarketMoney().orEmpty(),
+                total = (state.quote as? QuoteUM.Content)?.feeTotal?.formatPolymarketMoney() ?: DASH_SIGN,
                 isTotalLoading = state.quote is QuoteUM.Loading,
-                onSlippageClick = intents::onSlippageClick,
-                onTotalClick = intents::onFeeClick.takeIf { state.canShowFeeBreakdown() },
+                onSlippageClick = intents::onSlippageClick.takeIf { isIdle },
+                onTotalClick = intents::onFeeClick.takeIf { isIdle && state.canShowFeeBreakdown() },
             )
             PredictionNotificationsBlock(
                 notifications = state.notifications,
@@ -140,16 +143,6 @@ private fun OrderBody(
         }
         Spacer(modifier = Modifier.height(with(LocalDensity.current) { footerHeight.toDp() }))
     }
-}
-
-private fun PlacePredictionUM.isSubmitting(): Boolean = when (submit) {
-    SubmitUM.Signing,
-    SubmitUM.Posting,
-    SubmitUM.AwaitingFill,
-    -> true
-    SubmitUM.Idle,
-    is SubmitUM.Result,
-    -> false
 }
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 800)
