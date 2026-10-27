@@ -157,7 +157,7 @@ internal class SwapModelHideRejectedProviderTest : SwapModelTestBase() {
         } returns (buildSwapCurrencyStatus(wallet) to buildSwapCurrencyStatus(wallet))
         coEvery {
             swapInteractor.getPair(fromSwapCurrencyStatus = any(), toSwapCurrencyStatus = any(), filterProviderTypes = any())
-        } returns Either.Left(ExpressError.UnknownError)
+        } returns Either.Left(ExpressError.UnknownError())
         coEvery { swapInteractor.getUnfulfilledReceiveRequirement(any()) } returns null
         coEvery {
             swapInteractor.onSwap(
