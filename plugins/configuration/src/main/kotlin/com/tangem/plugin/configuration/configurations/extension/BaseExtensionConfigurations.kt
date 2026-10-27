@@ -34,6 +34,7 @@ internal fun BaseExtension.configureCompose(project: Project) {
             contains(Regex(pattern = ":features:marketing:api\$")) || // provides Composable function
             contains(Regex(pattern = ":features:for-you:api\$")) || // provides Composable function
             contains(Regex(pattern = ":impl\$")) &&
+                !contains(":core:analytics") &&
                 !contains(":core:biometric-auth") &&
                 !contains(":spend:push-provisioning")
     }

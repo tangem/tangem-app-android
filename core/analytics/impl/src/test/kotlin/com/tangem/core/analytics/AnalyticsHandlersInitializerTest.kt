@@ -1,4 +1,4 @@
-package com.tangem.tap.common.analytics
+package com.tangem.core.analytics
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsHandler
