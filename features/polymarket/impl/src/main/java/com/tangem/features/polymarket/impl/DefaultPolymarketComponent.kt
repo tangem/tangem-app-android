@@ -41,10 +41,8 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
     @Assisted private val params: PolymarketComponent.Params,
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
-    polymarketFeatureToggles: PolymarketFeatureToggles,
+    private val polymarketFeatureToggles: PolymarketFeatureToggles,
 ) : PolymarketComponent, AppComponentContext by appComponentContext {
-
-    private val isQuickOrderEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled
 
     private val stackNavigation = StackNavigation<PolymarketRoute>()
 
@@ -125,7 +123,7 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
         is PolymarketRoute.PlacePrediction -> PlacePredictionComponent(
             appComponentContext = factoryContext,
             tokenReceiveComponentFactory = tokenReceiveComponentFactory,
-            isQuickOrderEnabled = isQuickOrderEnabled,
+            isQuickOrderEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled,
             params = PlacePredictionComponent.Params.Buy(
                 userWalletId = configuration.userWalletId,
                 eventId = configuration.eventId,
@@ -136,7 +134,7 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
         is PolymarketRoute.ClosePosition -> PlacePredictionComponent(
             appComponentContext = factoryContext,
             tokenReceiveComponentFactory = tokenReceiveComponentFactory,
-            isQuickOrderEnabled = isQuickOrderEnabled,
+            isQuickOrderEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled,
             params = PlacePredictionComponent.Params.Sell(
                 userWalletId = configuration.userWalletId,
                 positionId = configuration.positionId,

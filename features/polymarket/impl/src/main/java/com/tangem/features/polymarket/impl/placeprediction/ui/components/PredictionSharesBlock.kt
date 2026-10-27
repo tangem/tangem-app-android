@@ -48,11 +48,17 @@ internal fun PredictionSharesBlock(
     proceeds: SharesProceedsUM,
     onAmountChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    isEnabled: Boolean = true,
 ) {
     TangemSurface(modifier = modifier, color = TangemTheme.colors3.bg.secondary, shape = PolymarketCardShape) {
         Column {
             ProceedsSection(selected = selected, position = position, proceeds = proceeds)
-            CalculatorRow(selected = selected, position = position, onAmountChange = onAmountChange)
+            CalculatorRow(
+                selected = selected,
+                position = position,
+                isEnabled = isEnabled,
+                onAmountChange = onAmountChange,
+            )
         }
     }
 }
@@ -128,9 +134,14 @@ private fun ProceedsFigure(proceeds: SharesProceedsUM) {
 }
 
 @Composable
-private fun CalculatorRow(selected: BigDecimal, position: SellPositionUM, onAmountChange: (String) -> Unit) {
+private fun CalculatorRow(
+    selected: BigDecimal,
+    position: SellPositionUM,
+    isEnabled: Boolean,
+    onAmountChange: (String) -> Unit,
+) {
     val available = position.availableOrZero
-    val isSteppable = position is SellPositionUM.Held && SharesCalculator.isSteppable(available)
+    val isSteppable = isEnabled && position is SellPositionUM.Held && SharesCalculator.isSteppable(available)
 
     FlowRow(
         modifier = Modifier
