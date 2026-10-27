@@ -277,33 +277,30 @@ internal class JointAccountMembersModel @Inject constructor(
 
     /** A live invite is reissued too: the backend retires the old code. A refused slot only redraws from the list */
     private fun onInviteClick(cryptoAccountId: String, slot: Int, accountName: TextReference) {
+        val accountId = AccountId
+            .forJointAccount(userWalletId = params.userWalletId, value = cryptoAccountId)
+            .getOrNull()
+            ?: return
         if (!issuingSlot.compareAndSet(expect = null, update = slot)) return
 
         modelScope.launch {
-            try {
-                issueJointAccountInviteUseCase(
-                    userWalletId = params.userWalletId,
-                    cryptoAccountId = cryptoAccountId,
-                    slot = slot,
-                )
-                    .onRight { invite ->
-                        bottomSheetNavigation.activate(
-                            JointAccountMembersSheetConfig.InviteMember(
-                                message = inviteSharing.message(inviteId = invite.id, accountName = accountName),
-                            ),
+            issueJointAccountInviteUseCase(accountId = accountId, slot = slot)
+                .onRight { invite ->
+                    bottomSheetNavigation.activate(
+                        JointAccountMembersSheetConfig.InviteMember(
+                            message = inviteSharing.message(inviteId = invite.id, accountName = accountName),
+                        ),
+                    )
+                }
+                .onLeft { error ->
+                    TangemLogger.e("Failed to issue the invite of slot $slot", error.cause)
+                    if (error is JointAccountInviteIssueError.Failed) {
+                        uiMessageSender.send(
+                            SnackbarMessage(message = resourceReference(CoreUiR.string.common_unknown_error)),
                         )
                     }
-                    .onLeft { error ->
-                        TangemLogger.e("Failed to issue the invite of slot $slot", error.cause)
-                        if (error is JointAccountInviteIssueError.Failed) {
-                            uiMessageSender.send(
-                                SnackbarMessage(message = resourceReference(CoreUiR.string.common_unknown_error)),
-                            )
-                        }
-                    }
-            } finally {
-                issuingSlot.value = null
-            }
+                }
+            issuingSlot.value = null
         }
     }
 

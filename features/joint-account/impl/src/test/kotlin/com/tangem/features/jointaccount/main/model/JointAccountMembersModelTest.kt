@@ -258,8 +258,7 @@ internal class JointAccountMembersModelTest {
         // Arrange
         stub(account = pendingAccount(members = listOf(creator)))
         stubAccountRecord()
-        coEvery { issueJointAccountInviteUseCase(userWalletId = any(), cryptoAccountId = any(), slot = any()) } returns
-            ISSUED_INVITE.right()
+        coEvery { issueJointAccountInviteUseCase(accountId = any(), slot = any()) } returns ISSUED_INVITE.right()
         val model = createModel()
         val openedSheets = model.bottomSheetNavigation.trackSlot()
         val expected = JointAccountMembersSheetConfig.InviteMember(
@@ -278,7 +277,10 @@ internal class JointAccountMembersModelTest {
 
         // Assert
         coVerify(exactly = 1) {
-            issueJointAccountInviteUseCase(userWalletId = USER_WALLET_ID, cryptoAccountId = ACCOUNT_ID, slot = 1)
+            issueJointAccountInviteUseCase(
+                accountId = AccountId.forJointAccount(USER_WALLET_ID, ACCOUNT_ID).getOrNull()!!,
+                slot = 1,
+            )
         }
         assertThat(openedSheets).containsExactly(expected)
         verify(exactly = 0) { shareManager.shareTrackedText(text = any()) }
@@ -292,7 +294,7 @@ internal class JointAccountMembersModelTest {
             stubAccountRecord()
             val answer = CompletableDeferred<Unit>()
             coEvery {
-                issueJointAccountInviteUseCase(userWalletId = any(), cryptoAccountId = any(), slot = any())
+                issueJointAccountInviteUseCase(accountId = any(), slot = any())
             } coAnswers {
                 answer.await()
                 ISSUED_INVITE.right()
@@ -310,7 +312,7 @@ internal class JointAccountMembersModelTest {
             // Assert
             assertThat(model.uiState.value.freeSlots.map { it.action?.isLoading }).containsExactly(true, false).inOrder()
             coVerify(exactly = 1) {
-                issueJointAccountInviteUseCase(userWalletId = any(), cryptoAccountId = any(), slot = any())
+                issueJointAccountInviteUseCase(accountId = any(), slot = any())
             }
             answer.complete(Unit)
         }
@@ -322,7 +324,7 @@ internal class JointAccountMembersModelTest {
         stubAccountRecord()
         val answer = CompletableDeferred<Unit>()
         coEvery {
-            issueJointAccountInviteUseCase(userWalletId = any(), cryptoAccountId = any(), slot = any())
+            issueJointAccountInviteUseCase(accountId = any(), slot = any())
         } coAnswers {
             answer.await()
             ISSUED_INVITE.right()
@@ -348,7 +350,7 @@ internal class JointAccountMembersModelTest {
             stub(account = pendingAccount(members = listOf(creator)))
             stubAccountRecord()
             coEvery {
-                issueJointAccountInviteUseCase(userWalletId = any(), cryptoAccountId = any(), slot = any())
+                issueJointAccountInviteUseCase(accountId = any(), slot = any())
             } returns JointAccountInviteIssueError.Failed(cause = IllegalStateException("offline")).left()
             val model = createModel()
             val openedSheets = model.bottomSheetNavigation.trackSlot()
@@ -377,7 +379,7 @@ internal class JointAccountMembersModelTest {
         stub(account = pendingAccount(members = listOf(creator)))
         stubAccountRecord()
         coEvery {
-            issueJointAccountInviteUseCase(userWalletId = any(), cryptoAccountId = any(), slot = any())
+            issueJointAccountInviteUseCase(accountId = any(), slot = any())
         } returns JointAccountInviteIssueError.SlotUnavailable(cause = IllegalStateException("taken")).left()
         val model = createModel()
         val openedSheets = model.bottomSheetNavigation.trackSlot()

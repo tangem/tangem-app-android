@@ -146,8 +146,8 @@ data class JointAccountMembersUM(
         data object Expired : SlotStatusUM
     }
 
-    @Immutable
     /** [isLoading] while the slot's invite is being issued: the button keeps its place and shows a loader */
+    @Immutable
     sealed interface SlotActionUM {
 
         val isLoading: Boolean
