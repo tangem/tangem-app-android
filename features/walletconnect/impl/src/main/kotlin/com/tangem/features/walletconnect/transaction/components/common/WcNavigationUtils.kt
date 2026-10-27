@@ -16,6 +16,7 @@ import com.tangem.features.walletconnect.transaction.entity.common.WcCommonTrans
 import com.tangem.features.walletconnect.transaction.model.WcSendTransactionModel
 import com.tangem.features.walletconnect.transaction.routes.WcTransactionRoutes
 
+@Suppress("CanBeNonNullable")
 internal fun getWcCommonScreen(
     config: WcTransactionRoutes,
     appComponentContext: AppComponentContext,

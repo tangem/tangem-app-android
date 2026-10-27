@@ -1,5 +1,6 @@
 package com.tangem.domain.jointaccount.safe
 
+import com.tangem.domain.jointaccount.model.FinishedJointOperation
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperation.MemberSignature.State
@@ -13,10 +14,34 @@ import com.tangem.domain.jointaccount.model.JointOperationSignerState.Answer
 class JointOperationSignersResolver {
 
     fun signers(jointAccount: JointAccount, operation: JointOperation): List<JointOperationSignerState> {
-        return jointAccount.members.map { member ->
-            val signature = operation.signatures.firstOrNull { it.address.equals(member.address, ignoreCase = true) }
+        return signers(
+            members = jointAccount.members,
+            initiator = operation.initiator,
+            createdAt = operation.createdAt,
+            signatures = operation.signatures,
+        )
+    }
+
+    /** The roster is today's: a member who left after the operation finished is no longer listed */
+    fun signers(jointAccount: JointAccount, operation: FinishedJointOperation): List<JointOperationSignerState> {
+        return signers(
+            members = jointAccount.members,
+            initiator = operation.initiator,
+            createdAt = operation.createdAt,
+            signatures = operation.signatures,
+        )
+    }
+
+    private fun signers(
+        members: List<JointAccount.Member>,
+        initiator: String?,
+        createdAt: String?,
+        signatures: List<JointOperation.MemberSignature>,
+    ): List<JointOperationSignerState> {
+        return members.map { member ->
+            val signature = signatures.firstOrNull { it.address.equals(member.address, ignoreCase = true) }
             val answer = when {
-                member.address.equals(operation.initiator, ignoreCase = true) -> Answer.CREATED
+                member.address.equals(initiator, ignoreCase = true) -> Answer.CREATED
                 signature?.state == State.SIGNED -> Answer.SIGNED
                 signature?.state == State.DECLINED -> Answer.DECLINED
                 else -> Answer.WAITING
@@ -24,7 +49,7 @@ class JointOperationSignersResolver {
 
             // The initiator signs by creating the operation, so its creation time is their answer time
             val at = when (answer) {
-                Answer.CREATED -> signature?.at ?: operation.createdAt
+                Answer.CREATED -> signature?.at ?: createdAt
                 Answer.WAITING -> null
                 Answer.SIGNED, Answer.DECLINED -> signature?.at
             }

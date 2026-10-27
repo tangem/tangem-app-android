@@ -4,7 +4,6 @@ import com.tangem.data.appsflyer.DefaultAppsFlyerRepository
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.appsflyer.usecase.ClearReferralInstallUseCase
-import com.tangem.domain.appsflyer.usecase.GetAppsFlyerDeeplinkUseCase
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -32,11 +31,6 @@ internal interface AppsFlyerDataModule {
         @Provides
         fun provideClearReferralInstallUseCase(appsFlyerRepository: AppsFlyerRepository): ClearReferralInstallUseCase {
             return ClearReferralInstallUseCase(appsFlyerRepository)
-        }
-
-        @Provides
-        fun provideGetAppsFlyerDeeplinkUseCase(appsFlyerRepository: AppsFlyerRepository): GetAppsFlyerDeeplinkUseCase {
-            return GetAppsFlyerDeeplinkUseCase(appsFlyerRepository)
         }
     }
 }

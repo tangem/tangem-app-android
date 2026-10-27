@@ -32,7 +32,7 @@ internal fun TangemBadgeStory(state: TangemBadgeStory, modifier: Modifier = Modi
         modifier = modifier
             .statusBarsPadding()
             .fillMaxSize()
-            .background(TangemTheme.colors2.surface.level1),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         stickyHeader("color_toggle") {
             ColorToggle(
@@ -40,7 +40,7 @@ internal fun TangemBadgeStory(state: TangemBadgeStory, modifier: Modifier = Modi
                 onSelect = state.onColorChange,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(TangemTheme.colors2.surface.level1)
+                    .background(TangemTheme.colors3.bg.primary)
                     .padding(horizontal = 16.dp, vertical = 8.dp),
             )
         }
@@ -62,8 +62,8 @@ private fun ColorToggle(
     Row(
         modifier = modifier
             .clip(shape)
-            .background(TangemTheme.colors2.surface.level2)
-            .border(width = 1.dp, color = TangemTheme.colors2.border.neutral.secondary, shape = shape)
+            .background(TangemTheme.colors3.bg.primary)
+            .border(width = 1.dp, color = TangemTheme.colors3.border.tertiary, shape = shape)
             .padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -85,14 +85,14 @@ private fun ColorChip(label: String, selected: Boolean, onClick: () -> Unit, mod
         contentAlignment = Alignment.Center,
         modifier = modifier
             .clip(chipShape)
-            .background(if (selected) TangemTheme.colors2.surface.level3 else TangemTheme.colors2.surface.level2)
+            .background(if (selected) TangemTheme.colors3.bg.secondary else TangemTheme.colors3.bg.primary)
             .clickable(onClick = onClick)
             .padding(vertical = 8.dp, horizontal = 4.dp),
     ) {
         Text(
             text = label,
             style = TangemTheme.typography.caption2,
-            color = if (selected) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.secondary,
+            color = if (selected) TangemTheme.colors3.text.primary else TangemTheme.colors3.text.secondary,
         )
     }
 }
@@ -103,20 +103,20 @@ private fun BadgeSizeSection(size: TangemBadgeSize, color: TangemBadgeColor) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .background(TangemTheme.colors2.surface.level1)
+            .background(TangemTheme.colors3.bg.primary)
             .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
         Text(
             text = size.name,
             style = TangemTheme.typography.subtitle1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         TangemBadgeShape.entries.forEach { shape ->
             BadgeShapeGroup(size = size, shape = shape, color = color)
         }
     }
     HorizontalDivider(
-        color = TangemTheme.colors2.border.neutral.secondary,
+        color = TangemTheme.colors3.border.tertiary,
         modifier = Modifier.padding(horizontal = 16.dp),
     )
 }
@@ -127,7 +127,7 @@ private fun BadgeShapeGroup(size: TangemBadgeSize, shape: TangemBadgeShape, colo
         Text(
             text = shape.name,
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
         )
         ColumnHeaderRow()
         TangemBadgeType.entries.forEach { type ->
@@ -146,25 +146,25 @@ private fun ColumnHeaderRow() {
         Text(
             text = "Icon Start",
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.weight(1f),
         )
         Text(
             text = "Icon End",
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.weight(1f),
         )
         Text(
             text = "Text",
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.weight(1f),
         )
         Text(
             text = "Icon",
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.weight(1f),
         )
     }
@@ -184,7 +184,7 @@ private fun BadgeTypeRow(
         Text(
             text = type.name,
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.width(STATE_LABEL_WIDTH.dp),
         )
         Box(

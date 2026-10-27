@@ -43,7 +43,7 @@ internal class SwapModelJointAccountSourceTest : SwapModelTestBase() {
         } returns Either.Right(null)
         coEvery {
             swapInteractor.getPair(fromSwapCurrencyStatus = any(), toSwapCurrencyStatus = any(), filterProviderTypes = any())
-        } returns Either.Left(ExpressError.UnknownError)
+        } returns Either.Left(ExpressError.UnknownError())
     }
 
     @Test

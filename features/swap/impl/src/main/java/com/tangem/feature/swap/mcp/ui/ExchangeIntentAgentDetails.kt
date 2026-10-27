@@ -21,6 +21,7 @@ import coil.compose.AsyncImage
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -90,9 +91,7 @@ private fun ExchangeIntentAgentDetailsPreview() {
     TangemThemePreviewRedesign {
         ExchangeIntentAgentDetails(
             agent = ExchangeIntentAgentUM.Verified(iconUrl = null, label = stringReference("mcp.claude.com")),
-            description = stringReference(
-                "The agent is asking to swap from your account. You’ll review the details next.",
-            ),
+            description = resourceReference(R.string.mcp_swap_intent_offer_description),
             modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
         )
     }
@@ -104,10 +103,8 @@ private fun ExchangeIntentAgentDetailsPreview() {
 private fun ExchangeIntentUnknownAgentDetailsPreview() {
     TangemThemePreviewRedesign {
         ExchangeIntentAgentDetails(
-            agent = ExchangeIntentAgentUM.Unknown(iconUrl = null, label = stringReference("Unknown")),
-            description = stringReference(
-                "The agent is asking to swap from your account. You’ll review the details next.",
-            ),
+            agent = ExchangeIntentAgentUM.Unknown(iconUrl = null, label = resourceReference(R.string.mcp_intent_host)),
+            description = resourceReference(R.string.mcp_swap_intent_offer_description),
             modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
         )
     }

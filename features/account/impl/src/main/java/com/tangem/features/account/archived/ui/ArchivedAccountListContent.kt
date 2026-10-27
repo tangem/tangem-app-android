@@ -40,7 +40,7 @@ import kotlinx.collections.immutable.toImmutableList
 internal fun ArchivedAccountListContent(state: AccountArchivedUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(color = TangemTheme.colors.background.secondary)
+            .background(color = TangemTheme.colors3.bg.primary)
             .fillMaxSize()
             .imePadding()
             .systemBarsPadding(),
@@ -74,7 +74,7 @@ private fun ArchiveAccountLoading(modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center,
     ) {
         CircularProgressIndicator(
-            color = TangemTheme.colors.icon.primary1,
+            color = TangemTheme.colors3.icon.primary,
             modifier = Modifier,
         )
     }
@@ -91,7 +91,7 @@ private fun ArchiveAccountError(state: AccountArchivedUM.Error, modifier: Modifi
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 style = TangemTheme.typography.caption2,
                 text = stringResourceSafe(R.string.common_unable_to_load),
             )
@@ -115,7 +115,7 @@ private fun ArchiveAccountContent(state: AccountArchivedUM.Content, modifier: Mo
             ArchivedAccountRow(
                 item = account,
                 modifier = Modifier.roundedShapeItemDecoration(
-                    backgroundColor = TangemTheme.colors.background.primary,
+                    backgroundColor = TangemTheme.colors3.bg.secondary,
                     radius = 20.dp,
                     currentIndex = index,
                     addDefaultPadding = true,

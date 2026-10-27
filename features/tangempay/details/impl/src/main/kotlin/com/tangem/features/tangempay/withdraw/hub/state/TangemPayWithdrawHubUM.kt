@@ -7,8 +7,9 @@ import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class TangemPayWithdrawHubUM(
-    val swapSection: SwapSectionUM,
-    val bankSection: BankSectionUM,
+    val title: TextReference,
+    val swapSection: SwapSectionUM?,
+    val bankSection: BankSectionUM?,
     val onBackClick: () -> Unit,
 ) {
 
@@ -26,6 +27,7 @@ internal data class TangemPayWithdrawHubUM(
             val toBusinessAccount: ActionCardUM,
             val recents: RecentsUM,
             val isAvailable: Boolean,
+            val unavailableSubtitle: TextReference,
         ) : BankSectionUM
     }
 

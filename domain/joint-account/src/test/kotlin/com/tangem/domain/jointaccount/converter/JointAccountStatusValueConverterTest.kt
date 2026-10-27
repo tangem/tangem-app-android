@@ -27,6 +27,21 @@ internal class JointAccountStatusValueConverterTest {
             expected = JointAccountStatusValue.Pending(source = StatusSource.CACHE, joinedMembers = 2, totalMembers = 3),
         ),
         TestModel(
+            account = account(status = JointAccount.Status.PENDING),
+            ownAddress = "0X1",
+            expected = JointAccountStatusValue.Pending(
+                source = StatusSource.CACHE,
+                joinedMembers = 2,
+                totalMembers = 3,
+                isOwnCreator = true,
+            ),
+        ),
+        TestModel(
+            account = account(status = JointAccount.Status.PENDING),
+            ownAddress = "0x2",
+            expected = JointAccountStatusValue.Pending(source = StatusSource.CACHE, joinedMembers = 2, totalMembers = 3),
+        ),
+        TestModel(
             account = account(status = JointAccount.Status.CONFIRMING, safeAddress = SAFE),
             expected = JointAccountStatusValue.Confirming(source = StatusSource.CACHE, totalMembers = 3),
         ),

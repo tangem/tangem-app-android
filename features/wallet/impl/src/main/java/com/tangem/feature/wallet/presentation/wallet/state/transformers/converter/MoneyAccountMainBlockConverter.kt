@@ -27,39 +27,15 @@ internal class MoneyAccountMainBlockConverter(
             is MoneyAccountStatusValue.NotCreated,
             is MoneyAccountStatusValue.Error.ExposedDevice,
             -> MoneyAccountMainUM.Empty
-            is MoneyAccountStatusValue.Loading -> MoneyAccountMainUM.Loading
-            is MoneyAccountStatusValue.Onboarding -> statusValue.toUM(userWalletId)
+            is MoneyAccountStatusValue.Onboarding.Activating -> MoneyAccountMainUM.Onboarding(
+                subtitle = resourceReference(R.string.money_account_main_status_activating),
+                onClick = moneyAccountIntents::onMoneyAccountActivatingClicked,
+            )
             is MoneyAccountStatusValue.Account -> when (statusValue) {
                 is MoneyAccountStatusValue.Account.Active -> statusValue.toUM(userWalletId)
                 is MoneyAccountStatusValue.Account.Deactivated -> MoneyAccountMainUM.Empty
             }
-            is MoneyAccountStatusValue.Error.Unavailable,
-            is MoneyAccountStatusValue.Error.NotSynced,
-            -> MoneyAccountMainUM.Unavailable
-        }
-    }
-
-    private fun MoneyAccountStatusValue.Onboarding.toUM(userWalletId: UserWalletId): MoneyAccountMainUM {
-        return when (this) {
-            is MoneyAccountStatusValue.Onboarding.Issuing,
-            is MoneyAccountStatusValue.Onboarding.Activating,
-            -> MoneyAccountMainUM.Onboarding(
-                subtitle = resourceReference(R.string.money_account_main_status_activating),
-                onClick = moneyAccountIntents::onMoneyAccountActivatingClicked,
-            )
-            is MoneyAccountStatusValue.Onboarding.KycRequired -> MoneyAccountMainUM.ActionRequired(
-                onClick = { moneyAccountIntents.onMoneyAccountKycRequiredClicked(userWalletId, customerId) },
-            )
-            is MoneyAccountStatusValue.Onboarding.UnderReview -> MoneyAccountMainUM.Onboarding(
-                subtitle = resourceReference(R.string.money_account_main_status_verification),
-                onClick = { moneyAccountIntents.onMoneyAccountVerificationClicked(userWalletId, customerId) },
-            )
-            is MoneyAccountStatusValue.Onboarding.VerificationDeclined -> MoneyAccountMainUM.ActionRequired(
-                onClick = { moneyAccountIntents.onMoneyAccountVerificationDeclinedClicked(userWalletId, customerId) },
-            )
-            is MoneyAccountStatusValue.Onboarding.CountryNotSupported -> MoneyAccountMainUM.ActionRequired(
-                onClick = { moneyAccountIntents.onMoneyAccountCountryNotSupportedClicked(userWalletId, countryCode) },
-            )
+            is MoneyAccountStatusValue.Error.Unavailable -> MoneyAccountMainUM.Unavailable
         }
     }
 
