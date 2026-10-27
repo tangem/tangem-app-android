@@ -1,5 +1,6 @@
 package com.tangem.features.collectibles.impl.main.ui.state
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.extensions.TextReference
@@ -10,6 +11,7 @@ internal data class CollectiblesMainUM(
     val balance: BalanceUM,
     val actions: ImmutableList<TangemButtonUM>,
     val collection: CollectionUM?,
+    val relink: RelinkUM,
     val menu: MenuUM,
     val isBalanceRefreshing: Boolean,
     val onBackClick: () -> Unit,
@@ -26,6 +28,12 @@ internal data class CollectiblesMainUM(
         val title: TextReference,
         val onClick: () -> Unit,
     )
+
+    @Immutable
+    sealed interface RelinkUM {
+        data object Hidden : RelinkUM
+        data class Shown(val isLoading: Boolean, val onRelinkClick: () -> Unit) : RelinkUM
+    }
 
     data class MenuUM(
         val items: ImmutableList<MenuItemUM>,
