@@ -31,6 +31,7 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
+import com.tangem.domain.mcp.models.analytics.McpIntentAnalyticsEvent
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -72,6 +73,7 @@ import com.tangem.features.send.common.SendConfirmAlertFactory
 import com.tangem.features.send.common.ui.state.ConfirmUM
 import com.tangem.features.send.common.ui.state.SendSignaturesUM
 import com.tangem.features.send.impl.R
+import com.tangem.features.send.mcp.model.sendIntentReportErrorCode
 import com.tangem.features.send.send.analytics.SendAnalyticHelper
 import com.tangem.features.send.send.confirm.SendConfirmComponent
 import com.tangem.features.send.send.confirm.model.transformers.*
@@ -591,7 +593,7 @@ internal class SendConfirmModel @Inject constructor(
             },
             ifRight = { txHash ->
                 updateTransactionStatus(txData, txHash)
-                reportIntentHashIfNeeded(txHash = txHash.ifEmpty { txData.hash.orEmpty() })
+                reportIntentHashIfNeeded(txData = txData, txHash = txHash.ifEmpty { txData.hash.orEmpty() })
                 addTokenToWalletIfNeeded()
                 sendBalanceUpdater.scheduleUpdates()
                 modelScope.launch(dispatchers.default) {
@@ -614,16 +616,42 @@ internal class SendConfirmModel @Inject constructor(
         )
     }
 
-    private fun reportIntentHashIfNeeded(txHash: String) {
-        val intentId = params.intentId ?: return
+    private fun reportIntentHashIfNeeded(txData: TransactionData.Uncompiled, txHash: String) {
+        val intent = params.intent ?: return
         if (txHash.isEmpty()) {
-            TangemLogger.e("No transaction hash to report for send intent $intentId")
+            TangemLogger.e("No transaction hash to report for send intent ${intent.id}")
+            analyticsEventHandler.send(
+                McpIntentAnalyticsEvent.IntentReportFailed(intentId = intent.id, errorCode = NO_TX_HASH_ERROR_CODE),
+            )
             return
         }
+        val completedEvent = McpIntentAnalyticsEvent.IntentCompleted(
+            intentId = intent.id,
+            blockchain = cryptoCurrency.network.name,
+            token = cryptoCurrency.symbol,
+            isModified = intent.isModifiedBy(
+                SentTransfer(
+                    amount = txData.amount.value,
+                    recipient = txData.destinationAddress,
+                    memo = confirmData.enteredMemo,
+                    decimals = cryptoCurrency.decimals,
+                    networkRawId = cryptoCurrency.network.rawId,
+                ),
+            ),
+        )
 
         appScope.launch {
-            reportSendIntentHashUseCase(intentId = intentId, txHash = txHash)
-                .onLeft { TangemLogger.e("Gave up reporting the hash of send intent $intentId", it) }
+            reportSendIntentHashUseCase(intentId = intent.id, txHash = txHash)
+                .onRight { analyticsEventHandler.send(completedEvent) }
+                .onLeft { error ->
+                    TangemLogger.e("Gave up reporting the hash of send intent ${intent.id}", error)
+                    analyticsEventHandler.send(
+                        McpIntentAnalyticsEvent.IntentReportFailed(
+                            intentId = intent.id,
+                            errorCode = sendIntentReportErrorCode(error),
+                        ),
+                    )
+                }
         }
     }
 
@@ -797,5 +825,6 @@ internal class SendConfirmModel @Inject constructor(
 
     private companion object {
         const val CHECK_FEE_UPDATE_DELAY = 10_000L
+        const val NO_TX_HASH_ERROR_CODE = "no_hash"
     }
 }

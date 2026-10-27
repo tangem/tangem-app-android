@@ -24,12 +24,18 @@ internal class SendIntentSourceResolver @Inject constructor(
     /** Returns `null` when the accounts of the wallet cannot be read. */
     suspend fun resolve(userWalletId: UserWalletId, intent: SendIntent): SendIntentSource? {
         val portfolios = loadPortfolios(userWalletId, intent) ?: return null
-
-        return portfolios.firstNotNullOfOrNull { portfolio ->
+        val heldTokens = portfolios.flatMap { portfolio ->
             portfolio.flattenCurrencies()
-                .firstOrNull { status -> intent.matches(status.currency) && intent.isSentFrom(status) }
-                ?.let { status -> SendIntentSource.Found(accountId = portfolio.accountId, status = status) }
-        } ?: SendIntentSource.NotFound
+                .filter { status -> intent.matches(status.currency) }
+                .map { status -> portfolio to status }
+        }
+
+        val source = heldTokens.firstOrNull { (_, status) -> intent.isSentFrom(status) }
+        return when {
+            source != null -> SendIntentSource.Found(accountId = source.first.accountId, status = source.second)
+            heldTokens.any { (_, status) -> status.value.networkAddress != null } -> SendIntentSource.OtherSender
+            else -> SendIntentSource.TokenMissing
+        }
     }
 
     /**
