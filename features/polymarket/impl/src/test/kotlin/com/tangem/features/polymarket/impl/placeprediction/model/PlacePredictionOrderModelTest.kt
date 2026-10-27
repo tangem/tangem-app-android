@@ -12,6 +12,7 @@ import com.tangem.features.polymarket.impl.common.FakeSlotHost
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -31,6 +32,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import java.math.BigDecimal
+import java.util.Locale
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
@@ -387,6 +389,29 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             // Assert
             assertThat(model.uiState.value.amountValue).isEqualTo(expected)
         }
+
+        @Test
+        fun `GIVEN a German locale WHEN max clicked THEN the amount is entered with a comma the screen reads back`() =
+            runOrderTest {
+                // Arrange
+                val defaultLocale = Locale.getDefault()
+                Locale.setDefault(Locale.GERMANY)
+                try {
+                    statusFlow.value = activeStatus(balance = BigDecimal("10.019"))
+                    val model = createOrderModel(testScope = this)
+                    advanceUntilIdle()
+
+                    // Act
+                    model.onMaxClick()
+
+                    // Assert
+                    assertThat(model.uiState.value.amountValue).isEqualTo("9,01")
+                    assertThat(model.uiState.value.enteredAmount())
+                        .isEquivalentAccordingToCompareTo(BigDecimal("9.01"))
+                } finally {
+                    Locale.setDefault(defaultLocale)
+                }
+            }
 
         @Test
         fun `GIVEN a balance below a cent after the cap WHEN max clicked THEN nothing is entered`() = runOrderTest {
