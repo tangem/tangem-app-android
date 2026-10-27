@@ -11,6 +11,7 @@ import com.tangem.domain.models.TokenReceiveNotification
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.nft.NFTFeatureToggles
 import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
 import com.tangem.domain.transaction.R
 import io.mockk.coEvery
@@ -32,7 +33,7 @@ internal class ReceiveAddressesFactoryTest {
     private val getDynamicReceiveAddressUseCase: GetDynamicReceiveAddressUseCase = mockk()
     private val dynamicAddressesRepository: DynamicAddressesRepository = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
-    private var isSolanaPnftAndCoreNftEnabled = false
+    private val nftFeatureToggles: NFTFeatureToggles = mockk()
 
     private val factory = ReceiveAddressesFactory(
         getEnsNameUseCase = getEnsNameUseCase,
@@ -40,7 +41,7 @@ internal class ReceiveAddressesFactoryTest {
         getDynamicReceiveAddressUseCase = getDynamicReceiveAddressUseCase,
         dynamicAddressesRepository = dynamicAddressesRepository,
         userWalletsListRepository = userWalletsListRepository,
-        isSolanaPnftAndCoreNftEnabled = { isSolanaPnftAndCoreNftEnabled },
+        nftFeatureToggles = nftFeatureToggles,
     )
 
     @Test
@@ -77,7 +78,7 @@ internal class ReceiveAddressesFactoryTest {
         isToggleEnabled: Boolean,
     ) = runTest {
         // Arrange
-        isSolanaPnftAndCoreNftEnabled = isToggleEnabled
+        every { nftFeatureToggles.isSolanaPnftAndCoreNftEnabled } returns isToggleEnabled
         val solana = MockCryptoCurrencyFactory().createCoin(Blockchain.Solana)
         coEvery { getEnsNameUseCase.invoke(any(), any(), any()) } returns null
         coEvery { getViewedTokenReceiveWarningUseCase() } returns emptySet()

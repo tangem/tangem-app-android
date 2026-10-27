@@ -39,6 +39,7 @@ dependencies {
 
     // region Project - Core
     api(projects.core.utils)
+    implementation(projects.core.configToggles)
     implementation(projects.core.local)
     implementation(projects.core.remote)
     implementation(projects.core.res)

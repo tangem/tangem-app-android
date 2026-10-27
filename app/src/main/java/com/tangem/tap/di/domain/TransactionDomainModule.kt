@@ -1,7 +1,5 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.core.configtoggle.FeatureToggles
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.wallets.hot.TangemHotWalletSigner
 import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
@@ -15,6 +13,7 @@ import com.tangem.domain.transaction.GaslessYieldRepository
 import com.tangem.domain.transaction.usecase.gasless.ResolveGaslessFeePlanUseCase
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
+import com.tangem.domain.nft.NFTFeatureToggles
 import com.tangem.domain.notifications.repository.PushNotificationsRepository
 import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
@@ -290,7 +289,7 @@ internal object TransactionDomainModule {
         getDynamicReceiveAddressUseCase: GetDynamicReceiveAddressUseCase,
         dynamicAddressesRepository: DynamicAddressesRepository,
         userWalletsListRepository: UserWalletsListRepository,
-        featureTogglesManager: FeatureTogglesManager,
+        nftFeatureToggles: NFTFeatureToggles,
     ): ReceiveAddressesFactory {
         return ReceiveAddressesFactory(
             getEnsNameUseCase = getEnsNameUseCase,
@@ -298,11 +297,7 @@ internal object TransactionDomainModule {
             getDynamicReceiveAddressUseCase = getDynamicReceiveAddressUseCase,
             dynamicAddressesRepository = dynamicAddressesRepository,
             userWalletsListRepository = userWalletsListRepository,
-            isSolanaPnftAndCoreNftEnabled = {
-                featureTogglesManager.isFeatureEnabled(
-                    toggle = FeatureToggles.TWI_1822_SOLANA_PNFT_AND_METAPLEX_CORE_ENABLED,
-                )
-            },
+            nftFeatureToggles = nftFeatureToggles,
         )
     }
 
