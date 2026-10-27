@@ -27,7 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.security.DisableAutofillEffect
+import com.tangem.core.ui.security.excludeFromAutofill
 import com.tangem.utils.StringsSigns.PASSWORD_VISUAL_CHAR
 import kotlinx.coroutines.delay
 import kotlin.random.Random
@@ -42,8 +42,6 @@ fun PinTextField(
     modifier: Modifier = Modifier,
     focusRequester: FocusRequester = remember { FocusRequester() },
 ) {
-    DisableAutofillEffect()
-
     var fieldValueState by remember { mutableStateOf(TextFieldValue(value, TextRange(value.length))) }
     val textFieldValue = if (fieldValueState.text == value) {
         fieldValueState
@@ -61,6 +59,7 @@ fun PinTextField(
             if (accepted != value) onValueChange(accepted)
         },
         modifier = modifier
+            .excludeFromAutofill()
             .clickable {
                 focusRequester.requestFocus()
             }
