@@ -41,6 +41,7 @@ dependencies {
     api(projects.domain.demo)
     api(projects.domain.dynamicAddresses)
     api(projects.domain.networks)
+    api(projects.domain.nft)
     api(projects.domain.notifications)
     api(projects.domain.tokens)
     api(projects.domain.walletManager)
