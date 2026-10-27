@@ -31,13 +31,4 @@ internal object SwapAlertUM {
             onClick = onConfirmClick,
         ),
     )
-
-    fun informationAlert(message: TextReference, onConfirmClick: () -> Unit): DialogMessage = DialogMessage(
-        title = resourceReference(R.string.swapping_alert_title),
-        message = message,
-        firstAction = EventMessageAction(
-            title = resourceReference(id = R.string.common_ok),
-            onClick = onConfirmClick,
-        ),
-    )
 }

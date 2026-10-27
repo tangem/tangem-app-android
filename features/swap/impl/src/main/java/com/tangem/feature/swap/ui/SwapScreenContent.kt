@@ -45,7 +45,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.SwapTokenScreenTestTags
 import com.tangem.feature.swap.domain.models.domain.SwapUIMode
-import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.models.states.SwapNotificationUM
@@ -194,9 +193,7 @@ private fun MainInfo(state: SwapStateHolder) {
         modifier = Modifier.fillMaxWidth(),
     ) {
         val (topCard, bottomCard, button) = createRefs()
-        val priceImpact = state.priceImpact
         TransactionCard(
-            priceImpact = priceImpact,
             swapCardState = state.sendCardData,
             modifier = Modifier.constrainAs(topCard) {
                 top.linkTo(parent.top)
@@ -206,7 +203,6 @@ private fun MainInfo(state: SwapStateHolder) {
         val marginCard = 12.dp
         if (state.swapUIMode == SwapUIMode.Simple) {
             TransactionCardSimple(
-                priceImpact = priceImpact,
                 swapCardState = state.receiveCardData,
                 slippageUM = state.visibleSlippageUM,
                 modifier = Modifier.constrainAs(bottomCard) {
@@ -216,7 +212,6 @@ private fun MainInfo(state: SwapStateHolder) {
             )
         } else {
             TransactionCard(
-                priceImpact = priceImpact,
                 swapCardState = state.receiveCardData,
                 modifier = Modifier.constrainAs(bottomCard) {
                     top.linkTo(topCard.bottom, margin = marginCard)
@@ -502,7 +497,6 @@ private val state = SwapStateHolder(
     onChangeCardsClicked = {},
     permissionUM = SwapPermissionUM.Empty,
     providerState = ProviderState.Loading(),
-    priceImpact = PriceImpact.Empty,
     shouldShowMaxAmount = true,
     isInsufficientFunds = false,
     onSuccess = {},

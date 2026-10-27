@@ -16,7 +16,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.promo.usecase.GetPromoCampaignsUseCase
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
-import com.tangem.features.promobanners.api.PromoBannersFeatureToggles
 import com.tangem.features.promobanners.impl.analytics.PromoBannerAnalyticsEvent
 import com.tangem.features.promobanners.impl.campaigns.service.CampaignsService
 import com.tangem.features.promobanners.impl.campaigns.v2.model.PromoBannerCampaignMatcher
@@ -48,7 +47,6 @@ internal class PromoBannersBlockModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val userWalletsListRepository: UserWalletsListRepository,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
-    promoBannersFeatureToggles: PromoBannersFeatureToggles,
     private val getPromoCampaignsUseCase: GetPromoCampaignsUseCase,
     private val campaignMatcher: PromoBannerCampaignMatcher,
     private val campaignsService: CampaignsService,
@@ -63,7 +61,6 @@ internal class PromoBannersBlockModel @Inject constructor(
     private val savedDisplayIdByWalletId: MutableMap<String, Int> = mutableMapOf()
     private val prefetchedWalletIds: MutableSet<String> = ConcurrentHashMap.newKeySet()
     private val prefetchSemaphore = Semaphore(permits = PREFETCH_PARALLELISM)
-    private val isCampaignsV2Enabled = promoBannersFeatureToggles.isPromoCampaignsV2Enabled
     private val requestedCampaignWalletIds: MutableSet<String> = ConcurrentHashMap.newKeySet()
     private val followedBannerWalletIds: MutableSet<String> = ConcurrentHashMap.newKeySet()
     private val followedCampaignWalletIds: MutableSet<String> = ConcurrentHashMap.newKeySet()
@@ -71,7 +68,7 @@ internal class PromoBannersBlockModel @Inject constructor(
     /** Raw banners per wallet, filled from cache/prefetch/network. Source of truth for the UI. */
     private val rawBannersByWalletId = MutableStateFlow<Map<String, List<PromoBannerDisplay>>>(emptyMap())
 
-    /** Filled only with campaigns v2 enabled; decides which campaign banners of [rawBannersByWalletId] are shown. */
+    /** Decides which campaign banners of [rawBannersByWalletId] are shown. */
     private val campaignsByWalletId = MutableStateFlow<Map<String, WalletCampaigns>>(emptyMap())
 
     private val selectedWalletId = MutableStateFlow<String?>(null)
@@ -81,14 +78,9 @@ internal class PromoBannersBlockModel @Inject constructor(
     private val baseBannerStates: StateFlow<Map<String, PromoBannersBlockUM>> =
         combine(rawBannersByWalletId, campaignsByWalletId) { rawByWallet, campaignsByWallet ->
             rawByWallet.mapValues { (walletId, banners) ->
-                val shownBanners = if (isCampaignsV2Enabled) {
-                    campaignMatcher.filter(banners, campaignsByWallet[walletId])
-                } else {
-                    banners
-                }
                 buildState(
                     walletId = walletId,
-                    banners = shownBanners,
+                    banners = campaignMatcher.filter(banners, campaignsByWallet[walletId]),
                     walletCampaigns = campaignsByWallet[walletId],
                     isVisible = false,
                 )
@@ -180,7 +172,6 @@ internal class PromoBannersBlockModel @Inject constructor(
      * shown. The repository caches them per wallet for the session; a failed wallet is retried on its next selection.
      */
     private fun requestCampaigns(userWallet: UserWallet) {
-        if (!isCampaignsV2Enabled) return
         val walletId = userWallet.walletId.stringValue
         followCampaigns(userWallet)
         if (!requestedCampaignWalletIds.add(walletId)) return
@@ -263,17 +254,13 @@ internal class PromoBannersBlockModel @Inject constructor(
                     displayId = displayId,
                     campaignName = campaignName,
                 ) },
-                onCampaignClick = if (isCampaignsV2Enabled) {
-                    { campaignId ->
-                        onCampaignClick(
-                            walletId = walletId,
-                            displayId = banner.id,
-                            campaignId = campaignId,
-                            campaignName = campaignName,
-                        )
-                    }
-                } else {
-                    null
+                onCampaignClick = { campaignId ->
+                    onCampaignClick(
+                        walletId = walletId,
+                        displayId = banner.id,
+                        campaignId = campaignId,
+                        campaignName = campaignName,
+                    )
                 },
             )
         }.toImmutableList()
