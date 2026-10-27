@@ -44,7 +44,6 @@ class EstimateFeeForTokenUseCase(
         gaslessTransactionRepository = gaslessTransactionRepository,
         demoConfig = demoConfig,
         gaslessYieldRepository = gaslessYieldRepository,
-        yieldModuleFeatureToggles = yieldModuleFeatureToggles,
     )
 
     suspend operator fun invoke(
@@ -77,6 +76,7 @@ class EstimateFeeForTokenUseCase(
                         amount = amount,
                         txTokenCurrencyStatus = sendingTokenCurrencyStatus,
                         initialFee = initialTxFee,
+                        isYieldModuleV3Enabled = yieldModuleFeatureToggles.isYieldModuleV3Enabled,
                     ).bind()
 
                     val accountStatusList = singleAccountStatusListSupplier.getSyncOrNull(userWallet.walletId)

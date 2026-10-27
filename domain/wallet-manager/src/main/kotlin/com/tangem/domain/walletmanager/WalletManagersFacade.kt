@@ -191,7 +191,7 @@ interface WalletManagersFacade {
         amount: Amount,
         userWalletId: UserWalletId,
         network: Network,
-        isYieldModuleUpgradeAllowed: Boolean = true,
+        isYieldModuleUpgradeAllowed: Boolean,
     ): Result<TransactionFee>?
 
     /**
