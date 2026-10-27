@@ -9,7 +9,6 @@ import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.moneyaccount.repository.MoneyAccountRepository
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
@@ -44,7 +43,6 @@ internal class AccountListSubscriber @AssistedInject constructor(
     private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
     private val getPendingJointOperationsUseCase: GetPendingJointOperationsUseCase,
-    private val moneyAccountRepository: MoneyAccountRepository,
 ) : BasicAccountListSubscriber() {
 
     override fun create(coroutineScope: CoroutineScope): Flow<*> {
@@ -52,8 +50,7 @@ internal class AccountListSubscriber @AssistedInject constructor(
         TangemLogger.i("$TAG[$walletId]: create() called, building combine9")
         return combine9(
             flow1 = getAccountStatusListFlow()
-                .combine(moneyAccountHiddenFlow(), ::Pair)
-                .log("flow1 accountStatusList") { (list) -> "(currencies=${list.flattenCurrencies().size})" },
+                .log("flow1 accountStatusList") { list -> "(currencies=${list.flattenCurrencies().size})" },
             flow2 = getAppCurrencyFlow()
                 .log("flow2 appCurrency") { "=${it.code}" },
             flow3 = accountDependencies.expandedAccountsHolder.expandedAccounts(userWallet)
@@ -71,7 +68,7 @@ internal class AccountListSubscriber @AssistedInject constructor(
             flow9 = jointPendingOperationsFlow()
                 .log("flow9 jointPendingOperations") { "(size=${it.size})" },
         ) {
-                (accountList, isMoneyAccountHidden), appCurrency, expandedAccounts, isAccountMode,
+                accountList, appCurrency, expandedAccounts, isAccountMode,
                 yieldSupplyApyMap, shouldShowMainPromo, stakingAvailabilityMap, isHotBackedUp,
                 jointPendingOperations,
             ->
@@ -85,8 +82,7 @@ internal class AccountListSubscriber @AssistedInject constructor(
                     "promo=$shouldShowMainPromo, " +
                     "stakingMap=${stakingAvailabilityMap.size}, " +
                     "isBackedUp=$isHotBackedUp, " +
-                    "pendingOperations=${jointPendingOperations.size}, " +
-                    "isMoneyAccountHidden=$isMoneyAccountHidden",
+                    "pendingOperations=${jointPendingOperations.size}",
             )
             updateState2(
                 accountList = accountList,
@@ -98,7 +94,6 @@ internal class AccountListSubscriber @AssistedInject constructor(
                 shouldShowMainPromo = shouldShowMainPromo,
                 isHotBackedUp = isHotBackedUp,
                 jointPendingOperations = jointPendingOperations,
-                isMoneyAccountHidden = isMoneyAccountHidden,
             )
         }
     }
@@ -107,10 +102,6 @@ internal class AccountListSubscriber @AssistedInject constructor(
         val walletId = userWallet.walletId.stringValue
         return onStart { TangemLogger.i("$TAG[$walletId]: $name subscribed") }
             .onEach { TangemLogger.i("$TAG[$walletId]: $name emitted${describeEmission(it)}") }
-    }
-
-    private fun moneyAccountHiddenFlow(): Flow<Boolean> {
-        return moneyAccountRepository.isMainBlockHidden(userWallet.walletId).distinctUntilChanged()
     }
 
     private fun jointPendingOperationsFlow(): Flow<List<JointPendingOperation>> = jointAccountsFlow()

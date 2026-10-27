@@ -2157,14 +2157,18 @@ internal class DefaultInitialCurrenciesResolverTest {
     }
 
     @Test
-    fun `GIVEN a money withdrawal while the account loads WHEN opened without a currency THEN FROM stays empty`() =
+    fun `GIVEN a money withdrawal while the account activates WHEN opened without a currency THEN FROM stays empty`() =
         runTest {
             // Arrange
             val walletStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("100"))
+            val activatingValue = MoneyAccountStatusValue.Onboarding.Activating(
+                source = StatusSource.ACTUAL,
+                customerId = "customer",
+            )
             setupSupplier(
                 listOf(
                     createCryptoPortfolioAccountStatus(listOf(walletStatus)),
-                    AccountStatus.Money(account = Account.Money(userWalletId), value = MoneyAccountStatusValue.Loading),
+                    AccountStatus.Money(account = Account.Money(userWalletId), value = activatingValue),
                 ),
             )
             setupAvailabilityForAnyCurrency()

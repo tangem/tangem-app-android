@@ -2,7 +2,6 @@ package com.tangem.data.moneyaccount.di
 
 import android.content.Context
 import androidx.datastore.dataStoreFile
-import com.tangem.core.local.datastore.DeleteObsoleteFileMigration
 import com.tangem.data.moneyaccount.converter.MoneyAccountStatusValueDMConverter
 import com.tangem.data.moneyaccount.currency.DefaultMoneyAccountCurrencyFactory
 import com.tangem.data.moneyaccount.currency.MoneyAccountCurrenciesProvider
@@ -104,11 +103,7 @@ internal interface MoneyAccountDataModule {
                         serializer = MapSerializer(String.serializer(), MoneyAccountStatusValueDM.serializer()),
                         json = KotlinxDataStoreSerializer.jsonBuilder { classDiscriminator = "__type" },
                     ),
-                    produceFile = { context.dataStoreFile(fileName = "money_account_statuses_v2") },
-                    migrations = listOf(
-                        DeleteObsoleteFileMigration { context.dataStoreFile(fileName = "money_account_statuses") },
-                        DeleteObsoleteFileMigration { context.dataStoreFile(fileName = "virtual_account_statuses") },
-                    ),
+                    produceFile = { context.dataStoreFile(fileName = "money_account_statuses") },
                     scope = scope,
                 ),
                 converter = converter,

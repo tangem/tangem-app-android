@@ -63,7 +63,4 @@ class SpendPreferencesKeys @Inject constructor() {
 
     fun getCustomerResidencyKey(userWalletId: UserWalletId): Preferences.Key<String> =
         stringPreferencesKey("tangem_pay_customer_residency_$userWalletId")
-
-    fun getMoneyAccountMainBlockHiddenKey(userWalletId: UserWalletId): Preferences.Key<Boolean> =
-        booleanPreferencesKey("money_account_main_block_hidden_$userWalletId")
 }

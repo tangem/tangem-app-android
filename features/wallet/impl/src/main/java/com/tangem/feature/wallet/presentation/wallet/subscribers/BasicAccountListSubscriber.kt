@@ -47,7 +47,6 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
         shouldShowMainPromo: Boolean = false,
         isHotBackedUp: Boolean? = null,
         jointPendingOperations: List<JointPendingOperation> = emptyList(),
-        isMoneyAccountHidden: Boolean = false,
     ) {
         val isRedesignedAccountRowsEnabled = accountDependencies.walletFeatureToggles.isRedesignedAccountRowsEnabled
         stateController.update(
@@ -62,7 +61,6 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                 isAccountsModeEnabled = isAccountMode,
                 isHotBackedUp = isHotBackedUp,
                 jointPendingOperations = jointPendingOperations,
-                isMoneyAccountHidden = isMoneyAccountHidden,
                 isRedesignedAccountRowsEnabled = isRedesignedAccountRowsEnabled,
             ),
         )
