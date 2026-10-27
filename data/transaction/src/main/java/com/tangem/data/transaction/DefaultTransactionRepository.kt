@@ -18,7 +18,6 @@ import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.smartcontract.SmartContractCallDataProviderFactory
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.nft.models.NFTAsset
-import com.tangem.blockchain.yieldsupply.wrapWithYieldModuleUpgradeIfAvailable
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.datasource.api.common.response.fold
@@ -150,13 +149,11 @@ internal class DefaultTransactionRepository(
             amount.type is AmountType.TokenYieldSupply
         if (!isUpgradeApplicable) return callData
 
-        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+        return walletManagersFacade.wrapYieldSendWithModuleUpgrade(
             userWalletId = userWalletId,
-            blockchain = network.toBlockchain(),
-            derivationPath = network.derivationPath.value,
-        ) ?: return callData
-
-        return walletManager.wrapWithYieldModuleUpgradeIfAvailable(callData)
+            network = network,
+            callData = callData,
+        )
     }
 
     override suspend fun createApprovalTransaction(
