@@ -52,6 +52,7 @@ import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.R
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.SwapSectionUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.TokenRecentsUM
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -64,6 +65,9 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -294,18 +298,45 @@ internal class TangemPayWithdrawHubModelTest {
 
     @ParameterizedTest
     @MethodSource("provideRefreshModels")
-    fun `GIVEN source account WHEN withdraw sent THEN that account refreshed`(testModel: RefreshModel) {
+    fun `GIVEN source account WHEN withdraw sent THEN that account refreshed once its balance can change`(
+        testModel: RefreshModel,
+    ) = runTest {
         // Arrange
-        val model = createModel(sourceAccount = testModel.sourceAccount)
+        val model = createModel(
+            sourceAccount = testModel.sourceAccount,
+            dispatchers = createTestingCoroutineDispatcherProvider(),
+        )
 
         // Act
         model.onWithdrawSent()
+        advanceTimeBy(testModel.elapsedMillis)
+        runCurrent()
 
         // Assert
         coVerify(exactly = testModel.expectedPaymentRefreshes) { paymentAccountStatusFetcher(userWalletId) }
         coVerify(exactly = testModel.expectedMoneyRefreshes) { moneyAccountStatusFetcher(userWalletId) }
         model.onDestroy()
     }
+
+    @Test
+    fun `GIVEN money account withdraw sent WHEN hub destroyed before the delay THEN status still fetched`() =
+        runTest {
+            // Arrange
+            val model = createModel(
+                sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, PRODUCT_INSTANCE_ID),
+                dispatchers = createTestingCoroutineDispatcherProvider(),
+            )
+            model.onWithdrawSent()
+            runCurrent()
+
+            // Act
+            model.onDestroy()
+            advanceTimeBy(ON_CHAIN_REFRESH_DELAY_MILLIS)
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 1) { moneyAccountStatusFetcher(userWalletId) }
+        }
 
     @Test
     fun `GIVEN money account with balance WHEN to personal account clicked THEN wizard opened with its USDC`() {
@@ -740,6 +771,7 @@ internal class TangemPayWithdrawHubModelTest {
 
     private fun createModel(
         sourceAccount: BankWithdrawSourceAccount = BankWithdrawSourceAccount.Payment(userWalletId),
+        dispatchers: TestingCoroutineDispatcherProvider = this.dispatchers,
     ): TangemPayWithdrawHubModel = TangemPayWithdrawHubModel(
         paramsContainer = MutableParamsContainer(
             TangemPayWithdrawHubModel.Params(
@@ -767,11 +799,19 @@ internal class TangemPayWithdrawHubModelTest {
     private fun provideRefreshModels(): List<RefreshModel> = listOf(
         RefreshModel(
             sourceAccount = BankWithdrawSourceAccount.Payment(userWalletId),
+            elapsedMillis = 0,
             expectedPaymentRefreshes = 1,
             expectedMoneyRefreshes = 0,
         ),
         RefreshModel(
             sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, PRODUCT_INSTANCE_ID),
+            elapsedMillis = ON_CHAIN_REFRESH_DELAY_MILLIS - 1,
+            expectedPaymentRefreshes = 0,
+            expectedMoneyRefreshes = 0,
+        ),
+        RefreshModel(
+            sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, PRODUCT_INSTANCE_ID),
+            elapsedMillis = ON_CHAIN_REFRESH_DELAY_MILLIS,
             expectedPaymentRefreshes = 0,
             expectedMoneyRefreshes = 1,
         ),
@@ -779,6 +819,7 @@ internal class TangemPayWithdrawHubModelTest {
 
     internal data class RefreshModel(
         val sourceAccount: BankWithdrawSourceAccount,
+        val elapsedMillis: Long,
         val expectedPaymentRefreshes: Int,
         val expectedMoneyRefreshes: Int,
     )
@@ -826,5 +867,6 @@ internal class TangemPayWithdrawHubModelTest {
     private companion object {
         const val RECENT_CURRENCY_ID_VALUE = "coin⟨polygon-pos⟩matic-network"
         const val PRODUCT_INSTANCE_ID = "instance-1"
+        const val ON_CHAIN_REFRESH_DELAY_MILLIS = 11_000L
     }
 }

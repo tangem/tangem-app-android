@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.withdraw.bank.preview.completion
 
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
+import com.tangem.domain.pay.model.bankofframp.OfframpDestination
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.preview.model.PreviewFailure
@@ -9,19 +10,27 @@ import javax.inject.Inject
 
 internal class BankWithdrawCompletionFactory @Inject constructor(
     private val orderCompletionFactory: OrderBankWithdrawCompletion.Factory,
+    private val routeCompletionFactory: RouteBankWithdrawCompletion.Factory,
 ) {
 
     fun create(
         sourceAccount: BankWithdrawSourceAccount,
         scope: CoroutineScope,
         onOrderCreated: (BankOfframpOrderResult) -> Unit,
+        onDestinationChanged: (OfframpDestination) -> Unit,
     ): BankWithdrawCompletion = when (sourceAccount) {
         is BankWithdrawSourceAccount.Payment -> orderCompletionFactory.create(
             userWalletId = sourceAccount.userWalletId,
             scope = scope,
             onOrderCreated = onOrderCreated,
         )
-        is BankWithdrawSourceAccount.Money -> UnavailableBankWithdrawCompletion
+        is BankWithdrawSourceAccount.Money -> sourceAccount.productInstanceId?.let { productInstanceId ->
+            routeCompletionFactory.create(
+                userWalletId = sourceAccount.userWalletId,
+                productInstanceId = productInstanceId,
+                onDestinationChanged = onDestinationChanged,
+            )
+        } ?: UnavailableBankWithdrawCompletion
     }
 }
 
