@@ -104,11 +104,9 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
     private val tradingPermission = MutableStateFlow<TradingPermissionUM?>(value = null)
 
-    private val isFundingWindowOpen = MutableStateFlow<Boolean?>(value = null)
+    private var isHeld = false
 
-    private val isAddFundsEnabled = MutableStateFlow<Boolean?>(value = null)
-
-    private val isHeld = MutableStateFlow(false)
+    private val heldWrites = mutableListOf<(PlacePredictionUM) -> PlacePredictionUM>()
 
     val addFunds = PlacePredictionAddFunds(
         userWalletId = params.userWalletId,
@@ -145,7 +143,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         predictionBalancePoller.subscribe(userWalletId = params.userWalletId)
             .launchIn(scope)
             .saveIn(balancePollJobHolder)
-        if (!isHeld.value) refresh()
+        if (!isHeld) refresh()
     }
 
     fun onPause() {
@@ -175,12 +173,14 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
     }
 
     fun retryQuote() {
-        if (isHeld.value || reloadPositionIfLost()) return
+        if (isHeld || reloadPositionIfLost()) return
 
         restartQuoteLoop(withDebounce = false)
     }
 
     fun prepare(): PreparedPrediction? {
+        if (isHeld) return null
+
         val state = uiState.value
         val isNegRisk = isNegRiskMarket ?: return null
         if (!state.isPrimaryButtonEnabled) return null
@@ -190,23 +190,18 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
     }
 
     fun holdForSubmit() {
-        isHeld.value = true
+        isHeld = true
         quoteJobHolder.cancel()
     }
 
     fun release() {
-        if (!isHeld.value) return
+        if (!isHeld) return
 
-        isHeld.value = false
-        resyncDroppedUpdates()
+        isHeld = false
+        val writes = heldWrites.toList()
+        heldWrites.clear()
+        if (writes.isNotEmpty()) uiState.update { state -> writes.fold(state) { acc, transform -> transform(acc) } }
         if (isResumed) refresh()
-    }
-
-    private fun resyncDroppedUpdates() {
-        write(SetBalanceTransformer(balance = activeStatus.value.actualBalance()))
-        tradingPermission.value?.let { write(SetTradingPermissionTransformer(permission = it)) }
-        isFundingWindowOpen.value?.let { write(SetAwaitingFundsTransformer(isAwaitingFunds = it)) }
-        isAddFundsEnabled.value?.let { write(SetAddFundsAvailabilityTransformer(isEnabled = it)) }
     }
 
     private fun refresh() {
@@ -219,7 +214,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
     }
 
     private fun write(transform: (PlacePredictionUM) -> PlacePredictionUM) {
-        if (!isHeld.value) uiState.update(transform)
+        if (isHeld) heldWrites += transform else uiState.update(transform)
     }
 
     private fun PredictionAccountStatusValue.Active?.actualBalance(): BigDecimal? =
@@ -264,20 +259,14 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
             .launchIn(scope)
 
         addFunds.isEnabled(permission = tradingPermission)
-            .onEach { isEnabled ->
-                isAddFundsEnabled.value = isEnabled
-                write(SetAddFundsAvailabilityTransformer(isEnabled = isEnabled))
-            }
+            .onEach { isEnabled -> write(SetAddFundsAvailabilityTransformer(isEnabled = isEnabled)) }
             .launchIn(scope)
     }
 
     private fun observeFundingWindow() {
         predictionFundingWindow.isOpen(userWalletId = params.userWalletId)
-            .onEach { isOpen ->
-                isFundingWindowOpen.value = isOpen
-                write(SetAwaitingFundsTransformer(isAwaitingFunds = isOpen))
-            }
             .flowOn(dispatchers.default)
+            .onEach { isOpen -> write(SetAwaitingFundsTransformer(isAwaitingFunds = isOpen)) }
             .launchIn(scope)
     }
 
@@ -359,7 +348,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
     private fun restartQuoteLoop(withDebounce: Boolean) {
         quoteJobHolder.cancel()
 
-        if (!isResumed || !isTradedAssetResolved || isHeld.value) return
+        if (!isResumed || !isTradedAssetResolved || isHeld) return
         if (!uiState.value.isMarketAcceptingOrders || !uiState.value.canPollPrice()) return
 
         scope.launch {

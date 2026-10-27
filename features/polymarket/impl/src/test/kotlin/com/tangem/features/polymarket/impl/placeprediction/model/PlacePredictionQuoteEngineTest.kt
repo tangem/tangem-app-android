@@ -1,5 +1,6 @@
 package com.tangem.features.polymarket.impl.placeprediction.model
 
+import app.cash.turbine.test
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
@@ -269,6 +270,92 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
 
         // Assert
         coVerify(exactly = 1) { getPriceUseCase(assetId = any(), side = any()) }
+
+        engine.onPause()
+    }
+
+    @Test
+    fun `GIVEN position read finished while held WHEN released THEN position applied`() = runTest {
+        // Arrange
+        val position = CompletableDeferred<Unit>()
+        coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } coAnswers {
+            position.await()
+            createPosition().right()
+        }
+        val (engine, uiState) = createEngine(params = SELL_PARAMS)
+        runCurrent()
+        engine.holdForSubmit()
+        position.complete(Unit)
+        advanceUntilIdle()
+
+        // Act
+        engine.release()
+
+        // Assert
+        assertThat((uiState.value.order as OrderSideUM.Sell).position).isInstanceOf(SellPositionUM.Held::class.java)
+    }
+
+    @Test
+    fun `GIVEN market load finished while held WHEN released THEN market header applied`() = runTest {
+        // Arrange
+        val event = CompletableDeferred<Unit>()
+        coEvery { getEventUseCase(eventId = EVENT_ID) } coAnswers {
+            event.await()
+            createEvent().right()
+        }
+        val (engine, uiState) = createEngine()
+        runCurrent()
+        engine.holdForSubmit()
+        event.complete(Unit)
+        advanceUntilIdle()
+
+        // Act
+        engine.release()
+
+        // Assert
+        assertThat(uiState.value.market.title).isEqualTo("Market question")
+    }
+
+    @Test
+    fun `GIVEN several updates while held WHEN released THEN they arrive in one emission`() = runTest {
+        // Arrange
+        val (engine, uiState) = createEngine()
+        advanceUntilIdle()
+        engine.holdForSubmit()
+        statusFlow.value = activeStatus(balance = BigDecimal("50"))
+        isFundingOpen.value = true
+        advanceUntilIdle()
+
+        uiState.test {
+            skipItems(count = 1)
+
+            // Act
+            engine.release()
+
+            // Assert
+            val released = awaitItem()
+            assertThat((released.order as OrderSideUM.Buy).balance).isEqualTo(BigDecimal("50"))
+            assertThat(released.isAwaitingFunds).isTrue()
+            expectNoEvents()
+        }
+    }
+
+    @Test
+    fun `GIVEN placeable quote and engine held WHEN prepared THEN nothing returned`() = runTest {
+        // Arrange
+        val (engine, uiState) = createEngine()
+        advanceUntilIdle()
+        engine.onResume()
+        engine.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        assertThat(uiState.value.isPrimaryButtonEnabled).isTrue()
+        engine.holdForSubmit()
+
+        // Act
+        val prepared = engine.prepare()
+
+        // Assert
+        assertThat(prepared).isNull()
 
         engine.onPause()
     }
