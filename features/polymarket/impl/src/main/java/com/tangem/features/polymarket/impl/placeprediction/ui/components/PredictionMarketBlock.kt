@@ -44,15 +44,17 @@ internal fun PredictionMarketBlock(state: MarketHeaderUM, modifier: Modifier = M
     )
 }
 
-private fun MarketHeaderUM.outcomeLabel(): String {
+private fun MarketHeaderUM.outcomeLabel(): String = priceLabel()?.let { "$outcomeTitle $it" } ?: outcomeTitle
+
+internal fun MarketHeaderUM.priceLabel(): String? {
     val livePrice = when {
         isPriceUnavailable -> DASH_SIGN
         outcomePrice != null -> outcomePrice
-        else -> return outcomeTitle
+        else -> return null
     }
     val entryPricePrefix = entryPrice?.let { "$it $PRICE_ARROW " }.orEmpty()
 
-    return "$outcomeTitle $entryPricePrefix$livePrice"
+    return "$entryPricePrefix$livePrice"
 }
 
 private const val PRICE_ARROW = "→"
