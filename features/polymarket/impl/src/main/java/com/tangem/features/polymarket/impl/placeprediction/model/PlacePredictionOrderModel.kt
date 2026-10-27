@@ -20,6 +20,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.AmountPresetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.MIN_QUOTABLE_AMOUNT
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.toStatusRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
@@ -53,7 +54,11 @@ internal class PlacePredictionOrderModel @Inject constructor(
 
     private val orderSubmitter = orderSubmitterFactory.create(params = params, uiState = uiState, scope = modelScope)
 
-    val feeSheet = PlacePredictionFeeSheet(uiState = uiState, scope = modelScope)
+    val feeSheet = PlacePredictionFeeSheet(
+        uiState = uiState,
+        scope = modelScope,
+        heading = PredictionFeeSheetUM.Heading.Total,
+    )
 
     val fundingSheetNavigation: SlotNavigation<PolymarketFundingSheetConfig>
         get() = quoteEngine.addFunds.navigation

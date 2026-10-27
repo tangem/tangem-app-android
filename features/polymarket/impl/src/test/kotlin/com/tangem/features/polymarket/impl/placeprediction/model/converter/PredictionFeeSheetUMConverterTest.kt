@@ -30,6 +30,7 @@ internal class PredictionFeeSheetUMConverterTest {
             quote = case.quote,
             slippage = case.slippage,
             tokenSymbol = case.tokenSymbol,
+            heading = case.heading,
         )
 
         // Assert
@@ -58,19 +59,7 @@ internal class PredictionFeeSheetUMConverterTest {
             ),
         ),
         ConvertCase(
-            quote = createQuote().copy(
-                side = PredictionOrderSide.SELL,
-                averagePrice = BigDecimal("0.9995"),
-                shares = BigDecimal("20"),
-                expectedExecutionAmount = BigDecimal("12"),
-                notional = BigDecimal("11.80"),
-                fees = PredictionOrderFees(
-                    market = BigDecimal("0.20"),
-                    builder = BigDecimal("0.30"),
-                    total = BigDecimal("0.50"),
-                ),
-                total = BigDecimal("11.30"),
-            ),
+            quote = createSellQuote(),
             slippage = SlippageUM.of(BigDecimal("2")),
             tokenSymbol = "pUSD",
             expected = createFeeSheet(
@@ -79,16 +68,58 @@ internal class PredictionFeeSheetUMConverterTest {
                 descriptionArgs = wrappedList("20", "99.9", "pUSD", "2%"),
             ),
         ),
+        ConvertCase(
+            quote = createQuote(),
+            slippage = SlippageUM.of(BigDecimal("0.25")),
+            tokenSymbol = "USDC",
+            heading = PredictionFeeSheetUM.Heading.Total,
+            expected = createFeeSheet(
+                amounts = listOf("$12.00", "$0.00", "$0.30", "$12.30"),
+                descriptionRes = R.string.prediction_fee_sheet_buy_description,
+                descriptionArgs = wrappedList("20", "60", "USDC", "0.25%"),
+                titleRes = R.string.prediction_fee_sheet_total,
+            ),
+        ),
+        ConvertCase(
+            quote = createSellQuote(),
+            slippage = SlippageUM.of(BigDecimal("2")),
+            tokenSymbol = "pUSD",
+            heading = PredictionFeeSheetUM.Heading.Total,
+            expected = createFeeSheet(
+                amounts = listOf("$11.80", "$0.20", "$0.30", "$11.30"),
+                descriptionRes = R.string.prediction_fee_sheet_sell_description,
+                descriptionArgs = wrappedList("20", "99.9", "pUSD", "2%"),
+                titleRes = R.string.prediction_fee_sheet_total,
+                orderRowTitleRes = R.string.prediction_close_title,
+            ),
+        ),
+    )
+
+    private fun createSellQuote() = createQuote().copy(
+        side = PredictionOrderSide.SELL,
+        averagePrice = BigDecimal("0.9995"),
+        shares = BigDecimal("20"),
+        expectedExecutionAmount = BigDecimal("12"),
+        notional = BigDecimal("11.80"),
+        fees = PredictionOrderFees(
+            market = BigDecimal("0.20"),
+            builder = BigDecimal("0.30"),
+            total = BigDecimal("0.50"),
+        ),
+        total = BigDecimal("11.30"),
     )
 
     private fun createFeeSheet(
         amounts: List<String>,
         descriptionRes: Int,
         descriptionArgs: WrappedList<Any>,
+        titleRes: Int = R.string.prediction_place_fee,
+        orderRowTitleRes: Int = R.string.prediction_fee_sheet_order,
     ) = PredictionFeeSheetUM(
+        title = resourceReference(titleRes),
         rows = persistentListOf(
             PredictionFeeSheetUM.Row(
-                title = resourceReference(R.string.prediction_fee_sheet_order),
+                title = resourceReference(orderRowTitleRes),
                 amount = amounts[0],
                 description = resourceReference(descriptionRes, descriptionArgs),
             ),
@@ -136,5 +167,6 @@ internal class PredictionFeeSheetUMConverterTest {
         val slippage: SlippageUM,
         val tokenSymbol: String,
         val expected: PredictionFeeSheetUM,
+        val heading: PredictionFeeSheetUM.Heading = PredictionFeeSheetUM.Heading.Fee,
     )
 }

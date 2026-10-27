@@ -39,6 +39,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.orderTotal
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionOrderIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionAmountPresets
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionNotificationsBlock
+import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionAmountCaptionStyle
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionOrderAmountInput
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionOrderDetailsCard
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionOrderHeader
@@ -138,6 +139,7 @@ private fun OrderBody(
                     }
                 },
                 isCalculatorDivided = true,
+                captionStyle = PredictionAmountCaptionStyle.Order,
             )
         }
         Column(
