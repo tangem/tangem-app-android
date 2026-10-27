@@ -140,9 +140,6 @@ class StorePreferencesKeys @Inject constructor() {
     fun getShouldShowAskNotificationPermissionViaBs(): Preferences.Key<Boolean> =
         booleanPreferencesKey("ShouldShowAskNotificationPermissionViaBs")
 
-    fun getShouldShowInitialPermissionScreen(permission: String): Preferences.Key<Boolean> =
-        booleanPreferencesKey("shouldShowInitialPushPermissionScreen_$permission")
-
     fun getHotWalletUnlockAttemptsKey(attemptId: String): Preferences.Key<Int> =
         intPreferencesKey(name = "hotWalletUnlockAttempts_$attemptId")
 

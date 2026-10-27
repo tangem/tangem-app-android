@@ -43,6 +43,7 @@ sealed class JointAccountStatusValue {
      *
      * @property joinedMembers members that have taken a slot, the creator included
      * @property totalMembers  slots of the account, fixed at creation
+
      */
     @Serializable
     data class Pending(
@@ -50,6 +51,7 @@ sealed class JointAccountStatusValue {
         val joinedMembers: Int,
         val totalMembers: Int,
         val threshold: Int,
+        val isOwnCreator: Boolean = false,
     ) : JointAccountStatusValue()
 
     /**

@@ -74,7 +74,7 @@ import dev.chrisbanes.haze.rememberHazeState
  * Design-system v2 modal bottom sheet: a floating modal-material card with a drag indicator,
  * optional [title] slot and [content], shown above a dimmed scrim.
  *
- * Version: 1.1.2
+ * Version: 1.1.3
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=8256-1265&m=dev)
  *
@@ -89,10 +89,10 @@ import dev.chrisbanes.haze.rememberHazeState
  *   the state is derived from the measured content height. A modal that opens with full-height
  *   content opens already expanded; crossing the threshold while shown (content growing or
  *   shrinking) animates the morph, iOS-sheet style.
- * - **Focus**: a field gaining focus anywhere in the card expands it to the full height with the
- *   same animation (and back when focus clears), regardless of the content height — the iOS
- *   keyboard-detent behavior. The content is IME-padded, so the focused field stays above the
- *   keyboard.
+ * - **Focus**: a field gaining focus anywhere in the card grows it by the part of the keyboard that
+ *   overlaps it (and back when focus clears), so the content keeps its own height and ends right
+ *   above the keyboard. A card with nothing focused ignores the keyboard, which may belong to a
+ *   modal above it.
  * - **Presentation** ([presentation]): with a [LocalTangemModalHost] in the window, the modal is
  *   rendered as a same-window overlay and its material truly blurs the app UI behind it; without
  *   a host (or with [TangemModal.Presentation.Dialog]) it opens in a separate dialog window with
@@ -200,7 +200,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModal(
 /** Public namespace of the modal component. */
 object TangemModal {
 
-    val version = DsVersion(major = 1, minor = 1, patch = 2)
+    val version = DsVersion(major = 1, minor = 1, patch = 3)
 
     /**
      * Where the modal is presented.
@@ -626,6 +626,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> TangemModalCont
             modifier = Modifier.modalCardLayout(
                 geometry = morphGeometry,
                 windowInsets = WindowInsets.systemBars,
+                imeInsets = WindowInsets.ime,
             ),
             isMaterial = isMaterial,
             materialStyle = TangemSurface.MaterialStyle.Modal,
@@ -646,8 +647,8 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> TangemModalCont
                         drawBehind { drawRect(color = opaqueColor.copy(alpha = morphGeometry.flatten)) }
                     }
                     .modalCardFill(geometry = morphGeometry, imeInsets = WindowInsets.ime)
-                    // A focused field anywhere in the card expands it to the full height, iOS
-                    // keyboard-detent style; hasFocus aggregates the whole subtree.
+                    // A focused field anywhere in the card makes it grow by the keyboard's overlap;
+                    // hasFocus aggregates the whole subtree.
                     .onFocusEvent { state -> morphGeometry.isFocused = state.hasFocus },
             ) {
                 when (chromePlacement) {

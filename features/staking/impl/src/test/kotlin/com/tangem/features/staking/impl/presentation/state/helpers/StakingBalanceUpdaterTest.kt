@@ -389,7 +389,7 @@ internal class StakingBalanceUpdaterTest {
             // Arrange
             coEvery {
                 getTxHistoryItemsCountUseCase(any(), any())
-            } returns TxHistoryStateError.EmptyTxHistories.left()
+            } returns TxHistoryStateError.EmptyTxHistories().left()
             val updater =
                 createUpdater(
                     testScope = this,

@@ -23,7 +23,6 @@ internal fun BaseExtension.configureCompose(project: Project) {
         contains(":ui") ||
             contains(Regex(pattern = ":common-ui\$")) || // shared Composable UI component modules
             contains(":common:ui-charts") ||
-            contains(":features:onboarding") || // TODO: divide on api/impl after migrating all onboarding to module
             contains(Regex(pattern = ":presentation\$")) ||
             contains(Regex(pattern = ":app\$")) || // TODO: [REDACTED_JIRA]
             contains(Regex(pattern = ":features:rating:api\$")) || // provides Composable function

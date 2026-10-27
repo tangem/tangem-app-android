@@ -910,7 +910,7 @@ internal class SwapAmountModel @Inject constructor(
 
     private fun showErrorAlert(errorMessage: String?) {
         swapAlertFactory.getGenericErrorState(
-            expressError = ExpressError.UnknownError,
+            expressError = ExpressError.UnknownError(),
             onFailedTxEmailClick = {
                 modelScope.launch {
                     swapAlertFactory.onFailedTxEmailClick(
