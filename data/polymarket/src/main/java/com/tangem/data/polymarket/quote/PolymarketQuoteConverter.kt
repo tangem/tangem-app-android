@@ -8,10 +8,12 @@ internal object PolymarketQuoteConverter {
     fun convert(event: PolymarketMarketEventDto): List<PolymarketQuoteUpdate> = when (event) {
         is PolymarketMarketEventDto.Book -> listOfNotNull(book(event))
         is PolymarketMarketEventDto.PriceChange -> event.priceChanges.mapNotNull { change ->
-            prices(change.assetId, change.bestBid, change.bestAsk, event.timestamp)
+            prices(assetId = change.assetId, bid = change.bestBid, ask = change.bestAsk, timestamp = event.timestamp)
         }
         is PolymarketMarketEventDto.BestBidAsk ->
-            listOfNotNull(prices(event.assetId, event.bestBid, event.bestAsk, event.timestamp))
+            listOfNotNull(
+                prices(assetId = event.assetId, bid = event.bestBid, ask = event.bestAsk, timestamp = event.timestamp),
+            )
         is PolymarketMarketEventDto.LastTradePrice -> listOfNotNull(trade(event))
         is PolymarketMarketEventDto.Unknown -> emptyList()
     }
