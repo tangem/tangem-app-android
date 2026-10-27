@@ -36,6 +36,7 @@ internal class GetOnrampFeesUseCaseTest {
                 name = "ACH",
                 paymentMethodId = "ACH",
                 group = AccountFeeGroupType.ONRAMP,
+                calculationType = AccountFee.CalculationType.FIXED,
                 amount = BigDecimal.ONE,
                 currency = "USD",
             ),
