@@ -7,6 +7,7 @@ import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketRedeemRepository
 import com.tangem.domain.polymarket.PolymarketRepository
+import com.tangem.domain.polymarket.PolymarketLiveQuotesRepository
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.PolymarketWithdrawRepository
 import com.tangem.domain.polymarket.PredictionWithdrawalStore
@@ -47,6 +48,7 @@ import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawDestinationsUse
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawalStateUseCase
 import com.tangem.domain.polymarket.usecase.InvalidatePolymarketCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketCredentialsPresenceUseCase
+import com.tangem.domain.polymarket.usecase.ObservePolymarketLiveQuotesUseCase
 import com.tangem.domain.polymarket.usecase.SearchPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
@@ -65,6 +67,11 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 @Suppress("TooManyFunctions", "LargeClass")
 internal object PolymarketDomainModule {
+
+    @Provides
+    fun provideObservePolymarketLiveQuotesUseCase(
+        repository: PolymarketLiveQuotesRepository,
+    ): ObservePolymarketLiveQuotesUseCase = ObservePolymarketLiveQuotesUseCase(repository)
 
     @Provides
     @Singleton
