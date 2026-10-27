@@ -6,4 +6,5 @@ interface SwapFeatureToggles {
     val isTronGaslessDexSwapEnabled: Boolean
     val isCustomSlippageEnabled: Boolean
     val isOverallBestPriceEnabled: Boolean
+    val isHideRejectedCexProviderEnabled: Boolean
 }
