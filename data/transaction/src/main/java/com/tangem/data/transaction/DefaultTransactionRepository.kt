@@ -18,6 +18,7 @@ import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.smartcontract.SmartContractCallDataProviderFactory
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.nft.models.NFTAsset
+import com.tangem.blockchain.yieldsupply.wrapWithYieldModuleUpgradeIfAvailable
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.datasource.api.common.response.fold
@@ -27,6 +28,7 @@ import com.tangem.datasource.api.tangemTech.models.TransactionEventBody
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.TransactionRepository
+import com.tangem.domain.transaction.YieldModuleFeatureToggles
 import com.tangem.domain.transaction.models.EventTransactionTypeDto
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -41,6 +43,7 @@ internal class DefaultTransactionRepository(
     private val tangemTechApi: TangemTechApi,
     private val walletManagersFacade: WalletManagersFacade,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val yieldModuleFeatureToggles: YieldModuleFeatureToggles,
 ) : TransactionRepository {
 
     override suspend fun createTransaction(
@@ -106,7 +109,14 @@ internal class DefaultTransactionRepository(
             destinationAddress = destination,
             amount = amount,
             blockchain = blockchain,
-        )
+        )?.let { transferCallData ->
+            wrapYieldSendWithModuleUpgradeIfAvailable(
+                callData = transferCallData,
+                amount = amount,
+                userWalletId = userWalletId,
+                network = network,
+            )
+        }
 
         val extras = if (callData != null) {
             createTransactionDataExtras(
@@ -128,6 +138,25 @@ internal class DefaultTransactionRepository(
             network = network,
             txExtras = getMemoExtras(networkId = network.id.rawId, memo = memo) ?: extras,
         )
+    }
+
+    private suspend fun wrapYieldSendWithModuleUpgradeIfAvailable(
+        callData: SmartContractCallData,
+        amount: Amount,
+        userWalletId: UserWalletId,
+        network: Network,
+    ): SmartContractCallData {
+        val isUpgradeApplicable = yieldModuleFeatureToggles.isYieldModuleV3Enabled &&
+            amount.type is AmountType.TokenYieldSupply
+        if (!isUpgradeApplicable) return callData
+
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = network.toBlockchain(),
+            derivationPath = network.derivationPath.value,
+        ) ?: return callData
+
+        return walletManager.wrapWithYieldModuleUpgradeIfAvailable(callData)
     }
 
     override suspend fun createApprovalTransaction(
