@@ -81,9 +81,10 @@ private fun PredictionFeeSheetPreview() {
     val state = PlacePredictionPreviewProvider().values.firstNotNullOf { preview ->
         (preview.quote as? QuoteUM.Content)?.let { content ->
             PredictionFeeSheetUMConverter.convert(
-                content.signable.quote,
-                preview.slippage,
-                preview.collateral.tokenSymbol,
+                quote = content.signable.quote,
+                slippage = preview.slippage,
+                tokenSymbol = preview.collateral.tokenSymbol,
+                heading = PredictionFeeSheetUM.Heading.Total,
             )
         }
     }
