@@ -20,7 +20,6 @@ import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.findCardWithId
-import com.tangem.features.tangempay.addfunds.va.deposit.TangemPayVirtualAccountDepositSuccessComponent
 import com.tangem.features.tangempay.card.activation.TangemPayCardActivationComponent
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToWalletComponent
 import com.tangem.features.tangempay.card.limit.setup.TangemPayCardLimitSetupComponent
@@ -31,7 +30,6 @@ import com.tangem.features.tangempay.card.pin.TangemPayChangePinSuccessComponent
 import com.tangem.features.tangempay.common.ifLoadedOrNull
 import com.tangem.features.tangempay.common.userWalletId
 import com.tangem.features.tokenreceive.TokenReceiveComponent
-import com.tangem.features.moneyaccount.details.component.MoneyAccountAddFundsBottomSheetComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -40,7 +38,6 @@ internal class TangemPayCardPageComponent @AssistedInject constructor(
     @Assisted private val appComponentContext: AppComponentContext,
     @Assisted private val params: Params,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
-    private val moneyAccountAddFundsComponentFactory: MoneyAccountAddFundsBottomSheetComponent.Factory,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<TangemPayCardDetailsInnerRoute>()
@@ -87,7 +84,6 @@ internal class TangemPayCardPageComponent @AssistedInject constructor(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = params,
             tokenReceiveComponentFactory = tokenReceiveComponentFactory,
-            moneyAccountAddFundsComponentFactory = moneyAccountAddFundsComponentFactory,
         )
         is TangemPayCardDetailsInnerRoute.ChangePIN -> TangemPayChangePinComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
@@ -133,10 +129,6 @@ internal class TangemPayCardPageComponent @AssistedInject constructor(
         TangemPayCardDetailsInnerRoute.LimitSetupSuccess -> TangemPayCardLimitSetupSuccessComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
         )
-        TangemPayCardDetailsInnerRoute.VirtualAccountDepositSuccess ->
-            TangemPayVirtualAccountDepositSuccessComponent(
-                appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
-            )
     }
 
     private fun onChildBack() {

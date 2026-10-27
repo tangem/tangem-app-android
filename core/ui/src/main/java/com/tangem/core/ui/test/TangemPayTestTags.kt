@@ -166,12 +166,8 @@ object TangemPayTestTags {
     const val RECEIVE_SHOW_QR_BUTTON = "TANGEM_PAY_RECEIVE_SHOW_QR_BUTTON"
     const val RECEIVE_QR_CODE = "TANGEM_PAY_RECEIVE_QR_CODE"
 
-    // Bank transfer (virtual account) deposit bottom sheet
-    const val VA_DEPOSIT_SHOW_DETAILS_BUTTON = "TANGEM_PAY_VA_DEPOSIT_SHOW_DETAILS_BUTTON"
+    // Bank transfer (virtual account) on-ramp fees
     const val VA_DEPOSIT_FEE_ERROR_BANNER = "TANGEM_PAY_VA_DEPOSIT_FEE_ERROR_BANNER"
-
-    // Virtual account order success screen
-    const val VA_DEPOSIT_SUCCESS_CLOSE_BUTTON = "TANGEM_PAY_VA_DEPOSIT_SUCCESS_CLOSE_BUTTON"
 
     // Tariff plans — select / confirm plan screen
     const val SELECT_PLAN_SCREEN = "TANGEM_PAY_SELECT_PLAN_SCREEN"

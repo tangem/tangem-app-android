@@ -5,14 +5,12 @@ import com.tangem.domain.promo.models.PromoMatchMode
 import com.tangem.features.promobanners.impl.campaigns.analytics.PromoCampaignsAnalyticsEvent.AlreadyEnrolledScreenOpened
 import com.tangem.features.promobanners.impl.campaigns.analytics.PromoCampaignsAnalyticsEvent.EnrollError
 import com.tangem.features.promobanners.impl.campaigns.analytics.PromoCampaignsAnalyticsEvent.PayoutToken
-import com.tangem.features.promobanners.impl.campaigns.entity.CampaignType
 import com.tangem.features.promobanners.impl.campaigns.v2.createPromoCampaign
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class PromoCampaignsAnalyticsEventTest {
@@ -22,13 +20,7 @@ internal class PromoCampaignsAnalyticsEventTest {
         // Arrange
         val campaign = createPromoCampaign()
         val events = listOf(
-            PromoCampaignsAnalyticsEvent.PromotionScreenOpened(campaignType = whaleSwap),
             PromoCampaignsAnalyticsEvent.PromotionScreenOpened(campaign = campaign),
-            PromoCampaignsAnalyticsEvent.EnrollButtonClicked(
-                campaignType = whaleSwap,
-                token = "USDT",
-                blockchain = "Ethereum",
-            ),
             PromoCampaignsAnalyticsEvent.EnrollButtonClicked(campaign = campaign, payoutToken = null, walletsCount = 1),
             AlreadyEnrolledScreenOpened(campaign = "whale-swap", source = AlreadyEnrolledScreenOpened.Source.Entry),
             PromoCampaignsAnalyticsEvent.EnrollSuccessful(
@@ -42,50 +34,6 @@ internal class PromoCampaignsAnalyticsEventTest {
 
         // Assert
         assertThat(events.map { it.category }.distinct()).containsExactly("Promotion")
-    }
-
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class LegacyCampaign {
-
-        @ParameterizedTest
-        @MethodSource("provideCampaignTypes")
-        fun `GIVEN campaign type WHEN PromotionScreenOpened THEN event name and Screen param are correct`(
-            model: CampaignNameModel,
-        ) {
-            // Act
-            val event = PromoCampaignsAnalyticsEvent.PromotionScreenOpened(campaignType = model.campaignType)
-
-            // Assert
-            assertThat(event.event).isEqualTo("Promotion Screen Opened")
-            assertThat(event.params).containsExactly("Screen", model.expectedAnalyticsName)
-        }
-
-        @ParameterizedTest
-        @MethodSource("provideCampaignTypes")
-        fun `GIVEN campaign type WHEN EnrollButtonClicked THEN event name and params are correct`(
-            model: CampaignNameModel,
-        ) {
-            // Act
-            val event = PromoCampaignsAnalyticsEvent.EnrollButtonClicked(
-                campaignType = model.campaignType,
-                token = "USDT",
-                blockchain = "Ethereum",
-            )
-
-            // Assert
-            assertThat(event.event).isEqualTo("Enroll Button Clicked")
-            assertThat(event.params).containsExactly(
-                "Campaign", model.expectedAnalyticsName,
-                "Token", "USDT",
-                "Blockchain", "Ethereum",
-            )
-        }
-
-        private fun provideCampaignTypes() = listOf(
-            CampaignNameModel(campaignType = whaleSwap, expectedAnalyticsName = "Cashback"),
-            CampaignNameModel(campaignType = reactivation, expectedAnalyticsName = "Reactivation"),
-        )
     }
 
     @Nested
@@ -244,22 +192,10 @@ internal class PromoCampaignsAnalyticsEventTest {
         }
     }
 
-    internal data class CampaignNameModel(
-        val campaignType: CampaignType,
-        val expectedAnalyticsName: String,
-    ) {
-        override fun toString(): String = "${campaignType::class.simpleName} -> $expectedAnalyticsName"
-    }
-
     internal data class ScreenOpenedModel(
         val matchMode: PromoMatchMode,
         val isPayoutNeeded: Boolean,
         val expectedMatchMode: String,
         val expectedPayout: String,
     )
-
-    private companion object {
-        val whaleSwap = CampaignType.WhaleSwapCashback(campaignId = "whale")
-        val reactivation = CampaignType.ReactivationCashback(campaignId = "reactivation")
-    }
 }

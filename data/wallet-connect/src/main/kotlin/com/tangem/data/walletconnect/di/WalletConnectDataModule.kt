@@ -67,13 +67,11 @@ internal object WalletConnectDataModule {
     fun wcInitializeUseCase(
         wcSdk: WcSdk,
         store: WalletConnectStore,
-        featureToggles: WalletConnectFeatureToggles,
         appScope: AppCoroutineScope,
         dispatchers: CoroutineDispatcherProvider,
     ): WcInitializeUseCase = DefaultWcInitializeUseCase(
         wcSdk = wcSdk,
         store = store,
-        featureToggles = featureToggles,
         scope = appScope,
         dispatchers = dispatchers,
     )
@@ -109,17 +107,12 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
-    fun sdkDelegate(
-        appScope: AppCoroutineScope,
-        store: WalletConnectStore,
-        wcSdk: WcSdk,
-        featureToggles: WalletConnectFeatureToggles,
-    ): WcPairSdkDelegate = WcPairSdkDelegate(
-        scope = appScope,
-        store = store,
-        wcSdk = wcSdk,
-        featureToggles = featureToggles,
-    )
+    fun sdkDelegate(appScope: AppCoroutineScope, store: WalletConnectStore, wcSdk: WcSdk): WcPairSdkDelegate =
+        WcPairSdkDelegate(
+            scope = appScope,
+            store = store,
+            wcSdk = wcSdk,
+        )
 
     @Provides
     @Singleton
@@ -132,7 +125,6 @@ internal object WalletConnectDataModule {
         analytics: AnalyticsEventHandler,
         appScope: AppCoroutineScope,
         wcSdk: WcSdk,
-        featureToggles: WalletConnectFeatureToggles,
     ): DefaultWcSessionsManager {
         return DefaultWcSessionsManager(
             store = store,
@@ -143,7 +135,6 @@ internal object WalletConnectDataModule {
             scope = appScope,
             multiAccountListSupplier = multiAccountListSupplier,
             wcSdk = wcSdk,
-            featureToggles = featureToggles,
         )
     }
 

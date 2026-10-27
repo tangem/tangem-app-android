@@ -30,7 +30,4 @@ internal sealed class TangemPayCardDetailsInnerRoute : Route {
 
     @Serializable
     data object LimitSetupSuccess : TangemPayCardDetailsInnerRoute()
-
-    @Serializable
-    data object VirtualAccountDepositSuccess : TangemPayCardDetailsInnerRoute()
 }

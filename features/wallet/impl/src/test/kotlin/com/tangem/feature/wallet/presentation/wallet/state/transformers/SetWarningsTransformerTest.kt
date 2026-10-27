@@ -23,27 +23,6 @@ import org.junit.jupiter.params.ParameterizedTest
 internal class SetWarningsTransformerTest {
 
     @Test
-    fun `GIVEN no balance state WHEN transform THEN notifications are set as they are`() {
-        // Arrange
-        val walletUM = createWalletContentUM()
-        val transformer = createTransformer(
-            notifications = persistentListOf(devCard, addFunds, missingBackup, tangemPayPromo),
-            notificationsCarousel = persistentListOf(rateApp),
-            balanceState = null,
-        )
-
-        // Act
-        val actual = transformer.transform(walletUM)
-
-        // Assert
-        val expected = walletUM.copy(
-            notifications = persistentListOf(devCard, addFunds, missingBackup, tangemPayPromo),
-            notificationsCarousel = persistentListOf(rateApp),
-        )
-        assertThat(actual).isEqualTo(expected)
-    }
-
-    @Test
     fun `GIVEN a locked wallet WHEN transform with a balance state THEN it stays as it is`() {
         // Arrange
         val walletUM = WalletUM.Locked(
@@ -421,7 +400,7 @@ internal class SetWarningsTransformerTest {
     private fun createTransformer(
         notifications: ImmutableList<WalletNotificationUM> = persistentListOf(),
         notificationsCarousel: ImmutableList<WalletNotificationUM> = persistentListOf(),
-        balanceState: NotificationsBalanceState?,
+        balanceState: NotificationsBalanceState,
         hasJointOperations: Boolean? = false,
     ) = SetWarningsTransformer(
         userWalletId = UserWalletId("01"),
