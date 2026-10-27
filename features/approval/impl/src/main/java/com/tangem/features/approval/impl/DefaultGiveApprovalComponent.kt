@@ -83,7 +83,7 @@ internal class DefaultGiveApprovalComponent @AssistedInject constructor(
 
         TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
             config = config,
-            containerColor = TangemTheme.colors.background.tertiary,
+            containerColor = TangemTheme.colors3.bg.primary,
             titleText = resourceReference(uiState.titleRes()),
             titleAction = TopAppBarButtonUM.Icon(
                 iconRes = R.drawable.ic_close_new_20,

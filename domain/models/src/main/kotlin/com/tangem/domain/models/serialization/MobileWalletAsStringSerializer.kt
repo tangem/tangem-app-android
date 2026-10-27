@@ -6,6 +6,7 @@ import com.tangem.common.json.TangemSdkAdapter
 import com.tangem.domain.models.MobileWallet
 import com.tangem.domain.models.scan.serialization.*
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -24,7 +25,8 @@ internal object MobileWalletAsStringSerializer : KSerializer<MobileWallet> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MobileWallet", PrimitiveKind.STRING)
 
     override fun deserialize(decoder: Decoder): MobileWallet {
-        return moshi.adapter(MobileWallet::class.java).fromJson(decoder.decodeString())!!
+        return moshi.adapter(MobileWallet::class.java).fromJson(decoder.decodeString())
+            ?: throw SerializationException("MobileWallet JSON is null")
     }
 
     override fun serialize(encoder: Encoder, value: MobileWallet) {

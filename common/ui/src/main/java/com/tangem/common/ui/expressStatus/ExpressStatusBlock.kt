@@ -45,7 +45,7 @@ fun ExpressStatusBlock(state: ExpressStatusUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .padding(
                 vertical = 14.dp,
                 horizontal = 12.dp,
@@ -60,7 +60,7 @@ fun ExpressStatusBlock(state: ExpressStatusUM, modifier: Modifier = Modifier) {
             Text(
                 text = state.title.resolveReference(),
                 style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
             SpacerWMax()
             AnimatedVisibility(visible = state.link is ExpressLinkUM.Content) {
@@ -72,7 +72,7 @@ fun ExpressStatusBlock(state: ExpressStatusUM, modifier: Modifier = Modifier) {
                     Icon(
                         painter = painterResource(id = link.icon),
                         contentDescription = null,
-                        tint = TangemTheme.colors.icon.informative,
+                        tint = TangemTheme.colors3.icon.secondary,
                         modifier = Modifier
                             .size(16.dp)
                             .padding(end = 2.dp),
@@ -83,7 +83,7 @@ fun ExpressStatusBlock(state: ExpressStatusUM, modifier: Modifier = Modifier) {
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         style = TangemTheme.typography.subtitle2,
-                        color = TangemTheme.colors.text.tertiary,
+                        color = TangemTheme.colors3.text.secondary,
                     )
                 }
             }
@@ -116,16 +116,16 @@ private fun ExpressStatusStep(status: ExpressStatusItemUM, isLast: Boolean) {
                     ExpressStatusItemState.Default -> StepDefault()
                     ExpressStatusItemState.Done -> Step(
                         iconRes = R.drawable.ic_check_24,
-                        iconColor = TangemTheme.colors.icon.primary1,
-                        borderColor = TangemTheme.colors.field.focused,
+                        iconColor = TangemTheme.colors3.icon.primary,
+                        borderColor = TangemTheme.colors3.bg.transparent.secondary,
                     )
                     ExpressStatusItemState.Error -> Step(
                         iconRes = R.drawable.ic_close_24,
-                        iconColor = TangemTheme.colors.icon.warning,
+                        iconColor = TangemTheme.colors3.icon.accent.red,
                     )
                     ExpressStatusItemState.Warning -> Step(
                         iconRes = R.drawable.ic_close_24,
-                        iconColor = TangemTheme.colors.icon.attention,
+                        iconColor = TangemTheme.colors3.icon.accent.yellow,
                     )
                 }
                 if (!isLast) {
@@ -133,11 +133,11 @@ private fun ExpressStatusStep(status: ExpressStatusItemUM, isLast: Boolean) {
                 }
             }
             val textColor = when (status.state) {
-                ExpressStatusItemState.Active -> TangemTheme.colors.text.primary1
-                ExpressStatusItemState.Default -> TangemTheme.colors.text.disabled
-                ExpressStatusItemState.Done -> TangemTheme.colors.text.primary1
-                ExpressStatusItemState.Error -> TangemTheme.colors.text.warning
-                ExpressStatusItemState.Warning -> TangemTheme.colors.text.attention
+                ExpressStatusItemState.Active -> TangemTheme.colors3.text.primary
+                ExpressStatusItemState.Default -> TangemTheme.colors3.text.tertiary
+                ExpressStatusItemState.Done -> TangemTheme.colors3.text.primary
+                ExpressStatusItemState.Error -> TangemTheme.colors3.text.accent.red
+                ExpressStatusItemState.Warning -> TangemTheme.colors3.text.accent.yellow
             }
             Text(
                 text = content.text.resolveReference(),
@@ -157,7 +157,7 @@ private fun StepDefault() {
             .size(20.dp)
             .border(
                 width = 1.5.dp,
-                color = TangemTheme.colors.field.focused,
+                color = TangemTheme.colors3.bg.transparent.secondary,
                 shape = CircleShape,
             )
             .padding(2.dp),
@@ -184,7 +184,7 @@ private fun Step(iconColor: Color, @DrawableRes iconRes: Int, borderColor: Color
 @Composable
 private fun StepInProgress() {
     CircularProgressIndicator(
-        color = TangemTheme.colors.icon.primary1,
+        color = TangemTheme.colors3.icon.primary,
         strokeWidth = 2.dp,
         modifier = Modifier
             .padding(2.dp)
@@ -202,7 +202,7 @@ private fun StepSeparator() {
                 height = 10.dp,
             )
             .background(
-                color = TangemTheme.colors.field.focused,
+                color = TangemTheme.colors3.bg.transparent.secondary,
                 shape = CircleShape,
             ),
     )

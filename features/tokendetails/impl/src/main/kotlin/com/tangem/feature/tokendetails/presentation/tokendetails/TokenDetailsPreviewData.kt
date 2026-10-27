@@ -23,7 +23,7 @@ internal object TokenDetailsPreviewData {
             persistentListOf(
                 TangemDropdownMenuItem(
                     title = TextReference.Res(id = R.string.token_details_hide_token),
-                    textColor = themedColor { TangemTheme.colors.text.warning },
+                    textColor = themedColor { TangemTheme.colors3.text.accent.red },
                     onClick = { },
                 ),
             ),

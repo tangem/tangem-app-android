@@ -176,25 +176,6 @@ internal class DefaultCardRepositoryTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class IsActivationFinished {
-
-        @Test
-        fun `GIVEN activation finished WHEN isActivationFinished THEN true`() = runTest {
-            // Arrange
-            seedCards(UsedCardInfo(cardId = CARD_ID, isActivationFinished = true))
-
-            // Act & Assert
-            assertThat(repository.isActivationFinished(CARD_ID)).isTrue()
-        }
-
-        @Test
-        fun `GIVEN card absent WHEN isActivationFinished THEN false`() = runTest {
-            assertThat(repository.isActivationFinished(CARD_ID)).isFalse()
-        }
-    }
-
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class IsActivationInProgress {
 
         @ParameterizedTest

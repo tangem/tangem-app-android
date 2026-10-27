@@ -290,7 +290,7 @@ internal object SwapNotificationUM {
                     id = R.string.common_learn_more,
                     spanStyleReference = {
                         TangemTheme.typography.caption2
-                            .copy(color = TangemTheme.colors.text.accent)
+                            .copy(color = TangemTheme.colors3.text.accent.blue)
                             .toSpanStyle()
                     },
                     onClick = onLearnMoreClick,

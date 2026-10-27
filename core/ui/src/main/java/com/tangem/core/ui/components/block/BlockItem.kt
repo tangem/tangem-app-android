@@ -88,8 +88,8 @@ val TangemBlockItemColors: BlockItemColors
     @ReadOnlyComposable
     get() = BlockItemColors(
         cardColors = TangemBlockCardColors,
-        leadingIconColor = TangemTheme.colors.icon.secondary,
-        textColor = TangemTheme.colors.text.primary1,
-        accentColor = TangemTheme.colors.text.accent,
-        warningColor = TangemTheme.colors.text.warning,
+        leadingIconColor = TangemTheme.colors3.icon.secondary,
+        textColor = TangemTheme.colors3.text.primary,
+        accentColor = TangemTheme.colors3.text.accent.blue,
+        warningColor = TangemTheme.colors3.text.accent.red,
     )

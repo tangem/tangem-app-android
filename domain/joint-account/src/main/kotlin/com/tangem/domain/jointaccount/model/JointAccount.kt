@@ -14,6 +14,7 @@ import com.tangem.domain.models.StatusSource
  * @property members         taken slots, ordered by join time, the creator first. The app finds itself in the list
  * by comparing [Member.address] against the address derived from the card (lowercased), never by trusting the
  * backend. Free slots are `membersCount - members.size`
+ * @property invites         issued, unredeemed invites without their codes; the creator of a pending account only
  * @property source          freshness of this data: [StatusSource.ACTUAL] right after a successful fetch,
  * [StatusSource.CACHE] when restored from persistence, [StatusSource.ONLY_CACHE] when a refresh failed
  * @property inFlightOperations the account's non-terminal operations keyed by chain — at most one per network
@@ -28,8 +29,21 @@ data class JointAccount(
     val status: Status,
     val members: List<Member>,
     val source: StatusSource,
+    val invites: List<JointAccountInvite> = emptyList(),
     val inFlightOperations: Map<Long, JointOperation> = emptyMap(),
 ) {
+
+    /** The backend reveals [Member.slot] to the creator of a pending account only; the creator is [Member.role] */
+    val hasRevealedSlots: Boolean
+        get() = members.any { it.slot != null }
+
+    /** `1..membersCount - 1` minus the taken ones; empty unless [hasRevealedSlots] */
+    val freeSlots: List<Int>
+        get() {
+            if (!hasRevealedSlots) return emptyList()
+            val taken = members.mapNotNullTo(hashSetOf()) { it.slot }
+            return (FIRST_INVITABLE_SLOT until membersCount).filterNot { it in taken }
+        }
 
     /**
      * [CANCELLED] is reserved by the contract — nothing sets it on this stage.
@@ -47,15 +61,14 @@ data class JointAccount(
      * @property name     the member's display name, 1..25 chars
      * @property address  the member's owner address in the Safe, lower-case hex — compare case-insensitively
      * @property role     only the creator sends invites
-     * @property inviteId the invite this member redeemed to take the slot; `null` for the creator, who never had
-     * one, and for data cached before the backend started reporting it
+     * @property slot     `0` for the creator; `null` whenever the backend withholds it, see [hasRevealedSlots]
      * @property signature the member's confirmation signature, lower-case hex; `null` until the member confirms
      */
     data class Member(
         val name: String,
         val address: String,
         val role: Role,
-        val inviteId: String? = null,
+        val slot: Int? = null,
         val signature: String? = null,
     ) {
 
@@ -68,5 +81,10 @@ data class JointAccount(
         CREATOR,
         MEMBER,
         UNKNOWN,
+    }
+
+    companion object {
+        const val CREATOR_SLOT = 0
+        const val FIRST_INVITABLE_SLOT = 1
     }
 }

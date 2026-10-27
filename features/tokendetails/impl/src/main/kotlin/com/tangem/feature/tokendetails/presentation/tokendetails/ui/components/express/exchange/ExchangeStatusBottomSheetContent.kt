@@ -48,14 +48,14 @@ internal fun ExchangeStatusBottomSheetContent(state: ExchangeUM, extraContent: (
         Text(
             text = stringResourceSafe(id = R.string.express_exchange_status_title),
             style = TangemTheme.typography.subtitle1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             modifier = Modifier.align(CenterHorizontally),
         )
         SpacerH10()
         Text(
             text = stringResourceSafe(id = R.string.express_exchange_status_subtitle),
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .align(CenterHorizontally),
@@ -140,7 +140,7 @@ private fun Notification(state: ExchangeStatusNotification) {
             is ExchangeStatusNotification.TokenRefunded -> {
                 CurrencyNotification(
                     config = notification.config,
-                    containerColor = TangemTheme.colors.background.action,
+                    containerColor = TangemTheme.colors3.bg.secondary,
                 )
             }
         }

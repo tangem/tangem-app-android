@@ -62,9 +62,9 @@ fun AutoSizeTextField(
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
-    color: Color = TangemTheme.colors.text.primary1,
+    color: Color = TangemTheme.colors3.text.primary,
     textStyle: TextStyle = TangemTheme.typography.body2.copy(color = color),
-    placeholderColor: Color = TangemTheme.colors.text.disabled,
+    placeholderColor: Color = TangemTheme.colors3.text.tertiary,
     readOnly: Boolean = false,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     isValuePasted: Boolean = false,
@@ -82,7 +82,7 @@ fun AutoSizeTextField(
         } else {
             textStyle.fontSize
         }
-        val textColor = if (value.isBlank()) TangemTheme.colors.text.disabled else color
+        val textColor = if (value.isBlank()) TangemTheme.colors3.text.tertiary else color
         SimpleTextField(
             value = value,
             onValueChange = onValueChange,

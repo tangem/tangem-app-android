@@ -58,12 +58,12 @@ fun TangemCheckbox(
             .then(
                 if (isChecked) {
                     Modifier.background(
-                        color = TangemTheme.colors2.border.status.accent,
+                        color = TangemTheme.colors3.border.accent.blue,
                         shape = shape,
                     )
                 } else {
                     Modifier.border(
-                        color = TangemTheme.colors2.border.neutral.secondary,
+                        color = TangemTheme.colors3.border.tertiary,
                         shape = shape,
                         width = 1.dp,
                     )
@@ -83,7 +83,7 @@ fun TangemCheckbox(
             Icon(
                 painter = rememberVectorPainter(ImageVector.vectorResource(R.drawable.ic_check_default_24)),
                 contentDescription = null,
-                tint = TangemTheme.colors2.graphic.neutral.primaryInvertedConstant,
+                tint = TangemTheme.colors3.icon.staticDark,
                 modifier = Modifier
                     .align(Alignment.Center)
                     .size(16.dp),
@@ -105,7 +105,7 @@ private fun TangemCheckbox_Preview() {
     )
     TangemThemePreviewRedesign {
         Row(
-            modifier = Modifier.background(TangemTheme.colors2.surface.level1),
+            modifier = Modifier.background(TangemTheme.colors3.bg.primary),
             horizontalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             previewData.fastForEach { data ->
