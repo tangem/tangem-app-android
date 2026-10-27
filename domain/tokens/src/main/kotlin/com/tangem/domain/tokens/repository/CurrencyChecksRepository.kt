@@ -29,6 +29,11 @@ interface CurrencyChecksRepository {
     /** Returns a fee resource amount available and max for paying fees in several blockchains */
     suspend fun getFeeResourceAmount(userWalletId: UserWalletId, network: Network): CurrencyAmount?
 
+    suspend fun getIncompleteBalanceWarning(
+        userWalletId: UserWalletId,
+        network: Network,
+    ): CryptoCurrencyWarning.IncompleteBalance?
+
     /** Is fee resource enough for a transaction amount */
     suspend fun checkIfFeeResourceEnough(amount: BigDecimal, userWalletId: UserWalletId, network: Network): Boolean
 
