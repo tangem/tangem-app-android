@@ -67,6 +67,9 @@ private val StandardEasing = CubicBezierEasing(a = 0.6f, b = 0f, c = 0.4f, d = 1
 private val AcceleratedEasing = CubicBezierEasing(a = 0.7f, b = 0f, c = 0.3f, d = 1f)
 private val PressEasing = CubicBezierEasing(a = 0.5f, b = 0f, c = 0.5f, d = 1f)
 
+internal const val EXPANSION_DELAY_MS = 150
+internal const val EXPANSION_DURATION_MS = 300
+
 /** Opacity every heading element drops to while the row is held down. */
 internal const val ROW_PRESSED_ALPHA = 0.6f
 
@@ -127,7 +130,9 @@ internal fun rememberExpansionMotion(isExpanded: Boolean): ExpansionMotion {
 
     val expansion by transition.animateFloat(
         label = "expansion",
-        transitionSpec = { tween(durationMillis = 300, delayMillis = 150, easing = StandardEasing) },
+        transitionSpec = {
+            tween(durationMillis = EXPANSION_DURATION_MS, delayMillis = EXPANSION_DELAY_MS, easing = StandardEasing)
+        },
     ) { expanded -> if (expanded) 1f else 0f }
 
     return ExpansionMotion(

@@ -5,6 +5,7 @@ import com.tangem.store.datasource.jointaccount.models.JointAccountDto
 import com.tangem.store.datasource.jointaccount.models.JointAccountInvitePreviewDto
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountConfig
+import com.tangem.domain.jointaccount.model.JointAccountInvite
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
 import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.SafeTx
@@ -14,7 +15,6 @@ import java.math.BigInteger
 internal const val FIXTURE_CRYPTO_ACCOUNT_ID = "4B2F1C8A9E7D6053A1B4C7E2F8D9A0B3C5E7F1A2D4B6C8E0F2A4B6C8D0E2F4A6"
 internal const val FIXTURE_ALICE_ADDRESS = "0x7e5f4552091a69125d5DfCb7b8C2659029395Bdf"
 internal const val FIXTURE_BOB_ADDRESS = "0x2B5AD5c4795c026514f8317c7a215E218DcCD6cF"
-internal const val FIXTURE_BOB_INVITE_ID = "AA11BB22CC33DD44EE55FF66AA77BB88CC99DD00EE11FF22AA33BB44CC55DD66"
 
 internal fun createJointAccount(
     cryptoAccountId: String = FIXTURE_CRYPTO_ACCOUNT_ID,
@@ -27,15 +27,17 @@ internal fun createJointAccount(
             name = "Alice",
             address = FIXTURE_ALICE_ADDRESS.lowercase(),
             role = JointAccount.Role.CREATOR,
+            slot = 0,
         ),
         JointAccount.Member(
             name = "Bob",
             address = FIXTURE_BOB_ADDRESS.lowercase(),
             role = JointAccount.Role.MEMBER,
-            inviteId = FIXTURE_BOB_INVITE_ID,
+            slot = 1,
         ),
     ),
     source: StatusSource = StatusSource.ACTUAL,
+    invites: List<JointAccountInvite> = emptyList(),
     inFlightOperations: Map<Long, JointOperation> = emptyMap(),
 ): JointAccount = JointAccount(
     cryptoAccountId = cryptoAccountId,
@@ -45,6 +47,7 @@ internal fun createJointAccount(
     status = status,
     members = members,
     source = source,
+    invites = invites,
     inFlightOperations = inFlightOperations,
 )
 
@@ -101,12 +104,12 @@ internal fun createJointAccountDto(
     safeAddress: String? = null,
     status: String = "pending",
     members: List<JointAccountDto.Member> = listOf(
-        JointAccountDto.Member(name = "Alice", address = FIXTURE_ALICE_ADDRESS, role = "creator"),
+        JointAccountDto.Member(name = "Alice", address = FIXTURE_ALICE_ADDRESS, role = "creator", slot = 0),
         JointAccountDto.Member(
             name = "Bob",
             address = FIXTURE_BOB_ADDRESS,
             role = "member",
-            inviteId = FIXTURE_BOB_INVITE_ID,
+            slot = 1,
         ),
     ),
     invites: List<JointAccountDto.Invite>? = null,

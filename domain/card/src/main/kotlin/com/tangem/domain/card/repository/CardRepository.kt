@@ -16,9 +16,6 @@ interface CardRepository {
     suspend fun isActivationStarted(cardId: String): Boolean
 
     @Throws
-    suspend fun isActivationFinished(cardId: String): Boolean
-
-    @Throws
     suspend fun isActivationInProgress(cardId: String): Boolean
 
     @Throws
