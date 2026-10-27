@@ -8,6 +8,7 @@ plugins {
 dependencies {
 
     // region Kotlin
+    api(deps.kotlin.datetime)
     api(deps.kotlin.serialization)
     // endregion
 
@@ -24,5 +25,6 @@ dependencies {
     // region Test
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
+    testImplementation(deps.kotlin.datetime)
     // endregion
 }

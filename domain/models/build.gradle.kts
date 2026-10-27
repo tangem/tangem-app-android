@@ -7,7 +7,7 @@ plugins {
 dependencies {
 
     // region Kotlin
-    api(deps.kotlin.datetime)
+    api(deps.kotlin.coroutines)
     api(deps.kotlin.serialization)
     // endregion
 

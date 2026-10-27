@@ -1,8 +1,12 @@
-package com.tangem.domain.models.staking
+package com.tangem.domain.staking.model
 
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.balance.BalanceContribution
 import com.tangem.domain.models.serialization.SerializedBigDecimal
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingAccount
+import com.tangem.domain.staking.model.ethpool.toStakingBalanceEntries
+import com.tangem.domain.staking.model.ethpool.unstakingAssets
+import com.tangem.domain.staking.model.ethpool.withdrawableAssets
 import kotlinx.serialization.Serializable
 import java.math.BigDecimal
 
