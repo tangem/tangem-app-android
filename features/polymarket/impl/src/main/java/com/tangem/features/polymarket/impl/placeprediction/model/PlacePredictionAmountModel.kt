@@ -28,6 +28,7 @@ import com.tangem.features.polymarket.impl.main.addfunds.PolymarketAddFundsCompo
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetConfig
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
+import com.tangem.features.polymarket.impl.placeprediction.entity.BuyAmountFractionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPrediction
@@ -40,6 +41,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
 import com.tangem.features.polymarket.impl.placeprediction.entity.isMarketClosed
 import com.tangem.features.polymarket.impl.placeprediction.entity.isQuotable
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAddFundsAvailabilityTransformer
+import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAmountFractionTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAmountTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAwaitingFundsTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetBalanceTransformer
@@ -212,6 +214,11 @@ internal class PlacePredictionAmountModel @Inject constructor(
     override fun onAmountChange(value: String) {
         uiState.update(SetAmountTransformer(value = value))
         restartQuoteLoop(withDebounce = true)
+    }
+
+    override fun onFractionClick(fraction: BuyAmountFractionUM) {
+        uiState.update(SetAmountFractionTransformer(fraction = fraction))
+        restartQuoteLoop(withDebounce = false)
     }
 
     override fun onSlippageClick() {
