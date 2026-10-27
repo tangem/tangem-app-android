@@ -9,6 +9,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -19,19 +20,41 @@ internal class BuyAmountCalculatorTest {
     fun `GIVEN a balance WHEN fraction THEN its share in whole cents, Max leaving room for the fees`(
         model: FractionModel,
     ) {
-        // Arrange
-        val lastQuote = model.feeTotal?.let { createQuote(feeTotal = BigDecimal(it), notional = BigDecimal("10")) }
-
         // Act
         val actual = BuyAmountCalculator.fraction(
             balance = BigDecimal(model.balance),
             fraction = model.fraction,
-            lastQuote = lastQuote,
+            feeRate = BigDecimal(model.feeRate),
         )
 
         // Assert
         assertThat(actual).isEqualTo(BigDecimal(model.expected))
     }
+
+    @ParameterizedTest
+    @MethodSource("provideFeeRateModels")
+    fun `GIVEN a quote WHEN feeRate THEN fees over notional, none for an empty quote`(model: FeeRateModel) {
+        // Arrange
+        val quote = mockk<PredictionOrderQuote> {
+            every { notional } returns BigDecimal(model.notional)
+            every { fees } returns PredictionOrderFees(
+                market = BigDecimal(model.fees),
+                builder = BigDecimal.ZERO,
+                total = BigDecimal(model.fees),
+            )
+        }
+
+        // Act
+        val actual = BuyAmountCalculator.feeRate(quote)
+
+        // Assert
+        assertThat(actual).isEqualTo(model.expected?.let(::BigDecimal))
+    }
+
+    private fun provideFeeRateModels(): List<FeeRateModel> = listOf(
+        FeeRateModel(fees = "0.4", notional = "10", expected = "0.04"),
+        FeeRateModel(fees = "0", notional = "0", expected = null),
+    )
 
     private fun provideTestModels(): List<FractionModel> = listOf(
         FractionModel(balance = "100", fraction = BuyAmountFractionUM.Quarter, expected = "25.00"),
@@ -40,20 +63,17 @@ internal class BuyAmountCalculatorTest {
         FractionModel(balance = "33.33", fraction = BuyAmountFractionUM.Half, expected = "16.66"),
         FractionModel(balance = "0.01", fraction = BuyAmountFractionUM.Quarter, expected = "0.00"),
         FractionModel(balance = "100", fraction = BuyAmountFractionUM.Max, expected = "90.00"),
-        FractionModel(balance = "100", fraction = BuyAmountFractionUM.Max, feeTotal = "0.4", expected = "90.00"),
-        FractionModel(balance = "100", fraction = BuyAmountFractionUM.Max, feeTotal = "2", expected = "83.33"),
-        FractionModel(balance = "100", fraction = BuyAmountFractionUM.Quarter, feeTotal = "2", expected = "25.00"),
+        FractionModel(balance = "100", fraction = BuyAmountFractionUM.Max, feeRate = "0.04", expected = "90.00"),
+        FractionModel(balance = "100", fraction = BuyAmountFractionUM.Max, feeRate = "0.2", expected = "83.33"),
+        FractionModel(balance = "100", fraction = BuyAmountFractionUM.Quarter, feeRate = "0.2", expected = "25.00"),
     )
-
-    private fun createQuote(feeTotal: BigDecimal, notional: BigDecimal): PredictionOrderQuote = mockk {
-        every { this@mockk.notional } returns notional
-        every { fees } returns PredictionOrderFees(market = feeTotal, builder = BigDecimal.ZERO, total = feeTotal)
-    }
 
     data class FractionModel(
         val balance: String,
         val fraction: BuyAmountFractionUM,
         val expected: String,
-        val feeTotal: String? = null,
+        val feeRate: String = "0",
     )
+
+    data class FeeRateModel(val fees: String, val notional: String, val expected: String?)
 }
