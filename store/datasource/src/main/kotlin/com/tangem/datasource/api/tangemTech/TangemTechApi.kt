@@ -10,6 +10,9 @@ import com.tangem.datasource.api.promotion.models.PromotionWalletType
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response
 import com.tangem.datasource.api.promotion.models.YieldBoostStatusResponse
 import com.tangem.datasource.api.stories.models.StoryContentResponse
+import com.tangem.datasource.api.survey.models.SurveyCompletionBody
+import com.tangem.datasource.api.survey.models.SurveyCompletionResponse
+import com.tangem.datasource.api.survey.models.SurveyCompletionStatusResponse
 import com.tangem.datasource.api.tangemTech.models.*
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsV2Response
@@ -314,5 +317,22 @@ interface TangemTechApi {
         @Path("uid") uid: String,
         @Body body: BindMarketingUidWalletsBody,
     ): ApiResponse<Unit>
+    // endregion
+
+    // region survey
+    @RequiresSessionAuth
+    @POST("api/v1/wallets/{walletId}/survey-completions")
+    suspend fun submitSurveyCompletion(
+        @Path("walletId") walletId: String,
+        @Body body: SurveyCompletionBody,
+    ): ApiResponse<SurveyCompletionResponse>
+
+    /** A wallet that has not completed the survey gets 200 with `completed: false`, not 404 */
+    @RequiresSessionAuth
+    @GET("api/v1/wallets/{walletId}/survey-completions/{surveyId}")
+    suspend fun getSurveyCompletionStatus(
+        @Path("walletId") walletId: String,
+        @Path("surveyId") surveyId: String,
+    ): ApiResponse<SurveyCompletionStatusResponse>
     // endregion
 }

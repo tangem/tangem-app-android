@@ -5,6 +5,7 @@ import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.remote.moshi.NetworkMoshi
+import com.tangem.data.marketing.DefaultDemandSurveyRepository
 import com.tangem.data.marketing.DefaultMarketingFeatureToggles
 import com.tangem.data.marketing.DefaultMarketingRepository
 import com.tangem.data.marketing.DefaultMarketingUidBindingRepository
@@ -21,6 +22,7 @@ import com.tangem.datasource.utils.create
 import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.datasource.utils.setTypes
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.marketing.DemandSurveyRepository
 import com.tangem.domain.marketing.MarketingFeatureToggles
 import com.tangem.domain.marketing.MarketingRepository
 import com.tangem.domain.marketing.MarketingUidBindingRepository
@@ -124,4 +126,9 @@ internal object MarketingDataModule {
         featureToggles = featureToggles,
         dispatchers = dispatchers,
     )
+
+    @Provides
+    @Singleton
+    fun provideDemandSurveyRepository(tangemTechApi: TangemTechApi): DemandSurveyRepository =
+        DefaultDemandSurveyRepository(tangemTechApi = tangemTechApi)
 }
