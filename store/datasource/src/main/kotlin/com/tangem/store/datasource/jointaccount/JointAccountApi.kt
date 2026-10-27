@@ -9,6 +9,7 @@ import com.tangem.store.datasource.jointaccount.models.JointAccountDto
 import com.tangem.store.datasource.jointaccount.models.JointAccountInvitePreviewDto
 import com.tangem.store.datasource.jointaccount.models.JointOperationDto
 import com.tangem.store.datasource.jointaccount.models.JointOperationHistoryDeltaResponse
+import com.tangem.store.datasource.jointaccount.models.JointOperationHistoryItemDto
 import com.tangem.store.datasource.jointaccount.models.JointOperationHistoryResponse
 import com.tangem.store.datasource.jointaccount.models.JoinJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.SignJointOperationRequest
@@ -148,4 +149,16 @@ interface JointAccountApi {
         @Query("beforeCursor") beforeCursor: String?,
         @Query("limit") limit: Int,
     ): ApiResponse<JointOperationHistoryDeltaResponse>
+
+    /**
+     * One operation in any status. [eTag] asks the backend to answer `304` while the operation has not changed.
+     *
+     * Errors: 403 — the wallet holds no slot in the operation's joint account; 404 — no such operation.
+     */
+    @GET("api/v1/wallets/{walletId}/joint-accounts/operations/{operationId}")
+    suspend fun getJointOperation(
+        @Path("walletId") walletId: String,
+        @Path("operationId") operationId: String,
+        @Header("If-None-Match") eTag: String? = null,
+    ): ApiResponse<JointOperationHistoryItemDto>
 }
