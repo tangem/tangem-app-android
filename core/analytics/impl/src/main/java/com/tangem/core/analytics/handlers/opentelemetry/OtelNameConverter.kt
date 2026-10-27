@@ -1,4 +1,4 @@
-package com.tangem.tap.common.analytics.handlers.opentelemetry
+package com.tangem.core.analytics.handlers.opentelemetry
 
 /**
  * Converts analytics event coordinates to OTel-valid plain snake_case names — the infra requirement,
