@@ -15,14 +15,18 @@ import com.tangem.features.tangempay.withdraw.bank.amount.TangemPayBankWithdrawA
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUMFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.isZero
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
@@ -35,6 +39,7 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
     private val router: Router,
     private val analytics: AnalyticsEventHandler,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
+    private val networkFeeLoader: BankWithdrawNetworkFeeLoader,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankWithdrawAmountComponent.Params>()
@@ -56,10 +61,13 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
             onRouteSelected = ::onRouteSelected,
             onSheetDismiss = ::closeSheet,
             onContinueClick = ::onContinueClick,
+            onRetryFeeClick = ::loadNetworkFee,
         ),
     )
 
     private val state = MutableStateFlow(AmountState())
+
+    private val networkFeeJobHolder = JobHolder()
 
     private var previousValidation: BankWithdrawAmountValidator.Result? = null
 
@@ -69,11 +77,13 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
                 draft = params.draft.value,
                 selection = currentSelection(),
                 sheet = state.value.sheet,
+                networkFee = state.value.networkFee,
                 isBalanceHidden = true,
             ),
         )
 
     init {
+        loadNetworkFee()
         combine(
             flow = params.draft,
             flow2 = params.options,
@@ -86,11 +96,29 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
                 draft = draft,
                 selection = selection,
                 sheet = amountState.sheet,
+                networkFee = amountState.networkFee,
                 isBalanceHidden = isBalanceHidden,
             )
         }
             .onEach { uiState.value = it }
             .launchIn(modelScope)
+    }
+
+    private fun loadNetworkFee() {
+        state.update { it.copy(networkFee = NetworkFeeState.Loading) }
+        modelScope.launch {
+            val networkFee = networkFeeLoader.load(
+                account = params.sourceAccount,
+                token = currentSelection().source.token,
+            ).fold(
+                ifLeft = { error ->
+                    TangemLogger.withTag(TAG).e("Failed to load the network fee of a bank withdraw: $error")
+                    NetworkFeeState.Unreachable
+                },
+                ifRight = NetworkFeeState::Loaded,
+            )
+            state.update { it.copy(networkFee = networkFee) }
+        }.saveIn(networkFeeJobHolder)
     }
 
     /** Reported on every entry into the shortage, so re-entering it after a valid amount reports it again. */
@@ -174,3 +202,5 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
     private fun currentSelection(): AmountSelection =
         state.value.resolve(draft = params.draft.value, options = params.options.value)
 }
+
+private const val TAG = "TangemPayBankWithdrawAmountModel"
