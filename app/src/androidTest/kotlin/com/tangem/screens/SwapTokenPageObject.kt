@@ -301,11 +301,6 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         hasTestTag(SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT)
     }
 
-    val receiveFiatAmountInformationIcon: KNode = child {
-        hasTestTag(SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT_INFORMATION_ICON)
-        useUnmergedTree = true
-    }
-
     val slippageRow: KNode = child {
         hasTestTag(SwapTokenScreenTestTags.SLIPPAGE_ROW)
     }

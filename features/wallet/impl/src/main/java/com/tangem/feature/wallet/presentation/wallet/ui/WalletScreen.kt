@@ -99,8 +99,6 @@ internal fun WalletScreen(
     collectiblesComponent: CollectiblesWalletBlockComponent,
     jointAccountComponent: JointAccountMainBlockComponent,
     modifier: Modifier = Modifier,
-    @RemoveWithToggle("TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED")
-    isHideMarketingWhileSystemEnabled: Boolean = false,
     @RemoveWithToggle("AND_18663_REDESIGNED_ACCOUNT_ROWS_ENABLED")
     isRedesignedAccountRowsEnabled: Boolean = false,
     isShtorkaBlurEnabled: () -> Boolean = { true },
@@ -156,7 +154,6 @@ internal fun WalletScreen(
         collectiblesComponent = collectiblesComponent,
         jointAccountComponent = jointAccountComponent,
         behavior = behavior,
-        isHideMarketingWhileSystemEnabled = isHideMarketingWhileSystemEnabled,
         isRedesignedAccountRowsEnabled = isRedesignedAccountRowsEnabled,
         isShtorkaBlurEnabled = isShtorkaBlurEnabled,
         isShtorkaPartialExpansionSupported = isShtorkaPartialExpansionSupported,
@@ -193,8 +190,6 @@ private fun WalletContent(
     behavior: TangemCollapsingAppBarBehavior,
     listStates: ImmutableMap<Int, LazyListState>,
     modifier: Modifier = Modifier,
-    @RemoveWithToggle("TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED")
-    isHideMarketingWhileSystemEnabled: Boolean = false,
     @RemoveWithToggle("AND_18663_REDESIGNED_ACCOUNT_ROWS_ENABLED")
     isRedesignedAccountRowsEnabled: Boolean = false,
     isShtorkaBlurEnabled: () -> Boolean = { true },
@@ -388,7 +383,7 @@ private fun WalletContent(
                                         contentPadding = contentPadding,
                                         tangemPayComponent = tangemPayComponent,
                                         promoBannersBlockComponent = promoBannersBlockComponent?.takeIf {
-                                            !isHideMarketingWhileSystemEnabled || currentWallet.isMarketingBlockVisible
+                                            currentWallet.isMarketingBlockVisible
                                         },
                                         walletId = currentWalletId,
                                         moneyAccountComponent = moneyAccountComponent,

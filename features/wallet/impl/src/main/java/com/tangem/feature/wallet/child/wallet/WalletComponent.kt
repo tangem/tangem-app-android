@@ -40,7 +40,6 @@ import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelecto
 import com.tangem.features.jointaccount.main.JointAccountMainBlockComponent
 import com.tangem.features.feed.v2.FeedV2Component
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
-import com.tangem.features.promobanners.api.PromoBannersFeatureToggles
 import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsBottomSheetComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
@@ -76,7 +75,6 @@ internal class WalletComponent @AssistedInject constructor(
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val yieldSupplyDepositedWarningComponent: YieldSupplyDepositedWarningComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
-    private val promoBannersFeatureToggles: PromoBannersFeatureToggles,
     private val walletFeatureToggles: WalletFeatureToggles,
     private val networkSelectionComponentFactory: NetworkSelectionComponent.Factory,
     private val tokenActionsComponentFactory: TokenActionsComponent.Factory,
@@ -349,7 +347,6 @@ internal class WalletComponent @AssistedInject constructor(
             polymarketComponent = polymarketWalletBlockComponent,
             collectiblesComponent = collectiblesWalletBlockComponent,
             modifier = modifier.trackUserInteraction(model.userInteractionTracker),
-            isHideMarketingWhileSystemEnabled = promoBannersFeatureToggles.isHideMarketingBannersWhileSystemEnabled,
             isRedesignedAccountRowsEnabled = walletFeatureToggles.isRedesignedAccountRowsEnabled,
             isShtorkaBlurEnabled = { isShtorkaBlurEnabled },
             isShtorkaPartialExpansionSupported = isShtorkaPartialExpansionSupported,

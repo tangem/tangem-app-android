@@ -18,7 +18,6 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.TangemPayEligibilityManager
-import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
@@ -30,7 +29,6 @@ import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.details.entity.*
 import com.tangem.features.details.utils.ItemsBuilder
 import com.tangem.features.details.utils.SocialsBuilder
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.info.AppInfoProvider
 import com.tangem.utils.logging.TangemLogger
@@ -61,7 +59,6 @@ internal class DetailsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val tangemPayEligibilityManager: TangemPayEligibilityManager,
 ) : Model() {
 
@@ -293,16 +290,8 @@ internal class DetailsModel @Inject constructor(
 
     private fun updateTangemPayItem() {
         modelScope.launch {
-            val isEligible = if (tangemPayFeatureToggles.isResidencyStepEnabled) {
+            val isEligible =
                 tangemPayEligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true).isNotEmpty()
-            } else {
-                tangemPayEligibilityManager
-                    .getEligibleWallets(
-                        shouldExcludePaeraCustomers = true,
-                        entryPoint = TangemPayEntryPoint.DETAILS,
-                    )
-                    .isNotEmpty()
-            }
             if (isEligible) {
                 if (!itemsBuilder.hasTangemPayItem(items.value)) {
                     analyticsEventHandler.send(TangemPayAnalyticsEvents.PermanentButtonShowed())
@@ -315,19 +304,8 @@ internal class DetailsModel @Inject constructor(
     }
 
     private fun onTangemPayItemClicked() {
-        modelScope.launch {
-            analyticsEventHandler.send(TangemPayAnalyticsEvents.DetailsVisaPermanentButtonClicked())
-            if (tangemPayFeatureToggles.isResidencyStepEnabled) {
-                router.push(AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.FromBannerInSettings))
-                return@launch
-            }
-            val isEligible = tangemPayEligibilityManager.getTangemPayAvailability(TangemPayEntryPoint.DETAILS)
-            if (isEligible) {
-                router.push(AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.FromBannerInSettings))
-            } else {
-                items.update { itemsBuilder.removeTangemPayItem(it) }
-            }
-        }
+        analyticsEventHandler.send(TangemPayAnalyticsEvents.DetailsVisaPermanentButtonClicked())
+        router.push(AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.FromBannerInSettings))
     }
 
     private fun getAppVersion(): String = "${appInfoProvider.appVersion} (${appInfoProvider.appVersionCode})"

@@ -14,7 +14,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToGoogleWalletController
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToGoogleWalletController.Entry as GoogleWalletEntry
@@ -44,7 +43,6 @@ internal class TangemPayCardPageModelTest {
 
     private val eventListener = DefaultCardDetailsEventListener()
     private val router: Router = mockk(relaxed = true)
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk(relaxed = true)
     private val statusFlow = MutableSharedFlow<AccountStatus.Payment>(replay = 1)
     private val supplier: PaymentAccountStatusSupplier = mockk()
     private val cardDetailsRepository: TangemPayCardDetailsRepository = mockk(relaxed = true)
@@ -176,9 +174,8 @@ internal class TangemPayCardPageModelTest {
         }
 
     @Test
-    fun `GIVEN v2 enabled WHEN banking details resolved on retry THEN account details screen opens`() = runTest {
+    fun `GIVEN loaded status WHEN banking details resolved on retry THEN account details screen opens`() = runTest {
         // Arrange
-        every { tangemPayFeatureToggles.isVisaOnrampV2Enabled } returns true
         val model = createModel()
         statusFlow.emit(paymentStatus)
         runCurrent()
@@ -190,28 +187,6 @@ internal class TangemPayCardPageModelTest {
         verify(exactly = 1) {
             router.push(TangemPayAccountDetailsInnerRoute.BankTransferOnrampDetails(BANK_CREDENTIALS), any())
         }
-    }
-
-    @Test
-    fun `GIVEN v2 disabled WHEN banking details resolved on retry THEN requisites sheet opens`() = runTest {
-        // Arrange
-        val model = createModel()
-        statusFlow.emit(paymentStatus)
-        runCurrent()
-        val openedSheets = model.bottomSheetNavigation.trackSlot()
-
-        // Act
-        model.onVaBankingDetailsResolved(BANK_CREDENTIALS)
-
-        // Assert
-        assertThat(openedSheets.filterIsInstance<TangemPayCardNavigation.VirtualAccountRequisites>())
-            .containsExactly(
-                TangemPayCardNavigation.VirtualAccountRequisites(
-                    userWalletId = userWalletId,
-                    bankCredentials = BANK_CREDENTIALS,
-                ),
-            )
-        verify(exactly = 0) { router.push(any(), any()) }
     }
 
     @Nested
@@ -382,7 +357,6 @@ internal class TangemPayCardPageModelTest {
         settingsManager = mockk(relaxed = true),
         onboardingRepository = mockk(relaxed = true),
         getBankCredentialsUseCase = getBankCredentialsUseCase,
-        tangemPayFeatureToggles = tangemPayFeatureToggles,
         googleWalletControllerFactory = googleWalletControllerFactory,
     )
 

@@ -3,8 +3,6 @@ package com.tangem.datasource.api.tangemTech
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.marketing.models.BindMarketingUidWalletsBody
 import com.tangem.datasource.api.marketing.models.MarketingCampaignsResponse
-import com.tangem.datasource.api.promotion.models.CreatePromotionRegistrationBody
-import com.tangem.datasource.api.promotion.models.PromotionRegistrationResponse
 import com.tangem.datasource.api.promotion.models.PromotionRegistrationsBody
 import com.tangem.datasource.api.promotion.models.PromotionRegistrationsResponse
 import com.tangem.datasource.api.promotion.models.PromotionsResponse
@@ -154,11 +152,6 @@ interface TangemTechApi {
     @Suppress("FunctionSignature", "TrailingCommaOnDeclarationSite")
     @GET("/v2/promotion/yield-apr-boost/status")
     suspend fun getYieldBoostStatus(@Query("walletId") walletId: String): ApiResponse<YieldBoostStatusResponse>
-
-    @POST("/v2/promotion/registrations")
-    suspend fun createPromotionRegistration(
-        @Body body: CreatePromotionRegistrationBody,
-    ): ApiResponse<PromotionRegistrationResponse>
 
     @RequiresSessionAuth
     @POST("/api/referral/v1/promotion/{id}/registrations")

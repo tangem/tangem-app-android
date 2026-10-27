@@ -317,7 +317,6 @@ internal class SwapModel @Inject constructor(
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         isAccountsModeProvider = Provider { isAccountsMode },
         isEvmGaslessFeeSupportedForNetwork = isEvmGaslessFeeSupportedForNetwork,
-        isCustomSlippageEnabled = swapFeatureToggles.isCustomSlippageEnabled,
         predictionTopUpLimitsProvider = Provider { predictionTopUpLimits },
     )
 
@@ -2570,54 +2569,6 @@ internal class SwapModel @Inject constructor(
         }
     }
 
-    private fun showSwapInfoAlert(isPriceImpact: Boolean, token: String, provider: SwapProvider) {
-        messageSender.send(
-            SwapAlertUM.informationAlert(
-                message = buildSwapInfoMessage(isPriceImpact, token, provider),
-                onConfirmClick = {},
-            ),
-        )
-    }
-
-    private fun buildSwapInfoMessage(isPriceImpact: Boolean, token: String, provider: SwapProvider): TextReference {
-        val slippage = provider.slippage?.let { "${it.parseBigDecimal(1)}%" }
-        val messages = buildList {
-            when (provider.type) {
-                ExchangeProviderType.CEX -> {
-                    if (slippage != null) {
-                        add(
-                            resourceReference(
-                                id = R.string.swapping_alert_cex_description_with_slippage,
-                                formatArgs = wrappedList(token, slippage),
-                            ),
-                        )
-                    } else {
-                        add(resourceReference(R.string.swapping_alert_cex_description, wrappedList(token)))
-                    }
-                }
-                ExchangeProviderType.DEX,
-                ExchangeProviderType.DEX_BRIDGE,
-                -> {
-                    if (isPriceImpact) {
-                        add(resourceReference(R.string.swapping_high_price_impact_description))
-                        add(stringReference("\n\n"))
-                    }
-                    if (slippage != null) {
-                        add(
-                            resourceReference(
-                                id = R.string.swapping_alert_dex_description_with_slippage,
-                                formatArgs = wrappedList(slippage),
-                            ),
-                        )
-                    } else {
-                        add(resourceReference(R.string.swapping_alert_dex_description, wrappedList(token)))
-                    }
-                }
-            }
-        }
-        return combinedReference(messages.toWrappedList())
-    }
-
     /**
      * Opens [route] in the slot of its card material. Ignored while that slot already shows a sheet, so queued
      * taps never replace an open sheet; [onOpened] runs only when this call actually opened it.
@@ -2753,12 +2704,6 @@ internal class SwapModel @Inject constructor(
             },
             onRetryClick = {
                 startLoadingQuotesFromLastState()
-            },
-            onReceiveCardWarningClick = {
-                val selectedProvider = dataState.selectedProvider ?: return@UiActions
-                val currencySymbol = dataState.toSwapCurrencyStatus?.currency?.symbol ?: return@UiActions
-                val isPriceImpact = uiState.priceImpact.type != PriceImpact.Type.NONE
-                showSwapInfoAlert(isPriceImpact, currencySymbol, selectedProvider)
             },
             onLinkClick = urlOpener::openUrl,
             onSelectTokenClick = { direction ->
