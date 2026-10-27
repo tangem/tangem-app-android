@@ -1,4 +1,4 @@
-package com.tangem.tap.common.analytics.handlers.opentelemetry
+package com.tangem.core.analytics.handlers.opentelemetry
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.EventLogger
@@ -96,9 +96,12 @@ internal class OpenTelemetryAnalyticsHandlerTest {
             ),
         )
         val expectedAttributes = Attributes.of(
-            AttributeKey.stringKey("blockchain"), "Bitcoin",
-            AttributeKey.stringKey("fee_type"), "Fixed",
-            AttributeKey.stringKey("category"), "basic",
+            AttributeKey.stringKey("blockchain"),
+            "Bitcoin",
+            AttributeKey.stringKey("fee_type"),
+            "Fixed",
+            AttributeKey.stringKey("category"),
+            "basic",
         )
 
         // Act
@@ -125,8 +128,10 @@ internal class OpenTelemetryAnalyticsHandlerTest {
         // Arrange
         val event = ExpressDurationEvent(params = mapOf("Duration" to "12.5", "Provider" to "ChangeNow"))
         val expectedAttributes = Attributes.of(
-            AttributeKey.stringKey("provider"), "ChangeNow",
-            AttributeKey.stringKey("category"), "swap",
+            AttributeKey.stringKey("provider"),
+            "ChangeNow",
+            AttributeKey.stringKey("category"),
+            "swap",
         )
 
         // Act
@@ -164,8 +169,10 @@ internal class OpenTelemetryAnalyticsHandlerTest {
         // Arrange
         val event = CustomTokenSentEvent(params = mapOf("Token" to "WEIRDCOIN"))
         val expectedAttributes = Attributes.of(
-            AttributeKey.stringKey("token"), "Custom",
-            AttributeKey.stringKey("category"), "basic",
+            AttributeKey.stringKey("token"),
+            "Custom",
+            AttributeKey.stringKey("category"),
+            "basic",
         )
 
         // Act
