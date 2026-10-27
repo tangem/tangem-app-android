@@ -10,12 +10,12 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.onEach
 
 /**
  * Subscriber that monitors account list changes and sends token list analytics
- * when the total fiat balance changes.
+ * when the total fiat balance or the number of currencies changes.
  *
 [REDACTED_AUTHOR]
  */
@@ -27,7 +27,7 @@ internal class TokenListAnalyticsSubscriber @AssistedInject constructor(
 ) : BasicWalletSubscriber() {
 
     override fun create(coroutineScope: CoroutineScope): Flow<*> = getAccountStatusListFlow()
-        .distinctUntilChanged { old, new -> old.totalFiatBalance == new.totalFiatBalance }
+        .distinctUntilChangedBy { it.totalFiatBalance to it.flattenCurrencies().size }
         .onEach(::sendTokenListAnalytics)
 
     private suspend fun sendTokenListAnalytics(accountStatusList: AccountStatusList) {

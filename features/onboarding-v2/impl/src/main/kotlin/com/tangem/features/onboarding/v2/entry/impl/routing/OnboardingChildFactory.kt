@@ -91,7 +91,6 @@ internal class OnboardingChildFactory @Inject constructor(
                 ),
             )
             is OnboardingRoute.PushNotifications -> createPushNotifications(route, childContext)
-            is OnboardingRoute.None -> Unit
         }
     }
 
