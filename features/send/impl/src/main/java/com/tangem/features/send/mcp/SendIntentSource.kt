@@ -11,6 +11,9 @@ internal sealed interface SendIntentSource {
         val currency: CryptoCurrency get() = status.currency
     }
 
-    /** No account of the wallet holds the intent's token at its sender address. */
-    data object NotFound : SendIntentSource
+    /** No account of the wallet holds the intent's token. */
+    data object TokenMissing : SendIntentSource
+
+    /** The wallet holds the intent's token, but at other addresses: the intent sends from another wallet. */
+    data object OtherSender : SendIntentSource
 }
