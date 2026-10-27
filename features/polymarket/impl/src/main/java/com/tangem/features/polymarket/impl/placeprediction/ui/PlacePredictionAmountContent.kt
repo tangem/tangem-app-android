@@ -124,6 +124,7 @@ private fun AmountBlock(state: PlacePredictionUM, intents: PlacePredictionAmount
     when (val order = state.order) {
         is OrderSideUM.Buy -> PredictionAmountBlock(
             amountValue = state.amountValue,
+            isAmountFromFraction = state.isAmountFromFraction,
             amountCaption = state.amountCaption,
             balance = order.balance,
             isAddFundsEnabled = order.isAddFundsEnabled,
