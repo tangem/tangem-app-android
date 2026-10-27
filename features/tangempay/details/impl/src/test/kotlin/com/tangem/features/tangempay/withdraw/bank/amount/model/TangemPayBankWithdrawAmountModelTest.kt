@@ -10,6 +10,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.transaction.error.GetFeeError
@@ -40,6 +41,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
+import io.mockk.verifySequence
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -960,6 +962,24 @@ internal class TangemPayBankWithdrawAmountModelTest {
 
         // Assert
         verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Offramp.InsufficientFundsStateShowed>()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN money account WHEN amount and rail picked and continued THEN only amount screen opened sent`() {
+        // Arrange
+        val model = createModel(sourceAccount = moneyAccount, options = bankWithdrawOptions())
+
+        // Act
+        model.content().amount.onValueChange("2325")
+        model.content().amount.onValueChange("500")
+        model.content().route.onClick?.invoke()
+        (model.content().sheet as SheetUM.Routes).items.last().onClick()
+        model.content().onContinueClick()
+
+        // Assert
+        verifySequence { analytics.send(MoneyAccountAnalyticsEvents.OfframpAmountScreenOpened()) }
+        assertThat(confirmed).hasSize(1)
         model.onDestroy()
     }
 

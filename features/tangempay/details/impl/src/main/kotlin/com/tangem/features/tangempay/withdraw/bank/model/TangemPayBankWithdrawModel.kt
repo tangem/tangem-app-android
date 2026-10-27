@@ -12,7 +12,6 @@ import com.tangem.domain.pay.model.bankofframp.OfframpDestination
 import com.tangem.domain.pay.usecase.GetTangemPayCountriesUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayRegionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
-import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
 import com.tangem.features.tangempay.withdraw.bank.TangemPayBankWithdrawComponent
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormFields
@@ -34,10 +33,12 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
     private val getBankAccountsUseCase: GetBankAccountsUseCase,
     private val getTangemPayCountriesUseCase: GetTangemPayCountriesUseCase,
     private val getTangemPayRegionsUseCase: GetTangemPayRegionsUseCase,
-    private val analytics: AnalyticsEventHandler,
+    analytics: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankWithdrawComponent.Params>()
+
+    private val withdrawAnalytics = BankWithdrawAnalytics(sourceAccount = params.sourceAccount, analytics = analytics)
 
     val draft: StateFlow<BankWithdrawDraft>
         field = MutableStateFlow(BankWithdrawDraft(entry = params.entry))
@@ -97,7 +98,7 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
     }
 
     fun onOrderSigned() {
-        analytics.send(TangemPayAnalyticsEvents.Offramp.SendSuccessScreenShowed(rail = draft.value.destination?.rail))
+        withdrawAnalytics.onSendSucceeded(rail = draft.value.destination?.rail)
         params.onWithdrawSent()
     }
 

@@ -8,6 +8,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.choice.model.BankWithdrawChoiceConfig
 import com.tangem.features.tangempay.withdraw.bank.choice.model.TangemPayBankWithdrawChoiceModel
 import com.tangem.features.tangempay.withdraw.bank.choice.ui.TangemPayBankWithdrawChoiceScreen
@@ -30,6 +31,7 @@ internal class TangemPayBankWithdrawChoiceComponent(
     }
 
     data class Params(
+        val sourceAccount: BankWithdrawSourceAccount,
         val draft: StateFlow<BankWithdrawDraft>,
         val step: TangemPayBankWithdrawInnerRoute,
         val config: BankWithdrawChoiceConfig,
