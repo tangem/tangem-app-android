@@ -14,22 +14,22 @@ internal class PolymarketQuoteStore(private val timeSource: TimeSource) {
     fun apply(updates: List<PolymarketQuoteUpdate>) = synchronized(lock) {
         updates.forEach { update ->
             val entry = entries.getOrPut(update.assetId) { Entry(timeSource.markNow()) }
-            var bookUpdated = false
+            var isBookUpdated = false
             if (update.bid != null && update.timestamp >= entry.bidTime) {
                 entry.bid = update.bid
                 entry.bidTime = update.timestamp
-                bookUpdated = true
+                isBookUpdated = true
             }
             if (update.ask != null && update.timestamp >= entry.askTime) {
                 entry.ask = update.ask
                 entry.askTime = update.timestamp
-                bookUpdated = true
+                isBookUpdated = true
             }
             if (update.lastTradePrice != null && update.timestamp >= entry.tradeTime) {
                 entry.tradePrice = update.lastTradePrice
                 entry.tradeTime = update.timestamp
             }
-            if (bookUpdated) {
+            if (isBookUpdated) {
                 entry.lastBookSeen = timeSource.markNow()
                 entry.refreshRequested = null
             }
