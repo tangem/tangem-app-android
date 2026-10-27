@@ -34,7 +34,7 @@ import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBankCredentialsUseC
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.moneyaccount.usecase.GetTangemPayProductsAvailabilityUseCase
 import com.tangem.domain.moneyaccount.usecase.IsMoneyAccountPathOccupiedUseCase
-import com.tangem.domain.moneyaccount.usecase.RestoreMoneyAccountOrderUseCase
+import com.tangem.domain.moneyaccount.usecase.PollTangemPayAccountStatusesUseCase
 import com.tangem.domain.moneyaccount.usecase.StartTangemPayOnboardingUseCase
 import com.tangem.domain.pay.usecase.CreateOnboardingOrderUseCase
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -126,10 +126,14 @@ internal interface MoneyAccountDataModule {
         fun provideStartTangemPayOnboardingUseCase(
             activateMoneyAccountUseCase: ActivateMoneyAccountUseCase,
             createOnboardingOrderUseCase: CreateOnboardingOrderUseCase,
+            pollTangemPayAccountStatusesUseCase: PollTangemPayAccountStatusesUseCase,
+            appCoroutineScope: AppCoroutineScope,
         ): StartTangemPayOnboardingUseCase {
             return StartTangemPayOnboardingUseCase(
                 activateMoneyAccountUseCase = activateMoneyAccountUseCase,
                 createOnboardingOrderUseCase = createOnboardingOrderUseCase,
+                pollTangemPayAccountStatusesUseCase = pollTangemPayAccountStatusesUseCase,
+                appCoroutineScope = appCoroutineScope,
             )
         }
 
@@ -150,12 +154,12 @@ internal interface MoneyAccountDataModule {
         }
 
         @Provides
-        fun provideRestoreMoneyAccountOrderUseCase(
+        fun providePollTangemPayAccountStatusesUseCase(
             getCustomerSummaryUseCase: GetCustomerSummaryUseCase,
             paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
             moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
-        ): RestoreMoneyAccountOrderUseCase {
-            return RestoreMoneyAccountOrderUseCase(
+        ): PollTangemPayAccountStatusesUseCase {
+            return PollTangemPayAccountStatusesUseCase(
                 getCustomerSummaryUseCase = getCustomerSummaryUseCase,
                 paymentAccountStatusFetcher = paymentAccountStatusFetcher,
                 moneyAccountStatusFetcher = moneyAccountStatusFetcher,
