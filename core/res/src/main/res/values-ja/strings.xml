@@ -2094,7 +2094,7 @@
   <string name="swap_search_tooltip_title">必要なものは検索して見つけましょう。</string>
   <string name="swap_simple_mode">シンプルモード</string>
   <string name="swap_slippage_error">対応していない金額です</string>
-  <string name="swap_slippage_info_text">とは、市場価格や流動性の変動によって生じる、予想価格と実際の約定価格の差です。</string>
+  <string name="swap_slippage_info_text">とは、署名した時点からトランザクションがプロバイダーに届くまでの価格変動です。届いた時点の価格で、スリッページ許容値の範囲内で執行されます。</string>
   <string name="swap_slippage_warning_text">スリッページが許容範囲を超えると、スワップが失敗する場合があります</string>
   <string name="swap_slippage_warning_title">スリッページは%sに設定されています</string>
   <string name="swap_story_fifth_subtitle">24時間体制のサポートであらゆる問題に対応します。</string>
