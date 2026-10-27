@@ -166,7 +166,6 @@ internal class TransactionDataToTxHistoryItemConverterTest {
                 currency = coin,
                 expected = TxInfo.TransactionType.IncentiveClaim,
             ),
-            // A claim on an outdated module is sent inside upgradeToAndCall and stays a claim
             FallbackModel(
                 transaction = merklClaim(isUpgradeWrapped = true),
                 currency = coin,
