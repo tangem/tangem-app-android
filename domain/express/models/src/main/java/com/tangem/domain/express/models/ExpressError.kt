@@ -32,6 +32,8 @@ sealed class ExpressError : Throwable() {
 
     data class InvalidAddressError(override val code: Int) : ExpressError()
 
+    data class ExchangeProviderAddressBannedByAmlError(override val code: Int) : ExpressError()
+
     /** The exchange intent exists, but belongs to another wallet than the one that asked for it. */
     data class IntentOfAnotherWalletError(override val code: Int) : ExpressError()
 
