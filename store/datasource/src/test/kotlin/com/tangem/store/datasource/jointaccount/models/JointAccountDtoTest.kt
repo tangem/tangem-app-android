@@ -36,14 +36,17 @@ internal class JointAccountDtoTest {
                       "name": "Alice",
                       "address": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
                       "role": "creator",
-                      "inviteId": null
+                      "slot": 0
                     },
                     {
                       "name": "Bob",
                       "address": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
                       "role": "member",
-                      "inviteId": "AA11BB22CC33DD44EE55FF66AA77BB88CC99DD00EE11FF22AA33BB44CC55DD66"
+                      "slot": 1
                     }
+                  ],
+                  "invites": [
+                    { "slot": 2, "expiresAt": "2026-10-29T12:00:00.000Z" }
                   ]
                 }
               ]
@@ -67,16 +70,16 @@ internal class JointAccountDtoTest {
                             name = "Alice",
                             address = "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
                             role = "creator",
-                            inviteId = null,
+                            slot = 0,
                         ),
                         JointAccountDto.Member(
                             name = "Bob",
                             address = "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
                             role = "member",
-                            inviteId = "AA11BB22CC33DD44EE55FF66AA77BB88CC99DD00EE11FF22AA33BB44CC55DD66",
+                            slot = 1,
                         ),
                     ),
-                    invites = null,
+                    invites = listOf(JointAccountDto.Invite(slot = 2, expiresAt = "2026-10-29T12:00:00.000Z")),
                 ),
             ),
         )
@@ -84,34 +87,24 @@ internal class JointAccountDtoTest {
     }
 
     @Test
-    fun `GIVEN create response json with invites WHEN parse THEN invites present`() {
+    fun `GIVEN member without slot WHEN parse THEN slot is null`() {
         // Arrange
         @Language("JSON")
         val json = """
-            {
-              "cryptoAccountId": "4B2F1C8A9E7D6053A1B4C7E2F8D9A0B3C5E7F1A2D4B6C8E0F2A4B6C8D0E2F4A6",
-              "membersCount": 3,
-              "threshold": 2,
-              "safeAddress": null,
-              "status": "pending",
-              "members": [
-                { "name": "Alice", "address": "0x7e5f4552091a69125d5DfCb7b8C2659029395Bdf", "role": "creator" }
-              ],
-              "invites": [
-                { "id": "AA11BB22CC33DD44EE55FF66AA77BB88CC99DD00EE11FF22AA33BB44CC55DD66" },
-                { "id": "BB11BB22CC33DD44EE55FF66AA77BB88CC99DD00EE11FF22AA33BB44CC55DD66" }
-              ]
-            }
+            { "name": "Bob", "address": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf", "role": "member" }
         """.trimIndent()
 
         // Act
-        val actual = moshi.adapter(JointAccountDto::class.java).fromJson(json)
+        val actual = moshi.adapter(JointAccountDto.Member::class.java).fromJson(json)
 
         // Assert
-        assertThat(actual?.invites).containsExactly(
-            JointAccountDto.Invite(id = "AA11BB22CC33DD44EE55FF66AA77BB88CC99DD00EE11FF22AA33BB44CC55DD66"),
-            JointAccountDto.Invite(id = "BB11BB22CC33DD44EE55FF66AA77BB88CC99DD00EE11FF22AA33BB44CC55DD66"),
-        ).inOrder()
+        val expected = JointAccountDto.Member(
+            name = "Bob",
+            address = "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
+            role = "member",
+            slot = null,
+        )
+        assertThat(actual).isEqualTo(expected)
     }
 
     @Test
