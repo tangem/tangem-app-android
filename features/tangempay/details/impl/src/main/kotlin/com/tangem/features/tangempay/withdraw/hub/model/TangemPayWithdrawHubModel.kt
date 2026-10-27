@@ -15,6 +15,7 @@ import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
+import com.tangem.domain.pay.model.recents.TokenTransferJournal
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.pay.usecase.bankofframp.GetBankOfframpOptionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetRecentBankAccountsUseCase
@@ -33,6 +34,8 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -43,6 +46,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -161,7 +165,10 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
     }
 
     private fun observeTokenRecents() {
-        getRecentTokenTransfersUseCase(params.userWalletId)
+        getRecentTokenTransfersUseCase(
+            userWalletId = params.userWalletId,
+            journal = TokenTransferJournal.PAYMENT_ACCOUNT,
+        )
             .onEach { transfers ->
                 state.update { it.copy(tokenRecents = TokenRecentsState.Loaded(transfers = transfers)) }
             }
@@ -181,7 +188,10 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
         modelScope.launch {
             when (params.sourceAccount) {
                 is BankWithdrawSourceAccount.Payment -> paymentAccountStatusFetcher(params.userWalletId)
-                is BankWithdrawSourceAccount.Money -> moneyAccountStatusFetcher(params.userWalletId)
+                is BankWithdrawSourceAccount.Money -> withContext(NonCancellable) {
+                    delay(ON_CHAIN_REFRESH_DELAY_MILLIS)
+                    moneyAccountStatusFetcher(params.userWalletId)
+                }
             }.onLeft { error ->
                 TangemLogger.withTag(TAG).e("Failed to refresh the source account after a bank withdraw: $error")
             }
@@ -255,5 +265,7 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
         val userWalletId: UserWalletId get() = sourceAccount.userWalletId
     }
 }
+
+private const val ON_CHAIN_REFRESH_DELAY_MILLIS = 11_000L
 
 private const val TAG = "TangemPayWithdrawHubModel"

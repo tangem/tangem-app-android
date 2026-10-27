@@ -8,6 +8,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.model.bankofframp.BankAccountType
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
+import com.tangem.domain.pay.model.bankofframp.OfframpDestination
 import com.tangem.domain.pay.usecase.GetTangemPayCountriesUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayRegionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
@@ -89,6 +90,10 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
 
     fun onOrderCreated(result: BankOfframpOrderResult) {
         draft.update { it.copy(order = result) }
+    }
+
+    fun onDestinationChanged(destination: OfframpDestination) {
+        draft.update { it.copy(destination = destination) }
     }
 
     fun onOrderSigned() {

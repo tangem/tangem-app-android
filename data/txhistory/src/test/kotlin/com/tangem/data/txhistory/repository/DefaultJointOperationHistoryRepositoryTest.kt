@@ -1,8 +1,15 @@
 package com.tangem.data.txhistory.repository
 
+import arrow.core.right
+import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.core.remote.response.ETAG_HEADER
+import com.tangem.domain.jointaccount.model.JointOperationFetchResult
+import com.tangem.domain.jointaccount.model.JointOperationRecord
+import com.tangem.test.core.ProvideTestModels
+import org.junit.jupiter.params.ParameterizedTest
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
-import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.data.txhistory.repository.converter.FinishedJointOperationConverter
 import com.tangem.data.txhistory.repository.converter.JointOperationEntityConverter
 import com.tangem.domain.jointaccount.model.FinishedJointOperation
 import com.tangem.domain.jointaccount.model.JointOperation
@@ -43,6 +50,24 @@ internal class DefaultJointOperationHistoryRepositoryTest {
         jointAccountApi = jointAccountApi,
         jointOperationDao = jointOperationDao,
         historySyncStateDao = historySyncStateDao,
+    )
+
+    private val expectedSafeTx = SafeTx(
+        to = "0xrecipient",
+        value = BigInteger.TEN,
+        data = "0x",
+        operation = 0,
+        safeTxGas = BigInteger.ONE,
+        baseGas = BigInteger.ONE,
+        gasPrice = BigInteger.ONE,
+        gasToken = "0x0",
+        refundReceiver = "0xrelayer",
+        nonce = BigInteger.TWO,
+    )
+
+    private val expectedSignatures = listOf(
+        JointOperation.MemberSignature(address = "0xalice", state = JointOperation.MemberSignature.State.SIGNED, at = CREATED_AT),
+        JointOperation.MemberSignature(address = "0xbob", state = JointOperation.MemberSignature.State.DECLINED, at = FINISHED_AT),
     )
 
     @BeforeEach
@@ -283,6 +308,113 @@ internal class DefaultJointOperationHistoryRepositoryTest {
             }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ObserveOperation {
+
+        @Test
+        fun `GIVEN a pending operation stored WHEN observeOperation THEN it is in flight`() = runTest {
+            // Arrange
+            val entity = toEntity(createItem(operationId = "1", status = "pending"))
+            every { jointOperationDao.observeById(WALLET_ID.stringValue, "1") } returns flowOf(entity)
+
+            // Act
+            val actual = repository.observeOperation(WALLET_ID, operationId = "1").first()
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                JointOperationRecord.InFlight(
+                    JointOperation(
+                        operationId = "1",
+                        chainId = CHAIN_ID,
+                        safeTx = expectedSafeTx,
+                        status = JointOperation.Status.PENDING,
+                        initiator = "0xalice",
+                        signatures = expectedSignatures,
+                        createdAt = CREATED_AT,
+                    ),
+                ),
+            )
+        }
+
+        @Test
+        fun `GIVEN a cancelled operation stored WHEN observeOperation THEN it is finished`() = runTest {
+            // Arrange
+            val entity = toEntity(createItem(operationId = "1", status = "cancelled"))
+            every { jointOperationDao.observeById(WALLET_ID.stringValue, "1") } returns flowOf(entity)
+
+            // Act
+            val actual = repository.observeOperation(WALLET_ID, operationId = "1").first()
+
+            // Assert
+            assertThat(actual).isEqualTo(JointOperationRecord.Finished(FinishedJointOperationConverter().convert(entity)!!))
+        }
+
+        @Test
+        fun `GIVEN nothing stored WHEN observeOperation THEN null`() = runTest {
+            // Arrange
+            every { jointOperationDao.observeById(WALLET_ID.stringValue, "1") } returns flowOf(null)
+
+            // Act
+            val actual = repository.observeOperation(WALLET_ID, operationId = "1").first()
+
+            // Assert
+            assertThat(actual).isNull()
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class FetchOperation {
+
+        @Test
+        fun `GIVEN the operation WHEN fetchOperation THEN stores it and returns the new tag`() = runTest {
+            // Arrange
+            val item = createItem(operationId = "1", status = "executed")
+            coEvery { jointAccountApi.getJointOperation(WALLET_ID.stringValue, "1", eTag = "old") } returns
+                ApiResponse.Success(data = item, headers = mapOf(ETAG_HEADER to listOf("new")))
+
+            // Act
+            val actual = repository.fetchOperation(WALLET_ID, operationId = "1", eTag = "old")
+
+            // Assert
+            assertThat(actual).isEqualTo(JointOperationFetchResult.Updated(eTag = "new").right())
+            coVerify { jointOperationDao.upsert(listOf(toEntity(item))) }
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN an error answer WHEN fetchOperation THEN maps it and stores nothing`(model: ErrorModel) =
+            runTest {
+                // Arrange
+                coEvery { jointAccountApi.getJointOperation(WALLET_ID.stringValue, "1", eTag = "old") } returns
+                    ApiResponse.Error(ApiResponseError.HttpException(model.code, message = null, errorBody = null))
+                        as ApiResponse<JointOperationHistoryItemDto>
+
+                // Act
+                val actual = repository.fetchOperation(WALLET_ID, operationId = "1", eTag = "old")
+
+                // Assert
+                assertThat(actual.getOrNull()).isEqualTo(model.expected)
+                assertThat(actual.isLeft()).isEqualTo(model.expected == null)
+                coVerify(exactly = 0) { jointOperationDao.upsert(any()) }
+            }
+
+        private fun provideTestModels() = listOf(
+            ErrorModel(
+                code = ApiResponseError.HttpException.Code.NOT_MODIFIED,
+                expected = JointOperationFetchResult.NotModified,
+            ),
+            ErrorModel(
+                code = ApiResponseError.HttpException.Code.BAD_REQUEST,
+                expected = JointOperationFetchResult.Gone,
+            ),
+            ErrorModel(code = ApiResponseError.HttpException.Code.NOT_FOUND, expected = JointOperationFetchResult.Gone),
+            ErrorModel(code = ApiResponseError.HttpException.Code.FORBIDDEN, expected = JointOperationFetchResult.Gone),
+            ErrorModel(code = ApiResponseError.HttpException.Code.INTERNAL_SERVER_ERROR, expected = null),
+        )
+    }
+
     private fun toEntity(item: JointOperationHistoryItemDto) =
         converter.convert(JointOperationEntityConverter.Input(userWalletId = WALLET_ID, dto = item))
 
@@ -290,6 +422,8 @@ internal class DefaultJointOperationHistoryRepositoryTest {
     private fun <T : Any> badRequest(): ApiResponse<T> = ApiResponse.Error(
         ApiResponseError.HttpException(ApiResponseError.HttpException.Code.BAD_REQUEST, message = null, errorBody = null),
     ) as ApiResponse<T>
+
+    data class ErrorModel(val code: ApiResponseError.HttpException.Code, val expected: JointOperationFetchResult?)
 
     private fun stubSyncState(state: HistorySyncStateEntity?) {
         every {

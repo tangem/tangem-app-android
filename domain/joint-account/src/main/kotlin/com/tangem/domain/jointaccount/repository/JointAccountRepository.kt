@@ -5,9 +5,10 @@ import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountConfirmationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationResult
-import com.tangem.domain.jointaccount.model.JointAccountInvite
+import com.tangem.domain.jointaccount.model.JointAccountInviteIssueError
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
+import com.tangem.domain.jointaccount.model.JointAccountIssuedInvite
 import com.tangem.domain.jointaccount.model.JointAccountJoinPayload
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
@@ -15,7 +16,6 @@ import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.models.wallet.UserWalletId
-import kotlinx.coroutines.flow.Flow
 
 /**
  * Write operations on joint accounts. Reading the accounts of a wallet is the supplier's job — see
@@ -35,16 +35,13 @@ interface JointAccountRepository {
     suspend fun getFreeOwnerDerivationIndex(userWalletId: UserWalletId): Int
 
     /**
-     * Registers a joint account and persists the invite ids from the response.
+     * Registers a joint account.
      *
      * [payload] is the object the card signed and [signature] the EIP-191 signature over its RFC 8785
      * canonical form. The request carries the payload as a regular JSON object: per the contract the backend
      * canonicalizes the payload "exactly as it arrives" before recovering the signer, so key order and
      * escaping on the wire do not matter — but the values must reach it untouched, never trimmed or
      * normalized.
-     *
-     * The backend issues the invites exactly once, in this response, and has no endpoint to read them back,
-     * so they are stored before the account is returned.
      *
      * A conflict on the creator's owner address comes back as
      * [JointAccountCreationResult.CreatorAlreadyRegistered] — see its docs for why it is a result and not an
@@ -101,20 +98,12 @@ interface JointAccountRepository {
         inviteId: String,
     ): Either<JointAccountInvitePreviewError, JointAccountInvitePreview>
 
-    /**
-     * The unused invites of the joint account [cryptoAccountId] that live on this device.
-     *
-
-     * list also answers "this device is not the creator's". Never throws: a store that cannot be read is an
-     * empty list, so a screen built on this keeps rendering everything else.
-     */
-    suspend fun getInvites(userWalletId: UserWalletId, cryptoAccountId: String): List<JointAccountInvite>
-
-    /** The invites of [cryptoAccountId] already shared from this device. Never fails: an unreadable store is empty. */
-    fun getSharedInvites(userWalletId: UserWalletId, cryptoAccountId: String): Flow<Set<String>>
-
-    /** Records that [inviteId] was shared. Never throws: a failed write is only logged, the slot stays not invited. */
-    suspend fun markInviteShared(userWalletId: UserWalletId, cryptoAccountId: String, inviteId: String)
+    /** Replaces the previous code of [slot]. A 403, 404 or 409 is `SlotUnavailable`; the function never throws */
+    suspend fun issueInvite(
+        userWalletId: UserWalletId,
+        cryptoAccountId: String,
+        slot: Int,
+    ): Either<JointAccountInviteIssueError, JointAccountIssuedInvite>
 
     /**
      * Registers a [safeTx] for collective signing, [signature] counting as the initiator's first one.

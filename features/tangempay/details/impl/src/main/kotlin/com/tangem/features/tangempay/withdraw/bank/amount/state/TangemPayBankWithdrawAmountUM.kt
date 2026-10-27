@@ -9,17 +9,38 @@ import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderUM
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
-internal data class TangemPayBankWithdrawAmountUM(
-    val header: BankWithdrawHeaderUM,
-    val from: BankWithdrawFromUM,
-    val amount: AmountFieldUM,
-    val source: SourceRowUM,
-    val route: RouteRowUM,
-    val isContinueEnabled: Boolean,
-    val sheet: SheetUM,
-    val onBackClick: () -> Unit,
-    val onContinueClick: () -> Unit,
-) {
+internal sealed interface TangemPayBankWithdrawAmountUM {
+
+    val header: BankWithdrawHeaderUM
+    val onBackClick: () -> Unit
+
+    @Immutable
+    data class Content(
+        override val header: BankWithdrawHeaderUM,
+        val from: BankWithdrawFromUM,
+        val amount: AmountFieldUM,
+        val source: SourceRowUM,
+        val route: RouteRowUM,
+        val isContinueEnabled: Boolean,
+        val sheet: SheetUM,
+        override val onBackClick: () -> Unit,
+        val onContinueClick: () -> Unit,
+    ) : TangemPayBankWithdrawAmountUM
+
+    @Immutable
+    data class Loading(
+        override val header: BankWithdrawHeaderUM,
+        val from: BankWithdrawFromUM,
+        val currencySymbol: String,
+        override val onBackClick: () -> Unit,
+    ) : TangemPayBankWithdrawAmountUM
+
+    @Immutable
+    data class FeeUnreachable(
+        override val header: BankWithdrawHeaderUM,
+        val onRetryClick: () -> Unit,
+        override val onBackClick: () -> Unit,
+    ) : TangemPayBankWithdrawAmountUM
 
     @Immutable
     data class AmountFieldUM(

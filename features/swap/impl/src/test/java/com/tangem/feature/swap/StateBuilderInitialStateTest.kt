@@ -326,7 +326,7 @@ internal class StateBuilderInitialStateTest {
             every { walletId } returns userWalletId
         }
 
-        private val expressError: ExpressError = ExpressError.UnknownError
+        private val expressError: ExpressError = ExpressError.UnknownError()
 
         private fun buildBaseStateWithSwapCardData(userWallet: UserWallet): SwapStateHolder {
             val emptyAmountState = SwapState.EmptyAmountState(

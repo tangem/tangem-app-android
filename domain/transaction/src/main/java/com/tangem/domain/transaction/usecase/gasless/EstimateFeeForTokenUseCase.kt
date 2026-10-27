@@ -7,6 +7,7 @@ import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCoinStatus
 import com.tangem.domain.demo.models.DemoConfig
@@ -31,6 +32,7 @@ class EstimateFeeForTokenUseCase(
     private val walletManagersFacade: WalletManagersFacade,
     private val demoConfig: DemoConfig,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
 ) {
@@ -70,9 +72,12 @@ class EstimateFeeForTokenUseCase(
                     val accountStatusList = singleAccountStatusListSupplier.getSyncOrNull(userWallet.walletId)
                         ?: raiseIllegalStateError("AccountStatusList is null for ${userWallet.walletId}")
 
-                    val nativeCurrencyStatus = accountStatusList.getCoinStatus(token.network).getOrElse {
-                        raiseIllegalStateError("No native currency found: ${token.network.id}")
-                    }
+                    val nativeCurrencyStatus = resolveNetworkFeeCurrencies(
+                        nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
+                        userWalletId = userWallet.walletId,
+                        network = token.network,
+                        portfolioCoinStatus = accountStatusList.getCoinStatus(token.network).getOrNull(),
+                    ).nativeCurrencyStatus
 
                     val walletManager = prepareWalletManager(userWallet, token.network)
 

@@ -24,14 +24,12 @@ import com.tangem.domain.jointaccount.usecase.ConfirmJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.CreateJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.CreateJointOperationUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitePreviewUseCase
-import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
+import com.tangem.domain.jointaccount.usecase.IssueJointAccountInviteUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountSupportedNetworksUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointOperationSlotUseCase
 import com.tangem.domain.jointaccount.usecase.GetMissingJointOwnerKeysCountUseCase
 import com.tangem.domain.jointaccount.usecase.GetPendingJointOperationsUseCase
-import com.tangem.domain.jointaccount.usecase.GetSharedJointAccountInvitesUseCase
 import com.tangem.domain.jointaccount.usecase.JoinJointAccountUseCase
-import com.tangem.domain.jointaccount.usecase.MarkJointAccountInviteSharedUseCase
 import com.tangem.domain.jointaccount.usecase.RejectJointOperationUseCase
 import com.tangem.domain.jointaccount.usecase.SignJointOperationUseCase
 import com.tangem.domain.jointaccount.verifier.JointAccountCompositionVerifier
@@ -58,24 +56,11 @@ internal object JointAccountDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetJointAccountInvitesUseCase(repository: JointAccountRepository): GetJointAccountInvitesUseCase {
-        return GetJointAccountInvitesUseCase(repository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideGetSharedJointAccountInvitesUseCase(
+    fun provideIssueJointAccountInviteUseCase(
         repository: JointAccountRepository,
-    ): GetSharedJointAccountInvitesUseCase {
-        return GetSharedJointAccountInvitesUseCase(repository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideMarkJointAccountInviteSharedUseCase(
-        repository: JointAccountRepository,
-    ): MarkJointAccountInviteSharedUseCase {
-        return MarkJointAccountInviteSharedUseCase(repository)
+        fetcher: SingleJointAccountListFetcher,
+    ): IssueJointAccountInviteUseCase {
+        return IssueJointAccountInviteUseCase(repository = repository, fetcher = fetcher)
     }
 
     @Provides
