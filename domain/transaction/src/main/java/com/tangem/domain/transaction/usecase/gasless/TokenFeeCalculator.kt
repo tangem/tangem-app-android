@@ -24,7 +24,6 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.GaslessYieldRepository
-import com.tangem.domain.transaction.YieldModuleFeatureToggles
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
 import com.tangem.domain.transaction.models.GaslessProtocolData
@@ -42,7 +41,6 @@ internal class TokenFeeCalculator(
     private val gaslessTransactionRepository: GaslessTransactionRepository,
     private val demoConfig: DemoConfig,
     private val gaslessYieldRepository: GaslessYieldRepository,
-    private val yieldModuleFeatureToggles: YieldModuleFeatureToggles,
 ) {
 
     suspend fun calculateInitialFee(
@@ -83,16 +81,17 @@ internal class TokenFeeCalculator(
 
     /**
      * The fee when the network coin pays: a yield send then goes out wrapped in the module upgrade, which the
-     * relayer-executed [initialFee] does not cover. Any other send reuses [initialFee] without another request.
+     * relayer-executed [initialFee] does not cover.
      */
     suspend fun estimateNativeFee(
         userWallet: UserWallet,
         amount: BigDecimal,
         txTokenCurrencyStatus: CryptoCurrencyStatus,
         initialFee: TransactionFee,
+        isYieldModuleV3Enabled: Boolean,
     ): Either<GetFeeError, TransactionFee> {
         val isYieldSend = amount.convertToSdkAmount(txTokenCurrencyStatus).type is AmountType.TokenYieldSupply
-        if (!yieldModuleFeatureToggles.isYieldModuleV3Enabled || !isYieldSend) return Either.Right(initialFee)
+        if (!isYieldModuleV3Enabled || !isYieldSend) return Either.Right(initialFee)
 
         return estimateFee(
             userWallet = userWallet,

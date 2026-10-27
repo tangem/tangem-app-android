@@ -16,7 +16,6 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.GaslessYieldRepository
-import com.tangem.domain.transaction.YieldModuleFeatureToggles
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
@@ -32,7 +31,6 @@ class EvmGaslessFeeResolver(
     private val gaslessTransactionRepository: GaslessTransactionRepository,
     private val gaslessYieldRepository: GaslessYieldRepository,
     private val resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
-    private val yieldModuleFeatureToggles: YieldModuleFeatureToggles,
 ) {
 
     private val tokenFeeCalculator = TokenFeeCalculator(
@@ -40,7 +38,6 @@ class EvmGaslessFeeResolver(
         gaslessTransactionRepository = gaslessTransactionRepository,
         demoConfig = demoConfig,
         gaslessYieldRepository = gaslessYieldRepository,
-        yieldModuleFeatureToggles = yieldModuleFeatureToggles,
     )
 
     /**
@@ -93,7 +90,6 @@ class EvmGaslessFeeResolver(
      * No balance-based fallback: the token is the user's choice, so falling short is an error rather than
      * a silent switch to the native coin.
      *
-     * @param nativeTransactionData see [resolveWithAutoFeeToken].
      * @param sentAmount required for a yield-supply send, whose [TransactionData.Uncompiled.amount] is zeroed.
      */
     @Suppress("LongParameterList")
