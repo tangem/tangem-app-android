@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.analytics.utils
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
@@ -85,6 +86,20 @@ internal class WalletWarningsAnalyticsSenderTest {
 
         // Assert
         verifyUpgradeNoticeSent(times = 2)
+    }
+
+    @Test
+    fun `GIVEN soft update banner WHEN emitted twice THEN soft update notice is sent once`() {
+        // Arrange
+        send(notifications = persistentListOf(WalletNotificationUM.SoftUpdateAvailable(onUpdateClick = {})))
+
+        // Act
+        send(notifications = persistentListOf(WalletNotificationUM.SoftUpdateAvailable(onUpdateClick = {})))
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(any<MainScreenAnalyticsEvent.NoticeSoftUpdate>())
+        }
     }
 
     private fun send(notifications: ImmutableList<WalletNotificationUM>, userWalletId: UserWalletId = WALLET_ID) {
