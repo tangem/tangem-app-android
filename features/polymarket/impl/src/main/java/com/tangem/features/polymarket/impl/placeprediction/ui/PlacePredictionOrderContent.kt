@@ -59,7 +59,7 @@ internal fun PlacePredictionOrderContent(
     modifier: Modifier = Modifier,
 ) {
     var footerHeight by remember { mutableIntStateOf(0) }
-    val isIdle = state.submit is SubmitUM.Idle
+    val isIdle = state.submit is SubmitUM.Idle && !state.isPlacementPending
     val focusManager = LocalFocusManager.current
 
     TangemTopBarScaffold(
@@ -82,7 +82,7 @@ internal fun PlacePredictionOrderContent(
                 PredictionPlaceButton(
                     order = state.order,
                     isLoading = !isIdle,
-                    isEnabled = state.isPrimaryButtonEnabled,
+                    isEnabled = state.isPrimaryButtonEnabled || state.isPrimaryButtonEnabledWhileQuoting,
                     onClick = {
                         focusManager.clearFocus()
                         intents.onPlaceClick()
@@ -109,7 +109,7 @@ private fun OrderBody(
     contentPadding: PaddingValues,
     footerHeight: Int,
 ) {
-    val isIdle = state.submit is SubmitUM.Idle
+    val isIdle = state.submit is SubmitUM.Idle && !state.isPlacementPending
 
     Column(
         modifier = Modifier

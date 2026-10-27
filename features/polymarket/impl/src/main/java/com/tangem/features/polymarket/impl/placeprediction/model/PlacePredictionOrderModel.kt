@@ -11,6 +11,7 @@ import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
 import com.tangem.features.polymarket.impl.common.formatPolymarketEnteredAmount
+import com.tangem.features.polymarket.impl.di.PlacePredictionTimeSource
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketAddFundsComponent
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetConfig
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
@@ -20,21 +21,28 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.AmountPresetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.MIN_QUOTABLE_AMOUNT
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPrediction
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.toStatusRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 
-@Suppress("TooManyFunctions")
+@Suppress("LongParameterList", "TooManyFunctions")
 @ModelScoped
 internal class PlacePredictionOrderModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -43,6 +51,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     quoteEngineFactory: PlacePredictionQuoteEngine.Factory,
     orderSubmitterFactory: PlacePredictionOrderSubmitter.Factory,
+    @PlacePredictionTimeSource private val timeSource: TimeSource,
 ) : Model(), PlacePredictionOrderIntents, PolymarketAddFundsComponent.ModelCallback {
 
     private val params = paramsContainer.require<PlacePredictionComponent.Params>()
@@ -53,6 +62,8 @@ internal class PlacePredictionOrderModel @Inject constructor(
     private val quoteEngine = quoteEngineFactory.create(params = params, uiState = uiState, scope = modelScope)
 
     private val orderSubmitter = orderSubmitterFactory.create(params = params, uiState = uiState, scope = modelScope)
+
+    private val pendingPlacementJobHolder = JobHolder()
 
     val feeSheet = PlacePredictionFeeSheet(
         uiState = uiState,
@@ -73,14 +84,16 @@ internal class PlacePredictionOrderModel @Inject constructor(
     }
 
     fun onPause() {
+        dropPendingPlacement()
         quoteEngine.onPause()
     }
 
-    fun isSubmitting(): Boolean = orderSubmitter.isSubmitting()
+    fun isSubmitting(): Boolean = orderSubmitter.isSubmitting() || uiState.value.isPlacementPending
 
     override fun onAmountChange(value: String) {
-        if (isSubmitting() || value == uiState.value.amountValue) return
+        if (orderSubmitter.isSubmitting() || value == uiState.value.amountValue) return
 
+        dropPendingPlacement()
         quoteEngine.onAmountChange(value = value)
     }
 
@@ -98,8 +111,9 @@ internal class PlacePredictionOrderModel @Inject constructor(
     private fun enterAmount(value: String) {
         val amount = value.parseBigDecimalOrNull() ?: return
         val current = uiState.value.amountValue.parseBigDecimalOrNull()
-        if (isSubmitting() || current != null && current.compareTo(amount) == 0) return
+        if (orderSubmitter.isSubmitting() || current != null && current.compareTo(amount) == 0) return
 
+        dropPendingPlacement()
         quoteEngine.onAmountChange(value = value, isPicked = true)
     }
 
@@ -145,8 +159,34 @@ internal class PlacePredictionOrderModel @Inject constructor(
     }
 
     override fun onPlaceClick() {
-        val prepared = quoteEngine.prepare() ?: return
+        if (uiState.value.isPlacementPending) return
 
+        val prepared = quoteEngine.prepare()
+        when {
+            prepared != null -> place(prepared = prepared)
+            uiState.value.isPrimaryButtonEnabledWhileQuoting -> placeOnceQuoted()
+        }
+    }
+
+    private fun placeOnceQuoted() {
+        val tappedAt = timeSource.markNow()
+        uiState.update { it.copy(isPlacementPending = true) }
+
+        modelScope.launch {
+            uiState.first { it.quote !is QuoteUM.Loading }
+            uiState.update { it.copy(isPlacementPending = false) }
+            if (tappedAt.elapsedNow() > PENDING_PLACEMENT_LIFETIME) return@launch
+
+            quoteEngine.prepare()?.let { prepared -> place(prepared = prepared) }
+        }.saveIn(pendingPlacementJobHolder)
+    }
+
+    private fun dropPendingPlacement() {
+        pendingPlacementJobHolder.cancel()
+        uiState.update { it.copy(isPlacementPending = false) }
+    }
+
+    private fun place(prepared: PreparedPrediction) {
         modelScope.launch(start = CoroutineStart.UNDISPATCHED) {
             quoteEngine.holdDuring {
                 val result = orderSubmitter.submit(prepared = prepared) ?: return@holdDuring
@@ -189,5 +229,6 @@ internal class PlacePredictionOrderModel @Inject constructor(
 
     private companion object {
         val BUY_PRESET_AMOUNTS = listOf(BigDecimal(100), BigDecimal(500), BigDecimal(1_000), BigDecimal(5_000))
+        val PENDING_PLACEMENT_LIFETIME = 10.seconds
     }
 }

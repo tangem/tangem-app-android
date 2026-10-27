@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -474,6 +475,108 @@ internal class PlacePredictionNotificationsFactoryTest {
         // Assert
         assertThat(actual.isPrimaryButtonEnabled).isTrue()
         assertThat(actual.notifications).isEmpty()
+    }
+
+    @Nested
+    inner class WhileQuoting {
+
+        @Test
+        fun `GIVEN a covered amount awaiting its quote WHEN the gate runs THEN only the while-quoting flag is on`() {
+            // Arrange
+            val state = createState(balance = BigDecimal("100"), quote = QuoteUM.Loading)
+
+            // Act
+            val actual = state.recomputeGate()
+
+            // Assert
+            assertThat(actual.isPrimaryButtonEnabled).isFalse()
+            assertThat(actual.isPrimaryButtonEnabledWhileQuoting).isTrue()
+        }
+
+        @Test
+        fun `GIVEN an amount above the balance awaiting its quote WHEN the gate runs THEN it stays blocked`() {
+            // Arrange
+            val state = createState(balance = BigDecimal("5"), quote = QuoteUM.Loading)
+
+            // Act
+            val actual = state.recomputeGate()
+
+            // Assert
+            assertThat(actual.isPrimaryButtonEnabledWhileQuoting).isFalse()
+        }
+
+        @Test
+        fun `GIVEN a quote that has arrived WHEN the gate runs THEN the while-quoting flag is off`() {
+            // Arrange
+            val state = createState(balance = BigDecimal("100"), quote = createQuote())
+
+            // Act
+            val actual = state.recomputeGate()
+
+            // Assert
+            assertThat(actual.isPrimaryButtonEnabled).isTrue()
+            assertThat(actual.isPrimaryButtonEnabledWhileQuoting).isFalse()
+        }
+
+        @Test
+        fun `GIVEN no amount is priced WHEN the gate runs THEN the while-quoting flag is off`() {
+            // Arrange
+            val state = createState(balance = BigDecimal("100"), quote = QuoteUM.Empty)
+
+            // Act
+            val actual = state.recomputeGate()
+
+            // Assert
+            assertThat(actual.isPrimaryButtonEnabledWhileQuoting).isFalse()
+        }
+
+        @Test
+        fun `GIVEN the region is restricted WHEN the gate runs while quoting THEN it stays blocked`() {
+            // Arrange
+            val state = createState(quote = QuoteUM.Loading, tradingPermission = TradingPermissionUM.Restricted)
+
+            // Act
+            val actual = state.recomputeGate()
+
+            // Assert
+            assertThat(actual.isPrimaryButtonEnabledWhileQuoting).isFalse()
+        }
+
+        @Test
+        fun `GIVEN an order is being signed WHEN the gate runs while quoting THEN it stays blocked`() {
+            // Arrange
+            val state = createState(quote = QuoteUM.Loading, submit = SubmitUM.Signing)
+
+            // Act
+            val actual = state.recomputeGate()
+
+            // Assert
+            assertThat(actual.isPrimaryButtonEnabledWhileQuoting).isFalse()
+        }
+
+        @ParameterizedTest(name = "selling {0} of 10 held shares while quoting enables it: {1}")
+        @CsvSource("5, true", "10, true", "11, false")
+        fun `GIVEN a sell awaiting its quote WHEN the gate runs THEN it follows the held shares`(
+            amount: String,
+            expected: Boolean,
+        ) {
+            // Arrange
+            val state = createState(
+                amountValue = amount,
+                quote = QuoteUM.Loading,
+                order = OrderSideUM.Sell(
+                    position = SellPositionUM.Held(available = BigDecimal("10")),
+                    proceeds = SharesProceedsUM.Unavailable,
+                    balance = null,
+                ),
+            )
+
+            // Act
+            val actual = state.recomputeGate()
+
+            // Assert
+            assertThat(actual.isPrimaryButtonEnabledWhileQuoting).isEqualTo(expected)
+        }
     }
 
     private fun createState(

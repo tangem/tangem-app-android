@@ -1,5 +1,6 @@
 package com.tangem.features.polymarket.impl.placeprediction.model
 
+import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
@@ -8,6 +9,9 @@ import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionOrderFailure
 import com.tangem.domain.polymarket.model.PredictionOrderFees
+import com.tangem.domain.polymarket.model.PredictionOrderQuote
+import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
+import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.domain.models.StatusSource
 import com.tangem.features.polymarket.impl.common.FakeSlotHost
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
@@ -570,6 +574,211 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         }
     }
 
+    @Nested
+    inner class TapWhileQuoting {
+
+        @Test
+        fun `GIVEN a quote on the way WHEN place clicked THEN the placement waits and nothing is signed`() =
+            runOrderTest {
+                // Arrange
+                val model = createQuotingModel()
+
+                // Act
+                model.onPlaceClick()
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.isPlacementPending).isTrue()
+                assertThat(model.isSubmitting()).isTrue()
+                coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+            }
+
+        @Test
+        fun `GIVEN a tap while quoting WHEN the quote arrives THEN the order is placed`() = runOrderTest {
+            // Arrange
+            val model = createQuotingModel()
+            model.onPlaceClick()
+
+            // Act
+            advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.isPlacementPending).isFalse()
+            coVerify(exactly = 1) { signOrderInteractor(request = any()) }
+            verify(exactly = 1) {
+                router.replaceAll(match<PlacePredictionRoute.Status> { it.side == BUY_PARAMS.side }, onComplete = any())
+            }
+        }
+
+        @Test
+        fun `GIVEN a tap while quoting WHEN the quote fails THEN the tap is released and nothing is signed`() =
+            runOrderTest {
+                // Arrange
+                val model = createQuotingModel(result = PredictionOrderQuoteError.Network.left())
+                model.onPlaceClick()
+
+                // Act
+                advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.isPlacementPending).isFalse()
+                assertThat(model.isSubmitting()).isFalse()
+                coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+            }
+
+        @Test
+        fun `GIVEN a tap while quoting WHEN the arrived quote cannot be placed THEN the tap is released`() =
+            runOrderTest {
+                // Arrange
+                val model = createQuotingModel(
+                    result = createQuote(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY).right(),
+                )
+                model.onPlaceClick()
+
+                // Act
+                advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.isPlacementPending).isFalse()
+                coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+                verify(exactly = 0) { router.pop(any()) }
+            }
+
+        @ParameterizedTest(name = "a quote arriving {0} ms after the tap signs {1} order(s)")
+        @CsvSource("10000, 1", "10001, 0")
+        fun `GIVEN a tap while quoting WHEN the quote arrives THEN it is placed only within ten seconds`(
+            quoteMillis: Long,
+            expectedSignings: Int,
+        ) = runOrderTest {
+            // Arrange
+            val model = createQuotingModel(quoteMillis = quoteMillis)
+            model.onPlaceClick()
+
+            // Act
+            advanceTimeBy(delayTimeMillis = quoteMillis)
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.isPlacementPending).isFalse()
+            coVerify(exactly = expectedSignings) { signOrderInteractor(request = any()) }
+        }
+
+        @Test
+        fun `GIVEN a tap while quoting WHEN the screen is left THEN the tap is dropped`() = runOrderTest {
+            // Arrange
+            val model = createQuotingModel()
+            model.onPlaceClick()
+
+            // Act
+            model.onPause()
+
+            // Assert
+            assertThat(model.uiState.value.isPlacementPending).isFalse()
+            model.onResume()
+            advanceTimeBy(delayTimeMillis = QUOTE_MILLIS * 2)
+            runCurrent()
+            coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+        }
+
+        @Test
+        fun `GIVEN a tap while quoting WHEN the amount changes THEN the tap is dropped`() = runOrderTest {
+            // Arrange
+            val model = createQuotingModel()
+            model.onPlaceClick()
+
+            // Act
+            model.onAmountChange(value = "25")
+
+            // Assert
+            assertThat(model.uiState.value.isPlacementPending).isFalse()
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + QUOTE_MILLIS * 2)
+            runCurrent()
+            coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+        }
+
+        @Test
+        fun `GIVEN a tap while quoting WHEN place clicked again THEN the order is signed once`() = runOrderTest {
+            // Arrange
+            val model = createQuotingModel()
+
+            // Act
+            model.onPlaceClick()
+            model.onPlaceClick()
+            advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 1) { signOrderInteractor(request = any()) }
+            coVerify(exactly = 1) { placeOrderUseCase(any(), any(), any()) }
+        }
+
+        @Test
+        fun `GIVEN a tap while quoting WHEN place clicked again THEN the first tap still bounds the wait`() =
+            runOrderTest {
+                // Arrange
+                val model = createQuotingModel(quoteMillis = 10_001L)
+                model.onPlaceClick()
+                advanceTimeBy(delayTimeMillis = 5_000L)
+
+                // Act
+                model.onPlaceClick()
+                advanceTimeBy(delayTimeMillis = 5_001L)
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.isPlacementPending).isFalse()
+                coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+            }
+
+        @Test
+        fun `GIVEN a tap while quoting WHEN close clicked THEN the flow stays`() = runOrderTest {
+            // Arrange
+            val model = createQuotingModel()
+            model.onPlaceClick()
+
+            // Act
+            model.onCloseClick()
+
+            // Assert
+            verify(exactly = 0) { router.pop(any()) }
+        }
+
+        @Test
+        fun `GIVEN the balance does not cover the amount WHEN place clicked while quoting THEN nothing waits`() =
+            runOrderTest {
+                // Arrange
+                statusFlow.value = activeStatus(balance = BigDecimal("5"))
+                val model = createQuotingModel()
+
+                // Act
+                model.onPlaceClick()
+
+                // Assert
+                assertThat(model.uiState.value.isPrimaryButtonEnabledWhileQuoting).isFalse()
+                assertThat(model.uiState.value.isPlacementPending).isFalse()
+            }
+    }
+
+    private fun TestScope.createQuotingModel(
+        quoteMillis: Long = QUOTE_MILLIS,
+        result: Either<PredictionOrderQuoteError, PredictionOrderQuote> = createQuote().right(),
+    ): PlacePredictionOrderModel {
+        coEvery { getQuoteUseCase(request = any()) } coAnswers {
+            delay(timeMillis = quoteMillis)
+            result
+        }
+        val model = createOrderModel(testScope = this)
+        advanceUntilIdle()
+        model.onResume()
+        model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS)
+        runCurrent()
+        return model
+    }
+
     private fun TestScope.createQuotedModel(): PlacePredictionOrderModel {
         val model = createOrderModel(testScope = this)
         advanceUntilIdle()
@@ -593,5 +802,6 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
 
     private companion object {
         const val SIGNING_MILLIS = 1_000L
+        const val QUOTE_MILLIS = 1_000L
     }
 }
