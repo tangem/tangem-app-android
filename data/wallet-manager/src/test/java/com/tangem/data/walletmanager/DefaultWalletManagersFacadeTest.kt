@@ -242,6 +242,37 @@ internal class DefaultWalletManagersFacadeTest {
         }
 
         @Test
+        fun `GIVEN transfer built bare after failed check WHEN built again after check passes THEN stays bare`() =
+            runTest {
+                // Arrange
+                val facade = createFacade(isToggleEnabled = true)
+                coEvery { walletManager.checkModuleVersionStatus() } throws IllegalStateException("RPC is down")
+                facade.wrapYieldSendWithModuleUpgrade(userWalletId, ethereumNetwork, sendCallData)
+                stubUpgradeAvailable()
+
+                // Act
+                val actual = facade.wrapYieldSendWithModuleUpgrade(userWalletId, ethereumNetwork, sendCallData)
+
+                // Assert
+                assertThat(actual).isSameInstanceAs(sendCallData)
+            }
+
+        @Test
+        fun `GIVEN decision reset after a sent upgrade WHEN wrap THEN checks module version again`() = runTest {
+            // Arrange
+            val facade = createFacade(isToggleEnabled = true)
+            facade.estimateFee(amount = yieldSupplyAmount, userWalletId = userWalletId, network = ethereumNetwork)
+            facade.resetYieldSendUpgradeDecision(userWalletId, ethereumNetwork)
+            coEvery { walletManager.checkModuleVersionStatus() } returns YieldModuleVersionStatus.UpToDate
+
+            // Act
+            val actual = facade.wrapYieldSendWithModuleUpgrade(userWalletId, ethereumNetwork, sendCallData)
+
+            // Assert
+            assertThat(actual).isSameInstanceAs(sendCallData)
+        }
+
+        @Test
         fun `GIVEN fee estimated with upgrade not allowed WHEN wrap THEN checks module version now`() = runTest {
             // Arrange
             val facade = createFacade(isToggleEnabled = true)
