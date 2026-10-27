@@ -37,7 +37,10 @@ internal class TangemPayWithdrawHubUMFactory(
     fun create(state: WithdrawHubState): TangemPayWithdrawHubUM = when (sourceAccount) {
         is BankWithdrawSourceAccount.Payment -> TangemPayWithdrawHubUM(
             title = resourceReference(R.string.tangempay_card_details_withdraw),
-            swapSection = createSwapSection(state.tokenRecents),
+            swapSection = createSwapSection(
+                subtitle = resourceReference(R.string.tangempay_withdraw_hub_swap_section_subtitle),
+                tokenRecents = state.tokenRecents,
+            ),
             bankSection = createBankSection(
                 state = state,
                 unavailableSubtitle = resourceReference(
@@ -48,7 +51,7 @@ internal class TangemPayWithdrawHubUMFactory(
         )
         is BankWithdrawSourceAccount.Money -> TangemPayWithdrawHubUM(
             title = resourceReference(R.string.common_send),
-            swapSection = null,
+            swapSection = createSwapSection(subtitle = null, tokenRecents = state.tokenRecents),
             bankSection = createBankSection(
                 state = state,
                 unavailableSubtitle = resourceReference(R.string.money_account_send_bank_transfer_unavailable),
@@ -57,17 +60,19 @@ internal class TangemPayWithdrawHubUMFactory(
         )
     }
 
-    private fun createSwapSection(tokenRecents: TokenRecentsState) = TangemPayWithdrawHubUM.SwapSectionUM(
-        withinPortfolio = ActionCardUM(
-            icon = TangemIconUM.Icon(
-                imageVector = Icons.ic_arrow_swap_horizontal_20,
-                tintReference = { TangemTheme.colors3.icon.staticDark },
+    private fun createSwapSection(subtitle: TextReference?, tokenRecents: TokenRecentsState) =
+        TangemPayWithdrawHubUM.SwapSectionUM(
+            subtitle = subtitle,
+            withinPortfolio = ActionCardUM(
+                icon = TangemIconUM.Icon(
+                    imageVector = Icons.ic_arrow_swap_horizontal_20,
+                    tintReference = { TangemTheme.colors3.icon.staticDark },
+                ),
+                title = resourceReference(R.string.tangempay_withdraw_hub_within_portfolio),
+                onClick = callbacks.onWithinPortfolioClick,
             ),
-            title = resourceReference(R.string.tangempay_withdraw_hub_within_portfolio),
-            onClick = callbacks.onWithinPortfolioClick,
-        ),
-        recents = createTokenRecents(tokenRecents),
-    )
+            recents = createTokenRecents(tokenRecents),
+        )
 
     private fun createBankSection(state: WithdrawHubState, unavailableSubtitle: TextReference): BankSectionUM? =
         when (state.options) {

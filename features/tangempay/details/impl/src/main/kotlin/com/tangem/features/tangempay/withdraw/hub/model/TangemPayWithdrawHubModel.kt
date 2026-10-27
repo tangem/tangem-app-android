@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.withdraw.hub.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
@@ -12,6 +13,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
+import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
@@ -58,6 +60,7 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     tangemPayCurrencyFactory: TangemPayCurrencyFactory,
+    moneyAccountCurrencyFactory: MoneyAccountCurrencyFactory,
     private val tangemPayWithdrawRepository: TangemPayWithdrawRepository,
     private val uiMessageSender: UiMessageSender,
     private val getRecentBankAccountsUseCase: GetRecentBankAccountsUseCase,
@@ -81,7 +84,10 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
         is BankWithdrawSourceAccount.Money -> account.productInstanceId != null
     }
 
-    private val cryptoCurrency: CryptoCurrency.Token = tangemPayCurrencyFactory.create(params.userWalletId)
+    private val cryptoCurrency: CryptoCurrency.Token = when (params.sourceAccount) {
+        is BankWithdrawSourceAccount.Payment -> tangemPayCurrencyFactory.create(params.userWalletId)
+        is BankWithdrawSourceAccount.Money -> moneyAccountCurrencyFactory.create(params.userWalletId)
+    }
 
     private val umFactory = TangemPayWithdrawHubUMFactory(
         sourceAccount = params.sourceAccount,
@@ -137,8 +143,8 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
         }
         if (params.sourceAccount is BankWithdrawSourceAccount.Payment) {
             analytics.send(TangemPayAnalyticsEvents.Offramp.BankTransferSheetOpened())
-            observeTokenRecents()
         }
+        observeTokenRecents()
     }
 
     private fun loadRecents() {
@@ -168,7 +174,10 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
     private fun observeTokenRecents() {
         getRecentTokenTransfersUseCase(
             userWalletId = params.userWalletId,
-            journal = TokenTransferJournal.PAYMENT_ACCOUNT,
+            journal = when (params.sourceAccount) {
+                is BankWithdrawSourceAccount.Payment -> TokenTransferJournal.PAYMENT_ACCOUNT
+                is BankWithdrawSourceAccount.Money -> TokenTransferJournal.MONEY_ACCOUNT
+            },
         )
             .onEach { transfers ->
                 state.update { it.copy(tokenRecents = TokenRecentsState.Loaded(transfers = transfers)) }
@@ -213,6 +222,21 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
     }
 
     private fun openWithdrawSwap(toCryptoCurrency: CryptoCurrency? = null) {
+        when (params.sourceAccount) {
+            is BankWithdrawSourceAccount.Payment -> openPaymentAccountSwap(toCryptoCurrency)
+            is BankWithdrawSourceAccount.Money -> router.push(
+                buildWithdrawSwapRoute(
+                    userWalletId = params.userWalletId,
+                    cryptoCurrency = cryptoCurrency,
+                    toCryptoCurrency = toCryptoCurrency,
+                    accountFlow = AccountFlow.MoneyWithdraw,
+                    screenSource = MONEY_ACCOUNT_SWAP_SCREEN_SOURCE,
+                ),
+            )
+        }
+    }
+
+    private fun openPaymentAccountSwap(toCryptoCurrency: CryptoCurrency?) {
         modelScope.launch {
             val hasActiveWithdrawal = tangemPayWithdrawRepository.hasWithdrawOrder(params.userWalletId)
             if (hasActiveWithdrawal) {
@@ -268,5 +292,7 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
 }
 
 private const val ON_CHAIN_REFRESH_DELAY_MILLIS = 11_000L
+
+private const val MONEY_ACCOUNT_SWAP_SCREEN_SOURCE = "MoneyAccount"
 
 private const val TAG = "TangemPayWithdrawHubModel"
