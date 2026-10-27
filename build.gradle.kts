@@ -315,14 +315,6 @@ dependencyAnalysis {
                 exclude("org.jetbrains.kotlin:kotlin-compiler-embeddable")
             }
         }
-        // :libs:visa uses no Android APIs, but its `packaging { resources { excludes += "/META-INF/*" } }`
-        // resolves the duplicate META-INF entries web3j ships. A JVM module has no packaging block, so
-        // the conflict would move to every consumer.
-        project(":libs:visa") {
-            onModuleStructure {
-                severity("ignore")
-            }
-        }
         // :features:hot-wallet:impl is the only path that pulls the cloud-backup modules into the app
         // graph, and data:cloud-backup contributes CloudBackupDataModule's Hilt bindings. Nothing
         // references them by type, so DAGP calls them unused — dropping them would remove the bindings.

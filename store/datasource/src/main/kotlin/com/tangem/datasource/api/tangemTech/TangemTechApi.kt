@@ -1,6 +1,7 @@
 package com.tangem.datasource.api.tangemTech
 
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.datasource.api.marketing.models.BindMarketingUidWalletsBody
 import com.tangem.datasource.api.marketing.models.MarketingCampaignsResponse
 import com.tangem.datasource.api.promotion.models.CreatePromotionRegistrationBody
 import com.tangem.datasource.api.promotion.models.PromotionRegistrationResponse
@@ -314,5 +315,11 @@ interface TangemTechApi {
         @Query("fromFiat") fromFiat: String? = null,
         @Header("If-None-Match") eTag: String? = null,
     ): ApiResponse<MarketingCampaignsResponse>
+
+    @POST("api/v1/marketing/activity/{uid}/bind-wallets")
+    suspend fun bindMarketingUidWallets(
+        @Path("uid") uid: String,
+        @Body body: BindMarketingUidWalletsBody,
+    ): ApiResponse<Unit>
     // endregion
 }

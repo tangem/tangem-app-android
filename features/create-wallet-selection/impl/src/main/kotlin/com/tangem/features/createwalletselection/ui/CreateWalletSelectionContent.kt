@@ -1,7 +1,6 @@
 package com.tangem.features.createwalletselection.ui
 
 import android.content.res.Configuration
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -109,12 +108,7 @@ internal fun CreateWalletSelectionContent(state: CreateWalletSelectionUM, modifi
                 )
             }
         }
-        AnimatedVisibility(state.shouldShowAlreadyHaveWallet) {
-            AlreadyHaveTangemWalletBlock(
-                onBuyClick = state.onBuyClick,
-                isScanInProgress = state.isScanInProgress,
-            )
-        }
+        AlreadyHaveTangemWalletBlock(onBuyClick = state.onBuyClick)
     }
 }
 
@@ -164,11 +158,7 @@ private fun WalletBlock(
 }
 
 @Composable
-private fun AlreadyHaveTangemWalletBlock(
-    onBuyClick: () -> Unit,
-    isScanInProgress: Boolean,
-    modifier: Modifier = Modifier,
-) {
+private fun AlreadyHaveTangemWalletBlock(onBuyClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -198,7 +188,6 @@ private fun AlreadyHaveTangemWalletBlock(
             text = stringResourceSafe(R.string.wallet_import_buy_title),
             onClick = onBuyClick,
             size = TangemButtonSize.RoundedAction,
-            showProgress = isScanInProgress,
         )
     }
 }
@@ -228,7 +217,6 @@ private fun PreviewCreateWalletContent() {
                         onClick = { },
                     ),
                 ),
-                shouldShowAlreadyHaveWallet = true,
                 onBuyClick = { },
                 onWhatToChooseClick = { },
             ),

@@ -16,14 +16,12 @@ import com.tangem.domain.models.ens.EnsAddress
 import com.tangem.features.tokenreceive.entity.ReceiveAddress.Type.Ens
 import com.tangem.features.tokenreceive.entity.ReceiveAddress.Type.Primary
 import com.tangem.features.tokenreceive.ui.state.TokenReceiveUM
-import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 
 @Suppress("MagicNumber")
 internal class TokenReceiveStateFactory(
-    private val currentStateProvider: Provider<TokenReceiveUM>,
     private val cryptoCurrency: CryptoCurrency,
     private val addresses: List<ReceiveAddressModel>,
     private val tokenReceiveNotification: List<TokenReceiveNotification>,
@@ -51,19 +49,19 @@ internal class TokenReceiveStateFactory(
         )
     }
 
-    fun getLoadingState(): TokenReceiveUM {
-        return currentStateProvider.invoke().copy(isEnsResultLoading = true)
+    fun getLoadingState(currentState: TokenReceiveUM): TokenReceiveUM {
+        return currentState.copy(isEnsResultLoading = true)
     }
 
-    fun getLoadedState(ensAddress: List<EnsAddress>): TokenReceiveUM {
-        val currentAddressValues = currentStateProvider.invoke().addresses.map { it.value }.toSet()
+    fun getLoadedState(currentState: TokenReceiveUM, ensAddress: List<EnsAddress>): TokenReceiveUM {
+        val currentAddressValues = currentState.addresses.map { it.value }.toSet()
 
         val newEnsAddresses = ensAddress
             .filterIsInstance<EnsAddress.Address>()
             .filterNot { it.name in currentAddressValues }
             .map { ens -> ReceiveAddress(value = ens.name, type = Ens) }
 
-        val combinedAddresses = (currentStateProvider.invoke().addresses + newEnsAddresses)
+        val combinedAddresses = (currentState.addresses + newEnsAddresses)
             .sortedWith(
                 compareBy { address ->
                     when (address.type) {
@@ -75,7 +73,7 @@ internal class TokenReceiveStateFactory(
                 },
             )
 
-        return currentStateProvider.invoke().copy(
+        return currentState.copy(
             isEnsResultLoading = false,
             addresses = combinedAddresses.toPersistentList(),
         )

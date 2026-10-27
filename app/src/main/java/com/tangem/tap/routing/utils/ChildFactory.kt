@@ -168,7 +168,6 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.ManageTokens -> {
                 val source = when (route.source) {
                     AppRoute.ManageTokens.Source.SETTINGS -> ManageTokensSource.SETTINGS
-                    AppRoute.ManageTokens.Source.STORIES -> ManageTokensSource.STORIES
                     AppRoute.ManageTokens.Source.ACCOUNT -> ManageTokensSource.ACCOUNT
                     AppRoute.ManageTokens.Source.WALLET -> ManageTokensSource.WALLET
                 }
@@ -559,15 +558,9 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.CreateWalletStart -> {
-                val mode = when (route.mode) {
-                    AppRoute.CreateWalletStart.Mode.ColdWallet -> CreateWalletStartComponent.Mode.ColdWallet
-                    AppRoute.CreateWalletStart.Mode.HotWallet -> CreateWalletStartComponent.Mode.HotWallet
-                }
                 createComponentChild(
                     context = context,
-                    params = CreateWalletStartComponent.Params(
-                        mode = mode,
-                    ),
+                    params = Unit,
                     componentFactory = createWalletStartComponentFactory,
                 )
             }
