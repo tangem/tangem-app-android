@@ -1,6 +1,7 @@
 package com.tangem.domain.mcp.repository
 
 import arrow.core.Either
+import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.mcp.models.McpAgent
 import com.tangem.domain.mcp.models.McpDeviceVerification
 import com.tangem.domain.mcp.models.McpDeviceVerificationResult
@@ -45,9 +46,20 @@ interface McpRepository {
      * Authorizations currently issued to MCP clients, as a hot list shared by every collector.
      *
      * Collecting it reads the list unless a read is already in flight, and the list is re-read after
-     * every change this repository makes. A failed read leaves the last known list in place.
+     * every change this repository makes. It stays [Lce.Loading] until the first read answers, and a
+     * failed read answers with [Lce.Error] rather than the last known list — after a revoke or an
+     * approval that list is no longer known to be current, so the caller offers [reloadSessions]
+     * instead of showing it.
      */
-    fun getSessions(): Flow<List<McpSession>>
+    fun getSessions(): Flow<Lce<Throwable, List<McpSession>>>
+
+    /**
+     * Reads the list again and suspends until that read is over, whatever it ends with.
+     *
+     * The read in flight, if any, is dropped: it predates this call, and the caller is asking about
+     * the list as it is now.
+     */
+    suspend fun reloadSessions()
 
     /**
      * Revokes [sessionId], cutting off the client's access and refresh tokens.

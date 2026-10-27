@@ -2084,7 +2084,7 @@
   <string name="swap_search_tooltip_title">使用搜索查找所需内容</string>
   <string name="swap_simple_mode">简易模式</string>
   <string name="swap_slippage_error">不支持的金额</string>
-  <string name="swap_slippage_info_text">是指由于市场价格或流动性变化导致的预期成交价格与实际成交价格之间的差异。</string>
+  <string name="swap_slippage_info_text">是指从您签名到交易送达服务商期间的价格变化。交易将按送达时的价格，在您设定的滑点容差范围内执行。</string>
   <string name="swap_slippage_warning_text">如果达到滑点阈值，互换交易可能会失败。</string>
   <string name="swap_slippage_warning_title">滑点已设定为 %s</string>
   <string name="swap_story_fifth_subtitle">我们提供全天候支持，让您安心无忧，任何问题都能得到帮助。</string>

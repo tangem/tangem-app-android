@@ -55,12 +55,12 @@ class WalletConnectPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
     }
 
     val noSessionTitle: KNode = child {
-        hasText(getResourceString(R.string.wc_no_sessions_title))
+        hasText(getResourceString(R.string.wc_connections_empty_title))
         useUnmergedTree = true
     }
 
     val noSessionText: KNode = child {
-        hasText(getResourceString(R.string.wc_no_sessions_desc))
+        hasText(getResourceString(R.string.wc_connections_empty_desc))
         useUnmergedTree = true
     }
 }

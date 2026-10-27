@@ -5,6 +5,9 @@ import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.domain.core.utils.lceContent
+import com.tangem.domain.core.utils.lceError
+import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.mcp.models.McpDeviceVerification
 import com.tangem.domain.mcp.models.McpDeviceVerificationResult
 import com.tangem.domain.mcp.models.McpSession
@@ -47,7 +50,9 @@ internal class DefaultMcpRepositoryTest {
     private val testScope = TestScope(UnconfinedTestDispatcher())
     private val appScope = object : AppCoroutineScope, CoroutineScope by testScope {}
 
-    private val repository = DefaultMcpRepository(
+    private val repository = createRepository()
+
+    private fun createRepository() = DefaultMcpRepository(
         mcpApi = mcpApi,
         appScope = appScope,
         dispatchers = TestingCoroutineDispatcherProvider(),
@@ -198,7 +203,7 @@ internal class DefaultMcpRepositoryTest {
             val actual = repository.getSessions().first()
 
             // Assert
-            assertThat(actual).containsExactly(SESSION)
+            assertThat(actual).isEqualTo(listOf(SESSION).lceContent())
         }
 
         @Test
@@ -211,7 +216,7 @@ internal class DefaultMcpRepositoryTest {
             val actual = repository.getSessions().first()
 
             // Assert
-            assertThat(actual).containsExactly(SESSION.copy(createdAtMillis = 0L))
+            assertThat(actual).isEqualTo(listOf(SESSION.copy(createdAtMillis = 0L)).lceContent())
         }
 
         @Test
@@ -245,6 +250,51 @@ internal class DefaultMcpRepositoryTest {
                 // Assert
                 coVerify(exactly = 2) { mcpApi.getSessions() }
             }
+
+        @Test
+        fun `GIVEN the read fails WHEN getSessions THEN the error is emitted instead of a list`() = runTest {
+            // Arrange
+            coEvery { mcpApi.getSessions() } returns apiError(SERVER_ERROR)
+
+            // Act
+            val actual = repository.getSessions().first()
+
+            // Assert
+            assertThat(actual).isEqualTo(SERVER_ERROR.lceError())
+        }
+
+        @Test
+        fun `GIVEN the read failed WHEN reloadSessions THEN the list is read again and replaces the error`() =
+            runTest {
+                // Arrange
+                coEvery { mcpApi.getSessions() } returns apiError(SERVER_ERROR)
+                repository.getSessions().first()
+                coEvery { mcpApi.getSessions() } returns ApiResponse.Success(listOf(SESSION_RESPONSE))
+
+                // Act
+                repository.reloadSessions()
+
+                // Assert
+                assertThat(repository.getSessions().first()).isEqualTo(listOf(SESSION).lceContent())
+            }
+
+        @Test
+        fun `GIVEN no read has answered WHEN getSessions THEN it is loading`() = runTest {
+            // Arrange — a repository of its own, so no earlier test's list is already in place
+            val repository = createRepository()
+            val release = CompletableDeferred<Unit>()
+            coEvery { mcpApi.getSessions() } coAnswers {
+                release.await()
+                ApiResponse.Success(listOf(SESSION_RESPONSE))
+            }
+
+            // Act
+            val actual = repository.getSessions().first()
+            release.complete(Unit)
+
+            // Assert
+            assertThat(actual).isEqualTo(lceLoading<List<McpSession>>())
+        }
 
         @Test
         fun `GIVEN revoke succeeds WHEN revokeSession THEN calls the api and re-reads the list`() = runTest {

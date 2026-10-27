@@ -8,6 +8,10 @@ import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.data.mcp.converter.McpClientConverter
 import com.tangem.data.mcp.converter.toDomain
+import com.tangem.domain.core.lce.Lce
+import com.tangem.domain.core.utils.lceContent
+import com.tangem.domain.core.utils.lceError
+import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.mcp.models.McpAgent
 import com.tangem.domain.mcp.models.McpDeviceVerification
 import com.tangem.domain.mcp.models.McpDeviceVerificationResult
@@ -42,10 +46,16 @@ internal class DefaultMcpRepository @Inject constructor(
     private val agentStore: McpAgentStore,
 ) : McpRepository {
 
-    private val sessions = MutableStateFlow<List<McpSession>>(value = emptyList())
+    private val sessions = MutableStateFlow<Lce<Throwable, List<McpSession>>>(value = lceLoading())
     private val loadJobHolder = JobHolder()
 
-    override fun getSessions(): Flow<List<McpSession>> = sessions.onStart { loadSessions(force = false) }
+    override fun getSessions(): Flow<Lce<Throwable, List<McpSession>>> = sessions
+        .onStart { loadSessions(force = false) }
+
+    override suspend fun reloadSessions() {
+        loadSessions(force = true)
+        loadJobHolder.join()
+    }
 
     override suspend fun getAgent(clientId: String): McpAgent {
         agentStore.getOrNull(clientId)?.let { return it }
@@ -100,7 +110,7 @@ internal class DefaultMcpRepository @Inject constructor(
     }
 
     override suspend fun revokeAllSessions() {
-        val issuedSessions = sessions.value
+        val issuedSessions = sessions.value.getOrNull().orEmpty()
         if (issuedSessions.isEmpty()) return
 
         withContext(dispatchers.io) {
@@ -137,6 +147,9 @@ internal class DefaultMcpRepository @Inject constructor(
      * Collectors share one request: a read that is already in flight is left to finish instead of
      * being duplicated. A change made by this repository passes [force], which restarts the read —
      * the in-flight one predates the change and would put the old list back.
+     *
+     * [sessions] is written once the read is over, so a refresh does not take the list off the
+     * screen while it runs.
      */
     @Synchronized
     private fun loadSessions(force: Boolean) {
@@ -144,8 +157,11 @@ internal class DefaultMcpRepository @Inject constructor(
 
         appScope.launch(dispatchers.io) {
             mcpApi.getSessions().toEither().fold(
-                ifLeft = { TangemLogger.withTag(TAG).e("Failed to load the agent sessions", it) },
-                ifRight = { sessions.value = it.map(McpSessionResponse::toDomain) },
+                ifLeft = { error ->
+                    TangemLogger.withTag(TAG).e("Failed to load the agent sessions", error)
+                    sessions.value = error.lceError()
+                },
+                ifRight = { response -> sessions.value = response.map(McpSessionResponse::toDomain).lceContent() },
             )
         }
             .saveIn(loadJobHolder)

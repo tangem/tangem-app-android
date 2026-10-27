@@ -2010,7 +2010,7 @@
   <string name="swap_search_tooltip_title">Utilisez la recherche pour trouver ce dont vous avez besoin.</string>
   <string name="swap_simple_mode">Mode simplifié</string>
   <string name="swap_slippage_error">Montant non pris en charge</string>
-  <string name="swap_slippage_info_text">est l’écart entre le prix d’exécution attendu et le prix d’exécution réel, causé par les variations du prix du marché ou de la liquidité</string>
+  <string name="swap_slippage_info_text">est l’écart de prix entre votre signature et l’arrivée de la transaction chez le fournisseur. Elle est exécutée au prix du moment, dans votre tolérance de slippage.</string>
   <string name="swap_slippage_warning_text">L’échange peut échouer si le seuil de slippage est atteint</string>
   <string name="swap_slippage_warning_title">Le slippage est défini à %s</string>
   <string name="swap_story_fifth_subtitle">Ayez confiance en notre assistance 24 heures sur 24 pour vous aider à résoudre tous vos problèmes</string>
