@@ -560,6 +560,8 @@ internal class StateBuilder(
             priceImpact = PriceImpact.Empty,
             shouldShowMaxAmount = shouldShowMaxAmount(fromCurrency, toCurrency),
             predefinedButtons = createPredefinedButtons(fromCurrency, toCurrency),
+            slippageUM = uiStateHolder.slippageUM.takeIf { isCustomSlippageShown(toSwapCurrencyStatus.account) }
+                ?: SwapSlippageUM.Hidden,
         )
     }
 
@@ -631,8 +633,10 @@ internal class StateBuilder(
             receiveCardData = SwapCardState.SwapCardData(
                 type = TransactionCardType.ReadOnly(
                     // The slippage entry point replaces the receive card's slippage info dialog.
-                    shouldShowWarning = !isCustomSlippageEnabled,
-                    onWarningClick = actions.onReceiveCardWarningClick.takeUnless { isCustomSlippageEnabled },
+                    shouldShowWarning = !isCustomSlippageShown(toSwapCurrencyStatus.account),
+                    onWarningClick = actions.onReceiveCardWarningClick.takeUnless {
+                        isCustomSlippageShown(toSwapCurrencyStatus.account)
+                    },
                     accountTitleUM = getCardAccountTitle(toSwapCurrencyStatus.account, isFromCard = false),
                 ),
                 amountField = displayAmountField(
@@ -699,6 +703,7 @@ internal class StateBuilder(
                 swapProvider = swapProvider,
                 slippage = slippage,
                 defaultSlippage = defaultSlippage,
+                toAccount = toSwapCurrencyStatus.account,
             ),
         )
     }
@@ -1211,12 +1216,14 @@ internal class StateBuilder(
         swapProvider: SwapProvider,
         slippage: SwapSlippageState,
         defaultSlippage: BigDecimal?,
+        toAccount: Account,
     ): SwapStateHolder {
         return uiState.copy(
             slippageUM = createSlippageUM(
                 swapProvider = swapProvider,
                 slippage = slippage,
                 defaultSlippage = defaultSlippage,
+                toAccount = toAccount,
             ),
         )
     }
@@ -1236,8 +1243,9 @@ internal class StateBuilder(
         swapProvider: SwapProvider,
         slippage: SwapSlippageState,
         defaultSlippage: BigDecimal?,
+        toAccount: Account,
     ): SwapSlippageUM {
-        if (!isCustomSlippageEnabled || defaultSlippage == null) return SwapSlippageUM.Hidden
+        if (!isCustomSlippageShown(toAccount) || defaultSlippage == null) return SwapSlippageUM.Hidden
         val customPercent = swapProvider.acceptedSlippageOrNull(slippage.customOrNull, defaultSlippage)
         return SwapSlippageUM.Content(
             value = customPercent?.formatSlippagePercent()?.let(::stringReference)
@@ -1245,6 +1253,10 @@ internal class StateBuilder(
             isHighlighted = slippage.isResetHighlighted,
             onClick = actions.onSlippageClick,
         )
+    }
+
+    private fun isCustomSlippageShown(toAccount: Account): Boolean {
+        return isCustomSlippageEnabled && SwapSlippage.isCustomAvailableFor(toAccount)
     }
 
     @Suppress("LongParameterList")
