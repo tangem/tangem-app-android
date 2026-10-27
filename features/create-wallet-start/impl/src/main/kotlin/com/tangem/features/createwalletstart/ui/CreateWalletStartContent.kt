@@ -28,7 +28,6 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButton
-import com.tangem.core.ui.components.SecondaryButtonIconEnd
 import com.tangem.core.ui.components.bottomFade
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -142,17 +141,6 @@ internal fun CreateWalletStartContent(state: CreateWalletStartUM, modifier: Modi
                     )
                 },
                 bottomContent = {
-                    if (state.shouldShowScanSecondaryButton) {
-                        SecondaryButtonIconEnd(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp),
-                            text = stringResourceSafe(R.string.welcome_unlock_card),
-                            onClick = state.onScanClick,
-                            showProgress = state.isScanInProgress,
-                            iconResId = R.drawable.ic_tangem_24,
-                        )
-                    }
                     PrimaryButton(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -194,21 +182,19 @@ internal fun CreateWalletStartContent(state: CreateWalletStartUM, modifier: Modi
                         )
                     }
 
-                    if (state.otherMethodDescription != null) {
-                        Text(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(
-                                    start = 16.dp,
-                                    top = 16.dp,
-                                    end = 16.dp,
-                                ),
-                            text = state.otherMethodDescription.resolveReference(),
-                            style = TangemTheme.typography.subtitle2,
-                            color = TangemTheme.colors3.text.secondary,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
+                    Text(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                start = 16.dp,
+                                top = 16.dp,
+                                end = 16.dp,
+                            ),
+                        text = state.otherMethodDescription.resolveReference(),
+                        style = TangemTheme.typography.subtitle2,
+                        color = TangemTheme.colors3.text.secondary,
+                        textAlign = TextAlign.Center,
+                    )
                     Row(
                         modifier = Modifier
                             .wrapContentWidth()
@@ -235,45 +221,43 @@ internal fun CreateWalletStartContent(state: CreateWalletStartUM, modifier: Modi
                 minImageHeight = 160.dp,
             )
         }
-        if (!state.shouldShowScanSecondaryButton) {
-            FlowRow(
+        FlowRow(
+            modifier = Modifier
+                .wrapContentWidth()
+                .padding(
+                    start = 16.dp,
+                    top = 24.dp,
+                    end = 16.dp,
+                    bottom = 8.dp,
+                ),
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            Text(
+                text = stringResourceSafe(R.string.welcome_create_wallet_already_have),
+                style = TangemTheme.typography.caption1,
+                color = TangemTheme.colors3.text.secondary,
+            )
+            Spacer(modifier = Modifier.size(4.dp))
+            Row(
                 modifier = Modifier
-                    .wrapContentWidth()
-                    .padding(
-                        start = 16.dp,
-                        top = 24.dp,
-                        end = 16.dp,
-                        bottom = 8.dp,
-                    ),
-                horizontalArrangement = Arrangement.Center,
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                    ) { state.onScanClick() },
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = stringResourceSafe(R.string.welcome_create_wallet_already_have),
+                    text = stringResourceSafe(R.string.wallet_create_scan_title),
                     style = TangemTheme.typography.caption1,
-                    color = TangemTheme.colors3.text.secondary,
+                    color = TangemTheme.colors3.text.primary,
                 )
-                Spacer(modifier = Modifier.size(4.dp))
-                Row(
-                    modifier = Modifier
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                        ) { state.onScanClick() },
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = stringResourceSafe(R.string.wallet_create_scan_title),
-                        style = TangemTheme.typography.caption1,
-                        color = TangemTheme.colors3.text.primary,
-                    )
-                    Spacer(modifier = Modifier.size(2.dp))
-                    Icon(
-                        modifier = Modifier.size(16.dp),
-                        painter = painterResource(id = R.drawable.ic_tangem_24),
-                        tint = TangemTheme.colors3.icon.primary,
-                        contentDescription = null,
-                    )
-                }
+                Spacer(modifier = Modifier.size(2.dp))
+                Icon(
+                    modifier = Modifier.size(16.dp),
+                    painter = painterResource(id = R.drawable.ic_tangem_24),
+                    tint = TangemTheme.colors3.icon.primary,
+                    contentDescription = null,
+                )
             }
         }
         Spacer(modifier = Modifier.size(16.dp))
@@ -411,34 +395,6 @@ private fun FeatureItem(@DrawableRes iconResId: Int, text: TextReference) {
 private class CreateWalletStartStateProvider : CollectionPreviewParameterProvider<CreateWalletStartUM>(
     collection = listOf(
         CreateWalletStartUM(
-            title = resourceReference(R.string.common_tangem_wallet),
-            description = resourceReference(R.string.welcome_create_wallet_hardware_description),
-            featureItems = persistentListOf(
-                CreateWalletStartUM.FeatureItem(
-                    iconResId = R.drawable.ic_shield_check_16,
-                    text = resourceReference(R.string.welcome_create_wallet_feature_class),
-                ),
-                CreateWalletStartUM.FeatureItem(
-                    iconResId = R.drawable.ic_flash_16,
-                    text = resourceReference(R.string.welcome_create_wallet_feature_delivery),
-                ),
-                CreateWalletStartUM.FeatureItem(
-                    iconResId = R.drawable.ic_sparkles_16,
-                    text = resourceReference(R.string.welcome_create_wallet_feature_use),
-                ),
-            ),
-            imageResId = R.drawable.img_hardware_wallet,
-            shouldShowScanSecondaryButton = true,
-            onPrimaryButtonClick = { },
-            primaryButtonText = resourceReference(R.string.details_buy_wallet),
-            otherMethodTitle = resourceReference(R.string.welcome_create_wallet_mobile_title),
-            otherMethodDescription = null,
-            otherMethodClick = { },
-            onBackClick = { },
-            onScanClick = { },
-            isScanInProgress = false,
-        ),
-        CreateWalletStartUM(
             title = resourceReference(R.string.hw_mobile_wallet),
             description = resourceReference(R.string.welcome_create_wallet_mobile_description_full),
             featureItems = persistentListOf(
@@ -456,7 +412,6 @@ private class CreateWalletStartStateProvider : CollectionPreviewParameterProvide
                 ),
             ),
             imageResId = R.drawable.img_mobile_wallet,
-            shouldShowScanSecondaryButton = false,
             onPrimaryButtonClick = { },
             primaryButtonText = resourceReference(R.string.welcome_create_wallet_mobile_title),
             otherMethodTitle = resourceReference(R.string.welcome_create_wallet_use_hardware_title),
