@@ -158,22 +158,6 @@ internal object SettingsDomainModule {
     // region PushPermissionRepository
     @Provides
     @Singleton
-    fun provideShouldInitiallyAskPermissionUseCase(
-        permissionRepository: PermissionRepository,
-    ): ShouldInitiallyAskPermissionUseCase {
-        return ShouldInitiallyAskPermissionUseCase(repository = permissionRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideNeverToInitiallyAskPermissionUseCase(
-        permissionRepository: PermissionRepository,
-    ): NeverToInitiallyAskPermissionUseCase {
-        return NeverToInitiallyAskPermissionUseCase(repository = permissionRepository)
-    }
-
-    @Provides
-    @Singleton
     fun provideShouldAskPermissionUseCase(permissionRepository: PermissionRepository): ShouldAskPermissionUseCase {
         return ShouldAskPermissionUseCase(repository = permissionRepository)
     }
