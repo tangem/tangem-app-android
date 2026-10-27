@@ -32,9 +32,7 @@ internal class SetTokenListTransformer(
     private val shouldShowMainPromo: Boolean,
     private val isAccountsModeEnabled: Boolean,
     private val isHotBackedUp: Boolean? = null,
-    private val accountIdsWithInvites: Set<String> = emptySet(),
     private val jointPendingOperations: List<JointPendingOperation> = emptyList(),
-    private val isMoneyAccountHidden: Boolean = false,
     private val isRedesignedAccountRowsEnabled: Boolean = false,
 ) : WalletStateTransformer(userWallet.walletId) {
 
@@ -170,8 +168,6 @@ internal class SetTokenListTransformer(
     }
 
     private fun MoneyAccountMainUM.toLoadedMoneyAccountState(): MoneyAccountMainUM {
-        if (isMoneyAccountHidden) return MoneyAccountMainUM.Empty
-
         val moneyAccountStatus = when (params) {
             is TokenConverterParams.Account -> params.accountList.accountStatuses
                 .filterIsInstance<AccountStatus.Money>()
@@ -222,7 +218,6 @@ internal class SetTokenListTransformer(
             shouldShowMainPromo = shouldShowMainPromo,
             isAccountsModeEnabled = isAccountsModeEnabled,
             expandedAccounts = params.expandedAccounts,
-            accountIdsWithInvites = accountIdsWithInvites,
             jointPendingOperations = jointPendingOperations,
             isRedesignedAccountRowsEnabled = isRedesignedAccountRowsEnabled,
         ).convert(value = params.accountList)
