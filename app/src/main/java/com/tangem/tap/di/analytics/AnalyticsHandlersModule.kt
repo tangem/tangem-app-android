@@ -7,9 +7,6 @@ import com.tangem.domain.common.LogConfig
 import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerClient
 import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerLogClient
-import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
-import com.tangem.tap.common.analytics.handlers.firebase.FirebaseClient
-import com.tangem.tap.common.analytics.handlers.firebase.FirebaseLogClient
 import com.tangem.tap.common.analytics.handlers.opentelemetry.OpenTelemetryAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.opentelemetry.OpenTelemetryMetricsHolder
 import com.tangem.utils.logging.TangemLogger
@@ -18,26 +15,12 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import dagger.multibindings.ElementsIntoSet
 import dagger.multibindings.IntoSet
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 internal object AnalyticsHandlersModule {
-
-    @Provides
-    @Singleton
-    @ElementsIntoSet
-    fun provideFirebaseHandler(): Set<AnalyticsHandler> {
-        val client = when {
-            !BuildConfig.DEBUG -> FirebaseClient()
-            LogConfig.analyticsHandlers.isFirebaseLogEnabled -> FirebaseLogClient()
-            else -> return emptySet()
-        }
-
-        return setOf(FirebaseAnalyticsHandler(client))
-    }
 
     @Provides
     @Singleton

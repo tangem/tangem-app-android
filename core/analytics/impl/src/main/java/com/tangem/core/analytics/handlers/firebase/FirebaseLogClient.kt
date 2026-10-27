@@ -1,4 +1,4 @@
-package com.tangem.tap.common.analytics.handlers.firebase
+package com.tangem.core.analytics.handlers.firebase
 
 import com.tangem.core.analytics.AnalyticsEventsLogger
 
