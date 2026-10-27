@@ -34,7 +34,6 @@ import java.math.BigDecimal
 internal class WalletJointAccountItemConverter(
     private val appCurrency: AppCurrency,
     private val userWalletId: UserWalletId,
-    private val accountIdsWithInvites: Set<String>,
     private val onAccountClick: (UserWalletId, String) -> Unit,
     private val onCompromisedAccountClick: (UserWalletId) -> Unit,
 ) {
@@ -48,7 +47,7 @@ internal class WalletJointAccountItemConverter(
             is JointAccountStatusValue.Pending -> waitingMembers(
                 account = account,
                 subtitle = membersCount(status.totalMembers),
-                banner = pendingBanner(account = account, freeSlots = status.totalMembers - status.joinedMembers),
+                banner = pendingBanner(account = account, status = status),
             )
             is JointAccountStatusValue.Confirming -> waitingMembers(
                 account = account,
@@ -117,19 +116,20 @@ internal class WalletJointAccountItemConverter(
         },
     )
 
-    /** Only the creator holds the invites, so their presence on this device marks the creator's row */
-    private fun Account.Joint.belongsToCreator(): Boolean = accountId.value in accountIdsWithInvites
-
     private fun membersCount(totalMembers: Int): TextReference = pluralReference(
         id = R.plurals.joint_account_members_count,
         count = totalMembers,
         formatArgs = wrappedList(totalMembers),
     )
 
-    private fun pendingBanner(account: Account.Joint, freeSlots: Int): JointAccountMainUM.BannerUM? {
+    private fun pendingBanner(
+        account: Account.Joint,
+        status: JointAccountStatusValue.Pending,
+    ): JointAccountMainUM.BannerUM? {
+        val freeSlots = status.totalMembers - status.joinedMembers
         if (freeSlots <= 0) return null
 
-        return if (account.belongsToCreator()) {
+        return if (status.isOwnCreator) {
             banner(
                 account = account,
                 text = resourceReference(id = R.string.joint_account_invite_members_to_join),
