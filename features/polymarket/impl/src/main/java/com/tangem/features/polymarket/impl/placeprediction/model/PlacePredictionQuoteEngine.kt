@@ -51,6 +51,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
+import com.tangem.utils.transformer.Transformer
 import com.tangem.utils.transformer.update
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -58,7 +59,9 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
@@ -104,6 +107,8 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
     private val tradingPermission = MutableStateFlow<TradingPermissionUM?>(value = null)
 
+    private val isHeld = MutableStateFlow(false)
+
     val addFunds = PlacePredictionAddFunds(
         userWalletId = params.userWalletId,
         activeStatus = activeStatus,
@@ -139,8 +144,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         predictionBalancePoller.subscribe(userWalletId = params.userWalletId)
             .launchIn(scope)
             .saveIn(balancePollJobHolder)
-        if (params is PlacePredictionComponent.Params.Sell) loadPosition(params = params)
-        restartQuoteLoop(withDebounce = false)
+        if (!isHeld.value) refresh()
     }
 
     fun onPause() {
@@ -184,6 +188,25 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         return PreparedPrediction(params = params, state = state, isNegRisk = isNegRisk, positionId = positionId)
     }
 
+    fun holdForSubmit() {
+        isHeld.value = true
+        quoteJobHolder.cancel()
+    }
+
+    fun release() {
+        isHeld.value = false
+        if (isResumed) refresh()
+    }
+
+    private fun refresh() {
+        if (params is PlacePredictionComponent.Params.Sell) loadPosition(params = params)
+        restartQuoteLoop(withDebounce = false)
+    }
+
+    private fun applyUnlessHeld(transformer: Transformer<PlacePredictionUM>) {
+        if (!isHeld.value) uiState.update(transformer)
+    }
+
     private fun loadTradingAllowance() {
         if (tradingAllowanceJobHolder.isActive) return
 
@@ -210,6 +233,9 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
         activeStatus
             .map { status -> status?.takeIf { it.source == StatusSource.ACTUAL }?.balance }
+            .combine(isHeld) { balance, isHeld -> balance to isHeld }
+            .filter { (_, isHeld) -> !isHeld }
+            .map { (balance, _) -> balance }
             .distinctUntilChanged()
             .onEach { balance -> uiState.update(SetBalanceTransformer(balance = balance)) }
             .launchIn(scope)
@@ -267,7 +293,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
     }
 
     private fun failPosition(position: SellPositionUM) {
-        uiState.update(SetSellPositionStateTransformer(position = position))
+        applyUnlessHeld(SetSellPositionStateTransformer(position = position))
         restartQuoteLoop(withDebounce = false)
     }
 
@@ -301,6 +327,8 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
                 },
             )
 
+            if (isHeld.value) return@launch
+
             isNegRiskMarket = position.isNegRisk
 
             uiState.update(SetPositionTransformer(position = position))
@@ -312,7 +340,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
     private fun restartQuoteLoop(withDebounce: Boolean) {
         quoteJobHolder.cancel()
 
-        if (!isResumed || !isTradedAssetResolved) return
+        if (!isResumed || !isTradedAssetResolved || isHeld.value) return
         if (!uiState.value.isMarketAcceptingOrders || !uiState.value.canPollPrice()) return
 
         scope.launch {
@@ -357,7 +385,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
                 }
             },
             ifRight = { price ->
-                uiState.update(SetOutcomePriceTransformer(price = price))
+                applyUnlessHeld(SetOutcomePriceTransformer(price = price))
                 true
             },
         )
