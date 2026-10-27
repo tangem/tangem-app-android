@@ -187,6 +187,7 @@ internal class SendIntentNavigationTest : SendModelTestBase() {
             processedConverter = SendIntentProcessedConverter(amountTextConverter),
             cantReachConverter = SendIntentCantReachConverter(),
             sendRouteConverter = SendIntentSendRouteConverter(),
+            analyticsEventHandler = mockk(relaxed = true),
             paramsContainer = MutableParamsContainer(SendIntentComponent.Params(intent.id)),
         )
         advanceUntilIdle()
