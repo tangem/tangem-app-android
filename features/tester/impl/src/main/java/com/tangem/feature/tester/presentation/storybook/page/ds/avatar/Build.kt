@@ -8,7 +8,7 @@ import com.tangem.feature.tester.presentation.storybook.viewmodel.storyPageFacto
 internal fun StateUpdater<TangemAvatarStory>.build(): TangemAvatarStory {
     return TangemAvatarStory(
         variant = TangemAvatarStory.Variant.Account,
-        fillColor = TangemAvatar.FillColor.DarkBlue,
+        fillColor = TangemAvatar.FillColor.AzureBlue,
         appearance = TangemAvatar.Appearance.Neutral,
         status = TangemAvatar.Status.Progress,
         hasPendingIndicator = false,
