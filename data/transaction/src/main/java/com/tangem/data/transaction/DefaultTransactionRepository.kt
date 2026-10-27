@@ -18,6 +18,7 @@ import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.smartcontract.SmartContractCallDataProviderFactory
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.nft.models.NFTAsset
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.datasource.api.common.response.fold
@@ -327,7 +328,15 @@ internal class DefaultTransactionRepository(
             blockchain = blockchain,
             derivationPath = network.derivationPath.value,
         )
-        (requireNotNull(walletManager) as TransactionSender).sendMultiple(txsData, signer, sendMode)
+        (requireNotNull(walletManager) as TransactionSender).sendMultiple(txsData, signer, sendMode).also { result ->
+            val isModuleUpgradeSent = txsData.any { tx ->
+                val extras = (tx as? TransactionData.Uncompiled)?.extras as? EthereumTransactionExtras
+                extras?.callData is EthereumYieldSupplyUpgradeToAndCallCallData
+            }
+            if (result is com.tangem.blockchain.extensions.Result.Success && isModuleUpgradeSent) {
+                walletManagersFacade.resetYieldSendUpgradeDecision(userWalletId, network)
+            }
+        }
     }
 
     override fun createTransactionDataExtras(
