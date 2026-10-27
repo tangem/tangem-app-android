@@ -46,7 +46,6 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
         stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
         shouldShowMainPromo: Boolean = false,
         isHotBackedUp: Boolean? = null,
-        accountIdsWithInvites: Set<String> = emptySet(),
         jointPendingOperations: List<JointPendingOperation> = emptyList(),
     ) {
         val isRedesignedAccountRowsEnabled = accountDependencies.walletFeatureToggles.isRedesignedAccountRowsEnabled
@@ -61,7 +60,6 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                 shouldShowMainPromo = shouldShowMainPromo,
                 isAccountsModeEnabled = isAccountMode,
                 isHotBackedUp = isHotBackedUp,
-                accountIdsWithInvites = accountIdsWithInvites,
                 jointPendingOperations = jointPendingOperations,
                 isRedesignedAccountRowsEnabled = isRedesignedAccountRowsEnabled,
             ),

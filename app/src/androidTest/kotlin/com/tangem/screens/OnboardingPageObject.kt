@@ -10,8 +10,6 @@ import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
-import io.github.kakaocup.kakao.common.views.KView
-import io.github.kakaocup.kakao.text.KButton
 import com.tangem.features.onboarding.v2.impl.R as OnboardingImplR
 
 class OnboardingPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
@@ -148,14 +146,6 @@ class OnboardingPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         hasTestTag(BaseButtonTestTags.TEXT)
         hasText(getResourceString(OnboardingImplR.string.onboarding_button_skip_backup))
         useUnmergedTree = true
-    }
-
-    val enableNFCAlert: KView = KView {
-        withId(R.id.alertTitle)
-    }
-
-    val cancelButton: KButton = KButton {
-        withId(android.R.id.button2)
     }
 }
 

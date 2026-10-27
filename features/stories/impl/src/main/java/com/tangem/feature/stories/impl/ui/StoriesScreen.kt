@@ -45,7 +45,7 @@ internal fun StoriesScreen(config: StoriesUM) {
 
     StoriesContainer(
         config = config,
-    ) { current, _ ->
+    ) { current ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
