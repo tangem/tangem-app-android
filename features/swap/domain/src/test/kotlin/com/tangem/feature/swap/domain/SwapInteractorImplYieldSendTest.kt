@@ -11,6 +11,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionExtras
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySendCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.wallet.UserWallet
@@ -202,6 +203,38 @@ internal class SwapInteractorImplYieldSendTest : SwapInteractorImplTestBase() {
         }
     }
 
+    @Test
+    fun `GIVEN transfer sent by the module wrapped in an upgrade WHEN onSwap THEN payInAddress is the recipient`() =
+        runTest {
+            // Arrange
+            coEvery {
+                createTransferTransactionUseCase(
+                    amount = any(), fee = any(), memo = any(),
+                    destination = any(), userWalletId = any(), network = any(),
+                )
+            } returns moduleSendTxData(isWrappedInUpgrade = true).right()
+            coEvery {
+                sendTransactionUseCase(txData = any(), userWallet = any(), network = any())
+            } returns TX_HASH.right()
+
+            // Act
+            val result = onSwap(fromStatus = yieldTokenStatus(), swapData = transferSwapData())
+
+            // Assert
+            assertThat(result).isInstanceOf(SwapTransactionState.TxSent::class.java)
+            coVerify(exactly = 1) {
+                repository.exchangeSent(
+                    userWallet = any(),
+                    txId = any(),
+                    fromNetwork = any(),
+                    fromAddress = any(),
+                    payInAddress = RECIPIENT,
+                    txHash = TX_HASH,
+                    payInExtraId = any(),
+                )
+            }
+        }
+
     // endregion
 
     // region the gate
@@ -325,19 +358,29 @@ internal class SwapInteractorImplYieldSendTest : SwapInteractorImplTestBase() {
      * What the SDK produces for `AmountType.TokenYieldSupply`: the transaction is addressed to the
      * yield module and the real recipient lives inside [EthereumYieldSupplySendCallData].
      */
-    private fun moduleSendTxData(): TransactionData.Uncompiled = TransactionData.Uncompiled(
-        amount = Amount(currencySymbol = "USDC", value = BigDecimal.ONE, decimals = DECIMALS),
-        fee = null,
-        sourceAddress = "0xFrom",
-        destinationAddress = YIELD_MODULE,
-        extras = EthereumTransactionExtras(
-            callData = EthereumYieldSupplySendCallData(
-                tokenContractAddress = TOKEN_CONTRACT,
-                destinationAddress = RECIPIENT,
-                amount = Amount(currencySymbol = "USDC", value = BigDecimal.ONE, decimals = DECIMALS),
+    private fun moduleSendTxData(isWrappedInUpgrade: Boolean = false): TransactionData.Uncompiled {
+        val sendCallData = EthereumYieldSupplySendCallData(
+            tokenContractAddress = TOKEN_CONTRACT,
+            destinationAddress = RECIPIENT,
+            amount = Amount(currencySymbol = "USDC", value = BigDecimal.ONE, decimals = DECIMALS),
+        )
+        return TransactionData.Uncompiled(
+            amount = Amount(currencySymbol = "USDC", value = BigDecimal.ONE, decimals = DECIMALS),
+            fee = null,
+            sourceAddress = "0xFrom",
+            destinationAddress = YIELD_MODULE,
+            extras = EthereumTransactionExtras(
+                callData = if (isWrappedInUpgrade) {
+                    EthereumYieldSupplyUpgradeToAndCallCallData(
+                        newImplementation = NEW_IMPLEMENTATION,
+                        innerCallData = sendCallData,
+                    )
+                } else {
+                    sendCallData
+                },
             ),
-        ),
-    )
+        )
+    }
 
     private fun buildQuotesLoadedState(fromStatus: SwapCurrencyStatus): SwapState.QuotesLoadedState =
         SwapState.QuotesLoadedState(
@@ -370,6 +413,7 @@ internal class SwapInteractorImplYieldSendTest : SwapInteractorImplTestBase() {
     private companion object {
         const val TOKEN_CONTRACT = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
         const val DEX_ROUTER = "0x1111111254eeb25477b68fb85ed929f73a960582"
+        const val NEW_IMPLEMENTATION = "0x5555555555555555555555555555555555555555"
         const val RECIPIENT = "0x742d35cc6634c0532925a3b844bc454e4438f44e"
         const val YIELD_MODULE = "0x00000000000000000000000000000000000module"
         const val TX_HASH = "0xTxHash"
