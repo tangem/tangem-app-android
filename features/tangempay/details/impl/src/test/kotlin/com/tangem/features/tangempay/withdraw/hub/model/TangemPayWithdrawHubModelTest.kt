@@ -29,6 +29,7 @@ import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
 import com.tangem.domain.pay.model.bankofframp.RecentBankAccounts
 import com.tangem.domain.pay.model.recents.RecentTokenTransfer
+import com.tangem.domain.pay.model.recents.TokenTransferJournal
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.pay.usecase.bankofframp.GetBankOfframpOptionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetRecentBankAccountsUseCase
@@ -127,7 +128,9 @@ internal class TangemPayWithdrawHubModelTest {
         every { moneyAccountStatusSupplier(userWalletId) } returns flowOf(moneyAccountStatus(userWalletId))
         coEvery { paymentAccountStatusFetcher(userWalletId) } returns Unit.right()
         coEvery { moneyAccountStatusFetcher(userWalletId) } returns Unit.right()
-        every { getRecentTokenTransfersUseCase(userWalletId) } returns tokenRecentsFlow
+        every {
+            getRecentTokenTransfersUseCase(userWalletId, TokenTransferJournal.PAYMENT_ACCOUNT)
+        } returns tokenRecentsFlow
         emitStatus()
     }
 
@@ -648,7 +651,7 @@ internal class TangemPayWithdrawHubModelTest {
         // Assert
         assertThat(model.uiState.value.swapSection).isNull()
         verify(exactly = 0) { analytics.send(any()) }
-        verify(exactly = 0) { getRecentTokenTransfersUseCase(any()) }
+        verify(exactly = 0) { getRecentTokenTransfersUseCase(any(), any()) }
         model.onDestroy()
     }
 
