@@ -1,19 +1,18 @@
 package com.tangem.features.polymarket.impl.placeprediction.model
 
-import app.cash.turbine.test
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.polymarket.model.PolymarketBridgeError
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
-import kotlinx.coroutines.CompletableDeferred
+import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -38,8 +37,9 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
     }
 
     @Test
-    fun `GIVEN engine held WHEN resumed THEN no price or quote requested`() = runTest {
+    fun `GIVEN engine held WHEN resumed THEN no source is re-read`() = runTest {
         // Arrange
+        stubFailedResumeSources()
         val (engine, _) = createEngine()
         advanceUntilIdle()
         engine.holdForSubmit()
@@ -51,6 +51,9 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
         // Assert
         coVerify(exactly = 0) { getPriceUseCase(assetId = any(), side = any()) }
         coVerify(exactly = 0) { getQuoteUseCase(request = any()) }
+        coVerify(exactly = 1) { checkGeoblockUseCase() }
+        coVerify(exactly = 1) { refreshRequisites(USER_WALLET_ID) }
+        verify(exactly = 0) { balancePoller.subscribe(userWalletId = any()) }
     }
 
     @Test
@@ -69,75 +72,9 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
     }
 
     @Test
-    fun `GIVEN balance emitted before hold WHEN delivered after hold THEN balance not applied`() = runTest {
+    fun `GIVEN engine resumed while held WHEN released THEN sources re-read once AND loop restarts`() = runTest {
         // Arrange
-        val (engine, uiState) = createEngine()
-        advanceUntilIdle()
-        statusFlow.value = activeStatus(balance = BigDecimal("50"))
-
-        // Act
-        engine.holdForSubmit()
-        advanceUntilIdle()
-
-        // Assert
-        assertThat((uiState.value.order as OrderSideUM.Buy).balance).isEqualTo(BigDecimal("100"))
-    }
-
-    @Test
-    fun `GIVEN position read pending WHEN engine held before it answers THEN position not applied`() = runTest {
-        // Arrange
-        val position = CompletableDeferred<Unit>()
-        coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } coAnswers {
-            position.await()
-            createPosition().right()
-        }
-        val (engine, uiState) = createEngine(params = SELL_PARAMS)
-        runCurrent()
-
-        // Act
-        engine.holdForSubmit()
-        position.complete(Unit)
-        advanceUntilIdle()
-
-        // Assert
-        assertThat((uiState.value.order as OrderSideUM.Sell).position).isEqualTo(SellPositionUM.Loading)
-    }
-
-    @Test
-    fun `GIVEN engine held WHEN balance changes THEN balance not applied`() = runTest {
-        // Arrange
-        val (engine, uiState) = createEngine()
-        advanceUntilIdle()
-        engine.holdForSubmit()
-
-        // Act
-        statusFlow.value = activeStatus(balance = BigDecimal("50"))
-        advanceUntilIdle()
-
-        // Assert
-        assertThat((uiState.value.order as OrderSideUM.Buy).balance).isEqualTo(BigDecimal("100"))
-    }
-
-    @Test
-    fun `GIVEN balance changed while held WHEN released THEN latest balance applied`() = runTest {
-        // Arrange
-        val (engine, uiState) = createEngine()
-        advanceUntilIdle()
-        engine.holdForSubmit()
-        statusFlow.value = activeStatus(balance = BigDecimal("50"))
-        advanceUntilIdle()
-
-        // Act
-        engine.release()
-        advanceUntilIdle()
-
-        // Assert
-        assertThat((uiState.value.order as OrderSideUM.Buy).balance).isEqualTo(BigDecimal("50"))
-    }
-
-    @Test
-    fun `GIVEN resumed engine held WHEN released THEN price loop restarts`() = runTest {
-        // Arrange
+        stubFailedResumeSources()
         val (engine, _) = createEngine()
         advanceUntilIdle()
         engine.holdForSubmit()
@@ -150,6 +87,28 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
 
         // Assert
         coVerify(exactly = 1) { getPriceUseCase(assetId = any(), side = any()) }
+        coVerify(exactly = 2) { checkGeoblockUseCase() }
+        coVerify(exactly = 2) { refreshRequisites(USER_WALLET_ID) }
+        verify(exactly = 1) { balancePoller.subscribe(userWalletId = USER_WALLET_ID) }
+
+        engine.onPause()
+    }
+
+    @Test
+    fun `GIVEN sell engine resumed while held WHEN released THEN position reloaded`() = runTest {
+        // Arrange
+        val (engine, _) = createEngine(params = SELL_PARAMS)
+        advanceUntilIdle()
+        engine.holdForSubmit()
+        engine.onResume()
+        runCurrent()
+
+        // Act
+        engine.release()
+        runCurrent()
+
+        // Assert
+        coVerify(exactly = 2) { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) }
 
         engine.onPause()
     }
@@ -157,6 +116,7 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
     @Test
     fun `GIVEN paused engine held WHEN released THEN nothing requested`() = runTest {
         // Arrange
+        stubFailedResumeSources()
         val (engine, _) = createEngine()
         advanceUntilIdle()
         engine.holdForSubmit()
@@ -167,74 +127,26 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
 
         // Assert
         coVerify(exactly = 0) { getPriceUseCase(assetId = any(), side = any()) }
+        coVerify(exactly = 1) { checkGeoblockUseCase() }
+        coVerify(exactly = 1) { refreshRequisites(USER_WALLET_ID) }
+        verify(exactly = 0) { balancePoller.subscribe(userWalletId = any()) }
     }
 
     @Test
-    fun `GIVEN engine held WHEN funding window opens THEN awaiting funds not applied`() = runTest {
+    fun `GIVEN resumed engine not held WHEN released THEN nothing extra requested`() = runTest {
         // Arrange
-        val (engine, uiState) = createEngine()
+        val (engine, _) = createEngine()
         advanceUntilIdle()
-        engine.holdForSubmit()
-
-        // Act
-        isFundingOpen.value = true
-        advanceUntilIdle()
-
-        // Assert
-        assertThat(uiState.value.isAwaitingFunds).isFalse()
-    }
-
-    @Test
-    fun `GIVEN funding window opened while held WHEN released THEN awaiting funds applied`() = runTest {
-        // Arrange
-        val (engine, uiState) = createEngine()
-        advanceUntilIdle()
-        engine.holdForSubmit()
-        isFundingOpen.value = true
-        advanceUntilIdle()
-
-        // Act
-        engine.release()
-
-        // Assert
-        assertThat(uiState.value.isAwaitingFunds).isTrue()
-    }
-
-    @Test
-    fun `GIVEN engine held WHEN trading permission answered on resume THEN permission not applied`() = runTest {
-        // Arrange
-        coEvery { checkGeoblockUseCase() } returns PolymarketOnboardingError.Network.left()
-        val (engine, uiState) = createEngine()
-        advanceUntilIdle()
-        coEvery { checkGeoblockUseCase() } returns false.right()
-        engine.holdForSubmit()
-
-        // Act
-        engine.onResume()
-        runCurrent()
-
-        // Assert
-        assertThat(uiState.value.tradingPermission).isEqualTo(TradingPermissionUM.Unknown)
-
-        engine.onPause()
-    }
-
-    @Test
-    fun `GIVEN trading permission answered while held WHEN released THEN permission applied`() = runTest {
-        // Arrange
-        coEvery { checkGeoblockUseCase() } returns PolymarketOnboardingError.Network.left()
-        val (engine, uiState) = createEngine()
-        advanceUntilIdle()
-        coEvery { checkGeoblockUseCase() } returns false.right()
-        engine.holdForSubmit()
         engine.onResume()
         runCurrent()
 
         // Act
         engine.release()
+        runCurrent()
 
         // Assert
-        assertThat(uiState.value.tradingPermission).isEqualTo(TradingPermissionUM.Allowed)
+        coVerify(exactly = 1) { getPriceUseCase(assetId = any(), side = any()) }
+        verify(exactly = 1) { balancePoller.subscribe(userWalletId = USER_WALLET_ID) }
 
         engine.onPause()
     }
@@ -257,90 +169,6 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
     }
 
     @Test
-    fun `GIVEN resumed engine not held WHEN released THEN no extra price request`() = runTest {
-        // Arrange
-        val (engine, _) = createEngine()
-        advanceUntilIdle()
-        engine.onResume()
-        runCurrent()
-
-        // Act
-        engine.release()
-        runCurrent()
-
-        // Assert
-        coVerify(exactly = 1) { getPriceUseCase(assetId = any(), side = any()) }
-
-        engine.onPause()
-    }
-
-    @Test
-    fun `GIVEN position read finished while held WHEN released THEN position applied`() = runTest {
-        // Arrange
-        val position = CompletableDeferred<Unit>()
-        coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } coAnswers {
-            position.await()
-            createPosition().right()
-        }
-        val (engine, uiState) = createEngine(params = SELL_PARAMS)
-        runCurrent()
-        engine.holdForSubmit()
-        position.complete(Unit)
-        advanceUntilIdle()
-
-        // Act
-        engine.release()
-
-        // Assert
-        assertThat((uiState.value.order as OrderSideUM.Sell).position).isInstanceOf(SellPositionUM.Held::class.java)
-    }
-
-    @Test
-    fun `GIVEN market load finished while held WHEN released THEN market header applied`() = runTest {
-        // Arrange
-        val event = CompletableDeferred<Unit>()
-        coEvery { getEventUseCase(eventId = EVENT_ID) } coAnswers {
-            event.await()
-            createEvent().right()
-        }
-        val (engine, uiState) = createEngine()
-        runCurrent()
-        engine.holdForSubmit()
-        event.complete(Unit)
-        advanceUntilIdle()
-
-        // Act
-        engine.release()
-
-        // Assert
-        assertThat(uiState.value.market.title).isEqualTo("Market question")
-    }
-
-    @Test
-    fun `GIVEN several updates while held WHEN released THEN they arrive in one emission`() = runTest {
-        // Arrange
-        val (engine, uiState) = createEngine()
-        advanceUntilIdle()
-        engine.holdForSubmit()
-        statusFlow.value = activeStatus(balance = BigDecimal("50"))
-        isFundingOpen.value = true
-        advanceUntilIdle()
-
-        uiState.test {
-            skipItems(count = 1)
-
-            // Act
-            engine.release()
-
-            // Assert
-            val released = awaitItem()
-            assertThat((released.order as OrderSideUM.Buy).balance).isEqualTo(BigDecimal("50"))
-            assertThat(released.isAwaitingFunds).isTrue()
-            expectNoEvents()
-        }
-    }
-
-    @Test
     fun `GIVEN placeable quote and engine held WHEN prepared THEN nothing returned`() = runTest {
         // Arrange
         val (engine, uiState) = createEngine()
@@ -358,6 +186,41 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
         assertThat(prepared).isNull()
 
         engine.onPause()
+    }
+
+    @Test
+    fun `GIVEN engine held WHEN balance changes THEN balance applied live`() = runTest {
+        // Arrange
+        val (engine, uiState) = createEngine()
+        advanceUntilIdle()
+        engine.holdForSubmit()
+
+        // Act
+        statusFlow.value = activeStatus(balance = BigDecimal("50"))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat((uiState.value.order as OrderSideUM.Buy).balance).isEqualTo(BigDecimal("50"))
+    }
+
+    @Test
+    fun `GIVEN engine held WHEN funding window opens THEN awaiting funds applied live`() = runTest {
+        // Arrange
+        val (engine, uiState) = createEngine()
+        advanceUntilIdle()
+        engine.holdForSubmit()
+
+        // Act
+        isFundingOpen.value = true
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(uiState.value.isAwaitingFunds).isTrue()
+    }
+
+    private fun stubFailedResumeSources() {
+        coEvery { checkGeoblockUseCase() } returns PolymarketOnboardingError.Network.left()
+        coEvery { refreshRequisites(USER_WALLET_ID) } returns PolymarketBridgeError.Unavailable.left()
     }
 
     private fun TestScope.createEngine(
