@@ -1,7 +1,9 @@
 package com.tangem.core.ui.ds2.expandable
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
 import kotlin.math.roundToInt
@@ -49,4 +51,51 @@ fun Modifier.expandableRowReveal(isExpanded: Boolean): Modifier {
                 placeable.placeRelative(x = 0, y = 0)
             }
         }
+}
+
+/** Time from a toggle until [expandableRowReveal] and [ExpandableRowRevealItem] come to rest. */
+const val EXPANDABLE_ROW_REVEAL_DURATION_MILLIS = EXPANSION_DELAY_MS + EXPANSION_DURATION_MS
+
+/**
+ * Lazy-list counterpart of [expandableRowReveal], for a host that emits what the row opens as separate
+ * lazy items instead of one group.
+ *
+ * Every item runs off the same choreography as the row, and together they fill from the top the way a
+ * single revealed group would: item [index] of [count] grows while the group's revealed height passes
+ * over it. Items are treated as equal in height. Once collapsed and at rest, an item composes nothing,
+ * so hidden rows cost no more than an empty slot.
+ *
+ * @param isExpanded Whether the row that owns these items is open. Pass the same value the row gets.
+ * @param index Position of this item among the revealed items, starting at 0.
+ * @param count Number of revealed items.
+ * @param modifier Modifier applied outside the reveal: a background or clip set here follows the
+ * revealed height.
+ * @param content The item.
+ */
+@Composable
+fun ExpandableRowRevealItem(
+    isExpanded: Boolean,
+    index: Int,
+    count: Int,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    val motion = rememberExpansionMotion(isExpanded = isExpanded)
+    if (!isExpanded && motion.isSettled) return
+
+    Box(
+        modifier = modifier
+            .clipToBounds()
+            .graphicsLayer { alpha = motion.slotAlpha }
+            .layout { measurable, constraints ->
+                val placeable = measurable.measure(constraints)
+                val fraction = (motion.expansion * count - index).coerceIn(0f, 1f)
+                val height = (placeable.height * fraction).roundToInt()
+                layout(width = placeable.width, height = height) {
+                    placeable.placeRelative(x = 0, y = 0)
+                }
+            },
+    ) {
+        content()
+    }
 }
