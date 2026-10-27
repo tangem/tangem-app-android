@@ -2598,7 +2598,7 @@
   <string name="swap_search_tooltip_title">Nutzen Sie die Suche, um zu finden, was Sie benötigen.</string>
   <string name="swap_simple_mode">Einfacher Modus</string>
   <string name="swap_slippage_error">Nicht unterstützter Betrag</string>
-  <string name="swap_slippage_info_text">ist die Differenz zwischen dem erwarteten und dem tatsächlichen Ausführungskurs, die durch Marktpreis- oder Liquiditätsänderungen verursacht wird</string>
+  <string name="swap_slippage_info_text">ist die Preisänderung zwischen Signatur und Eingang der Transaktion beim Anbieter. Sie wird zum dann gültigen Preis innerhalb Ihrer Slippage-Toleranz ausgeführt.</string>
   <string name="swap_slippage_warning_text">Der Swap kann fehlschlagen, wenn der Slippage-Grenzwert erreicht wird</string>
   <string name="swap_slippage_warning_title">Die Slippage ist festgelegt %s</string>
   <string name="swap_story_fifth_subtitle">Vertraue auf den rund um die Uhr verfügbaren Support bei allen Problemen</string>
