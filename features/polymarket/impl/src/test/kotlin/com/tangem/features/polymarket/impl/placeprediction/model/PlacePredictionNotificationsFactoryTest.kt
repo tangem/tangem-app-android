@@ -491,6 +491,7 @@ internal class PlacePredictionNotificationsFactoryTest {
             // Assert
             assertThat(actual.isPrimaryButtonEnabled).isFalse()
             assertThat(actual.isPrimaryButtonEnabledWhileQuoting).isTrue()
+            assertThat(actual.isPrimaryButtonTappable).isTrue()
         }
 
         @Test
@@ -515,6 +516,7 @@ internal class PlacePredictionNotificationsFactoryTest {
 
             // Assert
             assertThat(actual.isPrimaryButtonEnabledWhileQuoting).isFalse()
+            assertThat(actual.isPrimaryButtonTappable).isFalse()
         }
 
         @Test
@@ -528,6 +530,7 @@ internal class PlacePredictionNotificationsFactoryTest {
             // Assert
             assertThat(actual.isPrimaryButtonEnabled).isTrue()
             assertThat(actual.isPrimaryButtonEnabledWhileQuoting).isFalse()
+            assertThat(actual.isPrimaryButtonTappable).isTrue()
         }
 
         @Test

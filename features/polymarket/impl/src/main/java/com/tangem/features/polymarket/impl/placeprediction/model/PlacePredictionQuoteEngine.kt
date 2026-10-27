@@ -36,6 +36,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.isQuotable
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAddFundsAvailabilityTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAmountFractionTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAmountTransformer
+import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAwaitingFreshQuoteTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAwaitingFundsTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetBalanceTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetCollateralTransformer
@@ -123,6 +124,8 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
     private var isHeld = false
 
+    private val freshQuote = FreshQuoteSignal(uiState = uiState)
+
     private var isResumeSkipped = false
 
     init {
@@ -157,11 +160,12 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
     fun onPause() {
         isResumed = false
-        quoteJobHolder.cancel()
+        cancelQuote()
         balancePollJobHolder.cancel()
     }
 
     fun onAmountChange(value: String, isPicked: Boolean = false) {
+        freshQuote.onAmountEntered()
         uiState.update(SetAmountTransformer(value = value, isAmountFromFraction = isPicked))
         restartQuoteLoop(withDebounce = !isPicked)
     }
@@ -194,13 +198,13 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         val isNegRisk = isNegRiskMarket ?: return null
         if (!state.isPrimaryButtonEnabled) return null
 
-        quoteJobHolder.cancel()
+        cancelQuote()
         return PreparedPrediction(params = params, state = state, isNegRisk = isNegRisk, positionId = positionId)
     }
 
     suspend fun <T> holdDuring(block: suspend () -> T): T {
         isHeld = true
-        quoteJobHolder.cancel()
+        cancelQuote()
         balancePollJobHolder.cancel()
         return try {
             block()
@@ -348,8 +352,13 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         }.saveIn(positionJobHolder)
     }
 
-    private fun restartQuoteLoop(withDebounce: Boolean) {
+    private fun cancelQuote() {
         quoteJobHolder.cancel()
+        freshQuote.end()
+    }
+
+    private fun restartQuoteLoop(withDebounce: Boolean) {
+        cancelQuote()
 
         if (!isResumed || !isTradedAssetResolved || isHeld) return
         if (!uiState.value.isMarketAcceptingOrders || !uiState.value.canPollPrice()) return
@@ -409,26 +418,28 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
         uiState.update(SetQuoteLoadingTransformer)
 
-        val result = withContext(dispatchers.default) {
-            getPredictionOrderQuoteUseCase(
-                userWalletId = params.userWalletId,
-                request = PredictionOrderQuoteRequest(
-                    marketId = params.marketId,
+        freshQuote.during {
+            val result = withContext(dispatchers.default) {
+                getPredictionOrderQuoteUseCase(
+                    userWalletId = params.userWalletId,
+                    request = PredictionOrderQuoteRequest(
+                        marketId = params.marketId,
+                        assetId = tradedAssetId,
+                        side = params.side,
+                        amount = amount,
+                        slippagePercent = state.slippage.percent,
+                    ),
+                )
+            }
+
+            uiState.update(
+                SetQuoteResultTransformer(
+                    result = result,
+                    receivedAtMillis = System.currentTimeMillis(),
                     assetId = tradedAssetId,
-                    side = params.side,
-                    amount = amount,
-                    slippagePercent = state.slippage.percent,
                 ),
             )
         }
-
-        uiState.update(
-            SetQuoteResultTransformer(
-                result = result,
-                receivedAtMillis = System.currentTimeMillis(),
-                assetId = tradedAssetId,
-            ),
-        )
     }
 
     @AssistedFactory
@@ -442,5 +453,38 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
     private companion object {
         val logger = TangemLogger.withTag(tag = "PlacePredictionQuoteEngine")
+    }
+}
+
+private class FreshQuoteSignal(private val uiState: MutableStateFlow<PlacePredictionUM>) {
+
+    private var isEnteredAmountRequested = false
+
+    private var request: Any? = null
+
+    fun onAmountEntered() {
+        isEnteredAmountRequested = false
+    }
+
+    suspend fun during(block: suspend () -> Unit) {
+        val fresh = Any().takeUnless { isEnteredAmountRequested }
+        isEnteredAmountRequested = true
+        if (fresh != null) {
+            request = fresh
+            uiState.update(SetAwaitingFreshQuoteTransformer(isAwaitingFreshQuote = true))
+        }
+
+        try {
+            block()
+        } finally {
+            if (fresh != null && request === fresh) end()
+        }
+    }
+
+    fun end() {
+        if (request == null) return
+
+        request = null
+        uiState.update(SetAwaitingFreshQuoteTransformer(isAwaitingFreshQuote = false))
     }
 }
