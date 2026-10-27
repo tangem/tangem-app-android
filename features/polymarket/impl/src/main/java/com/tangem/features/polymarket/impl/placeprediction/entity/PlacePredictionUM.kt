@@ -154,11 +154,13 @@ internal data class MarketHeaderUM(
 @Immutable
 internal sealed interface AmountCaptionUM {
 
+    sealed interface Error : AmountCaptionUM
+
     data class ToWin(val payout: BigDecimal) : AmountCaptionUM
 
-    data class Shortfall(val error: PaymentAmountErrorUM, val payout: BigDecimal?) : AmountCaptionUM
+    data class Shortfall(val error: PaymentAmountErrorUM, val payout: BigDecimal?) : AmountCaptionUM.Error
 
-    data class BelowMinimum(val minAmount: BigDecimal) : AmountCaptionUM
+    data class BelowMinimum(val minAmount: BigDecimal) : AmountCaptionUM.Error
 }
 
 internal enum class PaymentAmountErrorUM(val text: TextReference) {
