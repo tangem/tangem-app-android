@@ -40,14 +40,14 @@ internal fun AccessCode(
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .background(TangemTheme.colors.background.primary)
+                .background(TangemTheme.colors3.bg.primary)
                 .navigationBarsPadding(),
         ) {
             CircularProgressIndicator(
                 modifier = Modifier
                     .align(Alignment.Center)
                     .size(20.dp),
-                color = TangemTheme.colors.icon.secondary,
+                color = TangemTheme.colors3.icon.secondary,
                 strokeWidth = 2.dp,
             )
         }
@@ -57,7 +57,7 @@ internal fun AccessCode(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(TangemTheme.colors.background.primary)
+            .background(TangemTheme.colors3.bg.primary)
             .navigationBarsPadding(),
     ) {
         Column(
@@ -78,7 +78,7 @@ internal fun AccessCode(
                     stringResourceSafe(R.string.access_code_create_title)
                 },
                 style = TangemTheme.typography.h2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 textAlign = TextAlign.Center,
             )
             Text(
@@ -94,7 +94,7 @@ internal fun AccessCode(
                     )
                 },
                 style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
             )
 

@@ -69,7 +69,7 @@ internal fun AddExistingWalletImportContent(state: AddExistingWalletImportUM, mo
                 Text(
                     text = stringResourceSafe(id = R.string.onboarding_seed_import_message),
                     style = TangemTheme.typography.body1,
-                    color = TangemTheme.colors.text.secondary,
+                    color = TangemTheme.colors3.text.secondary,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .padding(start = 36.dp, end = 36.dp, top = 24.dp, bottom = 16.dp)
@@ -89,7 +89,7 @@ internal fun AddExistingWalletImportContent(state: AddExistingWalletImportUM, mo
                     value = state.passPhrase,
                     onValueChange = state.passPhraseChange,
                     iconResId = R.drawable.ic_information_24,
-                    iconColor = TangemTheme.colors.icon.informative,
+                    iconColor = TangemTheme.colors3.icon.secondary,
                     label = stringResourceSafe(id = R.string.common_passphrase),
                     placeholder = stringResourceSafe(id = R.string.send_optional_field),
                     onIconClick = state.onPassphraseInfoClick,
@@ -126,7 +126,7 @@ internal fun AddExistingWalletImportContent(state: AddExistingWalletImportUM, mo
 
 @Composable
 private fun PhraseBlock(state: AddExistingWalletImportUM, modifier: Modifier = Modifier) {
-    val warningColor = TangemTheme.colors.text.warning
+    val warningColor = TangemTheme.colors3.text.accent.red
     val invalidWordsColorTransformation = remember(state.invalidWords, warningColor) {
         InvalidWordsColorTransformation(
             wordsToBrush = state.invalidWords,
@@ -175,7 +175,7 @@ private fun PhraseBlock(state: AddExistingWalletImportUM, modifier: Modifier = M
                     modifier = Modifier.fillMaxSize(),
                     text = state.wordsErrorText.resolveReference(),
                     style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.warning,
+                    color = TangemTheme.colors3.text.accent.red,
                 )
             }
         }
@@ -221,8 +221,8 @@ private fun SuggestionButton(text: String, onClick: () -> Unit, modifier: Modifi
         modifier = modifier
             .clip(TangemTheme.shapes.roundedCorners8)
             .clickable(onClick = onClick),
-        backgroundColor = TangemTheme.colors.icon.primary1,
-        textColor = TangemTheme.colors.text.primary2,
+        backgroundColor = TangemTheme.colors3.icon.primary,
+        textColor = TangemTheme.colors3.text.inverse.primary,
     )
 }
 

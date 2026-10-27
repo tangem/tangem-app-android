@@ -31,7 +31,7 @@ import com.tangem.features.hotwallet.createhardwarewallet.entity.CreateHardwareW
 internal fun CreateHardwareWalletContent(state: CreateHardwareWalletUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(TangemTheme.colors.background.primary)
+            .background(TangemTheme.colors3.bg.primary)
             .fillMaxSize()
             .systemBarsPadding(),
     ) {
@@ -68,7 +68,7 @@ internal fun CreateHardwareWalletContent(state: CreateHardwareWalletUM, modifier
                     ),
                 text = stringResourceSafe(R.string.hardware_wallet_create_title),
                 style = TangemTheme.typography.h2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 textAlign = TextAlign.Center,
             )
             FeatureBlock(

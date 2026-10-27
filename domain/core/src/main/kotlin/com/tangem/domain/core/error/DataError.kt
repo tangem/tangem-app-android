@@ -1,10 +1,10 @@
 package com.tangem.domain.core.error
 
-sealed class DataError : Exception() {
+sealed class DataError : Throwable() {
 
     sealed class NetworkError : DataError() {
 
-        object NoInternetConnection : NetworkError()
+        class NoInternetConnection : NetworkError()
     }
 
     sealed class UserWalletError : DataError() {

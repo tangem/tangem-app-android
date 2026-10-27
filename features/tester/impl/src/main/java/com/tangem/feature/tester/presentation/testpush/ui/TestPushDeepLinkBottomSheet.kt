@@ -41,7 +41,7 @@ private fun TestPushMenuDeepLinkBottomSheetContent(config: TangemBottomSheetConf
                     Text(
                         text = item.name,
                         style = TangemTheme.typography.subtitle1,
-                        color = TangemTheme.colors.text.primary1,
+                        color = TangemTheme.colors3.text.primary,
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable(
@@ -83,7 +83,7 @@ private fun TestPushMarketsTokenBottomSheetContent(config: TangemBottomSheetConf
                     Text(
                         text = "${item.id}: ${item.symbol}",
                         style = TangemTheme.typography.subtitle1,
-                        color = TangemTheme.colors.text.primary1,
+                        color = TangemTheme.colors3.text.primary,
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable(

@@ -1,9 +1,0 @@
-<?xml version="1.0" ?>
-<SmellBaseline>
-  <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>ObjectExtendsThrowable:OnrampPairsError.kt$OnrampPairsError$PairsNotFound : OnrampPairsError</ID>
-    <ID>ObjectExtendsThrowable:OnrampRedirectError.kt$OnrampRedirectError$VerificationFailed : OnrampRedirectError</ID>
-    <ID>ObjectExtendsThrowable:OnrampRedirectError.kt$OnrampRedirectError$WrongRequestId : OnrampRedirectError</ID>
-  </CurrentIssues>
-</SmellBaseline>

@@ -7,9 +7,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.features.send.impl.R
 import com.tangem.features.send.mcp.model.SendIntentAgentUM
 import com.tangem.features.send.mcp.model.SendIntentButtonUM
 import com.tangem.features.send.mcp.model.SendIntentUM
@@ -39,12 +42,13 @@ private fun SendIntentOfferContentPreview() {
         SendIntentOfferContent(
             state = SendIntentUM.Offer(
                 token = TangemTokenIcon.UiState.Token(TangemTokenIcon.State(url = null)),
-                title = stringReference("mcp.claude.com Agent wants to send 42.00 USDT"),
-                agent = SendIntentAgentUM.Verified(iconUrl = null, label = stringReference("mcp.claude.com")),
-                description = stringReference(
-                    "The agent is asking to send from your account. You’ll review the details next.",
+                title = resourceReference(
+                    R.string.mcp_send_intent_offer_title,
+                    wrappedList("mcp.claude.com", "42.00 USDT"),
                 ),
-                primaryButton = SendIntentButtonUM(text = stringReference("Proceed"), onClick = {}),
+                agent = SendIntentAgentUM.Verified(iconUrl = null, label = stringReference("mcp.claude.com")),
+                description = resourceReference(R.string.mcp_send_intent_offer_description),
+                primaryButton = SendIntentButtonUM(text = resourceReference(R.string.mcp_intent_proceed), onClick = {}),
             ),
             modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
         )

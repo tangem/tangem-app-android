@@ -18,7 +18,11 @@ import com.tangem.domain.onramp.model.OnrampPaymentMethod
 
 @Composable
 internal fun PaymentMethodIcon(method: OnrampPaymentMethod, modifier: Modifier = Modifier) {
-    val tileColor = if (method.hasThemedImages) TangemTheme.colors.field.focused else TangemColorPalette.Light1
+    val tileColor = if (method.hasThemedImages) {
+        TangemTheme.colors3.bg.transparent.secondary
+    } else {
+        TangemColorPalette.Light1
+    }
 
     SubcomposeAsyncImage(
         modifier = modifier

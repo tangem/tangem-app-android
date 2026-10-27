@@ -24,7 +24,7 @@ fun DividerContainer(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(paddingValues),
-                color = TangemTheme.colors.stroke.primary,
+                color = TangemTheme.colors3.border.secondary,
                 thickness = 0.5.dp,
             )
         }

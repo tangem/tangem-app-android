@@ -18,43 +18,20 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
         return when (value) {
             is MoneyAccountStatusValue.Empty -> MoneyAccountStatusValueDM.Empty
             is MoneyAccountStatusValue.NotCreated -> MoneyAccountStatusValueDM.NotCreated
-            is MoneyAccountStatusValue.Onboarding.CountryNotSupported -> {
-                MoneyAccountStatusValueDM.CountryNotSupported(
-                    countryCode = value.countryCode,
-                    customerId = value.customerId,
-                )
-            }
-            is MoneyAccountStatusValue.Onboarding.Issuing -> MoneyAccountStatusValueDM.Issuing(
-                step = value.step,
-                customerId = value.customerId,
-            )
-            is MoneyAccountStatusValue.Onboarding.KycRequired -> MoneyAccountStatusValueDM.KycRequired(
-                customerId = value.customerId,
-            )
-            is MoneyAccountStatusValue.Onboarding.UnderReview -> MoneyAccountStatusValueDM.UnderReview(
-                kycStatus = value.kycStatus,
-                customerId = value.customerId,
-            )
-            is MoneyAccountStatusValue.Onboarding.VerificationDeclined -> {
-                MoneyAccountStatusValueDM.VerificationDeclined(
-                    customerId = value.customerId,
-                )
-            }
             is MoneyAccountStatusValue.Onboarding.Activating -> MoneyAccountStatusValueDM.Activating(
                 customerId = value.customerId,
             )
             is MoneyAccountStatusValue.Account.Active -> MoneyAccountStatusValueDM.ActiveAccount(
                 customerId = value.customerId,
+                productInstanceId = value.productInstanceId,
                 balance = value.balance?.toDM(),
             )
             is MoneyAccountStatusValue.Account.Deactivated -> MoneyAccountStatusValueDM.Deactivated(
                 customerId = value.customerId,
                 balance = value.balance?.toDM(),
             )
-            is MoneyAccountStatusValue.Loading,
             is MoneyAccountStatusValue.Error.ExposedDevice,
             is MoneyAccountStatusValue.Error.Unavailable,
-            is MoneyAccountStatusValue.Error.NotSynced,
             -> null
         }
     }
@@ -63,41 +40,19 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
         return when (value) {
             is MoneyAccountStatusValueDM.Empty -> MoneyAccountStatusValue.Empty
             is MoneyAccountStatusValueDM.NotCreated -> MoneyAccountStatusValue.NotCreated
-            is MoneyAccountStatusValueDM.CountryNotSupported -> MoneyAccountStatusValue.Onboarding.CountryNotSupported(
-                source = StatusSource.CACHE,
-                customerId = value.customerId,
-                countryCode = value.countryCode,
-            )
-            is MoneyAccountStatusValueDM.Issuing -> MoneyAccountStatusValue.Onboarding.Issuing(
-                source = StatusSource.CACHE,
-                customerId = value.customerId,
-                step = value.step,
-            )
-            is MoneyAccountStatusValueDM.KycRequired -> MoneyAccountStatusValue.Onboarding.KycRequired(
-                source = StatusSource.CACHE,
-                customerId = value.customerId,
-            )
-            is MoneyAccountStatusValueDM.UnderReview -> MoneyAccountStatusValue.Onboarding.UnderReview(
-                source = StatusSource.CACHE,
-                kycStatus = value.kycStatus,
-                customerId = value.customerId,
-            )
-            is MoneyAccountStatusValueDM.VerificationDeclined -> {
-                MoneyAccountStatusValue.Onboarding.VerificationDeclined(
-                    source = StatusSource.CACHE,
-                    customerId = value.customerId,
-                )
-            }
             is MoneyAccountStatusValueDM.Activating -> MoneyAccountStatusValue.Onboarding.Activating(
                 source = StatusSource.CACHE,
                 customerId = value.customerId,
             )
-            is MoneyAccountStatusValueDM.ActiveAccount -> MoneyAccountStatusValue.Account.Active(
-                source = StatusSource.CACHE,
-                cryptoCurrency = moneyAccountCurrencyFactory.create(userWalletId),
-                balance = value.balance?.toDomain(),
-                customerId = value.customerId,
-            )
+            is MoneyAccountStatusValueDM.ActiveAccount -> value.productInstanceId?.let { productInstanceId ->
+                MoneyAccountStatusValue.Account.Active(
+                    source = StatusSource.CACHE,
+                    cryptoCurrency = moneyAccountCurrencyFactory.create(userWalletId),
+                    balance = value.balance?.toDomain(),
+                    customerId = value.customerId,
+                    productInstanceId = productInstanceId,
+                )
+            } ?: MoneyAccountStatusValue.Error.Unavailable
             is MoneyAccountStatusValueDM.Deactivated -> MoneyAccountStatusValue.Account.Deactivated(
                 source = StatusSource.CACHE,
                 cryptoCurrency = moneyAccountCurrencyFactory.create(userWalletId),
