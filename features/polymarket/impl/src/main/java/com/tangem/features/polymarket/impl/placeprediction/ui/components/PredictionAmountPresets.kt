@@ -32,7 +32,7 @@ internal fun PredictionAmountPresets(
     LazyRow(
         modifier = modifier,
         contentPadding = PresetsPadding,
-        horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(space = 4.dp),
     ) {
         items(items = presets, key = { it.amount }) { preset ->
             TangemButton(

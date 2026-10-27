@@ -55,7 +55,9 @@ internal fun PredictionOrderHeader(market: MarketHeaderUM, modifier: Modifier = 
                     color = TangemTheme.colors3.text.secondary,
                 )
                 PredictionOutcomeBadge(title = market.outcomeTitle, accent = market.outcomeAccent)
-                market.priceLabel()?.let { PredictionPriceBadge(text = it) }
+                market.priceLabel()?.let {
+                    PredictionPriceBadge(text = it, isEntryToLive = market.entryPrice != null)
+                }
             }
         }
     }
@@ -72,10 +74,11 @@ internal fun PredictionOutcomeBadge(title: String, accent: PolymarketOutcomeAcce
 }
 
 @Composable
-internal fun PredictionPriceBadge(text: String, modifier: Modifier = Modifier) {
+internal fun PredictionPriceBadge(text: String, modifier: Modifier = Modifier, isEntryToLive: Boolean = false) {
     TangemBadge(
         modifier = modifier,
         text = stringReference(text),
+        status = if (isEntryToLive) TangemBadge.Status.Info else TangemBadge.Status.Neutral,
         size = TangemBadge.Size.X4,
     )
 }
