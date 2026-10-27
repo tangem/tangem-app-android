@@ -105,7 +105,11 @@ internal fun PlacePredictionAmountContent(
             verticalArrangement = Arrangement.spacedBy(space = 12.dp),
         ) {
             PredictionMarketBlock(state = state.market)
-            AmountBlock(state = state, intents = intents)
+            PredictionOrderAmountInput(
+                state = state,
+                onAmountChange = intents::onAmountChange,
+                onAddFundsClick = intents::onAddFundsClick,
+            )
             PredictionNotificationsBlock(
                 notifications = state.notifications,
                 onRetryClick = intents::onQuoteRetryClick,
@@ -122,7 +126,11 @@ private fun PlacePredictionUM.hasFractionsToOffer(): Boolean =
     (order as? OrderSideUM.Buy)?.balance?.let { it.signum() > 0 } == true
 
 @Composable
-private fun AmountBlock(state: PlacePredictionUM, intents: PlacePredictionAmountIntents) {
+internal fun PredictionOrderAmountInput(
+    state: PlacePredictionUM,
+    onAmountChange: (String) -> Unit,
+    onAddFundsClick: () -> Unit,
+) {
     when (val order = state.order) {
         is OrderSideUM.Buy -> PredictionAmountBlock(
             amountValue = state.amountValue,
@@ -130,14 +138,14 @@ private fun AmountBlock(state: PlacePredictionUM, intents: PlacePredictionAmount
             amountCaption = state.amountCaption,
             balance = order.balance,
             isAddFundsEnabled = order.isAddFundsEnabled,
-            onAmountChange = intents::onAmountChange,
-            onAddFundsClick = intents::onAddFundsClick,
+            onAmountChange = onAmountChange,
+            onAddFundsClick = onAddFundsClick,
         )
         is OrderSideUM.Sell -> PredictionSharesBlock(
             selected = state.amountValue.toBigDecimalOrNull() ?: BigDecimal.ZERO,
             position = order.position,
             proceeds = order.proceeds,
-            onAmountChange = intents::onAmountChange,
+            onAmountChange = onAmountChange,
         )
     }
 }
