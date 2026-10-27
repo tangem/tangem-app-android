@@ -2174,7 +2174,7 @@
   <string name="swap_search_tooltip_title">Використовуйте пошук, щоб знайти потрібне</string>
   <string name="swap_simple_mode">Простий режим</string>
   <string name="swap_slippage_error">Недопустиме значення</string>
-  <string name="swap_slippage_info_text">означає різницю між очікуваною та фактичною ціною обміну через зміни ринкової ціни або ліквідності</string>
+  <string name="swap_slippage_info_text">це зміна ціни з моменту підписання до надходження транзакції до провайдера. Її виконують за ціною на цей момент у межах допустимого прослизання.</string>
   <string name="swap_slippage_warning_text">Обмін може не відбутися, якщо прослизання досягне встановленого порога</string>
   <string name="swap_slippage_warning_title">Встановлене прослизання: %s</string>
   <string name="swap_story_fifth_subtitle">Надійна підтримка 24/7, щоб ваші фінансові операції були швидкими та надійними!</string>

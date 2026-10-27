@@ -2167,7 +2167,7 @@
   <string name="swap_search_tooltip_title">Utilice la búsqueda para encontrar lo que necesite</string>
   <string name="swap_simple_mode">Modo sencillo</string>
   <string name="swap_slippage_error">Cantidad no soportada</string>
-  <string name="swap_slippage_info_text">es la diferencia entre el precio de ejecución esperado y el real causada por cambios en el precio de mercado o la liquidez.</string>
+  <string name="swap_slippage_info_text">es el cambio de precio desde que firma hasta que su transacción llega al proveedor. Se ejecuta al precio de ese momento, dentro de su tolerancia de deslizamiento.</string>
   <string name="swap_slippage_warning_text">El intercambio podría fallar si se alcanza el umbral de deslizamiento.</string>
   <string name="swap_slippage_warning_title">Se ha establecido el deslizamiento en %s</string>
   <string name="swap_story_fifth_subtitle">Siéntase seguro con una asistencia permanente que le ayudará con cualquier problema</string>
