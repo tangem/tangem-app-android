@@ -24,12 +24,11 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPredic
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.toStatusRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.JobHolder
-import com.tangem.utils.coroutines.saveIn
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -61,7 +60,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
 
     private val orderSubmitter = orderSubmitterFactory.create(params = params, uiState = uiState, scope = modelScope)
 
-    private val pendingPlacementJobHolder = JobHolder()
+    private var pendingPlacement: Job? = null
 
     val feeSheet = PlacePredictionFeeSheet(
         uiState = uiState,
@@ -173,14 +172,18 @@ internal class PlacePredictionOrderModel @Inject constructor(
             } ?: return@launch
 
             quoteEngine.prepare()?.let { prepared -> place(prepared = prepared) }
-        }.saveIn(pendingPlacementJobHolder)
+        }
 
+        pendingPlacement = wait
         uiState.update { it.copy(isPlacementPending = true) }
-        wait.invokeOnCompletion { uiState.update { state -> state.copy(isPlacementPending = false) } }
+        wait.invokeOnCompletion { if (pendingPlacement === wait) dropPendingPlacement() }
     }
 
     private fun dropPendingPlacement() {
-        pendingPlacementJobHolder.cancel()
+        val wait = pendingPlacement ?: return
+        pendingPlacement = null
+        wait.cancel()
+        uiState.update { it.copy(isPlacementPending = false) }
     }
 
     private fun place(prepared: PreparedPrediction) {
