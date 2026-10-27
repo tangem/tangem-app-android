@@ -9,6 +9,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
@@ -70,9 +71,9 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
 
     private val params = paramsContainer.require<Params>()
 
-    private val productInstanceId: String? = when (val account = params.sourceAccount) {
-        is BankWithdrawSourceAccount.Payment -> null
-        is BankWithdrawSourceAccount.Money -> account.productInstanceId
+    private val product: TangemPayProduct = when (params.sourceAccount) {
+        is BankWithdrawSourceAccount.Payment -> TangemPayProduct.PAYMENT_ACCOUNT
+        is BankWithdrawSourceAccount.Money -> TangemPayProduct.BANKING_ACCOUNT
     }
 
     private val isBankTransferOffered: Boolean = when (val account = params.sourceAccount) {
@@ -154,7 +155,7 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
     private fun loadOptions() {
         state.update { it.copy(options = OptionsState.Loading) }
         modelScope.launch {
-            getBankOfframpOptionsUseCase(params.userWalletId, productInstanceId).fold(
+            getBankOfframpOptionsUseCase(params.userWalletId, product).fold(
                 ifLeft = { error ->
                     TangemLogger.withTag(TAG).e("Failed to load bank offramp options: $error")
                     state.update { it.copy(options = OptionsState.Unavailable) }
