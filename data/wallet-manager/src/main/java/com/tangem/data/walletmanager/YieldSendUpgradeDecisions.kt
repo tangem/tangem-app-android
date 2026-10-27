@@ -8,11 +8,11 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.minutes
 
 /**
- * The module upgrade a yield send fee was last estimated with, per wallet and network.
+ * The module upgrade a yield send was last priced with, per wallet and network.
  *
- * The version check is soft, so it can fail for the estimate and pass for the transfer, and the transfer would then
- * send the upgrade-wrapped call with the gas limit of the bare one. While the estimate is recent enough to belong to
- * the same send, the transfer repeats its decision instead of checking again.
+ * The version check is soft, so it can fail when the fee is priced and pass when the transfer is built again for
+ * sending, and the transfer would then send the upgrade-wrapped call with the gas limit of the bare one. While the
+ * decision is recent enough to belong to the same send, the transfer repeats it instead of checking again.
  */
 internal class YieldSendUpgradeDecisions(
     private val currentTimeMillis: () -> Long = System::currentTimeMillis,
@@ -20,9 +20,9 @@ internal class YieldSendUpgradeDecisions(
 
     private val decisions = ConcurrentHashMap<Key, Decision>()
 
-    fun remember(userWalletId: UserWalletId, network: Network, estimatedCallData: SmartContractCallData) {
+    fun remember(userWalletId: UserWalletId, network: Network, pricedCallData: SmartContractCallData) {
         decisions[Key(userWalletId, network.id)] = Decision(
-            upgradeImplementation = (estimatedCallData as? EthereumYieldSupplyUpgradeToAndCallCallData)
+            upgradeImplementation = (pricedCallData as? EthereumYieldSupplyUpgradeToAndCallCallData)
                 ?.newImplementation,
             madeAtMillis = currentTimeMillis(),
         )
@@ -38,6 +38,10 @@ internal class YieldSendUpgradeDecisions(
             newImplementation = upgradeImplementation,
             innerCallData = callData,
         )
+    }
+
+    fun forget(userWalletId: UserWalletId, network: Network) {
+        decisions.remove(Key(userWalletId, network.id))
     }
 
     private data class Key(val userWalletId: UserWalletId, val networkId: Network.ID)
