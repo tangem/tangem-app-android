@@ -2,6 +2,8 @@ package com.tangem.data.tokens.repository
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.IncompleteBalanceProvider
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -20,6 +22,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
@@ -143,6 +146,73 @@ internal class DefaultCurrencyChecksRepositoryTest {
         override fun toString(): String = description
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetIncompleteBalanceWarning {
+
+        private val alephium by lazy { cryptoCurrencyFactory.createCoin(Blockchain.Alephium) }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun getIncompleteBalanceWarning(model: IncompleteBalanceTestModel) = runTest {
+            // Arrange
+            coEvery {
+                walletManagersFacade.getOrCreateWalletManager(USER_WALLET_ID, alephium.network)
+            } returns model.createManager()
+
+            // Act
+            val actual = repository.getIncompleteBalanceWarning(USER_WALLET_ID, alephium.network)
+
+            // Assert
+            val expected = CryptoCurrencyWarning.IncompleteBalance(
+                unspentsLimit = UNSPENTS_LIMIT,
+                networkName = alephium.network.name,
+                currencySymbol = alephium.network.currencySymbol,
+            ).takeIf { model.isWarningExpected }
+            assertThat(actual).isEqualTo(expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            IncompleteBalanceTestModel(
+                description = "no wallet manager -> no warning",
+                createManager = { null },
+                isWarningExpected = false,
+            ),
+            IncompleteBalanceTestModel(
+                description = "manager without the provider -> no warning",
+                createManager = { mockk<WalletManager>() },
+                isWarningExpected = false,
+            ),
+            IncompleteBalanceTestModel(
+                description = "provider with a complete balance -> no warning",
+                createManager = { incompleteBalanceManager(isBalanceIncomplete = false) },
+                isWarningExpected = false,
+            ),
+            IncompleteBalanceTestModel(
+                description = "provider with an incomplete balance -> warns with the limit and the network",
+                createManager = { incompleteBalanceManager(isBalanceIncomplete = true) },
+                isWarningExpected = true,
+            ),
+        )
+
+        private fun incompleteBalanceManager(isBalanceIncomplete: Boolean): WalletManager {
+            val manager = mockk<WalletManager>(moreInterfaces = arrayOf(IncompleteBalanceProvider::class))
+            val provider = manager as IncompleteBalanceProvider
+            every { provider.isBalanceIncomplete } returns isBalanceIncomplete
+            every { provider.unspentsLimit } returns UNSPENTS_LIMIT
+            return manager
+        }
+    }
+
+    internal data class IncompleteBalanceTestModel(
+        val description: String,
+        val createManager: () -> WalletManager?,
+        val isWarningExpected: Boolean,
+    ) {
+
+        override fun toString(): String = description
+    }
+
     // region Fixtures
     private fun status(amount: Int, contributions: List<BalanceContribution> = emptyList()) = CryptoCurrencyStatus(
         currency = solana,
@@ -199,5 +269,6 @@ internal class DefaultCurrencyChecksRepositoryTest {
         val USER_WALLET_ID = UserWalletId(stringValue = "011")
         val RENT = RentData(rent = BigDecimal("0.002"), exemptionAmount = BigDecimal(2))
         const val INTEGRATION_ID = "solana-sol-native-multivalidator-staking"
+        const val UNSPENTS_LIMIT = 5000
     }
 }
