@@ -94,6 +94,9 @@ class TangemPayHiddenBalancesTest : BaseTestCase() {
                 setWireMockScenarioState(historyScenario, cashbackTransactionsState)
             }
             step("Open Tangem Pay") { openTangemPay() }
+            step("Assert '$spendMerchant' transaction row is displayed") {
+                assertTangemPayTransactionRowDisplayed(spendMerchant)
+            }
             step("Assert '$spendMerchant' cashback badge is '$THREE_STARS'") {
                 flakySafely {
                     onTangemPayMainScreen {
