@@ -29,6 +29,7 @@ dependencies {
     api(projects.core.ui)
     api(projects.core.utils)
     implementation(projects.core.error)
+    implementation(projects.core.remote)
     api(projects.common.routing)
     api(projects.common.ui)
 
