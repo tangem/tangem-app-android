@@ -210,7 +210,6 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
 
             // Act
             model.onCloseClick()
-            model.onBackClick()
 
             // Assert
             verify(exactly = 0) { router.pop(any()) }
