@@ -1,6 +1,6 @@
-package com.tangem.tap.common.analytics.handlers.firebase
+package com.tangem.core.analytics.converters
 
-internal class UnderscoreAnalyticsEventConverter {
+class UnderscoreAnalyticsEventConverter {
 
     fun convertEventName(event: String): String {
         return convertString(event, FIREBASE_EVENT_NAME_MAX_LENGTH)

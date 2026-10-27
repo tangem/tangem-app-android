@@ -1,4 +1,4 @@
-package com.tangem.tap.common.analytics.handlers.firebase
+package com.tangem.core.analytics.handlers.firebase
 
 import android.os.Bundle
 import androidx.core.os.bundleOf
@@ -9,6 +9,7 @@ import com.google.firebase.ktx.Firebase
 import com.tangem.core.analytics.api.ExceptionLogger
 import com.tangem.core.analytics.api.EventLogger
 import com.tangem.core.analytics.api.UserIdHolder
+import com.tangem.core.analytics.converters.UnderscoreAnalyticsEventConverter
 
 /**
 [REDACTED_AUTHOR]

@@ -1,8 +1,7 @@
-package com.tangem.tap.common.analytics.converters
+package com.tangem.core.analytics.converters
 
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.common.core.TangemSdkError
-import com.tangem.domain.demo.DemoTransactionSender
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.utils.converter.Converter
 
@@ -10,13 +9,7 @@ import com.tangem.utils.converter.Converter
 [REDACTED_AUTHOR]
  */
 class AnalyticsErrorConverter : Converter<Throwable, Map<String, String>> {
-    fun canBeHandled(error: Throwable): Boolean {
-        return when (error) {
-            is TangemSdkError.UserCancelled -> false
-            is BlockchainSdkError -> !error.customMessage.contains(DemoTransactionSender.ID)
-            else -> true
-        }
-    }
+    fun canBeHandled(error: Throwable): Boolean = error !is TangemSdkError.UserCancelled
 
     override fun convert(value: Throwable): Map<String, String> {
         return when (value) {
@@ -55,8 +48,6 @@ private class BlockchainSdkErrorConverter(
 ) : Converter<BlockchainSdkError, Map<String, String>> {
 
     override fun convert(value: BlockchainSdkError): Map<String, String> {
-        if (value.customMessage.contains(DemoTransactionSender.ID)) return emptyMap()
-
         if (value is BlockchainSdkError.WrappedTangemError) {
             return (value.tangemError as? TangemSdkError)?.let { cardSdkErrorConverter.convert(it) }.orEmpty()
         }
