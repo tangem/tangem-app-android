@@ -13,7 +13,6 @@ import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPrediction
-import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.canShowFeeBreakdown
 import com.tangem.features.polymarket.impl.placeprediction.entity.feeBreakdownQuote
 import com.tangem.features.polymarket.impl.placeprediction.entity.toStatusRoute
@@ -80,8 +79,6 @@ internal class PlacePredictionSummaryModel @Inject constructor(
     }
 
     override fun onPlaceClick() {
-        if (uiState.value.submit !is SubmitUM.Idle || !uiState.value.isPrimaryButtonEnabled) return
-
         modelScope.launch(start = CoroutineStart.UNDISPATCHED) {
             val result = orderSubmitter.submit(prepared = order) ?: return@launch
             router.replaceAll(order.toStatusRoute(result = result))
