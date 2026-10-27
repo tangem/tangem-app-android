@@ -8,7 +8,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.sdk.api.TangemSdkManager
-import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.features.details.ui.cardsettings.coderecovery.AccessCodeRecoveryScreenState
 import com.tangem.tap.features.details.ui.cardsettings.domain.CardSettingsInteractor
