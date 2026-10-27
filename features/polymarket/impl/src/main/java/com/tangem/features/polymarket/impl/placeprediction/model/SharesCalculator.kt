@@ -9,7 +9,7 @@ internal object SharesCalculator {
 
     private val HUNDRED = BigDecimal(100)
     private const val WHOLE_SHARES_SCALE = 0
-    private const val FULL_PERCENT = 100
+    const val FULL_PERCENT = 100
 
     /**
      * @return the whole of [held], at most at the on-chain share precision. This is the only amount that closes a
