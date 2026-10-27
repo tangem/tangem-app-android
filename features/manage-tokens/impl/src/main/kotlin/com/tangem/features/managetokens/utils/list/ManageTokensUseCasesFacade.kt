@@ -45,13 +45,15 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
     private var isAllowedNetworkIdsResolved = false
     private var allowedNetworkIdsCache: Set<Network.RawID>? = null
 
-    suspend fun manageTokensListConfig(searchText: String?): ManageTokensListConfig {
+    suspend fun manageTokensListConfig(searchText: String?, loadUserTokensFromRemote: Boolean): ManageTokensListConfig {
         return when (mode) {
             is ManageTokensMode.Account -> {
                 ManageTokensListConfig(
                     accountId = mode.accountId,
                     searchText = searchText,
-                    allowedNetworkIds = resolveAllowedNetworkIds(mode),
+                    // Remote loading always lists the main account, which is never Joint. Its account list is
+                    // stored only by the list's own GET /accounts, so waiting for it here would never finish.
+                    allowedNetworkIds = if (loadUserTokensFromRemote) null else resolveAllowedNetworkIds(mode),
                 )
             }
             ManageTokensMode.None -> {
