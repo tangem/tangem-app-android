@@ -97,6 +97,7 @@ internal class FeedbackDataBuilder {
         val issueType = when (type) {
             is FeedbackEmailType.Visa.Activation,
             is FeedbackEmailType.Visa.DirectUserRequest,
+            is FeedbackEmailType.Visa.MoneyAccountRequest,
             is FeedbackEmailType.Visa.FeatureIsBeta,
             is FeedbackEmailType.Visa.Withdrawal,
             is FeedbackEmailType.Visa.KycRejected,
