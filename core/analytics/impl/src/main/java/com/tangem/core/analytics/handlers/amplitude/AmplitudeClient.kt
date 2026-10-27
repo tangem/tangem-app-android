@@ -1,13 +1,13 @@
-package com.tangem.tap.common.analytics.handlers.amplitude
+package com.tangem.core.analytics.handlers.amplitude
 
 import android.app.Application
 import com.amplitude.api.Amplitude
 import com.amplitude.api.AmplitudeClient
 import com.tangem.core.analytics.api.EventLogger
 import com.tangem.core.analytics.api.UserIdHolder
-import com.tangem.tap.common.analytics.AnalyticsEventsLogger
+import com.tangem.core.analytics.AnalyticsEventsLogger
 import com.tangem.utils.converter.Converter
-import com.tangem.wallet.BuildConfig
+import com.tangem.core.analytics.impl.BuildConfig
 import org.json.JSONObject
 
 /**
