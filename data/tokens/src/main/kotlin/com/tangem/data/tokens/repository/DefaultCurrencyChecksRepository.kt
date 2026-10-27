@@ -3,6 +3,7 @@ package com.tangem.data.tokens.repository
 import com.tangem.blockchain.blockchains.ethereum.eip1559.isGaslessTxSupported
 import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
 import com.tangem.blockchain.common.FeeResourceAmountProvider
+import com.tangem.blockchain.common.IncompleteBalanceProvider
 import com.tangem.blockchain.common.MinimumSendAmountProvider
 import com.tangem.blockchain.common.ReserveAmountProvider
 import com.tangem.blockchain.common.UtxoAmountLimitProvider
@@ -90,6 +91,24 @@ internal class DefaultCurrencyChecksRepository(
         } else {
             null
         }
+    }
+
+    override suspend fun getIncompleteBalanceWarning(
+        userWalletId: UserWalletId,
+        network: Network,
+    ): CryptoCurrencyWarning.IncompleteBalance? {
+        val manager = walletManagersFacade.getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            network = network,
+        )
+
+        if (manager !is IncompleteBalanceProvider || !manager.isBalanceIncomplete) return null
+
+        return CryptoCurrencyWarning.IncompleteBalance(
+            unspentsLimit = manager.unspentsLimit,
+            networkName = network.name,
+            currencySymbol = network.currencySymbol,
+        )
     }
 
     override suspend fun checkIfFeeResourceEnough(
