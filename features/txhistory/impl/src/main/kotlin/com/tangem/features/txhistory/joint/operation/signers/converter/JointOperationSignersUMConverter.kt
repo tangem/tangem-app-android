@@ -20,15 +20,21 @@ internal class JointOperationSignersUMConverter :
     override fun convert(value: Input): JointOperationSignersUM {
         return JointOperationSignersUM(
             membersCount = value.membersCount,
-            signers = value.signers.mapIndexed(::toSignerUM).toImmutableList(),
+            signers = value.signers
+                .mapIndexed { index, state -> toSignerUM(index = index, state = state, isFinished = value.isFinished) }
+                .toImmutableList(),
         )
     }
 
-    private fun toSignerUM(index: Int, state: JointOperationSignerState): JointOperationSignersUM.SignerUM {
+    private fun toSignerUM(
+        index: Int,
+        state: JointOperationSignerState,
+        isFinished: Boolean,
+    ): JointOperationSignersUM.SignerUM {
         return JointOperationSignersUM.SignerUM(
             name = state.member.name,
             avatar = avatar(member = state.member, index = index),
-            statusText = statusText(state),
+            statusText = statusText(state = state, isFinished = isFinished),
             mark = when (state.answer) {
                 Answer.CREATED, Answer.SIGNED -> JointOperationSignersUM.Mark.Signed
                 Answer.DECLINED -> JointOperationSignersUM.Mark.Declined
@@ -47,11 +53,15 @@ internal class JointOperationSignersUMConverter :
         )
     }
 
-    /** A member the backend reported without a time is shown answered but undated, never with a blank prefix */
-    private fun statusText(state: JointOperationSignerState): TextReference {
+    /**
+     * A member the backend reported without a time is shown answered but undated, never with a blank prefix. A member
+     * who never answered a finished operation is no longer waiting for anything.
+     */
+    private fun statusText(state: JointOperationSignerState, isFinished: Boolean): TextReference {
         val at = state.at
 
         return when {
+            state.answer == Answer.WAITING && isFinished -> TextReference.EMPTY
             state.answer == Answer.WAITING -> resourceReference(CoreUiR.string.joint_operation_waiting_to_sign)
             state.answer == Answer.DECLINED && at == null -> resourceReference(CoreUiR.string.joint_operation_declined)
             at == null -> TextReference.EMPTY
@@ -69,5 +79,6 @@ internal class JointOperationSignersUMConverter :
     data class Input(
         val membersCount: Int,
         val signers: List<JointOperationSignerState>,
+        val isFinished: Boolean = false,
     )
 }
