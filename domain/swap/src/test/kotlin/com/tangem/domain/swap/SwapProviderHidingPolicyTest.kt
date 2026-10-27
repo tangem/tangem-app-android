@@ -29,11 +29,11 @@ class SwapProviderHidingPolicyTest {
     private fun provideTestModels() = listOf(
         ShouldHideModel(providerId = "changehero", error = amlBanned, expected = true),
         ShouldHideModel(providerId = "changehero", error = exchangeNotPossible, expected = false),
-        ShouldHideModel(providerId = "changehero", error = ExpressError.UnknownError, expected = false),
+        ShouldHideModel(providerId = "changehero", error = ExpressError.UnknownError(), expected = false),
         ShouldHideModel(providerId = "changelly", error = amlBanned, expected = true),
         ShouldHideModel(providerId = "changelly", error = exchangeNotPossible, expected = true),
         ShouldHideModel(providerId = "changelly", error = dataError, expected = true),
-        ShouldHideModel(providerId = "changelly", error = ExpressError.UnknownError, expected = true),
+        ShouldHideModel(providerId = "changelly", error = ExpressError.UnknownError(), expected = true),
         ShouldHideModel(
             providerId = "changelly",
             error = ExpressError.AmountError.TooSmallError(code = 2250, amount = BigDecimal.ONE),
@@ -65,6 +65,6 @@ class SwapProviderHidingPolicyTest {
             expected = false,
         ),
         ShouldHideModel(providerId = "swapkit", error = amlBanned, expected = false),
-        ShouldHideModel(providerId = "changenow", error = ExpressError.UnknownError, expected = false),
+        ShouldHideModel(providerId = "changenow", error = ExpressError.UnknownError(), expected = false),
     )
 }

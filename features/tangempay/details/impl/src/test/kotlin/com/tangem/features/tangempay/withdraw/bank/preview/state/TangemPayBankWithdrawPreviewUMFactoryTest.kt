@@ -263,10 +263,13 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
         assertThat(actual.isSendEnabled).isTrue()
     }
 
-    @Test
-    fun `GIVEN general failure WHEN create THEN error result with retry`() {
+    @ParameterizedTest
+    @MethodSource("provideGeneralFailureModels")
+    fun `GIVEN general failure WHEN create THEN error result with retry only when it can help`(
+        model: GeneralFailureModel,
+    ) {
         // Arrange
-        val state = PreviewState(completion = CompletionState.Failed(PreviewFailure.General))
+        val state = PreviewState(completion = CompletionState.Failed(model.failure))
 
         // Act
         val actual = factory.create(draft = savedDraft(), state = state)
@@ -277,10 +280,17 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
                 title = resourceReference(R.string.tangempay_withdraw_bank_error_general_title),
                 icon = TangemStatusIcon.Kind.Warning,
                 onCloseClick = callbacks.onCloseClick,
-                onRetryClick = callbacks.onRetryClick,
+                onRetryClick = model.onRetryClick,
             ),
         )
     }
+
+    private fun provideGeneralFailureModels() = listOf(
+        GeneralFailureModel(failure = PreviewFailure.General, onRetryClick = callbacks.onRetryClick),
+        GeneralFailureModel(failure = PreviewFailure.TransferOutcomeUnknown, onRetryClick = null),
+    )
+
+    internal data class GeneralFailureModel(val failure: PreviewFailure, val onRetryClick: (() -> Unit)?)
 
     @ParameterizedTest
     @ProvideTestModels

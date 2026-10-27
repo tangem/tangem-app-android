@@ -55,7 +55,7 @@ fun TangemModalBottomSheetTitle(
                 Text(
                     text = title.resolveReference(),
                     style = TangemTheme.typography.subtitle1,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .testTag(BaseBottomSheetTestTags.TITLE),
@@ -65,7 +65,7 @@ fun TangemModalBottomSheetTitle(
                 Text(
                     text = subtitle.resolveReference(),
                     style = TangemTheme.typography.caption1,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .testTag(BaseBottomSheetTestTags.SUBTITLE),
@@ -100,7 +100,7 @@ private fun Preview_TangemModalBottomSheetTitle(
             onStartClick = params.onStartClick,
             endIconRes = params.endIconRes,
             onEndClick = params.onEndClick,
-            modifier = Modifier.background(TangemTheme.colors.background.secondary),
+            modifier = Modifier.background(TangemTheme.colors3.bg.primary),
         )
     }
 }

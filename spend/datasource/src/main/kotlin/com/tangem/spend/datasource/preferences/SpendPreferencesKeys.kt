@@ -28,6 +28,9 @@ class SpendPreferencesKeys @Inject constructor() {
     fun paymentAccountRecents(userWalletId: UserWalletId): Preferences.Key<String> =
         stringPreferencesKey("tangem_pay_account_recents_${userWalletId.stringValue}")
 
+    fun moneyAccountRecents(userWalletId: UserWalletId): Preferences.Key<String> =
+        stringPreferencesKey("money_account_recents_${userWalletId.stringValue}")
+
     fun getAddToWalletKey(customerWalletAddress: String): Preferences.Key<Boolean> =
         booleanPreferencesKey("tangem_pay_add_to_wallet_done_key_$customerWalletAddress")
 
@@ -60,7 +63,4 @@ class SpendPreferencesKeys @Inject constructor() {
 
     fun getCustomerResidencyKey(userWalletId: UserWalletId): Preferences.Key<String> =
         stringPreferencesKey("tangem_pay_customer_residency_$userWalletId")
-
-    fun getMoneyAccountMainBlockHiddenKey(userWalletId: UserWalletId): Preferences.Key<Boolean> =
-        booleanPreferencesKey("money_account_main_block_hidden_$userWalletId")
 }

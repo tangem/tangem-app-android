@@ -41,7 +41,6 @@ internal class WalletTokensListUMConverter(
     private val isAccountsModeEnabled: Boolean,
     private val expandedAccounts: Set<AccountId>,
     private val stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability>,
-    private val accountIdsWithInvites: Set<String>,
     shouldShowMainPromo: Boolean,
     private val jointPendingOperations: List<JointPendingOperation> = emptyList(),
     private val isRedesignedAccountRowsEnabled: Boolean = false,
@@ -51,7 +50,6 @@ internal class WalletTokensListUMConverter(
         WalletJointAccountItemConverter(
             appCurrency = appCurrency,
             userWalletId = selectedWallet.walletId,
-            accountIdsWithInvites = accountIdsWithInvites,
             onAccountClick = clickIntents::onJointAccountClick,
             onCompromisedAccountClick = clickIntents::onCompromisedJointAccountClick,
         )
@@ -269,9 +267,9 @@ internal class WalletTokensListUMConverter(
                     iconRes = iconRes,
                     tintReference = {
                         if (accountList.totalFiatBalance !is TotalFiatBalance.Loading) {
-                            TangemTheme.colors2.graphic.neutral.primary
+                            TangemTheme.colors3.icon.primary
                         } else {
-                            TangemTheme.colors2.graphic.neutral.quaternary
+                            TangemTheme.colors3.icon.tertiary
                         }
                     },
                 ),

@@ -28,11 +28,14 @@ import com.tangem.store.datasource.jointaccount.models.ConfirmJointAccountReques
 import com.tangem.store.datasource.jointaccount.models.CreateJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.JoinJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.JointAccountDto
+import com.tangem.store.datasource.jointaccount.models.IssueJointAccountInviteRequest
 import com.tangem.store.datasource.jointaccount.models.JointAccountInvitePreviewDto
+import com.tangem.store.datasource.jointaccount.models.JointAccountIssuedInviteDto
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountConfirmationPayload
-import com.tangem.domain.jointaccount.model.JointAccountInvite
+import com.tangem.domain.jointaccount.model.JointAccountInviteIssueError
+import com.tangem.domain.jointaccount.model.JointAccountIssuedInvite
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
 import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
@@ -40,7 +43,6 @@ import com.tangem.domain.jointaccount.model.JointAccountCreationResult
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
 import com.tangem.domain.jointaccount.model.JointAccountJoinPayload
 import com.tangem.domain.jointaccount.model.JointAccountParticipant
-import com.tangem.domain.jointaccount.store.JointAccountInvitesStore
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.ProvideTestModels
@@ -50,6 +52,8 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
+import java.time.Instant
+import java.time.format.DateTimeParseException
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -61,12 +65,10 @@ internal class DefaultJointAccountRepositoryTest {
 
     private val jointAccountApi: JointAccountApi = mockk()
     private val walletAccountsFetcher: WalletAccountsFetcher = mockk()
-    private val invitesStore: JointAccountInvitesStore = mockk(relaxUnitFun = true)
 
     private val repository = DefaultJointAccountRepository(
         jointAccountApi = jointAccountApi,
         walletAccountsFetcher = walletAccountsFetcher,
-        invitesStore = invitesStore,
         converter = JointAccountDtoConverter(operationConverter = JointOperationConverter(safeTxConverter = SafeTxConverter())),
         previewConverter = JointAccountInvitePreviewDtoConverter(),
         safeTxConverter = SafeTxConverter(),
@@ -77,7 +79,7 @@ internal class DefaultJointAccountRepositoryTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(jointAccountApi, walletAccountsFetcher, invitesStore)
+        clearMocks(jointAccountApi, walletAccountsFetcher)
     }
 
     @ParameterizedTest
@@ -134,45 +136,6 @@ internal class DefaultJointAccountRepositoryTest {
     }
 
     @Test
-    fun `GIVEN response with invites WHEN create THEN invites persisted for the created account`() = runTest {
-        // Arrange
-        val dto = createJointAccountDto(
-            invites = listOf(JointAccountDto.Invite(id = INVITE_A), JointAccountDto.Invite(id = INVITE_B)),
-        )
-        coEvery { jointAccountApi.createJointAccount(any(), any()) } returns ApiResponse.Success(dto)
-
-        // Act
-        repository.create(userWalletId = WALLET_ID, payload = createPayload(), signature = SIGNATURE)
-
-        // Assert
-        coVerify(exactly = 1) {
-            invitesStore.store(
-                userWalletId = WALLET_ID,
-                cryptoAccountId = FIXTURE_CRYPTO_ACCOUNT_ID,
-                invites = listOf(INVITE_A, INVITE_B),
-            )
-        }
-    }
-
-    @Test
-    fun `GIVEN invites store fails WHEN create THEN the created account is still returned`() = runTest {
-        // Arrange
-        // The account already exists on the backend — a storage failure must not push the user into a retry
-        // that can only end in a 409
-        coEvery {
-            jointAccountApi.createJointAccount(any(), any())
-        } returns ApiResponse.Success(createJointAccountDto())
-        coEvery { invitesStore.store(any(), any(), any()) } throws IllegalStateException("keystore unavailable")
-
-        // Act
-        val actual = repository.create(userWalletId = WALLET_ID, payload = createPayload(), signature = SIGNATURE)
-
-        // Assert
-        val expected = JointAccountCreationResult.Created(account = createJointAccount(source = StatusSource.ACTUAL))
-        assertThat(actual).isEqualTo(expected)
-    }
-
-    @Test
     fun `GIVEN conflict WHEN create THEN result says the creator is already registered`() = runTest {
         // Arrange
         // 409 is a recoverable branch, not a failure: the caller resolves the account by re-reading the list
@@ -185,7 +148,6 @@ internal class DefaultJointAccountRepositoryTest {
 
         // Assert
         assertThat(actual).isEqualTo(JointAccountCreationResult.CreatorAlreadyRegistered)
-        coVerify(exactly = 0) { invitesStore.store(any(), any(), any()) }
     }
 
     @Test
@@ -415,46 +377,104 @@ internal class DefaultJointAccountRepositoryTest {
     }
 
     @Test
-    fun `GIVEN stored invites WHEN getInvites THEN they are returned`() = runTest {
-        // Arrange
-        coEvery { invitesStore.get(WALLET_ID, FIXTURE_CRYPTO_ACCOUNT_ID) } returns listOf("invite-a", "invite-b")
+    fun `GIVEN a slot WHEN issueInvite THEN the request carries it verbatim and the issued invite is returned`() =
+        runTest {
+            // Arrange
+            val bodySlot = slot<IssueJointAccountInviteRequest>()
+            coEvery {
+                jointAccountApi.issueJointAccountInvite(walletId = WALLET_ID.stringValue, body = capture(bodySlot))
+            } returns ApiResponse.Success(issuedInviteDto())
 
-        // Act
-        val actual = repository.getInvites(userWalletId = WALLET_ID, cryptoAccountId = FIXTURE_CRYPTO_ACCOUNT_ID)
+            // Act
+            val actual = repository.issueInvite(
+                userWalletId = WALLET_ID,
+                cryptoAccountId = FIXTURE_CRYPTO_ACCOUNT_ID,
+                slot = INVITE_SLOT,
+            )
 
-        // Assert
-        assertThat(actual)
-            .containsExactly(JointAccountInvite(id = "invite-a"), JointAccountInvite(id = "invite-b"))
-            .inOrder()
-    }
-
-    @Test
-    fun `GIVEN unreadable store WHEN getInvites THEN empty instead of throwing`() = runTest {
-        // Arrange
-        // The members are worth showing even when the invite actions cannot be offered
-        coEvery { invitesStore.get(WALLET_ID, FIXTURE_CRYPTO_ACCOUNT_ID) } throws
-            IllegalStateException("keystore unavailable")
-
-        // Act
-        val actual = runCatching {
-            repository.getInvites(userWalletId = WALLET_ID, cryptoAccountId = FIXTURE_CRYPTO_ACCOUNT_ID)
+            // Assert
+            val expected = JointAccountIssuedInvite(
+                id = INVITE_A,
+                slot = INVITE_SLOT,
+                expiresAtMillis = Instant.parse(INVITE_EXPIRES_AT).toEpochMilli(),
+            )
+            assertThat(actual).isEqualTo(expected.right())
+            assertThat(bodySlot.captured)
+                .isEqualTo(IssueJointAccountInviteRequest(cryptoAccountId = FIXTURE_CRYPTO_ACCOUNT_ID, slot = INVITE_SLOT))
         }
 
-        // Assert
-        assertThat(actual.getOrNull()).isEmpty()
-    }
-
-    @Test
-    fun `GIVEN nothing stored WHEN getInvites THEN empty - this device is not the creator's`() = runTest {
+    @ParameterizedTest
+    @MethodSource("provideSlotUnavailableCodes")
+    fun `GIVEN the backend refuses the slot WHEN issueInvite THEN SlotUnavailable`(
+        code: ApiResponseError.HttpException.Code,
+    ) = runTest {
         // Arrange
-        coEvery { invitesStore.get(WALLET_ID, FIXTURE_CRYPTO_ACCOUNT_ID) } returns null
+        val response = errorResponse<JointAccountIssuedInviteDto>(code = code)
+        coEvery { jointAccountApi.issueJointAccountInvite(any(), any()) } returns response
 
         // Act
-        val actual = repository.getInvites(userWalletId = WALLET_ID, cryptoAccountId = FIXTURE_CRYPTO_ACCOUNT_ID)
+        val actual = issueInvite()
 
         // Assert
-        assertThat(actual).isEmpty()
+        val cause = (response as ApiResponse.Error).cause
+        assertThat(actual).isEqualTo(JointAccountInviteIssueError.SlotUnavailable(cause = cause).left())
     }
+
+    private fun provideSlotUnavailableCodes() = listOf(
+        ApiResponseError.HttpException.Code.FORBIDDEN,
+        ApiResponseError.HttpException.Code.NOT_FOUND,
+        ApiResponseError.HttpException.Code.CONFLICT,
+    )
+
+    @ParameterizedTest
+    @MethodSource("provideRetryableIssueCauses")
+    fun `GIVEN a retryable failure WHEN issueInvite THEN Failed`(cause: ApiResponseError) = runTest {
+        // Arrange
+        coEvery { jointAccountApi.issueJointAccountInvite(any(), any()) } returns
+            ApiResponse.Error(cause = cause) as ApiResponse<JointAccountIssuedInviteDto>
+
+        // Act
+        val actual = issueInvite()
+
+        // Assert
+        assertThat(actual).isEqualTo(JointAccountInviteIssueError.Failed(cause = cause).left())
+    }
+
+    private fun provideRetryableIssueCauses() = listOf(
+        ApiResponseError.HttpException(
+            code = ApiResponseError.HttpException.Code.INTERNAL_SERVER_ERROR,
+            message = null,
+            errorBody = null,
+        ),
+        ApiResponseError.NetworkException(),
+    )
+
+    @Test
+    fun `GIVEN an unreadable expiry WHEN issueInvite THEN Failed`() = runTest {
+        // Arrange
+        coEvery { jointAccountApi.issueJointAccountInvite(any(), any()) } returns
+            ApiResponse.Success(issuedInviteDto(expiresAt = "not-a-date"))
+
+        // Act
+        val actual = issueInvite()
+
+        // Assert
+        val error = actual.leftOrNull()
+        assertThat(error).isInstanceOf(JointAccountInviteIssueError.Failed::class.java)
+        assertThat(error?.cause).isInstanceOf(DateTimeParseException::class.java)
+    }
+
+    private suspend fun issueInvite() = repository.issueInvite(
+        userWalletId = WALLET_ID,
+        cryptoAccountId = FIXTURE_CRYPTO_ACCOUNT_ID,
+        slot = INVITE_SLOT,
+    )
+
+    private fun issuedInviteDto(expiresAt: String = INVITE_EXPIRES_AT) = JointAccountIssuedInviteDto(
+        id = INVITE_A,
+        slot = INVITE_SLOT,
+        expiresAt = expiresAt,
+    )
 
     private fun joinPayload() = JointAccountJoinPayload(
         inviteId = INVITE_A,
@@ -729,6 +749,7 @@ internal class DefaultJointAccountRepositoryTest {
         const val OPERATION_ID = "3f1a2b4c-5d6e-7f80-91a2-b3c4d5e6f708"
         const val CHAIN_ID = 137L
         const val INVITE_A = "AA11BB22CC33DD44EE55FF66AA77BB88CC99DD00EE11FF22AA33BB44CC55DD66"
-        const val INVITE_B = "BB11BB22CC33DD44EE55FF66AA77BB88CC99DD00EE11FF22AA33BB44CC55DD66"
+        const val INVITE_SLOT = 2
+        const val INVITE_EXPIRES_AT = "2026-10-29T12:00:00.000Z"
     }
 }

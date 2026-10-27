@@ -2,6 +2,7 @@ package com.tangem.data.jointaccount.converter
 
 import com.tangem.data.jointaccount.store.JointAccountDM
 import com.tangem.domain.jointaccount.model.JointAccount
+import com.tangem.domain.jointaccount.model.JointAccountInvite
 import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.models.StatusSource
@@ -28,9 +29,12 @@ internal class JointAccountDMConverter @Inject constructor() : TwoWayConverter<J
                 name = member.name,
                 address = member.address,
                 role = member.role.toRawString(),
-                inviteId = member.inviteId,
+                slot = member.slot,
                 signature = member.signature,
             )
+        },
+        invites = value.invites.map { invite ->
+            JointAccountDM.InviteDM(slot = invite.slot, expiresAtMillis = invite.expiresAtMillis)
         },
         operations = value.inFlightOperations.values.map { operation ->
             JointAccountDM.OperationDM(
@@ -44,6 +48,7 @@ internal class JointAccountDMConverter @Inject constructor() : TwoWayConverter<J
                         address = signature.address,
                         state = signature.state.toRawString(),
                         at = signature.at,
+                        signature = signature.signature,
                     )
                 },
                 to = operation.safeTx.to,
@@ -71,11 +76,14 @@ internal class JointAccountDMConverter @Inject constructor() : TwoWayConverter<J
                 name = member.name,
                 address = member.address,
                 role = JointAccountFieldsConverter.convertRole(member.role),
-                inviteId = member.inviteId,
+                slot = member.slot,
                 signature = member.signature,
             )
         },
         source = StatusSource.CACHE,
+        invites = value.invites.map { invite ->
+            JointAccountInvite(slot = invite.slot, expiresAtMillis = invite.expiresAtMillis)
+        },
         inFlightOperations = value.operations
             .map(::convertOperation)
             .associateBy(JointOperation::chainId),
@@ -104,6 +112,7 @@ internal class JointAccountDMConverter @Inject constructor() : TwoWayConverter<J
                 address = signature.address,
                 state = signature.state.toSignatureState(),
                 at = signature.at,
+                signature = signature.signature,
             )
         },
     )

@@ -28,6 +28,7 @@ import com.tangem.features.tokendetails.deeplink.ExpressDeepLinkListener
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.txhistory.component.TxHistoryDetailsSlotConfig
 import com.tangem.features.txhistory.converter.ExpressTxToTransactionItemUMConverter
+import com.tangem.features.txhistory.converter.JointOperationTxToTransactionItemUMConverter
 import com.tangem.features.txhistory.converter.TxHistoryInfoToTransactionItemUMConverter
 import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionItemUMConverter
 import com.tangem.features.txhistory.entity.TxHistoryItemsUM
@@ -100,7 +101,7 @@ internal class TxHistoryModel @Inject constructor(
             currency = params.currency,
             isResumed = isResumed,
             hasLoadedMorePages = loadedPagesTracker.hasLoadedMorePages,
-            reload = historyTxListManager::reload,
+            reload = ::reloadWithJointDelta,
         )
         subscribeOnCurrencyStatusUpdates()
         deepLinkListener()
@@ -170,6 +171,11 @@ internal class TxHistoryModel @Inject constructor(
                 txHistoryUiActions = this,
                 lookup = lookup,
             ),
+            jointConverter = JointOperationTxToTransactionItemUMConverter(
+                currency = params.currency,
+                txHistoryUiActions = this,
+                lookup = lookup,
+            ),
             txHistoryUiActions = this,
         )
 
@@ -205,6 +211,11 @@ internal class TxHistoryModel @Inject constructor(
             currency = params.currency,
         )
         appTxHistoryFetcher.invoke(trigger)
+    }
+
+    private fun reloadWithJointDelta() {
+        historyTxListManager.reload()
+        appTxHistoryFetcher.invoke(TxHistoryFetchTrigger.JointHistoryPoll(walletId = params.userWalletId))
     }
 
     fun onResume() {

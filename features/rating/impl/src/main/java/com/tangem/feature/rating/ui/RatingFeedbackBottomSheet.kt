@@ -42,7 +42,7 @@ import com.tangem.core.ui.test.RatingTestTags
 internal fun RatingFeedbackBottomSheet(config: TangemBottomSheetConfig) {
     TangemBottomSheet<RatingFeedbackBS>(
         config = config,
-        containerColor = TangemTheme.colors.background.secondary,
+        containerColor = TangemTheme.colors3.bg.primary,
         addBottomInsets = false,
         title = { content ->
             Column(
@@ -67,13 +67,13 @@ internal fun RatingFeedbackBottomSheet(config: TangemBottomSheetConfig) {
                     modifier = Modifier
                         .size(56.dp)
                         .clip(CircleShape)
-                        .background(TangemTheme.colors.icon.attention.copy(alpha = 0.12f)),
+                        .background(TangemTheme.colors3.bg.accent.yellow.copy(alpha = 0.12f)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_rating_star_24),
                         contentDescription = null,
-                        tint = TangemTheme.colors.icon.attention,
+                        tint = TangemTheme.colors3.icon.accent.yellow,
                         modifier = Modifier.size(32.dp),
                     )
                 }
@@ -81,7 +81,7 @@ internal fun RatingFeedbackBottomSheet(config: TangemBottomSheetConfig) {
                 Text(
                     text = stringResourceSafe(R.string.swapping_rate_feedback_title),
                     style = TangemTheme.typography.h2,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                     textAlign = TextAlign.Center,
                 )
                 SpacerH16()
@@ -128,11 +128,11 @@ private fun FeedbackTextField(value: String, onValueChange: (String) -> Unit) {
 
     val fieldShape = RoundedCornerShape(14.dp)
     val colors = TextFieldDefaults.colors().copy(
-        focusedContainerColor = TangemTheme.colors.field.focused,
-        unfocusedContainerColor = TangemTheme.colors.field.focused,
-        focusedTextColor = TangemTheme.colors.text.primary1,
-        unfocusedTextColor = TangemTheme.colors.text.primary1,
-        cursorColor = TangemTheme.colors.icon.primary1,
+        focusedContainerColor = TangemTheme.colors3.bg.transparent.secondary,
+        unfocusedContainerColor = TangemTheme.colors3.bg.transparent.secondary,
+        focusedTextColor = TangemTheme.colors3.text.primary,
+        unfocusedTextColor = TangemTheme.colors3.text.primary,
+        cursorColor = TangemTheme.colors3.icon.primary,
         focusedIndicatorColor = Color.Transparent,
         unfocusedIndicatorColor = Color.Transparent,
         disabledIndicatorColor = Color.Transparent,
@@ -146,8 +146,8 @@ private fun FeedbackTextField(value: String, onValueChange: (String) -> Unit) {
             .heightIn(min = 48.dp)
             .testTag(RatingTestTags.FEEDBACK_INPUT)
             .focusRequester(focusRequester),
-        textStyle = TangemTheme.typography.body1.copy(color = TangemTheme.colors.text.primary1),
-        cursorBrush = SolidColor(TangemTheme.colors.icon.primary1),
+        textStyle = TangemTheme.typography.body1.copy(color = TangemTheme.colors3.text.primary),
+        cursorBrush = SolidColor(TangemTheme.colors3.icon.primary),
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
         maxLines = 3,
         singleLine = false,
@@ -171,7 +171,7 @@ private fun FeedbackTextField(value: String, onValueChange: (String) -> Unit) {
                     Text(
                         text = stringResourceSafe(R.string.swapping_rate_feedback_placeholder),
                         style = TangemTheme.typography.body1,
-                        color = TangemTheme.colors.text.tertiary,
+                        color = TangemTheme.colors3.text.secondary,
                     )
                 },
             )

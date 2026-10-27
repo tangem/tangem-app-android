@@ -46,7 +46,7 @@ internal fun AddToPortfolioBottomSheet(
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
         title = {
             AnimatedContent(targetState = contentStack.value, label = "Title Animation") { animatedStack ->
                 AddToPortfolioBottomSheetTitle(

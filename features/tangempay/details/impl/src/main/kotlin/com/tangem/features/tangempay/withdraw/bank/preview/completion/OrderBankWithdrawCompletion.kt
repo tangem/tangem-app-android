@@ -10,7 +10,7 @@ import com.tangem.domain.pay.usecase.bankofframp.CancelBankOfframpOrderUseCase
 import com.tangem.domain.pay.usecase.bankofframp.CreateBankOfframpOrderUseCase
 import com.tangem.domain.pay.usecase.bankofframp.SignBankOfframpOrderUseCase
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
-import com.tangem.features.tangempay.withdraw.bank.preview.model.PreviewFailure
+import com.tangem.features.tangempay.withdraw.bank.preview.model.toFailure
 import com.tangem.features.tangempay.withdraw.bank.preview.model.toOrderRequest
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
@@ -152,18 +152,6 @@ internal class OrderBankWithdrawCompletion @AssistedInject constructor(
             onOrderCreated: (BankOfframpOrderResult) -> Unit,
         ): OrderBankWithdrawCompletion
     }
-}
-
-private fun BankOfframpError.toFailure(): PreviewFailure = when (this) {
-    BankOfframpError.RecipientRegionUnsupported -> PreviewFailure.RecipientRegion
-    BankOfframpError.SenderRegionUnsupported -> PreviewFailure.SenderRegion
-    BankOfframpError.BusinessUnsupported -> PreviewFailure.Business
-    BankOfframpError.UnsupportedConfiguration -> PreviewFailure.UnsupportedConfiguration
-    BankOfframpError.Validation,
-    BankOfframpError.PollingTimeout,
-    BankOfframpError.WithdrawalInProgress,
-    is BankOfframpError.Unknown,
-    -> PreviewFailure.General
 }
 
 private const val TAG = "OrderBankWithdrawCompletion"

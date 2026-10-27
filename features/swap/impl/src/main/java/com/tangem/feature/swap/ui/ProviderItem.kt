@@ -142,7 +142,7 @@ private fun ProviderContentState(
                         Text(
                             text = stringResourceSafe(id = R.string.express_by_provider),
                             style = TangemTheme.typography.caption2,
-                            color = TangemTheme.colors.text.tertiary,
+                            color = TangemTheme.colors3.text.secondary,
                             modifier = Modifier.padding(end = 4.dp),
                         )
                     }
@@ -150,7 +150,7 @@ private fun ProviderContentState(
                         Text(
                             text = name,
                             style = TangemTheme.typography.caption2,
-                            color = TangemTheme.colors.text.primary1,
+                            color = TangemTheme.colors3.text.primary,
                             modifier = Modifier.testTag(SwapTokenScreenTestTags.PROVIDER_NAME),
                         )
                     }
@@ -158,7 +158,7 @@ private fun ProviderContentState(
                         Text(
                             text = type,
                             style = TangemTheme.typography.caption2,
-                            color = TangemTheme.colors.text.tertiary,
+                            color = TangemTheme.colors3.text.secondary,
                             modifier = Modifier
                                 .padding(start = 4.dp)
                                 .testTag(SwapTokenScreenTestTags.PROVIDER_TYPE),
@@ -184,7 +184,7 @@ private fun ProviderContentState(
                         Text(
                             text = subtitle.resolveReference(),
                             style = TangemTheme.typography.body2,
-                            color = TangemTheme.colors.text.tertiary,
+                            color = TangemTheme.colors3.text.secondary,
                             overflow = TextOverflow.Ellipsis,
                             maxLines = 1,
                             modifier = Modifier.testTag(SwapTokenScreenTestTags.PROVIDER_RATE),
@@ -194,9 +194,9 @@ private fun ProviderContentState(
                         state.percentLowerThenBest.value != 0f
                     ) {
                         val textColor = if (state.percentLowerThenBest.value > 0) {
-                            TangemTheme.colors.icon.accent
+                            TangemTheme.colors3.icon.accent.blue
                         } else {
-                            TangemTheme.colors.text.warning
+                            TangemTheme.colors3.text.accent.red
                         }
                         AnimatedContent(targetState = state.percentLowerThenBest.value, label = "") { percentValue ->
                             Text(
@@ -217,7 +217,7 @@ private fun ProviderContentState(
                 Icon(
                     imageVector = ImageVector.vectorResource(R.drawable.ic_filter_default_24),
                     contentDescription = null,
-                    tint = TangemTheme.colors.icon.informative,
+                    tint = TangemTheme.colors3.icon.secondary,
                     modifier = Modifier
                         .padding(end = 14.dp)
                         .size(20.dp)
@@ -274,14 +274,14 @@ private fun ProviderUnavailableState(
                         Text(
                             text = name,
                             style = TangemTheme.typography.caption2,
-                            color = TangemTheme.colors.text.tertiary,
+                            color = TangemTheme.colors3.text.secondary,
                         )
                     }
                     AnimatedContent(targetState = state.type, label = "") { type ->
                         Text(
                             text = type,
                             style = TangemTheme.typography.caption2,
-                            color = TangemTheme.colors.text.tertiary,
+                            color = TangemTheme.colors3.text.secondary,
                             modifier = Modifier.padding(start = 4.dp),
                         )
                     }
@@ -294,7 +294,7 @@ private fun ProviderUnavailableState(
                     Text(
                         text = alertText.resolveReference(),
                         style = TangemTheme.typography.body2,
-                        color = TangemTheme.colors.text.tertiary,
+                        color = TangemTheme.colors3.text.secondary,
                         modifier = Modifier,
                     )
                 }
@@ -312,7 +312,7 @@ private fun ProviderLoadingState(modifier: Modifier = Modifier) {
             Text(
                 text = stringResourceSafe(R.string.express_provider),
                 style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 modifier = Modifier.padding(start = 12.dp),
             )
 
@@ -326,13 +326,13 @@ private fun ProviderLoadingState(modifier: Modifier = Modifier) {
                     modifier = Modifier
                         .size(16.dp)
                         .align(Alignment.CenterVertically),
-                    color = TangemTheme.colors.icon.informative,
+                    color = TangemTheme.colors3.icon.secondary,
                     strokeWidth = 2.dp,
                 )
                 Text(
                     text = stringResourceSafe(R.string.express_fetch_best_rates),
                     style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                     modifier = Modifier.padding(start = 4.dp),
                 )
             }
@@ -344,7 +344,7 @@ private fun ProviderLoadingState(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .align(alignment = Alignment.CenterEnd)
                 .padding(end = 12.dp),
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
         )
     }
 }
@@ -361,7 +361,7 @@ private fun BoxScope.ProviderChevron(selectionType: ProviderState.SelectionType,
                 modifier = Modifier
                     .align(alignment = Alignment.CenterEnd)
                     .padding(end = 12.dp),
-                tint = TangemTheme.colors.icon.informative,
+                tint = TangemTheme.colors3.icon.secondary,
             )
         }
         ProviderState.SelectionType.SELECT -> {
@@ -372,7 +372,7 @@ private fun BoxScope.ProviderChevron(selectionType: ProviderState.SelectionType,
                     modifier = Modifier
                         .align(alignment = Alignment.CenterEnd)
                         .padding(end = 12.dp),
-                    tint = TangemTheme.colors.icon.accent,
+                    tint = TangemTheme.colors3.icon.accent.blue,
                 )
             }
         }
@@ -383,7 +383,7 @@ private fun BoxScope.ProviderChevron(selectionType: ProviderState.SelectionType,
 private fun ErrorProviderIcon(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.background(
-            color = TangemTheme.colors.background.secondary,
+            color = TangemTheme.colors3.bg.primary,
             shape = TangemTheme.shapes.roundedCorners8,
         ),
         contentAlignment = Alignment.Center,
@@ -400,14 +400,14 @@ private fun ErrorProviderIcon(modifier: Modifier = Modifier) {
 private fun BestTradeItem(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.background(
-            color = TangemTheme.colors.icon.accent.copy(alpha = 0.1f),
+            color = TangemTheme.colors3.bg.accent.blueSubtle,
             shape = TangemTheme.shapes.roundedCornersLarge,
         ),
     ) {
         Text(
             text = stringResourceSafe(R.string.express_provider_best_rate),
             style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.icon.accent,
+            color = TangemTheme.colors3.icon.accent.blue,
             modifier = Modifier.padding(horizontal = 6.dp),
             maxLines = 1,
         )
@@ -418,14 +418,14 @@ private fun BestTradeItem(modifier: Modifier = Modifier) {
 private fun BestDexRateItem(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.background(
-            color = TangemTheme.colors.icon.accent.copy(alpha = 0.1f),
+            color = TangemTheme.colors3.bg.accent.blueSubtle,
             shape = TangemTheme.shapes.roundedCornersLarge,
         ),
     ) {
         Text(
             text = stringResourceSafe(R.string.express_provider_best_dex_rate),
             style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.icon.accent,
+            color = TangemTheme.colors3.icon.accent.blue,
             modifier = Modifier.padding(horizontal = 6.dp),
             maxLines = 1,
         )
@@ -436,14 +436,14 @@ private fun BestDexRateItem(modifier: Modifier = Modifier) {
 private fun PermissionBadgeItem(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.background(
-            color = TangemTheme.colors.background.secondary,
+            color = TangemTheme.colors3.bg.primary,
             shape = TangemTheme.shapes.roundedCornersLarge,
         ),
     ) {
         Text(
             text = stringResourceSafe(id = R.string.express_provider_permission_needed),
             style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.padding(horizontal = 6.dp),
             maxLines = 1,
         )
@@ -454,14 +454,14 @@ private fun PermissionBadgeItem(modifier: Modifier = Modifier) {
 private fun UnavailableBadgeItem(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.background(
-            color = TangemTheme.colors.background.secondary,
+            color = TangemTheme.colors3.bg.primary,
             shape = TangemTheme.shapes.roundedCornersLarge,
         ),
     ) {
         Text(
             text = stringResourceSafe(id = R.string.common_not_available),
             style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.padding(horizontal = 6.dp),
             maxLines = 1,
         )
@@ -472,14 +472,14 @@ private fun UnavailableBadgeItem(modifier: Modifier = Modifier) {
 private fun FCABadgeItem(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.background(
-            color = TangemTheme.colors.background.secondary,
+            color = TangemTheme.colors3.bg.primary,
             shape = TangemTheme.shapes.roundedCornersLarge,
         ),
     ) {
         Text(
             text = stringResourceSafe(id = R.string.express_provider_fca_warning_list),
             style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.padding(horizontal = 6.dp),
             maxLines = 1,
         )
@@ -490,14 +490,14 @@ private fun FCABadgeItem(modifier: Modifier = Modifier) {
 private fun RecommendedItem(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.background(
-            color = TangemTheme.colors.icon.accent.copy(alpha = 0.1f),
+            color = TangemTheme.colors3.bg.accent.blueSubtle,
             shape = TangemTheme.shapes.roundedCornersLarge,
         ),
     ) {
         Text(
             text = stringResourceSafe(id = R.string.express_provider_recommended),
             style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.icon.accent,
+            color = TangemTheme.colors3.icon.accent.blue,
             modifier = Modifier.padding(horizontal = 6.dp),
             maxLines = 1,
         )
@@ -513,7 +513,7 @@ private fun ProviderItemPreview(
 ) {
     TangemThemePreview {
         ProviderItemBlock(
-            modifier = Modifier.background(TangemTheme.colors.background.action),
+            modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
             state = state.first,
         )
     }

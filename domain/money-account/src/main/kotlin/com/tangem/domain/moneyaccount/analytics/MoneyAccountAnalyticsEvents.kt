@@ -49,9 +49,21 @@ sealed class MoneyAccountAnalyticsEvents(
         event = "VA Account Details Error Support Tapped",
     )
 
+    data class WithdrawOptionSelected(val method: WithdrawMethod) : MoneyAccountAnalyticsEvents(
+        categoryName = TRANSFER_CATEGORY,
+        event = "VA Withdraw Option Selected",
+        params = mapOf("method" to method.value),
+    )
+
+    enum class WithdrawMethod(val value: String) {
+        ON_CHAIN("on_chain"),
+        BANK_TRANSFER("bank_transfer"),
+    }
+
     private companion object {
         const val SCREEN_CATEGORY = "VA Screen"
         const val DEPOSIT_CATEGORY = "VA Deposit"
         const val DETAILS_CATEGORY = "VA Details"
+        const val TRANSFER_CATEGORY = "VA Transfer"
     }
 }

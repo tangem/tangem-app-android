@@ -36,7 +36,7 @@ internal fun ConfirmResidencyBottomSheet(config: TangemBottomSheetConfig, conten
     TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
         config = config,
         addBottomInsets = true,
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
         content = {
             val contentModifier = Modifier
                 .padding(horizontal = 16.dp)
@@ -58,7 +58,7 @@ internal fun ConfirmResidencyBottomSheetContent(model: ConfirmResidencyUM, modif
                 .padding(top = 10.dp),
             text = stringResourceSafe(id = R.string.onramp_residency_bottomsheet_title),
             style = TangemTheme.typography.subtitle1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
         )
         CountryContent(
@@ -107,7 +107,7 @@ private fun CountryContent(name: String, flagUrl: String, isCountrySupported: Bo
         Text(
             modifier = Modifier.padding(top = 12.dp),
             text = name,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             style = TangemTheme.typography.subtitle1,
             maxLines = 1,
         )
@@ -116,7 +116,7 @@ private fun CountryContent(name: String, flagUrl: String, isCountrySupported: Bo
             Text(
                 modifier = Modifier.padding(top = 6.dp),
                 text = stringResourceSafe(id = R.string.onramp_residency_bottomsheet_country_not_supported),
-                color = TangemTheme.colors.text.warning,
+                color = TangemTheme.colors3.text.accent.red,
                 style = TangemTheme.typography.body2,
             )
         }

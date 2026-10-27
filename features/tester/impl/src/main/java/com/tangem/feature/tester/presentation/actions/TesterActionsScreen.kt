@@ -49,7 +49,7 @@ internal fun TesterActionsScreen(state: TesterActionsContentState, modifier: Mod
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(TangemTheme.colors.background.secondary),
+            .background(TangemTheme.colors3.bg.primary),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         stickyHeader {
@@ -216,7 +216,7 @@ private fun createEmailShareIntent(activity: Activity, file: File?): Intent {
 private fun TesterActionsScreenSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(TangemTheme.colors.background.primary),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         TesterActionsScreen(
             state = TesterActionsContentState(

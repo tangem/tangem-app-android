@@ -32,7 +32,7 @@ internal fun StakingActionSelectorBottomSheet(config: TangemBottomSheetConfig) {
         title = { content ->
             TangemBottomSheetTitle(title = content.title)
         },
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
     ) { content ->
         Column(
             modifier = Modifier
@@ -42,12 +42,12 @@ internal fun StakingActionSelectorBottomSheet(config: TangemBottomSheetConfig) {
                     bottom = 32.dp,
                 )
                 .clip(TangemTheme.shapes.roundedCornersXMedium)
-                .background(TangemTheme.colors.background.action),
+                .background(TangemTheme.colors3.bg.secondary),
         ) {
             content.actions.forEachIndexed { index, action ->
                 InputRowDefault(
                     text = action.type.getPendingActionTitle(),
-                    textColor = TangemTheme.colors.text.primary1,
+                    textColor = TangemTheme.colors3.text.primary,
                     showDivider = index != content.actions.lastIndex,
                     modifier = Modifier
                         .fillMaxWidth()

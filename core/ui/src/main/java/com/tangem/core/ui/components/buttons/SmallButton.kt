@@ -69,7 +69,7 @@ private fun SmallButton(config: SmallButtonConfig, isPrimary: Boolean, modifier:
     val shape = RoundedCornerShape(size = 16.dp)
 
     val backgroundColor by animateColorAsState(
-        targetValue = if (isPrimary) TangemTheme.colors.button.primary else TangemTheme.colors.button.secondary,
+        targetValue = if (isPrimary) TangemTheme.colors3.bg.inverse else TangemTheme.colors3.bg.transparent.secondary,
         label = "Update background color",
     )
 
@@ -105,7 +105,7 @@ private fun SmallButton(config: SmallButtonConfig, isPrimary: Boolean, modifier:
         if (config.isLoading) {
             CircularProgressIndicator(
                 strokeWidth = 2.dp,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 modifier = Modifier.size(16.dp),
             )
         }
@@ -119,9 +119,9 @@ private fun SmallButton(config: SmallButtonConfig, isPrimary: Boolean, modifier:
                 text = {
                     val textColor by animateColorAsState(
                         targetValue = when {
-                            !config.isEnabled -> TangemTheme.colors.text.disabled
-                            isPrimary -> TangemTheme.colors.text.primary2
-                            else -> TangemTheme.colors.text.primary1
+                            !config.isEnabled -> TangemTheme.colors3.text.tertiary
+                            isPrimary -> TangemTheme.colors3.text.inverse.primary
+                            else -> TangemTheme.colors3.text.primary
                         },
                         label = "Update text color",
                     )
@@ -139,9 +139,9 @@ private fun SmallButton(config: SmallButtonConfig, isPrimary: Boolean, modifier:
                         modifier = Modifier.size(16.dp),
                         painter = painterResource(id = iconResId),
                         tint = if (config.isEnabled) {
-                            TangemTheme.colors.icon.secondary
+                            TangemTheme.colors3.icon.secondary
                         } else {
-                            TangemTheme.colors.icon.inactive
+                            TangemTheme.colors3.icon.tertiary
                         },
                         contentDescription = null,
                     )
@@ -180,7 +180,7 @@ private fun Preview_SmallButton() {
 @Composable
 private fun ButtonsSample() {
     Column(
-        modifier = Modifier.background(TangemTheme.colors.background.primary),
+        modifier = Modifier.background(TangemTheme.colors3.bg.primary),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         val config = SmallButtonConfig(

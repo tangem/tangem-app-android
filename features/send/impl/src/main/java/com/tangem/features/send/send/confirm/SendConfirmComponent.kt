@@ -156,7 +156,7 @@ internal class SendConfirmComponent(
                 router.pop()
             },
             backIconRes = R.drawable.ic_back_24,
-            backgroundColor = TangemTheme.colors.background.tertiary,
+            backgroundColor = TangemTheme.colors3.bg.primary,
             modifier = Modifier.height(56.dp),
         )
     }

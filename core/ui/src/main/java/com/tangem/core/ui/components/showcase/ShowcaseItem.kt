@@ -21,7 +21,7 @@ internal fun ShowcaseItem(@DrawableRes iconRes: Int, title: TextReference, subti
         Icon(
             painter = painterResource(id = iconRes),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.primary1,
+            tint = TangemTheme.colors3.icon.primary,
         )
         Column(
             modifier = Modifier
@@ -32,14 +32,14 @@ internal fun ShowcaseItem(@DrawableRes iconRes: Int, title: TextReference, subti
             Text(
                 text = title.resolveReference(),
                 style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 modifier = Modifier.fillMaxWidth(),
             )
 
             Text(
                 text = subtitle.resolveReference(),
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 modifier = Modifier.fillMaxWidth(),
             )
         }

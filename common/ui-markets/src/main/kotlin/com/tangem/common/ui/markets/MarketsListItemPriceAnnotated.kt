@@ -16,7 +16,7 @@ fun BigDecimal.toMarketsListItemPriceAnnotated(appCurrencyCode: String, appCurre
         fiat(
             fiatCurrencyCode = appCurrencyCode,
             fiatCurrencySymbol = appCurrencySymbol,
-            spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
+            spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.secondary) },
         ).price()
     }
 }

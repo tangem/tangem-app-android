@@ -96,9 +96,9 @@ fun ActionButtons(buttons: ImmutableList<TangemButtonUM>, modifier: Modifier = M
 @Composable
 private fun ActionButton(button: TangemButtonUM, modifier: Modifier = Modifier) {
     val textColor = if (button.isEnabled && !button.isDimmed) {
-        TangemTheme.colors2.text.neutral.primary
+        TangemTheme.colors3.text.primary
     } else {
-        TangemTheme.colors2.text.status.disabled
+        TangemTheme.colors3.text.tertiary
     }
     Column(
         modifier = modifier
@@ -174,9 +174,9 @@ private fun previewIcon(iconRes: Int, isEnabled: Boolean): TangemIconUM = Tangem
     iconRes = iconRes,
     tintReference = {
         if (isEnabled) {
-            TangemTheme.colors2.graphic.neutral.primary
+            TangemTheme.colors3.icon.primary
         } else {
-            TangemTheme.colors2.graphic.neutral.quaternary
+            TangemTheme.colors3.icon.tertiary
         }
     },
 )

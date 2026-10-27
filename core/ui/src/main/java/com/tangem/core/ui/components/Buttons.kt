@@ -338,7 +338,7 @@ fun HoldToConfirmButton(
 @Composable
 private fun PrimaryButtonSample() {
     Column(
-        modifier = Modifier.background(TangemTheme.colors.background.primary),
+        modifier = Modifier.background(TangemTheme.colors3.bg.primary),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         PrimaryButton(modifier = Modifier.fillMaxWidth(), text = "Manage tokens", onClick = { })
@@ -402,7 +402,7 @@ private fun PrimaryButtonPreview() {
 @Composable
 private fun SecondaryButtonSample() {
     Column(
-        modifier = Modifier.background(TangemTheme.colors.background.primary),
+        modifier = Modifier.background(TangemTheme.colors3.bg.primary),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         SecondaryButton(modifier = Modifier.fillMaxWidth(), text = "Manage tokens", onClick = { })
@@ -459,7 +459,7 @@ private fun SecondaryButtonPreview() {
 @Composable
 private fun TextButtonSample() {
     Column(
-        modifier = Modifier.background(TangemTheme.colors.background.primary),
+        modifier = Modifier.background(TangemTheme.colors3.bg.primary),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         TextButton(text = "Enabled", onClick = { })

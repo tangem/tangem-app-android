@@ -44,8 +44,8 @@ import kotlin.math.abs
 fun TangemLinearProgressIndicator(
     progress: () -> Float,
     modifier: Modifier = Modifier,
-    color: Color = TangemTheme.colors.text.accent,
-    backgroundColor: Color = TangemTheme.colors.background.tertiary,
+    color: Color = TangemTheme.colors3.text.accent.blue,
+    backgroundColor: Color = TangemTheme.colors3.bg.primary,
     strokeCap: StrokeCap = StrokeCap.Round,
 ) {
     val coercedProgress = { progress().coerceIn(0f, 1f) }
@@ -82,8 +82,8 @@ fun TangemLinearProgressIndicator(
 @Composable
 fun TangemLinearProgressIndicator(
     modifier: Modifier = Modifier,
-    color: Color = TangemTheme.colors.text.accent,
-    backgroundColor: Color = TangemTheme.colors.background.tertiary,
+    color: Color = TangemTheme.colors3.text.accent.blue,
+    backgroundColor: Color = TangemTheme.colors3.bg.primary,
     strokeCap: StrokeCap = StrokeCap.Round,
 ) {
     val infiniteTransition = rememberInfiniteTransition()
@@ -270,28 +270,28 @@ private fun LinearProgressIndicator_Preview() {
     TangemThemePreview {
         Column(
             modifier = Modifier
-                .background(TangemTheme.colors.background.secondary)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             TangemLinearProgressIndicator(
                 progress = { 0.6f },
                 modifier = Modifier.fillMaxWidth(),
-                color = TangemTheme.colors.icon.primary1,
-                backgroundColor = TangemTheme.colors.background.tertiary,
+                color = TangemTheme.colors3.icon.primary,
+                backgroundColor = TangemTheme.colors3.bg.primary,
             )
             TangemLinearProgressIndicatorWithDot(
                 progress = { 1f },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(6.dp),
-                dotColor = TangemTheme.colors.icon.primary1,
-                backgroundColor = TangemTheme.colors.background.tertiary,
+                dotColor = TangemTheme.colors3.icon.primary,
+                backgroundColor = TangemTheme.colors3.bg.primary,
             )
             TangemLinearProgressIndicator(
                 modifier = Modifier.fillMaxWidth(),
-                color = TangemTheme.colors.icon.primary1,
-                backgroundColor = TangemTheme.colors.background.tertiary,
+                color = TangemTheme.colors3.icon.primary,
+                backgroundColor = TangemTheme.colors3.bg.primary,
             )
         }
     }

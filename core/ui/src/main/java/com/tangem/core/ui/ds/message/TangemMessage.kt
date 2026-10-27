@@ -49,7 +49,7 @@ import kotlinx.collections.immutable.persistentListOf
 fun TangemMessage(
     messageUM: TangemMessageUM,
     modifier: Modifier = Modifier,
-    contentColor: Color = TangemTheme.colors2.surface.level3,
+    contentColor: Color = TangemTheme.colors3.bg.secondary,
 ) {
     val isIconLeading = messageUM.onCloseClick != null ||
         messageUM.iconPosition == TangemMessageIconPosition.Leading
@@ -114,7 +114,7 @@ fun TangemMessage(
 fun TangemMessage(
     config: NotificationConfig,
     modifier: Modifier = Modifier,
-    contentColor: Color = TangemTheme.colors2.surface.level3,
+    contentColor: Color = TangemTheme.colors3.bg.secondary,
     iconPosition: TangemMessageIconPosition = TangemMessageIconPosition.Trailing,
 ) {
     val buttonState = config.buttonsState
@@ -122,9 +122,9 @@ fun TangemMessage(
     val icon: @Composable RowScope.() -> Unit = {
         val iconTint = when (config.iconTint) {
             NotificationConfig.IconTint.Unspecified -> null
-            NotificationConfig.IconTint.Accent -> TangemTheme.colors2.graphic.status.accent
-            NotificationConfig.IconTint.Attention -> TangemTheme.colors2.graphic.status.attention
-            NotificationConfig.IconTint.Warning -> TangemTheme.colors2.graphic.status.warning
+            NotificationConfig.IconTint.Accent -> TangemTheme.colors3.icon.accent.blue
+            NotificationConfig.IconTint.Attention -> TangemTheme.colors3.icon.accent.yellow
+            NotificationConfig.IconTint.Warning -> TangemTheme.colors3.icon.accent.red
         }
         val iconModifier = Modifier.size(config.iconSize).testTag(NotificationTestTags.ICON)
         if (config.iconUrl != null) {
@@ -183,7 +183,7 @@ fun TangemMessage(
     messageEffect: TangemMessageEffect = TangemMessageEffect.None,
     onCloseClick: (() -> Unit)? = null,
     isCentered: Boolean = false,
-    contentColor: Color = TangemTheme.colors2.surface.level3,
+    contentColor: Color = TangemTheme.colors3.bg.secondary,
     leadingContent: (@Composable RowScope.() -> Unit)? = null,
     trailingContent: (@Composable RowScope.() -> Unit)? = null,
     buttons: (@Composable RowScope.() -> Unit)? = null,
@@ -233,7 +233,7 @@ fun TangemMessage(
             Icon(
                 imageVector = ImageVector.vectorResource(R.drawable.ic_close_new_20),
                 contentDescription = null,
-                tint = TangemTheme.colors2.text.neutral.secondary,
+                tint = TangemTheme.colors3.text.secondary,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(12.dp)
@@ -285,7 +285,7 @@ private fun TangemMessageContent(
                 Text(
                     text = title.resolveAnnotatedReference(),
                     style = TangemTheme.typography2.bodySemibold16,
-                    color = TangemTheme.colors2.text.neutral.primary,
+                    color = TangemTheme.colors3.text.primary,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     textAlign = textAlign,
@@ -297,7 +297,7 @@ private fun TangemMessageContent(
                     textAlign = textAlign,
                     text = subtitle.resolveAnnotatedReference(),
                     style = TangemTheme.typography2.captionSemibold12,
-                    color = TangemTheme.colors2.text.neutral.secondary,
+                    color = TangemTheme.colors3.text.secondary,
                     modifier = Modifier.testTag(NotificationTestTags.MESSAGE),
                 )
             }
@@ -334,7 +334,7 @@ private fun RowScope.TangemMessageLegacyButtons(buttonState: ButtonsState) {
             tangemIconUM = buttonState.iconResId?.let {
                 TangemIconUM.Icon(
                     iconRes = buttonState.iconResId,
-                    tintReference = { TangemTheme.colors2.graphic.neutral.primary },
+                    tintReference = { TangemTheme.colors3.icon.primary },
                 )
             },
             onClick = buttonState.onClick,
@@ -349,7 +349,7 @@ private fun RowScope.TangemMessageLegacyButtons(buttonState: ButtonsState) {
             tangemIconUM = buttonState.iconResId?.let {
                 TangemIconUM.Icon(
                     iconRes = buttonState.iconResId,
-                    tintReference = { TangemTheme.colors2.graphic.neutral.primary },
+                    tintReference = { TangemTheme.colors3.icon.primary },
                 )
             },
             onClick = buttonState.onClick,
@@ -440,7 +440,7 @@ private class TangemMessagePreviewProvider : PreviewParameterProvider<TangemMess
                         type = TangemButtonType.Primary,
                         tangemIconUM = TangemIconUM.Icon(
                             iconRes = R.drawable.ic_tangem_24,
-                            tintReference = { TangemTheme.colors2.graphic.neutral.primary },
+                            tintReference = { TangemTheme.colors3.icon.primary },
                         ),
                         onClick = {},
                     ),
@@ -519,7 +519,7 @@ private fun TangemMessage2_Preview() {
                     modifier = Modifier
                         .size(28.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(TangemTheme.colors2.text.neutral.primary),
+                        .background(TangemTheme.colors3.text.primary),
                 )
             },
             buttons = {
@@ -531,7 +531,7 @@ private fun TangemMessage2_Preview() {
                     shape = TangemButtonShape.Rounded,
                     tangemIconUM = TangemIconUM.Icon(
                         iconRes = R.drawable.ic_tangem_24,
-                        tintReference = { TangemTheme.colors2.graphic.neutral.primary },
+                        tintReference = { TangemTheme.colors3.icon.primary },
                     ),
                 )
                 PrimaryTangemButton(
@@ -543,7 +543,7 @@ private fun TangemMessage2_Preview() {
                 )
             },
             modifier = Modifier
-                .background(TangemTheme.colors2.surface.level1)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(4.dp)
                 .fillMaxWidth(),
         )
@@ -562,7 +562,7 @@ private fun TangemMessageLegacy_Preview(
         TangemMessage(
             config = params,
             modifier = Modifier
-                .background(TangemTheme.colors2.surface.level1)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(4.dp)
                 .fillMaxWidth(),
         )

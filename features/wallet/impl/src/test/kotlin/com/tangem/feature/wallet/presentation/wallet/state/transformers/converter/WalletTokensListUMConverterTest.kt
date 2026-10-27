@@ -85,7 +85,6 @@ internal class WalletTokensListUMConverterTest {
         clickIntents = clickIntents,
         yieldModuleApyMap = emptyMap(),
         isAccountsModeEnabled = isAccountsModeEnabled,
-        accountIdsWithInvites = emptySet(),
         expandedAccounts = emptySet(),
         stakingAvailabilityMap = emptyMap(),
         shouldShowMainPromo = false,

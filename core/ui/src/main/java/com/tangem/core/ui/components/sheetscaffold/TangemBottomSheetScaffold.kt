@@ -69,7 +69,7 @@ fun TangemBottomSheetScaffold(
     scaffoldState: TangemBottomSheetScaffoldState = rememberTangemBottomSheetScaffoldState(),
     topBar: @Composable (() -> Unit)? = null,
     snackbarHost: @Composable (SnackbarHostState) -> Unit = { SnackbarHost(it) },
-    containerColor: Color = TangemTheme.colors.background.secondary,
+    containerColor: Color = TangemTheme.colors3.bg.primary,
     contentColor: Color = contentColorFor(containerColor),
     bottomSheet: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,

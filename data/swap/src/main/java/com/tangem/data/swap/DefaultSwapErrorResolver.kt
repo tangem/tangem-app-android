@@ -14,7 +14,7 @@ internal class DefaultSwapErrorResolver(
                 expressErrorConverter.convert(throwable.errorBody.orEmpty())
             }
             is ExpressError -> throwable
-            else -> ExpressError.UnknownError
+            else -> ExpressError.UnknownError()
         }
     }
 }

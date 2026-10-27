@@ -121,11 +121,11 @@ internal sealed interface ExchangeStatusNotification {
                     val linkTextPosition = fullString.length - linkText.length
 
                     buildAnnotatedString {
-                        withStyle(SpanStyle(TangemTheme.colors.text.tertiary)) {
+                        withStyle(SpanStyle(TangemTheme.colors3.text.secondary)) {
                             append(fullString.substring(0, linkTextPosition))
                         }
 
-                        withStyle(SpanStyle(TangemTheme.colors.text.accent)) {
+                        withStyle(SpanStyle(TangemTheme.colors3.text.accent.blue)) {
                             append(fullString.substring(linkTextPosition, fullString.length))
                         }
                     }

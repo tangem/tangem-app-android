@@ -239,7 +239,7 @@ internal class SendWithSwapModelCallbackTest {
         // Assert
         verify(exactly = 1) {
             swapAlertFactory.getGenericErrorState(
-                expressError = ExpressError.UnknownError,
+                expressError = ExpressError.UnknownError(),
                 onFailedTxEmailClick = any(),
                 popBack = any(),
             )
@@ -256,7 +256,7 @@ internal class SendWithSwapModelCallbackTest {
         val model = createModel(this)
         verify {
             swapAlertFactory.getGenericErrorState(
-                expressError = ExpressError.UnknownError,
+                expressError = ExpressError.UnknownError(),
                 onFailedTxEmailClick = any(),
                 popBack = capture(popBackSlot),
             )

@@ -76,6 +76,7 @@ internal class JointOperationDtoTest {
                     address = "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
                     vote = "approve",
                     votedAt = "2026-09-07T10:00:00Z",
+                    signature = "0x9284",
                 ),
             ),
         )
