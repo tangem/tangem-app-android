@@ -2809,11 +2809,13 @@ internal class SwapModel @Inject constructor(
 
     private fun refreshSlippageUM() {
         val provider = dataState.selectedProvider ?: return
+        val toAccount = dataState.toSwapCurrencyStatus?.account ?: return
         uiState = stateBuilder.updateSlippage(
             uiState = uiState,
             swapProvider = provider,
             slippage = dataState.slippage,
             defaultSlippage = dataState.defaultSlippage(provider),
+            toAccount = toAccount,
         )
     }
 
