@@ -70,6 +70,7 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
 ) {
 
     suspend fun submit(prepared: PreparedPrediction): PlaceResultUM? {
+        if (uiState.value.submit !is SubmitUM.Idle) return null
         uiState.update(SetSubmitTransformer(submit = SubmitUM.Signing))
         return place(frozen = prepared.quote, isNegRisk = prepared.isNegRisk)
     }
@@ -273,8 +274,8 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
 
     /**
      * The exchange accepted the order into a matching delay, so the answer to "did it fill" is read back from
-     * the book. A match ends on the result screen like an immediate one; anything else is a dialog over the
-     * summary, since the order did not place and the same one can be placed again.
+     * the book. A match is returned as a result like an immediate one; anything else is a failure dialog,
+     * since the order did not place and the same one can be placed again.
      */
     private suspend fun awaitDelayedFill(
         addresses: PolymarketAddresses,
