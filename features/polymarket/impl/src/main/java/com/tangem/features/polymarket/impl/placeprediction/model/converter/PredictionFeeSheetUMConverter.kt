@@ -47,7 +47,7 @@ internal object PredictionFeeSheetUMConverter {
     }
 
     private fun PredictionOrderQuote.orderRowTitleRes(heading: PredictionFeeSheetUM.Heading): Int = when (side) {
-        PredictionOrderSide.BUY -> R.string.prediction_fee_sheet_order
+        PredictionOrderSide.BUY -> heading.buyOrderRowTitleRes
         PredictionOrderSide.SELL -> heading.sellOrderRowTitleRes
     }
 

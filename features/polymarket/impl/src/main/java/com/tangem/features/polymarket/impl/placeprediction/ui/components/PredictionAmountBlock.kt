@@ -1,6 +1,7 @@
 package com.tangem.features.polymarket.impl.placeprediction.ui.components
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
@@ -13,6 +14,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -183,6 +187,7 @@ private fun AmountCaptionSlot(amountCaption: AmountCaptionUM?, style: Prediction
         transitionSpec = { fadeIn() togetherWith fadeOut() using null },
         contentAlignment = Alignment.Center,
         label = "amountCaption",
+        contentKey = { caption -> caption?.let { it::class } },
     ) { caption ->
         when (caption) {
             is AmountCaptionUM.Shortfall -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -193,8 +198,8 @@ private fun AmountCaptionSlot(amountCaption: AmountCaptionUM?, style: Prediction
                     color = TangemTheme.colors3.text.status.error,
                     textAlign = TextAlign.Center,
                 )
-                if (style.isPayoutShownWithShortfall && caption.payout != null) {
-                    ToWinBadge(payout = caption.payout, status = style.toWinStatus)
+                if (style.isPayoutShownWithShortfall) {
+                    ShortfallPayoutBadge(payout = caption.payout, status = style.toWinStatus)
                 }
             }
             is AmountCaptionUM.BelowMinimum -> Text(
@@ -210,6 +215,16 @@ private fun AmountCaptionSlot(amountCaption: AmountCaptionUM?, style: Prediction
             is AmountCaptionUM.ToWin -> ToWinBadge(payout = caption.payout, status = style.toWinStatus)
             null -> Unit
         }
+    }
+}
+
+@Composable
+private fun ShortfallPayoutBadge(payout: BigDecimal?, status: TangemBadge.Status) {
+    var lastPayout by remember { mutableStateOf(payout) }
+    if (payout != null) lastPayout = payout
+
+    AnimatedVisibility(visible = payout != null, enter = fadeIn(), exit = fadeOut()) {
+        lastPayout?.let { ToWinBadge(payout = it, status = status) }
     }
 }
 
