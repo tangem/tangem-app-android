@@ -1,4 +1,4 @@
-package com.tangem.domain.models.staking
+package com.tangem.domain.staking.model
 
 import kotlinx.serialization.Serializable
 

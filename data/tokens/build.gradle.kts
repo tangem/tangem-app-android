@@ -79,6 +79,7 @@ dependencies {
 
     // region Tests
     testImplementation(projects.common.test)
+    testImplementation(projects.domain.staking)
     testImplementation(projects.test.core)
     // endregion
 }
