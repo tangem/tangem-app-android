@@ -31,9 +31,15 @@ import java.math.BigDecimal
  * The slippage line of the place-prediction flow.
  */
 @Composable
-internal fun PredictionSlippageRow(slippage: SlippageUM, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
+internal fun PredictionSlippageRow(
+    slippage: SlippageUM,
+    modifier: Modifier = Modifier,
+    divider: Boolean = false,
+    onClick: (() -> Unit)? = null,
+) {
     TangemRow(
         modifier = modifier,
+        divider = divider,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         titleSlot = {
             Text(
