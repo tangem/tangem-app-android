@@ -420,8 +420,8 @@ internal class ExpressTxToTransactionItemUMConverterTest {
     }
 
     @Test
-    fun `GIVEN send-and-swap to an external address WHEN convert THEN subtitle has no owner tail`() {
-        // Arrange — payout goes to a non-owned address; the external counterparty adds no "in …" tail.
+    fun `GIVEN send-and-swap to an external address WHEN convert THEN ticker with address tail`() {
+        // Arrange — payout goes to a non-owned address in no address book.
         val swap = createSwap(
             status = ExpressExchangeStatus.Finished,
             isOutgoing = true,
@@ -435,8 +435,11 @@ internal class ExpressTxToTransactionItemUMConverterTest {
         // Act
         val result = converterWith(lookup).convert(swap) as TransactionItemUM.Content
 
-        // Assert
-        assertThat((result.subtitle as ContentSubtitle.Asset).owner).isNull()
+        // Assert — the recipient is named by the raw address, as "to: BTC for <address>".
+        val subtitle = result.subtitle as ContentSubtitle.Asset
+        assertThat(subtitle.direction).isEqualTo(ContentSubtitle.Direction.TO)
+        assertThat(subtitle.owner)
+            .isEqualTo(ContentSubtitle.AssetOwner.Address(rawAddress = "external-address"))
     }
 
     @Test
@@ -465,7 +468,7 @@ internal class ExpressTxToTransactionItemUMConverterTest {
         // Act
         val result = converterWith(lookup).convert(swap) as TransactionItemUM.Content
 
-        // Assert — the payout ticker stays, the contact names the "in …" tail.
+        // Assert — the payout ticker stays, the contact names the "for …" tail.
         val subtitle = result.subtitle as ContentSubtitle.Asset
         assertThat(subtitle.direction).isEqualTo(ContentSubtitle.Direction.TO)
         assertThat(subtitle.symbol).isEqualTo(bitcoin.symbol)

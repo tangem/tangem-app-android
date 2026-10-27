@@ -15,7 +15,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.pushnotificationpreferences.MarkPushNotificationFirstActivationDoneUseCase
 import com.tangem.domain.settings.NeverRequestPermissionUseCase
-import com.tangem.domain.settings.NeverToInitiallyAskPermissionUseCase
 import com.tangem.domain.wallets.usecase.ApplyPushNotificationFirstActivationUseCase
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
@@ -43,7 +42,6 @@ import org.junit.jupiter.params.provider.MethodSource
 internal class PushNotificationsModelTest {
 
     private val neverRequestPermissionUseCase: NeverRequestPermissionUseCase = mockk(relaxed = true)
-    private val neverToInitiallyAskPermissionUseCase: NeverToInitiallyAskPermissionUseCase = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
     private val analyticHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val notificationsRepository: NotificationsRepository = mockk(relaxed = true)
@@ -91,7 +89,6 @@ internal class PushNotificationsModelTest {
 
         assertThat(model.isDoubleAskSheetShown.value).isFalse()
         coVerify { neverRequestPermissionUseCase(any()) }
-        coVerify { neverToInitiallyAskPermissionUseCase(any()) }
         verify { modelCallbacks.onDenySystemPermission() }
         verify(exactly = 0) {
             analyticHandler.send(match<PushNotificationAnalyticEvents.WarningScreenShown> { true })
@@ -132,7 +129,6 @@ internal class PushNotificationsModelTest {
         verify(exactly = 0) { analyticHandler.send(match<PushNotificationAnalyticEvents.ButtonLater> { true }) }
         coVerify(exactly = 1) { notificationsRepository.setUserAllowToSubscribeOnPushNotifications(false) }
         coVerify(exactly = 1) { neverRequestPermissionUseCase(any()) }
-        coVerify(exactly = 1) { neverToInitiallyAskPermissionUseCase(any()) }
         verify(exactly = 1) { modelCallbacks.onDenySystemPermission() }
         verify(exactly = 0) { modelCallbacks.onDismiss() }
     }
@@ -429,7 +425,6 @@ internal class PushNotificationsModelTest {
             paramsContainer = paramsContainer,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             neverRequestPermissionUseCase = neverRequestPermissionUseCase,
-            neverToInitiallyAskPermissionUseCase = neverToInitiallyAskPermissionUseCase,
             router = router,
             analyticHandler = analyticHandler,
             notificationsRepository = notificationsRepository,

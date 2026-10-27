@@ -190,7 +190,7 @@ internal class SwapTransactionSenderTest {
         send()
 
         // Assert
-        assertThat(expressErrors).containsExactly(ExpressError.UnknownError)
+        assertThat(expressErrors).containsExactly(ExpressError.UnknownError())
         coVerify(exactly = 0) { anyTransferTransaction() }
     }
 
@@ -224,7 +224,7 @@ internal class SwapTransactionSenderTest {
             send()
 
             // Assert
-            assertThat(expressErrors).containsExactly(ExpressError.UnknownError)
+            assertThat(expressErrors).containsExactly(ExpressError.UnknownError())
             coVerify(exactly = 0) { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) }
             coVerify(exactly = 0) {
                 createAndSendGaslessTransactionUseCase(userWallet = any(), transactionData = any(), fee = any())
@@ -424,7 +424,7 @@ internal class SwapTransactionSenderTest {
             send(confirmData = confirmData)
 
             // Assert
-            assertThat(expressErrors).containsExactly(ExpressError.UnknownError)
+            assertThat(expressErrors).containsExactly(ExpressError.UnknownError())
             coVerify(exactly = 0) { anySwapData() }
             coVerify(exactly = 0) { anyTransferTransaction() }
             coVerify(exactly = 0) { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) }

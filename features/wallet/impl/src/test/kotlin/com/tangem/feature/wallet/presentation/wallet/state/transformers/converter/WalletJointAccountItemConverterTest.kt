@@ -44,7 +44,12 @@ internal class WalletJointAccountItemConverterTest {
     private val clickedAccounts = mutableListOf<Pair<UserWalletId, String>>()
     private val compromisedClicks = mutableListOf<UserWalletId>()
 
-    private val converter = createConverter(accountIdsWithInvites = emptySet())
+    private val converter = WalletJointAccountItemConverter(
+        appCurrency = AppCurrency.Default,
+        userWalletId = userWalletId,
+        onAccountClick = { walletId, accountId -> clickedAccounts += walletId to accountId },
+        onCompromisedAccountClick = { walletId -> compromisedClicks += walletId },
+    )
 
     @BeforeEach
     fun resetClicks() {
@@ -52,13 +57,6 @@ internal class WalletJointAccountItemConverterTest {
         compromisedClicks.clear()
     }
 
-    private fun createConverter(accountIdsWithInvites: Set<String>) = WalletJointAccountItemConverter(
-        appCurrency = AppCurrency.Default,
-        userWalletId = userWalletId,
-        accountIdsWithInvites = accountIdsWithInvites,
-        onAccountClick = { walletId, accountId -> clickedAccounts += walletId to accountId },
-        onCompromisedAccountClick = { walletId -> compromisedClicks += walletId },
-    )
 
     @Test
     fun `GIVEN pending status WHEN convert THEN a not active row with members, zero balance and a waiting message`() {
@@ -93,13 +91,12 @@ internal class WalletJointAccountItemConverterTest {
     }
 
     @Test
-    fun `GIVEN invites on this device WHEN convert pending with free slots THEN the invite message is offered`() {
+    fun `GIVEN the account was created by this wallet WHEN convert pending with free slots THEN the invite message`() {
         // Arrange
-        val inviting = createConverter(accountIdsWithInvites = setOf(account.accountId.value))
-        val status = createStatus(JointAccountStatusValue.Pending(StatusSource.ACTUAL, 1, 2))
+        val status = createStatus(JointAccountStatusValue.Pending(StatusSource.ACTUAL, 1, 2, isOwnCreator = true))
 
         // Act
-        val state = inviting.convert(status).state as TangemAccountRow.State.NotActive
+        val state = converter.convert(status).state as TangemAccountRow.State.NotActive
 
         // Assert
         val message = requireNotNull(state.actionMessage)
@@ -114,38 +111,35 @@ internal class WalletJointAccountItemConverterTest {
     }
 
     @Test
-    fun `GIVEN invites on this device WHEN convert pending with every slot taken THEN no message is offered`() {
+    fun `GIVEN the account was created by this wallet WHEN convert pending with every slot taken THEN no message`() {
         // Arrange
-        val inviting = createConverter(accountIdsWithInvites = setOf(account.accountId.value))
-        val status = createStatus(JointAccountStatusValue.Pending(StatusSource.ACTUAL, joinedMembers = 3, totalMembers = 3))
+        val status = createStatus(
+            JointAccountStatusValue.Pending(StatusSource.ACTUAL, joinedMembers = 3, totalMembers = 3, isOwnCreator = true),
+        )
 
         // Act
-        val state = inviting.convert(status).state as TangemAccountRow.State.NotActive
+        val state = converter.convert(status).state as TangemAccountRow.State.NotActive
 
         // Assert
         assertThat(state.actionMessage).isNull()
     }
 
     @Test
-    fun `GIVEN confirming status not confirmed by this wallet WHEN convert THEN the confirm message for everyone`() {
+    fun `GIVEN confirming status not confirmed by this wallet WHEN convert THEN the confirm message`() {
         // Arrange
         val status = createStatus(JointAccountStatusValue.Confirming(StatusSource.ACTUAL, totalMembers = 3))
-        val inviting = createConverter(accountIdsWithInvites = setOf(account.accountId.value))
 
         // Act
-        val memberState = converter.convert(status).state as TangemAccountRow.State.NotActive
-        val creatorState = inviting.convert(status).state as TangemAccountRow.State.NotActive
+        val state = converter.convert(status).state as TangemAccountRow.State.NotActive
 
         // Assert
-        assertThat(memberState.description).isEqualTo(MEMBERS_THREE)
-        listOf(memberState, creatorState).forEach { state ->
-            val message = requireNotNull(state.actionMessage)
-            assertThat(message.text).isEqualTo(resourceReference(R.string.joint_account_confirm_shared_address))
-            assertThat(message.icon).isEqualTo(Icons.ic_checkmark_16)
-        }
+        assertThat(state.description).isEqualTo(MEMBERS_THREE)
+        val message = requireNotNull(state.actionMessage)
+        assertThat(message.text).isEqualTo(resourceReference(R.string.joint_account_confirm_shared_address))
+        assertThat(message.icon).isEqualTo(Icons.ic_checkmark_16)
 
         // Act
-        requireNotNull(memberState.actionMessage).onClick()
+        message.onClick()
 
         // Assert
         assertThat(clickedAccounts).containsExactly(userWalletId to account.accountId.value)
