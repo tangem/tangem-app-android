@@ -5,7 +5,6 @@ import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.datasource.local.preferences.utils.*
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.onboarding.repository.OnboardingRepository
-import kotlinx.coroutines.flow.Flow
 
 /**
  * Default implementation of [OnboardingRepository]
@@ -18,10 +17,6 @@ internal class DefaultOnboardingRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val storePreferencesKeys: StorePreferencesKeys,
 ) : OnboardingRepository {
-
-    override fun wasTwinsOnboardingShown(): Flow<Boolean> {
-        return appPreferencesStore.get(key = storePreferencesKeys.wasTwinsOnboardingShownKey, default = false)
-    }
 
     override suspend fun wasTwinsOnboardingShownSync(): Boolean {
         return appPreferencesStore.getSyncOrDefault(
