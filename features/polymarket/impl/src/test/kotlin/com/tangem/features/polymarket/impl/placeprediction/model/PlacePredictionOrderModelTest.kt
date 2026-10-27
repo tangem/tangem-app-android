@@ -28,6 +28,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -648,7 +649,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             }
 
         @ParameterizedTest(name = "a quote arriving {0} ms after the tap signs {1} order(s)")
-        @CsvSource("10000, 1", "10001, 0")
+        @CsvSource("9999, 1", "10001, 0")
         fun `GIVEN a tap while quoting WHEN the quote arrives THEN it is placed only within ten seconds`(
             quoteMillis: Long,
             expectedSignings: Int,
@@ -674,6 +675,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
 
             // Act
             model.onPause()
+            runCurrent()
 
             // Assert
             assertThat(model.uiState.value.isPlacementPending).isFalse()
@@ -691,6 +693,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
 
             // Act
             model.onAmountChange(value = "25")
+            runCurrent()
 
             // Assert
             assertThat(model.uiState.value.isPlacementPending).isFalse()
@@ -734,6 +737,30 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             }
 
         @Test
+        fun `GIVEN no quote request runs WHEN place clicked while quoting THEN ten seconds later the tap is released`() =
+            runOrderTest {
+                // Arrange
+                coEvery { getEventUseCase(eventId = any()) } coAnswers { awaitCancellation() }
+                val model = createOrderModel(testScope = this)
+                runCurrent()
+                model.onResume()
+                model.onAmountChange(value = "10")
+                runCurrent()
+                model.onPlaceClick()
+
+                // Act
+                advanceTimeBy(delayTimeMillis = PENDING_PLACEMENT_MILLIS + 1)
+                runCurrent()
+                model.onCloseClick()
+
+                // Assert
+                assertThat(model.uiState.value.isPlacementPending).isFalse()
+                assertThat(model.isSubmitting()).isFalse()
+                coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+                verify(exactly = 1) { router.pop(any()) }
+            }
+
+        @Test
         fun `GIVEN a tap while quoting WHEN close clicked THEN the flow stays`() = runOrderTest {
             // Arrange
             val model = createQuotingModel()
@@ -761,6 +788,73 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 assertThat(model.uiState.value.isPlacementPending).isFalse()
             }
     }
+
+    @Nested
+    inner class FreshQuote {
+
+        @ParameterizedTest(name = "{0}")
+        @EnumSource(UnplaceableResult::class)
+        fun `GIVEN an unplaceable quote WHEN the next poll reloads it THEN the button stays disabled`(
+            result: UnplaceableResult,
+        ) = runOrderTest {
+            // Arrange
+            val model = createQuotingModel(result = result.toQuoteResult())
+            advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
+            runCurrent()
+            val answeredQuote = model.uiState.value.quote
+
+            // Act
+            advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS)
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.quote).isEqualTo(answeredQuote)
+            assertThat(model.uiState.value.isPrimaryButtonEnabledWhileQuoting).isFalse()
+        }
+
+        @Test
+        fun `GIVEN a failed quote WHEN the screen resumes and reloads it THEN the button stays disabled`() =
+            runOrderTest {
+                // Arrange
+                val model = createQuotingModel(result = PredictionOrderQuoteError.Network.left())
+                advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
+                runCurrent()
+                model.onPause()
+                val failedQuote = model.uiState.value.quote
+
+                // Act
+                model.onResume()
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.quote).isEqualTo(failedQuote)
+                assertThat(model.uiState.value.isPrimaryButtonEnabledWhileQuoting).isFalse()
+            }
+
+        @Test
+        fun `GIVEN a failed quote WHEN a new amount is entered THEN the button is enabled while it loads`() =
+            runOrderTest {
+                // Arrange
+                val model = createQuotingModel(result = PredictionOrderQuoteError.Network.left())
+                advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
+                runCurrent()
+
+                // Act
+                model.onAmountChange(value = "25")
+
+                // Assert
+                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading)
+                assertThat(model.uiState.value.isPrimaryButtonEnabledWhileQuoting).isTrue()
+            }
+    }
+
+    enum class UnplaceableResult { NoLiquidity, QuoteError }
+
+    private fun UnplaceableResult.toQuoteResult(): Either<PredictionOrderQuoteError, PredictionOrderQuote> =
+        when (this) {
+            UnplaceableResult.NoLiquidity -> createQuote(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY).right()
+            UnplaceableResult.QuoteError -> PredictionOrderQuoteError.Network.left()
+        }
 
     private fun TestScope.createQuotingModel(
         quoteMillis: Long = QUOTE_MILLIS,
@@ -803,5 +897,6 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
     private companion object {
         const val SIGNING_MILLIS = 1_000L
         const val QUOTE_MILLIS = 1_000L
+        const val PENDING_PLACEMENT_MILLIS = 10_000L
     }
 }

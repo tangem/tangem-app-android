@@ -16,6 +16,9 @@ internal class SetAmountTransformer(
     override fun transform(prevState: PlacePredictionUM): PlacePredictionUM {
         val newState = prevState.copy(amountValue = value, isAmountFromFraction = isAmountFromFraction)
         val isQuotable = newState.enteredAmount() != null && !newState.isBelowMinAmount()
-        return newState.copy(quote = if (isQuotable) QuoteUM.Loading else QuoteUM.Empty).recomputeGate()
+        return newState.copy(
+            quote = if (isQuotable) QuoteUM.Loading else QuoteUM.Empty,
+            isAwaitingFreshQuote = isQuotable,
+        ).recomputeGate()
     }
 }
