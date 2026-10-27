@@ -7,6 +7,7 @@ import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
+import com.tangem.features.polymarket.impl.placeprediction.entity.BuyAmountFractionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.CollateralUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
@@ -95,6 +96,8 @@ internal object PlacePredictionPreviewIntents :
     PlacePredictionStatusIntents,
     PlacePredictionSlippageIntents {
     override fun onAmountChange(value: String) = Unit
+
+    override fun onFractionClick(fraction: BuyAmountFractionUM) = Unit
     override fun onSlippageClick() = Unit
     override fun onSlippageValueChange(value: String) = Unit
     override fun onSlippagePresetClick(percent: BigDecimal) = Unit

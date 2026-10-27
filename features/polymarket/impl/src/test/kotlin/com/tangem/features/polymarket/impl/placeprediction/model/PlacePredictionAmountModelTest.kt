@@ -12,6 +12,7 @@ import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketPositionsError
 import com.tangem.domain.polymarket.model.PolymarketAuthError
+import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
 import com.tangem.domain.polymarket.model.PredictionOrderSide
@@ -21,6 +22,7 @@ import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentAmountErrorUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.BuyAmountFractionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
@@ -1146,6 +1148,81 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
                 .contains(PredictionNotificationUM.PositionUnavailable)
             assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
             coVerify(exactly = 0) { getPriceUseCase(assetId = any(), side = any()) }
+
+            model.onDestroy()
+        }
+    }
+
+    @Nested
+    inner class Fractions {
+
+        @Test
+        fun `GIVEN a balance WHEN a fraction is tapped THEN its share is entered AND quoted at once`() = runTest {
+            // Arrange
+            val model = createAmountModel(testScope = this)
+            advanceUntilIdle()
+            model.onResume()
+            runCurrent()
+
+            // Act
+            model.onFractionClick(fraction = BuyAmountFractionUM.Half)
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.amountValue).isEqualTo("50")
+            coVerify(exactly = 1) {
+                getQuoteUseCase(
+                    request = PredictionOrderQuoteRequest(
+                        marketId = MARKET_ID,
+                        assetId = ASSET_ID,
+                        side = PredictionOrderSide.BUY,
+                        amount = BigDecimal("50"),
+                        slippagePercent = DEFAULT_SLIPPAGE_PERCENT,
+                    ),
+                )
+            }
+
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a priced quote with steep fees WHEN Max is tapped THEN the fees still fit into the balance`() =
+            runTest {
+                // Arrange
+                coEvery { getQuoteUseCase(request = any()) } returns createQuote().copy(
+                    fees = PredictionOrderFees(market = BigDecimal("2"), builder = BigDecimal.ZERO, total = BigDecimal("2")),
+                ).right()
+                val model = createAmountModel(testScope = this)
+                advanceUntilIdle()
+                model.onResume()
+                model.onAmountChange(value = "10")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+                // Act
+                model.onFractionClick(fraction = BuyAmountFractionUM.Max)
+
+                // Assert
+                assertThat(model.uiState.value.amountValue).isEqualTo("83.33")
+
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN no balance WHEN a fraction is tapped THEN nothing is entered AND nothing quoted`() = runTest {
+            // Arrange
+            statusFlow.value = PredictionAccountStatusValue.Error.Unavailable
+            val model = createAmountModel(testScope = this)
+            advanceUntilIdle()
+            model.onResume()
+            runCurrent()
+
+            // Act
+            model.onFractionClick(fraction = BuyAmountFractionUM.Max)
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.amountValue).isEmpty()
+            coVerify(exactly = 0) { getQuoteUseCase(request = any()) }
 
             model.onDestroy()
         }
