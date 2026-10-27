@@ -411,8 +411,8 @@ internal class AppSettingsModel @Inject constructor(
     )
 }
 
-private fun AppThemeMode.toAnalyticsTheme(): AnalyticsParam.AppTheme = when (this) {
-    AppThemeMode.FORCE_DARK -> AnalyticsParam.AppTheme.Dark
-    AppThemeMode.FORCE_LIGHT -> AnalyticsParam.AppTheme.Light
-    AppThemeMode.FOLLOW_SYSTEM -> AnalyticsParam.AppTheme.System
+private fun AppThemeMode.toAnalyticsTheme(): Settings.AppSettings.ThemeSwitched.Theme = when (this) {
+    AppThemeMode.FORCE_DARK -> Settings.AppSettings.ThemeSwitched.Theme.Dark
+    AppThemeMode.FORCE_LIGHT -> Settings.AppSettings.ThemeSwitched.Theme.Light
+    AppThemeMode.FOLLOW_SYSTEM -> Settings.AppSettings.ThemeSwitched.Theme.System
 }
