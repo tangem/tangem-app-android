@@ -1,6 +1,8 @@
 package com.tangem.feature.swap.model
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.test.core.ProvideTestModels
@@ -88,6 +90,37 @@ internal class SwapSlippageTest {
             IsLowModel(percent = "0.6", expected = false),
         )
     }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class IsCustomAvailableFor {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun isCustomAvailableFor(model: IsCustomAvailableForModel) {
+            // Act
+            val actual = SwapSlippage.isCustomAvailableFor(model.toAccount)
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels(): List<IsCustomAvailableForModel> {
+            val userWalletId = UserWalletId("0011")
+            return listOf(
+                IsCustomAvailableForModel(
+                    toAccount = Account.Personal.createMainAccount(userWalletId),
+                    expected = true,
+                ),
+                IsCustomAvailableForModel(toAccount = Account.Payment(userWalletId), expected = false),
+                IsCustomAvailableForModel(toAccount = Account.Money(userWalletId), expected = false),
+                IsCustomAvailableForModel(toAccount = Account.Prediction(userWalletId), expected = false),
+                IsCustomAvailableForModel(toAccount = Account.Collectibles(userWalletId), expected = false),
+            )
+        }
+    }
+
+    data class IsCustomAvailableForModel(val toAccount: Account, val expected: Boolean)
 
     data class PresetsModel(val default: String, val expected: List<String>)
 
