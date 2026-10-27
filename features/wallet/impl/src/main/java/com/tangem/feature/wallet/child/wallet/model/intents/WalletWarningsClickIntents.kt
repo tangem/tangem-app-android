@@ -8,6 +8,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic.ButtonSupport
 import com.tangem.core.analytics.models.event.AssetsDiscoveryAnalyticsEvent
+import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent.ButtonUpdateApp
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -265,6 +266,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onSoftUpdateClick() {
+        analyticsEventHandler.send(ButtonUpdateApp(source = ButtonUpdateApp.UpdateSource.Soft))
         appStoreOpener.openStorePage()
     }
 
