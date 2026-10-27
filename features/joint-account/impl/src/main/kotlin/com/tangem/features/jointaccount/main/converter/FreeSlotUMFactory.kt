@@ -13,56 +13,41 @@ import org.joda.time.format.DateTimeFormat
 import org.joda.time.format.DateTimeFormatter
 import java.util.Locale
 
-/**
- * Builds the free-slot rows. A slot whose invite was shared once offers Re-invite: it will ask the backend for a
- * fresh link, and until that endpoint exists it shares the same invite again.
- */
-internal class FreeSlotUMFactory(
-    private val onInviteClick: (inviteId: String, accountName: TextReference) -> Unit,
-) {
+/** Builds the free-slot rows; no row offers a button yet, a code can only come from issuing one */
+internal class FreeSlotUMFactory {
 
     data class Input(
-        val freeSlotsCount: Int,
-        val firstSlotNumber: Int,
+        val slots: List<Int>,
         val invites: List<JointAccountInvite>,
-        val sharedInvites: Set<String>,
         val canInvite: Boolean,
-        val accountName: TextReference?,
         val nowMillis: Long,
     )
 
-    fun create(input: Input): List<JointAccountMembersUM.MemberUM.FreeSlot> = List(
-        size = input.freeSlotsCount,
-    ) { index ->
-        val invite = input.invites.getOrNull(index)
+    fun create(input: Input): List<JointAccountMembersUM.MemberUM.FreeSlot> = input.slots.map { slot ->
+        val invite = input.invites.firstOrNull { it.slot == slot }
         val status = if (input.canInvite) {
-            slotStatus(invite = invite, isShared = invite?.id in input.sharedInvites, nowMillis = input.nowMillis)
+            slotStatus(invite = invite, nowMillis = input.nowMillis)
         } else {
             SlotStatusUM.WaitingToJoin
         }
 
         JointAccountMembersUM.MemberUM.FreeSlot(
-            id = "slot_$index",
+            id = "slot_$slot",
             title = resourceReference(
                 id = CoreUiR.string.joint_account_invite_members_member_number,
-                formatArgs = wrappedList(input.firstSlotNumber + index),
+                formatArgs = wrappedList(slot),
             ),
             status = status,
-            action = slotAction(invite = invite, status = status, input = input),
+            action = null,
         )
     }
 
-    private fun slotStatus(invite: JointAccountInvite?, isShared: Boolean, nowMillis: Long): SlotStatusUM {
-        val expiresAtMillis = invite?.expiresAtMillis
-
-        return when {
-            expiresAtMillis != null && expiresAtMillis <= nowMillis -> SlotStatusUM.Expired
-            !isShared -> SlotStatusUM.NotInvited
-            expiresAtMillis == null -> SlotStatusUM.Invited(
-                label = resourceReference(CoreUiR.string.joint_account_invite_members_invited),
-            )
-            else -> SlotStatusUM.Invited(label = untilLabel(expiresAtMillis = expiresAtMillis, nowMillis = nowMillis))
-        }
+    private fun slotStatus(invite: JointAccountInvite?, nowMillis: Long): SlotStatusUM = when {
+        invite == null -> SlotStatusUM.NotInvited
+        invite.isExpired(nowMillis = nowMillis) -> SlotStatusUM.Expired
+        else -> SlotStatusUM.Invited(
+            label = untilLabel(expiresAtMillis = invite.expiresAtMillis, nowMillis = nowMillis),
+        )
     }
 
     private fun untilLabel(expiresAtMillis: Long, nowMillis: Long): TextReference {
@@ -80,22 +65,6 @@ internal class FreeSlotUMFactory(
                 id = CoreUiR.string.joint_account_invite_members_until,
                 formatArgs = wrappedList(dateTimeFormatter().print(expiresAt)),
             )
-        }
-    }
-
-    private fun slotAction(
-        invite: JointAccountInvite?,
-        status: SlotStatusUM,
-        input: Input,
-    ): JointAccountMembersUM.SlotActionUM? {
-        val accountName = input.accountName
-        if (!input.canInvite || invite == null || accountName == null) return null
-
-        val onClick = { onInviteClick(invite.id, accountName) }
-        return if (status is SlotStatusUM.NotInvited) {
-            JointAccountMembersUM.SlotActionUM.Invite(onClick = onClick)
-        } else {
-            JointAccountMembersUM.SlotActionUM.ReInvite(onClick = onClick)
         }
     }
 
