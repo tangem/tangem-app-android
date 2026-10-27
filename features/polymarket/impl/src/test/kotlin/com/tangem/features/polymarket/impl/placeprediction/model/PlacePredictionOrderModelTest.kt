@@ -3,18 +3,22 @@ package com.tangem.features.polymarket.impl.placeprediction.model
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.decompose.model.Model
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionOrderFailure
 import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.models.StatusSource
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
+import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
@@ -23,6 +27,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.EnumSource
 import java.math.BigDecimal
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -32,7 +37,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
     inner class Place {
 
         @Test
-        fun `GIVEN a priced quote WHEN place clicked THEN the status step replaces the stack`() = runTest {
+        fun `GIVEN a priced quote WHEN place clicked THEN the status step replaces the stack`() = runOrderTest {
             // Arrange
             val model = createQuotedModel()
 
@@ -45,12 +50,41 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             verify(exactly = 1) {
                 router.replaceAll(match<PlacePredictionRoute.Status> { it.side == BUY_PARAMS.side }, onComplete = any())
             }
-
-            model.onDestroy()
         }
 
         @Test
-        fun `GIVEN the quote is not ready WHEN place clicked THEN nothing is signed`() = runTest {
+        fun `GIVEN the screen leaves on success WHEN the order is placed THEN no quote is requested after it`() =
+            runOrderTest {
+                // Arrange
+                val dispatcher = UnconfinedTestDispatcher(scheduler = testScheduler)
+                val dispatchers = TestingCoroutineDispatcherProvider(
+                    main = dispatcher,
+                    mainImmediate = dispatcher,
+                    io = dispatcher,
+                    default = dispatcher,
+                    single = dispatcher,
+                )
+                val model = createOrderModel(testScope = this, dispatchers = dispatchers)
+                every { router.replaceAll(any(), onComplete = any()) } answers {
+                    model.onPause()
+                    model.onDestroy()
+                }
+                advanceUntilIdle()
+                model.onResume()
+                model.onAmountChange(value = "10")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+                // Act
+                model.onPlaceClick()
+                advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
+
+                // Assert
+                verify(exactly = 1) { router.replaceAll(any(), onComplete = any()) }
+                coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+            }
+
+        @Test
+        fun `GIVEN the quote is not ready WHEN place clicked THEN nothing is signed`() = runOrderTest {
             // Arrange
             val model = createOrderModel(testScope = this)
             advanceUntilIdle()
@@ -65,12 +99,10 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
             coVerify(exactly = 0) { signOrderInteractor(request = any()) }
             verify(exactly = 0) { router.replaceAll(any(), onComplete = any()) }
-
-            model.onDestroy()
         }
 
         @Test
-        fun `GIVEN signing is in flight WHEN place clicked again THEN the order is signed once`() = runTest {
+        fun `GIVEN signing is in flight WHEN place clicked again THEN the order is signed once`() = runOrderTest {
             // Arrange
             coEvery { signOrderInteractor(request = any()) } coAnswers {
                 delay(timeMillis = SIGNING_MILLIS)
@@ -86,12 +118,10 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             // Assert
             coVerify(exactly = 1) { signOrderInteractor(request = any()) }
             coVerify(exactly = 1) { placeOrderUseCase(any(), any(), any()) }
-
-            model.onDestroy()
         }
 
         @Test
-        fun `GIVEN place clicked WHEN the click returns THEN signing has already started`() = runTest {
+        fun `GIVEN place clicked WHEN the click returns THEN signing has already started`() = runOrderTest {
             // Arrange
             coEvery { signOrderInteractor(request = any()) } coAnswers {
                 delay(timeMillis = SIGNING_MILLIS)
@@ -105,12 +135,10 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             // Assert
             assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Signing)
             assertThat(model.isSubmitting()).isTrue()
-
-            model.onDestroy()
         }
 
         @Test
-        fun `GIVEN the signature is declined WHEN place clicked THEN the quote loop resumes`() = runTest {
+        fun `GIVEN the signature is declined WHEN place clicked THEN the quote loop resumes`() = runOrderTest {
             // Arrange
             coEvery { signOrderInteractor(request = any()) } returns
                 PredictionOrderFailure.Signing(error = PolymarketSigningError.UserCancelled).left()
@@ -124,12 +152,32 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
             coVerify(exactly = 2) { getQuoteUseCase(request = any()) }
             verify(exactly = 0) { router.replaceAll(any(), onComplete = any()) }
-
-            model.onDestroy()
         }
 
+        @ParameterizedTest(name = "{0}")
+        @EnumSource(FrozenInput::class)
+        fun `GIVEN signing is in flight WHEN an input is used THEN the order stays as it was`(input: FrozenInput) =
+            runOrderTest {
+                // Arrange
+                coEvery { signOrderInteractor(request = any()) } coAnswers {
+                    delay(timeMillis = SIGNING_MILLIS)
+                    SIGNED_ORDER.right()
+                }
+                val model = createQuotedModel()
+                model.onPlaceClick()
+
+                // Act
+                input.apply(model)
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.amountValue).isEqualTo("10")
+                verify(exactly = 0) { router.push(any(), any()) }
+                coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+            }
+
         @Test
-        fun `GIVEN signing is in flight WHEN close clicked THEN the flow stays`() = runTest {
+        fun `GIVEN signing is in flight WHEN close clicked THEN the flow stays`() = runOrderTest {
             // Arrange
             coEvery { signOrderInteractor(request = any()) } coAnswers {
                 delay(timeMillis = SIGNING_MILLIS)
@@ -144,8 +192,6 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
 
             // Assert
             verify(exactly = 0) { router.pop(any()) }
-
-            model.onDestroy()
         }
     }
 
@@ -153,7 +199,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
     inner class Presets {
 
         @Test
-        fun `GIVEN a buy WHEN presets are read THEN they are 100, 500, 1000 and 5000`() = runTest {
+        fun `GIVEN a buy WHEN presets are read THEN they are 100, 500, 1000 and 5000`() = runOrderTest {
             // Arrange
             val model = createOrderModel(testScope = this)
 
@@ -165,7 +211,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         }
 
         @Test
-        fun `GIVEN a sell WHEN presets are read THEN there are none`() = runTest {
+        fun `GIVEN a sell WHEN presets are read THEN there are none`() = runOrderTest {
             // Arrange
             val model = createOrderModel(testScope = this, params = SELL_PARAMS)
 
@@ -177,7 +223,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         }
 
         @Test
-        fun `GIVEN a buy WHEN a preset clicked THEN its amount is entered`() = runTest {
+        fun `GIVEN a buy WHEN a preset clicked THEN its amount is entered`() = runOrderTest {
             // Arrange
             val model = createOrderModel(testScope = this)
             advanceUntilIdle()
@@ -202,7 +248,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN no quote WHEN max clicked THEN nine tenths of the balance floored to cents is entered`(
             balance: String,
             expected: String,
-        ) = runTest {
+        ) = runOrderTest {
             // Arrange
             statusFlow.value = activeStatus(balance = BigDecimal(balance))
             val model = createOrderModel(testScope = this)
@@ -226,7 +272,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             feeTotal: String,
             notional: String,
             expected: String,
-        ) = runTest {
+        ) = runOrderTest {
             // Arrange
             coEvery { getQuoteUseCase(request = any()) } returns createQuote().copy(
                 notional = BigDecimal(notional),
@@ -243,12 +289,10 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
 
             // Assert
             assertThat(model.uiState.value.amountValue).isEqualTo(expected)
-
-            model.onDestroy()
         }
 
         @Test
-        fun `GIVEN a balance below a cent after the cap WHEN max clicked THEN nothing is entered`() = runTest {
+        fun `GIVEN a balance below a cent after the cap WHEN max clicked THEN nothing is entered`() = runOrderTest {
             // Arrange
             statusFlow.value = activeStatus(balance = BigDecimal("0.011"))
             val model = createOrderModel(testScope = this)
@@ -262,7 +306,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         }
 
         @Test
-        fun `GIVEN the balance is not confirmed WHEN max clicked THEN nothing is entered`() = runTest {
+        fun `GIVEN the balance is not confirmed WHEN max clicked THEN nothing is entered`() = runOrderTest {
             // Arrange
             statusFlow.value = activeStatus(source = StatusSource.CACHE)
             val model = createOrderModel(testScope = this)
@@ -276,7 +320,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         }
 
         @Test
-        fun `GIVEN a held position WHEN max clicked THEN the whole position is entered`() = runTest {
+        fun `GIVEN a held position WHEN max clicked THEN the whole position is entered`() = runOrderTest {
             // Arrange
             coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
             val model = createOrderModel(testScope = this, params = SELL_PARAMS)
@@ -294,7 +338,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
     inner class Lifecycle {
 
         @Test
-        fun `GIVEN a model WHEN resumed THEN the price is polled until paused`() = runTest {
+        fun `GIVEN a model WHEN resumed THEN the price is polled until paused`() = runOrderTest {
             // Arrange
             val model = createOrderModel(testScope = this)
             advanceUntilIdle()
@@ -310,7 +354,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         }
 
         @Test
-        fun `GIVEN a model WHEN not resumed THEN nothing is polled`() = runTest {
+        fun `GIVEN a model WHEN not resumed THEN nothing is polled`() = runOrderTest {
             // Arrange
             val model = createOrderModel(testScope = this)
 
@@ -323,6 +367,14 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         }
     }
 
+    private fun runOrderTest(block: suspend TestScope.() -> Unit) = runTest {
+        try {
+            block()
+        } finally {
+            models.forEach(Model::onDestroy)
+        }
+    }
+
     private fun TestScope.createQuotedModel(): PlacePredictionOrderModel {
         val model = createOrderModel(testScope = this)
         advanceUntilIdle()
@@ -330,6 +382,14 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         model.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         return model
+    }
+
+    enum class FrozenInput(val apply: (PlacePredictionOrderModel) -> Unit) {
+        AmountChange(apply = { it.onAmountChange(value = "25") }),
+        Preset(apply = { it.onPresetClick(preset = it.amountPresets.first()) }),
+        Max(apply = PlacePredictionOrderModel::onMaxClick),
+        Slippage(apply = PlacePredictionOrderModel::onSlippageClick),
+        QuoteRetry(apply = PlacePredictionOrderModel::onQuoteRetryClick),
     }
 
     private companion object {

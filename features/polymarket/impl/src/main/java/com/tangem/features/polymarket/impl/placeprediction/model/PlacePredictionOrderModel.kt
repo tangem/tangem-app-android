@@ -72,6 +72,8 @@ internal class PlacePredictionOrderModel @Inject constructor(
     fun isSubmitting(): Boolean = orderSubmitter.isSubmitting()
 
     override fun onAmountChange(value: String) {
+        if (isSubmitting()) return
+
         quoteEngine.onAmountChange(value = value)
     }
 
@@ -82,13 +84,15 @@ internal class PlacePredictionOrderModel @Inject constructor(
     override fun onMaxClick() {
         val max = when (val order = uiState.value.order) {
             is OrderSideUM.Buy -> maxBuyAmount(balance = order.balance ?: return)
-            is OrderSideUM.Sell -> maxSellAmount(position = order.position)
+            is OrderSideUM.Sell -> (order.position as? SellPositionUM.Held)?.available
         } ?: return
 
-        onAmountChange(value = max.stripTrailingZeros().toPlainString())
+        onAmountChange(value = max.toPlainString())
     }
 
     override fun onSlippageClick() {
+        if (isSubmitting()) return
+
         router.push(
             PlacePredictionRoute.Slippage(
                 value = uiState.value.slippage.percent,
@@ -98,18 +102,26 @@ internal class PlacePredictionOrderModel @Inject constructor(
     }
 
     override fun onFeeClick() {
+        if (isSubmitting()) return
+
         feeSheet.onFeeClick()
     }
 
     override fun onAddFundsClick() {
+        if (isSubmitting()) return
+
         quoteEngine.addFunds.onAddFundsClick()
     }
 
     override fun onSwapClick() {
+        if (isSubmitting()) return
+
         quoteEngine.addFunds.onSwapClick()
     }
 
     override fun onReceiveClick() {
+        if (isSubmitting()) return
+
         quoteEngine.addFunds.onReceiveClick()
     }
 
@@ -118,6 +130,8 @@ internal class PlacePredictionOrderModel @Inject constructor(
     }
 
     override fun onQuoteRetryClick() {
+        if (isSubmitting()) return
+
         quoteEngine.retryQuote()
     }
 
@@ -125,8 +139,10 @@ internal class PlacePredictionOrderModel @Inject constructor(
         val prepared = quoteEngine.prepare() ?: return
 
         modelScope.launch(start = CoroutineStart.UNDISPATCHED) {
-            val result = quoteEngine.holdDuring { orderSubmitter.submit(prepared = prepared) } ?: return@launch
-            router.replaceAll(prepared.toStatusRoute(result = result))
+            quoteEngine.holdDuring {
+                val result = orderSubmitter.submit(prepared = prepared) ?: return@holdDuring
+                router.replaceAll(prepared.toStatusRoute(result = result))
+            }
         }
     }
 
@@ -139,12 +155,14 @@ internal class PlacePredictionOrderModel @Inject constructor(
     }
 
     override fun onBackClick() {
-        if (isSubmitting()) return
-
-        router.pop()
+        leaveFlow()
     }
 
     override fun onCloseClick() {
+        leaveFlow()
+    }
+
+    private fun leaveFlow() {
         if (isSubmitting()) return
 
         router.pop()
@@ -157,7 +175,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
         }
         val max = (feeCap?.min(balanceCap) ?: balanceCap).setScale(AMOUNT_DECIMALS, RoundingMode.FLOOR)
 
-        return max.takeIf { it >= MIN_MAX_AMOUNT }
+        return max.takeIf { it >= MIN_MAX_AMOUNT }?.stripTrailingZeros()
     }
 
     private fun latestFeeRate(): BigDecimal? {
@@ -165,12 +183,6 @@ internal class PlacePredictionOrderModel @Inject constructor(
         if (quote.notional.signum() <= 0) return null
 
         return quote.fees.total.divide(quote.notional, MathContext.DECIMAL128)
-    }
-
-    private fun maxSellAmount(position: SellPositionUM): BigDecimal? {
-        val held = position as? SellPositionUM.Held ?: return null
-
-        return SharesCalculator.fraction(available = held.available, percent = SharesCalculator.FULL_PERCENT)
     }
 
     private fun toPreset(amount: BigDecimal): AmountPresetUM = AmountPresetUM(
