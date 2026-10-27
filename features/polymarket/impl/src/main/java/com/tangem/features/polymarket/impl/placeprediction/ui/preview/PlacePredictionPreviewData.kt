@@ -96,7 +96,6 @@ internal object PlacePredictionPreviewIntents :
     PlacePredictionStatusIntents,
     PlacePredictionSlippageIntents {
     override fun onAmountChange(value: String) = Unit
-
     override fun onFractionClick(fraction: BuyAmountFractionUM) = Unit
     override fun onSlippageClick() = Unit
     override fun onSlippageValueChange(value: String) = Unit
