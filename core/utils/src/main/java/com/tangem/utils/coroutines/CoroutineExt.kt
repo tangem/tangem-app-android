@@ -7,8 +7,8 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
 suspend fun <R> runCatching(dispatcher: CoroutineDispatcher, block: suspend () -> R): Result<R> {
-    return runCatching {
-        withContext(dispatcher) { block() }
+    return withContext(dispatcher) {
+        runSuspendCatching { block() }
     }
 }
 

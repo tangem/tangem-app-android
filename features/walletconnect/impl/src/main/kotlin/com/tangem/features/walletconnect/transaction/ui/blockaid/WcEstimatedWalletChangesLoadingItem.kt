@@ -25,7 +25,7 @@ internal fun WcEstimatedWalletChangesLoadingItem(modifier: Modifier = Modifier) 
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(14.dp))
-            .background(color = TangemTheme.colors.background.action)
+            .background(color = TangemTheme.colors3.bg.secondary)
             .fillMaxWidth()
             .animateContentSize(),
     ) {
@@ -39,7 +39,7 @@ internal fun WcEstimatedWalletChangesLoadingItem(modifier: Modifier = Modifier) 
             modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 14.dp),
         ) {
             CircularProgressIndicator(
-                color = TangemTheme.colors.icon.accent,
+                color = TangemTheme.colors3.icon.accent.blue,
                 strokeWidth = 2.dp,
                 modifier = Modifier.size(24.dp),
             )
@@ -48,7 +48,7 @@ internal fun WcEstimatedWalletChangesLoadingItem(modifier: Modifier = Modifier) 
                     .fillMaxWidth()
                     .padding(start = 8.dp),
                 text = stringResourceSafe(R.string.wc_common_loading),
-                color = TangemTheme.colors.text.disabled,
+                color = TangemTheme.colors3.text.tertiary,
                 style = TangemTheme.typography.body2,
             )
         }
@@ -62,7 +62,7 @@ private fun WcEstimatedWalletChangesLoadingItems() {
     TangemThemePreview {
         Box(
             modifier = Modifier
-                .background(TangemTheme.colors.background.tertiary),
+                .background(TangemTheme.colors3.bg.primary),
         ) {
             WcEstimatedWalletChangesLoadingItem()
         }

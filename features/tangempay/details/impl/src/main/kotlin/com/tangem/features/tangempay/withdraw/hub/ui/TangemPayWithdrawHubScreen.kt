@@ -50,7 +50,9 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chevron_left_20
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.account.CryptoPortfolioIcon
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.hub.model.WithdrawHubState
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.BankSectionUM
@@ -72,7 +74,7 @@ internal fun TangemPayWithdrawHubScreen(state: TangemPayWithdrawHubUM, modifier:
             .background(TangemTheme.colors3.bg.primary)
             .testTag(TangemPayTestTags.WITHDRAW_HUB_SCREEN),
     ) {
-        WithdrawHubTopBar(onBackClick = state.onBackClick)
+        WithdrawHubTopBar(title = state.title, onBackClick = state.onBackClick)
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -80,17 +82,17 @@ internal fun TangemPayWithdrawHubScreen(state: TangemPayWithdrawHubUM, modifier:
                 .padding(vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
-            SwapSection(state = state.swapSection)
-            BankSection(state = state.bankSection)
+            state.swapSection?.let { SwapSection(state = it) }
+            state.bankSection?.let { BankSection(state = it) }
         }
     }
 }
 
 @Composable
-private fun WithdrawHubTopBar(onBackClick: () -> Unit) {
+private fun WithdrawHubTopBar(title: TextReference, onBackClick: () -> Unit) {
     TangemTopBar(
         modifier = Modifier.statusBarsPadding(),
-        title = resourceReference(R.string.tangempay_card_details_withdraw),
+        title = title,
         startContent = {
             TangemButton(
                 iconStart = TangemIconUM.Icon(Icons.ic_chevron_left_20),
@@ -281,19 +283,35 @@ private class SwapRecentsPreviewProvider : PreviewParameterProvider<TokenRecents
     )
 }
 
-private fun previewContent(recents: RecentsUM, isAvailable: Boolean = true): BankSectionUM.Content =
-    BankSectionUM.Content(
-        toPersonalAccount = previewActionCard(
-            iconRes = R.drawable.ic_user_filled_16,
-            titleRes = R.string.tangempay_withdraw_hub_to_personal_account,
+private class MoneyAccountBankSectionPreviewProvider : PreviewParameterProvider<BankSectionUM> {
+    override val values: Sequence<BankSectionUM> = sequenceOf(
+        previewContent(recents = previewRecents(onSeeAllClick = {})),
+        previewContent(
+            recents = previewRecents(onSeeAllClick = {}),
+            isAvailable = false,
+            unavailableSubtitle = resourceReference(R.string.money_account_send_bank_transfer_unavailable),
         ),
-        toBusinessAccount = previewActionCard(
-            iconRes = R.drawable.ic_briefcase_filled_16,
-            titleRes = R.string.tangempay_withdraw_hub_to_business_account,
-        ),
-        recents = recents,
-        isAvailable = isAvailable,
     )
+}
+
+private fun previewContent(
+    recents: RecentsUM,
+    isAvailable: Boolean = true,
+    unavailableSubtitle: TextReference =
+        resourceReference(R.string.tangempay_withdraw_hub_bank_section_subtitle_unavailable),
+): BankSectionUM.Content = BankSectionUM.Content(
+    toPersonalAccount = previewActionCard(
+        iconRes = R.drawable.ic_user_filled_16,
+        titleRes = R.string.tangempay_withdraw_hub_to_personal_account,
+    ),
+    toBusinessAccount = previewActionCard(
+        iconRes = R.drawable.ic_briefcase_filled_16,
+        titleRes = R.string.tangempay_withdraw_hub_to_business_account,
+    ),
+    recents = recents,
+    isAvailable = isAvailable,
+    unavailableSubtitle = unavailableSubtitle,
+)
 
 private fun previewActionCard(iconRes: Int, titleRes: Int): TangemPayWithdrawHubUM.ActionCardUM =
     TangemPayWithdrawHubUM.ActionCardUM(
@@ -337,8 +355,10 @@ private fun previewRecentToken(
 private fun previewState(
     bankSection: BankSectionUM,
     tokenRecents: TokenRecentsUM = TokenRecentsUM.Loading,
+    sourceAccount: BankWithdrawSourceAccount = BankWithdrawSourceAccount.Payment(userWalletId = UserWalletId("")),
 ): TangemPayWithdrawHubUM {
     val state = TangemPayWithdrawHubUMFactory(
+        sourceAccount = sourceAccount,
         callbacks = TangemPayWithdrawHubUMFactory.Callbacks(
             onBackClick = {},
             onWithinPortfolioClick = {},
@@ -353,7 +373,7 @@ private fun previewState(
 
     return state.copy(
         bankSection = bankSection,
-        swapSection = state.swapSection.copy(recents = tokenRecents),
+        swapSection = state.swapSection?.copy(recents = tokenRecents),
     )
 }
 
@@ -377,6 +397,25 @@ private fun TangemPayWithdrawHubSwapRecentsPreview(
     TangemThemePreviewRedesign {
         TangemPayWithdrawHubScreen(
             state = previewState(bankSection = BankSectionUM.Loading, tokenRecents = tokenRecents),
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun TangemPayWithdrawHubMoneyAccountPreview(
+    @PreviewParameter(MoneyAccountBankSectionPreviewProvider::class) bankSection: BankSectionUM,
+) {
+    TangemThemePreviewRedesign {
+        TangemPayWithdrawHubScreen(
+            state = previewState(
+                bankSection = bankSection,
+                sourceAccount = BankWithdrawSourceAccount.Money(
+                    userWalletId = UserWalletId(""),
+                    productInstanceId = "",
+                ),
+            ),
         )
     }
 }

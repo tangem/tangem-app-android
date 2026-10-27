@@ -9,6 +9,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.StatusSource
@@ -33,6 +34,7 @@ import com.tangem.domain.transaction.models.GaslessFeePlan
 import com.tangem.domain.transaction.models.isGasless
 import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -42,6 +44,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -60,6 +63,7 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
     private val gaslessTransactionRepository: GaslessTransactionRepository = mockk()
     private val gaslessYieldRepository: GaslessYieldRepository = mockk()
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
+    private val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider = mockk()
     private val estimateFeeUseCase: EstimateFeeUseCase = mockk()
     private val currencyChecksRepository: CurrencyChecksRepository = mockk()
     private val resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase = mockk()
@@ -72,6 +76,7 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
             gaslessTransactionRepository,
             gaslessYieldRepository,
             singleAccountStatusListSupplier,
+            nonPortfolioCurrenciesProvider,
             estimateFeeUseCase,
             currencyChecksRepository,
             resolveGaslessFeePlanUseCase,
@@ -227,6 +232,76 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
         assertThat(feeExtended.transactionFee.normal).isEqualTo(INITIAL_FEE)
     }
 
+    @Test
+    fun `GIVEN the network coin in the portfolio WHEN estimate THEN accounts outside the portfolio are not asked`() =
+        runTest {
+            // Arrange
+            givenAccountStatusList(
+                nativeBalance = BigDecimal("1"),
+                tokenBalance = SWAP_AMOUNT,
+                yieldSupplyStatus = null,
+            )
+
+            // Act
+            createUseCase().invoke(
+                userWallet = userWallet,
+                amount = SWAP_AMOUNT,
+                sendingTokenCurrencyStatus = tokenStatus(balance = SWAP_AMOUNT, yieldSupplyStatus = null),
+            )
+
+            // Assert
+            coVerify(exactly = 0) { nonPortfolioCurrenciesProvider.getStatuses(any(), any()) }
+        }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN a network outside the portfolio WHEN estimate THEN the fee is paid in the account token`(
+        nativeBalance: BigDecimal,
+    ) = runTest {
+        // Arrange
+        val tokenBalance = SWAP_AMOUNT + BigDecimal("5")
+        val sendingTokenStatus = tokenStatus(balance = tokenBalance, yieldSupplyStatus = null)
+        coEvery {
+            walletManager.getGasLimit(any(), FEE_RECEIVER, any())
+        } returns Result.Success(BigInteger("60000"))
+        givenAccountStatusList(nativeBalance = BigDecimal.ZERO, tokenBalance = tokenBalance, yieldSupplyStatus = null)
+        val portfolioTokenFee = createUseCase().invoke(
+            userWallet = userWallet,
+            amount = SWAP_AMOUNT,
+            sendingTokenCurrencyStatus = sendingTokenStatus,
+        )
+        givenNetworkOutsidePortfolio(nativeBalance = nativeBalance, tokenBalance = tokenBalance)
+
+        // Act
+        val result = createUseCase().invoke(
+            userWallet = userWallet,
+            amount = SWAP_AMOUNT,
+            sendingTokenCurrencyStatus = sendingTokenStatus,
+        )
+
+        // Assert
+        assertThat(result).isEqualTo(portfolioTokenFee)
+    }
+
+    @Test
+    fun `GIVEN a network outside the portfolio without the account token WHEN estimate THEN no coin fee is offered`() =
+        runTest {
+            // Arrange
+            givenNetworkOutsidePortfolio(nativeBalance = BigDecimal("1"), tokenBalance = BigDecimal.ZERO)
+
+            // Act
+            val result = createUseCase().invoke(
+                userWallet = userWallet,
+                amount = SWAP_AMOUNT,
+                sendingTokenCurrencyStatus = tokenStatus(balance = BigDecimal.ZERO, yieldSupplyStatus = null),
+            )
+
+            // Assert
+            assertThat(result.leftOrNull()).isEqualTo(GetFeeError.GaslessError.NoSupportedTokensFound)
+        }
+
+    private fun provideTestModels() = listOf(BigDecimal.ZERO, BigDecimal("1"))
+
     // region Fixtures
 
     private fun createUseCase() = EstimateFeeForGaslessTxUseCase(
@@ -235,6 +310,7 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
         gaslessTransactionRepository = gaslessTransactionRepository,
         gaslessYieldRepository = gaslessYieldRepository,
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+        nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
         estimateFeeUseCase = estimateFeeUseCase,
         currencyChecksRepository = currencyChecksRepository,
         resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
@@ -250,6 +326,14 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
             tokenStatus(balance = tokenBalance, yieldSupplyStatus = yieldSupplyStatus),
         )
         coEvery { singleAccountStatusListSupplier.getSyncOrNull(userWalletId) } returns accountStatusList(statuses)
+    }
+
+    private fun givenNetworkOutsidePortfolio(nativeBalance: BigDecimal, tokenBalance: BigDecimal) {
+        coEvery { singleAccountStatusListSupplier.getSyncOrNull(userWalletId) } returns accountStatusList(emptyList())
+        coEvery { nonPortfolioCurrenciesProvider.getStatuses(userWalletId, network) } returns listOf(
+            coinStatus(balance = nativeBalance),
+            tokenStatus(balance = tokenBalance, yieldSupplyStatus = null),
+        )
     }
 
     private fun accountStatusList(statuses: List<CryptoCurrencyStatus>) = AccountStatusList(

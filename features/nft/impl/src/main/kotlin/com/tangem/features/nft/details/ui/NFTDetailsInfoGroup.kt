@@ -111,7 +111,7 @@ private fun SalePrice(state: NFTAssetUM.SalePrice, modifier: Modifier = Modifier
                     Text(
                         text = state.cryptoPrice.resolveReference(),
                         style = TangemTheme.typography.head,
-                        color = TangemTheme.colors.text.primary1,
+                        color = TangemTheme.colors3.text.primary,
                     )
                     Text(
                         modifier = Modifier
@@ -119,7 +119,7 @@ private fun SalePrice(state: NFTAssetUM.SalePrice, modifier: Modifier = Modifier
                             .flicker(state.isFlickering),
                         text = state.fiatPrice.resolveReference(),
                         style = TangemTheme.typography.caption2,
-                        color = TangemTheme.colors.text.tertiary,
+                        color = TangemTheme.colors3.text.secondary,
                     )
                 }
             }
@@ -146,12 +146,12 @@ private fun Description(description: String?, onReadMoreClick: () -> Unit, modif
             expanded = false,
             text = description,
             style = TangemTheme.typography.body2.copy(
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             ),
             readMoreText = resourceReference(R.string.common_read_more).resolveReference(),
             readMoreMaxLines = READ_MORE_MAX_LINES,
             readMoreStyle = TangemTheme.typography.body2.copy(
-                color = TangemTheme.colors.text.accent,
+                color = TangemTheme.colors3.text.accent.blue,
             ).toSpanStyle(),
         )
     }
@@ -169,7 +169,7 @@ private fun Rarity(state: NFTAssetUM.Rarity, modifier: Modifier = Modifier) {
                         top = 8.dp,
                         end = 12.dp,
                     ),
-                    color = TangemTheme.colors.stroke.primary,
+                    color = TangemTheme.colors3.border.secondary,
                 )
             }
             Row(

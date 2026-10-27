@@ -14,8 +14,8 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.moneyaccount.model.StartTangemPayOnboardingError
+import com.tangem.domain.moneyaccount.usecase.GetTangemPayProductsAvailabilityUseCase
 import com.tangem.domain.moneyaccount.usecase.StartTangemPayOnboardingUseCase
-import com.tangem.domain.pay.usecase.GetTangemPayProductsAvailabilityUseCase
 import com.tangem.features.tangempay.components.TangemPayVerifiedComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder

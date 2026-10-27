@@ -137,7 +137,7 @@ private fun ModeBlock(earnType: EarnType, earnTypeTitle: TextReference, modifier
 @Composable
 private fun EarnListItemPreview() {
     TangemThemePreviewRedesign {
-        Column(modifier = Modifier.background(TangemTheme.colors.background.primary)) {
+        Column(modifier = Modifier.background(TangemTheme.colors3.bg.secondary)) {
             SpacerH(12.dp)
             EarnListItem(
                 item = EarnListItemUM(
