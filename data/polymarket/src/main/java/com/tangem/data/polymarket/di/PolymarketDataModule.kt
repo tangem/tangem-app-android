@@ -3,6 +3,7 @@ package com.tangem.data.polymarket.di
 import com.tangem.data.polymarket.DefaultPolymarketBridgeRepository
 import com.tangem.data.polymarket.DefaultPolymarketActivityRepository
 import com.tangem.data.polymarket.DefaultPolymarketLiveScoresRepository
+import com.tangem.data.polymarket.DefaultPolymarketLiveQuotesRepository
 import com.tangem.data.polymarket.DefaultPolymarketRepository
 import com.tangem.data.polymarket.DefaultPolymarketPositionsRepository
 import com.tangem.data.polymarket.DefaultPolymarketRedeemRepository
@@ -16,6 +17,7 @@ import com.tangem.data.polymarket.flow.DefaultPredictionAccountStatusFetcher
 import com.tangem.data.polymarket.flow.DefaultPredictionAccountStatusProducer
 import com.tangem.data.polymarket.flow.DefaultPredictionPositionsValueFetcher
 import com.tangem.data.polymarket.flow.DefaultPredictionPositionsValueProducer
+import com.tangem.data.polymarket.quote.PolymarketQuoteStore
 import com.tangem.data.polymarket.store.DefaultPolymarketBridgeAssetsStore
 import com.tangem.data.polymarket.store.DefaultPredictionDepositAddressWriter
 import com.tangem.data.polymarket.store.DefaultPredictionDepositRequisitesStore
@@ -25,6 +27,7 @@ import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketBridgeRepository
 import com.tangem.domain.polymarket.PolymarketRedeemRepository
 import com.tangem.domain.polymarket.PolymarketLiveScoresRepository
+import com.tangem.domain.polymarket.PolymarketLiveQuotesRepository
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.PolymarketSessionKeyRepository
 import com.tangem.domain.polymarket.PolymarketWithdrawRepository
@@ -56,6 +59,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import kotlin.time.TimeSource
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -76,6 +80,10 @@ internal interface PolymarketDataModule {
     @Binds
     @Singleton
     fun bindPolymarketLiveScoresRepository(impl: DefaultPolymarketLiveScoresRepository): PolymarketLiveScoresRepository
+
+    @Binds
+    @Singleton
+    fun bindLiveQuotesRepository(impl: DefaultPolymarketLiveQuotesRepository): PolymarketLiveQuotesRepository
 
     @Binds
     @Singleton
@@ -148,6 +156,10 @@ internal interface PolymarketDataModule {
     fun bindPredictionTransferCallCodec(impl: DefaultPredictionTransferCallCodec): PredictionTransferCallCodec
 
     companion object {
+
+        @Provides
+        @Singleton
+        fun provideQuoteStore(): PolymarketQuoteStore = PolymarketQuoteStore(TimeSource.Monotonic)
 
         @Provides
         @Singleton
