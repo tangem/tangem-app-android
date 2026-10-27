@@ -87,6 +87,7 @@ class GetCurrencyWarningsUseCaseTest {
         coEvery { currencyChecksRepository.getRentInfoWarning(any(), any()) } returns null
         coEvery { currencyChecksRepository.getExistentialDeposit(any(), any()) } returns null
         coEvery { currencyChecksRepository.getFeeResourceAmount(any(), any()) } returns null
+        coEvery { currencyChecksRepository.getIncompleteBalanceWarning(any(), any()) } returns null
         coEvery { walletManagersFacade.getAssetRequirements(any(), any()) } returns null
         every { dynamicAddressesRepository.hasFundsOnAdditionalAddresses(any(), any()) } returns flowOf(false)
 
