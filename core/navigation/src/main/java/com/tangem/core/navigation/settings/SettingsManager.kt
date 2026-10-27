@@ -9,6 +9,4 @@ interface SettingsManager {
     fun openBiometricSettings()
 
     fun openScreenLockSettings()
-
-    fun openSystemSettings()
 }

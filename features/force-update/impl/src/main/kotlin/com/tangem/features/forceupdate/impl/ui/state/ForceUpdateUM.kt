@@ -12,7 +12,6 @@ internal data class ForceUpdateUM(
     val description: TextReference,
     val onUpdateClick: (() -> Unit)?,
     val onLaterClick: (() -> Unit)?,
-    val onOpenSettingsClick: (() -> Unit)?,
     val onSupportClick: (() -> Unit)?,
 ) {
 

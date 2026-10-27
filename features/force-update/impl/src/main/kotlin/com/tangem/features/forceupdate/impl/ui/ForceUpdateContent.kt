@@ -112,8 +112,7 @@ private fun Buttons(state: ForceUpdateUM, modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         state.onSupportClick?.let { onClick ->
-            val isOnlyAction = state.onUpdateClick == null && state.onLaterClick == null &&
-                state.onOpenSettingsClick == null
+            val isOnlyAction = state.onUpdateClick == null && state.onLaterClick == null
             TangemButton(
                 modifier = Modifier.fillMaxWidth(),
                 variant = if (isOnlyAction) TangemButton.Variant.Primary else TangemButton.Variant.Secondary,
@@ -126,14 +125,6 @@ private fun Buttons(state: ForceUpdateUM, modifier: Modifier = Modifier) {
                 modifier = Modifier.fillMaxWidth(),
                 variant = TangemButton.Variant.Secondary,
                 text = resourceReference(R.string.common_later),
-                onClick = onClick,
-            )
-        }
-        state.onOpenSettingsClick?.let { onClick ->
-            TangemButton(
-                modifier = Modifier.fillMaxWidth(),
-                variant = TangemButton.Variant.Primary,
-                text = resourceReference(R.string.common_open_settings_button_title),
                 onClick = onClick,
             )
         }
@@ -174,7 +165,6 @@ private fun PreviewForce() {
                 description = TextReference.Str("Please update the application to the latest version."),
                 onUpdateClick = {},
                 onLaterClick = null,
-                onOpenSettingsClick = null,
                 onSupportClick = {},
             ),
         )
@@ -194,7 +184,6 @@ private fun PreviewBrick() {
                 description = TextReference.Str("This device can't run the OS version Tangem needs."),
                 onUpdateClick = null,
                 onLaterClick = null,
-                onOpenSettingsClick = null,
                 onSupportClick = {},
             ),
         )
@@ -214,7 +203,6 @@ private fun PreviewOsTooOld() {
                 description = TextReference.Str("Your OS is too old to run Tangem. Update it in Settings."),
                 onUpdateClick = null,
                 onLaterClick = {},
-                onOpenSettingsClick = {},
                 onSupportClick = null,
             ),
         )
