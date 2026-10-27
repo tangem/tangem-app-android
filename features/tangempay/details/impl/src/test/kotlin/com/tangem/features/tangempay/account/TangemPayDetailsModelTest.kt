@@ -1232,6 +1232,7 @@ internal class TangemPayDetailsModelTest {
             beneficiaryBankAddress = "Bank address",
             accountNumber = "123456",
             routingNumber = "654321",
+            rail = "ACH",
             transferMessage = null,
             depositFee = null,
             depositLimit = null,
