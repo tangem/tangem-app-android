@@ -13,6 +13,7 @@ import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawAnalytics
 import com.tangem.features.tangempay.withdraw.bank.recipients.TangemPayBankWithdrawRecipientsComponent
 import com.tangem.features.tangempay.withdraw.bank.recipients.state.TangemPayBankWithdrawRecipientsUM
 import com.tangem.features.tangempay.withdraw.bank.recipients.state.TangemPayBankWithdrawRecipientsUMFactory
@@ -35,10 +36,12 @@ internal class TangemPayBankWithdrawRecipientsModel @Inject constructor(
     private val router: Router,
     private val uiMessageSender: UiMessageSender,
     private val getBankAccountsUseCase: GetBankAccountsUseCase,
-    private val analytics: AnalyticsEventHandler,
+    analytics: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankWithdrawRecipientsComponent.Params>()
+
+    private val withdrawAnalytics = BankWithdrawAnalytics(sourceAccount = params.sourceAccount, analytics = analytics)
 
     private val umFactory = TangemPayBankWithdrawRecipientsUMFactory(
         callbacks = TangemPayBankWithdrawRecipientsUMFactory.Callbacks(
@@ -57,7 +60,7 @@ internal class TangemPayBankWithdrawRecipientsModel @Inject constructor(
         field = MutableStateFlow(umFactory.create(state.value))
 
     init {
-        analytics.send(TangemPayAnalyticsEvents.Offramp.SavedContactsScreenOpened())
+        withdrawAnalytics.onRecipientListOpened()
         state
             .onEach { uiState.value = umFactory.create(it) }
             .launchIn(modelScope)
@@ -93,7 +96,7 @@ internal class TangemPayBankWithdrawRecipientsModel @Inject constructor(
     /** The search bar re-reports an already active state, so only the transition into it counts as a tap. */
     private fun sendSearchBarClickedOnActivation(isActive: Boolean) {
         if (isActive && !state.value.isSearchActive) {
-            analytics.send(TangemPayAnalyticsEvents.Offramp.SearchBarClicked())
+            withdrawAnalytics.sendPaymentAccountOnly(TangemPayAnalyticsEvents.Offramp.SearchBarClicked())
         }
     }
 
@@ -102,7 +105,7 @@ internal class TangemPayBankWithdrawRecipientsModel @Inject constructor(
     }
 
     private fun onRecipientClick(account: BankAccount) {
-        analytics.send(TangemPayAnalyticsEvents.Offramp.SavedContactOnContactsScreenClicked())
+        withdrawAnalytics.onRecipientSelected()
         params.onRecipientSelected(account)
     }
 }
