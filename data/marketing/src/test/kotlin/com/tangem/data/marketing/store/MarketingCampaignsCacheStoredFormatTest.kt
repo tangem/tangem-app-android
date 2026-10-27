@@ -11,6 +11,7 @@ import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.datastore.legacyDataStoreMoshi
 import com.tangem.test.core.datastore.readStoredJson
 import com.tangem.test.core.datastore.writeStoredJson
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
@@ -67,6 +68,31 @@ internal class MarketingCampaignsCacheStoredFormatTest {
         assertThat(actual).isEqualTo(model.json)
     }
 
+    @Test
+    fun `GIVEN file stored before glow existed WHEN read by Moshi and DataStore THEN glow is off`() {
+        // Arrange
+        val json = """{"promo":{"response":{"campaigns":[{"id":7,"type":"promo","priority":1,""" +
+            """"banner":{"uiType":"small","dismissible":false}}]}}}"""
+        val expected = mapOf(
+            "promo" to MarketingCampaignsCacheEntry(
+                eTag = null,
+                response = MarketingCampaignsResponse(
+                    campaigns = listOf(
+                        CampaignDto(id = 7, type = "promo", priority = 1, banner = BannerDto(uiType = "small")),
+                    ),
+                ),
+            ),
+        )
+
+        // Act
+        val fromMoshi = legacyDataStoreMoshi.adapter<Map<String, MarketingCampaignsCacheEntry>>().fromJson(json)
+        val fromDataStore = readStoredJson(json = json, defaultValue = emptyMap<String, MarketingCampaignsCacheEntry>())
+
+        // Assert
+        assertThat(fromMoshi).isEqualTo(expected)
+        assertThat(fromDataStore).isEqualTo(expected)
+    }
+
     private fun provideTestModels() = listOf(
         FormatModel(
             value = mapOf(
@@ -105,7 +131,7 @@ internal class MarketingCampaignsCacheStoredFormatTest {
                 """"maxAmount":"100","providerIds":["provider"],"tokens":[{"networkId":"ethereum",""" +
                 """"contractAddress":"0xtoken","id":"usdt"}],"banner":{"uiType":"large","text":"Text",""" +
                 """"icon":"https://icon","iconAlign":"left","bgColor":"#000000","deeplink":"tangem://promo",""" +
-                """"dismissible":true}}]}}}""",
+                """"dismissible":true,"glow":false}}]}}}""",
         ),
         FormatModel(
             value = mapOf(
@@ -119,7 +145,40 @@ internal class MarketingCampaignsCacheStoredFormatTest {
                 ),
             ),
             json = """{"promo":{"response":{"campaigns":[{"id":7,"type":"promo","priority":1,""" +
-                """"banner":{"uiType":"small","dismissible":false}}]}}}""",
+                """"banner":{"uiType":"small","dismissible":false,"glow":false}}]}}}""",
+        ),
+        FormatModel(
+            value = mapOf(
+                "onramp" to MarketingCampaignsCacheEntry(
+                    eTag = null,
+                    response = MarketingCampaignsResponse(
+                        campaigns = listOf(
+                            CampaignDto(
+                                id = 8,
+                                type = "onramp",
+                                priority = 1,
+                                banner = BannerDto(
+                                    uiType = "pseudo_provider",
+                                    text = "Personal support manager",
+                                    deeplink = "tangem://support",
+                                    categoryLabel = "Concierge for large purchases",
+                                    subtitle = "Pay by bank transfer",
+                                    etaLabel = "up to 4 hours",
+                                    partnerLabel = "via Partner",
+                                    buttonText = "Request",
+                                    hasGlow = true,
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+            json = """{"onramp":{"response":{"campaigns":[{"id":8,"type":"onramp","priority":1,""" +
+                """"banner":{"uiType":"pseudo_provider","text":"Personal support manager",""" +
+                """"deeplink":"tangem://support","dismissible":false,""" +
+                """"categoryLabel":"Concierge for large purchases","subtitle":"Pay by bank transfer",""" +
+                """"etaLabel":"up to 4 hours","partnerLabel":"via Partner","buttonText":"Request",""" +
+                """"glow":true}}]}}}""",
         ),
     )
 
