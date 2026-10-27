@@ -1,7 +1,7 @@
 package com.tangem.tap.common.analytics.handlers.opentelemetry
 
 import android.app.Application
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
+import com.tangem.core.analytics.config.AnalyticsEnvironmentConfig
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -21,7 +21,7 @@ import javax.inject.Singleton
 @Singleton
 class OpenTelemetryMetricsHolder @Inject constructor(
     private val application: Application,
-    private val environmentConfig: EnvironmentConfig,
+    private val config: AnalyticsEnvironmentConfig,
     private val settingsRepository: SettingsRepository,
     private val dispatchers: CoroutineDispatcherProvider,
     private val appScope: AppCoroutineScope,
@@ -31,7 +31,7 @@ class OpenTelemetryMetricsHolder @Inject constructor(
     private var client: OpenTelemetryMetricsClient? = null
 
     fun initialize() {
-        val apiKey = environmentConfig.otlpApiKey
+        val apiKey = config.otlpApiKey
         // The OTLP exporter has its own HTTP client, so mocked builds would bypass WireMock and hit the real gateway
         if (BuildConfig.MOCK_DATA_SOURCE || apiKey.isNullOrEmpty()) return
 

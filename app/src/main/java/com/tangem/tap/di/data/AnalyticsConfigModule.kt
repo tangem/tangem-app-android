@@ -18,7 +18,9 @@ internal object AnalyticsConfigModule {
         return AnalyticsEnvironmentConfig(
             amplitudeApiKey = environmentConfig.amplitudeApiKey,
             amplitudeApiKeyDev = environmentConfig.amplitudeApiKeyDev,
+            appsFlyerApiKey = environmentConfig.appsFlyerApiKey,
             customerIoCdpApiKey = environmentConfig.customerIoCdpApiKey,
+            otlpApiKey = environmentConfig.otlpApiKey,
         )
     }
 }

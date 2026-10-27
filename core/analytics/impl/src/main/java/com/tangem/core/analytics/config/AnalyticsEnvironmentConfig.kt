@@ -7,5 +7,7 @@ package com.tangem.core.analytics.config
 data class AnalyticsEnvironmentConfig(
     val amplitudeApiKey: String,
     val amplitudeApiKeyDev: String?,
+    val appsFlyerApiKey: String,
     val customerIoCdpApiKey: String?,
+    val otlpApiKey: String?,
 )
