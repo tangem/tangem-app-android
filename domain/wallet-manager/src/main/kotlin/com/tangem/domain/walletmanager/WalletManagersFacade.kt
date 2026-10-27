@@ -184,8 +184,15 @@ interface WalletManagersFacade {
      * @param amount of transaction
      * @param userWalletId selected wallet id
      * @param network network of currency
+     * @param isYieldModuleUpgradeAllowed whether a yield send may be estimated as part of the module upgrade call,
+     * the way it is sent; `false` for flows that send the bare call, such as gasless
      */
-    suspend fun estimateFee(amount: Amount, userWalletId: UserWalletId, network: Network): Result<TransactionFee>?
+    suspend fun estimateFee(
+        amount: Amount,
+        userWalletId: UserWalletId,
+        network: Network,
+        isYieldModuleUpgradeAllowed: Boolean = true,
+    ): Result<TransactionFee>?
 
     /**
      * Validates transaction
