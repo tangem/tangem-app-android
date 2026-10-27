@@ -288,7 +288,6 @@ include(":common:ui-markets")
 include(":libs:auth")
 include(":libs:blockchain-sdk")
 include(":libs:crypto")
-include(":libs:visa")
 include(":libs:tangem-sdk-api")
 // endregion Libs modules
 

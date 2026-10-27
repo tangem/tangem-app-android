@@ -229,7 +229,7 @@ internal class SubmitPredictionClaimInteractorTest {
         runTest {
             // Arrange
             coEvery { polymarketRepository.getRelayerNonce(any()) } returns
-                DataError.NetworkError.NoInternetConnection.left()
+                DataError.NetworkError.NoInternetConnection().left()
 
             // Act
             val actual = interactor.claim(params())

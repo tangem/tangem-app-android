@@ -212,7 +212,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN categories fail WHEN model created THEN the reload prompt is shown and no feed is requested`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returns DataError.NetworkError.NoInternetConnection.left()
+        coEvery { getCategoriesUseCase() } returns DataError.NetworkError.NoInternetConnection().left()
 
         // Act
         val model = createModel(testScope = this)
@@ -370,7 +370,7 @@ internal class PolymarketMainModelTest {
     fun `GIVEN categories failed WHEN reload tapped THEN they are requested again and the first one's feed`() = runTest {
         // Arrange
         coEvery { getCategoriesUseCase() } returnsMany listOf(
-            DataError.NetworkError.NoInternetConnection.left(),
+            DataError.NetworkError.NoInternetConnection().left(),
             categories().right(),
         )
         val model = createModel(testScope = this)
@@ -392,7 +392,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN categories failed WHEN retry is awaiting categories THEN loading is shown immediately`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returns DataError.NetworkError.NoInternetConnection.left()
+        coEvery { getCategoriesUseCase() } returns DataError.NetworkError.NoInternetConnection().left()
         val model = createModel(testScope = this)
         advanceUntilIdle()
         val categoriesReady = CompletableDeferred<Unit>()
@@ -503,7 +503,7 @@ internal class PolymarketMainModelTest {
     @Test
     fun `GIVEN the categories keep failing WHEN reload tapped THEN the prompt stays and no feed is requested`() = runTest {
         // Arrange
-        coEvery { getCategoriesUseCase() } returns DataError.NetworkError.NoInternetConnection.left()
+        coEvery { getCategoriesUseCase() } returns DataError.NetworkError.NoInternetConnection().left()
         val model = createModel(testScope = this)
         advanceUntilIdle()
 

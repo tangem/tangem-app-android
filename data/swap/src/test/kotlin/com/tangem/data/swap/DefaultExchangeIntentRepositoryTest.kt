@@ -137,15 +137,15 @@ internal class DefaultExchangeIntentRepositoryTest {
         private fun provideTestModels() = listOf(
             RawFailureModel(
                 failure = httpError(ApiResponseError.HttpException.Code.BAD_REQUEST),
-                resolved = ExpressError.UnknownError,
+                resolved = ExpressError.UnknownError(),
             ),
             RawFailureModel(
                 failure = httpError(ApiResponseError.HttpException.Code.FORBIDDEN),
-                resolved = ExpressError.UnknownError,
+                resolved = ExpressError.UnknownError(),
             ),
             RawFailureModel(
                 failure = ApiResponseError.UnknownException(IllegalStateException()),
-                resolved = ExpressError.UnknownError,
+                resolved = ExpressError.UnknownError(),
             ),
         )
 
@@ -188,7 +188,7 @@ internal class DefaultExchangeIntentRepositoryTest {
             // Arrange
             val failure = httpError(ApiResponseError.HttpException.Code.SERVICE_UNAVAILABLE)
             stubError(failure)
-            every { expressErrorResolver.resolve(any()) } returns ExpressError.UnknownError
+            every { expressErrorResolver.resolve(any()) } returns ExpressError.UnknownError()
 
             // Act
             val actual = repository.getExchangeIntent(walletId, INTENT_ID)
