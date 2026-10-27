@@ -26,7 +26,6 @@ internal class SetQuoteResultTransformer(
         val quote = result.fold(ifLeft = ::toError, ifRight = ::toQuote)
         val updatedState = prevState.copy(
             quote = quote,
-            isAwaitingFreshQuote = false,
             market = if (quote.hasNoLiquidity() || quote is QuoteUM.Error && prevState.order is OrderSideUM.Sell) {
                 prevState.market.copy(isPriceUnavailable = true)
             } else {
