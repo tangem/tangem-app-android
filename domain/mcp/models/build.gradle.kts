@@ -5,6 +5,7 @@ plugins {
 }
 
 dependencies {
+    api(projects.core.analytics.models)
     api(projects.domain.models)
 
     api(deps.kotlin.serialization.core)
