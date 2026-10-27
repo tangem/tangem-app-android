@@ -5,6 +5,7 @@ import com.tangem.core.socket.KeyedSubscriptions
 import com.tangem.core.socket.SocketChannelFactory
 import com.tangem.core.socket.SocketSpec
 import com.tangem.grow.datasource.BuildConfig
+import com.tangem.grow.datasource.config.PolymarketClob
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.serialization.SerializersModuleProvider
 import com.tangem.utils.serialization.polymorphicUnknownFallback
@@ -35,7 +36,7 @@ internal object PolymarketMarketSocketModule {
                 } else {
                     factory.createPolymarketMarketSocket(
                         SocketSpec(
-                            url = "wss://ws-subscriptions-clob.polymarket.com/ws/market",
+                            url = PolymarketClob.MARKET_SOCKET_URL,
                             keepAlive = KeepAlive.ClientSends(text = "PING", interval = 10.seconds),
                             isSplitArrayFrames = true,
                             onOpen = {
