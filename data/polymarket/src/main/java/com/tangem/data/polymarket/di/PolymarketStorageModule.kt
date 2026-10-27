@@ -1,11 +1,16 @@
 package com.tangem.data.polymarket.di
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.provider.Settings
 import androidx.datastore.dataStoreFile
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.polymarket.cleaner.PolymarketUserWalletDataCleaner
+import com.tangem.data.polymarket.derivation.PolymarketAddressFactory
+import com.tangem.data.polymarket.sessionkey.DefaultPolymarketDeviceIdProvider
+import com.tangem.data.polymarket.sessionkey.DefaultPolymarketSessionKeyStore
 import com.tangem.data.polymarket.store.DefaultPolymarketCredentialsStore
 import com.tangem.data.polymarket.converter.PredictionAccountStatusValueDTOConverter
 import com.tangem.data.polymarket.store.DefaultPolymarketOnboardedStore
@@ -19,9 +24,13 @@ import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.PredictionWithdrawalStore
+import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
+import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.info.AppInfoProvider
 import dagger.Module
 import dagger.Provides
 import dagger.multibindings.IntoSet
@@ -126,6 +135,46 @@ internal object PolymarketStorageModule {
                 scope = scope,
             ),
             scope = scope,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providePolymarketSessionKeyStore(
+        @ApplicationContext context: Context,
+        tangemHotSdk: TangemHotSdk,
+        addressFactory: PolymarketAddressFactory,
+        dispatchers: CoroutineDispatcherProvider,
+    ): PolymarketSessionKeyStore {
+        return DefaultPolymarketSessionKeyStore(
+            tangemHotSdk = tangemHotSdk,
+            secureStorage = AndroidSecureStorageV2(
+                appContext = context,
+                useStrongBox = false,
+                name = "polymarket_session_key_storage",
+            ),
+            addressFactory = addressFactory,
+            dispatchers = dispatchers,
+        )
+    }
+
+    @SuppressLint("HardwareIds")
+    @Provides
+    @Singleton
+    fun providePolymarketDeviceIdProvider(
+        @ApplicationContext context: Context,
+        appInfoProvider: AppInfoProvider,
+        dispatchers: CoroutineDispatcherProvider,
+    ): PolymarketDeviceIdProvider {
+        return DefaultPolymarketDeviceIdProvider(
+            androidId = { Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID) },
+            appInfoProvider = appInfoProvider,
+            secureStorage = AndroidSecureStorageV2(
+                appContext = context,
+                useStrongBox = false,
+                name = "polymarket_device_id_storage",
+            ),
+            dispatchers = dispatchers,
         )
     }
 
