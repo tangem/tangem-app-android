@@ -268,7 +268,67 @@ internal class PlacePredictionComponentTest : PlacePredictionModelTestBase() {
             lifecycle.destroy()
         }
 
-    private fun createComponent(scope: TestScope, isQuickOrderEnabled: Boolean = false) {
+    @Test
+    fun `GIVEN quick order enabled WHEN a close opens THEN the order screen loads the position and quotes`() = runTest {
+        // Arrange
+        coEvery { getQuoteUseCase(any()) } returns createSellQuote().right()
+
+        // Act
+        createComponent(this, isQuickOrderEnabled = true, componentParams = SELL_PARAMS)
+        runCurrent()
+
+        // Assert
+        assertThat(models.filterIsInstance<PlacePredictionOrderModel>()).hasSize(1)
+        coVerify { positionsRepository.getPosition(addresses = any(), id = any()) }
+        coVerify { getQuoteUseCase(any()) }
+        lifecycle.destroy()
+    }
+
+    @Test
+    fun `GIVEN a priced order screen WHEN place succeeds THEN status replaces it without another quote`() = runTest {
+        // Arrange
+        createComponent(this, isQuickOrderEnabled = true)
+        runCurrent()
+        val order = models.filterIsInstance<PlacePredictionOrderModel>().single()
+        order.onAmountChange("10")
+        advanceTimeBy(QUOTE_DEBOUNCE_MILLIS + 1)
+
+        // Act
+        order.onPlaceClick()
+        runCurrent()
+        advanceTimeBy(QUOTE_POLL_INTERVAL_MILLIS * 3)
+
+        // Assert
+        assertThat(models.filterIsInstance<PlacePredictionStatusModel>()).hasSize(1)
+        coVerify(exactly = 1) { placeOrderUseCase(any(), any(), any()) }
+        coVerify(exactly = 1) { getQuoteUseCase(any()) }
+        lifecycle.destroy()
+    }
+
+    @Test
+    fun `GIVEN an idle order screen WHEN system back is pressed THEN the parent pops`() = runTest {
+        // Arrange
+        createComponent(this, isQuickOrderEnabled = true)
+        runCurrent()
+
+        // Act
+        backDispatcher.back()
+
+        // Assert
+        verify(exactly = 1) { router.pop(any()) }
+        lifecycle.destroy()
+    }
+
+    private fun createComponent(
+        scope: TestScope,
+        isQuickOrderEnabled: Boolean = false,
+        componentParams: PlacePredictionComponent.Params = PlacePredictionComponent.Params.Buy(
+            USER_WALLET_ID,
+            EVENT_ID,
+            MARKET_ID,
+            ASSET_ID,
+        ),
+    ) {
         val params = slot<ParamsContainer>()
         val childRouter = slot<Router>()
         val builder: ModelComponent.Builder = mockk()
@@ -316,7 +376,7 @@ internal class PlacePredictionComponentTest : PlacePredictionModelTestBase() {
             appComponentContext = context,
             tokenReceiveComponentFactory = mockk(),
             isQuickOrderEnabled = isQuickOrderEnabled,
-            params = PlacePredictionComponent.Params.Buy(USER_WALLET_ID, EVENT_ID, MARKET_ID, ASSET_ID),
+            params = componentParams,
         )
         lifecycle.create()
         lifecycle.start()
