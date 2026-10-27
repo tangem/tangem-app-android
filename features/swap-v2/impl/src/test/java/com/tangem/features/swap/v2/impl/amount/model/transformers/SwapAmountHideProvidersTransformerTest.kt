@@ -48,6 +48,23 @@ internal class SwapAmountHideProvidersTransformerTest {
     }
 
     @Test
+    fun `GIVEN providers already hidden WHEN transform THEN same state instance is returned`() {
+        // Arrange
+        val changeHeroQuote = quote(provider = changeHero)
+        val state = buildContentState(
+            providers = listOf(changeHero),
+            quotes = listOf(changeHeroQuote),
+            selectedQuote = changeHeroQuote,
+        )
+
+        // Act
+        val result = buildTransformer(providerIds = setOf(changelly.providerId)).transform(state)
+
+        // Assert
+        assertThat(result).isSameInstanceAs(state)
+    }
+
+    @Test
     fun `GIVEN selected provider is hidden WHEN transform THEN it is dropped and quote is loading`() {
         // Arrange
         val changellyQuote = quote(provider = changelly)
