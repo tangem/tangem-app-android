@@ -14,7 +14,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,6 +31,7 @@ import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.rememberLastNonNull
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -193,9 +193,7 @@ private fun AmountScreenCaption(amountCaption: AmountCaptionUM?) {
         contentKey = { caption -> (caption as? AmountCaptionUM.Shortfall)?.copy(payout = null) ?: caption },
     ) { caption ->
         when (caption) {
-            is AmountCaptionUM.Shortfall,
-            is AmountCaptionUM.BelowMinimum,
-            -> CaptionErrorText(caption = caption)
+            is AmountCaptionUM.Error -> CaptionErrorText(caption = caption)
             is AmountCaptionUM.ToWin -> ToWinBadge(payout = caption.payout, status = TangemBadge.Status.Success)
             null -> Unit
         }
@@ -204,7 +202,7 @@ private fun AmountScreenCaption(amountCaption: AmountCaptionUM?) {
 
 @Composable
 private fun OrderScreenCaption(amountCaption: AmountCaptionUM?) {
-    val errorCaption = amountCaption.takeIf { it is AmountCaptionUM.Shortfall || it is AmountCaptionUM.BelowMinimum }
+    val errorCaption = amountCaption as? AmountCaptionUM.Error
     val payout = when (amountCaption) {
         is AmountCaptionUM.ToWin -> amountCaption.payout
         is AmountCaptionUM.Shortfall -> amountCaption.payout
@@ -215,7 +213,15 @@ private fun OrderScreenCaption(amountCaption: AmountCaptionUM?) {
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         AnimatedVisibility(visible = errorCaption != null, enter = fadeIn(), exit = fadeOut()) {
-            shownErrorCaption?.let { CaptionErrorText(caption = it) }
+            AnimatedContent(
+                targetState = shownErrorCaption,
+                transitionSpec = { fadeIn() togetherWith fadeOut() using null },
+                contentAlignment = Alignment.Center,
+                label = "orderErrorCaption",
+                contentKey = { caption -> (caption as? AmountCaptionUM.Shortfall)?.copy(payout = null) ?: caption },
+            ) { caption ->
+                caption?.let { CaptionErrorText(caption = it) }
+            }
         }
         AnimatedVisibility(visible = payout != null, enter = fadeIn(), exit = fadeOut()) {
             shownPayout?.let { ToWinBadge(payout = it, status = TangemBadge.Status.Info) }
@@ -224,14 +230,13 @@ private fun OrderScreenCaption(amountCaption: AmountCaptionUM?) {
 }
 
 @Composable
-private fun CaptionErrorText(caption: AmountCaptionUM) {
+private fun CaptionErrorText(caption: AmountCaptionUM.Error) {
     val text = when (caption) {
         is AmountCaptionUM.Shortfall -> caption.error.text.resolveReference()
         is AmountCaptionUM.BelowMinimum -> stringResourceSafe(
             R.string.prediction_place_min_amount_error,
             caption.minAmount.formatPolymarketMoney(),
         )
-        is AmountCaptionUM.ToWin -> return
     }
     Text(
         modifier = Modifier.padding(top = CAPTION_GAP),
@@ -255,21 +260,6 @@ private fun ToWinBadge(payout: BigDecimal, status: TangemBadge.Status) {
         status = status,
         size = TangemBadge.Size.X6,
     )
-}
-
-@Composable
-private fun <T : Any> rememberLastNonNull(value: T?): T? {
-    val holder = remember { LastNonNull<T>() }
-    return holder.update(value)
-}
-
-private class LastNonNull<T : Any> {
-    private var last: T? = null
-
-    fun update(value: T?): T? {
-        if (value != null) last = value
-        return last
-    }
 }
 
 private val CAPTION_GAP = 12.dp
