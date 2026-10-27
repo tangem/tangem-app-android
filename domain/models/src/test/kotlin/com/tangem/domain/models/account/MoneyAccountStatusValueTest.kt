@@ -58,14 +58,13 @@ internal class MoneyAccountStatusValueTest {
     @Test
     fun `GIVEN onboarding status WHEN totalFiatBalance THEN zero`() {
         // Arrange
-        val issuing = MoneyAccountStatusValue.Onboarding.Issuing(
+        val activating = MoneyAccountStatusValue.Onboarding.Activating(
             source = StatusSource.ACTUAL,
             customerId = "customer-1",
-            step = MoneyAccountStatusValue.IssuingStep.STARTING,
         )
 
         // Act & Assert
-        Truth.assertThat(issuing.totalFiatBalance).isEqualTo(
+        Truth.assertThat(activating.totalFiatBalance).isEqualTo(
             TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = StatusSource.ACTUAL),
         )
     }
@@ -131,12 +130,6 @@ internal class MoneyAccountStatusValueTest {
     fun `GIVEN account without balance WHEN cryptoCurrencyStatus THEN null`() {
         // Act & Assert
         Truth.assertThat(activeWith(balance = null).cryptoCurrencyStatus).isNull()
-    }
-
-    @Test
-    fun `GIVEN Loading WHEN totalFiatBalance THEN Loading`() {
-        // Act & Assert
-        Truth.assertThat(MoneyAccountStatusValue.Loading.totalFiatBalance).isEqualTo(TotalFiatBalance.Loading)
     }
 
     private companion object {

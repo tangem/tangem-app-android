@@ -33,7 +33,6 @@ internal class SetTokenListTransformer(
     private val isAccountsModeEnabled: Boolean,
     private val isHotBackedUp: Boolean? = null,
     private val jointPendingOperations: List<JointPendingOperation> = emptyList(),
-    private val isMoneyAccountHidden: Boolean = false,
     private val isRedesignedAccountRowsEnabled: Boolean = false,
 ) : WalletStateTransformer(userWallet.walletId) {
 
@@ -169,8 +168,6 @@ internal class SetTokenListTransformer(
     }
 
     private fun MoneyAccountMainUM.toLoadedMoneyAccountState(): MoneyAccountMainUM {
-        if (isMoneyAccountHidden) return MoneyAccountMainUM.Empty
-
         val moneyAccountStatus = when (params) {
             is TokenConverterParams.Account -> params.accountList.accountStatuses
                 .filterIsInstance<AccountStatus.Money>()
