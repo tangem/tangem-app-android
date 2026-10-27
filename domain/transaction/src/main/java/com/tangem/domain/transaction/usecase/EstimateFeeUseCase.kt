@@ -41,6 +41,7 @@ class EstimateFeeUseCase(
                 amount = amountData,
                 userWalletId = userWallet.walletId,
                 network = cryptoCurrencyStatus.currency.network,
+                isYieldModuleUpgradeAllowed = true,
             )
         }
 

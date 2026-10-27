@@ -63,7 +63,6 @@ class TokenFeeCalculatorTest {
             gaslessTransactionRepository = gaslessTransactionRepository,
             demoConfig = demoConfig,
             gaslessYieldRepository = gaslessYieldRepository,
-            yieldModuleFeatureToggles = mockk { every { isYieldModuleV3Enabled } returns true },
         )
 
         mockWalletManager = mockk()

@@ -145,7 +145,12 @@ internal class DefaultWalletManagersFacadeTest {
                 val facade = createFacade(isToggleEnabled = true)
 
                 // Act
-                facade.estimateFee(amount = yieldSupplyAmount, userWalletId = userWalletId, network = ethereumNetwork)
+                facade.estimateFee(
+                    amount = yieldSupplyAmount,
+                    userWalletId = userWalletId,
+                    network = ethereumNetwork,
+                    isYieldModuleUpgradeAllowed = true,
+                )
 
                 // Assert
                 assertThat(sentCallData.captured).isInstanceOf(EthereumYieldSupplyUpgradeToAndCallCallData::class.java)
@@ -176,7 +181,12 @@ internal class DefaultWalletManagersFacadeTest {
                 val facade = createFacade(isToggleEnabled = false)
 
                 // Act
-                facade.estimateFee(amount = yieldSupplyAmount, userWalletId = userWalletId, network = ethereumNetwork)
+                facade.estimateFee(
+                    amount = yieldSupplyAmount,
+                    userWalletId = userWalletId,
+                    network = ethereumNetwork,
+                    isYieldModuleUpgradeAllowed = true,
+                )
 
                 // Assert
                 assertThat(sentCallData.captured).isInstanceOf(EthereumYieldSupplySendCallData::class.java)

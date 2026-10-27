@@ -48,7 +48,6 @@ class EstimateFeeForGaslessTxUseCase(
         gaslessTransactionRepository = gaslessTransactionRepository,
         demoConfig = demoConfig,
         gaslessYieldRepository = gaslessYieldRepository,
-        yieldModuleFeatureToggles = yieldModuleFeatureToggles,
     )
 
     suspend operator fun invoke(
@@ -94,6 +93,7 @@ class EstimateFeeForGaslessTxUseCase(
                         amount = amount,
                         txTokenCurrencyStatus = sendingTokenCurrencyStatus,
                         initialFee = initialFee,
+                        isYieldModuleV3Enabled = yieldModuleFeatureToggles.isYieldModuleV3Enabled,
                     ).bind()
 
                     val nonPortfolioFeeToken = feeCurrencies.nonPortfolioFeeToken

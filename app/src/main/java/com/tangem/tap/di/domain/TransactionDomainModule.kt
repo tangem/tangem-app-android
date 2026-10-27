@@ -348,7 +348,6 @@ internal object TransactionDomainModule {
         gaslessTransactionRepository: GaslessTransactionRepository,
         gaslessYieldRepository: GaslessYieldRepository,
         resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
-        yieldModuleFeatureToggles: YieldModuleFeatureToggles,
     ): EvmGaslessFeeResolver {
         return EvmGaslessFeeResolver(
             walletManagersFacade = walletManagersFacade,
@@ -356,7 +355,6 @@ internal object TransactionDomainModule {
             gaslessTransactionRepository = gaslessTransactionRepository,
             gaslessYieldRepository = gaslessYieldRepository,
             resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
-            yieldModuleFeatureToggles = yieldModuleFeatureToggles,
         )
     }
 
