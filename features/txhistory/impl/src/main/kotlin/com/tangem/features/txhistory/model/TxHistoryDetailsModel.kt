@@ -4,6 +4,14 @@ import android.content.Context
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.pushNew
+import com.tangem.common.ui.cosign.CosignRequestRowUM
+import com.tangem.common.ui.cosign.SignatureProgressUM
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.features.txhistory.joint.operation.route.JointOperationRoutes
+import com.tangem.features.txhistory.joint.operation.signers.FinishedJointOperationSigners
+import com.tangem.features.txhistory.joint.operation.signers.ui.state.JointOperationSignersUM
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.routing.AppRoute
@@ -102,6 +110,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
     getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     ownerLookupProducer: TxHistoryOwnerLookupProducer,
+    finishedJointOperationSigners: FinishedJointOperationSigners,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -161,6 +170,17 @@ internal class TxHistoryDetailsModel @Inject constructor(
         }
     }
 
+    val stackNavigation = StackNavigation<JointOperationRoutes>()
+
+    /** Who answered the viewed joint operation, drawn by the signers screen; fed while [uiState] is collected */
+    val signersState: StateFlow<JointOperationSignersUM?>
+        field = MutableStateFlow(null)
+
+    private val jointSignatures: Flow<FinishedJointOperationSigners.Signatures?> = finishedJointOperationSigners
+        .observe(userWalletId = params.userWalletId, currency = params.currency, txHistoryInfo = txHistoryInfo)
+        .onEach { signersState.value = it?.signers }
+        .flowOn(dispatchers.io)
+
     private val networkTokensFlow: Flow<Set<CryptoCurrency.Token>> = flow {
         emit(getCachedTokenInfoUseCase(params.userWalletId, params.currency.network.rawId))
     }
@@ -194,12 +214,14 @@ internal class TxHistoryDetailsModel @Inject constructor(
             flow2 = isAddressBookCompatibleUseCase(params.userWalletId),
             flow3 = networkTokensFlow,
             flow4 = fiatConversionFlow,
-        ) { lookup, isCompatible, tokens, fiatConversion ->
+            flow5 = jointSignatures,
+        ) { lookup, isCompatible, tokens, fiatConversion, jointSignatures ->
             DetailsInputs(
                 lookup = lookup,
                 isAddressBookCompatible = isCompatible,
                 networkTokens = tokens,
                 fiatConversion = fiatConversion,
+                jointSignatures = jointSignatures,
             )
         }
 
@@ -239,7 +261,10 @@ internal class TxHistoryDetailsModel @Inject constructor(
             onAddContact = contactCandidate?.let { candidate -> { openContactCreation(candidate) } },
             networkTokens = inputs.networkTokens,
             fiatConversion = inputs.fiatConversion,
-        ).convert(txInfo).also { um ->
+        ).convert(txInfo).withCosign(
+            signatures = inputs.jointSignatures,
+            onSignersClick = { stackNavigation.pushNew(JointOperationRoutes.Signers) },
+        ).also { um ->
             if (!isScreenOpenedAnalyticsSent) {
                 isScreenOpenedAnalyticsSent = true
                 sendScreenOpenedAnalytics(txInfo = txInfo, title = um.header.title)
@@ -469,7 +494,26 @@ private data class DetailsInputs(
     val isAddressBookCompatible: Boolean,
     val networkTokens: Set<CryptoCurrency.Token>,
     val fiatConversion: FiatConversion,
+    val jointSignatures: FinishedJointOperationSigners.Signatures?,
 )
+
+private fun TxHistoryDetailsUM.withCosign(
+    signatures: FinishedJointOperationSigners.Signatures?,
+    onSignersClick: () -> Unit,
+): TxHistoryDetailsUM {
+    if (this !is TxHistoryDetailsUM.SingleAsset || signatures == null) return this
+
+    return copy(
+        cosign = CosignRequestRowUM(
+            title = resourceReference(
+                id = R.string.joint_operation_signatures_progress,
+                formatArgs = wrappedList(signatures.collected, signatures.threshold),
+            ),
+            progress = SignatureProgressUM(collected = signatures.collected, total = signatures.threshold),
+            onInfoClick = onSignersClick,
+        ),
+    )
+}
 
 /** Identity of the rating slot: re-activation is needed only when one of these deal fields changes. */
 private data class RatingKey(
