@@ -50,7 +50,11 @@ internal fun PredictionOrderHeader(market: MarketHeaderUM, modifier: Modifier = 
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 PredictionYouVoteLabel()
-                PredictionOutcomeBadge(title = market.outcomeTitle, accent = market.outcomeAccent)
+                PredictionOutcomeBadge(
+                    modifier = Modifier.weight(1f, fill = false),
+                    title = market.outcomeTitle,
+                    accent = market.outcomeAccent,
+                )
                 market.priceLabel()?.let {
                     PredictionPriceBadge(text = it, isEntryToLive = market.entryPrice != null)
                 }
@@ -103,6 +107,14 @@ private fun PredictionOrderHeaderPreview() {
             PredictionOrderHeader(market = PreviewMarketHeader)
             PredictionOrderHeader(
                 market = PreviewMarketHeader.copy(
+                    outcomeAccent = PolymarketOutcomeAccent.Info,
+                    entryPrice = "85¢",
+                    outcomePrice = "86¢",
+                ),
+            )
+            PredictionOrderHeader(
+                market = PreviewMarketHeader.copy(
+                    outcomeTitle = "Uzbekistan national team",
                     outcomeAccent = PolymarketOutcomeAccent.Info,
                     entryPrice = "85¢",
                     outcomePrice = "86¢",
