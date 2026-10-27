@@ -165,15 +165,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
         urlOpener.openUrl(PolymarketLegalUrls.TANGEM_TERMS)
     }
 
-    override fun onBackClick() {
-        leaveFlow()
-    }
-
     override fun onCloseClick() {
-        leaveFlow()
-    }
-
-    private fun leaveFlow() {
         if (isSubmitting()) return
 
         router.pop()

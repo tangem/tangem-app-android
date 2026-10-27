@@ -22,6 +22,7 @@ import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionOrderFailure
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionAmountModel
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionModelTestBase
+import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionOrderModel
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSlippageModel
 import com.tangem.features.polymarket.impl.placeprediction.entity.ViewPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionStatusModel
@@ -180,7 +181,61 @@ internal class PlacePredictionComponentTest : PlacePredictionModelTestBase() {
         lifecycle.destroy()
     }
 
-    private fun createComponent(scope: TestScope) {
+    @Test
+    fun `GIVEN quick order disabled WHEN the flow opens THEN the amount step comes first`() = runTest {
+        // Act
+        createComponent(this, isQuickOrderEnabled = false)
+        runCurrent()
+
+        // Assert
+        assertThat(models.filterIsInstance<PlacePredictionAmountModel>()).hasSize(1)
+        assertThat(models.filterIsInstance<PlacePredictionOrderModel>()).isEmpty()
+        lifecycle.destroy()
+    }
+
+    @Test
+    fun `GIVEN quick order enabled WHEN the flow opens THEN the order screen polls the price`() = runTest {
+        // Act
+        createComponent(this, isQuickOrderEnabled = true)
+        runCurrent()
+
+        // Assert
+        assertThat(models.filterIsInstance<PlacePredictionOrderModel>()).hasSize(1)
+        assertThat(models.filterIsInstance<PlacePredictionAmountModel>()).isEmpty()
+        coVerify { getPriceUseCase(assetId = any(), side = any()) }
+        lifecycle.destroy()
+    }
+
+    @Test
+    fun `GIVEN signing on the order screen WHEN system back is pressed THEN the flow stays`() = runTest {
+        // Arrange
+        val signature = CompletableDeferred<Unit>()
+        coEvery { signOrderInteractor(any()) } coAnswers {
+            signature.await()
+            PredictionOrderFailure.Signing(PolymarketSigningError.UserCancelled).left()
+        }
+        createComponent(this, isQuickOrderEnabled = true)
+        runCurrent()
+        val order = models.filterIsInstance<PlacePredictionOrderModel>().single()
+        order.onAmountChange("10")
+        advanceTimeBy(QUOTE_DEBOUNCE_MILLIS + 1)
+        order.onPlaceClick()
+        runCurrent()
+
+        // Act
+        backDispatcher.back()
+
+        // Assert
+        assertThat(order.isSubmitting()).isTrue()
+        verify(exactly = 0) { router.pop(any()) }
+        signature.complete(Unit)
+        runCurrent()
+        backDispatcher.back()
+        verify(exactly = 1) { router.pop(any()) }
+        lifecycle.destroy()
+    }
+
+    private fun createComponent(scope: TestScope, isQuickOrderEnabled: Boolean = false) {
         val params = slot<ParamsContainer>()
         val childRouter = slot<Router>()
         val builder: ModelComponent.Builder = mockk()
@@ -196,6 +251,9 @@ internal class PlacePredictionComponentTest : PlacePredictionModelTestBase() {
             every { entryPoint.models() } returns mapOf(
                 PlacePredictionAmountModel::class.java to Provider<Model> {
                     createAmountModel(scope, modelParams.require(), modelRouter)
+                },
+                PlacePredictionOrderModel::class.java to Provider<Model> {
+                    createOrderModel(scope, modelParams.require(), modelRouter)
                 },
                 PlacePredictionSummaryModel::class.java to Provider<Model> {
                     createSummaryModel(scope, modelParams.require(), modelRouter)
@@ -224,6 +282,7 @@ internal class PlacePredictionComponentTest : PlacePredictionModelTestBase() {
         PlacePredictionComponent(
             appComponentContext = context,
             tokenReceiveComponentFactory = mockk(),
+            isQuickOrderEnabled = isQuickOrderEnabled,
             params = PlacePredictionComponent.Params.Buy(USER_WALLET_ID, EVENT_ID, MARKET_ID, ASSET_ID),
         )
         lifecycle.create()

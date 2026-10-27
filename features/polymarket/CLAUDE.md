@@ -60,11 +60,18 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
 
 ## Order flow
 
-- **Confirmation boundary.** Amount freezes a `PreparedPrediction` snapshot on Next (displayed state, quote
-  receipt time, signing params, region decision). Summary displays and signs that snapshot and has no price
-  or quote use cases; Back returns to the retained Amount model, which re-reads immediately.
-- **Quote loop** runs only while Amount is on top and in the foreground (bound to its resume/pause). The
-  quote is never cached; a stale one (>60 s at signing) is refused before submission.
+- **Two flows**, chosen once per opening by the Phase 2 toggle (`isPolymarketPhaseTwoEnabled`, read in
+  `DefaultPolymarketComponent`): single-step `Route.Order` when on, legacy `Amount → Summary` otherwise. Both
+  share `PlacePredictionQuoteEngine`, `PlacePredictionOrderSubmitter` and the fee sheet; Slippage and Status
+  routes are the same.
+- **Confirmation boundary.** The tap that commits freezes a `PreparedPrediction` snapshot (displayed state,
+  quote receipt time, signing params, region decision) — Next on Amount, Place on Order. Summary signs that
+  snapshot and has no price or quote use cases; Back returns to the retained Amount model, which re-reads
+  immediately. Order signs it in place and holds the engine's sources (`holdDuring`) until submission ends,
+  so the NFC pause/resume cannot restart the quote loop or reload the position under the signature.
+- **Back while submitting** is swallowed: the active step implements `SubmittingStep`.
+- **Quote loop** runs only while Amount or Order is on top and in the foreground (bound to its resume/pause).
+  The quote is never cached; a stale one (>60 s at signing) is refused before submission.
 - **Placeable** = `quote.isPlaceable` (a SELL also places on `BELOW_MIN_ORDER_SIZE`) and, for BUY only,
   the price-weighted minimum. A SELL has no floor beyond one whole share or the whole position.
 - **Shares.** The sellable size is the whole position at on-chain precision (6 decimals), not floored to
