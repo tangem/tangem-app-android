@@ -146,14 +146,15 @@ data class JointAccountMembersUM(
         data object Expired : SlotStatusUM
     }
 
+    /** [isLoading] while the slot's invite is being issued: the button keeps its place and shows a loader */
     @Immutable
     sealed interface SlotActionUM {
 
-        data class Invite(val onClick: () -> Unit) : SlotActionUM
+        val isLoading: Boolean
+        val onClick: () -> Unit
 
-        data class ReInvite(val onClick: () -> Unit) : SlotActionUM
+        data class Invite(override val onClick: () -> Unit, override val isLoading: Boolean = false) : SlotActionUM
 
-        /** A new invite is being issued for this slot. */
-        data object Loading : SlotActionUM
+        data class ReInvite(override val onClick: () -> Unit, override val isLoading: Boolean = false) : SlotActionUM
     }
 }

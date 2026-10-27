@@ -1,15 +1,19 @@
 package com.tangem.features.jointaccount.main.model
 
+import arrow.core.left
 import arrow.core.right
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.account.supplier.SingleAccountSupplier
@@ -17,8 +21,11 @@ import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountInvite
+import com.tangem.domain.jointaccount.model.JointAccountInviteIssueError
+import com.tangem.domain.jointaccount.model.JointAccountIssuedInvite
 import com.tangem.domain.jointaccount.polling.JointAccountPollingCoordinator
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
+import com.tangem.domain.jointaccount.usecase.IssueJointAccountInviteUseCase
 import com.tangem.domain.jointaccount.verifier.JointAccountCompositionVerifier
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
@@ -26,7 +33,9 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.jointaccount.compromised.JointAccountCompromiseWatcher
 import com.tangem.features.jointaccount.compromised.JointAccountCompromisedAlert
+import com.tangem.features.jointaccount.deeplink.JointAccountInviteLinkBuilder
 import com.tangem.features.jointaccount.main.JointAccountMembersUM
+import com.tangem.features.jointaccount.main.state.transformers.click
 import com.tangem.features.jointaccount.main.entity.JointAccountMembersSheetConfig
 import com.tangem.features.jointaccount.main.navigation.JointAccountMembersRoute
 import com.tangem.features.jointaccount.main.state.JointAccountMembersStateController
@@ -38,7 +47,9 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -56,6 +67,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import com.tangem.core.ui.R as CoreUiR
 
 /**
  * Mapping the account onto the screen (title/progress/members/activation offered or not) is covered by
@@ -75,6 +87,7 @@ internal class JointAccountMembersModelTest {
     private val supplier: SingleJointAccountListSupplier = mockk()
     private val jointAccountListFetcher: SingleJointAccountListFetcher = mockk(relaxed = true)
     private val pollingCoordinator: JointAccountPollingCoordinator = mockk()
+    private val issueJointAccountInviteUseCase: IssueJointAccountInviteUseCase = mockk()
     private val ownerAddressResolver: JointOwnerAddressResolver = mockk()
     private val clock = FakeCurrentTimeProvider()
     private val singleAccountSupplier: SingleAccountSupplier = mockk()
@@ -94,6 +107,7 @@ internal class JointAccountMembersModelTest {
             supplier,
             jointAccountListFetcher,
             pollingCoordinator,
+            issueJointAccountInviteUseCase,
             ownerAddressResolver,
             singleAccountSupplier,
             compositionVerifier,
@@ -237,6 +251,148 @@ internal class JointAccountMembersModelTest {
         // Assert
         assertThat(state.header).isNull()
         assertThat(state.joined).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN free slot WHEN invite clicked THEN an invite of that slot is issued and its sheet opens`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator)))
+        stubAccountRecord()
+        coEvery { issueJointAccountInviteUseCase(accountId = any(), slot = any()) } returns ISSUED_INVITE.right()
+        val model = createModel()
+        val openedSheets = model.bottomSheetNavigation.trackSlot()
+        val expected = JointAccountMembersSheetConfig.InviteMember(
+            message = resourceReference(
+                id = CoreUiR.string.joint_account_invite_member_message,
+                formatArgs = wrappedList(
+                    stringReference(ACCOUNT_NAME),
+                    JointAccountInviteLinkBuilder.build(inviteId = INVITE_ID),
+                ),
+            ),
+        )
+
+        // Act
+        model.uiState.value.freeSlots.first().action.click()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) {
+            issueJointAccountInviteUseCase(
+                accountId = AccountId.forJointAccount(USER_WALLET_ID, ACCOUNT_ID).getOrNull()!!,
+                slot = 1,
+            )
+        }
+        assertThat(openedSheets).containsExactly(expected)
+        verify(exactly = 0) { shareManager.shareTrackedText(text = any()) }
+    }
+
+    @Test
+    fun `GIVEN an invite being issued WHEN any slot is clicked again THEN it is ignored and the slot shows a loader`() =
+        runTest {
+            // Arrange
+            stub(account = pendingAccount(members = listOf(creator)))
+            stubAccountRecord()
+            val answer = CompletableDeferred<Unit>()
+            coEvery {
+                issueJointAccountInviteUseCase(accountId = any(), slot = any())
+            } coAnswers {
+                answer.await()
+                ISSUED_INVITE.right()
+            }
+            val model = createModel()
+            val (firstSlot, secondSlot) = model.uiState.value.freeSlots.map { it.action }
+
+            // Act
+            firstSlot.click()
+            runCurrent()
+            firstSlot.click()
+            secondSlot.click()
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.freeSlots.map { it.action?.isLoading }).containsExactly(true, false).inOrder()
+            coVerify(exactly = 1) {
+                issueJointAccountInviteUseCase(accountId = any(), slot = any())
+            }
+            answer.complete(Unit)
+        }
+
+    @Test
+    fun `GIVEN the invite is issued WHEN the answer arrives THEN the slot offers a button again`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator)))
+        stubAccountRecord()
+        val answer = CompletableDeferred<Unit>()
+        coEvery {
+            issueJointAccountInviteUseCase(accountId = any(), slot = any())
+        } coAnswers {
+            answer.await()
+            ISSUED_INVITE.right()
+        }
+        val model = createModel()
+        model.uiState.value.freeSlots.first().action.click()
+        runCurrent()
+        val whileIssuing = model.uiState.value.freeSlots.first().action
+
+        // Act
+        answer.complete(Unit)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(whileIssuing?.isLoading).isTrue()
+        assertThat(model.uiState.value.freeSlots.first().action?.isLoading).isFalse()
+    }
+
+    @Test
+    fun `GIVEN issuing fails WHEN invite clicked THEN error snackbar, no sheet and the button is back`() =
+        runTest {
+            // Arrange
+            stub(account = pendingAccount(members = listOf(creator)))
+            stubAccountRecord()
+            coEvery {
+                issueJointAccountInviteUseCase(accountId = any(), slot = any())
+            } returns JointAccountInviteIssueError.Failed(cause = IllegalStateException("offline")).left()
+            val model = createModel()
+            val openedSheets = model.bottomSheetNavigation.trackSlot()
+            val message = slot<SnackbarMessage>()
+
+            // Act
+            model.uiState.value.freeSlots.first().action.click()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { uiMessageSender.send(capture(message)) }
+            assertThat(message.captured.copy(onDismissRequest = NO_OP)).isEqualTo(
+                SnackbarMessage(
+                    message = resourceReference(CoreUiR.string.common_unknown_error),
+                    onDismissRequest = NO_OP,
+                ),
+            )
+            assertThat(openedSheets).isEmpty()
+            assertThat(model.uiState.value.freeSlots.first().action)
+                .isInstanceOf(JointAccountMembersUM.SlotActionUM.Invite::class.java)
+        }
+
+    @Test
+    fun `GIVEN the slot is no longer available WHEN invite clicked THEN nothing is shown`() = runTest {
+        // Arrange
+        stub(account = pendingAccount(members = listOf(creator)))
+        stubAccountRecord()
+        coEvery {
+            issueJointAccountInviteUseCase(accountId = any(), slot = any())
+        } returns JointAccountInviteIssueError.SlotUnavailable(cause = IllegalStateException("taken")).left()
+        val model = createModel()
+        val openedSheets = model.bottomSheetNavigation.trackSlot()
+
+        // Act
+        model.uiState.value.freeSlots.first().action.click()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { uiMessageSender.send(any()) }
+        assertThat(openedSheets).isEmpty()
+        assertThat(model.uiState.value.freeSlots.first().action)
+            .isInstanceOf(JointAccountMembersUM.SlotActionUM.Invite::class.java)
     }
 
     @Test
@@ -403,6 +559,10 @@ internal class JointAccountMembersModelTest {
                 JointAccountMembersUM.SlotStatusUM.Expired,
             ).inOrder()
         }
+    private fun stubAccountRecord() {
+        every { singleAccountSupplier.filterJointAccount(accountId = any()) } returns
+            flowOf(MockAccounts.createJointAccount(name = ACCOUNT_NAME, userWalletId = USER_WALLET_ID))
+    }
 
     @Test
     fun `GIVEN an invite expired while the screen was paused WHEN resumed THEN the slot reads Expired`() = runTest {
@@ -566,6 +726,7 @@ internal class JointAccountMembersModelTest {
             jointAccountListSupplier = supplier,
             jointAccountListFetcher = jointAccountListFetcher,
             pollingCoordinator = pollingCoordinator,
+            issueJointAccountInviteUseCase = issueJointAccountInviteUseCase,
             ownerAddressResolver = ownerAddressResolver,
             singleAccountSupplier = singleAccountSupplier,
             stateController = JointAccountMembersStateController(),
@@ -590,8 +751,10 @@ internal class JointAccountMembersModelTest {
         const val NOW = 1_700_000_000_000L
         const val FIRST_DEADLINE_IN_MILLIS = 60_000L
         const val SECOND_DEADLINE_IN_MILLIS = 120_000L
+        const val INVITE_ID = "invite-a"
         const val INVITE_MESSAGE = "Join my joint account “Family savings” in Tangem\n" +
             "https://tangem.com/joint-account/join/invite-a"
+        const val ACCOUNT_NAME = "Family savings"
         const val SAFE_ADDRESS = "0x5afe000000000000000000000000000000000001"
 
         val creator = JointAccount.Member(
@@ -606,6 +769,9 @@ internal class JointAccountMembersModelTest {
             role = JointAccount.Role.MEMBER,
             slot = 1,
         )
+
+        val ISSUED_INVITE = JointAccountIssuedInvite(id = INVITE_ID, slot = 1, expiresAtMillis = 1_000L)
+        val NO_OP: () -> Unit = {}
     }
 }
 
