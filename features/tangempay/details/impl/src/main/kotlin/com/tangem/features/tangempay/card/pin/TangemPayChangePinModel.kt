@@ -81,6 +81,7 @@ internal class TangemPayChangePinModel @Inject constructor(
                     fetcher.invoke(params = PaymentAccountStatusFetcher.Params(userWalletId = params.userWalletId))
                     analytics.send(TangemPayAnalyticsEvents.ChangePinSuccessShown())
                     router.push(TangemPayCardDetailsInnerRoute.ChangePINSuccess)
+                    uiState.update(transformer = PinCodeChangeTransformer(newPin = ""))
                 }
                 SetPinResult.DECRYPTION_ERROR,
                 SetPinResult.UNKNOWN_ERROR,
