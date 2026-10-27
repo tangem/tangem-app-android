@@ -242,7 +242,7 @@ internal abstract class PlacePredictionModelTestBase {
             orderSubmitterFactory = createOrderSubmitterFactory(testScope),
         ).also(models::add)
 
-    private fun createOrderSubmitterFactory(testScope: TestScope) = object : PlacePredictionOrderSubmitter.Factory {
+    protected fun createOrderSubmitterFactory(testScope: TestScope) = object : PlacePredictionOrderSubmitter.Factory {
         override fun create(
             params: PlacePredictionComponent.Params,
             uiState: MutableStateFlow<PlacePredictionUM>,
@@ -269,6 +269,22 @@ internal abstract class PlacePredictionModelTestBase {
             predictionFundingWindow = fundingWindow,
             positionsUpdateEmitter = positionsUpdateEmitter,
         )
+    }
+
+    protected fun createOrderModel(
+        testScope: TestScope,
+        params: PlacePredictionComponent.Params = BUY_PARAMS,
+        router: Router = this.router,
+    ): PlacePredictionOrderModel {
+        val dispatchers = testScope.createTestingCoroutineDispatcherProvider()
+        return PlacePredictionOrderModel(
+            paramsContainer = MutableParamsContainer(value = params),
+            router = router,
+            urlOpener = urlOpener,
+            dispatchers = dispatchers,
+            quoteEngineFactory = createQuoteEngineFactory(dispatchers = dispatchers, router = router),
+            orderSubmitterFactory = createOrderSubmitterFactory(testScope),
+        ).also(models::add)
     }
 
     protected fun createStatusModel(
@@ -389,6 +405,12 @@ internal abstract class PlacePredictionModelTestBase {
         val USER_WALLET_ID = UserWalletId("011")
         const val CONDITION_ID = "condition-1"
         val POSITION_ID = PolymarketPositionId(conditionId = CONDITION_ID, assetId = ASSET_ID)
+        val BUY_PARAMS = PlacePredictionComponent.Params.Buy(
+            userWalletId = USER_WALLET_ID,
+            eventId = EVENT_ID,
+            marketId = MARKET_ID,
+            assetId = ASSET_ID,
+        )
         val SELL_PARAMS = PlacePredictionComponent.Params.Sell(
             userWalletId = USER_WALLET_ID,
             positionId = POSITION_ID,
