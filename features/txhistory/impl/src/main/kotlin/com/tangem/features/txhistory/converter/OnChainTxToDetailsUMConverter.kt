@@ -191,7 +191,7 @@ internal class OnChainTxToDetailsUMConverter(
 
     private fun TxInfo.toHeaderUM(): TxHistoryDetailsUM.HeaderUM = TxHistoryDetailsUM.HeaderUM(
         icon = headerIcon(currency),
-        status = status.toUiStatus(),
+        status = displayedStatus(currency).toUiStatus(),
         title = titleConverter.convert(this, isOwnTransfer = isOwnTransfer()),
         subtitle = headerSubtitle(timestampInMillis),
         menu = menu.withCopyAddress(copyableAddress(), onCopyAddress).withExploreProvider(this),
@@ -233,7 +233,7 @@ internal class OnChainTxToDetailsUMConverter(
         amount = feeAmountText(currency) ?: approveAmountText() ?: stringReference(signedAmount(currency)),
         label = amountLabel(),
         fiatAmount = fiatAmountText(),
-        isFailed = status is TxInfo.TransactionStatus.Failed,
+        isFailed = readsFailed(currency),
     )
 
     /**
@@ -460,7 +460,7 @@ private fun TxInfo.signedAmount(currency: CryptoCurrency): String {
     val outgoingSign = "${StringsSigns.MINUS_SIGN}${StringsSigns.THIN_SPACE}"
     val incomingSign = "${StringsSigns.PLUS}${StringsSigns.THIN_SPACE}"
     val prefix = when {
-        status is TxInfo.TransactionStatus.Failed -> ""
+        readsFailed(currency) -> ""
         amount.isZero() -> ""
         else -> when (type.amountSign()) {
             AmountSign.BY_DIRECTION -> if (isOutgoing) outgoingSign else incomingSign

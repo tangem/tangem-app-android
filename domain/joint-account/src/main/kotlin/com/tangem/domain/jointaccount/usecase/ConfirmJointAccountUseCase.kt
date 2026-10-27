@@ -9,7 +9,6 @@ import arrow.core.raise.ensureNotNull
 import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.model.JointAccount
-import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountConfirmationError
 import com.tangem.domain.jointaccount.model.JointAccountConfirmationPayload
 import com.tangem.domain.jointaccount.model.JointAccountFlowError
@@ -21,7 +20,6 @@ import com.tangem.domain.jointaccount.signing.JointAccountSigner
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.supplier.find
 import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.utils.logging.TangemLogger
 
@@ -163,28 +161,20 @@ class ConfirmJointAccountUseCase(
         jointAccount: JointAccount,
         safeAddress: String,
     ): JointAccountConfirmationPayload {
-        val name = when (val accountName = account.accountName) {
-            is AccountName.Custom -> accountName.value
-            is AccountName.DefaultMain -> raise(
-                refused(
-                    error = JointAccountFlowError.Failed(
-                        cause = IllegalStateException("A joint account cannot carry the default main account name"),
-                    ),
-                    reason = "the account carries the default main account name",
-                ),
-            )
-        }
-
-        return JointAccountConfirmationPayload(
-            config = JointAccountConfig(
-                name = name,
-                icon = account.icon.value.name,
-                iconColor = account.icon.color.name,
-                membersCount = jointAccount.membersCount,
-                threshold = jointAccount.threshold,
-            ),
+        val payload = JointAccountConfirmationPayload.of(
+            account = account,
+            jointAccount = jointAccount,
             safeAddress = safeAddress,
         )
+
+        return ensureNotNull(payload) {
+            refused(
+                error = JointAccountFlowError.Failed(
+                    cause = IllegalStateException("A joint account cannot carry the default main account name"),
+                ),
+                reason = "the account carries the default main account name",
+            )
+        }
     }
 
     private fun toConfirmationError(cause: Throwable): JointAccountConfirmationError = when (cause) {

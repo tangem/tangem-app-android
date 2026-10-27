@@ -25,6 +25,7 @@ dependencies {
     /** Project - Core */
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
+    implementation(projects.core.media)
     implementation(projects.core.navigation)
     implementation(projects.core.pagination)
     implementation(projects.core.res)
@@ -56,7 +57,6 @@ dependencies {
     implementation(deps.androidx.media3.common)
     implementation(deps.androidx.media3.database)
     implementation(deps.androidx.media3.datasource)
-    implementation(deps.androidx.media3.exoplayer)
     // `@UnstableApi` in media3 is an androidx opt-in marker, so opting in needs androidx's own OptIn annotation.
     implementation(deps.androidx.annotation.experimental)
 

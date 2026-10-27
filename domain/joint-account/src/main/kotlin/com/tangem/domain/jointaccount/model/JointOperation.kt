@@ -34,14 +34,16 @@ data class JointOperation(
     }
 
     /**
-     * @property address the responding member's owner address, lowercase
-     * @property state   [State.UNKNOWN] is a backend value this build does not know
-     * @property at      when the member responded, ISO-8601 as the backend sent it
+     * @property address   the responding member's owner address, lowercase
+     * @property state     [State.UNKNOWN] is a backend value this build does not know
+     * @property at        when the member responded, ISO-8601 as the backend sent it
+     * @property signature the member's EIP-712 signature of [SafeTx], lower-case hex; `null` on a [State.DECLINED] vote
      */
     data class MemberSignature(
         val address: String,
         val state: State,
         val at: String?,
+        val signature: String? = null,
     ) {
 
         enum class State {

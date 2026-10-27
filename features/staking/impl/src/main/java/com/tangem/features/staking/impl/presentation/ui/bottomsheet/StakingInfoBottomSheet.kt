@@ -34,7 +34,7 @@ fun StakingInfoBottomSheet(config: TangemBottomSheetConfig) {
         ) {
             Text(
                 text = content.text.resolveReference(),
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 style = TangemTheme.typography.body2,
                 modifier = Modifier.padding(
                     horizontal = 28.dp,

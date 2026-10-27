@@ -37,20 +37,20 @@ internal fun NFTCollectionsEmpty(state: NFTCollectionsUM.Empty, modifier: Modifi
             Icon(
                 painter = painterResource(R.drawable.ic_nft_placeholder_add_76),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.inactive,
+                tint = TangemTheme.colors3.icon.tertiary,
             )
             Text(
                 modifier = Modifier.padding(top = 24.dp),
                 text = stringResourceSafe(R.string.nft_collections_empty_title),
                 style = TangemTheme.typography.h3,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 textAlign = TextAlign.Center,
             )
             Text(
                 modifier = Modifier.padding(top = 8.dp),
                 text = stringResourceSafe(R.string.nft_collections_empty_description),
                 style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
             )
         }

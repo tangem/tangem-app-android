@@ -16,6 +16,7 @@ internal data class JointAccountDM(
     val status: String,
     val members: List<MemberDM>,
     val operations: List<OperationDM> = emptyList(),
+    val invites: List<InviteDM> = emptyList(),
 ) {
 
     @Serializable
@@ -23,8 +24,14 @@ internal data class JointAccountDM(
         val name: String,
         val address: String,
         val role: String,
-        val inviteId: String? = null,
+        val slot: Int? = null,
         val signature: String? = null,
+    )
+
+    @Serializable
+    internal data class InviteDM(
+        val slot: Int,
+        val expiresAtMillis: Long,
     )
 
     @Serializable
@@ -52,5 +59,6 @@ internal data class JointAccountDM(
         val address: String,
         val state: String,
         val at: String? = null,
+        val signature: String? = null,
     )
 }

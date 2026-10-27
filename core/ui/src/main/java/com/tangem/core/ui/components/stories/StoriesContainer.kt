@@ -39,34 +39,22 @@ import kotlinx.collections.immutable.persistentListOf
  *
  * @param config stories configuration
  * @param modifier composable modifier
- * @param isPauseStories pause stories progression externally
  * @param currentStoryContent content of current displaying story
  */
 @Composable
 inline fun <reified T : StoryConfig> StoriesContainer(
     config: StoriesContentConfig<T>,
     modifier: Modifier = Modifier,
-    isPauseStories: Boolean = false,
-    crossinline currentStoryContent: @Composable BoxScope.(T, Boolean) -> Unit,
+    crossinline currentStoryContent: @Composable BoxScope.(T) -> Unit,
 ) {
     var watchedCounter by remember { mutableIntStateOf(1) }
     var isPressed by remember { mutableStateOf(value = false) }
-    // Key on content (stories + repeatability), not the whole config object: an unrelated change
-    // to the config instance (e.g. a caller folding a changing flag into it) must not recreate the
-    // state machine and rewind stories to the first page.
-    val storyState by remember(config.stories, config.isRestartable) {
-        mutableStateOf(
-            StoriesStepStateMachine(
-                stories = config.stories,
-                isRepeatable = config.isRestartable,
-            ),
-        )
+    // Key on the stories, not the whole config object: an unrelated change to the config instance
+    // must not recreate the state machine and rewind stories to the first page.
+    val storyState by remember(config.stories) {
+        mutableStateOf(StoriesStepStateMachine(stories = config.stories))
     }
-    if (config.isCloseButtonVisible) {
-        BackHandler(onBack = { config.onClose(watchedCounter) })
-    }
-
-    val isPaused = isPressed || isPauseStories
+    BackHandler(onBack = { config.onClose(watchedCounter) })
 
     val onNextClick = {
         storyState.nextStory()
@@ -83,7 +71,7 @@ inline fun <reified T : StoryConfig> StoriesContainer(
             onNextStory = onNextClick,
         )
 
-        currentStoryContent(storyState.currentStory, isPaused)
+        currentStoryContent(storyState.currentStory)
 
         Column(
             modifier = Modifier.statusBarsPadding(),
@@ -92,27 +80,25 @@ inline fun <reified T : StoryConfig> StoriesContainer(
                 steps = storyState.steps,
                 currentStep = storyState.currentIndex.intValue,
                 stepDuration = storyState.currentStory.duration,
-                paused = isPaused,
+                paused = isPressed,
                 onStepFinish = onNextClick,
             )
-            if (config.isCloseButtonVisible) {
-                Icon(
-                    painter = rememberVectorPainter(
-                        image = ImageVector.vectorResource(R.drawable.ic_close_24),
-                    ),
-                    tint = TangemTheme.colors.icon.constant,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .align(Alignment.End)
-                        .padding(top = 14.dp, end = 16.dp)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = LocalIndication.current,
-                            onClick = { config.onClose(watchedCounter) },
-                        )
-                        .testTag(SwapStoriesScreenTestTags.CLOSE_BUTTON),
-                )
-            }
+            Icon(
+                painter = rememberVectorPainter(
+                    image = ImageVector.vectorResource(R.drawable.ic_close_24),
+                ),
+                tint = TangemTheme.colors3.icon.staticDark,
+                contentDescription = null,
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .padding(top = 14.dp, end = 16.dp)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = LocalIndication.current,
+                        onClick = { config.onClose(watchedCounter) },
+                    )
+                    .testTag(SwapStoriesScreenTestTags.CLOSE_BUTTON),
+            )
         }
     }
 }
@@ -126,8 +112,7 @@ private fun StoriesContainer_Preview() {
         StoriesContainer(
             config = StoryContainerPreviewProviderData(),
             modifier = Modifier.background(Color(0xFF010101)),
-            isPauseStories = false,
-            currentStoryContent = { pageConfig, _ ->
+            currentStoryContent = { pageConfig ->
                 Text(
                     text = pageConfig.title,
                     color = TangemColorPalette.White,
@@ -145,7 +130,6 @@ private data class StoryContainerPreviewProviderData(
         StoryConfigPreviewProviderData(title = "Cold"),
         StoryConfigPreviewProviderData(title = "Wallet"),
     ),
-    override val isRestartable: Boolean = true,
     override val onClose: (Int) -> Unit = {},
 ) : StoriesContentConfig<StoryConfigPreviewProviderData>
 

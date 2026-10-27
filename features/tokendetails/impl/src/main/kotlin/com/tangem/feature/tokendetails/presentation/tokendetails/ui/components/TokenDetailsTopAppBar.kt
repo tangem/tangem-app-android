@@ -32,7 +32,7 @@ internal fun TokenDetailsTopAppBar(config: TokenDetailsTopAppBarConfig) {
             IconButton(onClick = config.onBackClick) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_back_24),
-                    tint = TangemTheme.colors.icon.primary1,
+                    tint = TangemTheme.colors3.icon.primary,
                     contentDescription = "Back",
                     modifier = Modifier.testTag(TokenDetailsTopBarTestTags.BACK_BUTTON),
                 )
@@ -47,7 +47,7 @@ internal fun TokenDetailsTopAppBar(config: TokenDetailsTopAppBarConfig) {
                 IconButton(onClick = { shouldShowDropdownMenu = true }) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_more_vertical_24),
-                        tint = TangemTheme.colors.icon.primary1,
+                        tint = TangemTheme.colors3.icon.primary,
                         contentDescription = "More",
                         modifier = Modifier.testTag(TokenDetailsTopBarTestTags.MORE_BUTTON),
                     )
@@ -56,7 +56,7 @@ internal fun TokenDetailsTopAppBar(config: TokenDetailsTopAppBarConfig) {
 
             TangemDropdownMenu(
                 expanded = shouldShowDropdownMenu,
-                modifier = Modifier.background(TangemTheme.colors.background.primary),
+                modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
                 onDismissRequest = { shouldShowDropdownMenu = false },
                 content = {
                     config.tokenDetailsAppBarMenuConfig?.items?.fastForEach { item ->
@@ -69,9 +69,9 @@ internal fun TokenDetailsTopAppBar(config: TokenDetailsTopAppBarConfig) {
             )
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = TangemTheme.colors.background.secondary,
-            titleContentColor = TangemTheme.colors.icon.primary1,
-            actionIconContentColor = TangemTheme.colors.icon.primary1,
+            containerColor = TangemTheme.colors3.bg.primary,
+            titleContentColor = TangemTheme.colors3.icon.primary,
+            actionIconContentColor = TangemTheme.colors3.icon.primary,
         ),
         scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(),
     )

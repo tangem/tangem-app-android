@@ -11,7 +11,6 @@ import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
-import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
@@ -50,7 +49,6 @@ private const val HIDE_PROGRESS_DELAY = 400L
 @Suppress("LongParameterList")
 @ModelScoped
 internal class CreateWalletStartModel @Inject constructor(
-    paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val scanCardProcessor: ScanCardProcessor,
@@ -69,78 +67,42 @@ internal class CreateWalletStartModel @Inject constructor(
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
 ) : Model() {
 
-    private val params = paramsContainer.require<CreateWalletStartComponent.Params>()
-
     internal val uiState: StateFlow<CreateWalletStartUM>
         field = MutableStateFlow(
-            when (params.mode) {
-                CreateWalletStartComponent.Mode.ColdWallet -> CreateWalletStartUM(
-                    title = resourceReference(R.string.common_tangem_wallet),
-                    description = resourceReference(R.string.welcome_create_wallet_hardware_description),
-                    featureItems = persistentListOf(
-                        CreateWalletStartUM.FeatureItem(
-                            iconResId = R.drawable.ic_shield_check_16,
-                            text = resourceReference(R.string.welcome_create_wallet_feature_class),
-                        ),
-                        CreateWalletStartUM.FeatureItem(
-                            iconResId = R.drawable.ic_flash_16,
-                            text = resourceReference(R.string.welcome_create_wallet_feature_delivery),
-                        ),
-                        CreateWalletStartUM.FeatureItem(
-                            iconResId = R.drawable.ic_sparkles_16,
-                            text = resourceReference(R.string.welcome_create_wallet_feature_use),
-                        ),
+            CreateWalletStartUM(
+                title = resourceReference(R.string.hw_mobile_wallet),
+                description = resourceReference(R.string.welcome_create_wallet_mobile_description_full),
+                featureItems = persistentListOf(
+                    CreateWalletStartUM.FeatureItem(
+                        iconResId = R.drawable.ic_shield_check_16,
+                        text = resourceReference(R.string.welcome_create_wallet_feature_seamless),
                     ),
-                    imageResId = R.drawable.img_hardware_wallet,
-                    shouldShowScanSecondaryButton = true,
-                    onPrimaryButtonClick = ::onBuyClick,
-                    primaryButtonText = resourceReference(R.string.details_buy_wallet),
-                    otherMethodTitle = resourceReference(R.string.welcome_create_wallet_mobile_title),
-                    otherMethodDescription = null,
-                    otherMethodClick = ::onStartWithMobileWalletClick,
-                    onBackClick = { router.pop() },
-                    onScanClick = ::onScanClick,
-                    isScanInProgress = false,
-                )
-                CreateWalletStartComponent.Mode.HotWallet -> CreateWalletStartUM(
-                    title = resourceReference(R.string.hw_mobile_wallet),
-                    description = resourceReference(R.string.welcome_create_wallet_mobile_description_full),
-                    featureItems = persistentListOf(
-                        CreateWalletStartUM.FeatureItem(
-                            iconResId = R.drawable.ic_shield_check_16,
-                            text = resourceReference(R.string.welcome_create_wallet_feature_seamless),
-                        ),
-                        CreateWalletStartUM.FeatureItem(
-                            iconResId = R.drawable.ic_flash_16,
-                            text = resourceReference(R.string.welcome_create_wallet_feature_one_tap),
-                        ),
-                        CreateWalletStartUM.FeatureItem(
-                            iconResId = R.drawable.ic_stack_fill_new_16,
-                            text = resourceReference(R.string.welcome_create_wallet_feature_assets),
-                        ),
+                    CreateWalletStartUM.FeatureItem(
+                        iconResId = R.drawable.ic_flash_16,
+                        text = resourceReference(R.string.welcome_create_wallet_feature_one_tap),
                     ),
-                    imageResId = R.drawable.img_mobile_wallet,
-                    shouldShowScanSecondaryButton = false,
-                    onPrimaryButtonClick = ::onStartWithMobileWalletClick,
-                    primaryButtonText = resourceReference(R.string.welcome_create_wallet_mobile_title),
-                    otherMethodTitle = resourceReference(R.string.welcome_create_wallet_use_hardware_title),
-                    otherMethodDescription = resourceReference(R.string.welcome_create_wallet_use_hardware_description),
-                    otherMethodClick = ::onBuyClick,
-                    onBackClick = { router.pop() },
-                    onScanClick = ::onScanClick,
-                    isScanInProgress = false,
-                )
-            },
+                    CreateWalletStartUM.FeatureItem(
+                        iconResId = R.drawable.ic_stack_fill_new_16,
+                        text = resourceReference(R.string.welcome_create_wallet_feature_assets),
+                    ),
+                ),
+                imageResId = R.drawable.img_mobile_wallet,
+                onPrimaryButtonClick = ::onStartWithMobileWalletClick,
+                primaryButtonText = resourceReference(R.string.welcome_create_wallet_mobile_title),
+                otherMethodTitle = resourceReference(R.string.welcome_create_wallet_use_hardware_title),
+                otherMethodDescription = resourceReference(R.string.welcome_create_wallet_use_hardware_description),
+                otherMethodClick = ::onBuyClick,
+                onBackClick = { router.pop() },
+                onScanClick = ::onScanClick,
+                isScanInProgress = false,
+            ),
         )
 
     init {
         modelScope.launch {
             analyticsEventHandler.send(
                 event = IntroductionProcess.CreateWalletIntroScreenOpened(
-                    screenType = when (params.mode) {
-                        CreateWalletStartComponent.Mode.ColdWallet -> ScreenType.Cold
-                        CreateWalletStartComponent.Mode.HotWallet -> ScreenType.Hot
-                    },
+                    screenType = ScreenType.Hot,
                     referralId = appsFlyerRepository.getConversionData()?.refcode,
                 ),
             )
