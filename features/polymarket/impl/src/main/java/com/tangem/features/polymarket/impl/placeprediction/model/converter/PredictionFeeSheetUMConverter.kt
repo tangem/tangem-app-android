@@ -20,7 +20,7 @@ internal object PredictionFeeSheetUMConverter {
         quote: PredictionOrderQuote,
         slippage: SlippageUM,
         tokenSymbol: String,
-        heading: PredictionFeeSheetUM.Heading = PredictionFeeSheetUM.Heading.Fee,
+        heading: PredictionFeeSheetUM.Heading,
     ): PredictionFeeSheetUM {
         return PredictionFeeSheetUM(
             title = resourceReference(heading.titleRes),
