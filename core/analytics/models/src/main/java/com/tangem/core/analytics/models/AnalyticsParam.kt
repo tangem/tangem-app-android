@@ -69,6 +69,18 @@ sealed class AnalyticsParam {
         data object BlockchainSdk : Error("Blockchain Sdk Error")
     }
 
+    enum class SecurityMode(val value: String) {
+        AccessCode("Access Code"),
+        Passcode("Passcode"),
+        LongTap("Long Tap"),
+    }
+
+    enum class AppTheme(val value: String) {
+        System("System"),
+        Dark("Dark"),
+        Light("Light"),
+    }
+
     enum class ShtorkaState(val value: String) {
         Collapsed("Collapsed"),
         Half("Half"),
