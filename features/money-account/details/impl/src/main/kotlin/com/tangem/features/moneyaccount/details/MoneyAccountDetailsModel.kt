@@ -175,7 +175,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
         val customerId = currentState?.customerId ?: return
         modelScope.launch {
             sendFeedbackEmailUseCase(
-                type = FeedbackEmailType.Visa.DirectUserRequest(
+                type = FeedbackEmailType.Visa.MoneyAccountRequest(
                     walletMetaInfo = WalletMetaInfo(userWalletId = params.userWalletId),
                     customerId = customerId,
                 ),
