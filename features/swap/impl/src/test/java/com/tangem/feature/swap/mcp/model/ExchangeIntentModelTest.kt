@@ -5,6 +5,8 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
@@ -69,6 +71,7 @@ internal class ExchangeIntentModelTest {
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val holdingsResolver: ExchangeIntentHoldingsResolver = mockk()
     private val mcpRepository: McpRepository = mockk()
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val amountConverter = ExchangeIntentAmountConverter()
     private val swapRouteConverter = ExchangeIntentSwapRouteConverter(amountConverter)
     private val swapTextConverter = ExchangeIntentSwapTextConverter(amountConverter)
@@ -103,6 +106,7 @@ internal class ExchangeIntentModelTest {
             userWalletsListRepository,
             holdingsResolver,
             mcpRepository,
+            analyticsEventHandler,
         )
         rootStack = emptyList()
         every { router.navigate(any(), any()) } answers {
@@ -615,6 +619,152 @@ internal class ExchangeIntentModelTest {
         }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Analytics {
+
+        @Test
+        fun `GIVEN open intent WHEN offer is shown THEN screen opened names the agent and the FROM token`() = runTest {
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sentEvents()).containsExactly(
+                "[MCP Intent] Intent Screen Opened" to mapOf(
+                    "Intent Type" to "exchange",
+                    "Agent Name" to "mcp.claude.com",
+                    "Blockchain" to usdt.network.name,
+                    "Token" to usdt.symbol,
+                    "Intent Id" to INTENT_ID,
+                ),
+            )
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN intent that is not offered WHEN its sheet is shown THEN load failed carries the reason`(
+            testModel: LoadFailedModel,
+        ) = runTest {
+            // Arrange
+            testModel.arrange()
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sentEvents()).containsExactly(
+                "[MCP Intent] Intent Load Failed" to buildMap {
+                    put("Intent Type", "exchange")
+                    put("Reason", testModel.expectedReason)
+                    testModel.expectedErrorCode?.let { put("Error Code", it) }
+                    put("Intent Id", INTENT_ID)
+                },
+            )
+            model.onDestroy()
+        }
+
+        private fun provideTestModels() = listOf(
+            LoadFailedModel("intent of another wallet", "Wrong Wallet", "2610") {
+                coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns
+                    DataError.UserWalletError.WrongUserWallet("another wallet").left()
+            },
+            LoadFailedModel("intent not found", "Not Found", "2600") {
+                coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns
+                    ExchangeIntentError.NotFound(INTENT_ID).left()
+            },
+            LoadFailedModel("no connection", "Unreachable") {
+                coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns
+                    ExchangeIntentError.Unreachable(INTENT_ID).left()
+            },
+            LoadFailedModel("amount of both sides", "Invalid Amount") {
+                coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns
+                    ExchangeIntentError.AmbiguousAmountSide(INTENT_ID).left()
+            },
+            LoadFailedModel("unknown read error", "Unknown") {
+                coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns
+                    IllegalStateException("boom").left()
+            },
+            LoadFailedModel("already carried out", "Already Processed") {
+                coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns intent.copy(isHandled = true).right()
+            },
+            LoadFailedModel("token to swap to missing", "Token Missing") {
+                coEvery { holdingsResolver.resolve(walletId, any()) } returns ExchangeIntentHoldings.MissingTo(usdt)
+            },
+            LoadFailedModel("accounts unreadable", "Unknown") {
+                coEvery { holdingsResolver.resolve(walletId, any()) } returns null
+            },
+            LoadFailedModel("malformed amount", "Invalid Amount") {
+                coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns intent.copy(amount = "many").right()
+            },
+        )
+
+        @Test
+        fun `GIVEN offer WHEN proceed is tapped twice THEN continue is sent once`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            val proceed = model.shownOffer().primaryButton.onClick
+
+            // Act
+            proceed()
+            proceed()
+
+            // Assert
+            assertThat(sentEvents().last()).isEqualTo(
+                "[MCP Intent] Button - Continue" to mapOf("Intent Type" to "exchange", "Intent Id" to INTENT_ID),
+            )
+            assertThat(sentEvents().count { it.first == "[MCP Intent] Button - Continue" }).isEqualTo(1)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN offer WHEN swap cannot be opened THEN continue is not sent`() = runTest {
+            // Arrange
+            every { router.navigate(any(), any()) } answers { secondArg<(Boolean) -> Unit>().invoke(false) }
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.shownOffer().primaryButton.onClick()
+
+            // Assert
+            assertThat(sentEvents().map { it.first }).doesNotContain("[MCP Intent] Button - Continue")
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN no wallet is selected WHEN model created THEN no analytics is sent`() = runTest {
+            // Arrange
+            coEvery { userWalletsListRepository.selectedUserWalletSync() } returns null
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sentEvents()).isEmpty()
+            model.onDestroy()
+        }
+    }
+
+    data class LoadFailedModel(
+        val description: String,
+        val expectedReason: String,
+        val expectedErrorCode: String? = null,
+        val arrange: () -> Unit,
+    ) {
+        override fun toString() = description
+    }
+
+    private fun sentEvents(): List<Pair<String, Map<String, String>>> {
+        val events = mutableListOf<AnalyticsEvent>()
+        verify(atLeast = 0) { analyticsEventHandler.send(capture(events)) }
+        return events.map { it.id to it.params }
+    }
+
     enum class CompletionAction { Close, Proceed, Destroy }
 
     data class CompletionModel(
@@ -646,6 +796,7 @@ internal class ExchangeIntentModelTest {
         processedConverter = processedConverter,
         cantReachConverter = cantReachConverter,
         swapRouteConverter = swapRouteConverter,
+        analyticsEventHandler = analyticsEventHandler,
         paramsContainer = MutableParamsContainer(value = ExchangeIntentComponent.Params(intentId = INTENT_ID)),
     )
 
