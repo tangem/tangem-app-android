@@ -33,6 +33,7 @@ internal data class PlacePredictionUM(
     val submit: SubmitUM,
     val isPrimaryButtonEnabled: Boolean,
     val isAwaitingFunds: Boolean = false,
+    val lastFeeRate: BigDecimal = BigDecimal.ZERO,
 ) {
 
     companion object {
