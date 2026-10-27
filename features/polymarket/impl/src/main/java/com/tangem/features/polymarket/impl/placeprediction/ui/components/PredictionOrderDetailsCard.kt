@@ -27,7 +27,7 @@ internal fun PredictionOrderDetailsCard(
 ) {
     TangemSurface(modifier = modifier, color = TangemTheme.colors3.bg.secondary, shape = PolymarketCardShape) {
         Column {
-            PredictionSlippageRow(slippage = slippage, onClick = onSlippageClick)
+            PredictionSlippageRow(slippage = slippage, divider = true, onClick = onSlippageClick)
             PredictionTotalRow(value = total, isLoading = isTotalLoading, onClick = onTotalClick)
         }
     }

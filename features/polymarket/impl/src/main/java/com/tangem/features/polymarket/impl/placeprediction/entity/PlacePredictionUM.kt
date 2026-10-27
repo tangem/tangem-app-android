@@ -14,6 +14,7 @@ import com.tangem.features.polymarket.impl.common.PolymarketOutcomeAccent
 import com.tangem.features.polymarket.impl.common.formatSlippagePercent
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import java.math.BigDecimal
 
 @Immutable
@@ -133,7 +134,23 @@ internal data class MarketHeaderUM(
     val outcomeAccent: PolymarketOutcomeAccent = PolymarketOutcomeAccent.Neutral,
     val isPriceUnavailable: Boolean = false,
     val entryPrice: String? = null,
-)
+) {
+
+    fun priceLabel(): String? {
+        val livePrice = when {
+            isPriceUnavailable -> DASH_SIGN
+            outcomePrice != null -> outcomePrice
+            else -> return null
+        }
+        val entryPricePrefix = entryPrice?.let { "$it $PRICE_ARROW " }.orEmpty()
+
+        return "$entryPricePrefix$livePrice"
+    }
+
+    private companion object {
+        const val PRICE_ARROW = "→"
+    }
+}
 
 @Immutable
 internal sealed interface AmountCaptionUM {
