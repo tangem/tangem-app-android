@@ -337,13 +337,4 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
         )
         return engine to uiState
     }
-
-    private companion object {
-        val BUY_PARAMS = PlacePredictionComponent.Params.Buy(
-            userWalletId = USER_WALLET_ID,
-            eventId = EVENT_ID,
-            marketId = MARKET_ID,
-            assetId = ASSET_ID,
-        )
-    }
 }
