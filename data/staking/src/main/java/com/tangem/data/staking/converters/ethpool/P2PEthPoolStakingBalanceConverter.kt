@@ -2,8 +2,8 @@ package com.tangem.data.staking.converters.ethpool
 
 import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolAccountResponse
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.staking.StakingBalance
-import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.staking.model.StakingBalance
+import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.staking.model.StakingIntegrationID
 import java.math.BigDecimal
 

@@ -1,7 +1,7 @@
 package com.tangem.domain.staking.verification
 
 import com.domain.blockaid.models.transaction.TransactionData
-import com.tangem.domain.models.staking.NetworkType
+import com.tangem.domain.staking.model.NetworkType
 
 /**
  * Builds a Blockaid [TransactionData] from a StakeKit unsigned transaction for Blockaid-supported

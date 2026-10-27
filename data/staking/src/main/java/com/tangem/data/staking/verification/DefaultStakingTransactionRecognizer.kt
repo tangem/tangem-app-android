@@ -2,7 +2,7 @@ package com.tangem.data.staking.verification
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.transaction.staking.StakingTransactionRecognizer as SdkStakingTransactionRecognizer
-import com.tangem.domain.models.staking.NetworkType
+import com.tangem.domain.staking.model.NetworkType
 import com.tangem.domain.staking.verification.StakingTransactionRecognizer
 
 /**
