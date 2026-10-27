@@ -57,6 +57,10 @@ internal class IntentSettingsManager(val context: Context) : SettingsManager {
         open(intent = Intent(Settings.ACTION_SECURITY_SETTINGS))
     }
 
+    override fun openSystemSettings() {
+        open(intent = Intent(Settings.ACTION_SETTINGS))
+    }
+
     private fun open(intent: Intent) {
         context.startActivity(
             intent.apply {
