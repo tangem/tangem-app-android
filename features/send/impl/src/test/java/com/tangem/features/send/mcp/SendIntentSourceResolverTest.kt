@@ -112,7 +112,7 @@ internal class SendIntentSourceResolverTest {
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN no currency matching the intent WHEN resolve THEN source is not found`(model: NotFoundModel) =
+    fun `GIVEN no currency matching the intent WHEN resolve THEN the token is missing`(model: NotFoundModel) =
         runTest {
             // Arrange
             stubAccounts(listOf(personal(statuses = model.held.map { (currency, address) -> status(currency, address) })))
@@ -121,8 +121,20 @@ internal class SendIntentSourceResolverTest {
             val actual = resolver.resolve(walletId, model.intent)
 
             // Assert
-            assertThat(actual).isEqualTo(SendIntentSource.NotFound)
+            assertThat(actual).isEqualTo(SendIntentSource.TokenMissing)
         }
+
+    @Test
+    fun `GIVEN token held only at other addresses WHEN resolve THEN it sends from another wallet`() = runTest {
+        // Arrange
+        stubAccounts(listOf(personal(statuses = listOf(status(usdt, OTHER_ADDRESS), status(eth, OTHER_ADDRESS)))))
+
+        // Act
+        val actual = resolver.resolve(walletId, intent)
+
+        // Assert
+        assertThat(actual).isEqualTo(SendIntentSource.OtherSender)
+    }
 
     data class NotFoundModel(
         val case: String,
@@ -134,11 +146,6 @@ internal class SendIntentSourceResolverTest {
 
     @Suppress("unused")
     private fun provideTestModels() = listOf(
-        NotFoundModel(
-            case = "address not in the wallet",
-            intent = intent,
-            held = listOf(usdt to OTHER_ADDRESS, eth to OTHER_ADDRESS),
-        ),
         NotFoundModel(
             case = "same token on another network",
             intent = intent,
@@ -201,7 +208,7 @@ internal class SendIntentSourceResolverTest {
             val expected = if (model.isFound) {
                 SendIntentSource.Found(accountId = accountId, status = solStatus)
             } else {
-                SendIntentSource.NotFound
+                SendIntentSource.OtherSender
             }
             assertThat(actual).isEqualTo(expected)
         }
@@ -274,7 +281,7 @@ internal class SendIntentSourceResolverTest {
         val actual = resolver.resolve(walletId, intent)
 
         // Assert
-        assertThat(actual).isEqualTo(SendIntentSource.NotFound)
+        assertThat(actual).isEqualTo(SendIntentSource.TokenMissing)
     }
 
     @Test
@@ -308,7 +315,7 @@ internal class SendIntentSourceResolverTest {
             val actual = resolver.resolve(walletId, intent)
 
             // Assert
-            assertThat(actual).isEqualTo(SendIntentSource.NotFound)
+            assertThat(actual).isEqualTo(SendIntentSource.TokenMissing)
         }
 
     @Test
