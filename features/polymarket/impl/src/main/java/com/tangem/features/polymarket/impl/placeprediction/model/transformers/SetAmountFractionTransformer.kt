@@ -18,6 +18,8 @@ internal class SetAmountFractionTransformer(
             feeRate = prevState.lastFeeRate,
         )
 
-        return SetAmountTransformer(value = amount.stripTrailingZeros().toPlainString()).transform(prevState)
+        return SetAmountTransformer(value = amount.stripTrailingZeros().toPlainString())
+            .transform(prevState)
+            .copy(isAmountFromFraction = true)
     }
 }

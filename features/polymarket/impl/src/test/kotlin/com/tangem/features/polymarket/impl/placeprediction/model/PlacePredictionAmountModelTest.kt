@@ -1211,6 +1211,26 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             }
 
         @Test
+        fun `GIVEN a fraction entered WHEN the user types THEN only the fraction is marked as picked`() = runTest {
+            // Arrange
+            val model = createAmountModel(testScope = this)
+            advanceUntilIdle()
+            model.onResume()
+            runCurrent()
+
+            // Act
+            model.onFractionClick(fraction = BuyAmountFractionUM.Quarter)
+            val picked = model.uiState.value.isAmountFromFraction
+            model.onAmountChange(value = "25.5")
+
+            // Assert
+            assertThat(picked).isTrue()
+            assertThat(model.uiState.value.isAmountFromFraction).isFalse()
+
+            model.onDestroy()
+        }
+
+        @Test
         fun `GIVEN no balance WHEN a fraction is tapped THEN nothing is entered AND nothing quoted`() = runTest {
             // Arrange
             statusFlow.value = PredictionAccountStatusValue.Error.Unavailable
