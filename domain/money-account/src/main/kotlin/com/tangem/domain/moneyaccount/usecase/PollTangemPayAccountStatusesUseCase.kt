@@ -11,8 +11,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
 
-// TODO v_rodionov: [REDACTED_TASK_KEY] Rename it
-class RestoreMoneyAccountOrderUseCase(
+class PollTangemPayAccountStatusesUseCase(
     private val getCustomerSummaryUseCase: GetCustomerSummaryUseCase,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
