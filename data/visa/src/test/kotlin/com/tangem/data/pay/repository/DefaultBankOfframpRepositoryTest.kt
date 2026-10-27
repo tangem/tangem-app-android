@@ -5,6 +5,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOptions
@@ -18,6 +19,7 @@ import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.response.BankAccountsResponse
 import com.tangem.spend.datasource.pay.models.response.BankOfframpOptionsResponse
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -25,9 +27,12 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 @Suppress("UNCHECKED_CAST")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultBankOfframpRepositoryTest {
 
     private val tangemPayApi: TangemPayApi = mockk()
@@ -110,10 +115,12 @@ internal class DefaultBankOfframpRepositoryTest {
     @Test
     fun `GIVEN options WHEN getOptions THEN sources and destinations converted`() = runTest {
         // Arrange
-        coEvery { tangemPayApi.getBankOfframpOptions(AUTH_HEADER, null) } returns ApiResponse.Success(optionsResponse())
+        coEvery {
+            tangemPayApi.getBankOfframpOptions(AUTH_HEADER, PAYMENT_ACCOUNT_TYPE)
+        } returns ApiResponse.Success(optionsResponse())
 
         // Act
-        val actual = repository.getOptions(WALLET_ID, productInstanceId = null)
+        val actual = repository.getOptions(WALLET_ID, product = TangemPayProduct.PAYMENT_ACCOUNT)
 
         // Assert
         val options = requireNotNull(actual.getOrNull())
@@ -121,59 +128,61 @@ internal class DefaultBankOfframpRepositoryTest {
         assertThat(options.destinations.single().rail).isEqualTo(BankRail.ACH)
     }
 
-    @Test
-    fun `GIVEN product instance id WHEN getOptions THEN the options of that instance requested and converted`() =
-        runTest {
-            // Arrange
-            coEvery {
-                tangemPayApi.getBankOfframpOptions(AUTH_HEADER, PRODUCT_INSTANCE_ID)
-            } returns ApiResponse.Success(optionsResponse())
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN product WHEN getOptions THEN the options of its account type requested and converted`(
+        model: AccountTypeModel,
+    ) = runTest {
+        // Arrange
+        coEvery {
+            tangemPayApi.getBankOfframpOptions(AUTH_HEADER, model.expectedAccountType)
+        } returns ApiResponse.Success(optionsResponse())
 
-            // Act
-            val actual = repository.getOptions(WALLET_ID, productInstanceId = PRODUCT_INSTANCE_ID)
+        // Act
+        val actual = repository.getOptions(WALLET_ID, product = model.product)
 
-            // Assert
-            assertThat(actual).isEqualTo(
-                BankOfframpOptions(
-                    sources = listOf(
-                        OfframpSource(
-                            networkName = "polygon-pos",
-                            isTestnet = false,
-                            chainId = 137L,
-                            tokens = listOf(
-                                OfframpToken(
-                                    symbol = "USDC",
-                                    contractAddress = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
-                                ),
+        // Assert
+        assertThat(actual).isEqualTo(
+            BankOfframpOptions(
+                sources = listOf(
+                    OfframpSource(
+                        networkName = "polygon-pos",
+                        isTestnet = false,
+                        chainId = 137L,
+                        tokens = listOf(
+                            OfframpToken(
+                                symbol = "USDC",
+                                contractAddress = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
                             ),
                         ),
                     ),
-                    destinations = listOf(
-                        OfframpDestination(
-                            rail = BankRail.ACH,
-                            fee = OfframpFee(
-                                name = "ACH",
-                                amount = BigDecimal("1.50"),
-                                currency = "USD",
-                                description = null,
-                            ),
-                            eta = OfframpEta(minDays = 1, maxDays = 3),
+                ),
+                destinations = listOf(
+                    OfframpDestination(
+                        rail = BankRail.ACH,
+                        fee = OfframpFee(
+                            name = "ACH",
+                            amount = BigDecimal("1.50"),
+                            currency = "USD",
+                            description = null,
                         ),
+                        eta = OfframpEta(minDays = 1, maxDays = 3),
                     ),
-                ).right(),
-            )
-            coVerify(exactly = 1) { tangemPayApi.getBankOfframpOptions(AUTH_HEADER, PRODUCT_INSTANCE_ID) }
-        }
+                ),
+            ).right(),
+        )
+        coVerify(exactly = 1) { tangemPayApi.getBankOfframpOptions(AUTH_HEADER, model.expectedAccountType) }
+    }
 
     @Test
     fun `GIVEN response without a result WHEN getOptions THEN empty options`() = runTest {
         // Arrange
         coEvery {
-            tangemPayApi.getBankOfframpOptions(AUTH_HEADER, null)
+            tangemPayApi.getBankOfframpOptions(AUTH_HEADER, PAYMENT_ACCOUNT_TYPE)
         } returns ApiResponse.Success(BankOfframpOptionsResponse(result = null))
 
         // Act
-        val actual = repository.getOptions(WALLET_ID, productInstanceId = null)
+        val actual = repository.getOptions(WALLET_ID, product = TangemPayProduct.PAYMENT_ACCOUNT)
 
         // Assert
         val options = requireNotNull(actual.getOrNull())
@@ -184,11 +193,11 @@ internal class DefaultBankOfframpRepositoryTest {
     @Test
     fun `GIVEN failing request WHEN getOptions THEN unknown error`() = runTest {
         // Arrange
-        coEvery { tangemPayApi.getBankOfframpOptions(AUTH_HEADER, null) } returns
+        coEvery { tangemPayApi.getBankOfframpOptions(AUTH_HEADER, PAYMENT_ACCOUNT_TYPE) } returns
             ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<BankOfframpOptionsResponse>
 
         // Act
-        val actual = repository.getOptions(WALLET_ID, productInstanceId = null)
+        val actual = repository.getOptions(WALLET_ID, product = TangemPayProduct.PAYMENT_ACCOUNT)
 
         // Assert
         assertThat(actual.leftOrNull()).isInstanceOf(BankOfframpError.Unknown::class.java)
@@ -257,9 +266,16 @@ internal class DefaultBankOfframpRepositoryTest {
         ),
     )
 
+    private fun provideTestModels() = listOf(
+        AccountTypeModel(product = TangemPayProduct.PAYMENT_ACCOUNT, expectedAccountType = PAYMENT_ACCOUNT_TYPE),
+        AccountTypeModel(product = TangemPayProduct.BANKING_ACCOUNT, expectedAccountType = "BANKING_ACCOUNT"),
+    )
+
+    internal data class AccountTypeModel(val product: TangemPayProduct, val expectedAccountType: String)
+
     private companion object {
         val WALLET_ID = UserWalletId("0123456789abcdef")
         const val AUTH_HEADER = "Bearer token"
-        const val PRODUCT_INSTANCE_ID = "123e4567-e89b-12d3-a456-426614174000"
+        const val PAYMENT_ACCOUNT_TYPE = "PAYMENT_ACCOUNT"
     }
 }

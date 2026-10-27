@@ -17,6 +17,7 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
@@ -285,14 +286,12 @@ internal class TangemPayWithdrawHubModelTest {
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN source account WHEN model created THEN options requested for its product instance`(
-        testModel: ProductInstanceModel,
-    ) {
+    fun `GIVEN source account WHEN model created THEN options requested for its product`(testModel: ProductModel) {
         // Act
         val model = createModel(sourceAccount = testModel.sourceAccount)
 
         // Assert
-        coVerify(exactly = 1) { getBankOfframpOptionsUseCase(userWalletId, testModel.expectedProductInstanceId) }
+        coVerify(exactly = 1) { getBankOfframpOptionsUseCase(userWalletId, testModel.expectedProduct) }
         model.onDestroy()
     }
 
@@ -824,14 +823,14 @@ internal class TangemPayWithdrawHubModelTest {
         val expectedMoneyRefreshes: Int,
     )
 
-    private fun provideTestModels(): List<ProductInstanceModel> = listOf(
-        ProductInstanceModel(
+    private fun provideTestModels(): List<ProductModel> = listOf(
+        ProductModel(
             sourceAccount = BankWithdrawSourceAccount.Payment(userWalletId),
-            expectedProductInstanceId = null,
+            expectedProduct = TangemPayProduct.PAYMENT_ACCOUNT,
         ),
-        ProductInstanceModel(
+        ProductModel(
             sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, PRODUCT_INSTANCE_ID),
-            expectedProductInstanceId = PRODUCT_INSTANCE_ID,
+            expectedProduct = TangemPayProduct.BANKING_ACCOUNT,
         ),
     )
 
@@ -859,9 +858,9 @@ internal class TangemPayWithdrawHubModelTest {
         val expectedEntry: BankWithdrawEntry,
     )
 
-    internal data class ProductInstanceModel(
+    internal data class ProductModel(
         val sourceAccount: BankWithdrawSourceAccount,
-        val expectedProductInstanceId: String?,
+        val expectedProduct: TangemPayProduct,
     )
 
     private companion object {
