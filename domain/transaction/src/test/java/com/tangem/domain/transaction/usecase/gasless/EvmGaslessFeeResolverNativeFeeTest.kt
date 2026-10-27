@@ -72,7 +72,6 @@ internal class EvmGaslessFeeResolverNativeFeeTest {
         gaslessTransactionRepository = gaslessTransactionRepository,
         gaslessYieldRepository = mockk<GaslessYieldRepository>(),
         resolveGaslessFeePlanUseCase = mockk(),
-        yieldModuleFeatureToggles = mockk { every { isYieldModuleV3Enabled } returns true },
     )
 
     init {
