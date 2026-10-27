@@ -37,7 +37,7 @@ internal fun ScanFailsDialogContent(state: ScanFailsUM) {
             modifier = Modifier
                 .trackUserInteraction(userInteractionTracker)
                 .background(
-                    color = TangemTheme.colors.background.primary,
+                    color = TangemTheme.colors3.bg.secondary,
                     shape = RoundedCornerShape(16.dp),
                 )
                 .padding(vertical = 16.dp, horizontal = 38.dp),
@@ -46,14 +46,14 @@ internal fun ScanFailsDialogContent(state: ScanFailsUM) {
         ) {
             Text(
                 text = stringResourceSafe(R.string.common_warning),
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 style = TangemTheme.typography.h3,
                 textAlign = TextAlign.Center,
             )
 
             Text(
                 text = stringResourceSafe(R.string.alert_troubleshooting_scan_card_title),
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 style = TangemTheme.typography.body2,
                 textAlign = TextAlign.Center,
             )
@@ -61,21 +61,21 @@ internal fun ScanFailsDialogContent(state: ScanFailsUM) {
             DialogTextButton(
                 text = stringResourceSafe(R.string.alert_button_how_to_scan),
                 onClick = state.onHowToScan,
-                color = TangemTheme.colors.text.accent,
+                color = TangemTheme.colors3.text.accent.blue,
                 modifier = Modifier.testTag(ScanFailsDialogTestTags.HOW_TO_SCAN_BUTTON),
             )
 
             DialogTextButton(
                 text = stringResourceSafe(R.string.alert_button_request_support),
                 onClick = state.onRequestSupport,
-                color = TangemTheme.colors.text.accent,
+                color = TangemTheme.colors3.text.accent.blue,
                 modifier = Modifier.testTag(ScanFailsDialogTestTags.REQUEST_SUPPORT_BUTTON),
             )
 
             DialogTextButton(
                 text = stringResourceSafe(R.string.common_cancel),
                 onClick = state.onDismiss,
-                color = TangemTheme.colors.text.warning,
+                color = TangemTheme.colors3.text.accent.red,
                 modifier = Modifier.testTag(ScanFailsDialogTestTags.CANCEL_BUTTON),
             )
         }

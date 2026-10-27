@@ -36,6 +36,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
@@ -129,6 +130,90 @@ internal class JointAccountInvitePreviewModelTest {
         coVerify(exactly = 1) { getJointAccountInvitePreviewUseCase(OTHER_WALLET_ID, INVITE_ID) }
         model.onDestroy()
     }
+
+    @Test
+    fun `GIVEN preview shown WHEN another wallet is picked THEN the content stays while it is previewed again`() =
+        runTest {
+            // Arrange
+            val other = mockWallet(id = OTHER_WALLET_ID, locked = false)
+            val picked = MutableStateFlow<Pair<UserWallet, AccountStatus.CryptoPortfolio>?>(value = null)
+            every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet, other))
+            every { portfolioSelectorController.selectedAccountWithData(any()) } returns picked
+            coEvery { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) } returns preview().right()
+            coEvery { getJointAccountInvitePreviewUseCase(OTHER_WALLET_ID, INVITE_ID) } coAnswers {
+                delay(1.seconds)
+                preview().right()
+            }
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            picked.value = other to mockk()
+            runCurrent()
+            val whileRefreshing = model.uiState.value
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(whileRefreshing).isInstanceOf(JointAccountInvitePreviewUM.Content::class.java)
+            whileRefreshing as JointAccountInvitePreviewUM.Content
+            assertThat(whileRefreshing.wallet?.name).isEqualTo(other.name)
+            assertThat(whileRefreshing.isContinueLoading).isTrue()
+            val refreshed = model.uiState.value
+            assertThat(refreshed).isInstanceOf(JointAccountInvitePreviewUM.Content::class.java)
+            assertThat((refreshed as JointAccountInvitePreviewUM.Content).isContinueLoading).isFalse()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a picked wallet is previewed again WHEN continue is tapped before the answer THEN the name step waits`() =
+        runTest {
+            // Arrange
+            val other = mockWallet(id = OTHER_WALLET_ID, locked = false)
+            val picked = MutableStateFlow<Pair<UserWallet, AccountStatus.CryptoPortfolio>?>(value = null)
+            every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet, other))
+            every { portfolioSelectorController.selectedAccountWithData(any()) } returns picked
+            coEvery { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) } returns preview().right()
+            coEvery { getJointAccountInvitePreviewUseCase(OTHER_WALLET_ID, INVITE_ID) } coAnswers {
+                delay(1.seconds)
+                JointAccountInvitePreviewError.InvalidLink(cause = IllegalStateException("409")).left()
+            }
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            picked.value = other to mockk()
+            runCurrent()
+            (model.uiState.value as JointAccountInvitePreviewUM.Content).onContinueClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 0) { router.push(JointAccountJoinRoute.DisplayName) }
+            assertThat(model.uiState.value).isInstanceOf(JointAccountInvitePreviewUM.InvalidLink::class.java)
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN preview shown WHEN a picked wallet already holds a slot THEN the invalid link screen replaces it`() =
+        runTest {
+            // Arrange
+            val other = mockWallet(id = OTHER_WALLET_ID, locked = false)
+            val picked = MutableStateFlow<Pair<UserWallet, AccountStatus.CryptoPortfolio>?>(value = null)
+            every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet, other))
+            every { portfolioSelectorController.selectedAccountWithData(any()) } returns picked
+            coEvery { getJointAccountInvitePreviewUseCase(WALLET_ID, INVITE_ID) } returns preview().right()
+            coEvery { getJointAccountInvitePreviewUseCase(OTHER_WALLET_ID, INVITE_ID) } returns
+                JointAccountInvitePreviewError.InvalidLink(cause = IllegalStateException("409")).left()
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            picked.value = other to mockk()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value).isInstanceOf(JointAccountInvitePreviewUM.InvalidLink::class.java)
+            model.onDestroy()
+        }
 
     @Test
     fun `GIVEN backend unreachable at first WHEN model created THEN the preview is retried and loads`() = runTest {

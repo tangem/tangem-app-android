@@ -74,7 +74,7 @@ fun LazyListScope.portfolioTokensList(
                         radius = 14.dp,
                         currentIndex = 1,
                         lastIndex = 1,
-                        backgroundColor = TangemTheme.colors.background.primary,
+                        backgroundColor = TangemTheme.colors3.bg.secondary,
                     ),
                 visible = isExpanded,
             ) {
@@ -99,7 +99,7 @@ fun LazyListScope.portfolioTokensList(
                         radius = 14.dp,
                         currentIndex = indexWithHeader,
                         lastIndex = lastIndex,
-                        backgroundColor = TangemTheme.colors.background.primary,
+                        backgroundColor = TangemTheme.colors3.bg.secondary,
                     ),
                 visible = isExpanded,
             ) {
@@ -148,7 +148,7 @@ fun LazyListScope.portfolioItem(portfolio: TokensListItemUM.Portfolio, modifier:
                     currentIndex = 0,
                     radius = 14.dp,
                     lastIndex = effectiveLastIndex,
-                    backgroundColor = TangemTheme.colors.background.primary,
+                    backgroundColor = TangemTheme.colors3.bg.secondary,
                 ),
         )
     }
@@ -216,13 +216,13 @@ fun NonContentItemContent(modifier: Modifier = Modifier) {
             painter = painterResource(id = R.drawable.ic_empty_64),
             contentDescription = null,
             modifier = Modifier.size(size = 64.dp),
-            tint = TangemTheme.colors.icon.inactive,
+            tint = TangemTheme.colors3.icon.tertiary,
         )
 
         Text(
             text = stringResourceSafe(id = R.string.main_empty_tokens_list_message),
             modifier = Modifier.padding(horizontal = 48.dp),
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
             style = TangemTheme.typography.caption2,
         )

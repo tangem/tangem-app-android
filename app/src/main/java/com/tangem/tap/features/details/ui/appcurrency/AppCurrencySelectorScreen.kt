@@ -47,7 +47,7 @@ internal fun AppCurrencySelectorScreen(state: AppCurrencySelectorState, modifier
         modifier = modifier
             .imePadding()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
-        containerColor = TangemTheme.colors.background.secondary,
+        containerColor = TangemTheme.colors3.bg.primary,
         topBar = {
             TopBar(
                 modifier = Modifier.fillMaxWidth(),
@@ -136,8 +136,8 @@ private fun TopBar(
                             is AppCurrencySelectorState.Search -> R.drawable.ic_close_24
                         }
                         val iconTint = when (state) {
-                            is AppCurrencySelectorState.Default -> TangemTheme.colors.icon.primary1
-                            is AppCurrencySelectorState.Search -> TangemTheme.colors.icon.informative
+                            is AppCurrencySelectorState.Default -> TangemTheme.colors3.icon.primary
+                            is AppCurrencySelectorState.Search -> TangemTheme.colors3.icon.secondary
                         }
 
                         Icon(
@@ -279,7 +279,7 @@ private fun CurrencyItem(name: String, isSelected: Boolean, onClick: () -> Unit,
         Text(
             text = name,
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
     }
 }
@@ -288,33 +288,33 @@ private fun CurrencyItem(name: String, isSelected: Boolean, onClick: () -> Unit,
 private val TopAppBarColors: TopAppBarColors
     @Composable
     get() = TopAppBarDefaults.topAppBarColors(
-        containerColor = TangemTheme.colors.background.secondary,
+        containerColor = TangemTheme.colors3.bg.primary,
         // Currently (08.09.23) it's not working when scrolling programmatically
-        scrolledContainerColor = TangemTheme.colors.background.secondary,
-        navigationIconContentColor = TangemTheme.colors.icon.primary1,
-        titleContentColor = TangemTheme.colors.text.primary1,
-        actionIconContentColor = TangemTheme.colors.icon.primary1,
+        scrolledContainerColor = TangemTheme.colors3.bg.primary,
+        navigationIconContentColor = TangemTheme.colors3.icon.primary,
+        titleContentColor = TangemTheme.colors3.text.primary,
+        actionIconContentColor = TangemTheme.colors3.icon.primary,
     )
 
 private val SearchBarColors: TextFieldColors
     @Composable
     get() = TextFieldDefaults.colors(
-        unfocusedContainerColor = TangemTheme.colors.background.secondary,
-        focusedContainerColor = TangemTheme.colors.background.secondary,
-        focusedTextColor = TangemTheme.colors.text.primary1,
-        unfocusedTextColor = TangemTheme.colors.text.secondary,
-        focusedPlaceholderColor = TangemTheme.colors.text.disabled,
-        unfocusedPlaceholderColor = TangemTheme.colors.text.disabled,
-        focusedIndicatorColor = TangemTheme.colors.background.secondary,
-        unfocusedIndicatorColor = TangemTheme.colors.background.secondary,
-        cursorColor = TangemTheme.colors.icon.primary1,
+        unfocusedContainerColor = TangemTheme.colors3.bg.primary,
+        focusedContainerColor = TangemTheme.colors3.bg.primary,
+        focusedTextColor = TangemTheme.colors3.text.primary,
+        unfocusedTextColor = TangemTheme.colors3.text.secondary,
+        focusedPlaceholderColor = TangemTheme.colors3.text.tertiary,
+        unfocusedPlaceholderColor = TangemTheme.colors3.text.tertiary,
+        focusedIndicatorColor = TangemTheme.colors3.bg.primary,
+        unfocusedIndicatorColor = TangemTheme.colors3.bg.primary,
+        cursorColor = TangemTheme.colors3.icon.primary,
     )
 
 private val RadioButtonColors: RadioButtonColors
     @Composable
     get() = RadioButtonDefaults.colors(
-        selectedColor = TangemTheme.colors.icon.accent,
-        unselectedColor = TangemTheme.colors.icon.secondary,
+        selectedColor = TangemTheme.colors3.icon.accent.blue,
+        unselectedColor = TangemTheme.colors3.icon.secondary,
     )
 
 // region Preview

@@ -29,12 +29,11 @@ import com.tangem.features.tangempay.common.userWalletId
 import com.tangem.features.tangempay.components.TangemPayBankTransferOnrampDetailsComponent
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.components.TangemPaySelectPlanComponent
-import com.tangem.features.tangempay.eligibility.TangemPayCountrySelectorComponent
+import com.tangem.features.tangempay.components.TangemPayWithdrawHubComponent
 import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardComponent
 import com.tangem.features.tangempay.tiers.current.TangemPayCurrentPlanComponent
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
-import com.tangem.features.tangempay.withdraw.hub.TangemPayWithdrawHubComponent
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.moneyaccount.details.component.MoneyAccountAddFundsBottomSheetComponent
@@ -53,7 +52,7 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
     private val moneyAccountAddFundsComponentFactory: MoneyAccountAddFundsBottomSheetComponent.Factory,
     private val cashbackComponentFactory: TangemPayCashbackComponent.Factory,
     private val orderCardComponentFactory: TangemPayOrderCardComponent.Factory,
-    private val countrySelectorComponentFactory: TangemPayCountrySelectorComponent.Factory,
+    private val withdrawHubComponentFactory: TangemPayWithdrawHubComponent.Factory,
     private val selectPlanComponentFactory: TangemPaySelectPlanComponent.Factory,
     private val bankDetailsComponentFactory: TangemPayBankTransferOnrampDetailsComponent.Factory,
     private val bankDetailsAnalytics: TangemPayBankTransferOnrampDetailsAnalytics,
@@ -183,12 +182,11 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
                 onAddFundsRequested = ::openAddFundsOnAccountDetails,
             ),
         )
-        TangemPayAccountDetailsInnerRoute.WithdrawHub -> TangemPayWithdrawHubComponent(
-            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+        TangemPayAccountDetailsInnerRoute.WithdrawHub -> withdrawHubComponentFactory.create(
+            context = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayWithdrawHubComponent.Params(
                 sourceAccount = BankWithdrawSourceAccount.Payment(userWalletId = params.initialStatus.userWalletId),
             ),
-            countrySelectorFactory = countrySelectorComponentFactory,
         )
     }
 

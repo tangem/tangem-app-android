@@ -96,7 +96,7 @@ enum class TangemBottomSheetType {
 inline fun <reified T : TangemBottomSheetConfigContent> TangemBottomSheet(
     config: TangemBottomSheetConfig,
     type: TangemBottomSheetType = Default,
-    containerColor: Color = TangemTheme.colors2.surface.level2,
+    containerColor: Color = TangemTheme.colors3.bg.primary,
     skipPartiallyExpanded: Boolean = true,
     noinline onBack: (() -> Unit)? = null,
     crossinline title: @Composable BoxScope.(T) -> Unit = {},
@@ -297,7 +297,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
         dragHandle = type.getDragHandle(),
         content = bsContent,
         peekHeightDp = maxHeight,
-        scrimColor = TangemTheme.colors2.overlay.overlaySecondary,
+        scrimColor = TangemTheme.colors3.overlay.modal,
     )
 }
 
@@ -317,7 +317,7 @@ fun BoxScope.FooterOverlay(
     } else {
         0.dp
     }
-    val fadeMax = TangemTheme.colors2.surface.level2
+    val fadeMax = TangemTheme.colors3.bg.primary
 
     CompositionLocalProvider(
         LocalTangemBottomSheetContentBottomInset provides contentBottomOverlayHeight,
@@ -386,26 +386,26 @@ private fun TangemModalBottomSheetWithFooter_Preview(
                         modifier = Modifier
                             .size(56.dp)
                             .clip(RoundedCornerShape(100))
-                            .background(TangemTheme.colors.icon.informative.copy(alpha = 0.1f))
+                            .background(TangemTheme.colors3.icon.secondary.copy(alpha = 0.1f))
                             .padding(12.dp),
                         painter = rememberVectorPainter(
                             ImageVector.vectorResource(R.drawable.ic_alert_24),
                         ),
-                        tint = TangemTheme.colors.icon.informative,
+                        tint = TangemTheme.colors3.icon.secondary,
                         contentDescription = null,
                     )
                     SpacerH24()
                     Text(
                         text = "Unsuported networks",
                         style = TangemTheme.typography.h3,
-                        color = TangemTheme.colors.text.primary1,
+                        color = TangemTheme.colors3.text.primary,
                         textAlign = TextAlign.Center,
                     )
                     SpacerH8()
                     Text(
                         text = "Tangem does not currently support a required network by React App.",
                         style = TangemTheme.typography.body2,
-                        color = TangemTheme.colors.text.secondary,
+                        color = TangemTheme.colors3.text.secondary,
                         textAlign = TextAlign.Center,
                     )
                     SpacerH(48.dp)
@@ -420,7 +420,7 @@ private fun TangemModalBottomSheetWithFooter_Preview(
                             "pharetra. Morbi sed faucibus leo. Praesent elementum pretium posuere. Morbi et felis a " +
                             "turpis pellentesque rhoncus.",
                         style = TangemTheme.typography.body1,
-                        color = TangemTheme.colors.text.secondary,
+                        color = TangemTheme.colors3.text.secondary,
                         textAlign = TextAlign.Center,
                     )
                 }
@@ -463,26 +463,26 @@ private fun TangemModalBottomSheetWithFooter_Preview2(
                         modifier = Modifier
                             .size(56.dp)
                             .clip(RoundedCornerShape(100))
-                            .background(TangemTheme.colors.icon.informative.copy(alpha = 0.1f))
+                            .background(TangemTheme.colors3.icon.secondary.copy(alpha = 0.1f))
                             .padding(12.dp),
                         painter = rememberVectorPainter(
                             ImageVector.vectorResource(R.drawable.ic_alert_24),
                         ),
-                        tint = TangemTheme.colors.icon.informative,
+                        tint = TangemTheme.colors3.icon.secondary,
                         contentDescription = null,
                     )
                     SpacerH24()
                     Text(
                         text = "Unsuported networks",
                         style = TangemTheme.typography.h3,
-                        color = TangemTheme.colors.text.primary1,
+                        color = TangemTheme.colors3.text.primary,
                         textAlign = TextAlign.Center,
                     )
                     SpacerH8()
                     Text(
                         text = "Tangem does not currently support a required network by React App.",
                         style = TangemTheme.typography.body2,
-                        color = TangemTheme.colors.text.secondary,
+                        color = TangemTheme.colors3.text.secondary,
                         textAlign = TextAlign.Center,
                     )
                     SpacerH(48.dp)
@@ -497,7 +497,7 @@ private fun TangemModalBottomSheetWithFooter_Preview2(
                             "pharetra. Morbi sed faucibus leo. Praesent elementum pretium posuere. Morbi et felis a " +
                             "turpis pellentesque rhoncus.",
                         style = TangemTheme.typography.body1,
-                        color = TangemTheme.colors.text.secondary,
+                        color = TangemTheme.colors3.text.secondary,
                         textAlign = TextAlign.Center,
                     )
                 }

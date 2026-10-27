@@ -72,7 +72,7 @@ private fun LazyListScope.currencyListError(state: CurrenciesListUM.Error) {
             Text(
                 text = stringResourceSafe(id = R.string.markets_loading_error_title),
                 style = TangemTheme.typography.caption1,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
             SecondarySmallButton(
                 modifier = Modifier.padding(top = 12.dp),
@@ -124,7 +124,7 @@ private fun GroupTitle(title: String, modifier: Modifier = Modifier) {
         modifier = modifier,
         text = title,
         style = TangemTheme.typography.subtitle2,
-        color = TangemTheme.colors.text.tertiary,
+        color = TangemTheme.colors3.text.secondary,
     )
 }
 
@@ -146,12 +146,12 @@ private fun CurrencyContent(currency: CurrencyItemState.Content, modifier: Modif
             Text(
                 text = currency.onrampCurrency.code,
                 style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
             Text(
                 text = currency.onrampCurrency.name,
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
     }

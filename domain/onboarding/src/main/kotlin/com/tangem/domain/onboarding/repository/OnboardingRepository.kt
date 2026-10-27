@@ -1,7 +1,6 @@
 package com.tangem.domain.onboarding.repository
 
 import com.tangem.domain.models.scan.ScanResponse
-import kotlinx.coroutines.flow.Flow
 
 /**
  * Onboarding repository
@@ -9,8 +8,6 @@ import kotlinx.coroutines.flow.Flow
 [REDACTED_AUTHOR]
  */
 interface OnboardingRepository {
-
-    fun wasTwinsOnboardingShown(): Flow<Boolean>
 
     @Throws
     suspend fun wasTwinsOnboardingShownSync(): Boolean

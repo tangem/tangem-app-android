@@ -20,6 +20,7 @@ import com.tangem.domain.mcp.repository.McpRepository
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.usecase.EnableAddressesSharingUseCase
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.mcp.impl.R
@@ -40,6 +41,7 @@ internal class McpPairModel @Inject constructor(
     private val systemNotificationsStateProvider: SystemNotificationsStateProvider,
     private val settingsManager: SettingsManager,
     private val mcpRepository: McpRepository,
+    private val enableAddressesSharingUseCase: EnableAddressesSharingUseCase,
     private val messageSender: UiMessageSender,
     val selectorController: PortfolioSelectorController,
     portfolioFetcherFactory: PortfolioFetcher.Factory,
@@ -152,15 +154,27 @@ internal class McpPairModel @Inject constructor(
             mcpRepository.approveDeviceVerification(verification = verification, walletId = walletId)
                 .fold(
                     ifLeft = { onPairFailed() },
-                    ifRight = { if (it.isSuccess) onPaired() else onPairFailed() },
+                    ifRight = { if (it.isSuccess) onPaired(walletId) else onPairFailed() },
                 )
         }
     }
 
-    private fun onPaired() {
+    private fun onPaired(walletId: UserWalletId) {
+        shareAddresses(walletId)
         connectState.update { it.copy(isConnecting = false, isConnected = true) }
         // Replaces instead of pushing: there is nothing to go back to once the agent is connected.
         stackNavigation.replaceAll(McpPairRoutes.Success)
+    }
+
+    /**
+     * The agent reads the portfolio by the wallet's addresses, so they are pushed as soon as it is authorized.
+     *
+     * Sent on [appScope]: the success screen is shown right away and the user may close the sheet before the
+     * push completes. A failure is retried by the saver itself, and every later token push carries the
+     * addresses anyway, so there is nothing to report here.
+     */
+    private fun shareAddresses(walletId: UserWalletId) {
+        appScope.launch { enableAddressesSharingUseCase(walletId) }
     }
 
     private fun onPairFailed(closeFlow: Boolean = false) {

@@ -178,7 +178,7 @@ private fun TangemDialog(
             modifier = Modifier
                 .background(
                     shape = TangemTheme.shapes.roundedCornersLarge,
-                    color = TangemTheme.colors.background.primary,
+                    color = TangemTheme.colors3.bg.secondary,
                 )
                 .padding(vertical = 24.dp)
                 .testTag(BaseDialogTestTags.CONTAINER),
@@ -196,7 +196,7 @@ private fun TangemDialog(
                         is DialogType.SimpleTextInput -> TangemTheme.typography.h3
                         is DialogType.Selector -> TangemTheme.typography.h2
                     },
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                 )
                 SpacerH16()
             }
@@ -229,7 +229,7 @@ private fun DialogContent(type: DialogType, modifier: Modifier = Modifier) {
                         .testTag(BaseDialogTestTags.TEXT),
                     text = type.message,
                     style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.secondary,
+                    color = TangemTheme.colors3.text.secondary,
                 )
             }
             is DialogType.SimpleTextInput -> {
@@ -364,14 +364,14 @@ private fun SelectorDialogContent(
                     onClick = onClick,
                     colors = RadioButtonDefaults.colors(
                         selectedColor = TangemTheme.colors.control.checked,
-                        unselectedColor = TangemTheme.colors.icon.secondary,
+                        unselectedColor = TangemTheme.colors3.icon.secondary,
                     ),
                     interactionSource = interactionSource,
                 )
                 Text(
                     text = itemText,
                     style = TangemTheme.typography.body1,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                 )
             }
         }

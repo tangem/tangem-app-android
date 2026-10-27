@@ -19,7 +19,7 @@ import ${PACKAGE_NAME}.entity.${NAME}UM
 internal fun ${NAME}Content(state: ${NAME}UM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(color = TangemTheme.colors.background.secondary)
+            .background(color = TangemTheme.colors3.bg.primary)
             .fillMaxSize()
             .imePadding()
             .systemBarsPadding(),

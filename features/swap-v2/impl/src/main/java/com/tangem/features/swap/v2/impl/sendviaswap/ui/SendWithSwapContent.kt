@@ -22,7 +22,7 @@ import com.tangem.features.swap.v2.impl.sendviaswap.SendWithSwapRoute
 internal fun SendWithSwapContent(stackState: ChildStack<SendWithSwapRoute, ComposableModularContentComponent>) {
     Column(
         modifier = Modifier
-            .background(color = TangemTheme.colors.background.tertiary)
+            .background(color = TangemTheme.colors3.bg.primary)
             .fillMaxSize()
             .imePadding()
             .systemBarsPadding(),
@@ -45,7 +45,7 @@ internal fun SendWithSwapContent(stackState: ChildStack<SendWithSwapRoute, Compo
 
                 if (stackState.active.configuration != SendWithSwapRoute.Success) {
                     Fade(
-                        backgroundColor = TangemTheme.colors.background.tertiary,
+                        backgroundColor = TangemTheme.colors3.bg.primary,
                         modifier = Modifier.align(Alignment.BottomCenter),
                     )
                 }

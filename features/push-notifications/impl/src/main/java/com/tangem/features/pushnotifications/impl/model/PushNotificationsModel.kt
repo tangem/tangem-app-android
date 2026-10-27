@@ -13,7 +13,6 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.pushnotificationpreferences.MarkPushNotificationFirstActivationDoneUseCase
 import com.tangem.domain.settings.NeverRequestPermissionUseCase
-import com.tangem.domain.settings.NeverToInitiallyAskPermissionUseCase
 import com.tangem.domain.wallets.usecase.ApplyPushNotificationFirstActivationUseCase
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
@@ -34,7 +33,6 @@ internal class PushNotificationsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val neverRequestPermissionUseCase: NeverRequestPermissionUseCase,
-    private val neverToInitiallyAskPermissionUseCase: NeverToInitiallyAskPermissionUseCase,
     private val router: Router,
     private val analyticHandler: AnalyticsEventHandler,
     private val notificationsRepository: NotificationsRepository,
@@ -137,7 +135,6 @@ internal class PushNotificationsModel @Inject constructor(
 
     private suspend fun proceedAfterLater() {
         neverRequestPermissionUseCase(PUSH_PERMISSION)
-        neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
         // The wallet-screen reminder is meant for those who were never asked, and a "Later" leaves no other
         // trace — the allow paths mark the answer by enabling the subscription.
         notificationsRepository.setShouldShowNotifications(
@@ -164,7 +161,6 @@ internal class PushNotificationsModel @Inject constructor(
         modelScope.launch { applyFirstActivationRule() }
         modelScope.launch {
             neverRequestPermissionUseCase(PUSH_PERMISSION)
-            neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
             params.modelCallbacks.onAllowSystemPermission()
             if (!params.isBottomSheet) {
                 params.nextRoute?.let { router.replaceAll(it) }
@@ -181,7 +177,6 @@ internal class PushNotificationsModel @Inject constructor(
         )
         modelScope.launch {
             neverRequestPermissionUseCase(PUSH_PERMISSION)
-            neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
             // Flag is fixed on DENY too, so a later activation is selective.
             markFirstActivationDoneForAllWallets()
             params.modelCallbacks.onDenySystemPermission()
