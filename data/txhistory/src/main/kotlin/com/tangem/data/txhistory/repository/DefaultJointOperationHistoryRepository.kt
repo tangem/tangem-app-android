@@ -9,11 +9,11 @@ import com.tangem.data.txhistory.repository.converter.JointOperationEntityConver
 import com.tangem.data.txhistory.repository.converter.JointOperationRecordConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.domain.jointaccount.model.FinishedJointOperation
+import com.tangem.domain.jointaccount.model.JointOperationFetchResult
 import com.tangem.domain.jointaccount.model.JointOperationRecord
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.repository.JointOperationHistoryRepository
-import com.tangem.domain.txhistory.repository.JointOperationHistoryRepository.FetchResult
 import com.tangem.store.datasource.jointaccount.JointAccountApi
 import com.tangem.store.datasource.jointaccount.models.JointOperationHistoryDeltaResponse
 import com.tangem.store.datasource.jointaccount.models.JointOperationHistoryItemDto
@@ -131,7 +131,7 @@ internal class DefaultJointOperationHistoryRepository @Inject constructor(
         userWalletId: UserWalletId,
         operationId: String,
         eTag: String?,
-    ): Either<Throwable, FetchResult> = Either.catch {
+    ): Either<Throwable, JointOperationFetchResult> = Either.catch {
         val response = jointAccountApi.getJointOperation(
             walletId = userWalletId.stringValue,
             operationId = operationId,
@@ -141,14 +141,14 @@ internal class DefaultJointOperationHistoryRepository @Inject constructor(
         when (response) {
             is ApiResponse.Success -> {
                 store(userWalletId, listOf(response.data))
-                FetchResult.Updated(eTag = response.headers[ETAG_HEADER]?.firstOrNull())
+                JointOperationFetchResult.Updated(eTag = response.headers[ETAG_HEADER]?.firstOrNull())
             }
             is ApiResponse.Error -> when ((response.cause as? ApiResponseError.HttpException)?.code) {
-                ApiResponseError.HttpException.Code.NOT_MODIFIED -> FetchResult.NotModified
+                ApiResponseError.HttpException.Code.NOT_MODIFIED -> JointOperationFetchResult.NotModified
                 ApiResponseError.HttpException.Code.BAD_REQUEST,
                 ApiResponseError.HttpException.Code.NOT_FOUND,
                 ApiResponseError.HttpException.Code.FORBIDDEN,
-                -> FetchResult.Gone
+                -> JointOperationFetchResult.Gone
                 else -> throw response.cause
             }
         }

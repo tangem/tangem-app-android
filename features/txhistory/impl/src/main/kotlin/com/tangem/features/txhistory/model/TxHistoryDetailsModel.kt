@@ -85,6 +85,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -118,6 +119,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
 
     private val shareTextConverter = ExpressTxToShareTextConverter()
     private val txHistoryInfo = params.historyTxListManager.txExpressHistoryItemFlow(params.txId)
+        .shareIn(modelScope, SharingStarted.WhileSubscribed(), replay = 1)
 
     /**
      * Known staking targets (StakeKit validators and P2P vaults) keyed by on-chain address, used to resolve the target
@@ -152,12 +154,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
 
     private var isRatingActivationStarted = false
 
-    /**
-     * One-shot guard for the screen-opened analytics, sent from the [uiState] combine below instead of a dedicated
-     * `.first()` collection of [txHistoryInfo]: that flow is cold and re-triggers its own standalone express-tx
-     * subscription per collector (see `DefaultHistoryTxListManager.txExpressHistoryItemFlow`), so a second collector
-     * would double the load for a tx not yet in the paginated list.
-     */
+    /** One-shot guard for the screen-opened analytics, sent from the [uiState] combine below */
     private var isScreenOpenedAnalyticsSent = false
 
     init {
