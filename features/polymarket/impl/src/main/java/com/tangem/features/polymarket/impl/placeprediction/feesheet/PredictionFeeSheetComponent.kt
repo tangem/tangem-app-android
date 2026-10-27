@@ -1,4 +1,4 @@
-package com.tangem.features.polymarket.impl.placeprediction.summary
+package com.tangem.features.polymarket.impl.placeprediction.feesheet
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue

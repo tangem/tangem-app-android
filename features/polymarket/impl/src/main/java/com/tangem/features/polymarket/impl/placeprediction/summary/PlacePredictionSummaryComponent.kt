@@ -10,6 +10,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.polymarket.impl.placeprediction.SubmittingStep
 import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPrediction
+import com.tangem.features.polymarket.impl.placeprediction.feesheet.predictionFeeSheetSlot
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSummaryModel
 import com.tangem.features.polymarket.impl.placeprediction.ui.PlacePredictionSummaryContent
 

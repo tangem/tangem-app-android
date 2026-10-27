@@ -55,6 +55,7 @@ internal fun PlacePredictionOrderContent(
     modifier: Modifier = Modifier,
 ) {
     var footerHeight by remember { mutableIntStateOf(0) }
+    val isIdle = state.submit is SubmitUM.Idle
 
     TangemTopBarScaffold(
         modifier = modifier,
@@ -70,12 +71,12 @@ internal fun PlacePredictionOrderContent(
                     .align(Alignment.BottomCenter)
                     .imePadding()
                     .onSizeChanged { footerHeight = it.height },
-                onPolymarketTermsClick = intents::onPolymarketTermsClick,
-                onTangemTermsClick = intents::onTangemTermsClick,
+                onPolymarketTermsClick = { if (isIdle) intents.onPolymarketTermsClick() },
+                onTangemTermsClick = { if (isIdle) intents.onTangemTermsClick() },
             ) {
                 PredictionPlaceButton(
                     order = state.order,
-                    isLoading = state.submit !is SubmitUM.Idle,
+                    isLoading = !isIdle,
                     isEnabled = state.isPrimaryButtonEnabled,
                     onClick = intents::onPlaceClick,
                 )
@@ -134,11 +135,11 @@ private fun OrderBody(
                 total = (state.quote as? QuoteUM.Content)?.feeTotal?.formatPolymarketMoney() ?: DASH_SIGN,
                 isTotalLoading = state.quote is QuoteUM.Loading,
                 onSlippageClick = intents::onSlippageClick.takeIf { isIdle },
-                onTotalClick = intents::onFeeClick.takeIf { isIdle && state.canShowFeeBreakdown() },
+                onTotalClick = intents::onFeeClick.takeIf { state.canShowFeeBreakdown() },
             )
             PredictionNotificationsBlock(
                 notifications = state.notifications,
-                onRetryClick = intents::onQuoteRetryClick,
+                onRetryClick = intents::onQuoteRetryClick.takeIf { isIdle },
             )
         }
         Spacer(modifier = Modifier.height(with(LocalDensity.current) { footerHeight.toDp() }))

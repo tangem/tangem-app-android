@@ -14,7 +14,7 @@ import com.tangem.features.polymarket.impl.main.addfunds.polymarketFundingSheetS
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.SubmittingStep
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionOrderModel
-import com.tangem.features.polymarket.impl.placeprediction.summary.predictionFeeSheetSlot
+import com.tangem.features.polymarket.impl.placeprediction.feesheet.predictionFeeSheetSlot
 import com.tangem.features.polymarket.impl.placeprediction.ui.PlacePredictionOrderContent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 
