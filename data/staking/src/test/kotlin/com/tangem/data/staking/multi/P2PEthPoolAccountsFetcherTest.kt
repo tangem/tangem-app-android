@@ -4,7 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.data.staking.MockP2PEthPoolAccountResponseFactory
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
-import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.staking.model.StakingID
 import com.tangem.grow.datasource.ethpool.P2PEthPoolApi
 import com.tangem.grow.datasource.ethpool.models.request.P2PEthPoolAccountsListRequest
 import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolAccountListItem

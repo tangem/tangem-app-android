@@ -8,8 +8,8 @@ import com.tangem.data.staking.toDomain
 import com.tangem.grow.datasource.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.staking.StakingBalance
-import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.staking.model.StakingBalance
+import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
 import androidx.datastore.core.DataStore
 import io.mockk.Runs

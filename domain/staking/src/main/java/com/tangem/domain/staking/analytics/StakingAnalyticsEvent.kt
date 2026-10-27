@@ -6,7 +6,7 @@ import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 import com.tangem.core.analytics.models.OtelIncludedEvent
 import com.tangem.core.analytics.models.OtelMetric
 import com.tangem.domain.staking.model.stakekit.StakingError
-import com.tangem.domain.models.staking.action.StakingActionType
+import com.tangem.domain.staking.model.action.StakingActionType
 
 sealed class StakingAnalyticsEvent(
     event: String,

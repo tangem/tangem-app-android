@@ -6,11 +6,11 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.BalanceItem
-import com.tangem.domain.models.staking.BalanceType
-import com.tangem.domain.models.staking.PendingAction
-import com.tangem.domain.models.staking.action.StakingActionType
-import com.tangem.domain.models.staking.StakingBalance
+import com.tangem.domain.staking.model.BalanceItem
+import com.tangem.domain.staking.model.BalanceType
+import com.tangem.domain.staking.model.PendingAction
+import com.tangem.domain.staking.model.action.StakingActionType
+import com.tangem.domain.staking.model.StakingBalance
 import com.tangem.domain.staking.model.StakeKitIntegration
 import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.StakingIntegrationID

@@ -3,9 +3,9 @@ package com.tangem.features.staking.impl.presentation.state.utils
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
-import com.tangem.domain.models.staking.BalanceType
-import com.tangem.domain.models.staking.PendingAction
-import com.tangem.domain.models.staking.action.StakingActionType
+import com.tangem.domain.staking.model.BalanceType
+import com.tangem.domain.staking.model.PendingAction
+import com.tangem.domain.staking.model.action.StakingActionType
 import com.tangem.features.staking.impl.presentation.state.balanceState
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.staking.MockStaking
