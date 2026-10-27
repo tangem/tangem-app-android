@@ -33,6 +33,7 @@ dependencies {
     implementation(projects.domain.wallets)
 
     /** Core */
+    implementation(projects.core.analytics)
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
     implementation(projects.core.navigation)
