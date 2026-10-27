@@ -32,7 +32,6 @@ import com.tangem.store.datasource.jointaccount.models.JointAccountInvitePreview
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountConfirmationPayload
-import com.tangem.domain.jointaccount.model.JointAccountInvite
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
 import com.tangem.domain.jointaccount.model.JointAccountConfig
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
@@ -40,7 +39,6 @@ import com.tangem.domain.jointaccount.model.JointAccountCreationResult
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
 import com.tangem.domain.jointaccount.model.JointAccountJoinPayload
 import com.tangem.domain.jointaccount.model.JointAccountParticipant
-import com.tangem.domain.jointaccount.store.JointAccountInvitesStore
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.ProvideTestModels
@@ -61,12 +59,10 @@ internal class DefaultJointAccountRepositoryTest {
 
     private val jointAccountApi: JointAccountApi = mockk()
     private val walletAccountsFetcher: WalletAccountsFetcher = mockk()
-    private val invitesStore: JointAccountInvitesStore = mockk(relaxUnitFun = true)
 
     private val repository = DefaultJointAccountRepository(
         jointAccountApi = jointAccountApi,
         walletAccountsFetcher = walletAccountsFetcher,
-        invitesStore = invitesStore,
         converter = JointAccountDtoConverter(operationConverter = JointOperationConverter(safeTxConverter = SafeTxConverter())),
         previewConverter = JointAccountInvitePreviewDtoConverter(),
         safeTxConverter = SafeTxConverter(),
@@ -77,7 +73,7 @@ internal class DefaultJointAccountRepositoryTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(jointAccountApi, walletAccountsFetcher, invitesStore)
+        clearMocks(jointAccountApi, walletAccountsFetcher)
     }
 
     @ParameterizedTest
@@ -134,45 +130,6 @@ internal class DefaultJointAccountRepositoryTest {
     }
 
     @Test
-    fun `GIVEN response with invites WHEN create THEN invites persisted for the created account`() = runTest {
-        // Arrange
-        val dto = createJointAccountDto(
-            invites = listOf(JointAccountDto.Invite(id = INVITE_A), JointAccountDto.Invite(id = INVITE_B)),
-        )
-        coEvery { jointAccountApi.createJointAccount(any(), any()) } returns ApiResponse.Success(dto)
-
-        // Act
-        repository.create(userWalletId = WALLET_ID, payload = createPayload(), signature = SIGNATURE)
-
-        // Assert
-        coVerify(exactly = 1) {
-            invitesStore.store(
-                userWalletId = WALLET_ID,
-                cryptoAccountId = FIXTURE_CRYPTO_ACCOUNT_ID,
-                invites = listOf(INVITE_A, INVITE_B),
-            )
-        }
-    }
-
-    @Test
-    fun `GIVEN invites store fails WHEN create THEN the created account is still returned`() = runTest {
-        // Arrange
-        // The account already exists on the backend — a storage failure must not push the user into a retry
-        // that can only end in a 409
-        coEvery {
-            jointAccountApi.createJointAccount(any(), any())
-        } returns ApiResponse.Success(createJointAccountDto())
-        coEvery { invitesStore.store(any(), any(), any()) } throws IllegalStateException("keystore unavailable")
-
-        // Act
-        val actual = repository.create(userWalletId = WALLET_ID, payload = createPayload(), signature = SIGNATURE)
-
-        // Assert
-        val expected = JointAccountCreationResult.Created(account = createJointAccount(source = StatusSource.ACTUAL))
-        assertThat(actual).isEqualTo(expected)
-    }
-
-    @Test
     fun `GIVEN conflict WHEN create THEN result says the creator is already registered`() = runTest {
         // Arrange
         // 409 is a recoverable branch, not a failure: the caller resolves the account by re-reading the list
@@ -185,7 +142,6 @@ internal class DefaultJointAccountRepositoryTest {
 
         // Assert
         assertThat(actual).isEqualTo(JointAccountCreationResult.CreatorAlreadyRegistered)
-        coVerify(exactly = 0) { invitesStore.store(any(), any(), any()) }
     }
 
     @Test
@@ -412,48 +368,6 @@ internal class DefaultJointAccountRepositoryTest {
         // Assert
         val expectedCause = (response as ApiResponse.Error).cause
         assertThat(actual).isEqualTo(Either.Left(JointAccountInvitePreviewError.LoadFailed(cause = expectedCause)))
-    }
-
-    @Test
-    fun `GIVEN stored invites WHEN getInvites THEN they are returned`() = runTest {
-        // Arrange
-        coEvery { invitesStore.get(WALLET_ID, FIXTURE_CRYPTO_ACCOUNT_ID) } returns listOf("invite-a", "invite-b")
-
-        // Act
-        val actual = repository.getInvites(userWalletId = WALLET_ID, cryptoAccountId = FIXTURE_CRYPTO_ACCOUNT_ID)
-
-        // Assert
-        assertThat(actual)
-            .containsExactly(JointAccountInvite(id = "invite-a"), JointAccountInvite(id = "invite-b"))
-            .inOrder()
-    }
-
-    @Test
-    fun `GIVEN unreadable store WHEN getInvites THEN empty instead of throwing`() = runTest {
-        // Arrange
-        // The members are worth showing even when the invite actions cannot be offered
-        coEvery { invitesStore.get(WALLET_ID, FIXTURE_CRYPTO_ACCOUNT_ID) } throws
-            IllegalStateException("keystore unavailable")
-
-        // Act
-        val actual = runCatching {
-            repository.getInvites(userWalletId = WALLET_ID, cryptoAccountId = FIXTURE_CRYPTO_ACCOUNT_ID)
-        }
-
-        // Assert
-        assertThat(actual.getOrNull()).isEmpty()
-    }
-
-    @Test
-    fun `GIVEN nothing stored WHEN getInvites THEN empty - this device is not the creator's`() = runTest {
-        // Arrange
-        coEvery { invitesStore.get(WALLET_ID, FIXTURE_CRYPTO_ACCOUNT_ID) } returns null
-
-        // Act
-        val actual = repository.getInvites(userWalletId = WALLET_ID, cryptoAccountId = FIXTURE_CRYPTO_ACCOUNT_ID)
-
-        // Assert
-        assertThat(actual).isEmpty()
     }
 
     private fun joinPayload() = JointAccountJoinPayload(
@@ -729,6 +643,5 @@ internal class DefaultJointAccountRepositoryTest {
         const val OPERATION_ID = "3f1a2b4c-5d6e-7f80-91a2-b3c4d5e6f708"
         const val CHAIN_ID = 137L
         const val INVITE_A = "AA11BB22CC33DD44EE55FF66AA77BB88CC99DD00EE11FF22AA33BB44CC55DD66"
-        const val INVITE_B = "BB11BB22CC33DD44EE55FF66AA77BB88CC99DD00EE11FF22AA33BB44CC55DD66"
     }
 }

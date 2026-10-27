@@ -22,7 +22,7 @@ internal fun PushNotificationSettingsScreen(
 ) {
     Scaffold(
         modifier = modifier,
-        containerColor = TangemTheme.colors.background.secondary,
+        containerColor = TangemTheme.colors3.bg.primary,
         topBar = {
             TangemTopAppBar(
                 modifier = Modifier.statusBarsPadding(),

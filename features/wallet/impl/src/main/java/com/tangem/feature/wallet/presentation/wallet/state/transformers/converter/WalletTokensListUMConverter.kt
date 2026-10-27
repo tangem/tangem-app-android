@@ -41,16 +41,15 @@ internal class WalletTokensListUMConverter(
     private val isAccountsModeEnabled: Boolean,
     private val expandedAccounts: Set<AccountId>,
     private val stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability>,
-    private val accountIdsWithInvites: Set<String>,
     shouldShowMainPromo: Boolean,
     private val jointPendingOperations: List<JointPendingOperation> = emptyList(),
+    private val isRedesignedAccountRowsEnabled: Boolean = false,
 ) : Converter<AccountStatusList, WalletTokensListUM> {
 
     private val jointAccountRowConverter by lazy(LazyThreadSafetyMode.NONE) {
         WalletJointAccountItemConverter(
             appCurrency = appCurrency,
             userWalletId = selectedWallet.walletId,
-            accountIdsWithInvites = accountIdsWithInvites,
             onAccountClick = clickIntents::onJointAccountClick,
             onCompromisedAccountClick = clickIntents::onCompromisedJointAccountClick,
         )
@@ -63,6 +62,16 @@ internal class WalletTokensListUMConverter(
             onAccountCollapseClick = clickIntents::onAccountCollapseClick,
             onAccountExpandClick = clickIntents::onAccountExpandClick,
             jointPendingOperations = jointPendingOperations,
+        )
+    }
+
+    private val accountRowV2Converter by lazy(LazyThreadSafetyMode.NONE) {
+        WalletAccountRowConverter(
+            appCurrency = appCurrency,
+            expandedAccounts = expandedAccounts,
+            onAccountCollapseClick = clickIntents::onAccountCollapseClick,
+            onAccountExpandClick = clickIntents::onAccountExpandClick,
+            onManageTokensClick = clickIntents::onManageTokensClick,
         )
     }
 
@@ -84,6 +93,18 @@ internal class WalletTokensListUMConverter(
             yieldModuleApyMap = yieldModuleApyMap,
             stakingAvailabilityMap = stakingAvailabilityMap,
             clickIntents = clickIntents,
+            userWalletId = selectedWallet.walletId,
+            jointPendingOperations = jointPendingOperations.filter { it.account.accountId == accountId },
+        )
+    }
+
+    private fun tokenRowConverter(accountId: AccountId): WalletTokenRowConverter {
+        return WalletTokenRowConverter(
+            appCurrency = appCurrency,
+            accountId = accountId,
+            clickIntents = clickIntents,
+            yieldModuleApyMap = yieldModuleApyMap,
+            stakingAvailabilityMap = stakingAvailabilityMap,
             userWalletId = selectedWallet.walletId,
             jointPendingOperations = jointPendingOperations.filter { it.account.accountId == accountId },
         )
@@ -140,7 +161,13 @@ internal class WalletTokensListUMConverter(
     private fun portfolioItem(
         accountStatus: AccountStatus.CryptoPortfolio,
         promoCryptoCurrency: CryptoCurrencyStatus?,
-    ): TokensListItemUM2.Portfolio {
+    ): TokensListItemUM2 {
+        if (isRedesignedAccountRowsEnabled) {
+            return accountRowV2Converter.convert(
+                value = accountStatus,
+                tokenList = getTokenListItemsV2(accountStatus, promoCryptoCurrency).toPersistentList(),
+            )
+        }
         return TokensListItemUM2.Portfolio(
             tokenRowUM = accountRowConverter.convert(accountStatus),
             isExpanded = expandedAccounts.contains(accountStatus.account.accountId),
@@ -192,6 +219,30 @@ internal class WalletTokensListUMConverter(
         }
     }
 
+    private fun getTokenListItemsV2(
+        accountStatus: AccountStatus.CryptoPortfolio,
+        promoCryptoCurrency: CryptoCurrencyStatus?,
+    ): Sequence<TokensListItemUM2> {
+        val converter = tokenRowConverter(accountStatus.accountId)
+        fun tokenItem(currencyStatus: CryptoCurrencyStatus): TokensListItemUM2.TokenV2 {
+            val shouldShowPromo = promoCryptoCurrency?.currency?.id == currencyStatus.currency.id
+            return converter.convert(currencyStatus, shouldShowPromo)
+        }
+
+        return when (val tokenList = accountStatus.tokenList) {
+            TokenList.Empty -> emptySequence()
+            is TokenList.GroupedByNetwork -> tokenList.groups.asSequence().flatMap { (network, currencies) ->
+                sequenceOf(toSection(network)) + currencies.asSequence().map(::tokenItem)
+            }
+            is TokenList.Ungrouped -> tokenList.currencies.asSequence().map(::tokenItem)
+        }
+    }
+
+    private fun toSection(network: Network): TokensListItemUM2.SectionV2 {
+        val groupRow = toGroupRow(network)
+        return TokensListItemUM2.SectionV2(id = groupRow.id, title = groupRow.title)
+    }
+
     private fun toGroupRow(network: Network): TangemHeaderRowUM {
         return TangemHeaderRowUM(
             id = network.hashCode().toString(),
@@ -216,9 +267,9 @@ internal class WalletTokensListUMConverter(
                     iconRes = iconRes,
                     tintReference = {
                         if (accountList.totalFiatBalance !is TotalFiatBalance.Loading) {
-                            TangemTheme.colors2.graphic.neutral.primary
+                            TangemTheme.colors3.icon.primary
                         } else {
-                            TangemTheme.colors2.graphic.neutral.quaternary
+                            TangemTheme.colors3.icon.tertiary
                         }
                     },
                 ),

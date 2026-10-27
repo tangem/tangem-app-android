@@ -108,12 +108,12 @@ private fun ButtonsContainer(alert: AlertsComponent.AlertType, modifier: Modifie
 @Composable
 private fun AlertIcon(alert: AlertsComponent.AlertType, modifier: Modifier = Modifier) {
     val color = when (alert) {
-        is AlertsComponent.AlertType.WcDisconnected -> TangemTheme.colors.icon.informative
+        is AlertsComponent.AlertType.WcDisconnected -> TangemTheme.colors3.icon.secondary
         is AlertsComponent.AlertType.UnsupportedMethod,
         is AlertsComponent.AlertType.RequiredAddNetwork,
         is AlertsComponent.AlertType.RequiredReconnectWithNetwork,
         is AlertsComponent.AlertType.TangemUnsupportedNetwork,
-        -> TangemTheme.colors.icon.attention
+        -> TangemTheme.colors3.icon.accent.yellow
     }
 
     @DrawableRes val drawableId = when (alert) {
@@ -162,7 +162,7 @@ private fun AlertContentTitle(alert: AlertsComponent.AlertType, modifier: Modifi
         modifier = modifier,
         text = stringResourceSafe(titleRes),
         style = TangemTheme.typography.h3,
-        color = TangemTheme.colors.text.primary1,
+        color = TangemTheme.colors3.text.primary,
         textAlign = TextAlign.Center,
     )
 }
@@ -193,7 +193,7 @@ private fun AlertContentDescription(alert: AlertsComponent.AlertType, modifier: 
         modifier = modifier,
         text = message,
         style = TangemTheme.typography.body2,
-        color = TangemTheme.colors.text.secondary,
+        color = TangemTheme.colors3.text.secondary,
         textAlign = TextAlign.Center,
     )
 }

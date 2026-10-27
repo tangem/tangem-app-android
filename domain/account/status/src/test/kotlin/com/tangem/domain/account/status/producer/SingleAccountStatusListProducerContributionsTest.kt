@@ -58,7 +58,7 @@ import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 internal class SingleAccountStatusListProducerContributionsTest {
 
     private val jointAccountCompositionVerifier: JointAccountCompositionVerifier = mockk {
-        coEvery { isVerified(userWalletId = any(), ownerKeyIndex = any(), jointAccount = any()) } returns true
+        coEvery { isVerified(account = any(), jointAccount = any()) } returns true
         coEvery { ownerAddress(userWalletId = any(), ownerKeyIndex = any()) } returns null
     }
 
