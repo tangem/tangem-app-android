@@ -10,7 +10,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher

@@ -11,7 +11,7 @@ import com.tangem.core.remote.response.ApiResponse
 import com.tangem.data.staking.StakeKitRepositoryFixtures.actionDTO
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.staking.YieldToken
+import com.tangem.domain.staking.model.YieldToken
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
