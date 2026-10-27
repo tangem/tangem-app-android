@@ -47,12 +47,7 @@ internal class SwapAmountSecondaryReadyStateTransformer(
     )
 
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {
-        val rateTypes = providers.flatMapTo(mutableSetOf()) { it.rateTypes }
-        val swapRateMode = when {
-            rateTypes.containsAll(listOf(ExpressRateType.Float, ExpressRateType.Fixed)) -> SwapRateMode.FLOAT_AND_FIXED
-            rateTypes.contains(ExpressRateType.Fixed) -> SwapRateMode.FIXED_ONLY
-            else -> SwapRateMode.FLOAT_ONLY
-        }
+        val swapRateMode = providers.getSwapRateMode()
         val selectedRateType = providers.getInitialRateType()
         return SwapAmountUM.Content(
             isPrimaryButtonEnabled = false,
@@ -81,5 +76,14 @@ internal class SwapAmountSecondaryReadyStateTransformer(
             priceImpact = null,
             swapRateMode = swapRateMode,
         )
+    }
+}
+
+internal fun List<ExpressProvider>.getSwapRateMode(): SwapRateMode {
+    val rateTypes = flatMapTo(mutableSetOf()) { it.rateTypes }
+    return when {
+        rateTypes.containsAll(listOf(ExpressRateType.Float, ExpressRateType.Fixed)) -> SwapRateMode.FLOAT_AND_FIXED
+        rateTypes.contains(ExpressRateType.Fixed) -> SwapRateMode.FIXED_ONLY
+        else -> SwapRateMode.FLOAT_ONLY
     }
 }
