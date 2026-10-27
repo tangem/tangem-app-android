@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -14,9 +15,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -51,23 +54,29 @@ import com.tangem.core.ui.components.fields.TangemAmountTextFieldColors
 import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
 import com.tangem.core.ui.components.isOpened
 import com.tangem.core.ui.components.keyboardAsState
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.core.ui.utils.rememberDecimalFormat
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.RouteRowUM
+import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.SheetUM
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.SourceRowUM
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawFromUM
 import com.tangem.features.tangempay.withdraw.bank.ui.BankFromRow
@@ -81,7 +90,6 @@ import kotlinx.coroutines.withTimeoutOrNull
 
 @Composable
 internal fun TangemPayBankWithdrawAmountScreen(state: TangemPayBankWithdrawAmountUM, modifier: Modifier = Modifier) {
-    val dismissKeyboardThen = rememberDismissKeyboardThen()
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -97,40 +105,103 @@ internal fun TangemPayBankWithdrawAmountScreen(state: TangemPayBankWithdrawAmoun
             onBack = state.onBackClick,
             onClose = state.header.onCloseClick,
         )
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp)
-                .padding(top = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            AmountCard(
-                from = state.from,
-                amount = state.amount,
-                source = state.source,
-                onSourceClick = state.source.onClick?.let { onSourceClick -> { dismissKeyboardThen(onSourceClick) } },
-            )
-            RouteRow(
-                route = state.route,
-                onClick = state.route.onClick?.let { onRouteClick -> { dismissKeyboardThen(onRouteClick) } },
-            )
-        }
-        TangemFooter(
-            windowInsets = WindowInsets(0),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-        ) {
-            TangemButton(
-                modifier = Modifier.fillMaxWidth(),
-                size = TangemButton.Size.X12,
-                text = resourceReference(R.string.common_continue),
-                isEnabled = state.isContinueEnabled,
-                onClick = state.onContinueClick,
-            )
+        when (state) {
+            is TangemPayBankWithdrawAmountUM.Content -> AmountContent(state = state)
+            is TangemPayBankWithdrawAmountUM.Loading -> AmountLoading(state = state)
+            is TangemPayBankWithdrawAmountUM.FeeUnreachable -> FeeUnreachable(state = state)
         }
     }
-    BankWithdrawAmountSheets(sheet = state.sheet)
+    BankWithdrawAmountSheets(sheet = (state as? TangemPayBankWithdrawAmountUM.Content)?.sheet ?: SheetUM.Hidden)
+}
+
+@Composable
+private fun ColumnScope.AmountContent(state: TangemPayBankWithdrawAmountUM.Content) {
+    val dismissKeyboardThen = rememberDismissKeyboardThen()
+    Column(
+        modifier = Modifier
+            .weight(1f)
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp)
+            .padding(top = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        AmountCard(
+            from = state.from,
+            amountSlot = { AmountInput(amount = state.amount, modifier = Modifier.weight(1f)) },
+            sourceSlot = {
+                SourceRow(
+                    source = state.source,
+                    onClick = state.source.onClick?.let { onSourceClick -> { dismissKeyboardThen(onSourceClick) } },
+                )
+            },
+        )
+        RouteRow(
+            route = state.route,
+            onClick = state.route.onClick?.let { onRouteClick -> { dismissKeyboardThen(onRouteClick) } },
+        )
+    }
+    TangemFooter(
+        windowInsets = WindowInsets(0),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+    ) {
+        TangemButton(
+            modifier = Modifier.fillMaxWidth(),
+            size = TangemButton.Size.X12,
+            text = resourceReference(R.string.common_continue),
+            isEnabled = state.isContinueEnabled,
+            onClick = state.onContinueClick,
+        )
+    }
+}
+
+@Composable
+private fun ColumnScope.AmountLoading(state: TangemPayBankWithdrawAmountUM.Loading) {
+    Column(
+        modifier = Modifier
+            .weight(1f)
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(top = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        AmountCard(
+            from = state.from,
+            amountSlot = {
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    AmountPlaceholder(currencySymbol = state.currencySymbol)
+                }
+            },
+            sourceSlot = { SourceRowShimmer() },
+        )
+        RouteRowShimmer()
+    }
+}
+
+@Composable
+private fun ColumnScope.FeeUnreachable(state: TangemPayBankWithdrawAmountUM.FeeUnreachable) {
+    Column(
+        modifier = Modifier
+            .weight(1f)
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
+    ) {
+        TangemButton(
+            variant = TangemButton.Variant.Primary,
+            size = TangemButton.Size.X10,
+            iconStart = TangemIconUM.Icon(imageVector = Icons.ic_arrow_refresh_20),
+            contentDescription = stringResourceSafe(R.string.warning_button_refresh),
+            onClick = state.onRetryClick,
+        )
+        Text(
+            text = stringResourceSafe(R.string.tangempay_withdraw_bank_network_fee_unreachable),
+            style = TangemTheme.typography3.caption.medium,
+            color = TangemTheme.colors3.text.secondary,
+            textAlign = TextAlign.Center,
+        )
+    }
 }
 
 @Composable
@@ -161,9 +232,8 @@ private const val KEYBOARD_HIDE_TIMEOUT_MILLIS = 500L
 @Composable
 private fun AmountCard(
     from: BankWithdrawFromUM,
-    amount: TangemPayBankWithdrawAmountUM.AmountFieldUM,
-    source: SourceRowUM,
-    onSourceClick: (() -> Unit)?,
+    amountSlot: @Composable ColumnScope.() -> Unit,
+    sourceSlot: @Composable () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -174,13 +244,43 @@ private fun AmountCard(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         BankFromRow(from = from, balance = null)
-        AmountInput(amount = amount, modifier = Modifier.weight(1f))
+        amountSlot()
         HorizontalDivider(
             modifier = Modifier.padding(horizontal = 16.dp),
             thickness = 1.dp,
             color = TangemTheme.colors3.border.secondary,
         )
-        SourceRow(source = source, onClick = onSourceClick)
+        sourceSlot()
+    }
+}
+
+@Composable
+private fun SourceRowShimmer() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        TangemShimmer(modifier = Modifier.size(40.dp), radius = 20.dp)
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            TangemShimmer(style = TangemTheme.typography3.body.medium)
+            TangemShimmer(style = TangemTheme.typography3.caption.medium)
+        }
+    }
+}
+
+@Composable
+private fun RouteRowShimmer() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(CircleShape)
+            .background(TangemTheme.colors3.bg.secondary)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+    ) {
+        TangemShimmer(style = TangemTheme.typography3.body.medium)
     }
 }
 
@@ -334,5 +434,7 @@ private class AmountPreviewProvider : PreviewParameterProvider<TangemPayBankWith
         TangemPayBankWithdrawAmountPreviewData.content,
         TangemPayBankWithdrawAmountPreviewData.contentWithError,
         TangemPayBankWithdrawAmountPreviewData.moneyAccount,
+        TangemPayBankWithdrawAmountPreviewData.loading,
+        TangemPayBankWithdrawAmountPreviewData.feeUnreachable,
     )
 }
