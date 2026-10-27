@@ -46,9 +46,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.ClassKey
 import dagger.multibindings.IntoMap
-import javax.inject.Qualifier
 import javax.inject.Singleton
-import kotlin.time.TimeSource
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -152,18 +150,7 @@ internal interface PolymarketModelModule {
     @IntoMap
     @ClassKey(PlacePredictionStatusModel::class)
     fun bindPlacePredictionStatusModel(impl: PlacePredictionStatusModel): Model
-
-    companion object {
-
-        @Provides
-        @PlacePredictionTimeSource
-        fun providePlacePredictionTimeSource(): TimeSource = TimeSource.Monotonic
-    }
 }
-
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-internal annotation class PlacePredictionTimeSource
 
 @Module
 @InstallIn(SingletonComponent::class)

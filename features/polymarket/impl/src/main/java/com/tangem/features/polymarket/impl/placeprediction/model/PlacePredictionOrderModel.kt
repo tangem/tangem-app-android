@@ -11,7 +11,6 @@ import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
 import com.tangem.features.polymarket.impl.common.formatPolymarketEnteredAmount
-import com.tangem.features.polymarket.impl.di.PlacePredictionTimeSource
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketAddFundsComponent
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetConfig
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
@@ -36,13 +35,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.TimeSource
 
-@Suppress("LongParameterList", "TooManyFunctions")
+@Suppress("TooManyFunctions")
 @ModelScoped
 internal class PlacePredictionOrderModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -51,7 +50,6 @@ internal class PlacePredictionOrderModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     quoteEngineFactory: PlacePredictionQuoteEngine.Factory,
     orderSubmitterFactory: PlacePredictionOrderSubmitter.Factory,
-    @PlacePredictionTimeSource private val timeSource: TimeSource,
 ) : Model(), PlacePredictionOrderIntents, PolymarketAddFundsComponent.ModelCallback {
 
     private val params = paramsContainer.require<PlacePredictionComponent.Params>()
@@ -169,21 +167,20 @@ internal class PlacePredictionOrderModel @Inject constructor(
     }
 
     private fun placeOnceQuoted() {
-        val tappedAt = timeSource.markNow()
-        uiState.update { it.copy(isPlacementPending = true) }
-
-        modelScope.launch {
-            uiState.first { it.quote !is QuoteUM.Loading }
-            uiState.update { it.copy(isPlacementPending = false) }
-            if (tappedAt.elapsedNow() > PENDING_PLACEMENT_LIFETIME) return@launch
+        val wait = modelScope.launch {
+            withTimeoutOrNull(PENDING_PLACEMENT_LIFETIME) {
+                uiState.first { !it.isAwaitingFreshQuote }
+            } ?: return@launch
 
             quoteEngine.prepare()?.let { prepared -> place(prepared = prepared) }
         }.saveIn(pendingPlacementJobHolder)
+
+        uiState.update { it.copy(isPlacementPending = true) }
+        wait.invokeOnCompletion { uiState.update { state -> state.copy(isPlacementPending = false) } }
     }
 
     private fun dropPendingPlacement() {
         pendingPlacementJobHolder.cancel()
-        uiState.update { it.copy(isPlacementPending = false) }
     }
 
     private fun place(prepared: PreparedPrediction) {
