@@ -207,6 +207,10 @@ internal class ExpressTxToDetailsUMConverter(
         is ResolvedOwner.OwnPaymentAccount -> TxHistoryDetailsUM.AssetOwnerUM.PaymentAccount(
             name = account.accountName.toUM().value,
         )
+        is ResolvedOwner.OwnMoneyAccount -> TxHistoryDetailsUM.AssetOwnerUM.Account(
+            name = moneyAccountOwnerName,
+            icon = CryptoPortfolioIconConverter.convert(moneyAccountOwnerIcon),
+        )
         is ResolvedOwner.OwnWallet -> TxHistoryDetailsUM.AssetOwnerUM.Wallet(
             name = stringReference(walletInfo.name),
             deviceIconUM = walletInfo.deviceIconUM,

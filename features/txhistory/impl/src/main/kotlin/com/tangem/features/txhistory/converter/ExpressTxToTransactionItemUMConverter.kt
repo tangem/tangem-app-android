@@ -108,6 +108,10 @@ internal class ExpressTxToTransactionItemUMConverter(
         is ResolvedOwner.OwnPaymentAccount -> ContentSubtitle.AssetOwner.PaymentAccount(
             name = account.accountName.toUM().value,
         )
+        is ResolvedOwner.OwnMoneyAccount -> ContentSubtitle.AssetOwner.Account(
+            name = moneyAccountOwnerName,
+            avatar = moneyAccountOwnerIcon.toPortfolioAvatar(name = moneyAccountOwnerName),
+        )
         is ResolvedOwner.OwnWallet -> ContentSubtitle.AssetOwner.Wallet(
             name = walletInfo.name,
             deviceIconUM = walletInfo.deviceIconUM,
