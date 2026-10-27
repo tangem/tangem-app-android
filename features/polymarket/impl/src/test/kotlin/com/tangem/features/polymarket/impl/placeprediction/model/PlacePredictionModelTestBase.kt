@@ -242,7 +242,10 @@ internal abstract class PlacePredictionModelTestBase {
             orderSubmitterFactory = createOrderSubmitterFactory(testScope),
         ).also(models::add)
 
-    protected fun createOrderSubmitterFactory(testScope: TestScope) = object : PlacePredictionOrderSubmitter.Factory {
+    protected fun createOrderSubmitterFactory(
+        testScope: TestScope,
+        dispatchers: CoroutineDispatcherProvider = testScope.createTestingCoroutineDispatcherProvider(),
+    ) = object : PlacePredictionOrderSubmitter.Factory {
         override fun create(
             params: PlacePredictionComponent.Params,
             uiState: MutableStateFlow<PlacePredictionUM>,
@@ -254,7 +257,7 @@ internal abstract class PlacePredictionModelTestBase {
             getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
             sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
             messageSender = messageSender,
-            dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
+            dispatchers = dispatchers,
             derivePolymarketAddressesUseCase = deriveAddressesUseCase,
             getPolymarketBalanceInteractor = getBalanceInteractor,
             submitPredictionOrderInteractor = SubmitPredictionOrderInteractor(
@@ -275,17 +278,15 @@ internal abstract class PlacePredictionModelTestBase {
         testScope: TestScope,
         params: PlacePredictionComponent.Params = BUY_PARAMS,
         router: Router = this.router,
-    ): PlacePredictionOrderModel {
-        val dispatchers = testScope.createTestingCoroutineDispatcherProvider()
-        return PlacePredictionOrderModel(
-            paramsContainer = MutableParamsContainer(value = params),
-            router = router,
-            urlOpener = urlOpener,
-            dispatchers = dispatchers,
-            quoteEngineFactory = createQuoteEngineFactory(dispatchers = dispatchers, router = router),
-            orderSubmitterFactory = createOrderSubmitterFactory(testScope),
-        ).also(models::add)
-    }
+        dispatchers: CoroutineDispatcherProvider = testScope.createTestingCoroutineDispatcherProvider(),
+    ): PlacePredictionOrderModel = PlacePredictionOrderModel(
+        paramsContainer = MutableParamsContainer(value = params),
+        router = router,
+        urlOpener = urlOpener,
+        dispatchers = dispatchers,
+        quoteEngineFactory = createQuoteEngineFactory(dispatchers = dispatchers, router = router),
+        orderSubmitterFactory = createOrderSubmitterFactory(testScope = testScope, dispatchers = dispatchers),
+    ).also(models::add)
 
     protected fun createStatusModel(
         testScope: TestScope,
