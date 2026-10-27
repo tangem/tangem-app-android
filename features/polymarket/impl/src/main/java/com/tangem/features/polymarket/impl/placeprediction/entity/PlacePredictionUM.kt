@@ -34,6 +34,8 @@ internal data class PlacePredictionUM(
     val priceError: PriceErrorUM? = null,
     val submit: SubmitUM,
     val isPrimaryButtonEnabled: Boolean,
+    val isPrimaryButtonEnabledWhileQuoting: Boolean = false,
+    val isPlacementPending: Boolean = false,
     val isAwaitingFunds: Boolean = false,
     val lastFeeRate: BigDecimal = BigDecimal.ZERO,
     val isAmountFromFraction: Boolean = false,
