@@ -3,20 +3,25 @@ package com.tangem.domain.transaction.usecase.gasless
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.transaction.models.GaslessBatchTransactionData
 import com.tangem.domain.transaction.models.GaslessFeePlan
 import com.tangem.domain.transaction.models.GaslessTransactionData
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendEvmGaslessTransactionUseCase.GaslessPayload
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigInteger
 
 /**
  * Unit tests for [CreateAndSendEvmGaslessTransactionUseCase.assembleGaslessPayload].
  * Pure function — no coroutines or SDK side-effects.
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class CreateAndSendEvmGaslessPayloadTest {
 
     // ─── Common fixtures ─────────────────────────────────────────────────────────
@@ -172,4 +177,41 @@ internal class CreateAndSendEvmGaslessPayloadTest {
             )
         }
     }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN fee plan WHEN upgradesYieldModule THEN true only for an upgrade-wrapped yield withdraw`(
+        model: UpgradePlanModel,
+    ) {
+        // Act
+        val actual = with(CreateAndSendEvmGaslessTransactionUseCase) { model.plan.upgradesYieldModule() }
+
+        // Assert
+        assertThat(actual).isEqualTo(model.expected)
+    }
+
+    private fun provideTestModels() = listOf(
+        UpgradePlanModel(
+            plan = yieldWithdrawPlan(
+                withdrawCallData = EthereumYieldSupplyUpgradeToAndCallCallData(
+                    newImplementation = "0xnew",
+                    innerCallData = fakeWithdrawCallData,
+                ),
+            ),
+            expected = true,
+        ),
+        UpgradePlanModel(plan = yieldWithdrawPlan(withdrawCallData = fakeWithdrawCallData), expected = false),
+        UpgradePlanModel(plan = GaslessFeePlan.TokenPay(feeToken = fakeToken, fee = fakeTokenFee), expected = false),
+        UpgradePlanModel(plan = null, expected = false),
+    )
+
+    private fun yieldWithdrawPlan(withdrawCallData: SmartContractCallData) = GaslessFeePlan.TokenPayWithYieldWithdraw(
+        feeToken = fakeToken,
+        fee = fakeTokenFee,
+        withdrawAmount = BigInteger.ONE,
+        withdrawCallData = withdrawCallData,
+        yieldModuleAddress = "0xmodule",
+    )
+
+    data class UpgradePlanModel(val plan: GaslessFeePlan?, val expected: Boolean)
 }
