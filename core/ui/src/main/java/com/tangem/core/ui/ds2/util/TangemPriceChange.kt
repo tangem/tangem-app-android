@@ -36,7 +36,7 @@ import com.tangem.core.ui.res.generated.icons.ic_triangle_up_12
  * [direction]. A "util" building block, not a complete component — embed it next to quotes and
  * balances (e.g. inside the token row).
  *
- * Version: 1.0.0
+ * Version: 1.0.1
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=5724-3922&m=dev)
  *
@@ -56,12 +56,12 @@ fun TangemPriceChange(
     val textColor = when (direction) {
         TangemPriceChange.Direction.Up -> TangemTheme.colors3.text.accent.blue
         TangemPriceChange.Direction.Down -> TangemTheme.colors3.text.accent.red
-        TangemPriceChange.Direction.Neutral -> TangemTheme.colors3.text.tertiary
+        TangemPriceChange.Direction.Neutral -> TangemTheme.colors3.text.secondary
     }
     val iconTint = when (direction) {
         TangemPriceChange.Direction.Up -> TangemTheme.colors3.icon.accent.blue
         TangemPriceChange.Direction.Down -> TangemTheme.colors3.icon.accent.red
-        TangemPriceChange.Direction.Neutral -> TangemTheme.colors3.icon.tertiary
+        TangemPriceChange.Direction.Neutral -> TangemTheme.colors3.icon.secondary
     }
     Row(
         modifier = modifier,
@@ -115,7 +115,7 @@ fun TangemPriceChange(state: TangemPriceChange.State, modifier: Modifier = Modif
 /** Public API surface of [TangemPriceChange]. */
 object TangemPriceChange {
 
-    val version = DsVersion(major = 1, minor = 0, patch = 0)
+    val version = DsVersion(major = 1, minor = 0, patch = 1)
 
     /** Direction of the price change, driving the leading icon and its color. */
     enum class Direction {
@@ -125,7 +125,7 @@ object TangemPriceChange {
         /** Price went down — downward arrow, error color. */
         Down,
 
-        /** No significant change — dot icon, tertiary color. */
+        /** No significant change — dot icon, secondary color. */
         Neutral,
     }
 
