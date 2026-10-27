@@ -755,29 +755,60 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         }
 
         @Test
-        fun `GIVEN a priced quote WHEN refresh fails or liquidity is unavailable THEN header keeps the last price`() = runTest {
+        fun `GIVEN a priced quote WHEN refresh fails THEN header keeps the last price`() = runTest {
+            // Arrange
             coEvery { getQuoteUseCase(request = any()) } returnsMany listOf(
                 createQuote().copy(averagePrice = BigDecimal("0.61")).right(),
                 PredictionOrderQuoteError.Network.left(),
-                createQuote().copy(
-                    status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY,
-                    averagePrice = BigDecimal.ZERO,
-                ).right(),
             )
             val model = createAmountModel(testScope = this)
             advanceUntilIdle()
             model.onResume()
             model.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            val priced = model.uiState.value.market
 
+            // Act
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
-            assertThat(model.uiState.value.market.outcomePrice).isEqualTo("61¢")
 
-            advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
-            assertThat(model.uiState.value.market.outcomePrice).isEqualTo("61¢")
+            // Assert
+            assertThat(model.uiState.value.market).isEqualTo(priced)
+            assertThat(priced.outcomePrice).isEqualTo("61¢")
 
             model.onDestroy()
         }
+
+        @Test
+        fun `GIVEN a priced quote WHEN liquidity disappears and returns THEN header price hidden and restored`() =
+            runTest {
+                // Arrange
+                coEvery { getQuoteUseCase(request = any()) } returnsMany listOf(
+                    createQuote().copy(averagePrice = BigDecimal("0.61")).right(),
+                    createQuote().copy(
+                        status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY,
+                        averagePrice = BigDecimal.ZERO,
+                    ).right(),
+                    createQuote().copy(averagePrice = BigDecimal("0.64")).right(),
+                )
+                val model = createAmountModel(testScope = this)
+                advanceUntilIdle()
+                model.onResume()
+                model.onAmountChange(value = "10")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+                val priced = model.uiState.value.market
+
+                // Act
+                advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+                val noLiquidity = model.uiState.value.market
+                advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
+                val restored = model.uiState.value.market
+
+                // Assert
+                assertThat(noLiquidity).isEqualTo(priced.copy(isPriceUnavailable = true))
+                assertThat(restored).isEqualTo(priced.copy(outcomePrice = "64¢"))
+
+                model.onDestroy()
+            }
     }
 
     @Nested
