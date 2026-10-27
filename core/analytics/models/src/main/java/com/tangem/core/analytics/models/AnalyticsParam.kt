@@ -118,6 +118,8 @@ sealed class AnalyticsParam {
         FirstSignIn("First Sign In"),
         MainRequestSheet("Main Request Sheet"),
         Deeplink("Deeplink"),
+        UnsupportedDevice("Unsupported Device"),
+        CritUpdate("Crit Update"),
     }
 
     sealed class TxSentFrom(val value: String) {
