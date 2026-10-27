@@ -112,13 +112,15 @@ private fun PseudoProviderHeader(banner: MarketingBannerUM, onClick: () -> Unit,
             }
         }
 
-        SpacerW(8.dp)
-
-        PrimaryButton(
-            size = TangemButtonSize.RoundedAction,
-            text = banner.buttonText.orEmpty(),
-            onClick = onClick,
-        )
+        val buttonText = banner.buttonText
+        if (!buttonText.isNullOrBlank()) {
+            SpacerW(8.dp)
+            PrimaryButton(
+                size = TangemButtonSize.RoundedAction,
+                text = buttonText,
+                onClick = onClick,
+            )
+        }
 
         if (banner.isDismissible) {
             SpacerW(8.dp)
@@ -207,6 +209,7 @@ private class PseudoProviderMarketingBannerPreviewProvider : PreviewParameterPro
                 isDismissible = true,
                 hasGlow = false,
             ),
+            concierge.copy(buttonText = null, hasGlow = false),
             concierge.copy(
                 categoryLabel = null,
                 subtitle = null,
