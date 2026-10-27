@@ -570,7 +570,11 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
 
             // Assert
             assertThat(model.uiState.value.amountCaption)
-                .isEqualTo(AmountCaptionUM.Shortfall(error = PaymentAmountErrorUM.NotEnoughForFees))
+                .isEqualTo(AmountCaptionUM.Shortfall(
+                    error = PaymentAmountErrorUM.NotEnoughForFees,
+                    payout = BigDecimal("23.8"),
+                ),
+            )
             assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
 
             model.onDestroy()

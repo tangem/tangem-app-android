@@ -9,7 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.ds2.modal.TangemModal
@@ -18,7 +17,6 @@ import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
@@ -36,7 +34,7 @@ internal fun PredictionFeeSheet(state: PredictionFeeSheetUM, onDismiss: () -> Un
         ),
         onBack = onDismiss,
         title = {
-            TangemModal.TopNavigation(title = resourceReference(R.string.prediction_place_fee))
+            TangemModal.TopNavigation(title = state.title)
         },
     ) {
         Column(modifier = Modifier.padding(bottom = 16.dp)) {

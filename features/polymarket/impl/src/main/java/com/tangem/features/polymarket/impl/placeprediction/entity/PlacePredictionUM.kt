@@ -156,7 +156,7 @@ internal sealed interface AmountCaptionUM {
 
     data class ToWin(val payout: BigDecimal) : AmountCaptionUM
 
-    data class Shortfall(val error: PaymentAmountErrorUM) : AmountCaptionUM
+    data class Shortfall(val error: PaymentAmountErrorUM, val payout: BigDecimal?) : AmountCaptionUM
 
     data class BelowMinimum(val minAmount: BigDecimal) : AmountCaptionUM
 }
