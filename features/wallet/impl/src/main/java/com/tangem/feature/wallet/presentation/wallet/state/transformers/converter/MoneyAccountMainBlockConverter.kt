@@ -1,9 +1,9 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
 import com.tangem.common.ui.R
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
@@ -40,7 +40,7 @@ internal class MoneyAccountMainBlockConverter(
 
     private fun MoneyAccountStatusValue.Account.toUM(userWalletId: UserWalletId): MoneyAccountMainUM {
         return MoneyAccountMainUM.Content(
-            subtitle = TextReference.EMPTY,
+            subtitle = resourceReference(R.string.money_account_main_status_active),
             balance = balance?.toUM(source),
             onClick = { moneyAccountIntents.onMoneyAccountClicked(userWalletId) },
         )
