@@ -3,7 +3,7 @@ package com.tangem.features.polymarket.impl.placeprediction.model
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
-import com.tangem.features.polymarket.impl.placeprediction.entity.BuyAmountFractionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.AmountFractionUM
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.mockk
@@ -57,20 +57,20 @@ internal class BuyAmountCalculatorTest {
     )
 
     private fun provideTestModels(): List<FractionModel> = listOf(
-        FractionModel(balance = "100", fraction = BuyAmountFractionUM.Quarter, expected = "25.00"),
-        FractionModel(balance = "100", fraction = BuyAmountFractionUM.Half, expected = "50.00"),
-        FractionModel(balance = "100", fraction = BuyAmountFractionUM.ThreeQuarters, expected = "75.00"),
-        FractionModel(balance = "33.33", fraction = BuyAmountFractionUM.Half, expected = "16.66"),
-        FractionModel(balance = "0.01", fraction = BuyAmountFractionUM.Quarter, expected = "0.00"),
-        FractionModel(balance = "100", fraction = BuyAmountFractionUM.Max, expected = "90.00"),
-        FractionModel(balance = "100", fraction = BuyAmountFractionUM.Max, feeRate = "0.04", expected = "90.00"),
-        FractionModel(balance = "100", fraction = BuyAmountFractionUM.Max, feeRate = "0.2", expected = "83.33"),
-        FractionModel(balance = "100", fraction = BuyAmountFractionUM.Quarter, feeRate = "0.2", expected = "25.00"),
+        FractionModel(balance = "100", fraction = AmountFractionUM.Quarter, expected = "25.00"),
+        FractionModel(balance = "100", fraction = AmountFractionUM.Half, expected = "50.00"),
+        FractionModel(balance = "100", fraction = AmountFractionUM.ThreeQuarters, expected = "75.00"),
+        FractionModel(balance = "33.33", fraction = AmountFractionUM.Half, expected = "16.66"),
+        FractionModel(balance = "0.01", fraction = AmountFractionUM.Quarter, expected = "0.00"),
+        FractionModel(balance = "100", fraction = AmountFractionUM.Max, expected = "90.00"),
+        FractionModel(balance = "100", fraction = AmountFractionUM.Max, feeRate = "0.04", expected = "90.00"),
+        FractionModel(balance = "100", fraction = AmountFractionUM.Max, feeRate = "0.2", expected = "83.33"),
+        FractionModel(balance = "100", fraction = AmountFractionUM.Quarter, feeRate = "0.2", expected = "25.00"),
     )
 
     data class FractionModel(
         val balance: String,
-        val fraction: BuyAmountFractionUM,
+        val fraction: AmountFractionUM,
         val expected: String,
         val feeRate: String = "0",
     )
