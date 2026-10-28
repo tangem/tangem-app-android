@@ -8,6 +8,8 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionExtras
+import com.tangem.blockchain.common.smartcontract.SmartContractCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.MerklClaimCallData
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -54,6 +56,8 @@ internal class RecentTransactionOwnershipTest {
         // from the explorer.
         OwnershipModel(transaction = merklClaim(), currency = coin, expected = true),
         OwnershipModel(transaction = merklClaim(), currency = usdc, expected = false),
+        OwnershipModel(transaction = merklClaim(isUpgradeWrapped = true), currency = coin, expected = true),
+        OwnershipModel(transaction = merklClaim(isUpgradeWrapped = true), currency = usdc, expected = false),
         // Plain transfers keep being matched by their own amount.
         OwnershipModel(transaction = coinTransfer(), currency = coin, expected = true),
         OwnershipModel(transaction = coinTransfer(), currency = usdc, expected = false),
@@ -77,11 +81,17 @@ internal class RecentTransactionOwnershipTest {
         ),
     )
 
-    private fun merklClaim(): TransactionData.Uncompiled = transaction(
-        amount = Amount(token = sdkUsdc, value = BigDecimal.ZERO),
-        destinationAddress = YIELD_MODULE_ADDRESS,
-        extras = EthereumTransactionExtras(callData = MerklClaimCallData.fromHex(MERKL_CLAIM_CALL_DATA)),
-    )
+    private fun merklClaim(isUpgradeWrapped: Boolean = false): TransactionData.Uncompiled {
+        val callData = MerklClaimCallData.fromHex(MERKL_CLAIM_CALL_DATA)
+        return transaction(
+            amount = Amount(token = sdkUsdc, value = BigDecimal.ZERO),
+            destinationAddress = YIELD_MODULE_ADDRESS,
+            extras = EthereumTransactionExtras(callData = if (isUpgradeWrapped) upgradeWrapped(callData) else callData),
+        )
+    }
+
+    private fun upgradeWrapped(callData: SmartContractCallData): SmartContractCallData =
+        EthereumYieldSupplyUpgradeToAndCallCallData(newImplementation = LATEST_IMPLEMENTATION, innerCallData = callData)
 
     private fun coinTransfer(): TransactionData.Uncompiled = transaction(
         amount = Amount(value = BigDecimal.ONE, blockchain = Blockchain.Polygon),
@@ -108,6 +118,7 @@ internal class RecentTransactionOwnershipTest {
     private val sdkUsdc = Token(name = "USD Coin", symbol = "USDC", contractAddress = USDC_CONTRACT, decimals = 6)
 
     private companion object {
+        const val LATEST_IMPLEMENTATION = "0x5555555555555555555555555555555555555555"
         const val USDC_CONTRACT = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
         const val USDT_CONTRACT = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"
         const val SPENDER_ADDRESS = "0x1111111254EEB25477B68fb85Ed929f73A960582"
