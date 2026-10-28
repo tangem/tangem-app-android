@@ -5,12 +5,12 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.staking.*
 import com.tangem.data.staking.converters.error.StakeKitErrorConverter
-import com.tangem.data.staking.store.P2PEthPoolBalancesStore
 import com.tangem.data.staking.store.StakeKitBalancesStore
 import com.tangem.data.staking.toggles.DefaultStakingFeatureToggles
 import com.tangem.data.staking.utils.DefaultStakingCleaner
 import com.tangem.data.staking.verification.DefaultStakingBlockAidRequestFactory
 import com.tangem.data.staking.verification.DefaultStakingTransactionRecognizer
+import com.tangem.domain.common.wallets.CryptoCurrencyDataCleaner
 import com.tangem.grow.datasource.ethpool.P2PEthPoolApi
 import com.tangem.grow.datasource.stakekit.StakeKitApi
 import com.tangem.grow.datasource.stakekit.models.response.model.error.StakeKitErrorResponse
@@ -25,7 +25,6 @@ import com.tangem.datasource.local.token.StakingActionsStore
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.store.datasource.txhistory.db.dao.P2PEthPoolVaultDao
 import com.tangem.store.datasource.txhistory.db.dao.StakingValidatorDao
-import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.repositories.*
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.domain.staking.utils.StakingCleaner
@@ -33,11 +32,13 @@ import com.tangem.domain.staking.verification.StakingBlockAidRequestFactory
 import com.tangem.domain.staking.verification.StakingTransactionRecognizer
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
 import javax.inject.Singleton
 
 @Module
@@ -156,20 +157,12 @@ internal object StakingDataModule {
     }
 
     @Provides
-    @Singleton
-    fun provideStakingCleaner(
-        stakingIdFactory: StakingIdFactory,
-        stakeKitBalancesStore: StakeKitBalancesStore,
-        p2pEthPoolBalancesStore: P2PEthPoolBalancesStore,
-        dispatchers: CoroutineDispatcherProvider,
-    ): StakingCleaner {
-        return DefaultStakingCleaner(
-            stakingIdFactory = stakingIdFactory,
-            stakeKitBalancesStore = stakeKitBalancesStore,
-            p2pEthPoolBalancesStore = p2pEthPoolBalancesStore,
-            dispatchers = dispatchers,
-        )
-    }
+    @IntoSet
+    fun provideStakingCryptoCurrencyDataCleaner(impl: DefaultStakingCleaner): CryptoCurrencyDataCleaner = impl
+
+    @Provides
+    @RemoveWithToggle(toggleName = "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED")
+    fun provideStakingCleaner(impl: DefaultStakingCleaner): StakingCleaner = impl
 
     @Provides
     @Singleton
