@@ -35,13 +35,15 @@ internal data class PlacePredictionUM(
     val submit: SubmitUM,
     val isPrimaryButtonEnabled: Boolean,
     val isPrimaryButtonEnabledWhileQuoting: Boolean = false,
-    val isPrimaryButtonTappable: Boolean = false,
     val isAwaitingFreshQuote: Boolean = false,
     val isPlacementPending: Boolean = false,
     val isAwaitingFunds: Boolean = false,
     val lastFeeRate: BigDecimal = BigDecimal.ZERO,
     val isAmountFromFraction: Boolean = false,
 ) {
+
+    val isPrimaryButtonTappable: Boolean
+        get() = isPrimaryButtonEnabled || isPrimaryButtonEnabledWhileQuoting
 
     companion object {
 

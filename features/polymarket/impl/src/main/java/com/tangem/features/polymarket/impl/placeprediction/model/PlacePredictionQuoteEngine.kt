@@ -61,6 +61,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -161,6 +162,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
     fun onPause() {
         isResumed = false
         cancelQuote()
+        freshQuote.settle()
         balancePollJobHolder.cancel()
     }
 
@@ -191,6 +193,10 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         restartQuoteLoop(withDebounce = false)
     }
 
+    suspend fun awaitFreshQuote(): Boolean = freshQuote.awaitQuoted()
+
+    fun abandonFreshQuote() = freshQuote.settle()
+
     fun prepare(): PreparedPrediction? {
         if (isHeld) return null
 
@@ -206,6 +212,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         isHeld = true
         cancelQuote()
         balancePollJobHolder.cancel()
+        freshQuote.settle()
         return try {
             block()
         } finally {
@@ -346,7 +353,9 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
             isNegRiskMarket = position.isNegRisk
 
+            val amountBefore = uiState.value.amountValue
             uiState.update(SetPositionTransformer(position = position))
+            if (uiState.value.amountValue != amountBefore) freshQuote.onAmountEntered()
 
             restartQuoteLoop(withDebounce = false)
         }.saveIn(positionJobHolder)
@@ -354,7 +363,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
     private fun cancelQuote() {
         quoteJobHolder.cancel()
-        freshQuote.end()
+        freshQuote.endRequest()
     }
 
     private fun restartQuoteLoop(withDebounce: Boolean) {
@@ -458,17 +467,30 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
 private class FreshQuoteSignal(private val uiState: MutableStateFlow<PlacePredictionUM>) {
 
-    private var isEnteredAmountRequested = false
+    private val amount = MutableStateFlow(FreshAmount(id = 0, status = FreshAmount.Status.Settled))
 
     private var request: Any? = null
 
     fun onAmountEntered() {
-        isEnteredAmountRequested = false
+        amount.update { FreshAmount(id = it.id + 1, status = FreshAmount.Status.Pending) }
+    }
+
+    fun settle() {
+        amount.update { it.copy(status = FreshAmount.Status.Settled) }
+        endRequest()
+    }
+
+    suspend fun awaitQuoted(): Boolean {
+        val awaited = amount.value
+        if (awaited.status != FreshAmount.Status.Pending) return false
+
+        val ended = amount.first { it != awaited }
+        return ended.id == awaited.id && ended.status == FreshAmount.Status.Quoted
     }
 
     suspend fun during(block: suspend () -> Unit) {
-        val fresh = Any().takeUnless { isEnteredAmountRequested }
-        isEnteredAmountRequested = true
+        val requested = amount.value
+        val fresh = Any().takeIf { requested.status == FreshAmount.Status.Pending }
         if (fresh != null) {
             request = fresh
             uiState.update(SetAwaitingFreshQuoteTransformer(isAwaitingFreshQuote = true))
@@ -476,15 +498,20 @@ private class FreshQuoteSignal(private val uiState: MutableStateFlow<PlacePredic
 
         try {
             block()
+            amount.update { if (it == requested) it.copy(status = FreshAmount.Status.Quoted) else it }
         } finally {
-            if (fresh != null && request === fresh) end()
+            if (fresh != null && request === fresh) endRequest()
         }
     }
 
-    fun end() {
+    fun endRequest() {
         if (request == null) return
 
         request = null
         uiState.update(SetAwaitingFreshQuoteTransformer(isAwaitingFreshQuote = false))
+    }
+
+    private data class FreshAmount(val id: Long, val status: Status) {
+        enum class Status { Pending, Quoted, Settled }
     }
 }

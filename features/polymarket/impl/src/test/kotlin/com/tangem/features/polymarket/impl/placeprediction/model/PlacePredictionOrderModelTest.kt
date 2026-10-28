@@ -783,8 +783,86 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 // Assert
                 assertThat(model.uiState.value.isPlacementPending).isFalse()
                 assertThat(model.isSubmitting()).isFalse()
+                assertThat(model.uiState.value.isPrimaryButtonTappable).isFalse()
                 coVerify(exactly = 0) { signOrderInteractor(request = any()) }
                 verify(exactly = 1) { router.pop(any()) }
+            }
+
+        @Test
+        fun `GIVEN a tap released by the timeout WHEN a new amount is requested THEN place is tappable again`() =
+            runOrderTest {
+                // Arrange
+                coEvery { getQuoteUseCase(request = any()) } coAnswers { awaitCancellation() }
+                val model = createOrderModel(testScope = this)
+                advanceUntilIdle()
+                model.onResume()
+                model.onAmountChange(value = "10")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS)
+                runCurrent()
+                model.onPlaceClick()
+                advanceTimeBy(delayTimeMillis = PENDING_PLACEMENT_MILLIS + 1)
+                runCurrent()
+
+                // Act
+                model.onAmountChange(value = "25")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS)
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.isPrimaryButtonTappable).isTrue()
+            }
+
+        @Test
+        fun `GIVEN a sell tap WHEN the position read restarts the quote mid-wait THEN the order is placed on the re-quote`() =
+            runOrderTest {
+                // Arrange
+                var positionReads = 0
+                coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } coAnswers {
+                    if (positionReads++ == 1) delay(timeMillis = POSITION_READ_MILLIS)
+                    createPosition().right()
+                }
+                coEvery { getQuoteUseCase(request = any()) } coAnswers {
+                    delay(timeMillis = QUOTE_MILLIS)
+                    createSellQuote(shares = BigDecimal("51.234567")).right()
+                }
+                val model = createOrderModel(testScope = this, params = SELL_PARAMS)
+                runCurrent()
+                model.onResume()
+                runCurrent()
+                model.onPlaceClick()
+
+                // Act
+                advanceTimeBy(delayTimeMillis = POSITION_READ_MILLIS)
+                runCurrent()
+                val isPendingAfterRestart = model.uiState.value.isPlacementPending
+                advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
+                runCurrent()
+
+                // Assert
+                assertThat(isPendingAfterRestart).isTrue()
+                coVerify(atLeast = 2) { getQuoteUseCase(request = any()) }
+                coVerify(exactly = 1) { signOrderInteractor(request = any()) }
+            }
+
+        @Test
+        fun `GIVEN a pending tap WHEN the gate closes mid-wait THEN the spinner stays until the quote and the tap drops`() =
+            runOrderTest {
+                // Arrange
+                val model = createQuotingModel()
+                model.onPlaceClick()
+
+                // Act
+                statusFlow.value = activeStatus(balance = BigDecimal("5"))
+                runCurrent()
+                val midWait = model.uiState.value
+                advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
+                runCurrent()
+
+                // Assert
+                assertThat(midWait.isPlacementPending).isTrue()
+                assertThat(midWait.isPrimaryButtonTappable).isFalse()
+                assertThat(model.uiState.value.isPlacementPending).isFalse()
+                coVerify(exactly = 0) { signOrderInteractor(request = any()) }
             }
 
         @Test
@@ -893,6 +971,31 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             }
 
         @Test
+        fun `GIVEN an amount paused within the debounce WHEN the screen resumes THEN the reload is not tappable`() =
+            runOrderTest {
+                // Arrange
+                coEvery { getQuoteUseCase(request = any()) } coAnswers {
+                    delay(timeMillis = QUOTE_MILLIS)
+                    createQuote().right()
+                }
+                val model = createOrderModel(testScope = this)
+                advanceUntilIdle()
+                model.onResume()
+                model.onAmountChange(value = "10")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS / 2)
+                model.onPause()
+
+                // Act
+                model.onResume()
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading)
+                assertThat(model.uiState.value.isPrimaryButtonTappable).isFalse()
+                coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+            }
+
+        @Test
         fun `GIVEN the first quote is cancelled by a pause WHEN the screen resumes THEN the reload is not tappable`() =
             runOrderTest {
                 // Arrange
@@ -998,5 +1101,6 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         const val SIGNING_MILLIS = 1_000L
         const val QUOTE_MILLIS = 1_000L
         const val PENDING_PLACEMENT_MILLIS = 10_000L
+        const val POSITION_READ_MILLIS = 300L
     }
 }
