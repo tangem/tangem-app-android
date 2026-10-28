@@ -15,6 +15,8 @@ import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.features.marketing.api.concierge.ConciergeDemandSurveyComponent
+import com.tangem.features.onramp.deeplink.DefaultConciergeWaitlistTrigger
 import com.tangem.features.onramp.main.OnrampMainComponent
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.Runs
@@ -28,6 +30,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -71,6 +75,7 @@ internal class OnrampMainComponentModelTest {
     }
 
     private val sentEvents = mutableListOf<AnalyticsEvent>()
+    private val conciergeWaitlistTrigger = DefaultConciergeWaitlistTrigger()
 
     @BeforeEach
     fun resetMocks() {
@@ -265,6 +270,70 @@ internal class OnrampMainComponentModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN started screen WHEN waitlist deeplink triggered THEN survey opened for the Buy wallet`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val model = createModel(scheduler = scheduler, quotes = emptyList())
+        val activatedSurveys = model.collectActivatedSurveys()
+        model.onStart()
+        scheduler.runCurrent()
+
+        // Act
+        triggerWaitlist(scheduler)
+
+        // Assert
+        assertThat(activatedSurveys).containsExactly(ConciergeDemandSurveyComponent.Params(USER_WALLET_ID))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN started screen WHEN waitlist deeplink triggered THEN screen state kept`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val model = createModel(scheduler = scheduler, quotes = emptyList())
+        model.onStart()
+        scheduler.runCurrent()
+        val stateBefore = model.state.value
+
+        // Act
+        triggerWaitlist(scheduler)
+
+        // Assert
+        assertThat(model.state.value).isSameInstanceAs(stateBefore)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN stopped screen WHEN waitlist deeplink triggered THEN survey not opened`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val model = createModel(scheduler = scheduler, quotes = emptyList())
+        val activatedSurveys = model.collectActivatedSurveys()
+        model.onStart()
+        scheduler.runCurrent()
+        model.onStop()
+        scheduler.runCurrent()
+
+        // Act
+        triggerWaitlist(scheduler)
+
+        // Assert
+        assertThat(activatedSurveys).isEmpty()
+        model.onDestroy()
+    }
+
+    private fun OnrampMainComponentModel.collectActivatedSurveys(): List<ConciergeDemandSurveyComponent.Params> {
+        val activated = mutableListOf<ConciergeDemandSurveyComponent.Params>()
+        demandSurveyNavigation.subscribe { event -> event.transformer(null)?.let(activated::add) }
+        return activated
+    }
+
+    private fun triggerWaitlist(scheduler: TestCoroutineScheduler) {
+        TestScope(scheduler).launch { conciergeWaitlistTrigger.triggerOpenWaitlist() }
+        scheduler.runCurrent()
+    }
+
     /** `replay = 1` so an emission made before the model's collector starts is still delivered. */
     private fun quotesFlow() = MutableSharedFlow<Either<OnrampError, List<OnrampQuote>>>(
         replay = 1,
@@ -331,6 +400,7 @@ internal class OnrampMainComponentModelTest {
             isDemoCardUseCase = mockk(relaxed = true),
             messageSender = mockk(relaxed = true),
             getCurrencyUSDQuoteUseCase = mockk(relaxed = true),
+            conciergeWaitlistListener = conciergeWaitlistTrigger,
             paramsContainer = MutableParamsContainer(value = params),
             getWalletsUseCase = getWalletsUseCase,
         )
