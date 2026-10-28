@@ -483,7 +483,6 @@ dependencies {
     implementation(deps.coil)
     implementation(deps.coil.gif)
     implementation(deps.coil.svg)
-    implementation(deps.amplitude)
     implementation(deps.appsflyer)
     implementation(platform(deps.otel.bom))
     implementation(deps.otel.api)
@@ -496,7 +495,6 @@ dependencies {
     }
     implementation(deps.otel.disk.buffering)
     implementation(deps.appsflyer.oaid)
-    implementation(deps.customerio.analytics)
     implementation(deps.customerio.messaging)
     runtimeOnly("com.android.installreferrer:installreferrer:2.2")
     runtimeOnly(deps.spongecastle.core)
