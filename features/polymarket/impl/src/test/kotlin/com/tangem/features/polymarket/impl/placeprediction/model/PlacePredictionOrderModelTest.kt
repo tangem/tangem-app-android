@@ -14,6 +14,14 @@ import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
+import com.tangem.domain.polymarket.model.PredictionOrderSide
+import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.balance
+import com.tangem.features.polymarket.impl.placeprediction.entity.canShowFeeBreakdown
+import io.mockk.slot
 import com.tangem.domain.models.StatusSource
 import com.tangem.features.polymarket.impl.common.FakeSlotHost
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
@@ -24,6 +32,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
+import com.tangem.features.polymarket.impl.placeprediction.entity.isReadyToPlace
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PredictionFeeSheetUMConverter
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -227,6 +236,61 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             // Assert
             verify(exactly = 0) { router.pop(any()) }
         }
+    }
+
+    @Nested
+    inner class ClosePosition {
+
+        @Test
+        fun `GIVEN a sell WHEN its quote is priced THEN the whole position is quoted and shown with proceeds and total`() =
+            runOrderTest {
+                // Arrange
+                val held = SharesCalculator.available(held = createPosition().size)
+                coEvery { getQuoteUseCase(request = any()) } returns createSellQuote(shares = held).right()
+
+                // Act
+                val model = createQuotedSellModel()
+
+                // Assert
+                val state = model.uiState.value
+                val expectedOrder = OrderSideUM.Sell(
+                    position = SellPositionUM.Held(available = held),
+                    proceeds = SharesProceedsUM.Content(expected = createSellQuote().expectedExecutionAmount),
+                    balance = state.order.balance,
+                )
+                assertThat(state.order).isEqualTo(expectedOrder)
+                assertThat((state.quote as QuoteUM.Content).total).isEqualTo(createSellQuote().total)
+                assertThat(model.amountPresets).isEmpty()
+                assertThat(state.canShowFeeBreakdown()).isTrue()
+                assertThat(state.isReadyToPlace).isTrue()
+                coVerify { getQuoteUseCase(request = match { it.side == PredictionOrderSide.SELL && it.amount == held }) }
+            }
+
+        @Test
+        fun `GIVEN a priced sell WHEN place clicked THEN it is signed and placed once and the status shows the closed shares`() =
+            runOrderTest {
+                // Arrange
+                val held = SharesCalculator.available(held = createPosition().size)
+                coEvery { getQuoteUseCase(request = any()) } returns createSellQuote(shares = held).right()
+                coEvery { placeOrderUseCase(any(), any(), any()) } returns
+                    createPlaceResult(makingAmount = held, takingAmount = BigDecimal("11.01")).right()
+                val model = createQuotedSellModel()
+
+                // Act
+                model.onPlaceClick()
+                runCurrent()
+
+                // Assert
+                coVerify(exactly = 1) {
+                    signOrderInteractor(request = match { it.side == PredictionOrderSide.SELL && it.quote.shares == held })
+                }
+                coVerify(exactly = 1) { placeOrderUseCase(any(), any(), any()) }
+                val status = slot<PlacePredictionRoute.Status>()
+                verify(exactly = 1) { router.replaceAll(capture(status), onComplete = any()) }
+                assertThat(status.captured.side).isEqualTo(PredictionOrderSide.SELL)
+                assertThat(status.captured.positionId).isNull()
+                assertThat((status.captured.result as PlaceResultUM.Filled).shares).isEqualTo(held)
+            }
     }
 
     @Nested
@@ -1122,6 +1186,14 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         advanceUntilIdle()
         model.onResume()
         model.onAmountChange(value = "10")
+        advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+        return model
+    }
+
+    private fun TestScope.createQuotedSellModel(): PlacePredictionOrderModel {
+        val model = createOrderModel(testScope = this, params = SELL_PARAMS)
+        runCurrent()
+        model.onResume()
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
         return model
     }
