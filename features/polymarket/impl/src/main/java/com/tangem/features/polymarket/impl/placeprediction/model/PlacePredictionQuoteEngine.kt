@@ -402,7 +402,8 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         uiState.update(SetQuoteLoadingTransformer)
 
         val result = withContext(dispatchers.default) {
-            getPredictionOrderQuoteUseCase( userWalletId = params.userWalletId,
+            getPredictionOrderQuoteUseCase(
+                userWalletId = params.userWalletId,
                 request = PredictionOrderQuoteRequest(
                     marketId = params.marketId,
                     assetId = tradedAssetId,

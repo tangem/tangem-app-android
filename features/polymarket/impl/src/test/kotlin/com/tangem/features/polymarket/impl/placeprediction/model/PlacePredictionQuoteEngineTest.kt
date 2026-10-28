@@ -50,7 +50,7 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
 
             // Assert
             coVerify(exactly = 0) { getPriceUseCase(assetId = any(), side = any()) }
-            coVerify(exactly = 0) { getQuoteUseCase(request = any()) }
+            coVerify(exactly = 0) { getQuoteUseCase(userWalletId = any(), request = any()) }
             coVerify(exactly = 1) { checkGeoblockUseCase() }
             coVerify(exactly = 1) { refreshRequisites(USER_WALLET_ID) }
             verify(exactly = 0) { balancePoller.subscribe(userWalletId = any()) }
@@ -157,7 +157,7 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
         coVerify(exactly = 2) { getPriceUseCase(assetId = any(), side = any()) }
         advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
         coVerify(exactly = 3) { getPriceUseCase(assetId = any(), side = any()) }
-        coVerify(exactly = 0) { getQuoteUseCase(request = any()) }
+        coVerify(exactly = 0) { getQuoteUseCase(userWalletId = any(), request = any()) }
 
         engine.onPause()
     }
