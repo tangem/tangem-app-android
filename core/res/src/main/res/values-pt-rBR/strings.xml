@@ -36,10 +36,12 @@
   <string name="account_details_archive_description">Você está arquivando esta conta, mas poderá recuperá-la a qualquer momento.</string>
   <string name="account_details_archive_joint_description">Isso apenas oculta a conta para você e desativa as notificações dela. Os outros membros continuam tendo acesso, e você pode recuperá-la a qualquer momento.</string>
   <string name="account_details_archiving">Arquivando...</string>
+  <string name="account_details_joint_members_confirmed">%1$s de %2$s confirmados</string>
   <plurals name="account_details_joint_members_count">
     <item quantity="one">%d pessoa</item>
     <item quantity="other">%d pessoas</item>
   </plurals>
+  <string name="account_details_joint_members_joined">%1$s de %2$s participantes ingressaram</string>
   <string name="account_details_joint_members_progress">%1$s/%2$s pessoas</string>
   <string name="account_details_joint_networks_info">Texto sobre redes.</string>
   <string name="account_details_joint_pending_description">A conta ainda está sendo preenchida com membros</string>
@@ -501,6 +503,7 @@
   <string name="common_from">De</string>
   <string name="common_from_account">Da conta</string>
   <string name="common_from_address">Do endereço</string>
+  <string name="common_from_lowercase">de</string>
   <string name="common_from_wallet">Da carteira</string>
   <string name="common_from_wallet_name">De %s</string>
   <string name="common_generate_addresses">Sincronizar endereços</string>
@@ -1295,6 +1298,7 @@
   <string name="joint_account_join_title">Você foi convidado a participar de %1$s</string>
   <string name="joint_account_join_to_account_btn_text">Entrar na conta</string>
   <string name="joint_account_join_to_approve">Para aprovação</string>
+  <string name="joint_account_main_cant_verify">Não foi possível verificar</string>
   <plurals name="joint_account_main_waiting_confirmations">
     <item quantity="one">Aguardando %d confirmação</item>
     <item quantity="other">Aguardando %d confirmações</item>
@@ -1635,7 +1639,7 @@
   <string name="money_account_add_funds_bank_description">Receba USD de uma conta bancária via ACH/Wire ou SPEI</string>
   <string name="money_account_add_funds_receive_description">Envie USDC pela rede Polygon para o endereço da sua conta</string>
   <string name="money_account_add_funds_swap_description">Use criptoativos da sua carteira para adicionar fundos à sua conta bancária</string>
-  <string name="money_account_main_name">Money account</string>
+  <string name="money_account_main_name">Conta em USD</string>
   <string name="money_account_main_status_action_required">Ação necessária</string>
   <string name="money_account_main_status_activating">Ativando...</string>
   <string name="money_account_main_status_active">%1$s rede</string>
@@ -1663,7 +1667,7 @@
   <string name="money_account_onboarding_secondary_button">Termos e taxas</string>
   <string name="money_account_onboarding_terms_link">Termos de Serviço</string>
   <string name="money_account_onboarding_terms_notice">Ao usar o serviço, você concorda com o provedor %1$s</string>
-  <string name="money_account_onboarding_title">Obtenha uma Money account</string>
+  <string name="money_account_onboarding_title">Obtenha uma conta em USD</string>
   <string name="money_account_onboarding_transfers_card_caption">Dinheiro entrando. Dinheiro saindo.</string>
   <string name="money_account_onboarding_transfers_card_subtitle">com uma conta dedicada com dados bancários</string>
   <string name="money_account_onboarding_transfers_card_title">Envie e receba pagamentos em moeda fiduciária</string>
@@ -1954,6 +1958,7 @@
   <string name="prediction_add_funds_swap_title">Da sua carteira Tangem</string>
   <string name="prediction_balance_total">Saldo total</string>
   <string name="prediction_balance_withdraw">Sacar</string>
+  <string name="prediction_cash_out">Sacar</string>
   <string name="prediction_claim_error_failed">O resgate não foi concluído. Nenhum valor saiu da conta, e você pode tentar novamente.</string>
   <string name="prediction_claim_error_generic">O resgate não pôde ser enviado. Por favor, tente novamente.</string>
   <string name="prediction_claim_error_rejected">A Polymarket recusou o envio da solicitação. Atualize suas posições e tente novamente.</string>
@@ -2663,7 +2668,7 @@
   <string name="swap_search_tooltip_title">Use a busca para encontrar o que você precisa.</string>
   <string name="swap_simple_mode">Modo simples</string>
   <string name="swap_slippage_error">Valor não compatível</string>
-  <string name="swap_slippage_info_text">é a diferença entre o preço de execução esperado e o preço de execução efetivo, causada por alterações no preço de mercado ou na liquidez</string>
+  <string name="swap_slippage_info_text">é a variação de preço entre a sua assinatura e a chegada da transação ao provedor. Ela é executada ao preço desse momento, dentro da sua tolerância de slippage.</string>
   <string name="swap_slippage_warning_text">A troca poderá falhar se o limite de slippage for atingido</string>
   <string name="swap_slippage_warning_title">Slippage definido em %s</string>
   <string name="swap_story_fifth_subtitle">Sinta-se seguro com o suporte disponível 24 horas por dia, 7 dias por semana, para ajudá-lo com qualquer problema.</string>
@@ -3225,14 +3230,14 @@
   <string name="tangempay_va_limit_resetting_everyday">O limite é reiniciado todos os dias</string>
   <string name="tangempay_verified_badge_available">Disponível</string>
   <string name="tangempay_verified_choose_plan">Escolher plano</string>
-  <string name="tangempay_verified_description_all">Você pode ter os dois: um cartão Visa e uma Money account.\nEscolha um plano e abriremos ambos para você.</string>
-  <string name="tangempay_verified_description_money_account">Você pode abrir uma Money account. O cartão Visa ainda não está disponível na sua região, mas avisaremos você quando estiver.</string>
+  <string name="tangempay_verified_description_all">Você pode ter os dois: um cartão Visa e uma conta em USD.\nEscolha um plano e abriremos ambos para você.</string>
+  <string name="tangempay_verified_description_money_account">Você pode abrir uma conta em USD. O cartão Visa ainda não está disponível na sua região, mas avisaremos você quando estiver.</string>
   <string name="tangempay_verified_description_none">Nenhum produto está disponível</string>
-  <string name="tangempay_verified_description_payment_account">Você pode obter um cartão Visa. A Money account ainda não está disponível na sua região, mas avisaremos você quando estiver.</string>
+  <string name="tangempay_verified_description_payment_account">Você pode obter um cartão Visa. A conta em USD ainda não está disponível na sua região, mas avisaremos você quando estiver.</string>
   <string name="tangempay_verified_money_account_subtitle">Transferências bancárias de entrada e saída</string>
-  <string name="tangempay_verified_notify_money_account">Receba notificações sobre a Money account</string>
+  <string name="tangempay_verified_notify_money_account">Receba notificações sobre a conta em USD</string>
   <string name="tangempay_verified_notify_payment_account">Receba notificações sobre o cartão</string>
-  <string name="tangempay_verified_open_money_account">Abrir Money account</string>
+  <string name="tangempay_verified_open_money_account">Abrir conta em USD</string>
   <string name="tangempay_verified_payment_account_subtitle">Apple Pay, Google Pay</string>
   <string name="tangempay_verified_payment_account_title">Cartão Visa</string>
   <string name="tangempay_verified_product_not_available">Indisponível no seu país</string>
@@ -3511,7 +3516,7 @@
   <string name="virtual_account_requisites_clabe">CLABE</string>
   <string name="virtual_account_requisites_reference">Referência</string>
   <string name="virtual_account_requisites_routing_number">Routing number</string>
-  <string name="virtual_account_title">Conta virtual</string>
+  <string name="virtual_account_title">Conta em USD</string>
   <string name="virtual_account_transactions_empty">Ainda não há transações. Comece a gastar e veja o histórico aqui</string>
   <string name="visa_balance_limits_details_aml_verified">Verificado AML</string>
   <string name="visa_balance_limits_details_available">Disponível</string>
@@ -3718,6 +3723,7 @@
   <string name="warning_express_not_enough_fee_for_token_tx_title">Não foi possível cobrir %s taxa</string>
   <string name="warning_express_notification_invalid_reserve_amount_title">O valor a receber deve ser de pelo menos %s</string>
   <string name="warning_express_pair_unavailable_message">Isso pode ocorrer porque o provedor não consegue, no momento, realizar a troca do par selecionado. Aguarde um momento e tente novamente. (Código) %s)</string>
+  <string name="warning_express_pair_unavailable_message_v2">No momento, o provedor não pode trocar o par selecionado. Por favor, escolha outro provedor. (Código %s)</string>
   <string name="warning_express_pair_unavailable_title">O par selecionado está temporariamente indisponível.</string>
   <string name="warning_express_providers_fca_warning_description">Alguns fornecedores não são autorizados pela Autoridade de Conduta Financeira do Reino Unido. Você deve evitar negociar com eles.</string>
   <string name="warning_express_providers_fca_warning_title">Lista de advertências da FCA</string>
@@ -3736,6 +3742,8 @@
   <string name="warning_hedera_token_association_not_enough_hbar_message">Não há %s suficiente. Recarregue sua conta Hedera para associar este token.</string>
   <string name="warning_incomplete_backup_notification_message">Identificamos que o processo de ativação do cartão não foi concluído corretamente devido a problemas com o módulo NFC do seu dispositivo ou à forma incorreta de aproximar o cartão do telefone. Entre em contato com nossa equipe de suporte para obter mais informações.</string>
   <string name="warning_incomplete_backup_notification_title">É necessário realizar uma ação. Não use sua carteira!</string>
+  <string name="warning_incomplete_balance_message">Esse endereço possui mais de %1$s UTXOs, por isso a rede %2$s retorna apenas parte deles. Seus fundos estão seguros. Para visualizar o saldo total, consolide os UTXOs enviando %3$s para seu próprio endereço.</string>
+  <string name="warning_incomplete_balance_title">O saldo pode estar incompleto</string>
   <string name="warning_kaspa_unfinished_token_transaction_discard_message">Tem certeza de que deseja cancelar a transação? Você não poderá tentar realizá-la novamente.</string>
   <string name="warning_kaspa_unfinished_token_transaction_message">Sua transação com um valor de %1$s %2$s não foi concluída. Você pode tentar novamente para concluí-la.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">Você tem uma transação pendente.</string>
@@ -3842,8 +3850,11 @@
   <string name="wc_connection_reqeust_would_like">Gostaria de</string>
   <string name="wc_connection_request">Solicitação de conexão</string>
   <string name="wc_connections">Conexões</string>
+  <string name="wc_connections_agents_error_title">Agentes de IA indisponíveis</string>
   <string name="wc_connections_agents_title">Agentes conectados</string>
   <string name="wc_connections_dapps_title">dApps conectados</string>
+  <string name="wc_connections_empty_desc">Conecte-se a dApps pelo WalletConnect ou a agentes de IA pelo MCP. Gerencie todas as suas conexões em um só lugar.</string>
+  <string name="wc_connections_empty_title">Nenhuma conexão ainda</string>
   <string name="wc_connections_subtitle">Conecte-se a dApps ou MCP</string>
   <string name="wc_contents">Conteúdo</string>
   <string name="wc_copy_data_button_text">Copiar dados</string>

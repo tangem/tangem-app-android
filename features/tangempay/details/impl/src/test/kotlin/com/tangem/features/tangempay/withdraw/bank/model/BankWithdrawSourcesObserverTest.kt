@@ -38,6 +38,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.util.Currency
 
@@ -233,10 +234,15 @@ internal class BankWithdrawSourcesObserverTest {
 
         private val account = BankWithdrawSourceAccount.Money(userWalletId, productInstanceId = "instance-1")
 
-        @Test
-        fun `GIVEN active account with balance WHEN observed THEN its USDC is the only source`() = runTest {
+        @ParameterizedTest
+        @MethodSource("provideFiatRateModels")
+        fun `GIVEN active account with balance WHEN observed THEN its USDC is the only source at one dollar each`(
+            model: FiatRateModel,
+        ) = runTest {
             // Arrange
-            emitMoneyStatus(activeMoneyAccount(token = usdcPolygon))
+            emitMoneyStatus(
+                activeMoneyAccount(token = usdcPolygon, balance = moneyAccountBalance(fiatRate = model.fiatRate)),
+            )
 
             // Act
             val actual = observer.observe(account, offrampOptions()).toList()
@@ -295,10 +301,6 @@ internal class BankWithdrawSourcesObserverTest {
                 value = activeMoneyAccount(token = usdcPolygon, balance = moneyAccountBalance(BigDecimal.ZERO)),
             ),
             MoneyNoOptionsModel(
-                description = "no fiat rate",
-                value = activeMoneyAccount(token = usdcPolygon, balance = moneyAccountBalance(fiatRate = null)),
-            ),
-            MoneyNoOptionsModel(
                 description = "off-ramp does not accept the account token",
                 value = activeMoneyAccount(token = usdcPolygon),
                 offramp = offrampOptions(sources = listOf(offrampSource("Base", BASE_CHAIN_ID, USDC_BASE))),
@@ -313,6 +315,12 @@ internal class BankWithdrawSourcesObserverTest {
             ),
         )
 
+        private fun provideFiatRateModels() = listOf(
+            FiatRateModel(fiatRate = BigDecimal.ONE),
+            FiatRateModel(fiatRate = BigDecimal("0.9")),
+            FiatRateModel(fiatRate = null),
+        )
+
         private fun emitMoneyStatus(value: MoneyAccountStatusValue) {
             every { moneyAccountStatusSupplier(userWalletId) } returns flowOf(moneyAccountStatus(userWalletId, value))
         }
@@ -322,6 +330,8 @@ internal class BankWithdrawSourcesObserverTest {
         val description: String,
         val status: AccountStatus.Payment,
     )
+
+    internal data class FiatRateModel(val fiatRate: BigDecimal?)
 
     internal data class MoneyNoOptionsModel(
         val description: String,
