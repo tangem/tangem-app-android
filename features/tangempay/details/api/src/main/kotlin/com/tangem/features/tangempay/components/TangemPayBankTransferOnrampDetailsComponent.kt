@@ -10,8 +10,14 @@ interface TangemPayBankTransferOnrampDetailsComponent : ComposableContentCompone
     data class Params(
         val userWalletId: UserWalletId,
         val bankCredentials: BankCredentials,
+        val feeSource: FeeSource,
         val analytics: Analytics,
     )
+
+    enum class FeeSource {
+        CATALOGUE,
+        ROUTE,
+    }
 
     interface Analytics {
         fun onDetailsShown()

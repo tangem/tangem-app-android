@@ -157,6 +157,7 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
             params = TangemPayBankTransferOnrampDetailsComponent.Params(
                 userWalletId = params.initialStatus.userWalletId,
                 bankCredentials = config.bankCredentials,
+                feeSource = TangemPayBankTransferOnrampDetailsComponent.FeeSource.CATALOGUE,
                 analytics = bankDetailsAnalytics,
             ),
         )

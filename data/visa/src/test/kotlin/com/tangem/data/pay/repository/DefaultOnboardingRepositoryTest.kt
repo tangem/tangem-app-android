@@ -330,6 +330,7 @@ internal class DefaultOnboardingRepositoryTest {
                     name = "ACH",
                     paymentMethodId = "ACH",
                     group = AccountFeeGroupType.ONRAMP,
+                    calculationType = AccountFee.CalculationType.FIXED,
                     amount = BigDecimal("1.00"),
                     currency = "USD",
                 ),
@@ -338,6 +339,7 @@ internal class DefaultOnboardingRepositoryTest {
                     name = "ACH",
                     paymentMethodId = "ACH",
                     group = AccountFeeGroupType.OFFRAMP,
+                    calculationType = AccountFee.CalculationType.FIXED,
                     amount = BigDecimal("1.50"),
                     currency = "USD",
                 ),
@@ -384,10 +386,56 @@ internal class DefaultOnboardingRepositoryTest {
                     name = "ACH",
                     paymentMethodId = null,
                     group = AccountFeeGroupType.ONRAMP,
+                    calculationType = AccountFee.CalculationType.FIXED,
                     amount = BigDecimal.ONE,
                     currency = "USD",
                 )
                 assertThat(actual).isEqualTo(listOf(expected).right())
+            }
+
+        @Test
+        fun `GIVEN percentage and missing calculation types WHEN getFees THEN missing one is fixed`() =
+            runTest {
+                // Arrange
+                val response = FeesResponse(
+                    result = listOf(
+                        fee(
+                            type = "SPEI_ONRAMP",
+                            group = "ONRAMP",
+                            paymentMethodId = "SPEI",
+                            calculationType = "PERCENTAGE",
+                        ),
+                        fee(type = "ACH_ONRAMP", group = "ONRAMP", paymentMethodId = "ACH", calculationType = null),
+                    ),
+                )
+                coEvery { tangemPayApi.getFees(authHeader = AUTH_HEADER, groups = any()) } returns
+                    ApiResponse.Success(response)
+
+                // Act
+                val actual = repository.getFees(USER_WALLET_ID, setOf(AccountFeeGroupType.ONRAMP))
+
+                // Assert
+                val expected = listOf(
+                    AccountFee(
+                        type = "SPEI_ONRAMP",
+                        name = "ACH",
+                        paymentMethodId = "SPEI",
+                        group = AccountFeeGroupType.ONRAMP,
+                        calculationType = AccountFee.CalculationType.PERCENTAGE,
+                        amount = BigDecimal.ONE,
+                        currency = "USD",
+                    ),
+                    AccountFee(
+                        type = "ACH_ONRAMP",
+                        name = "ACH",
+                        paymentMethodId = "ACH",
+                        group = AccountFeeGroupType.ONRAMP,
+                        calculationType = AccountFee.CalculationType.FIXED,
+                        amount = BigDecimal.ONE,
+                        currency = "USD",
+                    ),
+                )
+                assertThat(actual).isEqualTo(expected.right())
             }
 
         @Test
@@ -420,6 +468,7 @@ internal class DefaultOnboardingRepositoryTest {
             type: String,
             group: String?,
             paymentMethodId: String?,
+            calculationType: String? = "FIXED",
             amount: BigDecimal? = BigDecimal.ONE,
             currency: String? = "USD",
         ) = FeesResponse.Fee(
@@ -427,7 +476,7 @@ internal class DefaultOnboardingRepositoryTest {
             group = group,
             name = "ACH",
             paymentMethodId = paymentMethodId,
-            calculationType = "FIXED",
+            calculationType = calculationType,
             amount = amount,
             currency = currency,
             description = "fee",
