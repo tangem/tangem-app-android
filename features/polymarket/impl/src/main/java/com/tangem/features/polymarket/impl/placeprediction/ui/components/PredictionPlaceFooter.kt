@@ -65,7 +65,7 @@ internal fun PredictionPlaceButton(
     )
 
     if (isHoldToConfirm) {
-        key(holdResetKey) {
+        key(holdResetKey, isEnabled) {
             HoldToConfirmButton(
                 modifier = modifier.fillMaxWidth(),
                 text = text.resolveReference(),

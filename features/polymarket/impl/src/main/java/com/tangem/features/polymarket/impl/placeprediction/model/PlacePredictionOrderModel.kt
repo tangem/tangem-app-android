@@ -181,7 +181,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
         when (uiState.value.placeAction) {
             PlaceActionUM.Ready -> quoteEngine.prepare()?.let(::place) ?: resetHoldIfIdle()
             PlaceActionUM.ReadyOnceQuoted -> placeOnceQuoted()
-            PlaceActionUM.AwaitingQuote -> Unit
+            PlaceActionUM.AwaitingQuote -> resetHold()
             PlaceActionUM.Unavailable -> resetHoldIfIdle()
         }
     }
@@ -218,9 +218,11 @@ internal class PlacePredictionOrderModel @Inject constructor(
     }
 
     private fun resetHoldIfIdle() {
-        uiState.update { state ->
-            if (state.submit is SubmitUM.Idle) state.copy(holdResetKey = state.holdResetKey + 1) else state
-        }
+        if (uiState.value.submit is SubmitUM.Idle) resetHold()
+    }
+
+    private fun resetHold() {
+        uiState.update { it.copy(holdResetKey = it.holdResetKey + 1) }
     }
 
     private fun place(prepared: PreparedPrediction) {
