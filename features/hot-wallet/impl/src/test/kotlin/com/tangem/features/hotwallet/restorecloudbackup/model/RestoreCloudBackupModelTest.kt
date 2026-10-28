@@ -19,6 +19,7 @@ import com.tangem.domain.cloudbackup.models.RestoredCloudBackup
 import com.tangem.domain.cloudbackup.usecase.RestoreCloudBackupUseCase
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImportError
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImporter
@@ -55,6 +56,7 @@ internal class RestoreCloudBackupModelTest {
     private val callbacks: RestoreCloudBackupComponent.ModelCallbacks = mockk(relaxed = true)
     private var model: RestoreCloudBackupModel? = null
     private val paramsContainer: ParamsContainer = mockk()
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles = mockk()
 
     private val walletId = UserWalletId("011")
     private val mnemonic: Mnemonic = mockk()
@@ -76,6 +78,7 @@ internal class RestoreCloudBackupModelTest {
 
     @BeforeEach
     fun setUp() {
+        every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns true
         every { paramsContainer.require<RestoreCloudBackupComponent.Params>() } returns
             RestoreCloudBackupComponent.Params(callbacks)
     }
@@ -188,7 +191,7 @@ internal class RestoreCloudBackupModelTest {
     fun `GIVEN correct password WHEN restore clicked THEN import invoked with backed-up words`() = runTest {
         // Arrange
         val words = (1..MNEMONIC_WORDS).joinToString(separator = " ") { "word$it" }
-        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns
+        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns
             restoredBackup(mnemonic = words).right()
         val capturedMnemonicString = slot<String>()
         every { mnemonicRepository.generateMnemonic(capture(capturedMnemonicString)) } returns mnemonic
@@ -209,16 +212,63 @@ internal class RestoreCloudBackupModelTest {
         coVerify(exactly = 1) {
             hotWalletImporter.import(any(), mnemonic, null, "My Wallet", isSeedPhraseBackedUp = false)
         }
-        coVerify(exactly = 1) { setCloudBackupStateUseCase("011", isBackedUp = true) }
+        coVerify(exactly = 1) { setCloudBackupStateUseCase("011", isBackedUp = true, accountName = ACCOUNT_EMAIL) }
         verify(exactly = 1) { callbacks.onWalletImported(walletId) }
         model.onDestroy()
     }
 
     @Test
+    fun `GIVEN backups listed in an account WHEN restore clicked THEN the backup is read in that account`() = runTest {
+        // Arrange
+        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns
+            CloudBackupError.WrongPassword.left()
+        val model = createModel(this, holderOf(backupInfo, accountEmail = OTHER_ACCOUNT_EMAIL))
+        advanceUntilIdle()
+
+        // Act
+        (model.uiState.value as RestoreCloudBackupUM.EnterPassword).onPasswordChange(PASSWORD)
+        (model.uiState.value as RestoreCloudBackupUM.EnterPassword).onRestoreClick()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) {
+            restoreCloudBackupUseCase(fileId = backupInfo.fileId, password = any(), accountName = OTHER_ACCOUNT_EMAIL)
+        }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN multiple hot wallets disabled WHEN restored THEN no account is passed to the read and the state`() =
+        runTest {
+            // Arrange
+            every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns false
+            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns
+                restoredBackup(mnemonic = "word1 word2").right()
+            every { mnemonicRepository.generateMnemonic(any<String>()) } returns mnemonic
+            coEvery {
+                hotWalletImporter.import(any(), mnemonic, null, "My Wallet", isSeedPhraseBackedUp = false)
+            } returns walletId.right()
+            val model = createModel(this, holderOf(backupInfo, accountEmail = OTHER_ACCOUNT_EMAIL))
+            advanceUntilIdle()
+
+            // Act
+            (model.uiState.value as RestoreCloudBackupUM.EnterPassword).onPasswordChange(PASSWORD)
+            (model.uiState.value as RestoreCloudBackupUM.EnterPassword).onRestoreClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) {
+                restoreCloudBackupUseCase(fileId = backupInfo.fileId, password = any(), accountName = null)
+            }
+            coVerify(exactly = 1) { setCloudBackupStateUseCase("011", isBackedUp = true, accountName = null) }
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN cloud restore WHEN wallet imported THEN seed phrase is not marked as backed up`() = runTest {
         // Arrange
         val capturedBackedUp = slot<Boolean>()
-        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns
+        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns
             restoredBackup(mnemonic = "word1 word2").right()
         every { mnemonicRepository.generateMnemonic(any<String>()) } returns mnemonic
         coEvery {
@@ -243,7 +293,7 @@ internal class RestoreCloudBackupModelTest {
         runTest {
             // Arrange
             val fullName = "Wallet with a very long name"
-            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns
+            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns
                 restoredBackup(mnemonic = "word1 word2", walletName = fullName).right()
             every { mnemonicRepository.generateMnemonic(any<String>()) } returns mnemonic
             coEvery {
@@ -269,7 +319,7 @@ internal class RestoreCloudBackupModelTest {
     fun `GIVEN passphraseRequired backup WHEN password entered THEN passphrase screen shown AND import waits`() =
         runTest {
             // Arrange
-            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns
+            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns
                 restoredBackup(mnemonic = "word1 word2", isPassphraseRequired = true).right()
             every { mnemonicRepository.generateMnemonic(any<String>()) } returns mnemonic
 
@@ -291,7 +341,7 @@ internal class RestoreCloudBackupModelTest {
     fun `GIVEN passphrase screen WHEN back THEN the restored mnemonic is wiped`() = runTest {
         // Arrange
         val mnemonicChars = "word1 word2".toCharArray()
-        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns
+        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns
             RestoredCloudBackup(
                 walletName = "My Wallet",
                 secret = CloudBackupSecretData(mnemonic = mnemonicChars, isPassphraseRequired = true),
@@ -315,7 +365,7 @@ internal class RestoreCloudBackupModelTest {
     @Test
     fun `GIVEN passphrase screen WHEN passphrase entered THEN import invoked with that passphrase`() = runTest {
         // Arrange
-        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns
+        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns
             restoredBackup(mnemonic = "word1 word2", isPassphraseRequired = true).right()
         every { mnemonicRepository.generateMnemonic(any<String>()) } returns mnemonic
         val capturedPassphrase = slot<CharArray>()
@@ -350,7 +400,7 @@ internal class RestoreCloudBackupModelTest {
     fun `GIVEN wallet already added WHEN restore clicked THEN already-added dialog shown AND no import callback`() =
         runTest {
             // Arrange
-            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns
+            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns
                 restoredBackup(mnemonic = "word1 word2").right()
             every { mnemonicRepository.generateMnemonic(any<String>()) } returns mnemonic
             coEvery {
@@ -380,7 +430,7 @@ internal class RestoreCloudBackupModelTest {
     fun `GIVEN wrong password WHEN restore clicked THEN state stays EnterPassword with error AND no import`() =
         runTest {
             // Arrange
-            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns CloudBackupError.WrongPassword.left()
+            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns CloudBackupError.WrongPassword.left()
 
             val model = createModel(this, holderOf(backupInfo))
             advanceUntilIdle()
@@ -402,7 +452,7 @@ internal class RestoreCloudBackupModelTest {
     @Test
     fun `GIVEN download fails WHEN restore clicked THEN error dialog shown AND stays on EnterPassword`() = runTest {
         // Arrange
-        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns CloudBackupError.ReadError().left()
+        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns CloudBackupError.ReadError().left()
 
         val model = createModel(this, holderOf(backupInfo))
         advanceUntilIdle()
@@ -422,7 +472,7 @@ internal class RestoreCloudBackupModelTest {
     fun `GIVEN no network WHEN restore clicked THEN dialog explains the connection AND stays on EnterPassword`() =
         runTest {
             // Arrange
-            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns CloudBackupError.NetworkError.left()
+            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns CloudBackupError.NetworkError.left()
 
             val model = createModel(this, holderOf(backupInfo))
             advanceUntilIdle()
@@ -444,7 +494,7 @@ internal class RestoreCloudBackupModelTest {
     @Test
     fun `GIVEN malformed backup WHEN restore clicked THEN error dialog shown AND stays on EnterPassword`() = runTest {
         // Arrange
-        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns CloudBackupError.InvalidBackupFile.left()
+        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns CloudBackupError.InvalidBackupFile.left()
 
         val model = createModel(this, holderOf(backupInfo))
         advanceUntilIdle()
@@ -484,6 +534,7 @@ internal class RestoreCloudBackupModelTest {
             cloudRestoreResultHolder = holder,
             restoreCloudBackupUseCase = restoreCloudBackupUseCase,
             setCloudBackupStateUseCase = setCloudBackupStateUseCase,
+            hotWalletFeatureToggles = hotWalletFeatureToggles,
             mnemonicRepository = mnemonicRepository,
             hotWalletImporter = hotWalletImporter,
             uiMessageSender = uiMessageSender,
@@ -495,7 +546,7 @@ internal class RestoreCloudBackupModelTest {
     @Test
     fun `GIVEN wrong password WHEN restore clicked THEN wrong password event sent`() = runTest {
         // Arrange
-        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns CloudBackupError.WrongPassword.left()
+        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns CloudBackupError.WrongPassword.left()
         val model = createModel(this, holderOf(backupInfo))
         advanceUntilIdle()
 
@@ -514,7 +565,7 @@ internal class RestoreCloudBackupModelTest {
     @Test
     fun `GIVEN download fails WHEN restore clicked THEN import error event sent with message`() = runTest {
         // Arrange
-        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any()) } returns CloudBackupError.ReadError().left()
+        coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns CloudBackupError.ReadError().left()
         val model = createModel(this, holderOf(backupInfo))
         advanceUntilIdle()
 
@@ -549,5 +600,6 @@ internal class RestoreCloudBackupModelTest {
         const val PASSWORD = "Str0ng!Pass"
         const val MNEMONIC_WORDS = 12
         const val ACCOUNT_EMAIL = "user@gmail.com"
+        const val OTHER_ACCOUNT_EMAIL = "other@gmail.com"
     }
 }
