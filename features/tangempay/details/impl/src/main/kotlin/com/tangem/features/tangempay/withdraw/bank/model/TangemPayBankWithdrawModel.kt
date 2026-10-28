@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import javax.inject.Inject
 
 @Stable
@@ -83,8 +84,13 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
     }
 
     fun onAmountConfirmed(result: BankWithdrawAmountResult) {
-        draft.update {
-            it.copy(amount = result.amount, source = result.source, destination = result.destination)
+        draft.update { current ->
+            current.copy(
+                amount = result.amount,
+                source = result.source,
+                destination = result.destination,
+                networkFee = result.networkFee,
+            )
         }
     }
 
@@ -94,6 +100,10 @@ internal class TangemPayBankWithdrawModel @Inject constructor(
 
     fun onDestinationChanged(destination: OfframpDestination) {
         draft.update { it.copy(destination = destination) }
+    }
+
+    fun onNetworkFeeChanged(networkFee: BigDecimal) {
+        draft.update { it.copy(networkFee = networkFee) }
     }
 
     fun onOrderSigned() {

@@ -54,6 +54,7 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
         scope = modelScope,
         onOrderCreated = params.onOrderCreated,
         onDestinationChanged = params.onDestinationChanged,
+        onNetworkFeeChanged = params.onNetworkFeeChanged,
     )
 
     private val umFactory = TangemPayBankWithdrawPreviewUMFactory(
