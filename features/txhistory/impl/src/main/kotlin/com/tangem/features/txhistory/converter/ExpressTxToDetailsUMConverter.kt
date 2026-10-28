@@ -3,6 +3,7 @@ package com.tangem.features.txhistory.converter
 import androidx.annotation.StringRes
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.style.TextDecoration
+import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
@@ -209,7 +210,7 @@ internal class ExpressTxToDetailsUMConverter(
         )
         is ResolvedOwner.OwnMoneyAccount -> TxHistoryDetailsUM.AssetOwnerUM.Account(
             name = moneyAccountOwnerName,
-            icon = CryptoPortfolioIconConverter.convert(moneyAccountOwnerIcon),
+            icon = AccountIconUM.Money,
         )
         is ResolvedOwner.OwnWallet -> TxHistoryDetailsUM.AssetOwnerUM.Wallet(
             name = stringReference(walletInfo.name),

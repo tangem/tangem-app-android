@@ -1,6 +1,7 @@
 package com.tangem.features.txhistory.converter
 
 import androidx.annotation.StringRes
+import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.extensions.TextReference
@@ -47,7 +48,7 @@ internal fun ResolvedOwner.toCounterpartyUM(label: TextReference, onCopyClick: (
             is ResolvedOwner.OwnPaymentAccount -> TxHistoryDetailsUM.CounterpartyAvatar.PaymentAccount
             is ResolvedOwner.OwnMoneyAccount -> TxHistoryDetailsUM.CounterpartyAvatar.Account(
                 name = moneyAccountOwnerName,
-                icon = CryptoPortfolioIconConverter.convert(moneyAccountOwnerIcon),
+                icon = AccountIconUM.Money,
             )
             is ResolvedOwner.OwnWallet -> TxHistoryDetailsUM.CounterpartyAvatar.Wallet(
                 deviceIconUM = walletInfo.deviceIconUM,
