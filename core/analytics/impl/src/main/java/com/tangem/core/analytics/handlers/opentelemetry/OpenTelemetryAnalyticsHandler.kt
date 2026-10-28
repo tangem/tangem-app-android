@@ -1,4 +1,4 @@
-package com.tangem.tap.common.analytics.handlers.opentelemetry
+package com.tangem.core.analytics.handlers.opentelemetry
 
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.api.AnalyticsHandler
