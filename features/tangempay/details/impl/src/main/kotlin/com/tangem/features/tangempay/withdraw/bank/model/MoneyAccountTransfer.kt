@@ -20,6 +20,7 @@ import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
+import java.math.RoundingMode
 import javax.inject.Inject
 
 internal class MoneyAccountTransfer @Inject constructor(
@@ -35,9 +36,8 @@ internal class MoneyAccountTransfer @Inject constructor(
             val source = source(userWalletId, token).bind()
             val value = source.status.value
             val balance = ensureNotNull(value.amount) { GetFeeError.UnknownError }
-            val fiatRate = ensureNotNull(value.fiatRate) { GetFeeError.UnknownError }
             val accountAddress = ensureNotNull(value.networkAddress?.defaultAddress?.value) { GetFeeError.UnknownError }
-            quote(source = source, amount = balance, destination = accountAddress).bind().feeAmount.multiply(fiatRate)
+            quote(source = source, amount = balance, destination = accountAddress).bind().feeAmount.roundedUpToCents()
         }
 
     suspend fun send(
@@ -45,10 +45,15 @@ internal class MoneyAccountTransfer @Inject constructor(
         token: CryptoCurrency.Token,
         amount: BigDecimal,
         destination: String,
+        maxNetworkFee: BigDecimal,
     ): Either<MoneyAccountTransferError, Unit> = either {
         val source = source(userWalletId, token).getOrElse { notSent(step = "account lookup", cause = it) }
         val quote = quote(source = source, amount = amount, destination = destination)
             .getOrElse { notSent(step = "network fee", cause = it) }
+        if (quote.feeAmount > maxNetworkFee) {
+            TangemLogger.withTag(TAG).i("Money account transfer held, network fee ${quote.feeAmount} > $maxNetworkFee")
+            raise(MoneyAccountTransferError.NetworkFeeIncreased(quote.feeAmount.roundedUpToCents()))
+        }
         val balance = source.status.value.amount ?: notSent(step = "balance lookup", cause = "no amount")
         val total = amount + quote.feeAmount
         if (total > balance) notSent(step = "balance check", cause = "$total > $balance")
@@ -118,6 +123,8 @@ internal class MoneyAccountTransfer @Inject constructor(
     )
 
     private class Quote(val fee: TransactionFeeExtended, val feeAmount: BigDecimal)
+
+    private fun BigDecimal.roundedUpToCents(): BigDecimal = setScale(CENTS_SCALE, RoundingMode.CEILING)
 }
 
 internal sealed interface MoneyAccountTransferError {
@@ -127,6 +134,9 @@ internal sealed interface MoneyAccountTransferError {
     data object NotSent : MoneyAccountTransferError
 
     data object OutcomeUnknown : MoneyAccountTransferError
+
+    data class NetworkFeeIncreased(val networkFee: BigDecimal) : MoneyAccountTransferError
 }
 
 private const val TAG = "MoneyAccountTransfer"
+private const val CENTS_SCALE = 2
