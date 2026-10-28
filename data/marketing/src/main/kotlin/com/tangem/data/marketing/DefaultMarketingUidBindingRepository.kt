@@ -22,7 +22,7 @@ internal class DefaultMarketingUidBindingRepository(
     override suspend fun bind(uid: String) {
         if (!featureToggles.isUidBindingEnabled) return
 
-        val wallets = userWalletsListRepository.userWallets.filterNotNull().first().ifEmpty { awaitFirstWallets() }
+        val wallets = awaitFirstWallets()
         val body = BindMarketingUidWalletsBody(walletIds = wallets.map { it.walletId.stringValue })
 
         val response = tangemTechApi.bindMarketingUidWallets(uid, body)
