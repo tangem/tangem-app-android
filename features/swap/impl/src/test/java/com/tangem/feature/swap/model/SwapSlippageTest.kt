@@ -1,6 +1,8 @@
 package com.tangem.feature.swap.model
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.test.core.ProvideTestModels
@@ -40,7 +42,11 @@ internal class SwapSlippageTest {
         @ProvideTestModels
         fun parseValid(model: ParseValidModel) {
             // Act
-            val actual = SwapSlippage.parseValid(model.input, createProvider(slippage = BigDecimal("0.5")))
+            val actual = SwapSlippage.parseValid(
+                value = model.input,
+                provider = createProvider(slippage = BigDecimal("0.5")),
+                defaultPercent = BigDecimal(model.defaultPercent),
+            )
 
             // Assert
             assertThat(actual?.toPlainString()).isEqualTo(model.expected)
@@ -55,6 +61,9 @@ internal class SwapSlippageTest {
             ParseValidModel(input = "0", expected = null),
             ParseValidModel(input = "", expected = null),
             ParseValidModel(input = "abc", expected = null),
+            ParseValidModel(input = "0.1", defaultPercent = "0.05", expected = "0.1"),
+            ParseValidModel(input = "0.5", defaultPercent = "0.05", expected = null),
+            ParseValidModel(input = "2", defaultPercent = "1", expected = "2"),
         )
     }
 
@@ -82,11 +91,42 @@ internal class SwapSlippageTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class IsCustomAvailableFor {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun isCustomAvailableFor(model: IsCustomAvailableForModel) {
+            // Act
+            val actual = SwapSlippage.isCustomAvailableFor(model.toAccount)
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels(): List<IsCustomAvailableForModel> {
+            val userWalletId = UserWalletId("0011")
+            return listOf(
+                IsCustomAvailableForModel(
+                    toAccount = Account.Personal.createMainAccount(userWalletId),
+                    expected = true,
+                ),
+                IsCustomAvailableForModel(toAccount = Account.Payment(userWalletId), expected = false),
+                IsCustomAvailableForModel(toAccount = Account.Money(userWalletId), expected = false),
+                IsCustomAvailableForModel(toAccount = Account.Prediction(userWalletId), expected = false),
+                IsCustomAvailableForModel(toAccount = Account.Collectibles(userWalletId), expected = false),
+            )
+        }
+    }
+
+    data class IsCustomAvailableForModel(val toAccount: Account, val expected: Boolean)
+
     data class PresetsModel(val default: String, val expected: List<String>)
 
     data class IsLowModel(val percent: String, val expected: Boolean)
 
-    data class ParseValidModel(val input: String, val expected: String?)
+    data class ParseValidModel(val input: String, val expected: String?, val defaultPercent: String = "0.5")
 
     private fun createProvider(slippage: BigDecimal) = SwapProvider(
         providerId = "1inch",

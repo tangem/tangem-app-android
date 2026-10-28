@@ -3,6 +3,7 @@ package com.tangem.feature.swap.model
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.swap.models.SwapCurrencyStatus
@@ -28,14 +29,17 @@ internal object SwapSlippage {
             .distinctBy(BigDecimal::toPlainString)
     }
 
-    fun parseValid(value: String, provider: SwapProvider): BigDecimal? {
-        return provider.acceptedSlippageOrNull(value.parseBigDecimalOrNull())
+    fun parseValid(value: String, provider: SwapProvider, defaultPercent: BigDecimal): BigDecimal? {
+        return provider.acceptedSlippageOrNull(percent = value.parseBigDecimalOrNull(), defaultPercent = defaultPercent)
     }
 
     /** Below half the default the swap is likely to fail on price movement; the half preset itself is not low. */
     fun isLow(percent: BigDecimal, defaultPercent: BigDecimal): Boolean {
         return percent.multiply(PRESET_FACTOR) < defaultPercent
     }
+
+    /** Custom slippage is offered only for swaps into the wallet's own portfolio accounts. */
+    fun isCustomAvailableFor(toAccount: Account): Boolean = toAccount is Account.Personal
 }
 
 sealed interface SwapSlippageState {
@@ -70,6 +74,15 @@ data class SlippageQuoteKey(
         amount = amount,
     )
 }
+
+/**
+ * Slippage of the quotes loaded without a custom one, keyed by provider id: the per-pair default. Kept apart from the
+ * live quotes because a quote for a custom slippage echoes the custom value back.
+ */
+data class QuoteDefaultSlippages(
+    val quoteKey: SlippageQuoteKey,
+    val byProviderId: Map<String, BigDecimal>,
+)
 
 internal fun BigDecimal.formatSlippagePercent(): String = movePointLeft(2).format {
     percent(minFractionDigits = 0)
