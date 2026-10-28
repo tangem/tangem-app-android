@@ -3252,6 +3252,8 @@
   <string name="tangempay_unified_onboarding_fees_caption">Pay what you see</string>
   <string name="tangempay_unified_onboarding_fees_subtitle">1 USDC = 1 USD</string>
   <string name="tangempay_unified_onboarding_fees_title">No purchase fees. %1$s</string>
+  <string name="tangempay_unified_onboarding_interest_caption">Interest</string>
+  <string name="tangempay_unified_onboarding_interest_title">Hold and earn up to 4% APY</string>
   <string name="tangempay_unified_onboarding_legal">What you can open depends on where you live. We\'ll confirm right after verification</string>
   <string name="tangempay_unified_onboarding_money_account_caption">Quite handy</string>
   <string name="tangempay_unified_onboarding_money_account_header">USD account</string>
@@ -3261,6 +3263,8 @@
   <string name="tangempay_unified_onboarding_payment_account_header">Visa Card</string>
   <string name="tangempay_unified_onboarding_payment_account_subtitle_android">with Google Pay</string>
   <string name="tangempay_unified_onboarding_payment_account_title">Online or %1$s</string>
+  <string name="tangempay_unified_onboarding_payments_caption">Payments</string>
+  <string name="tangempay_unified_onboarding_payments_title">ACH and wire transfers for daily needs</string>
   <string name="tangempay_unified_onboarding_plan_caption">One plan</string>
   <string name="tangempay_unified_onboarding_plan_subtitle">Basic is free.</string>
   <string name="tangempay_unified_onboarding_plan_title">%1$s Plus covers both and packs much more</string>
