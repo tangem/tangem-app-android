@@ -1,13 +1,8 @@
 package com.tangem.features.walletconnect.connections.model.transformers
 
-import com.tangem.common.ui.account.AccountTitleUM
-import com.tangem.common.ui.account.CryptoPortfolioIconConverter
-import com.tangem.common.ui.account.toUM
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.account.models.AccountList
-import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.mcp.models.McpSession
-import com.tangem.domain.models.account.Account
+import com.tangem.domain.mcp.repository.McpSessionsLce
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
@@ -37,7 +32,7 @@ internal class WcConnectionsTransformer(
     private val wallets: List<UserWallet>,
     private val sessionsMap: Map<UserWallet, List<WcSession>>,
     private val accountLists: List<AccountList>,
-    private val mcpSessions: Lce<Throwable, List<McpSession>>,
+    private val mcpSessions: McpSessionsLce,
     private val isAgentsReloading: Boolean,
     private val isAccountMode: Boolean,
     private val currentWalletId: UserWalletId,
@@ -80,8 +75,8 @@ internal class WcConnectionsTransformer(
     )
 
     private fun createWallet(wallet: UserWallet): WcWalletConnectionsUM? {
-        val agents = createAgents(wallet)
-        val dAppGroups = createDAppGroups(wallet)
+        val agents = convertAgents(wallet)
+        val dAppGroups = convertDAppGroups(wallet)
         val hasAgents = agents is WcAgentsUM.Content && agents.agents.isNotEmpty()
 
         if (!hasAgents && dAppGroups.isEmpty()) return null
@@ -97,76 +92,27 @@ internal class WcConnectionsTransformer(
     private fun createAgentsOnlyWallet(wallet: UserWallet) = WcWalletConnectionsUM(
         userWalletId = wallet.walletId.stringValue,
         walletName = wallet.name,
-        agents = createAgents(wallet),
+        agents = convertAgents(wallet),
         dAppGroups = persistentListOf(),
     )
 
-    private fun createAgents(wallet: UserWallet): WcAgentsUM = mcpSessions.fold(
-        ifLoading = { WcAgentsUM.Loading },
-        ifError = { WcAgentsUM.Error(isReloading = isAgentsReloading, onReloadClick = onAgentsReloadClick) },
-        ifContent = { sessions ->
-            WcAgentsUM.Content(
-                agents = sessions
-                    .filter { it.walletId == wallet.walletId }
-                    .map { session -> createAgent(session = session, walletName = wallet.name) }
-                    .toPersistentList(),
-            )
-        },
-    )
-
-    private fun createAgent(session: McpSession, walletName: String) = McpAgentInfo(
-        id = session.id,
-        name = session.clientName ?: session.clientOrigin ?: session.clientId,
-        // clientOrigin is the only verified part of a client's identity
-        subtitle = session.clientOrigin.orEmpty(),
-        iconUrl = session.clientIconUrl,
-        onClick = { openMcpSessionModal(session, walletName) },
-    )
-
-    private fun createDAppGroups(wallet: UserWallet): ImmutableList<WcDAppGroupUM> {
-        val sessions = sessionsMap[wallet].orEmpty()
-        if (sessions.isEmpty()) return persistentListOf()
-
-        return if (isAccountMode) createAccountGroups(wallet, sessions) else createWalletGroup(wallet, sessions)
-    }
-
-    private fun createWalletGroup(wallet: UserWallet, sessions: List<WcSession>) = persistentListOf(
-        WcDAppGroupUM(
-            id = wallet.walletId.stringValue,
-            title = null,
-            connectedApps = sessions.map(::createAppInfo).toPersistentList(),
+    private fun convertAgents(wallet: UserWallet) = WcAgentsConverter.convert(
+        value = WcAgentsConverter.Input(
+            wallet = wallet,
+            sessions = mcpSessions,
+            isReloading = isAgentsReloading,
+            onReloadClick = onAgentsReloadClick,
+            onAgentClick = openMcpSessionModal,
         ),
     )
 
-    private fun createAccountGroups(wallet: UserWallet, sessions: List<WcSession>): ImmutableList<WcDAppGroupUM> {
-        val accounts = accountLists.firstOrNull { it.userWalletId == wallet.walletId }
-            ?.accounts
-            ?.filterIsInstance<Account.CryptoPortfolio>()
-            .orEmpty()
-
-        return accounts.mapNotNull { account ->
-            val accountSessions = sessions.filter { it.account.accountId == account.accountId }
-            if (accountSessions.isEmpty()) return@mapNotNull null
-
-            WcDAppGroupUM(
-                id = wallet.walletId.stringValue + account.accountId.value,
-                title = AccountTitleUM.Account(
-                    prefixText = TextReference.EMPTY,
-                    name = account.accountName.toUM().value,
-                    icon = CryptoPortfolioIconConverter.convert(account.icon),
-                ),
-                connectedApps = accountSessions.map(::createAppInfo).toPersistentList(),
-            )
-        }.toPersistentList()
-    }
-
-    private fun createAppInfo(session: WcSession) = with(session.sdkModel) {
-        WcConnectedAppInfo(
-            name = appMetaData.name,
-            iconUrl = appMetaData.icons.firstOrNull().orEmpty(),
-            subtitle = WcAppSubtitleConverter.convert(appMetaData),
-            verifiedState = WcDAppVerifiedStateConverter {}.convert(session.securityStatus to appMetaData.name),
-            onClick = { openAppInfoModal(session) },
-        )
-    }
+    private fun convertDAppGroups(wallet: UserWallet) = WcDAppGroupsConverter.convert(
+        value = WcDAppGroupsConverter.Input(
+            wallet = wallet,
+            sessions = sessionsMap[wallet].orEmpty(),
+            accountList = accountLists.firstOrNull { it.userWalletId == wallet.walletId },
+            isAccountMode = isAccountMode,
+            onAppClick = openAppInfoModal,
+        ),
+    )
 }
