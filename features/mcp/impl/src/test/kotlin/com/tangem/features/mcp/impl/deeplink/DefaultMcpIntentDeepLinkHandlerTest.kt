@@ -13,6 +13,7 @@ import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 
 internal class DefaultMcpIntentDeepLinkHandlerTest {
@@ -150,11 +151,15 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
         verify(exactly = 0) { mcpRequestService.request(any()) }
     }
 
-    @Test
-    fun `GIVEN transaction send link WHEN handler created THEN intent received is sent`() {
+    @ParameterizedTest
+    @CsvSource("express, exchange", "transaction, send")
+    fun `GIVEN supported intent link WHEN handler created THEN intent received is sent once`(
+        source: String,
+        type: String,
+    ) {
         // Arrange
         val event = slot<AnalyticsEvent>()
-        val params = mapOf("id" to "my_intent_id123", "source" to "transaction", "type" to "send")
+        val params = mapOf("id" to "my_intent_id123", "source" to source, "type" to type)
 
         // Act
         createHandler(queryParams = params)
@@ -162,11 +167,20 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
         // Assert
         verify(exactly = 1) { analyticsEventHandler.send(capture(event)) }
         assertThat(event.captured).isInstanceOf(McpIntentAnalyticsEvent.IntentReceived::class.java)
-        assertThat(event.captured.params).containsExactly(
-            "Intent Type", "send",
-            "Source", "transaction",
-            "Intent Id", "my_intent_id123",
+        assertThat(event.captured.id).isEqualTo("[MCP Intent] Intent Received")
+        assertThat(event.captured.params).isEqualTo(
+            mapOf("Intent Type" to type, "Source" to source, "Intent Id" to "my_intent_id123"),
         )
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["id", "source"])
+    fun `GIVEN link without a required param WHEN handler created THEN no analytics is sent`(missingKey: String) {
+        // Act
+        createHandler(queryParams = validParams - missingKey)
+
+        // Assert
+        verify(exactly = 0) { analyticsEventHandler.send(any()) }
     }
 
     @Test
