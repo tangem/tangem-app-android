@@ -86,27 +86,31 @@ internal class MoneyAccountTransferTest {
                 feeOf(BigDecimal("0.0123")).right()
         }
 
-        @Test
-        fun `GIVEN account balance WHEN estimateFee THEN fee of sending the balance to the account itself in fiat`() =
-            runTest {
-                // Arrange
-                accountTokenStatus(fiatRate = BigDecimal("0.9"))
+        @ParameterizedTest
+        @MethodSource("provideEstimateModels")
+        fun `GIVEN account balance WHEN estimateFee THEN USDC fee of sending it to the account rounded up to the cent`(
+            model: EstimateModel,
+        ) = runTest {
+            // Arrange
+            accountTokenStatus(fiatRate = model.fiatRate)
+            coEvery { getFeeForTokenUseCase(userWallet, token, transaction, BALANCE) } returns
+                feeOf(model.fee).right()
 
-                // Act
-                val actual = transfer.estimateFee(userWalletId, token)
+            // Act
+            val actual = transfer.estimateFee(userWalletId, token)
 
-                // Assert
-                assertThat(actual).isEqualTo(BigDecimal("0.01107").right())
-                coVerify(exactly = 1) {
-                    createTransferTransactionUseCase(
-                        amount = match { it.value == BALANCE },
-                        memo = null,
-                        destination = ACCOUNT_ADDRESS,
-                        userWalletId = userWalletId,
-                        network = token.network,
-                    )
-                }
+            // Assert
+            assertThat(actual).isEqualTo(model.expected.right())
+            coVerify(exactly = 1) {
+                createTransferTransactionUseCase(
+                    amount = match { it.value == BALANCE },
+                    memo = null,
+                    destination = ACCOUNT_ADDRESS,
+                    userWalletId = userWalletId,
+                    network = token.network,
+                )
             }
+        }
 
         @ParameterizedTest
         @ProvideTestModels
@@ -120,6 +124,13 @@ internal class MoneyAccountTransferTest {
             // Assert
             assertThat(actual).isEqualTo(model.expected.left())
         }
+
+        private fun provideEstimateModels() = listOf(
+            EstimateModel(fee = BigDecimal("0.0123"), fiatRate = BigDecimal("0.9"), expected = BigDecimal("0.02")),
+            EstimateModel(fee = BigDecimal("0.03"), fiatRate = BigDecimal.ONE, expected = BigDecimal("0.03")),
+            EstimateModel(fee = BigDecimal("0.030001"), fiatRate = BigDecimal.ONE, expected = BigDecimal("0.04")),
+            EstimateModel(fee = BigDecimal("0.0123"), fiatRate = null, expected = BigDecimal("0.02")),
+        )
 
         private fun provideTestModels() = listOf(
             EstimateFailureModel(
@@ -189,7 +200,7 @@ internal class MoneyAccountTransferTest {
         fun `GIVEN balance covers amount and network fee WHEN send THEN that amount signed and sent gasless`() =
             runTest {
                 // Act
-                val actual = transfer.send(userWalletId, token, AMOUNT, DEPOSIT_ADDRESS)
+                val actual = transfer.send(userWalletId, token, AMOUNT, DEPOSIT_ADDRESS, SHOWN_NETWORK_FEE)
 
                 // Assert
                 assertThat(actual).isEqualTo(Unit.right())
@@ -216,10 +227,25 @@ internal class MoneyAccountTransferTest {
             accountTokenStatus(balance = model.balance)
 
             // Act
-            val actual = transfer.send(userWalletId, token, AMOUNT, DEPOSIT_ADDRESS)
+            val actual = transfer.send(userWalletId, token, AMOUNT, DEPOSIT_ADDRESS, SHOWN_NETWORK_FEE)
 
             // Assert
             assertThat(actual).isEqualTo(model.expected)
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideNetworkFeeModels")
+        fun `GIVEN shown network fee WHEN send THEN sent only when the quoted fee is not above it`(
+            model: NetworkFeeModel,
+        ) = runTest {
+            // Act
+            val actual = transfer.send(userWalletId, token, AMOUNT, DEPOSIT_ADDRESS, model.shownNetworkFee)
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+            coVerify(exactly = model.expectedSignedCount) {
+                createAndSendGaslessTransactionUseCase(any(), any(), any())
+            }
         }
 
         @ParameterizedTest
@@ -231,7 +257,7 @@ internal class MoneyAccountTransferTest {
             model.arrange()
 
             // Act
-            val actual = transfer.send(userWalletId, token, AMOUNT, DEPOSIT_ADDRESS)
+            val actual = transfer.send(userWalletId, token, AMOUNT, DEPOSIT_ADDRESS, SHOWN_NETWORK_FEE)
 
             // Assert
             assertThat(actual).isEqualTo(MoneyAccountTransferError.NotSent.left())
@@ -248,11 +274,21 @@ internal class MoneyAccountTransferTest {
                 model.error.left()
 
             // Act
-            val actual = transfer.send(userWalletId, token, AMOUNT, DEPOSIT_ADDRESS)
+            val actual = transfer.send(userWalletId, token, AMOUNT, DEPOSIT_ADDRESS, SHOWN_NETWORK_FEE)
 
             // Assert
             assertThat(actual).isEqualTo(model.expected.left())
         }
+
+        private fun provideNetworkFeeModels() = listOf(
+            NetworkFeeModel(shownNetworkFee = BigDecimal("0.03"), expected = Unit.right(), expectedSignedCount = 1),
+            NetworkFeeModel(shownNetworkFee = BigDecimal("0.02"), expected = Unit.right(), expectedSignedCount = 1),
+            NetworkFeeModel(
+                shownNetworkFee = BigDecimal("0.01"),
+                expected = MoneyAccountTransferError.NetworkFeeIncreased(BigDecimal("0.02")).left(),
+                expectedSignedCount = 0,
+            ),
+        )
 
         private fun provideBalanceModels() = listOf(
             BalanceModel(balance = BALANCE, expected = Unit.right()),
@@ -305,7 +341,7 @@ internal class MoneyAccountTransferTest {
         )
     }
 
-    private fun accountTokenStatus(balance: BigDecimal = BALANCE, fiatRate: BigDecimal = BigDecimal.ONE) {
+    private fun accountTokenStatus(balance: BigDecimal = BALANCE, fiatRate: BigDecimal? = BigDecimal.ONE) {
         val status: CryptoCurrencyStatus = requireNotNull(
             activeMoneyAccount(
                 token = token,
@@ -336,6 +372,14 @@ internal class MoneyAccountTransferTest {
         gaslessProtocolData = GaslessProtocolData.Evm,
     )
 
+    internal data class EstimateModel(val fee: BigDecimal, val fiatRate: BigDecimal?, val expected: BigDecimal)
+
+    internal data class NetworkFeeModel(
+        val shownNetworkFee: BigDecimal,
+        val expected: Either<MoneyAccountTransferError, Unit>,
+        val expectedSignedCount: Int,
+    )
+
     internal data class EstimateFailureModel(
         val name: String,
         val arrange: () -> Unit,
@@ -358,6 +402,7 @@ internal class MoneyAccountTransferTest {
         const val TX_HASH = "0xhash"
         val BALANCE = BigDecimal("2325.55")
         val AMOUNT = BigDecimal("501.00")
+        val SHOWN_NETWORK_FEE = BigDecimal("0.03")
         val TRANSFER_ERROR = IllegalStateException("No wallet manager")
     }
 }

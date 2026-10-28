@@ -18,6 +18,7 @@ import com.tangem.utils.extensions.isPositive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.map
+import java.math.BigDecimal
 import javax.inject.Inject
 
 internal class BankWithdrawSourcesObserver @Inject constructor(
@@ -42,7 +43,12 @@ internal class BankWithdrawSourcesObserver @Inject constructor(
                 destinations = offramp.destinations,
                 sources = networks.filterIsInstance<PaymentNetworkStatus.Available>().flatMap { network ->
                     network.cryptoCurrencyStatuses.mapNotNull { currencyStatus ->
-                        currencyStatus.toWithdrawSource(network.network, network.chainId, offramp)
+                        currencyStatus.toWithdrawSource(
+                            network = network.network,
+                            chainId = network.chainId,
+                            offramp = offramp,
+                            fiatBalance = currencyStatus.value.fiatAmount,
+                        )
                     }
                 },
                 balanceCurrencyCode = status.balanceOrNull()?.fiatBalance?.currency,
@@ -56,13 +62,15 @@ internal class BankWithdrawSourcesObserver @Inject constructor(
         .map { status ->
             val active = status.value as? MoneyAccountStatusValue.Account.Active ?: return@map null
             if (active.isBankOfframpAvailable != true) return@map null
+            val currencyStatus = active.cryptoCurrencyStatus
             BankWithdrawOptionsFactory.create(
                 destinations = offramp.destinations,
                 sources = listOfNotNull(
-                    active.cryptoCurrencyStatus?.toWithdrawSource(
+                    currencyStatus?.toWithdrawSource(
                         network = active.cryptoCurrency.network,
                         chainId = TangemPayCurrencyFactory.TOKEN_CHAIN_ID,
                         offramp = offramp,
+                        fiatBalance = currencyStatus.value.amount,
                     ),
                 ),
                 balanceCurrencyCode = active.balance?.currencyCode,
@@ -73,14 +81,15 @@ internal class BankWithdrawSourcesObserver @Inject constructor(
         network: Network,
         chainId: Long,
         offramp: BankOfframpOptions,
+        fiatBalance: BigDecimal?,
     ): BankWithdrawSource? {
         val token = currency as? CryptoCurrency.Token ?: return null
-        val fiatBalance = value.fiatAmount?.takeIf { it.isPositive() } ?: return null
+        val positiveBalance = fiatBalance?.takeIf { it.isPositive() } ?: return null
         return BankWithdrawSource(
             network = network,
             chainId = chainId,
             token = token,
-            fiatBalance = fiatBalance,
+            fiatBalance = positiveBalance,
             isAvailable = offramp.sources.any { source ->
                 source.chainId == chainId &&
                     source.tokens.any { it.contractAddress.equals(token.contractAddress, ignoreCase = true) }
