@@ -203,9 +203,19 @@ private fun previewSellQuote(status: PredictionQuoteStatus = PredictionQuoteStat
         status = status,
         expected = BigDecimal("43.54"),
         feeTotal = BigDecimal("0.45"),
-        total = BigDecimal("42.66"),
+        total = BigDecimal("43.09"),
         signable = SignableQuoteUM(
-            quote = previewSignableQuote(status = status, side = PredictionOrderSide.SELL),
+            quote = previewSignableQuote(status = status, side = PredictionOrderSide.SELL).copy(
+                shares = BigDecimal("51.23"),
+                notional = BigDecimal("43.54"),
+                expectedExecutionAmount = BigDecimal("43.54"),
+                fees = PredictionOrderFees(
+                    market = BigDecimal.ZERO,
+                    builder = BigDecimal("0.45"),
+                    total = BigDecimal("0.45"),
+                ),
+                total = BigDecimal("43.09"),
+            ),
             receivedAtMillis = PLACED_AT,
             assetId = PREVIEW_ASSET_ID,
         ),
