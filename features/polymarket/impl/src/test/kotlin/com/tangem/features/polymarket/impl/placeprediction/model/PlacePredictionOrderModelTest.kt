@@ -744,8 +744,8 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             runOrderTest {
                 // Arrange
                 when (load) {
-                    MarketLoad.Hanging -> coEvery { getEventUseCase(eventId = any()) } coAnswers { awaitCancellation() }
-                    MarketLoad.Failed -> coEvery { getEventUseCase(eventId = any()) } returns
+                    MarketLoad.Hanging -> coEvery { getEventUseCase(userWalletId = any(), eventId = any()) } coAnswers { awaitCancellation() }
+                    MarketLoad.Failed -> coEvery { getEventUseCase(userWalletId = any(), eventId = any()) } returns
                         PolymarketEventError.Network.left()
                 }
                 val model = createOrderModel(testScope = this)
