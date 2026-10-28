@@ -18,6 +18,9 @@ internal class MarketingCampaignConverter : Converter<CampaignDto, MarketingCamp
         require(banner.uiType != MarketingBanner.UiType.LINKED_TO_PROVIDER || !value.providerIds.isNullOrEmpty()) {
             "linked_to_provider campaign ${value.id} has no providerIds"
         }
+        require(!banner.hasCallToAction() || banner.hasTextAndButtonText()) {
+            "${value.banner.uiType} campaign ${value.id} has no text or buttonText"
+        }
 
         return MarketingCampaign(
             id = value.id,
@@ -35,8 +38,11 @@ internal class MarketingCampaignConverter : Converter<CampaignDto, MarketingCamp
 
     private fun convertBanner(dto: BannerDto) = MarketingBanner(
         uiType = when (dto.uiType) {
+            "standalone" -> MarketingBanner.UiType.STANDALONE
             "linked_to_provider" -> MarketingBanner.UiType.LINKED_TO_PROVIDER
-            else -> MarketingBanner.UiType.STANDALONE
+            "pseudo_provider" -> MarketingBanner.UiType.PSEUDO_PROVIDER
+            "standalone_cta" -> MarketingBanner.UiType.STANDALONE_CTA
+            else -> throw IllegalArgumentException("Unknown banner uiType: ${dto.uiType}")
         },
         text = dto.text,
         iconUrl = dto.icon,
@@ -48,7 +54,18 @@ internal class MarketingCampaignConverter : Converter<CampaignDto, MarketingCamp
         bgColor = dto.bgColor,
         deeplink = dto.deeplink,
         isDismissible = dto.isDismissible,
+        categoryLabel = dto.categoryLabel,
+        subtitle = dto.subtitle,
+        etaLabel = dto.etaLabel,
+        partnerLabel = dto.partnerLabel,
+        buttonText = dto.buttonText,
+        hasGlow = dto.hasGlow,
     )
+
+    private fun MarketingBanner.hasCallToAction(): Boolean =
+        uiType == MarketingBanner.UiType.PSEUDO_PROVIDER || uiType == MarketingBanner.UiType.STANDALONE_CTA
+
+    private fun MarketingBanner.hasTextAndButtonText(): Boolean = !text.isNullOrBlank() && !buttonText.isNullOrBlank()
 
     private fun convertTarget(dto: CampaignTokenDto): MarketingCampaignTarget? {
         val coingeckoId = dto.id
