@@ -14,10 +14,12 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.GlobalLoadingMessage
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
@@ -55,6 +57,7 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
+    private val singleAccountListSupplier: SingleAccountListSupplier,
     private val activatePromoCodeUseCase: ActivatePromoCodeUseCase,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val appsFlyerRepository: AppsFlyerRepository,
@@ -138,11 +141,9 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
 
             logger.d("All user network statuses ${networkStatuses?.size}")
 
-            val cryptoCurrencies = multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
-                MultiWalletCryptoCurrenciesProducer.Params(userWallet.walletId),
-            )
+            val cryptoCurrencies = getCryptoCurrencies(userWallet)
 
-            logger.d("All user cryptoCurrencies on main ${cryptoCurrencies?.size}")
+            logger.d("All user cryptoCurrencies ${cryptoCurrencies?.size}")
 
             val payoutCurrency = cryptoCurrencies?.firstOrNull { it.isPayoutCurrency() }
             logger.d("PayoutCurrency $payoutCurrency")
@@ -167,6 +168,16 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
                 logger.d("No $payoutSymbol address, status ${payoutStatus?.value}")
                 showFailure(PromoActivationError.AddressMissing)
             }
+        }
+    }
+
+    private suspend fun getCryptoCurrencies(userWallet: UserWallet): Collection<CryptoCurrency>? {
+        return if (userWallet.isMultiCurrency) {
+            multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                MultiWalletCryptoCurrenciesProducer.Params(userWallet.walletId),
+            )
+        } else {
+            singleAccountListSupplier.getSyncOrNull(userWallet.walletId)?.flattenCurrencies()
         }
     }
 
