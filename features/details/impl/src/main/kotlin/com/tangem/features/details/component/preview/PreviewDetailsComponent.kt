@@ -2,6 +2,7 @@ package com.tangem.features.details.component.preview
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.tangem.core.analytics.DummyAnalyticsEventHandler
 import com.tangem.core.decompose.navigation.DummyRouter
 import com.tangem.core.navigation.url.DummyUrlOpener
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -31,6 +32,7 @@ internal class PreviewDetailsComponent : DetailsComponent {
             mcpFeatureToggles = object : McpFeatureToggles {
                 override val isMcpEnabled: Boolean = true
             },
+            analyticsEventHandler = DummyAnalyticsEventHandler(),
         ).buildAll(
             isWalletConnectAvailable = true,
             hasAnyMobileWallet = true,
