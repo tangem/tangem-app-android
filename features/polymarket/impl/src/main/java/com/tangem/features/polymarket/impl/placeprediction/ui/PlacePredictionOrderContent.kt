@@ -132,7 +132,7 @@ private fun OrderBody(
         ) {
             PredictionOrderDetailsCard(
                 slippage = state.slippage,
-                total = (state.quote as? QuoteUM.Content)?.feeTotal?.formatPolymarketMoney() ?: DASH_SIGN,
+                total = (state.quote as? QuoteUM.Content)?.total?.formatPolymarketMoney() ?: DASH_SIGN,
                 isTotalLoading = state.quote is QuoteUM.Loading,
                 onSlippageClick = intents::onSlippageClick.takeIf { isIdle },
                 onTotalClick = intents::onFeeClick.takeIf { state.canShowFeeBreakdown() },
