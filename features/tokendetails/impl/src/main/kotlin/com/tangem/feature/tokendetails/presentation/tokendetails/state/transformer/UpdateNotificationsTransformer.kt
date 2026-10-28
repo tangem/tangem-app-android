@@ -15,6 +15,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.shorted
+import com.tangem.core.ui.format.bigdecimal.simple
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.*
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -368,6 +369,26 @@ internal class UpdateNotificationsTransformer(
                 iconSize = 20.dp,
                 title = resourceReference(CoreResR.string.warning_outdated_data_title),
                 subtitle = resourceReference(CoreResR.string.warning_outdated_data_message),
+                messageEffect = TangemMessageEffect.None,
+            )
+            is CryptoCurrencyWarning.IncompleteBalance -> TangemMessageUM(
+                id = "incomplete_balance",
+                variant = TangemMessageBanner.Variant.Default,
+                shouldShowGlowRing = false,
+                iconUM = TangemIconUM.Icon(
+                    imageVector = Icons.ic_warning_20_filled,
+                    tintReference = { TangemTheme.colors3.icon.status.warning },
+                ),
+                iconSize = 20.dp,
+                title = resourceReference(CoreResR.string.warning_incomplete_balance_title),
+                subtitle = resourceReference(
+                    CoreResR.string.warning_incomplete_balance_message,
+                    wrappedList(
+                        warning.unspentsLimit.toBigDecimal().format { simple(decimals = 0) },
+                        warning.networkName,
+                        warning.currencySymbol,
+                    ),
+                ),
                 messageEffect = TangemMessageEffect.None,
             )
         }
