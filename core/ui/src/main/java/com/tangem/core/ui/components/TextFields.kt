@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.security.excludeFromAutofill
 
 /**
  * [Show in Figma](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?node-id=213%3A218&t=TmfD6UBHPg9uYfev-4)
@@ -47,9 +48,11 @@ fun OutlineTextField(
     keyboardActions: KeyboardActions = KeyboardActions(),
     visualTransformation: VisualTransformation = VisualTransformation.None,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    isExcludedFromAutofill: Boolean = false,
 ) {
     TangemTextField(
         modifier = modifier,
+        isExcludedFromAutofill = isExcludedFromAutofill,
         value = value,
         onValueChange = onValueChange,
         singleLine = true,
@@ -82,9 +85,11 @@ fun OutlineTextFieldWithIcon(
     visualTransformation: VisualTransformation = VisualTransformation.None,
     caption: String? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    isExcludedFromAutofill: Boolean = false,
 ) {
     TangemTextFieldWithIcon(
         modifier = modifier,
+        isExcludedFromAutofill = isExcludedFromAutofill,
         value = value,
         onValueChange = onValueChange,
         iconResId = iconResId,
@@ -123,10 +128,12 @@ private fun TangemTextField(
     colors: TextFieldColors = TangemTextFieldsDefault.defaultTextFieldColors,
     size: TangemTextFieldSize = TangemTextFieldSize.Default,
     onClear: () -> Unit = { onValueChange(TextFieldValue()) },
+    isExcludedFromAutofill: Boolean = false,
 ) {
     Column(modifier = modifier) {
         OutlinedTextField(
             modifier = Modifier
+                .then(if (isExcludedFromAutofill) Modifier.excludeFromAutofill() else Modifier)
                 .fillMaxWidth()
                 .height(IntrinsicSize.Min)
                 .heightIn(size.toHeightDp()),
@@ -234,10 +241,12 @@ private fun TangemTextFieldWithIcon(
     colors: TextFieldColors = TangemTextFieldsDefault.defaultTextFieldColors,
     size: TangemTextFieldSize = TangemTextFieldSize.Default,
     onIconClick: () -> Unit = {},
+    isExcludedFromAutofill: Boolean = false,
 ) {
     Column(modifier = modifier) {
         OutlinedTextField(
             modifier = Modifier
+                .then(if (isExcludedFromAutofill) Modifier.excludeFromAutofill() else Modifier)
                 .fillMaxWidth()
                 .height(IntrinsicSize.Min)
                 .heightIn(size.toHeightDp()),

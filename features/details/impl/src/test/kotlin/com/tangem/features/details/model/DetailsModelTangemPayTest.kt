@@ -1,10 +1,8 @@
 package com.tangem.features.details.model
 
 import com.tangem.common.routing.AppRoute
-import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -16,14 +14,11 @@ import org.junit.jupiter.api.Test
 internal class DetailsModelTangemPayTest : DetailsModelTestBase() {
 
     @Test
-    fun `GIVEN eligible wallets WHEN init THEN tangem pay item added and analytics sent`() = runTest {
+    fun `GIVEN compatible wallets WHEN init THEN tangem pay item added and analytics sent`() = runTest {
         // Arrange
         coEvery {
-            tangemPayEligibilityManager.getEligibleWallets(
-                shouldExcludePaeraCustomers = true,
-                entryPoint = TangemPayEntryPoint.DETAILS,
-            )
-        } returns listOf(hotWallet(wallet1))
+            tangemPayEligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true)
+        } returns listOf(wallet1)
 
         // Act
         val model = createModel(this)
@@ -36,12 +31,15 @@ internal class DetailsModelTangemPayTest : DetailsModelTestBase() {
     }
 
     @Test
-    fun `GIVEN no eligible wallets WHEN init THEN tangem pay item not added`() = runTest {
-        coEvery { tangemPayEligibilityManager.getEligibleWallets(any(), any()) } returns emptyList()
+    fun `GIVEN no compatible wallets WHEN init THEN tangem pay item not added`() = runTest {
+        // Arrange
+        coEvery { tangemPayEligibilityManager.getCompatibleWalletsIds(any()) } returns emptyList()
 
+        // Act
         val model = createModel(this)
         advanceUntilIdle()
 
+        // Assert
         verify(exactly = 0) { itemsBuilder.addTangemPayItem(any(), any()) }
         verify(exactly = 0) { analyticsEventHandler.send(any<TangemPayAnalyticsEvents.PermanentButtonShowed>()) }
         model.onDestroy()
@@ -50,7 +48,6 @@ internal class DetailsModelTangemPayTest : DetailsModelTestBase() {
     @Test
     fun `GIVEN item shown AND account created WHEN resumed THEN tangem pay item removed`() = runTest {
         // Arrange
-        every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
         coEvery {
             tangemPayEligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true)
         } returnsMany listOf(listOf(wallet1), emptyList())
@@ -70,7 +67,6 @@ internal class DetailsModelTangemPayTest : DetailsModelTestBase() {
     @Test
     fun `GIVEN item shown WHEN resumed again THEN analytics not resent`() = runTest {
         // Arrange
-        every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
         coEvery {
             tangemPayEligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true)
         } returns listOf(wallet1)
@@ -88,15 +84,19 @@ internal class DetailsModelTangemPayTest : DetailsModelTestBase() {
     }
 
     @Test
-    fun `GIVEN tangem pay available WHEN item clicked THEN navigates to onboarding`() = runTest {
-        coEvery { tangemPayEligibilityManager.getEligibleWallets(any(), any()) } returns listOf(hotWallet(wallet1))
-        coEvery { tangemPayEligibilityManager.getTangemPayAvailability(TangemPayEntryPoint.DETAILS) } returns true
-
+    fun `GIVEN item shown WHEN item clicked THEN analytics sent and navigates to onboarding`() = runTest {
+        // Arrange
+        coEvery {
+            tangemPayEligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true)
+        } returns listOf(wallet1)
         val model = createModel(this)
         advanceUntilIdle()
+
+        // Act
         onTangemPaySlot.captured.invoke()
         advanceUntilIdle()
 
+        // Assert
         verify { analyticsEventHandler.send(any<TangemPayAnalyticsEvents.DetailsVisaPermanentButtonClicked>()) }
         verify {
             router.push(
@@ -104,66 +104,7 @@ internal class DetailsModelTangemPayTest : DetailsModelTestBase() {
                 onComplete = any(),
             )
         }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN residency step enabled AND suitable wallet WHEN init THEN item added without availability check`() =
-        runTest {
-            // GIVEN
-            every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
-            coEvery {
-                tangemPayEligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true)
-            } returns listOf(wallet1)
-
-            // WHEN
-            val model = createModel(this)
-            advanceUntilIdle()
-
-            // THEN
-            verify { itemsBuilder.addTangemPayItem(any(), any()) }
-            coVerify(exactly = 0) { tangemPayEligibilityManager.getEligibleWallets(any(), any()) }
-            model.onDestroy()
-        }
-
-    @Test
-    fun `GIVEN residency step enabled WHEN item clicked THEN navigates without availability check`() = runTest {
-        // GIVEN
-        every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
-        coEvery {
-            tangemPayEligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true)
-        } returns listOf(wallet1)
-        val model = createModel(this)
-        advanceUntilIdle()
-
-        // WHEN
-        onTangemPaySlot.captured.invoke()
-        advanceUntilIdle()
-
-        // THEN
-        verify {
-            router.push(
-                route = AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.FromBannerInSettings),
-                onComplete = any(),
-            )
-        }
-        coVerify(exactly = 0) { tangemPayEligibilityManager.getTangemPayAvailability(any()) }
         verify(exactly = 0) { itemsBuilder.removeTangemPayItem(any()) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN tangem pay unavailable WHEN item clicked THEN item removed and no navigation`() = runTest {
-        coEvery { tangemPayEligibilityManager.getEligibleWallets(any(), any()) } returns listOf(hotWallet(wallet1))
-        coEvery { tangemPayEligibilityManager.getTangemPayAvailability(TangemPayEntryPoint.DETAILS) } returns false
-
-        val model = createModel(this)
-        advanceUntilIdle()
-        onTangemPaySlot.captured.invoke()
-        advanceUntilIdle()
-
-        verify { itemsBuilder.removeTangemPayItem(any()) }
-        verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
         model.onDestroy()
     }
 }

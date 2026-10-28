@@ -81,7 +81,7 @@ private fun ComponentPreview(state: TangemExpandableRowStory) {
 private fun ExpandableRowPreview(state: TangemExpandableRowStory) {
     val avatar = TangemAvatar.UiState.Account(
         iconRes = R.drawable.ic_airplane_mode_24,
-        color = TangemAvatar.FillColor.DarkBlue,
+        color = TangemAvatar.FillColor.AzureBlue,
     )
     val title = stringReference(if (state.longTitle) LONG_TITLE else SHORT_TITLE)
     val badge = if (state.hasBadge) stringReference("Label") else null

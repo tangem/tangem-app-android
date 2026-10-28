@@ -22,7 +22,6 @@ import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.ui.TangemPayOnboardingNavigation
 import com.tangem.features.tangempay.ui.TangemPayOnboardingScreenState
@@ -52,7 +51,6 @@ internal class TangemPayOnboardingModelTest {
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val produceInitialDataUseCase: ProduceTangemPayInitialDataUseCase = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
     private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
@@ -71,7 +69,6 @@ internal class TangemPayOnboardingModelTest {
             userWalletsListRepository,
             uiMessageSender,
         )
-        every { tangemPayFeatureToggles.isResidencyStepEnabled } returns false
         every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns false
         coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(mockk<UserWallet>())
         coEvery {
@@ -267,10 +264,9 @@ internal class TangemPayOnboardingModelTest {
         }
 
     @Test
-    fun `GIVEN residency step enabled AND single wallet WHEN get card clicked THEN residency step opened for it`() =
+    fun `GIVEN single wallet WHEN get card clicked THEN residency step opened for it`() =
         runTest {
             // Arrange
-            every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
             val userWalletId = UserWalletId("011")
             coEvery { eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false) } returns
                 listOf(userWalletId)
@@ -302,10 +298,9 @@ internal class TangemPayOnboardingModelTest {
         }
 
     @Test
-    fun `GIVEN residency step enabled AND several wallets WHEN get card clicked THEN wallet selector opened`() =
+    fun `GIVEN several wallets WHEN get card clicked THEN wallet selector opened`() =
         runTest {
             // Arrange
-            every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
             val walletsIds = listOf(UserWalletId("011"), UserWalletId("022"))
             coEvery { eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false) } returns
                 walletsIds
@@ -327,10 +322,9 @@ internal class TangemPayOnboardingModelTest {
         }
 
     @Test
-    fun `GIVEN residency step enabled AND wallet selector shown WHEN wallet selected THEN residency step opened`() =
+    fun `GIVEN wallet selector shown WHEN wallet selected THEN residency step opened`() =
         runTest {
             // Arrange
-            every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
             val userWalletId = UserWalletId("022")
             coEvery { eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false) } returns
                 listOf(UserWalletId("011"), userWalletId)
@@ -361,9 +355,8 @@ internal class TangemPayOnboardingModelTest {
         }
 
     @Test
-    fun `GIVEN residency step enabled AND no wallets WHEN get card clicked THEN error shown`() = runTest {
+    fun `GIVEN no wallets WHEN get card clicked THEN error shown`() = runTest {
         // Arrange
-        every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
         coEvery { eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = false) } returns emptyList()
         val model = createModel(TangemPayOnboardingComponent.Params.FromBannerOnMain)
         advanceUntilIdle()
@@ -380,7 +373,7 @@ internal class TangemPayOnboardingModelTest {
     }
 
     @Test
-    fun `GIVEN KYC not approved WHEN onboarding starts THEN order not created before KYC`() = runTest {
+    fun `GIVEN KYC not approved WHEN onboarding starts THEN residency step opened without order`() = runTest {
         // Arrange
         val userWalletId = UserWalletId("011")
         coEvery { produceInitialDataUseCase(userWalletId) } returns Unit.right()
@@ -394,7 +387,14 @@ internal class TangemPayOnboardingModelTest {
         // Assert
         coVerify(exactly = 0) { repository.createOrder(any(), any(), any()) }
         verify(exactly = 1) {
-            router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(userWalletId = userWalletId), onComplete = any())
+            router.replaceAll(
+                AppRoute.Wallet,
+                AppRoute.TangemPayEligibility(
+                    product = TangemPayProduct.PAYMENT_ACCOUNT,
+                    userWalletId = userWalletId,
+                ),
+                onComplete = any(),
+            )
         }
         model.onDestroy()
     }
@@ -426,7 +426,6 @@ internal class TangemPayOnboardingModelTest {
             repository = repository,
             urlOpener = urlOpener,
             eligibilityManager = eligibilityManager,
-            featureToggles = tangemPayFeatureToggles,
             moneyAccountFeatureToggles = moneyAccountFeatureToggles,
             onboardingStarter = TangemPayOnboardingStarter(
                 router = router,
@@ -436,7 +435,6 @@ internal class TangemPayOnboardingModelTest {
                 getCustomerOffersUseCase = mockk(relaxed = true),
                 createHotWalletUseCase = mockk(relaxed = true),
                 isHotWalletCreationSupported = mockk(relaxed = true),
-                tangemPayFeatureToggles = tangemPayFeatureToggles,
             ),
             userWalletsListRepository = userWalletsListRepository,
             uiMessageSender = uiMessageSender,

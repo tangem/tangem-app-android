@@ -6,6 +6,7 @@ import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.safe.JointOperationTransferResolver
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
+import com.tangem.domain.jointaccount.verifier.JointOperationDisplayGate
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.isJoint
@@ -26,6 +27,7 @@ import javax.inject.Inject
  * the threshold and on its way to the network until the chain reports it. The operation history can learn that it
  * finished before the account list does; from then on the history row stands for it and the request is dropped.
  */
+@Suppress("LongParameterList")
 internal class JointCosignRequestsDelegate @Inject constructor(
     private val accountListSupplier: SingleAccountListSupplier,
     private val jointAccountListSupplier: SingleJointAccountListSupplier,
@@ -33,6 +35,7 @@ internal class JointCosignRequestsDelegate @Inject constructor(
     private val transferResolver: JointOperationTransferResolver,
     private val ownerLookupProducer: TxHistoryOwnerLookupProducer,
     private val operationHistoryRepository: JointOperationHistoryRepository,
+    private val displayGate: JointOperationDisplayGate,
 ) {
 
     fun observe(userWalletId: UserWalletId, currency: CryptoCurrency): Flow<JointCosignRequest?> {
@@ -79,6 +82,14 @@ internal class JointCosignRequestsDelegate @Inject constructor(
             network = currency.network,
             safeAddress = safeAddress,
         ) ?: return null
+        val isShown = displayGate.isShown(
+            account = account,
+            jointAccount = jointAccount,
+            operation = operation,
+            network = currency.network,
+            transfer = transfer,
+        )
+        if (!isShown) return null
 
         return JointCosignRequest(
             operation = operation,

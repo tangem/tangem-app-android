@@ -89,6 +89,12 @@ class TangemPayTransactionDetailsSheetPageObject(semanticsProvider: SemanticsNod
         useUnmergedTree = true
     }
 
+    fun cashbackFieldValue(text: String): KNode = child {
+        hasText(text)
+        hasAnyAncestor(withTestTag(TangemPayTestTags.TRANSACTION_DETAILS_CASHBACK_ROW))
+        useUnmergedTree = true
+    }
+
     /** The transaction date, the merchant name and the category are plain texts, so they are pinned to the sheet. */
     fun date(text: String): KNode = sheetText(text)
 

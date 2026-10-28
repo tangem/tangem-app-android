@@ -35,6 +35,7 @@ class EmailMessageBodyResolver(
             -> addPhoneInfoBody()
             is FeedbackEmailType.Visa.Activation -> addUserRequestBody(type.walletMetaInfo)
             is FeedbackEmailType.Visa.DirectUserRequest -> addUserRequestBody(type.walletMetaInfo)
+            is FeedbackEmailType.Visa.MoneyAccountRequest -> addUserRequestBody(type.walletMetaInfo)
             is FeedbackEmailType.Visa.FailedIssueCard -> addTangemPayFailedIssuingCardBody(type)
             is FeedbackEmailType.Visa.Dispute -> addTangemPayDisputeRequestBody(type)
             is FeedbackEmailType.Visa.Withdrawal -> addTangemPayWithdrawalRequestBody(type)

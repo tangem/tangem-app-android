@@ -59,7 +59,7 @@ internal fun withStubUnstakeAction(
             ),
         ).toPersistentList()
     } else {
-        activeStake.pendingActions
+        pendingActions.toPersistentList()
     }
 }
 

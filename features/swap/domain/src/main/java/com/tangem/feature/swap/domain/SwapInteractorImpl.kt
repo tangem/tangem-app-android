@@ -213,7 +213,6 @@ internal class SwapInteractorImpl @Inject constructor(
         swapData: SwapDataModel,
         providerId: String,
     ): Boolean {
-        if (!swapFeatureToggles.isYieldDexTransferEnabled) return true
         if (fromSwapCurrencyStatus.currency !is CryptoCurrency.Token) return true
         if (!fromSwapCurrencyStatus.isYieldSwapActive) return true
         if (resolveSendInsteadOfYieldSwap(fromSwapCurrencyStatus, swapData) != null) return true
@@ -234,8 +233,8 @@ internal class SwapInteractorImpl @Inject constructor(
 
     /**
      * The provider's plain ERC-20 transfer to be performed by the yield module via `send()` instead of
-     * being wrapped into its `swap()`, or `null` when that substitution does not apply: the toggle is
-     * off, a non-yield swap, a coin, a flow with no provider call data, or genuine swap call data.
+     * being wrapped into its `swap()`, or `null` when that substitution does not apply: a non-yield
+     * swap, a coin, a flow with no provider call data, or genuine swap call data.
      *
      * A decodable transfer can only mean the send path here, because [isYieldPayloadConsistent] has
      * already refused every payload where the destination and the call data disagree — see the gate in
@@ -245,7 +244,6 @@ internal class SwapInteractorImpl @Inject constructor(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         swapData: SwapDataModel?,
     ): TransferERC20TokenCallData? {
-        if (!swapFeatureToggles.isYieldDexTransferEnabled) return null
         if (fromSwapCurrencyStatus.currency !is CryptoCurrency.Token) return null
         if (!fromSwapCurrencyStatus.isYieldSwapActive) return null
         val dexTransaction = swapData?.transaction as? ExpressTransactionModel.DEX ?: return null
@@ -269,7 +267,6 @@ internal class SwapInteractorImpl @Inject constructor(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         swapData: SwapDataModel?,
     ): Boolean {
-        if (!swapFeatureToggles.isYieldDexTransferEnabled) return true
         val token = fromSwapCurrencyStatus.currency as? CryptoCurrency.Token ?: return true
         if (!fromSwapCurrencyStatus.isYieldSwapActive) return true
         val dexTransaction = swapData?.transaction as? ExpressTransactionModel.DEX ?: return true
@@ -519,16 +516,6 @@ internal class SwapInteractorImpl @Inject constructor(
         }
 
         val dexRouterSpenderAddress = maybeQuote.getOrNull()?.allowanceContract
-
-        // With transfer detection the registry is checked against the exchange-data payload instead
-        // (isYieldSwapPayloadAllowed): a provider's quote and data are routed independently, so the
-        // quote's router does not tell which contract the module will actually call.
-        val isQuoteRouterGated = isYieldSwap && !swapFeatureToggles.isYieldDexTransferEnabled
-        if (isQuoteRouterGated && dexRouterSpenderAddress != null &&
-            !isYieldSwapRouterAllowed(fromSwapCurrencyStatus, dexRouterSpenderAddress)
-        ) {
-            return null
-        }
 
         val allowanceInfo = spenderAddress?.let { allowanceContract ->
             getAllowanceInfoUseCase(

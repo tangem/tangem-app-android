@@ -27,7 +27,7 @@ import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.sdk.api.TangemSdkManager
-import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsDialogsFactory
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsItemsFactory
@@ -206,7 +206,7 @@ internal class AppSettingsModel @Inject constructor(
         val mode = AppThemeMode.available[index]
         analyticsEventHandler.send(
             event = Settings.AppSettings.ThemeSwitched(
-                theme = AnalyticsParam.AppTheme.fromAppThemeMode(mode),
+                theme = mode.toAnalyticsTheme(),
             ),
         )
         changeAppThemeMode(mode)
@@ -218,9 +218,6 @@ internal class AppSettingsModel @Inject constructor(
     }
 
     private fun onBiometricAuthenticationToggled(isChecked: Boolean) {
-        // TODO : Uncomment and implement analytics event when ready
-        // val param = AnalyticsParam.OnOffState(isChecked)
-        // analyticsEventHandler.send(Settings.AppSettings.BiometricAuthenticationChanged(param))
         if (isChecked) {
             toggleBiometricsAuthentication(enable = true)
         } else {
@@ -237,9 +234,6 @@ internal class AppSettingsModel @Inject constructor(
     }
 
     private fun onRequireAccessCodeToggled(isChecked: Boolean) {
-        // TODO : Uncomment and implement analytics event when ready
-        // val param = AnalyticsParam.OnOffState(isChecked)
-        // analyticsEventHandler.send(Settings.AppSettings.RequireAccessCodeChanged(param))
         if (isChecked) {
             uiMessageSender.send(
                 dialogsFactory.createEnableRequireAccessCodeAlert(
@@ -358,7 +352,7 @@ internal class AppSettingsModel @Inject constructor(
     }
 
     private fun onFlipToHideBalanceToggled(enable: Boolean) {
-        val param = AnalyticsParam.OnOffState(enable)
+        val param = if (enable) AnalyticsParam.OnOffState.On else AnalyticsParam.OnOffState.Off
         analyticsEventHandler.send(Settings.AppSettings.HideBalanceChanged(param))
 
         modelScope.launch {
@@ -409,4 +403,10 @@ internal class AppSettingsModel @Inject constructor(
         val appCurrency: AppCurrency = AppCurrency.Default,
         val local: LocalState = LocalState(),
     )
+}
+
+private fun AppThemeMode.toAnalyticsTheme(): Settings.AppSettings.ThemeSwitched.Theme = when (this) {
+    AppThemeMode.FORCE_DARK -> Settings.AppSettings.ThemeSwitched.Theme.Dark
+    AppThemeMode.FORCE_LIGHT -> Settings.AppSettings.ThemeSwitched.Theme.Light
+    AppThemeMode.FOLLOW_SYSTEM -> Settings.AppSettings.ThemeSwitched.Theme.System
 }
