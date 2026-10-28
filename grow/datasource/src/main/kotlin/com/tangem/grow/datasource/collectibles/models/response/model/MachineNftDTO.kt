@@ -10,6 +10,7 @@ import kotlinx.serialization.Serializable
  * @property insuredValue appraised value **in cents** — 240 means $2.40.
  * @property gradingCompany grader that slabbed the card (e.g. `PSA`); absent for an ungraded collectible.
  */
+// TODO([REDACTED_TASK_KEY]): the backend has no such endpoint yet; likely the same DTO as CollectibleTxResponse.NftWonDTO
 @Serializable
 data class MachineNftDTO(
     @SerialName("id")
@@ -26,8 +27,10 @@ data class MachineNftDTO(
     val gradingCompany: String?,
     @SerialName("gradeNum")
     val gradeNum: String?,
-    @SerialName("image")
-    val image: String?,
+    @SerialName("imageFront")
+    val imageFront: String?,
+    @SerialName("imageBack")
+    val imageBack: String?,
     @SerialName("insured_value")
     val insuredValue: SerializedBigDecimal?,
 )

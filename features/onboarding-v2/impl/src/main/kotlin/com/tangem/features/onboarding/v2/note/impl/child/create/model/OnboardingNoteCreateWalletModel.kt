@@ -61,7 +61,7 @@ internal class OnboardingNoteCreateWalletModel @Inject constructor(
     private fun onCreateWalletClick() {
         modelScope.launch {
             _uiState.update {
-                it.copy(createWalletInProgress = true)
+                it.copy(isCreateWalletInProgress = true)
             }
             val scanResponse = params.childParams.commonState.value.scanResponse ?: return@launch
             when (val result = tangemSdkManager.createProductWallet(scanResponse)) {
@@ -75,7 +75,7 @@ internal class OnboardingNoteCreateWalletModel @Inject constructor(
                     createWalletAndNavigateBackWithDone(scanResponse.copy(card = result.data.card))
                 }
                 is CompletionResult.Failure -> _uiState.update {
-                    it.copy(createWalletInProgress = false)
+                    it.copy(isCreateWalletInProgress = false)
                 }
             }
         }
@@ -92,7 +92,7 @@ internal class OnboardingNoteCreateWalletModel @Inject constructor(
                 params.onWalletCreated(userWallet)
             }
             _uiState.update {
-                it.copy(createWalletInProgress = false)
+                it.copy(isCreateWalletInProgress = false)
             }
         }
     }

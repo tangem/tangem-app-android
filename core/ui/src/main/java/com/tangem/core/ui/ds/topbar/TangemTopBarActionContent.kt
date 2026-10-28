@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.conditionalCompose
@@ -35,14 +36,14 @@ fun TangemTopBarActionContent(
         stop = TangemTheme.colors2.button.backgroundSecondary,
         fraction = actionUM.ghostModeProgress,
     )
-    val padding = (TangemTheme.dimens2.x11 - type.getSideContentSize()) / 2
+    val padding = (44.dp - type.getSideContentSize()) / 2
 
     Icon(
         imageVector = ImageVector.vectorResource(id = actionUM.iconRes),
         contentDescription = null,
         tint = TangemTheme.colors2.graphic.neutral.primary,
         modifier = modifier
-            .size(TangemTheme.dimens2.x11)
+            .size(44.dp)
             .clip(CircleShape)
             .conditional(actionUM.isActionable) { background(background) }
             .conditionalCompose(actionUM.isActionable && actionUM.onClick != null) {

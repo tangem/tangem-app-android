@@ -6,6 +6,11 @@ import java.math.BigDecimal
 
 @JsonClass(generateAdapter = true)
 data class PolymarketPositionsValueResponse(
-    @Json(name = "user") val user: String?,
-    @Json(name = "value") val value: BigDecimal,
-)
+    @Json(name = "data") val data: Data,
+) {
+
+    @JsonClass(generateAdapter = true)
+    data class Data(
+        @Json(name = "value") val value: BigDecimal,
+    )
+}

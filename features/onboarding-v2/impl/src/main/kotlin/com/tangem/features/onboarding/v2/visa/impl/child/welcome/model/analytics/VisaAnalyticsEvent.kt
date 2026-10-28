@@ -8,7 +8,7 @@ internal const val MAIN_SOURCE = "Main"
 
 internal sealed class VisaAnalyticsEvent(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent("Visa", event, params) {
 
     data class ErrorOnboarding(val error: UniversalError) : VisaAnalyticsEvent(

@@ -6,6 +6,7 @@ import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PolymarketPositionsError
 import com.tangem.domain.polymarket.model.PolymarketPositionsPage
+import com.tangem.domain.polymarket.model.PolymarketPositionsPageRequest
 import com.tangem.domain.polymarket.model.PolymarketPositionsBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketPositionsBatchingContext
 import java.math.BigDecimal
@@ -16,18 +17,16 @@ interface PolymarketPositionsRepository {
     /** Each invocation owns its pagination state, independently of other wallets or tabs. */
     fun getPositionsBatchFlow(context: PolymarketPositionsBatchingContext, batchSize: Int): PolymarketPositionsBatchFlow
 
-    /** Open holdings sorted by endDate ascending; undated holdings come first. Limit is 1..30. */
+    /** Open holdings, most valuable first. The first page takes a limit of 1..30. */
     suspend fun getOpenPositions(
         addresses: PolymarketAddresses,
-        limit: Int,
-        offset: Int,
+        request: PolymarketPositionsPageRequest,
     ): Either<PolymarketPositionsError, PolymarketPositionsPage<PolymarketPosition.Open>>
 
-    /** History sorted by closedAt descending. Limit is 1..30; offset is 0..10000 on both lists. */
+    /** History, most recently closed first. Paged like [getOpenPositions]. */
     suspend fun getClosedPositions(
         addresses: PolymarketAddresses,
-        limit: Int,
-        offset: Int,
+        request: PolymarketPositionsPageRequest,
     ): Either<PolymarketPositionsError, PolymarketPositionsPage<PolymarketPosition.Closed>>
 
     /** A successful null is absence (or indexing delay after an order), not a transport failure. */

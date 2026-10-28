@@ -59,7 +59,6 @@ dependencies {
     // region Core modules
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
-    implementation(projects.core.configToggles)
     implementation(projects.core.local)
     implementation(projects.core.remote)
     implementation(projects.core.utils)

@@ -1,17 +1,19 @@
 package com.tangem.data.jointaccount.usecase
 
-import com.tangem.domain.jointaccount.model.SafeGasToken
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.data.jointaccount.safe.DefaultJointTransferPayloadCodec
+import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
+import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.jointaccount.gas.SafeTxGasBuilder
-import com.tangem.data.jointaccount.safe.DefaultJointTransferPayloadCodec
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.jointaccount.model.JointOperationSigningError
 import com.tangem.domain.jointaccount.model.JointTransferIntent
+import com.tangem.domain.jointaccount.model.SafeGasToken
 import com.tangem.domain.jointaccount.model.SafeInnerCall
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.network.JointNetworkReader
@@ -19,10 +21,11 @@ import com.tangem.domain.jointaccount.repository.JointAccountRepository
 import com.tangem.domain.jointaccount.safe.SafeCompositionChecker
 import com.tangem.domain.jointaccount.safe.SafeDeployment
 import com.tangem.domain.jointaccount.signing.JointOperationSigner
-import com.tangem.domain.jointaccount.usecase.CreateJointOperationUseCase
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
+import com.tangem.domain.jointaccount.usecase.CreateJointOperationUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.network.Network
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.MockAccounts
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -30,13 +33,14 @@ import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.mockk
 import io.mockk.slot
+import java.math.BigDecimal
+import java.math.BigInteger
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import java.math.BigDecimal
-import java.math.BigInteger
+import org.junit.jupiter.params.ParameterizedTest
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class CreateJointOperationUseCaseTest {
@@ -48,6 +52,8 @@ internal class CreateJointOperationUseCaseTest {
     private val gasBuilder: SafeTxGasBuilder = mockk()
     private val compositionChecker: SafeCompositionChecker = mockk()
     private val networkReader: JointNetworkReader = mockk()
+    private val blockaidGate: JointOperationBlockaidGate = mockk()
+    private val ownerAddressResolver: JointOwnerAddressResolver = mockk()
     private val network: Network = mockk()
 
     private val useCase = CreateJointOperationUseCase(
@@ -59,6 +65,8 @@ internal class CreateJointOperationUseCaseTest {
         compositionChecker = compositionChecker,
         networkReader = networkReader,
         payloadCodec = DefaultJointTransferPayloadCodec(),
+        blockaidGate = blockaidGate,
+        ownerAddressResolver = ownerAddressResolver,
     )
 
     private val account = MockAccounts.createJointAccount(ownerKeyIndex = 3)
@@ -66,7 +74,21 @@ internal class CreateJointOperationUseCaseTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(repository, signer, fetcher, supplier, gasBuilder, compositionChecker, networkReader)
+        clearMocks(
+            repository,
+            signer,
+            fetcher,
+            supplier,
+            gasBuilder,
+            compositionChecker,
+            networkReader,
+            blockaidGate,
+            ownerAddressResolver,
+        )
+        coEvery { ownerAddressResolver.resolve(MockAccounts.userWalletId, account.ownerKeyIndex) } returns
+            ALICE.right()
+        coEvery { blockaidGate.verify(any(), any(), any(), any(), any(), any()) } returns
+            JointOperationBlockaidGate.Verdict.SAFE
         coEvery { fetcher.invoke(params = any()) } returns Unit.right()
         coEvery { supplier.invoke(userWalletId = MockAccounts.userWalletId) } returns
             flowOf(listOf(jointAccount()))
@@ -107,6 +129,14 @@ internal class CreateJointOperationUseCaseTest {
                 network = network,
                 call = any(),
                 gasToken = SafeGasToken.Coin,
+            )
+            blockaidGate.verify(
+                network = network,
+                safeTx = safeTx(),
+                chainId = CHAIN_ID,
+                safeAddress = SAFE_ADDRESS,
+                ownerAddress = ALICE,
+                deployment = SafeDeployment.DEPLOYED,
             )
             signer.signOperation(
                 userWalletId = MockAccounts.userWalletId,
@@ -192,6 +222,78 @@ internal class CreateJointOperationUseCaseTest {
         assertThat(actual).isEqualTo(JointOperationCreateError.CompositionMismatch.left())
         coVerify(exactly = 0) { signer.signOperation(any(), any(), any(), any(), any()) }
         coVerify(exactly = 0) { repository.createOperation(any(), any(), any(), any(), any()) }
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN a blockaid verdict WHEN invoke THEN only a clear one lets the initiator sign`(model: VerdictModel) =
+        runTest {
+            // Arrange
+            coEvery { blockaidGate.verify(any(), any(), any(), any(), any(), any()) } returns model.verdict
+
+            // Act
+            val actual = useCase(account = account, network = network, intent = intent, gasToken = SafeGasToken.Coin)
+
+            // Assert
+            assertThat(actual.isRight()).isEqualTo(model.isSigned)
+            if (model.expectedError != null) assertThat(actual.leftOrNull()).isInstanceOf(model.expectedError)
+            coVerify(exactly = if (model.isSigned) 1 else 0) { signer.signOperation(any(), any(), any(), any(), any()) }
+        }
+
+    internal data class VerdictModel(
+        val verdict: JointOperationBlockaidGate.Verdict,
+        val isSigned: Boolean,
+        val expectedError: Class<out JointOperationCreateError>?,
+    )
+
+    private fun provideTestModels() = listOf(
+        VerdictModel(JointOperationBlockaidGate.Verdict.SAFE, isSigned = true, expectedError = null),
+        VerdictModel(JointOperationBlockaidGate.Verdict.WARNING, isSigned = true, expectedError = null),
+        VerdictModel(
+            verdict = JointOperationBlockaidGate.Verdict.MALICIOUS,
+            isSigned = false,
+            expectedError = JointOperationCreateError.Malicious::class.java,
+        ),
+        VerdictModel(
+            verdict = JointOperationBlockaidGate.Verdict.UNAVAILABLE,
+            isSigned = false,
+            expectedError = JointOperationCreateError.Failed::class.java,
+        ),
+        VerdictModel(
+            verdict = JointOperationBlockaidGate.Verdict.UNKNOWN,
+            isSigned = false,
+            expectedError = JointOperationCreateError.Failed::class.java,
+        ),
+    )
+
+    @Test
+    fun `GIVEN a safe not deployed yet WHEN invoke THEN blockaid checks the first operation as such`() = runTest {
+        // Arrange
+        coEvery { compositionChecker.ensureMatches(any(), any(), any(), any(), any()) } returns
+            SafeDeployment.NOT_DEPLOYED.right()
+
+        // Act
+        useCase(account = account, network = network, intent = intent, gasToken = SafeGasToken.Coin)
+
+        // Assert
+        coVerify(exactly = 1) {
+            blockaidGate.verify(any(), any(), any(), any(), any(), deployment = SafeDeployment.NOT_DEPLOYED)
+        }
+    }
+
+    @Test
+    fun `GIVEN owner key not derived WHEN invoke THEN nothing is checked or signed`() = runTest {
+        // Arrange
+        coEvery { ownerAddressResolver.resolve(MockAccounts.userWalletId, account.ownerKeyIndex) } returns
+            null.right()
+
+        // Act
+        val actual = useCase(account = account, network = network, intent = intent, gasToken = SafeGasToken.Coin)
+
+        // Assert
+        assertThat(actual.leftOrNull()).isInstanceOf(JointOperationCreateError.Failed::class.java)
+        coVerify(exactly = 0) { blockaidGate.verify(any(), any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { signer.signOperation(any(), any(), any(), any(), any()) }
     }
 
     @Test

@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
@@ -17,7 +18,6 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.onramp.paymentmethod.SelectPaymentMethodComponent
 import com.tangem.features.onramp.providers.entity.ProviderListBottomSheetConfig
 import com.tangem.features.onramp.providers.model.SelectProviderModel
@@ -63,7 +63,7 @@ internal class DefaultSelectProviderComponent @AssistedInject constructor(
                 SelectProviderBottomSheetContent(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = TangemTheme.dimens.spacing16),
+                        .padding(horizontal = 16.dp),
                     state = state,
                 )
             },

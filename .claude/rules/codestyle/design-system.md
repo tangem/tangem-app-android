@@ -10,21 +10,20 @@ paths:
 # Design System
 
 The app currently hosts **three generations of the design system (DS)** side by side. They differ by
-folder, token set (colors / typography / dimensions), and the `@Preview` wrapper. Knowing which
+folder, token set (colors / typography), and the `@Preview` wrapper. Knowing which
 generation a component belongs to is essential so you don't mix tokens or pull the wrong building blocks.
 
 ## Three generations
 
-| Generation | Folder | Colors | Typography | Dimensions | Preview wrapper |
-|---|---|---|---|---|---|
-| **DS1** (legacy) | `core/ui/src/main/java/com/tangem/core/ui/components/` | `TangemTheme.colors` | `TangemTheme.typography` | `TangemTheme.dimens` | `TangemThemePreview` |
-| **DS2** (redesign) | `core/ui/src/main/java/com/tangem/core/ui/ds/` | `TangemTheme.colors2` | `TangemTheme.typography2` | `TangemTheme.dimens2` | `TangemThemePreviewRedesign` |
-| **DS3** (target) | `core/ui/src/main/java/com/tangem/core/ui/ds2/` | `TangemTheme.colors3` | `TangemTheme.typography3` | literal `.dp` (no token) | `TangemThemePreviewRedesign` |
+| Generation | Folder | Colors | Typography | Preview wrapper |
+|---|---|---|---|---|
+| **DS1** (legacy) | `core/ui/src/main/java/com/tangem/core/ui/components/` | `TangemTheme.colors` | `TangemTheme.typography` | `TangemThemePreview` |
+| **DS2** (redesign) | `core/ui/src/main/java/com/tangem/core/ui/ds/` | `TangemTheme.colors2` | `TangemTheme.typography2` | `TangemThemePreviewRedesign` |
+| **DS3** (target) | `core/ui/src/main/java/com/tangem/core/ui/ds2/` | `TangemTheme.colors3` | `TangemTheme.typography3` | `TangemThemePreviewRedesign` |
 
 > Mind the numbering mismatch: **folder `ds` is DS2**, **folder `ds2` is DS3**.
 > The `colors2` / `typography2` tokens are `@Deprecated` (ReplaceWith `colors3` / `typography3`).
-> **DS3 has no dimension token** — `dimens2` is a DS2 token and must **not** be used in `ds2/`
-> components. Express dimensions as literal `.dp` values (see rule 2 below).
+> No generation has a dimension token — dimensions are always literal `.dp` values.
 
 - **DS1** — the entire current app is built on it. Do **not** add new components here.
 - **DS2** — redesign components. A transitional generation; don't write new components in it, only
@@ -52,8 +51,7 @@ Pattern rules:
 1. **Package & location.** `com.tangem.core.ui.ds2.<component>`, folder
    `core/ui/.../ds2/<component>/`. The component name is `Tangem<Name>`.
 2. **DS3 tokens only.** Colors — `TangemTheme.colors3.*`, text — `TangemTheme.typography3.*`. No
-   `colors` / `colors2` and no hardcoded colors outside `@Preview`. **Dimensions have no DS3 token** —
-   do **not** use `TangemTheme.dimens2.*` (it is a DS2 token); express dimensions as literal `.dp`
+   `colors` / `colors2` and no hardcoded colors outside `@Preview`. Express dimensions as literal `.dp`
    values and add `@Suppress("MagicNumber")` to the composable (or a `…Ext.kt` / `…Internal.kt` token
    holder, as `TangemButtonInternal.kt` and `TangemCheckmark.kt` do).
 3. **Signature.** `modifier: Modifier = Modifier` is mandatory (defaulting to `Modifier`, placed first
@@ -188,7 +186,7 @@ Page layout guidelines live in
 - [ ] Component created under `core/ui/.../ds2/<component>/`, package `com.tangem.core.ui.ds2.<component>`.
 - [ ] Named `Tangem<Name>`; first optional parameter is `modifier: Modifier = Modifier`.
 - [ ] Uses **only** DS3 tokens: `colors3`, `typography3`. No hardcoded colors outside previews. Dimensions
-      are literal `.dp` (DS3 has no dimension token — never use `dimens2`), with `@Suppress("MagicNumber")`.
+      are literal `.dp`, with `@Suppress("MagicNumber")`.
 - [ ] Variants/sizes expressed as an `enum` inside `object Tangem<Name>` (not a set of boolean flags).
 - [ ] All public types (enums, statuses, constants) declared inside the `object Tangem<Name>`.
 - [ ] `val version = DsVersion(…)` declared in the object, and the same value in the KDoc `Version:`

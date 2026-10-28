@@ -84,7 +84,9 @@ internal fun McpPairBottomSheet(
 private fun RouteContent(stack: ChildStack<McpPairRoutes, ComposableContentComponent>) {
     val contentModifier = Modifier.padding(horizontal = 16.dp)
     when (stack.active.configuration) {
-        McpPairRoutes.PortfolioSelector -> stack.active.instance.Content(modifier = contentModifier)
+        McpPairRoutes.PortfolioSelector -> stack.active.instance.Content(
+            modifier = contentModifier.padding(vertical = 16.dp),
+        )
         // The selector renders its own list, so only the other routes may scroll.
         McpPairRoutes.AgentInfo,
         McpPairRoutes.Success,

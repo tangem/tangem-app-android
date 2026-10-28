@@ -11,6 +11,7 @@ import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.res.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -70,10 +71,10 @@ private fun AddFundsOptionIcon(icon: ImageVector) {
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .background(color = TangemTheme.colors3.bg.status.infoSubtle, shape = CircleShape)
-            .size(TangemTheme.dimens2.x10),
+            .size(40.dp),
     ) {
         TangemIcon(
-            modifier = Modifier.size(TangemTheme.dimens2.x5),
+            modifier = Modifier.size(20.dp),
             tangemIconUM = TangemIconUM.Icon(
                 imageVector = icon,
                 tintReference = { TangemTheme.colors3.icon.brand },

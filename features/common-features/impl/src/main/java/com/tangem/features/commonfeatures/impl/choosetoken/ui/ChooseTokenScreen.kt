@@ -342,7 +342,7 @@ private fun WalletTabItem(state: WalletTabUM, modifier: Modifier = Modifier) {
     val countBackground = if (isSelected) {
         TangemTheme.colors3.bg.tertiary.copy(alpha = 0.2f)
     } else {
-        TangemTheme.colors3.bg.opaque.secondary
+        TangemTheme.colors3.bg.transparent.secondary
     }
 
     Row(
@@ -700,7 +700,7 @@ private fun AccountExpandButton(modifier: Modifier = Modifier) {
         modifier = modifier
             .size(36.dp)
             .clip(CircleShape)
-            .background(TangemTheme.colors3.bg.opaque.secondary),
+            .background(TangemTheme.colors3.bg.transparent.secondary),
         contentAlignment = Alignment.Center,
     ) {
         Icon(

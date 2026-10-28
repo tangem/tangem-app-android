@@ -2,11 +2,15 @@ package com.tangem.google.drive.di
 
 import android.content.Context
 import com.tangem.core.local.connection.NetworkConnectionManager
+import com.tangem.datasource.utils.AppDataStoreFactory
+import com.tangem.datasource.utils.create
 import com.tangem.google.auth.GoogleIdentityAuthorizer
 import com.tangem.google.drive.AppDataDrive
 import com.tangem.google.drive.DefaultGoogleDriveTokenProvider
 import com.tangem.google.drive.GoogleDriveApi
 import com.tangem.google.drive.GoogleDriveTokenProvider
+import com.tangem.google.drive.store.DefaultDriveAccountStore
+import com.tangem.google.drive.store.DriveAccountStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -56,13 +60,11 @@ internal object GoogleDriveModule {
     @Singleton
     fun provideGoogleDriveTokenProvider(
         authorizer: GoogleIdentityAuthorizer,
-        api: GoogleDriveApi,
         @ApplicationContext context: Context,
         networkConnectionManager: NetworkConnectionManager,
     ): GoogleDriveTokenProvider {
         return DefaultGoogleDriveTokenProvider(
             authorizer = authorizer,
-            api = api,
             context = context,
             networkConnectionManager = networkConnectionManager,
             scopes = listOf(DefaultGoogleDriveTokenProvider.DRIVE_FILE_SCOPE),
@@ -74,16 +76,30 @@ internal object GoogleDriveModule {
     @AppDataDrive
     fun provideAppDataDriveTokenProvider(
         authorizer: GoogleIdentityAuthorizer,
-        api: GoogleDriveApi,
         @ApplicationContext context: Context,
         networkConnectionManager: NetworkConnectionManager,
     ): GoogleDriveTokenProvider {
         return DefaultGoogleDriveTokenProvider(
             authorizer = authorizer,
-            api = api,
             context = context,
             networkConnectionManager = networkConnectionManager,
             scopes = listOf(DefaultGoogleDriveTokenProvider.DRIVE_APP_DATA_SCOPE),
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideDriveAccountStore(dataStoreFactory: AppDataStoreFactory): DriveAccountStore =
+        createDriveAccountStore(dataStoreFactory, fileName = "drive_file_wallet_accounts")
+
+    @Provides
+    @Singleton
+    @AppDataDrive
+    fun provideAppDataDriveAccountStore(dataStoreFactory: AppDataStoreFactory): DriveAccountStore =
+        createDriveAccountStore(dataStoreFactory, fileName = "drive_appdata_wallet_accounts")
+
+    private fun createDriveAccountStore(dataStoreFactory: AppDataStoreFactory, fileName: String): DriveAccountStore {
+        val dataStore = dataStoreFactory.create(defaultValue = emptyMap<String, String>(), fileName = fileName)
+        return DefaultDriveAccountStore(dataStore = dataStore)
     }
 }

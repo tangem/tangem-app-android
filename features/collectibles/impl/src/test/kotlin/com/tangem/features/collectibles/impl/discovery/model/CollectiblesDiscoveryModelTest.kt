@@ -559,8 +559,8 @@ internal class CollectiblesDiscoveryModelTest {
                     collectibleGachaMachines = listOf(createMachine()),
                     requestCursor = null,
                 ),
-                empty = false,
-                last = last,
+                isEmpty = false,
+                isLast = last,
             ),
         ),
     )

@@ -6,9 +6,13 @@ import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetDsl
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
+import com.tangem.core.ui.components.bottomsheets.message.OLD_DSL_DEPRECATION
 import com.tangem.core.ui.components.bottomsheets.message.messageBottomSheetUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.modal.MessageModalBuilder
+import com.tangem.core.ui.message.modal.MessageModalUM
+import com.tangem.core.ui.message.modal.messageModalUM
 
 /**
  * Event that is used to show a message in the UI.
@@ -173,8 +177,29 @@ data class BottomSheetMessage(
  *
  * @return [BottomSheetMessage] with the specified content.
  */
+@Deprecated(
+    message = OLD_DSL_DEPRECATION,
+    replaceWith = ReplaceWith("modalMessage(init)", "com.tangem.core.ui.message.modalMessage"),
+)
 fun bottomSheetMessage(init: @MessageBottomSheetDsl MessageBottomSheetUM.() -> Unit) =
     BottomSheetMessage(messageBottomSheetUM(init))
+
+/**
+ * Shows a [com.tangem.core.ui.message.modal.MessageModal].
+ *
+ * @param messageModalUM The content of the modal.
+ * */
+@Immutable
+data class ModalMessage(
+    val messageModalUM: MessageModalUM,
+) : EventMessage
+
+/**
+ * Builder for [ModalMessage]. See [messageModalUM] for the DSL.
+ *
+ * @return [ModalMessage] with the specified content.
+ */
+fun modalMessage(init: MessageModalBuilder.() -> Unit) = ModalMessage(messageModalUM(init))
 
 /**
  * Represents an action button in the dialog.

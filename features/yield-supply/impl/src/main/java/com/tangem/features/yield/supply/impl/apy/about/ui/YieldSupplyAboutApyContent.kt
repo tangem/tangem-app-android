@@ -30,7 +30,7 @@ import com.tangem.features.yield.supply.impl.common.formatter.formatApy
 import java.math.BigDecimal
 
 @Composable
-internal fun YieldSupplyAboutApyContent(baseApy: BigDecimal, rewardsApr: BigDecimal, onDismiss: () -> Unit) {
+internal fun YieldSupplyAboutApyContent(baseApy: BigDecimal, rewardsApy: BigDecimal, onDismiss: () -> Unit) {
     TangemModalBottomSheet<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
             isShown = true,
@@ -75,7 +75,7 @@ internal fun YieldSupplyAboutApyContent(baseApy: BigDecimal, rewardsApr: BigDeci
                     )
                     ApyBreakdownRow(
                         title = stringResourceSafe(R.string.yield_module_about_apy_extra_rewards_title),
-                        value = rewardsApr.formatApy().resolveReference(),
+                        value = rewardsApy.formatApy().resolveReference(),
                     )
                 }
             }
@@ -113,7 +113,7 @@ private fun YieldSupplyAboutApyContentPreview() {
     TangemThemePreview {
         YieldSupplyAboutApyContent(
             baseApy = BigDecimal("3.09"),
-            rewardsApr = BigDecimal("1.4"),
+            rewardsApy = BigDecimal("1.4"),
             onDismiss = {},
         )
     }

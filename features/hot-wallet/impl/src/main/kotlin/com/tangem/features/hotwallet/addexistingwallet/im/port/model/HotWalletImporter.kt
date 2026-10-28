@@ -115,7 +115,7 @@ internal class HotWalletImporter @Inject constructor(
         userWallet: UserWallet.Hot,
         isSeedPhraseBackedUp: Boolean,
     ): Either<HotWalletImportError, Unit> =
-        saveUserWalletUseCase.invoke(userWallet.copy(backedUp = isSeedPhraseBackedUp)).mapLeft { error ->
+        saveUserWalletUseCase.invoke(userWallet.copy(isBackedUp = isSeedPhraseBackedUp)).mapLeft { error ->
             when (error) {
                 is SaveWalletError.DataError -> {
                     TangemLogger.e("Unable to save user wallet: $error")

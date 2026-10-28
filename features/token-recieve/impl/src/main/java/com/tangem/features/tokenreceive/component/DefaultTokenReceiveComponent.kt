@@ -70,12 +70,13 @@ internal class DefaultTokenReceiveComponent @AssistedInject constructor(
             componentContext = componentContext,
             router = innerRouter,
         )
+        val params = model.params
         return when (config) {
             is TokenReceiveRoutes.QrCode -> TokenReceiveQrCodeComponent(
                 appComponentContext = appComponentContext,
                 params = TokenReceiveQrCodeComponent.TokenReceiveQrCodeParams(
-                    type = model.params.config.type,
-                    cryptoCurrency = model.params.config.cryptoCurrency,
+                    type = params.config.type,
+                    cryptoCurrency = params.config.cryptoCurrency,
                     address = model.state.value.addresses.find { it.value == config.address } ?: error(
                         "Address has to be there",
                     ),
@@ -90,8 +91,8 @@ internal class DefaultTokenReceiveComponent @AssistedInject constructor(
                     callback = model,
                     onDismiss = ::dismiss,
                     notificationConfigs = model.state.value.notificationConfigs,
-                    showMemoDisclaimer = model.params.config.showMemoDisclaimer,
-                    fullName = model.params.config.cryptoCurrency.network.name,
+                    shouldShowMemoDisclaimer = params.config.shouldShowMemoDisclaimer,
+                    fullName = params.config.cryptoCurrency.network.name,
                     tokenName = model.getTokenName(),
                     currencyIconState = model.state.value.iconState,
                 ),
@@ -102,7 +103,7 @@ internal class DefaultTokenReceiveComponent @AssistedInject constructor(
                     iconState = model.state.value.iconState,
                     callback = model,
                     onDismiss = ::dismiss,
-                    network = model.params.config.cryptoCurrency.network,
+                    network = params.config.cryptoCurrency.network,
                 ),
             )
         }

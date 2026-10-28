@@ -56,7 +56,7 @@ fun FeeExtendedSelectorContent(state: FeeExtendedSelectorUM, modifier: Modifier 
     ) {
         TokenItem(
             modifier = Modifier
-                .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
+                .clip(RoundedCornerShape(14.dp))
                 .background(color = TangemTheme.colors.background.action),
             state = state.token,
             isBalanceHidden = false,
@@ -71,13 +71,13 @@ fun FeeExtendedSelectorContent(state: FeeExtendedSelectorUM, modifier: Modifier 
         RegularFeeItemContent(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
+                .clip(RoundedCornerShape(14.dp))
                 .conditional(isChooseSpeedAvailable) {
                     clickable(onClick = state.onFeeClick)
                 }
                 .background(
                     TangemTheme.colors.background.action,
-                    RoundedCornerShape(TangemTheme.dimens.radius14),
+                    RoundedCornerShape(14.dp),
                 ),
             title = state.fee.title,
             iconRes = state.fee.iconRes,

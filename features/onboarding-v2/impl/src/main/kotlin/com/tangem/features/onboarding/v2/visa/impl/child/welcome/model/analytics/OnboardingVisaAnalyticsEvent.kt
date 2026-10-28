@@ -4,7 +4,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 
 internal sealed class OnboardingVisaAnalyticsEvent(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent("Onboarding / Visa", event, params) {
 
     class ActivationScreenOpened : OnboardingVisaAnalyticsEvent(

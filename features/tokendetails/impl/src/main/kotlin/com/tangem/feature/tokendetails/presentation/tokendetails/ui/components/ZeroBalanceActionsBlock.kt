@@ -22,8 +22,8 @@ internal fun ZeroBalanceActionsBlock(state: ZeroBalanceActionsUM, modifier: Modi
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(bottom = TangemTheme.dimens2.x6),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+            .padding(bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         ActionRow(
             iconRes = CoreR.drawable.ic_credit_card_20,

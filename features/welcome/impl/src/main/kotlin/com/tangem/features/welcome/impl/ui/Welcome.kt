@@ -29,10 +29,10 @@ internal fun Welcome(state: WelcomeUM, modifier: Modifier = Modifier) {
             contentKey = { it::class.java.simpleName },
         ) { st ->
             when (st) {
-                is WelcomeUM.Plain -> WelcomePlain(modifier = modifier)
+                is WelcomeUM.Plain -> WelcomePlain(modifier = Modifier.fillMaxSize())
                 is WelcomeUM.SelectWallet -> WelcomeSelectWallet(
                     state = st,
-                    modifier = modifier,
+                    modifier = Modifier.fillMaxSize(),
                 )
                 WelcomeUM.Empty -> {}
             }

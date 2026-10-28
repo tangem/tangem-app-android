@@ -11,6 +11,7 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.features.txhistory.converter.toSubtitle
 import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.joint.requests.model.JointCosignRequest
 import com.tangem.utils.StringsSigns
@@ -24,7 +25,6 @@ internal class JointCosignRequestConverter(
 
     override fun convert(value: JointCosignRequest): TransactionItemUM {
         val operationId = value.operation.operationId
-        val recipient = value.transfer.intent.recipient
         val startedAt = value.operation.startedAtMillis()
         val isPendingSignature = value.operation.status == JointOperation.Status.AWAITING_SIGNATURES
 
@@ -45,10 +45,7 @@ internal class JointCosignRequestConverter(
             direction = TransactionItemUM.Content.Direction.OUTGOING,
             icon = TxIcon.Vector(Icons.ic_arrow_up_20),
             title = resourceReference(R.string.common_sending),
-            subtitle = ContentSubtitle.ExternalAddress(
-                direction = ContentSubtitle.Direction.TO,
-                rawAddress = recipient,
-            ),
+            subtitle = value.recipient.toSubtitle(direction = ContentSubtitle.Direction.TO),
             timestamp = startedAt ?: 0L,
             onClick = { onClick(operationId) },
         )

@@ -11,6 +11,8 @@ import arrow.core.Either
  */
 interface GoogleAuthorizer {
 
+    val selectedAccountName: String?
+
     /**
      * Requests authorization for the given OAuth [scopes] and returns an access token.
      *
@@ -24,6 +26,13 @@ interface GoogleAuthorizer {
     suspend fun authorize(
         scopes: List<GoogleAuthScope>,
         interactive: Boolean = true,
+    ): Either<GoogleAuthError, GoogleAuthResult>
+
+    /** Bypasses the pinned account without changing it, and never shows the account picker. */
+    suspend fun authorizeAccount(
+        accountName: String?,
+        scopes: List<GoogleAuthScope>,
+        interactive: Boolean,
     ): Either<GoogleAuthError, GoogleAuthResult>
 
     /**

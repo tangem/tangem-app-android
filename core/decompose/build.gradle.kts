@@ -31,4 +31,8 @@ dependencies {
     // region Core modules
     api(projects.core.utils)
     // endregion
+
+    // region Tests
+    testImplementation(projects.test.core)
+    // endregion
 }

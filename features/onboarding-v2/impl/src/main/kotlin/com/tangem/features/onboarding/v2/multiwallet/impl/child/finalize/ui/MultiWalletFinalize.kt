@@ -38,9 +38,9 @@ internal fun MultiWalletFinalize(state: MultiWalletFinalizeUM, modifier: Modifie
                 modifier = Modifier.padding(top = 16.dp),
                 text = stringResourceSafe(
                     when {
-                        state.scanPrimary && state.isRing -> R.string.common_origin_ring
-                        state.scanPrimary && state.isRing.not() -> R.string.common_origin_card
-                        state.scanPrimary.not() && state.isRing -> R.string.onboarding_title_backup_ring
+                        state.shouldScanPrimary && state.isRing -> R.string.common_origin_ring
+                        state.shouldScanPrimary && state.isRing.not() -> R.string.common_origin_card
+                        state.shouldScanPrimary.not() && state.isRing -> R.string.onboarding_title_backup_ring
                         else -> R.string.onboarding_title_backup_card
                     },
                 ),

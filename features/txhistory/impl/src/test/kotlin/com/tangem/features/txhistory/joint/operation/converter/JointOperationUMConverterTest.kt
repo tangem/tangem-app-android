@@ -17,9 +17,14 @@ import com.tangem.domain.jointaccount.model.JointOperationSignerState
 import com.tangem.domain.jointaccount.model.JointOperationSignerState.Answer
 import com.tangem.domain.jointaccount.model.JointTransferIntent
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
+import com.tangem.common.ui.account.toUM
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
+import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.joint.operation.model.JointOperationFiat
+import com.tangem.features.txhistory.joint.operation.model.JointOperationRecipient
 import com.tangem.features.txhistory.joint.operation.model.JointOperationState
+import com.tangem.features.txhistory.model.ResolvedOwner
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.MockAccounts
 import org.junit.jupiter.api.Test
@@ -208,6 +213,29 @@ internal class JointOperationUMConverterTest {
         assertThat(actual.counterparty?.title).isEqualTo(TxHistoryDetailsUM.CounterpartyTitle.Address(LONG_RECIPIENT))
     }
 
+    @Test
+    fun `GIVEN the recipient is an own account WHEN converted THEN the card shows its name and icon`() {
+        // Arrange
+        val account = MockAccounts.createAccount(derivationIndex = 0)
+
+        // Act
+        val actual = converter.convert(input(state(isSending = false), recipient = ResolvedOwner.OwnAccount(account)))
+
+        // Assert
+        val name = account.accountName.toUM().value
+        assertThat(actual.counterparty).isEqualTo(
+            TxHistoryDetailsUM.CounterpartyUM(
+                label = resourceReference(R.string.send_recipient),
+                title = TxHistoryDetailsUM.CounterpartyTitle.Name(name),
+                avatar = TxHistoryDetailsUM.CounterpartyAvatar.Account(
+                    name = name,
+                    icon = CryptoPortfolioIconConverter.convert(account.icon),
+                ),
+                onCopyClick = actual.counterparty!!.onCopyClick,
+            ),
+        )
+    }
+
     data class HoldToConfirmModel(val description: String, val input: JointOperationUMConverter.Input, val expected: Boolean) {
         override fun toString() = description
     }
@@ -240,12 +268,13 @@ internal class JointOperationUMConverterTest {
         hasAnswered: Boolean = false,
         isColdWallet: Boolean = true,
         fiatRate: BigDecimal? = null,
+        recipient: ResolvedOwner = ResolvedOwner.External(state.displayed.recipient),
     ) = JointOperationUMConverter.Input(
         state = state,
         isSigning = false,
         isRefusing = false,
         hasAnswered = hasAnswered,
-        canCreateContact = true,
+        recipient = JointOperationRecipient(owner = recipient, canCreateContact = true),
         isBalanceHidden = false,
         isColdWallet = isColdWallet,
         fiat = JointOperationFiat(rate = fiatRate, appCurrency = AppCurrency(name = "US Dollar", code = "USD", symbol = "$")),

@@ -17,13 +17,16 @@ internal class PredictionTopUpLimitsResolver @Inject constructor(
     private val getCurrencyUSDQuoteUseCase: GetCurrencyUSDQuoteUseCase,
 ) {
 
-    /** @return limits in units of [receiveCurrency], or `null` when the minimum or a positive USD quote is unknown */
+    /**
+     * @return limits in units of [receiveCurrency], converted at one USD per token when its quote is unknown, or
+     *  `null` when the bridge named no minimum for [receiveCurrency]
+     */
     suspend fun resolve(userWalletId: UserWalletId, receiveCurrency: CryptoCurrency): PredictionTopUpLimits? {
-        val minimumUsd = getPredictionTopUpMinimumUseCase(userWalletId) ?: return null
+        val minimumUsd = getPredictionTopUpMinimumUseCase(userWalletId, receiveCurrency) ?: return null
         val usdRate = receiveCurrency.id.rawCurrencyId
             ?.let { getCurrencyUSDQuoteUseCase(it) }
             ?.takeIf { it.signum() > 0 }
-            ?: return null
+            ?: BigDecimal.ONE
         fun BigDecimal.inReceiveToken() = divide(usdRate, receiveCurrency.decimals, RoundingMode.UP)
         fun BigDecimal.formatUsd() = format {
             fiat(fiatCurrencyCode = AppCurrency.Default.code, fiatCurrencySymbol = AppCurrency.Default.symbol)

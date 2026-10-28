@@ -30,7 +30,7 @@ internal inline fun OnboardingEntry(
             stack = childStack,
             animation = stackAnimation(slide()),
         ) {
-            (it.instance as? ComposableContentComponent)?.Content(modifier = modifier)
+            (it.instance as? ComposableContentComponent)?.Content(modifier = Modifier.fillMaxSize())
         }
     }
 }

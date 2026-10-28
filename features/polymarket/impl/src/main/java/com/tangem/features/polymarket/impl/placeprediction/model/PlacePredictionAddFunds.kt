@@ -63,7 +63,10 @@ internal class PlacePredictionAddFunds(
         when (requisites.state.value) {
             is RequisitesState.Loading -> Unit
             is RequisitesState.Failed -> messageSender.send(
-                DialogMessage(message = resourceReference(R.string.prediction_add_funds_error_description)),
+                DialogMessage(
+                    message = resourceReference(R.string.prediction_add_funds_error_description),
+                    onDismissRequest = requisites::retryIfFailed,
+                ),
             )
             is RequisitesState.Ready -> openAddFunds()
         }
