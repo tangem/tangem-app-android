@@ -218,9 +218,7 @@ internal class WalletBackupModel @Inject constructor(
         refreshStatusJob?.cancel()
         setGoogleDriveStatus(BackupStatus.Loading)
         cloudSignInJob = modelScope.launch {
-            cloudBackupRepository.get().signOut()
-
-            val info = loadCloudBackup(interactive = true).getOrElse { error ->
+            val info = signInAndLoadCloudBackup().getOrElse { error ->
                 onCloudAccessFailed(error)
                 return@launch
             }
@@ -228,15 +226,38 @@ internal class WalletBackupModel @Inject constructor(
         }
     }
 
-    private suspend fun loadCloudBackup(interactive: Boolean): Either<CloudBackupError, CloudBackupInfo?> {
+    private suspend fun signInAndLoadCloudBackup(): Either<CloudBackupError, CloudBackupInfo?> {
         val repository = cloudBackupRepository.get()
         val walletId = params.userWalletId.stringValue
-        return if (interactive) {
-            findCloudBackup(repository, walletId, interactive = true)
-        } else {
-            repository.withAccountOf(walletId) { findCloudBackup(repository, walletId, interactive = false) }
+        // a wallet that remembers its account is not offered another one while that account still works
+        val isAccountKnown = hasRememberedAccount(repository, walletId)
+        if (isAccountKnown) {
+            val result = loadCloudBackup(interactive = true, isAccountKnown = true)
+            if (result.leftOrNull()?.let(::isAccessError) != true) return result
+        }
+
+        repository.signOut()
+        return loadCloudBackup(interactive = true, isAccountKnown = false).onRight { info ->
+            // the remembered account may be gone from the device, so a re-created backup must go to the picked one
+            if (isAccountKnown && info == null) setCloudBackupStateUseCase.get()(walletId, isBackedUp = true)
         }
     }
+
+    private suspend fun loadCloudBackup(
+        interactive: Boolean,
+        isAccountKnown: Boolean = true,
+    ): Either<CloudBackupError, CloudBackupInfo?> {
+        val repository = cloudBackupRepository.get()
+        val walletId = params.userWalletId.stringValue
+        return if (interactive && !isAccountKnown) {
+            findCloudBackup(repository, walletId, interactive = true)
+        } else {
+            repository.withAccountOf(walletId) { findCloudBackup(repository, walletId, interactive = interactive) }
+        }
+    }
+
+    private suspend fun hasRememberedAccount(repository: CloudBackupRepository, walletId: String): Boolean =
+        hotWalletFeatureToggles.isMultipleHotWalletsEnabled && repository.hasAccountOf(walletId)
 
     private suspend fun findCloudBackup(
         repository: CloudBackupRepository,
@@ -244,6 +265,7 @@ internal class WalletBackupModel @Inject constructor(
         interactive: Boolean,
     ): Either<CloudBackupError, CloudBackupInfo?> {
         val wasBackedUp = repository.isBackedUp(walletId)
+        val isLegacyBackup = hotWalletFeatureToggles.isMultipleHotWalletsEnabled && !repository.hasAccountOf(walletId)
 
         return repository.findBackups(interactive = interactive)
             .onLeft { error ->
@@ -260,7 +282,10 @@ internal class WalletBackupModel @Inject constructor(
                 if (info != null) {
                     setCloudBackupStateUseCase.get()(walletId, isBackedUp = true)
                 }
-                setGoogleDriveStatus(resolveFoundStatus(info, wasBackedUp))
+                // after an interactive pick the user chose the account, so a missing file there is really missing
+                setGoogleDriveStatus(
+                    resolveFoundStatus(info, wasBackedUp, canBeInAnotherAccount = isLegacyBackup && !interactive),
+                )
                 info
             }
     }
@@ -283,8 +308,14 @@ internal class WalletBackupModel @Inject constructor(
         )
     }
 
-    private fun resolveFoundStatus(info: CloudBackupInfo?, wasBackedUp: Boolean): BackupStatus = when {
+    private fun resolveFoundStatus(
+        info: CloudBackupInfo?,
+        wasBackedUp: Boolean,
+        canBeInAnotherAccount: Boolean,
+    ): BackupStatus = when {
         info != null -> BackupStatus.Done
+        // a legacy backup may sit in another of the user's accounts, so let them pick it rather than call it lost
+        wasBackedUp && canBeInAnotherAccount -> BackupStatus.ActionRequired(BackupStatus.ActionRequired.Reason.NoAccess)
         wasBackedUp -> BackupStatus.ActionRequired(BackupStatus.ActionRequired.Reason.FileNotFound)
         else -> BackupStatus.NoBackup
     }
@@ -413,8 +444,9 @@ internal class WalletBackupModel @Inject constructor(
 
     private fun recreateCloudBackup() {
         modelScope.launch {
-            // the file is missing in the wallet's account, so the new one must not silently go to the pinned one
-            cloudBackupRepository.get().signOut()
+            val repository = cloudBackupRepository.get()
+            // a legacy backup has no account of its own, so the new one must not silently go to the pinned one
+            if (!hasRememberedAccount(repository, params.userWalletId.stringValue)) repository.signOut()
             router.push(AppRoute.CreateCloudBackup(params.userWalletId))
         }
     }
