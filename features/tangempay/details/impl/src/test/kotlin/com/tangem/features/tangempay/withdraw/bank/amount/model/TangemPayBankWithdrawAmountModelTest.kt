@@ -96,6 +96,29 @@ internal class TangemPayBankWithdrawAmountModelTest {
     }
 
     @Test
+    fun `GIVEN money account WHEN continue clicked THEN result carries the network fee`() {
+        // Arrange
+        coEvery { networkFeeLoader.load(moneyAccount, any()) } returns NETWORK_FEE.right()
+        val options = bankWithdrawOptions()
+        val model = createModel(sourceAccount = moneyAccount, options = options)
+        model.content().amount.onValueChange("500")
+
+        // Act
+        model.content().onContinueClick()
+
+        // Assert
+        assertThat(confirmed).containsExactly(
+            BankWithdrawAmountResult(
+                amount = BigDecimal("500"),
+                source = options.sources.first(),
+                destination = options.destinations.first(),
+                networkFee = NETWORK_FEE,
+            ),
+        )
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN money account WHEN amount covers only the bank fee THEN not enough funds`() {
         // Arrange
         coEvery { networkFeeLoader.load(moneyAccount, any()) } returns NETWORK_FEE.right()

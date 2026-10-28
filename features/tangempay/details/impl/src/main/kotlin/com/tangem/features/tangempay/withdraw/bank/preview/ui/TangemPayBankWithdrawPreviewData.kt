@@ -90,6 +90,7 @@ internal object TangemPayBankWithdrawPreviewData {
         ),
         isSending = false,
         isSendEnabled = true,
+        sendText = resourceReference(R.string.common_send),
         isColdWallet = true,
         onBackClick = {},
         onCloseClick = {},
@@ -111,6 +112,20 @@ internal object TangemPayBankWithdrawPreviewData {
 
     /** A hot wallet signs without a card, so Send drops the Tangem logo. */
     val summaryHotWallet = summary.copy(isColdWallet = false)
+
+    val summaryMoneyAccount = summary.copy(
+        transfer = transfer.copy(
+            amount = transfer.amount.copy(
+                from = BankWithdrawFromUM(
+                    title = resourceReference(R.string.money_account_main_name),
+                    icon = AccountIconUM.Money,
+                ),
+            ),
+            route = transfer.route.copy(fee = "$1.03"),
+            sendingSummary = stringReference("Fees include ACH service charge and estimated network fee"),
+        ),
+        sendText = stringReference("Pay $501.03"),
+    )
 
     val sending = summary.copy(isSending = true)
 
