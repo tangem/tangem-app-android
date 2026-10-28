@@ -10,7 +10,9 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.domain.pay.usecase.GetOnrampFeesUseCase
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesLoader
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesUM
+import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayRouteFeeUMConverter
 import com.tangem.features.tangempay.components.TangemPayBankTransferOnrampDetailsComponent
+import com.tangem.features.tangempay.components.TangemPayBankTransferOnrampDetailsComponent.FeeSource
 import com.tangem.features.tangempay.components.TangemPayBankTransferOnrampDetailsComponent.RequisiteField
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,6 +58,15 @@ internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
 
     init {
         params.analytics.onDetailsShown()
+        when (params.feeSource) {
+            FeeSource.CATALOGUE -> loadCatalogueFees()
+            FeeSource.ROUTE -> uiState.update { state ->
+                state.copy(fees = TangemPayRouteFeeUMConverter.convert(params.bankCredentials))
+            }
+        }
+    }
+
+    private fun loadCatalogueFees() {
         feesLoader.fees
             .onEach { fees -> uiState.update { state -> state.copy(fees = fees) } }
             .launchIn(modelScope)

@@ -13,10 +13,32 @@ data class BankCredentials(
     val beneficiaryBankAddress: String,
     val accountNumber: String,
     val routingNumber: String,
+    val rail: String?,
     val transferMessage: String?,
-    val depositFee: SerializedBigDecimal?,
+    val depositFee: DepositFee?,
     val depositLimit: DepositLimit?,
 ) {
+    @Serializable
+    data class DepositFee(
+        val amount: SerializedBigDecimal,
+        val type: Type,
+    ) {
+        enum class Type {
+            FLAT,
+            PERCENTAGE,
+            UNKNOWN,
+            ;
+
+            companion object {
+                fun fromString(value: String) = when (value.uppercase(Locale.US)) {
+                    "FLAT" -> FLAT
+                    "PERCENTAGE" -> PERCENTAGE
+                    else -> UNKNOWN
+                }
+            }
+        }
+    }
+
     @Serializable
     data class DepositLimit(
         val amount: SerializedBigDecimal,
