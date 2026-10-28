@@ -14,9 +14,19 @@ internal object BankCredentialsConverter : Converter<BankCredentialsResponse.Res
             beneficiaryBankAddress = value.beneficiaryBankAddress.orEmpty(),
             accountNumber = value.accountNumber.orEmpty(),
             routingNumber = value.routingNumber.orEmpty(),
+            rail = value.rail?.takeIf(String::isNotBlank),
             transferMessage = value.transferMessage?.takeIf(String::isNotBlank),
-            depositFee = value.fee?.amount?.toBigDecimalOrNull(),
+            depositFee = convertDepositFee(value.fee),
             depositLimit = convertDepositLimit(value.depositLimit),
+        )
+    }
+
+    private fun convertDepositFee(value: BankCredentialsResponse.Fee?): BankCredentials.DepositFee? {
+        val amount = value?.amount?.toBigDecimalOrNull() ?: return null
+        val type = value.type?.let(BankCredentials.DepositFee.Type::fromString)
+        return BankCredentials.DepositFee(
+            amount = amount,
+            type = type ?: BankCredentials.DepositFee.Type.UNKNOWN,
         )
     }
 
