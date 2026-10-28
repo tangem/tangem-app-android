@@ -24,12 +24,12 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.account.status.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
-import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.mcp.McpRequestService
 import com.tangem.domain.mcp.models.McpRequest
 import com.tangem.domain.mcp.models.McpSession
 import com.tangem.domain.mcp.repository.McpRepository
+import com.tangem.domain.mcp.repository.McpSessionsLce
 import com.tangem.domain.qrscanning.models.QrResultSource
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
@@ -86,7 +86,7 @@ internal class WcConnectionsModel @Inject constructor(
     private val isAgentsReloading = MutableStateFlow(value = false)
 
     /** The repository keeps the list hot, so the screen only has to collect it. */
-    private val mcpSessions: Flow<Lce<Throwable, List<McpSession>>> = if (mcpFeatureToggles.isMcpEnabled) {
+    private val mcpSessions: Flow<McpSessionsLce> = if (mcpFeatureToggles.isMcpEnabled) {
         mcpRepository.getSessions()
     } else {
         flowOf(emptyList<McpSession>().lceContent())
