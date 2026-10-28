@@ -13,8 +13,8 @@ interface DemandSurveyRepository {
     suspend fun isCompleted(userWalletId: UserWalletId): Either<Throwable, Boolean>
 
     /**
-     * Requests the status once per collection unless the wallet is already known to be completed, then
-     * emits `true` as soon as [submit] succeeds. A failed request emits `false`.
+     * Requests the status once per collection and emits it, `false` on failure. A successful [submit] is kept
+     * in memory for the process: it emits `true` at once, even while the request is in flight or after it failed.
      */
     fun observeCompleted(userWalletId: UserWalletId): Flow<Boolean>
 }
