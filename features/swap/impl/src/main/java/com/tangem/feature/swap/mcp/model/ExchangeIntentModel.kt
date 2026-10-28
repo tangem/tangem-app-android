@@ -242,6 +242,12 @@ internal class ExchangeIntentModel @Inject constructor(
                     analyticsEventHandler.send(
                         McpIntentAnalyticsEvent.ButtonContinue(intentId = params.intentId, type = IntentType.Exchange),
                     )
+                } else {
+                    // A custom completion replaces the router's own, which reports the failure to the user
+                    router.defaultCompletionHandler(
+                        isSuccess = false,
+                        errorMessage = "Unable to open Swap for exchange intent ${params.intentId}",
+                    )
                 }
             },
         )
