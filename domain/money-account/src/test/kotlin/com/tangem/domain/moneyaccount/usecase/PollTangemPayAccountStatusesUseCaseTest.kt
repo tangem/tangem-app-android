@@ -33,13 +33,13 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class RestoreMoneyAccountOrderUseCaseTest {
+internal class PollTangemPayAccountStatusesUseCaseTest {
 
     private val getCustomerSummaryUseCase: GetCustomerSummaryUseCase = mockk()
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk()
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher = mockk()
 
-    private val useCase = RestoreMoneyAccountOrderUseCase(
+    private val useCase = PollTangemPayAccountStatusesUseCase(
         getCustomerSummaryUseCase = getCustomerSummaryUseCase,
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
         moneyAccountStatusFetcher = moneyAccountStatusFetcher,
