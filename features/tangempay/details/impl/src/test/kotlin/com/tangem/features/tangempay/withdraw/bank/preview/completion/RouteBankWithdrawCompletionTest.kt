@@ -38,19 +38,21 @@ internal class RouteBankWithdrawCompletionTest {
     private val userWalletId = UserWalletId("011")
     private val bankOfframpOrderRepository: BankOfframpOrderRepository = mockk()
     private val moneyAccountTransfer: MoneyAccountTransfer = mockk()
-    private val draft = savedRecipientDraft()
+    private val draft = savedRecipientDraft().copy(networkFee = NETWORK_FEE)
     private val token = requireNotNull(draft.source).token
     private val changedDestinations = mutableListOf<OfframpDestination>()
+    private val changedNetworkFees = mutableListOf<BigDecimal>()
     private val states = mutableListOf<CompletionState>()
 
     @BeforeEach
     fun resetMocks() {
         clearMocks(bankOfframpOrderRepository, moneyAccountTransfer)
         changedDestinations.clear()
+        changedNetworkFees.clear()
         states.clear()
         coEvery { bankOfframpOrderRepository.createRoute(userWalletId, any(), any(), any(), any()) } returns
             route().right()
-        coEvery { moneyAccountTransfer.send(userWalletId, any(), any(), any()) } returns Unit.right()
+        coEvery { moneyAccountTransfer.send(userWalletId, any(), any(), any(), any()) } returns Unit.right()
     }
 
     @Test
@@ -63,12 +65,12 @@ internal class RouteBankWithdrawCompletionTest {
 
         // Assert
         coVerify(exactly = 0) { bankOfframpOrderRepository.createRoute(any(), any(), any(), any(), any()) }
-        coVerify(exactly = 0) { moneyAccountTransfer.send(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { moneyAccountTransfer.send(any(), any(), any(), any(), any()) }
         assertThat(states).isEmpty()
     }
 
     @Test
-    fun `GIVEN route priced as shown WHEN complete THEN amount plus rail fee sent to the deposit address`() =
+    fun `GIVEN route priced as shown WHEN complete THEN amount plus rail fee sent capped by the shown network fee`() =
         runTest {
             // Arrange
             val completion = createCompletion()
@@ -87,9 +89,10 @@ internal class RouteBankWithdrawCompletionTest {
                 )
             }
             coVerify(exactly = 1) {
-                moneyAccountTransfer.send(userWalletId, token, BigDecimal("501.00"), DEPOSIT_ADDRESS)
+                moneyAccountTransfer.send(userWalletId, token, BigDecimal("501.00"), DEPOSIT_ADDRESS, NETWORK_FEE)
             }
             assertThat(changedDestinations).isEmpty()
+            assertThat(changedNetworkFees).isEmpty()
             assertThat(states).containsExactly(CompletionState.Sending, CompletionState.Completed).inOrder()
         }
 
@@ -109,7 +112,7 @@ internal class RouteBankWithdrawCompletionTest {
             assertThat(changedDestinations).containsExactly(
                 requireNotNull(draft.destination).copy(fee = repriced.fee, eta = repriced.eta),
             )
-            coVerify(exactly = 0) { moneyAccountTransfer.send(any(), any(), any(), any()) }
+            coVerify(exactly = 0) { moneyAccountTransfer.send(any(), any(), any(), any(), any()) }
             assertThat(states).containsExactly(CompletionState.Sending, CompletionState.Idle).inOrder()
         }
 
@@ -128,7 +131,51 @@ internal class RouteBankWithdrawCompletionTest {
             // Assert
             coVerify(exactly = 1) { bankOfframpOrderRepository.createRoute(any(), any(), any(), any(), any()) }
             coVerify(exactly = 1) {
-                moneyAccountTransfer.send(userWalletId, token, BigDecimal("501.50"), DEPOSIT_ADDRESS)
+                moneyAccountTransfer.send(userWalletId, token, BigDecimal("501.50"), DEPOSIT_ADDRESS, NETWORK_FEE)
+            }
+            assertThat(states.last()).isEqualTo(CompletionState.Completed)
+        }
+
+    @Test
+    fun `GIVEN network fee above the shown one WHEN complete THEN draft gets the new fee and idle reported`() =
+        runTest {
+            // Arrange
+            coEvery { moneyAccountTransfer.send(userWalletId, any(), any(), any(), any()) } returns
+                MoneyAccountTransferError.NetworkFeeIncreased(RAISED_NETWORK_FEE).left()
+            val completion = createCompletion()
+
+            // Act
+            completion.complete(draft, states::add)
+
+            // Assert
+            assertThat(changedNetworkFees).containsExactly(RAISED_NETWORK_FEE)
+            assertThat(changedDestinations).isEmpty()
+            assertThat(states).containsExactly(CompletionState.Sending, CompletionState.Idle).inOrder()
+        }
+
+    @Test
+    fun `GIVEN network fee rose WHEN complete with the updated draft THEN same route used and new fee is the cap`() =
+        runTest {
+            // Arrange
+            coEvery { moneyAccountTransfer.send(userWalletId, any(), any(), any(), any()) }.returnsMany(
+                listOf(MoneyAccountTransferError.NetworkFeeIncreased(RAISED_NETWORK_FEE).left(), Unit.right()),
+            )
+            val completion = createCompletion()
+            completion.complete(draft, states::add)
+
+            // Act
+            completion.complete(draft.copy(networkFee = changedNetworkFees.single()), states::add)
+
+            // Assert
+            coVerify(exactly = 1) { bankOfframpOrderRepository.createRoute(any(), any(), any(), any(), any()) }
+            coVerify(exactly = 1) {
+                moneyAccountTransfer.send(
+                    userWalletId = userWalletId,
+                    token = token,
+                    amount = BigDecimal("501.00"),
+                    destination = DEPOSIT_ADDRESS,
+                    maxNetworkFee = RAISED_NETWORK_FEE,
+                )
             }
             assertThat(states.last()).isEqualTo(CompletionState.Completed)
         }
@@ -146,7 +193,7 @@ internal class RouteBankWithdrawCompletionTest {
             completion.complete(draft, states::add)
 
             // Assert
-            coVerify(exactly = 0) { moneyAccountTransfer.send(any(), any(), any(), any()) }
+            coVerify(exactly = 0) { moneyAccountTransfer.send(any(), any(), any(), any(), any()) }
             assertThat(states).containsExactly(CompletionState.Sending, model.state).inOrder()
         }
 
@@ -174,7 +221,7 @@ internal class RouteBankWithdrawCompletionTest {
     fun `GIVEN transfer not sent WHEN complete again THEN the same route is reused and the transfer retried`() =
         runTest {
             // Arrange
-            coEvery { moneyAccountTransfer.send(userWalletId, any(), any(), any()) }
+            coEvery { moneyAccountTransfer.send(userWalletId, any(), any(), any(), any()) }
                 .returnsMany(listOf(MoneyAccountTransferError.NotSent.left(), Unit.right()))
             val completion = createCompletion()
 
@@ -184,7 +231,7 @@ internal class RouteBankWithdrawCompletionTest {
 
             // Assert
             coVerify(exactly = 1) { bankOfframpOrderRepository.createRoute(any(), any(), any(), any(), any()) }
-            coVerify(exactly = 2) { moneyAccountTransfer.send(any(), any(), any(), any()) }
+            coVerify(exactly = 2) { moneyAccountTransfer.send(any(), any(), any(), any(), any()) }
             assertThat(states).containsExactly(
                 CompletionState.Sending,
                 CompletionState.Failed(PreviewFailure.General),
@@ -199,7 +246,7 @@ internal class RouteBankWithdrawCompletionTest {
         model: ChangedAttemptModel,
     ) = runTest {
         // Arrange
-        coEvery { moneyAccountTransfer.send(userWalletId, any(), any(), any()) } returns
+        coEvery { moneyAccountTransfer.send(userWalletId, any(), any(), any(), any()) } returns
             MoneyAccountTransferError.NotSent.left()
         val completion = createCompletion()
         completion.complete(draft, states::add)
@@ -223,7 +270,7 @@ internal class RouteBankWithdrawCompletionTest {
     fun `GIVEN transfer outcome unknown WHEN complete again THEN no second transfer and the failure stays`() =
         runTest {
             // Arrange
-            coEvery { moneyAccountTransfer.send(userWalletId, any(), any(), any()) } returns
+            coEvery { moneyAccountTransfer.send(userWalletId, any(), any(), any(), any()) } returns
                 MoneyAccountTransferError.OutcomeUnknown.left()
             val completion = createCompletion()
 
@@ -233,7 +280,7 @@ internal class RouteBankWithdrawCompletionTest {
 
             // Assert
             coVerify(exactly = 1) { bankOfframpOrderRepository.createRoute(any(), any(), any(), any(), any()) }
-            coVerify(exactly = 1) { moneyAccountTransfer.send(any(), any(), any(), any()) }
+            coVerify(exactly = 1) { moneyAccountTransfer.send(any(), any(), any(), any(), any()) }
             assertThat(states).containsExactly(
                 CompletionState.Sending,
                 CompletionState.Failed(PreviewFailure.TransferOutcomeUnknown),
@@ -244,7 +291,7 @@ internal class RouteBankWithdrawCompletionTest {
     @Test
     fun `GIVEN signature cancelled WHEN complete THEN idle reported`() = runTest {
         // Arrange
-        coEvery { moneyAccountTransfer.send(userWalletId, any(), any(), any()) } returns
+        coEvery { moneyAccountTransfer.send(userWalletId, any(), any(), any(), any()) } returns
             MoneyAccountTransferError.Cancelled.left()
         val completion = createCompletion()
 
@@ -259,6 +306,7 @@ internal class RouteBankWithdrawCompletionTest {
         userWalletId = userWalletId,
         productInstanceId = PRODUCT_INSTANCE_ID,
         onDestinationChanged = changedDestinations::add,
+        onNetworkFeeChanged = changedNetworkFees::add,
         bankOfframpOrderRepository = bankOfframpOrderRepository,
         moneyAccountTransfer = moneyAccountTransfer,
     )
@@ -318,5 +366,7 @@ internal class RouteBankWithdrawCompletionTest {
         const val PRODUCT_INSTANCE_ID = "pi-1"
         const val DEPOSIT_ADDRESS = "0x0000000000000000000000000000000000000003"
         val SAVED_RECIPIENT = BankOfframpRecipient.Saved(bankAccountId = "acc-1")
+        val NETWORK_FEE = BigDecimal("0.03")
+        val RAISED_NETWORK_FEE = BigDecimal("0.05")
     }
 }

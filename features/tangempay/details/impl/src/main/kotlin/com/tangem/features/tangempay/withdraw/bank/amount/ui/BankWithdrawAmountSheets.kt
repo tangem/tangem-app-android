@@ -1,9 +1,13 @@
 package com.tangem.features.tangempay.withdraw.bank.amount.ui
 
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -17,9 +21,11 @@ import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.rememberLastNonNull
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.RouteItemUM
@@ -51,6 +57,7 @@ internal fun BankWithdrawAmountSheets(sheet: SheetUM) {
         title = { SheetHeader(title = R.string.tangempay_withdraw_bank_select_route, onClose = sheet.onDismiss) },
     ) {
         routes?.items?.fastForEach { item -> RouteRow(item = item) }
+        routes?.networkFeeNote?.let { note -> NetworkFeeNote(note = note) }
     }
 }
 
@@ -99,6 +106,19 @@ private fun RouteRow(item: RouteItemUM) {
         valueSlot = { TangemRowText(text = item.fee, role = TangemRowTextRole.Value) },
         endSlot = { TangemCheckmark(checked = item.isSelected, onCheckedChange = null) },
         onClick = item.onClick,
+    )
+}
+
+@Composable
+private fun NetworkFeeNote(note: TextReference) {
+    Text(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        text = note.resolveReference(),
+        style = TangemTheme.typography3.caption.medium,
+        color = TangemTheme.colors3.text.secondary,
+        textAlign = TextAlign.Center,
     )
 }
 
