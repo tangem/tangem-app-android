@@ -44,6 +44,8 @@ sealed interface SwapState {
         val isRestricted: Boolean = false,
         // Slippage percent the provider applied to this quote
         val slippage: BigDecimal? = null,
+        // Custom slippage sent with this quote; null means [slippage] is the provider's default for the pair
+        val requestedCustomSlippage: BigDecimal? = null,
     ) : SwapState
 
     data class Transfer(
