@@ -18,6 +18,7 @@ import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.marketing.api.concierge.ConciergeDemandSurveyComponent
 import com.tangem.features.onramp.deeplink.DefaultConciergeWaitlistTrigger
 import com.tangem.features.onramp.main.OnrampMainComponent
+import com.tangem.features.onramp.main.entity.OnrampMainBottomSheetConfig
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.Runs
 import io.mockk.clearMocks
@@ -275,6 +276,7 @@ internal class OnrampMainComponentModelTest {
         // Arrange
         val scheduler = TestCoroutineScheduler()
         val model = createModel(scheduler = scheduler, quotes = emptyList())
+        model.attachBottomSheetSlot(initial = null)
         val activatedSurveys = model.collectActivatedSurveys()
         model.onStart()
         scheduler.runCurrent()
@@ -309,6 +311,7 @@ internal class OnrampMainComponentModelTest {
         // Arrange
         val scheduler = TestCoroutineScheduler()
         val model = createModel(scheduler = scheduler, quotes = emptyList())
+        model.attachBottomSheetSlot(initial = null)
         val activatedSurveys = model.collectActivatedSurveys()
         model.onStart()
         scheduler.runCurrent()
@@ -321,6 +324,60 @@ internal class OnrampMainComponentModelTest {
         // Assert
         assertThat(activatedSurveys).isEmpty()
         model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN all offers sheet open WHEN waitlist deeplink triggered THEN sheet closed and survey opened`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val model = createModel(scheduler = scheduler, quotes = emptyList())
+        val bottomSheetSlot = model.attachBottomSheetSlot(initial = OnrampMainBottomSheetConfig.AllOffers("USD"))
+        val activatedSurveys = model.collectActivatedSurveys()
+        model.onStart()
+        scheduler.runCurrent()
+
+        // Act
+        triggerWaitlist(scheduler)
+
+        // Assert
+        assertThat(bottomSheetSlot.config).isNull()
+        assertThat(activatedSurveys).containsExactly(ConciergeDemandSurveyComponent.Params(USER_WALLET_ID))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN residency confirmation open WHEN waitlist deeplink triggered THEN survey not opened`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val model = createModel(scheduler = scheduler, quotes = emptyList())
+        val residency = OnrampMainBottomSheetConfig.ConfirmResidency(country = mockk(relaxed = true))
+        val bottomSheetSlot = model.attachBottomSheetSlot(initial = residency)
+        val activatedSurveys = model.collectActivatedSurveys()
+        model.onStart()
+        scheduler.runCurrent()
+
+        // Act
+        triggerWaitlist(scheduler)
+
+        // Assert
+        assertThat(bottomSheetSlot.config).isEqualTo(residency)
+        assertThat(activatedSurveys).isEmpty()
+        model.onDestroy()
+    }
+
+    /** Stands in for the component's child slot, which is what applies a navigation and reports its completion. */
+    private class FakeBottomSheetSlot(var config: OnrampMainBottomSheetConfig?)
+
+    private fun OnrampMainComponentModel.attachBottomSheetSlot(
+        initial: OnrampMainBottomSheetConfig?,
+    ): FakeBottomSheetSlot {
+        val slot = FakeBottomSheetSlot(initial)
+        bottomSheetNavigation.subscribe { event ->
+            val oldConfig = slot.config
+            slot.config = event.transformer(oldConfig)
+            event.onComplete(slot.config, oldConfig)
+        }
+        return slot
     }
 
     private fun OnrampMainComponentModel.collectActivatedSurveys(): List<ConciergeDemandSurveyComponent.Params> {
