@@ -6,6 +6,7 @@ import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.domain.SwapPairLeast
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
+import com.tangem.feature.swap.domain.models.domain.pairDefaultSlippage
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import java.math.BigDecimal
 
@@ -35,7 +36,22 @@ data class SwapProcessDataState(
     val amount: String? = null,
     val reduceBalanceBy: BigDecimal = BigDecimal.ZERO,
     val slippage: SwapSlippageState = SwapSlippageState.Default(),
+    val quoteDefaultSlippages: QuoteDefaultSlippages? = null,
 ) {
+
+    /** Pair defaults for the current pair and amount only; empty once either changed. */
+    val currentQuoteDefaultSlippages: Map<String, BigDecimal>
+        get() {
+            val defaults = quoteDefaultSlippages ?: return emptyMap()
+            val from = fromSwapCurrencyStatus ?: return emptyMap()
+            val to = toSwapCurrencyStatus ?: return emptyMap()
+            val amount = amount ?: return emptyMap()
+            return defaults.byProviderId.takeIf { defaults.quoteKey == SlippageQuoteKey(from, to, amount) }.orEmpty()
+        }
+
+    fun defaultSlippage(provider: SwapProvider): BigDecimal? {
+        return provider.pairDefaultSlippage(currentQuoteDefaultSlippages)
+    }
 
     fun getCurrentLoadedSwapState(): SwapState.QuotesLoadedState? {
         return lastLoadedSwapStates[selectedProvider] as? SwapState.QuotesLoadedState
