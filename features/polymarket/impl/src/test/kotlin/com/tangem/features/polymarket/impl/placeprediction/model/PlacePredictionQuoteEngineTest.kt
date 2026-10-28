@@ -218,6 +218,25 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
     }
 
     @Test
+    fun `GIVEN buy engine WHEN an amount is quoted THEN the market and quote are requested for the order wallet`() =
+        runTest {
+            // Arrange
+            val (engine, _) = createEngine()
+            advanceUntilIdle()
+            engine.onResume()
+
+            // Act
+            engine.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+            // Assert
+            coVerify { getEventUseCase(userWalletId = USER_WALLET_ID, eventId = EVENT_ID) }
+            coVerify { getQuoteUseCase(userWalletId = USER_WALLET_ID, request = any()) }
+
+            engine.onPause()
+        }
+
+    @Test
     fun `GIVEN placeable quote and engine held WHEN prepared THEN nothing returned`() = runTest {
         // Arrange
         val (engine, uiState) = createEngine()
