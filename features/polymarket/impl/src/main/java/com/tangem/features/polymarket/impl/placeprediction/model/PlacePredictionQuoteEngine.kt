@@ -57,6 +57,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -370,7 +371,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         cancelQuote()
 
         if (!isResumed || !isTradedAssetResolved || isHeld) return
-        if (!uiState.value.isMarketAcceptingOrders || !uiState.value.canPollPrice()) return
+        if (!uiState.value.isMarketAcceptingOrders || !uiState.value.canPollPrice()) return freshQuote.settle()
 
         scope.launch {
             if (withDebounce && uiState.value.isQuotable()) delay(timeMillis = QUOTE_DEBOUNCE_MILLIS)
@@ -425,9 +426,8 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         val amount = state.enteredAmount() ?: return
         if (!state.isQuotable()) return
 
-        uiState.update(SetQuoteLoadingTransformer)
-
-        freshQuote.during {
+        freshQuote.during { isFresh ->
+            uiState.update(SetQuoteLoadingTransformer(isAwaitingFreshQuote = isFresh))
             val result = withContext(dispatchers.default) {
                 getPredictionOrderQuoteUseCase(
                     userWalletId = params.userWalletId,
@@ -488,18 +488,19 @@ private class FreshQuoteSignal(private val uiState: MutableStateFlow<PlacePredic
         return ended.id == awaited.id && ended.status == FreshAmount.Status.Quoted
     }
 
-    suspend fun during(block: suspend () -> Unit) {
+    suspend fun during(block: suspend (isFresh: Boolean) -> Unit) {
         val requested = amount.value
         val fresh = Any().takeIf { requested.status == FreshAmount.Status.Pending }
-        if (fresh != null) {
-            request = fresh
-            uiState.update(SetAwaitingFreshQuoteTransformer(isAwaitingFreshQuote = true))
-        }
+        if (fresh != null) request = fresh
 
+        var status = FreshAmount.Status.Settled
         try {
-            block()
-            amount.update { if (it == requested) it.copy(status = FreshAmount.Status.Quoted) else it }
+            block(fresh != null)
+            status = FreshAmount.Status.Quoted
         } finally {
+            if (status == FreshAmount.Status.Quoted || currentCoroutineContext().isActive) {
+                amount.update { if (it == requested) it.copy(status = status) else it }
+            }
             if (fresh != null && request === fresh) endRequest()
         }
     }
@@ -508,7 +509,9 @@ private class FreshQuoteSignal(private val uiState: MutableStateFlow<PlacePredic
         if (request == null) return
 
         request = null
-        uiState.update(SetAwaitingFreshQuoteTransformer(isAwaitingFreshQuote = false))
+        if (uiState.value.isAwaitingFreshQuote) {
+            uiState.update(SetAwaitingFreshQuoteTransformer(isAwaitingFreshQuote = false))
+        }
     }
 
     private data class FreshAmount(val id: Long, val status: Status) {

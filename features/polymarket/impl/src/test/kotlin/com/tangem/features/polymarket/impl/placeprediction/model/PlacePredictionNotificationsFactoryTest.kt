@@ -573,6 +573,20 @@ internal class PlacePredictionNotificationsFactoryTest {
             assertThat(actual.isPrimaryButtonEnabledWhileQuoting).isFalse()
         }
 
+        @Test
+        fun `GIVEN a tap waits WHEN the gate closes THEN the place button stays enabled`() {
+            // Arrange
+            val state = createState(balance = BigDecimal("5"), quote = QuoteUM.Loading, isAwaitingFreshQuote = true)
+                .copy(isPlacementPending = true)
+
+            // Act
+            val actual = state.recomputeGate()
+
+            // Assert
+            assertThat(actual.isPrimaryButtonTappable).isFalse()
+            assertThat(actual.isPlaceButtonEnabled).isTrue()
+        }
+
         @ParameterizedTest(name = "selling {0} of 10 held shares while quoting enables it: {1}")
         @CsvSource("5, true", "10, true", "11, false")
         fun `GIVEN a sell awaiting its quote WHEN the gate runs THEN it follows the held shares`(

@@ -9,6 +9,7 @@ import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionOrderFailure
 import com.tangem.domain.polymarket.model.PolymarketEventError
+import com.tangem.domain.polymarket.model.PolymarketPositionsError
 import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
@@ -844,6 +845,44 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 coVerify(exactly = 1) { signOrderInteractor(request = any()) }
             }
 
+        @ParameterizedTest(name = "{0}")
+        @EnumSource(MidWaitRead::class)
+        fun `GIVEN a sell tap WHEN the position re-read stops the quote loop mid-wait THEN the tap is released at once`(
+            read: MidWaitRead,
+        ) = runOrderTest {
+            // Arrange
+            var positionReads = 0
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } coAnswers {
+                if (positionReads++ == 0) {
+                    createPosition().right()
+                } else {
+                    delay(timeMillis = POSITION_READ_MILLIS)
+                    when (read) {
+                        MidWaitRead.Fails -> PolymarketPositionsError.Network.left()
+                        MidWaitRead.StopsAcceptingOrders -> createPosition().copy(isAcceptingOrders = false).right()
+                    }
+                }
+            }
+            coEvery { getQuoteUseCase(request = any()) } coAnswers {
+                delay(timeMillis = QUOTE_MILLIS)
+                createSellQuote(shares = BigDecimal("51.234567")).right()
+            }
+            val model = createOrderModel(testScope = this, params = SELL_PARAMS)
+            runCurrent()
+            model.onResume()
+            runCurrent()
+            model.onPlaceClick()
+
+            // Act
+            advanceTimeBy(delayTimeMillis = POSITION_READ_MILLIS)
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.isPlacementPending).isFalse()
+            assertThat(model.isSubmitting()).isFalse()
+            coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+        }
+
         @Test
         fun `GIVEN a pending tap WHEN the gate closes mid-wait THEN the spinner stays until the quote and the tap drops`() =
             runOrderTest {
@@ -861,6 +900,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 // Assert
                 assertThat(midWait.isPlacementPending).isTrue()
                 assertThat(midWait.isPrimaryButtonTappable).isFalse()
+                assertThat(midWait.isPlaceButtonEnabled).isTrue()
                 assertThat(model.uiState.value.isPlacementPending).isFalse()
                 coVerify(exactly = 0) { signOrderInteractor(request = any()) }
             }
@@ -1052,6 +1092,8 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
     enum class UnplaceableResult { NoLiquidity, QuoteError }
 
     enum class MarketLoad { Hanging, Failed }
+
+    enum class MidWaitRead { Fails, StopsAcceptingOrders }
 
     private fun UnplaceableResult.toQuoteResult(): Either<PredictionOrderQuoteError, PredictionOrderQuote> =
         when (this) {

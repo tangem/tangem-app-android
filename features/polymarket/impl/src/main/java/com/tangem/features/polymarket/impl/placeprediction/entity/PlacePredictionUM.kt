@@ -35,6 +35,7 @@ internal data class PlacePredictionUM(
     val submit: SubmitUM,
     val isPrimaryButtonEnabled: Boolean,
     val isPrimaryButtonEnabledWhileQuoting: Boolean = false,
+    val isPlaceButtonEnabled: Boolean = false,
     val isAwaitingFreshQuote: Boolean = false,
     val isPlacementPending: Boolean = false,
     val isAwaitingFunds: Boolean = false,
