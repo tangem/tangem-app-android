@@ -233,7 +233,9 @@ class PolymarketGeoblockTest : BaseTestCase() {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { onSwapStoriesScreen { closeButton.clickWithAssertion() } }
             }
             step("Assert 'Withdraw' swap screen is displayed") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { onPolymarketWithdrawScreen { sendFromTitle.assertIsDisplayed() } }
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onPolymarketWithdrawScreen { sendFromTitle.assertIsDisplayed() }
+                }
             }
             step("Go back to 'Polymarket main' screen from the 'Withdraw' screen") {
                 device.uiDevice.pressBack()
@@ -386,6 +388,9 @@ class PolymarketGeoblockTest : BaseTestCase() {
             step("Assert 'Polymarket main' screen is displayed after the history") {
                 flakySafely { onPolymarketMainScreen { screen.assertIsDisplayed() } }
             }
+            step("Scroll to the beginning of the feed") {
+                flakySafely { onPolymarketMainScreen { scrollToFeedStart() } }
+            }
             val geoblockRequestsBeforeClick = getWireMockRequestCount("GET", POLYMARKET_GEOBLOCK_PATH)
             step("Click on 'Add funds' button") {
                 onPolymarketMainScreen { addFundsButton.clickWithAssertion() }
@@ -450,7 +455,9 @@ class PolymarketGeoblockTest : BaseTestCase() {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { onSwapStoriesScreen { closeButton.clickWithAssertion() } }
             }
             step("Assert 'Withdraw' swap screen is displayed") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { onPolymarketWithdrawScreen { sendFromTitle.assertIsDisplayed() } }
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onPolymarketWithdrawScreen { sendFromTitle.assertIsDisplayed() }
+                }
             }
             step("Assert 'Region restrictions' message is not displayed for 'Withdraw'") {
                 onPolymarketMainScreen { regionRestrictionsModalTitle.assertDoesNotExist() }
