@@ -43,7 +43,6 @@ internal class TangemPayAddFundsComponent(
 internal interface AddFundsListener {
     fun onClickReceive(data: TangemPayTopUpData)
     fun onClickSwap(data: TangemPayTopUpData)
-    fun onClickBankTransfer()
     fun onBankingDetailsLoadFailed(productInstanceId: String)
     fun onDismissAddFunds()
 }

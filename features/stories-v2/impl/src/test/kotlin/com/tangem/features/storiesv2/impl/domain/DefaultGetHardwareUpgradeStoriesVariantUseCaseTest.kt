@@ -3,17 +3,13 @@ package com.tangem.features.storiesv2.impl.domain
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.features.storiesv2.HardwareUpgradeStoriesVariant
-import com.tangem.features.storiesv2.StoriesV2FeatureToggles
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -21,18 +17,15 @@ import org.junit.jupiter.params.provider.MethodSource
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultGetHardwareUpgradeStoriesVariantUseCaseTest {
 
-    private val featureToggles: StoriesV2FeatureToggles = mockk()
     private val abTestsManager: ABTestsManager = mockk()
 
     private val useCase = DefaultGetHardwareUpgradeStoriesVariantUseCase(
-        featureToggles = featureToggles,
         abTestsManager = abTestsManager,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(featureToggles, abTestsManager)
-        every { featureToggles.isHardwareUpgradeStoriesAbEnabled } returns true
+        clearMocks(abTestsManager)
     }
 
     @ParameterizedTest
@@ -48,19 +41,6 @@ internal class DefaultGetHardwareUpgradeStoriesVariantUseCaseTest {
         assertThat(actual).isEqualTo(model.expected)
     }
 
-    @Test
-    fun `GIVEN the release gate is closed WHEN invoke THEN control without reading the experiment`() = runTest {
-        // Arrange
-        every { featureToggles.isHardwareUpgradeStoriesAbEnabled } returns false
-
-        // Act
-        val actual = useCase()
-
-        // Assert
-        assertThat(actual).isEqualTo(HardwareUpgradeStoriesVariant.CONTROL)
-        coVerify(exactly = 0) { abTestsManager.getValue(any(), any()) }
-    }
-
     @ParameterizedTest
     @MethodSource("providePeekModels")
     fun `GIVEN a value on the device WHEN peek THEN only treatment shows the story`(model: PeekModel) {
@@ -72,19 +52,6 @@ internal class DefaultGetHardwareUpgradeStoriesVariantUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)
-    }
-
-    @Test
-    fun `GIVEN the release gate is closed WHEN peek THEN control without reading the experiment`() {
-        // Arrange
-        every { featureToggles.isHardwareUpgradeStoriesAbEnabled } returns false
-
-        // Act
-        val actual = useCase.peek()
-
-        // Assert
-        assertThat(actual).isEqualTo(HardwareUpgradeStoriesVariant.CONTROL)
-        verify(exactly = 0) { abTestsManager.peekValue(any()) }
     }
 
     private fun providePeekModels() = listOf(
