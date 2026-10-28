@@ -61,6 +61,12 @@ sealed class CryptoCurrencyWarning {
 
     data object UsedOutdatedDataWarning : CryptoCurrencyWarning()
 
+    data class IncompleteBalance(
+        val unspentsLimit: Int,
+        val networkName: String,
+        val currencySymbol: String,
+    ) : CryptoCurrencyWarning()
+
     data class RequiredTrustline(
         val currency: CryptoCurrency,
         val currencySymbol: String,
