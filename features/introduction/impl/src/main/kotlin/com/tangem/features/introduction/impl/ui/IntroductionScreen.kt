@@ -1,6 +1,5 @@
 package com.tangem.features.introduction.impl.ui
 
-import android.view.SurfaceView
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
@@ -25,7 +24,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -35,21 +33,19 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.seconds
+import com.tangem.core.media.LoopingVideoState
+import com.tangem.core.media.VideoFrameSize
+import com.tangem.core.media.VideoSurfaceState
+import com.tangem.core.media.ui.VideoSurface
 import com.tangem.core.res.R
 import com.tangem.core.ui.components.KeepScreenOn
 import com.tangem.core.ui.components.legal.LegalCaption
@@ -90,13 +86,12 @@ private val PREWARM_COVER_TIMEOUT = 1.seconds
 @Composable
 internal fun IntroductionScreen(
     state: IntroductionUM,
-    onSurfaceAvailable: (SurfaceView) -> Unit,
-    onSurfaceRelease: (SurfaceView) -> Unit,
+    video: LoopingVideoState,
     videoPositionMs: () -> Long,
     modifier: Modifier = Modifier,
 ) {
     SystemBarsIconsDisposable(darkIcons = false)
-    val isAnimated = state.isMotionEnabled && !state.isVideoFailed
+    val isAnimated = video.isMotionEnabled && !video.isFailed
     // Nothing moves under reduced motion or with the video down, so there is nothing to keep the display awake for.
     if (isAnimated) KeepScreenOn()
 
@@ -108,11 +103,7 @@ internal fun IntroductionScreen(
                     .fillMaxSize()
                     .background(TangemTheme.colors3.bg.base),
             ) {
-                VideoBackground(
-                    state = state,
-                    onSurfaceAvailable = onSurfaceAvailable,
-                    onSurfaceRelease = onSurfaceRelease,
-                )
+                VideoBackground(surface = video.surface)
                 Header(
                     onBuyTangemClick = state.onBuyTangemClick,
                     modifier = Modifier
@@ -130,7 +121,7 @@ internal fun IntroductionScreen(
                     WelcomeTextScenes(
                         scenes = state.scenes,
                         isAnimated = isAnimated,
-                        isVideoRunning = state.isVideoRunning,
+                        isVideoRunning = video.isRunning,
                         videoPositionMs = videoPositionMs,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -144,9 +135,10 @@ internal fun IntroductionScreen(
             // One sheet is composed from the first frame, with or without a config of its own: a hidden modal
             // shows nothing, and being composed is what lets it warm the machinery both sheets then reuse.
             val isSheetShown = state.bottomSheetConfig != null || state.haveWalletBottomSheetConfig != null
+            val isScreenCovered = !isAnimated || !video.surface.isFirstFrameShown
             CreateWalletBottomSheet(
                 config = state.bottomSheetConfig,
-                prewarm = rememberSheetPrewarmReady(isScreenCovered = !isAnimated || !state.isVideoReady) &&
+                prewarm = rememberSheetPrewarmReady(isScreenCovered = isScreenCovered) &&
                     !rememberEverShown(isShown = isSheetShown),
                 onCollapseEnd = state.onCreateWalletSheetCollapsed,
             )
@@ -156,39 +148,12 @@ internal fun IntroductionScreen(
 }
 
 @Composable
-private fun VideoBackground(
-    state: IntroductionUM,
-    onSurfaceAvailable: (SurfaceView) -> Unit,
-    onSurfaceRelease: (SurfaceView) -> Unit,
-) {
-    val videoSize = state.videoSize
-    // A SurfaceView punches a hole through the window, erasing whatever is composed before it, so the shutter
-    // below has to come after it.
-    key(state.videoSurfaceKey) {
-        AndroidView(
-            modifier = Modifier.videoSurfaceSize(aspectRatio = videoSize.width.toFloat() / videoSize.height),
-            factory = { context ->
-                SurfaceView(context).also { surfaceView ->
-                    // The buffers keep the video's own size whatever the layout does, so no layout pass resizes
-                    // the surface under the decoder.
-                    surfaceView.holder.setFixedSize(videoSize.width, videoSize.height)
-                    onSurfaceAvailable(surfaceView)
-                }
-            },
-            onRelease = onSurfaceRelease,
-        )
-    }
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .graphicsLayer { alpha = if (state.isVideoReady) 0f else 1f }
-            .background(TangemTheme.colors3.bg.base),
-    ) {
-        // The video's own first frame, framed the way the surface frames it: the cut to playback lands on the
-        // same picture, and a surface with nothing in it yet shows this instead of the hole it punches through
-        // the window.
+private fun VideoBackground(surface: VideoSurfaceState) {
+    VideoSurface(state = surface, modifier = Modifier.fillMaxSize()) {
         Image(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(TangemTheme.colors3.bg.base),
             painter = painterResource(id = IntroductionR.drawable.img_introduction_background_poster),
             contentScale = ContentScale.Crop,
             contentDescription = null,
@@ -207,7 +172,7 @@ private fun VideoBackground(
  * The pass is a full composition and measurement of a modal card, and the first one in a process is the expensive
  * one — the few hundred milliseconds that otherwise sit between the viewer's first tap and the sheet starting to
  * move. It costs a frame, so it waits for one nobody sees: this is the cold-start screen, and until the video has
- * rendered its first frame (or is never going to) the shutter covers everything the pass could stutter.
+ * rendered its first frame (or is never going to) the poster covers everything the pass could stutter.
  *
  * [PREWARM_COVER_TIMEOUT] bounds that wait — a screen that uncovers before the pass is taken still has to take it,
  * since one stuttered frame is worth far less than half a second on the tap.
@@ -375,27 +340,8 @@ private fun BottomActions(state: IntroductionUM, modifier: Modifier = Modifier) 
         LegalCaption(
             modifier = Modifier.padding(top = 16.dp),
             onTermsOfServiceClick = state.onTermsOfServiceClick,
-            onPrivacyPolicyClick = null,
+            onPrivacyPolicyClick = state.onPrivacyPolicyClick,
         )
-    }
-}
-
-/**
- * Lays the surface out with the frame's own shape, large enough to cover the screen and centred on it.
- *
- * The crop the player asks the decoder for is a request: vendor decoders are free to ignore it and stretch the
- * frame into whatever shape the surface has, which on a screen taller than the video is what squeezes the
- * picture. A surface that already has the frame's shape renders the same either way.
- */
-private fun Modifier.videoSurfaceSize(aspectRatio: Float): Modifier = layout { measurable, constraints ->
-    val width = constraints.maxWidth
-    val height = constraints.maxHeight
-    val isCoveredByHeight = width < height * aspectRatio
-    val coverWidth = if (isCoveredByHeight) (height * aspectRatio).roundToInt() else width
-    val coverHeight = if (isCoveredByHeight) height else (width / aspectRatio).roundToInt()
-    val placeable = measurable.measure(Constraints.fixed(width = coverWidth, height = coverHeight))
-    layout(width = width, height = height) {
-        placeable.place(x = (width - coverWidth) / 2, y = (height - coverHeight) / 2)
     }
 }
 
@@ -405,16 +351,20 @@ private fun Modifier.videoSurfaceSize(aspectRatio: Float): Modifier = layout { m
 private fun IntroductionScreenPreview() {
     TangemThemePreview {
         IntroductionScreen(
-            onSurfaceAvailable = {},
-            onSurfaceRelease = {},
             videoPositionMs = { 0L },
-            state = IntroductionUM(
-                isVideoReady = true,
-                videoSize = IntSize(width = 1080, height = 1920),
-                videoSurfaceKey = 0,
-                isVideoFailed = false,
-                isVideoRunning = false,
+            video = LoopingVideoState(
+                surface = VideoSurfaceState(
+                    frameSize = VideoFrameSize(width = 1080, height = 1920),
+                    key = 0,
+                    isFirstFrameShown = true,
+                    onAvailable = {},
+                    onRelease = {},
+                ),
+                isRunning = false,
                 isMotionEnabled = false,
+                isFailed = false,
+            ),
+            state = IntroductionUM(
                 scenes = welcomeScenes,
                 bottomSheetConfig = null,
                 haveWalletBottomSheetConfig = null,
@@ -425,6 +375,7 @@ private fun IntroductionScreenPreview() {
                 onBuyTangemClick = {},
                 onCreateWalletSheetCollapsed = {},
                 onTermsOfServiceClick = {},
+                onPrivacyPolicyClick = {},
             ),
         )
     }

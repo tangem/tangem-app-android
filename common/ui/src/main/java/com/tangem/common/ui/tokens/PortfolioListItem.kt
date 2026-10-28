@@ -71,7 +71,7 @@ fun LazyListScope.portfolioTokensList(
                 modifier = modifier
                     .animateItem(fadeInSpec = null, placementSpec = null, fadeOutSpec = null)
                     .roundedShapeItemDecoration(
-                        radius = TangemTheme.dimens.radius14,
+                        radius = 14.dp,
                         currentIndex = 1,
                         lastIndex = 1,
                         backgroundColor = TangemTheme.colors.background.primary,
@@ -96,7 +96,7 @@ fun LazyListScope.portfolioTokensList(
                     .testModifier(indexWithHeader, testTag)
                     .animateItem(fadeInSpec = null, placementSpec = null, fadeOutSpec = null)
                     .roundedShapeItemDecoration(
-                        radius = TangemTheme.dimens.radius14,
+                        radius = 14.dp,
                         currentIndex = indexWithHeader,
                         lastIndex = lastIndex,
                         backgroundColor = TangemTheme.colors.background.primary,
@@ -146,7 +146,7 @@ fun LazyListScope.portfolioItem(portfolio: TokensListItemUM.Portfolio, modifier:
             modifier = modifier
                 .roundedShapeItemDecoration(
                     currentIndex = 0,
-                    radius = TangemTheme.dimens.radius14,
+                    radius = 14.dp,
                     lastIndex = effectiveLastIndex,
                     backgroundColor = TangemTheme.colors.background.primary,
                 ),
@@ -209,19 +209,19 @@ private fun EmptyAccountContent(emptyConent: PortfolioItemContentUM.Empty, modif
 fun NonContentItemContent(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing16),
+        verticalArrangement = Arrangement.spacedBy(space = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(
             painter = painterResource(id = R.drawable.ic_empty_64),
             contentDescription = null,
-            modifier = Modifier.size(size = TangemTheme.dimens.size64),
+            modifier = Modifier.size(size = 64.dp),
             tint = TangemTheme.colors.icon.inactive,
         )
 
         Text(
             text = stringResourceSafe(id = R.string.main_empty_tokens_list_message),
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing48),
+            modifier = Modifier.padding(horizontal = 48.dp),
             color = TangemTheme.colors.text.tertiary,
             textAlign = TextAlign.Center,
             style = TangemTheme.typography.caption2,

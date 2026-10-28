@@ -8,13 +8,13 @@ internal data class ManualBackupCheckUM(
     val onCompleteButtonClick: () -> Unit,
     val wordFields: ImmutableList<WordField>,
     val words: ImmutableList<String> = persistentListOf(),
-    val completeButtonEnabled: Boolean,
-    val completeButtonProgress: Boolean,
+    val isCompleteButtonEnabled: Boolean,
+    val isCompleteButtonInProgress: Boolean,
 ) {
     data class WordField(
         val index: Int,
         val word: TextFieldValue,
-        val error: Boolean,
+        val isError: Boolean,
         val onChange: (TextFieldValue) -> Unit,
     )
 }

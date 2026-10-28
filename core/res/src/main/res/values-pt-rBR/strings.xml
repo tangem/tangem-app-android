@@ -287,6 +287,7 @@
   </plurals>
   <string name="collectibles_account_collection_empty">Nenhum cartão</string>
   <string name="collectibles_account_collection_row_subtitle">Minha coleção</string>
+  <string name="collectibles_account_reconnect_subtitle">Reconectar a conta do Packs</string>
   <string name="collectibles_account_withdraw">Saque</string>
   <string name="collectibles_confirm_order_approve_button">Aprovar</string>
   <string name="collectibles_confirm_order_confirming_transaction_button">Confirmando a transação...</string>
@@ -327,6 +328,7 @@
   <string name="collectibles_main_pack_buyback_badge">Recompra de %s</string>
   <string name="collectibles_main_packs_empty">Ainda não há pacotes disponíveis aqui</string>
   <string name="collectibles_main_packs_load_error">Não foi possível carregar os pacotes. Toque para recarregar</string>
+  <string name="collectibles_main_relink_button">Vincular conta novamente</string>
   <string name="collectibles_main_search_empty">Nenhum resultado. Tente alterar os termos da busca\nou explore a partir da lista</string>
   <string name="collectibles_main_search_load_error">Não foi possível carregar a lista de cartões.</string>
   <string name="collectibles_main_title">Conta de pacotes</string>
@@ -937,6 +939,13 @@
   <string name="force_update_warning_message">Por favor, atualize o aplicativo para a versão mais recente para garantir o funcionamento correto.</string>
   <string name="force_update_warning_title">Atualização necessária</string>
   <string name="gasless_not_enough_funds_to_cover_token_fee">Fundos insuficientes</string>
+  <string name="gasless_solana_error_expired">A transação expirou antes de ser enviada. Inicie a troca novamente.</string>
+  <string name="gasless_solana_error_maybe_sent">A transação pode já ter sido enviada para a rede. Verifique o status antes de realizar outra troca.</string>
+  <string name="gasless_solana_error_rate_limited">Você atingiu o limite de trocas com taxas patrocinadas. Tente novamente daqui a uma hora.</string>
+  <string name="gasless_solana_error_rejected">A Tangem não pode pagar a taxa desta troca. Adicione SOL à sua carteira para pagar a taxa por conta própria.</string>
+  <string name="gasless_solana_error_unavailable">O patrocínio das taxas está indisponível no momento. Tente novamente mais tarde.</string>
+  <string name="gasless_solana_sponsored_fee_description">Esta transação é assinada em duas etapas: você assina a sua parte, e a Tangem adiciona o pagamento da taxa. Mesmo após a sua assinatura, a Tangem ainda poderá recusá-la.</string>
+  <string name="gasless_solana_sponsored_fee_title">A Tangem paga a taxa de rede</string>
   <string name="gasless_transaction_fee">Taxa de transação</string>
   <string name="gasless_tron_activation_attempts_limit">Você fez várias tentativas. Tente novamente mais tarde.</string>
   <string name="gasless_tron_activation_min_balance_description">Seu saldo deve ser superior a %s.</string>
@@ -1186,19 +1195,42 @@
   <string name="joint_account_activation_title">Você está ativando uma conta compartilhada</string>
   <string name="joint_account_coming_soon_description">Esta ação ainda não é compatível com contas conjuntas. Estamos trabalhando nisso</string>
   <string name="joint_account_coming_soon_title">Em breve nas contas conjuntas</string>
+  <string name="joint_account_compromised_message">O endereço da conta no seu dispositivo não corresponde ao registrado em nossos servidores.</string>
+  <string name="joint_account_compromised_title">Não foi possível verificar esta conta</string>
+  <string name="joint_account_confirm_account_subtitle">Antes de usar sua conta conjunta, certifique-se de que todos os membros vejam exatamente o mesmo endereço.</string>
+  <string name="joint_account_confirm_account_title">Confirmar a conta</string>
+  <string name="joint_account_confirm_address_compare_subtitle">Entre em contato com todos os membros fora do aplicativo Tangem, por telefone, mensagem ou pessoalmente. Verifique se todos veem exatamente o mesmo endereço.</string>
+  <string name="joint_account_confirm_address_compare_title">Compare com os demais membros</string>
+  <string name="joint_account_confirm_address_confirm_button">Confirmado com todos</string>
+  <string name="joint_account_confirm_address_everyone_subtitle">Sua conta estará pronta assim que todos os membros confirmarem o endereço.</string>
+  <string name="joint_account_confirm_address_everyone_title">Todos devem confirmar</string>
+  <string name="joint_account_confirm_address_label">Endereço compartilhado</string>
+  <string name="joint_account_confirm_address_mismatch_button">Os endereços não correspondem</string>
+  <string name="joint_account_confirm_shared_address">Confirmar endereço compartilhado</string>
   <string name="joint_account_invite_invalid_subtitle">Verifique se você abriu o link correto ou peça ao criador da conta para enviá-lo novamente</string>
   <string name="joint_account_invite_invalid_title">O link de convite não é válido</string>
   <string name="joint_account_invite_load_failed_subtitle">Não foi possível carregar a página de convite.\nToque para recarregar</string>
   <string name="joint_account_invite_member_message">Participe da minha conta conjunta “%1$s” na Tangem %2$s</string>
   <string name="joint_account_invite_member_message_label">Mensagem de convite</string>
+  <plurals name="joint_account_invite_members_awaiting_to_join">
+    <item quantity="one">Aguardando a entrada de %d membro</item>
+    <item quantity="other">Aguardando a entrada de %d membros</item>
+  </plurals>
   <string name="joint_account_invite_members_creator">Criador</string>
+  <string name="joint_account_invite_members_everyone_joined">Todos os membros entraram</string>
   <string name="joint_account_invite_members_invite">Convidar</string>
+  <string name="joint_account_invite_members_invite_expired">Convite expirado</string>
+  <plurals name="joint_account_invite_members_invite_more">
+    <item quantity="one">Convide mais %d membro</item>
+    <item quantity="other">Convide mais %d membros</item>
+  </plurals>
   <string name="joint_account_invite_members_invited">Convidado</string>
   <string name="joint_account_invite_members_member">Membro</string>
   <string name="joint_account_invite_members_member_info">Informações do membro</string>
   <string name="joint_account_invite_members_new_member">Novo membro</string>
   <string name="joint_account_invite_members_not_invited">Não convidado</string>
   <string name="joint_account_invite_members_other_members">Outros membros</string>
+  <string name="joint_account_invite_members_re_invite">Convidar novamente</string>
   <string name="joint_account_invite_members_safety_first_point_subtitle">Qualquer pessoa que abrir o link poderá participar e assinar. Envie-o somente à pessoa correta — nunca o publique</string>
   <string name="joint_account_invite_members_safety_first_point_title">O link funciona como uma chave</string>
   <string name="joint_account_invite_members_safety_second_point_subtitle">Todos os membros podem aprovar transações em conjunto com os demais. Convide apenas pessoas em quem você confia</string>
@@ -1211,6 +1243,9 @@
   <string name="joint_account_invite_members_subtitle">%1$s de %2$s entraram, incluindo você</string>
   <string name="joint_account_invite_members_title">Convidar membros</string>
   <string name="joint_account_invite_members_to_join">Convide membros para participar</string>
+  <string name="joint_account_invite_members_until">Até %s</string>
+  <string name="joint_account_invite_members_until_today">Até hoje, às %s</string>
+  <string name="joint_account_invite_members_until_tomorrow">Até amanhã, às %s</string>
   <string name="joint_account_invite_members_waiting_title">Aguardando membros</string>
   <string name="joint_account_invite_share_title">Convite para %s</string>
   <string name="joint_account_join_confirm_sheet_subtitle">Todos os membros desta conta compartilham o mesmo saldo. Outros membros podem movimentar os fundos sem a sua aprovação quando obtiverem assinaturas suficientes</string>
@@ -1237,6 +1272,12 @@
   <string name="joint_account_members_role_you">Você</string>
   <string name="joint_account_members_signers_subtitle">Para aprovar operações</string>
   <string name="joint_account_members_signers_title">Obrigatório assinar</string>
+  <string name="joint_account_members_status_confirmed">Confirmado</string>
+  <string name="joint_account_members_status_not_confirmed">Não confirmado</string>
+  <plurals name="joint_account_members_still_need_to_confirm">
+    <item quantity="one">%d membro ainda precisa confirmar</item>
+    <item quantity="other">%d membros ainda precisam confirmar</item>
+  </plurals>
   <string name="joint_account_members_subtitle">Defina quantas pessoas compartilharão a conta. Todas as transações dependerão da assinatura de %1$s de %2$s pessoas. Isso não poderá ser alterado posteriormente</string>
   <string name="joint_account_members_subtitle_helper_part"> %1$s de %2$s para assinar</string>
   <string name="joint_account_members_subtitle_main_part">Defina quantas pessoas compartilharão a conta. Todas as transações dependerão de %1$s. Isso não poderá ser alterado posteriormente</string>
@@ -1625,6 +1666,7 @@
   <string name="nft_receive_title">Receber NFT</string>
   <string name="nft_receive_unavailable_asset_warning_message">Você ainda não adicionou esta rede. Para receber NFTs, adicione-a ao seu portfólio.</string>
   <string name="nft_receive_unavailable_asset_warning_title">Rede não adicionada</string>
+  <string name="nft_receive_unsupported_cnft_description">Os cNFTs ainda não são compatíveis. Por favor, não os envie para sua carteira.</string>
   <string name="nft_receive_unsupported_types">Tipos de NFT não suportados</string>
   <string name="nft_receive_unsupported_types_description">cNFTs e pNFTs ainda não são suportados. Por favor, não os envie para sua carteira.</string>
   <string name="nft_send">Enviar NFT</string>
@@ -1877,6 +1919,7 @@
   <string name="prediction_details_market_volume">Volume:</string>
   <string name="prediction_details_resolution_date">Data de resolução</string>
   <string name="prediction_details_total_volume">Volume total</string>
+  <string name="prediction_event_live">Ao vivo</string>
   <plurals name="prediction_event_more_outcomes">
     <item quantity="one">+%d Resultado</item>
     <item quantity="other">+%d Resultados</item>
@@ -2336,7 +2379,7 @@
   <string name="settings_wallet_name_title">Nome</string>
   <string name="social_agreement_action_create">Criar carteira</string>
   <string name="social_login_consent_acknowledge">Entendo que, se eu não salvar minha frase de recuperação, a perda de acesso à minha conta %s poderá me impedir permanentemente de acessar esta carteira.</string>
-  <string name="social_login_consent_description">As chaves de sua carteira são criptografadas e armazenadas em backup na sua conta na nuvem. A tangem não pode acessá-las. Faça login com %1$s para restaurar sua carteira ou use sua frase de recuperação se perder acesso à sua conta %1$s.</string>
+  <string name="social_login_consent_description">As chaves de sua carteira são criptografadas e armazenadas em backup na sua conta na nuvem. A Tangem não pode acessá-las. Faça login com %1$s para restaurar sua carteira ou use sua frase de recuperação se perder o acesso à sua conta %1$s.</string>
   <string name="social_login_consent_email_sharing">Receba atualizações sobre produtos e ofertas exclusivas por e-mail</string>
   <string name="social_login_consent_learn_more">Saiba mais</string>
   <string name="social_login_consent_title">Criar uma carteira com a conta %s</string>
@@ -2353,7 +2396,7 @@
   <string name="social_login_error_support">Entre em contato com o suporte</string>
   <string name="social_login_error_unavailable">O login com %s não está disponível neste dispositivo.</string>
   <string name="social_login_restoring_wallet">Restaurando sua carteira</string>
-  <string name="social_login_restoring_wallet_description">Restaurando seus tokens e saldos</string>
+  <string name="social_login_restoring_wallet_description">Restaurando seus tokens</string>
   <string name="social_login_toast_wallet_added">Carteira adicionada</string>
   <string name="social_login_toast_wallet_created">Carteira criada</string>
   <string name="social_wallet_delete_anyway">Excluir mesmo assim</string>
@@ -2364,7 +2407,7 @@
   <string name="social_wallet_delete_error_description">Não foi possível excluir esta carteira. Por favor, tente novamente</string>
   <string name="social_wallet_delete_title">Excluir carteira?</string>
   <string name="social_wallet_log_out_description">Você sempre poderá fazer login novamente a qualquer momento.</string>
-  <string name="social_wallet_log_out_description_v2">Isso remove apenas a carteira deste dispositivo. Ela continua vinculada à sua conta %1$s, e você pode restaurá-la fazendo login com %1$s.</string>
+  <string name="social_wallet_log_out_description_v2">Isso remove a carteira apenas deste dispositivo. Ela continua vinculada à sua conta %1$s, e você pode restaurá-la fazendo login com %1$s.</string>
   <string name="social_wallet_log_out_title">Tem certeza de que deseja sair?</string>
   <string name="social_wallet_settings_delete_wallet">Excluir carteira</string>
   <string name="social_wallet_settings_delete_wallet_footer">A exclusão da sua carteira é irreversível. Sem um backup, não será possível restaurá-la.</string>
@@ -3070,6 +3113,15 @@
   <string name="tangempay_topup_receive_title">De outra carteira ou exchange</string>
   <string name="tangempay_topup_swap_body">Recarregue sua conta com qualquer token da carteira</string>
   <string name="tangempay_topup_swap_title">Da sua Tangem Wallet</string>
+  <string name="tangempay_unified_onboarding_everything_header">Para tudo</string>
+  <string name="tangempay_unified_onboarding_legal">Os recursos disponíveis dependem de onde você mora. Confirmaremos isso logo após a verificação</string>
+  <string name="tangempay_unified_onboarding_money_account_caption">Muito prático</string>
+  <string name="tangempay_unified_onboarding_money_account_subtitle">Receba transferências em USD via ACH, com conversão para USDC na proporção de 1:1; taxa fixa de US$ 1</string>
+  <string name="tangempay_unified_onboarding_money_account_title">Seus próprios dados bancários nos EUA. %1$s</string>
+  <string name="tangempay_unified_onboarding_plan_caption">Um plano</string>
+  <string name="tangempay_unified_onboarding_plan_subtitle">O Basic é gratuito.</string>
+  <string name="tangempay_unified_onboarding_plan_title">%1$s O Plus inclui ambos e oferece muito mais</string>
+  <string name="tangempay_unified_onboarding_terms_button">Termos e taxas</string>
   <string name="tangempay_usdc_on_polygon_network">USDC na rede Polygon</string>
   <string name="tangempay_va_account_details">Detalhes da conta</string>
   <string name="tangempay_va_available_to_deposit_day">Disponível para depósito diário:</string>

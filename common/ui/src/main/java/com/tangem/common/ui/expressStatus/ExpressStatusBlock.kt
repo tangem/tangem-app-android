@@ -47,15 +47,15 @@ fun ExpressStatusBlock(state: ExpressStatusUM, modifier: Modifier = Modifier) {
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
             .padding(
-                vertical = TangemTheme.dimens.spacing14,
-                horizontal = TangemTheme.dimens.spacing12,
+                vertical = 14.dp,
+                horizontal = 12.dp,
             ),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
-                .padding(bottom = TangemTheme.dimens.spacing16),
+                .padding(bottom = 16.dp),
         ) {
             Text(
                 text = state.title.resolveReference(),
@@ -74,8 +74,8 @@ fun ExpressStatusBlock(state: ExpressStatusUM, modifier: Modifier = Modifier) {
                         contentDescription = null,
                         tint = TangemTheme.colors.icon.informative,
                         modifier = Modifier
-                            .size(TangemTheme.dimens.spacing16)
-                            .padding(end = TangemTheme.dimens.spacing2),
+                            .size(16.dp)
+                            .padding(end = 2.dp),
                     )
                     Text(
                         modifier = Modifier.align(Alignment.CenterVertically),
@@ -144,7 +144,7 @@ private fun ExpressStatusStep(status: ExpressStatusItemUM, isLast: Boolean) {
                 style = TangemTheme.typography.body2,
                 color = textColor,
                 modifier = Modifier
-                    .padding(start = TangemTheme.dimens.spacing12),
+                    .padding(start = 12.dp),
             )
         }
     }
@@ -154,13 +154,13 @@ private fun ExpressStatusStep(status: ExpressStatusItemUM, isLast: Boolean) {
 private fun StepDefault() {
     Box(
         modifier = Modifier
-            .size(TangemTheme.dimens.size20)
+            .size(20.dp)
             .border(
-                width = TangemTheme.dimens.size1_5,
+                width = 1.5.dp,
                 color = TangemTheme.colors.field.focused,
                 shape = CircleShape,
             )
-            .padding(TangemTheme.dimens.spacing2),
+            .padding(2.dp),
     )
 }
 
@@ -171,13 +171,13 @@ private fun Step(iconColor: Color, @DrawableRes iconRes: Int, borderColor: Color
         contentDescription = null,
         tint = iconColor,
         modifier = Modifier
-            .size(TangemTheme.dimens.size20)
+            .size(20.dp)
             .border(
-                width = TangemTheme.dimens.size1_5,
+                width = 1.5.dp,
                 color = borderColor,
                 shape = CircleShape,
             )
-            .padding(TangemTheme.dimens.spacing2),
+            .padding(2.dp),
     )
 }
 
@@ -185,10 +185,10 @@ private fun Step(iconColor: Color, @DrawableRes iconRes: Int, borderColor: Color
 private fun StepInProgress() {
     CircularProgressIndicator(
         color = TangemTheme.colors.icon.primary1,
-        strokeWidth = TangemTheme.dimens.size2,
+        strokeWidth = 2.dp,
         modifier = Modifier
-            .padding(TangemTheme.dimens.spacing2)
-            .size(TangemTheme.dimens.size14),
+            .padding(2.dp)
+            .size(14.dp),
     )
 }
 
@@ -196,10 +196,10 @@ private fun StepInProgress() {
 private fun StepSeparator() {
     Box(
         modifier = Modifier
-            .padding(vertical = TangemTheme.dimens.spacing2)
+            .padding(vertical = 2.dp)
             .size(
-                width = TangemTheme.dimens.size1_5,
-                height = TangemTheme.dimens.size10,
+                width = 1.5.dp,
+                height = 10.dp,
             )
             .background(
                 color = TangemTheme.colors.field.focused,

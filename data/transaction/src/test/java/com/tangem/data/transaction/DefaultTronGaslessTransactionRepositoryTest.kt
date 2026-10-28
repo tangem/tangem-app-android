@@ -8,13 +8,17 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.grow.datasource.gasless.TronGaslessApi
 import com.tangem.grow.datasource.gasless.models.GaslessErrorResponse
 import com.tangem.grow.datasource.gasless.models.GaslessServiceResponse
+import com.tangem.grow.datasource.gasless.models.tron.TronApproveRequest
 import com.tangem.grow.datasource.gasless.models.tron.TronEstimateBreakdown
+import com.tangem.grow.datasource.gasless.models.tron.TronEstimateRequestBody
 import com.tangem.grow.datasource.gasless.models.tron.TronEstimateResponse
 import com.tangem.grow.datasource.gasless.models.tron.TronSubmitResponse
 import com.tangem.grow.datasource.gasless.models.tron.TronTokenDto
 import com.tangem.grow.datasource.gasless.models.tron.TronTokensResponse
 import com.tangem.domain.transaction.error.GaslessServiceException
 import com.tangem.domain.transaction.error.TronActivationRefusal
+import com.tangem.domain.transaction.models.tron.TronGaslessApprove
+import com.tangem.domain.transaction.models.tron.TronGaslessApproveEstimateParams
 import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -82,6 +86,58 @@ internal class DefaultTronGaslessTransactionRepositoryTest {
         assertThat(quote.trxCost).isEqualTo(BigDecimal("8.0722"))
         assertThat(quote.expiresAtEpochMs).isEqualTo(Instant.parse("2026-06-03T12:34:56.000Z").toEpochMilli())
     }
+
+    @Test
+    fun `GIVEN an approval WHEN estimateApprove THEN sends the approve block and keeps the approval in the quote`() =
+        runTest {
+            // Arrange
+            val approve = TronGaslessApprove(
+                fromAddress = "TFrom",
+                tokenContract = "TUSDT",
+                amount = BigInteger("3000000"),
+                spenderAddress = "TRouter",
+            )
+            coEvery { api.estimate(any(), any()) } returns ApiResponse.Success(
+                GaslessServiceResponse(
+                    result = TronEstimateResponse(
+                        quoteId = "q_1",
+                        feeRecipient = "TFee",
+                        compensationToken = "TUSDT",
+                        compensationAmount = "2.75",
+                        compensationAmountRaw = "2750000",
+                        estimate = TronEstimateBreakdown(energy = 99764, bandwidth = 345, trxCost = "8.0722"),
+                        expiresAt = "2026-06-03T12:34:56.000Z",
+                    ),
+                    isSuccess = true,
+                    timestamp = "t",
+                ),
+            )
+
+            // Act
+            val quote = repository.estimateApprove(
+                TronGaslessApproveEstimateParams(
+                    userWalletId = userWalletId,
+                    approve = approve,
+                    feeTokenContract = "TUSDT",
+                ),
+            )
+
+            // Assert
+            assertThat(quote.quotedApprove).isEqualTo(approve)
+            coVerify(exactly = 1) {
+                api.estimate(
+                    userWalletId = userWalletId.stringValue,
+                    body = TronEstimateRequestBody(
+                        fromAddress = "TFrom",
+                        toAddress = null,
+                        tokenContract = "TUSDT",
+                        amount = "3000000",
+                        feeTokenContract = "TUSDT",
+                        approve = TronApproveRequest(spender = "TRouter"),
+                    ),
+                )
+            }
+        }
 
     @Test
     fun `GIVEN unsuccessful estimate WHEN estimate THEN throws`() = runTest {

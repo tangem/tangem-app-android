@@ -3,9 +3,9 @@ package com.tangem.features.feed.model.feed
 import android.text.format.DateFormat
 import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.earn.usecase.FetchTopEarnTokensUseCase
@@ -46,7 +46,7 @@ internal class FeedComponentModelTest {
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val fetchTopEarnTokensUseCase: FetchTopEarnTokensUseCase = mockk(relaxed = true)
     private val getTopEarnTokensUseCase: GetTopEarnTokensUseCase = mockk()
-    private val appRouter: AppRouter = mockk(relaxed = true)
+    private val router: Router = mockk(relaxed = true)
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory = mockk(relaxed = true)
     private val getTopFiveMarketTokenUseCase: GetTopFiveMarketTokenUseCase = mockk(relaxed = true)
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
@@ -96,7 +96,7 @@ internal class FeedComponentModelTest {
             stateController = FeedStateController(),
             fetchTopEarnTokensUseCase = fetchTopEarnTokensUseCase,
             getTopEarnTokensUseCase = getTopEarnTokensUseCase,
-            appRouter = appRouter,
+            router = router,
             addToPortfolioManagerFactory = addToPortfolioManagerFactory,
             getTopFiveMarketTokenUseCase = getTopFiveMarketTokenUseCase,
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,

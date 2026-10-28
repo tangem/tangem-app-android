@@ -12,24 +12,33 @@ import com.tangem.data.cloudbackup.store.CloudBackupStore
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
 import com.tangem.domain.cloudbackup.models.RestoredCloudBackup
+import com.tangem.google.drive.DriveAbout
 import com.tangem.google.drive.DriveFile
 import com.tangem.google.drive.DriveFileListResponse
 import com.tangem.google.drive.DriveFileMetadata
+import com.tangem.google.drive.DriveUser
+import com.tangem.google.drive.GoogleDriveAccount
 import com.tangem.google.drive.GoogleDriveApi
 import com.tangem.google.drive.GoogleDriveTokenProvider
+import com.tangem.google.drive.store.DriveAccountStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
 import okhttp3.MediaType.Companion.toMediaType
@@ -45,6 +54,7 @@ internal class DefaultCloudBackupRepositoryTest {
     private val api: GoogleDriveApi = mockk()
     private val tokenProvider: GoogleDriveTokenProvider = mockk(relaxUnitFun = true)
     private val store = FakeCloudBackupStore()
+    private val accountStore = FakeDriveAccountStore()
 
     // Encryption itself is covered by CloudBackupCipherTest; here the cipher is stubbed so transport tests
     // don't pay the Argon2 cost and stay focused on the Drive API orchestration + error mapping.
@@ -53,6 +63,7 @@ internal class DefaultCloudBackupRepositoryTest {
     private val repository = DefaultCloudBackupRepository(
         api = api,
         tokenProvider = tokenProvider,
+        accountStore = accountStore,
         store = store,
         cipher = cipher,
         dispatchers = TestingCoroutineDispatcherProvider(),
@@ -86,8 +97,20 @@ internal class DefaultCloudBackupRepositoryTest {
     @BeforeEach
     fun setUp() {
         clearMocks(api, tokenProvider, cipher)
+        accountStore.accounts.clear()
+        coEvery { tokenProvider.currentAccountName() } returns ACCOUNT_NAME
         coEvery { tokenProvider.getAccessToken(any()) } returns "token".right()
         every { cipher.encrypt(any(), any(), any(), any()) } returns fileData
+    }
+
+    @Test
+    fun `GIVEN an authorized account WHEN signOut THEN only the local authorization is dropped`() = runTest {
+        // Act
+        repository.signOut()
+
+        // Assert
+        coVerify(exactly = 1) { tokenProvider.invalidate() }
+        confirmVerified(tokenProvider)
     }
 
     @Test
@@ -108,7 +131,7 @@ internal class DefaultCloudBackupRepositoryTest {
             secret = CloudBackupSecretData(mnemonic = "m".toCharArray(), isPassphraseRequired = false),
         )
         assertThat(actual).isEqualTo(expected.right())
-        coVerify(exactly = 1) { tokenProvider.invalidate() }
+        coVerify(exactly = 1) { tokenProvider.invalidateToken() }
         coVerify(exactly = 2) { api.downloadFileContent(any(), any(), any()) }
     }
 
@@ -211,6 +234,100 @@ internal class DefaultCloudBackupRepositoryTest {
     @Test
     fun `GIVEN nothing stored WHEN isBackedUp THEN returns false`() = runTest {
         assertThat(repository.isBackedUp(WALLET_ID)).isFalse()
+    }
+
+    @Test
+    fun `GIVEN a pinned account WHEN setBackedUp true THEN the account of the wallet is remembered`() = runTest {
+        // Act
+        repository.setBackedUp(WALLET_ID, backedUp = true)
+
+        // Assert
+        assertThat(accountStore.accounts).containsExactly(WALLET_ID, ACCOUNT_NAME)
+        coVerify(exactly = 0) { api.getAbout(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN an account Google picked itself WHEN setBackedUp true THEN the account Drive reports is remembered`() =
+        runTest {
+            // Arrange
+            coEvery { tokenProvider.currentAccountName() } returns null
+            coEvery { api.getAbout(any(), any()) } returns Response.success(
+                DriveAbout(user = DriveUser(emailAddress = OTHER_ACCOUNT_NAME)),
+            )
+
+            // Act
+            repository.setBackedUp(WALLET_ID, backedUp = true)
+
+            // Assert
+            assertThat(accountStore.accounts).containsExactly(WALLET_ID, OTHER_ACCOUNT_NAME)
+        }
+
+    @Test
+    fun `GIVEN a remembered account AND the account is unknown now WHEN setBackedUp true THEN it is forgotten`() =
+        runTest {
+            // Arrange — the backup was just written to whichever account Google picks, not the remembered one
+            accountStore.accounts[WALLET_ID] = OTHER_ACCOUNT_NAME
+            coEvery { tokenProvider.currentAccountName() } returns null
+            coEvery { api.getAbout(any(), any()) } returns Response.error(500, "".toResponseBody(null))
+
+            // Act
+            repository.setBackedUp(WALLET_ID, backedUp = true)
+
+            // Assert
+            assertThat(accountStore.accounts).isEmpty()
+        }
+
+    @Test
+    fun `GIVEN a remembered account WHEN setBackedUp false THEN the account is forgotten`() = runTest {
+        // Arrange
+        accountStore.accounts[WALLET_ID] = ACCOUNT_NAME
+
+        // Act
+        repository.setBackedUp(WALLET_ID, backedUp = false)
+
+        // Assert
+        assertThat(accountStore.accounts).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN a remembered account WHEN withAccountOf THEN the block runs in it`() = runTest {
+        // Arrange
+        accountStore.accounts[WALLET_ID] = ACCOUNT_NAME
+
+        // Act
+        val actual = repository.withAccountOf(WALLET_ID) { currentCoroutineContext()[GoogleDriveAccount] }
+
+        // Assert
+        assertThat(actual?.name).isEqualTo(ACCOUNT_NAME)
+        coVerify(exactly = 0) { tokenProvider.switchAccount(any()) }
+    }
+
+    @Test
+    fun `GIVEN no remembered account WHEN withAccountOf THEN the account is left to Google`() = runTest {
+        // Act
+        val actual = repository.withAccountOf(WALLET_ID) { currentCoroutineContext()[GoogleDriveAccount] }
+
+        // Assert — without the element the account pinned on a screen would be searched instead
+        assertThat(actual).isNotNull()
+        assertThat(actual?.name).isNull()
+    }
+
+    @Test
+    fun `GIVEN a block of one wallet running WHEN withAccountOf another THEN it runs without waiting`() = runTest {
+        // Arrange
+        accountStore.accounts[WALLET_ID] = ACCOUNT_NAME
+        accountStore.accounts[OTHER_WALLET_ID] = OTHER_ACCOUNT_NAME
+        val firstBlockReleased = CompletableDeferred<Unit>()
+        val first = async { repository.withAccountOf(WALLET_ID) { firstBlockReleased.await() } }
+        runCurrent()
+
+        // Act
+        val actual = repository.withAccountOf(OTHER_WALLET_ID) { currentCoroutineContext()[GoogleDriveAccount] }
+
+        // Assert
+        assertThat(actual?.name).isEqualTo(OTHER_ACCOUNT_NAME)
+        assertThat(first.isActive).isTrue()
+        firstBlockReleased.complete(Unit)
     }
 
     @Test
@@ -712,6 +829,9 @@ internal class DefaultCloudBackupRepositoryTest {
         const val HTTP_UNAUTHORIZED = 401
         const val HTTP_INTERNAL_ERROR = 500
         const val WALLET_ID = "wallet-1"
+        const val OTHER_WALLET_ID = "wallet-2"
+        const val ACCOUNT_NAME = "user@gmail.com"
+        const val OTHER_ACCOUNT_NAME = "other@gmail.com"
         const val FOLDER_MIME_TYPE = "application/vnd.google-apps.folder"
         const val SECRET_PAYLOAD = """{"mnemonic":"m","passphraseRequired":0}"""
         val JSON_MEDIA_TYPE = "application/json".toMediaType()
@@ -726,5 +846,16 @@ private class FakeCloudBackupStore : CloudBackupStore {
 
     override suspend fun setBackedUp(walletId: String, backedUp: Boolean) {
         walletIds.update { if (backedUp) it + walletId else it - walletId }
+    }
+}
+
+private class FakeDriveAccountStore : DriveAccountStore {
+
+    val accounts = mutableMapOf<String, String>()
+
+    override suspend fun getAccountName(walletId: String): String? = accounts[walletId]
+
+    override suspend fun setAccountName(walletId: String, accountName: String?) {
+        if (accountName == null) accounts.remove(walletId) else accounts[walletId] = accountName
     }
 }

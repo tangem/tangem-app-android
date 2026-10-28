@@ -13,6 +13,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
@@ -187,7 +188,7 @@ internal class DefaultManageFundsComponent @AssistedInject constructor(
     private fun ManageFundsRouteContent(route: ManageFundsModel.UiRoute, shouldFillHeight: Boolean) {
         val spec = route.uiSpec(model.flowType)
         val horizontalPadding = if (spec.shouldApplyHorizontalPadding) {
-            Modifier.padding(horizontal = TangemTheme.dimens2.x4)
+            Modifier.padding(horizontal = 16.dp)
         } else {
             Modifier
         }
@@ -201,7 +202,7 @@ internal class DefaultManageFundsComponent @AssistedInject constructor(
             ManageFundsModel.UiRoute.Loading -> Unit
             ManageFundsModel.UiRoute.ChooseToken -> chooseTokenComponent?.Content(modifier)
             ManageFundsModel.UiRoute.UserPortfolio -> CompositionLocalProvider(
-                LocalTangemBottomSheetContentBottomInset provides TangemTheme.dimens2.x4,
+                LocalTangemBottomSheetContentBottomInset provides 16.dp,
             ) {
                 userPortfolioComponent.Content(modifier)
             }

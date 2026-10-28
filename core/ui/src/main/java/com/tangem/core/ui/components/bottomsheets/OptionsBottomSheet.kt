@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.inputrow.InputRowDefault
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
@@ -44,9 +45,9 @@ private fun OptionsBottomSheetContent(content: OptionsBottomSheetContent) {
     Column(
         modifier = Modifier
             .padding(
-                start = TangemTheme.dimens.spacing16,
-                end = TangemTheme.dimens.spacing16,
-                bottom = TangemTheme.dimens.spacing16,
+                start = 16.dp,
+                end = 16.dp,
+                bottom = 16.dp,
             ),
     ) {
         content.options.forEachIndexed { index, option ->

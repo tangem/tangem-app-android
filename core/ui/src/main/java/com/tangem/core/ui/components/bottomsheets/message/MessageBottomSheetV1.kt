@@ -74,9 +74,9 @@ fun MessageBottomSheetContentV1(state: MessageBottomSheetUM, modifier: Modifier 
                 is MessageBottomSheetUM.InfoBlock -> {
                     ContentContainer(
                         modifier = Modifier
-                            .heightIn(min = TangemTheme.dimens.size180)
+                            .heightIn(min = 180.dp)
                             .fillMaxWidth()
-                            .padding(horizontal = TangemTheme.dimens.spacing16)
+                            .padding(horizontal = 16.dp)
                             .padding(bottom = 32.dp),
                         state = element,
                     )
@@ -101,7 +101,7 @@ private fun ContentContainer(state: MessageBottomSheetUM.InfoBlock, modifier: Mo
             Text(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = TangemTheme.dimens.spacing24)
+                    .padding(top = 24.dp)
                     .testTag(WarningBottomSheetTestTags.TITLE),
                 text = title.resolveReference(),
                 style = TangemTheme.typography.h3,
@@ -113,7 +113,7 @@ private fun ContentContainer(state: MessageBottomSheetUM.InfoBlock, modifier: Mo
             Text(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = TangemTheme.dimens.spacing8)
+                    .padding(top = 8.dp)
                     .testTag(WarningBottomSheetTestTags.MESSAGE),
                 text = body.resolveAnnotatedReference(),
                 style = TangemTheme.typography.body2,
@@ -123,7 +123,7 @@ private fun ContentContainer(state: MessageBottomSheetUM.InfoBlock, modifier: Mo
         }
         state.chip?.let { chip ->
             BottomSheetChip(
-                modifier = Modifier.padding(top = TangemTheme.dimens.spacing16),
+                modifier = Modifier.padding(top = 16.dp),
                 chip = chip,
             )
         }
@@ -141,7 +141,7 @@ private fun BottomSheetIconContainer(
     } else if (iconImage != null) {
         Image(
             modifier = modifier
-                .size(TangemTheme.dimens.size56)
+                .size(56.dp)
                 .clip(CircleShape),
             painter = painterResource(id = iconImage.res),
             contentDescription = null,
@@ -186,10 +186,10 @@ private fun BottomSheetChip(chip: MessageBottomSheetUM.Chip, modifier: Modifier 
     Text(
         modifier = modifier
             .background(
-                shape = RoundedCornerShape(TangemTheme.dimens.radius16),
+                shape = RoundedCornerShape(16.dp),
                 color = color.copy(alpha = 0.1F),
             )
-            .padding(vertical = TangemTheme.dimens.spacing4, horizontal = TangemTheme.dimens.spacing12),
+            .padding(vertical = 4.dp, horizontal = 12.dp),
         text = chip.text.resolveReference(),
         style = TangemTheme.typography.caption1,
         color = color,
@@ -204,8 +204,8 @@ private fun ButtonsContainer(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.padding(all = TangemTheme.dimens.spacing16),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+        modifier = modifier.padding(all = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         buttons.fastForEach { button ->
             val icon = button.icon?.let { iconResId ->

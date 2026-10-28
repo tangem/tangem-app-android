@@ -14,22 +14,31 @@ import com.tangem.domain.polymarket.usecase.CreatePolymarketActivitySessionUseCa
 import com.tangem.features.polymarket.impl.history.PolymarketHistoryComponent
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketHistoryUM.Content
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketHistoryUM.NextPage
+import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.pagination.PaginationStatus
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import java.io.File
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PolymarketHistoryModelTest {
 
+    private val exporter: PolymarketActivityExport = mockk()
+    private val messageSender: com.tangem.core.decompose.ui.UiMessageSender = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
     private val createSession: CreatePolymarketActivitySessionUseCase = mockk()
     private val session: PolymarketActivitySession = mockk(relaxed = true)
@@ -99,7 +108,7 @@ internal class PolymarketHistoryModelTest {
     }
 
     @Test
-    fun `GIVEN loaded history WHEN search and CSV are tapped THEN placeholders do not change state or load data`() = runTest {
+    fun `GIVEN loaded history WHEN search is tapped THEN the placeholder does not change state or load data`() = runTest {
         // Arrange
         val model = createModel()
         state.value = PolymarketActivityState(listOf(createHistoryActivity()), status = PaginationStatus.EndOfPagination)
@@ -110,13 +119,101 @@ internal class PolymarketHistoryModelTest {
         // Act
         content.search.onQueryChange("event")
         content.search.onActiveChange(true)
-        content.onDownloadCsvClick()
         runCurrent()
 
         // Assert
         assertThat(model.uiState.value).isSameInstanceAs(before)
         verify(exactly = 0) { session.loadMore() }
         verify(exactly = 0) { session.refresh() }
+    }
+
+    @Test
+    fun `GIVEN open details WHEN history refreshes THEN retains details and navigates to the same outcome`() = runTest {
+        // Arrange
+        val model = createModel()
+        state.value = PolymarketActivityState(listOf(historyTrade()), status = PaginationStatus.EndOfPagination)
+        runCurrent()
+
+        // Act
+        val content = model.uiState.value.content as Content.Data
+        requireNotNull(content.groups.single().activities.single().onClick).invoke()
+        val details = requireNotNull(model.uiState.value.details)
+        state.value = state.value.copy(isRefreshing = true)
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.details).isSameInstanceAs(details)
+        requireNotNull(details.onGoToPrediction).invoke()
+        assertThat(model.uiState.value.details).isNull()
+        verify(exactly = 1) {
+            router.push(PolymarketRoute.EventDetails("event", wallet, "market", "asset"))
+        }
+    }
+
+    @Test
+    fun `GIVEN a loss without event metadata WHEN opening details THEN hides amount and navigation`() = runTest {
+        // Arrange
+        val model = createModel()
+        val activity = createHistoryActivity(type = PolymarketActivity.Type.REDEEM)
+            .copy(redeemResult = PolymarketActivity.RedeemResult.LOST)
+        state.value = PolymarketActivityState(listOf(activity), status = PaginationStatus.EndOfPagination)
+        runCurrent()
+
+        // Act
+        val content = model.uiState.value.content as Content.Data
+        requireNotNull(content.groups.single().activities.single().onClick).invoke()
+
+        val details = requireNotNull(model.uiState.value.details)
+        // Assert
+        assertThat(details.amount).isNull()
+        assertThat(details.onGoToPrediction).isNull()
+        model.uiState.value.onDismissDetails()
+        assertThat(model.uiState.value.details).isNull()
+    }
+
+    @Test
+    fun `GIVEN an export in flight WHEN tapping twice and switching tabs THEN exports the original filter once`() = runTest {
+        // Arrange
+        val pendingFile = CompletableDeferred<File>()
+        coEvery { exporter(wallet, PolymarketActivityFilter()) } coAnswers { pendingFile.await() }
+        val model = createModel()
+        state.value = PolymarketActivityState(listOf(historyTrade()), status = PaginationStatus.EndOfPagination)
+        runCurrent()
+        val content = model.uiState.value.content as Content.Data
+        val received = async { model.exports.first() }
+
+        // Act
+        content.onDownloadCsvClick()
+        content.onDownloadCsvClick()
+        state.value = state.value.copy(filter = PolymarketActivityFilter(PolymarketActivity.Type.SELL))
+        runCurrent()
+        assertThat(model.uiState.value.isExporting).isTrue()
+        val file = File("predictions-history.csv")
+        pendingFile.complete(file)
+        runCurrent()
+
+        // Assert
+        assertThat(received.await()).isEqualTo(file)
+        assertThat(model.uiState.value.isExporting).isFalse()
+        coVerify(exactly = 1) { exporter(wallet, PolymarketActivityFilter()) }
+        coVerify(exactly = 1) { exporter(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN an export failure WHEN downloading THEN clears loading and offers an error message`() = runTest {
+        // Arrange
+        coEvery { exporter(any(), any()) } throws IllegalStateException("Failed page")
+        val model = createModel()
+        state.value = PolymarketActivityState(listOf(historyTrade()), status = PaginationStatus.EndOfPagination)
+        runCurrent()
+
+        // Act
+        (model.uiState.value.content as Content.Data).onDownloadCsvClick()
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value.isExporting).isFalse()
+        verify(exactly = 1) { messageSender.send(any()) }
     }
 
     private fun TestScope.createModel(): PolymarketHistoryModel {
@@ -127,6 +224,8 @@ internal class PolymarketHistoryModelTest {
             router = router,
             paramsContainer = MutableParamsContainer(PolymarketHistoryComponent.Params(wallet)),
             createSession = createSession,
+            exportActivity = exporter,
+            messageSender = messageSender,
         ).also { model = it }
     }
 

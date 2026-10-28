@@ -103,7 +103,7 @@ class ResolveEarnRateUseCase {
     }
 
     private fun StakingOption.StakeKit.preferredValidatorRewardInfo(): RewardInfo? = yield.validators
-        .filter { it.preferred }
+        .filter { it.isPreferred }
         .mapNotNull { it.rewardInfo }
         .maxByOrNull { it.rate }
 

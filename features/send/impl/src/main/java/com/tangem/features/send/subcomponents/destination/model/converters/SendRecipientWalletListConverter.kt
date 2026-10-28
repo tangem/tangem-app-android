@@ -6,7 +6,6 @@ import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.send.api.subcomponents.destination.entity.DestinationRecipientListUM
 import com.tangem.features.send.subcomponents.destination.model.transformers.WALLET_DEFAULT_COUNT
 import com.tangem.features.send.subcomponents.destination.model.transformers.WALLET_KEY_TAG
@@ -34,12 +33,10 @@ internal class SendRecipientWalletListConverter(
 
         return this.filterNotNull()
             .filter { destinationWallet ->
-                val isCoin = destinationWallet.cryptoCurrency is CryptoCurrency.Coin
-                val isPaymentAccount = destinationWallet.account is Account.Payment
                 val isNotSameAddress = destinationWallet.address != senderAddress
                 val isNotBlankAddress = destinationWallet.address.isNotBlank()
 
-                isNotBlankAddress && (isCoin || isPaymentAccount) && (isNotSameAddress || isSelfSendAvailable)
+                isNotBlankAddress && (isNotSameAddress || isSelfSendAvailable)
             }
             .groupBy { item -> item.name }
             .values.map { wallets ->

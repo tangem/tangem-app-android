@@ -43,7 +43,6 @@ fun TangemTheme(
     activity: Activity,
     uiDependencies: UiDependencies,
     typography: TangemTypography = TangemTheme.typography,
-    dimens: TangemDimens = TangemTheme.dimens,
     overrideSystemBarColors: Boolean = true,
     content: @Composable () -> Unit,
 ) {
@@ -61,7 +60,6 @@ fun TangemTheme(
         topSnackbarHostState = uiDependencies.globalTopSnackbarHostState,
         overrideSystemBarColors = overrideSystemBarColors,
         typography = typography,
-        dimens = dimens,
         content = {
             TangemThemeRedesign { content() }
         },
@@ -72,7 +70,6 @@ fun TangemTheme(
 fun TangemTheme(
     windowSize: WindowSize,
     typography: TangemTypography = TangemTheme.typography,
-    dimens: TangemDimens = TangemTheme.dimens,
     isDark: Boolean = false,
     vibratorHapticManager: VibratorHapticManager? = null,
     eventMessageHandler: EventMessageHandler = remember { EventMessageHandler() },
@@ -86,12 +83,10 @@ fun TangemTheme(
     val systemUiController = rememberSystemUiController()
     val systemBarsIconsController = remember(systemUiController) { SystemBarsIconsController(systemUiController) }
 
-    val shapes = remember { TangemShapes(dimens) }
+    val shapes = remember { TangemShapes() }
 
     // we don't want to override system bar colors in case of fragment bottom sheets for example
     if (overrideSystemBarColors) {
-        val systemUiController = rememberSystemUiController()
-
         SideEffect {
             systemUiController.setSystemBarsColor(
                 color = Color.Transparent,
@@ -115,7 +110,6 @@ fun TangemTheme(
         CompositionLocalProvider(
             LocalTangemColors provides rememberedColors,
             LocalTangemTypography provides typography,
-            LocalTangemDimens provides dimens,
             LocalTangemShapes provides shapes,
             LocalIsInDarkTheme provides isDark,
             LocalHapticManager provides hapticManager,
@@ -181,18 +175,6 @@ object TangemTheme {
         @Composable
         @ReadOnlyComposable
         get() = LocalTangemTypography3.current
-
-    @Deprecated("Use plain dp")
-    val dimens: TangemDimens
-        @Composable
-        @ReadOnlyComposable
-        get() = LocalTangemDimens.current
-
-    @Deprecated("Use plain dp")
-    val dimens2: TangemDimens2
-        @Composable
-        @ReadOnlyComposable
-        get() = LocalTangemDimens2.current
 
     val shapes: TangemShapes
         @Composable
@@ -384,14 +366,6 @@ internal val LocalTangemTypography = staticCompositionLocalOf {
 
 internal val LocalTangemTypography2 = staticCompositionLocalOf {
     TangemTypography2(InterFamily)
-}
-
-private val LocalTangemDimens = staticCompositionLocalOf {
-    TangemDimens()
-}
-
-private val LocalTangemDimens2 = staticCompositionLocalOf {
-    TangemDimens2()
 }
 
 internal val LocalTangemTypography3 = staticCompositionLocalOf {

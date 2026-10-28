@@ -64,6 +64,25 @@ internal class PredictionsBlockModelTest {
         blockModel.onDestroy()
     }
 
+    @Test
+    fun `GIVEN variant off at creation WHEN visibility refreshed after variant turns on THEN block becomes visible`() =
+        runTest {
+            // Arrange
+            every { featureToggles.isPolymarketEnabled } returns true
+            coEvery { abTestsManager.getValue(key = "twi_1576_polymarket", defaultValue = "off") } returnsMany
+                listOf("off", "on")
+            val blockModel = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            blockModel.refreshVisibility()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(blockModel.isVisible.value).isTrue()
+            blockModel.onDestroy()
+        }
+
     internal data class VariantModel(val variant: String, val expected: Boolean)
 
     private fun provideTestModels() = listOf(

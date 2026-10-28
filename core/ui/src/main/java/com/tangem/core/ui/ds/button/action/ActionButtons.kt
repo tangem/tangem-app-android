@@ -102,10 +102,10 @@ private fun ActionButton(button: TangemButtonUM, modifier: Modifier = Modifier) 
     }
     Column(
         modifier = modifier
-            .padding(horizontal = TangemTheme.dimens2.x2_5)
+            .padding(horizontal = 10.dp)
             .testTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
             .semantics { if (!button.isEnabled) disabled() },
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         TangemButton(

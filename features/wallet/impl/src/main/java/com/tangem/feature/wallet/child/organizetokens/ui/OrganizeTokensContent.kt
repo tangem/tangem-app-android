@@ -151,10 +151,10 @@ private fun TokenList(
         }
 
         val listContentPadding = PaddingValues(
-            top = TangemTheme.dimens2.x1,
-            bottom = TangemTheme.dimens2.x1 + footerInset,
-            start = TangemTheme.dimens2.x3,
-            end = TangemTheme.dimens2.x3,
+            top = 4.dp,
+            bottom = 4.dp + footerInset,
+            start = 12.dp,
+            end = 12.dp,
         )
 
         LazyColumn(
@@ -273,11 +273,11 @@ private fun LazyItemScope.DraggableItem(
 private fun BoxScope.BottomButtons(organizeTokensUM: OrganizeTokensUM) {
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
     Row(
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier
             .align(Alignment.BottomCenter)
-            .padding(horizontal = TangemTheme.dimens2.x4)
-            .padding(bottom = bottomBarHeight + TangemTheme.dimens2.x4),
+            .padding(horizontal = 16.dp)
+            .padding(bottom = bottomBarHeight + 16.dp),
     ) {
         TangemButton(
             modifier = Modifier
@@ -305,19 +305,19 @@ private fun Modifier.applyShapeAndShadow(roundingMode: RoundingModeUM, showShado
     return composed {
         val radius by animateDpAsState(
             targetValue = when (roundingMode) {
-                is RoundingModeUM.None -> TangemTheme.dimens2.x0
-                is RoundingModeUM.All -> TangemTheme.dimens2.x3
+                is RoundingModeUM.None -> 0.dp
+                is RoundingModeUM.All -> 12.dp
                 is RoundingModeUM.Bottom,
                 is RoundingModeUM.Top,
-                -> TangemTheme.dimens2.x4
+                -> 16.dp
             },
             label = "item_shape_radius",
         )
         val elevation by animateDpAsState(
             targetValue = if (showShadow) {
-                TangemTheme.dimens2.x2
+                8.dp
             } else {
-                TangemTheme.dimens2.x0
+                0.dp
             },
             label = "item_elevation",
         )
@@ -345,8 +345,8 @@ private fun OrganizeTokenRow(
                 tangemIconUM = tokenRowUM.headIconUM,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.HEAD)
-                    .padding(end = TangemTheme.dimens2.x3)
-                    .size(TangemTheme.dimens2.x10)
+                    .padding(end = 12.dp)
+                    .size(40.dp)
                     .testTag(tag = TokenElementsTestTags.TOKEN_ICON),
             )
 
@@ -354,7 +354,7 @@ private fun OrganizeTokenRow(
                 titleUM = tokenRowUM.titleUM,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.START_TOP)
-                    .padding(end = TangemTheme.dimens2.x2)
+                    .padding(end = 8.dp)
                     .testTag(tag = TokenElementsTestTags.TOKEN_TITLE),
             )
 
@@ -363,7 +363,7 @@ private fun OrganizeTokenRow(
                 isBalanceHidden = isBalanceHidden,
                 textStyle = TangemTheme.typography3.caption.medium,
                 textColor = TangemTheme.colors3.text.secondary,
-                placeholderWidth = TangemTheme.dimens2.x11,
+                placeholderWidth = 44.dp,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.START_BOTTOM)
                     .testTag(tag = TokenElementsTestTags.TOKEN_FIAT_AMOUNT),
@@ -384,17 +384,17 @@ private fun OrganizeTokenRow(
 @Composable
 @ReadOnlyComposable
 private fun getItemGap(roundingMode: RoundingModeUM): PaddingValues {
-    val paddingValue = TangemTheme.dimens2.x1
+    val paddingValue = 4.dp
 
     return if (roundingMode.isShowGap) {
         when (roundingMode) {
-            is RoundingModeUM.None -> PaddingValues(all = TangemTheme.dimens2.x0)
+            is RoundingModeUM.None -> PaddingValues(all = 0.dp)
             is RoundingModeUM.All -> PaddingValues(vertical = paddingValue)
             is RoundingModeUM.Top -> PaddingValues(top = paddingValue)
             is RoundingModeUM.Bottom -> PaddingValues(bottom = paddingValue)
         }
     } else {
-        PaddingValues(all = TangemTheme.dimens2.x0)
+        PaddingValues(all = 0.dp)
     }
 }
 

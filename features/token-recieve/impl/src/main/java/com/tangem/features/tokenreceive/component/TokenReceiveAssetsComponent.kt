@@ -39,7 +39,7 @@ internal class TokenReceiveAssetsComponent(
         val addresses: ImmutableList<ReceiveAddress>,
         val callback: TokenReceiveAssetsModelCallback,
         val onDismiss: () -> Unit,
-        val showMemoDisclaimer: Boolean,
+        val shouldShowMemoDisclaimer: Boolean,
         val currencyIconState: CurrencyIconState,
         val fullName: String,
         val tokenName: String,

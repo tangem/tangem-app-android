@@ -153,22 +153,22 @@ internal class WalletLoadingStateFactory(
         if (isSingleWalletWithToken) return persistentListOf()
 
         val firstButton = WalletManageButton.AddFunds(
-            enabled = true,
-            dimContent = false,
+            isEnabled = true,
+            shouldDimContent = false,
             onClick = { clickIntents.onAddFundsClick(userWallet.walletId) },
         )
 
         val lastButton = WalletManageButton.Transfer(
-            enabled = true,
-            dimContent = false,
+            isEnabled = true,
+            shouldDimContent = false,
             onClick = { clickIntents.onTransferClick(userWallet.walletId) },
         )
 
         return persistentListOf(
             firstButton,
             WalletManageButton.Swap(
-                enabled = true,
-                dimContent = false,
+                isEnabled = true,
+                shouldDimContent = false,
                 onClick = { clickIntents.onMultiWalletSwapClick(userWalletId = userWallet.walletId) },
             ),
             lastButton,
@@ -188,14 +188,14 @@ internal class WalletLoadingStateFactory(
     private fun createDimmedButtons(): PersistentList<WalletManageButton> {
         return persistentListOf(
             WalletManageButton.Receive(
-                enabled = true,
-                dimContent = true,
+                isEnabled = true,
+                shouldDimContent = true,
                 onClick = {},
                 onLongClick = null,
             ),
-            WalletManageButton.Send(enabled = true, dimContent = true, onClick = {}),
-            WalletManageButton.Buy(enabled = true, dimContent = true, onClick = {}),
-            WalletManageButton.Sell(enabled = true, dimContent = true, onClick = {}),
+            WalletManageButton.Send(isEnabled = true, shouldDimContent = true, onClick = {}),
+            WalletManageButton.Buy(isEnabled = true, shouldDimContent = true, onClick = {}),
+            WalletManageButton.Sell(isEnabled = true, shouldDimContent = true, onClick = {}),
         )
     }
 

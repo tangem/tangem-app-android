@@ -11,6 +11,7 @@ import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.txhistory.list.HistoryTxListManager
 import com.tangem.domain.txhistory.list.HistoryTxListManager.*
@@ -38,6 +39,7 @@ internal class DefaultHistoryTxListManager @AssistedInject constructor(
     dispatchers: CoroutineDispatcherProvider,
     private val expressServiceFetcher: ExpressServiceFetcher,
     private val paymentAccountCurrency: GetPaymentAccountCryptoCurrencyStatusUseCase,
+    private val moneyAccountCurrency: GetMoneyAccountCryptoCurrencyStatusUseCase,
     private val getAccountCryptoCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
@@ -185,7 +187,7 @@ internal class DefaultHistoryTxListManager @AssistedInject constructor(
     private suspend fun resolveOnChainSource(): OnChainSource {
         val isCryptoPortfolio = getAccountCryptoCurrencyStatusUseCase.invokeSync(userWalletId, currency).isSome()
         return when {
-            isCryptoPortfolio -> txHistoryItemsCountUseCase(userWalletId, currency).fold(
+            isCryptoPortfolio || isMoneyAccountCurrency() -> txHistoryItemsCountUseCase(userWalletId, currency).fold(
                 ifLeft = { error ->
                     when (error) {
                         is TxHistoryStateError.DataError -> throw error
@@ -200,6 +202,10 @@ internal class DefaultHistoryTxListManager @AssistedInject constructor(
             paymentAccountCurrency.invokeSync(userWalletId, currency).isSome() -> OnChainSource.TangemPay
             else -> OnChainSource.IndexTable
         }
+    }
+
+    private suspend fun isMoneyAccountCurrency(): Boolean {
+        return moneyAccountCurrency.invokeSync(userWalletId, currency).isSome()
     }
 
     /**

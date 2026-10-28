@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.map
  *
 [REDACTED_AUTHOR]
  */
-abstract class MultiAccountListSupplier(
+open class MultiAccountListSupplier(
     override val factory: MultiAccountListProducer.Factory,
     override val keyCreator: (Unit) -> String,
 ) : FlowCachingSupplier<MultiAccountListProducer, Unit, List<AccountList>>() {

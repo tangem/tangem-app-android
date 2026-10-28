@@ -69,7 +69,7 @@ internal class YieldSupplyPromoV2ModelTest {
     fun `GIVEN a campaign paying a reward APR WHEN the promo opens THEN the reward chip is added`() = runTest {
         // Arrange
         coEvery { getTokenStatusUseCase(any()) } returns MockYieldSupply.market(
-            campaign = MockYieldSupply.campaign(rewardsApr = BigDecimal("1.40")),
+            campaign = MockYieldSupply.campaign(rewardsApy = BigDecimal("1.40")),
         ).right()
 
         // Act
@@ -89,7 +89,7 @@ internal class YieldSupplyPromoV2ModelTest {
     fun `GIVEN a campaign paying nothing WHEN the promo opens THEN the reward chip is left out`() = runTest {
         // Arrange
         coEvery { getTokenStatusUseCase(any()) } returns MockYieldSupply.market(
-            campaign = MockYieldSupply.campaign(rewardsApr = BigDecimal.ZERO),
+            campaign = MockYieldSupply.campaign(rewardsApy = BigDecimal.ZERO),
         ).right()
 
         // Act
@@ -104,7 +104,7 @@ internal class YieldSupplyPromoV2ModelTest {
     fun `GIVEN a dormant campaign WHEN the promo opens THEN the reward chip is left out`() = runTest {
         // Arrange
         coEvery { getTokenStatusUseCase(any()) } returns MockYieldSupply.market(
-            campaign = MockYieldSupply.campaign(hasActiveCampaign = false, rewardsApr = BigDecimal("1.40")),
+            campaign = MockYieldSupply.campaign(hasActiveCampaign = false, rewardsApy = BigDecimal("1.40")),
         ).right()
 
         // Act

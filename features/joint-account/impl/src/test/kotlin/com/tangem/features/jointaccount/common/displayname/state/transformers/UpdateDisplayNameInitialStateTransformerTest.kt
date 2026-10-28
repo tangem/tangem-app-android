@@ -2,6 +2,7 @@ package com.tangem.features.jointaccount.common.displayname.state.transformers
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.R
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.jointaccount.common.displayname.ui.state.JointAccountDisplayNameUM
@@ -26,7 +27,7 @@ internal class UpdateDisplayNameInitialStateTransformerTest {
         val expected = JointAccountDisplayNameUM(
             name = model.initialName,
             buttonText = buttonText,
-            buttonIconRes = null,
+            buttonIcon = null,
             isButtonEnabled = model.expectedButtonEnabled,
             isButtonLoading = false,
             onNameChange = onNameChange,
@@ -65,7 +66,7 @@ internal class UpdateDisplayNameInitialStateTransformerTest {
         // Arrange
         val prevState = emptyState.copy(
             name = "Stale",
-            buttonIconRes = R.drawable.ic_tangem_24,
+            buttonIcon = TangemIconUM.Icon(iconRes = R.drawable.ic_tangem_24),
             isButtonLoading = true,
         )
         val transformer = createTransformer(initialName = "Ivan Zolo")
@@ -99,7 +100,7 @@ internal class UpdateDisplayNameInitialStateTransformerTest {
         val emptyState = JointAccountDisplayNameUM(
             name = "",
             buttonText = TextReference.EMPTY,
-            buttonIconRes = null,
+            buttonIcon = null,
             isButtonEnabled = false,
             isButtonLoading = false,
             onNameChange = {},

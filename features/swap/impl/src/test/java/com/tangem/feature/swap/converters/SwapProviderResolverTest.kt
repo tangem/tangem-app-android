@@ -20,8 +20,8 @@ import java.math.BigDecimal
  * row-badge resolution ([SwapProviderResolver.resolveBadge]).
  *
  * Ranking metric: best provider == lowest `from/to` fiat ratio == highest `to` fiat output for the
- * same `from` input. "Best DEX Rate" prefers the best-rated DEX/DEX_BRIDGE provider when any DEX is
- * present.
+ * same `from` input. With the overall-best-price toggle off, [SwapProviderResolver.findBest] prefers the
+ * best-rated DEX/DEX_BRIDGE provider when any DEX is present; with it on, the overall best wins.
  */
 internal class SwapProviderResolverTest {
 
@@ -50,7 +50,7 @@ internal class SwapProviderResolverTest {
             dexBridge to quote(fromFiat = "100", toFiat = "105"),
         )
 
-        val best = SwapProviderResolver.findBest(states)
+        val best = SwapProviderResolver.findBest(states, isOverallBestPriceEnabled = false)
 
         assertThat(best).isEqualTo(dex1)
     }
@@ -62,7 +62,7 @@ internal class SwapProviderResolverTest {
             cex2 to quote(fromFiat = "100", toFiat = "120"), // best CEX
         )
 
-        val best = SwapProviderResolver.findBest(states)
+        val best = SwapProviderResolver.findBest(states, isOverallBestPriceEnabled = false)
 
         assertThat(best).isEqualTo(cex2)
     }
@@ -75,7 +75,7 @@ internal class SwapProviderResolverTest {
             dexBridge to quote(fromFiat = "100", toFiat = "115"), // best among DEX-based
         )
 
-        val best = SwapProviderResolver.findBest(states)
+        val best = SwapProviderResolver.findBest(states, isOverallBestPriceEnabled = false)
 
         assertThat(best).isEqualTo(dexBridge)
     }
@@ -89,7 +89,7 @@ internal class SwapProviderResolverTest {
         )
 
         // Act
-        val best = SwapProviderResolver.findBest(states)
+        val best = SwapProviderResolver.findBest(states, isOverallBestPriceEnabled = false)
 
         // Assert
         assertThat(best).isEqualTo(cex2)
@@ -105,7 +105,7 @@ internal class SwapProviderResolverTest {
         )
 
         // Act
-        val best = SwapProviderResolver.findBest(states)
+        val best = SwapProviderResolver.findBest(states, isOverallBestPriceEnabled = false)
 
         // Assert
         assertThat(best).isEqualTo(dexBridge)
@@ -120,10 +120,57 @@ internal class SwapProviderResolverTest {
         )
 
         // Act
-        val best = SwapProviderResolver.findBest(states)
+        val best = SwapProviderResolver.findBest(states, isOverallBestPriceEnabled = false)
 
         // Assert
         assertThat(best).isEqualTo(cex1)
+    }
+
+    @Test
+    fun `GIVEN overall best price on AND CEX is overall best WHEN findBest THEN best CEX is selected`() {
+        // Arrange
+        val states = mapOf(
+            cex1 to quote(fromFiat = "100", toFiat = "120"),
+            dex1 to quote(fromFiat = "100", toFiat = "110"),
+            dexBridge to quote(fromFiat = "100", toFiat = "105"),
+        )
+
+        // Act
+        val best = SwapProviderResolver.findBest(states, isOverallBestPriceEnabled = true)
+
+        // Assert
+        assertThat(best).isEqualTo(cex1)
+    }
+
+    @Test
+    fun `GIVEN overall best price on AND DEX is overall best WHEN findBest THEN best DEX is selected`() {
+        // Arrange
+        val states = mapOf(
+            cex1 to quote(fromFiat = "100", toFiat = "105"),
+            dex1 to quote(fromFiat = "100", toFiat = "110"),
+        )
+
+        // Act
+        val best = SwapProviderResolver.findBest(states, isOverallBestPriceEnabled = true)
+
+        // Assert
+        assertThat(best).isEqualTo(dex1)
+    }
+
+    @Test
+    fun `GIVEN overall best price on AND overall best is region restricted WHEN findBest THEN best available provider`() {
+        // Arrange
+        val states = mapOf(
+            cex1 to quote(fromFiat = "100", toFiat = "130", restricted = true),
+            cex2 to quote(fromFiat = "100", toFiat = "120"),
+            dex1 to quote(fromFiat = "100", toFiat = "110"),
+        )
+
+        // Act
+        val best = SwapProviderResolver.findBest(states, isOverallBestPriceEnabled = true)
+
+        // Assert
+        assertThat(best).isEqualTo(cex2)
     }
 
     // endregion

@@ -1,0 +1,47 @@
+@file:Suppress("all")
+
+package com.tangem.core.ui.res.generated.icons
+
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.addPathNodes
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+
+/**
+ * Auto-generated from design tokens. Do not edit manually.
+ */
+
+private var _ic_kids_bottle_32: ImageVector? = null
+
+val Icons.ic_kids_bottle_32: ImageVector
+    get() {
+        if (_ic_kids_bottle_32 != null) return _ic_kids_bottle_32!!
+        _ic_kids_bottle_32 = ImageVector.Builder(
+            name = "ic_kids_bottle_32",
+            defaultWidth = 32.dp,
+            defaultHeight = 32.dp,
+            viewportWidth = 32f,
+            viewportHeight = 32f,
+        ).apply {
+            addPath(
+                fill = SolidColor(Color.Black),
+                pathFillType = PathFillType.NonZero,
+                pathData = addPathNodes("M22.1163 3.5128C23.2227 3.42153 24.3136 3.82171 25.0987 4.60655L25.2413 4.75792C25.9324 5.52888 26.2792 6.553 26.1935 7.59093C26.109 8.61307 25.6124 9.55197 24.8253 10.1983C25.216 10.8341 25.4288 11.5707 25.4288 12.3292C25.4287 13.4099 24.9985 14.4467 24.2335 15.2101L24.2325 15.2091L23.1964 16.2462C22.6253 16.8167 21.8723 17.0922 21.1241 17.0763C21.1281 17.1714 21.1319 17.2668 21.1319 17.3624C21.1323 19.1878 20.407 20.9387 19.1163 22.2296L14.3595 26.9864C12.1978 29.1477 8.69302 29.1478 6.53136 26.9864L2.72374 23.1788L2.72472 23.1778C1.68566 22.1403 1.10064 20.7332 1.09972 19.2648C1.09886 17.7957 1.68215 16.3866 2.72081 15.3478L7.47667 10.5909C8.76773 9.29986 10.52 8.57474 12.3458 8.5753C12.4407 8.57534 12.5356 8.5782 12.63 8.58214C12.6143 7.83454 12.8899 7.08169 13.4601 6.51085L13.463 6.50694L14.5011 5.47471C15.264 4.71236 16.2993 4.2844 17.378 4.28428C18.1348 4.28434 18.8693 4.49675 19.504 4.88585C20.1505 4.09601 21.0921 3.59749 22.1163 3.5128ZM12.3448 11.5753C11.3151 11.575 10.327 11.984 9.59874 12.712L4.8419 17.4689C4.36627 17.9447 4.09931 18.591 4.09972 19.2638C4.10035 19.9365 4.36858 20.5816 4.84483 21.0567L8.65343 24.8653C9.64354 25.8548 11.2483 25.855 12.2384 24.8653L16.9942 20.1085C17.7223 19.3804 18.1311 18.393 18.131 17.3634C18.1307 16.3338 17.7224 15.3461 16.9942 14.6183L15.09 12.714C14.3623 11.9855 13.3745 11.5757 12.3448 11.5753ZM22.9776 6.72862C22.816 6.56702 22.5912 6.48435 22.3634 6.50303C22.1355 6.52198 21.926 6.64016 21.7931 6.82628L21.4464 7.31846L21.4396 7.32823C21.0677 7.84736 20.4861 8.17659 19.8497 8.22862C19.2135 8.28044 18.5859 8.0505 18.1349 7.59874C17.9343 7.398 17.6618 7.28436 17.378 7.28428C17.0941 7.2844 16.8208 7.39678 16.6202 7.59776L16.6163 7.60264L15.6905 8.52159L21.1847 14.0157L22.1144 13.086C22.3154 12.8855 22.4287 12.6132 22.4288 12.3292C22.4288 12.0807 22.3419 11.8409 22.1857 11.6505L22.1144 11.5714C21.6626 11.1202 21.4315 10.4929 21.4835 9.85655C21.5356 9.22021 21.8658 8.6385 22.3849 8.26671L22.3868 8.26573L22.881 7.91221C23.0668 7.77918 23.1854 7.57161 23.2042 7.34386C23.223 7.11578 23.1395 6.89039 22.9776 6.72862Z"),
+            )
+        }.build()
+        return _ic_kids_bottle_32!!
+    }
+
+@Composable
+@Preview(showBackground = true)
+private fun IcKidsBottle32Preview() {
+    Icon(
+        imageVector = Icons.ic_kids_bottle_32,
+        contentDescription = null,
+    )
+}

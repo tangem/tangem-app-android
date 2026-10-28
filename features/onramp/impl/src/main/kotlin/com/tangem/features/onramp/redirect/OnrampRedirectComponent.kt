@@ -11,6 +11,7 @@ internal interface OnrampRedirectComponent : ComposableContentComponent {
     data class Params(
         val userWalletId: UserWalletId,
         val onBack: () -> Unit,
+        val onSuccess: (txId: String) -> Unit,
         val cryptoCurrency: CryptoCurrency,
         val onrampProviderWithQuote: OnrampProviderWithQuote.Data,
     )

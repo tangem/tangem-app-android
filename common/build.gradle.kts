@@ -17,7 +17,6 @@ dependencies {
     // region Firebase libraries
     implementation(platform(deps.firebase.bom))
     implementation(deps.firebase.analytics)
-    implementation(deps.firebase.crashlytics)
     implementation(deps.firebase.messaging)
     // endregion
 

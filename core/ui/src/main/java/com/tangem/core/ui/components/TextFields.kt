@@ -318,7 +318,7 @@ private enum class TangemTextFieldSize {
 
 @Composable
 private fun TangemTextFieldSize.toHeightDp(): Dp = when (this) {
-    TangemTextFieldSize.Default -> TangemTheme.dimens.size56
+    TangemTextFieldSize.Default -> 56.dp
 }
 
 @Composable

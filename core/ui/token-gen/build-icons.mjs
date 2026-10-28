@@ -115,6 +115,7 @@ function parseSvg(filePath) {
       fillRule: attr(a, 'fill-rule'),
       fillOpacity: attr(a, 'fill-opacity'),
       stroke: attr(a, 'stroke'),
+      strokeOpacity: attr(a, 'stroke-opacity'),
       strokeWidth: attr(a, 'stroke-width'),
       strokeLinecap: attr(a, 'stroke-linecap'),
       strokeLinejoin: attr(a, 'stroke-linejoin'),
@@ -127,7 +128,44 @@ function parseSvg(filePath) {
     if (!p.d) throw new Error('A <path> is missing the "d" attribute');
   }
 
-  return { viewportW, viewportH, defaultW, defaultH, paths };
+  return { viewportW, viewportH, defaultW, defaultH, paths, gradients: parseLinearGradients(src) };
+}
+
+function parseLinearGradients(src) {
+  const gradients = new Map();
+  const gradientRe = /<linearGradient\b([^>]*)>([\s\S]*?)<\/linearGradient>/g;
+  let m;
+  while ((m = gradientRe.exec(src)) !== null) {
+    const a = m[1];
+    const id = attr(a, 'id');
+    if (!id) throw new Error('A <linearGradient> is missing the "id" attribute');
+    if (attr(a, 'gradientUnits') !== 'userSpaceOnUse') {
+      throw new Error(`<linearGradient id="${id}"> must use gradientUnits="userSpaceOnUse"`);
+    }
+    if (attr(a, 'gradientTransform') != null) {
+      throw new Error(`<linearGradient id="${id}" gradientTransform="…"> is not supported`);
+    }
+    const stops = [];
+    const stopRe = /<stop\b([^>]*?)\/?>/g;
+    let s;
+    while ((s = stopRe.exec(m[2])) !== null) {
+      const offset = attr(s[1], 'offset') ?? '0';
+      stops.push({
+        offset: offset.endsWith('%') ? parseFloat(offset) / 100 : parseFloat(offset),
+        color: attr(s[1], 'stop-color') ?? 'black',
+        opacity: parseFloat(attr(s[1], 'stop-opacity') ?? '1'),
+      });
+    }
+    if (stops.length < 2) throw new Error(`<linearGradient id="${id}"> needs at least two <stop> elements`);
+    gradients.set(id, {
+      x1: parseFloat(attr(a, 'x1') ?? '0'),
+      y1: parseFloat(attr(a, 'y1') ?? '0'),
+      x2: parseFloat(attr(a, 'x2') ?? '0'),
+      y2: parseFloat(attr(a, 'y2') ?? '0'),
+      stops,
+    });
+  }
+  return gradients;
 }
 
 /**
@@ -181,7 +219,32 @@ function svgColorToKotlin(value, tintPlaceholders) {
   throw new Error(`Unsupported SVG color: "${value}"`);
 }
 
-function renderPath(p, indent, config) {
+function gradientStopColorToKotlin(stop) {
+  const named = { black: '#000000', white: '#FFFFFF' };
+  const value = named[stop.color] ?? stop.color;
+  const hex6 = value.match(/^#([0-9a-fA-F]{6})$/);
+  if (!hex6) throw new Error(`Unsupported gradient stop color: "${stop.color}"`);
+  const alpha = Math.round(stop.opacity * 255).toString(16).padStart(2, '0').toUpperCase();
+  return `Color(0x${alpha}${hex6[1].toUpperCase()})`;
+}
+
+function gradientRef(value) {
+  const m = value?.match(/^url\(#([^)]+)\)$/);
+  return m ? m[1] : null;
+}
+
+function renderLinearGradient(gradient, pad) {
+  const stops = gradient.stops.map(s => `${pad}    ${s.offset}f to ${gradientStopColorToKotlin(s)},`);
+  return [
+    'Brush.linearGradient(',
+    ...stops,
+    `${pad}    start = Offset(${gradient.x1}f, ${gradient.y1}f),`,
+    `${pad}    end = Offset(${gradient.x2}f, ${gradient.y2}f),`,
+    `${pad})`,
+  ].join('\n');
+}
+
+function renderPath(p, indent, config, gradients) {
   const pad = '    '.repeat(indent);
   const pad1 = '    '.repeat(indent + 1);
   const args = [];
@@ -189,9 +252,17 @@ function renderPath(p, indent, config) {
   // If a path has no fill at all and has stroke, leave fill out. Otherwise default to tintable black.
   const hasStroke = !!p.stroke && p.stroke !== 'none';
   const fillSpecified = p.fill != null;
-  let fillKt = svgColorToKotlin(p.fill, config.tintPlaceholders);
-  if (!fillSpecified && !hasStroke) fillKt = 'Color.Black';
-  if (fillKt) args.push(`fill = SolidColor(${fillKt})`);
+  const fillGradientId = gradientRef(p.fill);
+  let fillKt = null;
+  if (fillGradientId) {
+    const gradient = gradients.get(fillGradientId);
+    if (!gradient) throw new Error(`Fill references unknown gradient "${fillGradientId}"`);
+    args.push(`fill = ${renderLinearGradient(gradient, pad1)}`);
+  } else {
+    fillKt = svgColorToKotlin(p.fill, config.tintPlaceholders);
+    if (!fillSpecified && !hasStroke) fillKt = 'Color.Black';
+    if (fillKt) args.push(`fill = SolidColor(${fillKt})`);
+  }
 
   if (p.fillOpacity != null) {
     args.push(`fillAlpha = ${parseFloat(p.fillOpacity)}f`);
@@ -201,6 +272,7 @@ function renderPath(p, indent, config) {
 
   const strokeKt = svgColorToKotlin(p.stroke, config.tintPlaceholders);
   if (strokeKt) args.push(`stroke = SolidColor(${strokeKt})`);
+  if (strokeKt && p.strokeOpacity != null) args.push(`strokeAlpha = ${parseFloat(p.strokeOpacity)}f`);
   if (p.strokeWidth != null) args.push(`strokeLineWidth = ${parseFloat(p.strokeWidth)}f`);
   if (p.strokeLinecap) args.push(`strokeLineCap = StrokeCap.${capitalize(p.strokeLinecap)}`);
   if (p.strokeLinejoin) args.push(`strokeLineJoin = StrokeJoin.${capitalize(p.strokeLinejoin)}`);
@@ -216,6 +288,7 @@ function renderPath(p, indent, config) {
 
 function renderIconFile({ propName, fileName }, icon, config) {
   const usesStroke = icon.paths.some(p => p.stroke && p.stroke !== 'none');
+  const usesGradient = icon.paths.some(p => gradientRef(p.fill) != null);
 
   const imports = [
     'androidx.compose.material3.Icon',
@@ -232,11 +305,15 @@ function renderIconFile({ propName, fileName }, icon, config) {
     imports.push('androidx.compose.ui.graphics.StrokeCap');
     imports.push('androidx.compose.ui.graphics.StrokeJoin');
   }
+  if (usesGradient) {
+    imports.push('androidx.compose.ui.geometry.Offset');
+    imports.push('androidx.compose.ui.graphics.Brush');
+  }
   // When the namespace object lives in another package, import it.
   if (config.namespaceImport) imports.push(config.namespaceImport);
   imports.sort();
 
-  const pathBlocks = icon.paths.map(p => renderPath(p, 2, config)).join('\n');
+  const pathBlocks = icon.paths.map(p => renderPath(p, 2, config, icon.gradients)).join('\n');
 
   return `@file:Suppress("all")
 

@@ -20,7 +20,7 @@ class DerivePolymarketAddressesUseCase(
     suspend operator fun invoke(userWalletId: UserWalletId): Either<PolymarketOnboardingError, PolymarketAddresses> =
         eoaDeriver.deriveOwnerEoa(userWalletId = userWalletId)
             .mapLeft { it.toOnboardingError() }
-            .flatMap { ownerAddress -> addresses(userWalletId = userWalletId, ownerAddress = ownerAddress) }
+            .flatMap { ownerAddress -> fromOwner(userWalletId = userWalletId, ownerAddress = ownerAddress) }
 
     /**
      * The addresses if this device can produce them without asking the user for anything — no card session, no
@@ -33,10 +33,10 @@ class DerivePolymarketAddressesUseCase(
     suspend fun stored(userWalletId: UserWalletId): PolymarketAddresses? {
         val ownerAddress = eoaDeriver.storedOwnerEoa(userWalletId = userWalletId) ?: return null
 
-        return addresses(userWalletId = userWalletId, ownerAddress = ownerAddress).getOrNull()
+        return fromOwner(userWalletId = userWalletId, ownerAddress = ownerAddress).getOrNull()
     }
 
-    private fun addresses(
+    fun fromOwner(
         userWalletId: UserWalletId,
         ownerAddress: String,
     ): Either<PolymarketOnboardingError, PolymarketAddresses> =

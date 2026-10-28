@@ -13,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.block.BlockCard
-import com.tangem.core.ui.res.TangemTheme
 
 @Composable
 internal fun PushNotificationSettingsLoading(modifier: Modifier = Modifier) {
@@ -21,10 +20,10 @@ internal fun PushNotificationSettingsLoading(modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .padding(
-                horizontal = TangemTheme.dimens.spacing16,
-                vertical = TangemTheme.dimens.spacing12,
+                horizontal = 16.dp,
+                vertical = 12.dp,
             ),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         repeat(SHIMMER_ROW_COUNT) {
             ShimmerRow()
@@ -36,15 +35,15 @@ internal fun PushNotificationSettingsLoading(modifier: Modifier = Modifier) {
 private fun ShimmerRow(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         BlockCard(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
-                        horizontal = TangemTheme.dimens.spacing16,
-                        vertical = TangemTheme.dimens.spacing12,
+                        horizontal = 16.dp,
+                        vertical = 12.dp,
                     ),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -58,13 +57,13 @@ private fun ShimmerRow(modifier: Modifier = Modifier) {
                     modifier = Modifier
                         .width(SHIMMER_SWITCH_WIDTH)
                         .height(SHIMMER_SWITCH_HEIGHT),
-                    radius = TangemTheme.dimens.radius12,
+                    radius = 12.dp,
                 )
             }
         }
         RectangleShimmer(
             modifier = Modifier
-                .padding(horizontal = TangemTheme.dimens.spacing16)
+                .padding(horizontal = 16.dp)
                 .width(SHIMMER_SUBTITLE_WIDTH)
                 .height(SHIMMER_SUBTITLE_HEIGHT),
         )

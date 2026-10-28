@@ -17,6 +17,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
@@ -66,7 +67,7 @@ fun InputRowImage(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(TangemTheme.dimens.spacing12),
+                .padding(12.dp),
         ) {
             Text(
                 text = title.resolveReference(),
@@ -76,19 +77,19 @@ fun InputRowImage(
             Row(
                 modifier = Modifier
                     .padding(
-                        top = TangemTheme.dimens.spacing6,
+                        top = 6.dp,
                     ),
             ) {
                 CurrencyIcon(
                     state = tokenIconState,
                     shouldDisplayNetwork = showNetworkIcon,
                     modifier = Modifier
-                        .size(TangemTheme.dimens.size36),
+                        .size(36.dp),
                 )
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(start = TangemTheme.dimens.spacing12),
+                        .padding(start = 12.dp),
                 ) {
                     Text(
                         text = subtitle.resolveReference(),
@@ -99,7 +100,7 @@ fun InputRowImage(
                         text = caption.resolveReference(),
                         style = TangemTheme.typography.caption2,
                         color = captionColor,
-                        modifier = Modifier.padding(top = TangemTheme.dimens.spacing2),
+                        modifier = Modifier.padding(top = 2.dp),
                     )
                 }
                 iconRes?.let { iconRes ->

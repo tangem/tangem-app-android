@@ -25,7 +25,7 @@ internal object ValidatorStatePreviewData {
             stakedBalance = "355544384.45009977",
             website = "https://luganodes.com/",
             votingPower = 0.09778360195377911,
-            preferred = true,
+            isPreferred = true,
             isStrategicPartner = false,
         ),
         Yield.Validator(
@@ -41,7 +41,7 @@ internal object ValidatorStatePreviewData {
             stakedBalance = "12495684.05643019",
             website = "https://infstones.com/",
             votingPower = 0.0034366257754399774,
-            preferred = true,
+            isPreferred = true,
             isStrategicPartner = true,
         ),
         Yield.Validator(
@@ -57,7 +57,7 @@ internal object ValidatorStatePreviewData {
             stakedBalance = "85400369.96393165",
             website = "https://infstones.com/",
             votingPower = 0.023487238579718264,
-            preferred = true,
+            isPreferred = true,
             isStrategicPartner = false,
         ),
     )

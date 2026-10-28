@@ -32,7 +32,4 @@ sealed class SessionRefreshError {
 
     /** Device-key signing of the authentication payload failed (Keystore I/O or ECDSA failure). */
     data class SigningFailed(val cause: Throwable) : SessionRefreshError()
-
-    /** Refresher is disabled via `AND_15438_BACKEND_AUTHENTICATION_ENABLED` feature toggle. */
-    data object Disabled : SessionRefreshError()
 }

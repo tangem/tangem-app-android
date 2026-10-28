@@ -19,7 +19,7 @@ import com.tangem.core.ui.res.generated.icons.ic_clock_16
 internal fun CurrencyIconBottomBadge(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .size(TangemTheme.dimens.size12)
+            .size(12.dp)
             .background(
                 color = TangemTheme.colors.background.primary,
                 shape = CircleShape,
@@ -27,7 +27,7 @@ internal fun CurrencyIconBottomBadge(modifier: Modifier = Modifier) {
     ) {
         Box(
             modifier = Modifier
-                .padding(all = TangemTheme.dimens.spacing2)
+                .padding(all = 2.dp)
                 .matchParentSize()
                 .background(
                     color = TangemTheme.colors.icon.informative,

@@ -10,7 +10,7 @@ internal fun resetCardDialog(onConfirm: () -> Unit, dismiss: () -> Unit, onDismi
         message = resourceReference(R.string.onboarding_activation_error_message),
         confirmButtonText = resourceReference(R.string.common_support),
         dismissButtonText = resourceReference(R.string.common_ok),
-        dismissWarningColor = true,
+        isDismissWarningColor = true,
         onDismiss = dismiss,
         onConfirmClick = {
             onConfirm()

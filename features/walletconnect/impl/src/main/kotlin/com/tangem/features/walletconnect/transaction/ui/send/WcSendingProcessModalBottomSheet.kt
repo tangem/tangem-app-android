@@ -39,9 +39,9 @@ internal fun WcSendingProcessModalBottomSheet(config: TangemBottomSheetConfig) {
                 SpacerH(64.dp)
                 CircularProgressIndicator(
                     modifier = Modifier
-                        .size(TangemTheme.dimens.size32),
+                        .size(32.dp),
                     color = TangemTheme.colors.text.accent,
-                    strokeWidth = TangemTheme.dimens.size2,
+                    strokeWidth = 2.dp,
                 )
                 SpacerH(32.dp)
                 Text(

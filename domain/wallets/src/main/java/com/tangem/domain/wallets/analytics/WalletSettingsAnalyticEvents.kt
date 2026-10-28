@@ -5,6 +5,8 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACTION
 import com.tangem.core.analytics.models.AnalyticsParam.Key.STATUS
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
+import com.tangem.core.analytics.models.TrackingContextExcludedEvent
+import com.tangem.domain.sociallogin.models.SocialLoginError
 
 sealed class WalletSettingsAnalyticEvents(
     category: String = "Settings / Wallet Settings",
@@ -103,9 +105,20 @@ sealed class WalletSettingsAnalyticEvents(
         event = "Cloud Backup Deleted",
     )
 
-    class SocialRecoveryDeleted : WalletSettingsAnalyticEvents(
-        event = "Social Recovery Deleted",
-    )
+    class SocialRecoveryDeleted :
+        WalletSettingsAnalyticEvents(
+            event = "Social Recovery Deleted",
+            params = mobileWalletParams(),
+        ),
+        TrackingContextExcludedEvent
+
+    data class SocialRecoveryDeletionError(
+        val error: SocialLoginError,
+    ) : WalletSettingsAnalyticEvents(
+        event = "Social Recovery Deletion Error",
+        params = mobileWalletParams(AnalyticsParam.ERROR_MESSAGE to error.deletionMessage()),
+    ),
+        TrackingContextExcludedEvent
 
     data class CloudBackupDeletionError(
         val errorMessage: String,
@@ -131,17 +144,17 @@ sealed class WalletSettingsAnalyticEvents(
         event = "Forget Wallet Screen",
     )
 
-    class WalletForgotten : WalletSettingsAnalyticEvents(
-        event = "Wallet Forgotten",
-    )
+    class WalletForgotten :
+        WalletSettingsAnalyticEvents(event = "Wallet Forgotten", params = mobileWalletParams()),
+        TrackingContextExcludedEvent
 
     class LogOutRequest : WalletSettingsAnalyticEvents(
         event = "Log Out Request",
     )
 
-    class WalletLoggedOut : WalletSettingsAnalyticEvents(
-        event = "Wallet Logged Out",
-    )
+    class WalletLoggedOut :
+        WalletSettingsAnalyticEvents(event = "Wallet Logged Out", params = mobileWalletParams()),
+        TrackingContextExcludedEvent
 
     class DeleteWalletRequest : WalletSettingsAnalyticEvents(
         event = "Delete Wallet Request",
@@ -151,16 +164,20 @@ sealed class WalletSettingsAnalyticEvents(
         event = "Delete Wallet Screen Opened",
     )
 
-    class WalletDeleted : WalletSettingsAnalyticEvents(
-        event = "Wallet Deleted",
-    )
+    class WalletDeleted :
+        WalletSettingsAnalyticEvents(event = "Wallet Deleted", params = mobileWalletParams()),
+        TrackingContextExcludedEvent
 
     data class DeleteWalletError(
         val errorMessage: String,
     ) : WalletSettingsAnalyticEvents(
         event = "Delete Wallet Error",
-        params = mapOf(AnalyticsParam.ERROR_MESSAGE to errorMessage),
-    )
+        params = mobileWalletParams(AnalyticsParam.ERROR_MESSAGE to errorMessage),
+    ),
+        TrackingContextExcludedEvent {
+
+        constructor(error: SocialLoginError) : this(errorMessage = error.deletionMessage())
+    }
 
     class ButtonRecoveryPhrase : WalletSettingsAnalyticEvents(
         event = "Button - Recovery phrase",
@@ -298,3 +315,32 @@ sealed class WalletSettingsAnalyticEvents(
 }
 
 private fun Boolean.toYesNo(): String = if (this) "Yes" else "No"
+
+private fun mobileWalletParams(vararg params: Pair<String, String>): Map<String, String> =
+    mapOf(AnalyticsParam.PRODUCT_TYPE to AnalyticsParam.ProductType.MobileWallet.value, *params)
+
+/** Fixed wording, so the values stay groupable in Amplitude; the cause may carry file names or urls */
+private fun SocialLoginError.deletionMessage(): String = when (this) {
+    SocialLoginError.BackupNotFound -> "Backup not found"
+    SocialLoginError.CloudUnavailable -> "Cloud unavailable"
+    SocialLoginError.NetworkError -> "Network error"
+    is SocialLoginError.BackupWriteFailed -> "Delete error"
+    is SocialLoginError.ServerError -> "Server error"
+    is SocialLoginError.PersistenceFailed -> "Persistence error"
+    // a deletion does not produce these, they come from the sign-in and restore flows
+    SocialLoginError.SignInCanceled,
+    SocialLoginError.ConsentDeclined,
+    is SocialLoginError.SignInFailed,
+    SocialLoginError.NoProviderAccount,
+    SocialLoginError.ProviderUnavailable,
+    SocialLoginError.BindingNotFound,
+    SocialLoginError.BindingConflict,
+    is SocialLoginError.RecoveryKeyDecryptionFailed,
+    SocialLoginError.InvalidBackupFile,
+    is SocialLoginError.UnsupportedBackupVersion,
+    SocialLoginError.WalletAlreadySaved,
+    SocialLoginError.PassphraseNotSupported,
+    SocialLoginError.BackupAbandoned,
+    is SocialLoginError.Unknown,
+    -> "Unknown error"
+}

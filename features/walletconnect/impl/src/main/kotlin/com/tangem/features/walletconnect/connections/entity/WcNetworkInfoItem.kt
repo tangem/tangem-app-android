@@ -22,7 +22,7 @@ sealed class WcNetworkInfoItem {
         override val icon: Int,
         override val name: String,
         override val symbol: String,
-        val enabled: Boolean = true,
+        val isEnabled: Boolean = true,
     ) : WcNetworkInfoItem()
 
     data class Checkable(
@@ -30,9 +30,9 @@ sealed class WcNetworkInfoItem {
         override val icon: Int,
         override val name: String,
         override val symbol: String,
-        val checked: Boolean,
+        val isChecked: Boolean,
         val onCheckedChange: (Boolean) -> Unit,
-        val enabled: Boolean = true,
+        val isEnabled: Boolean = true,
     ) : WcNetworkInfoItem()
 
     data class ReadOnly(

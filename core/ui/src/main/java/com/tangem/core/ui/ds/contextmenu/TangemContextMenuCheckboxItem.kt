@@ -27,8 +27,8 @@ fun TangemContextMenuCheckboxItem(title: TextReference, isChecked: Boolean, onCl
             .width(width)
             .clickableSingle(onClick = onClick)
             .padding(
-                vertical = TangemTheme.dimens2.x2_5,
-                horizontal = TangemTheme.dimens2.x4,
+                vertical = 10.dp,
+                horizontal = 16.dp,
             ),
     ) {
         Text(

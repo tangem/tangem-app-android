@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.components.SpacerHHalf
 import com.tangem.core.ui.components.SpacerHMax
@@ -29,7 +30,7 @@ internal fun AddressSyncButtonScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(top = TangemTheme.dimens.spacing56),
+            .padding(top = 56.dp),
     ) {
         SpacerHHalf()
         Icon(
@@ -38,7 +39,7 @@ internal fun AddressSyncButtonScreen(
             tint = TangemTheme.colors.icon.accent,
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
-                .size(TangemTheme.dimens.size56),
+                .size(56.dp),
         )
         Text(
             text = stringResourceSafe(R.string.onboarding_address_sync_title),
@@ -48,9 +49,9 @@ internal fun AddressSyncButtonScreen(
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .padding(
-                    start = TangemTheme.dimens.spacing34,
-                    end = TangemTheme.dimens.spacing34,
-                    top = TangemTheme.dimens.spacing28,
+                    start = 34.dp,
+                    end = 34.dp,
+                    top = 28.dp,
                 ),
         )
         AddressSyncDescription(state.currenciesCount)
@@ -62,10 +63,10 @@ internal fun AddressSyncButtonScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    start = TangemTheme.dimens.spacing16,
-                    end = TangemTheme.dimens.spacing16,
-                    top = TangemTheme.dimens.spacing154,
-                    bottom = TangemTheme.dimens.spacing16,
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 154.dp,
+                    bottom = 16.dp,
                 ),
             showProgress = state.isButtonLoading,
         )
@@ -86,9 +87,9 @@ private fun ColumnScope.AddressSyncDescription(currenciesCount: Int) {
         modifier = Modifier
             .align(Alignment.CenterHorizontally)
             .padding(
-                start = TangemTheme.dimens.spacing34,
-                end = TangemTheme.dimens.spacing34,
-                top = TangemTheme.dimens.spacing28,
+                start = 34.dp,
+                end = 34.dp,
+                top = 28.dp,
             ),
     )
 }

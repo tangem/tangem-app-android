@@ -33,6 +33,7 @@ import com.tangem.domain.jointaccount.usecase.JoinJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.MarkJointAccountInviteSharedUseCase
 import com.tangem.domain.jointaccount.usecase.RejectJointOperationUseCase
 import com.tangem.domain.jointaccount.usecase.SignJointOperationUseCase
+import com.tangem.domain.jointaccount.verifier.JointAccountCompositionVerifier
 import com.tangem.domain.jointaccount.verifier.JointOperationVerifier
 import com.tangem.tap.domain.jointaccount.DefaultJointAccountSigner
 import dagger.Module
@@ -175,6 +176,8 @@ internal object JointAccountDomainModule {
         compositionChecker: SafeCompositionChecker,
         networkReader: JointNetworkReader,
         payloadCodec: JointTransferPayloadCodec,
+        blockaidGate: JointOperationBlockaidGate,
+        ownerAddressResolver: JointOwnerAddressResolver,
     ): CreateJointOperationUseCase {
         return CreateJointOperationUseCase(
             repository = repository,
@@ -185,8 +188,20 @@ internal object JointAccountDomainModule {
             compositionChecker = compositionChecker,
             networkReader = networkReader,
             payloadCodec = payloadCodec,
+            blockaidGate = blockaidGate,
+            ownerAddressResolver = ownerAddressResolver,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideJointAccountCompositionVerifier(
+        ownerAddressResolver: JointOwnerAddressResolver,
+        safeAddressCalculator: SafeAddressCalculator,
+    ): JointAccountCompositionVerifier = JointAccountCompositionVerifier(
+        ownerAddressResolver = ownerAddressResolver,
+        safeAddressCalculator = safeAddressCalculator,
+    )
 
     @Provides
     @Singleton

@@ -6,7 +6,7 @@ package com.tangem.core.analytics.models
 open class AnalyticsEvent(
     val category: String,
     val event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) {
     var params: Map<String, String> = params
         private set

@@ -12,6 +12,8 @@ import com.tangem.store.datasource.txhistory.db.entity.express.ExpressExchangeEn
 import com.tangem.store.datasource.txhistory.db.entity.express.ExpressOnrampEntity
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
+import com.tangem.domain.express.models.ExpressExchangeStatus
+import com.tangem.domain.express.models.ExpressOnrampStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.model.ExpressTx
@@ -229,6 +231,23 @@ internal class RefactoredTxHistoryRepositoryTest {
             }
 
         @Test
+        fun `GIVEN express queries WHEN getExpressHistory THEN expired deals are filtered out`() =
+            runTest {
+                // Arrange
+                val statuses = stubQueriesCapturingExcludedStatus()
+
+                // Act
+                repository.getExpressHistory(USER_WALLET_ID, currency, NO_LOWER_BOUND).first()
+
+                // Assert — an expired quote request is no row of the user's history
+                assertThat(statuses).containsExactly(
+                    ExpressExchangeStatus.Expired.raw,
+                    ExpressExchangeStatus.Expired.raw,
+                    ExpressOnrampStatus.Expired.raw,
+                )
+            }
+
+        @Test
         fun `GIVEN no wallet addresses WHEN getExpressHistory THEN only the dynamic ones are queried`() = runTest {
             // Arrange
             val addresses = stubQueriesCapturingAddresses()
@@ -243,17 +262,32 @@ internal class RefactoredTxHistoryRepositoryTest {
         }
     }
 
+    /** Stubs the three express queries and captures the status each of them leaves out. */
+    private fun stubQueriesCapturingExcludedStatus(): MutableList<String?> {
+        val statuses = mutableListOf<String?>()
+        every {
+            expressHistoryDao.observeOutgoingSwaps(any(), any(), any(), any(), any(), captureNullable(statuses))
+        } returns flowOf(emptyList())
+        every {
+            expressHistoryDao.observeIncomingSwaps(any(), any(), any(), any(), any(), captureNullable(statuses))
+        } returns flowOf(emptyList())
+        every {
+            expressHistoryDao.observeIncomingOnramps(any(), any(), any(), any(), any(), captureNullable(statuses))
+        } returns flowOf(emptyList())
+        return statuses
+    }
+
     /** Stubs the three express queries and captures the addresses they are filtered by. */
     private fun stubQueriesCapturingAddresses(): CapturingSlot<List<String>> {
         val addresses = slot<List<String>>()
         every {
-            expressHistoryDao.observeOutgoingSwaps(capture(addresses), any(), any(), any(), any())
+            expressHistoryDao.observeOutgoingSwaps(capture(addresses), any(), any(), any(), any(), any())
         } returns flowOf(emptyList())
         every {
-            expressHistoryDao.observeIncomingSwaps(any(), any(), any(), any(), any())
+            expressHistoryDao.observeIncomingSwaps(any(), any(), any(), any(), any(), any())
         } returns flowOf(emptyList())
         every {
-            expressHistoryDao.observeIncomingOnramps(any(), any(), any(), any(), any())
+            expressHistoryDao.observeIncomingOnramps(any(), any(), any(), any(), any(), any())
         } returns flowOf(emptyList())
         return addresses
     }
@@ -386,13 +420,13 @@ internal class RefactoredTxHistoryRepositoryTest {
     private fun stubQueries(): CapturingSlot<String> {
         val bound = slot<String>()
         every {
-            expressHistoryDao.observeOutgoingSwaps(any(), any(), any(), capture(bound), any())
+            expressHistoryDao.observeOutgoingSwaps(any(), any(), any(), capture(bound), any(), any())
         } returns flowOf(emptyList())
         every {
-            expressHistoryDao.observeIncomingSwaps(any(), any(), any(), capture(bound), any())
+            expressHistoryDao.observeIncomingSwaps(any(), any(), any(), capture(bound), any(), any())
         } returns flowOf(emptyList())
         every {
-            expressHistoryDao.observeIncomingOnramps(any(), any(), any(), capture(bound), any())
+            expressHistoryDao.observeIncomingOnramps(any(), any(), any(), capture(bound), any(), any())
         } returns flowOf(emptyList())
         return bound
     }
