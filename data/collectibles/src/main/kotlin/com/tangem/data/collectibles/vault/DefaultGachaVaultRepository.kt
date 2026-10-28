@@ -154,6 +154,21 @@ internal class DefaultGachaVaultRepository @Inject constructor(
         }
     }
 
+    override suspend fun getVaultHotDelegate(userWallet: UserWallet): Either<CollectiblesAccountError, String?> =
+        withContext(dispatchers.io) {
+            either {
+                val network = networkProvider.create(userWallet).mapLeft { it.asFailure() }.bind()
+                val walletManager = vaultWalletManager(userWalletId = userWallet.walletId, network = network)
+                    .mapLeft { it.toVaultFailure(userWallet) }
+                    .bind()
+
+                walletManager.getCollectiblesVault().toEither()
+                    .map { vault -> vault?.hotDelegate }
+                    .mapLeft { it.toVaultFailure(userWallet) }
+                    .bind()
+            }
+        }
+
     override suspend fun closeVault(userWallet: UserWallet): Either<CollectiblesAccountError, Unit> =
         withContext(dispatchers.io) {
             either {

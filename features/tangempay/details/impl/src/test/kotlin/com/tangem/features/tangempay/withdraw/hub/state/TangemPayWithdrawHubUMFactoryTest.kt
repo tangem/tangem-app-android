@@ -315,7 +315,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
 
     @ParameterizedTest
     @MethodSource("provideSourceModels")
-    fun `GIVEN source account WHEN bank unavailable THEN title, swap section and subtitle follow the source`(
+    fun `GIVEN source account WHEN bank unavailable THEN title and both section subtitles follow the source`(
         model: SourceModel,
     ) {
         // Act
@@ -325,10 +325,10 @@ internal class TangemPayWithdrawHubUMFactoryTest {
         assertThat(
             Triple(
                 actual.title,
-                actual.swapSection != null,
+                checkNotNull(actual.swapSection).subtitle,
                 (actual.bankSection as BankSectionUM.Content).unavailableSubtitle,
             ),
-        ).isEqualTo(Triple(model.expectedTitle, model.hasSwapSection, model.expectedUnavailableSubtitle))
+        ).isEqualTo(Triple(model.expectedTitle, model.expectedSwapSubtitle, model.expectedUnavailableSubtitle))
     }
 
     private fun create(
@@ -373,7 +373,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
     data class SourceModel(
         val sourceAccount: BankWithdrawSourceAccount,
         val expectedTitle: TextReference,
-        val hasSwapSection: Boolean,
+        val expectedSwapSubtitle: TextReference?,
         val expectedUnavailableSubtitle: TextReference,
     )
 
@@ -381,7 +381,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
         SourceModel(
             sourceAccount = BankWithdrawSourceAccount.Payment(USER_WALLET_ID),
             expectedTitle = resourceReference(R.string.tangempay_card_details_withdraw),
-            hasSwapSection = true,
+            expectedSwapSubtitle = resourceReference(R.string.tangempay_withdraw_hub_swap_section_subtitle),
             expectedUnavailableSubtitle = resourceReference(
                 R.string.tangempay_withdraw_hub_bank_section_subtitle_unavailable,
             ),
@@ -389,7 +389,7 @@ internal class TangemPayWithdrawHubUMFactoryTest {
         SourceModel(
             sourceAccount = BankWithdrawSourceAccount.Money(USER_WALLET_ID, productInstanceId = "instance-1"),
             expectedTitle = resourceReference(R.string.common_send),
-            hasSwapSection = false,
+            expectedSwapSubtitle = null,
             expectedUnavailableSubtitle = resourceReference(R.string.money_account_send_bank_transfer_unavailable),
         ),
     )

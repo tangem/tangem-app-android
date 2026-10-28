@@ -1,7 +1,6 @@
 package com.tangem.domain.promo.models
 
 import com.tangem.domain.models.wallet.UserWalletId
-import kotlinx.datetime.Instant
 
 data class PromoPayoutToken(
     val tokenId: String?,
@@ -11,31 +10,6 @@ data class PromoPayoutToken(
     val networkId: String,
     val decimals: Int?,
 )
-
-data class PromoTimeline(
-    val start: Instant,
-    val end: Instant,
-)
-
-data class TokenReward(
-    val tokenAddress: String,
-    val networkId: String,
-    val userAddress: String,
-    val tokenId: String,
-)
-
-data class EnrolledTokenReward(
-    val tokenAddress: String,
-    val networkId: String,
-    val tokenId: String,
-)
-
-sealed interface EnrollResult {
-    val tokenReward: EnrolledTokenReward
-
-    data class Success(override val tokenReward: EnrolledTokenReward) : EnrollResult
-    data class AlreadyEnrolled(override val tokenReward: EnrolledTokenReward) : EnrollResult
-}
 
 /**
  * One wallet to register for a campaign. [payout] is required when the campaign has [PromoPayout.isNeeded];

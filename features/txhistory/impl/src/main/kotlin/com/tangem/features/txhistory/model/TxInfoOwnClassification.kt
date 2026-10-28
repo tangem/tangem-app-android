@@ -54,6 +54,7 @@ internal fun TxInfo.Single.reclassifyOwnOperationAsTransfer(
     val owner = lookup.resolveOwner(address = counterparty, networkRawId = networkRawId)
     val isOwn = owner is ResolvedOwner.OwnAccount ||
         owner is ResolvedOwner.OwnPaymentAccount ||
+        owner is ResolvedOwner.OwnMoneyAccount ||
         owner is ResolvedOwner.OwnWallet
     return if (isOwn) {
         copy(

@@ -6,6 +6,9 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
+import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
+import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
+import com.tangem.domain.collectibles.delegate.HotDelegatePublicKey
 import com.tangem.domain.collectibles.models.CollectibleException
 import com.tangem.domain.collectibles.models.CollectiblePurchaseTx
 import com.tangem.domain.collectibles.models.CollectibleTurboMode
@@ -18,6 +21,10 @@ import com.tangem.domain.collectibles.models.OpenedCollectiblePack
 import com.tangem.domain.collectibles.repository.CollectiblesRepository
 import com.tangem.domain.collectibles.vault.GachaVaultError
 import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
+import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.CollectiblesAccountStatusValue
+import com.tangem.domain.models.account.CollectiblesVaultBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.ProvideTestModels
@@ -25,7 +32,9 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -40,6 +49,8 @@ internal class OpenCollectiblePackUseCaseTest {
     private val gachaVaultRepository: GachaVaultRepository = mockk()
     private val ownerDeriver: CollectiblesOwnerDeriver = mockk()
     private val accountStatusFetcher: CollectiblesAccountStatusFetcher = mockk()
+    private val accountRepository: CollectiblesAccountRepository = mockk()
+    private val hotDelegate: CollectiblesHotDelegate = mockk()
 
     private val userWallet: UserWallet = mockk { every { walletId } returns WALLET_ID }
 
@@ -48,11 +59,25 @@ internal class OpenCollectiblePackUseCaseTest {
         gachaVaultRepository = gachaVaultRepository,
         ownerDeriver = ownerDeriver,
         accountStatusFetcher = accountStatusFetcher,
+        accountRepository = accountRepository,
+        hotDelegate = hotDelegate,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(collectiblesRepository, gachaVaultRepository, ownerDeriver, accountStatusFetcher)
+        clearMocks(
+            collectiblesRepository,
+            gachaVaultRepository,
+            ownerDeriver,
+            accountStatusFetcher,
+            accountRepository,
+            hotDelegate,
+        )
+        coEvery { gachaVaultRepository.getVaultHotDelegate(userWallet) } returns DELEGATE.base58.right()
+        coEvery { hotDelegate.getPublicKeyOrNull(ACCOUNT_ID) } returns DELEGATE
+        coEvery { accountRepository.getStatusSync(WALLET_ID) } returns ONBOARDED
+        coEvery { accountRepository.saveAccount(any(), any()) } just runs
+        every { accountRepository.isRelinkPending(WALLET_ID) } returns false
         coEvery { accountStatusFetcher(any()) } returns Unit.right()
         coEvery { ownerDeriver.storedOwner(WALLET_ID) } returns OWNER
         coEvery { collectiblesRepository.generatePurchaseTx(WALLET_ID, any()) } returns PURCHASE
@@ -188,6 +213,83 @@ internal class OpenCollectiblePackUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(OpenPackStep.Failed.PurchaseFailed)
+    }
+
+    @Test
+    fun `GIVEN the vault answers to another delegate WHEN invoked THEN a relink is required and nothing is paid`() =
+        runTest {
+            // Arrange
+            coEvery { gachaVaultRepository.getVaultHotDelegate(userWallet) } returns OTHER_DELEGATE.right()
+
+            // Act
+            val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(OpenPackStep.Failed.PurchaseFailed)
+            coVerify(exactly = 1) { accountRepository.saveAccount(WALLET_ID, RELINK_REQUIRED) }
+            coVerify(exactly = 0) { collectiblesRepository.generatePurchaseTx(any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN a relink still landing WHEN invoked THEN nothing is paid and no new relink is asked`() = runTest {
+        // Arrange
+        coEvery { gachaVaultRepository.getVaultHotDelegate(userWallet) } returns OTHER_DELEGATE.right()
+        every { accountRepository.isRelinkPending(WALLET_ID) } returns true
+
+        // Act
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+
+        // Assert
+        assertThat(actual).isEqualTo(OpenPackStep.Failed.PurchaseFailed)
+        coVerify(exactly = 0) {
+            accountRepository.saveAccount(any(), any())
+            collectiblesRepository.generatePurchaseTx(any(), any())
+        }
+    }
+
+    @Test
+    fun `GIVEN the vault delegate cannot be read WHEN invoked THEN the purchase fails and pays nothing`() = runTest {
+        // Arrange
+        coEvery { gachaVaultRepository.getVaultHotDelegate(userWallet) } returns
+            CollectiblesAccountError.Vault(GachaVaultError.WalletUnavailable).left()
+
+        // Act
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+
+        // Assert
+        assertThat(actual).isEqualTo(OpenPackStep.Failed.PurchaseFailed)
+        coVerify(exactly = 0) { accountRepository.saveAccount(any(), any()) }
+        coVerify(exactly = 0) { collectiblesRepository.generatePurchaseTx(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN the vault is re-pointed while paying WHEN the send fails THEN a relink is required`() = runTest {
+        // Arrange
+        coEvery { gachaVaultRepository.getVaultHotDelegate(userWallet) } returnsMany
+            listOf(DELEGATE.base58.right(), OTHER_DELEGATE.right())
+        coEvery { gachaVaultRepository.sendPurchasePack(any(), any(), any(), any()) } returns
+            CollectiblesAccountError.Vault(GachaVaultError.WalletUnavailable).left()
+
+        // Act
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+
+        // Assert
+        assertThat(actual).isEqualTo(OpenPackStep.Failed.PurchaseFailed)
+        coVerify(exactly = 1) { accountRepository.saveAccount(WALLET_ID, RELINK_REQUIRED) }
+    }
+
+    @Test
+    fun `GIVEN the delegate still matches WHEN the send fails THEN the account is left as it is`() = runTest {
+        // Arrange
+        coEvery { gachaVaultRepository.sendPurchasePack(any(), any(), any(), any()) } returns
+            CollectiblesAccountError.Vault(GachaVaultError.WalletUnavailable).left()
+
+        // Act
+        useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList()
+
+        // Assert
+        coVerify(exactly = 2) { gachaVaultRepository.getVaultHotDelegate(userWallet) }
+        coVerify(exactly = 0) { accountRepository.saveAccount(any(), any()) }
     }
 
     @Test
@@ -389,6 +491,16 @@ internal class OpenCollectiblePackUseCaseTest {
         const val AMOUNT = 50_000_000L
         const val FEE_AMOUNT = 1_000_000L
         const val TX_HASH = "hash"
+        const val OTHER_DELEGATE = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
+
+        val ACCOUNT_ID = AccountId.forCollectiblesAccount(WALLET_ID)
+        val DELEGATE = HotDelegatePublicKey("CfzgiAsor8k46oAr1zLybapCbAK44892DYxBJUerNX31")
+        val BALANCE: CollectiblesVaultBalance = mockk()
+        val ONBOARDED = CollectiblesAccountStatusValue.Onboarded(source = StatusSource.CACHE, vaultBalance = BALANCE)
+        val RELINK_REQUIRED = CollectiblesAccountStatusValue.UpdateRequired(
+            source = StatusSource.ACTUAL,
+            vaultBalance = BALANCE,
+        )
 
         val PURCHASED = state(CollectibleTxStatus.PACK_PURCHASED)
 

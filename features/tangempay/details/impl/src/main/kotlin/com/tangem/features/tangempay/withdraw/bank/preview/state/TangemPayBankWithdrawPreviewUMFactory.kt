@@ -153,13 +153,16 @@ internal class TangemPayBankWithdrawPreviewUMFactory(
         PreviewFailure.SenderRegion -> unavailable(R.string.tangempay_withdraw_bank_error_sender_region)
         PreviewFailure.Business -> unavailable(R.string.tangempay_withdraw_bank_error_business)
         PreviewFailure.UnsupportedConfiguration -> unavailable(R.string.tangempay_withdraw_bank_error_region_title)
-        PreviewFailure.General -> TangemPayBankWithdrawPreviewUM.Failed(
-            title = resourceReference(R.string.tangempay_withdraw_bank_error_general_title),
-            icon = TangemStatusIcon.Kind.Warning,
-            onCloseClick = callbacks.onCloseClick,
-            onRetryClick = callbacks.onRetryClick,
-        )
+        PreviewFailure.General -> general(onRetryClick = callbacks.onRetryClick)
+        PreviewFailure.TransferOutcomeUnknown -> general(onRetryClick = null)
     }
+
+    private fun general(onRetryClick: (() -> Unit)?) = TangemPayBankWithdrawPreviewUM.Failed(
+        title = resourceReference(R.string.tangempay_withdraw_bank_error_general_title),
+        icon = TangemStatusIcon.Kind.Warning,
+        onCloseClick = callbacks.onCloseClick,
+        onRetryClick = onRetryClick,
+    )
 
     private fun unavailable(@StringRes titleRes: Int) = TangemPayBankWithdrawPreviewUM.Failed(
         title = resourceReference(titleRes),

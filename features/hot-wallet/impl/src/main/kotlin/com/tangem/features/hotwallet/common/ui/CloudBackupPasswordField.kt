@@ -59,7 +59,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_eye_20
 import com.tangem.core.ui.res.generated.icons.ic_eye_cross_20
-import com.tangem.core.ui.security.DisableAutofillEffect
+import com.tangem.core.ui.security.excludeFromAutofill
 import com.tangem.features.hotwallet.impl.R
 
 private val EYE_ICON_SIZE = 20.dp
@@ -87,8 +87,6 @@ internal fun CloudBackupPasswordField(
     contentType: ContentType? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
-    if (contentType == null) DisableAutofillEffect()
-
     val isFocused by interactionSource.collectIsFocusedAsState()
     val error = errorText?.resolveReference()
 
@@ -196,7 +194,13 @@ private fun PasswordInputField(
         modifier = modifier
             .fillMaxWidth()
             .then(focusRequester?.let { Modifier.focusRequester(it) } ?: Modifier)
-            .then(contentType?.let { type -> Modifier.semantics { this.contentType = type } } ?: Modifier)
+            .then(
+                if (contentType != null) {
+                    Modifier.semantics { this.contentType = contentType }
+                } else {
+                    Modifier.excludeFromAutofill()
+                },
+            )
             .semantics {
                 if (!enabled) disabled()
                 if (error != null) error(error)

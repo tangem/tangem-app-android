@@ -27,6 +27,7 @@ internal class ErrorsDataConverter(
                 2250 -> tryParseExchangeTooSmallAmountError(error = error)
                 2251 -> tryParseExchangeTooBigAmountError(error = error)
                 2260 -> tryParseExchangeNotEnoughAllowanceError(error = error)
+                2264 -> ExpressDataError.ExchangeProviderAddressBannedByAmlError(code = error.code)
                 2270 -> ExpressDataError.ExchangeNotEnoughBalanceError(code = error.code)
                 2280 -> ExpressDataError.ExchangeInvalidAddressError(code = error.code)
                 2290 -> tryParseExchangeInvalidFromDecimalsError(error = error)

@@ -65,7 +65,6 @@ internal class StateBuilder(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isAccountsModeProvider: Provider<Boolean>,
     private val isEvmGaslessFeeSupportedForNetwork: IsEvmGaslessFeeSupportedForNetwork,
-    private val isCustomSlippageEnabled: Boolean = false,
     private val predictionTopUpLimitsProvider: Provider<PredictionTopUpLimits?> = Provider { null },
 ) {
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
@@ -107,7 +106,6 @@ internal class StateBuilder(
             onSuccess = actions.onSuccess,
             providerState = ProviderState.Empty(),
             shouldShowMaxAmount = false,
-            priceImpact = PriceImpact.Empty,
             isInsufficientFunds = false,
             swapUIMode = swapUIMode,
             onSwapUIModeChange = actions.onSwapUIModeChange,
@@ -155,7 +153,6 @@ internal class StateBuilder(
             ),
             changeCardsButtonState = ChangeCardsButtonState.ENABLED,
             providerState = ProviderState.Empty(),
-            priceImpact = PriceImpact.Empty,
         )
     }
 
@@ -186,7 +183,6 @@ internal class StateBuilder(
             } ?: uiStateHolder.swapButton,
             changeCardsButtonState = ChangeCardsButtonState.ENABLED,
             providerState = ProviderState.Empty(),
-            priceImpact = PriceImpact.Empty,
             tosState = null,
         )
     }
@@ -225,7 +221,6 @@ internal class StateBuilder(
             ),
             providerState = ProviderState.Empty(),
             changeCardsButtonState = ChangeCardsButtonState.UPDATE_IN_PROGRESS,
-            priceImpact = PriceImpact.Empty,
             shouldShowMaxAmount = shouldShowMaxAmount(fromCurrency, toCurrency),
             predefinedButtons = createPredefinedButtons(fromCurrency, toCurrency),
             transferFooter = null,
@@ -275,7 +270,6 @@ internal class StateBuilder(
             ),
             changeCardsButtonState = ChangeCardsButtonState.ENABLED,
             providerState = ProviderState.Empty(),
-            priceImpact = PriceImpact.Empty,
         )
     }
 
@@ -509,7 +503,6 @@ internal class StateBuilder(
             ),
             changeCardsButtonState = ChangeCardsButtonState.DISABLED,
             providerState = ProviderState.Empty(),
-            priceImpact = PriceImpact.Empty,
         )
     }
 
@@ -550,7 +543,6 @@ internal class StateBuilder(
             providerState = ProviderState.Loading(),
             permissionUM = uiStateHolder.permissionUM,
             changeCardsButtonState = ChangeCardsButtonState.UPDATE_IN_PROGRESS,
-            priceImpact = PriceImpact.Empty,
             shouldShowMaxAmount = shouldShowMaxAmount(fromCurrency, toCurrency),
             predefinedButtons = createPredefinedButtons(fromCurrency, toCurrency),
         )
@@ -623,9 +615,6 @@ internal class StateBuilder(
             ),
             receiveCardData = SwapCardState.SwapCardData(
                 type = TransactionCardType.ReadOnly(
-                    // The slippage entry point replaces the receive card's slippage info dialog.
-                    shouldShowWarning = !isCustomSlippageEnabled,
-                    onWarningClick = actions.onReceiveCardWarningClick.takeUnless { isCustomSlippageEnabled },
                     accountTitleUM = getCardAccountTitle(toSwapCurrencyStatus.account, isFromCard = false),
                 ),
                 amountField = displayAmountField(
@@ -684,7 +673,6 @@ internal class StateBuilder(
                 additionalBadge = additionalBadge,
                 onProviderClick = actions.onProviderClick,
             ),
-            priceImpact = priceImpact,
             tosState = createTosState(swapProvider),
             shouldShowMaxAmount = shouldShowMaxAmount(fromSwapCurrencyStatus.currency, toSwapCurrencyStatus.currency),
             predefinedButtons = createPredefinedButtons(fromSwapCurrencyStatus.currency, toSwapCurrencyStatus.currency),
@@ -868,7 +856,6 @@ internal class StateBuilder(
             ),
             changeCardsButtonState = ChangeCardsButtonState.ENABLED,
             providerState = providerState,
-            priceImpact = PriceImpact.Empty,
             tosState = createTosState(swapProvider),
         )
     }
@@ -939,7 +926,6 @@ internal class StateBuilder(
             ),
             changeCardsButtonState = ChangeCardsButtonState.ENABLED,
             providerState = ProviderState.Empty(),
-            priceImpact = PriceImpact.Empty,
             transferFooter = null,
         )
     }
@@ -1213,7 +1199,7 @@ internal class StateBuilder(
 
     private fun createSlippageUM(swapProvider: SwapProvider, slippage: SwapSlippageState): SwapSlippageUM {
         val defaultSlippage = swapProvider.defaultSlippage
-        if (!isCustomSlippageEnabled || defaultSlippage == null) return SwapSlippageUM.Hidden
+        if (defaultSlippage == null) return SwapSlippageUM.Hidden
         val customPercent = swapProvider.acceptedSlippageOrNull(slippage.customOrNull)
         return SwapSlippageUM.Content(
             value = customPercent?.formatSlippagePercent()?.let(::stringReference)

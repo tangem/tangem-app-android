@@ -18,7 +18,6 @@ import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
-import com.tangem.features.tangempay.addfunds.va.deposit.TangemPayVirtualAccountDepositSuccessComponent
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.details.TangemPayBankTransferOnrampDetailsAnalytics
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.onboarding.TangemPayBankTransferOnrampOnboardingComponent
 import com.tangem.features.tangempay.card.details.TangemPayCardPageComponent
@@ -36,7 +35,6 @@ import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
-import com.tangem.features.moneyaccount.details.component.MoneyAccountAddFundsBottomSheetComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -49,7 +47,6 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val expressTransactionsComponentFactory: ExpressTransactionsComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
-    private val moneyAccountAddFundsComponentFactory: MoneyAccountAddFundsBottomSheetComponent.Factory,
     private val cashbackComponentFactory: TangemPayCashbackComponent.Factory,
     private val orderCardComponentFactory: TangemPayOrderCardComponent.Factory,
     private val withdrawHubComponentFactory: TangemPayWithdrawHubComponent.Factory,
@@ -115,7 +112,6 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
             tokenReceiveComponentFactory = tokenReceiveComponentFactory,
             expressTransactionsComponentFactory = expressTransactionsComponentFactory,
             promoBannersBlockComponentFactory = promoBannersBlockComponentFactory,
-            moneyAccountAddFundsComponentFactory = moneyAccountAddFundsComponentFactory,
         )
         is TangemPayAccountDetailsInnerRoute.CardDetails -> tangemPayCardPageFactory.create(
             context = childByContext(componentContext = componentContext, router = innerRouter),
@@ -149,10 +145,6 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
                 },
             ),
         )
-        TangemPayAccountDetailsInnerRoute.VirtualAccountDepositSuccess ->
-            TangemPayVirtualAccountDepositSuccessComponent(
-                appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
-            )
         TangemPayAccountDetailsInnerRoute.BankTransferOnrampOnboarding ->
             TangemPayBankTransferOnrampOnboardingComponent(
                 appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),

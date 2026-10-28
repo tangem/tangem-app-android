@@ -60,6 +60,9 @@ interface GachaVaultRepository {
      */
     suspend fun closeVault(userWallet: UserWallet): Either<CollectiblesAccountError, Unit>
 
+    /** The base58 `hot_delegate` the vault points at, or `null` when the wallet has no vault on chain. */
+    suspend fun getVaultHotDelegate(userWallet: UserWallet): Either<CollectiblesAccountError, String?>
+
     /** `PDA(["vault", owner])`, derived locally: the player the gacha sees, as the spin is paid from it. */
     suspend fun getVaultAddress(userWallet: UserWallet): Either<CollectiblesAccountError, String>
 

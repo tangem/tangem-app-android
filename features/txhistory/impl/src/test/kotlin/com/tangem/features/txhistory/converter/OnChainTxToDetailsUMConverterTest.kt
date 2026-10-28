@@ -901,6 +901,33 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
+    fun `GIVEN Transfer to own money account WHEN convert THEN counterparty named after the money account`() {
+        // Arrange
+        val ownConverter = onChainConverter(
+            lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownMoneyAccount)),
+        )
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        // Act
+        val counterparty = ownConverter.convert(tx).counterparty
+
+        // Assert
+        val moneyAccountName = resourceReference(R.string.tangempay_unified_onboarding_money_account_header)
+        assertThat(counterparty?.title).isEqualTo(TxHistoryDetailsUM.CounterpartyTitle.Name(moneyAccountName))
+        assertThat(counterparty?.avatar).isEqualTo(
+            TxHistoryDetailsUM.CounterpartyAvatar.Account(
+                name = moneyAccountName,
+                icon = AccountIconUM.CryptoPortfolio(value = AccountIconUM.Money.icon, color = AccountIconUM.Money.color),
+            ),
+        )
+        assertThat(counterparty?.onCopyClick).isNull()
+    }
+
+    @Test
     fun `GIVEN Transfer to own Payment account WHEN convert THEN payment counterparty card is not tappable`() {
         // Arrange — the recipient address belongs to the user's own Tangem Pay (Payment) account.
         val ownConverter = onChainConverter(

@@ -28,6 +28,7 @@ class ExpressErrorConverter(
                 2250 -> error.toTooSmallAmountError()
                 2251 -> error.toTooBigAmountError()
                 2260 -> error.toNotEnoughAllowanceError()
+                2264 -> ExpressError.ExchangeProviderAddressBannedByAmlError(code = error.code)
                 2270 -> ExpressError.NotEnoughBalanceError(code = error.code)
                 2280 -> ExpressError.InvalidAddressError(code = error.code)
                 2290 -> error.toInvalidFromDecimalsError()
