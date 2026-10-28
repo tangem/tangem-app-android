@@ -1,6 +1,7 @@
 package com.tangem.domain.polymarket.usecase
 
 import arrow.core.Either
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventError
@@ -13,7 +14,10 @@ class GetPolymarketEventUseCase(
     private val polymarketRepository: PolymarketRepository,
 ) {
 
-    suspend operator fun invoke(eventId: String): Either<PolymarketEventError, PolymarketEvent> {
-        return polymarketRepository.getEvent(eventId = eventId)
+    suspend operator fun invoke(
+        userWalletId: UserWalletId,
+        eventId: String,
+    ): Either<PolymarketEventError, PolymarketEvent> {
+        return polymarketRepository.getEvent(userWalletId = userWalletId, eventId = eventId)
     }
 }
