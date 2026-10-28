@@ -534,8 +534,11 @@ internal class SendConfirmModelTest : SendModelTestBase() {
         )
 
         private fun provideReportFailedModels() = listOf(
-            ReportFailedModel(SendIntentError.NotFound(INTENT_ID), "INTENT_NOT_FOUND"),
-            ReportFailedModel(SendIntentError.AlreadyCompleted(INTENT_ID), "INTENT_ALREADY_COMPLETED"),
+            ReportFailedModel(SendIntentError.NotFound(INTENT_ID, code = "INTENT_NOT_FOUND"), "INTENT_NOT_FOUND"),
+            ReportFailedModel(
+                SendIntentError.AlreadyCompleted(INTENT_ID, code = "INTENT_ALREADY_COMPLETED"),
+                "INTENT_ALREADY_COMPLETED",
+            ),
             ReportFailedModel(
                 ApiResponseError.HttpException(
                     code = ApiResponseError.HttpException.Code.BAD_GATEWAY,

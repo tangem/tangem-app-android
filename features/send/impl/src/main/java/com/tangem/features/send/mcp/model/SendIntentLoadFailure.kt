@@ -4,10 +4,6 @@ import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.mcp.models.analytics.McpIntentAnalyticsEvent.Reason
 import com.tangem.domain.transaction.error.SendIntentError
 
-/** Transaction Service error codes the repository turns into typed errors, kept for analytics. */
-private const val INTENT_NOT_FOUND_CODE = "INTENT_NOT_FOUND"
-private const val INTENT_ALREADY_COMPLETED_CODE = "INTENT_ALREADY_COMPLETED"
-
 private const val NETWORK_ERROR_CODE = "network"
 private const val TIMEOUT_ERROR_CODE = "timeout"
 private const val UNKNOWN_ERROR_CODE = "unknown"
@@ -18,10 +14,8 @@ internal data class SendIntentLoadFailure(val reason: Reason, val errorCode: Str
     companion object {
 
         fun ofReadError(error: Throwable): SendIntentLoadFailure = when (error) {
-            is SendIntentError.NotFound -> SendIntentLoadFailure(Reason.NotFound, INTENT_NOT_FOUND_CODE)
-            is SendIntentError.AlreadyCompleted -> {
-                SendIntentLoadFailure(Reason.AlreadyProcessed, INTENT_ALREADY_COMPLETED_CODE)
-            }
+            is SendIntentError.NotFound -> SendIntentLoadFailure(Reason.NotFound, error.code)
+            is SendIntentError.AlreadyCompleted -> SendIntentLoadFailure(Reason.AlreadyProcessed, error.code)
             is SendIntentError.Unreachable -> SendIntentLoadFailure(Reason.Unreachable)
             is SendIntentError.MalformedAmount -> SendIntentLoadFailure(Reason.InvalidAmount)
             is ApiResponseError.HttpException -> SendIntentLoadFailure(Reason.Unknown, error.httpCode())
@@ -32,8 +26,8 @@ internal data class SendIntentLoadFailure(val reason: Reason, val errorCode: Str
 
 /** The error code analytics reports for a transaction hash the Transaction Service did not take. */
 internal fun sendIntentReportErrorCode(error: Throwable): String = when (error) {
-    is SendIntentError.NotFound -> INTENT_NOT_FOUND_CODE
-    is SendIntentError.AlreadyCompleted -> INTENT_ALREADY_COMPLETED_CODE
+    is SendIntentError.NotFound -> error.code
+    is SendIntentError.AlreadyCompleted -> error.code
     is ApiResponseError.HttpException -> error.httpCode()
     is ApiResponseError.NetworkException -> NETWORK_ERROR_CODE
     is ApiResponseError.TimeoutException -> TIMEOUT_ERROR_CODE

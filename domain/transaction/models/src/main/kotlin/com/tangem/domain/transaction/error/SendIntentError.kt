@@ -3,11 +3,15 @@ package com.tangem.domain.transaction.error
 /** Why a [com.tangem.domain.transaction.models.SendIntent] could not be read or completed. */
 sealed class SendIntentError(override val message: String) : Throwable(message) {
 
-    /** The service does not tell an unknown intent from an intent raised for another wallet. */
-    data class NotFound(val intentId: String) : SendIntentError("Intent $intentId not found or of another wallet")
+    /**
+     * The service does not tell an unknown intent from an intent raised for another wallet; [code] is the service's
+     * error code that said so.
+     */
+    data class NotFound(val intentId: String, val code: String) :
+        SendIntentError("Intent $intentId not found or of another wallet")
 
-    /** The intent already carries the hash of another transaction. */
-    data class AlreadyCompleted(val intentId: String) :
+    /** The intent already carries the hash of another transaction; [code] is the service's error code that said so. */
+    data class AlreadyCompleted(val intentId: String, val code: String) :
         SendIntentError("Intent $intentId is already completed with another transaction")
 
     /** There is no connection or the service did not answer in time, so reading the intent again may help. */
