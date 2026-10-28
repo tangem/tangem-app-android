@@ -47,7 +47,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data object SomeNetworksUnreachable : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "SomeNetworksUnreachableNotification",
-            variant = TangemMessageBanner.Variant.Default,
+            variant = TangemMessageBanner.Variant.Light,
             shouldShowGlowRing = false,
             iconUM = TangemIconUM.Icon(
                 imageVector = Icons.ic_warning_20_filled,
@@ -98,7 +98,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data object DevCard : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "DevCardNotification",
-            variant = TangemMessageBanner.Variant.Default,
+            variant = TangemMessageBanner.Variant.Light,
             shouldShowGlowRing = false,
             iconUM = TangemIconUM.Icon(
                 imageVector = Icons.ic_warning_20_filled,
@@ -115,7 +115,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data object TestnetCard : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "TestnetCardNotification",
-            variant = TangemMessageBanner.Variant.Default,
+            variant = TangemMessageBanner.Variant.Light,
             shouldShowGlowRing = false,
             iconUM = TangemIconUM.Icon(
                 imageVector = Icons.ic_warning_20_filled,
@@ -132,7 +132,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data object DemoCard : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "DemoCardNotification",
-            variant = TangemMessageBanner.Variant.Default,
+            variant = TangemMessageBanner.Variant.Light,
             shouldShowGlowRing = false,
             iconUM = TangemIconUM.Icon(
                 imageVector = Icons.ic_warning_20_filled,
@@ -279,7 +279,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     ) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "MissingAddressesNotification",
-            variant = TangemMessageBanner.Variant.Default,
+            variant = TangemMessageBanner.Variant.Light,
             shouldShowGlowRing = true,
             iconUM = TangemIconUM.Icon(
                 imageVector = Icons.ic_info_20,
@@ -318,7 +318,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data class NoAccount(val network: String, val symbol: String, val amount: String) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "NoAccountNotification",
-            variant = TangemMessageBanner.Variant.Default,
+            variant = TangemMessageBanner.Variant.Light,
             shouldShowGlowRing = false,
             iconUM = TangemIconUM.Icon(
                 imageVector = Icons.ic_info_20,
@@ -338,7 +338,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data class UnlockWallets(val onClick: () -> Unit) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "UnlockWalletsNotification",
-            variant = TangemMessageBanner.Variant.Default,
+            variant = TangemMessageBanner.Variant.Light,
             shouldShowGlowRing = true,
             iconUM = TangemIconUM.Icon(
                 iconRes = CoreUiR.drawable.ic_lock_24,
@@ -372,7 +372,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     ) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "TangemPayRefreshNeeded",
-            variant = TangemMessageBanner.Variant.Default,
+            variant = TangemMessageBanner.Variant.Light,
             shouldShowGlowRing = true,
             iconUM = TangemIconUM.Icon(
                 imageVector = Icons.ic_warning_20_filled,
@@ -401,7 +401,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data object TangemPayUnreachable : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "TangemPayUnreachable",
-            variant = TangemMessageBanner.Variant.Default,
+            variant = TangemMessageBanner.Variant.Light,
             shouldShowGlowRing = true,
             iconUM = TangemIconUM.Icon(
                 imageVector = Icons.ic_warning_20_filled,
@@ -418,7 +418,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data class SoftUpdateAvailable(val onUpdateClick: () -> Unit) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "SoftUpdateAvailableNotification",
-            variant = TangemMessageBanner.Variant.Default,
+            variant = TangemMessageBanner.Variant.Light,
             shouldShowGlowRing = true,
             iconUM = TangemIconUM.Icon(
                 imageVector = Icons.ic_warning_20_filled,
@@ -445,7 +445,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data class AddFunds(val onClick: () -> Unit) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "AddFundsPromoNotification",
-            variant = TangemMessageBanner.Variant.Default,
+            variant = TangemMessageBanner.Variant.Light,
             shouldShowGlowRing = true,
             iconUM = TangemIconUM.Icon(
                 imageVector = Icons.ic_arrow_down_20,
@@ -469,7 +469,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     data class NoteMigration(val onClick: () -> Unit) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "NoteMigrationNotification",
-            variant = TangemMessageBanner.Variant.Default,
+            variant = TangemMessageBanner.Variant.Light,
             shouldShowGlowRing = true,
             iconUM = TangemIconUM.Image(
                 imageRes = R.drawable.img_banner_note_migration_64,
@@ -496,7 +496,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     ) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "TangemPayPromo",
-            variant = TangemMessageBanner.Variant.Default,
+            variant = TangemMessageBanner.Variant.Light,
             shouldShowGlowRing = true,
             iconUM = TangemIconUM.Image(imageRes = R.drawable.ic_visa_in_banner),
             iconSize = 40.dp,
@@ -526,7 +526,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     ) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "UpgradeHotWalletPromo",
-            variant = TangemMessageBanner.Variant.Default,
+            variant = TangemMessageBanner.Variant.Light,
             shouldShowGlowRing = true,
             iconUM = TangemIconUM.Image(imageRes = R.drawable.img_tangem_wallet_72),
             iconSize = 64.dp,
@@ -557,7 +557,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
         messageUM = TangemMessageUM(
             id = "YieldBoostPromoNotification",
             // Not present in the Figma reference frame; matched to the other promo banners.
-            variant = TangemMessageBanner.Variant.Default,
+            variant = TangemMessageBanner.Variant.Light,
             shouldShowGlowRing = true,
             title = combinedReference(
                 resourceReference(CoreResR.string.yield_apy_boost_banner_title),
@@ -596,7 +596,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     ) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "RateAppNotification",
-            variant = TangemMessageBanner.Variant.Default,
+            variant = TangemMessageBanner.Variant.Light,
             shouldShowGlowRing = true,
             iconUM = TangemIconUM.Icon(
                 imageVector = Icons.ic_logo_tangem_20,
@@ -632,7 +632,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     ) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "PushNotificationsNotification",
-            variant = TangemMessageBanner.Variant.Default,
+            variant = TangemMessageBanner.Variant.Light,
             shouldShowGlowRing = true,
             iconUM = TangemIconUM.Icon(
                 imageVector = Icons.ic_bell_20,
@@ -663,7 +663,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     ) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "CloreMigrationNotification",
-            variant = TangemMessageBanner.Variant.Default,
+            variant = TangemMessageBanner.Variant.Light,
             shouldShowGlowRing = true,
             iconUM = TangemIconUM.Icon(
                 imageVector = Icons.ic_warning_20_filled,
@@ -690,7 +690,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
     ) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "AssetsDiscoveryCompletedNotification",
-            variant = TangemMessageBanner.Variant.Default,
+            variant = TangemMessageBanner.Variant.Light,
             shouldShowGlowRing = true,
             iconUM = TangemIconUM.Icon(
                 imageVector = Icons.ic_success_20,
