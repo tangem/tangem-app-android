@@ -18,6 +18,7 @@ import com.tangem.grow.datasource.polymarket.PolymarketApi
 import com.tangem.pagination.BatchListSource
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.time.Duration
@@ -27,6 +28,8 @@ internal class DefaultPolymarketActivityRepository @Inject constructor(
     private val api: PolymarketApi,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PolymarketActivityRepository {
+
+    private val logger = TangemLogger.withTag("PolymarketActivityRepository")
 
     override fun getActivityBatchFlow(
         context: PolymarketActivityBatchingContext,
@@ -53,7 +56,14 @@ internal class DefaultPolymarketActivityRepository @Inject constructor(
                 cursor = cursor,
             )
         },
-        convert = { PolymarketActivityPage(PolymarketActivityConverter.convertList(it.items), it.nextCursor) },
+        convert = { response ->
+            val items = response.items.mapNotNull { item ->
+                Either.catch { PolymarketActivityConverter.convert(item) }
+                    .onLeft { logger.e("Skipping invalid activity row: ${item.id}", it) }
+                    .getOrNull()
+            }
+            PolymarketActivityPage(items, response.nextCursor)
+        },
     )
 
     override suspend fun reconcileDeposits(addresses: PolymarketAddresses): Either<PolymarketActivityError, Duration> =
