@@ -29,7 +29,7 @@ internal class PolymarketActivityUMConverter(
         onActivityClick: ((PolymarketActivity) -> Unit)? = null,
     ): ImmutableList<DateGroup> {
         val today = LocalDate.now(clock)
-        return items.sortedByDescending { it.occurredAt }
+        return PolymarketActivityClaimMerger.merge(items).sortedByDescending { it.occurredAt }
             .groupBy { it.occurredAt.atZone(clock.zone).toLocalDate() }
             .map { (date, activities) ->
                 DateGroup(
