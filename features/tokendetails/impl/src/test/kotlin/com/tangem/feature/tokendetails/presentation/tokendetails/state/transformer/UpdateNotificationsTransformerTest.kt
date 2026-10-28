@@ -701,17 +701,22 @@ class UpdateNotificationsTransformerTest {
         }
 
         /**
-         * Every token-details banner keeps the neutral [TangemMessageBanner.Variant.Default]
-         * background: in the Figma reference the coloured Error/Warning backgrounds are reserved for
-         * card-security banners, and the severity shows through the icon tint instead. The glow ring
-         * follows whether the banner carries action buttons.
+         * Every token-details banner uses the neutral [TangemMessageBanner.Variant.Light] background,
+         * except the outdated-data one, which stays [TangemMessageBanner.Variant.Default] grey. In the
+         * Figma reference the coloured Error/Warning backgrounds are reserved for card-security banners,
+         * and the severity shows through the icon tint instead. The glow ring follows whether the
+         * banner carries action buttons.
          */
         private fun provideTestModels() = listOf(
             AppearanceModel(CryptoCurrencyWarning.SomeNetworksUnreachable, expectedGlowRing = false),
             AppearanceModel(CryptoCurrencyWarning.BeaconChainShutdown, expectedGlowRing = false),
             AppearanceModel(CryptoCurrencyWarning.MigrationMaticToPol, expectedGlowRing = false),
             AppearanceModel(CryptoCurrencyWarning.TopUpWithoutReserve, expectedGlowRing = false),
-            AppearanceModel(CryptoCurrencyWarning.UsedOutdatedDataWarning, expectedGlowRing = false),
+            AppearanceModel(
+                warning = CryptoCurrencyWarning.UsedOutdatedDataWarning,
+                expectedGlowRing = false,
+                expectedVariant = TangemMessageBanner.Variant.Default,
+            ),
             AppearanceModel(DynamicAddressesWarnings.FundsFound, expectedGlowRing = true),
             AppearanceModel(CryptoCurrencyWarning.MigrationClore, expectedGlowRing = true),
             AppearanceModel(
@@ -799,7 +804,7 @@ class UpdateNotificationsTransformerTest {
     data class AppearanceModel(
         val warning: CryptoCurrencyWarning,
         val expectedGlowRing: Boolean,
-        val expectedVariant: TangemMessageBanner.Variant = TangemMessageBanner.Variant.Default,
+        val expectedVariant: TangemMessageBanner.Variant = TangemMessageBanner.Variant.Light,
     )
 
     private fun createTransformer(warnings: Set<CryptoCurrencyWarning>) = UpdateNotificationsTransformer(
