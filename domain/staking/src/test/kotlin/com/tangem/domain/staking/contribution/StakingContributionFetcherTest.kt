@@ -38,6 +38,11 @@ internal class StakingContributionFetcherTest {
     }
 
     @Test
+    fun `GIVEN staking fetcher WHEN name read THEN it is the STAKING error log key`() {
+        assertThat(fetcher.name).isEqualTo("STAKING")
+    }
+
+    @Test
     fun `GIVEN a joint and a personal currency WHEN fetch THEN only the personal one gets a staking id`() = runTest {
         // Arrange
         coEvery { stakingIdFactory.create(userWalletId, ethereum) } returns Either.Right(stakingId)
