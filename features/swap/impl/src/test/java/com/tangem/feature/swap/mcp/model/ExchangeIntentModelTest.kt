@@ -480,6 +480,7 @@ internal class ExchangeIntentModelTest {
             assertThat(model.sheet.value).isEqualTo(offer)
             verify(exactly = 1) { router.pop(any()) }
             verify(exactly = 0) { router.navigate(any(), any()) }
+            assertThat(sentEvents().map { it.first }).containsExactly("[MCP Intent] Intent Screen Opened")
             model.onDestroy()
         }
 
@@ -499,6 +500,7 @@ internal class ExchangeIntentModelTest {
         // Assert
         verify(exactly = 1) { router.pop(any()) }
         assertThat(model.sheet.value).isNull()
+        assertThat(sentEvents()).isEmpty()
         model.onDestroy()
     }
 
@@ -585,6 +587,7 @@ internal class ExchangeIntentModelTest {
             assertThat(model.sheet.value).isNull()
             verify(exactly = 1) { router.pop(any()) }
             verify(exactly = 0) { router.navigate(any(), any()) }
+            assertThat(sentEvents()).isEmpty()
             model.onDestroy()
         }
 
@@ -615,6 +618,7 @@ internal class ExchangeIntentModelTest {
             assertThat(lookupCancelled).isTrue()
             assertThat(model.sheet.value).isNull()
             verify(exactly = 1) { router.pop(any()) }
+            assertThat(sentEvents()).isEmpty()
             model.onDestroy()
         }
     }
@@ -730,6 +734,7 @@ internal class ExchangeIntentModelTest {
                 "[MCP Intent] Button - Continue" to mapOf("Intent Type" to "exchange", "Intent Id" to INTENT_ID),
             )
             assertThat(sentEvents().count { it.first == "[MCP Intent] Button - Continue" }).isEqualTo(1)
+            verify(exactly = 0) { router.defaultCompletionHandler(any(), any()) }
             model.onDestroy()
         }
 
@@ -745,6 +750,7 @@ internal class ExchangeIntentModelTest {
 
             // Assert
             assertThat(sentEvents().map { it.first }).doesNotContain("[MCP Intent] Button - Continue")
+            verify(exactly = 1) { router.defaultCompletionHandler(isSuccess = false, errorMessage = any()) }
             model.onDestroy()
         }
 
