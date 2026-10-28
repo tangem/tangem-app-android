@@ -252,6 +252,7 @@ include(":test:mock")
 // region Core modules
 include(":core:ab-tests")
 include(":core:analytics")
+include(":core:analytics:impl")
 include(":core:analytics:models")
 include(":core:biometric-auth:api")
 include(":core:biometric-auth:impl")

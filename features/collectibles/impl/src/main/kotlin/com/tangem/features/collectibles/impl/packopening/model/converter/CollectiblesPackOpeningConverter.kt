@@ -85,6 +85,10 @@ internal class CollectiblesPackOpeningConverter(
             OpenPackStep.NotStarted,
             is OpenPackStep.Failed,
             -> when {
+                value.isRelinkRequired -> ButtonUM(
+                    textRef = resourceReference(R.string.collectibles_confirm_order_approve_button),
+                    isEnabled = false,
+                )
                 !hasEnoughFunds -> ButtonUM(
                     textRef = resourceReference(R.string.collectibles_confirm_order_not_enough_funds_button),
                     isEnabled = false,
@@ -101,5 +105,6 @@ internal class CollectiblesPackOpeningConverter(
         val machine: CollectibleGachaMachine,
         val vaultBalance: CollectiblesVaultBalance,
         val step: OpenPackStep,
+        val isRelinkRequired: Boolean = false,
     )
 }

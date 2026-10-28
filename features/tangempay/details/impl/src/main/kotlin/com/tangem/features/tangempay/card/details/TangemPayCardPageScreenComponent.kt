@@ -18,9 +18,6 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.tangempay.addfunds.TangemPayAddFundsComponent
 import com.tangem.features.tangempay.addfunds.va.bank.DefaultTangemPayBankingDetailsErrorComponent
-import com.tangem.features.tangempay.addfunds.va.bank.VA_DAILY_DEPOSIT_LIMIT_PLACEHOLDER
-import com.tangem.features.tangempay.addfunds.va.bank.toRequisitesRows
-import com.tangem.features.tangempay.addfunds.va.deposit.TangemPayVirtualAccountDepositComponent
 import com.tangem.features.tangempay.card.closure.TangemPayCloseCardComponent
 import com.tangem.features.tangempay.card.pin.TangemPayViewPinComponent
 import com.tangem.features.tangempay.card.reissue.TangemPayReissueCardComponent
@@ -31,14 +28,11 @@ import com.tangem.features.tangempay.multichain.choosenetwork.PaymentChooseNetwo
 import com.tangem.features.tangempay.multichain.othernetworks.PaymentOtherNetworksComponent
 import com.tangem.features.tangempay.multichain.receive.PaymentReceiveComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
-import com.tangem.features.moneyaccount.details.component.MoneyAccountAddFundsBottomSheetComponent
-import com.tangem.features.moneyaccount.details.component.MoneyAccountAddFundsListener
 
 internal class TangemPayCardPageScreenComponent(
     private val appComponentContext: AppComponentContext,
     private val params: TangemPayCardPageComponent.Params,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
-    private val moneyAccountAddFundsComponentFactory: MoneyAccountAddFundsBottomSheetComponent.Factory,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
     private val model: TangemPayCardPageModel = getOrCreateModel(params = params)
@@ -133,31 +127,6 @@ internal class TangemPayCardPageScreenComponent(
                     depositAddress = navigation.depositAddress,
                     cryptoCurrency = navigation.cryptoCurrency,
                     virtualAccountOnramp = navigation.virtualAccountOnramp,
-                ),
-            )
-            is TangemPayCardNavigation.VirtualAccountDeposit -> TangemPayVirtualAccountDepositComponent(
-                appComponentContext = context,
-                params = TangemPayVirtualAccountDepositComponent.Params(
-                    virtualAccountOnramp = navigation.virtualAccountOnramp,
-                    userWalletId = navigation.userWalletId,
-                    paymentAccountAddress = navigation.paymentAccountAddress,
-                    onDismiss = model.bottomSheetNavigation::dismiss,
-                    onShowDetails = model::onShowVirtualAccountRequisites,
-                    onShowBankingDetailsError = model::showVaBankingDetailsError,
-                    onOrderCreated = model::onVirtualAccountOrderCreated,
-                ),
-            )
-            is TangemPayCardNavigation.VirtualAccountRequisites -> moneyAccountAddFundsComponentFactory.create(
-                context = context,
-                params = MoneyAccountAddFundsBottomSheetComponent.Params(
-                    userWalletId = navigation.userWalletId,
-                    requisites = navigation.bankCredentials.toRequisitesRows(),
-                    dailyDepositLimit = VA_DAILY_DEPOSIT_LIMIT_PLACEHOLDER,
-                    shouldSkipIntro = true,
-                    listener = MoneyAccountAddFundsListener { model.bottomSheetNavigation.dismiss() },
-                    onDetailsShown = model::onVaBankingDetailsShown,
-                    onShareClicked = model::onVaShareDetailsClicked,
-                    onFieldCopied = model::onVaFieldCopied,
                 ),
             )
             is TangemPayCardNavigation.VaBankingDetailsError -> DefaultTangemPayBankingDetailsErrorComponent(

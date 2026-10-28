@@ -25,15 +25,12 @@ import com.tangem.core.ui.components.fields.contextmenu.DisableContextMenu
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.security.DisableAutofillEffect
 import com.tangem.features.hotwallet.impl.R
 import com.tangem.features.hotwallet.manualbackup.check.entity.ManualBackupCheckUM
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun ManualBackupCheckContent(state: ManualBackupCheckUM, modifier: Modifier = Modifier) {
-    DisableAutofillEffect()
-
     Column(
         modifier = modifier
             .background(TangemTheme.colors3.bg.primary)
@@ -95,6 +92,7 @@ private fun Fields(state: ManualBackupCheckUM, modifier: Modifier = Modifier) {
         DisableContextMenu {
             state.wordFields.fastForEachIndexed { index, field ->
                 OutlineTextField(
+                    isExcludedFromAutofill = true,
                     value = field.word,
                     onValueChange = field.onChange,
                     label = field.index.toString(),

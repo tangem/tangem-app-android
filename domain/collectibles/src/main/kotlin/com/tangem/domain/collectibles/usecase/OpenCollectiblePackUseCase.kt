@@ -5,6 +5,8 @@ import arrow.core.raise.Raise
 import arrow.core.raise.either
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
+import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
+import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
 import com.tangem.domain.collectibles.models.CollectibleException
 import com.tangem.domain.collectibles.models.CollectibleTurboMode
 import com.tangem.domain.collectibles.models.CollectibleTxStatus
@@ -14,6 +16,9 @@ import com.tangem.domain.collectibles.models.OpenPackStep
 import com.tangem.domain.collectibles.models.OpenedCollectiblePack
 import com.tangem.domain.collectibles.repository.CollectiblesRepository
 import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
+import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.CollectiblesAccountStatusValue
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
@@ -32,12 +37,17 @@ import kotlin.time.Duration.Companion.seconds
  *
  * Nothing is spent until the payment is sent; from that attempt on, a failure that may leave the pack paid for is
  * [OpenPackStep.Failed.PackUnopened], which [OpenPackRequest.Reopen] retries.
+ *
+ * The vault must still answer to this device's hot delegate: it is checked before the spin is issued and again when
+ * the payment fails, and a vault re-pointed by another phone marks the account for a relink.
  */
 class OpenCollectiblePackUseCase @Inject constructor(
     private val collectiblesRepository: CollectiblesRepository,
     private val gachaVaultRepository: GachaVaultRepository,
     private val ownerDeriver: CollectiblesOwnerDeriver,
     private val accountStatusFetcher: CollectiblesAccountStatusFetcher,
+    private val accountRepository: CollectiblesAccountRepository,
+    private val hotDelegate: CollectiblesHotDelegate,
 ) {
 
     operator fun invoke(userWallet: UserWallet, request: OpenPackRequest): Flow<OpenPackStep> = flow {
@@ -75,6 +85,7 @@ class OpenCollectiblePackUseCase @Inject constructor(
         onStep(OpenPackStep.Generating)
         val owner = ownerDeriver.storedOwner(userWallet.walletId)
             ?: fail(OpenPackStep.Failed.PurchaseFailed, cause = "owner key is not stored")
+        ensureHotDelegateLinked(userWallet)
 
         val purchase = runSuspendCatching {
             collectiblesRepository.generatePurchaseTx(
@@ -103,9 +114,35 @@ class OpenCollectiblePackUseCase @Inject constructor(
             amount = purchase.amount,
             feeAmount = purchase.feeAmount,
             memo = purchase.memo,
-        ).getOrElse { error -> fail(OpenPackStep.Failed.PurchaseFailed, cause = error) }
+        ).getOrElse { error ->
+            ensureHotDelegateLinked(userWallet)
+            fail(OpenPackStep.Failed.PurchaseFailed, cause = error)
+        }
 
         return SentPurchase(txId = purchase.txId, txHash = txHash)
+    }
+
+    /** A vault that cannot be read is not paid from: whether it still answers to this device is unknown. */
+    private suspend fun Raise<OpenPackStep.Failed>.ensureHotDelegateLinked(userWallet: UserWallet) {
+        val vaultDelegate = gachaVaultRepository.getVaultHotDelegate(userWallet)
+            .getOrElse { error -> fail(OpenPackStep.Failed.PurchaseFailed, cause = error) }
+        val accountId = AccountId.forCollectiblesAccount(userWalletId = userWallet.walletId)
+        val localDelegate = hotDelegate.getPublicKeyOrNull(accountId)?.base58
+
+        if (vaultDelegate == null || vaultDelegate == localDelegate) return
+
+        if (accountRepository.isRelinkPending(userWallet.walletId)) {
+            fail(OpenPackStep.Failed.PurchaseFailed, cause = "the relink has not landed yet")
+        }
+
+        accountRepository.saveAccount(
+            userWalletId = userWallet.walletId,
+            status = CollectiblesAccountStatusValue.UpdateRequired(
+                source = StatusSource.ACTUAL,
+                vaultBalance = accountRepository.getStatusSync(userWallet.walletId)?.balance,
+            ),
+        )
+        fail(OpenPackStep.Failed.PurchaseFailed, cause = "the vault answers to another hot delegate")
     }
 
     private suspend fun Raise<OpenPackStep.Failed>.reportTxHash(userWallet: UserWallet, sent: SentPurchase) {

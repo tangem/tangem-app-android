@@ -13,6 +13,7 @@ import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawAnalytics
 import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTarget
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import com.tangem.features.tangempay.withdraw.bank.preview.TangemPayBankWithdrawPreviewComponent
@@ -43,11 +44,13 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     completionFactory: BankWithdrawCompletionFactory,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val analytics: AnalyticsEventHandler,
+    analytics: AnalyticsEventHandler,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankWithdrawPreviewComponent.Params>()
+
+    private val withdrawAnalytics = BankWithdrawAnalytics(sourceAccount = params.sourceAccount, analytics = analytics)
 
     private val completion = completionFactory.create(
         sourceAccount = params.sourceAccount,
@@ -84,7 +87,7 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
         getBalanceHidingSettingsUseCase.isBalanceHidden()
             .onEach { isBalanceHidden -> state.update { it.copy(isBalanceHidden = isBalanceHidden) } }
             .launchIn(modelScope)
-        analytics.send(TangemPayAnalyticsEvents.Offramp.ConfirmationScreenOpened())
+        withdrawAnalytics.onConfirmationScreenOpened()
     }
 
     /** The wallet cannot change while the wizard is open, and a lookup failure keeps the historic card icon. */
@@ -98,7 +101,7 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
 
     private fun onSendClick() {
         if (isSending) return
-        analytics.send(TangemPayAnalyticsEvents.Offramp.SendOnConfirmationClicked())
+        withdrawAnalytics.onSendClicked(params.draft.value)
         complete()
     }
 
@@ -129,7 +132,7 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
     }
 
     private fun onCompletionFailed(failure: PreviewFailure) {
-        analytics.send(TangemPayAnalyticsEvents.Offramp.SendErrorScreenOpened())
+        withdrawAnalytics.onSendFailed()
         if (failure == PreviewFailure.TransferOutcomeUnknown) params.onTransferOutcomeUnknown()
     }
 
@@ -145,14 +148,14 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
 
     private fun onEditClick(target: BankWithdrawEditTarget) {
         if (isSending) return
-        editEvent(target)?.let(analytics::send)
+        editEvent(target)?.let(withdrawAnalytics::sendPaymentAccountOnly)
         router.push(TangemPayBankWithdrawInnerRoute.Edit(target))
     }
 
     /** The rail is picked on the amount step, so the row reopens it. */
     private fun onRailClick() {
         if (isSending) return
-        analytics.send(TangemPayAnalyticsEvents.Offramp.RailSelectorClicked())
+        withdrawAnalytics.sendPaymentAccountOnly(TangemPayAnalyticsEvents.Offramp.RailSelectorClicked())
         onEditClick(BankWithdrawEditTarget.Amount)
     }
 

@@ -2,6 +2,7 @@ package com.tangem.data.moneyaccount.di
 
 import android.content.Context
 import androidx.datastore.dataStoreFile
+import com.tangem.data.moneyaccount.cleaner.MoneyAccountUserWalletDataCleaner
 import com.tangem.data.moneyaccount.converter.MoneyAccountStatusValueDMConverter
 import com.tangem.data.moneyaccount.currency.DefaultMoneyAccountCurrencyFactory
 import com.tangem.data.moneyaccount.currency.MoneyAccountCurrenciesProvider
@@ -13,6 +14,7 @@ import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
@@ -34,7 +36,7 @@ import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBankCredentialsUseC
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.moneyaccount.usecase.GetTangemPayProductsAvailabilityUseCase
 import com.tangem.domain.moneyaccount.usecase.IsMoneyAccountPathOccupiedUseCase
-import com.tangem.domain.moneyaccount.usecase.RestoreMoneyAccountOrderUseCase
+import com.tangem.domain.moneyaccount.usecase.PollTangemPayAccountStatusesUseCase
 import com.tangem.domain.moneyaccount.usecase.StartTangemPayOnboardingUseCase
 import com.tangem.domain.pay.usecase.CreateOnboardingOrderUseCase
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -44,6 +46,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
 import javax.inject.Singleton
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
@@ -75,6 +78,10 @@ internal interface MoneyAccountDataModule {
     @Binds
     @Singleton
     fun bindNonPortfolioCurrenciesProvider(impl: MoneyAccountCurrenciesProvider): NonPortfolioCurrenciesProvider
+
+    @Binds
+    @IntoSet
+    fun bindMoneyAccountUserWalletDataCleaner(impl: MoneyAccountUserWalletDataCleaner): UserWalletDataCleaner
 
     companion object {
 
@@ -126,10 +133,14 @@ internal interface MoneyAccountDataModule {
         fun provideStartTangemPayOnboardingUseCase(
             activateMoneyAccountUseCase: ActivateMoneyAccountUseCase,
             createOnboardingOrderUseCase: CreateOnboardingOrderUseCase,
+            pollTangemPayAccountStatusesUseCase: PollTangemPayAccountStatusesUseCase,
+            appCoroutineScope: AppCoroutineScope,
         ): StartTangemPayOnboardingUseCase {
             return StartTangemPayOnboardingUseCase(
                 activateMoneyAccountUseCase = activateMoneyAccountUseCase,
                 createOnboardingOrderUseCase = createOnboardingOrderUseCase,
+                pollTangemPayAccountStatusesUseCase = pollTangemPayAccountStatusesUseCase,
+                appCoroutineScope = appCoroutineScope,
             )
         }
 
@@ -150,12 +161,12 @@ internal interface MoneyAccountDataModule {
         }
 
         @Provides
-        fun provideRestoreMoneyAccountOrderUseCase(
+        fun providePollTangemPayAccountStatusesUseCase(
             getCustomerSummaryUseCase: GetCustomerSummaryUseCase,
             paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
             moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
-        ): RestoreMoneyAccountOrderUseCase {
-            return RestoreMoneyAccountOrderUseCase(
+        ): PollTangemPayAccountStatusesUseCase {
+            return PollTangemPayAccountStatusesUseCase(
                 getCustomerSummaryUseCase = getCustomerSummaryUseCase,
                 paymentAccountStatusFetcher = paymentAccountStatusFetcher,
                 moneyAccountStatusFetcher = moneyAccountStatusFetcher,

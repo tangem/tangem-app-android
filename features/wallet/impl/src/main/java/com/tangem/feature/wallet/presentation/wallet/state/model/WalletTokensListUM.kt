@@ -9,7 +9,6 @@ import com.tangem.core.ui.ds2.accountrow.TangemAccountRow
 import com.tangem.core.ui.ds2.avatar.TangemAvatar
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.features.jointaccount.main.JointAccountMainUM
 import com.tangem.utils.annotations.RemoveWithToggle
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -141,15 +140,14 @@ internal sealed interface TokensListItemUM2 {
     }
 
     /**
-     * A joint account that is not yet activated (collecting members / loading / blocked / temporarily
-     * unavailable). Rendered as a single non-collapsible row by the joint-account feature component,
-     * keyed by [accountId] so multiple pending joint accounts can coexist in the list. Once activated,
-     * a joint account becomes a regular [Portfolio] instead.
+     * A joint account that is not active yet (collecting members, confirming, loading, compromised or temporarily
+     * unavailable): a single non-expandable [TangemAccountRow]. Once active, a joint account is a regular portfolio
+     * row instead.
      */
     data class JointPending(
-        val accountId: String,
-        val state: JointAccountMainUM,
+        val state: TangemAccountRow.State,
+        val avatar: TangemAvatar.UiState,
     ) : TokensListItemUM2 {
-        override val id: String = accountId
+        override val id: String = state.id
     }
 }

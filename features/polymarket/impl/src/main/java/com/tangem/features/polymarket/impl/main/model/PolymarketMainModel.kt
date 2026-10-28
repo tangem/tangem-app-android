@@ -300,7 +300,9 @@ internal class PolymarketMainModel @Inject constructor(
     private fun loadCategories() {
         uiState.update { it.copy(isCategoriesLoading = true) }
         modelScope.launch {
-            val result = withContext(dispatchers.default) { getPolymarketCategoriesUseCase() }
+            val result = withContext(
+                dispatchers.default,
+            ) { getPolymarketCategoriesUseCase(userWalletId = params.userWalletId) }
             val loadedCategories = result.getOrNull().orEmpty()
 
             categories = loadedCategories
@@ -342,6 +344,7 @@ internal class PolymarketMainModel @Inject constructor(
         // replay = 1: the first Reload is emitted before the pagination subscribes.
         val actionsFlow = MutableSharedFlow<PolymarketEventsBatchAction>(replay = 1)
         val batchFlow = getPolymarketEventsBatchFlowUseCase(
+            userWalletId = params.userWalletId,
             context = PolymarketEventsBatchingContext(actionsFlow = actionsFlow, coroutineScope = modelScope),
         )
         val poller = PolymarketFeedPoller(

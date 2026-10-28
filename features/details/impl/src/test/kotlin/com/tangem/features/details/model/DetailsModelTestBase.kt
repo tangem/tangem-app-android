@@ -15,7 +15,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -57,7 +56,6 @@ internal abstract class DetailsModelTestBase {
     protected val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase = mockk()
     protected val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
     protected val tangemPayEligibilityManager: TangemPayEligibilityManager = mockk()
-    protected val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
 
     // Captured from itemsBuilder.buildAll(...) so the feature buttons can be driven.
     protected val wcSlot = slot<Boolean>()
@@ -77,9 +75,7 @@ internal abstract class DetailsModelTestBase {
         every { socialsBuilder.buildAll() } returns persistentListOf()
         every { appInfoProvider.appVersion } returns "1.2.3"
         every { appInfoProvider.appVersionCode } returns 456
-        coEvery { tangemPayEligibilityManager.getEligibleWallets(any(), any()) } returns emptyList()
         coEvery { tangemPayEligibilityManager.getCompatibleWalletsIds(any()) } returns emptyList()
-        every { tangemPayFeatureToggles.isResidencyStepEnabled } returns false
 
         every {
             itemsBuilder.buildAll(
@@ -117,7 +113,6 @@ internal abstract class DetailsModelTestBase {
         generateBuyTangemCardLinkUseCase = generateBuyTangemCardLinkUseCase,
         analyticsEventHandler = analyticsEventHandler,
         tangemPayEligibilityManager = tangemPayEligibilityManager,
-        tangemPayFeatureToggles = tangemPayFeatureToggles,
     ).also(DetailsModel::onResume)
 
     protected fun stubBuildAllReturns(list: ImmutableList<DetailsItemUM>) {

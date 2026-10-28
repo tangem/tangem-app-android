@@ -86,7 +86,7 @@ private fun ComponentPreview(state: TangemAccountRowStory) {
 private fun AccountRowPreview(state: TangemAccountRowStory) {
     val avatar = TangemAvatar.UiState.Account(
         imageVector = Icons.il_account_airplane,
-        color = TangemAvatar.FillColor.DarkBlue,
+        color = TangemAvatar.FillColor.AzureBlue,
     )
     val title = stringReference(if (state.longTitle) LONG_TITLE else SHORT_TITLE)
     val label = stringReference("Subtitle")

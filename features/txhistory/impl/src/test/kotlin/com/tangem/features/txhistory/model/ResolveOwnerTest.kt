@@ -48,6 +48,13 @@ internal class ResolveOwnerTest {
             networkRawId = ETH,
             expected = ResolvedOwner.OwnPaymentAccount(PAYMENT_ACCOUNT),
         ),
+        Model(
+            name = "accounts mode, own money account address -> OwnMoneyAccount",
+            lookup = lookup(ETH to mapOf(OWN_ADDRESS to MONEY_ACCOUNT)),
+            address = OWN_ADDRESS,
+            networkRawId = ETH,
+            expected = ResolvedOwner.OwnMoneyAccount(MONEY_ACCOUNT),
+        ),
         // Accounts mode: an address that is none of the user's is external.
         Model(
             name = "accounts mode, unknown address -> External",
@@ -156,6 +163,7 @@ internal class ResolveOwnerTest {
         val CRYPTO_ACCOUNT = Account.Personal.createMainAccount(USER_WALLET_ID)
         val SECONDARY_ACCOUNT = MockAccounts.createAccount(derivationIndex = 1, userWalletId = USER_WALLET_ID)
         val PAYMENT_ACCOUNT = Account.Payment(USER_WALLET_ID)
+        val MONEY_ACCOUNT = Account.Money(USER_WALLET_ID)
         val WALLET_INFO = WalletInfo(
             name = "My Wallet",
             deviceIconUM = DeviceIconUM.Card(mainColor = Color(color = 0xFF1E1E1E), secondColor = null),

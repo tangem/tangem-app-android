@@ -5,6 +5,7 @@ import com.tangem.blockchain.blockchains.ethereum.tokenmethods.ApprovalERC20Toke
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.MerklClaimCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.unwrapYieldModuleUpgrade
 import com.tangem.domain.models.currency.CryptoCurrency
 
 /**
@@ -30,4 +31,4 @@ private fun TransactionData.Uncompiled.isApproval(): Boolean =
     (extras as? EthereumTransactionExtras)?.callData is ApprovalERC20TokenCallData
 
 private fun TransactionData.Uncompiled.isMerklClaim(): Boolean =
-    (extras as? EthereumTransactionExtras)?.callData is MerklClaimCallData
+    (extras as? EthereumTransactionExtras)?.callData?.unwrapYieldModuleUpgrade() is MerklClaimCallData

@@ -80,7 +80,7 @@ internal class PolymarketPositionDetailsModelTest {
         every { BigDecimal("6300000").formatPolymarketVolume() } returns "$6.3M"
         coEvery { deriveAddresses.stored(wallet) } returns addresses
         coEvery { repository.getPosition(addresses, position.id) } returns position.right()
-        coEvery { getEvent(any()) } returns PolymarketEventError.Network.left()
+        coEvery { getEvent(any(), any()) } returns PolymarketEventError.Network.left()
     }
 
     @AfterEach
@@ -131,7 +131,7 @@ internal class PolymarketPositionDetailsModelTest {
         assertThat(model.uiState.value.content).isInstanceOf(Content.Data::class.java)
         coVerify(exactly = 1) { deriveAddresses.stored(wallet) }
         coVerify(exactly = 1) { repository.getPosition(addresses, position.id) }
-        coVerify(exactly = 1) { getEvent("event") }
+        coVerify(exactly = 1) { getEvent(any(), "event") }
         coVerify(exactly = 0) { deriveAddresses.invoke(any()) }
     }
 
@@ -190,7 +190,7 @@ internal class PolymarketPositionDetailsModelTest {
         // Assert
         assertThat(model.uiState.value.content).isEqualTo(Content.Unavailable)
         coVerify(exactly = 1) { repository.getPosition(addresses, position.id) }
-        coVerify(exactly = 0) { getEvent(any()) }
+        coVerify(exactly = 0) { getEvent(any(), any()) }
     }
 
     @Test
@@ -216,7 +216,7 @@ internal class PolymarketPositionDetailsModelTest {
     ) = runModelTest {
         // Arrange
         coEvery { repository.getPosition(addresses, position.id) } returns model.position.right()
-        coEvery { getEvent("event") } returns createEvent(markets = listOf(createMarket())).right()
+        coEvery { getEvent(any(), "event") } returns createEvent(markets = listOf(createMarket())).right()
         val details = createModel()
         details.onResume()
         runCurrent()
@@ -289,7 +289,7 @@ internal class PolymarketPositionDetailsModelTest {
     fun `GIVEN slow event WHEN metadata arrives THEN enriches already displayed position without another read`() = runModelTest {
         // Arrange
         val event = CompletableDeferred<PolymarketEvent>()
-        coEvery { getEvent("event") } coAnswers { event.await().right() }
+        coEvery { getEvent(any(), "event") } coAnswers { event.await().right() }
         val model = createModel()
         model.onResume()
         runCurrent()
@@ -306,7 +306,7 @@ internal class PolymarketPositionDetailsModelTest {
         assertThat(model.data().event?.iconUrl).isEqualTo("https://example.com/event.png")
         assertThat(model.data().event?.volume).isEqualTo(stringReference("$6.3M"))
         coVerify(exactly = 1) { repository.getPosition(addresses, position.id) }
-        coVerify(exactly = 1) { getEvent("event") }
+        coVerify(exactly = 1) { getEvent(any(), "event") }
     }
 
     @Test
@@ -477,7 +477,7 @@ internal class PolymarketPositionDetailsModelTest {
     fun `GIVEN a tradable market WHEN buy tapped THEN the buy route carries wallet, event, market and outcome`() =
         runModelTest {
             // Arrange
-            coEvery { getEvent("event") } returns createEvent(markets = listOf(createMarket())).right()
+            coEvery { getEvent(any(), "event") } returns createEvent(markets = listOf(createMarket())).right()
             val model = createModel()
             model.onResume()
             runCurrent()
@@ -497,7 +497,7 @@ internal class PolymarketPositionDetailsModelTest {
     @Test
     fun `GIVEN a blocked region WHEN buy tapped THEN the restriction is explained AND no order opens`() = runModelTest {
         // Arrange
-        coEvery { getEvent("event") } returns createEvent(markets = listOf(createMarket())).right()
+        coEvery { getEvent(any(), "event") } returns createEvent(markets = listOf(createMarket())).right()
         val model = createModel(regionAccess = createPredictionRegionAccess(isBlocked = true))
         model.onResume()
         runCurrent()
@@ -535,7 +535,7 @@ internal class PolymarketPositionDetailsModelTest {
     @Test
     fun `GIVEN an event market that refuses orders WHEN buy tapped THEN market closed sheet is shown`() = runModelTest {
         // Arrange
-        coEvery { getEvent("event") } returns
+        coEvery { getEvent(any(), "event") } returns
             createEvent(markets = listOf(createMarket(isAcceptingOrders = false))).right()
         val model = createModel()
         model.onResume()
@@ -569,7 +569,7 @@ internal class PolymarketPositionDetailsModelTest {
     @Test
     fun `GIVEN no market of the event holds the outcome WHEN opened THEN buy is not offered`() = runModelTest {
         // Arrange
-        coEvery { getEvent("event") } returns createEvent(markets = listOf(createMarket(assetId = "other"))).right()
+        coEvery { getEvent(any(), "event") } returns createEvent(markets = listOf(createMarket(assetId = "other"))).right()
         val model = createModel()
 
         // Act
@@ -590,7 +590,7 @@ internal class PolymarketPositionDetailsModelTest {
                 outcomes = listOf(createPolymarketOutcome(assetId = "asset-v2", legacyAssetId = position.id.assetId)),
             )
             coEvery { repository.getPosition(addresses, position.id) } returns legacy.right()
-            coEvery { getEvent("event") } returns createEvent(markets = listOf(market)).right()
+            coEvery { getEvent(any(), "event") } returns createEvent(markets = listOf(market)).right()
             val model = createModel()
             model.onResume()
             runCurrent()
@@ -611,7 +611,7 @@ internal class PolymarketPositionDetailsModelTest {
             // Arrange
             coEvery { repository.getPosition(addresses, position.id) } returns
                 position.copy(isAcceptingOrders = false).right()
-            coEvery { getEvent("event") } returns createEvent(markets = listOf(createMarket())).right()
+            coEvery { getEvent(any(), "event") } returns createEvent(markets = listOf(createMarket())).right()
             val model = createModel()
             model.onResume()
             runCurrent()
@@ -637,7 +637,7 @@ internal class PolymarketPositionDetailsModelTest {
                 ),
             )
             coEvery { repository.getPosition(addresses, position.id) } returns indexed.right()
-            coEvery { getEvent("event") } returns createEvent(markets = listOf(market)).right()
+            coEvery { getEvent(any(), "event") } returns createEvent(markets = listOf(market)).right()
             val model = createModel()
             model.onResume()
             runCurrent()
@@ -656,7 +656,7 @@ internal class PolymarketPositionDetailsModelTest {
         // Arrange
         val blank = position.copy(id = position.id.copy(assetId = ""))
         coEvery { repository.getPosition(addresses, blank.id) } returns blank.right()
-        coEvery { getEvent("event") } returns createEvent(markets = listOf(createMarket(assetId = ""))).right()
+        coEvery { getEvent(any(), "event") } returns createEvent(markets = listOf(createMarket(assetId = ""))).right()
         val model = createModel(positionId = blank.id)
 
         // Act

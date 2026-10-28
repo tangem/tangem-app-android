@@ -65,6 +65,7 @@ import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
 import com.tangem.features.foryou.impl.model.converter.ForYouWalletHeaderConverter
 import com.tangem.features.foryou.impl.model.converter.TOP_EARN_TOKENS_BATCH_SIZE
 import com.tangem.features.foryou.impl.model.converter.earnOpportunities.items
+import com.tangem.features.foryou.model.ForYouPeriod
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchListState
@@ -182,6 +183,25 @@ internal class ForYouModelTest {
             assertThat(loading.items).hasSize(5)
             assertThat(loading.items.all { it.tokenRowUM is TangemTokenRowUM.Loading }).isTrue()
         }
+        @Test
+        fun `GIVEN model created WHEN not yet advanced THEN period picker lists ForYouPeriod with Day selected`() =
+            runTest {
+                // Arrange
+                every { multiAccountStatusListSupplier.invokeAsMap() } returns flowOf(linkedMapOf())
+
+                // Act
+                val model = createModel(testScope = this)
+
+                // Assert
+                val picker = model.uiState.value.periodPickerUM
+                assertThat(picker.map { it.id })
+                    .containsExactlyElementsIn(ForYouPeriod.entries.map { it.id })
+                    .inOrder()
+                assertThat(picker.map { it.label })
+                    .containsExactlyElementsIn(ForYouPeriod.entries.map { it.title })
+                    .inOrder()
+                assertThat(picker.single { it.isSelected }.id).isEqualTo(ForYouPeriod.Day.id)
+            }
     }
 
     @Nested
@@ -404,7 +424,7 @@ internal class ForYouModelTest {
     inner class PeriodClick {
 
         @Test
-        fun `GIVEN Content state WHEN period clicked THEN initialSelectedItem updates without resetting rest`() =
+        fun `GIVEN Content state WHEN period clicked THEN selected segment updates without resetting rest`() =
             runTest {
                 // Arrange
                 val currency = createCoin(rawCurrencyId = "btc", symbol = "BTC")
@@ -412,14 +432,14 @@ internal class ForYouModelTest {
                 val model = createModel(testScope = this)
                 advanceUntilIdle()
                 val stateBefore = model.uiState.value
-                val weekItem = stateBefore.periodPickerUM.items[1]
+                val weekItem = stateBefore.periodPickerUM[1]
 
                 // Act
-                stateBefore.onPeriodClick(weekItem)
+                weekItem.onClick()
 
                 // Assert
                 val stateAfter = model.uiState.value
-                assertThat(stateAfter.periodPickerUM.initialSelectedItem).isEqualTo(weekItem)
+                assertThat(stateAfter.periodPickerUM.single { it.isSelected }.id).isEqualTo(weekItem.id)
                 assertThat(stateAfter.portfolioReviewUM).isEqualTo(stateBefore.portfolioReviewUM)
             }
     }
@@ -550,7 +570,7 @@ internal class ForYouModelTest {
 
             // Act
             val state = model.uiState.value
-            state.onPeriodClick(state.periodPickerUM.items[1])
+            state.periodPickerUM[1].onClick()
             advanceUntilIdle()
 
             // Assert
@@ -569,7 +589,7 @@ internal class ForYouModelTest {
             val stateBefore = model.uiState.value
 
             // Act — the initially selected Day segment is clicked again
-            stateBefore.onPeriodClick(stateBefore.periodPickerUM.items.first())
+            stateBefore.periodPickerUM.first().onClick()
             advanceUntilIdle()
 
             // Assert — the early return leaves the state instance as-is
@@ -817,7 +837,7 @@ internal class ForYouModelTest {
             val state = model.uiState.value
 
             // Act
-            state.onPeriodClick(state.periodPickerUM.items[1])
+            state.periodPickerUM[1].onClick()
 
             // Assert
             verify(exactly = 1) {
@@ -834,7 +854,7 @@ internal class ForYouModelTest {
             val state = model.uiState.value
 
             // Act
-            state.onPeriodClick(state.periodPickerUM.items[0])
+            state.periodPickerUM[0].onClick()
 
             // Assert
             verify(exactly = 0) { analyticsEventHandler.send(ofType<ForYouAnalyticsEvent.FilterInterval>()) }

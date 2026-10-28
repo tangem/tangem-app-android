@@ -139,7 +139,7 @@ internal class TangemModalDslTest {
         fun `GIVEN items WHEN tangemModalMenuUM THEN builds items in order`() {
             // Arrange
             val clickAction: TangemModalActionScope.() -> Unit = {}
-            val avatar = TangemAvatar.UiState.User(initial = 'A', color = TangemAvatar.FillColor.DarkBlue)
+            val avatar = TangemAvatar.UiState.User(initial = 'A', color = TangemAvatar.FillColor.AzureBlue)
 
             // Act
             val actual = tangemModalMenuUM {
