@@ -232,6 +232,11 @@
         "source": "https://github.com/tangem/tangem-yield-module-contracts/",
         "name": "yieldSend"
     },
+    "0x4c3f521d": {
+        "info": "yieldModule",
+        "source": "https://github.com/tangem/tangem-yield-module-contracts/",
+        "name": "swap"
+    },
     "0xb9de6a93": {
         "info": "yieldModule",
         "source": "https://github.com/tangem/tangem-yield-module-contracts/",
