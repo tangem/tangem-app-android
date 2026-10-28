@@ -11,11 +11,9 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.domain.card.common.TapWorkarounds.isVisa
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
-import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.features.onboarding.v2.stepper.api.OnboardingStepperComponent
 import com.tangem.features.onboarding.v2.stepper.impl.ui.OnboardingStepper
 import dagger.assisted.Assisted
@@ -30,7 +28,6 @@ internal class DefaultOnboardingStepperComponent @AssistedInject constructor(
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val analyticsHandler: AnalyticsEventHandler,
-    private val getTangemPayCustomerIdUseCase: GetTangemPayCustomerIdUseCase,
 ) : OnboardingStepperComponent, AppComponentContext by context {
 
     override val state = instanceKeeper.getOrCreateSimple { MutableStateFlow(params.initState) }
@@ -45,16 +42,8 @@ internal class DefaultOnboardingStepperComponent @AssistedInject constructor(
 
         componentScope.launch {
             val cardInfo = getWalletMetaInfoUseCase(params.scanResponse).getOrNull() ?: return@launch
-            val userWalletId = cardInfo.userWalletId
-            val visaCustomerId = userWalletId?.let { id -> getTangemPayCustomerIdUseCase(id).getOrNull() }
             analyticsHandler.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.Onboarding))
-            sendFeedbackEmailUseCase(
-                if (params.scanResponse.card.isVisa && !visaCustomerId.isNullOrEmpty()) {
-                    FeedbackEmailType.Visa.Activation(walletMetaInfo = cardInfo, customerId = visaCustomerId)
-                } else {
-                    FeedbackEmailType.DirectUserRequest(walletMetaInfo = cardInfo)
-                },
-            )
+            sendFeedbackEmailUseCase(FeedbackEmailType.DirectUserRequest(walletMetaInfo = cardInfo))
         }
     }
 

@@ -42,7 +42,6 @@ internal class EmailSubjectResolver(private val resources: Resources) {
             FeedbackEmailType.CardAttestationFailed -> "Card attestation failed"
             FeedbackEmailType.BiometricsAuthenticationFailed -> "Biometrics authentication failed"
             FeedbackEmailType.AppUpdateProblem -> resources.getStringSafe(R.string.feedback_subject_support_tangem)
-            is FeedbackEmailType.Visa.Activation -> "[Visa] [Activation] {auto-filled subject}"
             is FeedbackEmailType.Visa.DirectUserRequest -> "[Visa] {auto-filled subject}"
             is FeedbackEmailType.Visa.MoneyAccountRequest -> "[Visa] [USD ACCOUNT]"
             is FeedbackEmailType.Visa.FailedIssueCard -> "[Visa] Failed to issue card"
