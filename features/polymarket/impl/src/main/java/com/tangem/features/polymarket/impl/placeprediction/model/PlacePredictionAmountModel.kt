@@ -28,7 +28,7 @@ import com.tangem.features.polymarket.impl.main.addfunds.PolymarketAddFundsCompo
 import com.tangem.features.polymarket.impl.main.addfunds.PolymarketFundingSheetConfig
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
-import com.tangem.features.polymarket.impl.placeprediction.entity.BuyAmountFractionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.AmountFractionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPrediction
@@ -216,7 +216,7 @@ internal class PlacePredictionAmountModel @Inject constructor(
         restartQuoteLoop(withDebounce = true)
     }
 
-    override fun onFractionClick(fraction: BuyAmountFractionUM) {
+    override fun onFractionClick(fraction: AmountFractionUM) {
         uiState.update(SetAmountFractionTransformer(fraction = fraction))
         restartQuoteLoop(withDebounce = false)
     }
