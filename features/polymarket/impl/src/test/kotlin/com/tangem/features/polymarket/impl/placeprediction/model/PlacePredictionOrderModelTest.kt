@@ -262,6 +262,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 assertThat(state.isReadyToPlace).isTrue()
                 coVerify {
                     getQuoteUseCase(
+                        userWalletId = any(),
                         request = match { it.side == PredictionOrderSide.SELL && it.amount.compareTo(HELD) == 0 },
                     )
                 }
@@ -316,6 +317,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             // Assert
             coVerify {
                 getQuoteUseCase(
+                    userWalletId = any(),
                     request = match { it.side == PredictionOrderSide.SELL && it.amount.compareTo(BigDecimal("25")) == 0 },
                 )
             }
