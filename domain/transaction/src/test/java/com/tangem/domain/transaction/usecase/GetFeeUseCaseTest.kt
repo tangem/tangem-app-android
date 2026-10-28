@@ -10,6 +10,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySendCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -249,6 +250,27 @@ internal class GetFeeUseCaseTest {
 
         // Then
         assertThat(result.isRight()).isTrue()
+        val fee = result.getOrNull().requireAs<TransactionFee.Single>()
+        assertGasLimitIncreased(
+            patched = fee.normal,
+            expectedGasLimit = BigInteger("29400"),
+            expectedValue = BigDecimal("0.00294"),
+        )
+    }
+
+    @Test
+    fun `GIVEN upgrade-wrapped yield send WHEN invoke THEN gas limit is increased by 40 percent`() = runTest {
+        // Arrange
+        val txData = yieldSupplyTransactionData(isWrappedInUpgrade = true)
+        val original = TransactionFee.Single(
+            normal = eip1559Fee(gasLimit = BigInteger("21000"), value = BigDecimal("0.0021")),
+        )
+        coEvery { walletManager.getFee(txData) } returns Result.Success(original)
+
+        // Act
+        val result = useCase(userWallet, network, txData)
+
+        // Assert
         val fee = result.getOrNull().requireAs<TransactionFee.Single>()
         assertGasLimitIncreased(
             patched = fee.normal,
@@ -561,8 +583,16 @@ internal class GetFeeUseCaseTest {
 
     // region helpers
 
-    private fun yieldSupplyTransactionData(): TransactionData.Uncompiled {
-        val callData = mockk<EthereumYieldSupplySendCallData>()
+    private fun yieldSupplyTransactionData(isWrappedInUpgrade: Boolean = false): TransactionData.Uncompiled {
+        val sendCallData = mockk<EthereumYieldSupplySendCallData>()
+        val callData = if (isWrappedInUpgrade) {
+            EthereumYieldSupplyUpgradeToAndCallCallData(
+                newImplementation = "0x5555555555555555555555555555555555555555",
+                innerCallData = sendCallData,
+            )
+        } else {
+            sendCallData
+        }
         return uncompiledTransactionData(EthereumTransactionExtras(callData = callData))
     }
 

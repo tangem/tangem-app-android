@@ -14,6 +14,7 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySendCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.unwrapYieldModuleUpgrade
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
@@ -2904,7 +2905,7 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     private fun getPayoutAddress(txData: TransactionData.Uncompiled): String {
-        val ethereumCallData = (txData.extras as? EthereumTransactionExtras)?.callData
+        val ethereumCallData = (txData.extras as? EthereumTransactionExtras)?.callData?.unwrapYieldModuleUpgrade()
         return if (ethereumCallData is EthereumYieldSupplySendCallData) {
             ethereumCallData.destinationAddress
         } else {
