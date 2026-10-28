@@ -19,7 +19,7 @@ internal fun StateUpdater<TangemMessageBannerStory>.build(): TangemMessageBanner
         hasSlotEnd = true,
         hasExtraContent = true,
         isClickable = false,
-        background = Background.BgSecondary,
+        background = Background.BgPrimary,
         onVariantChange = { variant -> updateStory { it.copy(variant = variant) } },
         onContentAlignChange = { align -> updateStory { it.copy(contentAlign = align) } },
         onGlowRingToggle = { updateStory { it.copy(hasGlowRing = !it.hasGlowRing) } },
