@@ -11,9 +11,12 @@ import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.wallets.analytics.Settings.NoticeMobileWalletLimit
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
+import com.tangem.domain.wallets.models.CreateHotWalletError
 import com.tangem.domain.wallets.usecase.CreateHotWalletUseCase
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.MnemonicType
@@ -25,6 +28,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -100,7 +104,7 @@ internal class IntroductionMobileWalletCreatorTest {
     @Test
     fun `GIVEN the creation fails WHEN invoked THEN the viewer is told and the caller notified`() = runTest {
         // Arrange
-        coEvery { createHotWalletUseCase(any(), any()) } returns IllegalStateException("boom").left()
+        coEvery { createHotWalletUseCase(any(), any()) } returns CreateHotWalletError.Failed(IllegalStateException("boom")).left()
 
         // Act
         creator.createAndOpen(source = SOURCE, beforeOpen = {}, onFailed = onFailed)
@@ -115,6 +119,33 @@ internal class IntroductionMobileWalletCreatorTest {
             OnboardingAnalyticsEvent.CreateWallet.ButtonCreateWallet(),
         ).inOrder()
     }
+
+    @Test
+    fun `GIVEN hot wallets limit reached WHEN invoked THEN the limit is reported and the dialog is shown`() =
+        runTest {
+            // Arrange
+            coEvery { createHotWalletUseCase(any(), any()) } returns CreateHotWalletError.LimitReached.left()
+            val message = slot<DialogMessage>()
+            every { messageSender.send(capture(message)) } just runs
+
+            // Act
+            creator.createAndOpen(source = SOURCE, beforeOpen = {}, onFailed = onFailed)
+
+            // Assert
+            assertThat(message.captured.message).isEqualTo(Dialogs.hotWalletsLimitReachedDialog().message)
+            assertThat(message.captured.title).isNull()
+            assertThat(sentEvents).containsExactly(
+                OnboardingAnalyticsEvent.Onboarding.Started(source = SOURCE),
+                OnboardingAnalyticsEvent.SeedPhrase.CreateMobileScreenOpened(source = SOURCE),
+                OnboardingAnalyticsEvent.CreateWallet.ButtonCreateWallet(),
+                NoticeMobileWalletLimit(
+                    type = NoticeMobileWalletLimit.Type.Create,
+                    limit = NoticeMobileWalletLimit.Limit.MobileWallets,
+                ),
+            ).inOrder()
+            verify(exactly = 1) { onFailed() }
+            verify { router wasNot Called }
+        }
 
     @Test
     fun `GIVEN a referral WHEN the wallet is created THEN the referral id is reported`() = runTest {
