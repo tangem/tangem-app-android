@@ -6,6 +6,7 @@ import com.tangem.grow.datasource.polymarket.clob.models.PolymarketBalanceAllowa
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketOrderResponse
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPlaceOrderResponse
 import com.tangem.grow.datasource.polymarket.clob.models.PolymarketPriceResponse
+import com.tangem.grow.datasource.polymarket.clob.models.PolymarketSessionSignersResponse
 import okhttp3.RequestBody
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -73,4 +74,9 @@ interface PolymarketClobApi {
         @Query("asset_type") assetType: String,
         @Query("signature_type") signatureType: Int,
     ): ApiResponse<PolymarketBalanceAllowanceResponse>
+
+    @GET("v1/user/session-signers")
+    suspend fun getSessionSigners(
+        @HeaderMap headers: Map<String, String>,
+    ): ApiResponse<PolymarketSessionSignersResponse>
 }
