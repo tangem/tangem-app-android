@@ -332,7 +332,9 @@ internal class DefaultSocialLoginUseCase @Inject constructor(
                 is HotWalletImportError.Unknown -> SocialLoginError.Unknown(error.cause)
                 // unreachable: the list was checked above, and the import passes no passphrase
                 HotWalletImportError.AlreadySaved -> SocialLoginError.WalletAlreadySaved
-                is HotWalletImportError.PassphraseTooLong -> SocialLoginError.Unknown()
+                is HotWalletImportError.PassphraseTooLong,
+                HotWalletImportError.LimitReached,
+                -> SocialLoginError.Unknown()
             }
         }
     }
