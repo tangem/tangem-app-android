@@ -18,17 +18,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
-import com.tangem.core.ui.ds.tabs.TangemSegmentUM
-import com.tangem.core.ui.ds.tabs.TangemSegmentedPicker
-import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
+import com.tangem.core.ui.ds2.segmentedcontrol.TangemSegmentedControl
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.foryou.impl.components.state.AiInsightUM
+import com.tangem.features.foryou.impl.entity.forYouPeriodPickerItems
 import com.tangem.features.foryou.impl.tokensummary.entity.*
 import com.tangem.features.foryou.impl.tokensummary.ui.preivew.previewBottomButton
 import com.tangem.features.foryou.impl.tokensummary.ui.preivew.previewContentSentiment
@@ -37,8 +36,8 @@ import com.tangem.features.foryou.impl.tokensummary.ui.preivew.previewTokenSumma
 import com.tangem.features.foryou.impl.ui.components.AiInsightContent
 import com.tangem.features.foryou.impl.ui.components.GradientScaleBar
 import com.tangem.features.foryou.impl.ui.components.GradientScaleBarState
+import com.tangem.features.foryou.model.ForYouPeriod
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun TokenSummaryContent(
@@ -57,17 +56,17 @@ internal fun TokenSummaryContent(
                 .padding(top = contentPadding.calculateTopPadding()),
         ) {
             when (val periodPicker = tokenSummary.periodPicker) {
-                is PeriodPickerUM.Content -> TangemSegmentedPicker(
-                    modifier = Modifier.padding(16.dp),
-                    tangemSegmentedPickerUM = periodPicker.picker,
-                    onClick = tokenSummary.onPeriodClick,
-                )
-                PeriodPickerUM.Loading -> RectangleShimmer(
+                is PeriodPickerUM.Content -> TangemSegmentedControl(
+                    items = periodPicker.items,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
-                        .height(44.dp),
-                    radius = 12.dp,
+                        .padding(16.dp),
+                )
+                PeriodPickerUM.Loading -> TangemSegmentedControl(
+                    state = TangemSegmentedControl.State.Loading,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
                 )
                 PeriodPickerUM.Empty -> Unit
             }
@@ -338,16 +337,7 @@ private fun TokenSummaryContentPreview() {
         TokenSummaryContent(
             tokenSummary = previewTokenSummary(
                 periodPickerUm = PeriodPickerUM.Content(
-                    TangemSegmentedPickerUM(
-                        items = persistentListOf(
-                            TangemSegmentUM(id = "0", title = stringReference("Day")),
-                            TangemSegmentUM(id = "1", title = stringReference("Week")),
-                            TangemSegmentUM(id = "2", title = stringReference("Month")),
-                        ),
-                        initialSelectedItem = TangemSegmentUM(id = "0", title = stringReference("Day")),
-                        isFixed = true,
-                        isAltSurface = true,
-                    ),
+                    forYouPeriodPickerItems(selected = ForYouPeriod.Day, onClick = {}),
                 ),
                 tokenSentiment = previewContentSentiment,
             ),

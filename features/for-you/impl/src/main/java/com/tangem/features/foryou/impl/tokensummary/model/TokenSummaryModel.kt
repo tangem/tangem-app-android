@@ -17,8 +17,6 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds.tabs.TangemSegmentUM
-import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.markets.FetchCoinIndicatorsUseCase
@@ -30,6 +28,8 @@ import com.tangem.features.foryou.TokenSummaryComponent
 import com.tangem.features.foryou.impl.analytics.ForYouAnalyticsEvent
 import com.tangem.features.foryou.impl.analytics.toAnalyticsTokenAndNetwork
 import com.tangem.features.foryou.impl.components.state.AiInsightUM
+import com.tangem.features.foryou.impl.entity.forYouPeriodPickerItems
+import com.tangem.features.foryou.impl.entity.withSelected
 import com.tangem.features.foryou.model.ForYouPeriod
 import com.tangem.features.foryou.impl.tokensummary.entity.*
 import com.tangem.features.foryou.impl.tokensummary.model.converter.AddToPortfolioTargetConverter
@@ -38,7 +38,6 @@ import com.tangem.features.foryou.impl.tokensummary.model.transformer.SetTokenSe
 import com.tangem.features.foryou.impl.tokensummary.swapchooser.SwapTokenChooserComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.transformer.update
-import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -132,24 +131,17 @@ internal class TokenSummaryModel @Inject constructor(
     }
 
     private fun buildInitialUiState(): TokenSummaryUm {
-        val periodItems = ForYouPeriod.entries
-            .map { period -> TangemSegmentUM(id = period.id, title = period.title) }
-            .toPersistentList()
-
         return TokenSummaryUm(
             header = buildHeader(),
             periodPicker = PeriodPickerUM.Content(
-                TangemSegmentedPickerUM(
-                    items = periodItems,
-                    initialSelectedItem = periodItems.firstOrNull { it.id == params.selectedTokenPeriodId },
-                    isFixed = true,
-                    isAltSurface = true,
+                forYouPeriodPickerItems(
+                    selected = ForYouPeriod.fromId(params.selectedTokenPeriodId),
+                    onClick = ::onPeriodClick,
                 ),
             ),
             tokenSentiment = TokenSentimentUM.Loading,
             aiInsight = AiInsightUM.Hide,
             bottomButton = BottomButtonUM.Loading,
-            onPeriodClick = ::onPeriodClick,
             onInfoClick = ::onInfoClick,
             onCloseClick = params.callbacks::onDismiss,
         )
@@ -171,19 +163,23 @@ internal class TokenSummaryModel @Inject constructor(
         )
     }
 
-    private fun onPeriodClick(tangemSegmentUM: TangemSegmentUM) {
-        if (tangemSegmentUM.id == selectedTokenPeriodId.value) return
+    private fun onPeriodClick(period: ForYouPeriod) {
+        if (period.id == selectedTokenPeriodId.value) return
 
         val (token, network) = params.token.toAnalyticsTokenAndNetwork()
         analyticsEventHandler.send(
             ForYouAnalyticsEvent.TokenSummaryInterval(
                 token = token,
                 blockchain = network,
-                period = ForYouPeriod.fromId(tangemSegmentUM.id).analyticsValue,
+                period = period.analyticsValue,
             ),
         )
 
-        selectedTokenPeriodId.value = tangemSegmentUM.id
+        uiState.update { state ->
+            val picker = state.periodPicker as? PeriodPickerUM.Content ?: return@update state
+            state.copy(periodPicker = PeriodPickerUM.Content(picker.items.withSelected(period)))
+        }
+        selectedTokenPeriodId.value = period.id
     }
 
     /**
