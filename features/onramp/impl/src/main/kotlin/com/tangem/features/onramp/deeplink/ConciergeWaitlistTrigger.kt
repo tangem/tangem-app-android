@@ -5,10 +5,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Emits when `tangem://onramp?type=concierge_waitlist` arrives. Only a started Buy screen collects it, so the link is
- * dropped when Buy isn't on screen.
- */
 internal interface ConciergeWaitlistListener {
     val openWaitlistFlow: Flow<Unit>
 }
