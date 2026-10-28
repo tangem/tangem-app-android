@@ -7,7 +7,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class TangemAFConversionListener @Inject constructor(
+class TangemAFConversionListener @Inject internal constructor(
+    private val googleAdsConversionDataReporter: GoogleAdsConversionDataReporter,
     private val conversionDataHandlers: Set<@JvmSuppressWildcards AppsFlyerConversionDataHandler>,
 ) : AppsFlyerConversionListener {
 
@@ -16,6 +17,7 @@ class TangemAFConversionListener @Inject constructor(
 
         if (p0 == null) return
 
+        googleAdsConversionDataReporter.handle(conversionData = p0)
         conversionDataHandlers.forEach { it.handle(conversionData = p0) }
     }
 
