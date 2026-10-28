@@ -23,9 +23,7 @@ import com.tangem.domain.models.pay.TangemPayCustomerResidency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
-import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
@@ -33,7 +31,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TangemPayHideOnboardingStateTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TangemPayRefreshShowProgressTransformer
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -80,12 +77,10 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
     private val produceInitialDataTangemPay: ProduceTangemPayInitialDataUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val tangemPayOnboardingRepository: OnboardingRepository,
-    private val tangemPayEligibilityManager: TangemPayEligibilityManager,
     private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : BaseWalletClickIntents(), TangemPayIntents {
 
     override suspend fun onPullToRefresh() {
@@ -262,18 +257,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
 
     override fun onOnboardingBannerClick(userWalletId: UserWalletId) {
         analyticsEventHandler.send(TangemPayAnalyticsEvents.MainVisaPermanentBannerClicked())
-        if (tangemPayFeatureToggles.isResidencyStepEnabled) {
-            router.openTangemPayOnboarding(mode = AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain)
-        } else {
-            modelScope.launch {
-                val isEligible = tangemPayEligibilityManager.getTangemPayAvailability(TangemPayEntryPoint.BANNER)
-                if (isEligible) {
-                    router.openTangemPayOnboarding(mode = AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain)
-                } else {
-                    stateHolder.update(transformer = TangemPayHideOnboardingStateTransformer(userWalletId))
-                }
-            }
-        }
+        router.openTangemPayOnboarding(mode = AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain)
     }
 
     override fun onOnboardingBannerCloseClick(userWalletId: UserWalletId) {

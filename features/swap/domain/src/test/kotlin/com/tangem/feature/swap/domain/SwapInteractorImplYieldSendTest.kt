@@ -58,7 +58,6 @@ internal class SwapInteractorImplYieldSendTest : SwapInteractorImplTestBase() {
     @BeforeEach
     fun setup() {
         every { isDemoCardUseCase(any()) } returns false
-        every { swapFeatureToggles.isYieldDexTransferEnabled } returns true
         coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) } returns mockk<
             com.tangem.domain.models.currency.CryptoCurrencyStatus,
             >(relaxed = true).right()
@@ -111,20 +110,6 @@ internal class SwapInteractorImplYieldSendTest : SwapInteractorImplTestBase() {
             coVerify(exactly = 1) { dexSwapFeeCalculator.calculate(any(), any(), any(), any()) }
             coVerify(exactly = 0) { cexSwapFeeCalculator.calculate(any(), any(), any(), any(), any()) }
         }
-
-    @Test
-    fun `GIVEN toggle off and transfer calldata WHEN loadSwapFee THEN priced by the yield DEX calculator`() = runTest {
-        // Arrange
-        every { swapFeatureToggles.isYieldDexTransferEnabled } returns false
-
-        // Act
-        val result = loadSwapFee(fromStatus = yieldTokenStatus(), swapData = transferSwapData())
-
-        // Assert
-        assertThat(result.isRight()).isTrue()
-        coVerify(exactly = 1) { dexSwapFeeCalculator.calculateYield(any(), any(), any()) }
-        coVerify(exactly = 0) { cexSwapFeeCalculator.calculate(any(), any(), any(), any(), any()) }
-    }
 
     // endregion
 
@@ -189,36 +174,6 @@ internal class SwapInteractorImplYieldSendTest : SwapInteractorImplTestBase() {
     }
 
     @Test
-    fun `GIVEN toggle off and transfer calldata WHEN onSwap THEN the module swap wrapper is built`() = runTest {
-        // Arrange
-        every { swapFeatureToggles.isYieldDexTransferEnabled } returns false
-        coEvery {
-            dexSwapFeeCalculator.buildYieldSwapCallData(any(), any(), any(), any(), any())
-        } returns mockk(relaxed = true)
-        every {
-            createTransactionExtrasUseCase(callData = any(), network = any(), gasLimit = any(), nonce = any())
-        } returns mockk<TransactionExtras>(relaxed = true).right()
-        coEvery {
-            createTransactionUseCase(
-                amount = any(), fee = any(), memo = any(), destination = any(),
-                userWalletId = any(), network = any(), txExtras = any(),
-            )
-        } returns Throwable("stub").left()
-
-        // Act
-        onSwap(fromStatus = yieldTokenStatus(), swapData = transferSwapData())
-
-        // Assert
-        coVerify(exactly = 1) { dexSwapFeeCalculator.buildYieldSwapCallData(any(), any(), any(), any(), any()) }
-        coVerify(exactly = 0) {
-            createTransferTransactionUseCase(
-                amount = any(), fee = any(), memo = any(),
-                destination = any(), userWalletId = any(), network = any(),
-            )
-        }
-    }
-
-    @Test
     fun `GIVEN transfer sent by the module WHEN onSwap THEN payInAddress is the recipient not the token`() = runTest {
         // Arrange — the SDK re-targets the transaction to the module and keeps the recipient in the call data
         coEvery {
@@ -254,9 +209,6 @@ internal class SwapInteractorImplYieldSendTest : SwapInteractorImplTestBase() {
     @ParameterizedTest
     @ProvideTestModels
     fun isYieldPayloadConsistent(model: ConsistencyModel) {
-        // Arrange
-        every { swapFeatureToggles.isYieldDexTransferEnabled } returns model.isToggleEnabled
-
         // Act
         val actual = sut.isYieldPayloadConsistent(
             fromSwapCurrencyStatus = tokenStatus(yieldSupplyActive = model.isYieldActive),
@@ -289,12 +241,6 @@ internal class SwapInteractorImplYieldSendTest : SwapInteractorImplTestBase() {
         ConsistencyModel(
             txTo = TOKEN_CONTRACT,
             txData = "0x$SWAP_SELECTOR$RECIPIENT_WORD$AMOUNT_WORD",
-            isToggleEnabled = false,
-            expected = true,
-        ),
-        ConsistencyModel(
-            txTo = TOKEN_CONTRACT,
-            txData = "0x$SWAP_SELECTOR$RECIPIENT_WORD$AMOUNT_WORD",
             isYieldActive = false,
             expected = true,
         ),
@@ -305,24 +251,8 @@ internal class SwapInteractorImplYieldSendTest : SwapInteractorImplTestBase() {
         val txTo: String,
         val txData: String?,
         val expected: Boolean = false,
-        val isToggleEnabled: Boolean = true,
         val isYieldActive: Boolean = true,
     )
-
-    @Test
-    fun `GIVEN toggle off and contradictory calldata WHEN loadSwapFee THEN priced by the yield DEX calculator`() =
-        runTest {
-            // Arrange
-            every { swapFeatureToggles.isYieldDexTransferEnabled } returns false
-            val swapData = transferSwapData(txData = "0x$SWAP_SELECTOR$RECIPIENT_WORD$AMOUNT_WORD")
-
-            // Act
-            val result = loadSwapFee(fromStatus = yieldTokenStatus(), swapData = swapData)
-
-            // Assert
-            assertThat(result.isRight()).isTrue()
-            coVerify(exactly = 1) { dexSwapFeeCalculator.calculateYield(any(), any(), any()) }
-        }
 
     // endregion
 

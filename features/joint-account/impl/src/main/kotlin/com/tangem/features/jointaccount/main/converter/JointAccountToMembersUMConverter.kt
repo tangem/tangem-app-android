@@ -31,6 +31,7 @@ internal class JointAccountToMembersUMConverter(
         val ownAddress: String?,
         val accountName: AccountName? = null,
         val accountIcon: CryptoPortfolioIcon? = null,
+        val issuingSlot: Int? = null,
         val nowMillis: Long = System.currentTimeMillis(),
     )
 
@@ -40,6 +41,7 @@ internal class JointAccountToMembersUMConverter(
             name: TextReference,
             address: String,
         ) -> Unit,
+        val onInviteClick: (cryptoAccountId: String, slot: Int, accountName: TextReference) -> Unit,
         val onConfirmAddressClick: (cryptoAccountId: String) -> Unit,
         val onApprovalsInfoClick: (threshold: Int, total: Int) -> Unit,
         val onCloseClick: () -> Unit,
@@ -228,11 +230,17 @@ internal class JointAccountToMembersUMConverter(
             (account.members.size until account.membersCount).toList()
         }
 
-        return FreeSlotUMFactory().create(
+        val factory = FreeSlotUMFactory(
+            onInviteClick = { slot, name -> callbacks.onInviteClick(account.cryptoAccountId, slot, name) },
+        )
+
+        return factory.create(
             input = FreeSlotUMFactory.Input(
                 slots = slots,
                 invites = account.invites,
                 canInvite = phase.stage != MembersScreenPhase.Stage.Completed && phase.isThisDeviceCreator,
+                accountName = input.accountName?.toUM()?.value,
+                issuingSlot = input.issuingSlot,
                 nowMillis = input.nowMillis,
             ),
         )

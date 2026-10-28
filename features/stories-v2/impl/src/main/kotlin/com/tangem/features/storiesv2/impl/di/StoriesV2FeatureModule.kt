@@ -2,10 +2,8 @@ package com.tangem.features.storiesv2.impl.di
 
 import com.tangem.features.storiesv2.GetHardwareUpgradeStoriesVariantUseCase
 import com.tangem.features.storiesv2.StoriesV2Component
-import com.tangem.features.storiesv2.StoriesV2FeatureToggles
 import com.tangem.features.storiesv2.StoriesV2Prefetcher
 import com.tangem.features.storiesv2.StoriesV2StorybookComponent
-import com.tangem.features.storiesv2.impl.DefaultStoriesV2FeatureToggles
 import com.tangem.features.storiesv2.impl.component.DefaultStoriesV2Component
 import com.tangem.features.storiesv2.impl.content.DefaultStoryV2ContentRepository
 import com.tangem.features.storiesv2.impl.content.StoryV2ContentRepository
@@ -47,10 +45,6 @@ internal interface StoriesV2FeatureModule {
     @Binds
     @Singleton
     fun bindFileDownloader(impl: OkHttpStoryV2FileDownloader): StoryV2FileDownloader
-
-    @Binds
-    @Singleton
-    fun bindFeatureToggles(impl: DefaultStoriesV2FeatureToggles): StoriesV2FeatureToggles
 
     @Binds
     fun bindGetHardwareUpgradeStoriesVariantUseCase(

@@ -37,10 +37,8 @@ import com.tangem.feature.walletsettings.component.RenameWalletComponent
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.commonfeatures.api.managefunds.ManageFundsComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
-import com.tangem.features.jointaccount.main.JointAccountMainBlockComponent
 import com.tangem.features.feed.v2.FeedV2Component
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
-import com.tangem.features.promobanners.api.PromoBannersFeatureToggles
 import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsBottomSheetComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
@@ -66,7 +64,6 @@ internal class WalletComponent @AssistedInject constructor(
     feedV2ComponentFactory: FeedV2Component.Factory,
     tangemPayMainBlockComponentFactory: TangemPayMainBlockComponent.Factory,
     moneyAccountMainBlockComponentFactory: MoneyAccountMainBlockComponent.Factory,
-    jointAccountMainBlockComponentFactory: JointAccountMainBlockComponent.Factory,
     polymarketWalletBlockComponentFactory: PolymarketWalletBlockComponent.Factory,
     collectiblesWalletBlockComponentFactory: CollectiblesWalletBlockComponent.Factory,
     private val tangemPayTransactionBottomSheetComponentFactory: TangemPayTransactionBottomSheetComponent.Factory,
@@ -76,7 +73,6 @@ internal class WalletComponent @AssistedInject constructor(
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val yieldSupplyDepositedWarningComponent: YieldSupplyDepositedWarningComponent.Factory,
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
-    private val promoBannersFeatureToggles: PromoBannersFeatureToggles,
     private val walletFeatureToggles: WalletFeatureToggles,
     private val networkSelectionComponentFactory: NetworkSelectionComponent.Factory,
     private val tokenActionsComponentFactory: TokenActionsComponent.Factory,
@@ -114,12 +110,6 @@ internal class WalletComponent @AssistedInject constructor(
     private val collectiblesWalletBlockComponent by lazy {
         collectiblesWalletBlockComponentFactory.create(
             context = child("collectiblesWalletBlockComponent"),
-            params = Unit,
-        )
-    }
-    private val jointAccountMainBlockComponent by lazy {
-        jointAccountMainBlockComponentFactory.create(
-            context = child("jointAccountMainBlockComponent"),
             params = Unit,
         )
     }
@@ -345,11 +335,9 @@ internal class WalletComponent @AssistedInject constructor(
             promoBannersBlockComponent = promoBannersBlockComponent,
             tangemPayComponent = tangemPayMainBlockComponent,
             moneyAccountComponent = moneyAccountMainBlockComponent,
-            jointAccountComponent = jointAccountMainBlockComponent,
             polymarketComponent = polymarketWalletBlockComponent,
             collectiblesComponent = collectiblesWalletBlockComponent,
             modifier = modifier.trackUserInteraction(model.userInteractionTracker),
-            isHideMarketingWhileSystemEnabled = promoBannersFeatureToggles.isHideMarketingBannersWhileSystemEnabled,
             isRedesignedAccountRowsEnabled = walletFeatureToggles.isRedesignedAccountRowsEnabled,
             isShtorkaBlurEnabled = { isShtorkaBlurEnabled },
             isShtorkaPartialExpansionSupported = isShtorkaPartialExpansionSupported,

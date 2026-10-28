@@ -199,7 +199,11 @@ internal class OnChainTxToDetailsUMConverter(
 
     /** A transfer whose counterparty resolves to one of the user's own accounts/wallets reads "Transfer". */
     private fun TxInfo.isOwnTransfer(): Boolean = when (resolvedCounterparty()) {
-        is ResolvedOwner.OwnAccount, is ResolvedOwner.OwnPaymentAccount, is ResolvedOwner.OwnWallet -> true
+        is ResolvedOwner.OwnAccount,
+        is ResolvedOwner.OwnPaymentAccount,
+        is ResolvedOwner.OwnMoneyAccount,
+        is ResolvedOwner.OwnWallet,
+        -> true
         is ResolvedOwner.Foreign, null -> false
     }
 

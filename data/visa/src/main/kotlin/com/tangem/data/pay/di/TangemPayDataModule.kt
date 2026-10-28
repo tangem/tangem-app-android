@@ -27,8 +27,6 @@ import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.moneyaccount.repository.MoneyAccountOrderRepository
-import com.tangem.domain.moneyaccount.repository.MoneyAccountRepository
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
@@ -83,10 +81,6 @@ internal interface TangemPayDataModule {
     @Binds
     @Singleton
     fun bindIssueCardRepository(repository: DefaultIssueCardRepository): TangemPayIssueCardRepository
-
-    @Binds
-    @Singleton
-    fun bindMoneyAccountOrderRepository(repository: DefaultMoneyAccountOrderRepository): MoneyAccountOrderRepository
 
     @Binds
     @Singleton
@@ -351,10 +345,10 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
-        fun provideGetTangemPayProductsAvailabilityUseCase(
+        fun provideGetTangemPayProductsAvailabilityForCustomerUseCase(
             checkTangemPayEligibilityForCustomerUseCase: CheckTangemPayEligibilityForCustomerUseCase,
-        ): GetTangemPayProductsAvailabilityUseCase {
-            return GetTangemPayProductsAvailabilityUseCase(checkTangemPayEligibilityForCustomerUseCase)
+        ): GetTangemPayProductsAvailabilityForCustomerUseCase {
+            return GetTangemPayProductsAvailabilityForCustomerUseCase(checkTangemPayEligibilityForCustomerUseCase)
         }
 
         @Provides
@@ -666,12 +660,6 @@ internal interface TangemPayDataModule {
         @Provides
         @Singleton
         fun provideBankOfframpRepository(repository: DefaultBankOfframpRepository): BankOfframpRepository = repository
-
-        @Provides
-        @Singleton
-        fun provideMoneyAccountFeesRepository(repository: DefaultMoneyAccountRepository): MoneyAccountRepository {
-            return repository
-        }
 
         @Provides
         @Singleton

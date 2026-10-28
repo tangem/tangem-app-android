@@ -18,7 +18,6 @@ import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -197,6 +196,7 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
             // The yield-module proxy allowance is granted at enrollment, so no in-flow approval is shown.
             coEvery { yieldModuleAddressProvider.getOrFetch(any(), any()) } returns YIELD_PROXY
             coEvery { walletManagersFacade.isSwapSpenderAllowed(any(), any(), any()) } returns true
+            coEvery { walletManagersFacade.isSwapTargetAllowed(any(), any(), any()) } returns true
             stubAllowance(AllowanceInfo.NotEnough(allowance = BigDecimal.ZERO, requiredAmount = BigDecimal.ONE))
 
             val dexProvider = stubDexQuoteAndExchangeData()
@@ -315,7 +315,7 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
     fun `GIVEN router quote AND transfer payload WHEN findBestQuote THEN provider kept without a registry check`() =
         runTest {
             // Arrange
-            stubYieldSwapWithTransferDetection()
+            stubYieldModuleAddress()
             val dexProvider = stubDexQuoteAndExchangeData(
                 quoteAllowanceContract = "0xRouterQuotedOnly",
                 txTo = YIELD_TOKEN,
@@ -338,7 +338,7 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
         model: RegistryGateModel,
     ) = runTest {
         // Arrange
-        stubYieldSwapWithTransferDetection()
+        stubYieldModuleAddress()
         coEvery { walletManagersFacade.isSwapSpenderAllowed(any(), any(), model.router) } returns model.isSpenderAllowed
         coEvery { walletManagersFacade.isSwapTargetAllowed(any(), any(), model.router) } returns model.isTargetAllowed
         val dexProvider = stubDexQuoteAndExchangeData(
@@ -354,36 +354,6 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
         // Assert
         assertThat(result.containsKey(dexProvider)).isEqualTo(model.isProviderKept)
     }
-
-    @Test
-    fun `GIVEN toggle off AND router quote outside registry WHEN findBestQuote THEN skipped before exchange data`() =
-        runTest {
-            // Arrange
-            coEvery { yieldModuleAddressProvider.getOrFetch(any(), any()) } returns YIELD_PROXY
-            every { swapFeatureToggles.isYieldDexTransferEnabled } returns false
-            coEvery { walletManagersFacade.isSwapSpenderAllowed(any(), any(), any()) } returns false
-            val dexProvider = stubDexQuoteAndExchangeData(
-                quoteAllowanceContract = "0xUnregisteredRouter",
-                txTo = YIELD_TOKEN,
-                txData = TRANSFER_TX_DATA,
-                dataAllowanceContract = null,
-            )
-
-            // Act
-            val result = invokeFindBestQuote(dexProvider, yieldSupplyActive = true)
-
-            // Assert
-            assertThat(result).doesNotContainKey(dexProvider)
-            coVerify(exactly = 0) {
-                repository.getExchangeData(
-                    userWallet = any(), fromContractAddress = any(), fromNetwork = any(),
-                    toContractAddress = any(), fromAddress = any(), toNetwork = any(),
-                    fromAmount = any(), fromDecimals = any(), toDecimals = any(),
-                    providerId = any(), rateType = any(), toAddress = any(),
-                    expressOperationType = any(), refundAddress = any(), intentId = any(),
-                )
-            }
-        }
 
     data class RegistryGateModel(
         val router: String,
@@ -418,9 +388,8 @@ internal class SwapInteractorImplLoadDexSwapDataNoFeeTest : SwapInteractorImplTe
         ),
     )
 
-    private fun stubYieldSwapWithTransferDetection() {
+    private fun stubYieldModuleAddress() {
         coEvery { yieldModuleAddressProvider.getOrFetch(any(), any()) } returns YIELD_PROXY
-        every { swapFeatureToggles.isYieldDexTransferEnabled } returns true
     }
 
     // endregion

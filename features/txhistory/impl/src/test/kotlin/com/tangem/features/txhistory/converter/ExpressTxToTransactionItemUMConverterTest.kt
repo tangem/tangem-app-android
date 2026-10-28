@@ -306,6 +306,37 @@ internal class ExpressTxToTransactionItemUMConverterTest {
     }
 
     @Test
+    fun `GIVEN outgoing swap into the money account WHEN convert THEN subtitle names the money account`() {
+        // Arrange
+        val swap = createSwap(
+            status = ExpressExchangeStatus.Finished,
+            isOutgoing = true,
+            fromCurrency = ethereum,
+            toCurrency = bitcoin,
+            fromAddress = FROM_ADDRESS,
+            payoutAddress = PAYOUT_ADDRESS,
+        )
+        val lookup = lookupOf(
+            ethereum.network.id.rawId to mapOf(FROM_ADDRESS to ownAccount),
+            bitcoin.network.id.rawId to mapOf(PAYOUT_ADDRESS to Account.Money(MockAccounts.userWalletId)),
+        )
+
+        // Act
+        val result = converterWith(lookup).convert(swap) as TransactionItemUM.Content
+
+        // Assert
+        assertThat((result.subtitle as ContentSubtitle.Asset).owner).isEqualTo(
+            ContentSubtitle.AssetOwner.Account(
+                name = resourceReference(R.string.tangempay_unified_onboarding_money_account_header),
+                avatar = ContentSubtitle.PortfolioAvatar.Resource(
+                    resId = CryptoPortfolioIcon.Icon.Safe.getResId(),
+                    color = CryptoPortfolioIcon.Color.VitalGreen.getUiColor(),
+                ),
+            ),
+        )
+    }
+
+    @Test
     fun `GIVEN incoming swap from a different own account WHEN convert THEN subtitle names the source account`() {
         // Arrange — incoming row (viewed token is the payout side) shows the FROM (pay-in) counterparty account.
         val swap = createSwap(

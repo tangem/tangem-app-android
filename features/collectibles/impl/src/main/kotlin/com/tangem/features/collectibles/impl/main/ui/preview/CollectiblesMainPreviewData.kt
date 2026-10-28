@@ -37,6 +37,7 @@ internal object CollectiblesMainPreviewData {
             title = stringReference("25 cards"),
             onClick = {},
         ),
+        relink = CollectiblesMainUM.RelinkUM.Hidden,
         menu = menu(isShown = false),
         isBalanceRefreshing = false,
         onBackClick = {},

@@ -112,6 +112,11 @@ internal class DeepLinkFactory @Inject constructor(
         isFromOnNewIntent: Boolean,
         source: DeeplinkSource = DeeplinkSource.External,
     ) {
+        if (source == DeeplinkSource.External && deeplinkUri.isTangemPayMainLink()) {
+            TangemLogger.i("Tangem Pay main deep link is openable only from push")
+            return
+        }
+
         parkedDeeplink = ParkedDeeplink(uri = deeplinkUri, source = source)
 
         TangemLogger.i(
@@ -263,7 +268,7 @@ internal class DeepLinkFactory @Inject constructor(
         val path = deeplinkUri.path.orEmpty()
 
         return when {
-            path.matchesPathSegment("/pay-app-main") -> {
+            path.matchesPathSegment(PAY_APP_MAIN_PATH) -> {
                 tangemPayMainDeepLink.create(coroutineScope, getQueryParams(deeplinkUri))
                 true
             }
@@ -297,6 +302,17 @@ internal class DeepLinkFactory @Inject constructor(
      * silently do nothing — suppressing the web fallback and turning the tap into a no-op.
      */
     private fun String.matchesPathSegment(segment: String): Boolean = this == segment || startsWith("$segment/")
+
+    private fun Uri.isTangemPayMainLink(): Boolean = when (scheme) {
+        DeepLinkScheme.Tangem.scheme -> host == DeepLinkRoute.PayAppMain.host
+        DeepLinkScheme.Https.scheme -> host == DeepLinkRoute.PayApp.host && isPayAppMainPath()
+        else -> false
+    }
+
+    private fun Uri.isPayAppMainPath(): Boolean {
+        return path.orEmpty().matchesPathSegment(PAY_APP_MAIN_PATH) ||
+            pathSegments.firstOrNull() == PAY_APP_MAIN_SEGMENT
+    }
 
     @Suppress("CyclomaticComplexMethod")
     private fun handleTangemDeepLinks(
@@ -393,5 +409,8 @@ internal class DeepLinkFactory @Inject constructor(
          * [ExternalUrlValidator]'s trusted hosts because they serve attribution redirects rather than content.
          */
         val APPSFLYER_ONELINK_HOSTS = setOf("tangem.onelink.me", "join.tangem.com")
+
+        const val PAY_APP_MAIN_SEGMENT = "pay-app-main"
+        const val PAY_APP_MAIN_PATH = "/$PAY_APP_MAIN_SEGMENT"
     }
 }

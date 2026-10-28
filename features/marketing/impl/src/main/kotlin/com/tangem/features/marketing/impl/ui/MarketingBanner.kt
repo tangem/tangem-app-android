@@ -83,7 +83,7 @@ internal fun MarketingBanner(
 }
 
 @Composable
-private fun BannerIcon(iconUrl: String?, onLoadError: () -> Unit) {
+internal fun BannerIcon(iconUrl: String?, onLoadError: () -> Unit) {
     if (iconUrl.isNullOrBlank()) return
     SubcomposeAsyncImage(
         model = ImageRequest.Builder(LocalContext.current)

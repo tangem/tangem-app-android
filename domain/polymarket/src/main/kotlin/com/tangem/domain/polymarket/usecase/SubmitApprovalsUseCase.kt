@@ -21,6 +21,7 @@ class SubmitApprovalsUseCase(
         approvals: PolymarketSignedOnboarding.SignedApprovals,
     ): Either<PolymarketOnboardingError, PolymarketWalletStatus> = polymarketRepository
         .submitApprovals(
+            userWalletId = addresses.userWalletId,
             batch = PolymarketApprovalsBatch(
                 ownerAddress = addresses.ownerAddress,
                 depositWalletAddress = approvals.payload.depositWalletAddress,

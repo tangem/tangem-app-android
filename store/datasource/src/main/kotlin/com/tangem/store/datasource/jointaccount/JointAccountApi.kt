@@ -5,10 +5,13 @@ import com.tangem.store.datasource.jointaccount.models.ConfirmJointAccountReques
 import com.tangem.store.datasource.jointaccount.models.CreateJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.CreateJointOperationRequest
 import com.tangem.store.datasource.jointaccount.models.GetJointAccountsResponse
+import com.tangem.store.datasource.jointaccount.models.IssueJointAccountInviteRequest
 import com.tangem.store.datasource.jointaccount.models.JointAccountDto
 import com.tangem.store.datasource.jointaccount.models.JointAccountInvitePreviewDto
+import com.tangem.store.datasource.jointaccount.models.JointAccountIssuedInviteDto
 import com.tangem.store.datasource.jointaccount.models.JointOperationDto
 import com.tangem.store.datasource.jointaccount.models.JointOperationHistoryDeltaResponse
+import com.tangem.store.datasource.jointaccount.models.JointOperationHistoryItemDto
 import com.tangem.store.datasource.jointaccount.models.JointOperationHistoryResponse
 import com.tangem.store.datasource.jointaccount.models.JoinJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.SignJointOperationRequest
@@ -33,7 +36,7 @@ interface JointAccountApi {
 
     /**
      * Creates the account in `pending` with the caller as its creator and first participant. The invites are not
-     * issued here: the creator issues one per free slot with `POST /joint-accounts/invites` (v1.6).
+     * issued here: the creator issues one per free slot with [issueJointAccountInvite] (v1.6).
      *
      * Errors: 400 — field validation, `creator.walletId` not equal to the path, a signature that does not recover
      * to `creator.address`, or the wallet already participates in 20 active joint accounts; 409 — `creator.address`
@@ -45,6 +48,19 @@ interface JointAccountApi {
         @Path("walletId") walletId: String,
         @Body body: CreateJointAccountRequest,
     ): ApiResponse<JointAccountDto>
+
+    /**
+     * Issues the invite of one free slot of the creator's `pending` account. The code comes back only here and lives
+     * 24 hours; a repeated call on the same slot replaces it, and the old link answers 404 from then on.
+     *
+     * Errors: 400 — `slot` outside `1..membersCount - 1`; 403 — a member, not the creator; 404 — no such account for
+     * the wallet; 409 — the account left `pending`, or the slot is taken.
+     */
+    @POST("api/v1/wallets/{walletId}/joint-accounts/invites")
+    suspend fun issueJointAccountInvite(
+        @Path("walletId") walletId: String,
+        @Body body: IssueJointAccountInviteRequest,
+    ): ApiResponse<JointAccountIssuedInviteDto>
 
     /**
      * Returns every joint account the wallet participates in, archived ones excluded — they come from
@@ -148,4 +164,16 @@ interface JointAccountApi {
         @Query("beforeCursor") beforeCursor: String?,
         @Query("limit") limit: Int,
     ): ApiResponse<JointOperationHistoryDeltaResponse>
+
+    /**
+     * One operation in any status. [eTag] asks the backend to answer `304` while the operation has not changed.
+     *
+     * Errors: 403 — the wallet holds no slot in the operation's joint account; 404 — no such operation.
+     */
+    @GET("api/v1/wallets/{walletId}/joint-accounts/operations/{operationId}")
+    suspend fun getJointOperation(
+        @Path("walletId") walletId: String,
+        @Path("operationId") operationId: String,
+        @Header("If-None-Match") eTag: String? = null,
+    ): ApiResponse<JointOperationHistoryItemDto>
 }
