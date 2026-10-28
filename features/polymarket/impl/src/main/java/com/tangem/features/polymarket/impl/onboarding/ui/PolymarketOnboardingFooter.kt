@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import com.tangem.common.ui.onboarding.OnboardingFooter
 import com.tangem.core.res.R
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -12,6 +13,7 @@ import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_24
+import com.tangem.core.ui.test.PredictionTestTags
 import com.tangem.features.polymarket.impl.common.PolymarketLegalLine
 import com.tangem.features.polymarket.impl.onboarding.ui.state.PolymarketOnboardingUM
 
@@ -38,7 +40,9 @@ internal fun PolymarketOnboardingFooter(
             templateResId = legalTemplateResId,
         )
         TangemButton(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(PredictionTestTags.ONBOARDING_ACTION_BUTTON),
             size = TangemButton.Size.X12,
             variant = TangemButton.Variant.Primary,
             isLoading = state.isInProgress,

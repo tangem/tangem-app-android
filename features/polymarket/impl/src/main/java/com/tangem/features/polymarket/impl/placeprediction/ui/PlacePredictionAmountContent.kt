@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
@@ -31,6 +32,7 @@ import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.PredictionTestTags
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
@@ -54,7 +56,7 @@ internal fun PlacePredictionAmountContent(
     var footerHeight by remember { mutableIntStateOf(0) }
 
     TangemTopBarScaffold(
-        modifier = modifier,
+        modifier = modifier.testTag(PredictionTestTags.PLACE_PREDICTION_SCREEN),
         topBar = {
             TangemTopNavigation(
                 title = resourceReference(state.order.flowTitle()),
