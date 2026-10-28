@@ -245,7 +245,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a sell WHEN its quote is priced THEN the whole position is quoted and shown with its proceeds`() =
             runOrderTest {
                 // Arrange
-                coEvery { getQuoteUseCase(request = any()) } returns createSellQuote(shares = HELD).right()
+                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } returns createSellQuote(shares = HELD).right()
 
                 // Act
                 val model = createQuotedModel(params = SELL_PARAMS)
@@ -271,7 +271,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a priced sell WHEN place clicked THEN it is signed and placed once without a summary`() =
             runOrderTest {
                 // Arrange
-                coEvery { getQuoteUseCase(request = any()) } returns createSellQuote(shares = HELD).right()
+                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } returns createSellQuote(shares = HELD).right()
                 coEvery { placeOrderUseCase(any(), any(), any()) } returns
                     createPlaceResult(makingAmount = HELD, takingAmount = BigDecimal("11.01")).right()
                 val model = createQuotedModel(params = SELL_PARAMS)
