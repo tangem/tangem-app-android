@@ -24,7 +24,6 @@ import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.wallets.usecase.CreateHotWalletUseCase
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -48,7 +47,6 @@ internal class TangemPayOnboardingStarterTest {
     private val getCustomerOffersUseCase: GetCustomerOffersUseCase = mockk()
     private val createHotWalletUseCase: CreateHotWalletUseCase = mockk()
     private val isHotWalletCreationSupported: IsHotWalletCreationSupported = mockk()
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
 
     private val loadingChanges = mutableListOf<Boolean>()
     private var exitCount = 0
@@ -75,7 +73,6 @@ internal class TangemPayOnboardingStarterTest {
         getCustomerOffersUseCase = getCustomerOffersUseCase,
         createHotWalletUseCase = createHotWalletUseCase,
         isHotWalletCreationSupported = isHotWalletCreationSupported,
-        tangemPayFeatureToggles = tangemPayFeatureToggles,
     )
 
     @BeforeEach
@@ -88,42 +85,17 @@ internal class TangemPayOnboardingStarterTest {
             getCustomerOffersUseCase,
             createHotWalletUseCase,
             isHotWalletCreationSupported,
-            tangemPayFeatureToggles,
         )
         loadingChanges.clear()
         exitCount = 0
         requestedWalletsIds = null
         approvedCustomers.clear()
-        every { tangemPayFeatureToggles.isResidencyStepEnabled } returns false
         coEvery { produceInitialDataUseCase(USER_WALLET_ID) } returns Unit.right()
         coEvery { repository.getCustomerInfo(USER_WALLET_ID) } returns customerInfo(KycStatus.PENDING).right()
     }
 
     @Nested
     inner class CampaignOrder {
-
-        @Test
-        fun `GIVEN campaign offer WHEN startOnboarding THEN campaign order created AND KYC opened`() =
-            runTest {
-                // Arrange
-                coEvery {
-                    getCustomerOffersUseCase.campaignOffer(USER_WALLET_ID, CAMPAIGN_KEY)
-                } returns campaignOffer().right()
-                coEvery {
-                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST, any())
-                } returns ORDER_ID.right()
-
-                // Act
-                starter.startOnboarding(USER_WALLET_ID, CAMPAIGN_KEY, callbacks)
-
-                // Assert
-                coVerify(exactly = 1) {
-                    repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST, any())
-                }
-                verify(exactly = 1) {
-                    router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(USER_WALLET_ID), onComplete = any())
-                }
-            }
 
         @Test
         fun `GIVEN outcome unknown WHEN startOnboarding is repeated THEN the same idempotency key is reused`() =
@@ -306,7 +278,7 @@ internal class TangemPayOnboardingStarterTest {
             }
 
         @Test
-        fun `GIVEN campaign offer WHEN checkCustomerInfo continues to KYC THEN campaign order created first`() =
+        fun `GIVEN campaign offer WHEN checkCustomerInfo continues to KYC THEN order created before residency`() =
             runTest {
                 // Arrange
                 coEvery {
@@ -329,7 +301,14 @@ internal class TangemPayOnboardingStarterTest {
                     repository.createOrder(USER_WALLET_ID, CAMPAIGN_REQUEST, any())
                 }
                 verify(exactly = 1) {
-                    router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(USER_WALLET_ID), onComplete = any())
+                    router.replaceAll(
+                        AppRoute.Wallet,
+                        AppRoute.TangemPayEligibility(
+                            product = TangemPayProduct.PAYMENT_ACCOUNT,
+                            userWalletId = USER_WALLET_ID,
+                        ),
+                        onComplete = any(),
+                    )
                 }
             }
 
@@ -417,7 +396,7 @@ internal class TangemPayOnboardingStarterTest {
     inner class RegularOnboarding {
 
         @Test
-        fun `GIVEN no campaign WHEN startOnboarding THEN offers not requested AND key not cleared AND KYC opened`() =
+        fun `GIVEN no campaign WHEN startOnboarding THEN offers not requested AND residency step opened`() =
             runTest {
                 // Act
                 starter.startOnboarding(USER_WALLET_ID, campaignKey = null, callbacks)
@@ -426,6 +405,16 @@ internal class TangemPayOnboardingStarterTest {
                 coVerify(exactly = 0) { getCustomerOffersUseCase.campaignOffer(any(), any()) }
                 coVerify(exactly = 0) { repository.createOrder(any(), any(), any()) }
                 verify(exactly = 1) {
+                    router.replaceAll(
+                        AppRoute.Wallet,
+                        AppRoute.TangemPayEligibility(
+                            product = TangemPayProduct.PAYMENT_ACCOUNT,
+                            userWalletId = USER_WALLET_ID,
+                        ),
+                        onComplete = any(),
+                    )
+                }
+                verify(exactly = 0) {
                     router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(USER_WALLET_ID), onComplete = any())
                 }
             }
@@ -568,31 +557,8 @@ internal class TangemPayOnboardingStarterTest {
     inner class ResidencyStep {
 
         @Test
-        fun `GIVEN residency step enabled WHEN startOnboarding THEN residency opened instead of KYC`() = runTest {
-            // Arrange
-            every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
-
-            // Act
-            starter.startOnboarding(USER_WALLET_ID, campaignKey = null, callbacks)
-
-            // Assert
-            verify(exactly = 1) {
-                router.replaceAll(
-                    AppRoute.Wallet,
-                    AppRoute.TangemPayEligibility(
-                        product = TangemPayProduct.PAYMENT_ACCOUNT,
-                        userWalletId = USER_WALLET_ID,
-                    ),
-                    onComplete = any(),
-                )
-            }
-            verify(exactly = 0) { router.replaceAll(AppRoute.Wallet, AppRoute.Kyc(USER_WALLET_ID), onComplete = any()) }
-        }
-
-        @Test
         fun `GIVEN back stack kept WHEN startOnboarding THEN residency replaces only current screen`() = runTest {
             // Arrange
-            every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
             val keepingCallbacks = TangemPayOnboardingStarter.Callbacks(
                 onLoadingChange = { isLoading -> loadingChanges += isLoading },
                 onExit = { exitCount++ },
@@ -616,10 +582,9 @@ internal class TangemPayOnboardingStarterTest {
         }
 
         @Test
-        fun `GIVEN residency step enabled and campaign WHEN startOnboarding THEN order created before residency`() =
+        fun `GIVEN campaign WHEN startOnboarding THEN order created before residency`() =
             runTest {
                 // Arrange
-                every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
                 coEvery {
                     getCustomerOffersUseCase.campaignOffer(USER_WALLET_ID, CAMPAIGN_KEY)
                 } returns campaignOffer().right()
@@ -647,10 +612,7 @@ internal class TangemPayOnboardingStarterTest {
             }
 
         @Test
-        fun `GIVEN residency step enabled WHEN openKyc THEN KYC opened directly`() = runTest {
-            // Arrange
-            every { tangemPayFeatureToggles.isResidencyStepEnabled } returns true
-
+        fun `GIVEN wallet WHEN openKyc THEN KYC opened directly`() = runTest {
             // Act
             starter.openKyc(USER_WALLET_ID)
 

@@ -1,14 +1,11 @@
 package com.tangem.features.promobanners.impl.di
 
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
-import com.tangem.features.promobanners.api.PromoBannersFeatureToggles
 import com.tangem.features.promobanners.impl.DefaultPromoBannersBlockComponent
-import com.tangem.features.promobanners.impl.featuretoggles.DefaultPromoBannersFeatureToggles
 import com.tangem.features.promobanners.impl.model.PromoBannersBlockModel
 import com.tangem.features.promobanners.impl.repository.DefaultPromoBannersRepository
 import com.tangem.features.promobanners.impl.repository.PromoBannersRepository
@@ -45,14 +42,6 @@ internal interface PromoBannersFeatureModule {
                 dispatchers = dispatchers,
                 cache = RuntimeSharedStore(),
             )
-        }
-
-        @Provides
-        @Singleton
-        fun providePromoBannersFeatureToggles(
-            featureTogglesManager: FeatureTogglesManager,
-        ): PromoBannersFeatureToggles {
-            return DefaultPromoBannersFeatureToggles(featureTogglesManager = featureTogglesManager)
         }
     }
 }

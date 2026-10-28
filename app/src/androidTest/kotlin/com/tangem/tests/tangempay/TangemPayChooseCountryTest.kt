@@ -10,7 +10,6 @@ import com.tangem.common.constants.TestConstants.TANGEM_PAY_KYC_STATUS_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.scenarios.assertTangemPayTileNotDisplayed
 import com.tangem.scenarios.awaitNoWalletOfferedTangemPay
@@ -36,7 +35,6 @@ import com.tangem.screens.tangempay.onTangemPayMainScreen
 import com.tangem.screens.tangempay.onTangemPayOnboardingScreen
 import com.tangem.screens.tangempay.onTangemPayResidencyScreen
 import com.tangem.core.res.R as CoreResR
-import com.tangem.utils.annotations.RemoveWithToggle
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
@@ -55,14 +53,6 @@ class TangemPayChooseCountryTest : BaseTestCase() {
     private val california = "California"
     private val germany = "Germany"
     private val unitedStatesCode = "US"
-
-    @RemoveWithToggle(
-        toggleName = "TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED",
-        description = "Move the tests to a wallet without system cards, where the Main promo is shown",
-    )
-    override val featureToggleOverrides = mapOf(
-        FeatureToggles.TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED.rawName to false,
-    )
 
     @AllureId("12752")
     @DisplayName("Tangem Pay: Get Tangem Pay in Details is hidden after KYC starts and is back once the account is hidden")

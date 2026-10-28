@@ -14,6 +14,7 @@ internal data class TangemPayWithdrawHubUM(
 ) {
 
     data class SwapSectionUM(
+        val subtitle: TextReference?,
         val withinPortfolio: ActionCardUM,
         val recents: TokenRecentsUM,
     )

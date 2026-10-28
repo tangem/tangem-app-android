@@ -30,11 +30,16 @@ internal class SwapAlertFactory @Inject constructor(
     private val transactionErrorDialogFactory: TransactionErrorDialogFactory,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) {
-    fun getGenericErrorState(expressError: ExpressError, onFailedTxEmailClick: () -> Unit, popBack: () -> Unit = {}) {
+    fun getGenericErrorState(
+        expressError: ExpressError,
+        onFailedTxEmailClick: () -> Unit,
+        popBack: () -> Unit = {},
+        providerName: String? = null,
+    ) {
         uiMessageSender.send(
             DialogMessage.Companion(
                 title = SwapUtils.getExpressErrorTitle(expressError),
-                message = SwapUtils.getExpressErrorMessage(expressError),
+                message = SwapUtils.getExpressErrorMessage(expressError = expressError, providerName = providerName),
                 onDismissRequest = popBack,
                 dismissOnFirstAction = false,
                 firstActionBuilder = {

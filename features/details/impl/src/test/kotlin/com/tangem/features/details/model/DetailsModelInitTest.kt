@@ -120,7 +120,7 @@ internal class DetailsModelInitTest : DetailsModelTestBase() {
     fun `GIVEN buildAll result WHEN not eligible for tangem pay THEN state items equal buildAll result`() = runTest {
         val items = persistentListOf<DetailsItemUM>(DetailsItemUM.UserWalletList)
         stubBuildAllReturns(items)
-        coEvery { tangemPayEligibilityManager.getEligibleWallets(any(), any()) } returns emptyList()
+        coEvery { tangemPayEligibilityManager.getCompatibleWalletsIds(any()) } returns emptyList()
 
         val model = createModel(this)
         advanceUntilIdle()
@@ -135,7 +135,7 @@ internal class DetailsModelInitTest : DetailsModelTestBase() {
         val withTangemPay = persistentListOf<DetailsItemUM>(DetailsItemUM.UserWalletList)
         stubBuildAllReturns(initial)
         every { itemsBuilder.addTangemPayItem(any(), any()) } returns withTangemPay
-        coEvery { tangemPayEligibilityManager.getEligibleWallets(any(), any()) } returns listOf(hotWallet(wallet1))
+        coEvery { tangemPayEligibilityManager.getCompatibleWalletsIds(any()) } returns listOf(wallet1)
 
         val model = createModel(this)
         advanceUntilIdle()

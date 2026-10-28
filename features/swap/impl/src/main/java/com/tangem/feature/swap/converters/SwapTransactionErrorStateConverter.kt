@@ -10,6 +10,7 @@ import com.tangem.feature.swap.utils.getExpressErrorMessage
 import com.tangem.utils.converter.Converter
 
 internal class SwapTransactionErrorStateConverter(
+    private val providerName: String?,
     private val onDismiss: () -> Unit,
     private val onSupportClick: (String) -> Unit,
     private val transactionErrorDialogFactory: TransactionErrorDialogFactory = TransactionErrorDialogFactory(),
@@ -25,7 +26,7 @@ internal class SwapTransactionErrorStateConverter(
             }
             is SwapTransactionState.Error.ExpressError -> {
                 SwapAlertUM.expressErrorAlert(
-                    message = getExpressErrorMessage(value.error.toExpressError()),
+                    message = getExpressErrorMessage(value.error.toExpressError(), providerName),
                     onConfirmClick = { onSupportClick(value.error.code.toString()) },
                 )
             }
