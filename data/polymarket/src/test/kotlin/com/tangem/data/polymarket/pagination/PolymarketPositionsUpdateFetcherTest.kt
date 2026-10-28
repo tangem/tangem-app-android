@@ -3,12 +3,16 @@ package com.tangem.data.polymarket.pagination
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.polymarket.error.PolymarketPositionsReadException
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PolymarketPositionsError
 import com.tangem.domain.polymarket.model.PolymarketPositionsListConfig
 import com.tangem.domain.polymarket.model.PolymarketPositionsPage
+import com.tangem.domain.polymarket.model.PolymarketPositionsPageRequest
+import com.tangem.domain.polymarket.model.PolymarketPositionsPageRequest.First
+import com.tangem.domain.polymarket.model.PolymarketPositionsPageRequest.Next
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
 import com.tangem.domain.polymarket.model.PolymarketPositionsUpdateRequest
 import com.tangem.pagination.Batch
@@ -22,21 +26,20 @@ import org.junit.jupiter.api.Test
 internal class PolymarketPositionsUpdateFetcherTest {
 
     private val config = PolymarketPositionsListConfig(mockk<PolymarketAddresses>(), PolymarketPositionsTab.ACTIVE)
-    private val requestedLimits = mutableListOf<Int>()
-    private val requestedOffsets = mutableListOf<Int>()
+    private val requests = mutableListOf<PolymarketPositionsPageRequest>()
 
     @Test
-    fun `GIVEN loaded pages WHEN refreshed THEN each is requested at its own offset with the page size`() = runTest {
-        // Act
-        refresh(
-            pages = listOf(batch(key = 0, listOf(position("a"))), batch(key = 2, listOf(position("c")))),
-            response = { emptyList() },
-        )
+    fun `GIVEN loaded pages WHEN refreshed THEN each is read through the cursor of the fresh page before it`() =
+        runTest {
+            // Act
+            refresh(
+                pages = listOf(batch(key = 0, listOf(position("a"))), batch(key = 1, listOf(position("b")))),
+                response = { emptyList() },
+            )
 
-        // Assert
-        assertThat(requestedOffsets).containsExactly(0, 2 * BATCH_SIZE).inOrder()
-        assertThat(requestedLimits).containsExactly(BATCH_SIZE, BATCH_SIZE)
-    }
+            // Assert
+            assertThat(requests).containsExactly(First(BATCH_SIZE), Next("cursor-1")).inOrder()
+        }
 
     @Test
     fun `GIVEN a holding gone from the response WHEN the page is refreshed THEN the page drops it`() = runTest {
@@ -77,7 +80,7 @@ internal class PolymarketPositionsUpdateFetcherTest {
         // Act
         val context = refresh(
             pages = listOf(batch(key = 0, listOf(position("stale-a"))), batch(key = 1, listOf(position("stale-b")))),
-            response = { offset -> if (offset == 0) listOf(first) else listOf(second) },
+            response = { request -> if (request is First) listOf(first) else listOf(second) },
         )
 
         // Assert
@@ -86,12 +89,30 @@ internal class PolymarketPositionsUpdateFetcherTest {
     }
 
     @Test
+    fun `GIVEN a list that shrank to one page WHEN refreshed THEN later pages are emptied without a read`() = runTest {
+        // Arrange
+        val remaining = position("a")
+
+        // Act
+        val context = refresh(
+            pages = listOf(batch(key = 0, listOf(position("stale-a"))), batch(key = 1, listOf(position("stale-b")))),
+            response = { listOf(remaining) },
+            nextCursor = { null },
+        )
+
+        // Assert
+        assertThat(requests).containsExactly(First(BATCH_SIZE))
+        assertThat(context.positionsOf(key = 0)).containsExactly(remaining)
+        assertThat(context.positionsOf(key = 1)).isEmpty()
+    }
+
+    @Test
     fun `GIVEN the first page fails WHEN refreshed THEN the failure propagates and later pages are not requested`() =
         runTest {
             // Arrange
             val stale = position("a")
-            val fetcher = PolymarketPositionsUpdateFetcher(batchSize = BATCH_SIZE) { _, _, offset ->
-                requestedOffsets += offset
+            val fetcher = PolymarketPositionsUpdateFetcher(batchSize = BATCH_SIZE) { _, request ->
+                requests += request
                 PolymarketPositionsError.Network.left()
             }
             val context = FakeUpdateContext(listOf(batch(key = 0, listOf(stale)), batch(key = 1, listOf(position("b")))))
@@ -109,18 +130,18 @@ internal class PolymarketPositionsUpdateFetcherTest {
             // Assert
             assertThat(thrown).isInstanceOf(PolymarketPositionsReadException::class.java)
             assertThat((thrown as PolymarketPositionsReadException).error).isEqualTo(PolymarketPositionsError.Network)
-            assertThat(requestedOffsets).containsExactly(0)
+            assertThat(requests).containsExactly(First(BATCH_SIZE))
             assertThat(context.positionsOf(key = 0)).containsExactly(stale)
         }
 
     private suspend fun refresh(
         pages: List<Batch<Int, List<PolymarketPosition>>>,
-        response: (offset: Int) -> List<PolymarketPosition>,
+        response: (PolymarketPositionsPageRequest) -> List<PolymarketPosition>,
+        nextCursor: (PolymarketPositionsPageRequest) -> String? = { "cursor-${requests.size}" },
     ): FakeUpdateContext {
-        val fetcher = PolymarketPositionsUpdateFetcher(batchSize = BATCH_SIZE) { _, limit, offset ->
-            requestedLimits += limit
-            requestedOffsets += offset
-            PolymarketPositionsPage(response(offset), hasNext = true).right()
+        val fetcher = PolymarketPositionsUpdateFetcher(batchSize = BATCH_SIZE) { _, request ->
+            requests += request
+            PolymarketPositionsPage(response(request), nextCursor = nextCursor(request)).right()
         }
         val context = FakeUpdateContext(pages)
 

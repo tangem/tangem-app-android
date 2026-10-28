@@ -160,7 +160,7 @@ internal class CustomTokenFormModel @Inject constructor(
 
                     updateStateWithCurrency(
                         currency = validatorState.currency,
-                        fillForm = validatorState.fillForm,
+                        fillForm = validatorState.shouldFillForm,
                         isAlreadyAdded = validatorState.isAlreadyAdded,
                         isCustom = validatorState.isCustom,
                     )

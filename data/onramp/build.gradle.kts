@@ -44,7 +44,6 @@ dependencies {
 
     // region Core modules
     api(projects.core.analytics)
-    api(projects.core.configToggles)
     implementation(projects.core.local)
     implementation(projects.store.datasource)
     implementation(projects.grow.datasource)
@@ -60,7 +59,6 @@ dependencies {
     api(projects.domain.common)
     api(projects.domain.models)
     api(projects.domain.onramp)
-    api(projects.domain.txhistory)
     api(projects.domain.walletManager)
     implementation(projects.domain.card)
     runtimeOnly(projects.domain.account)

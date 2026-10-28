@@ -20,7 +20,6 @@ import com.tangem.feature.tester.presentation.backendauth.state.BackendAuthStatu
 import com.tangem.feature.tester.presentation.backendauth.state.BackendAuthStatusUM.StatusRow
 import com.tangem.core.ui.R as CoreUiR
 import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
-import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
 import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.lib.auth.session.SessionTokenRefresher
@@ -49,14 +48,13 @@ import kotlin.time.Duration.Companion.hours
 /**
  * ViewModel for the Backend Authentication status screen.
  *
- * Aggregates the observable auth state (toggle, environment, device key, registration flag,
+ * Aggregates the observable auth state (environment, device key, registration flag,
  * session tokens) so QA doesn't have to read logcat, and exposes action buttons grouped by the
  * state they operate on. Keys/tokens are shown shortened with a copy action for the full value.
  */
 @Suppress("LongParameterList")
 @HiltViewModel
 internal class BackendAuthStatusViewModel @Inject constructor(
-    private val authFeatureToggles: AuthFeatureToggles,
     private val deviceKeyManager: DeviceKeyManager,
     private val sessionTokensStore: SessionTokensStore,
     private val appPreferencesStore: AppPreferencesStore,
@@ -109,7 +107,6 @@ internal class BackendAuthStatusViewModel @Inject constructor(
         return persistentListOf(
             Section(
                 rows = persistentListOf(
-                    StatusRow("Feature toggle", if (authFeatureToggles.isBackendAuthenticationEnabled) "ON" else "OFF"),
                     StatusRow("Environment", environmentValue),
                     publicKeyRow,
                 ),

@@ -85,7 +85,7 @@ internal object YieldConverter : Converter<YieldDTO, Yield> {
 
     private fun convertAddressArgument(addressArgumentDTO: AddressArgumentDTO): AddressArgument {
         return AddressArgument(
-            required = addressArgumentDTO.required,
+            isRequired = addressArgumentDTO.required,
             network = addressArgumentDTO.network,
             minimum = addressArgumentDTO.minimum,
             maximum = addressArgumentDTO.maximum,
@@ -94,8 +94,8 @@ internal object YieldConverter : Converter<YieldDTO, Yield> {
 
     private fun convertStatus(statusDTO: YieldDTO.StatusDTO): Yield.Status {
         return Yield.Status(
-            enter = statusDTO.enter.asMandatory("enter"),
-            exit = statusDTO.exit,
+            canEnter = statusDTO.enter.asMandatory("enter"),
+            canExit = statusDTO.exit,
         )
     }
 
@@ -115,7 +115,7 @@ internal object YieldConverter : Converter<YieldDTO, Yield> {
             rewardClaiming = convertRewardClaiming(metadataDTO.rewardClaiming.asMandatory("rewardClaiming")),
             defaultValidator = metadataDTO.defaultValidator,
             minimumStake = metadataDTO.minimumStake,
-            supportsMultipleValidators = metadataDTO.supportsMultipleValidators,
+            isMultipleValidatorsSupported = metadataDTO.supportsMultipleValidators,
             revshare = convertEnabled(metadataDTO.revshare.asMandatory("revshare")),
             fee = convertEnabled(metadataDTO.fee.asMandatory("fee")),
         )
@@ -130,7 +130,7 @@ internal object YieldConverter : Converter<YieldDTO, Yield> {
 
     private fun convertEnabled(enabledDTO: YieldDTO.MetadataDTO.EnabledDTO): Yield.Metadata.Enabled {
         return Yield.Metadata.Enabled(
-            enabled = enabledDTO.enabled.asMandatory("enabled"),
+            isEnabled = enabledDTO.enabled.asMandatory("enabled"),
         )
     }
 
@@ -149,7 +149,7 @@ internal object YieldConverter : Converter<YieldDTO, Yield> {
             commission = validatorDTO.commission,
             stakedBalance = validatorDTO.stakedBalance,
             votingPower = validatorDTO.votingPower,
-            preferred = validatorDTO.preferred == true,
+            isPreferred = validatorDTO.preferred == true,
             isStrategicPartner = isStrategicPartner(address, name),
         )
     }
@@ -177,7 +177,7 @@ internal object YieldConverter : Converter<YieldDTO, Yield> {
             commission = entity.commission,
             stakedBalance = entity.stakedBalance,
             votingPower = entity.votingPower,
-            preferred = entity.isPreferred == true,
+            isPreferred = entity.isPreferred == true,
             isStrategicPartner = isStrategicPartner(entity.address, name),
         )
     }

@@ -27,7 +27,7 @@ internal class DefaultYieldSupplyRewardsBannerComponent(
         state?.let { bannerState ->
             YieldSupplyRewardsBanner(
                 state = bannerState,
-                onClaimClick = params.onClaimClick,
+                onClaimClick = model::onClaimClick,
                 modifier = modifier,
             )
         }
@@ -36,6 +36,6 @@ internal class DefaultYieldSupplyRewardsBannerComponent(
     internal data class Params(
         val cryptoCurrency: CryptoCurrency.Token,
         val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
-        val onClaimClick: () -> Unit,
+        val onClaimClick: (chainId: Int, userAddress: String) -> Unit,
     )
 }

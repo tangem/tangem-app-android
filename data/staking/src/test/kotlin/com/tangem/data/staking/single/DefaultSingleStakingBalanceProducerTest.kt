@@ -78,7 +78,7 @@ internal class DefaultSingleStakingBalanceProducerTest {
     }
 
     @Test
-    fun `flow is mapped for data from params`() = runTest {
+    fun `GIVEN balances for several ids WHEN produce THEN emits only params staking id balance`() = runTest {
         // Arrange
         val balance = MockYieldBalanceWrapperDTOFactory.createWithBalance(tonId).toDomain()
 
@@ -95,22 +95,24 @@ internal class DefaultSingleStakingBalanceProducerTest {
         // Act
         val actual = getEmittedValues(flow = producer.produce())
 
-        Truth.assertThat(actual).hasSize(1)
+        // Assert
         Truth.assertThat(actual).containsExactly(balance)
 
         verify(exactly = 1) { multiNetworkStatusSupplier(multiParams) }
     }
 
     @Test
-    fun `flow is updated if staking balance is updated`() = runTest {
+    fun `GIVEN balance updated WHEN produceWithFallback THEN emits each update`() = runTest {
         // Arrange
         val multiFlow = MutableSharedFlow<Set<StakingBalance>>(replay = 2, extraBufferCapacity = 1)
 
         val multiParams = MultiStakingBalanceProducer.Params(userWalletId = params.userWalletId)
         every { multiNetworkStatusSupplier(multiParams) } returns multiFlow
 
+        // Act
         val producerFlow = createProducer().produceWithFallback()
 
+        // Act & Assert
         producerFlow.test {
             val balance = MockYieldBalanceWrapperDTOFactory.createWithBalance(tonId).toDomain()
             multiFlow.emit(value = setOf(balance))
@@ -127,15 +129,17 @@ internal class DefaultSingleStakingBalanceProducerTest {
     }
 
     @Test
-    fun `flow is filtered the same status`() = runTest {
+    fun `GIVEN same balance emitted twice WHEN produceWithFallback THEN second emission filtered`() = runTest {
         // Arrange
         val multiFlow = MutableSharedFlow<Set<StakingBalance>>(replay = 2, extraBufferCapacity = 1)
 
         val multiParams = MultiStakingBalanceProducer.Params(userWalletId = params.userWalletId)
         every { multiNetworkStatusSupplier(multiParams) } returns multiFlow
 
+        // Act
         val producerFlow = createProducer().produceWithFallback()
 
+        // Act & Assert
         producerFlow.test {
             val balance = MockYieldBalanceWrapperDTOFactory.createWithBalance(tonId).toDomain()
             multiFlow.emit(value = setOf(balance))
@@ -152,7 +156,7 @@ internal class DefaultSingleStakingBalanceProducerTest {
     }
 
     @Test
-    fun `flow throws exception`() = runTest {
+    fun `GIVEN upstream throws WHEN produceWithFallback THEN emits Error fallback and recovers after retry`() = runTest {
         // Arrange
         val exception = IllegalStateException()
 
@@ -171,11 +175,13 @@ internal class DefaultSingleStakingBalanceProducerTest {
         val multiParams = MultiStakingBalanceProducer.Params(userWalletId = params.userWalletId)
         every { multiNetworkStatusSupplier(multiParams) } returns multiFlow
 
+        // Act
         val producerFlow = createProducer().produceWithFallback()
 
+        // Act & Assert
         producerFlow.test {
             // first collection throws -> retryWhen emits the fallback, then waits 2s
-            val fallbackStatus = StakingBalance.Error(stakingId = tonId.copy(address = "0x1"))
+            val fallbackStatus = StakingBalance.Error(stakingId = tonId)
             Truth.assertThat(awaitItem()).isEqualTo(fallbackStatus)
 
             // recover the upstream and let the retry fire
@@ -192,7 +198,7 @@ internal class DefaultSingleStakingBalanceProducerTest {
     }
 
     @Test
-    fun `flow doesn't contain network from params`() = runTest {
+    fun `GIVEN no balance for params id WHEN produce THEN emits Error balance`() = runTest {
         // Arrange
         val balance = MockYieldBalanceWrapperDTOFactory.createWithBalance(solanaId).toDomain()
 

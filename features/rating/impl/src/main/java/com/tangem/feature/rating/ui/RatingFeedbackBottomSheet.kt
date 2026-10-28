@@ -24,6 +24,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.PrimaryButton
@@ -52,8 +53,8 @@ internal fun RatingFeedbackBottomSheet(config: TangemBottomSheetConfig) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
-                            horizontal = TangemTheme.dimens.spacing16,
-                            vertical = TangemTheme.dimens.spacing8,
+                            horizontal = 16.dp,
+                            vertical = 8.dp,
                         ),
                     horizontalArrangement = Arrangement.End,
                 ) {
@@ -64,7 +65,7 @@ internal fun RatingFeedbackBottomSheet(config: TangemBottomSheetConfig) {
                 }
                 Box(
                     modifier = Modifier
-                        .size(TangemTheme.dimens.size56)
+                        .size(56.dp)
                         .clip(CircleShape)
                         .background(TangemTheme.colors.icon.attention.copy(alpha = 0.12f)),
                     contentAlignment = Alignment.Center,
@@ -73,7 +74,7 @@ internal fun RatingFeedbackBottomSheet(config: TangemBottomSheetConfig) {
                         painter = painterResource(R.drawable.ic_rating_star_24),
                         contentDescription = null,
                         tint = TangemTheme.colors.icon.attention,
-                        modifier = Modifier.size(TangemTheme.dimens.size32),
+                        modifier = Modifier.size(32.dp),
                     )
                 }
                 SpacerH12()
@@ -89,8 +90,8 @@ internal fun RatingFeedbackBottomSheet(config: TangemBottomSheetConfig) {
         content = { content ->
             Column(
                 modifier = Modifier
-                    .padding(horizontal = TangemTheme.dimens.spacing16)
-                    .padding(top = TangemTheme.dimens.spacing16)
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 16.dp)
                     .navigationBarsPadding(),
             ) {
                 FeedbackTextField(
@@ -125,7 +126,7 @@ private fun FeedbackTextField(value: String, onValueChange: (String) -> Unit) {
         keyboardController?.show()
     }
 
-    val fieldShape = RoundedCornerShape(TangemTheme.dimens.radius14)
+    val fieldShape = RoundedCornerShape(14.dp)
     val colors = TextFieldDefaults.colors().copy(
         focusedContainerColor = TangemTheme.colors.field.focused,
         unfocusedContainerColor = TangemTheme.colors.field.focused,
@@ -142,7 +143,7 @@ private fun FeedbackTextField(value: String, onValueChange: (String) -> Unit) {
         onValueChange = onValueChange,
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = TangemTheme.dimens.size48)
+            .heightIn(min = 48.dp)
             .testTag(RatingTestTags.FEEDBACK_INPUT)
             .focusRequester(focusRequester),
         textStyle = TangemTheme.typography.body1.copy(color = TangemTheme.colors.text.primary1),
@@ -163,8 +164,8 @@ private fun FeedbackTextField(value: String, onValueChange: (String) -> Unit) {
                 shape = fieldShape,
                 colors = colors,
                 contentPadding = PaddingValues(
-                    horizontal = TangemTheme.dimens.spacing16,
-                    vertical = TangemTheme.dimens.spacing12,
+                    horizontal = 16.dp,
+                    vertical = 12.dp,
                 ),
                 placeholder = {
                     Text(

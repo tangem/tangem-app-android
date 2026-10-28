@@ -22,7 +22,7 @@ internal class JointAccountDisplayNameStateController @Inject constructor() {
     private fun getInitialState(): JointAccountDisplayNameUM = JointAccountDisplayNameUM(
         name = "",
         buttonText = TextReference.EMPTY,
-        buttonIconRes = null,
+        buttonIcon = null,
         isButtonEnabled = false,
         isButtonLoading = false,
         onNameChange = {},

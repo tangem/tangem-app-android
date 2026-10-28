@@ -19,6 +19,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.notifications.models.NotificationType
 import com.tangem.domain.wallets.usecase.ResolveAndSelectUserWalletUseCase
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
+import com.tangem.features.jointaccount.compromised.JointAccountCompromisedAlert
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionTrigger
 import com.tangem.utils.logging.TangemLogger
@@ -46,6 +47,7 @@ internal class DefaultJointAccountDeepLinkHandler @AssistedInject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val walletDeepLinkActionTrigger: WalletDeepLinkActionTrigger,
     private val jointAccountFeatureToggles: JointAccountFeatureToggles,
+    private val jointAccountCompromisedAlert: JointAccountCompromisedAlert,
 ) : JointAccountDeepLinkHandler {
 
     init {
@@ -71,6 +73,15 @@ internal class DefaultJointAccountDeepLinkHandler @AssistedInject constructor(
             val account = findJointAccount(userWallet, accountId)
             if (account == null) {
                 TangemLogger.e("Could not find joint account for $ACCOUNT_ID_KEY: $accountId")
+                appRouter.popTo(AppRoute.Wallet)
+                return@launch
+            }
+
+            val isCompromised = jointAccountCompromisedAlert.showIfCompromised(
+                userWalletId = userWallet.walletId,
+                accountId = account.accountId.value,
+            )
+            if (isCompromised) {
                 appRouter.popTo(AppRoute.Wallet)
                 return@launch
             }

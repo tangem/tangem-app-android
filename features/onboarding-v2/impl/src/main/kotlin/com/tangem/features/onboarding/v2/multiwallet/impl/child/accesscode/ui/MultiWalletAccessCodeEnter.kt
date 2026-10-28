@@ -76,13 +76,13 @@ internal fun MultiWalletAccessCodeEnter(
                 state.onAccessCodeFirstChange
             },
             label = stringResourceSafe(id = R.string.onboarding_wallet_info_title_third),
-            isError = state.codesNotMatchError || state.atLeast4CharError,
+            isError = state.hasCodesNotMatchError || state.hasAtLeast4CharError,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             caption = when {
-                state.codesNotMatchError && reEnterAccessCodeState ->
+                state.hasCodesNotMatchError && reEnterAccessCodeState ->
                     stringResourceSafe(R.string.onboarding_access_codes_doesnt_match)
-                state.atLeast4CharError && !reEnterAccessCodeState ->
+                state.hasAtLeast4CharError && !reEnterAccessCodeState ->
                     stringResourceSafe(R.string.onboarding_access_code_too_short)
                 else -> null
             },

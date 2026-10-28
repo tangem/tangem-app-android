@@ -47,7 +47,7 @@ internal class TokenReceiveAssetsModel @Inject constructor(
                 },
                 onOpenQrCodeClick = params.callback::onQrCodeClick,
                 addresses = params.addresses,
-                showMemoDisclaimer = params.showMemoDisclaimer,
+                shouldShowMemoDisclaimer = params.shouldShowMemoDisclaimer,
                 isEnsResultLoading = false,
                 notificationConfigs = params.notificationConfigs,
                 currencyIconState = params.currencyIconState,

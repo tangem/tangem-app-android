@@ -13,6 +13,34 @@ data class TronGaslessEstimateParams(
     val feeTokenContract: String?,
 )
 
+data class TronGaslessSwap(
+    val fromAddress: String,
+    val tokenContract: String,
+    val amount: BigInteger,
+    val routerAddress: String,
+    val callDataHex: String,
+    val spenderAddress: String,
+)
+
+data class TronGaslessSwapEstimateParams(
+    val userWalletId: UserWalletId,
+    val swap: TronGaslessSwap,
+    val feeTokenContract: String,
+)
+
+data class TronGaslessApprove(
+    val fromAddress: String,
+    val tokenContract: String,
+    val amount: BigInteger,
+    val spenderAddress: String,
+)
+
+data class TronGaslessApproveEstimateParams(
+    val userWalletId: UserWalletId,
+    val approve: TronGaslessApprove,
+    val feeTokenContract: String,
+)
+
 data class TronGaslessQuote(
     val quoteId: String,
     val quotedAmountRaw: BigInteger,
@@ -25,6 +53,8 @@ data class TronGaslessQuote(
     val bandwidth: Long,
     val trxCost: BigDecimal,
     val expiresAtEpochMs: Long,
+    val quotedSwap: TronGaslessSwap? = null,
+    val quotedApprove: TronGaslessApprove? = null,
 )
 
 data class TronGaslessSubmitResult(

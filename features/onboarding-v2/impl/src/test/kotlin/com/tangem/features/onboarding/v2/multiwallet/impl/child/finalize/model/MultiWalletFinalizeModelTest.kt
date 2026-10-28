@@ -15,11 +15,13 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.onboarding.repository.OnboardingRepository
+import arrow.core.left
 import arrow.core.right
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.derivations.DerivationsHelper
+import com.tangem.domain.wallets.models.backup.CardBackupError
 import com.tangem.domain.wallets.models.backup.CardBackupStatus
 import com.tangem.domain.wallets.models.backup.WalletCardBackup
 import com.tangem.domain.wallets.repository.WalletsRepository
@@ -27,6 +29,7 @@ import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.domain.wallets.usecase.SyncWalletWithRemoteUseCase
 import com.tangem.domain.wallets.usecase.UpdateWalletUseCase
+import com.tangem.domain.sociallogin.models.SocialLoginError
 import com.tangem.domain.sociallogin.usecase.DeleteSocialBackupAfterUpgradeUseCase
 import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
 import io.mockk.verify
@@ -39,7 +42,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.ui.stat
 import com.tangem.features.onboarding.v2.multiwallet.impl.common.WalletCardsBackupReporter
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState
 import com.tangem.operations.backup.BackupService
-import com.tangem.sdk.api.BackupServiceHolder
+import com.tangem.sdk.api.BackupServiceProvider
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.*
@@ -54,14 +57,12 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.lang.ref.WeakReference
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class MultiWalletFinalizeModelTest {
 
-    private val backupServiceHolder: BackupServiceHolder = mockk()
+    private val backupServiceProvider: BackupServiceProvider = mockk()
     private val backupService: BackupService = mockk()
-    private val backupServiceWeakRef: WeakReference<BackupService> = WeakReference(backupService)
     private val tangemSdkManager: TangemSdkManager = mockk(relaxUnitFun = true)
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk()
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk()
@@ -138,7 +139,7 @@ internal class MultiWalletFinalizeModelTest {
         every { parentParams.mode } returns OnboardingMultiWalletComponent.Mode.Onboarding
         multiWalletStateFlow.value = multiWalletStateFlow.value.copy(startFromFinalize = null)
         every { paramsContainer.require<MultiWalletChildParams>() } returns params
-        every { backupServiceHolder.backupService } returns backupServiceWeakRef
+        every { backupServiceProvider.backupService } returns backupService
         every { backupService.primaryCardId } returns "primary-id-aaaa"
         every { backupService.primaryCardBatchId } returns NON_RING_BATCH_ID
         every { backupService.backupCardIds } returns listOf("backup-1-bbbb", "backup-2-cccc")
@@ -207,20 +208,6 @@ internal class MultiWalletFinalizeModelTest {
     }
 
     @Test
-    fun `GIVEN backupService is null WHEN model is created THEN initial state is default`() = runTest {
-        every { backupServiceHolder.backupService } returns WeakReference(null)
-
-        val model = createModel(this)
-        advanceUntilIdle()
-
-        val state = model.uiState.value
-        Assertions.assertEquals(MultiWalletFinalizeUM.Step.Primary, state.step)
-        Assertions.assertEquals(true, state.scanPrimary)
-        Assertions.assertEquals("", state.cardNumber)
-        Assertions.assertEquals(false, state.isRing)
-    }
-
-    @Test
     fun `GIVEN startFromFinalize null AND non-Ring primary WHEN model is created THEN state is Primary non-Ring`() =
         runTest {
             multiWalletStateFlow.value = multiWalletStateFlow.value.copy(startFromFinalize = null)
@@ -231,7 +218,7 @@ internal class MultiWalletFinalizeModelTest {
 
             val state = model.uiState.value
             Assertions.assertEquals(MultiWalletFinalizeUM.Step.Primary, state.step)
-            Assertions.assertEquals(true, state.scanPrimary)
+            Assertions.assertEquals(true, state.shouldScanPrimary)
             Assertions.assertEquals(false, state.isRing)
             Assertions.assertEquals("primary-id-aaaa".lastMaskedExpected(), state.cardNumber)
         }
@@ -249,7 +236,7 @@ internal class MultiWalletFinalizeModelTest {
 
             val state = model.uiState.value
             Assertions.assertEquals(MultiWalletFinalizeUM.Step.Primary, state.step)
-            Assertions.assertEquals(true, state.scanPrimary)
+            Assertions.assertEquals(true, state.shouldScanPrimary)
             Assertions.assertEquals(true, state.isRing)
         }
 
@@ -268,7 +255,7 @@ internal class MultiWalletFinalizeModelTest {
 
         val state = model.uiState.value
         Assertions.assertEquals(MultiWalletFinalizeUM.Step.BackupDevice1, state.step)
-        Assertions.assertEquals(false, state.scanPrimary)
+        Assertions.assertEquals(false, state.shouldScanPrimary)
         Assertions.assertEquals("backup-1-bbbb".lastMaskedExpected(), state.cardNumber)
     }
 
@@ -287,7 +274,7 @@ internal class MultiWalletFinalizeModelTest {
 
         val state = model.uiState.value
         Assertions.assertEquals(MultiWalletFinalizeUM.Step.BackupDevice2, state.step)
-        Assertions.assertEquals(false, state.scanPrimary)
+        Assertions.assertEquals(false, state.shouldScanPrimary)
         Assertions.assertEquals("backup-2-cccc".lastMaskedExpected(), state.cardNumber)
     }
 
@@ -373,7 +360,7 @@ internal class MultiWalletFinalizeModelTest {
 
         val state = model.uiState.value
         Assertions.assertEquals(MultiWalletFinalizeUM.Step.BackupDevice1, state.step)
-        Assertions.assertEquals(false, state.scanPrimary)
+        Assertions.assertEquals(false, state.shouldScanPrimary)
         Assertions.assertEquals("backup-1-bbbb".lastMaskedExpected(), state.cardNumber)
         Assertions.assertEquals(false, state.isRing)
         Assertions.assertEquals(
@@ -491,6 +478,124 @@ internal class MultiWalletFinalizeModelTest {
         }
 
     @Test
+    fun `GIVEN primary finalize fails WHEN onScanClick THEN primary is reported as not backed up with the error`() =
+        runTest {
+            // Arrange
+            backupsFlow.value = MultiWalletChildParams.Backup(card2 = addedBackupCard(cardId = "backup-1-bbbb"))
+            val callbackSlot = slot<(CompletionResult<Card>) -> Unit>()
+            every {
+                backupService.proceedBackup(iconScanRes = null, callback = capture(callbackSlot))
+            } just Runs
+
+            val model = createModel(this)
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.onScanClick.invoke()
+            advanceUntilIdle()
+            callbackSlot.captured.invoke(CompletionResult.Failure(TangemSdkError.TagLost()))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                walletCardsBackupReporter.report(
+                    scanResponse = scanResponse,
+                    cards = listOf(
+                        WalletCardBackup(
+                            cardId = "primary-id-aaaa",
+                            cardPublicKey = PRIMARY_CARD_PUBLIC_KEY.toHexString(),
+                            role = WalletCardBackup.Role.PRIMARY,
+                            backupStatus = CardBackupStatus.NO_BACKUP,
+                            curves = emptyList(),
+                            error = CardBackupError(code = "10001", message = "10001: TagLost"),
+                        ),
+                        WalletCardBackup(
+                            cardId = "backup-1-bbbb",
+                            cardPublicKey = BACKUP_CARD_PUBLIC_KEY.toHexString(),
+                            role = WalletCardBackup.Role.BACKUP_1,
+                            backupStatus = CardBackupStatus.NO_BACKUP,
+                            curves = emptyList(),
+                        ),
+                    ),
+                    usedSeed = false,
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN backup card finalize fails WHEN onScanClick THEN it is reported as not backed up with the error`() =
+        runTest {
+            // Arrange
+            multiWalletStateFlow.value = multiWalletStateFlow.value.copy(
+                startFromFinalize = OnboardingMultiWalletState.FinalizeStage.ScanBackupFirstCard,
+            )
+            backupsFlow.value = MultiWalletChildParams.Backup(card2 = addedBackupCard(cardId = "backup-1-bbbb"))
+            every { backupService.currentState } returns BackupService.State.FinalizingBackupCard(index = 1)
+            val callbackSlot = slot<(CompletionResult<Card>) -> Unit>()
+            every {
+                backupService.proceedBackup(iconScanRes = null, callback = capture(callbackSlot))
+            } just Runs
+
+            val model = createModel(this)
+            backgroundScope.launch(context = Dispatchers.Unconfined, start = CoroutineStart.UNDISPATCHED) {
+                model.onEvent.collect {}
+            }
+            advanceUntilIdle()
+
+            // Act
+            model.uiState.value.onScanClick.invoke()
+            advanceUntilIdle()
+            callbackSlot.captured.invoke(CompletionResult.Failure(TangemSdkError.TagLost()))
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                walletCardsBackupReporter.report(
+                    scanResponse = scanResponse,
+                    cards = listOf(
+                        WalletCardBackup(
+                            cardId = "primary-id-aaaa",
+                            cardPublicKey = PRIMARY_CARD_PUBLIC_KEY.toHexString(),
+                            role = WalletCardBackup.Role.PRIMARY,
+                            backupStatus = CardBackupStatus.NO_BACKUP,
+                            curves = emptyList(),
+                        ),
+                        WalletCardBackup(
+                            cardId = "backup-1-bbbb",
+                            cardPublicKey = BACKUP_CARD_PUBLIC_KEY.toHexString(),
+                            role = WalletCardBackup.Role.BACKUP_1,
+                            backupStatus = CardBackupStatus.NO_BACKUP,
+                            curves = emptyList(),
+                            error = CardBackupError(code = "10001", message = "10001: TagLost"),
+                        ),
+                    ),
+                    usedSeed = false,
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN user cancels finalize WHEN onScanClick THEN nothing is reported`() = runTest {
+        // Arrange
+        val callbackSlot = slot<(CompletionResult<Card>) -> Unit>()
+        every {
+            backupService.proceedBackup(iconScanRes = null, callback = capture(callbackSlot))
+        } just Runs
+
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.onScanClick.invoke()
+        advanceUntilIdle()
+        callbackSlot.captured.invoke(CompletionResult.Failure(TangemSdkError.UserCancelled()))
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { walletCardsBackupReporter.report(any(), any(), any()) }
+    }
+
+    @Test
     fun `GIVEN Ring primary WHEN onScanClick THEN changeProductType is true and ring icon is used`() = runTest {
         every { backupService.primaryCardBatchId } returns RING_BATCH_ID_AC17
         every {
@@ -537,7 +642,7 @@ internal class MultiWalletFinalizeModelTest {
         verify { tangemSdkManager.clearProductType() }
         coVerify(exactly = 0) { onboardingRepository.saveUnfinishedFinalizeOnboarding(any()) }
         Assertions.assertEquals(stateBefore.step, model.uiState.value.step)
-        Assertions.assertEquals(stateBefore.scanPrimary, model.uiState.value.scanPrimary)
+        Assertions.assertEquals(stateBefore.shouldScanPrimary, model.uiState.value.shouldScanPrimary)
         Assertions.assertEquals(emptyList<MultiWalletFinalizeComponent.Event>(), events)
     }
 
@@ -656,11 +761,10 @@ internal class MultiWalletFinalizeModelTest {
             // Act
             finishBackupAsUpgrade()
 
-            // Assert — the mark is read while the record is still hot, the file deleted once it is upgraded
+            // Assert — the mark is read while the record is still hot, the file deleted once it is replaced
             coVerifyOrder {
                 isSocialBackupCompletedUseCase(UPGRADED_WALLET_ID)
                 updateWalletUseCase.invoke(eq(UPGRADED_WALLET_ID), any())
-                walletsRepository.upgradeWallet(UPGRADED_WALLET_ID)
                 deleteSocialBackupAfterUpgradeUseCase(UPGRADED_WALLET_ID)
             }
         }
@@ -699,17 +803,40 @@ internal class MultiWalletFinalizeModelTest {
     }
 
     @Test
-    fun `GIVEN the upgrade fails WHEN backup finishes THEN social recovery is kept`() = runTest {
-        // Arrange — the wallet is still hot as far as the app knows, so its recovery must stay
+    fun `GIVEN the social backup cannot be deleted WHEN backup finishes THEN the error is reported`() = runTest {
+        // Arrange
         arrangeHotWalletUpgrade()
-        coEvery { walletsRepository.upgradeWallet(UPGRADED_WALLET_ID) } throws IllegalStateException("boom")
+        coEvery { walletsRepository.upgradeWallet(UPGRADED_WALLET_ID) } just Runs
+        coEvery { deleteSocialBackupAfterUpgradeUseCase(UPGRADED_WALLET_ID) } returns
+            SocialLoginError.BackupNotFound.left()
 
         // Act
         finishBackupAsUpgrade()
 
         // Assert
-        coVerify(exactly = 0) { deleteSocialBackupAfterUpgradeUseCase(any()) }
+        verify(exactly = 1) {
+            analyticsEventHandler.send(
+                WalletSettingsAnalyticEvents.SocialRecoveryDeletionError(SocialLoginError.BackupNotFound),
+            )
+        }
+        verify(exactly = 0) {
+            analyticsEventHandler.send(ofType<WalletSettingsAnalyticEvents.SocialRecoveryDeleted>())
+        }
     }
+
+    @Test
+    fun `GIVEN marking the wallet as upgraded fails WHEN backup finishes THEN the social backup is still deleted`() =
+        runTest {
+            // Arrange — the hot keys are already gone, the file must not outlive them
+            arrangeHotWalletUpgrade()
+            coEvery { walletsRepository.upgradeWallet(UPGRADED_WALLET_ID) } throws IllegalStateException("boom")
+
+            // Act
+            finishBackupAsUpgrade()
+
+            // Assert
+            coVerify(exactly = 1) { deleteSocialBackupAfterUpgradeUseCase(UPGRADED_WALLET_ID) }
+        }
 
     private fun arrangeHotWalletUpgrade() {
         multiWalletStateFlow.value = multiWalletStateFlow.value.copy(
@@ -720,6 +847,7 @@ internal class MultiWalletFinalizeModelTest {
         every { backupService.currentState } returns BackupService.State.Finished
         every { coldUserWalletBuilderFactory.create(any()) } returns coldUserWalletBuilder
         coEvery { isSocialBackupCompletedUseCase(UPGRADED_WALLET_ID) } returns true
+        coEvery { deleteSocialBackupAfterUpgradeUseCase(UPGRADED_WALLET_ID) } returns Unit.right()
         coEvery { updateWalletUseCase.invoke(eq(UPGRADED_WALLET_ID), any()) } returns coldUserWallet.right()
         coEvery { syncWalletWithRemoteUseCase(any()) } returns mockk(relaxed = true)
         coEvery { cardRepository.finishCardActivation(any(), any()) } just Runs
@@ -758,7 +886,7 @@ internal class MultiWalletFinalizeModelTest {
         return MultiWalletFinalizeModel(
             paramsContainer = paramsContainer,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
-            backupServiceHolder = backupServiceHolder,
+            backupServiceProvider = backupServiceProvider,
             tangemSdkManager = tangemSdkManager,
             getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
             sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,

@@ -3,8 +3,9 @@ package com.tangem.features.mcp.impl
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.domain.mcp.models.McpRequest
-import com.tangem.features.mcp.impl.intent.McpIntentComponent
 import com.tangem.features.mcp.impl.pair.McpPairComponent
+import com.tangem.features.send.api.mcp.SendIntentComponent
+import com.tangem.features.swap.mcp.ExchangeIntentComponent
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
@@ -13,24 +14,34 @@ internal class DefaultMcpComponentFactoryTest {
 
     private val context: AppComponentContext = mockk()
     private val pairComponent: McpPairComponent = mockk()
-    private val intentComponent: McpIntentComponent = mockk()
+    private val intentComponent: ExchangeIntentComponent = mockk()
+    private val sendIntentComponent: SendIntentComponent = mockk()
 
     private val pairRequest = McpRequest.Pair(userCode = "WDJB-MJHT")
     private val intentRequest = McpRequest.Intent(
         id = "my_intent_id123",
         source = McpRequest.Intent.Source.Express(McpRequest.Intent.Source.Express.Type.EXCHANGE),
     )
+    private val sendIntentRequest = McpRequest.Intent(
+        id = "my_send_intent_id456",
+        source = McpRequest.Intent.Source.Transaction(McpRequest.Intent.Source.Transaction.Type.SEND),
+    )
 
     private val pairFactory: McpPairComponent.Factory = mockk {
         every { create(context, McpPairComponent.Params(pairRequest)) } returns pairComponent
     }
-    private val intentFactory: McpIntentComponent.Factory = mockk {
-        every { create(context, McpIntentComponent.Params(intentRequest)) } returns intentComponent
+    private val intentFactory: ExchangeIntentComponent.Factory = mockk {
+        every { create(context, ExchangeIntentComponent.Params(intentId = "my_intent_id123")) } returns intentComponent
+    }
+    private val sendIntentFactory: SendIntentComponent.Factory = mockk {
+        every { create(context, SendIntentComponent.Params(intentId = "my_send_intent_id456")) } returns
+            sendIntentComponent
     }
 
     private val factory = DefaultMcpComponentFactory(
         mcpPairComponentFactory = pairFactory,
-        mcpIntentComponentFactory = intentFactory,
+        exchangeIntentComponentFactory = intentFactory,
+        sendIntentComponentFactory = sendIntentFactory,
     )
 
     @Test
@@ -43,11 +54,20 @@ internal class DefaultMcpComponentFactoryTest {
     }
 
     @Test
-    fun `GIVEN intent request WHEN create THEN intent component is returned`() {
+    fun `GIVEN exchange intent request WHEN create THEN exchange intent component is returned`() {
         // Act
         val actual = factory.create(context, intentRequest)
 
         // Assert
         assertThat(actual).isSameInstanceAs(intentComponent)
+    }
+
+    @Test
+    fun `GIVEN transaction send intent request WHEN create THEN send intent component is returned`() {
+        // Act
+        val actual = factory.create(context, sendIntentRequest)
+
+        // Assert
+        assertThat(actual).isSameInstanceAs(sendIntentComponent)
     }
 }

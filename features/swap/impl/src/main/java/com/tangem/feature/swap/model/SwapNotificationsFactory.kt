@@ -1,8 +1,6 @@
 package com.tangem.feature.swap.model
 
 import com.tangem.common.TangemSiteUrlBuilder
-import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addDustWarningNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addExistentialWarningNotification
@@ -21,7 +19,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
-import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
+import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedForNetwork
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
@@ -49,7 +47,7 @@ import java.math.BigDecimal
 @Suppress("LargeClass")
 internal class SwapNotificationsFactory(
     private val actions: UiActions,
-    private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
+    private val isEvmGaslessFeeSupportedForNetwork: IsEvmGaslessFeeSupportedForNetwork,
     private val appCurrencyProvider: Provider<AppCurrency> = Provider { AppCurrency.Default },
     private val predictionTopUpLimitsProvider: Provider<PredictionTopUpLimits?> = Provider { null },
 ) {
@@ -128,7 +126,7 @@ internal class SwapNotificationsFactory(
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
         swapFee: SwapFee?,
         feeError: GetFeeError?,
-        appRouter: AppRouter,
+        isFeeCurrencyInStack: Boolean,
         isHighNetworkFee: Boolean = false,
         lowSlippage: TextReference? = null,
     ): ImmutableList<NotificationUM> {
@@ -145,7 +143,7 @@ internal class SwapNotificationsFactory(
                 quoteModel = quoteModel,
                 feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                 swapFee = swapFee,
-                appRouter = appRouter,
+                isFeeCurrencyInStack = isFeeCurrencyInStack,
             )
             maybeAddTransactionInProgressWarning(quoteModel)
             maybeAddPriceImpactNotification(quoteModel.priceImpact)
@@ -356,7 +354,7 @@ internal class SwapNotificationsFactory(
         quoteModel: SwapState.QuotesLoadedState,
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
         swapFee: SwapFee?,
-        appRouter: AppRouter,
+        isFeeCurrencyInStack: Boolean,
     ) {
         if (feeCryptoCurrencyStatus == null) return
         val fromSwapCurrency = quoteModel.fromTokenInfo.swapCurrencyStatus
@@ -378,25 +376,21 @@ internal class SwapNotificationsFactory(
         // [swapFee] is known it names the token that actually pays, so an insufficient balance is final
         // and must be surfaced. On networks without gasless support the warning always shows.
         val isFeeTokenUnresolved = swapFee == null &&
-            isGaslessFeeSupportedForNetwork(fromCurrency.network) && isCexLikeFlow
+            isEvmGaslessFeeSupportedForNetwork(fromCurrency.network) && isCexLikeFlow
         if (shouldShowCoverWarning && !isFeeTokenUnresolved && isNotEnoughFee) {
             add(
                 if (fromCurrency.id == feeCryptoCurrencyStatus.currency.id) {
                     SwapNotificationUM.Error.InsufficientFunds
                 } else {
-                    val route = AppRoute.CurrencyDetails(
-                        userWalletId = fromSwapCurrency.userWalletId,
-                        currency = feeCryptoCurrencyStatus.currency,
-                    )
                     SwapNotificationUM.Error.UnableToCoverFeeWarning(
                         fromToken = fromCurrency,
                         feeCurrency = feeCryptoCurrencyStatus.currency,
                         currencyName = insufficientFee.feeCurrencyName ?: fromCurrency.network.name,
                         currencySymbol = insufficientFee.feeCurrencySymbol ?: fromCurrency.network.currencySymbol,
-                        onConfirmClick = if (!appRouter.stack.contains(route)) {
-                            { appRouter.push(route) }
-                        } else {
+                        onConfirmClick = if (isFeeCurrencyInStack) {
                             null
+                        } else {
+                            { actions.openTokenDetailsScreen(feeCryptoCurrencyStatus.currency) }
                         },
                     )
                 },

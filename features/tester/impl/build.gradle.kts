@@ -97,7 +97,6 @@ dependencies {
     implementation(projects.common.uiCharts)
     implementation(projects.libs.auth)
     implementation(projects.libs.crypto)
-    implementation(projects.libs.tangemSdkApi)
     implementation(projects.domain.staking)
 
     /** Tests */

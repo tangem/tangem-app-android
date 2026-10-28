@@ -13,7 +13,6 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.feed.search.usecase.SaveFeedSearchQueryUseCase
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
 import com.tangem.domain.markets.TokenListBatchFlow
 import com.tangem.domain.markets.TokenListBatchingContext
@@ -44,7 +43,6 @@ import com.tangem.pagination.BatchUpdateResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -80,7 +78,6 @@ internal class CryptoFeedSearchTabModelTest {
     private val getWalletIconUseCase: GetWalletIconUseCase = mockk()
     private val walletIconUMConverter: WalletIconUMConverter = mockk()
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
-    private val saveFeedSearchQueryUseCase: SaveFeedSearchQueryUseCase = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
 
     private val actions = mutableListOf<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>()
@@ -98,7 +95,6 @@ internal class CryptoFeedSearchTabModelTest {
             getSearchResultsUseCase,
             router,
             analyticsEventHandler,
-            saveFeedSearchQueryUseCase,
         )
         actions.clear()
         batchState.value = BatchListState(data = emptyList(), status = PaginationStatus.None)
@@ -269,7 +265,7 @@ internal class CryptoFeedSearchTabModelTest {
     }
 
     @Test
-    fun `GIVEN a market row WHEN it is clicked THEN the query is written to search history`() = runTest {
+    fun `GIVEN a market row WHEN it is clicked THEN token details open`() = runTest {
         // Arrange
         val query = MutableStateFlow("")
         val model = createModel(testScope = this, query = query)
@@ -284,7 +280,6 @@ internal class CryptoFeedSearchTabModelTest {
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 1) { saveFeedSearchQueryUseCase("btc") }
         verify { router.push(route = any<FeedRoute.MarketsTokenDetails>(), onComplete = any()) }
 
         model.onDestroy()
@@ -464,7 +459,6 @@ internal class CryptoFeedSearchTabModelTest {
             getWalletIconUseCase = getWalletIconUseCase,
             walletIconUMConverter = walletIconUMConverter,
             analyticsEventHandler = analyticsEventHandler,
-            saveFeedSearchQueryUseCase = saveFeedSearchQueryUseCase,
             router = router,
         )
     }

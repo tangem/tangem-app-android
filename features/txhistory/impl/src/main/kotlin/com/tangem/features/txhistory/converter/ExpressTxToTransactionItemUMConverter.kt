@@ -66,7 +66,7 @@ internal class ExpressTxToTransactionItemUMConverter(
         val counterparty = if (swap.isOutgoing) swap.tx.toAsset else swap.tx.fromAsset
         val prefix = when {
             status is Status.Failed -> ""
-            swap.isOutgoing -> StringsSigns.MINUS
+            swap.isOutgoing -> StringsSigns.MINUS_SIGN
             else -> StringsSigns.PLUS
         }
         return buildContent(

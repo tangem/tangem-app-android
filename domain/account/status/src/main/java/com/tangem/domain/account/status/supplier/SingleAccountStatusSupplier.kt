@@ -9,7 +9,7 @@ import com.tangem.domain.models.account.AccountStatus
  *
 [REDACTED_AUTHOR]
  */
-abstract class SingleAccountStatusSupplier(
+open class SingleAccountStatusSupplier(
     override val factory: SingleAccountStatusProducer.Factory,
     override val keyCreator: (SingleAccountStatusProducer.Params) -> String,
 ) : FlowCachingSupplier<SingleAccountStatusProducer, SingleAccountStatusProducer.Params, AccountStatus>()

@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.card.details
 
 import androidx.compose.runtime.Stable
+import arrow.core.Either
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
@@ -53,7 +54,9 @@ import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.usecase.ChangeCardFrozenStateUseCase
+import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.addfunds.AddFundsListener
@@ -113,6 +116,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val biometricAuthManager: BiometricAuthManager,
     private val settingsManager: SettingsManager,
     private val onboardingRepository: OnboardingRepository,
+    private val getBankCredentialsUseCase: GetBankCredentialsUseCase,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     googleWalletControllerFactory: TangemPayAddToGoogleWalletController.Factory,
 ) : Model(), ViewPinListener, ReissueCardListener, AddFundsListener, CloseCardListener, ChooseNetworkListener {
@@ -680,7 +684,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                 shouldShowWarning = true,
                 cryptoCurrency = data.currency,
                 userWalletId = data.walletId,
-                showMemoDisclaimer = false,
+                shouldShowMemoDisclaimer = false,
                 receiveAddress = data.receiveAddress,
             )
             bottomSheetNavigation.activate(TangemPayCardNavigation.Receive(config))
@@ -737,12 +741,12 @@ internal class TangemPayCardPageModel @Inject constructor(
         analytics.send(TangemPayAnalyticsEvents.VaDetailsErrorShowed())
         bottomSheetNavigation.dismiss()
         bottomSheetNavigation.activate(
-            TangemPayCardNavigation.VaBankingDetailsError(
-                userWalletId = userWalletId,
-                productInstanceId = productInstanceId,
-            ),
+            TangemPayCardNavigation.VaBankingDetailsError(productInstanceId = productInstanceId),
         )
     }
+
+    suspend fun loadBankCredentials(productInstanceId: String): Either<VisaApiError, BankCredentials> =
+        getBankCredentialsUseCase(userWalletId = userWalletId, productInstanceId = productInstanceId)
 
     private fun showVaPreparing() {
         analytics.send(TangemPayAnalyticsEvents.VaPreparationPopupShowed())

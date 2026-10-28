@@ -1,5 +1,6 @@
 package com.tangem.domain.walletconnect.model.sdkcopy
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
@@ -13,6 +14,6 @@ data class WcAppMetaData(
     val icons: List<String>,
     val redirect: String?,
     val appLink: String? = null,
-    val linkMode: Boolean = false,
+    @SerialName("linkMode") val isLinkMode: Boolean = false,
     val verifyUrl: String? = null,
 )

@@ -181,6 +181,25 @@ fun BaseTestCase.checkStoriesChanges() {
     }
 }
 
+fun BaseTestCase.viewSwapStoriesToEnd() {
+    listOf(
+        Triple(firstStoryIndex, firstStoryTitle, firstStorySubtitle),
+        Triple(secondStoryIndex, secondStoryTitle, secondStorySubtitle),
+        Triple(thirdStoryIndex, thirdStoryTitle, thirdStorySubtitle),
+        Triple(forthStoryIndex, forthStoryTitle, forthStorySubtitle),
+    ).forEach { (storyIndex, storyTitle, storySubtitle) ->
+        step("Assert story №${storyIndex + 1} title and subtitle are displayed") {
+            checkStoriesContent(storyIndex = storyIndex, storyTitle = storyTitle, storySubtitle = storySubtitle)
+        }
+        step("Click on right side") {
+            onSwapStoriesScreen { container.performTouchInput { click(centerRight) } }
+        }
+    }
+    step("Assert 'Stories' screen is not displayed") {
+        awaitSuccess { onSwapStoriesScreen { container.assertDoesNotExist() } }
+    }
+}
+
 fun BaseTestCase.skipSwapStories() {
     step("Skip 'Swap stories' screen if displayed") {
         onSwapStoriesScreen {

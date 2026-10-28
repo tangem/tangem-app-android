@@ -22,6 +22,7 @@ dependencies {
     // endregion
 
     // region Libs - Tangem
+    implementation(tangemDeps.blockchain)
     implementation(tangemDeps.card.core)
     // endregion
 
@@ -36,6 +37,14 @@ dependencies {
     implementation(projects.core.utils)
     // endregion
 
+    // region Project - Data
+    implementation(projects.data.common)
+    // endregion
+
+    // region Project - Libs
+    implementation(projects.libs.blockchainSdk)
+    // endregion
+
     // region Project - Datasource
     implementation(projects.spend.datasource)
     // endregion
@@ -44,19 +53,24 @@ dependencies {
     api(projects.domain.moneyAccount)
     api(projects.domain.quotes)
     implementation(projects.domain.account)
+    implementation(projects.domain.account.status)
     implementation(projects.domain.common)
     implementation(projects.domain.core)
     implementation(projects.domain.models)
     implementation(projects.domain.networks)
+    implementation(projects.domain.tokens)
     implementation(projects.domain.visa)
+    implementation(projects.domain.walletManager)
     implementation(projects.domain.wallets)
     // endregion
 
     // region Project - Domain models
+    implementation(projects.domain.moneyAccount.models)
     implementation(projects.domain.visa.models)
     // endregion
 
     // region Test
+    testImplementation(projects.common.test)
     testImplementation(projects.test.core)
     // endregion
 }

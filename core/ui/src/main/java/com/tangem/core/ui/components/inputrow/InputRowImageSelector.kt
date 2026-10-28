@@ -17,6 +17,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.atoms.radiobutton.TangemRadioButton
@@ -74,7 +75,7 @@ fun InputRowImageSelector(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(),
             )
-            .padding(TangemTheme.dimens.spacing12),
+            .padding(12.dp),
     ) {
         SpacerWMax()
         selectorContent(isSelected, false, onSelect)

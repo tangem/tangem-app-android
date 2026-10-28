@@ -41,7 +41,7 @@ sealed interface StakingTarget {
         override val address: String = delegate.address
         override val name: String = delegate.name
         override val rewardInfo: RewardInfo? = delegate.rewardInfo
-        override val isPreferred: Boolean = delegate.preferred
+        override val isPreferred: Boolean = delegate.isPreferred
         override val isActive: Boolean = delegate.status == Yield.Validator.ValidatorStatus.ACTIVE
         override val image: StakingTargetImage? = delegate.image?.let { StakingTargetImage.Url(it) }
         override val isStrategicPartner: Boolean = delegate.isStrategicPartner

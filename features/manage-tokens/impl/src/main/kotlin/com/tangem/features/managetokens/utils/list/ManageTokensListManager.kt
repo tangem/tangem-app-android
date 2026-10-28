@@ -12,6 +12,7 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.managetokens.model.CurrencyUnsupportedState
 import com.tangem.domain.managetokens.model.ManageTokensListBatchingContext
+import com.tangem.domain.managetokens.model.ManageTokensListConfig
 import com.tangem.domain.managetokens.model.ManageTokensUpdateAction
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -65,6 +66,10 @@ internal class ManageTokensListManager @AssistedInject constructor(
 
     private val manageTokensWarningDelegate: ManageTokensWarningDelegate = manageTokensWarningDelegateFactory
         .create(mode, source, this)
+    private val shouldLoadTokensFromRemote = when (mode) {
+        is ManageTokensMode.Account -> source == ManageTokensSource.ONBOARDING
+        ManageTokensMode.None -> false
+    }
     private val changedCurrenciesManager = ChangedCurrenciesManager()
     private val uiManager = ManageTokensUiManager(
         state = state,
@@ -89,10 +94,6 @@ internal class ManageTokensListManager @AssistedInject constructor(
      * @param isCollapsed   set initial display state of networks. !!! WARNING !!! Use `false` flag with cation
      */
     suspend fun launchPagination(isCollapsed: Boolean) = coroutineScope {
-        val shouldLoadTokensFromRemote = when (mode) {
-            is ManageTokensMode.Account -> source == ManageTokensSource.ONBOARDING
-            ManageTokensMode.None -> false
-        }
         val batchFlow = useCasesFacade.getManagedTokensUseCase(
             context = ManageTokensListBatchingContext(
                 actionsFlow = actionsFlow,
@@ -116,7 +117,7 @@ internal class ManageTokensListManager @AssistedInject constructor(
         state.value = ManageTokensListState(mode = mode)
         actionsFlow.emit(
             BatchAction.Reload(
-                requestParams = useCasesFacade.manageTokensListConfig(searchText = null),
+                requestParams = listConfig(searchText = null),
             ),
         )
     }
@@ -124,7 +125,7 @@ internal class ManageTokensListManager @AssistedInject constructor(
     suspend fun loadMore(query: String) {
         actionsFlow.emit(
             BatchAction.LoadMore(
-                requestParams = useCasesFacade.manageTokensListConfig(query),
+                requestParams = listConfig(searchText = query),
             ),
         )
     }
@@ -133,10 +134,15 @@ internal class ManageTokensListManager @AssistedInject constructor(
         state.value = ManageTokensListState(mode = mode, searchQuery = query)
         actionsFlow.emit(
             BatchAction.Reload(
-                requestParams = useCasesFacade.manageTokensListConfig(
-                    searchText = query,
-                ),
+                requestParams = listConfig(searchText = query),
             ),
+        )
+    }
+
+    private suspend fun listConfig(searchText: String?): ManageTokensListConfig {
+        return useCasesFacade.manageTokensListConfig(
+            searchText = searchText,
+            loadUserTokensFromRemote = shouldLoadTokensFromRemote,
         )
     }
 
@@ -253,7 +259,7 @@ internal class ManageTokensListManager @AssistedInject constructor(
         )
         val action = BatchAction.UpdateBatches(
             keys = setOf(batchKey),
-            async = true,
+            isAsync = true,
             updateRequest = request,
         )
 

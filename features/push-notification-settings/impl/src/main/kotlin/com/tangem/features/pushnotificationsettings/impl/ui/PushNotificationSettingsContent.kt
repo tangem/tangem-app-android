@@ -17,7 +17,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.tangem.core.ui.res.TangemTheme
+import androidx.compose.ui.unit.dp
 import com.tangem.features.pushnotificationsettings.impl.entity.AllowPushNotificationsBannerUM
 import com.tangem.features.pushnotificationsettings.impl.entity.PushNotificationSettingsUM
 import com.tangem.features.pushnotificationsettings.impl.entity.ToggleId
@@ -32,10 +32,10 @@ internal fun PushNotificationSettingsContent(
             .fillMaxSize()
             .navigationBarsPadding(),
         contentPadding = PaddingValues(
-            horizontal = TangemTheme.dimens.spacing16,
-            vertical = TangemTheme.dimens.spacing12,
+            horizontal = 16.dp,
+            vertical = 12.dp,
         ),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item(key = "banner") {
             AnimatedBannerSlot(banner = state.banner)

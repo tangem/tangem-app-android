@@ -21,8 +21,8 @@ class DefaultUserWalletImageFetcher @Inject constructor(
     private val artworkUMConverter: ArtworkUMConverter,
 ) : UserWalletImageFetcher {
 
-    private val smallCache = MutableStateFlow(mapOf<String, ArtworkUM>())
-    private val largeCache = MutableStateFlow(mapOf<String, ArtworkUM>())
+    private val smallCache = MutableStateFlow(emptyMap<String, ArtworkUM>())
+    private val largeCache = MutableStateFlow(emptyMap<String, ArtworkUM>())
 
     override fun allWallets(size: ArtworkSize): Flow<Map<UserWalletId, UserWalletItemUM.ImageState>> =
         getWalletsUseCase.invoke()
@@ -46,8 +46,8 @@ class DefaultUserWalletImageFetcher @Inject constructor(
 
     override fun walletImage(walletId: UserWalletId, size: ArtworkSize): Flow<UserWalletItemUM.ImageState> =
         getUserWalletUseCase.invokeFlow(walletId)
-            .transform {
-                it.fold(
+            .transform { walletResult ->
+                walletResult.fold(
                     ifLeft = { emit(UserWalletItemUM.ImageState.Loading) },
                     ifRight = { wallet -> emitAll(walletImage(wallet, size)) },
                 )

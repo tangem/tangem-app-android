@@ -11,21 +11,23 @@ import com.tangem.google.auth.GoogleAuthError
  */
 interface GoogleDriveTokenProvider {
 
+    suspend fun currentAccountName(): String?
+
     /**
      * @param interactive when `true`, may show the account picker and the consent screen; when `false`,
      * resolves only from an already-granted session and yields [GoogleAuthError.AuthRequired] otherwise.
      */
     suspend fun getAccessToken(interactive: Boolean = true): Either<GoogleAuthError, String>
 
-    /** Drops the cached token and the authorization state, so the next call authorizes from scratch. */
+    /** Drops the cached tokens and the authorization state, so the next call authorizes from scratch. */
     suspend fun invalidate()
 
     /**
-     * [invalidate], then pins the following authorizations to [accountName] — one operation, because in
-     * the gap between two a concurrent [getAccessToken] can cache a token for the account being left.
+     * Drops only the cached token and keeps the pinned account. For a token the server rejected: the
+     * re-authorization must stay in the same account, while [invalidate] would let it pick another one.
      */
-    suspend fun switchAccount(accountName: String)
+    suspend fun invalidateToken()
 
-    /** Same as [invalidate], but also revokes the token remotely. */
-    suspend fun signOut()
+    /** `null` leaves the choice of the account to Google */
+    suspend fun switchAccount(accountName: String?)
 }

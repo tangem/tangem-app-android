@@ -149,8 +149,8 @@ internal class TangemPayTxHistoryDetailsModel @Inject constructor(
         )
     }
 
-    private fun openExplorer(txHash: String?) {
-        txHash?.let(urlOpener::openUrlExternalBrowser)
+    private fun openExplorer(txHash: String) {
+        urlOpener.openUrlExternalBrowser(txHash)
     }
 
     private fun dispute(customerId: String) {

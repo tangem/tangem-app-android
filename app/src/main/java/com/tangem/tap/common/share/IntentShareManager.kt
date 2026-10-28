@@ -4,28 +4,30 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import com.tangem.core.decompose.utils.ForegroundActivityProvider
+import com.tangem.core.decompose.utils.withForegroundActivity
 import com.tangem.core.navigation.share.ShareManager
-import com.tangem.tap.foregroundActivityObserver
-import com.tangem.tap.withForegroundActivity
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-internal class IntentShareManager @Inject constructor() : ShareManager {
+internal class IntentShareManager @Inject constructor(
+    private val foregroundActivityProvider: ForegroundActivityProvider,
+) : ShareManager {
 
     override val sharedTexts: SharedFlow<String>
         field = MutableSharedFlow<String>(extraBufferCapacity = 1)
 
     override fun shareText(text: String) {
-        foregroundActivityObserver.withForegroundActivity { activity ->
+        foregroundActivityProvider.withForegroundActivity { activity ->
             activity.startActivity(Intent.createChooser(sendIntent(text), null))
         }
     }
 
     override fun shareTrackedText(text: String) {
-        foregroundActivityObserver.withForegroundActivity { activity ->
+        foregroundActivityProvider.withForegroundActivity { activity ->
             val chooser = Intent.createChooser(
                 sendIntent(text),
                 null,

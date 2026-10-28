@@ -39,7 +39,7 @@ import kotlin.math.sin
  */
 @Composable
 fun TangemShimmer(modifier: Modifier = Modifier, radius: Dp = TangemShimmer.DefaultRadius) {
-    val baseColor = TangemTheme.colors3.bg.opaque.secondary
+    val baseColor = TangemTheme.colors3.bg.transparent.secondary
     val progress = LocalTangemShimmerProgress.current ?: rememberShimmerProgressInstance()
     val colorStops = remember(baseColor) { buildColorStops(baseColor) }
 

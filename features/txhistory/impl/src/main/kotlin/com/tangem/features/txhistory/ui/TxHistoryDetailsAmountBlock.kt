@@ -146,7 +146,9 @@ private fun AmountIconItem(item: TxHistoryDetailsUM.AmountIconUM.Item, modifier:
     when (item) {
         is TxHistoryDetailsUM.AmountIconUM.Item.Currency -> TangemCurrencyIcon(
             state = item.state,
-            modifier = modifier.size(IconSize),
+            modifier = modifier
+                .size(IconSize)
+                .clip(CircleShape),
             shouldDisplayNetwork = false,
         )
         is TxHistoryDetailsUM.AmountIconUM.Item.Resource -> Image(

@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -55,8 +56,9 @@ internal class JointAccountDisplayNameModel @Inject constructor(
         userWalletsListRepository.userWallets
             .map { wallets -> wallets?.firstOrNull { it.walletId == params.userWalletId } }
             .map { wallet -> wallet?.let(::walletInterationIcon) }
+            .map { iconRes -> iconRes?.let { TangemIconUM.Icon(iconRes = it) } }
             .distinctUntilChanged()
-            .onEach { iconRes -> stateController.update(UpdateButtonIconTransformer(iconRes = iconRes)) }
+            .onEach { icon -> stateController.update(UpdateButtonIconTransformer(icon = icon)) }
             .launchIn(modelScope)
     }
 

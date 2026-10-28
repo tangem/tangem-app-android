@@ -13,13 +13,29 @@ import com.tangem.domain.yield.supply.models.YieldMarketToken
 import com.tangem.domain.yield.supply.models.incentives.YieldIncentiveCampaign
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
+import com.tangem.utils.StringsSigns
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.util.Locale
 
 internal class YieldSupplyTokenStatusSuccessTransformerTest {
 
     private var startEarningClicked = false
     private var learnMoreClicked = false
+    private var originalLocale: Locale = Locale.getDefault()
+
+    @BeforeEach
+    fun setUp() {
+        originalLocale = Locale.getDefault()
+        Locale.setDefault(Locale.US)
+    }
+
+    @AfterEach
+    fun tearDown() {
+        Locale.setDefault(originalLocale)
+    }
 
     @Test
     fun `GIVEN inactive token WHEN transform THEN Unavailable`() {
@@ -52,7 +68,8 @@ internal class YieldSupplyTokenStatusSuccessTransformerTest {
         assertThat(available.apyText).isEqualTo(
             combinedReference(
                 resourceReference(R.string.yield_module_token_details_earn_notification_apy),
-                stringReference(" 5.5%"),
+                stringReference(StringsSigns.WHITE_SPACE),
+                stringReference("5.50%"),
             ),
         )
     }
@@ -78,10 +95,32 @@ internal class YieldSupplyTokenStatusSuccessTransformerTest {
                 buildAnnotatedString {
                     append("APY ")
                     withStyle(SpanStyle(textDecoration = TextDecoration.LineThrough)) {
-                        append("5.5%")
+                        append("5.50%")
                     }
-                    append(" x3 → 16.5%")
+                    append(" x3 → 16.50%")
                 },
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN apy with a long backend scale WHEN transform THEN apy text shows two decimals`() {
+        // Arrange
+        val transformer = createTransformer(
+            tokenStatus = marketToken(isActive = true, apy = BigDecimal("9.1149999999999998")),
+        )
+
+        // Act
+        val result = transformer.transform(YieldSupplyUM.Initial)
+
+        // Assert
+        val available = result as YieldSupplyUM.Available
+        assertThat(available.apy).isEqualTo("9.1149999999999998")
+        assertThat(available.apyText).isEqualTo(
+            combinedReference(
+                resourceReference(R.string.yield_module_token_details_earn_notification_apy),
+                stringReference(StringsSigns.WHITE_SPACE),
+                stringReference("9.11%"),
             ),
         )
     }
@@ -121,7 +160,8 @@ internal class YieldSupplyTokenStatusSuccessTransformerTest {
         assertThat(available.apyText).isEqualTo(
             combinedReference(
                 resourceReference(R.string.yield_module_token_details_earn_notification_apy),
-                stringReference(" 7.0%"),
+                stringReference(StringsSigns.WHITE_SPACE),
+                stringReference("7.00%"),
             ),
         )
     }
@@ -165,9 +205,9 @@ internal class YieldSupplyTokenStatusSuccessTransformerTest {
                 buildAnnotatedString {
                     append("APY ")
                     withStyle(SpanStyle(textDecoration = TextDecoration.LineThrough)) {
-                        append("5.5%")
+                        append("5.50%")
                     }
-                    append(" x3 → 16.5%")
+                    append(" x3 → 16.50%")
                 },
             ),
         )
@@ -199,7 +239,7 @@ internal class YieldSupplyTokenStatusSuccessTransformerTest {
 
     private fun campaign(hasActiveCampaign: Boolean) = YieldIncentiveCampaign(
         hasActiveCampaign = hasActiveCampaign,
-        rewardsApr = BigDecimal("1.5"),
+        rewardsApy = BigDecimal("1.5"),
         totalApyEst = BigDecimal("7.0"),
     )
 }

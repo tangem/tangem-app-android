@@ -8,4 +8,6 @@ data class PromocodeActivationBody(
     @Json(name = "promoCode") val promoCode: String,
     @Json(name = "address") val address: String,
     @Json(name = "walletId") val walletId: String,
+    @Json(name = "paymentNetwork") val paymentNetwork: String? = null,
+    @Json(name = "paymentCurrency") val paymentCurrency: String? = null,
 )
