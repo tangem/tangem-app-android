@@ -229,6 +229,7 @@ interface TangemPayApi {
     @GET("v1/fees")
     suspend fun getFees(
         @Header("Authorization") authHeader: String,
+        @Query("account_type") accountType: String,
         @Query("groups") groups: List<String>,
     ): ApiResponse<FeesResponse>
 
