@@ -921,7 +921,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(counterparty?.avatar).isEqualTo(
             TxHistoryDetailsUM.CounterpartyAvatar.Account(
                 name = moneyAccountName,
-                icon = AccountIconUM.CryptoPortfolio(value = AccountIconUM.Money.icon, color = AccountIconUM.Money.color),
+                icon = AccountIconUM.Money,
             ),
         )
         assertThat(counterparty?.onCopyClick).isNull()
