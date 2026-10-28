@@ -10,6 +10,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.domain.cloudbackup.usecase.GetBackupPasswordUseCase
 import com.tangem.domain.cloudbackup.models.CloudBackupError
@@ -19,6 +20,7 @@ import com.tangem.domain.cloudbackup.models.RestoredCloudBackup
 import com.tangem.domain.cloudbackup.usecase.RestoreCloudBackupUseCase
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.analytics.Settings.NoticeMobileWalletLimit
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImportError
@@ -214,6 +216,7 @@ internal class RestoreCloudBackupModelTest {
         }
         coVerify(exactly = 1) { setCloudBackupStateUseCase("011", isBackedUp = true, accountName = ACCOUNT_EMAIL) }
         verify(exactly = 1) { callbacks.onWalletImported(walletId) }
+        verify(exactly = 0) { analyticsEventHandler.send(ofType<NoticeMobileWalletLimit>()) }
         model.onDestroy()
     }
 
@@ -420,6 +423,44 @@ internal class RestoreCloudBackupModelTest {
             verify(exactly = 1) { uiMessageSender.send(capture(dialog)) }
             assertThat(dialog.captured.message)
                 .isEqualTo(resourceReference(R.string.user_wallet_list_error_wallet_already_saved))
+            assertThat(model.uiState.value).isInstanceOf(RestoreCloudBackupUM.EnterPassword::class.java)
+            verify(exactly = 0) { callbacks.onWalletImported(any()) }
+            verify(exactly = 0) { analyticsEventHandler.send(ofType<NoticeMobileWalletLimit>()) }
+            coVerify(exactly = 0) { setCloudBackupStateUseCase(any(), any()) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN hot wallets limit reached WHEN restore clicked THEN limit reported AND dialog shown AND no import`() =
+        runTest {
+            // Arrange
+            coEvery { restoreCloudBackupUseCase(backupInfo.fileId, any(), any()) } returns
+                restoredBackup(mnemonic = "word1 word2").right()
+            every { mnemonicRepository.generateMnemonic(any<String>()) } returns mnemonic
+            coEvery {
+                hotWalletImporter.import(any(), mnemonic, null, "My Wallet", isSeedPhraseBackedUp = false)
+            } returns HotWalletImportError.LimitReached.left()
+
+            val model = createModel(this, holderOf(backupInfo))
+            advanceUntilIdle()
+
+            // Act
+            (model.uiState.value as RestoreCloudBackupUM.EnterPassword).onPasswordChange(PASSWORD)
+            (model.uiState.value as RestoreCloudBackupUM.EnterPassword).onRestoreClick()
+            advanceUntilIdle()
+
+            // Assert
+            val dialog = slot<DialogMessage>()
+            verify(exactly = 1) { uiMessageSender.send(capture(dialog)) }
+            assertThat(dialog.captured.message).isEqualTo(Dialogs.hotWalletsLimitReachedDialog().message)
+            verify(exactly = 1) {
+                analyticsEventHandler.send(
+                    NoticeMobileWalletLimit(
+                        type = NoticeMobileWalletLimit.Type.Import,
+                        limit = NoticeMobileWalletLimit.Limit.MobileWallets,
+                    ),
+                )
+            }
             assertThat(model.uiState.value).isInstanceOf(RestoreCloudBackupUM.EnterPassword::class.java)
             verify(exactly = 0) { callbacks.onWalletImported(any()) }
             coVerify(exactly = 0) { setCloudBackupStateUseCase(any(), any()) }
