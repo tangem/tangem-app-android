@@ -14,6 +14,7 @@ import io.mockk.Runs
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -86,7 +87,9 @@ internal class DefaultMarketingUidBindingRepositoryTest {
                 body = BindMarketingUidWalletsBody(walletIds = listOf(WALLET_ID, otherId, shortId)),
             )
         }
-        coVerify(exactly = 0) { walletServerBinder.awaitBound(any()) }
+        listOf(WALLET_ID, otherId, shortId).forEach { id ->
+            coVerify(exactly = 1) { walletServerBinder.awaitBound(UserWalletId(id)) }
+        }
     }
 
     @Test
@@ -113,7 +116,7 @@ internal class DefaultMarketingUidBindingRepositoryTest {
     }
 
     @Test
-    fun `GIVEN list not loaded WHEN it loads with a wallet THEN sent without asking the server`() = runTest {
+    fun `GIVEN list not loaded WHEN it loads with a wallet THEN sent after asking the server`() = runTest {
         // Arrange
         userWallets.value = null
         launch { repository.bind(UID) }
@@ -124,10 +127,10 @@ internal class DefaultMarketingUidBindingRepositoryTest {
         runCurrent()
 
         // Assert
-        coVerify(exactly = 1) {
+        coVerifyOrder {
+            walletServerBinder.awaitBound(UserWalletId(WALLET_ID))
             tangemTechApi.bindMarketingUidWallets(UID, BindMarketingUidWalletsBody(walletIds = listOf(WALLET_ID)))
         }
-        coVerify(exactly = 0) { walletServerBinder.awaitBound(any()) }
     }
 
     @Test
