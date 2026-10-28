@@ -20,9 +20,9 @@ dependencies {
     api(projects.domain.moneyAccount)
     api(projects.domain.models)
     api(projects.domain.networks)
-    api(projects.domain.nft)
+    api(projects.domain.nft) // AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED
     api(projects.domain.referral)
-    api(projects.domain.staking)
+    api(projects.domain.staking) // AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED
     api(projects.domain.tokens)
     api(projects.domain.tokens.models)
     api(projects.domain.visa)

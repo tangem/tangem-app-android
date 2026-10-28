@@ -95,7 +95,7 @@ class CryptoCurrencyBalanceFetcher(
         val FETCHING_SOURCES = setOf(
             FetchingSource.NETWORK,
             FetchingSource.QUOTE,
-            FetchingSource.STAKING,
+            FetchingSource.CONTRIBUTIONS,
         )
     }
 }
