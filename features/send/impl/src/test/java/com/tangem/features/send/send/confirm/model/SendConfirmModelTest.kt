@@ -426,8 +426,11 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
             every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
             coEvery { sendTransactionUseCase(any(), any(), any()) } returns REGULAR_TX_HASH.right()
-            stubSentTransaction(amount = model.sentAmount)
-            createSendConfirmModel(this, intentConfirmParams(normalFeeState(), intent = unchangedIntent()))
+            stubBuiltTransaction(amount = model.builtAmount, destination = model.builtDestination)
+            createSendConfirmModel(
+                this,
+                intentConfirmParams(normalFeeState(), intent = unchangedIntent().copy(amount = model.intentAmount)),
+            )
             advanceUntilIdle()
 
             // Act
@@ -560,10 +563,10 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             ).copy(intent = intent),
         )
 
-        private fun stubSentTransaction(amount: BigDecimal) {
+        private fun stubBuiltTransaction(amount: BigDecimal, destination: String) {
             val transaction = mockk<TransactionData.Uncompiled>(relaxed = true) {
                 every { this@mockk.amount } returns Amount(currencySymbol = "USDT", value = amount, decimals = 6)
-                every { destinationAddress } returns DESTINATION_ADDRESS
+                every { destinationAddress } returns destination
             }
             coEvery {
                 createTransferTransactionUseCase(any(), any<Fee>(), any(), any(), any(), any(), any())
@@ -571,11 +574,14 @@ internal class SendConfirmModelTest : SendModelTestBase() {
         }
 
         private fun provideModifiedModels() = listOf(
-            IntentModifiedModel(description = "sent as asked", sentAmount = BigDecimal.ONE, expectedModified = "No"),
+            IntentModifiedModel(description = "sent as asked", intentAmount = "1", expectedModified = "No"),
+            IntentModifiedModel(description = "amount changed", intentAmount = "1.5", expectedModified = "Yes"),
             IntentModifiedModel(
-                description = "fee taken out of the amount",
-                sentAmount = BigDecimal("0.99"),
-                expectedModified = "Yes",
+                description = "sent as asked through the yield module",
+                intentAmount = "1",
+                builtAmount = BigDecimal.ZERO,
+                builtDestination = YIELD_MODULE_ADDRESS,
+                expectedModified = "No",
             ),
         )
 
@@ -1324,8 +1330,10 @@ internal class SendConfirmModelTest : SendModelTestBase() {
 
     data class IntentModifiedModel(
         val description: String,
-        val sentAmount: BigDecimal,
+        val intentAmount: String,
         val expectedModified: String,
+        val builtAmount: BigDecimal = BigDecimal.ONE,
+        val builtDestination: String = DESTINATION_ADDRESS,
     ) {
         override fun toString() = description
     }
@@ -1342,6 +1350,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
         val TRON_BALANCE: BigDecimal = BigDecimal("24.929183")
         val TRON_GASLESS_FEE: BigDecimal = BigDecimal("2.51")
         const val DESTINATION_ADDRESS = "destinationAddr"
+        const val YIELD_MODULE_ADDRESS = "yieldModuleAddr"
         const val INTENT_ID = "intent-1"
         const val REGULAR_TX_HASH = "0xregular"
         const val GASLESS_TX_HASH = "0xgasless"
