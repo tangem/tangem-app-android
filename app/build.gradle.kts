@@ -448,7 +448,6 @@ dependencies {
 
     /** Firebase libraries */
     implementation(platform(deps.firebase.bom))
-    implementation(deps.firebase.analytics)
     implementation(deps.firebase.crashlytics)
     runtimeOnly(deps.firebase.crashlytics.ndk)
     implementation(deps.firebase.messaging)
