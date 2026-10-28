@@ -967,7 +967,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         @Test
         fun `GIVEN the position is gone WHEN place clicked again THEN the position is not read again`() = runTest {
             // Arrange
-            coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
+            coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } returns createSellQuote().right()
             val amountModel = createAmountModel(testScope = this, params = SELL_PARAMS)
             advanceUntilIdle()
             amountModel.onResume()
