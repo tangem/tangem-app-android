@@ -767,7 +767,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN the quote request hangs WHEN ten seconds pass after the tap THEN the tap is released`() =
             runOrderTest {
                 // Arrange
-                coEvery { getQuoteUseCase(request = any()) } coAnswers { awaitCancellation() }
+                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } coAnswers { awaitCancellation() }
                 val model = createOrderModel(testScope = this)
                 advanceUntilIdle()
                 model.onResume()
@@ -793,7 +793,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a tap released by the timeout WHEN a new amount is requested THEN place is tappable again`() =
             runOrderTest {
                 // Arrange
-                coEvery { getQuoteUseCase(request = any()) } coAnswers { awaitCancellation() }
+                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } coAnswers { awaitCancellation() }
                 val model = createOrderModel(testScope = this)
                 advanceUntilIdle()
                 model.onResume()
@@ -822,7 +822,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                     if (positionReads++ == 1) delay(timeMillis = POSITION_READ_MILLIS)
                     createPosition().right()
                 }
-                coEvery { getQuoteUseCase(request = any()) } coAnswers {
+                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } coAnswers {
                     delay(timeMillis = QUOTE_MILLIS)
                     createSellQuote(shares = BigDecimal("51.234567")).right()
                 }
@@ -841,7 +841,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
 
                 // Assert
                 assertThat(isPendingAfterRestart).isTrue()
-                coVerify(atLeast = 2) { getQuoteUseCase(request = any()) }
+                coVerify(atLeast = 2) { getQuoteUseCase(userWalletId = any(), request = any()) }
                 coVerify(exactly = 1) { signOrderInteractor(request = any()) }
             }
 
@@ -863,7 +863,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                     }
                 }
             }
-            coEvery { getQuoteUseCase(request = any()) } coAnswers {
+            coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } coAnswers {
                 delay(timeMillis = QUOTE_MILLIS)
                 createSellQuote(shares = BigDecimal("51.234567")).right()
             }
@@ -979,7 +979,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a sell WHEN the whole position is prefilled THEN place is tappable while its first quote loads`() =
             runOrderTest {
                 // Arrange
-                coEvery { getQuoteUseCase(request = any()) } coAnswers {
+                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } coAnswers {
                     delay(timeMillis = QUOTE_MILLIS)
                     createSellQuote().right()
                 }
@@ -1014,7 +1014,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN an amount paused within the debounce WHEN the screen resumes THEN the reload is not tappable`() =
             runOrderTest {
                 // Arrange
-                coEvery { getQuoteUseCase(request = any()) } coAnswers {
+                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } coAnswers {
                     delay(timeMillis = QUOTE_MILLIS)
                     createQuote().right()
                 }
@@ -1032,7 +1032,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 // Assert
                 assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading)
                 assertThat(model.uiState.value.isPrimaryButtonTappable).isFalse()
-                coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+                coVerify(exactly = 1) { getQuoteUseCase(userWalletId = any(), request = any()) }
             }
 
         @Test
@@ -1105,7 +1105,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         quoteMillis: Long = QUOTE_MILLIS,
         result: Either<PredictionOrderQuoteError, PredictionOrderQuote> = createQuote().right(),
     ): PlacePredictionOrderModel {
-        coEvery { getQuoteUseCase(request = any()) } coAnswers {
+        coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } coAnswers {
             delay(timeMillis = quoteMillis)
             result
         }
