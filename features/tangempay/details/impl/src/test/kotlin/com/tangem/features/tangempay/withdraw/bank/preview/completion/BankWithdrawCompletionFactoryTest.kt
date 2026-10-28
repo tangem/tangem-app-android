@@ -14,6 +14,7 @@ import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 
 internal class BankWithdrawCompletionFactoryTest {
 
@@ -25,6 +26,7 @@ internal class BankWithdrawCompletionFactoryTest {
     private val factory = BankWithdrawCompletionFactory(orderCompletionFactory, routeCompletionFactory)
     private val onOrderCreated: (BankOfframpOrderResult) -> Unit = {}
     private val onDestinationChanged: (OfframpDestination) -> Unit = {}
+    private val onNetworkFeeChanged: (BigDecimal) -> Unit = {}
 
     @BeforeEach
     fun resetMocks() {
@@ -42,18 +44,19 @@ internal class BankWithdrawCompletionFactoryTest {
             scope = backgroundScope,
             onOrderCreated = onOrderCreated,
             onDestinationChanged = onDestinationChanged,
+            onNetworkFeeChanged = onNetworkFeeChanged,
         )
 
         // Assert
         assertThat(actual).isSameInstanceAs(orderCompletion)
-        verify(exactly = 0) { routeCompletionFactory.create(any(), any(), any()) }
+        verify(exactly = 0) { routeCompletionFactory.create(any(), any(), any(), any()) }
     }
 
     @Test
     fun `GIVEN money account WHEN create THEN route completion of its product instance`() = runTest {
         // Arrange
         every {
-            routeCompletionFactory.create(userWalletId, PRODUCT_INSTANCE_ID, onDestinationChanged)
+            routeCompletionFactory.create(userWalletId, PRODUCT_INSTANCE_ID, onDestinationChanged, onNetworkFeeChanged)
         } returns routeCompletion
 
         // Act
@@ -65,6 +68,7 @@ internal class BankWithdrawCompletionFactoryTest {
             scope = backgroundScope,
             onOrderCreated = onOrderCreated,
             onDestinationChanged = onDestinationChanged,
+            onNetworkFeeChanged = onNetworkFeeChanged,
         )
 
         // Assert
@@ -81,6 +85,7 @@ internal class BankWithdrawCompletionFactoryTest {
             scope = backgroundScope,
             onOrderCreated = onOrderCreated,
             onDestinationChanged = onDestinationChanged,
+            onNetworkFeeChanged = onNetworkFeeChanged,
         )
 
         // Act
@@ -88,7 +93,7 @@ internal class BankWithdrawCompletionFactoryTest {
 
         // Assert
         assertThat(states).containsExactly(CompletionState.Failed(PreviewFailure.UnsupportedConfiguration))
-        verify(exactly = 0) { routeCompletionFactory.create(any(), any(), any()) }
+        verify(exactly = 0) { routeCompletionFactory.create(any(), any(), any(), any()) }
     }
 
     private companion object {

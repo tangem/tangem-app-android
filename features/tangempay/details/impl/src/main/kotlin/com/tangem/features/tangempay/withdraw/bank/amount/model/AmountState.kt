@@ -41,7 +41,8 @@ internal data class AmountState(
             ?: options.sources.first(BankWithdrawSource::isAvailable)
         val displayValue = displayValue(draft = draft, currency = options.currency)
         val amount = displayValue.parseBigDecimalOrNull()
-        val fees = destination.fee.amount + (networkFee as? NetworkFeeState.Loaded)?.fee.orZero()
+        val networkFee = (networkFee as? NetworkFeeState.Loaded)?.fee.orZero()
+        val fees = destination.fee.amount + networkFee
         return AmountSelection(
             currency = options.currency,
             minAmount = options.minAmount,
@@ -55,6 +56,7 @@ internal data class AmountState(
             destinations = options.destinations,
             source = source,
             destination = destination,
+            networkFee = networkFee,
             displayValue = displayValue,
             amount = amount,
             validation = BankWithdrawAmountValidator.validate(
@@ -85,6 +87,7 @@ internal data class AmountSelection(
     val destinations: ImmutableList<OfframpDestination>,
     val source: BankWithdrawSource,
     val destination: OfframpDestination,
+    val networkFee: BigDecimal,
     val displayValue: String,
     val amount: BigDecimal?,
     val validation: BankWithdrawAmountValidator.Result,
@@ -95,6 +98,12 @@ internal data class AmountSelection(
 
     fun toResult(): BankWithdrawAmountResult? {
         val amount = amount ?: return null
-        return if (isContinueEnabled) BankWithdrawAmountResult(amount, source, destination) else null
+        if (!isContinueEnabled) return null
+        return BankWithdrawAmountResult(
+            amount = amount,
+            source = source,
+            destination = destination,
+            networkFee = networkFee,
+        )
     }
 }

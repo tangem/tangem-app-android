@@ -48,7 +48,6 @@ import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusScreen
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -131,11 +130,7 @@ private fun SummaryScreen(state: TangemPayBankWithdrawPreviewUM.Summary, modifie
         },
         overlay = {
             SendFooter(
-                sendingSummary = state.transfer?.sendingSummary,
-                isSending = state.isSending,
-                isSendEnabled = state.isSendEnabled,
-                isColdWallet = state.isColdWallet,
-                onSendClick = state.onSendClick,
+                state = state,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .onSizeChanged { size -> footerHeight = with(density) { size.height.toDp() } },
@@ -250,18 +245,11 @@ private fun DetailCard(card: TangemPayBankWithdrawPreviewUM.RecipientCardUM) {
 }
 
 @Composable
-private fun SendFooter(
-    sendingSummary: TextReference?,
-    isSending: Boolean,
-    isSendEnabled: Boolean,
-    isColdWallet: Boolean,
-    onSendClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun SendFooter(state: TangemPayBankWithdrawPreviewUM.Summary, modifier: Modifier = Modifier) {
     TangemFooter(
         modifier = modifier,
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-        extraTop = sendingSummary?.let { summary ->
+        extraTop = state.transfer?.sendingSummary?.let { summary ->
             {
                 Text(
                     modifier = Modifier.fillMaxWidth(),
@@ -276,11 +264,11 @@ private fun SendFooter(
         TangemButton(
             modifier = Modifier.fillMaxWidth(),
             size = TangemButton.Size.X12,
-            text = resourceReference(R.string.common_send),
-            iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24).takeIf { isColdWallet },
-            isLoading = isSending,
-            isEnabled = isSendEnabled,
-            onClick = onSendClick,
+            text = state.sendText,
+            iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24).takeIf { state.isColdWallet },
+            isLoading = state.isSending,
+            isEnabled = state.isSendEnabled,
+            onClick = state.onSendClick,
         )
     }
 }
@@ -303,6 +291,7 @@ private class PreviewProvider : PreviewParameterProvider<TangemPayBankWithdrawPr
         TangemPayBankWithdrawPreviewData.summaryBusiness,
         TangemPayBankWithdrawPreviewData.summarySavedRecipient,
         TangemPayBankWithdrawPreviewData.summaryHotWallet,
+        TangemPayBankWithdrawPreviewData.summaryMoneyAccount,
         TangemPayBankWithdrawPreviewData.sending,
         TangemPayBankWithdrawPreviewData.failedGeneral,
         TangemPayBankWithdrawPreviewData.failedUnavailable,

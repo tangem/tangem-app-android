@@ -26,6 +26,7 @@ internal class RouteBankWithdrawCompletion @AssistedInject constructor(
     @Assisted private val userWalletId: UserWalletId,
     @Assisted private val productInstanceId: String,
     @Assisted private val onDestinationChanged: (OfframpDestination) -> Unit,
+    @Assisted private val onNetworkFeeChanged: (BigDecimal) -> Unit,
     private val bankOfframpOrderRepository: BankOfframpOrderRepository,
     private val moneyAccountTransfer: MoneyAccountTransfer,
 ) : BankWithdrawCompletion {
@@ -50,7 +51,13 @@ internal class RouteBankWithdrawCompletion @AssistedInject constructor(
             onState(CompletionState.Idle)
             return
         }
-        transfer(route = route, amount = amount.truncatedToCents() + route.fee.amount, token = token, onState = onState)
+        transfer(
+            route = route,
+            amount = amount.truncatedToCents() + route.fee.amount,
+            maxNetworkFee = draft.networkFee,
+            token = token,
+            onState = onState,
+        )
     }
 
     private suspend fun createRoute(
@@ -94,6 +101,7 @@ internal class RouteBankWithdrawCompletion @AssistedInject constructor(
     private suspend fun transfer(
         route: BankOfframpRoute,
         amount: BigDecimal,
+        maxNetworkFee: BigDecimal,
         token: CryptoCurrency.Token,
         onState: (CompletionState) -> Unit,
     ) {
@@ -102,6 +110,7 @@ internal class RouteBankWithdrawCompletion @AssistedInject constructor(
             token = token,
             amount = amount,
             destination = route.depositAddress,
+            maxNetworkFee = maxNetworkFee,
         ).fold(
             ifLeft = { error -> onTransferFailed(error = error, onState = onState) },
             ifRight = {
@@ -118,6 +127,10 @@ internal class RouteBankWithdrawCompletion @AssistedInject constructor(
             MoneyAccountTransferError.OutcomeUnknown -> {
                 isTransferOutcomeUnknown = true
                 onState(CompletionState.Failed(PreviewFailure.TransferOutcomeUnknown))
+            }
+            is MoneyAccountTransferError.NetworkFeeIncreased -> {
+                onNetworkFeeChanged(error.networkFee)
+                onState(CompletionState.Idle)
             }
         }
     }
@@ -142,6 +155,7 @@ internal class RouteBankWithdrawCompletion @AssistedInject constructor(
             userWalletId: UserWalletId,
             productInstanceId: String,
             onDestinationChanged: (OfframpDestination) -> Unit,
+            onNetworkFeeChanged: (BigDecimal) -> Unit,
         ): RouteBankWithdrawCompletion
     }
 }
