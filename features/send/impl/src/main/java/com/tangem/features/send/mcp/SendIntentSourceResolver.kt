@@ -33,8 +33,9 @@ internal class SendIntentSourceResolver @Inject constructor(
         val source = heldTokens.firstOrNull { (_, status) -> intent.isSentFrom(status) }
         return when {
             source != null -> SendIntentSource.Found(accountId = source.first.accountId, status = source.second)
-            heldTokens.any { (_, status) -> status.value.networkAddress != null } -> SendIntentSource.OtherSender
-            else -> SendIntentSource.TokenMissing
+            heldTokens.isEmpty() -> SendIntentSource.TokenMissing
+            heldTokens.any { (_, status) -> status.value.networkAddress == null } -> SendIntentSource.Unresolved
+            else -> SendIntentSource.OtherSender
         }
     }
 
