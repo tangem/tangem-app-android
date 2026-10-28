@@ -71,6 +71,7 @@ class GetFeeForTokenUseCase(
                         transactionData = transactionData.unwrapYieldModuleUpgrade(),
                         nativeCurrencyStatus = feeCurrencies.nativeCurrencyStatus,
                         tokenCurrencyStatus = tokenCurrencyStatus,
+                        nativeTransactionData = transactionData,
                         sentAmount = sentAmount,
                     ).bind()
                 },
