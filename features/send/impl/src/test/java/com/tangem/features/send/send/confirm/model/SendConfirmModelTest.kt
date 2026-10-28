@@ -17,6 +17,7 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.transaction.error.SendIntentError
@@ -445,14 +446,16 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             )
         }
 
-        @Test
-        fun `GIVEN the service refuses the hash WHEN send succeeds THEN report failed carries its code`() = runTest {
+        @ParameterizedTest
+        @MethodSource("provideReportFailedModels")
+        fun `GIVEN the hash is not taken WHEN send succeeds THEN only report failed is sent with the error code`(
+            model: ReportFailedModel,
+        ) = runTest {
             // Arrange
             val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
             every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
             coEvery { sendTransactionUseCase(any(), any(), any()) } returns REGULAR_TX_HASH.right()
-            coEvery { reportSendIntentHashUseCase(any(), any()) } returns
-                SendIntentError.AlreadyCompleted(INTENT_ID).left()
+            coEvery { reportSendIntentHashUseCase(any(), any()) } returns model.error.left()
             createSendConfirmModel(this, intentConfirmParams(normalFeeState(), intent = unchangedIntent()))
             advanceUntilIdle()
 
@@ -461,13 +464,44 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             advanceUntilIdle()
 
             // Assert
-            assertThat(sentIntentEvents()).containsExactly(
-                "[MCP Intent] Intent Report Failed" to mapOf(
-                    "Intent Type" to "send",
-                    "Error Code" to "INTENT_ALREADY_COMPLETED",
-                    "Intent Id" to INTENT_ID,
-                ),
-            )
+            assertThat(sentIntentEvents()).containsExactly(reportFailed(model.expectedErrorCode))
+        }
+
+        @Test
+        fun `GIVEN send returns no hash WHEN send succeeds THEN report failed is sent and nothing is reported`() =
+            runTest {
+                // Arrange
+                val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+                every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
+                coEvery { sendTransactionUseCase(any(), any(), any()) } returns "".right()
+                createSendConfirmModel(this, intentConfirmParams(normalFeeState(), intent = unchangedIntent()))
+                advanceUntilIdle()
+
+                // Act
+                resultFlow.tryEmit(true)
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(sentIntentEvents()).containsExactly(reportFailed(errorCode = "no_hash"))
+                coVerify(exactly = 0) { reportSendIntentHashUseCase(any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN send opened for an intent WHEN send fails THEN no intent analytics is sent`() = runTest {
+            // Arrange
+            val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+            every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
+            coEvery { sendTransactionUseCase(any(), any(), any()) } returns
+                mockk<SendTransactionError>(relaxed = true).left()
+            createSendConfirmModel(this, intentConfirmParams(normalFeeState(), intent = unchangedIntent()))
+            advanceUntilIdle()
+
+            // Act
+            resultFlow.tryEmit(true)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sentIntentEvents()).isEmpty()
         }
 
         @Test
@@ -492,6 +526,28 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             verify(atLeast = 0) { analyticsEventHandler.send(capture(events)) }
             return events.filter { it.category == "MCP Intent" }.map { it.id to it.params }
         }
+
+        private fun reportFailed(errorCode: String) = "[MCP Intent] Intent Report Failed" to mapOf(
+            "Intent Type" to "send",
+            "Error Code" to errorCode,
+            "Intent Id" to INTENT_ID,
+        )
+
+        private fun provideReportFailedModels() = listOf(
+            ReportFailedModel(SendIntentError.NotFound(INTENT_ID), "INTENT_NOT_FOUND"),
+            ReportFailedModel(SendIntentError.AlreadyCompleted(INTENT_ID), "INTENT_ALREADY_COMPLETED"),
+            ReportFailedModel(
+                ApiResponseError.HttpException(
+                    code = ApiResponseError.HttpException.Code.BAD_GATEWAY,
+                    message = null,
+                    errorBody = null,
+                ),
+                "502",
+            ),
+            ReportFailedModel(ApiResponseError.NetworkException(), "network"),
+            ReportFailedModel(ApiResponseError.TimeoutException(), "timeout"),
+            ReportFailedModel(IllegalStateException("boom"), "unknown"),
+        )
 
         private fun intentConfirmParams(state: SendUM, intent: SendConfirmComponent.Intent?) = MutableParamsContainer(
             defaultSendConfirmParams(
@@ -1258,6 +1314,10 @@ internal class SendConfirmModelTest : SendModelTestBase() {
     data class DispatchModel(val isGaslessFee: Boolean)
 
     data class ReportIntentModel(val isGaslessFee: Boolean, val expectedTxHash: String)
+
+    data class ReportFailedModel(val error: Throwable, val expectedErrorCode: String) {
+        override fun toString() = expectedErrorCode
+    }
 
     data class IntentModifiedModel(
         val description: String,
