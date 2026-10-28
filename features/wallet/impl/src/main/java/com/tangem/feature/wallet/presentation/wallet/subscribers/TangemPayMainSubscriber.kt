@@ -1,7 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.moneyaccount.usecase.RestoreMoneyAccountOrderUseCase
+import com.tangem.domain.moneyaccount.usecase.PollTangemPayAccountStatusesUseCase
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.pay.usecase.RestoreActiveCardOrdersUseCase
@@ -19,7 +19,7 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
     @Assisted private val userWallet: UserWallet,
     private val tangemPayWithdrawRepository: TangemPayWithdrawRepository,
     private val restoreActiveCardOrdersUseCase: RestoreActiveCardOrdersUseCase,
-    private val restoreMoneyAccountOrderUseCase: RestoreMoneyAccountOrderUseCase,
+    private val pollTangemPayAccountStatusesUseCase: PollTangemPayAccountStatusesUseCase,
     private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val analytics: WalletTangemPayAnalyticsEventSender,
@@ -35,7 +35,7 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
         }
         if (moneyAccountFeatureToggles.isMoneyAccountsEnabled) {
             coroutineScope.launch {
-                restoreMoneyAccountOrderUseCase(userWallet.walletId)
+                pollTangemPayAccountStatusesUseCase(userWallet.walletId)
             }
         }
         subscribeToStatus(coroutineScope)
