@@ -40,6 +40,7 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
         verify(exactly = 1) {
             mcpRequestService.request(McpRequest.Intent(id = "my_intent_id123", source = exchangeSource))
         }
+        verify(exactly = 1) { analyticsEventHandler.send(intentReceived(exchangeSource)) }
     }
 
     @ParameterizedTest
@@ -55,6 +56,7 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
         verify(exactly = 1) {
             mcpRequestService.request(McpRequest.Intent(id = "my_intent_id123", source = exchangeSource))
         }
+        verify(exactly = 1) { analyticsEventHandler.send(intentReceived(exchangeSource)) }
     }
 
     @Test
@@ -66,26 +68,29 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
         verify(exactly = 1) {
             mcpRequestService.request(McpRequest.Intent(id = "my_intent_id123", source = exchangeSource))
         }
+        verify(exactly = 1) { analyticsEventHandler.send(intentReceived(exchangeSource)) }
     }
 
     @ParameterizedTest
     @ValueSource(strings = ["id", "source"])
-    fun `GIVEN missing param WHEN handler created THEN no request is sent`(missingKey: String) {
+    fun `GIVEN missing param WHEN handler created THEN nothing is sent`(missingKey: String) {
         // Act
         createHandler(queryParams = validParams - missingKey)
 
         // Assert
         verify(exactly = 0) { mcpRequestService.request(any()) }
+        verify(exactly = 0) { analyticsEventHandler.send(any()) }
     }
 
     @ParameterizedTest
     @ValueSource(strings = ["id", "source"])
-    fun `GIVEN blank param WHEN handler created THEN no request is sent`(blankKey: String) {
+    fun `GIVEN blank param WHEN handler created THEN nothing is sent`(blankKey: String) {
         // Act
         createHandler(queryParams = validParams + (blankKey to " "))
 
         // Assert
         verify(exactly = 0) { mcpRequestService.request(any()) }
+        verify(exactly = 0) { analyticsEventHandler.send(any()) }
     }
 
     @Test
@@ -100,11 +105,12 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
         verify(exactly = 1) {
             mcpRequestService.request(McpRequest.Intent(id = "my_intent_id123", source = sendSource))
         }
+        verify(exactly = 1) { analyticsEventHandler.send(intentReceived(sendSource)) }
     }
 
     @ParameterizedTest
     @ValueSource(strings = ["receive", "SEND", "", " "])
-    fun `GIVEN transaction link of an unsupported or blank type WHEN handler created THEN no request is sent`(
+    fun `GIVEN transaction link of an unsupported or blank type WHEN handler created THEN nothing is sent`(
         type: String,
     ) {
         // Act
@@ -112,43 +118,48 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
 
         // Assert
         verify(exactly = 0) { mcpRequestService.request(any()) }
+        verify(exactly = 0) { analyticsEventHandler.send(any()) }
     }
 
     @Test
-    fun `GIVEN transaction link with no type param WHEN handler created THEN no request is sent`() {
+    fun `GIVEN transaction link with no type param WHEN handler created THEN nothing is sent`() {
         // Act
         createHandler(queryParams = mapOf("id" to "my_intent_id123", "source" to "transaction"))
 
         // Assert
         verify(exactly = 0) { mcpRequestService.request(any()) }
+        verify(exactly = 0) { analyticsEventHandler.send(any()) }
     }
 
     @ParameterizedTest
     @ValueSource(strings = ["onramp", "staking"])
-    fun `GIVEN intent of an unknown service WHEN handler created THEN no request is sent`(source: String) {
+    fun `GIVEN intent of an unknown service WHEN handler created THEN nothing is sent`(source: String) {
         // Act
         createHandler(queryParams = mapOf("id" to "my_intent_id123", "source" to source, "type" to "send"))
 
         // Assert
         verify(exactly = 0) { mcpRequestService.request(any()) }
+        verify(exactly = 0) { analyticsEventHandler.send(any()) }
     }
 
     @Test
-    fun `GIVEN express intent of an unsupported operation WHEN handler created THEN no request is sent`() {
+    fun `GIVEN express intent of an unsupported operation WHEN handler created THEN nothing is sent`() {
         // Act
         createHandler(queryParams = validParams + ("type" to "onramp"))
 
         // Assert
         verify(exactly = 0) { mcpRequestService.request(any()) }
+        verify(exactly = 0) { analyticsEventHandler.send(any()) }
     }
 
     @Test
-    fun `GIVEN express intent of an unknown operation WHEN handler created THEN no request is sent`() {
+    fun `GIVEN express intent of an unknown operation WHEN handler created THEN nothing is sent`() {
         // Act
         createHandler(queryParams = validParams + ("type" to "refund"))
 
         // Assert
         verify(exactly = 0) { mcpRequestService.request(any()) }
+        verify(exactly = 0) { analyticsEventHandler.send(any()) }
     }
 
     @ParameterizedTest
@@ -173,24 +184,10 @@ internal class DefaultMcpIntentDeepLinkHandlerTest {
         )
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = ["id", "source"])
-    fun `GIVEN link without a required param WHEN handler created THEN no analytics is sent`(missingKey: String) {
-        // Act
-        createHandler(queryParams = validParams - missingKey)
 
-        // Assert
-        verify(exactly = 0) { analyticsEventHandler.send(any()) }
-    }
 
-    @Test
-    fun `GIVEN intent of an unsupported operation WHEN handler created THEN no analytics is sent`() {
-        // Act
-        createHandler(queryParams = validParams + ("type" to "onramp"))
-
-        // Assert
-        verify(exactly = 0) { analyticsEventHandler.send(any()) }
-    }
+    private fun intentReceived(source: McpRequest.Intent.Source) =
+        McpIntentAnalyticsEvent.IntentReceived(intentId = "my_intent_id123", source = source)
 
     private fun createHandler(queryParams: Map<String, String>) = DefaultMcpIntentDeepLinkHandler(
         queryParams = queryParams,
