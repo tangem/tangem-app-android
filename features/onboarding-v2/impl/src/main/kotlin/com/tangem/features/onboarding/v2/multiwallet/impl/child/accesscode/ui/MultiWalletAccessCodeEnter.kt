@@ -21,7 +21,6 @@ import com.tangem.core.ui.components.OutlineTextField
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.security.DisableAutofillEffect
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.accesscode.ui.state.MultiWalletAccessCodeUM
 import kotlinx.coroutines.delay
@@ -32,8 +31,6 @@ internal fun MultiWalletAccessCodeEnter(
     reEnterAccessCodeState: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    DisableAutofillEffect()
-
     Column(
         modifier = modifier
             .padding(horizontal = 16.dp),
@@ -62,6 +59,7 @@ internal fun MultiWalletAccessCodeEnter(
         val focusRequester = remember { FocusRequester() }
 
         OutlineTextField(
+            isExcludedFromAutofill = true,
             modifier = Modifier
                 .focusRequester(focusRequester)
                 .fillMaxWidth(),

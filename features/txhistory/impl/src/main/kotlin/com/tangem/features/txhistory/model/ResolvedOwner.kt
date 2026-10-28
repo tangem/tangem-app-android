@@ -15,6 +15,7 @@ import com.tangem.domain.txhistory.model.ExpressTx
 internal sealed interface ResolvedOwner {
     data class OwnAccount(val account: Account.CryptoPortfolio) : ResolvedOwner
     data class OwnPaymentAccount(val account: Account.Payment) : ResolvedOwner
+    data class OwnMoneyAccount(val account: Account.Money) : ResolvedOwner
     data class OwnWallet(val userWalletId: UserWalletId, val walletInfo: WalletInfo) : ResolvedOwner
 
     /** A counterparty that is none of the user's own portfolios, so it always has a plain [address]. */
@@ -64,6 +65,7 @@ internal fun TxHistoryLookupContext.resolveOwner(address: String, networkRawId: 
         }
         account is Account.CryptoPortfolio -> ResolvedOwner.OwnAccount(account)
         account is Account.Payment -> ResolvedOwner.OwnPaymentAccount(account)
+        account is Account.Money -> ResolvedOwner.OwnMoneyAccount(account)
         else -> ResolvedOwner.External(address)
     }
 }
@@ -135,6 +137,8 @@ private fun isSameOwnPortfolio(from: ResolvedOwner?, to: ResolvedOwner?): Boolea
     from is ResolvedOwner.OwnAccount && to is ResolvedOwner.OwnAccount ->
         from.account.accountId == to.account.accountId
     from is ResolvedOwner.OwnPaymentAccount && to is ResolvedOwner.OwnPaymentAccount ->
+        from.account.accountId == to.account.accountId
+    from is ResolvedOwner.OwnMoneyAccount && to is ResolvedOwner.OwnMoneyAccount ->
         from.account.accountId == to.account.accountId
     from is ResolvedOwner.OwnWallet && to is ResolvedOwner.OwnWallet ->
         from.userWalletId == to.userWalletId

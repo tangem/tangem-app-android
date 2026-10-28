@@ -1,6 +1,5 @@
 package com.tangem.tests.tangempay
 
-import androidx.test.platform.app.InstrumentationRegistry
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
@@ -18,9 +17,6 @@ import io.qameta.allure.kotlin.junit4.DisplayName
 import org.joda.time.DateTimeZone
 import org.joda.time.LocalDate
 import org.junit.Test
-import java.time.Month
-import java.time.format.TextStyle
-import java.util.Locale
 
 @HiltAndroidTest
 class TangemPayCashbackTest : BaseTestCase() {
@@ -68,7 +64,7 @@ class TangemPayCashbackTest : BaseTestCase() {
         get() = LocalDate.now(DateTimeZone.UTC)
 
     private val currentMonth: String
-        get() = fullMonth(today)
+        get() = tangemPayCashbackFullMonth(today)
 
     private val payoutWindow: String
         get() {
@@ -97,7 +93,7 @@ class TangemPayCashbackTest : BaseTestCase() {
             }
             step("Open Tangem Pay") { openTangemPay() }
             step("Assert cashback widget with '$positiveAmount' is displayed") {
-                assertTangemPayCashbackWidget(widgetTitle(positiveAmount))
+                assertTangemPayCashbackWidget(tangemPayCashbackWidgetTitle(positiveAmount, today))
             }
             step("Open 'More' menu") { openTangemPayMoreActionsMenu() }
             step("Assert 'Cashback in $currentMonth' menu item is not displayed") {
@@ -122,7 +118,7 @@ class TangemPayCashbackTest : BaseTestCase() {
             }
             step("Open Tangem Pay") { openTangemPay() }
             step("Assert cashback widget with '$zeroAmount' is displayed") {
-                assertTangemPayCashbackWidget(widgetTitle(zeroAmount))
+                assertTangemPayCashbackWidget(tangemPayCashbackWidgetTitle(zeroAmount, today))
             }
         }
     }
@@ -143,7 +139,7 @@ class TangemPayCashbackTest : BaseTestCase() {
             }
             step("Open Tangem Pay") { openTangemPay() }
             step("Assert cashback widget with '$refundAmount' is displayed") {
-                assertTangemPayCashbackWidget(widgetTitle(refundAmount))
+                assertTangemPayCashbackWidget(tangemPayCashbackWidgetTitle(refundAmount, today))
             }
         }
     }
@@ -191,7 +187,7 @@ class TangemPayCashbackTest : BaseTestCase() {
                 setWireMockScenarioState(cashbackScenario, emptyState)
             }
             step("Open Tangem Pay") { openTangemPay() }
-            step("Open 'Cashback' screen") { openTangemPayCashback(widgetTitle(zeroAmount)) }
+            step("Open 'Cashback' screen") { openTangemPayCashback(tangemPayCashbackWidgetTitle(zeroAmount, today)) }
             step("Assert empty state header is displayed") {
                 assertTangemPayCashbackHeader(title = emptyTitle, subtitle = emptySubtitle)
             }
@@ -225,9 +221,14 @@ class TangemPayCashbackTest : BaseTestCase() {
                 setWireMockScenarioState(cashbackScenario, positiveState)
             }
             step("Open Tangem Pay") { openTangemPay() }
-            step("Open 'Cashback' screen") { openTangemPayCashback(widgetTitle(positiveAmount)) }
+            step("Open 'Cashback' screen") {
+                openTangemPayCashback(tangemPayCashbackWidgetTitle(positiveAmount, today))
+            }
             step("Assert earned header with the payout window is displayed") {
-                assertTangemPayCashbackHeader(title = earnedTitle(positiveAmount), subtitle = payoutWindow)
+                assertTangemPayCashbackHeader(
+                    title = tangemPayCashbackEarnedTitle(positiveAmount, today),
+                    subtitle = payoutWindow,
+                )
             }
             step("Assert info tiles are displayed") {
                 assertTangemPayCashbackInfoTiles(rateTitle, rateSubtitle, accrualsTitle)
@@ -235,8 +236,8 @@ class TangemPayCashbackTest : BaseTestCase() {
             step("Assert histogram with the earned months is displayed") {
                 // The mock skips two months ago, and the chart draws only the months the backend returns.
                 assertTangemPayCashbackHistogram(
-                    total = totalTitle(positiveTotal),
-                    months = listOf(-4, -3, -1, 0).map { shortMonth(today.plusMonths(it)) },
+                    total = tangemPayCashbackTotalTitle(positiveTotal),
+                    months = listOf(-4, -3, -1, 0).map { tangemPayCashbackShortMonth(today.plusMonths(it)) },
                     amounts = listOf(fourMonthsAgoAmount, threeMonthsAgoAmount, previousMonthAmount, positiveAmount),
                 )
             }
@@ -258,15 +259,18 @@ class TangemPayCashbackTest : BaseTestCase() {
                 setWireMockScenarioState(cashbackScenario, refundState)
             }
             step("Open Tangem Pay") { openTangemPay() }
-            step("Open 'Cashback' screen") { openTangemPayCashback(widgetTitle(refundAmount)) }
+            step("Open 'Cashback' screen") { openTangemPayCashback(tangemPayCashbackWidgetTitle(refundAmount, today)) }
             step("Assert earned header without the payout window is displayed") {
-                assertTangemPayCashbackHeader(title = earnedTitle(refundAmount), subtitle = null)
+                assertTangemPayCashbackHeader(
+                    title = tangemPayCashbackEarnedTitle(refundAmount, today),
+                    subtitle = null,
+                )
             }
             step("Assert refund banner is displayed") { assertTangemPayCashbackBanner(refundBanner) }
             step("Assert histogram with the refund is displayed") {
                 assertTangemPayCashbackHistogram(
-                    total = totalTitle(refundAmount),
-                    months = listOf(shortMonth(today)),
+                    total = tangemPayCashbackTotalTitle(refundAmount),
+                    months = listOf(tangemPayCashbackShortMonth(today)),
                     amounts = listOf(refundAmount),
                 )
             }
@@ -288,7 +292,9 @@ class TangemPayCashbackTest : BaseTestCase() {
                 setWireMockScenarioState(cashbackScenario, historyFailedState)
             }
             step("Open Tangem Pay") { openTangemPay() }
-            step("Open 'Cashback' screen") { openTangemPayCashback(widgetTitle(positiveAmount)) }
+            step("Open 'Cashback' screen") {
+                openTangemPayCashback(tangemPayCashbackWidgetTitle(positiveAmount, today))
+            }
             step("Assert failure message is displayed") {
                 flakySafely {
                     onTangemPayCashbackScreen {
@@ -303,7 +309,10 @@ class TangemPayCashbackTest : BaseTestCase() {
                 onTangemPayCashbackScreen { reloadButton.clickWithAssertion() }
             }
             step("Assert earned header is displayed") {
-                assertTangemPayCashbackHeader(title = earnedTitle(positiveAmount), subtitle = payoutWindow)
+                assertTangemPayCashbackHeader(
+                    title = tangemPayCashbackEarnedTitle(positiveAmount, today),
+                    subtitle = payoutWindow,
+                )
             }
         }
     }
@@ -363,14 +372,17 @@ class TangemPayCashbackTest : BaseTestCase() {
             val depositBanner = getResourceString(
                 CoreResR.string.tangempay_cashback_deposit_banner,
                 previousPayoutAmount,
-                fullMonth(payoutEndDate.minusMonths(1)),
+                tangemPayCashbackFullMonth(payoutEndDate.minusMonths(1)),
                 DateTimeFormatters.formatDate(payoutEndDate.toDateTimeAtStartOfDay(), DateTimeFormatters.dateDMMM),
             )
 
             step("Open Tangem Pay") { openTangemPay() }
-            step("Open 'Cashback' screen") { openTangemPayCashback(widgetTitle(payoutAmount)) }
+            step("Open 'Cashback' screen") { openTangemPayCashback(tangemPayCashbackWidgetTitle(payoutAmount, today)) }
             step("Assert earned header with the payout window is displayed") {
-                assertTangemPayCashbackHeader(title = earnedTitle(payoutAmount), subtitle = payoutWindow)
+                assertTangemPayCashbackHeader(
+                    title = tangemPayCashbackEarnedTitle(payoutAmount, today),
+                    subtitle = payoutWindow,
+                )
             }
             step("Assert payout banner is displayed") { assertTangemPayCashbackBanner(depositBanner) }
         }
@@ -408,24 +420,6 @@ class TangemPayCashbackTest : BaseTestCase() {
             }
         }
     }
-
-    private fun widgetTitle(amount: String): String =
-        getResourceString(CoreResR.string.tangempay_cashback_widget_title, amount, currentMonth)
-
-    private fun earnedTitle(amount: String): String {
-        val monthIn = InstrumentationRegistry.getInstrumentation().targetContext.resources
-            .getStringArray(CoreResR.array.common_month_in)[today.monthOfYear - 1]
-        return getResourceString(CoreResR.string.tangempay_cashback_earned_title, amount, monthIn)
-    }
-
-    private fun totalTitle(amount: String): String =
-        getResourceString(CoreResR.string.tangempay_cashback_total_earned, amount)
-
-    private fun fullMonth(date: LocalDate): String =
-        Month.of(date.monthOfYear).getDisplayName(TextStyle.FULL_STANDALONE, Locale.getDefault())
-
-    private fun shortMonth(date: LocalDate): String =
-        Month.of(date.monthOfYear).getDisplayName(TextStyle.SHORT_STANDALONE, Locale.getDefault())
 
     private companion object {
         const val PAYOUT_START_DAY = 2

@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -18,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -39,7 +37,6 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_edit_16
 import com.tangem.core.ui.test.SwapTokenScreenTestTags
-import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.SwapCardState
 import com.tangem.feature.swap.models.TransactionCardType
 import com.tangem.feature.swap.models.states.SwapSlippageUM
@@ -47,7 +44,6 @@ import com.tangem.feature.swap.ui.preview.SwapTransactionCardPreview
 
 @Composable
 internal fun TransactionCardSimple(
-    priceImpact: PriceImpact,
     swapCardState: SwapCardState,
     onSelectTokenClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -68,7 +64,6 @@ internal fun TransactionCardSimple(
         )
         is SwapCardState.SwapCardData -> SimpleTransactionCardData(
             cardState = swapCardState,
-            priceImpact = priceImpact,
             onChangeTokenClick = onChangeTokenClick,
             modifier = modifier.testTag(cardTag),
             slippageUM = slippageUM,
@@ -80,7 +75,6 @@ internal fun TransactionCardSimple(
 @Composable
 private fun SimpleTransactionCardData(
     cardState: SwapCardState.SwapCardData,
-    priceImpact: PriceImpact,
     modifier: Modifier = Modifier,
     onChangeTokenClick: (() -> Unit)? = null,
     slippageUM: SwapSlippageUM.Content? = null,
@@ -106,7 +100,6 @@ private fun SimpleTransactionCardData(
 
             SimpleContent(
                 cardData = cardState,
-                priceImpact = priceImpact,
                 slippageUM = slippageUM,
             )
         }
@@ -311,11 +304,7 @@ private fun SimpleHeader(
 
 @Suppress("LongMethod")
 @Composable
-private fun SimpleContent(
-    cardData: SwapCardState.SwapCardData,
-    priceImpact: PriceImpact,
-    slippageUM: SwapSlippageUM.Content?,
-) {
+private fun SimpleContent(cardData: SwapCardState.SwapCardData, slippageUM: SwapSlippageUM.Content?) {
     val type = cardData.type
     Row(
         modifier = Modifier
@@ -370,9 +359,6 @@ private fun SimpleContent(
             ) {
                 if (type is TransactionCardType.ReadOnly) {
                     slippageUM?.let { SlippageLink(slippageUM = it) }
-                    if (type.shouldShowWarning) {
-                        WarningIcon(priceImpact = priceImpact, onClick = type.onWarningClick)
-                    }
                 }
             }
         }
@@ -403,25 +389,6 @@ private fun SlippageLink(slippageUM: SwapSlippageUM.Content) {
     }
 }
 
-@Composable
-private fun WarningIcon(priceImpact: PriceImpact, onClick: (() -> Unit)?) {
-    IconButton(
-        onClick = { onClick?.invoke() },
-        modifier = Modifier.size(20.dp),
-    ) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_information_24),
-            contentDescription = null,
-            tint = when (priceImpact.type) {
-                PriceImpact.Type.HIGH -> TangemTheme.colors3.text.accent.red
-                PriceImpact.Type.MEDIUM -> TangemTheme.colors3.text.accent.yellow
-                else -> TangemTheme.colors3.text.secondary
-            },
-            modifier = Modifier.testTag(SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT_INFORMATION_ICON),
-        )
-    }
-}
-
 // region Preview
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
@@ -429,7 +396,6 @@ private fun WarningIcon(priceImpact: PriceImpact, onClick: (() -> Unit)?) {
 private fun TransactionCardSimple_Preview(@PreviewParameter(SimplePreviewProvider::class) params: SwapCardState) {
     TangemThemePreview {
         TransactionCardSimple(
-            priceImpact = PriceImpact.Empty,
             swapCardState = params,
             onSelectTokenClick = {},
             modifier = Modifier,

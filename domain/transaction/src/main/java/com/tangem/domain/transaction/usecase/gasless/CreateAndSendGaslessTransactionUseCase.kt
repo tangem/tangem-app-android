@@ -3,6 +3,7 @@ package com.tangem.domain.transaction.usecase.gasless
 import arrow.core.Either
 import arrow.core.left
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.unwrapYieldModuleUpgrade
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.GaslessProtocolData
@@ -30,7 +31,9 @@ class CreateAndSendGaslessTransactionUseCase(
             null -> SendTransactionError.DataError("Gasless send called with a native fee").left()
             GaslessProtocolData.Evm -> createAndSendEvmGaslessTransactionUseCase(
                 userWallet = userWallet,
-                transactionData = transactionData,
+                // The token fee is priced on the bare call. The module is upgraded only when a yield withdraw
+                // pays that fee, see ResolveGaslessFeePlanUseCase
+                transactionData = transactionData.unwrapYieldModuleUpgrade(),
                 fee = fee,
             )
             is GaslessProtocolData.Tron -> createAndSendTronGaslessTransactionUseCase(
