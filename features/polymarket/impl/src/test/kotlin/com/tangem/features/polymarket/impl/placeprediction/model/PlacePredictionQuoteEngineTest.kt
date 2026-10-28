@@ -14,6 +14,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.verify
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
@@ -360,6 +361,36 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
                 FreshQuoteEnd.NewAmount -> engine.onAmountChange(value = "25")
                 FreshQuoteEnd.Abandon -> engine.abandonFreshQuote()
             }
+            runCurrent()
+
+            // Assert
+            assertThat(wait.await()).isFalse()
+            engine.onPause()
+        }
+
+        @Test
+        fun `GIVEN a fresh quote in flight WHEN the quote use case throws THEN the wait ends unquoted`() = runTest {
+            // Arrange
+            coEvery { getQuoteUseCase(request = any()) } coAnswers {
+                delay(timeMillis = QUOTE_MILLIS)
+                error("Quote use case failed")
+            }
+            val dispatchers = createTestingCoroutineDispatcherProvider()
+            val engine = createQuoteEngineFactory(dispatchers = dispatchers).create(
+                params = BUY_PARAMS,
+                uiState = MutableStateFlow(PlacePredictionUM.initial(side = BUY_PARAMS.side)),
+                scope = CoroutineScope(dispatchers.mainImmediate + engineJob + CoroutineExceptionHandler { _, _ -> }),
+            )
+            advanceUntilIdle()
+            engine.onResume()
+            engine.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS)
+            runCurrent()
+            val wait = async { engine.awaitFreshQuote() }
+            runCurrent()
+
+            // Act
+            advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
             runCurrent()
 
             // Assert

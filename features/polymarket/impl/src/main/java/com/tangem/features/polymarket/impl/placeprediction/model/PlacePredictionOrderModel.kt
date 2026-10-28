@@ -174,7 +174,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
         }
 
         pendingPlacement = wait
-        uiState.update { it.copy(isPlacementPending = true) }
+        uiState.update { it.copy(isPlacementPending = true).recomputeGate() }
         wait.invokeOnCompletion { if (pendingPlacement === wait) dropPendingPlacement() }
     }
 
@@ -182,7 +182,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
         val wait = pendingPlacement ?: return
         pendingPlacement = null
         wait.cancel()
-        uiState.update { it.copy(isPlacementPending = false) }
+        uiState.update { it.copy(isPlacementPending = false).recomputeGate() }
     }
 
     private fun place(prepared: PreparedPrediction) {

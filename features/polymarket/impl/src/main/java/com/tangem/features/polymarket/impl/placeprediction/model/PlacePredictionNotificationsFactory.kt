@@ -100,6 +100,7 @@ internal fun PlacePredictionUM.recomputeGate(): PlacePredictionUM {
         notifications = notifications,
         isPrimaryButtonEnabled = isPrimaryButtonEnabled,
         isPrimaryButtonEnabledWhileQuoting = isPrimaryButtonEnabledWhileQuoting,
+        isPlaceButtonEnabled = isPrimaryButtonEnabled || isPrimaryButtonEnabledWhileQuoting || isPlacementPending,
     )
 }
 
