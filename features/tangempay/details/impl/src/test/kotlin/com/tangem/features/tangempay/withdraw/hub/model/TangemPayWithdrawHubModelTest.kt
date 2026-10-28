@@ -743,6 +743,30 @@ internal class TangemPayWithdrawHubModelTest {
         model.onDestroy()
     }
 
+    @ParameterizedTest
+    @MethodSource("provideSwapOptionModels")
+    fun `GIVEN source account WHEN swap option clicked THEN on chain option reported for money account only`(
+        testModel: SwapOptionModel,
+    ) {
+        // Arrange
+        tokenRecentsFlow.value = listOf(recentTransfer())
+        moneyTokenRecentsFlow.value = listOf(recentTransfer())
+        val model = createModel(sourceAccount = testModel.sourceAccount)
+
+        // Act
+        testModel.click(model)
+
+        // Assert
+        verify(exactly = testModel.expectedOnChainEvents) {
+            analytics.send(
+                MoneyAccountAnalyticsEvents.WithdrawOptionSelected(
+                    method = MoneyAccountAnalyticsEvents.WithdrawMethod.ON_CHAIN,
+                ),
+            )
+        }
+        model.onDestroy()
+    }
+
     @Test
     fun `GIVEN money account without bank transfer WHEN model created THEN no bank section and nothing requested`() {
         // Act
@@ -915,6 +939,35 @@ internal class TangemPayWithdrawHubModelTest {
     internal data class MoneyBankOptionModel(
         val click: (TangemPayWithdrawHubModel) -> Unit,
         val expectedEntry: BankWithdrawEntry,
+    )
+
+    private fun provideSwapOptionModels(): List<SwapOptionModel> = listOf(
+        SwapOptionModel(
+            sourceAccount = moneySourceAccount,
+            click = { it.swapSection().withinPortfolio.onClick() },
+            expectedOnChainEvents = 1,
+        ),
+        SwapOptionModel(
+            sourceAccount = moneySourceAccount,
+            click = { it.tokenRecents().onTokenClick(RECENT_CURRENCY_ID_VALUE) },
+            expectedOnChainEvents = 1,
+        ),
+        SwapOptionModel(
+            sourceAccount = BankWithdrawSourceAccount.Payment(userWalletId),
+            click = { it.swapSection().withinPortfolio.onClick() },
+            expectedOnChainEvents = 0,
+        ),
+        SwapOptionModel(
+            sourceAccount = BankWithdrawSourceAccount.Payment(userWalletId),
+            click = { it.tokenRecents().onTokenClick(RECENT_CURRENCY_ID_VALUE) },
+            expectedOnChainEvents = 0,
+        ),
+    )
+
+    internal data class SwapOptionModel(
+        val sourceAccount: BankWithdrawSourceAccount,
+        val click: (TangemPayWithdrawHubModel) -> Unit,
+        val expectedOnChainEvents: Int,
     )
 
     internal data class ProductModel(
