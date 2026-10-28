@@ -252,8 +252,9 @@ internal class DefaultMcpRepositoryTest {
             }
 
         @Test
-        fun `GIVEN the read fails WHEN getSessions THEN the error is emitted instead of a list`() = runTest {
-            // Arrange
+        fun `GIVEN nothing was read yet WHEN the read fails THEN the error is emitted instead of a list`() = runTest {
+            // Arrange — a repository of its own, so no earlier test's list is already in place
+            val repository = createRepository()
             coEvery { mcpApi.getSessions() } returns apiError(SERVER_ERROR)
 
             // Act
@@ -261,6 +262,20 @@ internal class DefaultMcpRepositoryTest {
 
             // Assert
             assertThat(actual).isEqualTo(SERVER_ERROR.lceError())
+        }
+
+        @Test
+        fun `GIVEN the list was read WHEN a later read fails THEN the list is kept`() = runTest {
+            // Arrange
+            coEvery { mcpApi.getSessions() } returns ApiResponse.Success(listOf(SESSION_RESPONSE))
+            repository.getSessions().first()
+            coEvery { mcpApi.getSessions() } returns apiError(SERVER_ERROR)
+
+            // Act
+            repository.reloadSessions()
+
+            // Assert
+            assertThat(repository.getSessions().first()).isEqualTo(listOf(SESSION).lceContent())
         }
 
         @Test
@@ -310,6 +325,23 @@ internal class DefaultMcpRepositoryTest {
             assertThat(actual).isEqualTo(Either.Right(Unit))
             coVerify(exactly = 1) { mcpApi.revokeSession(sessionId = SESSION_ID) }
             coVerify(exactly = 2) { mcpApi.getSessions() }
+        }
+
+        @Test
+        fun `GIVEN the reload fails WHEN revokeSession succeeds THEN the revoked session leaves the list`() = runTest {
+            // Arrange
+            coEvery { mcpApi.getSessions() } returns
+                ApiResponse.Success(listOf(SESSION_RESPONSE, SECOND_SESSION_RESPONSE))
+            coEvery { mcpApi.revokeSession(any()) } returns ApiResponse.Success(Unit)
+            repository.getSessions().first()
+            coEvery { mcpApi.getSessions() } returns apiError(SERVER_ERROR)
+
+            // Act
+            repository.revokeSession(SESSION_ID)
+
+            // Assert
+            val expected = listOf(SESSION.copy(id = SECOND_SESSION_ID)).lceContent()
+            assertThat(repository.getSessions().first()).isEqualTo(expected)
         }
 
         @Test
