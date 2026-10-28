@@ -48,7 +48,7 @@ internal class UpdateNotificationsTransformer(
         return when (warning) {
             is CryptoCurrencyWarning.SomeNetworksUnreachable -> TangemMessageUM(
                 id = "networks_unreachable",
-                variant = TangemMessageBanner.Variant.Default,
+                variant = TangemMessageBanner.Variant.Light,
                 shouldShowGlowRing = false,
                 iconUM = TangemIconUM.Icon(
                     imageVector = Icons.ic_warning_20_filled,
@@ -83,7 +83,7 @@ internal class UpdateNotificationsTransformer(
             )
             is CryptoCurrencyWarning.BeaconChainShutdown -> TangemMessageUM(
                 id = "beacon_chain_shutdown",
-                variant = TangemMessageBanner.Variant.Default,
+                variant = TangemMessageBanner.Variant.Light,
                 shouldShowGlowRing = false,
                 iconUM = TangemIconUM.Icon(
                     imageVector = Icons.ic_warning_20_filled,
@@ -96,7 +96,7 @@ internal class UpdateNotificationsTransformer(
             )
             is HederaWarnings.AssociateWarning -> TangemMessageUM(
                 id = "hedera_associate",
-                variant = TangemMessageBanner.Variant.Default,
+                variant = TangemMessageBanner.Variant.Light,
                 shouldShowGlowRing = true,
                 iconUM = TangemIconUM.Icon(
                     imageVector = Icons.ic_warning_20_filled,
@@ -116,7 +116,7 @@ internal class UpdateNotificationsTransformer(
             )
             is HederaWarnings.AssociateWarningWithFee -> TangemMessageUM(
                 id = "hedera_associate_fee",
-                variant = TangemMessageBanner.Variant.Default,
+                variant = TangemMessageBanner.Variant.Light,
                 shouldShowGlowRing = true,
                 iconUM = TangemIconUM.Icon(
                     imageVector = Icons.ic_warning_20_filled,
@@ -142,7 +142,7 @@ internal class UpdateNotificationsTransformer(
             )
             is CryptoCurrencyWarning.RequiredTrustline -> TangemMessageUM(
                 id = "required_trustline",
-                variant = TangemMessageBanner.Variant.Default,
+                variant = TangemMessageBanner.Variant.Light,
                 shouldShowGlowRing = true,
                 iconUM = TangemIconUM.Icon(
                     imageVector = Icons.ic_warning_20_filled,
@@ -168,7 +168,7 @@ internal class UpdateNotificationsTransformer(
             )
             is KaspaWarnings.IncompleteTransaction -> TangemMessageUM(
                 id = "kaspa_incomplete",
-                variant = TangemMessageBanner.Variant.Default,
+                variant = TangemMessageBanner.Variant.Light,
                 shouldShowGlowRing = true,
                 iconUM = TangemIconUM.Icon(
                     imageVector = Icons.ic_warning_20_filled,
@@ -205,7 +205,7 @@ internal class UpdateNotificationsTransformer(
             )
             is CryptoCurrencyWarning.MigrationMaticToPol -> TangemMessageUM(
                 id = "migration_matic_pol",
-                variant = TangemMessageBanner.Variant.Default,
+                variant = TangemMessageBanner.Variant.Light,
                 shouldShowGlowRing = false,
                 iconUM = TangemIconUM.Icon(
                     imageVector = Icons.ic_warning_20_filled,
@@ -218,7 +218,7 @@ internal class UpdateNotificationsTransformer(
             )
             is CryptoCurrencyWarning.MigrationClore -> TangemMessageUM(
                 id = "migration_clore",
-                variant = TangemMessageBanner.Variant.Default,
+                variant = TangemMessageBanner.Variant.Light,
                 shouldShowGlowRing = true,
                 iconUM = TangemIconUM.Icon(
                     imageVector = Icons.ic_warning_20_filled,
@@ -238,7 +238,7 @@ internal class UpdateNotificationsTransformer(
             )
             is DynamicAddressesWarnings.FundsFound -> TangemMessageUM(
                 id = "dynamic_addresses_funds_found",
-                variant = TangemMessageBanner.Variant.Default,
+                variant = TangemMessageBanner.Variant.Light,
                 shouldShowGlowRing = true,
                 iconUM = TangemIconUM.Icon(
                     imageVector = Icons.ic_warning_20_filled,
@@ -258,7 +258,7 @@ internal class UpdateNotificationsTransformer(
             )
             is CryptoCurrencyWarning.ExistentialDeposit -> TangemMessageUM(
                 id = "existential_deposit",
-                variant = TangemMessageBanner.Variant.Default,
+                variant = TangemMessageBanner.Variant.Light,
                 shouldShowGlowRing = false,
                 iconUM = TangemIconUM.Icon(
                     imageVector = Icons.ic_info_20,
@@ -274,7 +274,7 @@ internal class UpdateNotificationsTransformer(
             )
             is CryptoCurrencyWarning.Rent -> TangemMessageUM(
                 id = "rent_info",
-                variant = TangemMessageBanner.Variant.Default,
+                variant = TangemMessageBanner.Variant.Light,
                 shouldShowGlowRing = true,
                 iconUM = TangemIconUM.Icon(
                     imageVector = Icons.ic_info_20,
@@ -300,7 +300,7 @@ internal class UpdateNotificationsTransformer(
             )
             is CryptoCurrencyWarning.SomeNetworksNoAccount -> TangemMessageUM(
                 id = "networks_no_account",
-                variant = TangemMessageBanner.Variant.Default,
+                variant = TangemMessageBanner.Variant.Light,
                 shouldShowGlowRing = false,
                 iconUM = TangemIconUM.Icon(
                     imageVector = Icons.ic_info_20,
@@ -322,7 +322,7 @@ internal class UpdateNotificationsTransformer(
             )
             is CryptoCurrencyWarning.TopUpWithoutReserve -> TangemMessageUM(
                 id = "top_up_without_reserve",
-                variant = TangemMessageBanner.Variant.Default,
+                variant = TangemMessageBanner.Variant.Light,
                 shouldShowGlowRing = false,
                 iconUM = TangemIconUM.Icon(
                     imageVector = Icons.ic_info_20,
@@ -335,7 +335,7 @@ internal class UpdateNotificationsTransformer(
             )
             is CryptoCurrencyWarning.FeeResourceInfo -> TangemMessageUM(
                 id = "fee_resource_info",
-                variant = TangemMessageBanner.Variant.Default,
+                variant = TangemMessageBanner.Variant.Light,
                 shouldShowGlowRing = false,
                 iconUM = TangemIconUM.Icon(
                     imageVector = Icons.ic_info_20,
@@ -391,7 +391,7 @@ internal class UpdateNotificationsTransformer(
 
         return TangemMessageUM(
             id = params.id,
-            variant = TangemMessageBanner.Variant.Default,
+            variant = TangemMessageBanner.Variant.Light,
             shouldShowGlowRing = buttons.isNotEmpty(),
             iconUM = TangemIconUM.Icon(
                 imageVector = Icons.ic_warning_20_filled,
