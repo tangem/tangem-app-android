@@ -12,6 +12,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.models.account.isOrderRequired
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.CreateVirtualAccountOrderUseCase
 import com.tangem.domain.pay.usecase.GetOnrampFeesUseCase
@@ -55,6 +56,7 @@ internal class TangemPayBankTransferOnrampOnboardingModel @Inject constructor(
     private val feesLoader = TangemPayOnrampFeesLoader(
         getOnrampFeesUseCase = getOnrampFeesUseCase,
         userWalletId = params.userWalletId,
+        product = TangemPayProduct.PAYMENT_ACCOUNT,
         scope = modelScope,
     )
 
