@@ -5,6 +5,9 @@ import arrow.core.none
 import arrow.core.right
 import arrow.core.some
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.stringReference
@@ -24,6 +27,7 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyEstimateEnterFeeUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetCurrentFeeUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetMaxFeeUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyMinAmountUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyPendingTracker
 import com.tangem.domain.yield.supply.usecase.YieldSupplyStartEarningUseCase
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
@@ -35,6 +39,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.slot
 import io.mockk.unmockkObject
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -166,6 +171,36 @@ internal class YieldSupplyStartEarningModelTest : YieldSupplyActionModelTestBase
         coVerify { yieldSupplyRepository.saveTokenProtocolPendingStatus(userWalletId, any(), any()) }
         coVerify { pendingTracker.addPending(userWalletId, any(), any(), any()) }
         verify { callback.onTransactionSent() }
+    }
+
+    @Test
+    fun `GIVEN upgrade-wrapped enter in batch WHEN onClick THEN deposit context carries the enter hash`() = runTest {
+        // Arrange
+        val wrappedEnter = uncompiledTx().copy(
+            extras = EthereumTransactionExtras(
+                callData = EthereumYieldSupplyUpgradeToAndCallCallData(
+                    newImplementation = "0x5555555555555555555555555555555555555555",
+                    innerCallData = mockk<EthereumYieldSupplyEnterCallData>(),
+                ),
+            ),
+        )
+        coEvery { estimateEnterFeeUseCase(any(), any(), any()) } returns listOf(uncompiledTx(), wrappedEnter).right()
+        coEvery {
+            sendTransactionUseCase(txsData = any(), userWallet = any(), network = any(), sendMode = any())
+        } returns listOf("0xfirst", "0xenter").right()
+        val depositContextSlot = slot<YieldSupplyPendingTracker.DepositContext>()
+        coEvery {
+            pendingTracker.addPending(any(), any(), any(), capture(depositContextSlot))
+        } returns Unit
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Act
+        model.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(depositContextSlot.captured.enterTransactionHash).isEqualTo("0xenter")
     }
 
     @Test
