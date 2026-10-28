@@ -36,7 +36,7 @@ internal class SubmitApprovalsUseCaseTest {
     fun `GIVEN signed approvals WHEN invoke THEN submits exactly the signed fields`() = runTest {
         // Arrange
         val batch = slot<PolymarketApprovalsBatch>()
-        coEvery { polymarketRepository.submitApprovals(capture(batch)) } returns
+        coEvery { polymarketRepository.submitApprovals(ADDRESSES.userWalletId, capture(batch)) } returns
             PolymarketWalletStatus.APPROVALS_IN_PROGRESS.right()
 
         // Act
@@ -60,7 +60,7 @@ internal class SubmitApprovalsUseCaseTest {
     @Test
     fun `GIVEN the relayer rejects the batch WHEN invoke THEN wraps the wallet error`() = runTest {
         // Arrange
-        coEvery { polymarketRepository.submitApprovals(any()) } returns
+        coEvery { polymarketRepository.submitApprovals(any(), any()) } returns
             PolymarketWalletError.RelayerRejected.NonceReused.left()
 
         // Act
@@ -75,7 +75,7 @@ internal class SubmitApprovalsUseCaseTest {
     @Test
     fun `GIVEN there is no connection WHEN invoke THEN returns Network`() = runTest {
         // Arrange
-        coEvery { polymarketRepository.submitApprovals(any()) } returns PolymarketWalletError.Network.left()
+        coEvery { polymarketRepository.submitApprovals(any(), any()) } returns PolymarketWalletError.Network.left()
 
         // Act
         val actual = useCase(addresses = ADDRESSES, approvals = SIGNED_APPROVALS)

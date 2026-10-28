@@ -79,6 +79,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             // Assert
             coVerify(exactly = 1) {
                 getQuoteUseCase(
+                    any(),
                     request = PredictionOrderQuoteRequest(
                         marketId = MARKET_ID,
                         assetId = ASSET_ID,
@@ -97,7 +98,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a legacy asset id of a moved market WHEN the amount is entered THEN the current token is quoted`() =
             runTest {
                 // Arrange
-                coEvery { getEventUseCase(eventId = EVENT_ID) } returns createPolymarketEvent(
+                coEvery { getEventUseCase(any(), eventId = EVENT_ID) } returns createPolymarketEvent(
                     id = EVENT_ID,
                     markets = listOf(
                         createPolymarketMarket(
@@ -121,6 +122,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
                 assertThat(model.uiState.value.market.outcomeTitle).isEqualTo("Yes")
                 coVerify(exactly = 1) {
                     getQuoteUseCase(
+                        any(),
                         request = PredictionOrderQuoteRequest(
                             marketId = MARKET_ID,
                             assetId = "asset-v2",
@@ -130,7 +132,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
                         ),
                     )
                 }
-                coVerify(exactly = 0) { getQuoteUseCase(request = match { it.assetId == ASSET_ID }) }
+                coVerify(exactly = 0) { getQuoteUseCase(any(), request = match { it.assetId == ASSET_ID }) }
                 assertThat((model.uiState.value.quote as QuoteUM.Content).signable.assetId).isEqualTo("asset-v2")
 
                 model.onDestroy()
@@ -140,7 +142,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN the event is still loading WHEN resumed THEN no price is polled until the market lands`() = runTest {
             // Arrange
             val event = CompletableDeferred<PolymarketEvent>()
-            coEvery { getEventUseCase(eventId = EVENT_ID) } coAnswers { event.await().right() }
+            coEvery { getEventUseCase(any(), eventId = EVENT_ID) } coAnswers { event.await().right() }
             val model = createAmountModel(testScope = this)
             model.onResume()
             runCurrent()
@@ -172,7 +174,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
 
             // Assert
-            coVerify(exactly = 2) { getQuoteUseCase(request = any()) }
+            coVerify(exactly = 2) { getQuoteUseCase(any(), request = any()) }
 
             model.onDestroy()
         }
@@ -180,7 +182,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         @Test
         fun `GIVEN the market takes no orders WHEN an amount is typed THEN no quote is requested`() = runTest {
             // Arrange
-            coEvery { getEventUseCase(eventId = any()) } returns createEvent(isAcceptingOrders = false).right()
+            coEvery { getEventUseCase(any(), eventId = any()) } returns createEvent(isAcceptingOrders = false).right()
             val model = createAmountModel(testScope = this)
             advanceUntilIdle()
             model.onResume()
@@ -190,7 +192,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
 
             // Assert
-            coVerify(exactly = 0) { getQuoteUseCase(request = any()) }
+            coVerify(exactly = 0) { getQuoteUseCase(any(), request = any()) }
             assertThat(model.uiState.value.notifications).contains(PredictionNotificationUM.MarketClosed)
             assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
 
@@ -201,7 +203,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN an amount typed before the market lands WHEN it takes no orders THEN no quote is requested`() =
             runTest {
                 // Arrange
-                coEvery { getEventUseCase(eventId = any()) } returns createEvent(isAcceptingOrders = false).right()
+                coEvery { getEventUseCase(any(), eventId = any()) } returns createEvent(isAcceptingOrders = false).right()
                 val model = createAmountModel(testScope = this)
                 model.onResume()
 
@@ -211,7 +213,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
                 advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + QUOTE_POLL_INTERVAL_MILLIS * 3)
 
                 // Assert
-                coVerify(exactly = 0) { getQuoteUseCase(request = any()) }
+                coVerify(exactly = 0) { getQuoteUseCase(any(), request = any()) }
 
                 model.onDestroy()
             }
@@ -222,7 +224,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             val model = createAmountModel(testScope = this)
             advanceUntilIdle()
             model.onResume()
-            coEvery { getQuoteUseCase(request = any()) } returns
+            coEvery { getQuoteUseCase(any(), request = any()) } returns
                 createQuote(status = PredictionQuoteStatus.MARKET_CLOSED).right()
 
             // Act
@@ -231,7 +233,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
 
             // Assert
-            coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+            coVerify(exactly = 1) { getQuoteUseCase(any(), request = any()) }
             assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Unavailable(PredictionQuoteStatus.MARKET_CLOSED))
 
             model.onDestroy()
@@ -251,7 +253,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 2)
 
             // Assert
-            coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+            coVerify(exactly = 1) { getQuoteUseCase(any(), request = any()) }
             assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Empty)
             assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
 
@@ -261,7 +263,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         @Test
         fun `GIVEN balance below quote total WHEN quote loaded THEN button stays disabled`() = runTest {
             // Arrange
-            coEvery { getQuoteUseCase(request = any()) } returns createQuote(total = BigDecimal("120")).right()
+            coEvery { getQuoteUseCase(any(), request = any()) } returns createQuote(total = BigDecimal("120")).right()
             val model = createAmountModel(testScope = this)
             advanceUntilIdle()
             model.onResume()
@@ -280,7 +282,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         @Test
         fun `GIVEN quote fails WHEN retry clicked THEN quote requested again AND content shown`() = runTest {
             // Arrange
-            coEvery { getQuoteUseCase(request = any()) } returnsMany listOf(
+            coEvery { getQuoteUseCase(any(), request = any()) } returnsMany listOf(
                 PredictionOrderQuoteError.Network.left(),
                 createQuote().right(),
             )
@@ -325,7 +327,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         @Test
         fun `GIVEN no liquidity WHEN quote loaded THEN figures are not shown AND button disabled`() = runTest {
             // Arrange
-            coEvery { getQuoteUseCase(request = any()) } returns
+            coEvery { getQuoteUseCase(any(), request = any()) } returns
                 createQuote(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY).right()
             val model = createAmountModel(testScope = this)
             advanceUntilIdle()
@@ -351,7 +353,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         @Test
         fun `GIVEN below min order size WHEN quote loaded THEN figures are kept AND button disabled`() = runTest {
             // Arrange
-            coEvery { getQuoteUseCase(request = any()) } returns
+            coEvery { getQuoteUseCase(any(), request = any()) } returns
                 createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE).right()
             val model = createAmountModel(testScope = this)
             advanceUntilIdle()
@@ -371,7 +373,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         @Test
         fun `GIVEN below min order amount WHEN quote loaded THEN figures are kept AND button disabled`() = runTest {
             // Arrange
-            coEvery { getQuoteUseCase(request = any()) } returns
+            coEvery { getQuoteUseCase(any(), request = any()) } returns
                 createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_AMOUNT).right()
             val model = createAmountModel(testScope = this)
             advanceUntilIdle()
@@ -392,7 +394,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN the first quote states a minimum the sum is below WHEN it arrives THEN the price is polled`() =
             runTest {
                 // Arrange
-                coEvery { getQuoteUseCase(request = any()) } returns
+                coEvery { getQuoteUseCase(any(), request = any()) } returns
                     createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE).right()
                 val model = createAmountModel(testScope = this)
                 advanceUntilIdle()
@@ -404,7 +406,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
                 advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + 1)
 
                 // Assert
-                coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+                coVerify(exactly = 1) { getQuoteUseCase(any(), request = any()) }
                 coVerify(atLeast = 1) { getPriceUseCase(assetId = ASSET_ID, side = PredictionOrderSide.SELL) }
 
                 model.onDestroy()
@@ -424,7 +426,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
             // Assert
-            coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+            coVerify(exactly = 1) { getQuoteUseCase(any(), request = any()) }
             assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Empty)
             assertThat(model.uiState.value.amountCaption)
                 .isEqualTo(AmountCaptionUM.BelowMinimum(minAmount = BigDecimal("2.15")))
@@ -445,7 +447,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS)
 
             // Assert
-            coVerify(exactly = 0) { getQuoteUseCase(request = any()) }
+            coVerify(exactly = 0) { getQuoteUseCase(any(), request = any()) }
             assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Empty)
 
             model.onDestroy()
@@ -472,7 +474,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         @Test
         fun `GIVEN liquidity disappears WHEN next tick arrives THEN button is gated on the latest quote`() = runTest {
             // Arrange
-            coEvery { getQuoteUseCase(request = any()) } returnsMany listOf(
+            coEvery { getQuoteUseCase(any(), request = any()) } returnsMany listOf(
                 createQuote().right(),
                 createQuote(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY).right(),
             )
@@ -496,7 +498,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         @Test
         fun `GIVEN the total exceeds the balance WHEN quote loaded THEN the shortfall is named under the amount`() = runTest {
             // Arrange
-            coEvery { getQuoteUseCase(request = any()) } returns createQuote(total = BigDecimal("120")).right()
+            coEvery { getQuoteUseCase(any(), request = any()) } returns createQuote(total = BigDecimal("120")).right()
             val model = createAmountModel(testScope = this)
             advanceUntilIdle()
             model.onResume()
@@ -527,7 +529,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
 
             // Assert
-            coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+            coVerify(exactly = 1) { getQuoteUseCase(any(), request = any()) }
 
             model.onDestroy()
         }
@@ -548,7 +550,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
 
             // Assert
             assertThat(model.uiState.value.quote).isEqualTo(shown)
-            coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+            coVerify(exactly = 1) { getQuoteUseCase(any(), request = any()) }
 
             model.onDestroy()
         }
@@ -557,7 +559,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a refresh in flight WHEN the amount step is left THEN the figures shown stay AND the answer never lands`() =
             runTest {
                 // Arrange
-                coEvery { getQuoteUseCase(request = any()) } returns createQuote().right() coAndThen {
+                coEvery { getQuoteUseCase(any(), request = any()) } returns createQuote().right() coAndThen {
                     delay(timeMillis = 1_000)
                     createQuote(total = BigDecimal("99")).right()
                 }
@@ -575,7 +577,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
 
                 // Assert
                 assertThat(model.uiState.value.quote).isEqualTo(shown)
-                coVerify(exactly = 2) { getQuoteUseCase(request = any()) }
+                coVerify(exactly = 2) { getQuoteUseCase(any(), request = any()) }
 
                 model.onDestroy()
             }
@@ -596,7 +598,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             advanceTimeBy(delayTimeMillis = 1)
 
             // Assert
-            coVerify(exactly = 2) { getQuoteUseCase(request = any()) }
+            coVerify(exactly = 2) { getQuoteUseCase(any(), request = any()) }
 
             model.onDestroy()
         }
@@ -671,7 +673,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         @Test
         fun `GIVEN amount entered and cleared WHEN polling THEN price loop yields to quote loop and resumes`() = runTest {
             // Arrange
-            coEvery { getQuoteUseCase(request = any()) } returnsMany listOf(
+            coEvery { getQuoteUseCase(any(), request = any()) } returnsMany listOf(
                 createQuote().copy(averagePrice = BigDecimal("0.61")).right(),
                 createQuote().copy(status = PredictionQuoteStatus.PARTIAL, averagePrice = BigDecimal("0.64")).right(),
             )
@@ -701,7 +703,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
 
         @Test
         fun `GIVEN a priced quote WHEN refresh fails or liquidity is unavailable THEN header keeps the last price`() = runTest {
-            coEvery { getQuoteUseCase(request = any()) } returnsMany listOf(
+            coEvery { getQuoteUseCase(any(), request = any()) } returnsMany listOf(
                 createQuote().copy(averagePrice = BigDecimal("0.61")).right(),
                 PredictionOrderQuoteError.Network.left(),
                 createQuote().copy(
@@ -747,7 +749,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
 
             // Assert
             coVerify(exactly = 1) {
-                getQuoteUseCase(request = match { it.slippagePercent == BigDecimal("5") })
+                getQuoteUseCase(any(), request = match { it.slippagePercent == BigDecimal("5") })
             }
             assertThat(model.uiState.value.slippage.isDefault).isFalse()
 
@@ -849,7 +851,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         @Test
         fun `GIVEN insufficient sell liquidity WHEN quote received THEN proceeds shown AND closing disabled`() = runTest {
             // Arrange
-            coEvery { getQuoteUseCase(request = any()) } returns
+            coEvery { getQuoteUseCase(any(), request = any()) } returns
                 createSellQuote().copy(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY).right()
             val model = createAmountModel(testScope = this, params = SELL_PARAMS)
             advanceUntilIdle()
@@ -873,12 +875,12 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN sell proceeds without liquidity WHEN quote refresh pending THEN displayed state retained`() = runTest {
             // Arrange
             val quote = createSellQuote().copy(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY)
-            coEvery { getQuoteUseCase(request = any()) } returns quote.right()
+            coEvery { getQuoteUseCase(any(), request = any()) } returns quote.right()
             val model = createAmountModel(testScope = this, params = SELL_PARAMS)
             advanceUntilIdle()
             model.onResume()
             runCurrent()
-            coEvery { getQuoteUseCase(request = any()) } coAnswers {
+            coEvery { getQuoteUseCase(any(), request = any()) } coAnswers {
                 delay(timeMillis = QUOTE_POLL_INTERVAL_MILLIS)
                 quote.right()
             }
@@ -892,7 +894,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
                 .isEqualTo(SharesProceedsUM.Content(expected = BigDecimal("11.01")))
             assertThat(state.notifications).contains(PredictionNotificationUM.NoLiquidity)
             assertThat(state.isPrimaryButtonEnabled).isFalse()
-            coVerify(exactly = 2) { getQuoteUseCase(request = any()) }
+            coVerify(exactly = 2) { getQuoteUseCase(any(), request = any()) }
 
             model.onDestroy()
         }
@@ -901,7 +903,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN first sell quote fails WHEN screen shown THEN current price unavailable AND entry price kept`() =
             runTest {
                 // Arrange
-                coEvery { getQuoteUseCase(request = any()) } returns
+                coEvery { getQuoteUseCase(any(), request = any()) } returns
                     PredictionOrderQuoteError.Unknown(httpCode = 500, detail = "Quote failed").left()
                 val model = createAmountModel(testScope = this, params = SELL_PARAMS)
                 advanceUntilIdle()
@@ -923,7 +925,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         @Test
         fun `GIVEN priced sell quote WHEN refresh fails and recovers THEN current price hidden and restored`() = runTest {
             // Arrange
-            coEvery { getQuoteUseCase(request = any()) } returnsMany listOf(
+            coEvery { getQuoteUseCase(any(), request = any()) } returnsMany listOf(
                 createSellQuote().copy(averagePrice = BigDecimal("0.61")).right(),
                 PredictionOrderQuoteError.Network.left(),
                 createSellQuote().copy(averagePrice = BigDecimal("0.64")).right(),
@@ -970,7 +972,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             assertThat(model.uiState.value.market.outcomeTitle).isEqualTo("Yes")
             assertThat(model.uiState.value.market.entryPrice).isEqualTo("35.6¢")
             assertThat(model.uiState.value.collateral.tokenSymbol).isEqualTo("pUSD")
-            coVerify(exactly = 0) { getEventUseCase(eventId = any()) }
+            coVerify(exactly = 0) { getEventUseCase(any(), eventId = any()) }
 
             model.onDestroy()
         }
@@ -989,7 +991,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
 
             // Assert
             coVerify(exactly = 1) {
-                getQuoteUseCase(request = match { it.side == PredictionOrderSide.SELL && it.amount == BigDecimal("0.005") })
+                getQuoteUseCase(any(), request = match { it.side == PredictionOrderSide.SELL && it.amount == BigDecimal("0.005") })
             }
 
             model.onDestroy()
@@ -1010,7 +1012,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         @Test
         fun `GIVEN shares selected WHEN debounce elapses THEN a sell quote is requested for them`() = runTest {
             // Arrange
-            coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
+            coEvery { getQuoteUseCase(any(), request = any()) } returns createSellQuote().right()
             val model = createAmountModel(testScope = this, params = SELL_PARAMS)
             advanceUntilIdle()
             model.onResume()
@@ -1022,6 +1024,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             // Assert
             coVerify(exactly = 1) {
                 getQuoteUseCase(
+                    any(),
                     request = PredictionOrderQuoteRequest(
                         marketId = MARKET_ID,
                         assetId = ASSET_ID,
@@ -1120,7 +1123,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
 
             // Assert
             coVerify(exactly = 0) { getPriceUseCase(assetId = any(), side = any()) }
-            coVerify(exactly = 0) { getQuoteUseCase(request = any()) }
+            coVerify(exactly = 0) { getQuoteUseCase(any(), request = any()) }
             assertThat(model.uiState.value.notifications)
                 .contains(PredictionNotificationUM.PositionUnavailable)
 
