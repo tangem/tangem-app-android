@@ -20,6 +20,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.GaslessYieldRepository
+import com.tangem.domain.transaction.YieldModuleFeatureToggles
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
@@ -39,6 +40,7 @@ class EstimateFeeForGaslessTxUseCase(
     private val estimateFeeUseCase: EstimateFeeUseCase,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
+    private val yieldModuleFeatureToggles: YieldModuleFeatureToggles,
 ) {
 
     private val tokenFeeCalculator = TokenFeeCalculator(
@@ -70,19 +72,11 @@ class EstimateFeeForGaslessTxUseCase(
                     val nativeCurrencyStatus = feeCurrencies.nativeCurrencyStatus
 
                     if (!currencyChecksRepository.isNetworkSupportedForGaslessTx(network)) {
-                        estimateFeeUseCase.invoke(
+                        return@either estimateNativeCoinFee(
                             userWallet = userWallet,
                             amount = amount,
-                            cryptoCurrencyStatus = sendingTokenCurrencyStatus,
-                        ).fold(
-                            ifLeft = { raise(it) },
-                            ifRight = { fee ->
-                                return@either TransactionFeeExtended(
-                                    transactionFee = fee,
-                                    feeTokenId = nativeCurrencyStatus.currency.id,
-                                    nativeFee = fee,
-                                )
-                            },
+                            sendingTokenCurrencyStatus = sendingTokenCurrencyStatus,
+                            nativeCurrencyStatus = nativeCurrencyStatus,
                         )
                     }
 
@@ -92,6 +86,14 @@ class EstimateFeeForGaslessTxUseCase(
                         userWallet = userWallet,
                         amount = amount,
                         txTokenCurrencyStatus = sendingTokenCurrencyStatus,
+                    ).bind()
+
+                    val nativeInitialFee = tokenFeeCalculator.estimateNativeFee(
+                        userWallet = userWallet,
+                        amount = amount,
+                        txTokenCurrencyStatus = sendingTokenCurrencyStatus,
+                        initialFee = initialFee,
+                        isYieldModuleV3Enabled = yieldModuleFeatureToggles.isYieldModuleV3Enabled,
                     ).bind()
 
                     val nonPortfolioFeeToken = feeCurrencies.nonPortfolioFeeToken
@@ -104,7 +106,7 @@ class EstimateFeeForGaslessTxUseCase(
                             networkCurrenciesStatuses = listOf(nonPortfolioFeeToken),
                             sendingTokenCurrencyStatus = sendingTokenCurrencyStatus,
                             amount = amount,
-                        ).bind().copy(nativeFee = initialFee)
+                        ).bind().copy(nativeFee = nativeInitialFee)
                     }
 
                     selectFeePaymentStrategy(
@@ -114,6 +116,7 @@ class EstimateFeeForGaslessTxUseCase(
                         nativeCurrencyStatus = nativeCurrencyStatus,
                         network = network,
                         initialFee = initialFee,
+                        nativeInitialFee = nativeInitialFee,
                         sendingTokenCurrencyStatus = sendingTokenCurrencyStatus,
                         amount = amount,
                     )
@@ -123,6 +126,24 @@ class EstimateFeeForGaslessTxUseCase(
                 },
             )
         }
+    }
+
+    private suspend fun Raise<GetFeeError>.estimateNativeCoinFee(
+        userWallet: UserWallet,
+        amount: BigDecimal,
+        sendingTokenCurrencyStatus: CryptoCurrencyStatus,
+        nativeCurrencyStatus: CryptoCurrencyStatus,
+    ): TransactionFeeExtended {
+        val fee = estimateFeeUseCase.invoke(
+            userWallet = userWallet,
+            amount = amount,
+            cryptoCurrencyStatus = sendingTokenCurrencyStatus,
+        ).bind()
+        return TransactionFeeExtended(
+            transactionFee = fee,
+            feeTokenId = nativeCurrencyStatus.currency.id,
+            nativeFee = fee,
+        )
     }
 
     @Suppress("NullableToStringCall")
@@ -147,10 +168,11 @@ class EstimateFeeForGaslessTxUseCase(
         nativeCurrencyStatus: CryptoCurrencyStatus,
         network: Network,
         initialFee: TransactionFee,
+        nativeInitialFee: TransactionFee,
         sendingTokenCurrencyStatus: CryptoCurrencyStatus,
         amount: BigDecimal,
     ): TransactionFeeExtended {
-        val feeValue = initialFee.normal.amount.value ?: raise(GetFeeError.UnknownError)
+        val feeValue = nativeInitialFee.normal.amount.value ?: raise(GetFeeError.UnknownError)
 
         val networkCurrenciesStatuses = accountStatusList
             .flattenPersonalCurrencies()
@@ -158,9 +180,9 @@ class EstimateFeeForGaslessTxUseCase(
 
         val nativeBalance = nativeCurrencyStatus.value.amount ?: BigDecimal.ZERO
         val nativeCoinSelectedResult = TransactionFeeExtended(
-            transactionFee = initialFee,
+            transactionFee = nativeInitialFee,
             feeTokenId = nativeCurrencyStatus.currency.id,
-            nativeFee = initialFee,
+            nativeFee = nativeInitialFee,
         )
         return if (nativeBalance >= feeValue) {
             nativeCoinSelectedResult
@@ -173,7 +195,7 @@ class EstimateFeeForGaslessTxUseCase(
                 networkCurrenciesStatuses = networkCurrenciesStatuses,
                 sendingTokenCurrencyStatus = sendingTokenCurrencyStatus,
                 amount = amount,
-            ).map { it.copy(nativeFee = initialFee) }.getOrElse { error ->
+            ).map { it.copy(nativeFee = nativeInitialFee) }.getOrElse { error ->
                 when (error) {
                     GaslessError.NotEnoughFunds,
                     GaslessError.YieldBalanceUnavailable,
