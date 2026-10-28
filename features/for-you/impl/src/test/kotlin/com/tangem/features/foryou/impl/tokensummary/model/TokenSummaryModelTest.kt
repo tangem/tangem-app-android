@@ -13,7 +13,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.ds.tabs.TangemSegmentUM
+import com.tangem.core.ui.ds2.segmentedcontrol.TangemSegmentedControl
 import com.tangem.domain.markets.FetchCoinIndicatorsUseCase
 import com.tangem.domain.markets.GetCoinIndicatorsUpdatesUseCase
 import com.tangem.domain.models.account.AccountStatus
@@ -29,6 +29,7 @@ import com.tangem.features.foryou.impl.tokensummary.entity.IndicatorType
 import com.tangem.features.foryou.impl.tokensummary.entity.PeriodPickerUM
 import com.tangem.features.foryou.impl.tokensummary.entity.TokenIndicatorUM
 import com.tangem.features.foryou.impl.tokensummary.entity.TokenSummaryUm
+import com.tangem.features.foryou.model.ForYouPeriod
 import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -141,7 +142,7 @@ internal class TokenSummaryModelTest {
             val state = model.uiState.value
 
             // Act
-            state.onPeriodClick(state.periodItems()[1])
+            state.periodItems()[1].onClick()
 
             // Assert
             verify(exactly = 1) {
@@ -156,13 +157,26 @@ internal class TokenSummaryModelTest {
         }
 
         @Test
+        fun `GIVEN Day selected WHEN Week clicked THEN Week segment becomes selected`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this, token = portfolioToken(ethereum), selectedPeriodId = "0")
+
+            // Act
+            model.uiState.value.periodItems()[1].onClick()
+
+            // Assert
+            val selectedIds = model.uiState.value.periodItems().filter { it.isSelected }.map { it.id }
+            assertThat(selectedIds).containsExactly(ForYouPeriod.Week.id)
+        }
+
+        @Test
         fun `GIVEN Day selected WHEN Day clicked again THEN no interval event is sent`() = runTest {
             // Arrange
             val model = createModel(testScope = this, token = portfolioToken(ethereum), selectedPeriodId = "0")
             val state = model.uiState.value
 
             // Act
-            state.onPeriodClick(state.periodItems()[0])
+            state.periodItems()[0].onClick()
 
             // Assert
             verify(exactly = 0) {
@@ -281,8 +295,8 @@ internal class TokenSummaryModelTest {
     private fun indicatorRow(indicatorType: IndicatorType, title: String = "name from backend") =
         TokenIndicatorUM.NoData(indicatorType = indicatorType, title = title)
 
-    private fun TokenSummaryUm.periodItems(): List<TangemSegmentUM> =
-        (periodPicker as PeriodPickerUM.Content).picker.items
+    private fun TokenSummaryUm.periodItems(): List<TangemSegmentedControl.Item> =
+        (periodPicker as PeriodPickerUM.Content).items
 
     private fun TokenSummaryModel.clickBottomButton() {
         (uiState.value.bottomButton as BottomButtonUM.Content).onClick()

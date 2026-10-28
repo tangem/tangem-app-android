@@ -19,8 +19,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
-import com.tangem.core.ui.ds.tabs.TangemSegmentUM
-import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.conditional
@@ -29,9 +27,11 @@ import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.foryou.impl.entity.ForYouUM
+import com.tangem.features.foryou.impl.entity.forYouPeriodPickerItems
 import com.tangem.features.foryou.impl.model.ForYouNotification
 import com.tangem.features.foryou.impl.ui.preview.ForYouEarnOpportunitiesPreviewData
 import com.tangem.features.foryou.impl.ui.preview.ForYouPortfolioReviewPreviewData
+import com.tangem.features.foryou.model.ForYouPeriod
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -87,7 +87,6 @@ internal fun ForYouContent(
         ForYouPortfolioReview(
             portfolioReviewUM = forYouUM.portfolioReviewUM,
             periodPickerUM = forYouUM.periodPickerUM,
-            onPeriodClick = forYouUM.onPeriodClick,
             portfolioFilter = forYouUM.portfolioFilter,
             modifier = Modifier.padding(horizontal = 16.dp),
         )
@@ -132,17 +131,7 @@ private class ForYouContentPreviewProvider : PreviewParameterProvider<ForYouUM> 
                 notifications = persistentListOf(ForYouNotification.UsedOutdatedData),
                 earnOpportunities = ForYouEarnOpportunitiesPreviewData.tokensRewards,
                 portfolioReviewUM = ForYouPortfolioReviewPreviewData.reviewContent,
-                periodPickerUM = TangemSegmentedPickerUM(
-                    items = persistentListOf(
-                        TangemSegmentUM(id = "0", title = stringReference("Day")),
-                        TangemSegmentUM(id = "1", title = stringReference("Week")),
-                        TangemSegmentUM(id = "2", title = stringReference("Month")),
-                    ),
-                    initialSelectedItem = TangemSegmentUM(id = "0", title = stringReference("Day")),
-                    isFixed = true,
-                    isAltSurface = true,
-                ),
-                onPeriodClick = {},
+                periodPickerUM = forYouPeriodPickerItems(selected = ForYouPeriod.Day, onClick = {}),
                 // Active state on purpose: ForYouPortfolioReview's own preview covers the inactive chip.
                 portfolioFilter = TangemFilterItemUM.Active(
                     id = "portfolio_selector",

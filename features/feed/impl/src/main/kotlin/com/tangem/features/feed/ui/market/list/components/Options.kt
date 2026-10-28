@@ -8,16 +8,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds.tabs.TangemSegmentUM
-import com.tangem.core.ui.ds.tabs.TangemSegmentedPicker
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.segmentedcontrol.TangemSegmentedControl
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_chevron_down_20
 import com.tangem.features.feed.model.market.list.state.MarketsListUM
 import com.tangem.features.feed.model.market.list.state.SortByMenuUM
-import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 internal fun Options(
@@ -29,21 +28,15 @@ internal fun Options(
     var isShowDropdownMenu by rememberSaveable { mutableStateOf(false) }
     val hapticManager = LocalHapticManager.current
 
-    val segmentItems = remember {
-        persistentListOf(
-            TangemSegmentUM(
-                id = MarketsListUM.TrendInterval.H24.name,
-                title = MarketsListUM.TrendInterval.H24.text,
-            ),
-            TangemSegmentUM(
-                id = MarketsListUM.TrendInterval.D7.name,
-                title = MarketsListUM.TrendInterval.D7.text,
-            ),
-            TangemSegmentUM(
-                id = MarketsListUM.TrendInterval.M1.name,
-                title = MarketsListUM.TrendInterval.M1.text,
-            ),
-        )
+    val segmentItems = remember(trendInterval, onIntervalClick) {
+        MarketsListUM.TrendInterval.entries.map { interval ->
+            TangemSegmentedControl.Item(
+                id = interval.name,
+                label = interval.text,
+                isSelected = interval == trendInterval,
+                onClick = { onIntervalClick(interval) },
+            )
+        }.toImmutableList()
     }
 
     Box(
@@ -70,14 +63,7 @@ internal fun Options(
                 modifier = Modifier.weight(weight = 1f, fill = false),
             )
 
-            TangemSegmentedPicker(
-                items = segmentItems,
-                initialSelectedItem = segmentItems.firstOrNull { it.id == trendInterval.name },
-                isFixed = false,
-                isAltSurface = true,
-                minSegmentWidth = 54.dp,
-                onClick = { segment -> onIntervalClick(MarketsListUM.TrendInterval.valueOf(segment.id)) },
-            )
+            TangemSegmentedControl(items = segmentItems)
         }
 
         SortByMenu(

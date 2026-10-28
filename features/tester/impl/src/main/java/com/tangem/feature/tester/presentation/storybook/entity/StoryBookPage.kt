@@ -59,8 +59,6 @@ internal data class TangemCheckboxStory(
     val onCircleCheckedChange: (Boolean) -> Unit,
 ) : StoryBookPage
 
-internal data object TangemSegmentedPickerStory : StoryBookPage
-
 internal data class TangemMessageStory(
     val selectedEffect: TangemMessageEffect,
     val onEffectChange: (TangemMessageEffect) -> Unit,

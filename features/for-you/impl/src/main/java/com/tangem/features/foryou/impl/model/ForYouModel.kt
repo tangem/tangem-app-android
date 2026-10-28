@@ -15,8 +15,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
-import com.tangem.core.ui.ds.tabs.TangemSegmentUM
-import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.models.AccountStatusList
@@ -160,7 +158,7 @@ internal class ForYouModel @Inject constructor(
         field = MutableStateFlow<ForYouUM>(
             ForYouUM(
                 notifications = persistentListOf(),
-                periodPickerUM = TangemSegmentedPickerUM(persistentListOf()),
+                periodPickerUM = forYouPeriodPickerItems(selected = ForYouPeriod.Day, onClick = ::onPeriodClick),
                 earnOpportunities = EarnOpportunitiesUM.Loading(
                     tokenList = buildList<ForYouTokenListItemUM> {
                         repeat(5) { index ->
@@ -178,7 +176,6 @@ internal class ForYouModel @Inject constructor(
                         }
                     }.toPersistentList().asSingleForYouGroup(),
                 ),
-                onPeriodClick = ::onPeriodClick,
                 portfolioFilter = TangemFilterItemUM.Loading(id = ForYouPortfolioFilterConverter.ID),
                 portfolioReviewUM = PortfolioReviewUM.Loading(
                     marketChartUM = MarketChartUM.NoData(
@@ -487,21 +484,13 @@ internal class ForYouModel @Inject constructor(
         }
     }
 
-    private fun onPeriodClick(tangemSegmentUM: TangemSegmentUM) {
-        if (tangemSegmentUM.id == selectedPeriod.value.id) return
+    private fun onPeriodClick(period: ForYouPeriod) {
+        if (period == selectedPeriod.value) return
 
-        analyticsEventHandler.send(
-            ForYouAnalyticsEvent.FilterInterval(period = ForYouPeriod.fromId(tangemSegmentUM.id).analyticsValue),
-        )
+        analyticsEventHandler.send(ForYouAnalyticsEvent.FilterInterval(period = period.analyticsValue))
 
-        uiState.update { state ->
-            state.copy(
-                periodPickerUM = state.periodPickerUM.copy(
-                    initialSelectedItem = tangemSegmentUM,
-                ),
-            )
-        }
-        selectedPeriod.value = ForYouPeriod.fromId(tangemSegmentUM.id)
+        uiState.update { state -> state.copy(periodPickerUM = state.periodPickerUM.withSelected(period)) }
+        selectedPeriod.value = period
     }
 
     private fun createAddToPortfolioManager(): AddToPortfolioManager {
