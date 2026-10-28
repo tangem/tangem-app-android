@@ -1,13 +1,15 @@
 package com.tangem.tap.di.analytics
 
-import com.appsflyer.AppsFlyerConversionListener
 import com.appsflyer.deeplink.DeepLinkListener
+import com.tangem.core.analytics.api.AppsFlyerConversionDataHandler
 import com.tangem.tap.common.analytics.appsflyer.AppsFlyerDeepLinkListener
-import com.tangem.tap.common.analytics.appsflyer.TangemAFConversionListener
+import com.tangem.tap.common.analytics.appsflyer.AppsFlyerReferralParamsHandler
+import com.tangem.tap.common.analytics.appsflyer.GoogleAdsConversionDataReporter
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -17,5 +19,10 @@ internal interface AppsFlyerListenersModule {
     fun bindDeepLinkListener(listener: AppsFlyerDeepLinkListener): DeepLinkListener
 
     @Binds
-    fun bindConversionListener(listener: TangemAFConversionListener): AppsFlyerConversionListener
+    @IntoSet
+    fun bindReferralParamsHandler(handler: AppsFlyerReferralParamsHandler): AppsFlyerConversionDataHandler
+
+    @Binds
+    @IntoSet
+    fun bindGoogleAdsConversionDataReporter(reporter: GoogleAdsConversionDataReporter): AppsFlyerConversionDataHandler
 }
