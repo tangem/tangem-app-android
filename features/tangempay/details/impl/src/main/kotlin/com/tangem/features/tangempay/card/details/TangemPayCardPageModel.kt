@@ -83,7 +83,6 @@ import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -164,10 +163,10 @@ internal class TangemPayCardPageModel @Inject constructor(
                 settings = persistentListOf(),
                 menuItems = buildMenuItems(
                     isLastCard = params.initialStatus.ifLoadedOrNull { it.cards.isLastCard() } ?: false,
-                    isReissueAvailable = params.initialStatus
+                    isAwaitingActivation = params.initialStatus
                         .ifLoadedOrNull { it.findCardWithId(params.cardId) }
                         ?.state
-                        ?.isAwaitingActivation != true,
+                        ?.isAwaitingActivation == true,
                 ),
             ),
         )
@@ -311,7 +310,7 @@ internal class TangemPayCardPageModel @Inject constructor(
                     settings = status.buildSettings(card.frozenState, isDetailsShown),
                     menuItems = buildMenuItems(
                         isLastCard = status.cards.isLastCard(),
-                        isReissueAvailable = !card.state.isAwaitingActivation,
+                        isAwaitingActivation = card.state.isAwaitingActivation,
                     ),
                     cardState = card.state,
                     delivery = buildDeliveryState(cardState = card.state, email = email),
@@ -449,46 +448,41 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     private fun buildMenuItems(
         isLastCard: Boolean,
-        isReissueAvailable: Boolean,
+        isAwaitingActivation: Boolean,
     ): ImmutableList<TangemPayDropDownItemUM> {
-        return buildList {
-            if (isReissueAvailable) {
-                add(
-                    TangemPayDropDownItemUM(
-                        title = TextReference.Res(R.string.tangempay_card_details_reissue_card),
-                        onClick = ::onClickReissueCard,
-                        icon = TangemIconUM.Icon(
-                            imageVector = Icons.ic_arrow_refresh_20,
-                            tintReference = {
-                                TangemTheme.colors3.icon.primary
-                            },
-                        ),
-                    ),
-                )
-            }
-            add(
-                TangemPayDropDownItemUM(
-                    title = TextReference.Res(R.string.tangem_pay_close_card_popup_primary_button_title),
-                    onClick = ::onClickCloseCard,
-                    icon = TangemIconUM.Icon(
-                        iconRes = CoreUiR.drawable.ic_trash_24,
-                        tintReference = {
-                            if (isLastCard) {
-                                TangemTheme.colors3.icon.tertiary
-                            } else {
-                                TangemTheme.colors3.icon.primary
-                            }
-                        },
-                    ),
-                    subtitle = if (isLastCard) {
-                        TextReference.Res(R.string.tangem_pay_close_card_disabled_last_card)
-                    } else {
-                        null
+        if (isAwaitingActivation) return persistentListOf()
+        return persistentListOf(
+            TangemPayDropDownItemUM(
+                title = TextReference.Res(R.string.tangempay_card_details_reissue_card),
+                onClick = ::onClickReissueCard,
+                icon = TangemIconUM.Icon(
+                    imageVector = Icons.ic_arrow_refresh_20,
+                    tintReference = {
+                        TangemTheme.colors3.icon.primary
                     },
-                    isEnabled = !isLastCard,
                 ),
-            )
-        }.toImmutableList()
+            ),
+            TangemPayDropDownItemUM(
+                title = TextReference.Res(R.string.tangem_pay_close_card_popup_primary_button_title),
+                onClick = ::onClickCloseCard,
+                icon = TangemIconUM.Icon(
+                    iconRes = CoreUiR.drawable.ic_trash_24,
+                    tintReference = {
+                        if (isLastCard) {
+                            TangemTheme.colors3.icon.tertiary
+                        } else {
+                            TangemTheme.colors3.icon.primary
+                        }
+                    },
+                ),
+                subtitle = if (isLastCard) {
+                    TextReference.Res(R.string.tangem_pay_close_card_disabled_last_card)
+                } else {
+                    null
+                },
+                isEnabled = !isLastCard,
+            ),
+        )
     }
 
     private fun onClickViewDetails() {
