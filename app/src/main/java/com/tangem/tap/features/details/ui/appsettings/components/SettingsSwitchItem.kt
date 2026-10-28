@@ -69,8 +69,6 @@ internal fun SettingsSwitchItem(item: Item.Switch, modifier: Modifier = Modifier
                 checked = item.isChecked,
                 enabled = item.isEnabled,
                 onCheckedChange = item.onCheckedChange,
-                checkedColor = TangemTheme.colors.control.checked,
-                uncheckedColor = TangemTheme.colors3.icon.tertiary,
             )
         }
 
