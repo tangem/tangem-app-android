@@ -365,7 +365,6 @@ internal class OnrampMainComponentModelTest {
         model.onDestroy()
     }
 
-    /** Stands in for the component's child slot, which is what applies a navigation and reports its completion. */
     private class FakeBottomSheetSlot(var config: OnrampMainBottomSheetConfig?)
 
     private fun OnrampMainComponentModel.attachBottomSheetSlot(

@@ -288,10 +288,7 @@ internal class OnrampMainComponentModel @Inject constructor(
             .saveIn(conciergeWaitlistJobHolder)
     }
 
-    /**
-     * The survey is a same-window modal, so it would open under the bottom sheets' dialog windows: close the sheet
-     * first. A pending residency confirmation is not skipped for it; the link is dropped instead.
-     */
+    // The survey would render under the sheets' dialog windows; residency confirmation keeps priority over the link.
     private fun openDemandSurvey() {
         bottomSheetNavigation.navigate(
             transformer = { sheet -> sheet as? OnrampMainBottomSheetConfig.ConfirmResidency },
