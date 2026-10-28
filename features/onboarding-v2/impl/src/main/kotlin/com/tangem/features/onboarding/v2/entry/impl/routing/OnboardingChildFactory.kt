@@ -9,7 +9,6 @@ import com.tangem.features.onboarding.v2.entry.impl.model.OnboardingEntryModel
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.note.api.OnboardingNoteComponent
 import com.tangem.features.onboarding.v2.twin.api.OnboardingTwinComponent
-import com.tangem.features.onboarding.v2.visa.api.OnboardingVisaComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
 import javax.inject.Inject
@@ -19,7 +18,6 @@ internal class OnboardingChildFactory @Inject constructor(
     private val multiWalletComponentFactory: OnboardingMultiWalletComponent.Factory,
     private val onboardingManageTokensComponentFactory: OnboardingManageTokensComponent.Factory,
     private val onboardingDoneComponentFactory: OnboardingDoneComponent.Factory,
-    private val onBoardingVisaComponentFactory: OnboardingVisaComponent.Factory,
     private val askBiometryComponentFactory: AskBiometryComponent.Factory,
     private val onboardingNoteComponentFactory: OnboardingNoteComponent.Factory,
     private val onboardingTwinComponentFactory: OnboardingTwinComponent.Factory,
@@ -44,14 +42,6 @@ internal class OnboardingChildFactory @Inject constructor(
                     mode = route.mode,
                 ),
             )
-            is OnboardingRoute.Visa -> onBoardingVisaComponentFactory.create(
-                context = childContext,
-                params = OnboardingVisaComponent.Params(
-                    scanResponse = route.scanResponse,
-                    titleProvider = route.titleProvider,
-                    onDone = route.onDone,
-                ),
-            )
             is OnboardingRoute.ManageTokens -> onboardingManageTokensComponentFactory.create(
                 context = childContext,
                 params = OnboardingManageTokensComponent.Params(
@@ -61,10 +51,7 @@ internal class OnboardingChildFactory @Inject constructor(
             )
             is OnboardingRoute.Done -> onboardingDoneComponentFactory.create(
                 context = childContext,
-                params = OnboardingDoneComponent.Params(
-                    mode = route.mode,
-                    onDone = route.onDone,
-                ),
+                params = OnboardingDoneComponent.Params(onDone = route.onDone),
             )
             is OnboardingRoute.Note -> onboardingNoteComponentFactory.create(
                 context = childContext,
