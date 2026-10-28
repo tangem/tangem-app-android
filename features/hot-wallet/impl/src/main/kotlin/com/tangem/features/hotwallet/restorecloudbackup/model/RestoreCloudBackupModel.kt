@@ -10,6 +10,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.core.ui.message.dialog.Dialogs.hotWalletsLimitReachedDialog
 import com.tangem.domain.cloudbackup.analytics.analyticsMessage
 import com.tangem.domain.cloudbackup.models.CloudBackupError
 import com.tangem.domain.cloudbackup.models.CloudBackupInfo
@@ -17,6 +18,7 @@ import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
 import com.tangem.domain.cloudbackup.usecase.GetBackupPasswordUseCase
 import com.tangem.domain.cloudbackup.usecase.RestoreCloudBackupUseCase
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
+import com.tangem.domain.wallets.analytics.Settings.NoticeMobileWalletLimit
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImportError
@@ -294,6 +296,7 @@ internal class RestoreCloudBackupModel @Inject constructor(
             ifLeft = { error ->
                 when (error) {
                     HotWalletImportError.AlreadySaved -> showAlreadyAdded()
+                    HotWalletImportError.LimitReached -> showLimitReached()
                     is HotWalletImportError.PassphraseTooLong,
                     is HotWalletImportError.Unknown,
                     -> showError(CloudBackupError.Unknown())
@@ -309,6 +312,12 @@ internal class RestoreCloudBackupModel @Inject constructor(
     }
 
     private fun backupAccountName() = accountEmail.takeIf { hotWalletFeatureToggles.isMultipleHotWalletsEnabled }
+
+    private fun showLimitReached() {
+        uiState.value = buildCurrentStepUM()
+        analyticsEventHandler.send(importLimitReachedEvent())
+        uiMessageSender.send(hotWalletsLimitReachedDialog())
+    }
 
     private fun showAlreadyAdded() {
         uiState.value = buildCurrentStepUM()
@@ -383,3 +392,8 @@ internal class RestoreCloudBackupModel @Inject constructor(
         wipeRestoredSecret()
     }
 }
+
+private fun importLimitReachedEvent() = NoticeMobileWalletLimit(
+    type = NoticeMobileWalletLimit.Type.Import,
+    limit = NoticeMobileWalletLimit.Limit.MobileWallets,
+)
