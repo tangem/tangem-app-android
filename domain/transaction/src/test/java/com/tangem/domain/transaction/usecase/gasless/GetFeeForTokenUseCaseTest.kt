@@ -110,6 +110,7 @@ internal class GetFeeForTokenUseCaseTest {
                     transactionData = transactionData,
                     nativeCurrencyStatus = accountCoinStatus,
                     tokenCurrencyStatus = accountUsdcStatus,
+                    nativeTransactionData = transactionData,
                     sentAmount = null,
                 )
             } returns expected.right()
