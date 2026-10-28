@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
+import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
@@ -36,6 +37,10 @@ internal class CollectiblesMainComponent @AssistedInject constructor(
     private val model: CollectiblesMainModel = getOrCreateModel(params = params)
 
     private val discoveryComponent = discoveryComponentFactory.create(context = child(key = "discovery"))
+
+    init {
+        lifecycle.doOnResume { model.onScreenResumed() }
+    }
 
     private val bottomSheetSlot = childSlot(
         source = model.bottomSheetNavigation,
