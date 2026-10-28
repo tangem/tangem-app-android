@@ -9,8 +9,6 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.common.wallets.getSyncOrNull
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
@@ -24,7 +22,6 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.AmountPresetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.MIN_QUOTABLE_AMOUNT
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceActionUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceButtonTypeUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPrediction
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
@@ -40,6 +37,9 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import java.math.BigDecimal
@@ -56,19 +56,13 @@ internal class PlacePredictionOrderModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     quoteEngineFactory: PlacePredictionQuoteEngine.Factory,
     orderSubmitterFactory: PlacePredictionOrderSubmitter.Factory,
-    userWalletsListRepository: UserWalletsListRepository,
+    private val userWalletsListRepository: UserWalletsListRepository,
 ) : Model(), PlacePredictionOrderIntents, PolymarketAddFundsComponent.ModelCallback {
 
     private val params = paramsContainer.require<PlacePredictionComponent.Params>()
 
     val uiState: StateFlow<PlacePredictionUM>
-        field = MutableStateFlow(
-            PlacePredictionUM.initial(side = params.side).copy(
-                placeButtonType = placeButtonTypeOf(
-                    userWallet = userWalletsListRepository.getSyncOrNull(id = params.userWalletId),
-                ),
-            ),
-        )
+        field = MutableStateFlow(PlacePredictionUM.initial(side = params.side))
 
     private val quoteEngine = quoteEngineFactory.create(params = params, uiState = uiState, scope = modelScope)
 
@@ -88,6 +82,20 @@ internal class PlacePredictionOrderModel @Inject constructor(
     val amountPresets: ImmutableList<AmountPresetUM> = when (params) {
         is PlacePredictionComponent.Params.Buy -> BUY_PRESET_AMOUNTS.map(::toPreset).toImmutableList()
         is PlacePredictionComponent.Params.Sell -> persistentListOf()
+    }
+
+    init {
+        observeWalletType()
+    }
+
+    private fun observeWalletType() {
+        modelScope.launch {
+            val userWallet = userWalletsListRepository.userWallets
+                .mapNotNull { wallets -> wallets?.find { it.walletId == params.userWalletId } }
+                .first()
+
+            uiState.update { it.copy(isHoldToConfirm = userWallet.isHotWallet) }
+        }
     }
 
     fun onResume() {
@@ -171,11 +179,10 @@ internal class PlacePredictionOrderModel @Inject constructor(
 
     override fun onPlaceClick() {
         when (uiState.value.placeAction) {
-            PlaceActionUM.Ready -> quoteEngine.prepare()?.let(::place)
+            PlaceActionUM.Ready -> quoteEngine.prepare()?.let(::place) ?: resetHoldIfIdle()
             PlaceActionUM.ReadyOnceQuoted -> placeOnceQuoted()
-            PlaceActionUM.AwaitingQuote,
-            PlaceActionUM.Unavailable,
-            -> Unit
+            PlaceActionUM.AwaitingQuote -> Unit
+            PlaceActionUM.Unavailable -> resetHoldIfIdle()
         }
     }
 
@@ -201,6 +208,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
         pendingPlacement = null
         wait.cancel()
         releaseTap()
+        resetHoldIfIdle()
     }
 
     private fun releaseTap() {
@@ -209,10 +217,20 @@ internal class PlacePredictionOrderModel @Inject constructor(
         }
     }
 
+    private fun resetHoldIfIdle() {
+        uiState.update { state ->
+            if (state.submit is SubmitUM.Idle) state.copy(holdResetKey = state.holdResetKey + 1) else state
+        }
+    }
+
     private fun place(prepared: PreparedPrediction) {
         modelScope.launch(start = CoroutineStart.UNDISPATCHED) {
             quoteEngine.holdDuring {
-                val result = orderSubmitter.submit(prepared = prepared) ?: return@holdDuring
+                val result = orderSubmitter.submit(prepared = prepared)
+                if (result == null) {
+                    resetHoldIfIdle()
+                    return@holdDuring
+                }
                 router.replaceAll(prepared.toStatusRoute(result = result))
             }
         }
@@ -244,12 +262,6 @@ internal class PlacePredictionOrderModel @Inject constructor(
 
     private fun BigDecimal.toCollateralInput(): String =
         parseBigDecimal(decimals = PolymarketConst.COLLATERAL_DISPLAY_DECIMALS, roundingMode = RoundingMode.DOWN)
-
-    private fun placeButtonTypeOf(userWallet: UserWallet?): PlaceButtonTypeUM = if (userWallet?.isHotWallet == true) {
-        PlaceButtonTypeUM.HoldToConfirm
-    } else {
-        PlaceButtonTypeUM.RequiredNfcInteraction
-    }
 
     private fun toPreset(amount: BigDecimal): AmountPresetUM = AmountPresetUM(
         label = amount.formatPolymarketEnteredAmount(),

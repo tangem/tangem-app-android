@@ -16,13 +16,13 @@ import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.polymarket.impl.common.FakeSlotHost
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceActionUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceButtonTypeUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
@@ -241,7 +241,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
     }
 
     @Nested
-    inner class PlaceButton {
+    inner class WalletType {
 
         @Test
         fun `GIVEN a hot wallet WHEN the order screen opens THEN the order is placed by holding the button`() =
@@ -251,9 +251,10 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
 
                 // Act
                 val model = createOrderModel(testScope = this)
+                runCurrent()
 
                 // Assert
-                assertThat(model.uiState.value.placeButtonType).isEqualTo(PlaceButtonTypeUM.HoldToConfirm)
+                assertThat(model.uiState.value.isHoldToConfirm).isTrue()
             }
 
         @Test
@@ -264,10 +265,138 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
 
                 // Act
                 val model = createOrderModel(testScope = this)
+                runCurrent()
 
                 // Assert
-                assertThat(model.uiState.value.placeButtonType).isEqualTo(PlaceButtonTypeUM.RequiredNfcInteraction)
+                assertThat(model.uiState.value.isHoldToConfirm).isFalse()
             }
+
+        @Test
+        fun `GIVEN the wallets are not loaded WHEN the hot wallet arrives THEN the order is placed by holding`() =
+            runOrderTest {
+                // Arrange
+                val wallets = MutableStateFlow<List<UserWallet>?>(null)
+                every { userWalletsListRepository.userWallets } returns wallets
+                val model = createOrderModel(testScope = this)
+                runCurrent()
+
+                // Act
+                wallets.value = listOf(hotWallet())
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.isHoldToConfirm).isTrue()
+            }
+
+        @Test
+        fun `GIVEN the wallet is not in the list WHEN the order screen opens THEN the button is tapped`() =
+            runOrderTest {
+                // Arrange
+                every { userWalletsListRepository.userWallets } returns MutableStateFlow(emptyList())
+
+                // Act
+                val model = createOrderModel(testScope = this)
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.isHoldToConfirm).isFalse()
+            }
+    }
+
+    @Nested
+    inner class HoldReset {
+
+        @Test
+        fun `GIVEN nothing to place WHEN place clicked THEN the hold button is reset`() = runOrderTest {
+            // Arrange
+            val model = createOrderModel(testScope = this)
+            advanceUntilIdle()
+            model.onResume()
+            val before = model.uiState.value.holdResetKey
+
+            // Act
+            model.onPlaceClick()
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.holdResetKey).isEqualTo(before + 1)
+        }
+
+        @Test
+        fun `GIVEN the signature is declined WHEN place clicked THEN the hold button is reset`() = runOrderTest {
+            // Arrange
+            coEvery { signOrderInteractor(request = any()) } returns
+                PredictionOrderFailure.Signing(error = PolymarketSigningError.UserCancelled).left()
+            val model = createQuotedModel()
+            val before = model.uiState.value.holdResetKey
+
+            // Act
+            model.onPlaceClick()
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.holdResetKey).isEqualTo(before + 1)
+        }
+
+        @Test
+        fun `GIVEN a priced quote WHEN the order is placed THEN the hold button is left as it is`() = runOrderTest {
+            // Arrange
+            val model = createQuotedModel()
+            val before = model.uiState.value.holdResetKey
+
+            // Act
+            model.onPlaceClick()
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.holdResetKey).isEqualTo(before)
+        }
+
+        @Test
+        fun `GIVEN a quote on the way WHEN place clicked THEN the hold button is left as it is`() = runOrderTest {
+            // Arrange
+            val model = createQuotingModel()
+            val before = model.uiState.value.holdResetKey
+
+            // Act
+            model.onPlaceClick()
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.holdResetKey).isEqualTo(before)
+        }
+
+        @Test
+        fun `GIVEN a tap while quoting WHEN the quote arrives and is placed THEN the hold button is left as it is`() =
+            runOrderTest {
+                // Arrange
+                val model = createQuotingModel()
+                val before = model.uiState.value.holdResetKey
+                model.onPlaceClick()
+
+                // Act
+                advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
+                runCurrent()
+
+                // Assert
+                verify(exactly = 1) { router.replaceAll(any(), onComplete = any()) }
+                assertThat(model.uiState.value.holdResetKey).isEqualTo(before)
+            }
+
+        @Test
+        fun `GIVEN a tap while quoting WHEN the quote fails THEN the hold button is reset`() = runOrderTest {
+            // Arrange
+            val model = createQuotingModel(result = PredictionOrderQuoteError.Network.left())
+            val before = model.uiState.value.holdResetKey
+            model.onPlaceClick()
+
+            // Act
+            advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.holdResetKey).isEqualTo(before + 1)
+        }
     }
 
     @Nested

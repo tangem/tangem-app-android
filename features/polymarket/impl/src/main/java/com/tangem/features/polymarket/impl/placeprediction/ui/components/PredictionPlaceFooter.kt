@@ -23,7 +23,6 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_24
 import com.tangem.features.polymarket.impl.common.PolymarketLegalLine
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceButtonTypeUM
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PreviewBuyOrder
 
 @Composable
@@ -55,7 +54,8 @@ internal fun PredictionPlaceButton(
     isEnabled: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    type: PlaceButtonTypeUM = PlaceButtonTypeUM.RequiredNfcInteraction,
+    isHoldToConfirm: Boolean = false,
+    holdResetKey: Int = 0,
 ) {
     val text = resourceReference(
         when (order) {
@@ -64,17 +64,8 @@ internal fun PredictionPlaceButton(
         },
     )
 
-    when (type) {
-        PlaceButtonTypeUM.RequiredNfcInteraction -> TangemButton(
-            modifier = modifier.fillMaxWidth(),
-            size = TangemButton.Size.X12,
-            isLoading = isLoading,
-            iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24),
-            text = text,
-            isEnabled = isEnabled,
-            onClick = onClick,
-        )
-        PlaceButtonTypeUM.HoldToConfirm -> key(isEnabled) {
+    if (isHoldToConfirm) {
+        key(holdResetKey) {
             HoldToConfirmButton(
                 modifier = modifier.fillMaxWidth(),
                 text = text.resolveReference(),
@@ -83,6 +74,16 @@ internal fun PredictionPlaceButton(
                 onConfirm = onClick,
             )
         }
+    } else {
+        TangemButton(
+            modifier = modifier.fillMaxWidth(),
+            size = TangemButton.Size.X12,
+            isLoading = isLoading,
+            iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24),
+            text = text,
+            isEnabled = isEnabled,
+            onClick = onClick,
+        )
     }
 }
 
@@ -103,7 +104,7 @@ private fun PredictionPlaceFooterPreview() {
                     isLoading = false,
                     isEnabled = true,
                     onClick = {},
-                    type = PlaceButtonTypeUM.HoldToConfirm,
+                    isHoldToConfirm = true,
                 )
             }
         }

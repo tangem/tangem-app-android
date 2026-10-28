@@ -88,7 +88,8 @@ internal fun PlacePredictionOrderContent(
                         focusManager.clearFocus()
                         intents.onPlaceClick()
                     },
-                    type = state.placeButtonType,
+                    isHoldToConfirm = state.isHoldToConfirm,
+                    holdResetKey = state.holdResetKey,
                 )
             }
         },
