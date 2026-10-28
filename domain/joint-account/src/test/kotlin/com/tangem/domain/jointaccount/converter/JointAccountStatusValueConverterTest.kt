@@ -24,7 +24,12 @@ internal class JointAccountStatusValueConverterTest {
     private fun provideTestModels() = listOf(
         TestModel(
             account = account(status = JointAccount.Status.PENDING),
-            expected = JointAccountStatusValue.Pending(source = StatusSource.CACHE, joinedMembers = 2, totalMembers = 3),
+            expected = JointAccountStatusValue.Pending(
+                source = StatusSource.CACHE,
+                joinedMembers = 2,
+                totalMembers = 3,
+                threshold = 2,
+            ),
         ),
         TestModel(
             account = account(status = JointAccount.Status.PENDING),
@@ -33,17 +38,23 @@ internal class JointAccountStatusValueConverterTest {
                 source = StatusSource.CACHE,
                 joinedMembers = 2,
                 totalMembers = 3,
+                threshold = 2,
                 isOwnCreator = true,
             ),
         ),
         TestModel(
             account = account(status = JointAccount.Status.PENDING),
             ownAddress = "0x2",
-            expected = JointAccountStatusValue.Pending(source = StatusSource.CACHE, joinedMembers = 2, totalMembers = 3),
+            expected = JointAccountStatusValue.Pending(
+                source = StatusSource.CACHE,
+                joinedMembers = 2,
+                totalMembers = 3,
+                threshold = 2,
+            ),
         ),
         TestModel(
             account = account(status = JointAccount.Status.CONFIRMING, safeAddress = SAFE),
-            expected = JointAccountStatusValue.Confirming(source = StatusSource.CACHE, totalMembers = 3),
+            expected = JointAccountStatusValue.Confirming(source = StatusSource.CACHE, totalMembers = 3, threshold = 2),
         ),
         TestModel(
             account = account(status = JointAccount.Status.CONFIRMING, safeAddress = SAFE, isBobVerified = true),
@@ -53,6 +64,7 @@ internal class JointAccountStatusValueConverterTest {
                 totalMembers = 3,
                 verifiedMembers = 1,
                 isOwnVerified = true,
+                threshold = 2,
             ),
         ),
         TestModel(
@@ -63,11 +75,17 @@ internal class JointAccountStatusValueConverterTest {
                 totalMembers = 3,
                 verifiedMembers = 1,
                 isOwnVerified = false,
+                threshold = 2,
             ),
         ),
         TestModel(
             account = account(status = JointAccount.Status.ACTIVE, safeAddress = SAFE),
-            expected = JointAccountStatusValue.Active(source = StatusSource.CACHE, totalMembers = 3, safeAddress = SAFE),
+            expected = JointAccountStatusValue.Active(
+                source = StatusSource.CACHE,
+                totalMembers = 3,
+                safeAddress = SAFE,
+                threshold = 2,
+            ),
         ),
         TestModel(
             account = account(status = JointAccount.Status.ACTIVE, safeAddress = null),

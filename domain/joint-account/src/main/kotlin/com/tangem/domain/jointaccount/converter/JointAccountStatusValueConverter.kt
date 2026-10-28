@@ -22,6 +22,7 @@ class JointAccountStatusValueConverter(
             source = value.source,
             joinedMembers = value.members.size,
             totalMembers = value.membersCount,
+            threshold = value.threshold,
             isOwnCreator = value.members.any {
                 it.role == JointAccount.Role.CREATOR && it.address.equals(ownAddress, ignoreCase = true)
             },
@@ -29,6 +30,7 @@ class JointAccountStatusValueConverter(
         JointAccount.Status.CONFIRMING -> JointAccountStatusValue.Confirming(
             source = value.source,
             totalMembers = value.membersCount,
+            threshold = value.threshold,
             verifiedMembers = value.members.count { it.isVerified },
             isOwnVerified = value.members.any { it.isVerified && it.address.equals(ownAddress, ignoreCase = true) },
         )
@@ -41,6 +43,7 @@ class JointAccountStatusValueConverter(
                 JointAccountStatusValue.Active(
                     source = value.source,
                     totalMembers = value.membersCount,
+                    threshold = value.threshold,
                     safeAddress = safeAddress,
                 )
             }

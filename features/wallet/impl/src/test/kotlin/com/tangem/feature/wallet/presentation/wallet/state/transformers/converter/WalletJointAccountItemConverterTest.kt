@@ -62,7 +62,7 @@ internal class WalletJointAccountItemConverterTest {
     fun `GIVEN pending status WHEN convert THEN a not active row with members, zero balance and a waiting message`() {
         // Arrange
         val status = createStatus(
-            JointAccountStatusValue.Pending(StatusSource.ACTUAL, joinedMembers = 1, totalMembers = 3),
+            JointAccountStatusValue.Pending(StatusSource.ACTUAL, joinedMembers = 1, totalMembers = 3, threshold = 2),
         )
 
         // Act
@@ -93,7 +93,9 @@ internal class WalletJointAccountItemConverterTest {
     @Test
     fun `GIVEN the account was created by this wallet WHEN convert pending with free slots THEN the invite message`() {
         // Arrange
-        val status = createStatus(JointAccountStatusValue.Pending(StatusSource.ACTUAL, 1, 2, isOwnCreator = true))
+        val status = createStatus(
+            JointAccountStatusValue.Pending(StatusSource.ACTUAL, 1, 2, threshold = 2, isOwnCreator = true),
+        )
 
         // Act
         val state = converter.convert(status).state as TangemAccountRow.State.NotActive
@@ -114,7 +116,13 @@ internal class WalletJointAccountItemConverterTest {
     fun `GIVEN the account was created by this wallet WHEN convert pending with every slot taken THEN no message`() {
         // Arrange
         val status = createStatus(
-            JointAccountStatusValue.Pending(StatusSource.ACTUAL, joinedMembers = 3, totalMembers = 3, isOwnCreator = true),
+            JointAccountStatusValue.Pending(
+                source = StatusSource.ACTUAL,
+                joinedMembers = 3,
+                totalMembers = 3,
+                threshold = 2,
+                isOwnCreator = true,
+            ),
         )
 
         // Act
@@ -127,7 +135,7 @@ internal class WalletJointAccountItemConverterTest {
     @Test
     fun `GIVEN confirming status not confirmed by this wallet WHEN convert THEN the confirm message`() {
         // Arrange
-        val status = createStatus(JointAccountStatusValue.Confirming(StatusSource.ACTUAL, totalMembers = 3))
+        val status = createStatus(JointAccountStatusValue.Confirming(StatusSource.ACTUAL, totalMembers = 3, threshold = 2))
 
         // Act
         val state = converter.convert(status).state as TangemAccountRow.State.NotActive
@@ -154,6 +162,7 @@ internal class WalletJointAccountItemConverterTest {
                 totalMembers = 3,
                 verifiedMembers = 1,
                 isOwnVerified = true,
+                threshold = 2,
             ),
         )
 
@@ -235,7 +244,7 @@ internal class WalletJointAccountItemConverterTest {
     @Test
     fun `GIVEN pending status WHEN row tapped THEN the members screen of the wallet is requested`() {
         // Arrange
-        val status = createStatus(JointAccountStatusValue.Pending(StatusSource.ACTUAL, 1, 3))
+        val status = createStatus(JointAccountStatusValue.Pending(StatusSource.ACTUAL, 1, 3, threshold = 2))
 
         // Act
         requireNotNull((converter.convert(status).state as TangemAccountRow.State.NotActive).onClick).invoke()
@@ -248,7 +257,12 @@ internal class WalletJointAccountItemConverterTest {
     fun `GIVEN active status WHEN convert THEN refused - the caller renders it as a regular portfolio`() {
         // Arrange
         val status = createStatus(
-            JointAccountStatusValue.Active(StatusSource.ACTUAL, totalMembers = 3, safeAddress = "0x5afe"),
+            JointAccountStatusValue.Active(
+                StatusSource.ACTUAL,
+                totalMembers = 3,
+                safeAddress = "0x5afe",
+                threshold = 2,
+            ),
         )
 
         // Act

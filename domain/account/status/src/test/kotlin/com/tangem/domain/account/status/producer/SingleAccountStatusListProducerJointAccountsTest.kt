@@ -82,7 +82,12 @@ internal class SingleAccountStatusListProducerJointAccountsTest {
 
             // Assert
             assertThat(status.value).isEqualTo(
-                JointAccountStatusValue.Active(source = StatusSource.ACTUAL, totalMembers = 3, safeAddress = SAFE),
+                JointAccountStatusValue.Active(
+                    source = StatusSource.ACTUAL,
+                    totalMembers = 3,
+                    safeAddress = SAFE,
+                    threshold = 2,
+                ),
             )
             val currencyStatus = status.tokenList.flattenCurrencies().single()
             assertThat(currencyStatus.currency).isEqualTo(jointEthereum)
@@ -138,7 +143,12 @@ internal class SingleAccountStatusListProducerJointAccountsTest {
         // Assert
         val status = list.jointStatus()
         assertThat(status.value).isEqualTo(
-            JointAccountStatusValue.Pending(source = StatusSource.ACTUAL, joinedMembers = 2, totalMembers = 3),
+            JointAccountStatusValue.Pending(
+                source = StatusSource.ACTUAL,
+                joinedMembers = 2,
+                totalMembers = 3,
+                threshold = 2,
+            ),
         )
         assertThat(status.tokenList).isEqualTo(TokenList.Empty)
         assertThat(list.totalFiatBalance).isInstanceOf(TotalFiatBalance.Loaded::class.java)
