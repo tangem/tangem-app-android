@@ -1,4 +1,4 @@
-package com.tangem.tap.common.analytics.handlers.opentelemetry
+package com.tangem.core.analytics.handlers.opentelemetry
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.test.core.ProvideTestModels
