@@ -6,11 +6,9 @@ import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pushNew
-import com.tangem.common.ui.cosign.CosignRequestRowUM
-import com.tangem.common.ui.cosign.SignatureProgressUM
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.features.txhistory.joint.operation.route.JointOperationRoutes
 import com.tangem.features.txhistory.joint.operation.signers.FinishedJointOperationSigners
+import com.tangem.features.txhistory.joint.operation.signers.withCosign
 import com.tangem.features.txhistory.joint.operation.signers.ui.state.JointOperationSignersUM
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.TangemBlogUrlBuilder
@@ -48,10 +46,7 @@ import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
-import com.tangem.domain.txhistory.model.explorerHash
-import com.tangem.domain.txhistory.model.idToCopy
 import com.tangem.domain.txhistory.usecase.GetCachedTokenInfoUseCase
-import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.features.rating.RatingComponent
 import com.tangem.features.txhistory.analytics.TxHistoryAnalyticsEvent
 import com.tangem.features.txhistory.analytics.toAnalyticsStatus
@@ -101,7 +96,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val shareManager: ShareManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
+    private val menuActions: TxDetailsMenuActions,
     private val getStakingTargetsByAddressUseCase: GetStakingTargetsByAddressUseCase,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
@@ -233,8 +228,6 @@ internal class TxHistoryDetailsModel @Inject constructor(
         // Each header-menu row drops with the data behind it: no explorer hash (an express op with no on-chain leg
         // yet, or a blank on-chain hash) drops "Explore"; only an express deal can describe itself as text, so an
         // on-chain row has no "Share"; a blank id drops the copy-id row.
-        val explorerHash = txInfo.explorerHash?.ifBlank { null }
-        val idToCopy = txInfo.idToCopy.ifBlank { null }
         val shareText = (txInfo as? ExpressTx)?.let(shareTextConverter::convert)
         val contactCandidate = txInfo
             .contactCandidate(currency = params.currency, lookup = lookup)
@@ -243,11 +236,11 @@ internal class TxHistoryDetailsModel @Inject constructor(
             currency = params.currency,
             onCopyAddress = { address -> onCopyAddress(address, txInfo) },
             onGoToProvider = { url -> onGoToProvider(url, txInfo) },
-            onCopyTxId = idToCopy?.let { id -> { onCopyTxId(id, txInfo) } },
+            onCopyTxId = menuActions.copyTxIdAction(txInfo = txInfo, currency = params.currency),
             copyIdTitle = resourceReference(txInfo.copyIdLabels.title),
             shareText = shareText,
             onShare = { text -> onShare(text, txInfo) },
-            onExplore = explorerHash?.let { hash -> { explore(hash, txInfo) } },
+            onExplore = menuActions.exploreAction(txInfo = txInfo, currency = params.currency),
             refundCurrency = refundToken,
             onLearnMoreAboutRefundsClick = ::onLearnMoreAboutRefunds,
             onGoToRefundedTokenClick = params.onOpenTokenDetails,
@@ -258,10 +251,17 @@ internal class TxHistoryDetailsModel @Inject constructor(
             onAddContact = contactCandidate?.let { candidate -> { openContactCreation(candidate) } },
             networkTokens = inputs.networkTokens,
             fiatConversion = inputs.fiatConversion,
-        ).convert(txInfo).withCosign(
-            signatures = inputs.jointSignatures,
-            onSignersClick = { stackNavigation.pushNew(JointOperationRoutes.Signers) },
-        ).also { um ->
+        ).convert(txInfo).let { um ->
+            val signatures = inputs.jointSignatures
+            if (um is TxHistoryDetailsUM.SingleAsset && signatures != null) {
+                um.withCosign(
+                    signatures = signatures,
+                    onSignersClick = { stackNavigation.pushNew(JointOperationRoutes.Signers) },
+                )
+            } else {
+                um
+            }
+        }.also { um ->
             if (!isScreenOpenedAnalyticsSent) {
                 isScreenOpenedAnalyticsSent = true
                 sendScreenOpenedAnalytics(txInfo = txInfo, title = um.header.title)
@@ -351,24 +351,6 @@ internal class TxHistoryDetailsModel @Inject constructor(
         )
     }
 
-    /** Copies the transaction id to the clipboard — wired into the header menu's copy-id row. */
-    private fun onCopyTxId(id: String, txInfo: TxHistoryInfo) {
-        analyticsEventHandler.send(
-            TxHistoryAnalyticsEvent.ButtonCopyTransactionId(
-                token = params.currency.symbol,
-                blockchain = params.currency.network.name,
-                type = txInfo.toAnalyticsType(),
-            ),
-        )
-        clipboardManager.setText(text = id, isSensitive = false)
-        uiMessageSender.send(
-            SnackbarMessage(
-                message = resourceReference(txInfo.copyIdLabels.copied),
-                startIconId = R.drawable.ic_check_24,
-            ),
-        )
-    }
-
     /** Shares the transaction summary — wired into the header menu's "Share" row. */
     private fun onShare(text: String, txInfo: TxHistoryInfo) {
         analyticsEventHandler.send(
@@ -380,22 +362,6 @@ internal class TxHistoryDetailsModel @Inject constructor(
             ),
         )
         shareManager.shareText(text)
-    }
-
-    /** Opens the transaction in the blockchain explorer — wired into the header menu's "Explore" row. */
-    private fun explore(txHash: String, txInfo: TxHistoryInfo) {
-        analyticsEventHandler.send(
-            TokenScreenAnalyticsEvent.ButtonExplore(
-                token = params.currency.symbol,
-                source = TokenScreenAnalyticsEvent.ButtonExplore.ExploreActionSource.TransactionDetail,
-                blockchain = params.currency.network.name,
-                type = txInfo.toAnalyticsType(),
-            ),
-        )
-        getExplorerTransactionUrlUseCase(txHash = txHash, currency = params.currency).fold(
-            ifLeft = { TangemLogger.e(it.toString()) },
-            ifRight = { urlOpener.openUrl(url = it) },
-        )
     }
 
     /**
@@ -493,24 +459,6 @@ private data class DetailsInputs(
     val fiatConversion: FiatConversion,
     val jointSignatures: FinishedJointOperationSigners.Signatures?,
 )
-
-private fun TxHistoryDetailsUM.withCosign(
-    signatures: FinishedJointOperationSigners.Signatures?,
-    onSignersClick: () -> Unit,
-): TxHistoryDetailsUM {
-    if (this !is TxHistoryDetailsUM.SingleAsset || signatures == null) return this
-
-    return copy(
-        cosign = CosignRequestRowUM(
-            title = resourceReference(
-                id = R.string.joint_operation_signatures_progress,
-                formatArgs = wrappedList(signatures.collected, signatures.threshold),
-            ),
-            progress = SignatureProgressUM(collected = signatures.collected, total = signatures.threshold),
-            onInfoClick = onSignersClick,
-        ),
-    )
-}
 
 /** Identity of the rating slot: re-activation is needed only when one of these deal fields changes. */
 private data class RatingKey(

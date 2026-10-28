@@ -6,11 +6,9 @@ import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ETAG_HEADER
 import com.tangem.data.txhistory.repository.converter.FinishedJointOperationConverter
 import com.tangem.data.txhistory.repository.converter.JointOperationEntityConverter
-import com.tangem.data.txhistory.repository.converter.JointOperationRecordConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.domain.jointaccount.model.FinishedJointOperation
 import com.tangem.domain.jointaccount.model.JointOperationFetchResult
-import com.tangem.domain.jointaccount.model.JointOperationRecord
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.repository.JointOperationHistoryRepository
@@ -29,6 +27,7 @@ import kotlinx.coroutines.flow.map
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.format.ISODateTimeFormat
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 /** Fetches the joint account operation history from the API and persists it into the local database */
@@ -40,7 +39,7 @@ internal class DefaultJointOperationHistoryRepository @Inject constructor(
 
     private val entityConverter = JointOperationEntityConverter()
     private val finishedConverter = FinishedJointOperationConverter()
-    private val recordConverter = JointOperationRecordConverter(finishedConverter)
+    private val operationETags = ConcurrentHashMap<OperationKey, String>()
 
     suspend fun fetchHistory(userWalletId: UserWalletId, limit: Int = DEFAULT_LIMIT): JointOperationHistoryResponse {
         val state = syncState(userWalletId)
@@ -116,12 +115,12 @@ internal class DefaultJointOperationHistoryRepository @Inject constructor(
         .map { it.toSet() }
         .distinctUntilChanged()
 
-    override fun observeOperation(userWalletId: UserWalletId, operationId: String): Flow<JointOperationRecord?> =
+    override fun observeOperation(userWalletId: UserWalletId, operationId: String): Flow<FinishedJointOperation?> =
         jointOperationDao.observeById(userWalletId = userWalletId.stringValue, operationId = operationId)
             .distinctUntilChanged()
             .map { entity ->
                 entity?.let { stored ->
-                    runCatching { recordConverter.convert(stored) }
+                    runCatching { finishedConverter.convert(stored) }
                         .onFailure { TangemLogger.e("Dropped the joint operation $operationId", it) }
                         .getOrNull()
                 }
@@ -130,25 +129,33 @@ internal class DefaultJointOperationHistoryRepository @Inject constructor(
     override suspend fun fetchOperation(
         userWalletId: UserWalletId,
         operationId: String,
-        eTag: String?,
     ): Either<Throwable, JointOperationFetchResult> = Either.catch {
+        val key = OperationKey(userWalletId = userWalletId, operationId = operationId)
         val response = jointAccountApi.getJointOperation(
             walletId = userWalletId.stringValue,
             operationId = operationId,
-            eTag = eTag,
+            eTag = operationETags[key],
         )
 
         when (response) {
-            is ApiResponse.Success -> {
+            is ApiResponse.Success -> if (response.data.isReadable()) {
                 store(userWalletId, listOf(response.data))
-                JointOperationFetchResult.Updated(eTag = response.headers[ETAG_HEADER]?.firstOrNull())
+                val eTag = response.headers[ETAG_HEADER]?.firstOrNull()
+                if (eTag != null) operationETags[key] = eTag else operationETags.remove(key)
+                JointOperationFetchResult.Updated
+            } else {
+                TangemLogger.e("Joint operation $operationId came back unreadable: status ${response.data.status}")
+                operationETags.remove(key)
+                JointOperationFetchResult.Gone
             }
             is ApiResponse.Error -> when ((response.cause as? ApiResponseError.HttpException)?.code) {
                 ApiResponseError.HttpException.Code.NOT_MODIFIED -> JointOperationFetchResult.NotModified
-                ApiResponseError.HttpException.Code.BAD_REQUEST,
                 ApiResponseError.HttpException.Code.NOT_FOUND,
                 ApiResponseError.HttpException.Code.FORBIDDEN,
-                -> JointOperationFetchResult.Gone
+                -> {
+                    operationETags.remove(key)
+                    JointOperationFetchResult.Gone
+                }
                 else -> throw response.cause
             }
         }
@@ -175,9 +182,15 @@ internal class DefaultJointOperationHistoryRepository @Inject constructor(
         historySyncStateDao.delete(type = SYNC_TYPE.name, userWalletId = userWalletId.stringValue)
     }
 
+    private fun JointOperationHistoryItemDto.isReadable(): Boolean {
+        return status in IN_FLIGHT_STATUSES ||
+            status in FinishedJointOperationConverter.FINISHED_STATUSES && finishedAt != null
+    }
+
     private suspend fun store(userWalletId: UserWalletId, items: List<JointOperationHistoryItemDto>) {
-        if (items.isEmpty()) return
-        val entities = items.map { item ->
+        val finished = items.filter { it.status in FinishedJointOperationConverter.FINISHED_STATUSES }
+        if (finished.isEmpty()) return
+        val entities = finished.map { item ->
             entityConverter.convert(JointOperationEntityConverter.Input(userWalletId = userWalletId, dto = item))
         }
         jointOperationDao.upsert(entities)
@@ -216,5 +229,8 @@ internal class DefaultJointOperationHistoryRepository @Inject constructor(
     private companion object {
         const val DEFAULT_LIMIT = 100
         val SYNC_TYPE = HistorySyncStateEntity.Type.JOINT_OPERATION
+        val IN_FLIGHT_STATUSES = setOf("awaiting_signatures", "pending")
     }
 }
+
+private data class OperationKey(val userWalletId: UserWalletId, val operationId: String)
