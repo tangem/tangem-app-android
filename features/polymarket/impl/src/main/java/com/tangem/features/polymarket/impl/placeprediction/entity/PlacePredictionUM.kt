@@ -37,7 +37,8 @@ internal data class PlacePredictionUM(
     val isAwaitingFunds: Boolean = false,
     val lastFeeRate: BigDecimal = BigDecimal.ZERO,
     val isAmountFromFraction: Boolean = false,
-    val placeButtonType: PlaceButtonTypeUM = PlaceButtonTypeUM.RequiredNfcInteraction,
+    val isHoldToConfirm: Boolean = false,
+    val holdResetKey: Int = 0,
 ) {
 
     companion object {
@@ -219,8 +220,6 @@ internal val OrderSideUM.balance: BigDecimal?
         is OrderSideUM.Buy -> balance
         is OrderSideUM.Sell -> balance
     }
-
-internal enum class PlaceButtonTypeUM { RequiredNfcInteraction, HoldToConfirm }
 
 internal enum class TradingPermissionUM { Unknown, Allowed, Restricted }
 
