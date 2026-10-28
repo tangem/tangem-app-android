@@ -1,10 +1,10 @@
-package com.tangem.tap.common.analytics.appsflyer
+package com.tangem.core.analytics.handlers.appsflyer
 
+import com.tangem.core.analytics.api.AppsFlyerConversionDataHandler
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
-import io.mockk.coVerify
 import io.mockk.mockk
-import kotlinx.coroutines.test.runTest
+import io.mockk.verify
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -15,29 +15,28 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TangemAFConversionListenerTest {
 
-    private val referralParamsHandler: AppsFlyerReferralParamsHandler = mockk(relaxUnitFun = true)
-    private val googleAdsConversionDataReporter: GoogleAdsConversionDataReporter = mockk(relaxUnitFun = true)
+    private val firstHandler: AppsFlyerConversionDataHandler = mockk(relaxUnitFun = true)
+    private val secondHandler: AppsFlyerConversionDataHandler = mockk(relaxUnitFun = true)
     private val listener = TangemAFConversionListener(
-        referralParamsHandler = referralParamsHandler,
-        googleAdsConversionDataReporter = googleAdsConversionDataReporter,
+        conversionDataHandlers = setOf(firstHandler, secondHandler),
     )
 
     @AfterEach
     fun tearDown() {
-        clearMocks(referralParamsHandler, googleAdsConversionDataReporter)
+        clearMocks(firstHandler, secondHandler)
     }
 
     @ParameterizedTest
     @ProvideTestModels
-    fun onConversionDataSuccess(model: OnConversionDataSuccessModel) = runTest {
+    fun onConversionDataSuccess(model: OnConversionDataSuccessModel) {
         listener.onConversionDataSuccess(p0 = model.params)
 
         if (model.shouldHandle) {
-            coVerify { referralParamsHandler.handle(params = model.params!!) }
-            coVerify { googleAdsConversionDataReporter.report(conversionData = model.params!!) }
+            verify { firstHandler.handle(conversionData = model.params!!) }
+            verify { secondHandler.handle(conversionData = model.params!!) }
         } else {
-            coVerify(inverse = true) { referralParamsHandler.handle(params = any()) }
-            coVerify(inverse = true) { googleAdsConversionDataReporter.report(conversionData = any()) }
+            verify(inverse = true) { firstHandler.handle(conversionData = any()) }
+            verify(inverse = true) { secondHandler.handle(conversionData = any()) }
         }
     }
 
