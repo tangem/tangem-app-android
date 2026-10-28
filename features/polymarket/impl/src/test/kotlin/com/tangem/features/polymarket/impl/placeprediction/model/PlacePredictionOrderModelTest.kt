@@ -22,6 +22,7 @@ import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceActionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceButtonTypeUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
@@ -42,6 +43,7 @@ import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
@@ -236,6 +238,36 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             // Assert
             verify(exactly = 0) { router.pop(any()) }
         }
+    }
+
+    @Nested
+    inner class PlaceButton {
+
+        @Test
+        fun `GIVEN a hot wallet WHEN the order screen opens THEN the order is placed by holding the button`() =
+            runOrderTest {
+                // Arrange
+                every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(hotWallet()))
+
+                // Act
+                val model = createOrderModel(testScope = this)
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonType).isEqualTo(PlaceButtonTypeUM.HoldToConfirm)
+            }
+
+        @Test
+        fun `GIVEN a card wallet WHEN the order screen opens THEN the order is placed by tapping the button`() =
+            runOrderTest {
+                // Arrange
+                every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(coldWallet()))
+
+                // Act
+                val model = createOrderModel(testScope = this)
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonType).isEqualTo(PlaceButtonTypeUM.RequiredNfcInteraction)
+            }
     }
 
     @Nested
