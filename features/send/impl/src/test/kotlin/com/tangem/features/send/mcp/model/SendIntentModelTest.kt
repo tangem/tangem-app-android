@@ -671,6 +671,9 @@ internal class SendIntentModelTest {
             LoadFailedModel("token held at other addresses", "Wrong Wallet") {
                 coEvery { sourceResolver.resolve(walletId, any()) } returns SendIntentSource.OtherSender
             },
+            LoadFailedModel("sender not resolved yet", "Unknown") {
+                coEvery { sourceResolver.resolve(walletId, any()) } returns SendIntentSource.Unresolved
+            },
             LoadFailedModel("accounts unreadable", "Unknown") {
                 coEvery { sourceResolver.resolve(walletId, any()) } returns null
             },
