@@ -17,6 +17,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.details.TangemPayBankTransferOnrampDetailsAnalytics
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.onboarding.TangemPayBankTransferOnrampOnboardingComponent
@@ -157,7 +158,9 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
             params = TangemPayBankTransferOnrampDetailsComponent.Params(
                 userWalletId = params.initialStatus.userWalletId,
                 bankCredentials = config.bankCredentials,
-                feeSource = TangemPayBankTransferOnrampDetailsComponent.FeeSource.CATALOGUE,
+                feeSource = TangemPayBankTransferOnrampDetailsComponent.FeeSource.Catalogue(
+                    product = TangemPayProduct.PAYMENT_ACCOUNT,
+                ),
                 analytics = bankDetailsAnalytics,
             ),
         )

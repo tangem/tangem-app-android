@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.pay.usecase.GetOnrampFeesUseCase
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesLoader
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesUM
@@ -37,11 +38,6 @@ internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
 
     private val requisitesConverter = TangemPayBankTransferOnrampRequisitesUMConverter(onCopyClick = ::onCopyClick)
     private val dailyDepositLimitConverter = TangemPayDailyDepositLimitUMConverter()
-    private val feesLoader = TangemPayOnrampFeesLoader(
-        getOnrampFeesUseCase = getOnrampFeesUseCase,
-        userWalletId = params.userWalletId,
-        scope = modelScope,
-    )
 
     private val requisites = requisitesConverter.convert(params.bankCredentials)
 
@@ -58,15 +54,21 @@ internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
 
     init {
         params.analytics.onDetailsShown()
-        when (params.feeSource) {
-            FeeSource.CATALOGUE -> loadCatalogueFees()
-            FeeSource.ROUTE -> uiState.update { state ->
+        when (val feeSource = params.feeSource) {
+            is FeeSource.Catalogue -> loadCatalogueFees(feeSource.product)
+            FeeSource.Route -> uiState.update { state ->
                 state.copy(fees = TangemPayRouteFeeUMConverter.convert(params.bankCredentials))
             }
         }
     }
 
-    private fun loadCatalogueFees() {
+    private fun loadCatalogueFees(product: TangemPayProduct) {
+        val feesLoader = TangemPayOnrampFeesLoader(
+            getOnrampFeesUseCase = getOnrampFeesUseCase,
+            userWalletId = params.userWalletId,
+            product = product,
+            scope = modelScope,
+        )
         feesLoader.fees
             .onEach { fees -> uiState.update { state -> state.copy(fees = fees) } }
             .launchIn(modelScope)
