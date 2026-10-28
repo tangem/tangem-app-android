@@ -27,6 +27,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,6 +58,8 @@ import com.tangem.core.ui.components.sheetscaffold.TangemSheetState
 import com.tangem.core.ui.components.sheetscaffold.TangemSheetValue
 import com.tangem.core.ui.components.sheetscaffold.rememberSheetState
 import com.tangem.core.ui.ds2.DsVersion
+import com.tangem.core.ui.ds2.messagebanner.LocalMessageBannerDefaultVariant
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.res.LocalBottomSheetAlwaysVisible
@@ -599,7 +602,7 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> PreviewTangemMo
 
 @Composable
 @PublishedApi
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LongMethod")
 internal inline fun <reified T : TangemBottomSheetConfigContent> TangemModalContainer(
     config: TangemBottomSheetConfig,
     isMaterial: Boolean,
@@ -657,14 +660,24 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> TangemModalCont
                             hazeState = contentHazeState,
                             isShown = showDragIndicator,
                         ) { title(model) }
-                        ModalContentColumn(hazeState = contentHazeState, scrollableContent = scrollableContent) {
+                        ModalContentColumn(
+                            hazeState = contentHazeState,
+                            scrollableContent = scrollableContent,
+                            geometry = morphGeometry,
+                            isMaterial = isMaterial,
+                        ) {
                             content(model)
                         }
                     }
                     // The chrome is a sibling drawn after the haze source, never inside it: glass
                     // title buttons blur the content under them without sampling themselves.
                     TangemModal.ChromePlacement.Overlay -> Box(modifier = Modifier.fillMaxWidth()) {
-                        ModalContentColumn(hazeState = contentHazeState, scrollableContent = scrollableContent) {
+                        ModalContentColumn(
+                            hazeState = contentHazeState,
+                            scrollableContent = scrollableContent,
+                            geometry = morphGeometry,
+                            isMaterial = isMaterial,
+                        ) {
                             content(model)
                         }
                         ModalChrome(
@@ -698,14 +711,24 @@ internal fun ModalChrome(
     }
 }
 
-/** The caller's content: the card's haze source, IME-padded, optionally scrolling. */
+/**
+ * The caller's content: the card's haze source, IME-padded, optionally scrolling. While the card is glass (a
+ * [isMaterial] card short of edge-to-edge), default message banners render on-material.
+ */
 @Composable
 @PublishedApi
 internal fun ModalContentColumn(
     hazeState: HazeState,
     scrollableContent: Boolean,
+    geometry: ModalMorphGeometry,
+    isMaterial: Boolean,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val isOnGlass by remember(geometry, isMaterial) {
+        derivedStateOf { isMaterial && geometry.flatten < 0.5f }
+    }
+    val bannerVariant = if (isOnGlass) TangemMessageBanner.Variant.OnMaterial else TangemMessageBanner.Variant.Default
+
     // Content glass must not sample the host state: every modal entry is a source of it, so a glass
     // element inside the content would draw the layer that contains it (a RenderThread stack overflow).
     // An isolated state keeps content glass, and any sources the content registers (a footer fade), in a
@@ -720,7 +743,10 @@ internal fun ModalContentColumn(
     val modifier = Modifier
         .hazeSourceTangem(state = hazeState)
         .consumeWindowInsets(WindowInsets.ime)
-    CompositionLocalProvider(LocalHazeState provides isolatedHazeState) {
+    CompositionLocalProvider(
+        LocalHazeState provides isolatedHazeState,
+        LocalMessageBannerDefaultVariant provides bannerVariant,
+    ) {
         Column(
             modifier = if (scrollableContent) modifier.verticalScroll(rememberScrollState()) else modifier,
             content = content,
