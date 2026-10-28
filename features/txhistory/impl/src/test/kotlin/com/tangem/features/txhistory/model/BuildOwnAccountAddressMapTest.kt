@@ -5,21 +5,25 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.core.utils.lceError
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.MockAccounts
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 /**
@@ -33,6 +37,15 @@ internal class BuildOwnAccountAddressMapTest {
 
     private val bitcoin = MockCryptoCurrencyFactory().bitcoin
     private val bitcoinRawId = bitcoin.network.id.rawId
+
+    private val moneyAccount = Account.Money(MockAccounts.userWalletId)
+    private val moneyToken = MockAccounts.createPaymentAccountToken()
+    private val moneyBalance = MoneyAccountStatusValue.Balance(
+        cryptoAmount = BigDecimal.TEN,
+        depositAddress = MONEY_ADDRESS,
+        currencyCode = "USD",
+        fiatRate = BigDecimal.ONE,
+    )
 
     @Test
     fun `GIVEN currency with several address types WHEN build THEN every address maps to the account`() = runTest {
@@ -138,6 +151,47 @@ internal class BuildOwnAccountAddressMapTest {
         )
     }
 
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN money account status WHEN build THEN deposit address maps to the money account only with a balance`(
+        model: MoneyModel,
+    ) = runTest {
+        // Arrange
+        val lists = listOf(accountStatusList(AccountStatus.Money(account = moneyAccount, value = model.value)))
+
+        // Act
+        val actual = buildOwnAccountAddressMapAllNetworks(lists) { _, _ -> emptyList() }
+
+        // Assert
+        assertThat(actual).isEqualTo(model.expected)
+    }
+
+    private fun provideTestModels(): List<MoneyModel> {
+        val registered = mapOf(moneyToken.network.id.rawId to mapOf(MONEY_ADDRESS to moneyAccount))
+        return listOf(
+            MoneyModel(value = activeMoneyAccount(balance = moneyBalance), expected = registered),
+            MoneyModel(
+                value = MoneyAccountStatusValue.Account.Deactivated(
+                    source = StatusSource.ACTUAL,
+                    cryptoCurrency = moneyToken,
+                    balance = moneyBalance,
+                    customerId = "cust_1",
+                ),
+                expected = registered,
+            ),
+            MoneyModel(value = activeMoneyAccount(balance = null), expected = emptyMap()),
+            MoneyModel(value = MoneyAccountStatusValue.Empty, expected = emptyMap()),
+        )
+    }
+
+    private fun activeMoneyAccount(balance: MoneyAccountStatusValue.Balance?) = MoneyAccountStatusValue.Account.Active(
+        source = StatusSource.ACTUAL,
+        cryptoCurrency = moneyToken,
+        balance = balance,
+        customerId = "cust_1",
+        productInstanceId = "pi_money",
+    )
+
     private fun accountStatusList(
         vararg statuses: AccountStatus,
         userWalletId: UserWalletId = MockAccounts.userWalletId,
@@ -197,6 +251,11 @@ internal class BuildOwnAccountAddressMapTest {
         value = CryptoCurrencyStatus.Loading,
     )
 
+    data class MoneyModel(
+        val value: MoneyAccountStatusValue,
+        val expected: Map<Network.RawID, Map<String, Account>>,
+    )
+
     private companion object {
         const val SEGWIT_ADDRESS = "bc1q2h9dg7krrys54u53wrhnts4gncmv99dg4uqglw"
         const val LEGACY_ADDRESS = "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2"
@@ -204,5 +263,6 @@ internal class BuildOwnAccountAddressMapTest {
         const val RECIPIENT_DYNAMIC_ADDRESS = "bc1qh5fhjnddqk5zjx38gz727dd9nu5ht2sww50k7f"
         const val RECIPIENT_PATH = "m/84'/0'/1'/0/0"
         const val DEPOSIT_ADDRESS = "0xdeposit"
+        const val MONEY_ADDRESS = "0x314DE614f5F525833a86524781D737B41f93c529"
     }
 }
