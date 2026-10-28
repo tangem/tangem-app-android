@@ -2,7 +2,6 @@ package com.tangem.features.foryou.impl.model.transformer
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
-import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
@@ -218,8 +217,7 @@ internal class ApplyExpandedAssetsTransformerTest {
             onAllEarnTokensClick = {},
         ),
         notifications = persistentListOf(),
-        periodPickerUM = TangemSegmentedPickerUM(persistentListOf()),
-        onPeriodClick = {},
+        periodPickerUM = persistentListOf(),
         portfolioFilter = TangemFilterItemUM.Loading(id = "portfolio_selector"),
     )
 
@@ -238,8 +236,7 @@ internal class ApplyExpandedAssetsTransformerTest {
             tokenList = earnItems.toPersistentList().asSingleForYouGroup(),
         ),
         notifications = persistentListOf(),
-        periodPickerUM = TangemSegmentedPickerUM(persistentListOf()),
-        onPeriodClick = {},
+        periodPickerUM = persistentListOf(),
         portfolioFilter = TangemFilterItemUM.Loading(id = "portfolio_selector"),
     )
 }

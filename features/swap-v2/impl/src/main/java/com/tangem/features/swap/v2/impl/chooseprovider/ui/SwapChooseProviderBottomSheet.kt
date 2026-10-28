@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -93,6 +94,7 @@ internal fun SwapChooseProviderContent(
                 selectedFilter = contentUM.selectedFilter,
                 onFilterSelect = onFilterSelect,
                 modifier = Modifier
+                    .fillMaxWidth()
                     .padding(horizontal = 4.dp)
                     .padding(bottom = 12.dp),
             )
