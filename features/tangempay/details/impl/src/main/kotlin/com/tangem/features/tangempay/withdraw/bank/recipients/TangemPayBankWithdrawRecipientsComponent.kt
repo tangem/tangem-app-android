@@ -10,6 +10,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.bankofframp.BankAccount
+import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.recipients.model.TangemPayBankWithdrawRecipientsModel
 import com.tangem.features.tangempay.withdraw.bank.recipients.ui.TangemPayBankWithdrawRecipientsScreen
 
@@ -28,8 +29,10 @@ internal class TangemPayBankWithdrawRecipientsComponent(
     }
 
     data class Params(
-        val userWalletId: UserWalletId,
+        val sourceAccount: BankWithdrawSourceAccount,
         val onRecipientSelected: (BankAccount) -> Unit,
         val onCloseFlow: () -> Unit,
-    )
+    ) {
+        val userWalletId: UserWalletId get() = sourceAccount.userWalletId
+    }
 }
