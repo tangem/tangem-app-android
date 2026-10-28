@@ -41,7 +41,6 @@ internal fun previewTokenSummary(
             "buffer. Consider trimming concentration for a smoother ride",
     ),
     bottomButton = bottomButton,
-    onPeriodClick = {},
     onCloseClick = {},
     onInfoClick = {},
 )
