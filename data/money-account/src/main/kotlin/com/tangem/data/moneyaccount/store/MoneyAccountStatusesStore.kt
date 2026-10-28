@@ -18,12 +18,6 @@ import kotlinx.coroutines.launch
 internal typealias WalletIdWithMoneyAccountStatus = Map<String, AccountStatus.Money>
 internal typealias WalletIdWithMoneyAccountStatusDM = Map<String, MoneyAccountStatusValueDM>
 
-/**
- * Store for money account statuses with dual storage (runtime + persistence).
- *
- * @property runtimeStore         runtime store for fast in-memory access
- * @property persistenceDataStore persistence store for caching across app restarts
- */
 internal class MoneyAccountStatusesStore(
     private val runtimeStore: RuntimeSharedStore<WalletIdWithMoneyAccountStatus>,
     private val persistenceDataStore: DataStore<WalletIdWithMoneyAccountStatusDM>,
@@ -76,6 +70,14 @@ internal class MoneyAccountStatusesStore(
 
     suspend fun contains(userWalletId: UserWalletId): Boolean {
         return runtimeStore.getSyncOrDefault(emptyMap()).containsKey(userWalletId.stringValue)
+    }
+
+    suspend fun clear(userWalletIds: List<UserWalletId>) {
+        val keys = userWalletIds.map { it.stringValue }.toSet()
+        coroutineScope {
+            launch { runtimeStore.update(default = emptyMap()) { it - keys } }
+            launch { persistenceDataStore.updateData { it - keys } }
+        }
     }
 
     private suspend fun storeInRuntime(userWalletId: UserWalletId, status: AccountStatus.Money) {
