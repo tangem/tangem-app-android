@@ -260,18 +260,18 @@ internal class PlacePredictionComponentTest : PlacePredictionModelTestBase() {
             advanceTimeBy(QUOTE_POLL_INTERVAL_MILLIS * 3)
 
             // Assert
-            coVerify(exactly = 0) { getQuoteUseCase(any()) }
+            coVerify(exactly = 0) { getQuoteUseCase(any(), any()) }
             coVerify(exactly = 0) { getPriceUseCase(assetId = any(), side = any()) }
             signature.complete(Unit)
             runCurrent()
-            coVerify(exactly = 1) { getQuoteUseCase(any()) }
+            coVerify(exactly = 1) { getQuoteUseCase(any(), any()) }
             lifecycle.destroy()
         }
 
     @Test
     fun `GIVEN quick order enabled WHEN a close opens THEN the order screen loads the position and quotes`() = runTest {
         // Arrange
-        coEvery { getQuoteUseCase(any()) } returns createSellQuote().right()
+        coEvery { getQuoteUseCase(any(), any()) } returns createSellQuote().right()
 
         // Act
         createComponent(this, isQuickOrderEnabled = true, componentParams = SELL_PARAMS)
@@ -280,7 +280,7 @@ internal class PlacePredictionComponentTest : PlacePredictionModelTestBase() {
         // Assert
         assertThat(models.filterIsInstance<PlacePredictionOrderModel>()).hasSize(1)
         coVerify { positionsRepository.getPosition(addresses = any(), id = any()) }
-        coVerify { getQuoteUseCase(any()) }
+        coVerify { getQuoteUseCase(any(), any()) }
         lifecycle.destroy()
     }
 
@@ -301,7 +301,7 @@ internal class PlacePredictionComponentTest : PlacePredictionModelTestBase() {
         // Assert
         assertThat(models.filterIsInstance<PlacePredictionStatusModel>()).hasSize(1)
         coVerify(exactly = 1) { placeOrderUseCase(any(), any(), any()) }
-        coVerify(exactly = 1) { getQuoteUseCase(any()) }
+        coVerify(exactly = 1) { getQuoteUseCase(any(), any()) }
         lifecycle.destroy()
     }
 
