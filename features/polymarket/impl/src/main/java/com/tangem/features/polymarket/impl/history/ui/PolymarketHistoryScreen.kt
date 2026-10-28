@@ -25,6 +25,7 @@ import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
@@ -42,6 +43,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_globe_20
 import com.tangem.core.ui.res.generated.icons.ic_info_20
+import com.tangem.core.ui.test.PredictionTestTags
 import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadMoreEffect
 import com.tangem.features.polymarket.impl.common.ui.PolymarketNextPageLoader
 import com.tangem.features.polymarket.impl.common.ui.PolymarketReloadPrompt
@@ -55,7 +57,7 @@ internal fun PolymarketHistoryScreen(state: PolymarketHistoryUM, modifier: Modif
     val layoutDirection = LocalLayoutDirection.current
     ProvideHaze {
         TangemTopBarScaffold(
-            modifier = modifier.fillMaxSize().imePadding(),
+            modifier = modifier.fillMaxSize().imePadding().testTag(PredictionTestTags.HISTORY_SCREEN),
             topBar = { HistoryTopBar(state) },
             overlay = { contentPadding ->
                 val content = state.content
