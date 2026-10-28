@@ -10,6 +10,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayProduct
@@ -23,12 +24,16 @@ import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.wallets.models.CreateHotWalletError
 import com.tangem.domain.wallets.usecase.CreateHotWalletUseCase
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -541,7 +546,7 @@ internal class TangemPayOnboardingStarterTest {
             runTest {
                 // Arrange
                 every { isHotWalletCreationSupported() } returns true
-                coEvery { createHotWalletUseCase(any(), any()) } returns RuntimeException("boom").left()
+                coEvery { createHotWalletUseCase(any(), any()) } returns CreateHotWalletError.Failed(RuntimeException("boom")).left()
 
                 // Act
                 val actual = starter.createHotWallet(onLoadingChange = callbacks.onLoadingChange)
@@ -550,6 +555,24 @@ internal class TangemPayOnboardingStarterTest {
                 assertThat(actual).isNull()
                 assertThat(loadingChanges).containsExactly(false)
                 verify(exactly = 1) { uiMessageSender.send(any<DialogMessage>()) }
+            }
+
+        @Test
+        fun `GIVEN hot wallets limit reached WHEN createHotWallet THEN limit dialog shown AND null returned`() =
+            runTest {
+                // Arrange
+                every { isHotWalletCreationSupported() } returns true
+                coEvery { createHotWalletUseCase(any(), any()) } returns CreateHotWalletError.LimitReached.left()
+                val dialog = slot<DialogMessage>()
+                every { uiMessageSender.send(capture(dialog)) } just runs
+
+                // Act
+                val actual = starter.createHotWallet(onLoadingChange = callbacks.onLoadingChange)
+
+                // Assert
+                assertThat(actual).isNull()
+                assertThat(loadingChanges).containsExactly(false)
+                assertThat(dialog.captured.message).isEqualTo(Dialogs.hotWalletsLimitReachedDialog().message)
             }
     }
 
