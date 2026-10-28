@@ -33,6 +33,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictio
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.canShowFeeBreakdown
+import com.tangem.features.polymarket.impl.placeprediction.entity.orderTotal
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionOrderIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionAmountPresets
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionNotificationsBlock
@@ -132,7 +133,7 @@ private fun OrderBody(
         ) {
             PredictionOrderDetailsCard(
                 slippage = state.slippage,
-                total = (state.quote as? QuoteUM.Content)?.total?.formatPolymarketMoney() ?: DASH_SIGN,
+                total = state.orderTotal()?.formatPolymarketMoney() ?: DASH_SIGN,
                 isTotalLoading = state.quote is QuoteUM.Loading,
                 onSlippageClick = intents::onSlippageClick.takeIf { isIdle },
                 onTotalClick = intents::onFeeClick.takeIf { state.canShowFeeBreakdown() },
