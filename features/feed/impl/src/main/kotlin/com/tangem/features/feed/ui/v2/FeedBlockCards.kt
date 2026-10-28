@@ -43,7 +43,7 @@ internal fun FeedShortcutCard(
 ) {
     TangemSurface(
         modifier = modifier,
-        color = TangemTheme.colors3.bg.opaque.primary,
+        color = TangemTheme.colors3.bg.transparent.primary,
         shape = FeedBlockShape,
         onClick = onClick,
     ) {
@@ -144,7 +144,7 @@ private fun FeedPromoCardFrame(
 ) {
     TangemSurface(
         modifier = modifier,
-        color = TangemTheme.colors3.bg.opaque.primary,
+        color = TangemTheme.colors3.bg.transparent.primary,
         shape = FeedBlockShape,
         onClick = onClick,
     ) {
@@ -187,7 +187,7 @@ private fun FeedPromoCardFrame(
 internal fun FeedTitleCard(title: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     TangemSurface(
         modifier = modifier,
-        color = TangemTheme.colors3.bg.opaque.primary,
+        color = TangemTheme.colors3.bg.transparent.primary,
         shape = FeedBlockShape,
         onClick = onClick,
     ) {
@@ -230,7 +230,7 @@ private fun PlusAffordance() {
         modifier = Modifier
             .size(size = 24.dp)
             .clip(shape = CircleShape)
-            .background(color = TangemTheme.colors3.bg.opaque.primary),
+            .background(color = TangemTheme.colors3.bg.transparent.primary),
         contentAlignment = Alignment.Center,
     ) {
         Icon(

@@ -15,7 +15,6 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.feed.search.usecase.SaveFeedSearchQueryUseCase
 import com.tangem.domain.markets.CoinCategory
 import com.tangem.domain.markets.GetCoinCategoriesUseCase
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
@@ -93,7 +92,6 @@ internal class RwaFeedSearchTabModelTest {
     private val getWalletIconUseCase: GetWalletIconUseCase = mockk()
     private val walletIconUMConverter: WalletIconUMConverter = mockk()
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
-    private val saveFeedSearchQueryUseCase: SaveFeedSearchQueryUseCase = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
 
     private val actions = mutableListOf<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>()
@@ -113,7 +111,6 @@ internal class RwaFeedSearchTabModelTest {
             getSearchResultsUseCase,
             router,
             analyticsEventHandler,
-            saveFeedSearchQueryUseCase,
         )
         actions.clear()
         batchState.value = BatchListState(data = emptyList(), status = PaginationStatus.None)
@@ -443,7 +440,7 @@ internal class RwaFeedSearchTabModelTest {
     }
 
     @Test
-    fun `GIVEN an asset row WHEN it is clicked THEN the query is written to search history`() =
+    fun `GIVEN an asset row WHEN it is clicked THEN token details open`() =
         runTest {
             // Arrange
             val query = MutableStateFlow("")
@@ -459,7 +456,6 @@ internal class RwaFeedSearchTabModelTest {
             advanceUntilIdle()
 
             // Assert
-            coVerify(exactly = 1) { saveFeedSearchQueryUseCase("tsla") }
             verify { router.push(route = any<FeedRoute.MarketsTokenDetails>(), onComplete = any()) }
 
             model.onDestroy()
@@ -627,7 +623,6 @@ internal class RwaFeedSearchTabModelTest {
             getWalletIconUseCase = getWalletIconUseCase,
             walletIconUMConverter = walletIconUMConverter,
             analyticsEventHandler = analyticsEventHandler,
-            saveFeedSearchQueryUseCase = saveFeedSearchQueryUseCase,
             router = router,
         )
     }

@@ -20,15 +20,15 @@ internal class ChangeCollectionExpandedStateTransformer(
             is NFTCollectionsUM.Failed,
             -> prevState.content
             is NFTCollectionsUM.Content -> prevState.content.copy(
-                collections = prevState.content.collections.map {
+                collections = prevState.content.collections.map { collectionItem ->
                     val collectionId = collection.collectionIdProvider()
-                    if (it.id == collectionId && it is NFTCollectionUM) {
-                        if (!it.isExpanded) {
+                    if (collectionItem.id == collectionId && collectionItem is NFTCollectionUM) {
+                        if (!collectionItem.isExpanded) {
                             onFirstExpanded()
                         }
-                        it.copy(isExpanded = !it.isExpanded)
+                        collectionItem.copy(isExpanded = !collectionItem.isExpanded)
                     } else {
-                        it
+                        collectionItem
                     }
                 }.toPersistentList(),
             )

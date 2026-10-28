@@ -17,6 +17,7 @@ import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -135,17 +136,56 @@ internal class DefaultSocialRecoveryRepositoryTest {
     }
 
     @Test
-    fun `GIVEN the wallet id WHEN unbindWallet THEN the backend id is passed through`() = runTest {
+    fun `GIVEN a wallet WHEN unbindWallet THEN its backend id is passed through`() = runTest {
         // Arrange
         coEvery { client.unbindWallet(any()) } returns Unit.right()
 
         // Act
-        val actual = repository.unbindWallet(WALLET_ID)
+        val actual = repository.unbindWallet(userWallet)
 
         // Assert
         assertThat(actual).isEqualTo(Unit.right())
         coVerify(exactly = 1) { client.unbindWallet(BACKEND_WALLET_ID) }
     }
+
+    @Test
+    fun `GIVEN a wallet not registered here WHEN unbindWallet THEN it is registered and unbound again`() = runTest {
+        // Arrange — the answer to its register got lost, so the backend has the binding but not the wallet
+        val signer: WalletSigner = mockk()
+        every { hotWalletSignerFactory.signerFor(userWallet) } returns signer
+        coEvery { client.unbindWallet(BACKEND_WALLET_ID) } returnsMany listOf(
+            SocialRecoveryError.WalletNotRegistered.left(),
+            Unit.right(),
+        )
+        coEvery { client.registerWallet(BACKEND_WALLET_ID, signer) } returns Unit.right()
+
+        // Act
+        val actual = repository.unbindWallet(userWallet)
+
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+        coVerifyOrder {
+            client.unbindWallet(BACKEND_WALLET_ID)
+            client.registerWallet(BACKEND_WALLET_ID, signer)
+            client.unbindWallet(BACKEND_WALLET_ID)
+        }
+    }
+
+    @Test
+    fun `GIVEN the wallet cannot be registered WHEN unbindWallet THEN the binding is not reported as erased`() =
+        runTest {
+            // Arrange
+            every { hotWalletSignerFactory.signerFor(userWallet) } returns mockk()
+            coEvery { client.unbindWallet(BACKEND_WALLET_ID) } returns SocialRecoveryError.WalletNotRegistered.left()
+            coEvery { client.registerWallet(any(), any()) } returns SocialRecoveryError.Api(AuthError.NetworkError).left()
+
+            // Act
+            val actual = repository.unbindWallet(userWallet)
+
+            // Assert
+            assertThat(actual).isEqualTo(SocialLoginError.NetworkError.left())
+            coVerify(exactly = 1) { client.unbindWallet(any()) }
+        }
 
     @ParameterizedTest
     @ProvideTestModels
@@ -170,6 +210,7 @@ internal class DefaultSocialRecoveryRepositoryTest {
             ErrorModel(SocialRecoveryError.BindingConflict, SocialLoginError.BindingConflict),
             ErrorModel(SocialRecoveryError.NonceExpired, SocialLoginError.ServerError()),
             ErrorModel(SocialRecoveryError.NoActiveSession, SocialLoginError.ServerError()),
+            ErrorModel(SocialRecoveryError.WalletNotRegistered, SocialLoginError.ServerError()),
             ErrorModel(SocialRecoveryError.DeviceKeyUnavailable, SocialLoginError.ServerError()),
             ErrorModel(SocialRecoveryError.SigningFailed(cause), SocialLoginError.ServerError(cause)),
             ErrorModel(

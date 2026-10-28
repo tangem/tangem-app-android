@@ -34,7 +34,7 @@ fun FullScreen(
     val fullScreenLayout = remember {
         FullScreenLayout(
             isNotTouchable = notTouchable,
-            focusable = focusable,
+            isFocusable = focusable,
             composeView = view,
             onBackClick = onBackClick,
             uniqueId = id,
@@ -54,7 +54,7 @@ fun FullScreen(
 @SuppressLint("ViewConstructor", "ClickableViewAccessibility")
 private class FullScreenLayout(
     private val isNotTouchable: Boolean,
-    private val focusable: Boolean,
+    private val isFocusable: Boolean,
     private val composeView: View,
     private val onBackClick: () -> Unit,
     uniqueId: UUID,
@@ -102,7 +102,7 @@ private class FullScreenLayout(
         height = WindowManager.LayoutParams.MATCH_PARENT
         format = PixelFormat.TRANSLUCENT
 
-        if (focusable && Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
+        if (isFocusable && Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
             softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
         } else {
             flags = WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
@@ -113,7 +113,7 @@ private class FullScreenLayout(
         if (isViewShowing) dismiss()
         windowManager.addView(this, params)
 
-        if (focusable.not()) {
+        if (isFocusable.not()) {
             params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
         }
 
@@ -126,7 +126,7 @@ private class FullScreenLayout(
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (focusable.not()) {
+        if (isFocusable.not()) {
             return super.dispatchKeyEvent(event)
         }
 

@@ -32,7 +32,7 @@ class CheckOnrampAvailabilityUseCase(
     ): OnrampAvailability {
         val countries = repository.fetchCountries(userWallet)
         val updatedCountry = countries.find { it.id == savedCountry.id } ?: savedCountry
-        return if (updatedCountry.onrampAvailable) {
+        return if (updatedCountry.isOnrampAvailable) {
             val currency = repository.getDefaultCurrencySync() ?: run {
                 repository.saveDefaultCurrency(savedCountry.defaultCurrency)
                 savedCountry.defaultCurrency

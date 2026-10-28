@@ -440,10 +440,10 @@ private fun HoldToConfirmButtonContent(
         if (shouldShowProgress) {
             CircularProgressIndicator(
                 modifier = Modifier
-                    .size(TangemTheme.dimens.size24)
+                    .size(24.dp)
                     .graphicsLayer { alpha = state.textAlpha.value },
                 color = color.contentColor,
-                strokeWidth = TangemTheme.dimens.spacing2,
+                strokeWidth = 2.dp,
             )
         } else {
             Text(
@@ -474,7 +474,7 @@ private fun HoldToConfirmButtonPreview() {
         Column(
             modifier = Modifier
                 .background(TangemTheme.colors.background.primary)
-                .padding(TangemTheme.dimens.spacing16),
+                .padding(16.dp),
         ) {
             TangemHoldToConfirmButton(
                 modifier = Modifier.fillMaxWidth(),
@@ -484,7 +484,7 @@ private fun HoldToConfirmButtonPreview() {
                 onConfirm = { isLoading = true },
             )
 
-            Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing16))
+            Spacer(modifier = Modifier.height(16.dp))
 
             TextButton(
                 text = "Reset (simulate error)",
@@ -492,7 +492,7 @@ private fun HoldToConfirmButtonPreview() {
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing8))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = "isLoading: $isLoading",

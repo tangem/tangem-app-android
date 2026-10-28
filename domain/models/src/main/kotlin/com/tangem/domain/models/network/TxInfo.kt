@@ -174,6 +174,13 @@ sealed interface TxInfo {
         data object GaslessFee : TransactionType
 
         /**
+         * A Merkl incentive rewards claim: in the coin's history the claim call itself, which moved no coin; in the
+         * reward token's history the reward it delivered. Kept apart from [YieldSupply], whose rules are Aave's.
+         */
+        @Serializable
+        data object IncentiveClaim : TransactionType
+
+        /**
          * A transaction that moved no coin — the wallet only paid the network fee of a token transfer. The fee
          * itself is in [TxInfo.fee].
          *

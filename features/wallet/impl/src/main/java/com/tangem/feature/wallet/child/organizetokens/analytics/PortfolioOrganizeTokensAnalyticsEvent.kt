@@ -5,7 +5,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 
 sealed class PortfolioOrganizeTokensAnalyticsEvent(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent("Portfolio / Organize Tokens", event, params) {
 
     class ScreenOpened : PortfolioOrganizeTokensAnalyticsEvent("Organize Tokens Screen Opened")

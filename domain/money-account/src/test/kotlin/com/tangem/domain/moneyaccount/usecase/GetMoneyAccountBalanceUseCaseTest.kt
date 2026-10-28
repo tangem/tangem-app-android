@@ -29,14 +29,12 @@ import java.math.BigDecimal
 
 internal class GetMoneyAccountBalanceUseCaseTest {
 
-    private val tangemPayCurrencyFactory: TangemPayCurrencyFactory = mockk()
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher = mockk()
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier = mockk()
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher = mockk()
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier = mockk()
 
     private val useCase = GetMoneyAccountBalanceUseCase(
-        tangemPayCurrencyFactory = tangemPayCurrencyFactory,
         singleNetworkStatusFetcher = singleNetworkStatusFetcher,
         singleNetworkStatusSupplier = singleNetworkStatusSupplier,
         singleQuoteStatusFetcher = singleQuoteStatusFetcher,
@@ -56,13 +54,11 @@ internal class GetMoneyAccountBalanceUseCaseTest {
     @BeforeEach
     fun resetMocks() {
         clearMocks(
-            tangemPayCurrencyFactory,
             singleNetworkStatusFetcher,
             singleNetworkStatusSupplier,
             singleQuoteStatusFetcher,
             singleQuoteStatusSupplier,
         )
-        every { tangemPayCurrencyFactory.createMoneyAccountToken(userWalletId) } returns token
         coEvery { singleNetworkStatusFetcher(any()) } returns Unit.right()
         coEvery { singleQuoteStatusFetcher(any()) } returns Unit.right()
     }
@@ -77,7 +73,7 @@ internal class GetMoneyAccountBalanceUseCaseTest {
         coEvery { singleQuoteStatusSupplier.getSyncOrNull(quoteParams) } returns quoteStatusWith(fiatRate)
 
         // Act
-        val actual = useCase(userWalletId)
+        val actual = useCase(userWalletId, token)
 
         // Assert
         Truth.assertThat(actual.getOrNull()).isEqualTo(expectedBalance(amount = amount, fiatRate = fiatRate))
@@ -104,7 +100,7 @@ internal class GetMoneyAccountBalanceUseCaseTest {
         coEvery { singleQuoteStatusSupplier.getSyncOrNull(quoteParams) } returns null
 
         // Act
-        val actual = useCase(userWalletId)
+        val actual = useCase(userWalletId, token)
 
         // Assert
         Truth.assertThat(actual.getOrNull()).isEqualTo(expectedBalance(amount = amount, fiatRate = null))
@@ -117,7 +113,7 @@ internal class GetMoneyAccountBalanceUseCaseTest {
         coEvery { singleQuoteStatusSupplier.getSyncOrNull(quoteParams) } returns null
 
         // Act
-        val actual = useCase(userWalletId)
+        val actual = useCase(userWalletId, token)
 
         // Assert
         Truth.assertThat(actual.isLeft()).isTrue()
@@ -131,29 +127,14 @@ internal class GetMoneyAccountBalanceUseCaseTest {
         coEvery { singleQuoteStatusSupplier.getSyncOrNull(quoteParams) } returns null
 
         // Act
-        val actual = useCase(userWalletId)
+        val actual = useCase(userWalletId, token)
 
         // Assert
         Truth.assertThat(actual.isLeft()).isTrue()
-    }
-
-    @Test
-    fun `GIVEN token cannot be created WHEN invoke THEN left returned`() = runTest {
-        // Arrange
-        every { tangemPayCurrencyFactory.createMoneyAccountToken(userWalletId) } throws IllegalArgumentException()
-
-        // Act
-        val actual = useCase(userWalletId)
-
-        // Assert
-        Truth.assertThat(actual.isLeft()).isTrue()
-        coVerify(exactly = 0) { singleNetworkStatusFetcher(any()) }
-        coVerify(exactly = 0) { singleQuoteStatusFetcher(any()) }
     }
 
     private fun expectedBalance(amount: BigDecimal, fiatRate: BigDecimal?) = MoneyAccountStatusValue.Balance(
         cryptoAmount = amount,
-        cryptoCurrency = token,
         depositAddress = DEPOSIT_ADDRESS,
         currencyCode = "USD",
         fiatRate = fiatRate,

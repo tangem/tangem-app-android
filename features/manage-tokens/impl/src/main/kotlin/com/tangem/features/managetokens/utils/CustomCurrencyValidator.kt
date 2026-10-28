@@ -191,7 +191,7 @@ internal class CustomCurrencyValidator(
             state.copy(
                 status = Status.Validated(
                     currency = currency,
-                    fillForm = fillForm,
+                    shouldFillForm = fillForm,
                     isAlreadyAdded = !isNotAdded,
                     isCustom = isCustom,
                 ),
@@ -222,7 +222,7 @@ internal class CustomCurrencyValidator(
 
         data class Validated(
             val currency: CryptoCurrency,
-            val fillForm: Boolean,
+            val shouldFillForm: Boolean,
             val isAlreadyAdded: Boolean,
             val isCustom: Boolean,
         ) : Status()

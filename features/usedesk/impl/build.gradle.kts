@@ -13,6 +13,7 @@ android {
 dependencies {
     /** Core */
     api(projects.core.analytics)
+    implementation(projects.core.configToggles)
     implementation(projects.core.local)
     implementation(projects.store.datasource)
     api(projects.core.decompose)
@@ -20,6 +21,7 @@ dependencies {
     implementation(projects.core.analytics.models)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.models)
+    implementation(projects.common.routing)
 
     /** Features api */
     api(projects.features.usedesk.api)
@@ -27,6 +29,8 @@ dependencies {
     /** Domain */
     api(projects.domain.feedback)
     api(projects.domain.settings)
+    implementation(projects.domain.wallets)
+    implementation(projects.domain.wallets.models)
 
     /** DI */
     implementation(deps.hilt.android)
@@ -44,6 +48,7 @@ dependencies {
     implementation(deps.lifecycle.runtime.ktx)
 
     /** Other */
+    implementation(deps.arrow.core)
     implementation(deps.decompose)
     implementation(deps.kotlin.coroutines)
 

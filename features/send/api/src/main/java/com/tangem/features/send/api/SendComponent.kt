@@ -7,6 +7,10 @@ import com.tangem.domain.models.wallet.UserWalletId
 
 interface SendComponent : ComposableContentComponent {
 
+    /**
+     * @property intentId the MCP send intent this transfer fulfils. Its values stay editable: an intent opens Send
+     *   like a QR scanned on the main screen, never in the locked sell-redirect mode.
+     */
     data class Params(
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
@@ -16,6 +20,7 @@ interface SendComponent : ComposableContentComponent {
         val destinationAddress: String? = null,
         val entryType: EntryType = EntryType.Manual,
         val callback: ModelCallback? = null,
+        val intentId: String? = null,
     )
 
     enum class EntryType {

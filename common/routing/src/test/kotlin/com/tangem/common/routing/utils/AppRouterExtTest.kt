@@ -21,59 +21,6 @@ internal class AppRouterExtTest {
     private val wallet = AppRoute.Wallet
 
     @Test
-    fun `GIVEN route is not in stack WHEN popAndPush THEN current route replaced with it`() {
-        // Arrange
-        val router = FakeAppRouter(wallet, send)
-
-        // Act
-        router.popAndPush(tetherDetails)
-
-        // Assert
-        assertThat(router.stack).containsExactly(wallet, tetherDetails).inOrder()
-        assertThat(router.errors).isEmpty()
-    }
-
-    @Test
-    fun `GIVEN route is under the current one WHEN popAndPush THEN popped to it without error`() {
-        // Arrange
-        // Gasless send: the fee currency is the token the send flow was opened from
-        val router = FakeAppRouter(wallet, tetherDetails, send)
-
-        // Act
-        router.popAndPush(tetherDetails)
-
-        // Assert
-        assertThat(router.stack).containsExactly(wallet, tetherDetails).inOrder()
-        assertThat(router.errors).isEmpty()
-    }
-
-    @Test
-    fun `GIVEN route is deep in stack WHEN popAndPush THEN popped to it without error`() {
-        // Arrange
-        val router = FakeAppRouter(wallet, tetherDetails, tronDetails, send)
-
-        // Act
-        router.popAndPush(tetherDetails)
-
-        // Assert
-        assertThat(router.stack).containsExactly(wallet, tetherDetails).inOrder()
-        assertThat(router.errors).isEmpty()
-    }
-
-    @Test
-    fun `GIVEN route is the current one WHEN popAndPush THEN stack is unchanged`() {
-        // Arrange
-        val router = FakeAppRouter(wallet, tetherDetails)
-
-        // Act
-        router.popAndPush(tetherDetails)
-
-        // Assert
-        assertThat(router.stack).containsExactly(wallet, tetherDetails).inOrder()
-        assertThat(router.errors).isEmpty()
-    }
-
-    @Test
     fun `GIVEN covered route WHEN popToIfCovered THEN popped back to it`() {
         // Arrange
         val router = FakeAppRouter(wallet, tetherDetails, send)

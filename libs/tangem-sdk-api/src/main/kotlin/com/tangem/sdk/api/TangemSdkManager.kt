@@ -1,7 +1,6 @@
 package com.tangem.sdk.api
 
 import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
 import arrow.core.Either
 import com.tangem.Message
 import com.tangem.common.CompletionResult
@@ -19,7 +18,7 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.WithdrawalSignatureResult
-import com.tangem.domain.visa.model.TangemPayInitialCredentials
+import com.tangem.domain.visa.model.TangemPayInitialData
 import com.tangem.domain.visa.model.MoneyAccountActivationData
 import com.tangem.domain.visa.model.VisaActivationInput
 import com.tangem.domain.visa.model.VisaDataForApprove
@@ -48,11 +47,13 @@ interface TangemSdkManager {
     suspend fun checkNeedEnrollBiometrics(awaitInitialization: Boolean = true): Boolean
 
     /**
-     * Scans the card and returns [ScanResponse] with the card information.
-     * If [cardId] is provided, it will try to find the card with this ID in the card reader's range.
-     * If [allowsRequestAccessCodeFromRepository] is true, it will try to request access code from the repository
-     * if the card is protected by access code and the access code is not saved in the repository.
-     * If [shouldCheckIsAlreadyActivated] is true, it will check if the card is already activated and return an error if it is.
+     * Low-level card scan. Don't call it from features: scan through `ScanCardProcessor`, which also handles the card
+     * attestation failure dialog, the failed scans counter, the card ID display format and onboarding.
+     *
+     * @param cardId                                scans only the card with this ID; any card when `null`
+     * @param allowsRequestAccessCodeFromRepository allows using the saved access code
+     * @param shouldCheckIsAlreadyActivated         lets the SDK confirm that the wallet belongs to the user
+     * ("This is my wallet"); off when re-scanning a card already known to the app
      */
     suspend fun scanProduct(
         cardId: String? = null,
@@ -144,9 +145,6 @@ interface TangemSdkManager {
     @Suppress("MagicNumber")
     fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse?)
 
-    @Deprecated("com.tangem.sdk.api.TangemSdkManager shouldn't returns a string from resources")
-    fun getString(@StringRes stringResId: Int, vararg formatArgs: Any?): String
-
     fun setUserCodeRequestPolicy(policy: UserCodeRequestPolicy)
 
     // region Twin-specific
@@ -155,19 +153,14 @@ interface TangemSdkManager {
         secondCardPublicKey: ByteArray,
         issuerKeyPair: KeyPair,
         cardId: String,
-        initialMessage: Message,
     ): CompletionResult<ScanResponse>
 
-    suspend fun createFirstTwinWallet(cardId: String, initialMessage: Message): CompletionResult<CreateWalletResponse>
+    suspend fun createFirstTwinWallet(cardId: String): CompletionResult<CreateWalletResponse>
 
-    @Suppress("LongParameterList")
     suspend fun createSecondTwinWallet(
         firstPublicKey: String,
         firstCardId: String,
         issuerKeys: KeyPair,
-        preparingMessage: Message,
-        creatingWalletMessage: Message,
-        initialMessage: Message,
     ): CompletionResult<CreateWalletResponse>
 
     fun changeProductType(isRing: Boolean)
@@ -187,9 +180,9 @@ interface TangemSdkManager {
         visaDataForApprove: VisaDataForApprove,
     ): CompletionResult<VisaSignedDataByCustomerWallet>
 
-    suspend fun tangemPayProduceInitialCredentials(
+    suspend fun tangemPayProduceInitialData(
         preflightReadFilter: PreflightReadFilter,
-    ): Either<Throwable, TangemPayInitialCredentials>
+    ): Either<Throwable, TangemPayInitialData>
 
     suspend fun tangemPayProduceMoneyAccountData(
         preflightReadFilter: PreflightReadFilter,

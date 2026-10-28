@@ -1,64 +1,53 @@
 package com.tangem.domain.transaction.usecase.gasless
 
 import arrow.core.Either
-import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
-import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
-import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
-import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.TransactionData
-import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySendCallData
 import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCoinStatus
-import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
-import com.tangem.domain.transaction.GaslessTransactionRepository
-import com.tangem.domain.transaction.GaslessYieldRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.raiseIllegalStateError
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
-import com.tangem.domain.walletmanager.WalletManagersFacade
 import java.math.BigDecimal
 
-@Suppress("LongParameterList")
+/**
+ * Fee with the payment currency picked automatically, dispatched to the resolver that owns the network's
+ * compensation protocol. The resolvers cover disjoint networks, so the order they are asked in does not
+ * change the answer.
+ */
 class GetFeeForGaslessUseCase(
-    private val walletManagersFacade: WalletManagersFacade,
-    private val demoConfig: DemoConfig,
-    private val gaslessTransactionRepository: GaslessTransactionRepository,
-    private val gaslessYieldRepository: GaslessYieldRepository,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
-    private val getFeeUseCase: GetFeeUseCase,
+    private val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
     private val currencyChecksRepository: CurrencyChecksRepository,
-    private val resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
+    private val getFeeUseCase: GetFeeUseCase,
+    private val evmGaslessFeeResolver: EvmGaslessFeeResolver,
+    private val tronGaslessFeeResolver: TronGaslessFeeResolver,
 ) {
 
-    private val tokenFeeCalculator = TokenFeeCalculator(
-        walletManagersFacade = walletManagersFacade,
-        gaslessTransactionRepository = gaslessTransactionRepository,
-        demoConfig = demoConfig,
-        gaslessYieldRepository = gaslessYieldRepository,
-    )
-
     /**
-     * @param sentAmount amount sent by the main transaction, in the sent token. Required for a yield-supply
-     * send, whose [TransactionData.Uncompiled.amount] is zeroed.
+     * @param sentAmount required for a yield-supply send, whose [TransactionData.Uncompiled.amount] is zeroed.
+     * @param onNativeFeePreferred fires when the network coin was picked over a compensation fee and covers
+     * the fee; see [TronGaslessFeeResolver.resolveWithAutoFeeToken].
+     * @param sentCurrencyStatus the caller's status of the sent currency, used while the account list lags behind.
      */
     suspend operator fun invoke(
         userWallet: UserWallet,
         network: Network,
         transactionData: TransactionData,
         sentAmount: BigDecimal? = null,
+        sentCurrencyStatus: CryptoCurrencyStatus? = null,
+        onNativeFeePreferred: () -> Unit = {},
     ): Either<GetFeeError, TransactionFeeExtended> {
         return either {
             catch(
@@ -66,42 +55,31 @@ class GetFeeForGaslessUseCase(
                     val accountStatusList = singleAccountStatusListSupplier.getSyncOrNull(userWallet.walletId)
                         ?: raiseIllegalStateError("AccountStatusList is null for ${userWallet.walletId}")
 
-                    val nativeCurrencyStatus = accountStatusList.getCoinStatus(network).getOrElse {
-                        raiseIllegalStateError("No native currency found: ${network.id}")
-                    }
+                    val nativeCurrencyStatus = accountStatusList.getCoinStatus(network).getOrNull()
+                        ?: nonPortfolioCurrenciesProvider.getStatuses(userWallet.walletId, network)
+                            .firstOrNull { it.currency is CryptoCurrency.Coin }
+                        ?: raiseIllegalStateError("No native currency found: ${network.id}")
 
-                    if (!currencyChecksRepository.isNetworkSupportedForGaslessTx(network)) {
-                        getFeeUseCase.invoke(userWallet, network, transactionData).fold(
-                            ifLeft = { raise(it) },
-                            ifRight = { fee ->
-                                return@either TransactionFeeExtended(
-                                    transactionFee = fee,
-                                    feeTokenId = nativeCurrencyStatus.currency.id,
-                                    nativeFee = fee,
-                                )
-                            },
+                    if (currencyChecksRepository.isNetworkSupportedForGaslessTx(network)) {
+                        evmGaslessFeeResolver.resolveWithAutoFeeToken(
+                            userWallet = userWallet,
+                            network = network,
+                            transactionData = transactionData,
+                            nativeCurrencyStatus = nativeCurrencyStatus,
+                            accountStatusList = accountStatusList,
+                            sentAmount = sentAmount,
+                        ).bind()
+                    } else {
+                        resolveNativeOrCompensationFee(
+                            userWallet = userWallet,
+                            network = network,
+                            transactionData = transactionData,
+                            nativeCurrencyStatus = nativeCurrencyStatus,
+                            accountStatusList = accountStatusList,
+                            sentCurrencyStatus = sentCurrencyStatus,
+                            onNativeFeePreferred = onNativeFeePreferred,
                         )
                     }
-
-                    val walletManager = prepareWalletManager(userWallet, network)
-
-                    val initialFee = tokenFeeCalculator.calculateInitialFee(
-                        userWallet = userWallet,
-                        network = network,
-                        walletManager = walletManager,
-                        transactionData = transactionData,
-                    ).bind()
-
-                    selectFeePaymentStrategy(
-                        userWallet = userWallet,
-                        accountStatusList = accountStatusList,
-                        walletManager = walletManager,
-                        nativeCurrencyStatus = nativeCurrencyStatus,
-                        network = network,
-                        initialFee = initialFee,
-                        transactionData = transactionData,
-                        sentAmount = sentAmount,
-                    )
                 },
                 catch = {
                     raise(GaslessError.DataError(it))
@@ -110,241 +88,37 @@ class GetFeeForGaslessUseCase(
         }
     }
 
-    @Suppress("NullableToStringCall")
-    private suspend fun Raise<GetFeeError>.prepareWalletManager(
-        userWallet: UserWallet,
-        network: Network,
-    ): EthereumWalletManager {
-        val walletManager = walletManagersFacade.getOrCreateWalletManager(
-            userWalletId = userWallet.walletId,
-            network = network,
-        )
-        val ethereumWalletManager = walletManager as? EthereumWalletManager
-            ?: raiseIllegalStateError("WalletManager type ${walletManager?.javaClass?.name} not supported")
-        return ethereumWalletManager
-    }
-
+    /** The plain native fee, unless the network has a compensation flow of its own. */
     @Suppress("LongParameterList")
-    private suspend fun Raise<GetFeeError>.selectFeePaymentStrategy(
+    private suspend fun Raise<GetFeeError>.resolveNativeOrCompensationFee(
         userWallet: UserWallet,
-        accountStatusList: AccountStatusList,
-        walletManager: EthereumWalletManager,
-        nativeCurrencyStatus: CryptoCurrencyStatus,
         network: Network,
-        initialFee: TransactionFee,
         transactionData: TransactionData,
-        sentAmount: BigDecimal?,
+        nativeCurrencyStatus: CryptoCurrencyStatus,
+        accountStatusList: AccountStatusList,
+        sentCurrencyStatus: CryptoCurrencyStatus?,
+        onNativeFeePreferred: () -> Unit,
     ): TransactionFeeExtended {
-        val feeValue = initialFee.normal.amount.value ?: raise(GetFeeError.UnknownError)
-
-        val networkCurrenciesStatuses = accountStatusList
-            .flattenPersonalCurrencies()
-            .filter { it.currency.network.id == network.id }
-
-        val nativeBalance = nativeCurrencyStatus.value.amount ?: BigDecimal.ZERO
-        val nativeCoinSelectedResult = TransactionFeeExtended(
-            transactionFee = initialFee,
-            feeTokenId = nativeCurrencyStatus.currency.id,
-            nativeFee = initialFee,
-        )
-        return if (nativeBalance >= feeValue) {
-            nativeCoinSelectedResult
-        } else {
-            findTokensToPayFee(
-                userWallet = userWallet,
-                walletManager = walletManager,
-                initialTxFee = initialFee,
-                nativeCurrencyStatus = nativeCurrencyStatus,
-                networkCurrenciesStatuses = networkCurrenciesStatuses,
-                transactionData = transactionData,
-                sentAmount = sentAmount,
-            ).map { it.copy(nativeFee = initialFee) }.getOrElse { error ->
-                when (error) {
-                    GaslessError.NotEnoughFunds,
-                    GaslessError.YieldBalanceUnavailable,
-                    -> nativeCoinSelectedResult
-                    else -> raise(error)
-                }
+        val loadNativeFee: suspend () -> Either<GetFeeError, TransactionFeeExtended> = {
+            getFeeUseCase.invoke(userWallet, network, transactionData).map { fee ->
+                TransactionFeeExtended(
+                    transactionFee = fee,
+                    feeTokenId = nativeCurrencyStatus.currency.id,
+                    nativeFee = fee,
+                )
             }
         }
-    }
 
-    @Suppress("NullableToStringCall", "LongParameterList")
-    private suspend fun findTokensToPayFee(
-        userWallet: UserWallet,
-        walletManager: EthereumWalletManager,
-        initialTxFee: TransactionFee,
-        nativeCurrencyStatus: CryptoCurrencyStatus,
-        networkCurrenciesStatuses: List<CryptoCurrencyStatus>,
-        transactionData: TransactionData,
-        sentAmount: BigDecimal?,
-    ): Either<GetFeeError, TransactionFeeExtended> = either {
-        val initialFee = initialTxFee.normal as? Fee.Ethereum
-            ?: raiseIllegalStateError(
-                error = "only Fee.Ethereum supported, but was ${initialTxFee.normal::class.qualifiedName}",
-            )
-
-        val supportedGaslessTokens = gaslessTransactionRepository.getSupportedTokens(
-            network = nativeCurrencyStatus.currency.network,
-        ).mapNotNull { currency ->
-            (currency as? CryptoCurrency.Token)?.contractAddress?.lowercase()
-        }.toSet()
-
-        /**
-         * Yield-aware candidate selection:
-         * a token is eligible if it is a supported gasless token AND
-         * (total balance > 0 OR has an active yield position).
-         * Sorted by total balance descending to maximise chances of covering the fee. For a yield token
-         * value.amount is already effectiveBalance (liquid EOA + effectiveProtocolBalance), so it must NOT
-         * be summed with effectiveProtocolBalance again — that would double-count the module portion.
-         */
-        val candidates = networkCurrenciesStatuses
-            .asSequence()
-            .filter { it.currency is CryptoCurrency.Token }
-            .filter { (it.currency as CryptoCurrency.Token).contractAddress.lowercase() in supportedGaslessTokens }
-            .filter { status ->
-                val total = status.value.amount ?: BigDecimal.ZERO
-                total > BigDecimal.ZERO || status.value.yieldSupplyStatus?.isActive == true
-            }
-            .sortedByDescending { status -> status.value.amount ?: BigDecimal.ZERO }
-
-        val tokenForPayFeeStatus = candidates.firstOrNull() ?: raise(GaslessError.NoSupportedTokensFound)
-
-        val isYieldActive = tokenForPayFeeStatus.value.yieldSupplyStatus?.isActive == true
-        val tokenFeeExtended = tokenFeeCalculator.calculateTokenFee(
-            walletManager = walletManager,
-            tokenForPayFeeStatus = tokenForPayFeeStatus,
-            nativeCurrencyStatus = nativeCurrencyStatus,
-            initialFee = initialFee,
-            isYieldActive = isYieldActive,
-            userWallet = userWallet,
-        ).bind()
-
-        attachGaslessFeePlan(
-            resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
-            userWallet = userWallet,
-            tokenStatus = tokenForPayFeeStatus,
-            tokenFeeExtended = tokenFeeExtended,
+        val compensationFee = tronGaslessFeeResolver.resolveWithAutoFeeToken(
+            userWalletId = userWallet.walletId,
+            network = network,
             transactionData = transactionData,
-            isYieldActive = isYieldActive,
-            sentAmount = sentAmount,
+            nativeCurrencyStatus = nativeCurrencyStatus,
+            accountStatusList = accountStatusList,
+            sentCurrencyStatus = sentCurrencyStatus,
+            loadNativeFee = loadNativeFee,
+            onNativeFeePreferred = onNativeFeePreferred,
         )
-    }
-}
-
-/**
- * Resolves the [com.tangem.domain.transaction.models.GaslessFeePlan] for [tokenStatus] paying the gasless
- * fee and attaches it to [tokenFeeExtended]. Shared by the auto path ([GetFeeForGaslessUseCase]) and the
- * manual fee-token selection path ([GetFeeForTokenUseCase]) so both produce identical plans.
- */
-@Suppress("LongParameterList")
-internal suspend fun Raise<GetFeeError>.attachGaslessFeePlan(
-    resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
-    userWallet: UserWallet,
-    tokenStatus: CryptoCurrencyStatus,
-    tokenFeeExtended: TransactionFeeExtended,
-    transactionData: TransactionData,
-    isYieldActive: Boolean,
-    sentAmount: BigDecimal? = null,
-): TransactionFeeExtended {
-    val feeTokenContract = (tokenStatus.currency as? CryptoCurrency.Token)?.contractAddress
-        ?: raiseIllegalStateError("gasless fee currency must be a token")
-
-    return attachGaslessFeePlan(
-        resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
-        userWallet = userWallet,
-        tokenStatus = tokenStatus,
-        tokenFeeExtended = tokenFeeExtended,
-        sendAmountInFeeToken = computeSendAmountInFeeToken(transactionData, feeTokenContract, sentAmount),
-        isYieldActive = isYieldActive,
-    )
-}
-
-/**
- * Same as the [TransactionData]-based overload, but for the *estimate* paths
- * ([EstimateFeeForGaslessTxUseCase] / [EstimateFeeForTokenUseCase]) where no transaction has been built
- * yet — a CEX swap only knows the amount it is about to send. The caller computes
- * [sendAmountInFeeToken] with [computeSendAmountInFeeToken].
- */
-@Suppress("LongParameterList")
-internal suspend fun Raise<GetFeeError>.attachGaslessFeePlan(
-    resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
-    userWallet: UserWallet,
-    tokenStatus: CryptoCurrencyStatus,
-    tokenFeeExtended: TransactionFeeExtended,
-    sendAmountInFeeToken: BigDecimal,
-    isYieldActive: Boolean,
-): TransactionFeeExtended {
-    val feeInTokenCurrency = tokenFeeExtended.transactionFee.normal as? Fee.Ethereum.TokenCurrency
-        ?: raiseIllegalStateError("gasless token fee must be Fee.Ethereum.TokenCurrency")
-
-    val plan = resolveGaslessFeePlanUseCase(
-        userWallet = userWallet,
-        tokenStatus = tokenStatus,
-        tokenFee = feeInTokenCurrency,
-        isYieldActive = isYieldActive,
-        sendAmountInFeeToken = sendAmountInFeeToken,
-    ).bind()
-
-    return tokenFeeExtended.copy(gaslessFeePlan = plan)
-}
-
-/**
- * Computes how much of the fee token is also being spent in the main transaction body.
- *
- * Gasless token-fee transactions MUST supply uncompiled data (the resolver needs the raw amount to
- * account for it in the required-balance check). A compiled tx or a null sent amount on the
- * matching-token path are both programmer errors, so they raise loudly instead of silently
- * under-accounting as ZERO.
- *
- * @param transactionData the raw transaction data passed into [GetFeeForGaslessUseCase].
- * @param feeTokenContract the contract address of the token selected to pay the gasless fee.
- * @return the sent amount when [feeTokenContract] matches the sent-token contract,
- *         or [BigDecimal.ZERO] when a different token is being sent.
- */
-internal fun Raise<GetFeeError>.computeSendAmountInFeeToken(
-    transactionData: TransactionData,
-    feeTokenContract: String,
-    sentAmount: BigDecimal? = null,
-): BigDecimal {
-    // Gasless token-fee requires uncompiled tx data (mirrors CreateAndSendGaslessTransactionUseCase).
-    val uncompiled = transactionData as? TransactionData.Uncompiled
-        ?: raiseIllegalStateError("gasless token fee requires uncompiled transaction data")
-    val sentTokenContract = when (val type = uncompiled.amount.type) {
-        is AmountType.Token -> type.token.contractAddress
-        is AmountType.TokenYieldSupply -> type.token.contractAddress
-        else -> null
-    }
-    if (sentTokenContract == null || !sentTokenContract.equals(feeTokenContract, ignoreCase = true)) {
-        return BigDecimal.ZERO
-    }
-
-    // A yield-supply send keeps the real amount in the module call data and zeroes TransactionData.amount.
-    // Reading that zero back would make the resolver skip the yield withdraw, and the executor would revert
-    // on an EOA the send has just emptied.
-    if (uncompiled.isYieldSupplySend()) {
-        return sentAmount
-            ?: raiseIllegalStateError("sent amount is required to pay the gasless fee in a yield-supply send")
-    }
-
-    return sentAmount
-        ?: uncompiled.amount.value
-        ?: raiseIllegalStateError("sent amount is null while paying the gasless fee in the sent token")
-}
-
-private fun TransactionData.Uncompiled.isYieldSupplySend(): Boolean {
-    return (extras as? EthereumTransactionExtras)?.callData is EthereumYieldSupplySendCallData
-}
-
-internal fun computeSendAmountInFeeToken(
-    sendingCurrency: CryptoCurrency,
-    feeTokenContract: String,
-    amount: BigDecimal,
-): BigDecimal {
-    val sentTokenContract = (sendingCurrency as? CryptoCurrency.Token)?.contractAddress
-    return if (sentTokenContract != null && sentTokenContract.equals(feeTokenContract, ignoreCase = true)) {
-        amount
-    } else {
-        BigDecimal.ZERO
+        return (compensationFee ?: loadNativeFee()).bind()
     }
 }

@@ -5,7 +5,6 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.common.ui.tokens.getUnavailabilityReasonTitle
@@ -14,6 +13,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -49,7 +49,7 @@ import javax.inject.Inject
 internal class TokenSummaryModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val appRouter: AppRouter,
+    private val router: Router,
     private val messageSender: UiMessageSender,
     private val fetchCoinIndicatorsUseCase: FetchCoinIndicatorsUseCase,
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
@@ -233,7 +233,7 @@ internal class TokenSummaryModel @Inject constructor(
 
     private fun onTokenAdded(result: AddToPortfolioManager.Result) {
         bottomSheetNavigation.dismiss()
-        appRouter.push(
+        router.push(
             AppRoute.CurrencyDetails(
                 userWalletId = result.wallet.walletId,
                 currency = result.addedCurrency.currency,
@@ -272,7 +272,7 @@ internal class TokenSummaryModel @Inject constructor(
     }
 
     private fun navigateToSwap(userWalletId: UserWalletId, currency: CryptoCurrency) {
-        appRouter.push(
+        router.push(
             AppRoute.Swap(
                 userWalletId = userWalletId,
                 fromCryptoCurrency = currency,

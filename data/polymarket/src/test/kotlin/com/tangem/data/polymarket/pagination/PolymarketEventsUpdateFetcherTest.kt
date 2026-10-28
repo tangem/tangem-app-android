@@ -34,7 +34,7 @@ internal class PolymarketEventsUpdateFetcherTest {
     }
 
     @Test
-    fun `GIVEN an event the response no longer carries WHEN the page is refreshed THEN it keeps its old data`() =
+    fun `GIVEN an event the response no longer carries WHEN the page is refreshed THEN it is removed`() =
         runTest {
             // Arrange
             val staleFirst = event(id = "event-1")
@@ -48,22 +48,52 @@ internal class PolymarketEventsUpdateFetcherTest {
             )
 
             // Assert
-            assertThat(context.eventsOf(key = 0)).containsExactly(freshFirst, staleSecond).inOrder()
+            assertThat(context.eventsOf(key = 0)).containsExactly(freshFirst)
         }
 
     @Test
-    fun `GIVEN an event only the response carries WHEN the page is refreshed THEN the page does not take it`() =
+    fun `GIVEN a new event in the response WHEN the page is refreshed THEN it is included in response order`() =
         runTest {
             // Arrange
             val stale = event(id = "event-1")
             val drifted = event(id = "event-2")
 
             // Act
-            val context = refresh(page = batch(key = 0, events = listOf(stale)), response = listOf(stale, drifted))
+            val context = refresh(page = batch(key = 0, events = listOf(stale)), response = listOf(drifted, stale))
 
             // Assert
-            assertThat(context.eventsOf(key = 0)).containsExactly(stale)
+            assertThat(context.eventsOf(key = 0)).containsExactly(drifted, stale).inOrder()
         }
+
+    @Test
+    fun `GIVEN reordered events WHEN the page is refreshed THEN the new order and data are displayed`() = runTest {
+        // Arrange
+        val staleFirst = event(id = "event-1")
+        val staleSecond = event(id = "event-2")
+        val freshFirst = event(id = "event-1")
+        val freshSecond = event(id = "event-2")
+
+        // Act
+        val context = refresh(
+            page = batch(key = 0, events = listOf(staleFirst, staleSecond)),
+            response = listOf(freshSecond, freshFirst),
+        )
+
+        // Assert
+        assertThat(context.eventsOf(key = 0)).containsExactly(freshSecond, freshFirst).inOrder()
+    }
+
+    @Test
+    fun `GIVEN an empty response WHEN the page is refreshed THEN stale events are removed`() = runTest {
+        // Arrange
+        val stale = event(id = "event-1")
+
+        // Act
+        val context = refresh(page = batch(key = 0, events = listOf(stale)), response = emptyList())
+
+        // Assert
+        assertThat(context.eventsOf(key = 0)).isEmpty()
+    }
 
     @Test
     fun `GIVEN a loaded page WHEN it is refreshed THEN it is requested by the cursor it was loaded with`() = runTest {

@@ -74,8 +74,8 @@ internal class YieldMarketTokenConverterTest {
             maxFeeNative = BigDecimal("0.005"),
             maxFeeUSD = BigDecimal("12.34"),
             hasActiveCampaign = true,
-            rewardsApr = BigDecimal("2.08"),
-            totalApyEst = BigDecimal("6.2"),
+            grossRewardsApy = BigDecimal("2.08"),
+            grossTotalApyEst = BigDecimal("6.2"),
         )
 
         // Act
@@ -85,7 +85,7 @@ internal class YieldMarketTokenConverterTest {
         assertThat(result.campaign).isEqualTo(
             YieldIncentiveCampaign(
                 hasActiveCampaign = true,
-                rewardsApr = BigDecimal("2.08"),
+                rewardsApy = BigDecimal("2.08"),
                 totalApyEst = BigDecimal("6.2"),
             ),
         )
@@ -97,7 +97,7 @@ internal class YieldMarketTokenConverterTest {
         val dto = YieldSupplyMarketTokenDto(
             apy = BigDecimal("4.12"),
             hasActiveCampaign = true,
-            rewardsApr = BigDecimal("2.08"),
+            grossRewardsApy = BigDecimal("2.08"),
         )
 
         // Act
@@ -114,7 +114,7 @@ internal class YieldMarketTokenConverterTest {
         val dto = YieldSupplyMarketTokenDto(
             apy = BigDecimal("4.12"),
             hasActiveCampaign = true,
-            totalApyEst = BigDecimal("6.2"),
+            grossTotalApyEst = BigDecimal("6.2"),
         )
 
         // Act
@@ -124,7 +124,7 @@ internal class YieldMarketTokenConverterTest {
         assertThat(result.campaign).isEqualTo(
             YieldIncentiveCampaign(
                 hasActiveCampaign = true,
-                rewardsApr = BigDecimal.ZERO,
+                rewardsApy = BigDecimal.ZERO,
                 totalApyEst = BigDecimal("6.2"),
             ),
         )

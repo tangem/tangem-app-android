@@ -287,6 +287,7 @@
   </plurals>
   <string name="collectibles_account_collection_empty">No cards</string>
   <string name="collectibles_account_collection_row_subtitle">My collection</string>
+  <string name="collectibles_account_reconnect_subtitle">Reconnect Packs account</string>
   <string name="collectibles_account_withdraw">Withdrawal</string>
   <string name="collectibles_confirm_order_approve_button">Approve</string>
   <string name="collectibles_confirm_order_confirming_transaction_button">Confirming transaction...</string>
@@ -327,6 +328,9 @@
   <string name="collectibles_main_pack_buyback_badge">Buyback %s</string>
   <string name="collectibles_main_packs_empty">There are no packs here yet</string>
   <string name="collectibles_main_packs_load_error">Failed to load packs. Tap to reload</string>
+  <string name="collectibles_main_relink_button">Relink account</string>
+  <string name="collectibles_main_relink_description">Make this phone primary for Packs account</string>
+  <string name="collectibles_main_relink_title">Relink account</string>
   <string name="collectibles_main_search_empty">No results. Try to change your wording\nor explore from the list</string>
   <string name="collectibles_main_search_load_error">Failed to load cards list.</string>
   <string name="collectibles_main_title">Packs account</string>
@@ -800,6 +804,7 @@
   <string name="express_error_provider_amount_roundup">Error %1$s. The selected provider cannot process the specified transaction. Please round the value up to %2$s or change it</string>
   <string name="express_error_swap_pair_unavailable">Selected provider is unavailable at the moment. Please try again later. (Code: %s)</string>
   <string name="express_error_swap_unavailable">Swaps are unavailable at the moment. Please try again later. (Code: %s)</string>
+  <string name="express_error_transaction_cannot_be_created">The transaction cannot be created with %1$s. Please choose another provider. (Code: %2$s)</string>
   <string name="express_estimated_amount">Estimated amount</string>
   <string name="express_exchange_by">Exchange by %s</string>
   <string name="express_exchange_notification_failed_text">Visit the provider\'s website to get a refund</string>
@@ -1199,8 +1204,17 @@
   <string name="joint_account_activation_title">You\'re activating a shared account</string>
   <string name="joint_account_coming_soon_description">This action isn\'t supported for joint accounts yet. We\'re working on it</string>
   <string name="joint_account_coming_soon_title">Coming soon to joint accounts</string>
+  <string name="joint_account_compromised_message">The account address on your device doesn\'t match the one from our servers.</string>
+  <string name="joint_account_compromised_title">Can\'t verify this account</string>
   <string name="joint_account_confirm_account_subtitle">Before using your Joint Account, make sure every member sees exactly the same address.</string>
   <string name="joint_account_confirm_account_title">Confirm the account</string>
+  <string name="joint_account_confirm_address_compare_subtitle">Contact all members outside Tangem by phone, messenger, or in person. Check that everyone sees the exact same address.</string>
+  <string name="joint_account_confirm_address_compare_title">Compare with other members</string>
+  <string name="joint_account_confirm_address_confirm_button">Checked with everyone</string>
+  <string name="joint_account_confirm_address_everyone_subtitle">Your account will be ready once all members have confirmed the address.</string>
+  <string name="joint_account_confirm_address_everyone_title">Everyone must confirm</string>
+  <string name="joint_account_confirm_address_label">Shared address</string>
+  <string name="joint_account_confirm_address_mismatch_button">Address doesn\'t match</string>
   <string name="joint_account_confirm_shared_address">Confirm shared address</string>
   <string name="joint_account_invite_invalid_subtitle">Check that you opened the correct link, or ask the account creator to send it again</string>
   <string name="joint_account_invite_invalid_title">Invitation link isn\'t valid</string>
@@ -1224,6 +1238,10 @@
   <string name="joint_account_invite_members_creator">Creator</string>
   <string name="joint_account_invite_members_everyone_joined">Everyone has joined</string>
   <string name="joint_account_invite_members_invite">Invite</string>
+  <plurals name="joint_account_invite_members_invite_count">
+    <item quantity="one">Invite %d member</item>
+    <item quantity="other">Invite %d members</item>
+  </plurals>
   <string name="joint_account_invite_members_invite_expired">Invite expired</string>
   <plurals name="joint_account_invite_members_invite_more">
     <item quantity="one">Invite %d more member</item>
@@ -1278,6 +1296,14 @@
   <string name="joint_account_join_title">You\'ve been invited to %1$s</string>
   <string name="joint_account_join_to_account_btn_text">Join account</string>
   <string name="joint_account_join_to_approve">To approve</string>
+  <plurals name="joint_account_main_waiting_confirmations">
+    <item quantity="one">Waiting for %d confirmation</item>
+    <item quantity="other">Waiting for %d confirmations</item>
+  </plurals>
+  <plurals name="joint_account_main_waiting_members">
+    <item quantity="one">Waiting for %d member</item>
+    <item quantity="other">Waiting for %d members</item>
+  </plurals>
   <plurals name="joint_account_members_count">
     <item quantity="one">%d member</item>
     <item quantity="other">%d members</item>
@@ -1683,6 +1709,7 @@
   <string name="nft_receive_title">Receive NFT</string>
   <string name="nft_receive_unavailable_asset_warning_message">You haven\'t added this network yet. To receive NFTs, add it to your portfolio.</string>
   <string name="nft_receive_unavailable_asset_warning_title">Network not added</string>
+  <string name="nft_receive_unsupported_cnft_description">cNFTs are not supported yet. Please don\'t send them to your wallet.</string>
   <string name="nft_receive_unsupported_types">Unsupported NFT types</string>
   <string name="nft_receive_unsupported_types_description">cNFTs and pNFTs are not supported yet. Please don\'t send them to your wallet.</string>
   <string name="nft_send">Send NFT</string>
@@ -1934,6 +1961,7 @@
   <string name="prediction_details_market_opened">Market Opened</string>
   <string name="prediction_details_market_volume">Volume:</string>
   <string name="prediction_details_resolution_date">Resolution Date</string>
+  <string name="prediction_details_resolution_source">Resolution Source</string>
   <string name="prediction_details_total_volume">Total volume</string>
   <string name="prediction_event_live">Live</string>
   <plurals name="prediction_event_more_outcomes">
@@ -3030,6 +3058,8 @@
   <string name="tangempay_onboarding_security_title">Unrivaled privacy</string>
   <string name="tangempay_onboarding_setup_wallet_description">And link a payment card to it</string>
   <string name="tangempay_onboarding_setup_wallet_title">We\'ll set up a wallet</string>
+  <string name="tangempay_onboarding_success_description">Products activation might take a few minutes to finish</string>
+  <string name="tangempay_onboarding_success_title">Tangem Pay is activating</string>
   <string name="tangempay_onboarding_title">Get your Tangem Pay Card in minutes</string>
   <string name="tangempay_order_card_error_active_order">A card order is already in progress.</string>
   <string name="tangempay_order_card_error_insufficient_balance">Not enough money for delivery. Add funds and try again.</string>
@@ -3387,7 +3417,9 @@
   <string name="transaction_history_to_inline_address">to: %%image%% %s</string>
   <string name="transaction_history_transaction_for_address">for: %s</string>
   <string name="transaction_history_transaction_from_address">from: %s</string>
+  <string name="transaction_history_transaction_from_for_address">from: %1$s for %2$s</string>
   <string name="transaction_history_transaction_to_address">to: %s</string>
+  <string name="transaction_history_transaction_to_for_address">to: %1$s for %2$s</string>
   <string name="transaction_history_transaction_validator">validator: %s</string>
   <string name="transaction_history_unlimited">Unlimited</string>
   <string name="transaction_history_unlimited_amount">Unlimited %s</string>

@@ -172,6 +172,8 @@ Also process any direct `FeatureTogglesManager.isFeatureEnabled()` call sites th
 - `TangemPayFeatureToggles`
 - `SwapFeatureToggles`
 - `SendFeatureToggles`
+- `TxHistoryFeatureToggles`
+- `SettingsFeatureToggles`
 
 If the interface is **protected**: remove the `featureTogglesManager` / `featureToggles` constructor parameter from `DefaultXxxFeatureToggles`, remove unused imports (`FeatureTogglesManager`, `FeatureToggles`), but keep both files.
 

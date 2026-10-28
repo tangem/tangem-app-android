@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
+import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
 import com.tangem.domain.polymarket.model.PolymarketPositionsFilter
@@ -51,6 +52,32 @@ internal class PolymarketPositionsModelTest {
     @AfterEach
     fun tearDown() {
         model?.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN position updates across one cent WHEN emitted THEN the card indicator follows cash pnl`() = runTest {
+        // Arrange
+        val model = createModel()
+        val converter = PolymarketPositionUMConverter()
+        model.onResume()
+        runCurrent()
+
+        // Act
+        val actual = listOf("0.01", "0.0099", "-0.01", "-0.0099", "0.01").map { cashPnl ->
+            val position = createPolymarketPosition(cashPnl = cashPnl.toBigDecimal(), percentPnl = "12.34".toBigDecimal())
+            activeState.value = FilteredContent(content = Content.Data(persistentListOf(converter.convert(position))))
+            runCurrent()
+            (model.uiState.value.content as Content.Data).positions.single().priceChange
+        }
+
+        // Assert
+        assertThat(actual).containsExactly(
+            TangemPriceChange.State(stringReference("$0.01 (12.34%)"), TangemPriceChange.Direction.Up),
+            TangemPriceChange.State(stringReference("<$0.01 (12.34%)"), TangemPriceChange.Direction.Neutral),
+            TangemPriceChange.State(stringReference("$0.01 (12.34%)"), TangemPriceChange.Direction.Down),
+            TangemPriceChange.State(stringReference("<$0.01 (12.34%)"), TangemPriceChange.Direction.Neutral),
+            TangemPriceChange.State(stringReference("$0.01 (12.34%)"), TangemPriceChange.Direction.Up),
+        ).inOrder()
     }
 
     @Test
@@ -348,6 +375,7 @@ internal class PolymarketPositionsModelTest {
             router = router,
             dispatchers = TestingCoroutineDispatcherProvider(dispatcher, dispatcher, dispatcher, dispatcher, dispatcher),
             loader = loader,
+            urlOpener = mockk(relaxed = true),
         ).also { model = it }
     }
 

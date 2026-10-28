@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
@@ -51,9 +52,9 @@ internal fun NFTDetails(state: NFTDetailsUM, modifier: Modifier = Modifier) {
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(
-                    start = TangemTheme.dimens.spacing16,
-                    end = TangemTheme.dimens.spacing16,
-                    bottom = TangemTheme.dimens.spacing16,
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = 16.dp,
                 )
                 .fillMaxWidth(),
             text = stringResourceSafe(id = R.string.common_send),

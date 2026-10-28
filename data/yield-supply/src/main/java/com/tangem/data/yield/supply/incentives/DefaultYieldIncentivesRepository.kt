@@ -41,9 +41,10 @@ internal class DefaultYieldIncentivesRepository(
     ): Either<YieldIncentivesError, YieldIncentives> {
         if (!isMerklIncentivesEnabled) return YieldIncentivesError.FeatureAbsent.left()
 
-        val key = "incentives:$chainId:${userAddress.lowercase()}"
-
-        return cache.getOrFetch(key = key, window = INCENTIVES_CACHE_SECONDS.seconds) {
+        return cache.getOrFetch(
+            key = incentivesKey(chainId = chainId, userAddress = userAddress),
+            window = INCENTIVES_CACHE_SECONDS.seconds,
+        ) {
             request(
                 call = { api.getIncentives(chainId = chainId, userAddress = userAddress) },
                 convert = YieldIncentivesConverter::convert,
@@ -87,14 +88,20 @@ internal class DefaultYieldIncentivesRepository(
     ): Either<YieldIncentivesError, List<YieldClaimHistoryItem>> {
         if (!isMerklIncentivesEnabled) return YieldIncentivesError.FeatureAbsent.left()
 
-        val key = "claim-history:$chainId:${userAddress.lowercase()}"
-
-        return cache.getOrFetch(key = key, window = CLAIM_HISTORY_CACHE_SECONDS.seconds) {
+        return cache.getOrFetch(
+            key = claimHistoryKey(chainId = chainId, userAddress = userAddress),
+            window = CLAIM_HISTORY_CACHE_SECONDS.seconds,
+        ) {
             request(
                 call = { api.getClaimHistory(chainId = chainId, userAddress = userAddress) },
                 convert = { YieldClaimHistoryConverter.convert(it).right() },
             )
         }
+    }
+
+    override suspend fun invalidateUserCache(chainId: Int, userAddress: String) {
+        cache.invalidate(incentivesKey(chainId = chainId, userAddress = userAddress))
+        cache.invalidate(claimHistoryKey(chainId = chainId, userAddress = userAddress))
     }
 
     /**
@@ -119,6 +126,12 @@ internal class DefaultYieldIncentivesRepository(
             is ApiResponse.Error -> response.cause.toDomainError().left()
         }
     }
+
+    private fun incentivesKey(chainId: Int, userAddress: String) = userKey("incentives", chainId, userAddress)
+
+    private fun claimHistoryKey(chainId: Int, userAddress: String) = userKey("claim-history", chainId, userAddress)
+
+    private fun userKey(prefix: String, chainId: Int, address: String) = "$prefix:$chainId:${address.lowercase()}"
 
     private fun ApiResponseError.toDomainError(): YieldIncentivesError {
         val isUnsupportedChain = this is ApiResponseError.HttpException &&

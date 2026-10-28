@@ -91,10 +91,10 @@ internal object TokenDetailsPreviewData {
     )
 
     private val actionButtons = persistentListOf(
-        TokenDetailsActionButton.Buy(dimContent = false, onClick = {}),
-        TokenDetailsActionButton.Send(dimContent = false, onClick = {}),
+        TokenDetailsActionButton.Buy(shouldDimContent = false, onClick = {}),
+        TokenDetailsActionButton.Send(shouldDimContent = false, onClick = {}),
         TokenDetailsActionButton.Receive(onClick = {}, onLongClick = null),
-        TokenDetailsActionButton.Swap(dimContent = false, onClick = {}, showBadge = true),
+        TokenDetailsActionButton.Swap(shouldDimContent = false, onClick = {}, shouldShowBadge = true),
     )
 
     private val balanceSegmentedButtonConfig = persistentListOf(

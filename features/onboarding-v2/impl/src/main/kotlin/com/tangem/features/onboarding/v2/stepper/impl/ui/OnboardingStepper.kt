@@ -36,7 +36,7 @@ internal fun OnboardingStepper(
     val animatedIndicatorFraction by TangemAnimations.horizontalIndicatorAsState(targetFraction = fraction)
 
     val progressAlpha by animateFloatAsState(
-        targetValue = if (state.showProgress) 1f else 0f,
+        targetValue = if (state.shouldShowProgress) 1f else 0f,
         animationSpec = tween(
             durationMillis = 300,
             easing = LinearEasing,
@@ -90,7 +90,7 @@ private fun OnboardingStepper_Preview() {
                     currentStep = 2,
                     steps = 3,
                     title = OnboardingTitle(text = resourceReference(R.string.common_done)),
-                    showProgress = true,
+                    shouldShowProgress = true,
                 ),
                 onBackClick = {},
                 onSupportButtonClick = {},

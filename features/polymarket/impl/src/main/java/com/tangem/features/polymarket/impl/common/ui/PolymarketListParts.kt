@@ -72,6 +72,28 @@ internal fun PolymarketNextPageLoader(modifier: Modifier = Modifier) {
     }
 }
 
+/** A list the backend has nothing for: [text] alone, nothing to tap. */
+@Composable
+internal fun PolymarketEmptyListPrompt(
+    text: TextReference,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(vertical = 48.dp),
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(contentPadding),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text.resolveReference(),
+            color = TangemTheme.colors3.text.secondary,
+            style = TangemTheme.typography3.subheading.medium,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
 /** A list that could not be served: [text] under a refresh mark, the whole area tappable to retry. */
 @Composable
 internal fun PolymarketReloadPrompt(

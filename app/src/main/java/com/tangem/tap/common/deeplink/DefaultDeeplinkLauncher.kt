@@ -22,33 +22,30 @@ internal class DefaultDeeplinkLauncher(
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
 ) : DeeplinkLauncher {
 
-    override fun launch(link: String) {
+    override fun launch(link: String, shouldReportFailure: Boolean) {
         val deeplinkUri = link.toUri()
-        when (deeplinkUri.scheme) {
+        val failure = when (deeplinkUri.scheme) {
             DeepLinkScheme.Tangem.scheme,
             DeepLinkScheme.WalletConnect.scheme,
             -> launchDeepLink(deeplinkUri)
             DeepLinkScheme.Https.scheme -> {
-                if (ExternalUrlValidator.isUriTrusted(link)) {
+                if (ExternalUrlValidator.isUriTrusted(deeplinkUri)) {
                     launchDeeplinkOrOpenBrowser(deeplinkUri, link)
+                    null
                 } else {
-                    TangemLogger.i(
-                        """
-                            Untrusted HTTPS link dropped
-                            |- Received URI: $deeplinkUri
-                        """.trimIndent(),
-                    )
+                    UntrustedDeeplinkException(deeplinkUri)
                 }
             }
-            else -> {
-                TangemLogger.i(
-                    """
-                        No match found for deep link
-                        |- Received URI: $deeplinkUri
-                    """.trimIndent(),
-                )
-            }
-        }
+            else -> UnsupportedDeeplinkException(deeplinkUri)
+        } ?: return
+
+        TangemLogger.i(
+            """
+                ${failure.message}
+                |- Received URI: $deeplinkUri
+            """.trimIndent(),
+        )
+        if (shouldReportFailure) reportFailure(deeplinkUri, failure)
     }
 
     private fun launchDeeplinkOrOpenBrowser(uri: Uri, link: String) {
@@ -60,27 +57,24 @@ internal class DefaultDeeplinkLauncher(
         }
     }
 
-    private fun launchDeepLink(uri: Uri) {
+    private fun launchDeepLink(uri: Uri): UnopenableDeeplinkException? {
         val intent = createDeepLinkIntent(uri)
-        if (intent.resolveActivity(context.packageManager) != null) {
-            context.startActivity(intent)
-        } else {
-            TangemLogger.i(
-                """
-                        No match found for deep link
-                        |- Received URI: $uri
-                """.trimIndent(),
-            )
-            analyticsExceptionHandler.sendException(
-                ExceptionAnalyticsEvent(
-                    exception = UnresolvedDeeplinkException(uri),
-                    params = mapOf(
-                        "uri_scheme" to uri.scheme.orEmpty(),
-                        "uri_host" to uri.host.orEmpty(),
-                    ),
+        if (intent.resolveActivity(context.packageManager) == null) return UnresolvedDeeplinkException(uri)
+
+        context.startActivity(intent)
+        return null
+    }
+
+    private fun reportFailure(uri: Uri, exception: UnopenableDeeplinkException) {
+        analyticsExceptionHandler.sendException(
+            ExceptionAnalyticsEvent(
+                exception = exception,
+                params = mapOf(
+                    "uri_scheme" to uri.scheme.orEmpty(),
+                    "uri_host" to uri.host.orEmpty(),
                 ),
-            )
-        }
+            ),
+        )
     }
 
     private fun createDeepLinkIntent(uri: Uri): Intent = Intent(Intent.ACTION_VIEW, uri).apply {
@@ -89,5 +83,14 @@ internal class DefaultDeeplinkLauncher(
     }
 }
 
+internal sealed class UnopenableDeeplinkException(uri: Uri, reason: String) :
+    RuntimeException("$reason: scheme=${uri.scheme}, host=${uri.host}")
+
 internal class UnresolvedDeeplinkException(uri: Uri) :
-    RuntimeException("Deeplink has no matching activity: scheme=${uri.scheme}, host=${uri.host}")
+    UnopenableDeeplinkException(uri, reason = "Deeplink has no matching activity")
+
+internal class UntrustedDeeplinkException(uri: Uri) :
+    UnopenableDeeplinkException(uri, reason = "Deeplink is not a trusted https link")
+
+internal class UnsupportedDeeplinkException(uri: Uri) :
+    UnopenableDeeplinkException(uri, reason = "Deeplink scheme is not supported")

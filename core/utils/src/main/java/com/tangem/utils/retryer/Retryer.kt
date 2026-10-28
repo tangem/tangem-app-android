@@ -34,7 +34,7 @@ class Retryer(
             val timeInMillis = calculateDelay(iteration = iteration)
             delay(timeInMillis)
 
-            val result = try {
+            val isSuccess = try {
                 block(iteration)
             } catch (e: CancellationException) {
                 throw e
@@ -44,7 +44,7 @@ class Retryer(
                 false
             }
 
-            if (result) return
+            if (isSuccess) return
         }
     }
 

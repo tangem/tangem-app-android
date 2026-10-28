@@ -95,7 +95,7 @@ internal object InitialStakingStatePreview {
                         commission = null,
                         stakedBalance = null,
                         votingPower = null,
-                        preferred = false,
+                        isPreferred = false,
                         isStrategicPartner = false,
                     ).toStakingTarget(),
                     pendingActions = persistentListOf(),

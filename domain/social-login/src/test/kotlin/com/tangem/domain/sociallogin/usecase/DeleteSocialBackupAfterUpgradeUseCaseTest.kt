@@ -25,7 +25,7 @@ internal class DeleteSocialBackupAfterUpgradeUseCaseTest {
     @BeforeEach
     fun resetMocks() {
         clearMocks(socialBackupRepository)
-        coEvery { socialBackupRepository.deleteBackup(walletId) } returns Unit.right()
+        coEvery { socialBackupRepository.deleteBackup(walletId) } returns true.right()
     }
 
     @Test
@@ -37,6 +37,18 @@ internal class DeleteSocialBackupAfterUpgradeUseCaseTest {
         assertThat(actual).isEqualTo(Unit.right())
         coVerify(exactly = 1) { socialBackupRepository.deleteBackup(walletId) }
         coVerify(exactly = 0) { socialBackupRepository.setSocialBackupCompleted(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN no file of the wallet WHEN invoke THEN backup not found is returned`() = runTest {
+        // Arrange
+        coEvery { socialBackupRepository.deleteBackup(walletId) } returns false.right()
+
+        // Act
+        val actual = useCase(walletId)
+
+        // Assert
+        assertThat(actual).isEqualTo(SocialLoginError.BackupNotFound.left())
     }
 
     @Test

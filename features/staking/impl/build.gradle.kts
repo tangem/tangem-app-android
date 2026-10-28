@@ -88,9 +88,12 @@ dependencies {
 
     /** Test */
     testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
+    testImplementation(projects.common.test)
     testImplementation(deps.kotlin.coroutines)
     testImplementation(deps.jodatime)
     testImplementation(projects.domain.txhistory.models)
+    testImplementation(projects.libs.blockchainSdk)
     api(deps.kotlin.coroutines)
     api(projects.domain.staking.models)
 }

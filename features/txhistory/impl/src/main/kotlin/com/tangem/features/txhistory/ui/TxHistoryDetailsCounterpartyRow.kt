@@ -45,7 +45,7 @@ import com.tangem.features.txhistory.entity.TxHistoryDetailsUM.CounterpartyUM
 
 /**
  * Counterparty ("Recipient" / "From") card of the single-asset detail, built on the DS3 [TangemRow] inside a tinted
- * `bg.opaque.primary` cell. The layout is identical across counterparty kinds — only the leading
+ * `bg.transparent.primary` cell. The layout is identical across counterparty kinds — only the leading
  * [avatar][CounterpartyUM.avatar] varies (see [CounterpartyAvatar]). The whole row is clickable and copies the
  * counterparty address via [CounterpartyUM.onCopyClick].
  *
@@ -61,7 +61,7 @@ internal fun TxHistoryDetailsCounterpartyRow(counterparty: CounterpartyUM, modif
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(24.dp))
-            .background(TangemTheme.colors3.bg.opaque.primary),
+            .background(TangemTheme.colors3.bg.transparent.primary),
     ) {
         TangemRow(
             verticalAlignment = TangemRowVerticalAlignment.Center,
@@ -109,7 +109,7 @@ private fun CounterpartyAvatar(avatar: CounterpartyAvatar, modifier: Modifier = 
         is CounterpartyAvatar.Glyph -> Box(
             modifier = avatarModifier
                 .clip(CircleShape)
-                .background(TangemTheme.colors3.bg.opaque.secondary),
+                .background(TangemTheme.colors3.bg.transparent.secondary),
             contentAlignment = Alignment.Center,
         ) {
             Icon(

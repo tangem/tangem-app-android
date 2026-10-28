@@ -55,14 +55,14 @@ fun RoundedActionButton(
 ) {
     ActionBaseButton(
         config = config,
-        shape = RoundedCornerShape(size = TangemTheme.dimens.radius24),
+        shape = RoundedCornerShape(size = 24.dp),
         content = { contentModifier ->
             ActionButtonContent(
                 config = config,
                 text = { color -> Text(text = config.text, textColor = color) },
                 modifier = contentModifier.padding(
-                    start = TangemTheme.dimens.spacing16,
-                    end = TangemTheme.dimens.spacing24,
+                    start = 16.dp,
+                    end = 24.dp,
                 ),
             )
         },
@@ -90,14 +90,14 @@ fun ActionButton(
 ) {
     ActionBaseButton(
         config = config,
-        shape = RoundedCornerShape(size = TangemTheme.dimens.radius12),
-        content = {
+        shape = RoundedCornerShape(size = 12.dp),
+        content = { contentModifier ->
             ActionButtonContent(
                 config = config,
                 text = { textColor -> Text(text = config.text, textColor = textColor) },
-                modifier = it.padding(
-                    start = TangemTheme.dimens.spacing16,
-                    end = TangemTheme.dimens.spacing24,
+                modifier = contentModifier.padding(
+                    start = 16.dp,
+                    end = 24.dp,
                 ),
             )
         },
@@ -179,7 +179,7 @@ fun ActionButtonContent(
 ) {
     Row(
         modifier = modifier
-            .padding(vertical = TangemTheme.dimens.spacing8),
+            .padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -189,7 +189,7 @@ fun ActionButtonContent(
             else -> TangemTheme.colors.icon.primary1
         }
         Icon(
-            modifier = Modifier.size(size = TangemTheme.dimens.size20),
+            modifier = Modifier.size(size = 20.dp),
             painter = painterResource(id = config.iconResId),
             contentDescription = null,
             tint = iconTint,
@@ -219,7 +219,7 @@ private fun Loading(backgroundColor: Color, modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center,
     ) {
         CircularProgressIndicator(
-            modifier = Modifier.size(TangemTheme.dimens.size24),
+            modifier = Modifier.size(24.dp),
             color = TangemTheme.colors.icon.accent,
         )
     }

@@ -26,15 +26,12 @@ import com.tangem.domain.polymarket.model.PolymarketChainFamily
 import com.tangem.domain.polymarket.model.PolymarketDepositNetwork
 import com.tangem.domain.polymarket.model.PolymarketDepositRequisites
 import com.tangem.domain.polymarket.model.PolymarketDepositToken
+import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
-import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
-import com.tangem.domain.polymarket.model.PolymarketMarket
-import com.tangem.domain.polymarket.model.PolymarketOutcome
-import com.tangem.domain.polymarket.model.PolymarketStatus
 import com.tangem.domain.polymarket.model.PredictionCollateral
 import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
@@ -50,6 +47,9 @@ import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionPriceUseCase
 import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
+import com.tangem.features.polymarket.impl.createPolymarketEvent
+import com.tangem.features.polymarket.impl.createPolymarketMarket
+import com.tangem.features.polymarket.impl.createPolymarketOutcome
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.positions.model.createPolymarketPosition
@@ -65,7 +65,6 @@ import kotlinx.coroutines.test.TestScope
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import java.math.BigDecimal
-
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPrediction
 
@@ -295,6 +294,9 @@ internal abstract class PlacePredictionModelTestBase {
         minOrderAmount = BigDecimal.ONE,
         tickSize = BigDecimal("0.001"),
         isLive = isLive,
+        version = PolymarketMarketVersion.V1,
+        exchange = PolymarketContracts.CTF_EXCHANGE,
+        signingDomainVersion = "2",
     )
 
     protected fun createPosition(size: BigDecimal = BigDecimal("51.234567")): PolymarketPosition.Open =
@@ -313,53 +315,22 @@ internal abstract class PlacePredictionModelTestBase {
         total = BigDecimal("10.48"),
     )
 
-    protected fun createEvent(isAcceptingOrders: Boolean = true, conditionId: String? = null): PolymarketEvent = PolymarketEvent(
-        id = EVENT_ID,
-        slug = "event-slug",
-        title = "Event title",
-        description = "Event description",
-        rulesUrl = "https://polymarket.com/rules",
-        iconUrl = null,
-        imageUrl = null,
-        status = PolymarketStatus.ACTIVE,
-        startDate = null,
-        endDate = null,
-        volume = null,
-        volume24h = null,
-        liquidity = null,
-        totalMarketsCount = 1,
-        isNegRisk = false,
-        isLive = false,
-        displayMode = PolymarketDisplayMode.PLAIN_MARKETS,
-        markets = listOf(
-            PolymarketMarket(
-                id = MARKET_ID,
-                conditionId = conditionId,
-                eventId = EVENT_ID,
-                title = "Market question",
-                slug = "market-slug",
-                description = "Market description",
-                groupItemTitle = null,
-                iconUrl = null,
-                imageUrl = null,
-                status = PolymarketStatus.ACTIVE,
-                isNegRisk = false,
-                isAcceptingOrders = isAcceptingOrders,
-                startDate = null,
-                endDate = null,
-                startDateIso = null,
-                endDateIso = null,
-                volume = null,
-                volume24h = null,
-                liquidity = null,
-                orderIndex = 0,
-                outcomes = listOf(
-                    PolymarketOutcome(assetId = ASSET_ID, title = "Yes", probability = BigDecimal("0.42")),
-                    PolymarketOutcome(assetId = "asset-2", title = "No", probability = BigDecimal("0.58")),
+    protected fun createEvent(isAcceptingOrders: Boolean = true, conditionId: String? = null): PolymarketEvent =
+        createPolymarketEvent(
+            id = EVENT_ID,
+            markets = listOf(
+                createPolymarketMarket(
+                    id = MARKET_ID,
+                    conditionId = conditionId,
+                    eventId = EVENT_ID,
+                    isAcceptingOrders = isAcceptingOrders,
+                    outcomes = listOf(
+                        createPolymarketOutcome(assetId = ASSET_ID, title = "Yes", probability = BigDecimal("0.42")),
+                        createPolymarketOutcome(assetId = "asset-2", title = "No", probability = BigDecimal("0.58")),
+                    ),
                 ),
             ),
-        ),
-    )
+        )
 
     protected companion object {
         const val EVENT_ID = "event-1"

@@ -21,14 +21,12 @@ import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.feature.swap.converters.*
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.ExpressException
 import com.tangem.feature.swap.domain.models.createFromAmountWithOffset
 import com.tangem.feature.swap.domain.models.domain.*
-import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.grow.datasource.express.TangemExpressApi
 import com.tangem.grow.datasource.express.models.request.ExchangeSentRequestBody
 import com.tangem.grow.datasource.express.models.request.PairsRequestBody
@@ -54,8 +52,6 @@ internal class DefaultSwapRepository(
     private val growPreferencesKeys: GrowPreferencesKeys,
     private val expressUtils: ExpressUtils,
     private val expressHistoryRepository: ExpressHistoryRepository,
-    private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
-    private val swapFeatureToggles: SwapFeatureToggles,
     moshi: Moshi,
 ) : SwapRepository {
 
@@ -152,9 +148,7 @@ internal class DefaultSwapRepository(
                             )
                             .getOrThrow()
 
-                        if (txHistoryFeatureToggles.isNewTxHistoryEnabled) {
-                            expressHistoryRepository.storeExchanges(items = listOf(response))
-                        }
+                        expressHistoryRepository.storeExchanges(items = listOf(response))
 
                         exchangeStatusConverter.convert(response)
                     },
@@ -201,8 +195,7 @@ internal class DefaultSwapRepository(
                     toTokenAmount = createFromAmountWithOffset(response.toAmount, response.toDecimals),
                     allowanceContract = response.allowanceContract,
                     txType = response.txType?.toDomain(),
-                    isRestricted = response.isRestricted &&
-                        swapFeatureToggles.isExpressCategoriesGeoBlockingEnabled,
+                    isRestricted = response.isRestricted,
                     slippage = ExpressSlippageConverter.fromApi(response.slippage),
                 ).right()
             } catch (ex: Exception) {

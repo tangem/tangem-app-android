@@ -15,6 +15,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.extensions.TextReference
@@ -167,8 +168,8 @@ fun TangemTopAppBar(
     ) {
         Box(
             modifier = Modifier
-                .padding(horizontal = TangemTheme.dimens.spacing12)
-                .size(TangemTheme.dimens.size32),
+                .padding(horizontal = 12.dp)
+                .size(32.dp),
             contentAlignment = Alignment.Center,
         ) {
             if (startButton != null) {
@@ -190,11 +191,11 @@ fun TangemTopAppBar(
 
         Row(
             modifier = Modifier
-                .padding(horizontal = TangemTheme.dimens.spacing12)
-                .widthIn(min = TangemTheme.dimens.size32)
-                .height(TangemTheme.dimens.size32),
+                .padding(horizontal = 12.dp)
+                .widthIn(min = 32.dp)
+                .height(32.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12, Alignment.End),
+            horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End),
             content = endContent,
         )
     }
@@ -252,8 +253,8 @@ private val TangemTopAppBarHeight.dp
     @Composable
     @ReadOnlyComposable
     get() = when (this) {
-        TangemTopAppBarHeight.BOTTOM_SHEET -> TangemTheme.dimens.size44
-        TangemTopAppBarHeight.DEFAULT -> TangemTheme.dimens.size56
+        TangemTopAppBarHeight.BOTTOM_SHEET -> 44.dp
+        TangemTopAppBarHeight.DEFAULT -> 56.dp
     }
 
 // region Preview

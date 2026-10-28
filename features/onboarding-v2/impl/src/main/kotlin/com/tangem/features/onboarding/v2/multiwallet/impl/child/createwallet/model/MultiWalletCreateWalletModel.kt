@@ -61,14 +61,16 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
     private val multiWalletState
         get() = params.multiWalletState
 
+    val onDone = MutableSharedFlow<Step>()
+
     private val _uiState = MutableStateFlow(
         MultiWalletCreateWalletUM(
-            title = if (params.parentParams.withSeedPhraseFlow) {
+            title = if (params.parentParams.isSeedPhraseFlow) {
                 resourceReference(R.string.onboarding_create_wallet_options_title)
             } else {
                 resourceReference(R.string.onboarding_create_wallet_header)
             },
-            bodyText = if (params.parentParams.withSeedPhraseFlow) {
+            bodyText = if (params.parentParams.isSeedPhraseFlow) {
                 resourceReference(R.string.onboarding_create_wallet_options_message)
             } else {
                 resourceReference(R.string.onboarding_create_wallet_body)
@@ -77,7 +79,7 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
                 analyticsHandler.send(OnboardingAnalyticsEvent.CreateWallet.ButtonCreateWallet())
                 createWallet(false)
             },
-            showOtherOptionsButton = params.parentParams.withSeedPhraseFlow,
+            shouldShowOtherOptionsButton = params.parentParams.isSeedPhraseFlow,
             onOtherOptionsClick = {
                 analyticsHandler.send(OnboardingAnalyticsEvent.CreateWallet.ButtonOtherOptions())
                 modelScope.launch {
@@ -90,7 +92,6 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
     )
 
     val uiState: StateFlow<MultiWalletCreateWalletUM> = _uiState
-    val onDone = MutableSharedFlow<Step>()
 
     init {
         analyticsHandler.send(OnboardingAnalyticsEvent.CreateWallet.ScreenOpened())
@@ -105,9 +106,9 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
 
             when (result) {
                 is CompletionResult.Success -> {
-                    multiWalletState.update {
-                        it.copy(
-                            currentScanResponse = it.currentScanResponse.copy(
+                    multiWalletState.update { state ->
+                        state.copy(
+                            currentScanResponse = state.currentScanResponse.copy(
                                 card = result.data.card,
                                 derivedKeys = result.data.derivedKeys,
                                 primaryCard = result.data.primaryCard,
@@ -135,10 +136,10 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
                         ),
                     )
 
-                    val cardDoesNotSupportBackup = result.data.card.settings.isBackupAllowed.not()
+                    val isBackupNotSupported = !result.data.card.settings.isBackupAllowed
                     when {
-                        cardDoesNotSupportBackup -> createWalletAndNavigateBackWithDone()
-                        params.parentParams.withSeedPhraseFlow -> onDone.emit(Step.AddBackupDevice)
+                        isBackupNotSupported -> createWalletAndNavigateBackWithDone()
+                        params.parentParams.isSeedPhraseFlow -> onDone.emit(Step.AddBackupDevice)
                         else -> onDone.emit(Step.ChooseBackupOption)
                     }
                 }
@@ -166,8 +167,8 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
                 cardRepository.finishCardActivation(scanResponse.card.cardId)
 
                 // save user wallet for manage tokens screen
-                params.multiWalletState.update {
-                    it.copy(resultUserWallet = userWallet)
+                params.multiWalletState.update { state ->
+                    state.copy(resultUserWallet = userWallet)
                 }
 
                 onDone.emit(Step.Done)

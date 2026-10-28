@@ -30,15 +30,15 @@ import com.tangem.common.ui.account.picker.AccountColorPicker
 import com.tangem.common.ui.account.picker.AccountIconPicker
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.fields.SimpleTextField
-import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds2.button.Back
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
-import com.tangem.core.ui.ds2.fade.TangemFade
+import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
+import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -60,27 +60,40 @@ internal fun JointAccountConfigScreen(
     onCloseClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val density = LocalDensity.current
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(color = TangemTheme.colors3.bg.primary),
-    ) {
-        var topBarHeightPx by remember { mutableIntStateOf(0) }
-        var footerHeightPx by remember { mutableIntStateOf(0) }
-        val topBarHeight = with(density) { topBarHeightPx.toDp() }
-        val footerHeight = with(density) { footerHeightPx.toDp() }
-        val bottomNavHeight = with(density) { WindowInsets.navigationBars.getBottom(this).toDp() }
+    var footerHeightPx by remember { mutableIntStateOf(0) }
+
+    TangemTopBarScaffold(
+        modifier = modifier,
+        containerColor = TangemTheme.colors3.bg.primary,
+        topBar = {
+            TangemTopNavigation(
+                startButton = { TangemButton.Back(onClick = state.onBackClick) },
+                endButton = { TangemButton.Close(onClick = onCloseClick) },
+            )
+        },
+        overlay = {
+            Footer(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .imePadding()
+                    .onSizeChanged { size -> footerHeightPx = size.height },
+                isEnabled = state.isContinueEnabled,
+                onContinueClick = state.onContinueClick,
+            )
+        },
+    ) { contentPadding ->
+        val footerHeight = with(LocalDensity.current) { footerHeightPx.toDp() }
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .hazeSourceTangem()
-                .background(color = TangemTheme.colors3.bg.primary)
                 .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
-                .padding(top = topBarHeight + 12.dp, bottom = footerHeight + 12.dp + bottomNavHeight),
+                .padding(
+                    top = contentPadding.calculateTopPadding() + 12.dp,
+                    bottom = maxOf(contentPadding.calculateBottomPadding(), footerHeight) + 12.dp,
+                ),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             NameCard(state = state)
@@ -103,25 +116,6 @@ internal fun JointAccountConfigScreen(
 
             state.wallet?.let { wallet -> WalletCard(wallet = wallet) }
         }
-
-        Footer(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .imePadding()
-                .navigationBarsPadding()
-                .onSizeChanged { footerHeightPx = it.height },
-            isEnabled = state.isContinueEnabled,
-            onContinueClick = state.onContinueClick,
-        )
-
-        TangemTopNavigation(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .onSizeChanged { topBarHeightPx = it.height },
-            startButton = { TangemButton.Back(onClick = state.onBackClick) },
-            endButton = { TangemButton.Close(onClick = onCloseClick) },
-        )
     }
 }
 
@@ -230,18 +224,11 @@ private fun WalletCard(wallet: JointAccountConfigUM.WalletUM) {
 
 @Composable
 private fun Footer(isEnabled: Boolean, onContinueClick: () -> Unit, modifier: Modifier = Modifier) {
-    Box(modifier = modifier.fillMaxWidth()) {
-        TangemFade(
-            position = TangemFade.Position.Bottom,
-            modifier = Modifier.matchParentSize(),
-        )
-
+    TangemFooter(modifier = modifier) {
         TangemButton(
             modifier = Modifier
                 .testTag(JointAccountCreationTestTags.CONFIG_CONTINUE_BUTTON)
-                .fillMaxWidth()
-                .padding(top = 16.dp)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .fillMaxWidth(),
             variant = TangemButton.Variant.Primary,
             size = TangemButton.Size.X12,
             text = resourceReference(R.string.common_continue),

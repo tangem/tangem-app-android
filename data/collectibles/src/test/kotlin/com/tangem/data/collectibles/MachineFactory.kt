@@ -60,6 +60,11 @@ internal object MachineFactory {
         expectedValue = expectedValue,
         imageUrl = imageUrl,
         categoryId = categoryId,
+        revealAssets = CollectibleGachaMachine.RevealAssets(
+            lightVideoUrl = "light video url",
+            darkVideoUrl = "dark video url",
+            skipAudioUrl = "skip audio url",
+        ),
     )
 
     fun createDto(
@@ -75,6 +80,11 @@ internal object MachineFactory {
         epicOdds: Int? = 1,
         epicStock: Int? = 2628,
         epicRange: TierRangeDTO? = TierRangeDTO(start = BigDecimal("25000"), end = BigDecimal("500100")),
+        openPackMedia: MachineDTO.OpenPackMediaDTO? = MachineDTO.OpenPackMediaDTO(
+            videoLight = "light video url",
+            videoDark = "dark video url",
+            skipAnimationAudio = "skip audio url",
+        ),
     ) = MachineDTO(
         id = id,
         externalId = externalId,
@@ -99,6 +109,7 @@ internal object MachineFactory {
         categoryId = categoryId,
         createdAt = createdAt,
         updatedAt = updatedAt,
+        openPackMedia = openPackMedia,
     )
 
     fun createListConfig(
@@ -130,7 +141,8 @@ internal object MachineFactory {
         description: String? = "2024 #208 Raging Bolt EX PSA 10 Tef EN-Temporal Forces Pokemon",
         rarity: CollectibleRarity? = CollectibleRarity.RARE,
         grade: CollectibleGachaMachineNft.Grade? = CollectibleGachaMachineNft.Grade(company = "PSA", value = "10"),
-        imageUrl: String? = "https://cdn.tangem.com/nft.png",
+        frontImageUrl: String? = "https://cdn.tangem.com/nft.png",
+        backImageUrl: String? = "https://cdn.tangem.com/nft_back.png",
         insuredValue: BigDecimal? = BigDecimal("2.40"),
     ) = CollectibleGachaMachineNft(
         id = id,
@@ -139,7 +151,8 @@ internal object MachineFactory {
         description = description,
         rarity = rarity,
         grade = grade,
-        imageUrl = imageUrl,
+        frontImageUrl = frontImageUrl,
+        backImageUrl = backImageUrl,
         insuredValue = insuredValue,
     )
 
@@ -151,7 +164,8 @@ internal object MachineFactory {
         rarity: String? = "rare",
         gradingCompany: String? = "PSA",
         gradeNum: String? = "10",
-        image: String? = "https://cdn.tangem.com/nft.png",
+        imageFront: String? = "https://cdn.tangem.com/nft.png",
+        imageBack: String? = "https://cdn.tangem.com/nft_back.png",
         insuredValue: BigDecimal? = BigDecimal("240"),
     ) = MachineNftDTO(
         id = id,
@@ -161,7 +175,8 @@ internal object MachineFactory {
         rarity = rarity,
         gradingCompany = gradingCompany,
         gradeNum = gradeNum,
-        image = image,
+        imageFront = imageFront,
+        imageBack = imageBack,
         insuredValue = insuredValue,
     )
 

@@ -18,7 +18,12 @@ internal object WcAlertsFactory {
         is WcTransactionRoutes.Alert.Type.UnsafeDomain ->
             createUnsafeDomainAlert()
         is WcTransactionRoutes.Alert.Type.BlockAidErrorInfo ->
-            createMaliciousDAppAlert(alertType.description, alertType.onClick, alertType.iconType, alertType.iconBgType)
+            createMaliciousDAppAlert(
+                description = alertType.description,
+                activeButtonOnClick = alertType.onClick,
+                iconType = alertType.iconType,
+                iconBgType = alertType.iconBgType,
+            )
         is WcTransactionRoutes.Alert.Type.UnknownError ->
             createUnknownErrorAlert(alertType.errorMessage, alertType.onDismiss, alertType.onRetry)
     }

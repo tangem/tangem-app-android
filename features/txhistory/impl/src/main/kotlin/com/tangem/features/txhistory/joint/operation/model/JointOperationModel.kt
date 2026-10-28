@@ -101,15 +101,18 @@ internal class JointOperationModel @Inject constructor(
     private val isBusy: Boolean
         get() = isSigning.value || isRefusing.value
 
-    private val canCreateContact = operationState.flatMapLatest { state ->
-        if (state == null) return@flatMapLatest flowOf(false)
+    private val recipient = operationState
+        .map { state -> state?.displayed?.recipient }
+        .distinctUntilChanged()
+        .flatMapLatest { address ->
+            if (address == null) return@flatMapLatest flowOf(null)
 
-        delegate.canCreateContact(
-            userWalletId = params.userWalletId,
-            recipient = state.displayed.recipient,
-            network = params.currency.network,
-        )
-    }
+            delegate.recipient(
+                userWalletId = params.userWalletId,
+                recipient = address,
+                network = params.currency.network,
+            )
+        }
 
     private val operationConverter = JointOperationUMConverter(
         currency = params.currency,
@@ -137,13 +140,13 @@ internal class JointOperationModel @Inject constructor(
     val uiState: StateFlow<JointOperationUM> = combine(
         flow = operationState,
         flow2 = userActions,
-        flow3 = canCreateContact,
+        flow3 = recipient,
         flow4 = isBalanceHidden,
         flow5 = delegate.fiat(userWalletId = params.userWalletId, currency = params.currency),
-    ) { state, actions, canCreateContact, isBalanceHidden, fiat ->
+    ) { state, actions, recipient, isBalanceHidden, fiat ->
         val answered = state?.withOwnAnswer(answeredLocally = actions.localAnswer)
         val isGone = answered == null || actions.isGone || !answered.isReachable && !answered.isSending
-        if (isGone) return@combine JointOperationUM.Gone
+        if (isGone || recipient == null) return@combine JointOperationUM.Gone
 
         JointOperationUM.Content(
             operation = operationConverter.convert(
@@ -152,7 +155,7 @@ internal class JointOperationModel @Inject constructor(
                     isSigning = actions.isSigning,
                     isRefusing = actions.isRefusing,
                     hasAnswered = actions.localAnswer != null,
-                    canCreateContact = canCreateContact,
+                    recipient = recipient,
                     isBalanceHidden = isBalanceHidden,
                     isColdWallet = isColdWallet,
                     fiat = fiat,
