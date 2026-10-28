@@ -1,4 +1,4 @@
-package com.tangem.tap.common.analytics.handlers.opentelemetry
+package com.tangem.core.analytics.handlers.opentelemetry
 
 import android.app.Application
 import android.content.ComponentCallbacks2
@@ -8,7 +8,6 @@ import com.tangem.utils.SupportedLanguages
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
-import com.tangem.wallet.BuildConfig
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.metrics.Meter
@@ -44,6 +43,7 @@ import java.util.concurrent.TimeUnit
 internal class OpenTelemetryMetricsClient(
     application: Application,
     apiKey: String,
+    appVersion: String,
     settingsRepository: SettingsRepository,
     private val scope: CoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -56,7 +56,7 @@ internal class OpenTelemetryMetricsClient(
             Resource.create(
                 Attributes.builder()
                     .put(SERVICE_NAME_KEY, SERVICE_NAME)
-                    .put(SERVICE_VERSION_KEY, BuildConfig.VERSION_NAME)
+                    .put(SERVICE_VERSION_KEY, appVersion)
                     .put(OS_NAME_KEY, OS_NAME)
                     .put(LANGUAGE_KEY, SupportedLanguages.getCurrentSupportedLanguageCode())
                     .apply { resolveCountryCode(settingsRepository)?.let { put(COUNTRY_CODE_KEY, it) } }
