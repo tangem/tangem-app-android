@@ -302,7 +302,7 @@ internal class SendIntentSourceResolverTest {
     }
 
     @Test
-    fun `GIVEN token loading until the wait ends WHEN resolve THEN the latest emission is used and source is not found`() =
+    fun `GIVEN token loading until the wait ends WHEN resolve THEN the latest emission is used and sender is unresolved`() =
         runTest {
             // Arrange
             val loading = accountStatusList(listOf(personal(statuses = listOf(loadingStatus(usdt)))))
@@ -315,7 +315,25 @@ internal class SendIntentSourceResolverTest {
             val actual = resolver.resolve(walletId, intent)
 
             // Assert
-            assertThat(actual).isEqualTo(SendIntentSource.TokenMissing)
+            assertThat(actual).isEqualTo(SendIntentSource.Unresolved)
+        }
+
+    @Test
+    fun `GIVEN token at another address and an unresolved holding WHEN resolve THEN sender is unresolved`() =
+        runTest {
+            // Arrange
+            val resolved = personal(statuses = listOf(status(usdt, OTHER_ADDRESS)))
+            val unresolved = personal(statuses = listOf(loadingStatus(usdt)))
+            every { singleAccountStatusListSupplier(walletId) } returns flow {
+                emit(accountStatusList(listOf(resolved, unresolved)))
+                awaitCancellation()
+            }
+
+            // Act
+            val actual = resolver.resolve(walletId, intent)
+
+            // Assert
+            assertThat(actual).isEqualTo(SendIntentSource.Unresolved)
         }
 
     @Test

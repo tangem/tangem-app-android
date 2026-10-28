@@ -16,4 +16,10 @@ internal sealed interface SendIntentSource {
 
     /** The wallet holds the intent's token, but at other addresses: the intent sends from another wallet. */
     data object OtherSender : SendIntentSource
+
+    /**
+     * The wallet holds the intent's token, but some holding has no address yet (still loading, or its derivation is
+     * missing), so the sender may be in this wallet and cannot be told.
+     */
+    data object Unresolved : SendIntentSource
 }
