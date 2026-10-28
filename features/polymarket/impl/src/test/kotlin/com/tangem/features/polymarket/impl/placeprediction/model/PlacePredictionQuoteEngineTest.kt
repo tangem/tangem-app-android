@@ -17,7 +17,9 @@ import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
@@ -29,7 +31,10 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.math.BigDecimal
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -320,6 +325,88 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
         assertThat(isAwaitingFunds).isTrue()
     }
 
+    @Nested
+    inner class AwaitFreshQuote {
+
+        @Test
+        fun `GIVEN a fresh quote in flight WHEN its result arrives THEN the wait ends quoted`() = runTest {
+            // Arrange
+            val engine = createRequestingEngine()
+            val wait = async { engine.awaitFreshQuote() }
+            runCurrent()
+
+            // Act
+            advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
+            runCurrent()
+
+            // Assert
+            assertThat(wait.await()).isTrue()
+            engine.onPause()
+        }
+
+        @ParameterizedTest(name = "{0}")
+        @EnumSource(FreshQuoteEnd::class)
+        fun `GIVEN a fresh quote in flight WHEN it ends without a result THEN the wait ends unquoted`(
+            end: FreshQuoteEnd,
+        ) = runTest {
+            // Arrange
+            val engine = createRequestingEngine()
+            val wait = async { engine.awaitFreshQuote() }
+            runCurrent()
+
+            // Act
+            when (end) {
+                FreshQuoteEnd.Pause -> engine.onPause()
+                FreshQuoteEnd.NewAmount -> engine.onAmountChange(value = "25")
+                FreshQuoteEnd.Abandon -> engine.abandonFreshQuote()
+            }
+            runCurrent()
+
+            // Assert
+            assertThat(wait.await()).isFalse()
+            engine.onPause()
+        }
+
+        @Test
+        fun `GIVEN a fresh quote is abandoned WHEN its request still runs THEN it is no longer awaited`() = runTest {
+            // Arrange
+            val (engine, uiState) = createEngine()
+            coEvery { getQuoteUseCase(request = any()) } coAnswers {
+                delay(timeMillis = QUOTE_MILLIS)
+                createQuote().right()
+            }
+            advanceUntilIdle()
+            engine.onResume()
+            engine.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS)
+            runCurrent()
+
+            // Act
+            engine.abandonFreshQuote()
+
+            // Assert
+            assertThat(uiState.value.isAwaitingFreshQuote).isFalse()
+            assertThat(engine.awaitFreshQuote()).isFalse()
+            engine.onPause()
+        }
+
+        private fun TestScope.createRequestingEngine(): PlacePredictionQuoteEngine {
+            coEvery { getQuoteUseCase(request = any()) } coAnswers {
+                delay(timeMillis = QUOTE_MILLIS)
+                createQuote().right()
+            }
+            val (engine, _) = createEngine()
+            advanceUntilIdle()
+            engine.onResume()
+            engine.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS)
+            runCurrent()
+            return engine
+        }
+    }
+
+    enum class FreshQuoteEnd { Pause, NewAmount, Abandon }
+
     private fun stubFailedResumeSources() {
         coEvery { checkGeoblockUseCase() } returns PolymarketOnboardingError.Network.left()
         coEvery { refreshRequisites(USER_WALLET_ID) } returns PolymarketBridgeError.Unavailable.left()
@@ -336,5 +423,9 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
             scope = CoroutineScope(dispatchers.mainImmediate + engineJob),
         )
         return engine to uiState
+    }
+
+    private companion object {
+        const val QUOTE_MILLIS = 1_000L
     }
 }

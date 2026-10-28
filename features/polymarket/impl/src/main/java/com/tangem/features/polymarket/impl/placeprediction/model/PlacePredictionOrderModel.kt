@@ -31,7 +31,6 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -167,11 +166,11 @@ internal class PlacePredictionOrderModel @Inject constructor(
 
     private fun placeOnceQuoted() {
         val wait = modelScope.launch {
-            withTimeoutOrNull(PENDING_PLACEMENT_LIFETIME) {
-                uiState.first { !it.isAwaitingFreshQuote }
-            } ?: return@launch
-
-            quoteEngine.prepare()?.let { prepared -> place(prepared = prepared) }
+            when (withTimeoutOrNull(PENDING_PLACEMENT_LIFETIME) { quoteEngine.awaitFreshQuote() }) {
+                true -> quoteEngine.prepare()?.let { prepared -> place(prepared = prepared) }
+                null -> quoteEngine.abandonFreshQuote()
+                false -> Unit
+            }
         }
 
         pendingPlacement = wait
