@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.legal.LegalCaption
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.resourceReference
@@ -34,7 +33,6 @@ internal fun TangemPayCampaignLandingContent(state: TangemPayCampaignUM.Landing,
         footer = {
             TangemPayCampaignFooter(
                 state = state,
-                showLegalCaption = isNoWallet,
                 showCtaIcon = !isNoWallet,
             )
         },
@@ -109,7 +107,6 @@ private fun TangemPayCampaignBullet(
 @Composable
 private fun TangemPayCampaignFooter(
     state: TangemPayCampaignUM.Landing,
-    showLegalCaption: Boolean,
     showCtaIcon: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -119,12 +116,6 @@ private fun TangemPayCampaignFooter(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        if (showLegalCaption) {
-            LegalCaption(
-                onTermsOfServiceClick = state.onTermsOfServiceClick,
-                onPrivacyPolicyClick = state.onPrivacyPolicyClick,
-            )
-        }
         TangemButton(
             modifier = Modifier.fillMaxWidth(),
             variant = TangemButton.Variant.Primary,

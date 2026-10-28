@@ -9,6 +9,8 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.media.LoopingVideoController
+import com.tangem.core.media.VideoFrameSize
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.error.UniversalError
 import com.tangem.core.navigation.url.UrlOpener
@@ -22,9 +24,12 @@ import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
+import com.tangem.features.tangempay.onboarding.impl.R
 import com.tangem.features.tangempay.ui.TangemPayOnboardingNavigation
 import com.tangem.features.tangempay.ui.TangemPayOnboardingScreenState
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -40,6 +45,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -54,6 +61,9 @@ internal class TangemPayOnboardingModelTest {
     private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
+    private val video: LoopingVideoController = mockk(relaxed = true)
+    private val videoFactory: LoopingVideoController.Factory = mockk()
 
     private val deeplink = "tangem://onboard-visa"
 
@@ -68,8 +78,12 @@ internal class TangemPayOnboardingModelTest {
             urlOpener,
             userWalletsListRepository,
             uiMessageSender,
+            video,
+            videoFactory,
         )
         every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns false
+        every { tangemPayFeatureToggles.isPayBundleIntroductionEnabled } returns false
+        every { videoFactory.create(any(), any(), any(), any(), any()) } returns video
         coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(mockk<UserWallet>())
         coEvery {
             eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true)
@@ -399,6 +413,78 @@ internal class TangemPayOnboardingModelTest {
         model.onDestroy()
     }
 
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN feature toggles WHEN model created THEN bundle video created only for unified onboarding with bundle`(
+        testModel: VideoToggleTestModel,
+    ) = runTest {
+        // Arrange
+        every { tangemPayFeatureToggles.isPayBundleIntroductionEnabled } returns testModel.isPayBundleEnabled
+        every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns testModel.isMoneyAccountsEnabled
+
+        // Act
+        val model = createModel(TangemPayOnboardingComponent.Params.FromBannerOnMain)
+
+        // Assert
+        verify(exactly = if (testModel.isVideoExpected) 1 else 0) {
+            videoFactory.create(
+                scope = any(),
+                videoRes = R.raw.tangem_pay_bundle_background,
+                frameSize = VideoFrameSize(width = 1080, height = 1920),
+                diagnosticsSubject = any(),
+                onFailed = any(),
+            )
+        }
+        assertThat(model.videoState != null).isEqualTo(testModel.isVideoExpected)
+        model.onDestroy()
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN bundle video WHEN screen resumes or pauses THEN video is told`(isRunning: Boolean) = runTest {
+        // Arrange
+        enableBundleVideo()
+        val model = createModel(TangemPayOnboardingComponent.Params.FromBannerOnMain)
+
+        // Act
+        model.setVideoRunning(isRunning = isRunning)
+
+        // Assert
+        verify(exactly = 1) { video.setRunning(isRunning = isRunning) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN bundle video WHEN model destroyed THEN video released`() = runTest {
+        // Arrange
+        enableBundleVideo()
+        val model = createModel(TangemPayOnboardingComponent.Params.FromBannerOnMain)
+
+        // Act
+        model.onDestroy()
+
+        // Assert
+        verify(exactly = 1) { video.release() }
+    }
+
+    private fun enableBundleVideo() {
+        every { tangemPayFeatureToggles.isPayBundleIntroductionEnabled } returns true
+        every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
+    }
+
+    private fun provideTestModels() = listOf(
+        VideoToggleTestModel(isPayBundleEnabled = true, isMoneyAccountsEnabled = true, isVideoExpected = true),
+        VideoToggleTestModel(isPayBundleEnabled = true, isMoneyAccountsEnabled = false, isVideoExpected = false),
+        VideoToggleTestModel(isPayBundleEnabled = false, isMoneyAccountsEnabled = true, isVideoExpected = false),
+        VideoToggleTestModel(isPayBundleEnabled = false, isMoneyAccountsEnabled = false, isVideoExpected = false),
+    )
+
+    data class VideoToggleTestModel(
+        val isPayBundleEnabled: Boolean,
+        val isMoneyAccountsEnabled: Boolean,
+        val isVideoExpected: Boolean,
+    )
+
     private fun buildCustomerInfo(kycStatus: KycStatus) = CustomerInfo(
         customerId = "cust_1",
         paymentAccount = null,
@@ -438,6 +524,8 @@ internal class TangemPayOnboardingModelTest {
             ),
             userWalletsListRepository = userWalletsListRepository,
             uiMessageSender = uiMessageSender,
+            tangemPayFeatureToggles = tangemPayFeatureToggles,
+            videoFactory = videoFactory,
         )
     }
 

@@ -2,9 +2,6 @@ package com.tangem.features.tangempay.ui
 
 import android.content.res.Configuration
 import androidx.compose.animation.core.EaseInOut
-import androidx.compose.animation.core.animate
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -15,14 +12,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -30,16 +25,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import com.tangem.common.ui.onboarding.OnboardingHeadline
 import com.tangem.core.media.VideoSurfaceState
-import com.tangem.core.media.ui.VideoSurface
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.haze.ProvideHaze
 import com.tangem.core.ui.components.legal.LegalCaption
@@ -53,17 +45,12 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_24
 import com.tangem.features.tangempay.hotwallet.TangemPayHotWalletOnboardingUM
-import com.tangem.features.tangempay.onboarding.impl.R as OnboardingR
 
 private const val FRAME_WIDTH = 402f
 private const val FADE_TOP = 412f
 private const val FADE_BOTTOM = 652f
 private const val CONTENT_TOP = 498f
 private const val FADE_STOPS_COUNT = 16
-private const val BACKDROP_ASPECT_RATIO = 9f / 16f
-
-/** `RoutingTransitionAnimationFactory`'s 400 ms, plus a margin. */
-private const val ENTER_TRANSITION_MILLIS = 500
 
 /** Positions are the design's 402-wide frame, scaled with the screen width. */
 @Composable
@@ -116,49 +103,12 @@ internal fun TangemPayBundleIntroductionLayout(
             }
         },
     ) { contentPadding ->
-        Backdrop(video = video)
+        TangemPayBundleBackdrop(video = video)
         BundleContent(
             contentPadding = contentPadding,
             trailingSpace = with(LocalDensity.current) { footerHeight.toDp() },
         )
     }
-}
-
-@Composable
-private fun Backdrop(video: VideoSurfaceState?) {
-    val modifier = Modifier
-        .fillMaxWidth()
-        .wrapContentHeight(align = Alignment.Top, unbounded = true)
-        .aspectRatio(BACKDROP_ASPECT_RATIO)
-
-    if (video == null || !rememberIsEnterTransitionOver()) {
-        Poster(modifier = modifier)
-    } else {
-        VideoSurface(state = video, modifier = modifier) {
-            Poster(modifier = Modifier.matchParentSize())
-        }
-    }
-}
-
-/**
- * The replaced screen stays drawn until the routing transition ends, and two SurfaceViews in one window have no
- * defined order: this video could show through the hole of that screen's own.
- */
-@Composable
-private fun rememberIsEnterTransitionOver(): Boolean = produceState(initialValue = false) {
-    // An animation of its own, so it runs on the transition's clock and scales with it
-    animate(initialValue = 0f, targetValue = 1f, animationSpec = tween(ENTER_TRANSITION_MILLIS)) { _, _ -> }
-    value = true
-}.value
-
-@Composable
-private fun Poster(modifier: Modifier = Modifier) {
-    Image(
-        modifier = modifier,
-        painter = painterResource(OnboardingR.drawable.ill_tangem_pay_bundle_poster),
-        contentDescription = null,
-        contentScale = ContentScale.Crop,
-    )
 }
 
 @Composable
@@ -212,6 +162,7 @@ private fun TangemPayBundleIntroductionLayoutPreview() {
             modifier = Modifier.fillMaxSize(),
             state = TangemPayHotWalletOnboardingUM(
                 isPayBundleIntroductionEnabled = true,
+                isUnifiedOnboarding = false,
                 isLoading = false,
                 onGetCardClick = {},
                 onTermsClick = {},

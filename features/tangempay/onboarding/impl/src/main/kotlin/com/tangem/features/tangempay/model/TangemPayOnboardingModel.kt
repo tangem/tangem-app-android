@@ -11,6 +11,8 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.media.LoopingVideoController
+import com.tangem.core.media.LoopingVideoState
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
@@ -21,6 +23,7 @@ import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayConstants
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.eligibility.TangemPayWalletSelectorComponent
@@ -51,9 +54,21 @@ internal class TangemPayOnboardingModel @Inject constructor(
     private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val uiMessageSender: UiMessageSender,
+    tangemPayFeatureToggles: TangemPayFeatureToggles,
+    videoFactory: LoopingVideoController.Factory,
 ) : Model(), TangemPayWalletSelectorComponent.Listener {
 
     private val params = paramsContainer.require<TangemPayOnboardingComponent.Params>()
+
+    private val video = if (
+        tangemPayFeatureToggles.isPayBundleIntroductionEnabled && moneyAccountFeatureToggles.isMoneyAccountsEnabled
+    ) {
+        videoFactory.createPayBundleVideo(scope = modelScope)
+    } else {
+        null
+    }
+
+    val videoState: StateFlow<LoopingVideoState>? = video?.state
 
     val bottomSheetNavigation: SlotNavigation<TangemPayOnboardingNavigation> = SlotNavigation()
 
@@ -116,7 +131,6 @@ internal class TangemPayOnboardingModel @Inject constructor(
             TangemPayOnboardingScreenState.Content(
                 onBack = state.onBack,
                 onTermsClick = ::onTermsClick,
-                onTermsAndFeesClick = ::onTermsAndFeesClick,
                 buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(
                     isLoading = false,
                     onClick = ::onGetCardClick,
@@ -162,10 +176,6 @@ internal class TangemPayOnboardingModel @Inject constructor(
         urlOpener.openUrl(TangemPayConstants.termsAndLimitsLink())
     }
 
-    private fun onTermsAndFeesClick() {
-        urlOpener.openUrl(TangemPayConstants.tangemPayLink())
-    }
-
     private fun onGetCardClick() {
         analytics.send(TangemPayAnalyticsEvents.GetCardClicked())
         val shouldExcludePaeraCustomers = params is TangemPayOnboardingComponent.Params.FromBannerInSettings
@@ -205,6 +215,15 @@ internal class TangemPayOnboardingModel @Inject constructor(
 
     private fun back() {
         router.pop()
+    }
+
+    fun setVideoRunning(isRunning: Boolean) {
+        video?.setRunning(isRunning = isRunning)
+    }
+
+    override fun onDestroy() {
+        video?.release()
+        super.onDestroy()
     }
 
     private fun getInitialState(): TangemPayOnboardingScreenState {
