@@ -13,7 +13,6 @@ import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.gas.JointGasTokenResolver
 import com.tangem.domain.jointaccount.gas.JointRefundReceiverProvider
-import com.tangem.domain.jointaccount.gas.gasTokenQuoteId
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
 import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.model.JointOperationSigningError
@@ -28,8 +27,10 @@ import com.tangem.domain.jointaccount.safe.SafeDeployment
 import com.tangem.domain.jointaccount.verifier.JointAccountCompositionVerifier
 import com.tangem.domain.jointaccount.verifier.JointOperationVerifier
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.utils.extensions.addHexPrefix
 
 /**
  * Co-signs the operation of a joint account in [Network]: the operation is taken from the store by the id the
@@ -258,7 +259,11 @@ class SignJointOperationUseCase(
             .resolve(
                 network = network,
                 address = operation.safeTx.gasToken,
-                rawCurrencyId = account.gasTokenQuoteId(network = network, gasToken = operation.safeTx.gasToken),
+                rawCurrencyId = gasTokenQuoteId(
+                    account = account,
+                    network = network,
+                    gasToken = operation.safeTx.gasToken,
+                ),
             )
             .mapLeft(JointOperationSignError::Failed)
             .bind()
@@ -273,6 +278,16 @@ class SignJointOperationUseCase(
             networkGasPrice = gasPrice,
             gasToken = gasToken,
         )
+    }
+
+    private fun gasTokenQuoteId(account: Account.Joint, network: Network, gasToken: String): CryptoCurrency.RawID? {
+        val address = gasToken.lowercase().addHexPrefix()
+
+        return account.cryptoCurrencies
+            .filterIsInstance<CryptoCurrency.Token>()
+            .firstOrNull { it.network == network && it.contractAddress.lowercase().addHexPrefix() == address }
+            ?.id
+            ?.rawCurrencyId
     }
 
     private fun toSignError(error: JointOperationCreateError): JointOperationSignError = when (error) {

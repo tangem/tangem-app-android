@@ -1,8 +1,8 @@
 package com.tangem.domain.jointaccount.verifier
 
+import arrow.core.Either
 import com.tangem.domain.jointaccount.gas.JointGasTokenResolver
 import com.tangem.domain.jointaccount.gas.JointRefundReceiverProvider
-import com.tangem.domain.jointaccount.gas.gasTokenQuoteId
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationTransfer
@@ -48,8 +48,8 @@ class JointOperationDisplayGate(
         )
         verdicts[verdict]?.let { return it }
 
-        // Not cached: the gas token is priced from quotes that may simply not have arrived yet
-        val refundBounds = refundBounds(account = account, network = network, operation = operation)
+        // Not cached: the Smart Gas list may simply not have been read yet
+        val refundBounds = refundBounds(network = network, operation = operation)
         if (refundBounds == null) {
             TangemLogger.e("Joint operation ${operation.operationId} is hidden: the refund bounds cannot be read")
             return false
@@ -71,17 +71,12 @@ class JointOperationDisplayGate(
     }
 
     private suspend fun refundBounds(
-        account: Account.Joint,
         network: Network,
         operation: JointOperation,
     ): JointOperationVerifier.RefundBounds? {
-        val refundReceiver = runCatching { refundReceiverProvider.refundReceiver() }.getOrNull() ?: return null
+        val refundReceiver = Either.catch { refundReceiverProvider.refundReceiver() }.getOrNull() ?: return null
         val gasToken = gasTokenResolver
-            .resolve(
-                network = network,
-                address = operation.safeTx.gasToken,
-                rawCurrencyId = account.gasTokenQuoteId(network = network, gasToken = operation.safeTx.gasToken),
-            )
+            .findUnpriced(network = network, address = operation.safeTx.gasToken)
             .getOrNull()
             ?: return null
 
