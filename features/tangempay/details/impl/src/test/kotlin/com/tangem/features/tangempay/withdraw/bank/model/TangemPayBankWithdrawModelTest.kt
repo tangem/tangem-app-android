@@ -80,6 +80,7 @@ internal class TangemPayBankWithdrawModelTest {
                 amount = BigDecimal("500"),
                 source = bankWithdrawSource(),
                 destination = offrampDestination(),
+                networkFee = BigDecimal.ZERO,
             ),
         )
         model.onOrderCreated(BankOfframpOrderResult(orderId = "order-1", bankAccountId = "acc-7"))
@@ -194,6 +195,7 @@ internal class TangemPayBankWithdrawModelTest {
                 amount = BigDecimal("500"),
                 source = bankWithdrawSource(),
                 destination = offrampDestination(),
+                networkFee = BigDecimal.ZERO,
             ),
         )
         model.onDetailsFilled(formResult(BankWithdrawFormField.AccountNumber to "4830019271"))
@@ -259,7 +261,7 @@ internal class TangemPayBankWithdrawModelTest {
     }
 
     @Test
-    fun `GIVEN draft WHEN amount confirmed THEN draft keeps amount source and destination`() {
+    fun `GIVEN draft WHEN amount confirmed THEN draft keeps amount source destination and network fee`() {
         // Arrange
         val model = createModel(BankWithdrawEntry.NewBusiness)
         val source = bankWithdrawSource()
@@ -267,7 +269,12 @@ internal class TangemPayBankWithdrawModelTest {
 
         // Act
         model.onAmountConfirmed(
-            BankWithdrawAmountResult(amount = BigDecimal("500"), source = source, destination = destination),
+            BankWithdrawAmountResult(
+                amount = BigDecimal("500"),
+                source = source,
+                destination = destination,
+                networkFee = BigDecimal("0.03"),
+            ),
         )
 
         // Assert
@@ -277,6 +284,29 @@ internal class TangemPayBankWithdrawModelTest {
                 amount = BigDecimal("500"),
                 source = source,
                 destination = destination,
+                networkFee = BigDecimal("0.03"),
+            ),
+        )
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN amount confirmed WHEN network fee changed THEN draft keeps everything else and the new fee`() {
+        // Arrange
+        val model = createModel(BankWithdrawEntry.NewPersonal)
+        model.onAmountConfirmed(achAmountResult())
+
+        // Act
+        model.onNetworkFeeChanged(BigDecimal("0.05"))
+
+        // Assert
+        assertThat(model.draft.value).isEqualTo(
+            BankWithdrawDraft(
+                entry = BankWithdrawEntry.NewPersonal,
+                amount = BigDecimal("500"),
+                source = bankWithdrawSource(),
+                destination = offrampDestination(),
+                networkFee = BigDecimal("0.05"),
             ),
         )
         model.onDestroy()
@@ -492,6 +522,7 @@ internal class TangemPayBankWithdrawModelTest {
                     amount = BigDecimal("500"),
                     source = bankWithdrawSource(),
                     destination = offrampDestination(rail = rail),
+                    networkFee = BigDecimal.ZERO,
                 ),
             )
         }
@@ -525,6 +556,7 @@ internal class TangemPayBankWithdrawModelTest {
         amount = BigDecimal("500"),
         source = bankWithdrawSource(),
         destination = offrampDestination(),
+        networkFee = BigDecimal.ZERO,
     )
 
     private fun wireDestination() =

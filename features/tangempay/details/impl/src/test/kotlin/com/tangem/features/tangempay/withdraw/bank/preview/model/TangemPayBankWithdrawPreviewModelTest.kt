@@ -66,6 +66,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val onOrderCreated: (BankOfframpOrderResult) -> Unit = {}
     private val onDestinationChanged: (OfframpDestination) -> Unit = {}
+    private val onNetworkFeeChanged: (BigDecimal) -> Unit = {}
     private val onCloseFlow: () -> Unit = mockk(relaxed = true)
     private var completedCount = 0
     private var outcomeUnknownCount = 0
@@ -76,7 +77,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
         completedCount = 0
         outcomeUnknownCount = 0
         every { getUserWalletUseCase(userWalletId) } returns mockk<UserWallet.Cold>().right()
-        every { completionFactory.create(any(), any(), any(), any()) } returns completion
+        every { completionFactory.create(any(), any(), any(), any(), any()) } returns completion
         completionInFlight()
     }
 
@@ -111,7 +112,9 @@ internal class TangemPayBankWithdrawPreviewModelTest {
         val model = createModel()
 
         // Assert
-        verify(exactly = 1) { completionFactory.create(sourceAccount, any(), onOrderCreated, onDestinationChanged) }
+        verify(exactly = 1) {
+            completionFactory.create(sourceAccount, any(), onOrderCreated, onDestinationChanged, onNetworkFeeChanged)
+        }
         model.onDestroy()
     }
 
@@ -619,6 +622,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
                     draft = MutableStateFlow(draft),
                     onOrderCreated = onOrderCreated,
                     onDestinationChanged = onDestinationChanged,
+                    onNetworkFeeChanged = onNetworkFeeChanged,
                     onCompleted = { completedCount++ },
                     onTransferOutcomeUnknown = { outcomeUnknownCount++ },
                     onCloseFlow = onCloseFlow,
