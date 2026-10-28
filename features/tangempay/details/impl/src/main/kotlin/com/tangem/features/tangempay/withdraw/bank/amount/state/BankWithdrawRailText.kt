@@ -11,7 +11,6 @@ import com.tangem.core.ui.format.bigdecimal.optionalDecimals
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.model.bankofframp.OfframpDestination
 import com.tangem.domain.pay.model.bankofframp.OfframpEta
-import com.tangem.domain.pay.model.bankofframp.OfframpFee
 import com.tangem.features.tangempay.details.impl.R
 import java.math.BigDecimal
 import java.util.Currency
@@ -35,7 +34,10 @@ internal fun OfframpEta.toTextReference(): TextReference = when {
     else -> resourceReference(R.string.tangempay_order_type_delivery_eta_range, wrappedList(minDays, maxDays))
 }
 
-internal fun OfframpFee.toText(): String = amount.formatFiat(Currency.getInstance(currency))
+internal fun OfframpDestination.totalFee(networkFee: BigDecimal): BigDecimal = fee.amount + networkFee
+
+internal fun OfframpDestination.totalFeeText(networkFee: BigDecimal): String =
+    totalFee(networkFee).formatFiat(Currency.getInstance(fee.currency))
 
 internal fun BigDecimal.formatFiat(currency: Currency): String = format {
     fiat(fiatCurrencyCode = currency.currencyCode, fiatCurrencySymbol = currency.symbol).optionalDecimals()
