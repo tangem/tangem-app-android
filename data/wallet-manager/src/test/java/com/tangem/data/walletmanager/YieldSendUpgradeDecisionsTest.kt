@@ -3,6 +3,7 @@ package com.tangem.data.walletmanager
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.smartcontract.CompiledSmartContractCallData
+import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.models.network.Network
@@ -12,6 +13,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -75,6 +79,45 @@ internal class YieldSendUpgradeDecisionsTest {
 
         // Assert
         assertThat(actual).isNull()
+    }
+
+    @Test
+    fun `GIVEN decision in use WHEN applyTo past lifetime since creation THEN decision is applied`() = runTest {
+        // Arrange
+        decisions.remember(userWalletId, ethereum) { wrappedCallData }
+        nowMillis += 4.minutes.inWholeMilliseconds
+        decisions.applyTo(userWalletId, ethereum, sendCallData)
+        nowMillis += 4.minutes.inWholeMilliseconds
+
+        // Act
+        val actual = decisions.applyTo(userWalletId, ethereum, sendCallData)
+
+        // Assert
+        assertThat(actual).isInstanceOf(EthereumYieldSupplyUpgradeToAndCallCallData::class.java)
+    }
+
+    @Test
+    fun `GIVEN overlapping builds WHEN applyOrRemember THEN both send the decision of the first build`() = runTest {
+        // Arrange
+        val firstCheck = CompletableDeferred<SmartContractCallData>()
+        var isSecondCheckMade = false
+
+        // Act
+        val first = async { decisions.applyOrRemember(userWalletId, ethereum, sendCallData) { firstCheck.await() } }
+        runCurrent()
+        val second = async {
+            decisions.applyOrRemember(userWalletId, ethereum, sendCallData) {
+                isSecondCheckMade = true
+                sendCallData
+            }
+        }
+        runCurrent()
+        firstCheck.complete(wrappedCallData)
+
+        // Assert
+        assertThat(first.await()).isSameInstanceAs(wrappedCallData)
+        assertThat(second.await()).isInstanceOf(EthereumYieldSupplyUpgradeToAndCallCallData::class.java)
+        assertThat(isSecondCheckMade).isFalse()
     }
 
     @Test

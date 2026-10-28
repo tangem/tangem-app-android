@@ -859,15 +859,13 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         network: Network,
         callData: SmartContractCallData,
     ): SmartContractCallData = withContext(dispatchers.io) {
-        yieldSendUpgradeDecisions.applyTo(userWalletId, network, callData)?.let { return@withContext it }
-
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
             blockchain = network.toBlockchain(),
             derivationPath = network.derivationPath.value,
         ) ?: return@withContext callData
 
-        yieldSendUpgradeDecisions.remember(userWalletId, network) {
+        yieldSendUpgradeDecisions.applyOrRemember(userWalletId, network, callData) {
             walletManager.wrapWithYieldModuleUpgradeIfAvailable(callData)
         }
     }
