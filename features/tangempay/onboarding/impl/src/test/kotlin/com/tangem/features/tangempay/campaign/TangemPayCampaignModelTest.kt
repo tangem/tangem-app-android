@@ -11,7 +11,6 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.error.UniversalError
-import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
@@ -27,7 +26,6 @@ import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.pay.usecase.ResolveTangemPayCampaignUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.components.TangemPayCampaignComponent
 import com.tangem.features.tangempay.model.TangemPayOnboardingStarter
 import com.tangem.features.tangempay.ui.TangemPayOnboardingNavigation
@@ -55,7 +53,6 @@ internal class TangemPayCampaignModelTest {
 
     private val router: Router = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
-    private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val eligibilityManager: TangemPayEligibilityManager = mockk()
     private val resolveTangemPayCampaignUseCase: ResolveTangemPayCampaignUseCase = mockk()
@@ -69,7 +66,6 @@ internal class TangemPayCampaignModelTest {
         clearMocks(
             router,
             uiMessageSender,
-            urlOpener,
             userWalletsListRepository,
             eligibilityManager,
             resolveTangemPayCampaignUseCase,
@@ -542,34 +538,6 @@ internal class TangemPayCampaignModelTest {
         }
 
         @Test
-        fun `GIVEN NoWallet landing WHEN terms of service clicked THEN disclaimer opened`() = runTest {
-            // Arrange
-            val model = createModel(testScope = this)
-            advanceUntilIdle()
-
-            // Act
-            (model.uiState.value as TangemPayCampaignUM.Landing).onTermsOfServiceClick()
-
-            // Assert
-            verify(exactly = 1) { router.push(AppRoute.Disclaimer(isTosAccepted = true)) }
-            model.onDestroy()
-        }
-
-        @Test
-        fun `GIVEN NoWallet landing WHEN privacy policy clicked THEN privacy policy link opened`() = runTest {
-            // Arrange
-            val model = createModel(testScope = this)
-            advanceUntilIdle()
-
-            // Act
-            (model.uiState.value as TangemPayCampaignUM.Landing).onPrivacyPolicyClick()
-
-            // Assert
-            verify(exactly = 1) { urlOpener.openUrl(match { it.startsWith(TangemPayConstants.PRIVACY_POLICY_URL) }) }
-            model.onDestroy()
-        }
-
-        @Test
         fun `GIVEN landing WHEN wallet selected THEN customer info checked with campaign`() = runTest {
             // Arrange
             val model = createModel(testScope = this)
@@ -752,7 +720,6 @@ internal class TangemPayCampaignModelTest {
             ),
             router = router,
             uiMessageSender = uiMessageSender,
-            urlOpener = urlOpener,
             userWalletsListRepository = userWalletsListRepository,
             eligibilityManager = eligibilityManager,
             resolveTangemPayCampaignUseCase = resolveTangemPayCampaignUseCase,

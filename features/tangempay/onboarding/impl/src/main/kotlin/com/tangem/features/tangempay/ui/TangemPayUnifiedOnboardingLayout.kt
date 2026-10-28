@@ -176,12 +176,9 @@ private fun UnifiedOnboardingContent(scrollState: ScrollState, contentPadding: P
     }
 }
 
+@Suppress("MagicNumber")
 @Composable
-private fun UnifiedOnboardingVideoContent(
-    scrollState: ScrollState,
-    contentPadding: PaddingValues,
-    trailingSpace: Dp,
-) {
+private fun UnifiedOnboardingVideoContent(scrollState: ScrollState, contentPadding: PaddingValues, trailingSpace: Dp) {
     val layoutDirection = LocalLayoutDirection.current
     val backgroundColor = TangemTheme.colors3.bg.primary
 
@@ -224,93 +221,96 @@ private fun UnifiedOnboardingBody() {
         subtitle = resourceReference(R.string.tangempay_unified_onboarding_description),
     )
     Spacer(modifier = Modifier.height(24.dp))
-    UnifiedOnboardingSections()
-}
-
-@Composable
-private fun UnifiedOnboardingSections() {
-    val primaryColor = TangemTheme.colors3.text.primary
-    val secondaryColor = TangemTheme.colors3.text.secondary
-
     Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
-        Section(header = stringResourceSafe(R.string.tangempay_unified_onboarding_payment_account_header)) {
-            FeatureCardsRow(
-                start = {
-                    FeatureCard(
-                        modifier = it,
-                        caption = stringResourceSafe(R.string.tangempay_unified_onboarding_cashback_caption),
-                        text = formattedText(
-                            formatResId = R.string.tangempay_unified_onboarding_cashback_title,
-                            arg = stringResourceSafe(R.string.tangempay_unified_onboarding_cashback_subtitle),
-                            argColor = secondaryColor,
-                            textColor = primaryColor,
-                        ),
-                    )
-                },
-                end = {
-                    FeatureCard(
-                        modifier = it,
-                        caption = stringResourceSafe(R.string.tangempay_unified_onboarding_payment_account_caption),
-                        text = formattedText(
-                            formatResId = R.string.tangempay_unified_onboarding_payment_account_title,
-                            arg = stringResourceSafe(
-                                R.string.tangempay_unified_onboarding_payment_account_subtitle_android,
-                            ),
-                            argColor = primaryColor,
-                            textColor = primaryColor,
-                        ),
-                    )
-                },
-            )
-        }
-        Section(header = stringResourceSafe(R.string.tangempay_unified_onboarding_money_account_header)) {
-            FeatureCard(
-                modifier = Modifier.fillMaxWidth(),
-                caption = stringResourceSafe(R.string.tangempay_unified_onboarding_fees_caption),
-                text = formattedText(
-                    formatResId = R.string.tangempay_unified_onboarding_fees_title,
-                    arg = stringResourceSafe(R.string.tangempay_unified_onboarding_fees_subtitle),
-                    argColor = primaryColor,
-                    textColor = secondaryColor,
-                ),
-            )
-            FeatureCardsRow(
-                start = {
-                    FeatureCard(
-                        modifier = it,
-                        caption = stringResourceSafe(R.string.tangempay_unified_onboarding_money_account_caption),
-                        text = formattedText(
-                            formatResId = R.string.tangempay_unified_onboarding_money_account_title,
-                            arg = stringResourceSafe(R.string.tangempay_unified_onboarding_money_account_subtitle),
-                            argColor = primaryColor,
-                            textColor = primaryColor,
-                        ),
-                    )
-                },
-                end = {
-                    FeatureCard(
-                        modifier = it,
-                        caption = stringResourceSafe(R.string.tangempay_unified_onboarding_payments_caption),
-                        text = AnnotatedString(
-                            stringResourceSafe(R.string.tangempay_unified_onboarding_payments_title),
-                        ),
-                    )
-                },
-            )
-            FeatureCard(
-                modifier = Modifier.fillMaxWidth(),
-                caption = stringResourceSafe(R.string.tangempay_unified_onboarding_interest_caption),
-                text = AnnotatedString(stringResourceSafe(R.string.tangempay_unified_onboarding_interest_title)),
-            )
-        }
+        PaymentAccountSection()
+        MoneyAccountSection()
     }
 }
 
 @Composable
-private fun FeatureCardsRow(
-    start: @Composable (Modifier) -> Unit,
-    end: @Composable (Modifier) -> Unit,
-) {
+private fun MoneyAccountSection() {
+    val primaryColor = TangemTheme.colors3.text.primary
+    val secondaryColor = TangemTheme.colors3.text.secondary
+    Section(header = stringResourceSafe(R.string.tangempay_unified_onboarding_money_account_header)) {
+        FeatureCard(
+            modifier = Modifier.fillMaxWidth(),
+            caption = stringResourceSafe(R.string.tangempay_unified_onboarding_fees_caption),
+            text = formattedText(
+                formatResId = R.string.tangempay_unified_onboarding_fees_title,
+                arg = stringResourceSafe(R.string.tangempay_unified_onboarding_fees_subtitle),
+                argColor = primaryColor,
+                textColor = secondaryColor,
+            ),
+        )
+        FeatureCardsRow(
+            start = { modifier ->
+                FeatureCard(
+                    modifier = modifier,
+                    caption = stringResourceSafe(R.string.tangempay_unified_onboarding_money_account_caption),
+                    text = formattedText(
+                        formatResId = R.string.tangempay_unified_onboarding_money_account_title,
+                        arg = stringResourceSafe(R.string.tangempay_unified_onboarding_money_account_subtitle),
+                        argColor = primaryColor,
+                        textColor = primaryColor,
+                    ),
+                )
+            },
+            end = { modifier ->
+                FeatureCard(
+                    modifier = modifier,
+                    caption = stringResourceSafe(R.string.tangempay_unified_onboarding_payments_caption),
+                    text = AnnotatedString(
+                        stringResourceSafe(R.string.tangempay_unified_onboarding_payments_title),
+                    ),
+                )
+            },
+        )
+        FeatureCard(
+            modifier = Modifier.fillMaxWidth(),
+            caption = stringResourceSafe(R.string.tangempay_unified_onboarding_interest_caption),
+            text = AnnotatedString(stringResourceSafe(R.string.tangempay_unified_onboarding_interest_title)),
+        )
+    }
+}
+
+@Composable
+private fun PaymentAccountSection() {
+    val primaryColor = TangemTheme.colors3.text.primary
+    val secondaryColor = TangemTheme.colors3.text.secondary
+    Section(header = stringResourceSafe(R.string.tangempay_unified_onboarding_payment_account_header)) {
+        FeatureCardsRow(
+            start = { modifier ->
+                FeatureCard(
+                    modifier = modifier,
+                    caption = stringResourceSafe(R.string.tangempay_unified_onboarding_cashback_caption),
+                    text = formattedText(
+                        formatResId = R.string.tangempay_unified_onboarding_cashback_title,
+                        arg = stringResourceSafe(R.string.tangempay_unified_onboarding_cashback_subtitle),
+                        argColor = secondaryColor,
+                        textColor = primaryColor,
+                    ),
+                )
+            },
+            end = { modifier ->
+                FeatureCard(
+                    modifier = modifier,
+                    caption = stringResourceSafe(R.string.tangempay_unified_onboarding_payment_account_caption),
+                    text = formattedText(
+                        formatResId = R.string.tangempay_unified_onboarding_payment_account_title,
+                        arg = stringResourceSafe(
+                            R.string.tangempay_unified_onboarding_payment_account_subtitle_android,
+                        ),
+                        argColor = primaryColor,
+                        textColor = primaryColor,
+                    ),
+                )
+            },
+        )
+    }
+}
+
+@Composable
+private fun FeatureCardsRow(start: @Composable (Modifier) -> Unit, end: @Composable (Modifier) -> Unit) {
     Row(
         modifier = Modifier.height(IntrinsicSize.Min),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
