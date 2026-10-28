@@ -371,7 +371,7 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
         @Test
         fun `GIVEN a fresh quote in flight WHEN the quote use case throws THEN the wait ends unquoted`() = runTest {
             // Arrange
-            coEvery { getQuoteUseCase(request = any()) } coAnswers {
+            coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } coAnswers {
                 delay(timeMillis = QUOTE_MILLIS)
                 error("Quote use case failed")
             }
@@ -402,7 +402,7 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
         fun `GIVEN a fresh quote is abandoned WHEN its request still runs THEN it is no longer awaited`() = runTest {
             // Arrange
             val (engine, uiState) = createEngine()
-            coEvery { getQuoteUseCase(request = any()) } coAnswers {
+            coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } coAnswers {
                 delay(timeMillis = QUOTE_MILLIS)
                 createQuote().right()
             }
@@ -422,7 +422,7 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
         }
 
         private fun TestScope.createRequestingEngine(): PlacePredictionQuoteEngine {
-            coEvery { getQuoteUseCase(request = any()) } coAnswers {
+            coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } coAnswers {
                 delay(timeMillis = QUOTE_MILLIS)
                 createQuote().right()
             }
