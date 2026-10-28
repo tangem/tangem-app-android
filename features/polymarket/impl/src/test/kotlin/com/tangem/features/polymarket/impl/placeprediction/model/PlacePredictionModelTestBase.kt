@@ -11,6 +11,8 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.approval.PolymarketContracts
@@ -97,6 +99,9 @@ internal abstract class PlacePredictionModelTestBase {
     protected val positionsUpdateEmitter: PredictionPositionsUpdateEmitter = mockk(relaxed = true)
     protected val statusSupplier: PredictionAccountStatusSupplier = mockk()
     protected val balancePoller: PredictionBalancePoller = mockk()
+    protected val userWalletsListRepository: UserWalletsListRepository = mockk {
+        every { userWallets } returns MutableStateFlow(listOf(coldWallet()))
+    }
     protected val refreshRequisites: RefreshPredictionDepositRequisitesInteractor = mockk()
 
     protected val statusFlow = MutableStateFlow<PredictionAccountStatusValue>(value = activeStatus())
@@ -281,6 +286,7 @@ internal abstract class PlacePredictionModelTestBase {
         dispatchers = dispatchers,
         quoteEngineFactory = createQuoteEngineFactory(dispatchers = dispatchers, router = router),
         orderSubmitterFactory = createOrderSubmitterFactory(testScope = testScope, dispatchers = dispatchers),
+        userWalletsListRepository = userWalletsListRepository,
     ).also(models::add)
 
     protected fun createStatusModel(
@@ -297,6 +303,14 @@ internal abstract class PlacePredictionModelTestBase {
 
     protected val getCollateralCurrencyUseCase: GetPolymarketCollateralCurrencyUseCase = mockk {
         every { this@mockk.invoke() } returns createCollateralCurrency()
+    }
+
+    protected fun hotWallet(): UserWallet = mockk<UserWallet.Hot> {
+        every { walletId } returns USER_WALLET_ID
+    }
+
+    protected fun coldWallet(): UserWallet = mockk<UserWallet.Cold> {
+        every { walletId } returns USER_WALLET_ID
     }
 
     protected fun createCollateralCurrency(): CryptoCurrency.Token {
