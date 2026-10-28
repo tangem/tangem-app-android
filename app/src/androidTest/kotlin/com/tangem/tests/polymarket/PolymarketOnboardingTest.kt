@@ -11,6 +11,7 @@ import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.scenarios.POLYMARKET_AB_TEST_ON
 import com.tangem.scenarios.POLYMARKET_AB_TEST_PROPERTY
 import com.tangem.scenarios.POLYMARKET_APPROVALS_PATH
+import com.tangem.scenarios.POLYMARKET_BALANCE_PATH
 import com.tangem.scenarios.POLYMARKET_BALANCE_SCENARIO
 import com.tangem.scenarios.POLYMARKET_CREATED_API_KEY
 import com.tangem.scenarios.POLYMARKET_DERIVED_API_KEY
@@ -300,6 +301,7 @@ class PolymarketOnboardingTest : BaseTestCase() {
                 device.uiDevice.pressBack()
             }
             val deriveRequestsAfterReconnect = getWireMockRequestCount("GET", POLYMARKET_DERIVE_KEY_PATH)
+            val balanceRequestsAfterReconnect = getWireMockRequestCount("GET", POLYMARKET_BALANCE_PATH)
             step("Open Polymarket from the 'Predictions' banner again") {
                 openPolymarketFromMarketsBanner()
             }
@@ -316,7 +318,9 @@ class PolymarketOnboardingTest : BaseTestCase() {
                 onSwapStoriesScreen { container.assertDoesNotExist() }
             }
             step("Assert the stored credentials are used for the account requests") {
-                flakySafely { assertPolymarketL2CredentialsSent(POLYMARKET_DERIVED_API_KEY) }
+                flakySafely {
+                    assertPolymarketL2CredentialsSent(POLYMARKET_DERIVED_API_KEY, balanceRequestsAfterReconnect)
+                }
             }
             step("Assert no signature, deploy or approvals were requested the second time") {
                 assertEquals(deriveRequestsAfterReconnect, getWireMockRequestCount("GET", POLYMARKET_DERIVE_KEY_PATH))
