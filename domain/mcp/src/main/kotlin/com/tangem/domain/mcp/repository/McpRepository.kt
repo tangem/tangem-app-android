@@ -1,12 +1,16 @@
 package com.tangem.domain.mcp.repository
 
 import arrow.core.Either
+import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.mcp.models.McpAgent
 import com.tangem.domain.mcp.models.McpDeviceVerification
 import com.tangem.domain.mcp.models.McpDeviceVerificationResult
 import com.tangem.domain.mcp.models.McpSession
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
+
+/** The issued authorizations as the repository knows them, which is not at all until the first read answers. */
+typealias McpSessionsLce = Lce<Throwable, List<McpSession>>
 
 /**
  * Authorizations the wallet owner has granted to MCP clients, and the device verification flow that
@@ -45,9 +49,21 @@ interface McpRepository {
      * Authorizations currently issued to MCP clients, as a hot list shared by every collector.
      *
      * Collecting it reads the list unless a read is already in flight, and the list is re-read after
-     * every change this repository makes. A failed read leaves the last known list in place.
+     * every change this repository makes. It stays [Lce.Loading] until the first read answers, and
+     * only a read that has no list to fall back on answers with [Lce.Error] — once the list is known,
+     * a failed read keeps it, because a stale list is still worth more to the owner than an error in
+     * place of their agents. [Lce.Error] therefore means "nothing has ever been read", which is when
+     * the caller offers [reloadSessions].
      */
-    fun getSessions(): Flow<List<McpSession>>
+    fun getSessions(): Flow<McpSessionsLce>
+
+    /**
+     * Reads the list again and suspends until that read is over, whatever it ends with.
+     *
+     * The read in flight, if any, is dropped: it predates this call, and the caller is asking about
+     * the list as it is now.
+     */
+    suspend fun reloadSessions()
 
     /**
      * Revokes [sessionId], cutting off the client's access and refresh tokens.
