@@ -1,6 +1,7 @@
 package com.tangem.data.marketing
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.survey.models.SurveyAnswerDto
 import com.tangem.datasource.api.survey.models.SurveyCompletionBody
@@ -12,11 +13,13 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 
 internal class DefaultDemandSurveyRepository(
@@ -24,8 +27,7 @@ internal class DefaultDemandSurveyRepository(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : DemandSurveyRepository {
 
-    /** Only completion is cached: it is final, while `false` or a failure must be re-requested next session */
-    private val completedWalletIds = MutableStateFlow(emptySet<UserWalletId>())
+    private val submittedWalletIds = MutableStateFlow(emptySet<UserWalletId>())
 
     override suspend fun submit(userWalletId: UserWalletId, answers: List<SurveyAnswer>): Either<Throwable, Unit> {
         val body = SurveyCompletionBody(
@@ -34,7 +36,7 @@ internal class DefaultDemandSurveyRepository(
         )
         return tangemTechApi.submitSurveyCompletion(walletId = userWalletId.stringValue, body = body)
             .toEither()
-            .map { markCompleted(userWalletId) }
+            .map { submittedWalletIds.update { walletIds -> walletIds + userWalletId } }
             .onLeft { TangemLogger.e("Demand survey submit failed", it) }
     }
 
@@ -42,19 +44,18 @@ internal class DefaultDemandSurveyRepository(
         return tangemTechApi.getSurveyCompletionStatus(walletId = userWalletId.stringValue, surveyId = DEMAND_SURVEY_ID)
             .toEither()
             .map { it.isCompleted }
-            .onRight { isCompleted -> if (isCompleted) markCompleted(userWalletId) }
             .onLeft { TangemLogger.e("Demand survey status request failed", it) }
     }
 
-    override fun observeCompleted(userWalletId: UserWalletId): Flow<Boolean> = flow {
-        if (userWalletId !in completedWalletIds.value) isCompleted(userWalletId)
-        emitAll(completedWalletIds.map { userWalletId in it })
-    }
-        .distinctUntilChanged()
-        .flowOn(dispatchers.io)
+    override fun observeCompleted(userWalletId: UserWalletId): Flow<Boolean> {
+        val isSubmitted = submittedWalletIds.map { userWalletId in it }
+        val requestedStatus = flow<Boolean?> { emit(isCompleted(userWalletId).getOrElse { false }) }
+            .onStart { emit(null) }
 
-    private fun markCompleted(userWalletId: UserWalletId) {
-        completedWalletIds.update { it + userWalletId }
+        return combine(isSubmitted, requestedStatus) { submitted, requested -> if (submitted) true else requested }
+            .filterNotNull()
+            .distinctUntilChanged()
+            .flowOn(dispatchers.io)
     }
 
     private fun <T : Any> ApiResponse<T>.toEither(): Either<Throwable, T> = when (this) {

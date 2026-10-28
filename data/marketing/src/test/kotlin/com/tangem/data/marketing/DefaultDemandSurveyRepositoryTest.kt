@@ -20,6 +20,7 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -159,35 +160,22 @@ internal class DefaultDemandSurveyRepositoryTest {
             }
         }
 
-        @Test
-        fun `GIVEN wallet completed WHEN observeCompleted again THEN emits true without requesting again`() =
-            runTest {
-                // Arrange
-                mockStatus(completed = true)
-                repository.observeCompleted(userWalletId).first()
+        @ParameterizedTest
+        @ValueSource(booleans = [true, false])
+        fun `GIVEN previous session WHEN observeCompleted in a new session THEN requests status again`(
+            completed: Boolean,
+        ) = runTest {
+            // Arrange
+            mockStatus(completed = completed)
+            repository.observeCompleted(userWalletId).first()
 
-                // Act
-                val actual = repository.observeCompleted(userWalletId).first()
+            // Act
+            val actual = repository.observeCompleted(userWalletId).first()
 
-                // Assert
-                assertThat(actual).isTrue()
-                coVerify(exactly = 1) { tangemTechApi.getSurveyCompletionStatus(any(), any()) }
-            }
-
-        @Test
-        fun `GIVEN wallet not completed WHEN observeCompleted in a new session THEN requests status again`() =
-            runTest {
-                // Arrange
-                mockStatus(completed = false)
-                repository.observeCompleted(userWalletId).first()
-
-                // Act
-                val actual = repository.observeCompleted(userWalletId).first()
-
-                // Assert
-                assertThat(actual).isFalse()
-                coVerify(exactly = 2) { tangemTechApi.getSurveyCompletionStatus(any(), any()) }
-            }
+            // Assert
+            assertThat(actual).isEqualTo(completed)
+            coVerify(exactly = 2) { tangemTechApi.getSurveyCompletionStatus(any(), any()) }
+        }
 
         @Test
         fun `GIVEN status request fails WHEN observeCompleted THEN emits false`() = runTest {
@@ -207,8 +195,7 @@ internal class DefaultDemandSurveyRepositoryTest {
         fun `GIVEN observing not completed wallet WHEN submit succeeds THEN emits true`(status: String) = runTest {
             // Arrange
             mockStatus(completed = false)
-            coEvery { tangemTechApi.submitSurveyCompletion(any(), any()) } returns
-                ApiResponse.Success(SurveyCompletionResponse(status = status))
+            mockSubmit(status = status)
 
             repository.observeCompleted(userWalletId).test {
                 assertThat(awaitItem()).isFalse()
@@ -220,6 +207,42 @@ internal class DefaultDemandSurveyRepositoryTest {
                 assertThat(awaitItem()).isTrue()
             }
         }
+
+        @Test
+        fun `GIVEN status request in flight WHEN submit succeeds THEN emits true before the request finishes`() =
+            runTest {
+                // Arrange
+                val status = CompletableDeferred<ApiResponse<SurveyCompletionStatusResponse>>()
+                coEvery { tangemTechApi.getSurveyCompletionStatus(any(), any()) } coAnswers { status.await() }
+                mockSubmit(status = "created")
+
+                repository.observeCompleted(userWalletId).test {
+                    // Act
+                    repository.submit(userWalletId, answers)
+
+                    // Assert
+                    assertThat(awaitItem()).isTrue()
+                    status.complete(ApiResponse.Success(SurveyCompletionStatusResponse(isCompleted = false)))
+                    expectNoEvents()
+                }
+            }
+
+        @Test
+        fun `GIVEN wallet submitted WHEN later session request fails THEN emits true`() =
+            runTest {
+                // Arrange
+                mockSubmit(status = "created")
+                repository.submit(userWalletId, answers)
+                coEvery { tangemTechApi.getSurveyCompletionStatus(any(), any()) } returns
+                    errorResponse(ApiResponseError.NetworkException())
+
+                // Act
+                val actual = repository.observeCompleted(userWalletId).first()
+
+                // Assert
+                assertThat(actual).isTrue()
+                coVerify(exactly = 1) { tangemTechApi.getSurveyCompletionStatus(any(), any()) }
+            }
 
         @Test
         fun `GIVEN observing not completed wallet WHEN submit fails THEN emits nothing new`() = runTest {
@@ -242,8 +265,7 @@ internal class DefaultDemandSurveyRepositoryTest {
         @Test
         fun `GIVEN another wallet submitted WHEN observeCompleted THEN requests status for this wallet`() = runTest {
             // Arrange
-            coEvery { tangemTechApi.submitSurveyCompletion(any(), any()) } returns
-                ApiResponse.Success(SurveyCompletionResponse(status = "created"))
+            mockSubmit(status = "created")
             mockStatus(completed = false)
             repository.submit(otherUserWalletId, answers)
 
@@ -260,6 +282,11 @@ internal class DefaultDemandSurveyRepositoryTest {
         private fun mockStatus(completed: Boolean) {
             coEvery { tangemTechApi.getSurveyCompletionStatus(any(), any()) } returns
                 ApiResponse.Success(SurveyCompletionStatusResponse(isCompleted = completed))
+        }
+
+        private fun mockSubmit(status: String) {
+            coEvery { tangemTechApi.submitSurveyCompletion(any(), any()) } returns
+                ApiResponse.Success(SurveyCompletionResponse(status = status))
         }
     }
 
