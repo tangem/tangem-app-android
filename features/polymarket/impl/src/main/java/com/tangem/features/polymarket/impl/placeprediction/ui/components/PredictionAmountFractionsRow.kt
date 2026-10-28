@@ -12,18 +12,15 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.polymarket.impl.common.formatPolymarketPercent
-import com.tangem.features.polymarket.impl.placeprediction.entity.BuyAmountFractionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.AmountFractionUM
 
 @Composable
-internal fun PredictionAmountFractionsRow(
-    onFractionClick: (BuyAmountFractionUM) -> Unit,
-    modifier: Modifier = Modifier,
-) {
+internal fun PredictionAmountFractionsRow(onFractionClick: (AmountFractionUM) -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        BuyAmountFractionUM.entries.forEach { fraction ->
+        AmountFractionUM.entries.forEach { fraction ->
             TangemButton(
                 modifier = Modifier.weight(1f),
                 variant = TangemButton.Variant.Secondary,
@@ -35,7 +32,7 @@ internal fun PredictionAmountFractionsRow(
     }
 }
 
-private fun BuyAmountFractionUM.label(): TextReference = when (this) {
-    BuyAmountFractionUM.Max -> resourceReference(R.string.send_max_amount)
+internal fun AmountFractionUM.label(): TextReference = when (this) {
+    AmountFractionUM.Max -> resourceReference(R.string.send_max_amount)
     else -> stringReference(percent.formatPolymarketPercent())
 }

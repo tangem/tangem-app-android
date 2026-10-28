@@ -24,16 +24,13 @@ import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.surface.TangemSurface
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
-import com.tangem.features.polymarket.impl.common.formatPolymarketPercent
 import com.tangem.features.polymarket.impl.common.formatPolymarketShares
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
+import com.tangem.features.polymarket.impl.placeprediction.entity.AmountFractionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.availableOrZero
@@ -144,7 +141,7 @@ private fun CalculatorRow(selected: BigDecimal, position: SellPositionUM, onAmou
         verticalArrangement = Arrangement.spacedBy(BUTTON_GAP),
         itemVerticalAlignment = Alignment.CenterVertically,
     ) {
-        SharesFraction.entries.forEach { fraction ->
+        AmountFractionUM.entries.forEach { fraction ->
             TangemButton(
                 variant = TangemButton.Variant.Secondary,
                 size = TangemButton.Size.X8,
@@ -170,18 +167,6 @@ private fun CalculatorRow(selected: BigDecimal, position: SellPositionUM, onAmou
             onClick = { onAmountChange(SharesCalculator.increased(selected, available).toPlainString()) },
         )
     }
-}
-
-private enum class SharesFraction(val percent: Int) {
-    Quarter(percent = 25),
-    Half(percent = 50),
-    ThreeQuarters(percent = 75),
-    All(percent = 100),
-}
-
-private fun SharesFraction.label(): TextReference = when (this) {
-    SharesFraction.All -> resourceReference(R.string.send_max_amount)
-    else -> stringReference(percent.formatPolymarketPercent())
 }
 
 private val CAPTION_GAP = 12.dp

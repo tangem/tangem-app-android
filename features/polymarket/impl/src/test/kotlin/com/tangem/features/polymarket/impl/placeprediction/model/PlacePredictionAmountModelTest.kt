@@ -22,7 +22,7 @@ import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentAmountErrorUM
-import com.tangem.features.polymarket.impl.placeprediction.entity.BuyAmountFractionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.AmountFractionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
@@ -1165,7 +1165,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             runCurrent()
 
             // Act
-            model.onFractionClick(fraction = BuyAmountFractionUM.Half)
+            model.onFractionClick(fraction = AmountFractionUM.Half)
             runCurrent()
 
             // Assert
@@ -1199,9 +1199,9 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
                 advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
                 // Act
-                model.onFractionClick(fraction = BuyAmountFractionUM.Max)
+                model.onFractionClick(fraction = AmountFractionUM.Max)
                 val afterFirstTap = model.uiState.value.amountValue
-                model.onFractionClick(fraction = BuyAmountFractionUM.Max)
+                model.onFractionClick(fraction = AmountFractionUM.Max)
 
                 // Assert
                 assertThat(afterFirstTap).isEqualTo("83.33")
@@ -1219,7 +1219,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             runCurrent()
 
             // Act
-            model.onFractionClick(fraction = BuyAmountFractionUM.Quarter)
+            model.onFractionClick(fraction = AmountFractionUM.Quarter)
             val picked = model.uiState.value.isAmountFromFraction
             model.onAmountChange(value = "25.5")
 
@@ -1240,7 +1240,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             runCurrent()
 
             // Act
-            model.onFractionClick(fraction = BuyAmountFractionUM.Max)
+            model.onFractionClick(fraction = AmountFractionUM.Max)
             runCurrent()
 
             // Assert
