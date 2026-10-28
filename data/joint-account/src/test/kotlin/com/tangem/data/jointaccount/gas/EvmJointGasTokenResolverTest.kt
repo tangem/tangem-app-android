@@ -93,6 +93,34 @@ internal class EvmJointGasTokenResolverTest {
     }
 
     @Test
+    fun `GIVEN a smart gas token WHEN findUnpriced THEN the token without a rate and no quote is read`() = runTest {
+        // Act
+        val actual = resolver.findUnpriced(network = network, address = TOKEN_CONTRACT.uppercase())
+
+        // Assert
+        assertThat(actual).isEqualTo(SafeGasToken.Unpriced(address = TOKEN_CONTRACT.lowercase()).right())
+        coVerify(exactly = 0) { singleQuoteStatusSupplier.getSyncOrNull(params = any()) }
+    }
+
+    @Test
+    fun `GIVEN the coin address WHEN findUnpriced THEN coin`() = runTest {
+        // Act
+        val actual = resolver.findUnpriced(network = network, address = SafeGasToken.Coin.address)
+
+        // Assert
+        assertThat(actual).isEqualTo(SafeGasToken.Coin.right())
+    }
+
+    @Test
+    fun `GIVEN a token outside smart gas WHEN findUnpriced THEN null`() = runTest {
+        // Act
+        val actual = resolver.findUnpriced(network = network, address = "0x1111111111111111111111111111111111111111")
+
+        // Assert
+        assertThat(actual).isEqualTo(null.right())
+    }
+
+    @Test
     fun `GIVEN a token outside smart gas WHEN resolve THEN null`() = runTest {
         // Act
         val actual = resolver.resolve(
