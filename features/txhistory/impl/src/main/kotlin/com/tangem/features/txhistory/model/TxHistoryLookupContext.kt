@@ -5,6 +5,7 @@ import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.addressbook.model.ContactAddressLookup
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -76,7 +77,10 @@ internal suspend fun buildOwnAccountAddressMapAllNetworks(
                         register(status.account, accountList.userWalletId, currencyStatus)
                     }
                 }
-                is AccountStatus.Money -> Unit
+                is AccountStatus.Money -> {
+                    val currencyStatus = (status.value as? MoneyAccountStatusValue.Account)?.cryptoCurrencyStatus
+                    if (currencyStatus != null) register(status.account, accountList.userWalletId, currencyStatus)
+                }
                 is AccountStatus.Prediction -> Unit
                 is AccountStatus.Collectibles -> Unit
             }

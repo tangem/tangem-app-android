@@ -15,7 +15,6 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletconnect.WcAnalyticEvents
-import com.tangem.domain.walletconnect.featuretoggle.WalletConnectFeatureToggles
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.WcSessionDTO
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
@@ -41,7 +40,6 @@ internal class DefaultWcSessionsManager(
     private val analytics: AnalyticsEventHandler,
     private val scope: AppCoroutineScope,
     private val wcSdk: WcSdk,
-    private val featureToggles: WalletConnectFeatureToggles,
 ) : WcSessionsManager, WcSdkObserver {
 
     private val interruptedApprovals = WcInterruptedApprovals(store)
@@ -57,11 +55,7 @@ internal class DefaultWcSessionsManager(
         .transformLatest { triple ->
             val (wallets, inStore, allWalletsAccounts) = triple
             val inSdk: List<Wallet.Model.Session> = wcSdk.getActiveSessions()
-            val actualInStore = if (featureToggles.isOnDemandInitEnabled) {
-                inStore + interruptedApprovals.complete(inSdk)
-            } else {
-                inStore
-            }
+            val actualInStore = inStore + interruptedApprovals.complete(inSdk)
             val associatedSessions: List<WcSession> = associate(
                 inSdk = inSdk,
                 inStore = actualInStore,

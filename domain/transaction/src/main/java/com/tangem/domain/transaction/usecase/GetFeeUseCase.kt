@@ -12,6 +12,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySendCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.unwrapYieldModuleUpgrade
 import com.tangem.domain.demo.DemoTransactionSender
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -144,7 +145,7 @@ class GetFeeUseCase(
         val uncompiledTransactionData = transactionData as? TransactionData.Uncompiled ?: return this
         val ethereumExtras = uncompiledTransactionData.extras as? EthereumTransactionExtras ?: return this
 
-        return if (ethereumExtras.callData is EthereumYieldSupplySendCallData) {
+        return if (ethereumExtras.callData?.unwrapYieldModuleUpgrade() is EthereumYieldSupplySendCallData) {
             val patchedFee = when (this) {
                 is TransactionFee.Choosable -> {
                     copy(

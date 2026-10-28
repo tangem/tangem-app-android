@@ -18,6 +18,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.EventMessage
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.collectibles.models.BuybackError
 import com.tangem.domain.collectibles.models.CollectibleBuybackOffer
@@ -82,6 +83,7 @@ internal class CollectiblesPackOpeningModelTest {
     private val getMachineUseCase: GetCollectibleGachaMachineUseCase = mockk()
     private val router: Router = mockk(relaxed = true)
     private val accountStatusSupplier: CollectiblesAccountStatusSupplier = mockk()
+    private val accountStatusFetcher: CollectiblesAccountStatusFetcher = mockk()
     private val openCollectiblePackUseCase: OpenCollectiblePackUseCase = mockk()
     private val getBuybackOfferUseCase: GetCollectibleBuybackOfferUseCase = mockk()
     private val buybackCollectibleUseCase: BuybackCollectibleUseCase = mockk()
@@ -103,6 +105,7 @@ internal class CollectiblesPackOpeningModelTest {
             getMachineUseCase,
             router,
             accountStatusSupplier,
+            accountStatusFetcher,
             openCollectiblePackUseCase,
             getBuybackOfferUseCase,
             buybackCollectibleUseCase,
@@ -121,6 +124,7 @@ internal class CollectiblesPackOpeningModelTest {
         every { player.videoLoadState } returns videoLoadState
         coEvery { getMachineUseCase(any(), any()) } returns createMachine().right()
         every { accountStatusSupplier(USER_WALLET_ID) } returns statusFlow
+        coEvery { accountStatusFetcher(any()) } returns Unit.right()
     }
 
     @AfterEach
@@ -555,6 +559,30 @@ internal class CollectiblesPackOpeningModelTest {
             feeAmount = BigDecimal("1"),
         ).right()
         statusFlow.value = onboarded(usdcAmount = "50.99")
+
+        // Act
+        val model = startModel()
+
+        // Assert
+        assertThat(model.order().button.isEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN the screen opens WHEN model created THEN the vault link is re-checked`() = runTest {
+        // Act
+        startModel()
+
+        // Assert
+        coVerify(exactly = 1) { accountStatusFetcher(CollectiblesAccountStatusFetcher.Params(USER_WALLET_ID)) }
+    }
+
+    @Test
+    fun `GIVEN the vault answers to another phone WHEN model created THEN approve is blocked`() = runTest {
+        // Arrange
+        statusFlow.value = CollectiblesAccountStatusValue.UpdateRequired(
+            source = StatusSource.ACTUAL,
+            vaultBalance = MockCollectibles.vaultBalance(amount = BigDecimal("1000"), fiatRate = BigDecimal.ONE),
+        )
 
         // Act
         val model = startModel()
@@ -1334,6 +1362,7 @@ internal class CollectiblesPackOpeningModelTest {
             dispatchers = createTestingCoroutineDispatcherProvider(),
             getMachineUseCase = getMachineUseCase,
             accountStatusSupplier = accountStatusSupplier,
+            accountStatusFetcher = accountStatusFetcher,
             openCollectiblePackUseCase = openCollectiblePackUseCase,
             getBuybackOfferUseCase = getBuybackOfferUseCase,
             buybackCollectibleUseCase = buybackCollectibleUseCase,

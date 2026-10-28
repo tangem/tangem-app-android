@@ -6,6 +6,7 @@ import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToI
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.common.TransactionSender
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.MerklClaimCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.unwrapYieldModuleUpgrade
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -159,7 +160,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
         uiState.update(YieldSupplyTransactionInProgressTransformer)
 
         val claimIndex = yieldSupplyFeeUM.transactionDataList.indexOfFirst {
-            (it.extras as? EthereumTransactionExtras)?.callData is MerklClaimCallData
+            (it.extras as? EthereumTransactionExtras)?.callData?.unwrapYieldModuleUpgrade() is MerklClaimCallData
         }
         // Read on the same frame as the fee content: both are written together when the fee loads
         val claim = withdrawalClaim?.takeIf { claimIndex != -1 }

@@ -37,7 +37,7 @@ import com.tangem.core.ui.res.generated.icons.ic_sign_equal_24
  * badge, quote + price change, fiat/crypto balances and an optional message-bubble promo line
  * underneath. DS3 replacement for the legacy `ds/row/token` `TangemTokenRow`.
  *
- * Version: 1.2.2
+ * Version: 1.2.3
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=5723-2473)
  *
@@ -144,7 +144,7 @@ fun TangemTokenRow(
 /** Public API surface of [TangemTokenRow]. */
 object TangemTokenRow {
 
-    val version = DsVersion(major = 1, minor = 2, patch = 2)
+    val version = DsVersion(major = 1, minor = 2, patch = 3)
 
     /**
      * Badge shown after the title (e.g. an `"APY 5.47%"` chip). Always a tinted [TangemBadge].

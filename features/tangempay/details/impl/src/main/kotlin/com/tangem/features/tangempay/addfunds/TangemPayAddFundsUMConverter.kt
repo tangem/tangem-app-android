@@ -1,6 +1,5 @@
 package com.tangem.features.tangempay.addfunds
 
-import androidx.compose.ui.graphics.vector.ImageVector
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
@@ -9,7 +8,6 @@ import com.tangem.core.ui.res.generated.icons.ic_card_20
 import com.tangem.core.ui.res.generated.icons.ic_clock_20
 import com.tangem.core.ui.res.generated.icons.ic_government_20
 import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_20
-import com.tangem.core.ui.res.generated.icons.ic_sign_usd_20
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.features.tangempay.details.impl.R
@@ -18,8 +16,8 @@ import kotlinx.collections.immutable.toPersistentList
 
 internal class TangemPayAddFundsUMConverter(
     private val listener: AddFundsListener,
+    private val onBankTransferClick: () -> Unit,
     private val virtualAccountOnramp: VirtualAccountOnramp?,
-    private val isVisaOnrampV2Enabled: Boolean,
 ) : Converter<TangemPayAddFundsUMConverter.Input, TangemPayAddFundsUM> {
 
     data class Input(
@@ -60,24 +58,23 @@ internal class TangemPayAddFundsUMConverter(
 
     private fun bankTransferItem(isLoading: Boolean): TangemPayAddFundsItemUM? {
         val onramp = virtualAccountOnramp ?: return null
-        if (!isVisaOnrampV2Enabled) return clickableBankTransferItem(icon = Icons.ic_sign_usd_20)
         return when (onramp) {
             VirtualAccountOnramp.Processing -> pendingBankTransferItem()
             VirtualAccountOnramp.Eligible,
             VirtualAccountOnramp.Failed,
             is VirtualAccountOnramp.Available,
-            -> clickableBankTransferItem(icon = Icons.ic_government_20, isLoading = isLoading)
+            -> clickableBankTransferItem(isLoading = isLoading)
         }
     }
 
-    private fun clickableBankTransferItem(icon: ImageVector, isLoading: Boolean = false) = TangemPayAddFundsItemUM(
+    private fun clickableBankTransferItem(isLoading: Boolean) = TangemPayAddFundsItemUM(
         icon = TangemIconUM.Icon(
-            imageVector = icon,
+            imageVector = Icons.ic_government_20,
             tintReference = { TangemTheme.colors3.icon.brand },
         ),
         title = resourceReference(R.string.tangempay_topup_bank_transfer_title),
         description = resourceReference(R.string.tangempay_topup_bank_transfer_body),
-        onClick = if (isLoading) null else listener::onClickBankTransfer,
+        onClick = if (isLoading) null else onBankTransferClick,
         isLoading = isLoading,
     )
 

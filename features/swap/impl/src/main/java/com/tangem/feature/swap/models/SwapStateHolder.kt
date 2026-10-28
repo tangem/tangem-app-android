@@ -11,7 +11,6 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.feature.swap.domain.models.domain.SwapUIMode
-import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.models.states.SwapSlippageUM
 import kotlinx.collections.immutable.ImmutableList
@@ -27,7 +26,6 @@ internal data class SwapStateHolder(
     val providerState: ProviderState,
 
     val permissionUM: SwapPermissionUM = SwapPermissionUM.Empty,
-    val priceImpact: PriceImpact,
 
     val successState: SwapSuccessStateHolder? = null,
     val swapButton: SwapButton,
@@ -132,8 +130,6 @@ sealed interface TransactionCardType {
     ) : TransactionCardType
 
     data class ReadOnly(
-        val shouldShowWarning: Boolean = false,
-        val onWarningClick: (() -> Unit)? = null,
         override val inputError: InputError = InputError.Empty,
         override val accountTitleUM: AccountTitleUM,
     ) : TransactionCardType

@@ -218,7 +218,7 @@ internal class MoneyAccountDetailsModelTest {
             verify(exactly = 1) { analytics.send(ofType<MoneyAccountAnalyticsEvents.DetailsErrorSupportTapped>()) }
             coVerify(exactly = 1) {
                 sendFeedbackEmailUseCase(
-                    FeedbackEmailType.Visa.DirectUserRequest(
+                    FeedbackEmailType.Visa.MoneyAccountRequest(
                         walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId),
                         customerId = CUSTOMER_ID,
                     ),
@@ -285,6 +285,24 @@ internal class MoneyAccountDetailsModelTest {
     }
 
     @ParameterizedTest
+    @MethodSource("provideSendClickModels")
+    fun `GIVEN account WHEN send clicked THEN send button tap reported only when the hub opens`(
+        model: SendClickModel,
+    ) = runTest {
+        // Arrange
+        val detailsModel = createModel(model.status)
+        advanceUntilIdle()
+
+        // Act
+        detailsModel.uiState.value.onSendClick()
+
+        // Assert
+        val expectedTaps = if (model.expectedRoute == null) 0 else 1
+        verify(exactly = expectedTaps) { analytics.send(MoneyAccountAnalyticsEvents.SendClicked()) }
+        detailsModel.onDestroy()
+    }
+
+    @ParameterizedTest
     @MethodSource("provideNonAccountStatuses")
     fun `GIVEN account shown WHEN its status stops being an account THEN screen stays open`(
         status: MoneyAccountStatusValue,
@@ -315,6 +333,31 @@ internal class MoneyAccountDetailsModelTest {
             verify(exactly = 1) { router.pop(any()) }
             model.onDestroy()
         }
+
+    @Test
+    fun `GIVEN account status WHEN model created THEN tx history currency is the account token`() = runTest {
+        // Act
+        val model = createModel(activeAccount(balance = null))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.txHistoryCurrency).isEqualTo(token)
+        model.onDestroy()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideNonAccountStatuses")
+    fun `GIVEN non account status WHEN model created THEN tx history currency is absent`(
+        status: MoneyAccountStatusValue,
+    ) = runTest {
+        // Act
+        val model = createModel(status)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.txHistoryCurrency).isNull()
+        model.onDestroy()
+    }
 
     private fun TestScope.createModel(status: MoneyAccountStatusValue) = createModel(flowOf(status))
 

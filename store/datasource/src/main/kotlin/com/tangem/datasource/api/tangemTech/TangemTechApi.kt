@@ -3,8 +3,6 @@ package com.tangem.datasource.api.tangemTech
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.api.marketing.models.BindMarketingUidWalletsBody
 import com.tangem.datasource.api.marketing.models.MarketingCampaignsResponse
-import com.tangem.datasource.api.promotion.models.CreatePromotionRegistrationBody
-import com.tangem.datasource.api.promotion.models.PromotionRegistrationResponse
 import com.tangem.datasource.api.promotion.models.PromotionRegistrationsBody
 import com.tangem.datasource.api.promotion.models.PromotionRegistrationsResponse
 import com.tangem.datasource.api.promotion.models.PromotionsResponse
@@ -12,6 +10,9 @@ import com.tangem.datasource.api.promotion.models.PromotionWalletType
 import com.tangem.datasource.api.promotion.models.PromotionsV3Response
 import com.tangem.datasource.api.promotion.models.YieldBoostStatusResponse
 import com.tangem.datasource.api.stories.models.StoryContentResponse
+import com.tangem.datasource.api.survey.models.SurveyCompletionBody
+import com.tangem.datasource.api.survey.models.SurveyCompletionResponse
+import com.tangem.datasource.api.survey.models.SurveyCompletionStatusResponse
 import com.tangem.datasource.api.tangemTech.models.*
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsV2Response
@@ -154,11 +155,6 @@ interface TangemTechApi {
     @Suppress("FunctionSignature", "TrailingCommaOnDeclarationSite")
     @GET("/v2/promotion/yield-apr-boost/status")
     suspend fun getYieldBoostStatus(@Query("walletId") walletId: String): ApiResponse<YieldBoostStatusResponse>
-
-    @POST("/v2/promotion/registrations")
-    suspend fun createPromotionRegistration(
-        @Body body: CreatePromotionRegistrationBody,
-    ): ApiResponse<PromotionRegistrationResponse>
 
     @RequiresSessionAuth
     @POST("/api/referral/v1/promotion/{id}/registrations")
@@ -321,5 +317,22 @@ interface TangemTechApi {
         @Path("uid") uid: String,
         @Body body: BindMarketingUidWalletsBody,
     ): ApiResponse<Unit>
+    // endregion
+
+    // region survey
+    @RequiresSessionAuth
+    @POST("api/v1/wallets/{walletId}/survey-completions")
+    suspend fun submitSurveyCompletion(
+        @Path("walletId") walletId: String,
+        @Body body: SurveyCompletionBody,
+    ): ApiResponse<SurveyCompletionResponse>
+
+    /** A wallet that has not completed the survey gets 200 with `completed: false`, not 404 */
+    @RequiresSessionAuth
+    @GET("api/v1/wallets/{walletId}/survey-completions/{surveyId}")
+    suspend fun getSurveyCompletionStatus(
+        @Path("walletId") walletId: String,
+        @Path("surveyId") surveyId: String,
+    ): ApiResponse<SurveyCompletionStatusResponse>
     // endregion
 }

@@ -109,7 +109,7 @@ private fun SwapSection(state: TangemPayWithdrawHubUM.SwapSectionUM) {
     Column(modifier = Modifier.fillMaxWidth().testTag(TangemPayTestTags.WITHDRAW_HUB_SWAP_SECTION)) {
         HubSectionHeader(
             title = resourceReference(R.string.tangempay_withdraw_hub_swap_section_title),
-            subtitle = resourceReference(R.string.tangempay_withdraw_hub_swap_section_subtitle),
+            subtitle = state.subtitle,
         )
         LazyRow(
             modifier = Modifier
@@ -133,7 +133,7 @@ private fun SwapSection(state: TangemPayWithdrawHubUM.SwapSectionUM) {
 @Composable
 internal fun HubSectionHeader(
     title: TextReference,
-    subtitle: TextReference,
+    subtitle: TextReference?,
     modifier: Modifier = Modifier,
     subtitleColor: Color = TangemTheme.colors3.text.secondary,
 ) {
@@ -148,11 +148,13 @@ internal fun HubSectionHeader(
             style = TangemTheme.typography3.subheading.medium,
             color = TangemTheme.colors3.text.primary,
         )
-        Text(
-            text = subtitle.resolveReference(),
-            style = TangemTheme.typography3.caption.medium,
-            color = subtitleColor,
-        )
+        if (subtitle != null) {
+            Text(
+                text = subtitle.resolveReference(),
+                style = TangemTheme.typography3.caption.medium,
+                color = subtitleColor,
+            )
+        }
     }
 }
 

@@ -23,7 +23,6 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.collectiblesW
 import com.tangem.feature.wallet.presentation.wallet.ui.components.polymarketWalletBlock
 import com.tangem.feature.wallet.presentation.wallet.ui.components.tangemPay
 import com.tangem.feature.wallet.presentation.wallet.ui.components.moneyAccount
-import com.tangem.features.jointaccount.main.JointAccountMainBlockComponent
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockComponent
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
@@ -42,7 +41,6 @@ internal fun WalletListContent(
     moneyAccountComponent: MoneyAccountMainBlockComponent,
     polymarketComponent: PolymarketWalletBlockComponent,
     collectiblesComponent: CollectiblesWalletBlockComponent,
-    jointAccountComponent: JointAccountMainBlockComponent,
     contentPadding: PaddingValues,
     onOrganizeButtonBoundsChange: (Rect?) -> Unit,
     modifier: Modifier = Modifier,
@@ -107,7 +105,6 @@ internal fun WalletListContent(
 
             tokensListItems2(
                 walletTokensListUM = currentWallet.tokensListUM,
-                jointAccountComponent = jointAccountComponent,
                 modifier = movableItemModifier,
                 isBalanceHidden = isBalanceHidden,
                 isRedesignedAccountRowsEnabled = isRedesignedAccountRowsEnabled,

@@ -18,12 +18,10 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
-import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.eligibility.TangemPayWalletSelectorComponent
 import com.tangem.features.tangempay.model.transformers.TangemPayOnboardingButtonLoadingTransformer
@@ -50,7 +48,6 @@ internal class TangemPayOnboardingModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val eligibilityManager: TangemPayEligibilityManager,
     private val onboardingStarter: TangemPayOnboardingStarter,
-    private val featureToggles: TangemPayFeatureToggles,
     private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val uiMessageSender: UiMessageSender,
@@ -173,18 +170,8 @@ internal class TangemPayOnboardingModel @Inject constructor(
         analytics.send(TangemPayAnalyticsEvents.GetCardClicked())
         val shouldExcludePaeraCustomers = params is TangemPayOnboardingComponent.Params.FromBannerInSettings
         modelScope.launch {
-            val isDeeplink = params is TangemPayOnboardingComponent.Params.Deeplink ||
-                params is TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink
-            val walletsIds = if (isDeeplink || featureToggles.isResidencyStepEnabled) {
+            val walletsIds =
                 eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = shouldExcludePaeraCustomers)
-            } else {
-                eligibilityManager
-                    .getEligibleWallets(
-                        shouldExcludePaeraCustomers = shouldExcludePaeraCustomers,
-                        entryPoint = params.toEntryPointOrNull(),
-                    )
-                    .map { it.walletId }
-            }
             if (walletsIds.isEmpty()) {
                 showError()
             } else {
@@ -231,16 +218,5 @@ internal class TangemPayOnboardingModel @Inject constructor(
 
     override fun onWalletSelectorDismiss() {
         bottomSheetNavigation.dismiss()
-    }
-
-    private fun TangemPayOnboardingComponent.Params.toEntryPointOrNull() = when (this) {
-        is TangemPayOnboardingComponent.Params.FromBannerInSettings -> TangemPayEntryPoint.DETAILS
-        is TangemPayOnboardingComponent.Params.FromBannerOnMain -> TangemPayEntryPoint.BANNER
-
-        is TangemPayOnboardingComponent.Params.Deeplink,
-        is TangemPayOnboardingComponent.Params.ContinueOnboarding,
-        is TangemPayOnboardingComponent.Params.HotWalletOnboarding,
-        is TangemPayOnboardingComponent.Params.MobileOnboardingDeeplink,
-        -> null
     }
 }

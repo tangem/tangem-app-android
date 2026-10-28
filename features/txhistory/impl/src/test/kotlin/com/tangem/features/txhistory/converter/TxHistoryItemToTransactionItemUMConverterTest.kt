@@ -656,6 +656,41 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
+    fun `GIVEN Transfer to own money account in accounts mode WHEN convert THEN money account subtitle`() {
+        val converter = TxHistoryItemToTransactionItemUMConverter(
+            currency = coin,
+            txHistoryUiActions = txHistoryUiActions,
+            lookupContext = TxHistoryLookupContext(
+                ownAccountByNetwork = mapOf(
+                    coin.network.id.rawId to mapOf(USER_ADDRESS to Account.Money(UserWalletId(stringValue = "00"))),
+                ),
+                isAccountsModeEnabled = true,
+                walletInfoById = emptyMap(),
+            ),
+        )
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        val result = converter.convert(tx) as TransactionItemUM.Content
+
+        val moneyAccountName = resRef(R.string.tangempay_unified_onboarding_money_account_header)
+        assertThat(result.title).isEqualTo(resRef(R.string.common_transferred))
+        assertThat(result.subtitle).isEqualTo(
+            ContentSubtitle.OwnAccount(
+                direction = ContentSubtitle.Direction.TO,
+                accountName = moneyAccountName,
+                avatar = ContentSubtitle.PortfolioAvatar.Resource(
+                    resId = CryptoPortfolioIcon.Icon.Safe.getResId(),
+                    color = CryptoPortfolioIcon.Color.VitalGreen.getUiColor(),
+                ),
+            ),
+        )
+    }
+
+    @Test
     fun `GIVEN Transfer with own account in wallets mode WHEN convert THEN OwnWallet subtitle`() {
         val userWalletId = UserWalletId(stringValue = "01")
         val ownAccount = createMainAccount(userWalletId)

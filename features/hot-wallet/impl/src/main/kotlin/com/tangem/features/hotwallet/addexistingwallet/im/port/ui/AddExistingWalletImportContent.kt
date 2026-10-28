@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.security.DisableAutofillEffect
+import com.tangem.core.ui.security.excludeFromAutofill
 import com.tangem.features.hotwallet.addexistingwallet.im.port.entity.AddExistingWalletImportUM
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.Keyboard
@@ -53,8 +53,6 @@ import kotlinx.coroutines.delay
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun AddExistingWalletImportContent(state: AddExistingWalletImportUM, modifier: Modifier = Modifier) {
-    DisableAutofillEffect()
-
     Box(modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -82,6 +80,7 @@ internal fun AddExistingWalletImportContent(state: AddExistingWalletImportUM, mo
                 )
 
                 OutlineTextFieldWithIcon(
+                    isExcludedFromAutofill = true,
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
                         .fillMaxWidth()
@@ -148,6 +147,7 @@ private fun PhraseBlock(state: AddExistingWalletImportUM, modifier: Modifier = M
     ) {
         OutlinedTextField(
             modifier = Modifier
+                .excludeFromAutofill()
                 .fillMaxWidth()
                 .height(142.dp)
                 .focusRequester(focusRequester)

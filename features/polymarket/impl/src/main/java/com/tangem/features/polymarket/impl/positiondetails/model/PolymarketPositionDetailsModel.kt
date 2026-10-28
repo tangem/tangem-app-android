@@ -134,7 +134,8 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
 
     private fun loadEvent(eventId: String) {
         eventJob = modelScope.launch {
-            val result = withContext(dispatchers.default) { getEvent(eventId) }
+            val result =
+                withContext(dispatchers.default) { getEvent(userWalletId = params.userWalletId, eventId = eventId) }
             ensureActive()
             result.fold(
                 ifLeft = { TangemLogger.e("Failed to load position event: $it") },

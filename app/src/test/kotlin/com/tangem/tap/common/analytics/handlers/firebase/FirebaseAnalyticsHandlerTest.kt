@@ -1,7 +1,7 @@
 package com.tangem.tap.common.analytics.handlers.firebase
 
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
-import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.core.analytics.models.AnalyticsParam
 import io.mockk.clearMocks
 import io.mockk.mockk
 import io.mockk.verify

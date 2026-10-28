@@ -285,6 +285,16 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         useUnmergedTree = true
     }
 
+    val swapCardBalance: KNode = cardBalance(SwapTokenScreenTestTags.SWAP_CARD)
+
+    val receiveCardBalance: KNode = cardBalance(SwapTokenScreenTestTags.RECEIVE_CARD)
+
+    private fun cardBalance(cardTag: String): KNode = child {
+        hasTestTag(SwapTokenScreenTestTags.BALANCE)
+        hasAnyAncestor(withTestTag(cardTag))
+        useUnmergedTree = true
+    }
+
     val insufficientFundsErrorTitle: KNode = child {
         hasTestTag(SendScreenTestTags.AMOUNT_CONTAINER_TITLE)
         hasText(getResourceString(R.string.swapping_insufficient_funds))
@@ -299,11 +309,6 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
 
     val receiveFiatAmount: KNode = child {
         hasTestTag(SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT)
-    }
-
-    val receiveFiatAmountInformationIcon: KNode = child {
-        hasTestTag(SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT_INFORMATION_ICON)
-        useUnmergedTree = true
     }
 
     val slippageRow: KNode = child {

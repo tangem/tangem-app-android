@@ -30,6 +30,7 @@ import com.tangem.domain.jointaccount.safe.JointOperationTransferResolver
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.RejectJointOperationUseCase
 import com.tangem.domain.jointaccount.usecase.SignJointOperationUseCase
+import com.tangem.domain.jointaccount.verifier.JointOperationDisplayGate
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -70,6 +71,7 @@ internal class JointOperationDelegate @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val displayGate: JointOperationDisplayGate,
 ) {
 
     /**
@@ -210,6 +212,14 @@ internal class JointOperationDelegate @Inject constructor(
             network = currency.network,
             safeAddress = safeAddress,
         ) ?: return null
+        val isShown = displayGate.isShown(
+            account = account,
+            jointAccount = jointAccount,
+            operation = operation,
+            network = currency.network,
+            transfer = transfer,
+        )
+        if (!isShown) return null
 
         val ownerAddress = ownerAddressResolver
             .resolve(userWalletId = account.accountId.userWalletId, ownerKeyIndex = account.ownerKeyIndex)

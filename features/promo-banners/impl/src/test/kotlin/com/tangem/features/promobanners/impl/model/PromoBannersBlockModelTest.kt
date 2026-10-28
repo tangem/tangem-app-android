@@ -12,7 +12,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.promo.usecase.GetPromoCampaignsUseCase
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent.Placeholder
-import com.tangem.features.promobanners.api.PromoBannersFeatureToggles
 import com.tangem.features.promobanners.impl.analytics.PromoBannerAnalyticsEvent
 import com.tangem.features.promobanners.impl.campaigns.service.CampaignsService
 import com.tangem.features.promobanners.impl.campaigns.v2.createPromoCampaign
@@ -39,7 +38,6 @@ internal class PromoBannersBlockModelTest {
 
     private val repository: PromoBannersRepository = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
-    private val promoBannersFeatureToggles: PromoBannersFeatureToggles = mockk()
     private val getPromoCampaignsUseCase: GetPromoCampaignsUseCase = mockk()
     private val campaignsService: CampaignsService = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
@@ -61,7 +59,6 @@ internal class PromoBannersBlockModelTest {
         clearMocks(
             repository,
             userWalletsListRepository,
-            promoBannersFeatureToggles,
             getPromoCampaignsUseCase,
             campaignsService,
             analyticsEventHandler,
@@ -76,11 +73,8 @@ internal class PromoBannersBlockModelTest {
     }
 
     @Test
-    fun `GIVEN v2 enabled WHEN model created THEN campaigns loaded once per wallet and enrolled banner hidden`() =
+    fun `GIVEN campaigns loaded WHEN model created THEN campaigns loaded once per wallet and enrolled banner hidden`() =
         runTest {
-            // Arrange
-            every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns true
-
             // Act
             val model = createModel()
             advanceUntilIdle()
@@ -96,13 +90,12 @@ internal class PromoBannersBlockModelTest {
     @Test
     fun `GIVEN banners shown WHEN banners cache refreshed THEN block shows the refreshed banners`() = runTest {
         // Arrange
-        every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns false
         val cachedBanners = MutableStateFlow(allBanners)
         every { repository.getBanners(SELECTED_WALLET_ID, any()) } returns cachedBanners
         val model = createModel()
         advanceUntilIdle()
         assertThat(model.uiState.value.banners.map { it.displayId })
-            .containsExactlyElementsIn(allBanners.map { it.id }).inOrder()
+            .containsExactly(plainBanner.id, openCampaignBanner.id).inOrder()
 
         // Act
         cachedBanners.value = listOf(plainBanner)
@@ -114,10 +107,9 @@ internal class PromoBannersBlockModelTest {
     }
 
     @Test
-    fun `GIVEN v2 enabled and unchanged banners WHEN campaigns cache drops a campaign THEN its banner hidden`() =
+    fun `GIVEN unchanged banners WHEN campaigns cache drops a campaign THEN its banner hidden`() =
         runTest {
             // Arrange
-            every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns true
             val cachedCampaigns = MutableStateFlow(campaigns)
             every { getPromoCampaignsUseCase(selectedWallet) } returns cachedCampaigns
             val model = createModel()
@@ -135,9 +127,8 @@ internal class PromoBannersBlockModelTest {
         }
 
     @Test
-    fun `GIVEN v2 enabled and campaigns fail WHEN model created THEN only banners without campaign shown`() = runTest {
+    fun `GIVEN campaigns fail WHEN model created THEN only banners without campaign shown`() = runTest {
         // Arrange
-        every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns true
         coEvery { getPromoCampaignsUseCase.invokeSync(selectedWallet, any()) } returns Either.Left(RuntimeException("network"))
 
         // Act
@@ -152,25 +143,8 @@ internal class PromoBannersBlockModelTest {
     }
 
     @Test
-    fun `GIVEN v2 disabled WHEN model created THEN campaigns not requested and all banners shown`() = runTest {
+    fun `GIVEN campaigns loaded WHEN campaign banner clicked THEN sheet requested for selected wallet`() = runTest {
         // Arrange
-        every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns false
-
-        // Act
-        val model = createModel()
-        advanceUntilIdle()
-
-        // Assert
-        assertThat(model.uiState.value.banners.map { it.displayId })
-            .containsExactlyElementsIn(allBanners.map { it.id }).inOrder()
-        coVerify(exactly = 0) { getPromoCampaignsUseCase.invokeSync(any(), any()) }
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN v2 enabled WHEN campaign banner clicked THEN campaign sheet requested for selected wallet`() = runTest {
-        // Arrange
-        every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns true
         val model = createModel()
         advanceUntilIdle()
         val campaignBanner = model.uiState.value.banners.single { it.displayId == openCampaignBanner.id }
@@ -190,24 +164,8 @@ internal class PromoBannersBlockModelTest {
     }
 
     @Test
-    fun `GIVEN v2 disabled WHEN model created THEN campaign banner is not clickable`() = runTest {
+    fun `GIVEN campaigns loaded WHEN banners shown THEN only campaign banner reports campaign`() = runTest {
         // Arrange
-        every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns false
-
-        // Act
-        val model = createModel()
-        advanceUntilIdle()
-
-        // Assert
-        assertThat(model.uiState.value.banners.single { it.displayId == openCampaignBanner.id }.config.onClick)
-            .isNull()
-        model.onDestroy()
-    }
-
-    @Test
-    fun `GIVEN v2 enabled WHEN banners shown THEN only campaign banner reports campaign`() = runTest {
-        // Arrange
-        every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns true
         val model = createModel()
         advanceUntilIdle()
 
@@ -226,9 +184,8 @@ internal class PromoBannersBlockModelTest {
     }
 
     @Test
-    fun `GIVEN v2 enabled WHEN campaign banner clicked THEN click reports campaign`() = runTest {
+    fun `GIVEN campaigns loaded WHEN campaign banner clicked THEN click reports campaign`() = runTest {
         // Arrange
-        every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns true
         val model = createModel()
         advanceUntilIdle()
         val campaignBanner = model.uiState.value.banners.single { it.displayId == openCampaignBanner.id }
@@ -246,9 +203,8 @@ internal class PromoBannersBlockModelTest {
     }
 
     @Test
-    fun `GIVEN v2 enabled WHEN campaign banner dismissed THEN dismiss reports campaign`() = runTest {
+    fun `GIVEN campaigns loaded WHEN campaign banner dismissed THEN dismiss reports campaign`() = runTest {
         // Arrange
-        every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns true
         val dismissableBanner = createBanner(id = 4, campaignId = OPEN_CAMPAIGN_ID, isDismissable = true)
         coEvery { repository.getBannersSync(any(), any(), any()) } returns listOf(dismissableBanner)
         coEvery { repository.dismissBanner(any(), any()) } just runs
@@ -269,23 +225,6 @@ internal class PromoBannersBlockModelTest {
         model.onDestroy()
     }
 
-    @Test
-    fun `GIVEN v2 disabled WHEN campaign banner shown THEN campaign not sent`() = runTest {
-        // Arrange
-        every { promoBannersFeatureToggles.isPromoCampaignsV2Enabled } returns false
-        val model = createModel()
-        advanceUntilIdle()
-
-        // Act
-        model.uiState.value.onBannerShown(openCampaignBanner.id)
-
-        // Assert
-        verify(exactly = 1) {
-            analyticsEventHandler.send(PromoBannerAnalyticsEvent.Shown(openCampaignBanner.id, PLACEHOLDER))
-        }
-        model.onDestroy()
-    }
-
     private fun TestScope.createModel() = PromoBannersBlockModel(
         dispatchers = createTestingCoroutineDispatcherProvider(),
         paramsContainer = MutableParamsContainer(value = PromoBannersBlockComponent.Params(Placeholder.MAIN)),
@@ -294,7 +233,6 @@ internal class PromoBannersBlockModelTest {
         analyticsEventHandler = analyticsEventHandler,
         userWalletsListRepository = userWalletsListRepository,
         uiMessageSender = mockk<UiMessageSender>(relaxed = true),
-        promoBannersFeatureToggles = promoBannersFeatureToggles,
         getPromoCampaignsUseCase = getPromoCampaignsUseCase,
         campaignMatcher = PromoBannerCampaignMatcher(),
         campaignsService = campaignsService,

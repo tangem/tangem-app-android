@@ -39,15 +39,13 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.security.DisableAutofillEffect
+import com.tangem.core.ui.security.excludeFromAutofill
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.visa.impl.child.pincode.ui.state.OnboardingVisaPinCodeUM
 import kotlinx.coroutines.delay
 
 @Composable
 internal fun OnboardingVisaPinCode(state: OnboardingVisaPinCodeUM, modifier: Modifier = Modifier) {
-    DisableAutofillEffect()
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -164,6 +162,7 @@ private fun PinCode(
                 },
             ),
             modifier = Modifier
+                .excludeFromAutofill()
                 .alpha(alpha = 0.01f)
                 .focusRequester(focusRequester),
             textStyle = TextStyle.Default.copy(color = Transparent),

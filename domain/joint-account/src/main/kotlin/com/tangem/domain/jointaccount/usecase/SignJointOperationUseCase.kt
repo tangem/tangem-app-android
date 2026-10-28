@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.either
+import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
 import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
 import com.tangem.domain.jointaccount.blockaid.JointOperationBlockaidGate
@@ -23,9 +24,10 @@ import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.supplier.find
 import com.tangem.domain.jointaccount.safe.SafeCompositionChecker
 import com.tangem.domain.jointaccount.safe.SafeDeployment
+import com.tangem.domain.jointaccount.verifier.JointAccountCompositionVerifier
 import com.tangem.domain.jointaccount.verifier.JointOperationVerifier
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.extensions.addHexPrefix
@@ -52,6 +54,7 @@ class SignJointOperationUseCase(
     private val compositionChecker: SafeCompositionChecker,
     private val refundReceiverProvider: JointRefundReceiverProvider,
     private val gasTokenResolver: JointGasTokenResolver,
+    private val compositionVerifier: JointAccountCompositionVerifier,
 ) {
 
     suspend operator fun invoke(
@@ -68,6 +71,12 @@ class SignJointOperationUseCase(
         val safeAddress = ensureNotNull(jointAccount.safeAddress) {
             JointOperationSignError.VerificationFailed(
                 reason = JointOperationSignError.VerificationFailed.Reason.SAFE_ADDRESS_MISMATCH,
+            )
+        }
+        // A compromised account is kept off the wallet screen, but the token page can still be reached around it
+        ensure(compositionVerifier.isVerified(account = account, jointAccount = jointAccount)) {
+            JointOperationSignError.VerificationFailed(
+                reason = JointOperationSignError.VerificationFailed.Reason.COMPOSITION_MISMATCH,
             )
         }
 
