@@ -76,12 +76,12 @@ internal class PolymarketMainComponentTest {
     init {
         every { positionsPreviewLoader.state } returns MutableStateFlow(PolymarketPositionsPreviewUM.Loading)
         // The model starts loading on construction; empty stubs keep this wiring test off the feed logic.
-        coEvery { getPolymarketCategoriesUseCase() } returns emptyList<PolymarketCategory>().right()
+        coEvery { getPolymarketCategoriesUseCase(any()) } returns emptyList<PolymarketCategory>().right()
         every { observeCredentialsPresence(any()) } returns flowOf(true)
         every { predictionAccountStatusSupplier(any<UserWalletId>()) } returns
             flowOf(PredictionAccountStatusValue.Loading)
         every { fundingWindow.isOpen(any()) } returns MutableStateFlow(false)
-        every { getPolymarketEventsBatchFlowUseCase(any(), any()) } returns object : PolymarketEventsBatchFlow {
+        every { getPolymarketEventsBatchFlowUseCase(any(), any(), any()) } returns object : PolymarketEventsBatchFlow {
             override val state = MutableStateFlow(
                 BatchListState<Int, PolymarketEventsBatch>(
                     data = emptyList(),
