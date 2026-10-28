@@ -16,7 +16,6 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.core.error.DataError
 import com.tangem.domain.mcp.models.McpAgent
 import com.tangem.domain.mcp.repository.McpRepository
 import com.tangem.domain.models.wallet.UserWallet
@@ -221,11 +220,11 @@ internal class ExchangeIntentModelTest {
     private fun provideTestModels() = listOf(
         CantReachModel(description = "intent belongs to another wallet") {
             coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns
-                DataError.UserWalletError.WrongUserWallet("another wallet").left()
+                ExchangeIntentError.OtherWallet(INTENT_ID, code = 2610).left()
         },
         CantReachModel(description = "intent is not found") {
             coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns
-                ExchangeIntentError.NotFound(INTENT_ID).left()
+                ExchangeIntentError.NotFound(INTENT_ID, code = 2600).left()
         },
         CantReachModel(description = "intent cannot be read for an unknown reason") {
             coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns IllegalStateException("no network").left()
@@ -670,11 +669,11 @@ internal class ExchangeIntentModelTest {
         private fun provideTestModels() = listOf(
             LoadFailedModel("intent of another wallet", "Wrong Wallet", "2610") {
                 coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns
-                    DataError.UserWalletError.WrongUserWallet("another wallet").left()
+                    ExchangeIntentError.OtherWallet(INTENT_ID, code = 2610).left()
             },
             LoadFailedModel("intent not found", "Not Found", "2600") {
                 coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns
-                    ExchangeIntentError.NotFound(INTENT_ID).left()
+                    ExchangeIntentError.NotFound(INTENT_ID, code = 2600).left()
             },
             LoadFailedModel("no connection", "Unreachable") {
                 coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns
