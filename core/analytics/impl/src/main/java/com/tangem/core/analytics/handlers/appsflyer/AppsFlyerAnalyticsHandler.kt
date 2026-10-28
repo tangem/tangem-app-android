@@ -1,4 +1,4 @@
-package com.tangem.tap.common.analytics.handlers.appsflyer
+package com.tangem.core.analytics.handlers.appsflyer
 
 import com.tangem.core.analytics.api.AnalyticsHandler
 import com.tangem.core.analytics.api.AnalyticsUserIdHandler

@@ -1,17 +1,17 @@
-package com.tangem.tap.common.analytics.handlers.appsflyer
+package com.tangem.core.analytics.handlers.appsflyer
 
 import android.content.Context
+import com.appsflyer.AppsFlyerConversionListener
 import com.appsflyer.AppsFlyerLib
 import com.appsflyer.attribution.AppsFlyerRequestListener
+import com.appsflyer.deeplink.DeepLinkListener
 import com.tangem.core.analytics.api.EventLogger
 import com.tangem.core.analytics.api.UserIdHolder
 import com.tangem.core.analytics.converters.UnderscoreAnalyticsEventConverter
+import com.tangem.core.analytics.impl.BuildConfig
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
-import com.tangem.tap.common.analytics.appsflyer.AppsFlyerDeepLinkListener
-import com.tangem.tap.common.analytics.appsflyer.TangemAFConversionListener
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
-import com.tangem.wallet.BuildConfig
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -23,8 +23,8 @@ interface AppsFlyerAnalyticsClient : EventLogger, UserIdHolder
 class AppsFlyerClient @AssistedInject constructor(
     @Assisted apiKey: String,
     @ApplicationContext private val context: Context,
-    appsFlyerDeepLinkListener: AppsFlyerDeepLinkListener,
-    tangemAFConversionListener: TangemAFConversionListener,
+    deepLinkListener: DeepLinkListener,
+    conversionListener: AppsFlyerConversionListener,
     private val appsFlyerRepository: AppsFlyerRepository,
     private val coroutineScope: AppCoroutineScope,
 ) : AppsFlyerAnalyticsClient {
@@ -37,8 +37,8 @@ class AppsFlyerClient @AssistedInject constructor(
             setAppId(context.packageName)
             setDebugLog(BuildConfig.LOG_ENABLED)
 
-            init(apiKey, tangemAFConversionListener, context)
-            subscribeForDeepLink(appsFlyerDeepLinkListener)
+            init(apiKey, conversionListener, context)
+            subscribeForDeepLink(deepLinkListener)
             setOneLinkCustomDomain(BRANDED_ONELINK_DOMAIN)
 
             TangemLogger.i("Starting AppsFlyer SDK")

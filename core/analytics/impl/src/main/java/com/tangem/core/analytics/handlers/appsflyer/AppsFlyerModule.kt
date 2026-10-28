@@ -1,11 +1,8 @@
-package com.tangem.tap.di.analytics
+package com.tangem.core.analytics.handlers.appsflyer
 
 import com.tangem.core.analytics.api.AnalyticsHandler
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
-import com.tangem.domain.common.LogConfig
-import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerAnalyticsHandler
-import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerClient
-import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerLogClient
+import com.tangem.core.analytics.config.AnalyticsEnvironmentConfig
+import com.tangem.core.analytics.impl.BuildConfig
 import com.tangem.utils.logging.TangemLogger
 import dagger.Module
 import dagger.Provides
@@ -16,21 +13,21 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal object AnalyticsHandlersModule {
+internal object AppsFlyerModule {
 
     @Provides
     @Singleton
     @IntoSet
     fun provideAppsFlyerHandler(
-        environmentConfig: EnvironmentConfig,
+        config: AnalyticsEnvironmentConfig,
         appsFlyerClientFactory: AppsFlyerClient.Factory,
     ): AnalyticsHandler {
-        val client = if (LogConfig.analyticsHandlers.isAppsflyerLogEnabled) {
+        val client = if (BuildConfig.LOG_ENABLED) {
             TangemLogger.withTag("AppsFlyer").i("AppsFlyer log enabled, mock client created")
             AppsFlyerLogClient()
         } else {
             TangemLogger.withTag("AppsFlyer").i("AppsFlyer log disabled, real client created")
-            appsFlyerClientFactory.create(apiKey = environmentConfig.appsFlyerApiKey)
+            appsFlyerClientFactory.create(apiKey = config.appsFlyerApiKey)
         }
 
         return AppsFlyerAnalyticsHandler(client)

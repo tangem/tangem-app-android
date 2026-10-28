@@ -23,6 +23,7 @@ dependencies {
 
     // region Analytics SDKs
     implementation(deps.amplitude)
+    implementation(deps.appsflyer)
     implementation(deps.customerio.analytics)
     implementation(deps.customerio.messaging)
     implementation(platform(deps.firebase.bom))
@@ -57,6 +58,7 @@ dependencies {
 
     // region Domain
     implementation(projects.domain.analytics)
+    implementation(projects.domain.appsflyer)
     implementation(projects.domain.settings)
     // endregion
 
