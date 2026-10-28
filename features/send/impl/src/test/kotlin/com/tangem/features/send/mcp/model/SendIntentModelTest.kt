@@ -242,7 +242,8 @@ internal class SendIntentModelTest {
     @Suppress("unused")
     private fun provideTestModels() = listOf(
         CloseModel(description = "intent not found") {
-            coEvery { getSendIntentUseCase(INTENT_ID) } returns SendIntentError.NotFound(INTENT_ID).left()
+            coEvery { getSendIntentUseCase(INTENT_ID) } returns
+                SendIntentError.NotFound(INTENT_ID, code = "INTENT_NOT_FOUND").left()
         },
         CloseModel(description = "network failure") {
             coEvery { getSendIntentUseCase(INTENT_ID) } returns ApiResponseError.NetworkException().left()
@@ -337,7 +338,8 @@ internal class SendIntentModelTest {
     fun `GIVEN the service reports the intent as completed WHEN model created THEN processed sheet has no subtitle`() =
         runTest {
             // Arrange
-            coEvery { getSendIntentUseCase(INTENT_ID) } returns SendIntentError.AlreadyCompleted(INTENT_ID).left()
+            coEvery { getSendIntentUseCase(INTENT_ID) } returns
+                SendIntentError.AlreadyCompleted(INTENT_ID, code = "INTENT_ALREADY_COMPLETED").left()
 
             // Act
             val model = createModel(testScope = this)
@@ -636,10 +638,12 @@ internal class SendIntentModelTest {
 
         private fun provideTestModels() = listOf(
             LoadFailedModel("intent not found", "Not Found", "INTENT_NOT_FOUND") {
-                coEvery { getSendIntentUseCase(INTENT_ID) } returns SendIntentError.NotFound(INTENT_ID).left()
+                coEvery { getSendIntentUseCase(INTENT_ID) } returns
+                    SendIntentError.NotFound(INTENT_ID, code = "INTENT_NOT_FOUND").left()
             },
             LoadFailedModel("completed by the service", "Already Processed", "INTENT_ALREADY_COMPLETED") {
-                coEvery { getSendIntentUseCase(INTENT_ID) } returns SendIntentError.AlreadyCompleted(INTENT_ID).left()
+                coEvery { getSendIntentUseCase(INTENT_ID) } returns
+                    SendIntentError.AlreadyCompleted(INTENT_ID, code = "INTENT_ALREADY_COMPLETED").left()
             },
             LoadFailedModel("no connection", "Unreachable") {
                 coEvery { getSendIntentUseCase(INTENT_ID) } returns SendIntentError.Unreachable(INTENT_ID).left()
