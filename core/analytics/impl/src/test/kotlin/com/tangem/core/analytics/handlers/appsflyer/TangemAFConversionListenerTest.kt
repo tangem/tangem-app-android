@@ -17,13 +17,15 @@ class TangemAFConversionListenerTest {
 
     private val firstHandler: AppsFlyerConversionDataHandler = mockk(relaxUnitFun = true)
     private val secondHandler: AppsFlyerConversionDataHandler = mockk(relaxUnitFun = true)
+    private val googleAdsConversionDataReporter: GoogleAdsConversionDataReporter = mockk(relaxUnitFun = true)
     private val listener = TangemAFConversionListener(
+        googleAdsConversionDataReporter = googleAdsConversionDataReporter,
         conversionDataHandlers = setOf(firstHandler, secondHandler),
     )
 
     @AfterEach
     fun tearDown() {
-        clearMocks(firstHandler, secondHandler)
+        clearMocks(googleAdsConversionDataReporter, firstHandler, secondHandler)
     }
 
     @ParameterizedTest
@@ -32,9 +34,11 @@ class TangemAFConversionListenerTest {
         listener.onConversionDataSuccess(p0 = model.params)
 
         if (model.shouldHandle) {
+            verify { googleAdsConversionDataReporter.handle(conversionData = model.params!!) }
             verify { firstHandler.handle(conversionData = model.params!!) }
             verify { secondHandler.handle(conversionData = model.params!!) }
         } else {
+            verify(inverse = true) { googleAdsConversionDataReporter.handle(conversionData = any()) }
             verify(inverse = true) { firstHandler.handle(conversionData = any()) }
             verify(inverse = true) { secondHandler.handle(conversionData = any()) }
         }

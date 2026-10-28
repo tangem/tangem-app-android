@@ -4,7 +4,6 @@ import com.appsflyer.deeplink.DeepLinkListener
 import com.tangem.core.analytics.api.AppsFlyerConversionDataHandler
 import com.tangem.tap.common.analytics.appsflyer.AppsFlyerDeepLinkListener
 import com.tangem.tap.common.analytics.appsflyer.AppsFlyerReferralParamsHandler
-import com.tangem.tap.common.analytics.appsflyer.GoogleAdsConversionDataReporter
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -21,8 +20,4 @@ internal interface AppsFlyerListenersModule {
     @Binds
     @IntoSet
     fun bindReferralParamsHandler(handler: AppsFlyerReferralParamsHandler): AppsFlyerConversionDataHandler
-
-    @Binds
-    @IntoSet
-    fun bindGoogleAdsConversionDataReporter(reporter: GoogleAdsConversionDataReporter): AppsFlyerConversionDataHandler
 }

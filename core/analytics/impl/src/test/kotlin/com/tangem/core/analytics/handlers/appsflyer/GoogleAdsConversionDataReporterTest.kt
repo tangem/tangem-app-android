@@ -1,4 +1,4 @@
-package com.tangem.tap.common.analytics.appsflyer
+package com.tangem.core.analytics.handlers.appsflyer
 
 import android.content.Context
 import com.appsflyer.AppsFlyerLib
