@@ -1,13 +1,13 @@
 package com.tangem.features.polymarket.impl.placeprediction.model.transformers
 
-import com.tangem.features.polymarket.impl.placeprediction.entity.BuyAmountFractionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.AmountFractionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.model.BuyAmountCalculator
 import com.tangem.utils.transformer.Transformer
 
 internal class SetAmountFractionTransformer(
-    private val fraction: BuyAmountFractionUM,
+    private val fraction: AmountFractionUM,
 ) : Transformer<PlacePredictionUM> {
 
     override fun transform(prevState: PlacePredictionUM): PlacePredictionUM {
