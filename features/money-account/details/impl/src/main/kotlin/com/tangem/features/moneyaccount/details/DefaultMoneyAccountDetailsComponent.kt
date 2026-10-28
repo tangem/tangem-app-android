@@ -80,7 +80,7 @@ internal class DefaultMoneyAccountDetailsComponent @AssistedInject constructor(
             params = TangemPayBankTransferOnrampDetailsComponent.Params(
                 userWalletId = params.userWalletId,
                 bankCredentials = config.bankCredentials,
-                feeSource = TangemPayBankTransferOnrampDetailsComponent.FeeSource.ROUTE,
+                feeSource = TangemPayBankTransferOnrampDetailsComponent.FeeSource.Route,
                 analytics = bankDetailsAnalytics,
             ),
         )

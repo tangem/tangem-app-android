@@ -3,6 +3,7 @@ package com.tangem.domain.pay.usecase
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.AccountFeeGroupType
@@ -24,6 +25,7 @@ internal class GetAccountFeesUseCaseTest {
     private val useCase = GetAccountFeesUseCase(onboardingRepository = onboardingRepository)
 
     private val userWalletId = UserWalletId("011")
+    private val product = TangemPayProduct.BANKING_ACCOUNT
 
     @BeforeEach
     fun resetMocks() {
@@ -31,28 +33,30 @@ internal class GetAccountFeesUseCaseTest {
     }
 
     @Test
-    fun `GIVEN fee types WHEN invoke THEN repository requested with them`() = runTest {
+    fun `GIVEN product and fee types WHEN invoke THEN repository requested with them`() = runTest {
         // Arrange
         val types = setOf(AccountFeeGroupType.ONRAMP, AccountFeeGroupType.OFFRAMP)
         val fees = listOf(fee(group = AccountFeeGroupType.ONRAMP), fee(group = AccountFeeGroupType.OFFRAMP))
-        coEvery { onboardingRepository.getFees(userWalletId, types) } returns fees.right()
+        coEvery { onboardingRepository.getFees(userWalletId, product, types) } returns fees.right()
 
         // Act
-        val actual = useCase(userWalletId = userWalletId, types = types)
+        val actual = useCase(userWalletId = userWalletId, product = product, types = types)
 
         // Assert
         assertThat(actual).isEqualTo(fees.right())
-        coVerify(exactly = 1) { onboardingRepository.getFees(userWalletId, types) }
+        coVerify(exactly = 1) { onboardingRepository.getFees(userWalletId, product, types) }
     }
 
     @Test
     fun `GIVEN fees unavailable WHEN invoke THEN error`() = runTest {
         // Arrange
         val types = setOf(AccountFeeGroupType.ONRAMP)
-        coEvery { onboardingRepository.getFees(userWalletId, types) } returns VisaApiError.ServerUnavailable.left()
+        coEvery {
+            onboardingRepository.getFees(userWalletId, product, types)
+        } returns VisaApiError.ServerUnavailable.left()
 
         // Act
-        val actual = useCase(userWalletId = userWalletId, types = types)
+        val actual = useCase(userWalletId = userWalletId, product = product, types = types)
 
         // Assert
         assertThat(actual).isEqualTo(VisaApiError.ServerUnavailable.left())
