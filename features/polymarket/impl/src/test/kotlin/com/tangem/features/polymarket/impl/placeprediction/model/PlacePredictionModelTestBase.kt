@@ -279,13 +279,17 @@ internal abstract class PlacePredictionModelTestBase {
         params: PlacePredictionComponent.Params = BUY_PARAMS,
         router: Router = this.router,
         dispatchers: CoroutineDispatcherProvider = testScope.createTestingCoroutineDispatcherProvider(),
+        orderSubmitterFactory: PlacePredictionOrderSubmitter.Factory = createOrderSubmitterFactory(
+            testScope = testScope,
+            dispatchers = dispatchers,
+        ),
     ): PlacePredictionOrderModel = PlacePredictionOrderModel(
         paramsContainer = MutableParamsContainer(value = params),
         router = router,
         urlOpener = urlOpener,
         dispatchers = dispatchers,
         quoteEngineFactory = createQuoteEngineFactory(dispatchers = dispatchers, router = router),
-        orderSubmitterFactory = createOrderSubmitterFactory(testScope = testScope, dispatchers = dispatchers),
+        orderSubmitterFactory = orderSubmitterFactory,
         userWalletsListRepository = userWalletsListRepository,
     ).also(models::add)
 
