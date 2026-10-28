@@ -14,7 +14,7 @@ import com.tangem.core.navigation.notifications.SystemNotificationsStateProvider
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.mcp.models.McpDeviceVerification
 import com.tangem.domain.mcp.repository.McpRepository
 import com.tangem.domain.models.account.AccountStatus
@@ -83,7 +83,7 @@ internal class McpPairModel @Inject constructor(
         modelScope.launch {
             mcpRepository.getDeviceVerification(userCode = params.request.userCode)
                 .fold(
-                    ifLeft = { onPairFailed(closeFlow = true) },
+                    ifLeft = { onPairFailed() },
                     ifRight = { verification.value = it },
                 )
         }
@@ -177,10 +177,20 @@ internal class McpPairModel @Inject constructor(
         appScope.launch { enableAddressesSharingUseCase(walletId) }
     }
 
-    private fun onPairFailed(closeFlow: Boolean = false) {
+    /**
+     * Every failure of the flow reads the same to the user, so there is nothing to branch on: the
+     * server answers an unknown, expired and already used code alike, and neither end of the pairing
+     * can be resumed in place. The sheet goes away and the alert carries the reason.
+     */
+    private fun onPairFailed() {
         connectState.update { it.copy(isConnecting = false) }
-        messageSender.send(SnackbarMessage(message = resourceReference(R.string.mcp_connection_failed)))
-        if (closeFlow) router.pop()
+        messageSender.send(
+            DialogMessage(
+                title = resourceReference(R.string.common_something_went_wrong),
+                message = resourceReference(R.string.common_try_again_later),
+            ),
+        )
+        router.pop()
     }
 
     private suspend fun selectInitialWallet(): Boolean {
