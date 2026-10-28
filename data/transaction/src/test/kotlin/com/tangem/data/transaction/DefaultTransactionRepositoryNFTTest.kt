@@ -41,6 +41,7 @@ internal class DefaultTransactionRepositoryNFTTest {
         tangemTechApi = mockk<TangemTechApi>(),
         walletManagersFacade = walletManagersFacade,
         dispatchers = TestingCoroutineDispatcherProvider(),
+        yieldModuleFeatureToggles = mockk(),
     )
 
     @ParameterizedTest
