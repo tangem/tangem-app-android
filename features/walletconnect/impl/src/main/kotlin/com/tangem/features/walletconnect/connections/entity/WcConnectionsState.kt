@@ -1,5 +1,6 @@
 package com.tangem.features.walletconnect.connections.entity
 
+import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
@@ -52,6 +53,7 @@ internal data class WcWalletConnectionsUM(
  * The agent list is read for every wallet at once, so [Loading] and [Error] are the same for all of
  * them — only [Content] is the wallet's own.
  */
+@Immutable
 internal sealed interface WcAgentsUM {
 
     data object Loading : WcAgentsUM
