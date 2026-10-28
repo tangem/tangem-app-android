@@ -16,6 +16,7 @@ import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.preview.model.TangemPayBankWithdrawPreviewModel
 import com.tangem.features.tangempay.withdraw.bank.preview.ui.TangemPayBankWithdrawPreviewScreen
 import kotlinx.coroutines.flow.StateFlow
+import java.math.BigDecimal
 
 internal class TangemPayBankWithdrawPreviewComponent(
     appComponentContext: AppComponentContext,
@@ -36,6 +37,7 @@ internal class TangemPayBankWithdrawPreviewComponent(
         val draft: StateFlow<BankWithdrawDraft>,
         val onOrderCreated: (BankOfframpOrderResult) -> Unit,
         val onDestinationChanged: (OfframpDestination) -> Unit,
+        val onNetworkFeeChanged: (BigDecimal) -> Unit,
         val onCompleted: () -> Unit,
         val onTransferOutcomeUnknown: () -> Unit,
         val onCloseFlow: () -> Unit,
