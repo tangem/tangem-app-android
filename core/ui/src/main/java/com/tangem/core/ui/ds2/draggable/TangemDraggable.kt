@@ -65,12 +65,12 @@ fun TangemDraggable(state: TangemDraggable.State, modifier: Modifier = Modifier,
         transitionSpec = {
             when {
                 TangemDraggable.State.Elevated == initialState || TangemDraggable.State.Elevated == targetState ->
-                    tween(durationMillis = ELEVATE_DURATION_MS, easing = EaseOut)
+                    tween(durationMillis = 280, easing = EaseOut)
                 // Delayed by the tap timeout: a scroll that starts on the item releases the press before
                 // the shrink becomes visible.
                 TangemDraggable.State.Pressed == targetState ->
-                    tween(durationMillis = PRESS_DURATION_MS, delayMillis = PRESS_DELAY_MS, easing = EaseOut)
-                else -> tween(durationMillis = PRESS_DURATION_MS, easing = EaseOut)
+                    tween(durationMillis = 120, delayMillis = 100, easing = EaseOut)
+                else -> tween(durationMillis = 120, easing = EaseOut)
             }
         },
         label = "scale",
@@ -82,7 +82,7 @@ fun TangemDraggable(state: TangemDraggable.State, modifier: Modifier = Modifier,
         }
     }
     val elevation by transition.animateFloat(
-        transitionSpec = { tween(durationMillis = ELEVATE_DURATION_MS, easing = EaseOut) },
+        transitionSpec = { tween(durationMillis = 280, easing = EaseOut) },
         label = "elevation",
     ) { if (it == TangemDraggable.State.Elevated) 1f else 0f }
 
@@ -209,10 +209,6 @@ object TangemDraggable {
         Elevated,
     }
 }
-
-private const val PRESS_DURATION_MS = 120
-private const val PRESS_DELAY_MS = 100
-private const val ELEVATE_DURATION_MS = 280
 
 private val DraggableShape = SmoothCornerShape(radius = 20.dp, smoothing = 0.6f)
 
