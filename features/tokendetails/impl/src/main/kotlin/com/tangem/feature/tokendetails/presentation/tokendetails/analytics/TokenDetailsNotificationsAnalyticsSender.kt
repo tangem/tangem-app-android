@@ -74,6 +74,7 @@ internal class TokenDetailsNotificationsAnalyticsSender(
             is TokenDetailsNotification.MigrationMaticToPol,
             is TokenDetailsNotification.MigrationClore,
             is TokenDetailsNotification.UsedOutdatedData,
+            is TokenDetailsNotification.IncompleteBalance,
             -> null
         }
     }

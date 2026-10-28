@@ -3723,6 +3723,8 @@
   <string name="warning_hedera_token_association_not_enough_hbar_message">Not enough %s. Top up your Hedera account to associate this token</string>
   <string name="warning_incomplete_backup_notification_message">We found out that the card activation process has not been completed accordingly due to issues with your device\'s NFC module or the incorrect way of tapping the cards to the phone. Please get in touch with our Support team for more details.</string>
   <string name="warning_incomplete_backup_notification_title">Action is required. Don\'t use your wallet!</string>
+  <string name="warning_incomplete_balance_message">This address has more than %1$s UTXOs, so the %2$s network returns only part of them. Your funds are safe. To see the full balance, consolidate UTXOs by sending %3$s to your own address.</string>
+  <string name="warning_incomplete_balance_title">Balance may be incomplete</string>
   <string name="warning_kaspa_unfinished_token_transaction_discard_message">Are you sure you want to cancel the transaction? You will not be able to retry the transaction</string>
   <string name="warning_kaspa_unfinished_token_transaction_message">Your transaction with an amount of %1$s %2$s was not completed. You can try again to complete it.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">You have an unfinished transaction</string>
