@@ -72,18 +72,19 @@ internal class PolymarketActivityUMConverterTest {
     }
 
     @Test
-    fun `GIVEN a split redemption WHEN converted THEN labels the returned amount as redeemed`() {
+    fun `GIVEN a split redemption WHEN converted THEN shows a split with its market title and returned amount`() {
         // Arrange
-        val activity = createHistoryActivity(type = PolymarketActivity.Type.REDEEM)
-            .copy(redeemResult = PolymarketActivity.RedeemResult.SPLIT)
+        val activity = historyTrade(PolymarketActivity.Type.REDEEM)
+            .copy(redeemResult = PolymarketActivity.RedeemResult.SPLIT, amount = BigDecimal("12.000000"))
 
         // Act
         val actual = PolymarketActivityUMConverter(clock).convert(listOf(activity)).single().activities.single()
 
         // Assert
-        assertThat(actual.type).isEqualTo(PolymarketActivityRowUM.Type.REDEEMED)
-        assertThat(actual.title).isEqualTo(resourceReference(R.string.prediction_history_redeemed))
-        assertThat(actual.amount).isEqualTo(stringReference("+ $10.00"))
+        assertThat(actual.type).isEqualTo(PolymarketActivityRowUM.Type.SPLIT)
+        assertThat(actual.title).isEqualTo(resourceReference(R.string.prediction_positions_split))
+        assertThat(actual.subtitle).isEqualTo(PolymarketActivitySubtitleUM.Plain(stringReference(activity.marketTitle)))
+        assertThat(actual.amount).isEqualTo(stringReference("+ $12.00"))
     }
 
     @Test

@@ -79,6 +79,6 @@ private fun ActivityIcon(state: PolymarketActivityRowUM) {
                 modifier = Modifier.size(24.dp),
             )
         }
-        Type.BOUGHT, Type.SOLD, Type.REDEEMED, Type.LOST -> PolymarketCardIcon(iconUrl = state.iconUrl)
+        Type.BOUGHT, Type.SOLD, Type.REDEEMED, Type.LOST, Type.SPLIT -> PolymarketCardIcon(iconUrl = state.iconUrl)
     }
 }
