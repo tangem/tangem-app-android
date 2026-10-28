@@ -9,4 +9,6 @@ dependencies {
     api(projects.domain.models)
 
     api(deps.kotlin.serialization.core)
+
+    testImplementation(projects.test.core)
 }
