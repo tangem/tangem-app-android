@@ -77,7 +77,7 @@ import java.math.BigDecimal
 internal const val QUOTE_DEBOUNCE_MILLIS = 500L
 internal const val QUOTE_POLL_INTERVAL_MILLIS = 3_000L
 
-@Suppress("LongParameterList", "TooManyFunctions")
+@Suppress("LongParameterList", "TooManyFunctions", "LargeClass")
 internal class PlacePredictionQuoteEngine @AssistedInject constructor(
     @Assisted private val params: PlacePredictionComponent.Params,
     @Assisted private val uiState: MutableStateFlow<PlacePredictionUM>,
