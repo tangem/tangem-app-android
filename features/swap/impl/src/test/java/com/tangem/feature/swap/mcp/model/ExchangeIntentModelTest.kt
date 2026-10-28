@@ -10,6 +10,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -683,6 +684,13 @@ internal class ExchangeIntentModelTest {
                 coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns
                     ExchangeIntentError.AmbiguousAmountSide(INTENT_ID).left()
             },
+            LoadFailedModel("server error", "Unknown", "502") {
+                coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns ApiResponseError.HttpException(
+                    code = ApiResponseError.HttpException.Code.BAD_GATEWAY,
+                    message = null,
+                    errorBody = null,
+                ).left()
+            },
             LoadFailedModel("unknown read error", "Unknown") {
                 coEvery { getExchangeIntentUseCase(walletId, INTENT_ID) } returns
                     IllegalStateException("boom").left()
@@ -692,6 +700,12 @@ internal class ExchangeIntentModelTest {
             },
             LoadFailedModel("token to swap to missing", "Token Missing") {
                 coEvery { holdingsResolver.resolve(walletId, any()) } returns ExchangeIntentHoldings.MissingTo(usdt)
+            },
+            LoadFailedModel("token to swap from missing", "Token Missing") {
+                coEvery { holdingsResolver.resolve(walletId, any()) } returns ExchangeIntentHoldings.MissingFrom(pol)
+            },
+            LoadFailedModel("both tokens missing", "Token Missing") {
+                coEvery { holdingsResolver.resolve(walletId, any()) } returns ExchangeIntentHoldings.MissingBoth
             },
             LoadFailedModel("accounts unreadable", "Unknown") {
                 coEvery { holdingsResolver.resolve(walletId, any()) } returns null
