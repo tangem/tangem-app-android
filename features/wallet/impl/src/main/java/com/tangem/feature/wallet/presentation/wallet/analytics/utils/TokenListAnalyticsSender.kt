@@ -11,8 +11,8 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
-import com.tangem.domain.analytics.CheckIsWalletToppedUpUseCase
-import com.tangem.domain.analytics.model.WalletBalanceState
+import com.tangem.domain.wallets.usecase.CheckIsWalletToppedUpUseCase
+import com.tangem.domain.wallets.models.WalletBalanceState
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrencyStatus

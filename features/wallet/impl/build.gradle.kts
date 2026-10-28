@@ -77,7 +77,6 @@ dependencies {
     implementation(projects.domain.appsflyer)
     api(projects.domain.account.status)
     api(projects.domain.addressBook)
-    api(projects.domain.analytics)
     api(projects.domain.appCurrency)
     api(projects.domain.appTheme)
     api(projects.domain.appUpdate)
