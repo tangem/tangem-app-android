@@ -92,21 +92,31 @@ private fun smoothCornerPath(size: Size, params: SmoothCornerParams): Path = Pat
 /** Draws a corner; [quarterTurns] rotates the top-right corner clockwise onto the others. */
 @Suppress("MagicNumber")
 private fun Path.smoothCorner(params: SmoothCornerParams, center: Offset, quarterTurns: Int) = with(params) {
-    relativeCubicTo(Offset(a, 0f), Offset(a + b, 0f), Offset(a + b + c, d), quarterTurns)
+    relativeCubicTo(
+        control1 = Offset(a, 0f),
+        control2 = Offset(a + b, 0f),
+        end = Offset(a + b + c, d),
+        quarterTurns = quarterTurns,
+    )
     arcTo(
         rect = Rect(center = center, radius = radius),
         startAngleDegrees = quarterTurns * 90f - 45f - arcMeasure / 2,
         sweepAngleDegrees = arcMeasure,
         forceMoveTo = false,
     )
-    relativeCubicTo(Offset(d, c), Offset(d, b + c), Offset(d, a + b + c), quarterTurns)
+    relativeCubicTo(
+        control1 = Offset(d, c),
+        control2 = Offset(d, b + c),
+        end = Offset(d, a + b + c),
+        quarterTurns = quarterTurns,
+    )
 }
 
 private fun Path.relativeCubicTo(control1: Offset, control2: Offset, end: Offset, quarterTurns: Int) {
     val c1 = control1.rotated(quarterTurns)
     val c2 = control2.rotated(quarterTurns)
     val e = end.rotated(quarterTurns)
-    relativeCubicTo(c1.x, c1.y, c2.x, c2.y, e.x, e.y)
+    relativeCubicTo(dx1 = c1.x, dy1 = c1.y, dx2 = c2.x, dy2 = c2.y, dx3 = e.x, dy3 = e.y)
 }
 
 @Suppress("MagicNumber")

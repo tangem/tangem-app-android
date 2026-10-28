@@ -74,8 +74,8 @@ fun TangemDraggable(state: TangemDraggable.State, modifier: Modifier = Modifier,
             }
         },
         label = "scale",
-    ) {
-        when (it) {
+    ) { visualState ->
+        when (visualState) {
             TangemDraggable.State.Default -> 1f
             TangemDraggable.State.Pressed -> 0.98f
             TangemDraggable.State.Elevated -> 1.02f
