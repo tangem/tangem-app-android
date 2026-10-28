@@ -88,6 +88,7 @@ internal fun PlacePredictionOrderContent(
                         focusManager.clearFocus()
                         intents.onPlaceClick()
                     },
+                    type = state.placeButtonType,
                 )
             }
         },
