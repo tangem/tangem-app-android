@@ -84,7 +84,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
 
                 // Assert
                 verify(exactly = 1) { router.replaceAll(any(), onComplete = any()) }
-                coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+                coVerify(exactly = 1) { getQuoteUseCase(userWalletId = any(), request = any()) }
             }
 
         @Test
@@ -154,7 +154,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
 
             // Assert
             assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
-            coVerify(exactly = 2) { getQuoteUseCase(request = any()) }
+            coVerify(exactly = 2) { getQuoteUseCase(userWalletId = any(), request = any()) }
             verify(exactly = 0) { router.replaceAll(any(), onComplete = any()) }
         }
 
@@ -181,7 +181,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 verify(exactly = 0) { router.push(any(), any()) }
                 verify(exactly = 0) { messageSender.send(any()) }
                 verify(exactly = 0) { urlOpener.openUrl(any()) }
-                coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+                coVerify(exactly = 1) { getQuoteUseCase(userWalletId = any(), request = any()) }
             }
 
         @Test
@@ -218,7 +218,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 // Assert
                 assertThat(model.uiState.value.quote).isInstanceOf(QuoteUM.Content::class.java)
                 advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
-                coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+                coVerify(exactly = 1) { getQuoteUseCase(userWalletId = any(), request = any()) }
             }
 
         @Test
@@ -235,7 +235,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             assertThat(model.uiState.value.amountValue).isEqualTo("90")
             assertThat(model.uiState.value.quote).isInstanceOf(QuoteUM.Content::class.java)
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
-            coVerify(exactly = 2) { getQuoteUseCase(request = any()) }
+            coVerify(exactly = 2) { getQuoteUseCase(userWalletId = any(), request = any()) }
         }
 
         @Test
@@ -253,13 +253,13 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 assertThat(model.uiState.value.amountValue).isEqualTo("100.00")
                 assertThat(model.uiState.value.quote).isInstanceOf(QuoteUM.Content::class.java)
                 advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
-                coVerify(exactly = 2) { getQuoteUseCase(request = any()) }
+                coVerify(exactly = 2) { getQuoteUseCase(userWalletId = any(), request = any()) }
             }
 
         @Test
         fun `GIVEN the max typed with a comma WHEN max clicked THEN the quote stays priced`() = runOrderTest {
             // Arrange
-            coEvery { getQuoteUseCase(request = any()) } returns createQuote().copy(
+            coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } returns createQuote().copy(
                 fees = PredictionOrderFees(
                     market = BigDecimal("1.2"),
                     builder = BigDecimal.ZERO,
@@ -277,7 +277,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             assertThat(model.uiState.value.amountValue).isEqualTo("89,28")
             assertThat(model.uiState.value.quote).isInstanceOf(QuoteUM.Content::class.java)
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
-            coVerify(exactly = 2) { getQuoteUseCase(request = any()) }
+            coVerify(exactly = 2) { getQuoteUseCase(userWalletId = any(), request = any()) }
         }
 
         @Test
@@ -373,7 +373,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             expected: String,
         ) = runOrderTest {
             // Arrange
-            coEvery { getQuoteUseCase(request = any()) } returns createQuote().copy(
+            coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } returns createQuote().copy(
                 notional = BigDecimal(notional),
                 fees = PredictionOrderFees(
                     market = BigDecimal(feeTotal),
@@ -444,7 +444,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         @Test
         fun `GIVEN a held position WHEN max clicked THEN the whole position is entered`() = runOrderTest {
             // Arrange
-            coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
+            coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } returns createSellQuote().right()
             val model = createOrderModel(testScope = this, params = SELL_PARAMS)
             advanceUntilIdle()
 
