@@ -113,12 +113,18 @@ fun BaseTestCase.assertPolymarketL1HeadersSent(method: String, urlPath: String, 
         "L1 signature must be a hex string, was ${headers["poly_signature"]}",
         Regex("0x[0-9a-fA-F]{130}").matches(headers["poly_signature"].orEmpty()),
     )
-    Assert.assertTrue(headers["poly_timestamp"].orEmpty().all { it.isDigit() } && headers["poly_timestamp"] != "")
+    val timestamp = headers["poly_timestamp"].orEmpty()
+    Assert.assertTrue(
+        "L1 timestamp must be numeric, was $timestamp",
+        timestamp.isNotEmpty() && timestamp.all { it.isDigit() },
+    )
     Assert.assertTrue("L1 nonce must be present", headers["poly_nonce"] != null)
 }
 
-fun BaseTestCase.assertPolymarketL2CredentialsSent(apiKey: String) {
-    val headers = findWireMockRequestHeaders(method = "GET", urlPath = POLYMARKET_BALANCE_PATH).last()
+fun BaseTestCase.assertPolymarketL2CredentialsSent(apiKey: String, balanceRequestsBefore: Int = 0) {
+    val headers = findWireMockRequestHeaders(method = "GET", urlPath = POLYMARKET_BALANCE_PATH)
+        .drop(balanceRequestsBefore)
+        .last()
     Assert.assertEquals(apiKey, headers["poly_api_key"])
     Assert.assertEquals(POLYMARKET_API_PASSPHRASE, headers["poly_passphrase"])
     Assert.assertTrue("L2 signature must be present", headers["poly_signature"].orEmpty().isNotEmpty())

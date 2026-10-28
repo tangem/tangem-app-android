@@ -69,6 +69,11 @@ class PolymarketMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
         feedList { performScrollToNode(hasTestTag(PredictionTestTags.OUTCOME_BUTTON)) }
     }
 
+    @OptIn(ExperimentalTestApi::class)
+    fun scrollToFeedStart() {
+        feedList { performScrollToIndex(0) }
+    }
+
     val firstOutcomeButton: KNode = child {
         hasTestTag(PredictionTestTags.OUTCOME_BUTTON)
         hasPosition(0)
