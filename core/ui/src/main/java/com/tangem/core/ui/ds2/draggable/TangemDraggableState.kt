@@ -33,7 +33,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Creates a [TangemDraggableState] that reorders the items of a vertical `LazyColumn` driven by
@@ -47,6 +47,7 @@ import kotlin.time.Duration.Companion.milliseconds
  * @param onDragEnd Called the moment the finger is lifted, before the item settles into its slot.
  *   Persist the final order here.
  */
+@Suppress("MagicNumber")
 @Composable
 fun rememberTangemDraggableState(
     listState: LazyListState,
@@ -64,8 +65,8 @@ fun rememberTangemDraggableState(
             scope = scope,
             onMove = { from, to -> currentOnMove(from, to) },
             onDragEnd = { currentOnDragEnd() },
-            scrollZonePx = with(density) { AUTO_SCROLL_ZONE.toPx() },
-            maxScrollSpeedPx = with(density) { AUTO_SCROLL_MAX_SPEED_PER_SECOND.toPx() },
+            scrollZonePx = with(density) { 48.dp.toPx() },
+            maxScrollSpeedPx = with(density) { 800.dp.toPx() },
         )
     }
 }
@@ -186,7 +187,7 @@ class TangemDraggableState internal constructor(
         isMoveInFlight = true
         onMove(from, to)
         moveJob = scope.launch(start = CoroutineStart.UNDISPATCHED) {
-            withTimeoutOrNull(MOVE_LAYOUT_TIMEOUT_MS.milliseconds) {
+            withTimeoutOrNull(1.seconds) {
                 while (itemInfo(draggingKey)?.index == from) {
                     if (isAnchorNeeded) listState.requestScrollToItem(firstVisibleIndex, firstVisibleOffset)
                     withFrameNanos { }
@@ -197,6 +198,7 @@ class TangemDraggableState internal constructor(
         }
     }
 
+    @Suppress("MagicNumber")
     private fun startAutoScrollIfNeeded() {
         if (autoScrollJob?.isActive == true || autoScrollSpeed() == 0f) return
 
@@ -205,7 +207,7 @@ class TangemDraggableState internal constructor(
             var isScrolling = true
             while (isScrolling) {
                 val frameNanos = withFrameNanos { it }
-                val elapsedSeconds = (frameNanos - lastFrameNanos) / NANOS_PER_SECOND
+                val elapsedSeconds = (frameNanos - lastFrameNanos) / 1_000_000_000f
                 lastFrameNanos = frameNanos
                 isScrolling = isMoveInFlight || autoScrollStep(elapsedSeconds)
             }
@@ -291,8 +293,3 @@ internal suspend fun PointerInputScope.detectTangemDrag(
         onPressChange(false)
     }
 }
-
-private const val MOVE_LAYOUT_TIMEOUT_MS = 1_000L
-private const val NANOS_PER_SECOND = 1_000_000_000f
-private val AUTO_SCROLL_ZONE = 48.dp
-private val AUTO_SCROLL_MAX_SPEED_PER_SECOND = 800.dp
