@@ -30,7 +30,7 @@ import com.tangem.core.ui.res.generated.icons.ic_grid_plus_20
  * row: an account's coloured glyph, a person's initial, an address identicon, a status glyph, or a
  * transaction's icon.
  *
- * Version: 1.0.0
+ * Version: 1.0.1
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=9737-838)
  *
@@ -41,7 +41,8 @@ import com.tangem.core.ui.res.generated.icons.ic_grid_plus_20
  * - The pending indicator is drawn only for [TangemAvatar.UiState.Transaction] at
  *   [TangemAvatar.Size.X40] and [TangemAvatar.Size.X44] — Figma defines no indicator for the other two
  *   sizes. It overhangs the avatar's corner and punches a transparent ring behind itself.
- * - Fill colours are fixed brand hexes, not theme tokens, so an avatar looks the same in light and dark.
+ * - The account fills come from the `colors3.account` tokens; [TangemAvatar.FillColor.Predictions],
+ *   [TangemAvatar.FillColor.Gacha] and [TangemAvatar.FillColor.Money] stay fixed brand hexes.
  *
  * @param state What the avatar shows. See [TangemAvatar.UiState].
  * @param size One of the fixed [TangemAvatar.Size] presets driving every dimension.
@@ -68,29 +69,29 @@ fun TangemAvatar(
 /** Public API surface of [TangemAvatar]. */
 object TangemAvatar {
 
-    val version = DsVersion(major = 1, minor = 0, patch = 0)
+    val version = DsVersion(major = 1, minor = 0, patch = 1)
 
     /** Fixed size presets: `X72` = 72dp … `X16` = 16dp. */
     enum class Size { X72, X44, X40, X16 }
 
     /**
      * Fill palette of the [UiState.Account] and [UiState.User] variants, mirroring the Figma
-     * `Avatar Module [Fill Color]`. The first twelve are user-selectable; the last four are reserved for
-     * the built-in account kinds.
+     * `Avatar Module [Fill Color]`. The first twelve are user-selectable account colours; the last four are
+     * reserved for the built-in account kinds.
      */
     enum class FillColor {
-        DarkBlue,
-        LightBlue,
-        Lavender,
-        Violet,
-        Golden,
-        LightPurple,
-        DarkPurple,
-        Pink,
-        Red,
-        Yellow,
-        LightGreen,
-        DarkGreen,
+        AzureBlue,
+        CaribbeanBlue,
+        DullLavender,
+        CandyGrapeFizz,
+        SweetDesire,
+        PalatinateBlue,
+        FuchsiaNebula,
+        MexicanPink,
+        Pelati,
+        Pattypan,
+        UfoGreen,
+        VitalGreen,
         Predictions,
         Gacha,
         PayVisa,
@@ -211,11 +212,11 @@ private fun TangemAvatarPreview() {
         PreviewRow(
             state = TangemAvatar.UiState.Account(
                 iconRes = R.drawable.ic_airplane_mode_24,
-                color = TangemAvatar.FillColor.DarkBlue,
+                color = TangemAvatar.FillColor.AzureBlue,
             ),
         )
-        PreviewRow(state = TangemAvatar.UiState.User(initial = 'A', color = TangemAvatar.FillColor.Violet))
-        PreviewRow(state = TangemAvatar.UiState.User(initial = null, color = TangemAvatar.FillColor.Violet))
+        PreviewRow(state = TangemAvatar.UiState.User(initial = 'A', color = TangemAvatar.FillColor.CandyGrapeFizz))
+        PreviewRow(state = TangemAvatar.UiState.User(initial = null, color = TangemAvatar.FillColor.CandyGrapeFizz))
         PreviewRow(state = TangemAvatar.UiState.Address(address = "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984"))
         PreviewRow(state = TangemAvatar.UiState.Icon(Icons.ic_grid_plus_20, TangemAvatar.Appearance.Neutral))
     }
