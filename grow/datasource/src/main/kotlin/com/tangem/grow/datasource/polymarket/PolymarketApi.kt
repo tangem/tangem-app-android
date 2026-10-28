@@ -97,7 +97,10 @@ interface PolymarketApi {
      * @param locale optional locale for the category labels; BFF defaults to `en`
      */
     @GET("api/predictions/v1/categories")
-    suspend fun getCategories(@Query("locale") locale: String?): ApiResponse<PolymarketCategoriesResponse>
+    suspend fun getCategories(
+        @Header("wallet-id") walletId: String,
+        @Query("locale") locale: String?,
+    ): ApiResponse<PolymarketCategoriesResponse>
 
     /**
      * Discovery feed: paginated prediction events, each with its top active markets.
@@ -108,6 +111,7 @@ interface PolymarketApi {
      */
     @GET("api/predictions/v1/events")
     suspend fun getEvents(
+        @Header("wallet-id") walletId: String,
         @Query("category") category: Int?,
         @Query("limit") limit: Int,
         @Query("cursor") cursor: String?,
@@ -123,6 +127,7 @@ interface PolymarketApi {
      */
     @GET("api/predictions/v1/search")
     suspend fun searchEvents(
+        @Header("wallet-id") walletId: String,
         @Query("query") query: String,
         @Query("limit") limit: Int,
         @Query("page") page: Int,
@@ -133,7 +138,10 @@ interface PolymarketApi {
      * markets of an event, this endpoint carries all of them (including closed ones).
      */
     @GET("api/predictions/v1/events/{eventId}")
-    suspend fun getEvent(@Path("eventId") eventId: String): ApiResponse<PolymarketEventResponse>
+    suspend fun getEvent(
+        @Header("wallet-id") walletId: String,
+        @Path("eventId") eventId: String,
+    ): ApiResponse<PolymarketEventResponse>
 
     /**
      * Onboarding status of the owner's deposit wallet — the endpoint the client polls to observe
@@ -141,6 +149,7 @@ interface PolymarketApi {
      */
     @GET("api/predictions/v1/wallet")
     suspend fun getWalletStatus(
+        @Header("wallet-id") walletId: String,
         @Query("ownerAddress") ownerAddress: String,
     ): ApiResponse<PolymarketWalletStatusResponse>
 
@@ -150,6 +159,7 @@ interface PolymarketApi {
      */
     @GET("api/predictions/v1/wallet")
     suspend fun getWalletStatusByWalletId(
+        @Header("wallet-id") walletIdHeader: String,
         @Query("walletId") walletId: String,
     ): ApiResponse<PolymarketWalletStatusResponse>
 
@@ -159,19 +169,21 @@ interface PolymarketApi {
 
     /**
      * Initiate deposit-wallet deployment via the relayer (gasless, unsigned). Returns as soon as the
-     * relayer accepts the submission; the client then polls [getWalletStatus].
+     * relayer accepts the submission; the client then polls [getWalletStatusByWalletId].
      */
     @POST("api/predictions/v1/wallet/deploy")
     suspend fun deployWallet(
+        @Header("wallet-id") walletId: String,
         @Body request: PolymarketWalletDeployRequest,
     ): ApiResponse<PolymarketWalletOperationResponse>
 
     /**
      * Relay the fully-signed 17-approval batch (gasless). The DW must be deployed first. Returns as soon
-     * as the relayer accepts; the client then polls [getWalletStatus].
+     * as the relayer accepts; the client then polls [getWalletStatusByWalletId].
      */
     @POST("api/predictions/v1/wallet/approvals")
     suspend fun submitApprovals(
+        @Header("wallet-id") walletId: String,
         @Body request: PolymarketWalletApprovalsRequest,
     ): ApiResponse<PolymarketWalletOperationResponse>
 
@@ -180,7 +192,10 @@ interface PolymarketApi {
      * placed, and the quote is only valid for as long as the book stands still, so callers re-request it.
      */
     @POST("api/predictions/v1/orders/quote")
-    suspend fun getOrderQuote(@Body request: PolymarketOrderQuoteRequest): ApiResponse<PolymarketOrderQuoteResponse>
+    suspend fun getOrderQuote(
+        @Header("wallet-id") walletId: String,
+        @Body request: PolymarketOrderQuoteRequest,
+    ): ApiResponse<PolymarketOrderQuoteResponse>
 
     /**
      * Relay the signed pUSD transfer that empties part of the deposit wallet (gasless). Always `202` on

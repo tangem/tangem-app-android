@@ -30,7 +30,7 @@ internal class PlacePredictionStatusModelTest : PlacePredictionModelTestBase() {
     fun `GIVEN a buy fills on a market with a condition id WHEN the position is indexed THEN view position is available`() =
         runTest {
             // Arrange
-            coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
+            coEvery { getEventUseCase(any(), eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
             val amountModel = createAmountModel(testScope = this)
             advanceUntilIdle()
             amountModel.onResume()
@@ -50,7 +50,7 @@ internal class PlacePredictionStatusModelTest : PlacePredictionModelTestBase() {
     fun `GIVEN the position is not indexed yet WHEN a buy fills THEN the button waits AND the read is retried`() =
         runTest {
             // Arrange
-            coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
+            coEvery { getEventUseCase(any(), eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
             coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returnsMany listOf(
                 null.right(),
                 createPosition().right(),
@@ -76,7 +76,7 @@ internal class PlacePredictionStatusModelTest : PlacePredictionModelTestBase() {
     @Test
     fun `GIVEN the position never indexes WHEN the reads run out THEN view position is hidden`() = runTest {
         // Arrange
-        coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
+        coEvery { getEventUseCase(any(), eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
         coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns null.right()
         val amountModel = createAmountModel(testScope = this)
         advanceUntilIdle()
@@ -99,7 +99,7 @@ internal class PlacePredictionStatusModelTest : PlacePredictionModelTestBase() {
     fun `GIVEN the position indexes on the twelfth read WHEN a buy fills THEN view position is still available`() =
         runTest {
             // Arrange
-            coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
+            coEvery { getEventUseCase(any(), eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
             coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returnsMany
                 List(size = 11) { null.right() } + createPosition().right()
             val amountModel = createAmountModel(testScope = this)
@@ -121,7 +121,7 @@ internal class PlacePredictionStatusModelTest : PlacePredictionModelTestBase() {
     fun `GIVEN the market resolved while indexing WHEN the position is read THEN view position is available`() =
         runTest {
             // Arrange
-            coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
+            coEvery { getEventUseCase(any(), eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
             coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
                 createPosition().copy(resolutionStatus = PolymarketResolutionStatus.RESOLVED).right()
             val amountModel = createAmountModel(testScope = this)
@@ -143,7 +143,7 @@ internal class PlacePredictionStatusModelTest : PlacePredictionModelTestBase() {
     fun `GIVEN the position read fails WHEN a buy fills THEN the read is retried like a missing position`() =
         runTest {
             // Arrange
-            coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
+            coEvery { getEventUseCase(any(), eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
             coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returnsMany listOf(
                 PolymarketPositionsError.Unknown(httpCode = 502, detail = null).left(),
                 createPosition().right(),
@@ -184,7 +184,7 @@ internal class PlacePredictionStatusModelTest : PlacePredictionModelTestBase() {
     @Test
     fun `GIVEN the exchange found no match WHEN place clicked THEN view position is hidden`() = runTest {
         // Arrange
-        coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
+        coEvery { getEventUseCase(any(), eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
         coEvery { placeOrderUseCase(any(), any(), any()) } returns
             PredictionPlaceOrderError.NoLiquidity(detail = "no orders found to match with FAK order").left()
         val amountModel = createAmountModel(testScope = this)
@@ -205,7 +205,7 @@ internal class PlacePredictionStatusModelTest : PlacePredictionModelTestBase() {
     @Test
     fun `GIVEN a sell fills WHEN place clicked THEN view position is hidden`() = runTest {
         // Arrange
-        coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
+        coEvery { getQuoteUseCase(any(), request = any()) } returns createSellQuote().right()
         val amountModel = createAmountModel(testScope = this, params = SELL_PARAMS)
         advanceUntilIdle()
         amountModel.onResume()
@@ -224,7 +224,7 @@ internal class PlacePredictionStatusModelTest : PlacePredictionModelTestBase() {
     fun `GIVEN the position is indexed WHEN view position clicked THEN main and the position details replace the stack`() =
         runTest {
             // Arrange
-            coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
+            coEvery { getEventUseCase(any(), eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
             val amountModel = createAmountModel(testScope = this)
             advanceUntilIdle()
             amountModel.onResume()
@@ -249,7 +249,7 @@ internal class PlacePredictionStatusModelTest : PlacePredictionModelTestBase() {
     @Test
     fun `GIVEN the position is still indexing WHEN view position clicked THEN nothing navigates`() = runTest {
         // Arrange
-        coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
+        coEvery { getEventUseCase(any(), eventId = EVENT_ID) } returns createEvent(conditionId = CONDITION_ID).right()
         coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns null.right()
         val amountModel = createAmountModel(testScope = this)
         advanceUntilIdle()
