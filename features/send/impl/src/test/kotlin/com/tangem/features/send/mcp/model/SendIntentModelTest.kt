@@ -648,6 +648,13 @@ internal class SendIntentModelTest {
                 coEvery { getSendIntentUseCase(INTENT_ID) } returns
                     SendIntentError.MalformedAmount(INTENT_ID, "many").left()
             },
+            LoadFailedModel("server error", "Unknown", "502") {
+                coEvery { getSendIntentUseCase(INTENT_ID) } returns ApiResponseError.HttpException(
+                    code = ApiResponseError.HttpException.Code.BAD_GATEWAY,
+                    message = null,
+                    errorBody = null,
+                ).left()
+            },
             LoadFailedModel("unknown read error", "Unknown") {
                 coEvery { getSendIntentUseCase(INTENT_ID) } returns ApiResponseError.NetworkException().left()
             },
@@ -698,6 +705,54 @@ internal class SendIntentModelTest {
 
             // Assert
             assertThat(sentEvents().last()).isEqualTo(loadFailed(reason = "Send Not Opened"))
+            assertThat(sentEvents().map { it.first }).doesNotContain("[MCP Intent] Button - Continue")
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN equal send covered by another screen WHEN proceed THEN load failed is sent instead of continue`() =
+            runTest {
+                // Arrange
+                rootStack = listOf(expectedSendRoute(), AppRoute.Send(userWalletId = walletId, currency = usdt))
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+
+                // Act
+                model.shownOffer().primaryButton.onClick()
+
+                // Assert
+                assertThat(sentEvents().last()).isEqualTo(loadFailed(reason = "Send Not Opened"))
+                assertThat(sentEvents().map { it.first }).doesNotContain("[MCP Intent] Button - Continue")
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN equal send on top WHEN proceed THEN continue is sent once`() = runTest {
+            // Arrange
+            rootStack = listOf(expectedSendRoute())
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.shownOffer().primaryButton.onClick()
+
+            // Assert
+            assertThat(sentEvents().filter { it.first == "[MCP Intent] Button - Continue" }).containsExactly(
+                "[MCP Intent] Button - Continue" to mapOf("Intent Type" to "send", "Intent Id" to INTENT_ID),
+            )
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN offer WHEN sheet is dismissed THEN continue is not sent`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.onClose()
+
+            // Assert
             assertThat(sentEvents().map { it.first }).doesNotContain("[MCP Intent] Button - Continue")
             model.onDestroy()
         }
