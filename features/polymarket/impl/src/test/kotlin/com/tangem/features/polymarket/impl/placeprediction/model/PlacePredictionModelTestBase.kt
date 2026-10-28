@@ -128,11 +128,11 @@ internal abstract class PlacePredictionModelTestBase {
         every { fundingWindow.isOpen(USER_WALLET_ID) } returns isFundingOpen
         coEvery { refreshRequisites(USER_WALLET_ID) } returns REQUISITES.right()
 
-        coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent().right()
+        coEvery { getEventUseCase(any(), eventId = EVENT_ID) } returns createEvent().right()
         coEvery { deriveAddressesUseCase.stored(userWalletId = USER_WALLET_ID) } returns ADDRESSES
         coEvery { getBalanceInteractor(addresses = ADDRESSES) } returns
             PolymarketBalanceAllowance(balance = BigDecimal("100"), allowances = mapOf("0xspender" to BigDecimal("1000"))).right()
-        coEvery { getQuoteUseCase(request = any()) } returns createQuote().right()
+        coEvery { getQuoteUseCase(any(), request = any()) } returns createQuote().right()
         coEvery { getPriceUseCase(assetId = any(), side = any()) } returns BigDecimal("0.48").right()
         coEvery { checkGeoblockUseCase() } returns false.right()
         coEvery { signOrderInteractor(request = any()) } returns SIGNED_ORDER.right()

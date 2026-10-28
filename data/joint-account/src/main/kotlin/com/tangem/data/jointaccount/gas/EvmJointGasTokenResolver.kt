@@ -30,10 +30,7 @@ internal class EvmJointGasTokenResolver @Inject constructor(
         val normalizedAddress = address.lowercase().addHexPrefix()
         if (normalizedAddress == SafeGasToken.Coin.address) return@catch SafeGasToken.Coin
 
-        val token = gaslessTransactionRepository.getSupportedTokens(network)
-            .filterIsInstance<CryptoCurrency.Token>()
-            .firstOrNull { it.contractAddress.lowercase().addHexPrefix() == normalizedAddress }
-            ?: return@catch null
+        val token = supportedToken(network = network, normalizedAddress = normalizedAddress) ?: return@catch null
 
         val blockchain = network.toBlockchain()
         val coinRate = fiatRate(rawCurrencyId = CryptoCurrency.RawID(blockchain.toCoinId()))
@@ -46,6 +43,21 @@ internal class EvmJointGasTokenResolver @Inject constructor(
             coinDecimals = blockchain.decimals(),
             nativeToTokenRate = coinRate.divide(tokenRate, MathContext.DECIMAL128),
         )
+    }
+
+    override suspend fun findUnpriced(network: Network, address: String): Either<Throwable, SafeGasToken?> =
+        Either.catch {
+            val normalizedAddress = address.lowercase().addHexPrefix()
+            if (normalizedAddress == SafeGasToken.Coin.address) return@catch SafeGasToken.Coin
+
+            supportedToken(network = network, normalizedAddress = normalizedAddress)
+                ?.let { SafeGasToken.Unpriced(address = normalizedAddress) }
+        }
+
+    private suspend fun supportedToken(network: Network, normalizedAddress: String): CryptoCurrency.Token? {
+        return gaslessTransactionRepository.getSupportedTokens(network)
+            .filterIsInstance<CryptoCurrency.Token>()
+            .firstOrNull { it.contractAddress.lowercase().addHexPrefix() == normalizedAddress }
     }
 
     /** In USD: a quote kept from before an app currency change is still in USD, so both sides share one unit */

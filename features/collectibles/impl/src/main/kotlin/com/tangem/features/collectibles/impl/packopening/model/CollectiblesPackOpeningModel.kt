@@ -17,6 +17,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.collectibles.account.covers
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.collectibles.models.BuybackError
 import com.tangem.domain.collectibles.models.CollectibleBuybackOffer
@@ -30,6 +31,7 @@ import com.tangem.domain.collectibles.usecase.GetCollectibleGachaMachineUseCase
 import com.tangem.domain.collectibles.usecase.OpenCollectiblePackUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
+import com.tangem.domain.models.account.CollectiblesAccountStatusValue
 import com.tangem.domain.models.account.CollectiblesVaultBalance
 import com.tangem.features.collectibles.impl.CollectiblesRoute
 import com.tangem.features.collectibles.impl.common.formatter.formatUsd
@@ -75,6 +77,7 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getMachineUseCase: GetCollectibleGachaMachineUseCase,
     private val accountStatusSupplier: CollectiblesAccountStatusSupplier,
+    private val accountStatusFetcher: CollectiblesAccountStatusFetcher,
     private val openCollectiblePackUseCase: OpenCollectiblePackUseCase,
     private val getBuybackOfferUseCase: GetCollectibleBuybackOfferUseCase,
     private val buybackCollectibleUseCase: BuybackCollectibleUseCase,
@@ -133,6 +136,14 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
 
     init {
         loadMachine()
+        recheckLinkage()
+    }
+
+    private fun recheckLinkage() {
+        modelScope.launch {
+            accountStatusFetcher(CollectiblesAccountStatusFetcher.Params(params.userWalletId))
+                .onLeft { TangemLogger.e("Unable to refresh the collectibles account", it) }
+        }
     }
 
     override fun onDestroy() {
@@ -186,22 +197,28 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
     private suspend fun observeBalance(machine: CollectibleGachaMachine) {
         this.machine = machine
 
-        val vaultBalanceFlow = accountStatusSupplier(params.userWalletId)
+        val statusFlow = accountStatusSupplier(params.userWalletId)
+        val vaultBalanceFlow = statusFlow
             .mapNotNull { status -> status.balance }
             .distinctUntilChanged()
             .onEach { balance -> vaultBalance = balance }
+        val isRelinkRequiredFlow = statusFlow
+            .map { status -> status is CollectiblesAccountStatusValue.UpdateRequired }
+            .distinctUntilChanged()
 
         combine(
             flow = vaultBalanceFlow,
-            flow2 = openPackStep,
-            flow3 = reveal,
-            flow4 = buyback,
-        ) { vaultBalance, step, reveal, buyback ->
+            flow2 = isRelinkRequiredFlow,
+            flow3 = openPackStep,
+            flow4 = reveal,
+            flow5 = buyback,
+        ) { vaultBalance, isRelinkRequired, step, reveal, buyback ->
             val content = orderConverter.convert(
                 CollectiblesPackOpeningConverter.Input(
                     machine = machine,
                     vaultBalance = vaultBalance,
                     step = step,
+                    isRelinkRequired = isRelinkRequired,
                 ),
             )
             content.copy(

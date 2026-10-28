@@ -21,6 +21,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.mockk
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -67,6 +68,25 @@ internal class JointOperationVerifierTest {
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)
+    }
+
+    @Test
+    fun `GIVEN no network gas price WHEN verify THEN the ceiling is not checked`() {
+        // Act
+        val actual = verifier.verify(
+            jointAccount = JOINT_ACCOUNT,
+            operation = operation(gasPrice = NETWORK_GAS_PRICE * BigInteger.valueOf(40)),
+            displayed = DISPLAYED,
+            ownerAddress = ALICE,
+            refundBounds = JointOperationVerifier.RefundBounds(
+                refundReceiver = REFUND_RECEIVER,
+                networkGasPrice = null,
+                gasToken = SafeGasToken.Coin,
+            ),
+        )
+
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
     }
 
     private fun provideTestModels() = listOf(

@@ -12,6 +12,7 @@ import com.tangem.domain.collectibles.vault.GachaVaultLimits
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
+import com.tangem.domain.models.account.isAccountCreated
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
@@ -23,6 +24,9 @@ import javax.inject.Inject
  *
  * Never more than one tap, and none at all for a mobile wallet or for an account that already exists. What the
  * device already has decides which operation that tap signs.
+ *
+ * Reactivating a vault that answers to another phone re-issues the hot delegate rather than reusing the one stored
+ * here, so a key that may have leaked with an old install is never trusted again.
  */
 class CreateOrReactivateCollectiblesAccountUseCase @Inject constructor(
     private val hotDelegate: CollectiblesHotDelegate,
@@ -43,6 +47,8 @@ class CreateOrReactivateCollectiblesAccountUseCase @Inject constructor(
 
         val limits = GachaVaultLimits.Default
         val accountId = AccountId.forCollectiblesAccount(userWalletId = userWallet.walletId)
+        if (accountStatus is CollectiblesAccountStatusValue.UpdateRequired) hotDelegate.forget(accountId)
+
         val delegate = hotDelegate.provision(accountId)
             .onLeft { TangemLogger.d("create account: hot delegate provisioning failed: $it") }
             .onRight { TangemLogger.d("create account: hot delegate ready") }
@@ -62,9 +68,14 @@ class CreateOrReactivateCollectiblesAccountUseCase @Inject constructor(
                 .bind()
         }
 
+        if (accountStatus.isAccountCreated) accountRepository.markRelinkSent(userWallet.walletId)
+
         accountRepository.saveAccount(
             userWalletId = userWallet.walletId,
-            status = CollectiblesAccountStatusValue.Onboarded(source = StatusSource.ACTUAL),
+            status = CollectiblesAccountStatusValue.Onboarded(
+                source = StatusSource.ACTUAL,
+                vaultBalance = accountStatus?.balance,
+            ),
         )
         TangemLogger.d("create account: the collectibles account is created, the gacha account is ready to use")
 

@@ -27,6 +27,7 @@ import com.tangem.domain.jointaccount.safe.JointOperationTransferResolver
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.RejectJointOperationUseCase
 import com.tangem.domain.jointaccount.usecase.SignJointOperationUseCase
+import com.tangem.domain.jointaccount.verifier.JointOperationDisplayGate
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -77,6 +78,7 @@ internal class JointOperationDelegateTest {
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
+    private val displayGate: JointOperationDisplayGate = mockk()
 
     @BeforeEach
     fun resetMocks() {
@@ -97,9 +99,11 @@ internal class JointOperationDelegateTest {
             userWalletsListRepository,
             singleAccountStatusListSupplier,
             getSelectedAppCurrencyUseCase,
+            displayGate,
         )
 
         every { accountListSupplier(USER_WALLET_ID) } returns flowOf(accountListWithJointAccount)
+        coEvery { displayGate.isShown(any(), any(), any(), any(), any()) } returns true
         every {
             transferResolver.resolve(safeTx = any(), currencies = any(), network = any(), safeAddress = any())
         } returns JointOperationTransfer(currency = jointCurrency, intent = TRANSFER_INTENT)
@@ -125,6 +129,21 @@ internal class JointOperationDelegateTest {
         // Assert
         assertThat(values).containsExactly(expectedState)
         coVerify(exactly = 0) { jointAccountListFetcher(userWalletId = any()) }
+    }
+
+    @Test
+    fun `GIVEN the operation does not pass the display gate WHEN observe THEN the sheet has no state`() = runTest {
+        // Arrange
+        every { jointAccountListSupplier(USER_WALLET_ID) } returns flowOf(listOf(createJointAccount()))
+        coEvery { displayGate.isShown(any(), any(), any(), any(), any()) } returns false
+
+        // Act
+        val values = getEmittedValues(flow = createDelegate().observe(USER_WALLET_ID, jointCurrency, OPERATION_ID))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(values).containsExactly(null)
+        coVerify(exactly = 0) { signersResolver.signers(jointAccount = any(), operation = any<JointOperation>()) }
     }
 
     @Test
@@ -285,6 +304,7 @@ internal class JointOperationDelegateTest {
         userWalletsListRepository = userWalletsListRepository,
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
         getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
+        displayGate = displayGate,
     )
 
     private fun createJointAccount(

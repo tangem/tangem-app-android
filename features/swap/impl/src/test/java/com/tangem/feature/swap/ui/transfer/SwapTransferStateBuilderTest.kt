@@ -34,7 +34,6 @@ import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.feature.swap.buildSwapCurrencyStatus
 import com.tangem.feature.swap.domain.models.SwapAmount
-import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokenSwapInfo
 import com.tangem.feature.swap.model.SwapProcessDataState
@@ -1327,7 +1326,6 @@ internal class SwapTransferStateBuilderTest {
         isInsufficientFunds = false,
         changeCardsButtonState = ChangeCardsButtonState.ENABLED,
         providerState = ProviderState.Empty(),
-        priceImpact = PriceImpact.Empty,
         swapButton = SwapButton(walletInteractionIcon = null, isEnabled = false, onClick = {}),
         shouldShowMaxAmount = false,
         onRefresh = {},

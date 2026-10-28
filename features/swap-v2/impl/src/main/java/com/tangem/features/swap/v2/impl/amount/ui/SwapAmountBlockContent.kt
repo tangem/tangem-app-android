@@ -102,6 +102,7 @@ internal fun SwapAmountBlockContent(
                 end.linkTo(parent.end)
             },
             showFCAWarning = amountUM.isShowFCAWarning,
+            isProviderUnavailable = amountUM.selectedQuote is SwapQuoteUM.Empty,
         )
     }
 }

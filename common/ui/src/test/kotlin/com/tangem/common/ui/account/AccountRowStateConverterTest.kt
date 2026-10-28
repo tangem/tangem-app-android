@@ -105,18 +105,18 @@ internal class AccountRowStateConverterTest {
         }
 
         private fun provideTestModels() = listOf(
-            ColorModel(CryptoPortfolioIcon.Color.Azure, TangemAvatar.FillColor.DarkBlue),
-            ColorModel(CryptoPortfolioIcon.Color.CaribbeanBlue, TangemAvatar.FillColor.LightBlue),
-            ColorModel(CryptoPortfolioIcon.Color.DullLavender, TangemAvatar.FillColor.Lavender),
-            ColorModel(CryptoPortfolioIcon.Color.CandyGrapeFizz, TangemAvatar.FillColor.Violet),
-            ColorModel(CryptoPortfolioIcon.Color.SweetDesire, TangemAvatar.FillColor.LightPurple),
-            ColorModel(CryptoPortfolioIcon.Color.PalatinateBlue, TangemAvatar.FillColor.DarkBlue),
-            ColorModel(CryptoPortfolioIcon.Color.FuchsiaNebula, TangemAvatar.FillColor.DarkPurple),
-            ColorModel(CryptoPortfolioIcon.Color.MexicanPink, TangemAvatar.FillColor.Pink),
-            ColorModel(CryptoPortfolioIcon.Color.Pelati, TangemAvatar.FillColor.Red),
-            ColorModel(CryptoPortfolioIcon.Color.Pattypan, TangemAvatar.FillColor.Yellow),
-            ColorModel(CryptoPortfolioIcon.Color.UFOGreen, TangemAvatar.FillColor.LightGreen),
-            ColorModel(CryptoPortfolioIcon.Color.VitalGreen, TangemAvatar.FillColor.DarkGreen),
+            ColorModel(CryptoPortfolioIcon.Color.Azure, TangemAvatar.FillColor.AzureBlue),
+            ColorModel(CryptoPortfolioIcon.Color.CaribbeanBlue, TangemAvatar.FillColor.CaribbeanBlue),
+            ColorModel(CryptoPortfolioIcon.Color.DullLavender, TangemAvatar.FillColor.DullLavender),
+            ColorModel(CryptoPortfolioIcon.Color.CandyGrapeFizz, TangemAvatar.FillColor.CandyGrapeFizz),
+            ColorModel(CryptoPortfolioIcon.Color.SweetDesire, TangemAvatar.FillColor.SweetDesire),
+            ColorModel(CryptoPortfolioIcon.Color.PalatinateBlue, TangemAvatar.FillColor.PalatinateBlue),
+            ColorModel(CryptoPortfolioIcon.Color.FuchsiaNebula, TangemAvatar.FillColor.FuchsiaNebula),
+            ColorModel(CryptoPortfolioIcon.Color.MexicanPink, TangemAvatar.FillColor.MexicanPink),
+            ColorModel(CryptoPortfolioIcon.Color.Pelati, TangemAvatar.FillColor.Pelati),
+            ColorModel(CryptoPortfolioIcon.Color.Pattypan, TangemAvatar.FillColor.Pattypan),
+            ColorModel(CryptoPortfolioIcon.Color.UFOGreen, TangemAvatar.FillColor.UfoGreen),
+            ColorModel(CryptoPortfolioIcon.Color.VitalGreen, TangemAvatar.FillColor.VitalGreen),
         )
     }
 

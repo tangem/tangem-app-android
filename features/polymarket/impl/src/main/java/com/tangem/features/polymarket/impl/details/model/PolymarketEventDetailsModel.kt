@@ -126,11 +126,11 @@ internal class PolymarketEventDetailsModel @Inject constructor(
     }
 
     private suspend fun fetchEventWithSilentRetry(): Either<PolymarketEventError, PolymarketEvent> {
-        val first = getPolymarketEventUseCase(eventId = params.eventId)
+        val first = getPolymarketEventUseCase(userWalletId = params.userWalletId, eventId = params.eventId)
         if (first.isRight()) return first
 
         delay(RETRY_DELAY)
-        return getPolymarketEventUseCase(eventId = params.eventId)
+        return getPolymarketEventUseCase(userWalletId = params.userWalletId, eventId = params.eventId)
     }
 
     private fun reportStaleDataOnce() {

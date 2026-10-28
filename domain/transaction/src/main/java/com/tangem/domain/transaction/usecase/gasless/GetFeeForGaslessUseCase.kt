@@ -5,6 +5,7 @@ import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.unwrapYieldModuleUpgrade
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
@@ -78,7 +79,7 @@ class GetFeeForGaslessUseCase(
                         nonPortfolioFeeToken != null -> evmGaslessFeeResolver.resolveWithSelectedFeeToken(
                             userWallet = userWallet,
                             network = network,
-                            transactionData = transactionData,
+                            transactionData = transactionData.unwrapYieldModuleUpgrade(),
                             nativeCurrencyStatus = nativeCurrencyStatus,
                             tokenCurrencyStatus = nonPortfolioFeeToken,
                             sentAmount = sentAmount,
@@ -86,7 +87,7 @@ class GetFeeForGaslessUseCase(
                         else -> evmGaslessFeeResolver.resolveWithAutoFeeToken(
                             userWallet = userWallet,
                             network = network,
-                            transactionData = transactionData,
+                            transactionData = transactionData.unwrapYieldModuleUpgrade(),
                             nativeCurrencyStatus = nativeCurrencyStatus,
                             accountStatusList = accountStatusList,
                             sentAmount = sentAmount,

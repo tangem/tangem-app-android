@@ -35,7 +35,6 @@ dependencies {
     api(projects.features.tokenRecieve.api)
     implementation(projects.features.tokendetails.api)
     api(projects.features.promoBanners.api)
-    api(projects.features.moneyAccount.details.api)
 
     /** Domain */
     api(projects.domain.balanceHiding)

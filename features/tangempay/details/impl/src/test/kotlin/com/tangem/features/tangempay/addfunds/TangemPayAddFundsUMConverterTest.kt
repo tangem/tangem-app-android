@@ -8,7 +8,6 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_clock_20
 import com.tangem.core.ui.res.generated.icons.ic_government_20
-import com.tangem.core.ui.res.generated.icons.ic_sign_usd_20
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.features.tangempay.details.impl.R
@@ -26,12 +25,11 @@ internal class TangemPayAddFundsUMConverterTest {
 
     private fun convert(
         onramp: VirtualAccountOnramp?,
-        isVisaOnrampV2Enabled: Boolean = false,
         isBankTransferLoading: Boolean = false,
     ) = TangemPayAddFundsUMConverter(
         listener = listener,
+        onBankTransferClick = {},
         virtualAccountOnramp = onramp,
-        isVisaOnrampV2Enabled = isVisaOnrampV2Enabled,
     ).convert(TangemPayAddFundsUMConverter.Input(data = data, isBankTransferLoading = isBankTransferLoading))
 
     private fun titleIds(um: TangemPayAddFundsUM): List<Int> {
@@ -84,7 +82,6 @@ internal class TangemPayAddFundsUMConverterTest {
         // Act
         val row = convert(
             onramp = model.onramp,
-            isVisaOnrampV2Enabled = model.isV2Enabled,
             isBankTransferLoading = model.isBankTransferLoading,
         ).bankTransfer()
 
@@ -99,15 +96,6 @@ internal class TangemPayAddFundsUMConverterTest {
 
     private fun provideTestModels() = listOf(
         BankTransferRowModel(
-            isV2Enabled = false,
-            onramp = VirtualAccountOnramp.Processing,
-            expectedIcon = Icons.ic_sign_usd_20,
-            expectedDescription = resourceReference(R.string.tangempay_topup_bank_transfer_body),
-            isClickable = true,
-            expectedAccent = TangemPayAddFundsItemUM.Accent.Info,
-        ),
-        BankTransferRowModel(
-            isV2Enabled = true,
             onramp = VirtualAccountOnramp.Eligible,
             expectedIcon = Icons.ic_government_20,
             expectedDescription = resourceReference(R.string.tangempay_topup_bank_transfer_body),
@@ -115,7 +103,6 @@ internal class TangemPayAddFundsUMConverterTest {
             expectedAccent = TangemPayAddFundsItemUM.Accent.Info,
         ),
         BankTransferRowModel(
-            isV2Enabled = true,
             onramp = VirtualAccountOnramp.Available(productInstanceId = "pi_account"),
             expectedIcon = Icons.ic_government_20,
             expectedDescription = resourceReference(R.string.tangempay_topup_bank_transfer_body),
@@ -123,7 +110,6 @@ internal class TangemPayAddFundsUMConverterTest {
             expectedAccent = TangemPayAddFundsItemUM.Accent.Info,
         ),
         BankTransferRowModel(
-            isV2Enabled = true,
             onramp = VirtualAccountOnramp.Failed,
             expectedIcon = Icons.ic_government_20,
             expectedDescription = resourceReference(R.string.tangempay_topup_bank_transfer_body),
@@ -131,7 +117,6 @@ internal class TangemPayAddFundsUMConverterTest {
             expectedAccent = TangemPayAddFundsItemUM.Accent.Info,
         ),
         BankTransferRowModel(
-            isV2Enabled = true,
             onramp = VirtualAccountOnramp.Processing,
             expectedIcon = Icons.ic_clock_20,
             expectedDescription = resourceReference(R.string.tangempay_topup_bank_transfer_pending_body),
@@ -139,7 +124,6 @@ internal class TangemPayAddFundsUMConverterTest {
             expectedAccent = TangemPayAddFundsItemUM.Accent.Warning,
         ),
         BankTransferRowModel(
-            isV2Enabled = true,
             onramp = VirtualAccountOnramp.Available(productInstanceId = "pi_account"),
             isBankTransferLoading = true,
             expectedIcon = Icons.ic_government_20,
@@ -150,7 +134,6 @@ internal class TangemPayAddFundsUMConverterTest {
     )
 
     data class BankTransferRowModel(
-        val isV2Enabled: Boolean,
         val onramp: VirtualAccountOnramp,
         val isBankTransferLoading: Boolean = false,
         val expectedIcon: ImageVector,
@@ -158,7 +141,6 @@ internal class TangemPayAddFundsUMConverterTest {
         val isClickable: Boolean,
         val expectedAccent: TangemPayAddFundsItemUM.Accent,
     ) {
-        override fun toString(): String =
-            "v2 enabled = $isV2Enabled, ${onramp::class.simpleName}, loading = $isBankTransferLoading"
+        override fun toString(): String = "${onramp::class.simpleName}, loading = $isBankTransferLoading"
     }
 }

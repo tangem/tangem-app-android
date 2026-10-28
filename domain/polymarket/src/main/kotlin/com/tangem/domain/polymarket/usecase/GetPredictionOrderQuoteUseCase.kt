@@ -1,6 +1,7 @@
 package com.tangem.domain.polymarket.usecase
 
 import arrow.core.Either
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
@@ -10,6 +11,10 @@ import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
 class GetPredictionOrderQuoteUseCase(private val polymarketRepository: PolymarketRepository) {
 
     suspend operator fun invoke(
+        userWalletId: UserWalletId,
         request: PredictionOrderQuoteRequest,
-    ): Either<PredictionOrderQuoteError, PredictionOrderQuote> = polymarketRepository.getOrderQuote(request = request)
+    ): Either<PredictionOrderQuoteError, PredictionOrderQuote> = polymarketRepository.getOrderQuote(
+        userWalletId = userWalletId,
+        request = request,
+    )
 }
