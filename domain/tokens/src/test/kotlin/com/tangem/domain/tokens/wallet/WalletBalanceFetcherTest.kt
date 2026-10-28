@@ -506,7 +506,7 @@ internal class WalletBalanceFetcherTest {
     }
 
     @Test
-    fun `GIVEN legacy staking fetch WHEN fetchStaking RETURNS LEFT THEN the same STAKING failure`() = runTest {
+    fun `GIVEN legacy staking fetch WHEN fetchStaking RETURNS LEFT THEN STAKING failure`() = runTest {
         // Arrange
         val cardTypesResolver = mockk<CardTypesResolver> {
             every { isMultiwalletAllowed() } returns true
@@ -773,7 +773,7 @@ internal class WalletBalanceFetcherTest {
             "Failed to fetch next sources for UserWalletId(011...011):\n" +
                 "NETWORK – java.lang.IllegalStateException: Error\n" +
                 "QUOTE – java.lang.IllegalStateException: Error\n" +
-                "StakingContributionFetcher – java.lang.IllegalStateException: Error",
+                "${StakingContributionFetcher::class.java.simpleName} – java.lang.IllegalStateException: Error",
         ).left()
         assertEither(actual, expected)
 
