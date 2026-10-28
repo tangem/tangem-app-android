@@ -12,6 +12,7 @@ import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.withdraw.bank.form.TangemPayBankWithdrawFormComponent
 import com.tangem.features.tangempay.withdraw.bank.form.state.TangemPayBankWithdrawFormUM
 import com.tangem.features.tangempay.withdraw.bank.form.state.TangemPayBankWithdrawFormUMFactory
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawAnalytics
 import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTarget
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -29,11 +30,13 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-    private val analytics: AnalyticsEventHandler,
+    analytics: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<Params>()
     private val form = params.form
+
+    private val withdrawAnalytics = BankWithdrawAnalytics(sourceAccount = form.sourceAccount, analytics = analytics)
 
     private val screen = when (form.step) {
         TangemPayBankWithdrawInnerRoute.BankDetails,
@@ -71,7 +74,7 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
         )
 
     init {
-        analytics.send(screenOpenedEvent())
+        withdrawAnalytics.sendPaymentAccountOnly(screenOpenedEvent())
         combine(form.draft, state, form.savedAccounts) { draft, formState, accounts ->
             umFactory.create(draft = draft, state = formState, accounts = accounts)
         }
@@ -185,7 +188,7 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
         if (errors.isNotEmpty()) {
             state.update { it.copy(errors = errors, focusedField = null) }
         } else {
-            analytics.send(continueClickedEvent())
+            withdrawAnalytics.sendPaymentAccountOnly(continueClickedEvent())
             form.onContinue(result())
             state.update { it.copy(edits = emptyMap(), displayNameEdits = emptyMap(), errors = emptyMap()) }
         }
@@ -231,7 +234,7 @@ internal class TangemPayBankWithdrawFormModel @Inject constructor(
     private fun reportFieldFilled(field: BankWithdrawFormField) {
         if (field in fieldsReportedAsFilled || currentValues()[field].orEmpty().isBlank()) return
         fieldsReportedAsFilled += field
-        analytics.send(fieldFilledEvent(field))
+        withdrawAnalytics.sendPaymentAccountOnly(fieldFilledEvent(field))
     }
 
     private fun screenOpenedEvent(): TangemPayAnalyticsEvents = when (screen) {

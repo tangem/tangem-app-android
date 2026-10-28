@@ -6,10 +6,12 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.bankofframp.BankAccountType
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
+import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.choice.TangemPayBankWithdrawChoiceComponent
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderUM
@@ -34,6 +36,8 @@ internal class TangemPayBankWithdrawChoiceModelTest {
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val draft = MutableStateFlow(BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal))
+    private val paymentAccount = BankWithdrawSourceAccount.Payment(UserWalletId("011"))
+    private val moneyAccount = BankWithdrawSourceAccount.Money(UserWalletId("011"), productInstanceId = "instance-1")
 
     @BeforeEach
     fun resetMocks() {
@@ -205,6 +209,26 @@ internal class TangemPayBankWithdrawChoiceModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN money account transfer type step WHEN option picked and continued THEN no event is sent`() {
+        // Arrange
+        val config = BankWithdrawChoices.transferType(isThirdParty = null)
+        val model = createModel(
+            config = config,
+            step = TangemPayBankWithdrawInnerRoute.TransferType,
+            sourceAccount = moneyAccount,
+        )
+        model.uiState.value.options[1].onClick()
+
+        // Act
+        model.uiState.value.onContinueClick()
+
+        // Assert
+        verify(exactly = 0) { analytics.send(any()) }
+        verify(exactly = 1) { onContinue(config.options[1].id) }
+        model.onDestroy()
+    }
+
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class ContinueClicked {
@@ -281,9 +305,11 @@ internal class TangemPayBankWithdrawChoiceModelTest {
     private fun createModel(
         config: BankWithdrawChoiceConfig,
         step: TangemPayBankWithdrawInnerRoute,
+        sourceAccount: BankWithdrawSourceAccount = paymentAccount,
     ): TangemPayBankWithdrawChoiceModel = TangemPayBankWithdrawChoiceModel(
         paramsContainer = MutableParamsContainer(
             TangemPayBankWithdrawChoiceComponent.Params(
+                sourceAccount = sourceAccount,
                 draft = draft,
                 step = step,
                 config = config,
