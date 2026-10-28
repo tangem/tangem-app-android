@@ -54,7 +54,7 @@ internal class JointOperationDisplayGateTest {
         clearMocks(verifier, compositionVerifier, refundReceiverProvider, gasTokenResolver)
         coEvery { compositionVerifier.ownerAddress(userWalletId = any(), ownerKeyIndex = any()) } returns ALICE
         coEvery { refundReceiverProvider.refundReceiver() } returns REFUND_RECEIVER
-        coEvery { gasTokenResolver.resolve(network = any(), address = any(), rawCurrencyId = any()) } returns
+        coEvery { gasTokenResolver.findUnpriced(network = any(), address = any()) } returns
             SafeGasToken.Coin.right()
         every { verifier.verify(any(), any(), any(), any(), any()) } returns Unit.right()
     }
@@ -133,14 +133,14 @@ internal class JointOperationDisplayGateTest {
     }
 
     @Test
-    fun `GIVEN the gas token cannot be priced yet WHEN isShown THEN hidden and asked again next time`() = runTest {
+    fun `GIVEN the smart gas list is unavailable WHEN isShown THEN hidden and asked again next time`() = runTest {
         // Arrange
-        coEvery { gasTokenResolver.resolve(network = any(), address = any(), rawCurrencyId = any()) } returns
-            IOException("no quote").left()
+        coEvery { gasTokenResolver.findUnpriced(network = any(), address = any()) } returns
+            IOException("offline").left()
 
         // Act
         val whileUnpriced = isShown()
-        coEvery { gasTokenResolver.resolve(network = any(), address = any(), rawCurrencyId = any()) } returns
+        coEvery { gasTokenResolver.findUnpriced(network = any(), address = any()) } returns
             SafeGasToken.Coin.right()
         val oncePriced = isShown()
 
@@ -152,7 +152,7 @@ internal class JointOperationDisplayGateTest {
     @Test
     fun `GIVEN a gas token outside smart gas WHEN isShown THEN it is hidden`() = runTest {
         // Arrange
-        coEvery { gasTokenResolver.resolve(network = any(), address = any(), rawCurrencyId = any()) } returns
+        coEvery { gasTokenResolver.findUnpriced(network = any(), address = any()) } returns
             null.right()
 
         // Act
