@@ -46,7 +46,7 @@ internal class McpSessionInfoModel @Inject constructor(
     // There is no endpoint for a single session, so it is picked out of the list the repository keeps
     private fun loadSession() {
         mcpRepository.getSessions()
-            .mapNotNull { sessions -> sessions.firstOrNull { it.id == params.sessionId } }
+            .mapNotNull { sessions -> sessions.getOrNull()?.firstOrNull { it.id == params.sessionId } }
             .onEach { session -> uiState.value = session.toUM(isRevoking = uiState.value?.isRevoking == true) }
             .launchIn(modelScope)
     }
