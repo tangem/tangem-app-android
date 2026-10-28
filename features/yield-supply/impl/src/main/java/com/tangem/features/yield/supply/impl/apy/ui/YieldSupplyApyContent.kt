@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,9 +45,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.core.ui.ds.tabs.TangemSegmentUM
-import com.tangem.core.ui.ds.tabs.TangemSegmentedPicker
-import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
+import com.tangem.core.ui.ds2.segmentedcontrol.TangemSegmentedControl
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -60,7 +59,7 @@ import com.tangem.core.ui.res.generated.icons.ic_triangle_up_12
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartIncentiveUM
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartPeriod
-import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 /** Never rendered as text: it only gives a shimmer the width a rate would take, so the row keeps its height. */
 private const val RATE_PLACEHOLDER = "0.00%"
@@ -104,11 +103,7 @@ internal fun YieldSupplyApyContent(
             ) {
                 if (incentive != null) {
                     SpacerH24()
-                    TangemSegmentedPicker(
-                        tangemSegmentedPickerUM = incentive.picker,
-                        onClick = { incentive.onPeriodSelected(it.id) },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                    PeriodPicker(incentive = incentive, modifier = Modifier.fillMaxWidth())
                 } else {
                     PlainRateDescription()
                 }
@@ -146,6 +141,21 @@ internal fun YieldSupplyApyContent(
             }
         },
     )
+}
+
+@Composable
+private fun PeriodPicker(incentive: YieldSupplyChartIncentiveUM, modifier: Modifier = Modifier) {
+    val items = remember(incentive.period, incentive.onPeriodSelected) {
+        YieldSupplyChartPeriod.entries.map { period ->
+            TangemSegmentedControl.Item(
+                id = period.name,
+                label = resourceReference(period.titleRes),
+                isSelected = period == incentive.period,
+                onClick = { incentive.onPeriodSelected(period.name) },
+            )
+        }.toImmutableList()
+    }
+    TangemSegmentedControl(items = items, modifier = modifier)
 }
 
 @Composable
@@ -413,25 +423,12 @@ private fun YieldSupplyApyContentContentPreview() {
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun YieldSupplyApyContentIncentivisedPreview() {
-    val segments = persistentListOf(
-        TangemSegmentUM(id = "Week", title = resourceReference(R.string.yield_module_incentive_chart_period_week)),
-        TangemSegmentUM(
-            id = "ThreeMonths",
-            title = resourceReference(R.string.yield_module_incentive_chart_period_three_months),
-        ),
-    )
-
     TangemThemePreview {
         YieldSupplyApyContent(
             apy = stringReference("7.3%"),
             isLoading = false,
             incentive = YieldSupplyChartIncentiveUM(
                 period = YieldSupplyChartPeriod.Week,
-                picker = TangemSegmentedPickerUM(
-                    items = segments,
-                    initialSelectedItem = segments.first(),
-                    isFixed = true,
-                ),
                 averageApy = stringReference("6.84%"),
                 onPeriodSelected = {},
             ),

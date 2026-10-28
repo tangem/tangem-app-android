@@ -11,7 +11,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedForNetwork
-import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.ProviderState
@@ -240,18 +239,6 @@ internal class StateBuilderInitialStateTest {
             )
 
             assertThat(result.providerState).isInstanceOf(ProviderState.Empty::class.java)
-        }
-
-        @Test
-        fun `WHEN called THEN priceImpact is Empty`() {
-            val result = sut.createInitialReadyState(
-                uiStateHolder = baseState,
-                emptyAmountState = emptyAmountState,
-                fromSwapCurrencyStatus = null,
-                toSwapCurrencyStatus = null,
-            )
-
-            assertThat(result.priceImpact).isEqualTo(PriceImpact.Empty)
         }
 
         @Test

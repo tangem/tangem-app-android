@@ -287,7 +287,7 @@
   </plurals>
   <string name="collectibles_account_collection_empty">No cards</string>
   <string name="collectibles_account_collection_row_subtitle">My collection</string>
-  <string name="collectibles_account_reconnect_subtitle">Reconnect Packs account</string>
+  <string name="collectibles_account_reconnect_subtitle">Reconnect required</string>
   <string name="collectibles_account_withdraw">Withdrawal</string>
   <string name="collectibles_confirm_order_approve_button">Approve</string>
   <string name="collectibles_confirm_order_confirming_transaction_button">Confirming transaction...</string>
@@ -1298,6 +1298,7 @@
   <string name="joint_account_join_title">You\'ve been invited to %1$s</string>
   <string name="joint_account_join_to_account_btn_text">Join account</string>
   <string name="joint_account_join_to_approve">To approve</string>
+  <string name="joint_account_main_cant_verify">Can\'t verify</string>
   <plurals name="joint_account_main_waiting_confirmations">
     <item quantity="one">Waiting for %d confirmation</item>
     <item quantity="other">Waiting for %d confirmations</item>

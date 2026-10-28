@@ -195,6 +195,7 @@ dependencies {
     implementation(projects.common.routing)
     implementation(projects.common.google)
     implementation(projects.core.analytics)
+    implementation(projects.core.analytics.impl)
     implementation(projects.core.analytics.models)
     implementation(projects.core.navigation)
     implementation(projects.core.abTests)

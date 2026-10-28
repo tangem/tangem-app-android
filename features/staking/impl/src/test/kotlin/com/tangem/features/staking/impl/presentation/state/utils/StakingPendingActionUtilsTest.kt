@@ -102,6 +102,42 @@ internal class StakingPendingActionUtilsTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class WithStubUnstakeActionPassedList {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN no stub unstake needed WHEN withStubUnstakeAction THEN passed actions returned`(
+            model: PassedListModel,
+        ) {
+            // Arrange
+            val activeStake = balanceState(
+                type = model.balanceType,
+                pendingActions = actions(StakingActionType.CLAIM_REWARDS, StakingActionType.RESTAKE),
+            )
+
+            // Act
+            val actual = withStubUnstakeAction(
+                networkId = model.blockchain.toNetworkId(),
+                pendingActions = actions(StakingActionType.CLAIM_REWARDS),
+                activeStake = activeStake,
+            )
+
+            // Assert
+            assertThat(actual).containsExactly(actions(StakingActionType.CLAIM_REWARDS).single())
+        }
+
+        private fun provideTestModels() = listOf(
+            PassedListModel(Blockchain.Cosmos, BalanceType.REWARDS),
+            PassedListModel(Blockchain.Cardano, BalanceType.REWARDS),
+            PassedListModel(Blockchain.BSC, BalanceType.REWARDS),
+            PassedListModel(Blockchain.Solana, BalanceType.STAKED),
+            PassedListModel(Blockchain.Polygon, BalanceType.STAKED),
+            PassedListModel(Blockchain.Polygon, BalanceType.REWARDS),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class IsTronStakedBalance {
 
         @ParameterizedTest
@@ -157,6 +193,8 @@ internal class StakingPendingActionUtilsTest {
         val types: List<StakingActionType>,
         val expected: Boolean,
     )
+
+    internal data class PassedListModel(val blockchain: Blockchain, val balanceType: BalanceType)
 
     internal data class TronStakedModel(val blockchain: Blockchain, val type: StakingActionType?, val expected: Boolean)
 

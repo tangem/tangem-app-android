@@ -38,7 +38,6 @@ import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.PaymentAccountStatusValue
-import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.account.findCardWithId
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
@@ -57,7 +56,6 @@ import com.tangem.domain.pay.usecase.ChangeCardFrozenStateUseCase
 import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.addfunds.AddFundsListener
 import com.tangem.features.tangempay.card.closure.CloseCardListener
@@ -117,7 +115,6 @@ internal class TangemPayCardPageModel @Inject constructor(
     private val settingsManager: SettingsManager,
     private val onboardingRepository: OnboardingRepository,
     private val getBankCredentialsUseCase: GetBankCredentialsUseCase,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     googleWalletControllerFactory: TangemPayAddToGoogleWalletController.Factory,
 ) : Model(), ViewPinListener, ReissueCardListener, AddFundsListener, CloseCardListener, ChooseNetworkListener {
 
@@ -704,37 +701,8 @@ internal class TangemPayCardPageModel @Inject constructor(
         )
     }
 
-    override fun onClickBankTransfer() {
-        val loaded = currentStatus.value.ifLoadedOrNull { it } ?: return
-        when (val onramp = loaded.virtualAccount) {
-            null -> return
-            VirtualAccountOnramp.Processing -> showVaPreparing()
-            is VirtualAccountOnramp.Available,
-            VirtualAccountOnramp.Eligible,
-            VirtualAccountOnramp.Failed,
-            -> openVirtualAccountDeposit(onramp, loaded)
-        }
-    }
-
     override fun onBankingDetailsLoadFailed(productInstanceId: String) {
         showVaBankingDetailsError(productInstanceId)
-    }
-
-    private fun openVirtualAccountDeposit(onramp: VirtualAccountOnramp, loaded: PaymentAccountStatusValue.Loaded) {
-        analytics.send(TangemPayAnalyticsEvents.VaTopupButtonClicked())
-        bottomSheetNavigation.dismiss()
-        val paymentAccountAddress = loaded.paymentAccountAddress
-        if (paymentAccountAddress == null) {
-            uiMessageSender.send(TangemPayMessagesFactory.createErrorMessage(TangemPayDetailsErrorType.Receive))
-            return
-        }
-        bottomSheetNavigation.activate(
-            TangemPayCardNavigation.VirtualAccountDeposit(
-                virtualAccountOnramp = onramp,
-                userWalletId = userWalletId,
-                paymentAccountAddress = paymentAccountAddress,
-            ),
-        )
     }
 
     fun showVaBankingDetailsError(productInstanceId: String) {
@@ -747,12 +715,6 @@ internal class TangemPayCardPageModel @Inject constructor(
 
     suspend fun loadBankCredentials(productInstanceId: String): Either<VisaApiError, BankCredentials> =
         getBankCredentialsUseCase(userWalletId = userWalletId, productInstanceId = productInstanceId)
-
-    private fun showVaPreparing() {
-        analytics.send(TangemPayAnalyticsEvents.VaPreparationPopupShowed())
-        bottomSheetNavigation.dismiss()
-        uiMessageSender.send(message = TangemPayMessagesFactory.createVaPreparingMessage())
-    }
 
     fun onVaBankingDetailsResolved(bankCredentials: BankCredentials) {
         // Bank credentials just loaded on retry — show the requisites straight away ([REDACTED_TASK_KEY]),
@@ -773,36 +735,9 @@ internal class TangemPayCardPageModel @Inject constructor(
         }
     }
 
-    fun onVirtualAccountOrderCreated() {
-        analytics.send(TangemPayAnalyticsEvents.VaSuccessScreenActivation())
-        bottomSheetNavigation.dismiss()
-        router.push(TangemPayCardDetailsInnerRoute.VirtualAccountDepositSuccess)
-    }
-
     fun onShowVirtualAccountRequisites(bankCredentials: BankCredentials) {
         bottomSheetNavigation.dismiss()
-        if (tangemPayFeatureToggles.isVisaOnrampV2Enabled) {
-            router.push(TangemPayAccountDetailsInnerRoute.BankTransferOnrampDetails(bankCredentials))
-            return
-        }
-        bottomSheetNavigation.activate(
-            TangemPayCardNavigation.VirtualAccountRequisites(
-                userWalletId = userWalletId,
-                bankCredentials = bankCredentials,
-            ),
-        )
-    }
-
-    fun onVaBankingDetailsShown() {
-        analytics.send(TangemPayAnalyticsEvents.VaBankingDetailsShowed())
-    }
-
-    fun onVaShareDetailsClicked() {
-        analytics.send(TangemPayAnalyticsEvents.VaShareDetailsButtonClicked())
-    }
-
-    fun onVaFieldCopied(field: String) {
-        analytics.send(TangemPayAnalyticsEvents.VaCopyFieldClicked(field))
+        router.push(TangemPayAccountDetailsInnerRoute.BankTransferOnrampDetails(bankCredentials))
     }
 
     override fun onDismissAddFunds() {

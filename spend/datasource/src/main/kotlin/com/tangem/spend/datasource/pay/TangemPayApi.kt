@@ -61,7 +61,7 @@ interface TangemPayApi {
     @GET("v1/account/bank-offramp/options")
     suspend fun getBankOfframpOptions(
         @Header("Authorization") authHeader: String,
-        @Query("product_instance_id") productInstanceId: String?,
+        @Query("account_type") accountType: String,
     ): ApiResponse<BankOfframpOptionsResponse>
 
     @POST("v1/account/bank-offramp/route")

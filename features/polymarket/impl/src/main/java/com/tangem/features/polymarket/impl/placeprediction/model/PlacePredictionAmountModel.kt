@@ -277,7 +277,7 @@ internal class PlacePredictionAmountModel @Inject constructor(
     private fun loadMarket(params: PlacePredictionComponent.Params.Buy) {
         modelScope.launch {
             val event = withContext(dispatchers.default) {
-                getPolymarketEventUseCase(eventId = params.eventId).getOrNull()
+                getPolymarketEventUseCase(userWalletId = params.userWalletId, eventId = params.eventId).getOrNull()
             } ?: return@launch
 
             val market = event.markets.firstOrNull { it.id == params.marketId } ?: return@launch
@@ -412,6 +412,7 @@ internal class PlacePredictionAmountModel @Inject constructor(
 
         val result = withContext(dispatchers.default) {
             getPredictionOrderQuoteUseCase(
+                userWalletId = params.userWalletId,
                 request = PredictionOrderQuoteRequest(
                     marketId = params.marketId,
                     assetId = tradedAssetId,

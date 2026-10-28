@@ -47,25 +47,20 @@ internal class TangemPayDetailsStateFactoryTest {
 
     private val notIssuedNetwork: PaymentNetworkStatus.NotIssued = mockk(relaxed = true)
 
-    private var isVisaOnrampV2Enabled = false
-
     private val factory = TangemPayDetailsStateFactory(
         onBack = {},
         onOpenMenu = {},
         intents = intents,
-        isVisaOnrampV2Enabled = { isVisaOnrampV2Enabled },
     )
 
     @BeforeEach
     fun resetMocks() {
         clearMocks(intents)
-        isVisaOnrampV2Enabled = false
     }
 
     @Test
-    fun `GIVEN v2 enabled and banking details being created WHEN getLoadedState THEN creating banner shown`() {
+    fun `GIVEN banking details being created WHEN getLoadedState THEN creating banner shown`() {
         // Arrange
-        isVisaOnrampV2Enabled = true
         val status = loadedStatus(virtualAccount = VirtualAccountOnramp.Processing)
 
         // Act
@@ -86,9 +81,8 @@ internal class TangemPayDetailsStateFactoryTest {
     }
 
     @Test
-    fun `GIVEN v2 enabled and banking details creation failed WHEN getLoadedState THEN closable failed banner shown`() {
+    fun `GIVEN banking details creation failed WHEN getLoadedState THEN closable failed banner shown`() {
         // Arrange
-        isVisaOnrampV2Enabled = true
         val status = loadedStatus(virtualAccount = VirtualAccountOnramp.Failed)
 
         // Act
@@ -112,11 +106,10 @@ internal class TangemPayDetailsStateFactoryTest {
 
     @ParameterizedTest
     @MethodSource("provideHiddenBankTransferOnrampBannerCases")
-    fun `GIVEN no banking details creation in v2 WHEN getLoadedState THEN creating banner hidden`(
+    fun `GIVEN no banking details creation WHEN getLoadedState THEN creating banner hidden`(
         case: HiddenBankTransferOnrampBannerCase,
     ) {
         // Arrange
-        isVisaOnrampV2Enabled = case.isV2Enabled
         val status = loadedStatus(virtualAccount = case.virtualAccount)
 
         // Act
@@ -705,19 +698,16 @@ internal class TangemPayDetailsStateFactoryTest {
         override fun toString(): String = name
     }
 
-    data class HiddenBankTransferOnrampBannerCase(val isV2Enabled: Boolean, val virtualAccount: VirtualAccountOnramp?)
+    data class HiddenBankTransferOnrampBannerCase(val virtualAccount: VirtualAccountOnramp?)
 
     private companion object {
         @JvmStatic
         fun provideHiddenBankTransferOnrampBannerCases() = listOf(
-            HiddenBankTransferOnrampBannerCase(isV2Enabled = false, virtualAccount = VirtualAccountOnramp.Processing),
-            HiddenBankTransferOnrampBannerCase(isV2Enabled = false, virtualAccount = VirtualAccountOnramp.Failed),
-            HiddenBankTransferOnrampBannerCase(isV2Enabled = true, virtualAccount = VirtualAccountOnramp.Eligible),
+            HiddenBankTransferOnrampBannerCase(virtualAccount = VirtualAccountOnramp.Eligible),
             HiddenBankTransferOnrampBannerCase(
-                isV2Enabled = true,
                 virtualAccount = VirtualAccountOnramp.Available(productInstanceId = "pi_account"),
             ),
-            HiddenBankTransferOnrampBannerCase(isV2Enabled = true, virtualAccount = null),
+            HiddenBankTransferOnrampBannerCase(virtualAccount = null),
         )
 
         @JvmStatic

@@ -8,8 +8,12 @@ import com.tangem.domain.marketing.models.MarketingBanner
 import com.tangem.domain.marketing.models.MarketingCampaignTarget
 import com.tangem.domain.marketing.models.MarketingScreenType
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class MarketingCampaignConverterTest {
 
     private val converter = MarketingCampaignConverter()
@@ -110,6 +114,118 @@ internal class MarketingCampaignConverterTest {
         // Assert
         assertThat(result.map { it.id }).containsExactly(2)
     }
+
+    @ParameterizedTest
+    @MethodSource("provideUiTypeModels")
+    fun `GIVEN known uiType WHEN convert THEN mapped to its UiType`(model: UiTypeModel) {
+        // Arrange
+        val dto = onrampCampaign(banner = ctaBanner(uiType = model.uiType))
+
+        // Act
+        val uiType = converter.convert(dto).banner.uiType
+
+        // Assert
+        assertThat(uiType).isEqualTo(model.expected)
+    }
+
+    @Test
+    fun `GIVEN pseudo_provider with all fields WHEN convert THEN banner fully mapped`() {
+        // Arrange
+        val dto = onrampCampaign(banner = ctaBanner(uiType = "pseudo_provider"))
+
+        // Act
+        val banner = converter.convert(dto).banner
+
+        // Assert
+        assertThat(banner).isEqualTo(
+            MarketingBanner(
+                uiType = MarketingBanner.UiType.PSEUDO_PROVIDER,
+                text = "Personal support manager",
+                iconUrl = null,
+                iconAlign = null,
+                bgColor = null,
+                deeplink = "tangem://support",
+                isDismissible = false,
+                categoryLabel = "Concierge for large purchases",
+                subtitle = "Pay by bank transfer",
+                etaLabel = "up to 4 hours",
+                partnerLabel = "via Partner",
+                buttonText = "Request",
+                hasGlow = true,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN unknown uiType WHEN convertListIgnoreErrors THEN only that campaign dropped`() {
+        // Arrange
+        val unknown = onrampCampaign(id = 1, banner = banner(uiType = "carousel"))
+        val valid = onrampCampaign(id = 2, banner = banner())
+
+        // Act
+        val result = converter.convertListIgnoreErrors(listOf(unknown, valid))
+
+        // Assert
+        assertThat(result.map { it.id }).containsExactly(2)
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideIncompleteCtaBanners")
+    fun `GIVEN call-to-action banner without text or buttonText WHEN convertListIgnoreErrors THEN dropped`(
+        banner: BannerDto,
+    ) {
+        // Arrange
+        val dto = onrampCampaign(banner = banner)
+
+        // Act
+        val result = converter.convertListIgnoreErrors(listOf(dto))
+
+        // Assert
+        assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN standalone without buttonText WHEN convert THEN kept`() {
+        // Arrange
+        val dto = onrampCampaign(banner = banner(uiType = "standalone").copy(buttonText = null))
+
+        // Act
+        val result = converter.convertListIgnoreErrors(listOf(dto))
+
+        // Assert
+        assertThat(result.map { it.banner.uiType }).containsExactly(MarketingBanner.UiType.STANDALONE)
+    }
+
+    private fun onrampCampaign(id: Int = 1, banner: BannerDto) =
+        CampaignDto(id = id, type = "onramp", priority = 1, banner = banner)
+
+    private fun ctaBanner(uiType: String) = BannerDto(
+        uiType = uiType,
+        text = "Personal support manager",
+        deeplink = "tangem://support",
+        isDismissible = false,
+        categoryLabel = "Concierge for large purchases",
+        subtitle = "Pay by bank transfer",
+        etaLabel = "up to 4 hours",
+        partnerLabel = "via Partner",
+        buttonText = "Request",
+        hasGlow = true,
+    )
+
+    private fun provideUiTypeModels() = listOf(
+        UiTypeModel(uiType = "standalone", expected = MarketingBanner.UiType.STANDALONE),
+        UiTypeModel(uiType = "pseudo_provider", expected = MarketingBanner.UiType.PSEUDO_PROVIDER),
+        UiTypeModel(uiType = "standalone_cta", expected = MarketingBanner.UiType.STANDALONE_CTA),
+    )
+
+    private fun provideIncompleteCtaBanners() = listOf(
+        ctaBanner(uiType = "pseudo_provider").copy(text = null),
+        ctaBanner(uiType = "pseudo_provider").copy(buttonText = " "),
+        ctaBanner(uiType = "standalone_cta").copy(text = ""),
+        ctaBanner(uiType = "standalone_cta").copy(buttonText = null),
+    )
+
+    data class UiTypeModel(val uiType: String, val expected: MarketingBanner.UiType)
 
     @Test
     fun `GIVEN unknown type WHEN convertListIgnoreErrors THEN dropped`() {

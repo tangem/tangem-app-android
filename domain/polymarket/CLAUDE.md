@@ -14,7 +14,12 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
   `maker`/`signer` of every order.
 - **`walletId`** = `UserWalletId.stringValue` (64 hex, no `0x`). A BFF correlation key only — never a
   derivation input, never sent to the bridge (the bridge gets addresses plus the builder code that
-  `GET /configuration` returns for the wallet id).
+  `GET /configuration` returns for the wallet id). Every BFF call carries it as the `wallet-id` header,
+  discovery included (the wallet of the screen), and `GET /wallet` is read by `walletId`: only that lookup
+  returns `sessionKeys`. Onboarding falls back to one `ownerAddress` read only when the `walletId` read answers
+  `NOT_CREATED` or fails (`404` included) — any other status, `DEPLOYMENT_FAILED` and `UNKNOWN` too, is kept —
+  and then answers with the owner read, its error included: a deposit wallet deployed before the BFF bound it to
+  a wallet id is found only so.
 
 ## Invariants — expensive to break
 
