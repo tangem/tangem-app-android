@@ -1,14 +1,18 @@
-package com.tangem.tap.common.analytics.handlers.amplitude
+package com.tangem.core.analytics.handlers.customerio
 
 import com.tangem.core.analytics.api.AnalyticsHandler
 import com.tangem.core.analytics.api.AnalyticsUserIdHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 
-class AmplitudeAnalyticsHandler(
-    private val client: AmplitudeAnalyticsClient,
+/**
+ * Customer.io analytics handler.
+ */
+class CustomerIoAnalyticsHandler(
+    private val client: CustomerIoAnalyticsClient,
 ) : AnalyticsHandler, AnalyticsUserIdHandler {
 
     override fun id(): String = ID
+
     override fun setUserId(userId: String) {
         client.setUserId(userId)
     }
@@ -18,10 +22,11 @@ class AmplitudeAnalyticsHandler(
     }
 
     override fun send(event: AnalyticsEvent) {
-        client.logEvent(event.id, event.params)
+        // No-op: product events are not sent to Customer.io.
+        // Triggers are configured to come from Amplitude directly.
     }
 
     companion object {
-        const val ID = "Amplitude"
+        const val ID = "CustomerIO"
     }
 }

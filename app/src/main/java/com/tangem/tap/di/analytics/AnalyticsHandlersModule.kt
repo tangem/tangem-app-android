@@ -1,17 +1,12 @@
 package com.tangem.tap.di.analytics
 
-import android.app.Application
+import com.tangem.core.analytics.AnalyticsEventsLogger
 import com.tangem.core.analytics.api.AnalyticsHandler
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.domain.common.LogConfig
-import com.tangem.tap.common.analytics.AnalyticsEventsLogger
-import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
-import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeClient
 import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerClient
 import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerLogClient
-import com.tangem.tap.common.analytics.handlers.customerio.CustomerIoAnalyticsHandler
-import com.tangem.tap.common.analytics.handlers.customerio.CustomerIoClient
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseClient
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseLogClient
@@ -30,25 +25,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal object AnalyticsHandlersModule {
-
-    @Provides
-    @Singleton
-    @IntoSet
-    fun provideAmplitudeHandler(application: Application, environmentConfig: EnvironmentConfig): AnalyticsHandler {
-        val client = if (BuildConfig.TESTER_MENU_ENABLED) {
-            AmplitudeClient(
-                application = application,
-                key = requireNotNull(environmentConfig.amplitudeApiKeyDev) {
-                    "Amplitude api key not found in ${BuildConfig.BUILD_TYPE}"
-                },
-                logger = AnalyticsEventsLogger(name = AmplitudeAnalyticsHandler.ID),
-            )
-        } else {
-            AmplitudeClient(application = application, key = environmentConfig.amplitudeApiKey, logger = null)
-        }
-
-        return AmplitudeAnalyticsHandler(client)
-    }
 
     @Provides
     @Singleton
@@ -79,19 +55,6 @@ internal object AnalyticsHandlersModule {
         }
 
         return AppsFlyerAnalyticsHandler(client)
-    }
-
-    @Provides
-    @Singleton
-    @ElementsIntoSet
-    fun provideCustomerIoHandler(
-        application: Application,
-        environmentConfig: EnvironmentConfig,
-    ): Set<AnalyticsHandler> {
-        val cdpApiKey = environmentConfig.customerIoCdpApiKey
-        if (cdpApiKey.isNullOrBlank()) return emptySet()
-
-        return setOf(CustomerIoAnalyticsHandler(CustomerIoClient(application = application, cdpApiKey = cdpApiKey)))
     }
 
     @Provides

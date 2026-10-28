@@ -1,6 +1,6 @@
 package com.tangem.tap.common.analytics.handlers.firebase
 
-import com.tangem.tap.common.analytics.AnalyticsEventsLogger
+import com.tangem.core.analytics.AnalyticsEventsLogger
 
 /**
 [REDACTED_AUTHOR]
