@@ -25,10 +25,18 @@ dependencies {
     implementation(deps.amplitude)
     implementation(deps.customerio.analytics)
     implementation(deps.customerio.messaging)
+    implementation(platform(deps.firebase.bom))
+    implementation(deps.firebase.analytics)
+    implementation(deps.firebase.crashlytics)
+    // endregion
+
+    // region AndroidX
+    implementation(deps.androidx.core)
     // endregion
 
     // region Tangem
-    implementation(tangemDeps.card.core) // for calculating user id hash
+    implementation(tangemDeps.blockchain)
+    implementation(tangemDeps.card.core)
     // endregion
 
     // region Core modules

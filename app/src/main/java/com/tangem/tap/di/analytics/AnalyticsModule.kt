@@ -1,13 +1,11 @@
 package com.tangem.tap.di.analytics
 
 import com.tangem.core.abtests.manager.ABTestsManager
-import com.tangem.core.analytics.AppInstanceIdProvider
 import com.tangem.core.analytics.api.AnalyticsUserIdHandler
 import com.tangem.core.analytics.api.ParamsInterceptorHolder
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.tap.common.analytics.ABTestsTrackingContextObserver
 import com.tangem.tap.common.analytics.DefaultTrackingContextProxy
-import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAppInstanceIdProvider
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
 import dagger.Module
 import dagger.Provides
@@ -38,8 +36,4 @@ internal object AnalyticsModule {
     @IntoSet
     fun provideABTestsTrackingContextObserver(abTestsManager: ABTestsManager): TrackingContextProxy.Observer =
         ABTestsTrackingContextObserver(abTestsManager)
-
-    @Provides
-    @Singleton
-    fun provideAppInstanceIdProvider(): AppInstanceIdProvider = FirebaseAppInstanceIdProvider()
 }
