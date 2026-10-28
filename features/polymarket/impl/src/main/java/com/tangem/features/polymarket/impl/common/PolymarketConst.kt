@@ -8,6 +8,7 @@ internal object PolymarketConst {
     val USD_CODE = AppCurrency.Default.code
     val USD_SYMBOL = AppCurrency.Default.symbol
     const val COLLATERAL_DISPLAY_DECIMALS = 2
+    val COLLATERAL_DISPLAY_STEP: BigDecimal = BigDecimal.ONE.movePointLeft(COLLATERAL_DISPLAY_DECIMALS)
     const val SHARES_DISPLAY_DECIMALS = 2
     val SHARES_DISPLAY_STEP: BigDecimal = BigDecimal.ONE.movePointLeft(SHARES_DISPLAY_DECIMALS)
 

@@ -3,12 +3,12 @@ package com.tangem.features.pushnotifications.impl.model
 import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -44,7 +44,7 @@ internal class PushNotificationsModelTest {
 
     private val neverRequestPermissionUseCase: NeverRequestPermissionUseCase = mockk(relaxed = true)
     private val neverToInitiallyAskPermissionUseCase: NeverToInitiallyAskPermissionUseCase = mockk(relaxed = true)
-    private val appRouter: AppRouter = mockk(relaxed = true)
+    private val router: Router = mockk(relaxed = true)
     private val analyticHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val notificationsRepository: NotificationsRepository = mockk(relaxed = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk(relaxed = true)
@@ -295,8 +295,8 @@ internal class PushNotificationsModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 1) { appRouter.replaceAll(routes = arrayOf(NEXT_ROUTE), onComplete = any()) }
-        verify(exactly = 0) { appRouter.push(any(), any()) }
+        verify(exactly = 1) { router.replaceAll(routes = arrayOf(NEXT_ROUTE), onComplete = any()) }
+        verify(exactly = 0) { router.push(any(), any()) }
     }
 
     @Test
@@ -311,8 +311,8 @@ internal class PushNotificationsModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 1) { appRouter.replaceAll(routes = arrayOf(NEXT_ROUTE), onComplete = any()) }
-        verify(exactly = 0) { appRouter.push(any(), any()) }
+        verify(exactly = 1) { router.replaceAll(routes = arrayOf(NEXT_ROUTE), onComplete = any()) }
+        verify(exactly = 0) { router.push(any(), any()) }
     }
 
     @Test
@@ -327,8 +327,8 @@ internal class PushNotificationsModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 1) { appRouter.replaceAll(routes = arrayOf(NEXT_ROUTE), onComplete = any()) }
-        verify(exactly = 0) { appRouter.push(any(), any()) }
+        verify(exactly = 1) { router.replaceAll(routes = arrayOf(NEXT_ROUTE), onComplete = any()) }
+        verify(exactly = 0) { router.push(any(), any()) }
     }
 
     @Test
@@ -343,8 +343,8 @@ internal class PushNotificationsModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 0) { appRouter.replaceAll(routes = anyVararg(), onComplete = any()) }
-        verify(exactly = 0) { appRouter.push(any(), any()) }
+        verify(exactly = 0) { router.replaceAll(routes = anyVararg(), onComplete = any()) }
+        verify(exactly = 0) { router.push(any(), any()) }
     }
 
     @Test
@@ -430,7 +430,7 @@ internal class PushNotificationsModelTest {
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             neverRequestPermissionUseCase = neverRequestPermissionUseCase,
             neverToInitiallyAskPermissionUseCase = neverToInitiallyAskPermissionUseCase,
-            appRouter = appRouter,
+            router = router,
             analyticHandler = analyticHandler,
             notificationsRepository = notificationsRepository,
             userWalletsListRepository = userWalletsListRepository,

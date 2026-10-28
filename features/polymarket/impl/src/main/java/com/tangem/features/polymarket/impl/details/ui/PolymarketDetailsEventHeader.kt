@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -30,6 +31,7 @@ import coil.compose.AsyncImage
 import com.tangem.core.res.R
 import com.tangem.core.ui.components.marketprice.PriceChangeInPercent
 import com.tangem.core.ui.components.marketprice.PriceChangeState
+import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -63,11 +65,14 @@ internal fun EventHeader(state: PolymarketEventDetailsUM.Content) {
 
 @Composable
 private fun MetaRow(state: PolymarketEventDetailsUM.Content) {
-    Row(
+    FlowRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        state.categoryLabel?.let { category ->
+            TangemBadge(text = category, size = TangemBadge.Size.X4)
+        }
         MetaEntry(label = stringResourceSafe(R.string.prediction_event_total_volume)) {
             MetaValue(value = state.totalVolume.resolveReference(), color = TangemTheme.colors3.text.accent.yellow)
         }

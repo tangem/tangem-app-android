@@ -65,7 +65,10 @@ internal class FeedTopBlocksComponent(
             callbacks = params.callbacks,
             blocksAnalytics = blocksAnalytics,
         ),
-        PredictionsBlockComponent(context = child(key = PredictionsBlockComponent.KEY)),
+        PredictionsBlockComponent(
+            context = child(key = PredictionsBlockComponent.KEY),
+            shtorkaExpansion = blocksAnalytics.shtorkaExpansion,
+        ),
         CollectiblesBlockComponent(
             context = child(key = CollectiblesBlockComponent.KEY),
             portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,

@@ -13,7 +13,7 @@ internal object CollectiblesReceiveConfigFactory {
         shouldShowWarning = true,
         cryptoCurrency = vault.usdcToken,
         userWalletId = userWalletId,
-        showMemoDisclaimer = false,
+        shouldShowMemoDisclaimer = false,
         receiveAddress = listOf(
             ReceiveAddressModel(displayType = ReceiveAddressModel.DisplayType.Default, value = vault.ataAddress),
         ),

@@ -8,7 +8,6 @@ import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.MarketingDeeplink
 import com.tangem.common.routing.deeplink.resolveMarketingDeeplink
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
@@ -27,6 +26,7 @@ import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
@@ -91,7 +91,6 @@ import com.tangem.domain.transaction.error.IncompleteTransactionError
 import com.tangem.domain.transaction.error.OpenTrustlineError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.*
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.usecase.*
@@ -111,7 +110,6 @@ import com.tangem.features.rating.RatingComponent
 import com.tangem.features.tokendetails.ExpressTransactionsEvent
 import com.tangem.features.tokendetails.ExpressTransactionsEventListener
 import com.tangem.features.tokendetails.TokenDetailsComponent
-import com.tangem.features.tokendetails.deeplink.ExpressDeepLinkListener
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
@@ -165,9 +163,8 @@ internal class TokenDetailsModel @Inject constructor(
     private val expressTransactionsEventListener: ExpressTransactionsEventListener,
     paramsContainer: ParamsContainer,
     getUserWalletUseCase: GetUserWalletUseCase,
-    private val appRouter: AppRouter,
-    private val router: InnerTokenDetailsRouter,
-    private val expressDeepLinkListener: ExpressDeepLinkListener,
+    private val router: Router,
+    private val tokenDetailsRouter: InnerTokenDetailsRouter,
     private val receiveAddressesFactory: ReceiveAddressesFactory,
     private val saveViewedYieldSupplyWarningUseCase: SaveViewedYieldSupplyWarningUseCase,
     private val saveViewedTokenReceiveWarningUseCase: SaveViewedTokenReceiveWarningUseCase,
@@ -192,7 +189,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
     private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase,
     private val onrampGetDefaultCurrencyUseCase: OnrampGetDefaultCurrencyUseCase,
-    private val txHistoryFeatureToggle: TxHistoryFeatureToggles,
 ) : Model(),
     TokenDetailsClickIntents,
     YieldSupplyDepositedWarningComponent.ModelCallback {
@@ -272,7 +268,7 @@ internal class TokenDetailsModel @Inject constructor(
             signCloreMessageUseCase = signCloreMessageUseCase,
             clipboardManager = clipboardManager,
             uiMessageSender = uiMessageSender,
-            router = router,
+            router = tokenDetailsRouter,
             userWallet = userWallet,
             cryptoCurrency = cryptoCurrency,
             coroutineScope = modelScope,
@@ -314,7 +310,6 @@ internal class TokenDetailsModel @Inject constructor(
         initButtons()
         updateContent()
         handleBalanceHiding()
-        checkForActionUpdates()
         handleNavigationParam()
         observeQuickTopUpBlock()
     }
@@ -565,7 +560,7 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     override fun onBackClick() {
-        router.popBackStack()
+        tokenDetailsRouter.popBackStack()
     }
 
     override fun onAddFundsClick() {
@@ -626,7 +621,7 @@ internal class TokenDetailsModel @Inject constructor(
         val status = cryptoCurrencyStatus ?: return
         warnAboutBackupErrorOrProceed {
             modelScope.launch {
-                appRouter.push(
+                router.push(
                     AppRoute.Onramp(
                         userWalletId = userWallet.walletId,
                         currency = status.currency,
@@ -647,7 +642,7 @@ internal class TokenDetailsModel @Inject constructor(
             ),
         )
         warnAboutBackupErrorOrProceed {
-            appRouter.push(
+            router.push(
                 AppRoute.Onramp(
                     source = OnrampSource.TOKEN_DETAILS,
                     userWalletId = userWalletId,
@@ -668,7 +663,7 @@ internal class TokenDetailsModel @Inject constructor(
             ),
         )
         warnAboutBackupErrorOrProceed {
-            appRouter.push(
+            router.push(
                 AppRoute.Onramp(
                     source = OnrampSource.TOKEN_DETAILS,
                     userWalletId = userWalletId,
@@ -687,12 +682,12 @@ internal class TokenDetailsModel @Inject constructor(
                 derivationIndex = getAccountIndexOrNull(),
             ),
         )
-        router.openTokenDetails(userWalletId = userWalletId, currency = cryptoCurrency)
+        tokenDetailsRouter.openTokenDetails(userWalletId = userWalletId, currency = cryptoCurrency)
     }
 
     /** Opens the given currency's Token Details on top of this screen (e.g. the refunded token from the tx details sheet). */
     fun openTokenDetails(currency: CryptoCurrency) {
-        router.openTokenDetails(userWalletId = userWalletId, currency = currency)
+        tokenDetailsRouter.openTokenDetails(userWalletId = userWalletId, currency = currency)
     }
 
     override fun onStakeBannerClick() {
@@ -768,7 +763,7 @@ internal class TokenDetailsModel @Inject constructor(
             userWalletId = userWallet.walletId,
         )
 
-        appRouter.push(route)
+        router.push(route)
     }
 
     override fun onReceiveClick(unavailabilityReason: ScenarioUnavailabilityReason) {
@@ -909,7 +904,7 @@ internal class TokenDetailsModel @Inject constructor(
             return
         }
 
-        appRouter.push(
+        router.push(
             AppRoute.SendEntryPoint(
                 userWalletId = userWalletId,
                 currency = cryptoCurrency,
@@ -942,7 +937,7 @@ internal class TokenDetailsModel @Inject constructor(
                     ),
                 )
             } else {
-                appRouter.push(swapRoute())
+                router.push(swapRoute())
             }
         }
     }
@@ -986,7 +981,7 @@ internal class TokenDetailsModel @Inject constructor(
 
             manageCryptoCurrenciesUseCase(accountId = accountId, remove = cryptoCurrency)
                 .onLeft { TangemLogger.e("Error", it) }
-                .onRight { router.popBackStack() }
+                .onRight { tokenDetailsRouter.popBackStack() }
         }
     }
 
@@ -1020,7 +1015,7 @@ internal class TokenDetailsModel @Inject constructor(
                     )
                 }
                 is NetworkAddress.Single -> {
-                    router.openUrl(
+                    tokenDetailsRouter.openUrl(
                         url = getExploreUrlUseCase(
                             userWalletId = userWalletId,
                             currency = cryptoCurrency,
@@ -1047,7 +1042,7 @@ internal class TokenDetailsModel @Inject constructor(
 
     override fun onAddressTypeSelected(addressModel: AddressModel) {
         modelScope.launch {
-            router.openUrl(
+            tokenDetailsRouter.openUrl(
                 url = getExploreUrlUseCase(
                     userWalletId = userWalletId,
                     currency = cryptoCurrency,
@@ -1064,7 +1059,7 @@ internal class TokenDetailsModel @Inject constructor(
             currency = cryptoCurrency,
         ).fold(
             ifLeft = { TangemLogger.e(it.toString()) },
-            ifRight = { router.openUrl(url = it) },
+            ifRight = { tokenDetailsRouter.openUrl(url = it) },
         )
     }
 
@@ -1335,7 +1330,7 @@ internal class TokenDetailsModel @Inject constructor(
                 .onRight { availability ->
                     val option = availability.optionOrNull
                     if (option != null) {
-                        router.openStaking(
+                        tokenDetailsRouter.openStaking(
                             userWalletId = userWalletId,
                             cryptoCurrency = cryptoCurrency,
                             integrationId = option.integrationId,
@@ -1351,13 +1346,6 @@ internal class TokenDetailsModel @Inject constructor(
     private fun showStakingUnavailable() {
         TangemLogger.e("Staking is unavailable for ${cryptoCurrency.name}")
         uiMessageSender.send(SnackbarMessage(resourceReference(R.string.staking_error_no_validators_title)))
-    }
-
-    private fun checkForActionUpdates() {
-        if (txHistoryFeatureToggle.isNewTxHistoryEnabled) return
-        expressDeepLinkListener.actionFlow
-            .onEach { txId -> expressTransactionsEventListener.send(ExpressTransactionsEvent.OpenTx(txId)) }
-            .launchIn(modelScope)
     }
 
     private suspend fun configureReceiveAddresses(
@@ -1451,7 +1439,7 @@ internal class TokenDetailsModel @Inject constructor(
             when (tokenAction) {
                 TokenAction.Receive -> navigateToReceive()
                 TokenAction.Send -> sendCurrency()
-                TokenAction.Swap -> appRouter.push(swapRoute())
+                TokenAction.Swap -> router.push(swapRoute())
                 TokenAction.Info -> Unit
             }
         }

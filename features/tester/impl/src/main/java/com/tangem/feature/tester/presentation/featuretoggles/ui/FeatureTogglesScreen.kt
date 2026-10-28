@@ -115,7 +115,7 @@ private fun LazyListScope.emptySearch(featureToggleGroups: List<FeatureToggleGro
                 text = stringResourceSafe(R.string.feature_toggles_no_feature_toggles_found),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(TangemTheme.dimens.spacing16),
+                    .padding(16.dp),
                 color = TangemTheme.colors.text.tertiary,
                 style = TangemTheme.typography.body2,
             )
@@ -131,7 +131,7 @@ private fun RestartButton(onRestartAppClick: () -> Unit, modifier: Modifier = Mo
         modifier = modifier
             .fillMaxWidth()
             .background(TangemTheme.colors.background.secondary)
-            .padding(TangemTheme.dimens.spacing16),
+            .padding(16.dp),
     )
 }
 
@@ -170,8 +170,8 @@ private fun GroupHeader(title: String) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(
-                horizontal = TangemTheme.dimens.spacing18,
-                vertical = TangemTheme.dimens.spacing8,
+                horizontal = 18.dp,
+                vertical = 8.dp,
             ),
         color = TangemTheme.colors.text.primary1,
         style = TangemTheme.typography.h3,
@@ -184,8 +184,8 @@ private fun FeatureToggleItem(toggle: TesterFeatureToggleUM, onCheckedChange: (B
         modifier = Modifier
             .fillMaxWidth()
             .padding(
-                horizontal = TangemTheme.dimens.spacing18,
-                vertical = TangemTheme.dimens.spacing8,
+                horizontal = 18.dp,
+                vertical = 8.dp,
             ),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
@@ -199,7 +199,7 @@ private fun FeatureToggleItem(toggle: TesterFeatureToggleUM, onCheckedChange: (B
                 style = TangemTheme.typography.body2,
             )
             Row(
-                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(

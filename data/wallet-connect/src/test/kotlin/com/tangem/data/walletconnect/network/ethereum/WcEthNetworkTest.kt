@@ -170,7 +170,7 @@ internal class WcEthNetworkTest {
                 namespaces = mapOf(),
                 appMetaData = emptyMetadata(),
             ),
-            showWalletInfo = false,
+            shouldShowWalletInfo = false,
         )
     }
 

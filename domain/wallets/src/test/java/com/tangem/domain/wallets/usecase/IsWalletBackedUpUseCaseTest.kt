@@ -167,7 +167,7 @@ internal class IsWalletBackedUpUseCaseTest {
         walletId = UserWalletId(id),
         hotWalletId = mockk(relaxed = true),
         wallets = null,
-        backedUp = backedUp,
+        isBackedUp = backedUp,
     )
 
     private fun coldWallet(status: CardDTO.BackupStatus?): UserWallet.Cold = mockk {

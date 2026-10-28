@@ -68,8 +68,8 @@ fun UserWalletItem(
             state = state,
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = TangemTheme.dimens.size68)
-                .padding(all = TangemTheme.dimens.spacing12)
+                .heightIn(min = 68.dp)
+                .padding(all = 12.dp)
                 .testTag(WalletSettingsScreenTestTags.USER_ACCOUNT_ITEM),
         )
     }
@@ -80,7 +80,7 @@ fun UserWalletItemRow(state: UserWalletItemUM, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CardImage(state.imageState)
         NameAndInfo(
@@ -127,7 +127,7 @@ private fun NameAndInfo(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.heightIn(min = TangemTheme.dimens.size40),
+        modifier = modifier.heightIn(min = 40.dp),
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.SpaceEvenly,
     ) {
@@ -191,8 +191,8 @@ private fun BalanceContent(balance: UserWalletItemUM.Balance, modifier: Modifier
         modifier = modifier,
         targetState = balance,
         label = "Balance content",
-    ) { balance ->
-        when (balance) {
+    ) { targetBalance ->
+        when (targetBalance) {
             UserWalletItemUM.Balance.Locked -> {
                 Icon(
                     modifier = Modifier
@@ -215,7 +215,7 @@ private fun BalanceContent(balance: UserWalletItemUM.Balance, modifier: Modifier
                         maxLines = 1,
                     )
 
-                    val (balanceValue, isFlickering) = getBalanceValueAndFlickerState(balance)
+                    val (balanceValue, isFlickering) = getBalanceValueAndFlickerState(targetBalance)
 
                     if (balanceValue == null) {
                         TextShimmer(
@@ -242,15 +242,15 @@ private fun BalanceContent(balance: UserWalletItemUM.Balance, modifier: Modifier
 @Composable
 fun CardImage(imageState: UserWalletItemUM.ImageState, modifier: Modifier = Modifier) {
     val imageModifier = modifier
-        .width(TangemTheme.dimens.size36)
-        .height(TangemTheme.dimens.size24)
+        .width(36.dp)
+        .height(24.dp)
         .clip(TangemTheme.shapes.roundedCornersSmall)
 
     when (imageState) {
         is UserWalletItemUM.ImageState.Loading -> {
             RectangleShimmer(
                 modifier = imageModifier,
-                radius = TangemTheme.dimens.size2,
+                radius = 2.dp,
             )
         }
         is UserWalletItemUM.ImageState.MobileWallet -> {
@@ -280,8 +280,8 @@ fun CardImage(imageState: UserWalletItemUM.ImageState, modifier: Modifier = Modi
                     modifier = imageModifier,
                     model = ImageRequest.Builder(LocalContext.current)
                         .size(
-                            width = with(LocalDensity.current) { TangemTheme.dimens.size36.roundToPx() },
-                            height = with(LocalDensity.current) { TangemTheme.dimens.size24.roundToPx() },
+                            width = with(LocalDensity.current) { 36.dp.roundToPx() },
+                            height = with(LocalDensity.current) { 24.dp.roundToPx() },
                         )
                         .data(imageState.artwork.defaultUrl)
                         .crossfade(enable = true)
@@ -290,7 +290,7 @@ fun CardImage(imageState: UserWalletItemUM.ImageState, modifier: Modifier = Modi
                     loading = {
                         RectangleShimmer(
                             modifier = imageModifier,
-                            radius = TangemTheme.dimens.size2,
+                            radius = 2.dp,
                         )
                     },
                     error = {

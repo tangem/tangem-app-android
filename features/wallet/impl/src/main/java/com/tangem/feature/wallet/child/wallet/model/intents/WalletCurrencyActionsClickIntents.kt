@@ -539,11 +539,11 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             ChooseAddressBottomSheetConfig(
                 currency = currency,
                 networkAddress = addresses,
-                onClick = {
+                onClick = { addressModel ->
                     onAddressTypeSelected(
                         userWalletId = userWalletId,
                         currency = currency,
-                        addressModel = it,
+                        addressModel = addressModel,
                     )
                 },
             ),
@@ -670,9 +670,9 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
     private suspend fun getSwapRoute(targetRoute: AppRoute): AppRoute {
         val maybeSwapStories = getStoryContentUseCase.invokeSync(StoryContentIds.STORY_FIRST_TIME_SWAP.id)
-        val showSwapStories = maybeSwapStories.getOrNull() != null
+        val shouldShowSwapStories = maybeSwapStories.getOrNull() != null
 
-        return if (showSwapStories) {
+        return if (shouldShowSwapStories) {
             AppRoute.Stories(
                 storyId = StoryContentIds.STORY_FIRST_TIME_SWAP.id,
                 nextScreen = targetRoute,

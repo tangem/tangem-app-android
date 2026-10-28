@@ -4,6 +4,7 @@ import android.Manifest
 import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.printToLog
+import androidx.datastore.preferences.core.MutablePreferences
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.intent.Intents
 import androidx.test.platform.app.InstrumentationRegistry
@@ -115,6 +116,7 @@ abstract class BaseTestCase : TestCase(
      */
     protected fun setupHooks(
         additionalBeforeAppLaunchSection: () -> Unit = {},
+        additionalPreferencesSection: ((MutablePreferences) -> Unit)? = null,
         additionalBeforeSection: () -> Unit = {},
         additionalAfterSection: () -> Unit = {},
     ) = before {
@@ -163,6 +165,7 @@ abstract class BaseTestCase : TestCase(
                     value = false
                 )
             }
+            additionalPreferencesSection?.let { section -> appPreferencesStore.editData { section(it) } }
         }
         apiEnvironmentRule.setup(apiConfigsManager)
         ActivityScenario.launch(MainActivity::class.java)
@@ -238,8 +241,6 @@ abstract class BaseTestCase : TestCase(
         // FeatureToggles rawNames; stale keys match nothing and are logged as ignored.
         val baseToggles = mapOf(
             "VISA_ONBOARDING_ENABLED" to true, // "undefined" on develop → forced on for tests
-            // The OTLP exporter has its own HTTP client, so it bypasses the WireMock redirect.
-            "TWI_1627_OTEL_METRICS_ENABLED" to false,
         )
         // Overrides supplied at launch time (GitHub Actions `feature_toggles` input / Allure TestOps launch
         // parameter, delivered via the `featureToggles` instrumentation arg) win over the base map. Empty

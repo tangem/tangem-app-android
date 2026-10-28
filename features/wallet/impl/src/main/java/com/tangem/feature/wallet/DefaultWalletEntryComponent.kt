@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.stack.Children
@@ -46,9 +47,10 @@ internal class DefaultWalletEntryComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         Children(
             stack = stack,
+            modifier = modifier,
             animation = stackAnimation(fade()),
         ) {
-            it.instance.Content(modifier)
+            it.instance.Content(Modifier.fillMaxSize())
         }
     }
 

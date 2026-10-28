@@ -16,6 +16,7 @@ import com.tangem.utils.transformer.Transformer
 internal class SetQuoteResultTransformer(
     private val result: Either<PredictionOrderQuoteError, PredictionOrderQuote>,
     private val receivedAtMillis: Long,
+    private val assetId: String,
 ) : Transformer<PlacePredictionUM> {
 
     override fun transform(prevState: PlacePredictionUM): PlacePredictionUM {
@@ -24,7 +25,7 @@ internal class SetQuoteResultTransformer(
         val quote = result.fold(ifLeft = ::toError, ifRight = ::toQuote)
         val updatedState = prevState.copy(
             quote = quote,
-            market = if (quote is QuoteUM.Error && prevState.order is OrderSideUM.Sell) {
+            market = if (quote.hasNoLiquidity() || quote is QuoteUM.Error && prevState.order is OrderSideUM.Sell) {
                 prevState.market.copy(isPriceUnavailable = true)
             } else {
                 prevState.market
@@ -39,6 +40,9 @@ internal class SetQuoteResultTransformer(
             updatedState.recomputeGate()
         }
     }
+
+    private fun QuoteUM.hasNoLiquidity(): Boolean =
+        this is QuoteUM.Unavailable && status == PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY
 
     private fun toError(error: PredictionOrderQuoteError): QuoteUM.Error = QuoteUM.Error(
         reason = when (error) {
@@ -63,7 +67,7 @@ internal class SetQuoteResultTransformer(
             expected = quote.expectedExecutionAmount,
             feeTotal = quote.fees.total,
             total = quote.total,
-            signable = SignableQuoteUM(quote = quote, receivedAtMillis = receivedAtMillis),
+            signable = SignableQuoteUM(quote = quote, receivedAtMillis = receivedAtMillis, assetId = assetId),
         )
     }
 }

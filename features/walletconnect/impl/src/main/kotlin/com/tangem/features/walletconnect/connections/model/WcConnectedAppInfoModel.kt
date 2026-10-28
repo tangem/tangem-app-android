@@ -67,7 +67,8 @@ internal class WcConnectedAppInfoModel @Inject constructor(
                 uiState.update { state ->
                     WcConnectedAppInfoUM(
                         appName = session.sdkModel.appMetaData.name,
-                        appIcon = session.sdkModel.appMetaData.icons.firstOrNull().orEmpty(),
+                        appIcon = session.sdkModel.appMetaData.icons
+                            .firstOrNull().orEmpty(),
                         isVerified = session.securityStatus == CheckDAppResult.SAFE,
                         verifiedDAppState = extractVerifiedState(session),
                         appSubtitle = WcAppSubtitleConverter.convert(session.sdkModel.appMetaData),
@@ -75,17 +76,17 @@ internal class WcConnectedAppInfoModel @Inject constructor(
                         connectingTime = session.connectingTime,
                         networks = session.networks
                             .distinctBy { network -> network.rawId }
-                            .map {
+                            .map { network ->
                                 WcNetworkInfoItem.Required(
-                                    id = it.rawId,
-                                    icon = it.iconResId,
-                                    name = it.name,
-                                    symbol = it.currencySymbol,
+                                    id = network.rawId,
+                                    icon = network.iconResId,
+                                    name = network.name,
+                                    symbol = network.currencySymbol,
                                 )
                             }.toImmutableList(),
                         disconnectButtonConfig = WcPrimaryButtonConfig(
-                            showProgress = false,
-                            enabled = true,
+                            shouldShowProgress = false,
+                            isEnabled = true,
                             onClick = { disconnect(session) },
                         ),
                         notification = extractNotificationInfo(session),
@@ -119,7 +120,7 @@ internal class WcConnectedAppInfoModel @Inject constructor(
     private fun disconnect(session: WcSession) {
         uiState.update { state ->
             state?.copy(
-                disconnectButtonConfig = state.disconnectButtonConfig.copy(showProgress = true),
+                disconnectButtonConfig = state.disconnectButtonConfig.copy(shouldShowProgress = true),
             )
         }
         modelScope.launch {

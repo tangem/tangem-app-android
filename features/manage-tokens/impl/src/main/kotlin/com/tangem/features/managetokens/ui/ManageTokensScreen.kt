@@ -104,11 +104,11 @@ internal fun ManageTokensScreen(state: ManageTokensUM, modifier: Modifier = Modi
                 SaveChangesButton(
                     modifier = Modifier
                         .navigationBarsPadding()
-                        .padding(horizontal = TangemTheme.dimens.spacing16)
+                        .padding(horizontal = 16.dp)
                         .fillMaxWidth(),
                     isVisible = state.hasChanges,
                     showProgress = state.isSavingInProgress,
-                    showIcon = state.needToInteractWithColdWallet,
+                    showIcon = state.shouldInteractWithColdWallet,
                     onClick = state.saveChanges,
                 )
             }
@@ -187,7 +187,7 @@ internal fun Currencies(
         modifier = modifier,
         state = listState,
         contentPadding = PaddingValues(
-            bottom = TangemTheme.dimens.spacing76 + bottomBarHeight,
+            bottom = 76.dp + bottomBarHeight,
         ),
     ) {
         items(
@@ -223,7 +223,7 @@ internal fun Currencies(
             item(key = "loading_item") {
                 ProgressIndicator(
                     modifier = Modifier
-                        .padding(vertical = TangemTheme.dimens.spacing16)
+                        .padding(vertical = 16.dp)
                         .fillMaxWidth(),
                 )
             }
@@ -338,7 +338,7 @@ private fun BasicCurrencyItem(item: CurrencyItemUM.Basic, isEditable: Boolean, m
                 Icon(
                     modifier = Modifier
                         .rotate(rotation)
-                        .size(TangemTheme.dimens.size24),
+                        .size(24.dp),
                     painter = painterResource(id = R.drawable.ic_chevron_24),
                     tint = TangemTheme.colors3.icon.tertiary,
                     contentDescription = null,
@@ -348,8 +348,8 @@ private fun BasicCurrencyItem(item: CurrencyItemUM.Basic, isEditable: Boolean, m
 
         NetworksList(
             modifier = Modifier.padding(
-                start = TangemTheme.dimens.spacing10,
-                end = TangemTheme.dimens.spacing8,
+                start = 10.dp,
+                end = 8.dp,
             ),
             networks = item.networks,
             currencyId = item.id.value,
@@ -388,7 +388,7 @@ private fun NetworksList(
                     content = {
                         BlockchainRow(
                             modifier = Modifier
-                                .padding(end = TangemTheme.dimens.spacing8)
+                                .padding(end = 8.dp)
                                 .combinedClickable(
                                     onLongClick = network.onLongClick,
                                     onClick = {},

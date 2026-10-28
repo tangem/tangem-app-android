@@ -66,7 +66,7 @@ internal fun TxHistoryDetailsInfoRows(
                 titleSlot = { TangemRowText(text = row.label, role = TangemRowTextRole.Title) },
                 valueSlot = {
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.weight(weight = 1f, fill = false),
                     ) {
@@ -91,6 +91,7 @@ internal fun TxHistoryDetailsInfoRows(
                                 textAlign = TextAlign.End,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(weight = 1f, fill = false),
                             )
                         }
                         row.trailingIconRes?.let { iconRes ->

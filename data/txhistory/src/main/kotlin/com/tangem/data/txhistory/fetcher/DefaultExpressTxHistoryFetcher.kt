@@ -9,8 +9,8 @@ import com.tangem.grow.datasource.express.models.response.ExchangeHistoryDeltaRe
 import com.tangem.grow.datasource.express.models.response.ExchangeHistoryResponse
 import com.tangem.grow.datasource.onramp.models.response.OnrampHistoryDeltaResponse
 import com.tangem.grow.datasource.onramp.models.response.OnrampHistoryResponse
-import com.tangem.store.datasource.txhistory.db.dao.ExpressSyncStateDao
-import com.tangem.store.datasource.txhistory.db.entity.express.ExpressSyncStateEntity
+import com.tangem.store.datasource.txhistory.db.dao.HistorySyncStateDao
+import com.tangem.store.datasource.txhistory.db.entity.sync.HistorySyncStateEntity
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.fetcher.ExpressTxHistoryFetcher
 import com.tangem.domain.txhistory.fetcher.TxHistoryExpressTrigger
@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
 internal class DefaultExpressTxHistoryFetcher @AssistedInject constructor(
     @Assisted override val walletId: UserWalletId,
     private val utils: TxHistoryFetcherUtils,
-    private val expressSyncStateDao: ExpressSyncStateDao,
+    private val historySyncStateDao: HistorySyncStateDao,
     private val expressHistoryRepository: DefaultExpressHistoryRepository,
 ) : ExpressTxHistoryFetcher, TxHistoryFetcherUtils by utils {
 
@@ -146,12 +146,12 @@ internal class DefaultExpressTxHistoryFetcher @AssistedInject constructor(
         }
     }
 
-    private suspend fun expressSyncState(): ExpressSyncStateEntity? = expressSyncStateDao
-        .observe(ExpressSyncStateEntity.Type.EXCHANGE.name, walletId.stringValue)
+    private suspend fun expressSyncState(): HistorySyncStateEntity? = historySyncStateDao
+        .observe(HistorySyncStateEntity.Type.EXCHANGE.name, walletId.stringValue)
         .first()
 
-    private suspend fun onrampSyncState(): ExpressSyncStateEntity? = expressSyncStateDao
-        .observe(ExpressSyncStateEntity.Type.ONRAMP.name, walletId.stringValue)
+    private suspend fun onrampSyncState(): HistorySyncStateEntity? = historySyncStateDao
+        .observe(HistorySyncStateEntity.Type.ONRAMP.name, walletId.stringValue)
         .first()
 
     @AssistedFactory

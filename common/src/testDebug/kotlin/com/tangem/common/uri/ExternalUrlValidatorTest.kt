@@ -1,8 +1,12 @@
 package com.tangem.common.uri
 
+import android.net.Uri
 import com.google.common.truth.Truth
 import com.tangem.test.core.ProvideTestModels
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.jupiter.params.ParameterizedTest
+import java.net.URI
 
 /**
 [REDACTED_AUTHOR]
@@ -11,10 +15,22 @@ class ExternalUrlValidatorTest {
 
     @ParameterizedTest
     @ProvideTestModels
-    fun test(model: Model) {
-        val actual = ExternalUrlValidator.isUriTrusted(externalUri = model.url)
+    fun isUriTrusted(model: Model) {
+        // Act
+        val actual = ExternalUrlValidator.isUriTrusted(uri = createUri(model.url))
 
+        // Assert
         Truth.assertThat(actual).isEqualTo(model.expected)
+    }
+
+    private fun createUri(url: String): Uri {
+        val uri = URI(url)
+
+        return mockk {
+            every { scheme } returns uri.scheme
+            every { userInfo } returns uri.userInfo
+            every { host } returns uri.host
+        }
     }
 
     companion object {
@@ -49,6 +65,9 @@ class ExternalUrlValidatorTest {
             // Wrong scheme
             Model(url = "http://tangem.com", expected = false),
             Model(url = "http://buy.tangem.com", expected = false),
+            // User info
+            Model(url = "https://[REDACTED_EMAIL]", expected = false),
+            Model(url = "https://[REDACTED_EMAIL]", expected = false),
             // Typos
             Model(url = "https://tange.com", expected = false),
             Model(url = "http://tandem.com", expected = false),

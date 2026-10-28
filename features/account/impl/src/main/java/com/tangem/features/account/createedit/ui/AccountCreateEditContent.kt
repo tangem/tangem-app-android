@@ -111,7 +111,7 @@ private fun AppBar(title: TextReference, onBackClick: () -> Unit) {
         text = title.resolveReference(),
         onBackClick = onBackClick,
         iconRes = R.drawable.ic_close_24,
-        modifier = Modifier.height(TangemTheme.dimens.size56),
+        modifier = Modifier.height(56.dp),
     )
 }
 

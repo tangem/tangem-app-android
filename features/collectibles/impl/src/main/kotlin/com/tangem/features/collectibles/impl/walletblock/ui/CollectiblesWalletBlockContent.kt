@@ -24,7 +24,9 @@ import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
+import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.orMaskWithStars
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -50,9 +52,11 @@ internal fun CollectiblesWalletBlockContent(
                 ),
                 contentLead = TangemRowContentLead.Start,
                 verticalAlignment = TangemRowVerticalAlignment.Center,
-                // TODO([REDACTED_TASK_KEY]): move the title to Lokalise once the collectibles keys are created
                 titleSlot = {
-                    TangemRowText(text = stringReference(value = "Packs account"), role = TangemRowTextRole.Title)
+                    TangemRowText(
+                        text = resourceReference(R.string.collectibles_main_title),
+                        role = TangemRowTextRole.Title,
+                    )
                 },
                 valueSlot = { BalanceValue(balance = state.balance, isBalanceHidden = isBalanceHidden) },
                 startSlot = {
@@ -90,7 +94,7 @@ private fun BalanceValue(balance: CollectiblesWalletBlockUM.Balance, isBalanceHi
 @Composable
 private fun collectiblesIconUM() = TangemIconUM.Currency(
     currencyIconState = CurrencyIconState.CryptoPortfolio.Icon(
-        resId = CollectiblesAccountIcon.resId,
+        imageVector = CollectiblesAccountIcon.imageVector,
         color = CollectiblesAccountIcon.color,
         isGrayscale = false,
         size = AccountIconSize.Default,

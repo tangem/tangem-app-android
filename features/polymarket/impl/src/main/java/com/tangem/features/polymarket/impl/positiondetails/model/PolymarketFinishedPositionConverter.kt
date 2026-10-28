@@ -8,6 +8,7 @@ import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.common.outcomeAccent
 import com.tangem.features.polymarket.impl.common.toBubbleVariant
+import com.tangem.features.polymarket.impl.common.toResolutionSourceUM
 import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketFinishedPositionUM
 import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketPositionDetailsUM.Summary
 import com.tangem.features.polymarket.impl.positions.model.PolymarketPositionBadgeConverter
@@ -50,6 +51,7 @@ internal class PolymarketFinishedPositionConverter(
             ),
             shouldShowOutcome = result != null,
             closureDate = stringReference(dateFormatter.format(value.closedAt)),
+            resolutionSource = value.resolutionSource.toResolutionSourceUM(),
         )
     }
 }

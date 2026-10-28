@@ -30,7 +30,7 @@ internal data class WcSendTransactionItemUM(
     val networkInfo: WcNetworkInfoUM,
     val address: String?,
     val transactionValidationResult: ValidationResult?,
-    val sendEnabled: Boolean,
+    val isSendEnabled: Boolean,
     val feeErrorNotification: NotificationUM.Info?,
     val targetNotification: NotificationUM.Error? = null,
     val isLoading: Boolean = false,

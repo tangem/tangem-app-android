@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -39,7 +40,7 @@ fun TangemDropdownItem(item: TangemDropdownMenuItem, dismissParent: () -> Unit, 
                     Modifier
                 },
             )
-            .padding(vertical = TangemTheme.dimens.spacing8, horizontal = TangemTheme.dimens.spacing16)
+            .padding(vertical = 8.dp, horizontal = 16.dp)
             .testTag(PopUpMenuTestTags.BUTTON),
         text = item.title.resolveReference(),
         style = TangemTheme.typography.button.copy(color = textColor),

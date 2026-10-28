@@ -62,13 +62,21 @@ internal class SendRecipientWalletListConverterTest {
 
         private fun provideTestModels() = listOf(
             ExcludedModel("blank address", wallet(address = ""), converter()),
-            ExcludedModel("token and not a payment account", wallet(cryptoCurrency = token), converter()),
             ExcludedModel(
                 "own address while self-send disabled",
                 wallet(address = SENDER),
                 converter(senderAddress = SENDER, isSelfSendAvailable = false),
             ),
         )
+
+        @Test
+        fun `GIVEN token row of a portfolio account WHEN convert THEN included`() {
+            // Act
+            val actual = converter().convert(listOf(wallet(cryptoCurrency = token)))
+
+            // Assert
+            assertThat(actual.map { it.address }).containsExactly("0xWalletAddress")
+        }
 
         @Test
         fun `GIVEN own address while self-send enabled WHEN convert THEN included`() {

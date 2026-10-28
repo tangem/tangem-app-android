@@ -19,7 +19,7 @@ internal class PromoEnrollmentsFactoryTest {
         walletId = UserWalletId("0b"),
         hotWalletId = mockk(),
         wallets = null,
-        backedUp = true,
+        isBackedUp = true,
     )
     private val wallets = listOf(cardWallet, mobileWallet)
     private val payout = PromoEnrollment.PromoPayoutTarget(

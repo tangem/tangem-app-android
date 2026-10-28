@@ -119,4 +119,9 @@ interface YieldSupplyRepository {
     fun getShouldShowYieldPromoBanner(): Flow<Boolean>
 
     suspend fun setShouldShowYieldPromoBanner(shouldShow: Boolean)
+
+    /** Whether the Yield Mode promo bottom sheet has been shown on this install; removing a wallet keeps it. */
+    suspend fun isYieldModePromoBottomSheetShown(): Boolean
+
+    suspend fun setYieldModePromoBottomSheetShown()
 }

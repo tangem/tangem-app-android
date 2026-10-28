@@ -4,12 +4,14 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.qrscanning.QrDeepLinkMatcher
 import com.tangem.domain.qrscanning.models.ClassifiedQrContent
 import java.net.URLDecoder
 
 internal class QrContentClassifierParser(
     private val blockchainDataProvider: BlockchainDataProvider,
     private val paymentUriParsers: Set<PaymentUriParser>,
+    private val deepLinkMatcher: QrDeepLinkMatcher,
 ) {
 
     fun parse(qrCode: String, userCurrencies: List<CryptoCurrency>): ClassifiedQrContent {
@@ -38,6 +40,10 @@ internal class QrContentClassifierParser(
             }
             is PaymentUriParser.ParseResult.RecognizedError -> return paymentUriResult.error
             is PaymentUriParser.ParseResult.NotRecognized -> Unit
+        }
+
+        if (deepLinkMatcher.isDeepLink(qrCode)) {
+            return ClassifiedQrContent.DeepLink(qrCode)
         }
 
         val matchingCoins = uniqueCoins

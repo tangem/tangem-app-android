@@ -29,7 +29,7 @@ internal class PolymarketPositionsRefreshTest : PolymarketPositionsSessionTestBa
             val session = createFactory()(wallet, tab)
             val old = position(assetId = "old")
             val removed = position(assetId = "removed")
-            fetch = { offset -> page(listOf(if (offset == 0) old else removed), last = offset == 30) }
+            fetch = { index -> page(listOf(if (index == 0) old else removed), last = index == 1) }
             session.resume(backgroundScope)
             runCurrent()
             session.loadMore()
@@ -38,7 +38,7 @@ internal class PolymarketPositionsRefreshTest : PolymarketPositionsSessionTestBa
             val response = CompletableDeferred<BatchFetchResult<List<PolymarketPosition>>>()
             val first = position(assetId = "new")
             val next = position(assetId = "next")
-            fetch = { offset -> if (offset == 0) response.await() else page(listOf(next)) }
+            fetch = { index -> if (index == 0) response.await() else page(listOf(next)) }
 
             // Act
             session.refresh()
@@ -48,7 +48,7 @@ internal class PolymarketPositionsRefreshTest : PolymarketPositionsSessionTestBa
 
             // Assert
             assertThat(session.state.value).isEqualTo(before.copy(isRefreshing = true))
-            assertThat(requests.map { it.second }).containsExactly(0, 30, 0).inOrder()
+            assertThat(requests.map { it.second }).containsExactly(0, 1, 0).inOrder()
 
             // Act
             response.complete(page(listOf(first), last = false))
@@ -60,7 +60,7 @@ internal class PolymarketPositionsRefreshTest : PolymarketPositionsSessionTestBa
             assertThat(session.state.value.positions).containsExactly(first, next).inOrder()
             assertThat(session.state.value.status).isEqualTo(PaginationStatus.EndOfPagination)
             assertThat(session.state.value.isRefreshing).isFalse()
-            assertThat(requests.map { it.second }).containsExactly(0, 30, 0, 30).inOrder()
+            assertThat(requests.map { it.second }).containsExactly(0, 1, 0, 1).inOrder()
             assertThat(requests.map { it.first.tab }.distinct()).containsExactly(tab)
         }
 
@@ -256,7 +256,7 @@ internal class PolymarketPositionsRefreshTest : PolymarketPositionsSessionTestBa
         runCurrent()
         val before = session.state.value
         val nextPage = CompletableDeferred<BatchFetchResult<List<PolymarketPosition>>>()
-        fetch = { offset -> if (offset == 0) page(last = false) else nextPage.await() }
+        fetch = { index -> if (index == 0) page(last = false) else nextPage.await() }
 
         // Act
         session.refresh()
@@ -272,7 +272,7 @@ internal class PolymarketPositionsRefreshTest : PolymarketPositionsSessionTestBa
 
         // Assert
         assertThat(session.state.value).isEqualTo(before.copy(positions = listOf(newWon)))
-        assertThat(requests.map { it.second }).containsExactly(0, 0, 30).inOrder()
+        assertThat(requests.map { it.second }).containsExactly(0, 0, 1).inOrder()
     }
 
     @Test
@@ -320,7 +320,7 @@ internal class PolymarketPositionsRefreshTest : PolymarketPositionsSessionTestBa
             runCurrent()
             val before = session.state.value
             val error = IllegalStateException("Offline")
-            fetch = { offset -> if (offset == 0) page(last = false) else BatchFetchResult.Error(error) }
+            fetch = { index -> if (index == 0) page(last = false) else BatchFetchResult.Error(error) }
 
             // Act
             session.refresh()
@@ -330,17 +330,17 @@ internal class PolymarketPositionsRefreshTest : PolymarketPositionsSessionTestBa
 
             // Assert
             assertThat(session.state.value).isEqualTo(before.copy(refreshError = error))
-            assertThat(requests.map { it.second }).containsExactly(0, 0, 30).inOrder()
+            assertThat(requests.map { it.second }).containsExactly(0, 0, 1).inOrder()
 
             // Act
             val newWon = position(assetId = "new", result = PolymarketPositionResult.WON)
-            fetch = { offset -> if (offset == 0) page(last = false) else page(listOf(newWon)) }
+            fetch = { index -> if (index == 0) page(last = false) else page(listOf(newWon)) }
             session.refresh()
             runCurrent()
 
             // Assert
             assertThat(session.state.value).isEqualTo(before.copy(positions = listOf(newWon)))
-            assertThat(requests.map { it.second }).containsExactly(0, 0, 30, 0, 30).inOrder()
+            assertThat(requests.map { it.second }).containsExactly(0, 0, 1, 0, 1).inOrder()
         }
 
     private companion object {

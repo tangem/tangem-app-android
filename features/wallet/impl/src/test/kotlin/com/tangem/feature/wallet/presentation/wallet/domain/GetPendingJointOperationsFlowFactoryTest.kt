@@ -8,6 +8,7 @@ import com.tangem.domain.jointaccount.model.JointPendingOperation
 import com.tangem.domain.jointaccount.usecase.GetPendingJointOperationsUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.clearMocks
@@ -55,7 +56,7 @@ internal class GetPendingJointOperationsFlowFactoryTest {
     fun `GIVEN joint accounts WHEN create THEN emits their pending operations`() = runTest {
         // Arrange
         val account = mockk<Account.Joint>()
-        val jointStatus = mockk<AccountStatus.Joint> { every { this@mockk.account } returns account }
+        val jointStatus = jointStatus(account = account, value = mockk<JointAccountStatusValue.Active>())
         val operations = listOf(mockk<JointPendingOperation>())
         every { singleAccountStatusListSupplier(params) } returns flowOf(accountStatusList(jointStatus))
         every { getPendingJointOperationsUseCase(WALLET_ID, listOf(account)) } returns flowOf(operations)
@@ -65,6 +66,25 @@ internal class GetPendingJointOperationsFlowFactoryTest {
 
         // Assert
         assertThat(actual).isEqualTo(operations)
+    }
+
+    @Test
+    fun `GIVEN joint account not active WHEN create THEN emits no operations without asking for them`() = runTest {
+        // Arrange
+        val jointStatus = jointStatus(account = mockk(), value = mockk<JointAccountStatusValue.Error.Compromised>())
+        every { singleAccountStatusListSupplier(params) } returns flowOf(accountStatusList(jointStatus))
+
+        // Act
+        val actual = factory.create(userWallet).first()
+
+        // Assert
+        assertThat(actual).isEmpty()
+        verify(exactly = 0) { getPendingJointOperationsUseCase(any(), any()) }
+    }
+
+    private fun jointStatus(account: Account.Joint, value: JointAccountStatusValue): AccountStatus.Joint = mockk {
+        every { this@mockk.account } returns account
+        every { this@mockk.value } returns value
     }
 
     private fun accountStatusList(vararg statuses: AccountStatus): AccountStatusList = mockk {

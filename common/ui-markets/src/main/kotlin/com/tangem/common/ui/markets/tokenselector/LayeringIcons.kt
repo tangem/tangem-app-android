@@ -10,11 +10,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.res.TangemColorPalette
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
 private const val MIN_STACKED_ICON_COUNT = 1
@@ -30,8 +30,8 @@ fun LayeringIcons(
     tangemIconUM: TangemIconUM,
     modifier: Modifier = Modifier,
     count: Int = MIN_STACKED_ICON_COUNT,
-    layerHorizontalShift: Dp = TangemTheme.dimens2.x1,
-    iconSize: Dp = TangemTheme.dimens2.x10,
+    layerHorizontalShift: Dp = 4.dp,
+    iconSize: Dp = 40.dp,
 ) {
     require(count > 0)
 

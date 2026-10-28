@@ -9,6 +9,7 @@ import com.tangem.domain.models.serialization.BigDecimalSerializer
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.features.yield.supply.api.promobottomsheet.YieldModePromoOffer
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.serialization.Serializable
 import java.math.BigDecimal
@@ -53,6 +54,9 @@ internal sealed interface WalletDialogConfig {
 
     @Serializable
     data class TangemPayWaitlist(val userWalletId: UserWalletId, val countryCode: String) : WalletDialogConfig
+
+    @Serializable
+    data class YieldModePromo(val offer: YieldModePromoOffer) : WalletDialogConfig
 
     @Serializable
     data class AddAndManage(val userWalletId: UserWalletId) : WalletDialogConfig

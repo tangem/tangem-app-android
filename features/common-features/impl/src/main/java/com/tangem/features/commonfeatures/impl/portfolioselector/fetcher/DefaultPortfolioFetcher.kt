@@ -8,6 +8,7 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
+import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher.*
@@ -25,6 +26,7 @@ internal class DefaultPortfolioFetcher @AssistedInject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val getWallets: GetWalletsUseCase,
+    private val walletsRepository: WalletsRepository,
     dispatchers: CoroutineDispatcherProvider,
     @Assisted mode: Mode,
     @Assisted private val scope: CoroutineScope,
@@ -70,11 +72,12 @@ internal class DefaultPortfolioFetcher @AssistedInject constructor(
         )
     }
 
-    private fun List<UserWallet>.filterWallets(mode: Mode): List<UserWallet> = this.filter { wallet ->
-        when (mode) {
-            is Mode.All -> if (mode.isOnlyMultiCurrency) wallet.isMultiCurrency else true
-            is Mode.Wallet -> wallet.walletId == mode.walletId
+    private suspend fun List<UserWallet>.filterWallets(mode: Mode): List<UserWallet> = when (mode) {
+        is Mode.All -> filter { wallet ->
+            (!mode.isOnlyMultiCurrency || wallet.isMultiCurrency) &&
+                (!mode.isOnlyRegistered || walletsRepository.isWalletRegistered(wallet.walletId))
         }
+        is Mode.Wallet -> filter { wallet -> wallet.walletId == mode.walletId }
     }
 
     private fun balancesForWallets(wallets: List<UserWallet>): Flow<Map<UserWalletId, PortfolioBalance>> {

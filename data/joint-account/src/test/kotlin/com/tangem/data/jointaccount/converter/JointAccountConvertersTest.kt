@@ -102,6 +102,27 @@ internal class JointAccountConvertersTest {
     }
 
     @Test
+    fun `GIVEN verified member WHEN persistence round trip THEN isVerified survives`() {
+        // Arrange
+        val original = createJointAccount(
+            members = listOf(
+                JointAccount.Member(
+                    name = "Alice",
+                    address = FIXTURE_ALICE_ADDRESS.lowercase(),
+                    role = JointAccount.Role.CREATOR,
+                    isVerified = true,
+                ),
+            ),
+        )
+
+        // Act
+        val restored = dmConverter.convertBack(value = dmConverter.convert(value = original))
+
+        // Assert
+        assertThat(restored.members.single().isVerified).isTrue()
+    }
+
+    @Test
     fun `GIVEN unknown status WHEN persistence round trip THEN stays UNKNOWN`() {
         // Arrange
         val original = createJointAccount(status = JointAccount.Status.UNKNOWN)

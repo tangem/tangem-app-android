@@ -3,9 +3,8 @@ package com.tangem.domain.collectibles.usecase
 import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.either
-import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
-import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.models.CollectibleException
 import com.tangem.domain.collectibles.models.CollectibleTurboMode
 import com.tangem.domain.collectibles.models.CollectibleTxStatus
@@ -15,13 +14,14 @@ import com.tangem.domain.collectibles.models.OpenPackStep
 import com.tangem.domain.collectibles.models.OpenedCollectiblePack
 import com.tangem.domain.collectibles.repository.CollectiblesRepository
 import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
-import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
@@ -36,8 +36,8 @@ import kotlin.time.Duration.Companion.seconds
 class OpenCollectiblePackUseCase @Inject constructor(
     private val collectiblesRepository: CollectiblesRepository,
     private val gachaVaultRepository: GachaVaultRepository,
-    private val hotDelegate: CollectiblesHotDelegate,
     private val ownerDeriver: CollectiblesOwnerDeriver,
+    private val accountStatusFetcher: CollectiblesAccountStatusFetcher,
 ) {
 
     operator fun invoke(userWallet: UserWallet, request: OpenPackRequest): Flow<OpenPackStep> = flow {
@@ -60,7 +60,11 @@ class OpenCollectiblePackUseCase @Inject constructor(
             openPack(userWallet, txId)
         }
 
-        emit(result.fold(ifLeft = { it }, ifRight = { OpenPackStep.Opened(it) }))
+        // Any outcome may have moved money; refreshed alongside, so the reveal does not wait for it
+        coroutineScope {
+            launch { accountStatusFetcher(CollectiblesAccountStatusFetcher.Params(userWallet.walletId)) }
+            emit(result.fold(ifLeft = { it }, ifRight = { OpenPackStep.Opened(it) }))
+        }
     }
 
     private suspend fun Raise<OpenPackStep.Failed>.buyPack(
@@ -69,19 +73,14 @@ class OpenCollectiblePackUseCase @Inject constructor(
         onStep: suspend (OpenPackStep) -> Unit,
     ): SentPurchase {
         onStep(OpenPackStep.Generating)
-        val delegate = hotDelegate.getPublicKeyOrNull(AccountId.forCollectiblesAccount(userWallet.walletId))
-            ?: fail(OpenPackStep.Failed.PurchaseFailed, cause = "hot delegate is not readable")
-
         val owner = ownerDeriver.storedOwner(userWallet.walletId)
             ?: fail(OpenPackStep.Failed.PurchaseFailed, cause = "owner key is not stored")
-        val vault = gachaVaultRepository.getVaultAddress(userWallet)
-            .getOrElse { fail(OpenPackStep.Failed.PurchaseFailed, cause = it) }
 
         val purchase = runSuspendCatching {
             collectiblesRepository.generatePurchaseTx(
                 userWalletId = userWallet.walletId,
                 params = GeneratePurchaseTxParams(
-                    fromAddress = vault, // TODO waiting for info from Stepan
+                    fromAddress = owner,
                     machineId = request.machineId,
                     // The vault pays, so it is the player; Day 1 delivers the prize to the owner (the card's key)
                     toAddress = owner,
@@ -101,19 +100,10 @@ class OpenCollectiblePackUseCase @Inject constructor(
 
         val txHash = gachaVaultRepository.sendPurchasePack(
             userWallet = userWallet,
-            hotDelegate = delegate,
             amount = purchase.amount,
             feeAmount = purchase.feeAmount,
             memo = purchase.memo,
-        ).getOrElse { error ->
-            // TODO tell a send that surely failed from one that may have landed, e.g. by the signature's status or the
-            //  vault balance, so a sure failure is not shown as a pack left unopened
-            val failure = when (error) {
-                is CollectiblesAccountError.DelegateSigningFailed -> OpenPackStep.Failed.PurchaseFailed
-                else -> OpenPackStep.Failed.PackUnopened(purchase.txId)
-            }
-            fail(failure, cause = error)
-        }
+        ).getOrElse { error -> fail(OpenPackStep.Failed.PurchaseFailed, cause = error) }
 
         return SentPurchase(txId = purchase.txId, txHash = txHash)
     }

@@ -49,6 +49,7 @@ import com.tangem.features.walletconnect.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -190,7 +191,11 @@ internal class WcConnectionsModel @Inject constructor(
 
     private fun disconnectAllSessions() {
         modelScope.launch {
-            wcDisconnectUseCase.disconnectAll()
+            coroutineScope {
+                if (mcpFeatureToggles.isMcpEnabled) launch { mcpRepository.revokeAllSessions() }
+                launch { wcDisconnectUseCase.disconnectAll() }
+            }
+
             uiMessageSender.send(SnackbarMessage(message = resourceReference(R.string.wc_all_dapps_disconnected)))
         }
     }

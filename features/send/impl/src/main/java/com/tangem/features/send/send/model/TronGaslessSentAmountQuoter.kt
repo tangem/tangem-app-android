@@ -7,6 +7,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.features.send.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkAndCalculateSubtractedAmount
 import com.tangem.utils.logging.TangemLogger
@@ -28,7 +29,7 @@ internal class TronGaslessSentAmountQuoter @Inject constructor(
     ): Either<GetFeeError, TransactionFeeExtended> {
         var current = fee
         repeat(MAX_REQUOTES) {
-            val quote = current.tronGaslessQuote ?: return current.right()
+            val quote = (current.gaslessProtocolData as? GaslessProtocolData.Tron)?.quote ?: return current.right()
             val sentAmount = sentAmount(
                 fee = current,
                 userWalletId = userWalletId,

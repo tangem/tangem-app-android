@@ -216,6 +216,7 @@ sealed interface TransactionItemUM {
      * @property currencySymbol  currency symbol rendered after [amount]; null when [amount] is null
      * @property subtitle        optional subtitle — the spender address for Approve, the DeFi provider for a yield
      *                           supply / withdrawal
+     * @property isSuccess       a settled pill drawn in the success colors instead of the muted ones
      */
     data class Pill(
         override val txHash: String,
@@ -227,6 +228,7 @@ sealed interface TransactionItemUM {
         val subtitle: PillSubtitle?,
         val timestamp: Long,
         val onClick: () -> Unit,
+        val isSuccess: Boolean = false,
     ) : TransactionItemUM
 
     enum class PillKind {
@@ -236,6 +238,7 @@ sealed interface TransactionItemUM {
         /** Funds moved in or out of the yield position — a settled one carries no leading icon, only its provider. */
         YIELD_SUPPLY,
         APPROVE,
+        INCENTIVE_CLAIM,
     }
 
     @Immutable

@@ -19,5 +19,6 @@ class WithdrawStoreDataConverter : Converter<TangemPayWithdrawState, WithdrawSto
             )
         },
         txHash = value.txHash,
+        createdAtMillis = value.createdAtMillis,
     )
 }

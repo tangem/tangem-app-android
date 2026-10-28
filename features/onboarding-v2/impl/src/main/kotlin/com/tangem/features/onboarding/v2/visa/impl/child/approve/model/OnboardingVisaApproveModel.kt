@@ -72,8 +72,8 @@ internal class OnboardingVisaApproveModel @Inject constructor(
         modelScope.launch {
             val dataToSign =
                 visaActivationRepository.getCustomerWalletAcceptanceData(params.preparationDataForApprove.request)
-                    .getOrElse {
-                        onError(it)
+                    .getOrElse { error ->
+                        onError(error)
                         return@launch
                     }
 
@@ -94,8 +94,8 @@ internal class OnboardingVisaApproveModel @Inject constructor(
             }
 
             visaActivationRepository.approveByCustomerWallet(resultData)
-                .onLeft {
-                    onError(it)
+                .onLeft { error ->
+                    onError(error)
                     return@launch
                 }
 
@@ -114,6 +114,6 @@ internal class OnboardingVisaApproveModel @Inject constructor(
     }
 
     private fun loading(state: Boolean) {
-        _uiState.update { it.copy(approveButtonLoading = state) }
+        _uiState.update { it.copy(isApproveButtonLoading = state) }
     }
 }

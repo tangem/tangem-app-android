@@ -11,11 +11,11 @@ internal class WcSelectNetworksCheckedTransformer(
 ) : Transformer<WcSelectNetworksUM> {
     override fun transform(prevState: WcSelectNetworksUM): WcSelectNetworksUM {
         val available = prevState.available
-            .map { item -> if (item.id == network.rawId) item.copy(checked = isChecked) else item }
-        val doneButtonEnabled = available.any { it.checked } || prevState.required.isNotEmpty()
+            .map { item -> if (item.id == network.rawId) item.copy(isChecked = isChecked) else item }
+        val isDoneButtonEnabled = available.any { it.isChecked } || prevState.required.isNotEmpty()
         return prevState.copy(
             available = available.toImmutableList(),
-            doneButtonEnabled = doneButtonEnabled,
+            isDoneButtonEnabled = isDoneButtonEnabled,
         )
     }
 }

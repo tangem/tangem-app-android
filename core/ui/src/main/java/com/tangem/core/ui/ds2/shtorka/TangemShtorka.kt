@@ -40,6 +40,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds2.DsVersion
+import com.tangem.core.ui.ds2.messagebanner.LocalMessageBannerDefaultVariant
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.res.LocalHazeState
@@ -163,7 +165,10 @@ fun TangemShtorka(
                     }
                     .hazeSourceTangem(state = contentHazeState),
             ) {
-                CompositionLocalProvider(LocalShtorkaSurfaceOpacity provides surfaceOpacity) {
+                CompositionLocalProvider(
+                    LocalShtorkaSurfaceOpacity provides surfaceOpacity,
+                    LocalMessageBannerDefaultVariant provides TangemMessageBanner.Variant.Light,
+                ) {
                     content()
                 }
             }

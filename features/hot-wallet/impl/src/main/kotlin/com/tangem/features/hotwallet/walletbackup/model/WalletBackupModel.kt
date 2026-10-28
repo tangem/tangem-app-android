@@ -116,7 +116,7 @@ internal class WalletBackupModel @Inject constructor(
                     ifRight = { userWallet ->
                         updateBackupStatuses(userWallet)
                         if (userWallet is UserWallet.Hot) {
-                            isManuallyBackedUp = userWallet.backedUp
+                            isManuallyBackedUp = userWallet.isBackedUp
                             sendScreenOpenedEventIfReady()
                         }
                     },
@@ -172,8 +172,8 @@ internal class WalletBackupModel @Inject constructor(
 
     private fun WalletBackupUM.updateBackupStatusesHotWallet(userWallet: UserWallet.Hot): WalletBackupUM {
         val updated = copy(
-            recoveryPhraseOption = if (userWallet.backedUp) doneLabel() else noBackupLabel(),
-            isBackedUp = userWallet.backedUp,
+            recoveryPhraseOption = if (userWallet.isBackedUp) doneLabel() else noBackupLabel(),
+            isBackedUp = userWallet.isBackedUp,
         )
 
         return if (hotWalletFeatureToggles.isGoogleDriveBackupEnabled) {
@@ -231,6 +231,18 @@ internal class WalletBackupModel @Inject constructor(
     private suspend fun loadCloudBackup(interactive: Boolean): Either<CloudBackupError, CloudBackupInfo?> {
         val repository = cloudBackupRepository.get()
         val walletId = params.userWalletId.stringValue
+        return if (interactive) {
+            findCloudBackup(repository, walletId, interactive = true)
+        } else {
+            repository.withAccountOf(walletId) { findCloudBackup(repository, walletId, interactive = false) }
+        }
+    }
+
+    private suspend fun findCloudBackup(
+        repository: CloudBackupRepository,
+        walletId: String,
+        interactive: Boolean,
+    ): Either<CloudBackupError, CloudBackupInfo?> {
         val wasBackedUp = repository.isBackedUp(walletId)
 
         return repository.findBackups(interactive = interactive)
@@ -244,7 +256,8 @@ internal class WalletBackupModel @Inject constructor(
             .map { backups ->
                 val info = backups.firstOrNull { it.walletId == walletId }
                 cloudBackupInfo = info
-                if (info != null && !wasBackedUp) {
+                // for an already marked wallet too, to remember the account its file was found in
+                if (info != null) {
                     setCloudBackupStateUseCase.get()(walletId, isBackedUp = true)
                 }
                 setGoogleDriveStatus(resolveFoundStatus(info, wasBackedUp))
@@ -398,6 +411,14 @@ internal class WalletBackupModel @Inject constructor(
         )
     }
 
+    private fun recreateCloudBackup() {
+        modelScope.launch {
+            // the file is missing in the wallet's account, so the new one must not silently go to the pinned one
+            cloudBackupRepository.get().signOut()
+            router.push(AppRoute.CreateCloudBackup(params.userWalletId))
+        }
+    }
+
     private fun showBackupNotFoundSheet() {
         uiMessageSender.send(
             bottomSheetMessage {
@@ -422,7 +443,7 @@ internal class WalletBackupModel @Inject constructor(
                 primaryButton {
                     text = resourceReference(R.string.hw_cloud_backup_not_found_create)
                     onClick {
-                        router.push(AppRoute.CreateCloudBackup(params.userWalletId))
+                        recreateCloudBackup()
                         closeBs()
                     }
                 }
@@ -516,7 +537,9 @@ internal class WalletBackupModel @Inject constructor(
 
     private fun deleteCloudBackup(fileId: String) {
         modelScope.launch {
-            cloudBackupRepository.get().deleteBackup(fileId).fold(
+            val repository = cloudBackupRepository.get()
+            // a non-interactive load doesn't pin the wallet's account for the screen
+            repository.withAccountOf(params.userWalletId.stringValue) { repository.deleteBackup(fileId) }.fold(
                 ifLeft = { error ->
                     TangemLogger.e("Error on deleting cloud backup: $error")
                     showCloudErrorDialog(error)

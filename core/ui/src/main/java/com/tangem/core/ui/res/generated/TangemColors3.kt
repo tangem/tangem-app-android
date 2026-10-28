@@ -188,7 +188,7 @@ class TangemColors3 internal constructor(
         inverse: Color,
         base: Color,
         disabled: Color,
-        val opaque: Opaque,
+        val transparent: Transparent,
         val status: Status,
         val accent: Accent,
         val special: Special,
@@ -209,18 +209,36 @@ class TangemColors3 internal constructor(
             private set
 
         @Stable
-        class Opaque internal constructor(
+        class Transparent internal constructor(
             primary: Color,
             secondary: Color,
+            val onMaterial: OnMaterial,
         ) {
             var primary by mutableStateOf(primary)
                 private set
             var secondary by mutableStateOf(secondary)
                 private set
 
-            fun update(other: Opaque) {
+            @Stable
+            class OnMaterial internal constructor(
+                primary: Color,
+                secondary: Color,
+            ) {
+                var primary by mutableStateOf(primary)
+                    private set
+                var secondary by mutableStateOf(secondary)
+                    private set
+
+                fun update(other: OnMaterial) {
+                    primary = other.primary
+                    secondary = other.secondary
+                }
+            }
+
+            fun update(other: Transparent) {
                 primary = other.primary
                 secondary = other.secondary
+                onMaterial.update(other.onMaterial)
             }
         }
 
@@ -267,48 +285,80 @@ class TangemColors3 internal constructor(
         @Stable
         class Accent internal constructor(
             blue: Color,
+            blueSubtle: Color,
             violet: Color,
+            violetSubtle: Color,
             red: Color,
+            redSubtle: Color,
             orange: Color,
+            orangeSubtle: Color,
             yellow: Color,
+            yellowSubtle: Color,
             green: Color,
+            greenSubtle: Color,
             neutral: Color,
+            neutralSubtle: Color,
         ) {
             var blue by mutableStateOf(blue)
                 private set
+            var blueSubtle by mutableStateOf(blueSubtle)
+                private set
             var violet by mutableStateOf(violet)
+                private set
+            var violetSubtle by mutableStateOf(violetSubtle)
                 private set
             var red by mutableStateOf(red)
                 private set
+            var redSubtle by mutableStateOf(redSubtle)
+                private set
             var orange by mutableStateOf(orange)
+                private set
+            var orangeSubtle by mutableStateOf(orangeSubtle)
                 private set
             var yellow by mutableStateOf(yellow)
                 private set
+            var yellowSubtle by mutableStateOf(yellowSubtle)
+                private set
             var green by mutableStateOf(green)
                 private set
+            var greenSubtle by mutableStateOf(greenSubtle)
+                private set
             var neutral by mutableStateOf(neutral)
+                private set
+            var neutralSubtle by mutableStateOf(neutralSubtle)
                 private set
 
             fun update(other: Accent) {
                 blue = other.blue
+                blueSubtle = other.blueSubtle
                 violet = other.violet
+                violetSubtle = other.violetSubtle
                 red = other.red
+                redSubtle = other.redSubtle
                 orange = other.orange
+                orangeSubtle = other.orangeSubtle
                 yellow = other.yellow
+                yellowSubtle = other.yellowSubtle
                 green = other.green
+                greenSubtle = other.greenSubtle
                 neutral = other.neutral
+                neutralSubtle = other.neutralSubtle
             }
         }
 
         @Stable
         class Special internal constructor(
             control: Color,
+            switch: Color,
         ) {
             var control by mutableStateOf(control)
+                private set
+            var switch by mutableStateOf(switch)
                 private set
 
             fun update(other: Special) {
                 control = other.control
+                switch = other.switch
             }
         }
 
@@ -320,7 +370,7 @@ class TangemColors3 internal constructor(
             inverse = other.inverse
             base = other.base
             disabled = other.disabled
-            opaque.update(other.opaque)
+            transparent.update(other.transparent)
             status.update(other.status)
             accent.update(other.accent)
             special.update(other.special)
@@ -509,36 +559,64 @@ class TangemColors3 internal constructor(
         @Stable
         class Accent internal constructor(
             blue: Color,
+            blueSubtle: Color,
             violet: Color,
+            violetSubtle: Color,
             red: Color,
+            redSubtle: Color,
             orange: Color,
+            orangeSubtle: Color,
             yellow: Color,
+            yellowSubtle: Color,
             green: Color,
+            greenSubtle: Color,
             neutral: Color,
+            neutralSubtle: Color,
         ) {
             var blue by mutableStateOf(blue)
                 private set
+            var blueSubtle by mutableStateOf(blueSubtle)
+                private set
             var violet by mutableStateOf(violet)
+                private set
+            var violetSubtle by mutableStateOf(violetSubtle)
                 private set
             var red by mutableStateOf(red)
                 private set
+            var redSubtle by mutableStateOf(redSubtle)
+                private set
             var orange by mutableStateOf(orange)
+                private set
+            var orangeSubtle by mutableStateOf(orangeSubtle)
                 private set
             var yellow by mutableStateOf(yellow)
                 private set
+            var yellowSubtle by mutableStateOf(yellowSubtle)
+                private set
             var green by mutableStateOf(green)
                 private set
+            var greenSubtle by mutableStateOf(greenSubtle)
+                private set
             var neutral by mutableStateOf(neutral)
+                private set
+            var neutralSubtle by mutableStateOf(neutralSubtle)
                 private set
 
             fun update(other: Accent) {
                 blue = other.blue
+                blueSubtle = other.blueSubtle
                 violet = other.violet
+                violetSubtle = other.violetSubtle
                 red = other.red
+                redSubtle = other.redSubtle
                 orange = other.orange
+                orangeSubtle = other.orangeSubtle
                 yellow = other.yellow
+                yellowSubtle = other.yellowSubtle
                 green = other.green
+                greenSubtle = other.greenSubtle
                 neutral = other.neutral
+                neutralSubtle = other.neutralSubtle
             }
         }
 
