@@ -82,7 +82,7 @@ internal fun PlacePredictionOrderContent(
                 PredictionPlaceButton(
                     order = state.order,
                     isLoading = !isIdle,
-                    isEnabled = state.isPrimaryButtonTappable,
+                    isEnabled = state.isPrimaryButtonTappable || state.isPlacementPending,
                     onClick = {
                         focusManager.clearFocus()
                         intents.onPlaceClick()

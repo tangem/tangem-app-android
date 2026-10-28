@@ -71,11 +71,12 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
   immediately. Order signs it in place and holds the engine's sources (`holdDuring`) until submission ends,
   so the NFC pause/resume cannot restart the quote loop or reload the position under the signature.
 - **Back while submitting** is swallowed: the active step implements `SubmittingStep`.
-- **Tap while quoting** (Order only, as iOS): `PlacePredictionQuoteEngine` sets `isAwaitingFreshQuote` only while
-  the first request since the amount was entered (or prefilled) is running, and clears it in a `finally` or on
-  any cancel; poll, retry and resume reloads don't count. The gate exposes `isPrimaryButtonTappable` for the
-  button. A tap then waits (`isPlacementPending`, inputs and Back locked) at most 10 s for that request and
-  places iff the regular gate passes; otherwise, or on pause or an amount change, it is dropped silently.
+- **Tap while quoting** (Order only, as iOS): `PlacePredictionQuoteEngine` keeps a fresh amount pending from
+  entry (typed or Sell prefill) until its first quote result or error, a pause, `holdDuring` or
+  `abandonFreshQuote()`; `isAwaitingFreshQuote` is that plus a request actually running. The UM's
+  `isPrimaryButtonTappable` derives from the two gate outputs. A tap waits on `awaitFreshQuote()` (true only for a
+  result of that amount) for at most 10 s: true places through `prepare()`, timeout abandons the fresh amount,
+  false drops. Pause or an amount change drops the tap; the button stays enabled with a spinner while it waits.
 - **Quote loop** runs only while Amount or Order is on top and in the foreground (bound to its resume/pause).
   The quote is never cached; a stale one (>60 s at signing) is refused before submission.
 - **Placeable** = `quote.isPlaceable` (a SELL also places on `BELOW_MIN_ORDER_SIZE`) and, for BUY only,
