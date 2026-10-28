@@ -45,7 +45,7 @@ internal class CollectibleGachaMachineNftsBatchFetcherTest {
 
         // Assert
         assertThat(actual).isInstanceOf(BatchFetchResult.Success::class.java)
-        assertThat((actual as BatchFetchResult.Success).last).isFalse()
+        assertThat((actual as BatchFetchResult.Success).isLast).isFalse()
         assertThat(requestedPages).containsExactly(1)
     }
 
@@ -58,7 +58,7 @@ internal class CollectibleGachaMachineNftsBatchFetcherTest {
         val actual = fetcher.fetchFirst(config)
 
         // Assert
-        assertThat((actual as BatchFetchResult.Success).last).isTrue()
+        assertThat((actual as BatchFetchResult.Success).isLast).isTrue()
     }
 
     @Test
@@ -70,7 +70,7 @@ internal class CollectibleGachaMachineNftsBatchFetcherTest {
         val actual = fetcher.fetchFirst(config)
 
         // Assert
-        assertThat((actual as BatchFetchResult.Success).empty).isTrue()
+        assertThat((actual as BatchFetchResult.Success).isEmpty).isTrue()
     }
 
     @Test
@@ -88,7 +88,7 @@ internal class CollectibleGachaMachineNftsBatchFetcherTest {
         val actual = fetcher.fetchNext(overrideRequestParams = null, lastResult = first)
 
         // Assert
-        assertThat((actual as BatchFetchResult.Success).last).isTrue()
+        assertThat((actual as BatchFetchResult.Success).isLast).isTrue()
         assertThat(requestedPages).containsExactly(1, 2).inOrder()
     }
 

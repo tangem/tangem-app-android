@@ -199,15 +199,15 @@ fun TangemMessage(
                 .matchParentSize()
                 .messageEffectBackground(
                     messageEffect = messageEffect,
-                    radius = TangemTheme.dimens2.x6,
+                    radius = 24.dp,
                     contentColor = contentColor,
                 ),
         )
         Column(
             horizontalAlignment = alignment,
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x3),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier
-                .padding(TangemTheme.dimens2.x3)
+                .padding(12.dp)
                 .fillMaxWidth(),
         ) {
             TangemMessageContent(
@@ -236,8 +236,8 @@ fun TangemMessage(
                 tint = TangemTheme.colors2.text.neutral.secondary,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(TangemTheme.dimens2.x3)
-                    .size(TangemTheme.dimens2.x5)
+                    .padding(12.dp)
+                    .size(20.dp)
                     .testTag(NotificationTestTags.CLOSE_BUTTON)
                     .clickableSingle(onClick = onCloseClick),
             )
@@ -264,8 +264,8 @@ private fun TangemMessageContent(
     // reserve trailing space to never run under it; trailing-content layouts are kept untouched
     val isCloseSpaceReserved = hasCloseButton && content == null
     Row(
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
-        modifier = Modifier.padding(TangemTheme.dimens2.x1),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.padding(4.dp),
     ) {
         leadingContent?.invoke(this)
         Column(
@@ -273,13 +273,13 @@ private fun TangemMessageContent(
                 .weight(1f)
                 .then(
                     if (isCloseSpaceReserved) {
-                        Modifier.padding(end = TangemTheme.dimens2.x5)
+                        Modifier.padding(end = 20.dp)
                     } else {
                         Modifier
                     },
                 ),
             horizontalAlignment = alignment,
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             if (title != null) {
                 Text(
@@ -517,8 +517,8 @@ private fun TangemMessage2_Preview() {
             trailingContent = {
                 Box(
                     modifier = Modifier
-                        .size(TangemTheme.dimens2.x7)
-                        .clip(RoundedCornerShape(TangemTheme.dimens2.x2))
+                        .size(28.dp)
+                        .clip(RoundedCornerShape(8.dp))
                         .background(TangemTheme.colors2.text.neutral.primary),
                 )
             },
@@ -544,7 +544,7 @@ private fun TangemMessage2_Preview() {
             },
             modifier = Modifier
                 .background(TangemTheme.colors2.surface.level1)
-                .padding(TangemTheme.dimens2.x1)
+                .padding(4.dp)
                 .fillMaxWidth(),
         )
     }
@@ -563,7 +563,7 @@ private fun TangemMessageLegacy_Preview(
             config = params,
             modifier = Modifier
                 .background(TangemTheme.colors2.surface.level1)
-                .padding(TangemTheme.dimens2.x1)
+                .padding(4.dp)
                 .fillMaxWidth(),
         )
     }

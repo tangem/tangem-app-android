@@ -56,8 +56,8 @@ internal class ViewPhraseModel @Inject constructor(
                 .getOrElse { error -> TangemLogger.e("Error", error); throw error }
                 .mnemonic.mnemonicComponents
 
-            uiState.update {
-                it.copy(
+            uiState.update { state ->
+                state.copy(
                     words = words.mapIndexed { index, s ->
                         EnumeratedTwoColumnGridItem(index + 1, s)
                     }.toImmutableList(),

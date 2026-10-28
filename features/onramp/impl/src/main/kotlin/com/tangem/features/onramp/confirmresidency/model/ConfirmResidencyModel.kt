@@ -35,7 +35,7 @@ internal class ConfirmResidencyModel @Inject constructor(
         ConfirmResidencyUM(
             country = params.country.name,
             countryFlagUrl = params.country.image,
-            isCountrySupported = params.country.onrampAvailable,
+            isCountrySupported = params.country.isOnrampAvailable,
             primaryButtonConfig = getPrimaryButtonConfig(params.country),
             secondaryButtonConfig = ConfirmResidencyUM.ActionButtonConfig(
                 onClick = ::onChangeClick,
@@ -48,7 +48,7 @@ internal class ConfirmResidencyModel @Inject constructor(
         analyticsEventHandler.send(OnrampAnalyticsEvent.ResidenceConfirmScreenOpened(params.country.name))
     }
 
-    private fun getPrimaryButtonConfig(country: OnrampCountry) = if (country.onrampAvailable) {
+    private fun getPrimaryButtonConfig(country: OnrampCountry) = if (country.isOnrampAvailable) {
         ConfirmResidencyUM.ActionButtonConfig(
             onClick = {
                 analyticsEventHandler.send(OnrampAnalyticsEvent.OnResidenceConfirm(country.name))

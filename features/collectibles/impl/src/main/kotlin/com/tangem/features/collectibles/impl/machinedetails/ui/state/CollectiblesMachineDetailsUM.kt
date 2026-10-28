@@ -11,12 +11,12 @@ import kotlinx.collections.immutable.ImmutableList
 @Immutable
 internal sealed interface CollectiblesMachineDetailsUM {
 
-    val onBackClick: () -> Unit
+    val onCloseClick: () -> Unit
 
-    data class Loading(override val onBackClick: () -> Unit) : CollectiblesMachineDetailsUM
+    data class Loading(override val onCloseClick: () -> Unit) : CollectiblesMachineDetailsUM
 
     data class Content(
-        override val onBackClick: () -> Unit,
+        override val onCloseClick: () -> Unit,
         val title: TextReference,
         val imageUrl: String?,
         val tiers: ImmutableList<TierUM>,
@@ -27,7 +27,7 @@ internal sealed interface CollectiblesMachineDetailsUM {
 
     /** @property isReloading a retry is in flight; the error stays with a spinner in its button */
     data class Error(
-        override val onBackClick: () -> Unit,
+        override val onCloseClick: () -> Unit,
         val message: TextReference,
         val onReloadClick: () -> Unit,
         val isReloading: Boolean = false,

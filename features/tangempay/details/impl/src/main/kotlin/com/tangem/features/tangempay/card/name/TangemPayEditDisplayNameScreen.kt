@@ -7,6 +7,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.button.TangemButton
@@ -52,14 +53,14 @@ internal fun TangemPayEditDisplayNameScreen(
         ) {
             TangemPayCard(
                 state = cardDetailsState,
-                modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x4, vertical = TangemTheme.dimens2.x2),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
         }
 
         TangemButton(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = TangemTheme.dimens2.x3, horizontal = TangemTheme.dimens2.x4)
+                .padding(vertical = 12.dp, horizontal = 16.dp)
                 .imePadding()
                 .testTag(TangemPayTestTags.CARD_RENAME_DONE_BUTTON),
             text = resourceReference(R.string.common_done),

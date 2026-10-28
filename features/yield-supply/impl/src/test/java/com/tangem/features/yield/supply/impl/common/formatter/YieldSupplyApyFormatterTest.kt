@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.util.Locale
 
@@ -48,6 +49,32 @@ internal class YieldSupplyApyFormatterTest {
         // Assert
         assertThat(actual).isEqualTo(stringReference(BigDecimalFormatConstants.EMPTY_BALANCE_SIGN))
     }
+
+    @ParameterizedTest
+    @MethodSource("provideApyValueModels")
+    fun formatApyValue(model: ApyModel) {
+        // Act
+        val actual = BigDecimal(model.raw).formatApyValue()
+
+        // Assert
+        assertThat(actual).isEqualTo(stringReference(model.expected))
+    }
+
+    @Test
+    fun `GIVEN no rate WHEN formatted without the sign THEN the shared empty sign is shown`() {
+        // Act
+        val actual = (null as BigDecimal?).formatApyValue()
+
+        // Assert
+        assertThat(actual).isEqualTo(stringReference(BigDecimalFormatConstants.EMPTY_BALANCE_SIGN))
+    }
+
+    private fun provideApyValueModels() = listOf(
+        ApyModel(raw = "9.20", expected = "9.20"),
+        ApyModel(raw = "4.4949", expected = "4.49"),
+        ApyModel(raw = "12", expected = "12.00"),
+        ApyModel(raw = "0.000001", expected = "<0.01"),
+    )
 
     private fun provideTestModels() = listOf(
         ApyModel(raw = "3.09", expected = "3.09%"),

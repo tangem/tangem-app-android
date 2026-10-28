@@ -69,7 +69,7 @@ internal fun TokenDetailsBalanceBlock(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = TangemTheme.dimens2.x10),
+            .padding(vertical = 40.dp),
     ) {
         CurrencyIcon(
             state = balanceBlockUM.currencyIconState,
@@ -78,7 +78,7 @@ internal fun TokenDetailsBalanceBlock(
             networkBadgeSize = NetworkBadgeSize,
             networkBadgeBackground = TangemTheme.colors2.surface.level2,
         )
-        SpacerH(TangemTheme.dimens2.x3)
+        SpacerH(12.dp)
         when (balanceBlockUM) {
             is TokenDetailsBalanceBlockUM.Content -> ContentBody(
                 state = balanceBlockUM,
@@ -88,7 +88,7 @@ internal fun TokenDetailsBalanceBlock(
             is TokenDetailsBalanceBlockUM.Error -> ErrorBody()
         }
         if (!balanceBlockUM.isBalanceZeroContent()) {
-            SpacerH(TangemTheme.dimens2.x10)
+            SpacerH(40.dp)
             val hapticManager = LocalHapticManager.current
             val buttons = remember(
                 balanceBlockUM.addFundsButton,
@@ -127,7 +127,7 @@ private fun ContentBody(state: TokenDetailsBalanceBlockUM.Content, isBalanceHidd
         when (val tokenBalanceTypeUM = state.tokenBalanceTypeUM) {
             is TokenBalanceTypeUM.Multiple -> Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier.clickable(onClick = tokenBalanceTypeUM.onSelect),
             ) {
                 Text(
@@ -139,7 +139,7 @@ private fun ContentBody(state: TokenDetailsBalanceBlockUM.Content, isBalanceHidd
                     imageVector = ImageVector.vectorResource(R.drawable.ic_sort_24),
                     contentDescription = null,
                     tint = TangemTheme.colors2.graphic.neutral.secondary,
-                    modifier = Modifier.size(TangemTheme.dimens2.x5),
+                    modifier = Modifier.size(20.dp),
                 )
             }
             TokenBalanceTypeUM.Single -> Text(
@@ -149,7 +149,7 @@ private fun ContentBody(state: TokenDetailsBalanceBlockUM.Content, isBalanceHidd
             )
         }
     }
-    SpacerH(TangemTheme.dimens2.x2)
+    SpacerH(8.dp)
     AnimatedBalance(
         modifier = Modifier.testTag(TokenDetailsScreenTestTags.BALANCE_FIAT),
         yieldBalance = state.displayYieldSupplyFiatBalance,
@@ -158,7 +158,7 @@ private fun ContentBody(state: TokenDetailsBalanceBlockUM.Content, isBalanceHidd
         color = TangemTheme.colors2.text.neutral.primary,
         isBalanceHidden = isBalanceHidden,
     )
-    SpacerH(TangemTheme.dimens2.x2_5)
+    SpacerH(10.dp)
     AnimatedBalance(
         yieldBalance = state.displayYieldSupplyCryptoBalance,
         fallbackBalance = state.displayCryptoBalance,
@@ -184,7 +184,7 @@ private fun AnimatedBalance(
     BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = TangemTheme.dimens2.x6),
+            .padding(horizontal = 24.dp),
         contentAlignment = Alignment.Center,
     ) {
         if (yieldBalance != null && !isBalanceHidden) {
@@ -261,17 +261,17 @@ private fun LoadingBody() {
         style = TangemTheme.typography2.calloutSemibold15,
         color = TangemTheme.colors2.text.neutral.secondary,
     )
-    SpacerH(TangemTheme.dimens2.x2)
+    SpacerH(8.dp)
     TextShimmer(
         style = TangemTheme.typography2.titleRegular44,
         text = "$1234567890",
-        radius = TangemTheme.dimens2.x6,
+        radius = 24.dp,
     )
-    SpacerH(TangemTheme.dimens2.x2)
+    SpacerH(8.dp)
     TextShimmer(
         style = TangemTheme.typography2.bodySemibold16,
         text = "12345.67",
-        radius = TangemTheme.dimens2.x4,
+        radius = 16.dp,
     )
 }
 
@@ -282,7 +282,7 @@ private fun ErrorBody() {
         style = TangemTheme.typography2.titleRegular44,
         color = TangemTheme.colors2.text.neutral.primary,
     )
-    SpacerH(TangemTheme.dimens2.x2_5)
+    SpacerH(10.dp)
     Text(
         text = "—",
         style = TangemTheme.typography2.bodySemibold16,

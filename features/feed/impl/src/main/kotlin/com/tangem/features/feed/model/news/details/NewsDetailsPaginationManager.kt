@@ -87,7 +87,7 @@ internal class NewsDetailsPaginationManager(
 
                 is PaginationStatus.Paginating -> {
                     val lastResult = status.lastResult
-                    val canLoadMore = lastResult is BatchFetchResult.Success && !lastResult.last
+                    val canLoadMore = lastResult is BatchFetchResult.Success && !lastResult.isLast
 
                     if (canLoadMore) {
                         loadMore()

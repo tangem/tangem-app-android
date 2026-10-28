@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.polymarket.model.PolymarketActivity
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketActivityRowUM
 import com.tangem.features.polymarket.impl.history.ui.state.PolymarketActivitySubtitleUM
@@ -97,6 +98,25 @@ internal class PolymarketActivityUMConverterTest {
         // Assert
         assertThat(actual.amount).isEqualTo(stringReference("- $10.00"))
         assertThat(actual.subtitle).isEqualTo(PolymarketActivitySubtitleUM.Plain(stringReference("0xtransaction")))
+    }
+
+    @Test
+    fun `GIVEN a won redemption and buy WHEN converting THEN describes the win and makes both clickable`() {
+        // Arrange
+        val won = historyTrade(PolymarketActivity.Type.REDEEM).copy(redeemResult = PolymarketActivity.RedeemResult.WON)
+        val deposit = createHistoryActivity(id = "buy", type = PolymarketActivity.Type.BUY)
+
+        // Act
+        val rows = PolymarketActivityUMConverter(clock).convert(listOf(won, deposit)) {}.single().activities
+
+        // Assert
+        assertThat(rows.first().subtitle).isEqualTo(
+            PolymarketActivitySubtitleUM.Plain(
+                resourceReference(R.string.prediction_history_won_description, wrappedList(won.marketTitle)),
+            ),
+        )
+        assertThat(rows.first().onClick).isNotNull()
+        assertThat(rows.last().onClick).isNotNull()
     }
 }
 

@@ -11,6 +11,7 @@ internal fun StateUpdater<TangemButtonStory>.build(): TangemButtonStory {
         size = TangemButton.Size.X10,
         background = TangemButtonStory.Background.Rainbow,
         isLoading = false,
+        hasLoadingText = false,
         isEnabled = true,
         hasIconStart = false,
         hasIconEnd = false,
@@ -28,6 +29,9 @@ internal fun StateUpdater<TangemButtonStory>.build(): TangemButtonStory {
         },
         onLoadingToggle = {
             updateStory { it.copy(isLoading = !it.isLoading) }
+        },
+        onLoadingTextToggle = {
+            updateStory { it.copy(hasLoadingText = !it.hasLoadingText) }
         },
         onEnabledToggle = {
             updateStory { it.copy(isEnabled = !it.isEnabled) }

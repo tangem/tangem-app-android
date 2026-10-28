@@ -1,6 +1,7 @@
 package com.tangem.domain.mcp.repository
 
 import arrow.core.Either
+import com.tangem.domain.mcp.models.McpAgent
 import com.tangem.domain.mcp.models.McpDeviceVerification
 import com.tangem.domain.mcp.models.McpDeviceVerificationResult
 import com.tangem.domain.mcp.models.McpSession
@@ -15,6 +16,14 @@ import kotlinx.coroutines.flow.Flow
  * that follows it have to be made from the same device.
  */
 interface McpRepository {
+
+    /**
+     * Returns the agent behind [clientId], for the sheets that tell the owner who is asking for something.
+     *
+     * Never fails: an agent that cannot be looked up (unknown client, no network, rate limit) comes back as
+     * [McpAgent.unknown], because not knowing who asks must not block the owner from the request itself.
+     */
+    suspend fun getAgent(clientId: String): McpAgent
 
     /** Returns who is asking for access behind [userCode], so the owner can decide on it. */
     suspend fun getDeviceVerification(userCode: String): Either<Throwable, McpDeviceVerification>
@@ -40,6 +49,20 @@ interface McpRepository {
      */
     fun getSessions(): Flow<List<McpSession>>
 
-    /** Revokes [sessionId], cutting off the client's access and refresh tokens. */
+    /**
+     * Revokes [sessionId], cutting off the client's access and refresh tokens.
+     *
+     * A session the service no longer knows is a success, not a failure: the authorization is gone
+     * either way, and the caller has nothing left to tell the owner about.
+     */
     suspend fun revokeSession(sessionId: String): Either<Throwable, Unit>
+
+    /**
+     * Revokes every authorization currently issued, across all wallets — the agent half of the
+     * screen's Disconnect All, which cuts off every dApp the same way.
+     *
+     * The service has no bulk endpoint, so this is the single-session revoke sent for each of them at
+     * once. A session that fails to be revoked stays, and comes back with the reloaded list.
+     */
+    suspend fun revokeAllSessions()
 }

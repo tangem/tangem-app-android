@@ -3,10 +3,6 @@ package com.tangem.domain.polymarket.model
 /** Progress of an onboarding run: every value is a decision already taken, not a status to interpret. */
 sealed interface PolymarketOnboardingProgress {
 
-    /** Deriving the owner address; may require a card session. */
-    data object Deriving : PolymarketOnboardingProgress
-
-    /** Both onboarding payloads are being signed in one card session. */
     data object AwaitingSignature : PolymarketOnboardingProgress
 
     /** The backend is executing [status]. */
@@ -14,7 +10,8 @@ sealed interface PolymarketOnboardingProgress {
 
     /**
      * Terminal: the wallet is onboarded and the credentials are stored.
-     * [isNewAccount] is false when the backend already reported READY_TO_TRADE at the start of this run.
+     * [isNewAccount] is false when the backend already reported READY_TO_TRADE at the start of this run, or when
+     * the wallet had been confirmed onboarded before it (a re-approval after the backend demoted it).
      */
     data class Ready(val isNewAccount: Boolean) : PolymarketOnboardingProgress
 

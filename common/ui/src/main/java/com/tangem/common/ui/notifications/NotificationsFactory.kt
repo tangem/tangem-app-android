@@ -127,8 +127,8 @@ object NotificationsFactory {
         val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
         if (!isSubtractionAvailable) return
 
-        val showNotification = sendingAmount + feeAmount > balance - minimumRequirement.orZero()
-        if (showNotification) {
+        val shouldShowNotification = sendingAmount + feeAmount > balance - minimumRequirement.orZero()
+        if (shouldShowNotification) {
             add(NotificationUM.Error.TotalExceedsBalance)
         }
     }

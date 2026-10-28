@@ -48,7 +48,20 @@ data class MachineDTO(
     val createdAt: String,
     @SerialName("updatedAt")
     val updatedAt: String,
+    @SerialName("openPackMedia")
+    val openPackMedia: OpenPackMediaDTO? = null,
 ) {
+    /** Media of the pack opening: the reveal video per theme and the sound played over a skip. */
+    @Serializable
+    data class OpenPackMediaDTO(
+        @SerialName("videoLight")
+        val videoLight: String,
+        @SerialName("videoDark")
+        val videoDark: String,
+        @SerialName("skipAnimationAudio")
+        val skipAnimationAudio: String,
+    )
+
     /** Remaining card count per rarity tier. */
     @Serializable
     data class MachineStockDTO(

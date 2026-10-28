@@ -23,9 +23,12 @@ import com.tangem.data.sociallogin.toDomainError
 import com.tangem.google.auth.GoogleAuthError
 import com.tangem.google.drive.DriveFile
 import com.tangem.google.drive.DriveFileMetadata
+import com.tangem.google.drive.GoogleDriveAccount
 import com.tangem.google.drive.GoogleDriveApi
 import com.tangem.google.drive.GoogleDriveTokenProvider
+import com.tangem.google.drive.store.DriveAccountStore
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import dagger.Lazy
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -56,6 +59,7 @@ import kotlinx.serialization.json.decodeFromStream
 internal class DefaultSocialBackupRepository(
     private val api: GoogleDriveApi,
     private val tokenProvider: GoogleDriveTokenProvider,
+    private val accountStore: DriveAccountStore,
     // the wallets list reaches this repository through IsWalletBackedUpUseCase
     private val userWalletsListRepository: Lazy<UserWalletsListRepository>,
     private val cipher: SocialBackupCipher,
@@ -76,6 +80,9 @@ internal class DefaultSocialBackupRepository(
                 createdAtMillis = createdAtMillis,
             )
         } ?: return@withContext Either.Left(SocialLoginError.BackupWriteFailed())
+
+        // before the write too: an aborted write may still leave a file that the cleanup has to find
+        rememberAccount(walletId)
 
         withAuthRetry { authInteractive ->
             val auth = authHeader(interactive = authInteractive)
@@ -98,7 +105,7 @@ internal class DefaultSocialBackupRepository(
             }
 
             existingFiles.forEach { file -> deleteQuietly(auth, file.id) }
-        }
+        }.onRight { rememberAccount(walletId) }
     }
 
     override suspend fun getBackupInfo(): Either<SocialLoginError, SocialBackupInfo> = withContext(dispatchers.io) {
@@ -127,7 +134,7 @@ internal class DefaultSocialBackupRepository(
                     ),
                     secret = parseSecret(payloadBytes),
                 )
-            }
+            }.onRight { rememberAccount(it.info.walletId) }
         }
 
     /**
@@ -136,8 +143,8 @@ internal class DefaultSocialBackupRepository(
      * behind would keep the wallet restorable after it was reported unbound. Files of other wallets
      * are left alone.
      */
-    override suspend fun deleteBackup(walletId: UserWalletId): Either<SocialLoginError, Unit> =
-        withContext(dispatchers.io) {
+    override suspend fun deleteBackup(walletId: UserWalletId): Either<SocialLoginError, Boolean> =
+        withContext(dispatchers.io + GoogleDriveAccount(accountStore.getAccountName(walletId.stringValue))) {
             withAuthRetry(interactive = false) { authInteractive ->
                 val auth = authHeader(interactive = authInteractive)
                 val owned = listBackupFiles(auth).filter { file ->
@@ -145,7 +152,7 @@ internal class DefaultSocialBackupRepository(
                     data != null && cipher.validateHeader(data).isRight() && data.walletId == walletId.stringValue
                 }
 
-                owned.forEach { file ->
+                val deletedCount = owned.count { file ->
                     val response = catchingIo(onError = { SocialLoginError.BackupWriteFailed(it) }) {
                         api.deleteFile(authorization = auth, fileId = file.id)
                     }
@@ -158,9 +165,22 @@ internal class DefaultSocialBackupRepository(
                             ),
                         )
                     }
+                    response.isSuccessful
                 }
+
+                deletedCount > 0
             }
+                .onLeft { TangemLogger.e("Failed to delete the social backup: $it") }
+                .onRight { isDeleted ->
+                    if (!isDeleted) TangemLogger.i("No social backup of the wallet to delete in the cloud")
+                    accountStore.setAccountName(walletId.stringValue, accountName = null)
+                }
         }
+
+    private suspend fun rememberAccount(walletId: UserWalletId) {
+        val accountName = tokenProvider.currentAccountName() ?: return
+        accountStore.setAccountName(walletId.stringValue, accountName)
+    }
 
     override suspend fun isSocialBackupCompleted(walletId: UserWalletId): Boolean =
         isSocialBackupCompletedFlow(walletId).first()
@@ -347,7 +367,9 @@ internal class DefaultSocialBackupRepository(
             HttpURLConnection.HTTP_UNAUTHORIZED,
             HttpURLConnection.HTTP_FORBIDDEN,
             -> {
-                tokenProvider.invalidate()
+                // The account stays pinned: a re-authorization under another one would write this
+                // wallet's backup into a folder its sign-in account never reads.
+                tokenProvider.invalidateToken()
                 SocialLoginError.CloudUnavailable
             }
             HttpURLConnection.HTTP_NOT_FOUND -> notFoundError ?: errorHandler(null)

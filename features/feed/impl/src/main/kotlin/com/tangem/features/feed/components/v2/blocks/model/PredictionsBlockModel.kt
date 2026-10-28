@@ -23,11 +23,15 @@ internal class PredictionsBlockModel @Inject constructor(
         field = MutableStateFlow(false)
 
     init {
-        if (featureToggles.isPolymarketEnabled) {
-            modelScope.launch {
-                val variant = abTestsManager.getValue(key = EXPERIMENT_KEY, defaultValue = OFF_VARIANT)
-                isVisible.value = variant == ON_VARIANT
-            }
+        refreshVisibility()
+    }
+
+    fun refreshVisibility() {
+        if (!featureToggles.isPolymarketEnabled) return
+
+        modelScope.launch {
+            val variant = abTestsManager.getValue(key = EXPERIMENT_KEY, defaultValue = OFF_VARIANT)
+            isVisible.value = variant == ON_VARIANT
         }
     }
 

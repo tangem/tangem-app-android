@@ -16,6 +16,15 @@ sealed class TangemPayAnalyticsEvents(
         event = "Visa Activation Screen Opened",
     ), AppsFlyerIncludedEvent
 
+    class ShortForHwActivationScreenOpened : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Visa Short For HW Activation Screen Opened",
+        params = mapOf(
+            AnalyticsParam.PRODUCT_TYPE to AnalyticsParam.ProductType.MobileWallet.value,
+            AnalyticsParam.CURRENCY to AnalyticsParam.WalletType.MultiCurrency.value,
+        ),
+    ), AppsFlyerIncludedEvent
+
     class ViewTermsClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Button - Visa View Terms",

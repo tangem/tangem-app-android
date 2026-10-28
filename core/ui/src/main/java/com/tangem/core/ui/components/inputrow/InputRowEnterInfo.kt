@@ -13,6 +13,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.inputrow.inner.DividerContainer
 import com.tangem.core.ui.components.fields.SimpleTextField
 import com.tangem.core.ui.extensions.TextReference
@@ -58,7 +59,7 @@ fun InputRowEnterInfo(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(TangemTheme.dimens.spacing12),
+                .padding(12.dp),
         ) {
             Text(
                 text = title.resolveReference(),
@@ -74,7 +75,7 @@ fun InputRowEnterInfo(
                     visualTransformation = visualTransformation,
                     keyboardOptions = keyboardOptions,
                     modifier = Modifier
-                        .padding(top = TangemTheme.dimens.spacing8)
+                        .padding(top = 8.dp)
                         .weight(1f),
                 )
                 info?.let { info ->
@@ -83,7 +84,7 @@ fun InputRowEnterInfo(
                         style = TangemTheme.typography.body2,
                         color = infoColor,
                         modifier = Modifier
-                            .padding(start = TangemTheme.dimens.spacing8)
+                            .padding(start = 8.dp)
                             .align(Alignment.Bottom),
                     )
                 }

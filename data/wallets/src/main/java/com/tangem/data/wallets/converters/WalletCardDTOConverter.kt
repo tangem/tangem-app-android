@@ -7,6 +7,9 @@ import com.tangem.utils.converter.Converter
 
 internal object WalletCardDTOConverter : Converter<WalletCardBackup, WalletCardDTO> {
 
+    private const val MAX_ERROR_CODE_LENGTH = 256
+    private const val MAX_ERROR_MESSAGE_LENGTH = 1024
+
     override fun convert(value: WalletCardBackup): WalletCardDTO {
         return WalletCardDTO(
             cardId = value.cardId,
@@ -14,8 +17,8 @@ internal object WalletCardDTOConverter : Converter<WalletCardBackup, WalletCardD
             role = value.role.toDTO(),
             backupStatus = value.backupStatus.toDTO(),
             curves = value.curves.map { it.curve },
-            errorCode = value.error?.code,
-            errorMessage = value.error?.message,
+            errorCode = value.error?.code?.take(MAX_ERROR_CODE_LENGTH),
+            errorMessage = value.error?.message?.take(MAX_ERROR_MESSAGE_LENGTH),
         )
     }
 

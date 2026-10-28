@@ -28,3 +28,8 @@ data class YieldMarketToken(
     val effectiveApy: BigDecimal
         get() = campaign?.takeIf(YieldIncentiveCampaign::hasActiveCampaign)?.totalApyEst ?: apy
 }
+
+/** Effective APY of every active market by its [YieldMarketToken.yieldSupplyKey], in percent. */
+fun List<YieldMarketToken>.activeEffectiveApys(): Map<String, BigDecimal> {
+    return filter { it.isActive }.associate { it.yieldSupplyKey to it.effectiveApy }
+}

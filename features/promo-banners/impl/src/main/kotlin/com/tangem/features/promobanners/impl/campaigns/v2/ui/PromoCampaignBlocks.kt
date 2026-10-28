@@ -88,7 +88,7 @@ private fun PromoTile(tile: PromoBlockUM.Tile, modifier: Modifier = Modifier) {
         modifier = modifier
             .heightIn(min = 72.dp)
             .clip(RoundedCornerShape(24.dp))
-            .background(TangemTheme.colors3.bg.opaque.primary)
+            .background(TangemTheme.colors3.bg.transparent.primary)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {

@@ -9,7 +9,10 @@ internal data class CreateWalletUM(
     val onCloseClick: () -> Unit,
 ) : TangemBottomSheetConfigContent {
 
+    val isSigningInSocially: Boolean
+        get() = socialLogin?.isLoading == true
+
     /** Dismissing the sheet does not cancel what the tapped row started, so it stays locked until then */
     val isCreatingWallet: Boolean
-        get() = seedPhrase.isLoading || socialLogin?.isLoading == true
+        get() = seedPhrase.isLoading || isSigningInSocially
 }

@@ -4,8 +4,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.cosign.CosignRequestBanner
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.wallet.state.model.JointOperationBannerUM
 import kotlinx.collections.immutable.ImmutableList
 
@@ -20,7 +20,7 @@ internal fun LazyListScope.jointOperationBanners(
         itemContent = { index, item ->
             CosignRequestBanner(
                 state = item.banner,
-                modifier = modifier.padding(top = if (index == 0) TangemTheme.dimens2.x3 else TangemTheme.dimens2.x2),
+                modifier = modifier.padding(top = if (index == 0) 12.dp else 8.dp),
             )
         },
     )

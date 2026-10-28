@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
+import com.tangem.domain.polymarket.model.PolymarketExchangeDomain
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.grow.datasource.polymarket.models.PolymarketOrderQuoteFeesResponse
@@ -49,6 +50,7 @@ import com.tangem.grow.datasource.polymarket.relayer.models.PolymarketNonceRespo
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketCategory
+import com.tangem.domain.polymarket.model.PolymarketCategoryIcon
 import com.tangem.domain.polymarket.model.PolymarketEventError
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.model.PolymarketSearchConfig
@@ -56,6 +58,8 @@ import com.tangem.domain.polymarket.model.PolymarketApprovalCall
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
 import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
+import com.tangem.domain.polymarket.model.PolymarketClobAsset
+import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PolymarketL1Headers
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
@@ -166,12 +170,12 @@ internal class DefaultPolymarketRepositoryTest {
     }
 
     @Test
-    fun `GIVEN categories response WHEN getCategories THEN maps to domain categories`() = runTest {
+    fun `GIVEN categories response WHEN getCategories THEN maps to domain categories in order`() = runTest {
         // Arrange
         coEvery { api.getCategories(locale = null) } returns ApiResponse.Success(
             PolymarketCategoriesResponse(
                 categories = listOf(
-                    PolymarketCategoryDto(id = 1, label = "Trending", icon = "https://img/trending.png"),
+                    PolymarketCategoryDto(id = 1, label = "Trending", icon = "trending"),
                     PolymarketCategoryDto(id = 2, label = "Sport", icon = null),
                 ),
             ),
@@ -183,11 +187,66 @@ internal class DefaultPolymarketRepositoryTest {
         // Assert
         assertThat(result).isEqualTo(
             listOf(
-                PolymarketCategory(id = 1, label = "Trending", iconUrl = "https://img/trending.png"),
-                PolymarketCategory(id = 2, label = "Sport", iconUrl = null),
+                PolymarketCategory(id = 1, label = "Trending", icon = PolymarketCategoryIcon.TRENDING),
+                PolymarketCategory(id = 2, label = "Sport", icon = null),
             ).right(),
         )
     }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetCategoriesIcon {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN an icon key WHEN getCategories THEN maps it to the category icon`(model: CategoryIconModel) =
+            runTest {
+                // Arrange
+                coEvery { api.getCategories(locale = null) } returns ApiResponse.Success(
+                    PolymarketCategoriesResponse(
+                        categories = listOf(PolymarketCategoryDto(id = 7, label = "Label", icon = model.key)),
+                    ),
+                )
+
+                // Act
+                val result = repository.getCategories()
+
+                // Assert
+                assertThat(result).isEqualTo(
+                    listOf(PolymarketCategory(id = 7, label = "Label", icon = model.expected)).right(),
+                )
+            }
+
+        private fun provideTestModels() = listOf(
+            CategoryIconModel(key = "world", expected = PolymarketCategoryIcon.WORLD),
+            CategoryIconModel(key = "geopolitics", expected = PolymarketCategoryIcon.GEOPOLITICS),
+            CategoryIconModel(key = "elections", expected = PolymarketCategoryIcon.ELECTIONS),
+            CategoryIconModel(key = "soccer", expected = PolymarketCategoryIcon.SOCCER),
+            CategoryIconModel(key = "nba", expected = PolymarketCategoryIcon.NBA),
+            CategoryIconModel(key = "nfl", expected = PolymarketCategoryIcon.NFL),
+            CategoryIconModel(key = "hockey", expected = PolymarketCategoryIcon.HOCKEY),
+            CategoryIconModel(key = "tennis", expected = PolymarketCategoryIcon.TENNIS),
+            CategoryIconModel(key = "formula1", expected = PolymarketCategoryIcon.FORMULA_1),
+            CategoryIconModel(key = "tech", expected = PolymarketCategoryIcon.TECH),
+            CategoryIconModel(key = "economy", expected = PolymarketCategoryIcon.ECONOMY),
+            CategoryIconModel(key = "mentions", expected = PolymarketCategoryIcon.MENTIONS),
+            CategoryIconModel(key = "trending", expected = PolymarketCategoryIcon.TRENDING),
+            CategoryIconModel(key = "new", expected = PolymarketCategoryIcon.NEW),
+            CategoryIconModel(key = "politics", expected = PolymarketCategoryIcon.POLITICS),
+            CategoryIconModel(key = "sports", expected = PolymarketCategoryIcon.SPORTS),
+            CategoryIconModel(key = "esports", expected = PolymarketCategoryIcon.ESPORTS),
+            CategoryIconModel(key = "culture", expected = PolymarketCategoryIcon.CULTURE),
+            CategoryIconModel(key = "weather", expected = PolymarketCategoryIcon.WEATHER),
+            CategoryIconModel(key = "finance", expected = PolymarketCategoryIcon.FINANCE),
+            CategoryIconModel(key = "crypto", expected = PolymarketCategoryIcon.CRYPTO),
+            CategoryIconModel(key = "astrology", expected = null),
+            CategoryIconModel(key = "Politics", expected = null),
+            CategoryIconModel(key = "https://cdn.example.com/icons/politics.svg", expected = null),
+            CategoryIconModel(key = null, expected = null),
+        )
+    }
+
+    data class CategoryIconModel(val key: String?, val expected: PolymarketCategoryIcon?)
 
     @Test
     fun `GIVEN network exception WHEN getCategories THEN returns left no internet`() = runTest {
@@ -607,17 +666,28 @@ internal class DefaultPolymarketRepositoryTest {
             val headers = slot<Map<String, String>>()
             val assetType = slot<String>()
             val signatureType = slot<Int>()
+            val tokenId = slot<String?>()
             coEvery {
-                clobApi.updateBalanceAllowance(capture(headers), capture(assetType), capture(signatureType))
+                clobApi.updateBalanceAllowance(
+                    capture(headers),
+                    capture(assetType),
+                    capture(signatureType),
+                    captureNullable(tokenId),
+                )
             } returns ApiResponse.Success(Unit)
 
             // Act
-            val result = repository.syncBalanceAllowance(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS)
+            val result = repository.syncBalanceAllowance(
+                ownerAddress = OWNER,
+                credentials = SYNC_CREDENTIALS,
+                asset = PolymarketClobAsset.Collateral,
+            )
 
             // Assert
             assertThat(result).isEqualTo(Unit.right())
             assertThat(assetType.captured).isEqualTo("COLLATERAL")
             assertThat(signatureType.captured).isEqualTo(3)
+            assertThat(tokenId.captured).isNull()
             assertThat(headers.captured["POLY_ADDRESS"]).isEqualTo(OWNER)
             assertThat(headers.captured["POLY_API_KEY"]).isEqualTo(SYNC_CREDENTIALS.apiKey)
             assertThat(headers.captured["POLY_PASSPHRASE"]).isEqualTo(SYNC_CREDENTIALS.passphrase)
@@ -643,7 +713,6 @@ internal class DefaultPolymarketRepositoryTest {
                 ownerAddress = OWNER,
                 credentials = SYNC_CREDENTIALS,
                 signedOrder = signedOrder(),
-                isNegRisk = false,
             )
 
             // Assert
@@ -665,7 +734,6 @@ internal class DefaultPolymarketRepositoryTest {
             ownerAddress = OWNER,
             credentials = SYNC_CREDENTIALS,
             signedOrder = signedOrder(),
-            isNegRisk = false,
         )
 
         // Assert
@@ -675,14 +743,16 @@ internal class DefaultPolymarketRepositoryTest {
     @Test
     fun `GIVEN an order signed for the other exchange WHEN placeOrder THEN nothing is sent`() = runTest {
         // Arrange
-        val standardExchangeOrder = signedOrder(signature = standardExchangeSignature())
+        val standardExchangeOrder = signedOrder(
+            signature = standardExchangeSignature(),
+            domain = PolymarketExchangeDomain.NEG_RISK_CTF,
+        )
 
         // Act
         val result = repository.placeOrder(
             ownerAddress = OWNER,
             credentials = SYNC_CREDENTIALS,
             signedOrder = standardExchangeOrder,
-            isNegRisk = true,
         )
 
         // Assert
@@ -702,7 +772,6 @@ internal class DefaultPolymarketRepositoryTest {
             ownerAddress = OWNER,
             credentials = SYNC_CREDENTIALS,
             signedOrder = signedOrder(),
-            isNegRisk = false,
         )
 
         // Assert
@@ -721,7 +790,6 @@ internal class DefaultPolymarketRepositoryTest {
             ownerAddress = OWNER,
             credentials = SYNC_CREDENTIALS,
             signedOrder = signedOrder(),
-            isNegRisk = false,
         )
 
         // Assert
@@ -740,7 +808,6 @@ internal class DefaultPolymarketRepositoryTest {
             ownerAddress = OWNER,
             credentials = SYNC_CREDENTIALS,
             signedOrder = signedOrder(),
-            isNegRisk = false,
         )
 
         // Assert
@@ -757,13 +824,70 @@ internal class DefaultPolymarketRepositoryTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SyncSharesBalance {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN shares of a versioned market WHEN syncBalanceAllowance THEN sends the token under its asset type`(
+            model: SharesAssetTypeModel,
+        ) = runTest {
+            // Arrange
+            val assetType = slot<String>()
+            val tokenId = slot<String?>()
+            coEvery {
+                clobApi.updateBalanceAllowance(any(), capture(assetType), any(), captureNullable(tokenId))
+            } returns ApiResponse.Success(Unit)
+
+            // Act
+            val result = repository.syncBalanceAllowance(
+                ownerAddress = OWNER,
+                credentials = SYNC_CREDENTIALS,
+                asset = PolymarketClobAsset.Shares(tokenId = "777", version = model.version),
+            )
+
+            // Assert
+            assertThat(result).isEqualTo(Unit.right())
+            assertThat(assetType.captured).isEqualTo(model.expectedAssetType)
+            assertThat(tokenId.captured).isEqualTo("777")
+        }
+
+        private fun provideTestModels() = listOf(
+            SharesAssetTypeModel(version = PolymarketMarketVersion.V1, expectedAssetType = "CONDITIONAL"),
+            SharesAssetTypeModel(version = PolymarketMarketVersion.V2, expectedAssetType = "CONDITIONAL-V2"),
+        )
+    }
+
+    data class SharesAssetTypeModel(val version: PolymarketMarketVersion, val expectedAssetType: String)
+
+    @Test
+    fun `GIVEN shares of an unknown market version WHEN syncBalanceAllowance THEN fails without calling the api`() =
+        runTest {
+            // Act
+            val result = repository.syncBalanceAllowance(
+                ownerAddress = OWNER,
+                credentials = SYNC_CREDENTIALS,
+                asset = PolymarketClobAsset.Shares(tokenId = "777", version = PolymarketMarketVersion.UNKNOWN),
+            )
+
+            // Assert
+            assertThat(result.leftOrNull()).isInstanceOf(PolymarketAuthError.Unknown::class.java)
+            coVerify(exactly = 0) { clobApi.updateBalanceAllowance(any(), any(), any(), any()) }
+        }
+
     @Test
     fun `GIVEN a 401 WHEN syncBalanceAllowance THEN maps to InvalidSignature`() = runTest {
         // Arrange
-        coEvery { clobApi.updateBalanceAllowance(any(), any(), any()) } returns httpError(Code.UNAUTHORIZED, body = null)
+        coEvery { clobApi.updateBalanceAllowance(any(), any(), any(), any()) } returns
+            httpError(Code.UNAUTHORIZED, body = null)
 
         // Act
-        val result = repository.syncBalanceAllowance(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS)
+        val result = repository.syncBalanceAllowance(
+            ownerAddress = OWNER,
+            credentials = SYNC_CREDENTIALS,
+            asset = PolymarketClobAsset.Collateral,
+        )
 
         // Assert
         assertThat(result).isEqualTo(PolymarketAuthError.InvalidSignature.left())
@@ -776,14 +900,18 @@ internal class DefaultPolymarketRepositoryTest {
             val credentials = SYNC_CREDENTIALS.copy(secret = "abc+def/==")
 
             // Act
-            val result = repository.syncBalanceAllowance(ownerAddress = OWNER, credentials = credentials)
+            val result = repository.syncBalanceAllowance(
+                ownerAddress = OWNER,
+                credentials = credentials,
+                asset = PolymarketClobAsset.Collateral,
+            )
 
             // Assert
             val error = result.leftOrNull() as? PolymarketAuthError.Unknown
             assertThat(error).isNotNull()
             assertThat(error?.httpCode).isNull()
             assertThat(error?.detail).isNotNull()
-            coVerify(exactly = 0) { clobApi.updateBalanceAllowance(any(), any(), any()) }
+            coVerify(exactly = 0) { clobApi.updateBalanceAllowance(any(), any(), any(), any()) }
         }
 
     @Test
@@ -792,14 +920,18 @@ internal class DefaultPolymarketRepositoryTest {
         val credentials = SYNC_CREDENTIALS.copy(secret = "")
 
         // Act
-        val result = repository.syncBalanceAllowance(ownerAddress = OWNER, credentials = credentials)
+        val result = repository.syncBalanceAllowance(
+            ownerAddress = OWNER,
+            credentials = credentials,
+            asset = PolymarketClobAsset.Collateral,
+        )
 
         // Assert
         val error = result.leftOrNull() as? PolymarketAuthError.Unknown
         assertThat(error).isNotNull()
         assertThat(error?.httpCode).isNull()
         assertThat(error?.detail).isNotNull()
-        coVerify(exactly = 0) { clobApi.updateBalanceAllowance(any(), any(), any()) }
+        coVerify(exactly = 0) { clobApi.updateBalanceAllowance(any(), any(), any(), any()) }
     }
 
     @Test
@@ -1229,12 +1361,13 @@ internal class DefaultPolymarketRepositoryTest {
         )
 
         fun standardExchangeSignature(): String = "0x" + "11".repeat(n = 65) +
-            PolymarketOrderTypedDataBuilder.domainSeparator(isNegRisk = false)
+            PolymarketOrderTypedDataBuilder.domainSeparator(PolymarketExchangeDomain.CTF)
                 .joinToString(separator = "") { byte -> "%02x".format(byte) }
 
         fun signedOrder(
             signature: String = standardExchangeSignature(),
             salt: Long = 1_234_567_890L,
+            domain: PolymarketExchangeDomain = PolymarketExchangeDomain.CTF,
         ): PredictionSignedOrder =
             PredictionSignedOrder(
             order = PredictionOrder(
@@ -1251,6 +1384,7 @@ internal class DefaultPolymarketRepositoryTest {
                 builder = "0xbuilder",
             ),
             signature = signature,
+            domain = domain,
         )
 
         fun placeOrderResponse(
@@ -1290,10 +1424,10 @@ internal class DefaultPolymarketRepositoryTest {
             volume24hr = null,
             liquidity = null,
             totalMarketsCount = 0,
+            isNegRisk = false,
             isLive = false,
             displayMode = "plain_markets",
             markets = emptyList(),
-            isNegRisk = false,
         )
     }
 }

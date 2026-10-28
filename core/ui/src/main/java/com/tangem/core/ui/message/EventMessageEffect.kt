@@ -20,6 +20,7 @@ import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheet
 import com.tangem.core.ui.components.snackbar.TangemTopSnackbarHostState
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.message.modal.MessageModal
 import com.tangem.core.ui.res.*
 
 @Composable
@@ -36,6 +37,7 @@ fun EventMessageEffect(
 
     var dialogMessage: DialogMessage? by remember { mutableStateOf(value = null) }
     var bottomSheetMessage: BottomSheetMessage? by remember { mutableStateOf(value = null) }
+    var modalMessage: ModalMessage? by remember { mutableStateOf(value = null) }
     var loadingMessage: GlobalLoadingMessage? by remember { mutableStateOf(value = null) }
 
     EventEffect(event = messageEvent) { message ->
@@ -48,6 +50,9 @@ fun EventMessageEffect(
             }
             is BottomSheetMessage -> {
                 bottomSheetMessage = message
+            }
+            is ModalMessage -> {
+                modalMessage = message
             }
             is ToastMessage -> {
                 onShowToast(message, context)
@@ -76,6 +81,13 @@ fun EventMessageEffect(
         MessageBottomSheet(
             state = message.messageBottomSheetUM,
             onDismissRequest = { bottomSheetMessage = null },
+        )
+    }
+
+    modalMessage?.let { message ->
+        MessageModal(
+            state = message.messageModalUM,
+            onDismissRequest = { modalMessage = null },
         )
     }
 

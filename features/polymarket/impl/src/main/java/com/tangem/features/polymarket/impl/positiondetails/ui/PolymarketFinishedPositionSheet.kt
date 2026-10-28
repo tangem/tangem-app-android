@@ -22,6 +22,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.rememberLastNonNull
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.features.polymarket.impl.common.ui.PolymarketResolutionSourceRow
 import com.tangem.features.polymarket.impl.positiondetails.ui.preview.PolymarketFinishedPositionPreviewProvider
 import com.tangem.features.polymarket.impl.positiondetails.ui.state.PolymarketFinishedPositionUM
 
@@ -42,7 +43,8 @@ internal fun PolymarketFinishedPositionSheet(state: PolymarketFinishedPositionUM
             PolymarketPositionSummary(state = displayed.summary, modifier = Modifier.padding(bottom = 32.dp))
             if (displayed.shouldShowOutcome) {
                 TangemRow(
-                    divider = displayed.resolutionDate != null || displayed.closureDate != null,
+                    divider = displayed.resolutionDate != null || displayed.closureDate != null ||
+                        displayed.resolutionSource != null,
                     titleSlot = {
                         TangemRowText(resourceReference(R.string.prediction_positions_outcome), TangemRowTextRole.Title)
                     },
@@ -60,11 +62,18 @@ internal fun PolymarketFinishedPositionSheet(state: PolymarketFinishedPositionUM
                 FinishedDateRow(
                     title = resourceReference(R.string.prediction_details_resolution_date),
                     value = date,
-                    divider = displayed.closureDate != null,
+                    divider = displayed.closureDate != null || displayed.resolutionSource != null,
                 )
             }
             displayed.closureDate?.let { date ->
-                FinishedDateRow(title = resourceReference(R.string.prediction_positions_closure_date), value = date)
+                FinishedDateRow(
+                    title = resourceReference(R.string.prediction_positions_closure_date),
+                    value = date,
+                    divider = displayed.resolutionSource != null,
+                )
+            }
+            displayed.resolutionSource?.let {
+                PolymarketResolutionSourceRow(state = it, onOpenUrl = displayed.onResolutionSourceClick)
             }
         }
     }

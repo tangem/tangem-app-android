@@ -5,11 +5,11 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.earn.model.EarnFilter
 import com.tangem.domain.earn.model.EarnFilterNetwork
@@ -60,7 +60,7 @@ internal class EarnModel @Inject constructor(
     private val fetchTopEarnTokensUseCase: FetchTopEarnTokensUseCase,
     private val getEarnFilterUseCase: GetEarnFilterUseCase,
     private val setEarnFilterUseCase: SetEarnFilterUseCase,
-    private val appRouter: AppRouter,
+    private val router: Router,
     private val stateController: EarnStateController,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
@@ -105,7 +105,7 @@ internal class EarnModel @Inject constructor(
     }
 
     private fun openCurrencyDetails(result: AddToPortfolioManager.Result) {
-        appRouter.push(
+        router.push(
             AppRoute.CurrencyDetails(
                 userWalletId = result.wallet.walletId,
                 currency = result.addedCurrency.currency,

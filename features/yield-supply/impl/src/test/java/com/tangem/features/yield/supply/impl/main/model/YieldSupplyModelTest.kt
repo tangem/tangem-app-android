@@ -3,11 +3,14 @@ package com.tangem.features.yield.supply.impl.main.model
 import arrow.core.*
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.earn.EarnBlockUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.ui.extensions.combinedReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations
@@ -34,8 +37,10 @@ import com.tangem.domain.yield.supply.promo.usecase.IsYieldBoostPromoEnabledForT
 import com.tangem.domain.yield.supply.usecase.*
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
+import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.YieldBoostStoryPreloader
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
+import com.tangem.utils.StringsSigns
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -49,12 +54,13 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.util.Locale
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class YieldSupplyModelTest {
 
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
-    private val appRouter: AppRouter = mockk(relaxed = true)
+    private val router: Router = mockk(relaxed = true)
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
     private val accountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
@@ -78,9 +84,12 @@ internal class YieldSupplyModelTest {
     private val token: CryptoCurrency.Token = token()
     private val coin: CryptoCurrency.Coin = coin()
     private val accountStatusList: AccountStatusList = mockk()
+    private var originalLocale: Locale = Locale.getDefault()
 
     @BeforeEach
     fun setUp() {
+        originalLocale = Locale.getDefault()
+        Locale.setDefault(Locale.US)
         mockkObject(CryptoCurrencyStatusOperations)
         coEvery { getSelectedAppCurrencyUseCase.invokeSync() } returns AppCurrency.Default.right()
         coEvery { isAvailableUseCase(any(), any()) } returns true
@@ -102,6 +111,7 @@ internal class YieldSupplyModelTest {
 
     @AfterEach
     fun tearDown() {
+        Locale.setDefault(originalLocale)
         unmockkObject(CryptoCurrencyStatusOperations)
     }
 
@@ -249,6 +259,29 @@ internal class YieldSupplyModelTest {
             EarnBlockUM.TrailingUM.StatusIcon(tone = EarnBlockUM.TrailingUM.StatusIcon.Tone.Warning),
         )
     }
+
+    @Test
+    fun `GIVEN active token with a long backend apy scale WHEN status emitted THEN rewards apy shows two decimals`() =
+        runTest {
+            // Arrange
+            stubStatus(status(isActive = true, effectiveProtocolBalance = BigDecimal.TEN).some())
+            coEvery { getTokenStatusUseCase(any()) } returns
+                marketToken(isActive = true, apy = BigDecimal("9.1149999999999998")).right()
+
+            // Act
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Assert
+            val legacy = model.uiStateLegacy.value as YieldSupplyUM.Content
+            assertThat(legacy.rewardsApy).isEqualTo(
+                combinedReference(
+                    resourceReference(R.string.yield_module_token_details_earn_notification_apy),
+                    stringReference(StringsSigns.WHITE_SPACE),
+                    stringReference("9.11%"),
+                ),
+            )
+        }
 
     @Test
     fun `GIVEN active token and token status fails WHEN status emitted THEN content with empty apy`() = runTest {
@@ -535,7 +568,7 @@ internal class YieldSupplyModelTest {
         model.onStartEarningClick()
 
         // Assert
-        verify { appRouter.push(capture(routeSlot), any()) }
+        verify { router.push(capture(routeSlot), any()) }
         val route = routeSlot.captured as AppRoute.YieldSupplyEntry
         assertThat(route.userWalletId).isEqualTo(userWalletId)
         assertThat(route.cryptoCurrency).isEqualTo(token)
@@ -554,7 +587,7 @@ internal class YieldSupplyModelTest {
         model.onStartEarningClick()
 
         // Assert
-        verify { appRouter.push(capture(routeSlot), any()) }
+        verify { router.push(capture(routeSlot), any()) }
         assertThat((routeSlot.captured as AppRoute.YieldSupplyEntry).apy).isEmpty()
     }
 
@@ -569,7 +602,7 @@ internal class YieldSupplyModelTest {
         model.onActiveClick()
 
         // Assert
-        verify(exactly = 0) { appRouter.push(any(), any()) }
+        verify(exactly = 0) { router.push(any(), any()) }
     }
 
     @Test
@@ -583,7 +616,7 @@ internal class YieldSupplyModelTest {
         model.onLearnMoreClick()
 
         // Assert
-        verify { appRouter.push(capture(routeSlot), any()) }
+        verify { router.push(capture(routeSlot), any()) }
         val route = routeSlot.captured as AppRoute.Stories
         assertThat(route.storyId).isEqualTo(StoryContentIds.STORY_FIRST_TIME_YIELD_PROMO.id)
         assertThat(route.screenSource).isEqualTo("TokenDetails")
@@ -602,7 +635,7 @@ internal class YieldSupplyModelTest {
         ),
         dispatchers = createDispatchers(),
         analyticsEventsHandler = analytics,
-        appRouter = appRouter,
+        router = router,
         getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
         getUserWalletUseCase = getUserWalletUseCase,
         singleAccountStatusListSupplier = accountStatusListSupplier,
@@ -664,10 +697,10 @@ internal class YieldSupplyModelTest {
         ),
     )
 
-    private fun marketToken(isActive: Boolean): YieldMarketToken = YieldMarketToken(
+    private fun marketToken(isActive: Boolean, apy: BigDecimal = BigDecimal("5")): YieldMarketToken = YieldMarketToken(
         tokenAddress = "0xToken",
         chainId = 1,
-        apy = BigDecimal("5"),
+        apy = apy,
         isActive = isActive,
         maxFeeNative = BigDecimal.ZERO,
         maxFeeUSD = BigDecimal.ZERO,

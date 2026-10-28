@@ -69,7 +69,7 @@ private fun ActivityIcon(state: PolymarketActivityRowUM) {
         Type.FUNDS_ADDED, Type.WITHDRAWN -> Box(
             modifier = Modifier
                 .size(40.dp)
-                .background(TangemTheme.colors3.bg.opaque.secondary, CircleShape),
+                .background(TangemTheme.colors3.bg.transparent.secondary, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(

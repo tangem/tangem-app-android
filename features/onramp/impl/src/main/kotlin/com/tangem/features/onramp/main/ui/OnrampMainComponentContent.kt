@@ -91,7 +91,7 @@ private fun InitialLoading(state: OnrampMainComponentUM.InitialLoading, modifier
             .fillMaxWidth()
             .wrapContentHeight()
             .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         OnrampAmountContentLoading()
         OnrampNotifications(state = state)
@@ -103,34 +103,34 @@ private fun OnrampAmountContentLoading() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(shape = RoundedCornerShape(size = TangemTheme.dimens.radius16))
+            .clip(shape = RoundedCornerShape(size = 16.dp))
             .background(TangemTheme.colors.background.action)
-            .padding(vertical = TangemTheme.dimens.spacing28),
+            .padding(vertical = 28.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         RectangleShimmer(
             modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing16)
+                .padding(top = 16.dp)
                 .size(width = 76.dp, height = 20.dp),
-            radius = TangemTheme.dimens.radius4,
+            radius = 4.dp,
         )
         RectangleShimmer(
             modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing12)
+                .padding(top = 12.dp)
                 .size(width = 136.dp, height = 44.dp),
-            radius = TangemTheme.dimens.radius4,
+            radius = 4.dp,
         )
         RectangleShimmer(
             modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing8)
+                .padding(top = 8.dp)
                 .size(width = 52.dp, height = 16.dp),
-            radius = TangemTheme.dimens.radius4,
+            radius = 4.dp,
         )
         RectangleShimmer(
             modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing20)
+                .padding(top = 20.dp)
                 .size(width = 84.dp, height = 28.dp),
-            radius = TangemTheme.dimens.radius14,
+            radius = 14.dp,
         )
     }
 }
@@ -152,7 +152,7 @@ private fun Content(
                 start = 16.dp,
                 end = 16.dp,
             ),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         OnrampAmountContent(state = state)
 

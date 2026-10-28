@@ -9,6 +9,7 @@ enum class NotificationType(val type: String) {
     JointOverview("joint_overview"),
     JointTx("joint_tx"),
     JointTxSent("joint_tx_sent"),
+    SupportMessage("support_message"),
     Unknown("unknown"),
     ;
 

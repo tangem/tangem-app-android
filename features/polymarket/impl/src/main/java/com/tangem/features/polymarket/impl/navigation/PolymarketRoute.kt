@@ -55,6 +55,7 @@ internal sealed interface PolymarketRoute : Route {
         val userWalletId: UserWalletId,
         val marketId: String? = null,
         val assetId: String? = null,
+        val categoryLabel: String? = null,
     ) : PolymarketRoute
 
     /**

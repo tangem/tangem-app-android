@@ -50,11 +50,11 @@ fun TangemCheckbox(
     val shape = if (isRounded) {
         CircleShape
     } else {
-        RoundedCornerShape(TangemTheme.dimens2.x1)
+        RoundedCornerShape(4.dp)
     }
     Box(
         modifier = modifier
-            .size(TangemTheme.dimens2.x5)
+            .size(20.dp)
             .then(
                 if (isChecked) {
                     Modifier.background(
@@ -86,7 +86,7 @@ fun TangemCheckbox(
                 tint = TangemTheme.colors2.graphic.neutral.primaryInvertedConstant,
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .size(TangemTheme.dimens2.x4),
+                    .size(16.dp),
             )
         }
     }
@@ -106,7 +106,7 @@ private fun TangemCheckbox_Preview() {
     TangemThemePreviewRedesign {
         Row(
             modifier = Modifier.background(TangemTheme.colors2.surface.level1),
-            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x6),
+            horizontalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             previewData.fastForEach { data ->
                 TangemCheckbox(

@@ -66,11 +66,11 @@ internal class DefaultWcRequestService(
             it.filterTo(mutableSetOf()) { (millis, _) -> millis > expiredMillis }
         }
 
-        val noHaveCached = cachedRequest.none { (_, hashParams) -> hash == hashParams }
-        if (!noHaveCached) {
+        val isNotCached = cachedRequest.none { (_, hashParams) -> hash == hashParams }
+        if (!isNotCached) {
             TangemLogger.withTag(WC_TAG).i("filter request $request")
         }
-        return noHaveCached
+        return isNotCached
     }
 
     private fun saveRequest(request: WcSdkSessionRequest) {

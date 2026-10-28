@@ -14,9 +14,9 @@ import dagger.assisted.AssistedInject
 /**
  * Handles the `tangem://intent?id=...&source=...&type=...` deep link.
  *
- * Only Express exchange intents are acted on; an intent of any other service or operation is dropped, so it never
- * takes the place of the swap flow in the request queue. Express links may omit `type`, as the exchange is the only
- * operation it has had so far.
+ * Only Express exchange intents and Transaction Service send intents are acted on; an intent of any other service or
+ * operation is dropped, so it never takes the place of a supported flow in the request queue. Express links may omit
+ * `type`, as the exchange is the only operation it has had so far.
  */
 internal class DefaultMcpIntentDeepLinkHandler @AssistedInject constructor(
     @Assisted queryParams: Map<String, String>,
@@ -32,7 +32,7 @@ internal class DefaultMcpIntentDeepLinkHandler @AssistedInject constructor(
             TangemLogger.e("MCP intent deeplink requires $INTENT_ID_KEY and $SOURCE_KEY parameters")
         } else {
             val intentSource = parseSource(source = source, type = type)
-            if (intentSource == SUPPORTED_SOURCE) {
+            if (intentSource != null && intentSource in SUPPORTED_SOURCES) {
                 mcpRequestService.request(McpRequest.Intent(id = id, source = intentSource))
             } else {
                 TangemLogger.e("MCP intent of an unsupported kind: $SOURCE_KEY=$source, $TYPE_KEY=$type")
@@ -49,6 +49,9 @@ internal class DefaultMcpIntentDeepLinkHandler @AssistedInject constructor(
             }
             expressType?.let(McpRequest.Intent.Source::Express)
         }
+        SOURCE_TRANSACTION -> McpRequest.Intent.Source.Transaction.Type.entries
+            .firstOrNull { it.name.lowercase() == type }
+            ?.let(McpRequest.Intent.Source::Transaction)
         else -> null
     }
 
@@ -61,7 +64,11 @@ internal class DefaultMcpIntentDeepLinkHandler @AssistedInject constructor(
         const val DEEPLINK_KEY = "tangem://intent"
 
         private const val SOURCE_EXPRESS = "express"
+        private const val SOURCE_TRANSACTION = "transaction"
 
-        private val SUPPORTED_SOURCE = McpRequest.Intent.Source.Express(McpRequest.Intent.Source.Express.Type.EXCHANGE)
+        private val SUPPORTED_SOURCES = setOf(
+            McpRequest.Intent.Source.Express(McpRequest.Intent.Source.Express.Type.EXCHANGE),
+            McpRequest.Intent.Source.Transaction(McpRequest.Intent.Source.Transaction.Type.SEND),
+        )
     }
 }

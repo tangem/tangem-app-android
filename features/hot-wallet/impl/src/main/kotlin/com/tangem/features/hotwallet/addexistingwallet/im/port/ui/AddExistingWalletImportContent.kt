@@ -105,8 +105,8 @@ internal fun AddExistingWalletImportContent(state: AddExistingWalletImportUM, mo
                     .padding(16.dp)
                     .fillMaxWidth(),
                 text = stringResourceSafe(id = R.string.common_import),
-                enabled = state.importWalletEnabled,
-                showProgress = state.importWalletProgress,
+                enabled = state.isImportWalletEnabled,
+                showProgress = state.isImportWalletInProgress,
                 onClick = state.importWalletClick,
             )
         }
@@ -149,7 +149,7 @@ private fun PhraseBlock(state: AddExistingWalletImportUM, modifier: Modifier = M
         OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(TangemTheme.dimens.size142)
+                .height(142.dp)
                 .focusRequester(focusRequester)
                 .testTag(ImportWalletScreenTestTags.PHRASE_TEXT_FIELD),
             value = state.words,
@@ -168,7 +168,7 @@ private fun PhraseBlock(state: AddExistingWalletImportUM, modifier: Modifier = M
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
-                .height(TangemTheme.dimens.size32),
+                .height(32.dp),
         ) {
             if (state.wordsErrorText != null) {
                 Text(
@@ -196,15 +196,15 @@ private fun SuggestionsBlock(
     ) {
         LazyRow(
             modifier = Modifier.padding(bottom = 8.dp),
-            contentPadding = PaddingValues(horizontal = TangemTheme.dimens.size16),
+            contentPadding = PaddingValues(horizontal = 16.dp),
         ) {
             items(suggestionsList.size) { index ->
                 SuggestionButton(
                     modifier = Modifier.rowPadding(
                         index = index,
                         rowSize = suggestionsList.size,
-                        outSide = TangemTheme.dimens.size0,
-                        inSide = TangemTheme.dimens.size4,
+                        outSide = 0.dp,
+                        inSide = 4.dp,
                     ),
                     text = suggestionsList[index],
                     onClick = { onClick(index) },
@@ -248,12 +248,12 @@ private fun PreviewAddExistingWalletImportContent() {
                 onPassphraseInfoClick = {},
                 wordsErrorText = null,
                 invalidWords = persistentListOf(),
-                importWalletEnabled = false,
-                importWalletProgress = false,
+                isImportWalletEnabled = false,
+                isImportWalletInProgress = false,
                 importWalletClick = {},
                 suggestionsList = persistentListOf(),
                 onSuggestionClick = {},
-                readyToImport = false,
+                isReadyToImport = false,
             ),
         )
     }

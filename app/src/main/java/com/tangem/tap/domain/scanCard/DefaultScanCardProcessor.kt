@@ -1,6 +1,5 @@
 package com.tangem.tap.domain.scanCard
 
-import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
@@ -9,6 +8,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.GlobalUiMessageSender
@@ -20,6 +20,7 @@ import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.ScanFailsCounter
 import com.tangem.domain.card.common.util.twinsIsTwinned
+import com.tangem.domain.card.models.ScanConfig
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.ScanResponse
@@ -52,73 +53,61 @@ internal class DefaultScanCardProcessor @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ScanCardProcessor {
 
-    override suspend fun scan(
-        cardId: String?,
-        allowsRequestAccessCodeFromRepository: Boolean,
-        analyticsSource: AnalyticsParam.ScreensSources,
-        shouldCheckIsAlreadyActivated: Boolean,
-    ): CompletionResult<ScanResponse> {
-        return tangemSdkManager.scanProduct(
-            cardId = cardId,
-            allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
-            shouldCheckIsAlreadyActivated = shouldCheckIsAlreadyActivated,
-            source = analyticsSource,
-        )
-            .doOnFailure { error ->
-                onScanFailure(analyticsSource = analyticsSource, error = error, onFailure = {}, onCancel = {})
-            }
-    }
+    override suspend fun scan(config: ScanConfig) {
+        val callback = config.callback
 
-    @Suppress("LongParameterList")
-    override suspend fun scan(
-        analyticsSource: AnalyticsParam.ScreensSources,
-        shouldCheckIsAlreadyActivated: Boolean,
-        cardId: String?,
-        onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
-        onWalletNotCreated: suspend () -> Unit,
-        onCancel: suspend () -> Unit,
-        onFailure: suspend (error: TangemError) -> Unit,
-        onSuccess: suspend (scanResponse: ScanResponse) -> Unit,
-    ) {
         withContext(dispatchers.main) {
-            onProgressStateChange(true)
+            callback.onProgressStateChange(showProgress = true)
 
-            tangemSdkManager.changeDisplayedCardIdNumbersCount(null)
+            if (config.shouldUpdateCardIdDisplayFormat) {
+                tangemSdkManager.changeDisplayedCardIdNumbersCount(null)
+            }
 
             val result = tangemSdkManager.scanProduct(
-                cardId = cardId,
-                shouldCheckIsAlreadyActivated = shouldCheckIsAlreadyActivated,
-                source = analyticsSource,
+                cardId = config.cardId,
+                allowsRequestAccessCodeFromRepository = config.canRequestAccessCodeFromRepository,
+                shouldCheckIsAlreadyActivated = config.shouldConfirmWalletOwnership,
+                source = config.analyticsSource,
             )
 
             result
                 .doOnFailure { error ->
-                    scanFailsCounter.onScanFailure(
-                        isUserCancelled = error is TangemSdkError.UserCancelled,
-                        source = analyticsSource,
-                    )
+                    if (config.shouldTrackScanFails) {
+                        scanFailsCounter.onScanFailure(
+                            isUserCancelled = error is TangemSdkError.UserCancelled,
+                            source = config.analyticsSource,
+                        )
+                    }
+
                     onScanFailure(
-                        analyticsSource = analyticsSource,
+                        analyticsSource = config.analyticsSource,
                         error = error,
-                        onFailure = onFailure,
+                        onFailure = callback::onFailure,
                         onCancel = {
                             appCoroutineScope.launch(dispatchers.main) {
-                                onProgressStateChange.invoke(false)
-                                onCancel()
+                                callback.onProgressStateChange(showProgress = false)
+                                callback.onCardVerificationFailed()
                             }
                         },
                     )
                 }
                 .doOnSuccess { scanResponse ->
-                    scanFailsCounter.reset()
-                    tangemSdkManager.changeDisplayedCardIdNumbersCount(scanResponse)
+                    if (config.shouldTrackScanFails) scanFailsCounter.reset()
 
-                    onScanSuccess(
-                        scanResponse = scanResponse,
-                        onProgressStateChange = onProgressStateChange,
-                        onSuccess = onSuccess,
-                        onWalletNotCreated = onWalletNotCreated,
-                    )
+                    if (config.shouldUpdateCardIdDisplayFormat) {
+                        tangemSdkManager.changeDisplayedCardIdNumbersCount(scanResponse)
+                    }
+
+                    if (config.shouldLaunchOnboarding) {
+                        onScanSuccess(
+                            scanResponse = scanResponse,
+                            onProgressStateChange = callback::onProgressStateChange,
+                            onSuccess = callback::onSuccess,
+                            onWalletNotCreated = callback::onOnboardingRequired,
+                        )
+                    } else {
+                        callback.onSuccess(scanResponse)
+                    }
                 }
         }
     }
@@ -130,34 +119,39 @@ internal class DefaultScanCardProcessor @Inject constructor(
         onCancel: () -> Unit,
     ) {
         if (error is TangemSdkError.CardVerificationFailed) {
-            analyticsEventHandler.send(
-                event = OnboardingAnalyticsEvent.Error.OfflineAttestationFailed(
-                    analyticsSource,
-                ),
-            )
-
-            val resource = error.localizedDescriptionRes()
-            val resId = resource.resId ?: R.string.common_unknown_error
-            val resArgs = resource.args.map { it.value }
-
-            uiMessageSender.send(
-                message = Dialogs.cardVerificationFailed(
-                    errorDescription = resourceReference(id = resId, resArgs.toWrappedList()),
-                    onRequestSupport = {
-                        appCoroutineScope.launch(dispatchers.main) {
-                            onCancel()
-
-                            sendFeedbackEmailUseCase.invoke(
-                                type = FeedbackEmailType.CardAttestationFailed,
-                            )
-                        }
-                    },
-                    onCancelClick = { onCancel() },
-                ),
-            )
+            showCardVerificationFailedDialog(analyticsSource = analyticsSource, error = error, onClosed = onCancel)
         } else {
             onFailure(error)
         }
+    }
+
+    private fun showCardVerificationFailedDialog(
+        analyticsSource: AnalyticsParam.ScreensSources,
+        error: TangemSdkError.CardVerificationFailed,
+        onClosed: () -> Unit,
+    ) {
+        analyticsEventHandler.send(event = OnboardingAnalyticsEvent.Error.OfflineAttestationFailed(analyticsSource))
+
+        val resource = error.localizedDescriptionRes()
+        val resId = resource.resId ?: R.string.common_unknown_error
+        val resArgs = resource.args.map { it.value }
+
+        uiMessageSender.send(
+            message = Dialogs.cardVerificationFailed(
+                errorDescription = resourceReference(id = resId, resArgs.toWrappedList()),
+                onRequestSupport = {
+                    appCoroutineScope.launch(dispatchers.main) {
+                        onClosed()
+
+                        analyticsEventHandler.send(event = Basic.ButtonSupport(source = analyticsSource))
+                        sendFeedbackEmailUseCase.invoke(
+                            type = FeedbackEmailType.CardAttestationFailed,
+                        )
+                    }
+                },
+                onCancelClick = { onClosed() },
+            ),
+        )
     }
 
     private suspend fun onScanSuccess(
@@ -166,34 +160,32 @@ internal class DefaultScanCardProcessor @Inject constructor(
         onWalletNotCreated: suspend () -> Unit,
         onSuccess: suspend (ScanResponse) -> Unit,
     ) {
+        val onboardingRoute = resolveOnboardingRoute(scanResponse)
+
+        if (onboardingRoute != null) {
+            onWalletNotCreated()
+            navigateTo(route = onboardingRoute, onProgressStateChange = onProgressStateChange)
+        } else {
+            delay(DELAY_SDK_DIALOG_CLOSE)
+            onSuccess(scanResponse)
+        }
+    }
+
+    /** Returns the onboarding route if the scanned card needs it, and sets the analytics context of the card */
+    private suspend fun resolveOnboardingRoute(scanResponse: ScanResponse): AppRoute.Onboarding? {
         if (onboardingHelper.isOnboardingCase(scanResponse)) {
             trackingContextProxy.addContext(scanResponse)
-            onWalletNotCreated()
-            navigateTo(
-                AppRoute.Onboarding(
-                    scanResponse = scanResponse,
-                    mode = AppRoute.Onboarding.Mode.Onboarding,
-                ),
-                onProgressStateChange = onProgressStateChange,
-            )
+            return AppRoute.Onboarding(scanResponse = scanResponse, mode = AppRoute.Onboarding.Mode.Onboarding)
+        }
+
+        trackingContextProxy.setContext(scanResponse)
+
+        val wasTwinsOnboardingShown = wasTwinsOnboardingShownUseCase.invokeSync()
+
+        return if (scanResponse.twinsIsTwinned() && !wasTwinsOnboardingShown) {
+            AppRoute.Onboarding(scanResponse = scanResponse, mode = AppRoute.Onboarding.Mode.WelcomeOnlyTwin)
         } else {
-            trackingContextProxy.setContext(scanResponse)
-
-            val wasTwinsOnboardingShown = wasTwinsOnboardingShownUseCase.invokeSync()
-
-            if (scanResponse.twinsIsTwinned() && !wasTwinsOnboardingShown) {
-                onWalletNotCreated()
-                navigateTo(
-                    AppRoute.Onboarding(
-                        scanResponse = scanResponse,
-                        mode = AppRoute.Onboarding.Mode.WelcomeOnlyTwin,
-                    ),
-                    onProgressStateChange = onProgressStateChange,
-                )
-            } else {
-                delay(DELAY_SDK_DIALOG_CLOSE)
-                onSuccess(scanResponse)
-            }
+            null
         }
     }
 

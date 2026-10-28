@@ -24,6 +24,7 @@ internal val PaymentAccountStatusValue.typeName: String
         is PaymentAccountStatusValue.KycRequired -> "KycRequired"
         is PaymentAccountStatusValue.UnderReview -> "UnderReview"
         is PaymentAccountStatusValue.IssuingCard -> "IssuingCard"
+        is PaymentAccountStatusValue.Verified -> "Verified"
         is PaymentAccountStatusValue.AwaitingPlanSelection -> "AwaitingPlanSelection"
         is PaymentAccountStatusValue.Inactive -> "Inactive"
         is PaymentAccountStatusValue.Deactivated -> "Deactivated"

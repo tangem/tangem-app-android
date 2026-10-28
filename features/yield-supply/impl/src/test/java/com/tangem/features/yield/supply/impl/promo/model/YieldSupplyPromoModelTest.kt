@@ -1,9 +1,9 @@
 package com.tangem.features.yield.supply.impl.promo.model
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -20,7 +20,7 @@ internal class YieldSupplyPromoModelTest {
 
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
-    private val appRouter: AppRouter = mockk(relaxed = true)
+    private val router: Router = mockk(relaxed = true)
     private val boostStoryPreloader: YieldBoostStoryPreloader = mockk(relaxed = true)
 
     private val personal: CryptoCurrency = coin(derivationPath = Network.DerivationPath.None)
@@ -82,7 +82,7 @@ internal class YieldSupplyPromoModelTest {
         ),
         analytics = analytics,
         urlOpener = urlOpener,
-        appRouter = appRouter,
+        router = router,
         getBoostedApyUseCase = GetBoostedApyUseCase(),
         boostStoryPreloader = boostStoryPreloader,
     )

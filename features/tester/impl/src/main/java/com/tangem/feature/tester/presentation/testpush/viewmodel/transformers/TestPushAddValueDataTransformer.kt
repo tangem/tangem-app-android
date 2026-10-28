@@ -11,7 +11,7 @@ internal class TestPushAddValueDataTransformer(
     override fun transform(prevState: TestPushUM): TestPushUM {
         val mutableData = prevState.data.toMutableList()
         val updated = mutableData[index].copy(second = value)
-        mutableData.set(index = index, updated)
+        mutableData[index] = updated
 
         return prevState.copy(data = mutableData)
     }

@@ -24,6 +24,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.AllowanceInfo
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.domain.transaction.models.isGasless
 import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetAllowanceInfoUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
@@ -39,6 +40,8 @@ import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelector
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -78,6 +81,13 @@ internal class GiveApprovalModel @Inject constructor(
         field = MutableStateFlow(
             GiveApprovalUM(
                 approveType = ApproveType.LIMITED,
+                // The Tron gasless service relays an exact approval only, and an unlimited one would keep
+                // every later gasless swap of this token over its allowance limit.
+                approveItems = if (params.isTronGaslessSupported) {
+                    persistentListOf(ApproveType.LIMITED)
+                } else {
+                    ApproveType.entries.toImmutableList()
+                },
                 walletInteractionIcon = walletInterationIcon(userWallet),
                 isApproveButtonEnabled = false,
                 isApproveLoading = false,
@@ -226,8 +236,6 @@ internal class GiveApprovalModel @Inject constructor(
         val feeContent = feeSelectorUM as? FeeSelectorUM.Content ?: return false
         val feeExtended = feeContent.feeExtraInfo.transactionFeeExtended
 
-        val isFeeInTokenCurrency = feeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency
-
         val transactions = approvalTxList.map { (tx, fee) ->
             tx.copy(
                 fee = when (feeContent.selectedFeeItem) {
@@ -239,7 +247,7 @@ internal class GiveApprovalModel @Inject constructor(
             )
         }
 
-        return if (isFeeInTokenCurrency) {
+        return if (feeExtended?.isGasless == true) {
             createAndSendGaslessTransactionUseCase(
                 userWallet = userWallet,
                 transactionData = transactions.first(),
