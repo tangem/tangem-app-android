@@ -18,6 +18,7 @@ import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
 import com.tangem.domain.cloudbackup.usecase.GetBackupPasswordUseCase
 import com.tangem.domain.cloudbackup.usecase.RestoreCloudBackupUseCase
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.wallets.analytics.Settings.NoticeMobileWalletLimit
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.MnemonicRepository
@@ -60,6 +61,7 @@ internal class RestoreCloudBackupModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val getBackupPasswordUseCase: GetBackupPasswordUseCase,
+    private val userWalletsListRepository: UserWalletsListRepository,
 ) : Model() {
 
     private val params = paramsContainer.require<RestoreCloudBackupComponent.Params>()
@@ -77,6 +79,7 @@ internal class RestoreCloudBackupModel @Inject constructor(
     private var accountEmail: String? = null
     private var backups: List<CloudBackupInfo> = emptyList()
     private var selectedBackup: CloudBackupInfo? = null
+    private var addedWalletIds: Set<String> = emptySet()
 
     val uiState: StateFlow<RestoreCloudBackupUM>
         field = MutableStateFlow(resolveInitialState(cloudRestoreResultHolder))
@@ -111,7 +114,13 @@ internal class RestoreCloudBackupModel @Inject constructor(
 
         accountEmail = result?.accountEmail
         backups = loaded
-        return if (loaded.size == 1) {
+        addedWalletIds = if (hotWalletFeatureToggles.isMultipleHotWalletsEnabled) {
+            userWalletsListRepository.userWallets.value.orEmpty().mapTo(mutableSetOf()) { it.walletId.stringValue }
+        } else {
+            emptySet()
+        }
+        val isAnyBackupAdded = loaded.any { it.isAlreadyAdded() }
+        return if (loaded.size == 1 && !isAnyBackupAdded) {
             selectedBackup = loaded.first()
             sendEnterPasswordScreenEvent()
             buildEnterPasswordUM()
@@ -130,15 +139,19 @@ internal class RestoreCloudBackupModel @Inject constructor(
     private fun buildBackupListUM(list: List<CloudBackupInfo>): RestoreCloudBackupUM.BackupList =
         RestoreCloudBackupUM.BackupList(
             items = list.map { info ->
+                val isAdded = info.isAlreadyAdded()
                 BackupRowUM(
                     walletName = info.walletName,
                     createdAtMillis = info.createdAtMillis,
-                    onClick = { showEnterPassword(info) },
+                    isAlreadyAdded = isAdded,
+                    onClick = { if (!isAdded) showEnterPassword(info) },
                 )
             }.toImmutableList(),
             accountEmail = accountEmail,
             onBack = ::onRootBack,
         )
+
+    private fun CloudBackupInfo.isAlreadyAdded(): Boolean = walletId in addedWalletIds
 
     private fun showEnterPassword(backup: CloudBackupInfo) {
         selectedBackup = backup
