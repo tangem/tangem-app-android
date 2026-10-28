@@ -862,18 +862,20 @@ internal data class TangemAvatarStory(
     val fillColor: TangemAvatar.FillColor,
     val appearance: TangemAvatar.Appearance,
     val status: TangemAvatar.Status,
-    val hasPendingIndicator: Boolean,
-    val hasUserInitial: Boolean,
-    val isShimmerRounded: Boolean,
+    val hasAccountIndicator: Boolean,
+    val hasLetter: Boolean,
+    val isRemoteAsset: Boolean,
+    val isRoundedSquare: Boolean,
     val onVariantChange: (Variant) -> Unit,
     val onFillColorChange: (TangemAvatar.FillColor) -> Unit,
     val onAppearanceChange: (TangemAvatar.Appearance) -> Unit,
     val onStatusChange: (TangemAvatar.Status) -> Unit,
-    val onPendingIndicatorToggle: () -> Unit,
-    val onUserInitialToggle: () -> Unit,
-    val onShimmerRoundedToggle: () -> Unit,
+    val onAccountIndicatorToggle: () -> Unit,
+    val onLetterToggle: () -> Unit,
+    val onRemoteAssetToggle: () -> Unit,
+    val onRoundedSquareToggle: () -> Unit,
 ) : DsStoryBookPage {
 
     /** Which [com.tangem.core.ui.ds2.avatar.TangemAvatar.UiState] subtype is rendered. */
-    enum class Variant { Account, User, Address, Icon, Transaction, Shimmer }
+    enum class Variant { Account, User, Address, Icon, Transaction, Asset, Shimmer }
 }

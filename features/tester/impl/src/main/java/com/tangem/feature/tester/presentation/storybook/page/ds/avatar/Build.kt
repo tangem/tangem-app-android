@@ -11,16 +11,20 @@ internal fun StateUpdater<TangemAvatarStory>.build(): TangemAvatarStory {
         fillColor = TangemAvatar.FillColor.AzureBlue,
         appearance = TangemAvatar.Appearance.Neutral,
         status = TangemAvatar.Status.Progress,
-        hasPendingIndicator = false,
-        hasUserInitial = true,
-        isShimmerRounded = false,
-        onVariantChange = { variant -> updateStory { it.copy(variant = variant) } },
+        hasAccountIndicator = false,
+        hasLetter = false,
+        isRemoteAsset = false,
+        isRoundedSquare = true,
+        onVariantChange = { variant ->
+            updateStory { it.copy(variant = variant, isRoundedSquare = variant == TangemAvatarStory.Variant.Account) }
+        },
         onFillColorChange = { color -> updateStory { it.copy(fillColor = color) } },
         onAppearanceChange = { appearance -> updateStory { it.copy(appearance = appearance) } },
         onStatusChange = { status -> updateStory { it.copy(status = status) } },
-        onPendingIndicatorToggle = { updateStory { it.copy(hasPendingIndicator = !it.hasPendingIndicator) } },
-        onUserInitialToggle = { updateStory { it.copy(hasUserInitial = !it.hasUserInitial) } },
-        onShimmerRoundedToggle = { updateStory { it.copy(isShimmerRounded = !it.isShimmerRounded) } },
+        onAccountIndicatorToggle = { updateStory { it.copy(hasAccountIndicator = !it.hasAccountIndicator) } },
+        onLetterToggle = { updateStory { it.copy(hasLetter = !it.hasLetter) } },
+        onRemoteAssetToggle = { updateStory { it.copy(isRemoteAsset = !it.isRemoteAsset) } },
+        onRoundedSquareToggle = { updateStory { it.copy(isRoundedSquare = !it.isRoundedSquare) } },
     )
 }
 
