@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.analytics.utils
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
@@ -141,6 +142,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotificationUM.AddFunds -> NoticeAddFunds()
             is WalletNotificationUM.TangemPayPromo -> TangemPayAnalyticsEvents.PermanentBannerShowed()
             is WalletNotificationUM.UpgradeHotWalletPromo -> NoticeUpgradeToColdWallet()
+            is WalletNotificationUM.SoftUpdateAvailable -> MainScreenAnalyticsEvent.NoticeSoftUpdate()
             is WalletNotificationUM.UnlockWallets,
             is WalletNotificationUM.NoAccount,
             is WalletNotificationUM.LowSignatures,
@@ -151,7 +153,6 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             WalletNotificationUM.TangemPayUnreachable,
             is WalletNotificationUM.YieldBoostPromo,
             is WalletNotificationUM.AssetsDiscoveryCompleted,
-            is WalletNotificationUM.SoftUpdateAvailable,
             -> null
         }
     }
