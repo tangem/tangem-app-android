@@ -211,7 +211,12 @@ internal class WalletTokensListUMConverterTest {
     private fun pendingJointStatus(): AccountStatus.Joint {
         return AccountStatus.Joint(
             account = jointAccount(),
-            value = JointAccountStatusValue.Pending(StatusSource.ACTUAL, joinedMembers = 1, totalMembers = 3),
+            value = JointAccountStatusValue.Pending(
+                StatusSource.ACTUAL,
+                joinedMembers = 1,
+                totalMembers = 3,
+                threshold = 2,
+            ),
             tokenList = TokenList.Empty,
             priceChangeLce = Unit.lceError(),
         )
@@ -220,7 +225,12 @@ internal class WalletTokensListUMConverterTest {
     private fun activeJointStatus(): AccountStatus.Joint {
         return AccountStatus.Joint(
             account = jointAccount(),
-            value = JointAccountStatusValue.Active(StatusSource.ACTUAL, totalMembers = 3, safeAddress = "0x5afe"),
+            value = JointAccountStatusValue.Active(
+                StatusSource.ACTUAL,
+                totalMembers = 3,
+                safeAddress = "0x5afe",
+                threshold = 2,
+            ),
             tokenList = ungroupedTokenList(),
             priceChangeLce = Unit.lceError(),
         )
