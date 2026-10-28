@@ -5,7 +5,6 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.data.swap.converter.ExchangeIntentConverter
-import com.tangem.domain.core.error.DataError
 import com.tangem.domain.express.ExpressErrorResolver
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.express.models.ExpressRateType
@@ -89,7 +88,7 @@ internal class DefaultExchangeIntentRepositoryTest {
     inner class Failure {
 
         @Test
-        fun `GIVEN intent of another wallet WHEN getExchangeIntent THEN wrong wallet is reported`() = runTest {
+        fun `GIVEN intent of another wallet WHEN getExchangeIntent THEN other wallet is reported with the Express code`() = runTest {
             // Arrange
             val failure = httpError(ApiResponseError.HttpException.Code.FORBIDDEN)
             stubError(failure)
@@ -99,12 +98,11 @@ internal class DefaultExchangeIntentRepositoryTest {
             val actual = repository.getExchangeIntent(walletId, INTENT_ID)
 
             // Assert
-            val expected = DataError.UserWalletError.WrongUserWallet("Intent $INTENT_ID belongs to another wallet")
-            assertThat(actual).isEqualTo(Either.Left(expected))
+            assertThat(actual).isEqualTo(Either.Left(ExchangeIntentError.OtherWallet(INTENT_ID, code = 2610)))
         }
 
         @Test
-        fun `GIVEN unknown intent WHEN getExchangeIntent THEN not found is reported`() = runTest {
+        fun `GIVEN unknown intent WHEN getExchangeIntent THEN not found is reported with the Express code`() = runTest {
             // Arrange
             val failure = httpError(ApiResponseError.HttpException.Code.NOT_FOUND)
             stubError(failure)
@@ -114,7 +112,7 @@ internal class DefaultExchangeIntentRepositoryTest {
             val actual = repository.getExchangeIntent(walletId, INTENT_ID)
 
             // Assert
-            assertThat(actual).isEqualTo(Either.Left(ExchangeIntentError.NotFound(INTENT_ID)))
+            assertThat(actual).isEqualTo(Either.Left(ExchangeIntentError.NotFound(INTENT_ID, code = 2600)))
         }
 
         @ParameterizedTest
