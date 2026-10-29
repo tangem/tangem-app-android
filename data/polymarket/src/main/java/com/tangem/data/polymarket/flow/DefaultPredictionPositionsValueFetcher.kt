@@ -27,8 +27,8 @@ internal class DefaultPredictionPositionsValueFetcher @Inject constructor(
         val userWalletId = params.userWalletId
 
         return Either.catchOn(dispatchers.default) {
-            val userWallet = userWalletsListRepository.getSyncOrNull(userWalletId)
-            if (userWallet == null || userWallet.isLocked) {
+            val userWallet = userWalletsListRepository.getSyncOrNull(userWalletId) ?: return@catchOn
+            if (userWallet.isLocked) {
                 store.markUnrefreshed(userWalletId = userWalletId)
                 return@catchOn
             }

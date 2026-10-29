@@ -18,9 +18,11 @@ import com.tangem.data.polymarket.store.DefaultPolymarketOnboardedStore
 import com.tangem.data.polymarket.store.DefaultPredictionWithdrawalStore
 import com.tangem.data.polymarket.entity.PredictionAccountStatusValueDTO
 import com.tangem.data.polymarket.entity.PolymarketSessionKeyReadinessDTO
+import com.tangem.data.polymarket.entity.PredictionPositionsValueDTO
 import com.tangem.data.polymarket.entity.PredictionWithdrawalRecordDTO
 import com.tangem.data.polymarket.store.DefaultPolymarketSessionKeyTradingStore
 import com.tangem.data.polymarket.store.PredictionAccountStatusStore
+import com.tangem.data.polymarket.store.PredictionPositionsValueStore
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
@@ -94,6 +96,30 @@ internal object PolymarketStorageModule {
                     json = KotlinxDataStoreSerializer.jsonBuilder { classDiscriminator = "__type" },
                 ),
                 produceFile = { context.dataStoreFile(fileName = "prediction_account_statuses") },
+                scope = scope,
+            ),
+            scope = scope,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providePredictionPositionsValueStore(
+        @ApplicationContext context: Context,
+        scope: AppCoroutineScope,
+        dataStoreFactory: AppDataStoreFactory,
+    ): PredictionPositionsValueStore {
+        return PredictionPositionsValueStore(
+            runtimeStore = RuntimeSharedStore(),
+            persistenceDataStore = dataStoreFactory.create(
+                serializer = KotlinxDataStoreSerializer(
+                    defaultValue = emptyMap(),
+                    serializer = MapSerializer(
+                        keySerializer = String.serializer(),
+                        valueSerializer = PredictionPositionsValueDTO.serializer(),
+                    ),
+                ),
+                produceFile = { context.dataStoreFile(fileName = "prediction_positions_values") },
                 scope = scope,
             ),
             scope = scope,
