@@ -1,5 +1,6 @@
 package com.tangem.features.moneyaccount.details
 
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -21,6 +22,7 @@ internal class MoneyAccountDetailsStateFactory(
     private val onTermsClick: () -> Unit,
     private val onSupportClick: () -> Unit,
     private val onBackClick: () -> Unit,
+    private val onRefresh: () -> Unit,
 ) {
     fun createInitialState(): MoneyAccountDetailsUM = MoneyAccountDetailsUM(
         title = resourceReference(R.string.virtual_account_title),
@@ -49,11 +51,15 @@ internal class MoneyAccountDetailsStateFactory(
         onAddFundsClick = onAddFundsClick,
         onSendClick = onSendClick,
         txHistoryCurrency = null,
+        pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = { onRefresh() }),
     )
 
-    fun createAccountState(account: MoneyAccountStatusValue.Account): MoneyAccountDetailsUM {
+    fun createAccountState(
+        prevState: MoneyAccountDetailsUM,
+        account: MoneyAccountStatusValue.Account,
+    ): MoneyAccountDetailsUM {
         val balance = account.balance
-        return createInitialState().copy(
+        return prevState.copy(
             balance = if (balance == null) {
                 MoneyAccountBalanceBlockState.Unavailable
             } else {

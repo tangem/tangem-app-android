@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.SpacerH24
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
+import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
 import com.tangem.core.ui.components.topFade
 import com.tangem.core.ui.ds.contextmenu.TangemContextMenu
 import com.tangem.core.ui.ds.image.TangemIcon
@@ -73,27 +75,32 @@ internal fun MoneyAccountDetailsScreen(
             .fillMaxSize()
             .background(rootBackground),
     ) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .topFade(
-                    height = topBarTotalHeight,
-                    0f to rootBackground,
-                    TOP_FADE_MID_STOP to rootBackground.copy(alpha = TOP_FADE_MID_ALPHA),
-                    1f to Color.Transparent,
-                ),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            state = listState,
-            contentPadding = PaddingValues(
-                top = topBarTotalHeight,
-                bottom = 16.dp + bottomBarHeight,
-            ),
+        TangemPullToRefreshSlidingContainer(
+            config = state.pullToRefreshConfig,
+            indicatorOffset = topBarTotalHeight,
         ) {
-            body(
-                state = state,
-                listState = listState,
-                txHistory = txHistory,
-            )
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .topFade(
+                        height = topBarTotalHeight,
+                        0f to rootBackground,
+                        TOP_FADE_MID_STOP to rootBackground.copy(alpha = TOP_FADE_MID_ALPHA),
+                        1f to Color.Transparent,
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                state = listState,
+                contentPadding = PaddingValues(
+                    top = topBarTotalHeight,
+                    bottom = 16.dp + bottomBarHeight,
+                ),
+            ) {
+                body(
+                    state = state,
+                    listState = listState,
+                    txHistory = txHistory,
+                )
+            }
         }
         TopBar(
             state = state,
@@ -314,6 +321,7 @@ private fun MoneyAccountDetailsScreenPreview() {
                 onAddFundsClick = {},
                 onSendClick = {},
                 txHistoryCurrency = null,
+                pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             ),
             txHistoryComponent = PreviewTxHistoryComponent,
         )
@@ -336,6 +344,7 @@ private fun MoneyAccountDetailsScreenBalanceUnavailablePreview() {
                 onAddFundsClick = {},
                 onSendClick = {},
                 txHistoryCurrency = null,
+                pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             ),
             txHistoryComponent = PreviewTxHistoryComponent,
         )
