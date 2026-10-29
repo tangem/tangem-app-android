@@ -213,7 +213,8 @@
   <string name="main_tokens">代幣</string>
   <string name="money_account_add_funds_bank_description">透過 ACH/Wire 或 SPEI 從銀行帳戶接收 USD</string>
   <string name="money_account_add_funds_receive_description">將 Polygon 網路的 USDC 發送至帳戶地址</string>
-  <string name="money_account_add_funds_swap_description">使用錢包中的加密資產為帳戶儲值</string>
+  <string name="money_account_add_funds_swap_description">使用錢包中的加密資產為美元帳戶儲值</string>
+  <string name="money_account_close_account">關閉帳戶</string>
   <string name="money_account_main_name">美元帳戶</string>
   <string name="money_account_main_status_action_required">需要操作</string>
   <string name="money_account_main_status_activating">正在啟用…</string>
@@ -246,6 +247,9 @@
   <string name="money_account_onboarding_transfers_card_caption">入帳。出帳。</string>
   <string name="money_account_onboarding_transfers_card_subtitle">使用具備銀行資訊的專屬帳戶</string>
   <string name="money_account_onboarding_transfers_card_title">以法幣付款與收款</string>
+  <string name="money_account_send_fees_footer">費用包含%s服務費和預估網路費</string>
+  <string name="money_account_send_network_fee_note">費用包含預估網路費%s，可能隨網路活躍度變化</string>
+  <string name="money_account_send_pay_button">支付 %s</string>
   <string name="no_account_polkadot">目標帳戶未激活。發送 %s 或更多以激活帳戶</string>
   <string name="no_account_send_to_create">要創建帳戶，請將資金發送到此地址</string>
   <string name="no_trustline_xlm_asset">目標帳戶沒有用於發送資產的 trustline</string>
@@ -809,7 +813,7 @@
   <string name="tangempay_residency_all_state">選擇其他州</string>
   <string name="tangempay_residency_search_empty">未找到結果，請嘗試變更搜尋內容</string>
   <string name="tangempay_residency_suggested_country">建議國家</string>
-  <string name="tangempay_residency_suggested_state"> 建議州</string>
+  <string name="tangempay_residency_suggested_state">建議州</string>
   <string name="tangempay_residency_title_country">居住國家</string>
   <string name="tangempay_residency_title_state">選擇州</string>
   <string name="tangempay_select_plan_btn_cancel">取消</string>
@@ -859,6 +863,8 @@
   <string name="tangempay_unified_onboarding_fees_caption">所見即所付</string>
   <string name="tangempay_unified_onboarding_fees_subtitle">1 USDC = 1 USD</string>
   <string name="tangempay_unified_onboarding_fees_title">消費免手續費。%1$s</string>
+  <string name="tangempay_unified_onboarding_interest_caption">利息</string>
+  <string name="tangempay_unified_onboarding_interest_title">持有即可賺取最高4%的年化收益</string>
   <string name="tangempay_unified_onboarding_legal">可開通的產品取決於您所在地區。驗證完成後我們會立即確認</string>
   <string name="tangempay_unified_onboarding_money_account_caption">十分方便</string>
   <string name="tangempay_unified_onboarding_money_account_header">美元帳戶</string>
@@ -867,6 +873,8 @@
   <string name="tangempay_unified_onboarding_payment_account_caption">隨心支付</string>
   <string name="tangempay_unified_onboarding_payment_account_header">Visa 卡</string>
   <string name="tangempay_unified_onboarding_payment_account_title">線上或 %1$s</string>
+  <string name="tangempay_unified_onboarding_payments_caption">付款</string>
+  <string name="tangempay_unified_onboarding_payments_title">滿足日常所需的ACH和電匯轉帳</string>
   <string name="tangempay_unified_onboarding_plan_caption">一個方案</string>
   <string name="tangempay_unified_onboarding_plan_subtitle">Basic 免費。</string>
   <string name="tangempay_unified_onboarding_plan_title">%1$s Plus 涵蓋兩者，還有更多權益</string>
@@ -883,7 +891,7 @@
   <string name="tangempay_verified_choose_plan">選擇方案</string>
   <string name="tangempay_verified_description_all">您可以同時擁有 Visa 卡和美元帳戶。\n選擇方案後，我們將為您開通</string>
   <string name="tangempay_verified_description_money_account">您可以開通美元帳戶。Visa 卡尚未在您所在地區推出，推出後我們會通知您</string>
-  <string name="tangempay_verified_description_none">產品暫不可用</string>
+  <string name="tangempay_verified_description_none">產品不可用</string>
   <string name="tangempay_verified_description_payment_account">您可以取得 Visa 卡。美元帳戶尚未在您所在地區推出，推出後我們會通知您</string>
   <string name="tangempay_verified_money_account_subtitle">透過銀行轉帳收付款</string>
   <string name="tangempay_verified_notify_money_account">美元帳戶上線時通知我</string>
@@ -891,7 +899,7 @@
   <string name="tangempay_verified_open_money_account">開通美元帳戶</string>
   <string name="tangempay_verified_payment_account_subtitle">Apple Pay、Google Pay</string>
   <string name="tangempay_verified_payment_account_title">Visa 卡</string>
-  <string name="tangempay_verified_product_not_available">您所在的國家/地區暫不可用</string>
+  <string name="tangempay_verified_product_not_available">您所在的國家/地區不可用</string>
   <string name="tangempay_verified_title">身分驗證已完成</string>
   <string name="tangempay_visa_benefits">Visa 權益</string>
   <string name="tangempay_waitlist_description">在您所在地區開通後，我們會第一時間以電子郵件通知您</string>
@@ -994,7 +1002,7 @@
   <string name="virtual_account_requisites_beneficiary_name">收款人姓名</string>
   <string name="virtual_account_requisites_clabe">CLABE</string>
   <string name="virtual_account_requisites_reference">參考號</string>
-  <string name="virtual_account_requisites_routing_number">Routing number</string>
+  <string name="virtual_account_requisites_routing_number">銀行路由號碼</string>
   <string name="virtual_account_title">美元帳戶</string>
   <string name="wallet_balance_blockchain_unreachable_try_later">區塊鍊無法使用。稍後再試</string>
   <string name="wallet_balance_missing_derivation">掃描卡片</string>
