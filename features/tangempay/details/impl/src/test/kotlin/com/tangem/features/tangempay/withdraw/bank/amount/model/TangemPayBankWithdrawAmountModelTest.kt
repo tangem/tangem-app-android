@@ -172,6 +172,36 @@ internal class TangemPayBankWithdrawAmountModelTest {
     }
 
     @Test
+    fun `GIVEN balance not covering the network fee WHEN model created THEN form shown instead of fee unreachable`() {
+        // Arrange
+        coEvery { networkFeeLoader.load(moneyAccount, any()) } returns GetFeeError.GaslessError.NotEnoughFunds.left()
+
+        // Act
+        val model = createModel(sourceAccount = moneyAccount, options = bankWithdrawOptions())
+
+        // Assert
+        assertThat(model.uiState.value).isInstanceOf(TangemPayBankWithdrawAmountUM.Content::class.java)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN balance not covering the network fee WHEN amount within balance entered THEN not enough funds`() {
+        // Arrange
+        coEvery { networkFeeLoader.load(moneyAccount, any()) } returns GetFeeError.GaslessError.NotEnoughFunds.left()
+        val model = createModel(sourceAccount = moneyAccount, options = bankWithdrawOptions())
+
+        // Act
+        model.content().amount.onValueChange("500")
+
+        // Assert
+        val state = model.content()
+        assertThat(state.amount.error)
+            .isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_amount_not_enough_funds))
+        assertThat(state.isContinueEnabled).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN prepared options WHEN model created THEN first source and first rail preselected`() {
         // Act
         val model = createModel()
