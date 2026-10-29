@@ -12,12 +12,14 @@ private const val SPONSORED_FEE_TITLE = "SmartGas"
  */
 internal fun TokenItemState.asSponsoredFee(symbol: String): TokenItemState {
     val sponsoredId = "${id}_sponsored"
+    val sponsoredTitle = TokenItemState.TitleState.Content(text = stringReference("$SPONSORED_FEE_TITLE $symbol"))
     return when (this) {
-        is TokenItemState.Content -> copy(
-            id = sponsoredId,
-            titleState = TokenItemState.TitleState.Content(text = stringReference("$SPONSORED_FEE_TITLE $symbol")),
-        )
+        is TokenItemState.Content -> copy(id = sponsoredId, titleState = sponsoredTitle)
+        is TokenItemState.Unreachable -> copy(id = sponsoredId, titleState = sponsoredTitle)
+        is TokenItemState.NoAddress -> copy(id = sponsoredId, titleState = sponsoredTitle)
         is TokenItemState.Loading -> copy(id = sponsoredId)
-        else -> this
+        is TokenItemState.Locked,
+        is TokenItemState.Draggable,
+        -> this
     }
 }
