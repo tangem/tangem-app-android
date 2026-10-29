@@ -67,7 +67,7 @@ internal class PolymarketActivityUMConverter(
                 when (type) {
                     Type.LOST -> MINUS
                     Type.BOUGHT, Type.WITHDRAWN -> "$MINUS $money"
-                    Type.SOLD, Type.FUNDS_ADDED, Type.REDEEMED -> "$PLUS $money"
+                    Type.SOLD, Type.FUNDS_ADDED, Type.REDEEMED, Type.SPLIT -> "$PLUS $money"
                 },
             ),
             iconUrl = activity.historyIconUrl,
@@ -81,10 +81,10 @@ internal fun PolymarketActivity.rowType(): Type = when (type) {
     PolymarketActivity.Type.SELL -> Type.SOLD
     PolymarketActivity.Type.DEPOSIT -> Type.FUNDS_ADDED
     PolymarketActivity.Type.WITHDRAW -> Type.WITHDRAWN
-    PolymarketActivity.Type.REDEEM -> if (redeemResult == PolymarketActivity.RedeemResult.LOST) {
-        Type.LOST
-    } else {
-        Type.REDEEMED
+    PolymarketActivity.Type.REDEEM -> when (redeemResult) {
+        PolymarketActivity.RedeemResult.LOST -> Type.LOST
+        PolymarketActivity.RedeemResult.SPLIT -> Type.SPLIT
+        PolymarketActivity.RedeemResult.WON, null -> Type.REDEEMED
     }
 }
 
@@ -96,6 +96,7 @@ internal fun Type.title() = resourceReference(
         Type.WITHDRAWN -> R.string.transaction_history_withdrawn
         Type.REDEEMED -> R.string.prediction_history_redeemed
         Type.LOST -> R.string.prediction_positions_lost
+        Type.SPLIT -> R.string.prediction_positions_split
     },
 )
 

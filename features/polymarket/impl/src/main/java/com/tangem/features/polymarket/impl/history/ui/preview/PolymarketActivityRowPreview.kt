@@ -93,6 +93,7 @@ private fun activityCases(): List<ActivityRowPreviewCase> = listOf(
     },
     activityCase(Type.LOST, "Lost", "-"),
     activityCase(Type.REDEEMED, "Redeemed", "+ $350.31"),
+    activityCase(Type.SPLIT, "Split", "+ $12.00"),
     activityCase(Type.BOUGHT, "Bought", "- $200.01"),
     activityCase(Type.SOLD, "Sold", "+ $200.01"),
     activityCase(Type.FUNDS_ADDED, "Funds Added", "+ $5,000.31").let { case ->
@@ -161,6 +162,7 @@ private fun activityRow(type: Type, amount: String) = PolymarketActivityRowUM(
             Type.WITHDRAWN -> R.string.transaction_history_withdrawn
             Type.REDEEMED -> R.string.prediction_history_redeemed
             Type.LOST -> R.string.prediction_positions_lost
+            Type.SPLIT -> R.string.prediction_positions_split
         },
     ),
     subtitle = Plain(stringReference("Will Ethereum reach $5,000 before September 30?")),
