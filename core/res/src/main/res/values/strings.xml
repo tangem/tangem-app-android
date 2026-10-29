@@ -1304,6 +1304,8 @@
   <string name="joint_account_join_to_account_btn_text">Join account</string>
   <string name="joint_account_join_to_approve">To approve</string>
   <string name="joint_account_main_cant_verify">Can\'t verify</string>
+  <string name="joint_account_main_paused_for_safety">Paused for safety</string>
+  <string name="joint_account_main_unavailable">Unavailable</string>
   <plurals name="joint_account_main_waiting_confirmations">
     <item quantity="one">Waiting for %d confirmation</item>
     <item quantity="other">Waiting for %d confirmations</item>
