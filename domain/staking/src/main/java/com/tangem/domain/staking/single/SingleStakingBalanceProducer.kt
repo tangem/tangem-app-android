@@ -3,8 +3,8 @@ package com.tangem.domain.staking.single
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.domain.core.flow.FlowProducer
-import com.tangem.domain.models.staking.StakingBalance
-import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.staking.model.StakingBalance
+import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.extensions.indexOfFirstOrNull
 import com.tangem.utils.logging.TangemLogger

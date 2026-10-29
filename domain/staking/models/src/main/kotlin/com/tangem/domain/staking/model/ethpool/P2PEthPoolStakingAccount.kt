@@ -1,4 +1,4 @@
-package com.tangem.domain.models.staking
+package com.tangem.domain.staking.model.ethpool
 
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import kotlinx.datetime.Instant

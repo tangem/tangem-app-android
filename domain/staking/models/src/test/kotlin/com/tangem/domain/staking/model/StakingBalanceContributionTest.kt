@@ -1,8 +1,12 @@
-package com.tangem.domain.models.staking
+package com.tangem.domain.staking.model
 
 import com.google.common.truth.Truth
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.balance.BalanceContribution
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolExitQueue
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolExitRequest
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolStake
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingAccount
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.mockk
