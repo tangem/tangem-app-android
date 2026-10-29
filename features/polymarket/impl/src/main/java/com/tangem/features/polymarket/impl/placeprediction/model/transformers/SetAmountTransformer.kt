@@ -11,7 +11,7 @@ import com.tangem.utils.transformer.Transformer
 internal class SetAmountTransformer(private val value: String) : Transformer<PlacePredictionUM> {
 
     override fun transform(prevState: PlacePredictionUM): PlacePredictionUM {
-        val newState = prevState.copy(amountValue = value)
+        val newState = prevState.copy(amountValue = value, isAmountFromFraction = false)
         val isQuotable = newState.enteredAmount() != null && !newState.isBelowMinAmount()
         return newState.copy(quote = if (isQuotable) QuoteUM.Loading else QuoteUM.Empty).recomputeGate()
     }
