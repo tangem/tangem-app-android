@@ -1,14 +1,15 @@
-package com.tangem.tap.common.analytics.appsflyer
+package com.tangem.core.analytics.handlers.appsflyer
 
 import com.appsflyer.AppsFlyerConversionListener
+import com.tangem.core.analytics.api.AppsFlyerConversionDataHandler
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class TangemAFConversionListener @Inject constructor(
-    private val referralParamsHandler: AppsFlyerReferralParamsHandler,
+class TangemAFConversionListener @Inject internal constructor(
     private val googleAdsConversionDataReporter: GoogleAdsConversionDataReporter,
+    private val conversionDataHandlers: Set<@JvmSuppressWildcards AppsFlyerConversionDataHandler>,
 ) : AppsFlyerConversionListener {
 
     override fun onConversionDataSuccess(p0: Map<String?, Any?>?) {
@@ -16,8 +17,8 @@ class TangemAFConversionListener @Inject constructor(
 
         if (p0 == null) return
 
-        googleAdsConversionDataReporter.report(conversionData = p0)
-        referralParamsHandler.handle(params = p0)
+        googleAdsConversionDataReporter.handle(conversionData = p0)
+        conversionDataHandlers.forEach { it.handle(conversionData = p0) }
     }
 
     override fun onConversionDataFail(p0: String?) {
