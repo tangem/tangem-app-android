@@ -1,22 +1,26 @@
 package com.tangem.features.feed.components.v2.blocks
 
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.core.ui.components.account.AccountIconSize
-import com.tangem.core.ui.components.account.CollectiblesAccountResIcon
+import com.tangem.core.ui.components.account.CollectiblesAccountIcon
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.ds2.ambient.TangemAmbientBackground
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.feed.components.v2.blocks.model.CollectiblesBlockModel
 import com.tangem.features.feed.impl.R
+import com.tangem.features.feed.ui.v2.FeedBlockIconBadge
 import com.tangem.features.feed.ui.v2.FeedPromoCard
 import kotlinx.coroutines.flow.StateFlow
 
@@ -49,8 +53,20 @@ internal class CollectiblesBlockComponent(
             ambientVariant = TangemAmbientBackground.Variant.Yellow,
             onClick = model::onClick,
             modifier = modifier,
-            icon = { CollectiblesAccountResIcon(size = AccountIconSize.Default) },
+            icon = { CollectiblesIcon() },
         )
+    }
+
+    @Composable
+    private fun CollectiblesIcon() {
+        FeedBlockIconBadge(background = CollectiblesAccountIcon.color) {
+            Icon(
+                imageVector = CollectiblesAccountIcon.imageVector,
+                contentDescription = null,
+                tint = TangemTheme.colors3.icon.staticDark,
+                modifier = Modifier.size(size = 24.dp),
+            )
+        }
     }
 
     @Composable
