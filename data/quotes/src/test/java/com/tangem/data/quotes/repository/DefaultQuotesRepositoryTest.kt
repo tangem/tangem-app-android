@@ -180,14 +180,14 @@ internal class DefaultQuotesRepositoryTest {
             // Arrange
             coEvery {
                 quotesFetcher.fetch(
-                    fiatCurrencyId = "eur",
+                    fiatCurrencyId = "EUR",
                     currenciesIds = setOf("bitcoin"),
                     fields = setOf(QuotesFetcher.Field.PRICE, QuotesFetcher.Field.PRICE_USD),
                 )
             } returns model.fetchResult
 
             // Act
-            val actual = repository.getFiatUSDRate(fiatCurrencyCode = "EUR")
+            val actual = repository.getFiatUSDRate(fiatCurrencyCode = "eur")
 
             // Assert
             Truth.assertThat(actual).isEqualTo(model.expected)

@@ -25,10 +25,10 @@ import com.tangem.domain.onramp.model.OnrampProviderWithQuote
 import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.onramp.model.isRestricted
-import com.tangem.domain.quotes.GetFiatUSDRateUseCase
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.marketing.api.LinkedBannerRequest
+import com.tangem.features.marketing.api.MarketingBannerAmount
 import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.marketing.api.concierge.ConciergeDemandSurveyComponent
 import com.tangem.features.onramp.deeplink.ConciergeWaitlistListener
@@ -52,7 +52,6 @@ import com.tangem.utils.isNullOrZero
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.math.BigDecimal
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass")
@@ -71,7 +70,6 @@ internal class OnrampMainComponentModel @Inject constructor(
     private val getOnrampOffersUseCase: GetOnrampOffersUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val messageSender: UiMessageSender,
-    private val getFiatUSDRateUseCase: GetFiatUSDRateUseCase,
     private val conciergeWaitlistListener: ConciergeWaitlistListener,
     paramsContainer: ParamsContainer,
     getWalletsUseCase: GetWalletsUseCase,
@@ -103,33 +101,22 @@ internal class OnrampMainComponentModel @Inject constructor(
         )
 
     /**
-     * USD rate of the fiat currency selected on the screen, refetched only when that currency changes so typing an
-     * amount doesn't hit the network. Seeded with `null` via [onStart] so the banner requests below emit before the
-     * first rate arrives.
-     */
-    private val selectedFiatUsdRate: Flow<FiatUsdRate?> = state
-        .map { (it as? OnrampMainComponentUM.Content)?.amountBlockState?.currencyUM?.code }
-        .distinctUntilChanged()
-        .mapLatest { code -> code?.let { FiatUsdRate(fiatCode = it, rate = getFiatUSDRateUseCase(it)) } }
-        .onStart { emit(null) }
-
-    /**
      * Request flow for the standalone marketing banner.
      * [fromFiat] is the fiat currency code the user is paying in (only available once the screen is in Content state).
      * [toNetwork] is the backend network id of the target crypto currency.
      * [toContractAddress] is the contract address of the target token (empty string for coins).
-     * [amountUsd] is the typed fiat amount converted to USD (see [toAmountUsd]). It doesn't depend on provider quotes,
-     * so the campaign min/max filter also applies when the amount is outside every provider's limits.
+     * [amount] is the typed fiat amount (see [toMarketingAmount]); the banner converts it to USD for the campaigns'
+     * min/max bounds, so the bounds also apply when the amount is outside every provider's limits.
      */
-    val marketingRequest: Flow<MarketingBannerRequest?> = combine(state, selectedFiatUsdRate) { s, rate ->
-        val contentState = s as? OnrampMainComponentUM.Content ?: return@combine null
+    val marketingRequest: Flow<MarketingBannerRequest?> = state.map { s ->
+        val contentState = s as? OnrampMainComponentUM.Content ?: return@map null
         MarketingBannerRequest(
             screen = MarketingScreen.Onramp(
                 fromFiat = contentState.amountBlockState.currencyUM.code,
                 toNetwork = params.cryptoCurrency.network.rawId,
                 toContractAddress = (params.cryptoCurrency as? CryptoCurrency.Token)?.contractAddress.orEmpty(),
             ),
-            amountUsd = contentState.amountBlockState.toAmountUsd(rate),
+            amount = contentState.amountBlockState.toMarketingAmount(),
         )
     }
 
@@ -137,17 +124,17 @@ internal class OnrampMainComponentModel @Inject constructor(
      * Request flow for the LINKED_TO_PROVIDER marketing banner shown inline next to onramp provider offers.
      * Carries no provider id: provider matching is done per offer at render time (each offer row asks for its
      * banner via [MarketingBannerComponent.LinkedContent]), mirroring iOS.
-     * [amountUsd] follows the same rules as in [marketingRequest].
+     * [amount] follows the same rules as in [marketingRequest].
      */
-    val linkedMarketingRequest: Flow<LinkedBannerRequest?> = combine(state, selectedFiatUsdRate) { s, rate ->
-        val contentState = s as? OnrampMainComponentUM.Content ?: return@combine null
+    val linkedMarketingRequest: Flow<LinkedBannerRequest?> = state.map { s ->
+        val contentState = s as? OnrampMainComponentUM.Content ?: return@map null
         LinkedBannerRequest(
             screen = MarketingScreen.Onramp(
                 fromFiat = contentState.amountBlockState.currencyUM.code,
                 toNetwork = params.cryptoCurrency.network.rawId,
                 toContractAddress = (params.cryptoCurrency as? CryptoCurrency.Token)?.contractAddress.orEmpty(),
             ),
-            amountUsd = contentState.amountBlockState.toAmountUsd(rate),
+            amount = contentState.amountBlockState.toMarketingAmount(),
         )
     }
 
@@ -532,14 +519,11 @@ internal class OnrampMainComponentModel @Inject constructor(
         }
     }
 
-    /**
-     * Null when nothing is typed, or when the rate is unknown — not fetched yet for a just-selected currency, or
-     * unavailable — so campaigns with amount bounds stay hidden rather than matched against a wrong amount.
-     */
-    private fun OnrampAmountBlockUM.toAmountUsd(rate: FiatUsdRate?): BigDecimal? {
-        val fiatAmount = amountFieldModel.fiatAmount.value?.takeIf { it.signum() > 0 } ?: return null
-        if (rate?.fiatCode != currencyUM.code) return null
-        return rate.rate?.let(fiatAmount::multiply)
+    /** Null while the field is empty; a typed `0` is still an amount. */
+    private fun OnrampAmountBlockUM.toMarketingAmount(): MarketingBannerAmount.Fiat? {
+        if (amountFieldModel.fiatValue.isEmpty()) return null
+        val value = amountFieldModel.fiatAmount.value ?: return null
+        return MarketingBannerAmount.Fiat(value = value, currencyCode = currencyUM.code)
     }
 
     /** Reports every newly restricted provider once; an empty [quotes] re-arms the guard. */
@@ -619,5 +603,3 @@ internal class OnrampMainComponentModel @Inject constructor(
         const val UPDATE_DELAY = 10_000L
     }
 }
-
-private data class FiatUsdRate(val fiatCode: String, val rate: BigDecimal?)
