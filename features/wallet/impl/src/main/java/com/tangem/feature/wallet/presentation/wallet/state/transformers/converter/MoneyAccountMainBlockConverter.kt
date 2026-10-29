@@ -23,18 +23,16 @@ internal class MoneyAccountMainBlockConverter(
         val userWalletId = value.account.userWalletId
         return when (val statusValue = value.value) {
             is MoneyAccountStatusValue.Empty,
-            is MoneyAccountStatusValue.NotCreated,
             is MoneyAccountStatusValue.Error.ExposedDevice,
             -> MoneyAccountMainUM.Empty
             is MoneyAccountStatusValue.Onboarding.Activating -> MoneyAccountMainUM.Onboarding(
                 subtitle = resourceReference(R.string.money_account_main_status_activating),
                 onClick = moneyAccountIntents::onMoneyAccountActivatingClicked,
             )
-            is MoneyAccountStatusValue.Account -> when (statusValue) {
-                is MoneyAccountStatusValue.Account.Active -> statusValue.toUM(userWalletId)
-                is MoneyAccountStatusValue.Account.Deactivated -> MoneyAccountMainUM.Empty
-            }
-            is MoneyAccountStatusValue.Error.Unavailable -> MoneyAccountMainUM.Unavailable
+            is MoneyAccountStatusValue.Account.Active -> statusValue.toUM(userWalletId)
+            is MoneyAccountStatusValue.Error.Unavailable,
+            is MoneyAccountStatusValue.Error.NotSynced,
+            -> MoneyAccountMainUM.Unavailable
         }
     }
 
