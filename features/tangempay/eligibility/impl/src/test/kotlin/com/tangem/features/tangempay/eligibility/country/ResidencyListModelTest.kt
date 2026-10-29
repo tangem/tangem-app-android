@@ -146,6 +146,28 @@ internal class ResidencyListModelTest {
     }
 
     @Test
+    fun `GIVEN availability check fails WHEN country clicked THEN early filter retry event sent`() = runTest {
+        // Arrange
+        coEvery { getProductsAvailabilityUseCase(GERMANY.code, null) } returns VisaApiError.ServerUnavailable.left()
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.item(GERMANY.code).onClick()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(
+                TangemPayAnalyticsEvents.EligibilityRetryScreenOpened(
+                    stage = TangemPayAnalyticsEvents.EligibilityStage.EARLY_FILTER,
+                ),
+            )
+        }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN customer info request fails WHEN country clicked THEN error shown AND item loading released`() =
         runTest {
             // Arrange

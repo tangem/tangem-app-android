@@ -3,8 +3,10 @@ package com.tangem.domain.tangempay
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
+import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.pay.model.bankofframp.BankRail
+import com.tangem.domain.visa.error.VisaApiError
 
 sealed class TangemPayAnalyticsEvents(
     categoryName: String,
@@ -235,6 +237,62 @@ sealed class TangemPayAnalyticsEvents(
     class KycCancelled : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa KYC Canceled",
+    )
+
+    class VerificationResultReceived(availableProducts: Set<TangemPayProduct>) : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Verification Result Received",
+        params = buildMap {
+            put("products_available", ProductSet.of(availableProducts)?.value ?: "none")
+            put("card_available", (TangemPayProduct.PAYMENT_ACCOUNT in availableProducts).toLowercaseYesNo())
+            put("account_available", (TangemPayProduct.BANKING_ACCOUNT in availableProducts).toLowercaseYesNo())
+            putAll(entryParams(entryChannel = null))
+        },
+    )
+
+    class EligibilityRetryScreenOpened(stage: EligibilityStage) : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Eligibility Retry Screen Opened",
+        params = mapOf("stage" to stage.value),
+    )
+
+    class WalletSignatureRequested(walletType: WalletType) : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Wallet Signature Requested",
+        params = mapOf("wallet_type" to walletType.value),
+    )
+
+    class WalletSignatureFinished(result: SignatureResult, walletType: WalletType) : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Wallet Signature Finished",
+        params = mapOf("result" to result.value, "wallet_type" to walletType.value),
+    )
+
+    class OnboardingOrderCreated(
+        availableProducts: Set<TangemPayProduct>,
+        plan: TangemPayTariffPlan?,
+    ) : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Onboarding Order Created",
+        params = buildMap {
+            ProductSet.of(availableProducts)?.let { put("products", it.value) }
+            plan?.let { put("plan", if (it.isBasicTier) "basic" else "plus") }
+            put("order_type", "onboarding")
+            put("is_existing_holder", "no")
+            putAll(entryParams(entryChannel = null))
+        },
+    ), AppsFlyerIncludedEvent
+
+    class OnboardingOrderFailed(
+        error: VisaApiError,
+        availableProducts: Set<TangemPayProduct>,
+    ) : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Onboarding Order Failed",
+        params = buildMap {
+            put("error_code", error.toOrderErrorCode())
+            ProductSet.of(availableProducts)?.let { put("products", it.value) }
+        },
     )
 
     class ReplaceCardClicked : TangemPayAnalyticsEvents(
@@ -1019,6 +1077,22 @@ sealed class TangemPayAnalyticsEvents(
         DETAILS("details"),
         DEEPLINK("deeplink"),
     }
+
+    enum class EligibilityStage(val value: String) {
+        EARLY_FILTER("early_filter"),
+        AFTER_VERIFICATION("after_verification"),
+    }
+
+    enum class WalletType(val value: String) {
+        CARD("card"),
+        HOT("hot"),
+    }
+
+    enum class SignatureResult(val value: String) {
+        SIGNED("signed"),
+        CANCELLED("cancelled"),
+        FAILED("failed"),
+    }
 }
 
 private const val MISSING_WIRE_TYPE = "missing"
@@ -1030,4 +1104,18 @@ private fun Boolean.toLowercaseYesNo(): String = if (this) "yes" else "no"
 private fun entryParams(entryChannel: TangemPayAnalyticsEvents.EntryChannel?): Map<String, String> = buildMap {
     put("entry_intent", "generic")
     entryChannel?.let { put("entry_channel", it.value) }
+}
+
+private fun VisaApiError.toOrderErrorCode(): String = when (this) {
+    VisaApiError.CardIssueOfferNotAvailable,
+    VisaApiError.CustomerIsBlocked,
+    -> "not_eligible"
+    VisaApiError.CardIssueActiveOrderExists,
+    VisaApiError.AccountIssueActiveOrderExists,
+    -> "active_order_exists"
+    VisaApiError.ProductInstanceIsAlreadyActivated -> "already_onboarded"
+    VisaApiError.ServerUnavailable,
+    VisaApiError.UnknownWithoutCode,
+    -> "network"
+    else -> "other"
 }
