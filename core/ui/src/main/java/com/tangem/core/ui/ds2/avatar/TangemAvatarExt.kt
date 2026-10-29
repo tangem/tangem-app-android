@@ -102,8 +102,8 @@ internal fun TangemAvatar.Size.tokens(): AvatarTokens = when (this) {
 
 /**
  * Interpolates between two size presets so a host can morph an avatar continuously — the account row
- * shrinks its 40dp avatar to 16dp while expanding. The indicator is dropped as soon as either end lacks
- * one, because Figma draws none at [TangemAvatar.Size.X16].
+ * shrinks its 40dp avatar to 16dp while expanding. Figma draws no indicator at [TangemAvatar.Size.X16], so
+ * towards that end the indicator shrinks with the avatar and is gone once it arrives.
  */
 internal fun lerpAvatarTokens(start: AvatarTokens, stop: AvatarTokens, fraction: Float) = AvatarTokens(
     size = lerp(start = start.size, stop = stop.size, fraction = fraction),
@@ -112,11 +112,7 @@ internal fun lerpAvatarTokens(start: AvatarTokens, stop: AvatarTokens, fraction:
     iconGlyphSize = lerp(start = start.iconGlyphSize, stop = stop.iconGlyphSize, fraction = fraction),
     initialFontSize = lerp(start = start.initialFontSize, stop = stop.initialFontSize, fraction = fraction),
     initialStyle = if (fraction < 0.5f) start.initialStyle else stop.initialStyle,
-    indicatorSize = if (start.indicatorSize > 0.dp && stop.indicatorSize > 0.dp) {
-        lerp(start = start.indicatorSize, stop = stop.indicatorSize, fraction = fraction)
-    } else {
-        0.dp
-    },
+    indicatorSize = lerp(start = start.indicatorSize, stop = stop.indicatorSize, fraction = fraction),
 )
 
 @Immutable
