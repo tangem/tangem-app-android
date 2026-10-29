@@ -49,6 +49,7 @@ class EvmGaslessFeeResolver(
         nativeCurrencyStatus: CryptoCurrencyStatus,
         accountStatusList: AccountStatusList,
         sentAmount: BigDecimal? = null,
+        approval: GaslessApproval? = null,
     ): Either<GetFeeError, TransactionFeeExtended> = either {
         val walletManager = prepareWalletManager(userWallet, network)
 
@@ -57,7 +58,16 @@ class EvmGaslessFeeResolver(
             network = network,
             walletManager = walletManager,
             transactionData = transactionData,
+            allowanceSpenderAddress = approval?.spenderAddress,
         ).bind()
+        val approvalNativeFee = approval?.let { approval ->
+            tokenFeeCalculator.calculateInitialFee(
+                userWallet = userWallet,
+                network = network,
+                walletManager = walletManager,
+                transactionData = approval.approvalTransaction,
+            ).bind()
+        }
 
         selectFeePaymentStrategy(
             userWallet = userWallet,
@@ -68,6 +78,8 @@ class EvmGaslessFeeResolver(
             initialFee = initialFee,
             transactionData = transactionData,
             sentAmount = sentAmount,
+            approval = approval,
+            approvalNativeFee = approvalNativeFee,
         )
     }
 
@@ -158,8 +170,12 @@ class EvmGaslessFeeResolver(
         initialFee: TransactionFee,
         transactionData: TransactionData,
         sentAmount: BigDecimal?,
+        approval: GaslessApproval?,
+        approvalNativeFee: TransactionFee?,
     ): TransactionFeeExtended {
         val feeValue = initialFee.normal.amount.value ?: raise(GetFeeError.UnknownError)
+        // Paid in the native coin, the approve is a separate transaction, so the balance must cover both
+        val approvalFeeValue = approvalNativeFee?.normal?.amount?.value ?: BigDecimal.ZERO
 
         val networkCurrenciesStatuses = accountStatusList
             .flattenPersonalCurrencies()
@@ -171,7 +187,7 @@ class EvmGaslessFeeResolver(
             feeTokenId = nativeCurrencyStatus.currency.id,
             nativeFee = initialFee,
         )
-        return if (nativeBalance >= feeValue) {
+        return if (nativeBalance >= feeValue + approvalFeeValue) {
             nativeCoinSelectedResult
         } else {
             findTokensToPayFee(
@@ -182,6 +198,7 @@ class EvmGaslessFeeResolver(
                 networkCurrenciesStatuses = networkCurrenciesStatuses,
                 transactionData = transactionData,
                 sentAmount = sentAmount,
+                approval = approval,
             ).map { it.copy(nativeFee = initialFee) }.getOrElse { error ->
                 when (error) {
                     GaslessError.NotEnoughFunds,
@@ -202,6 +219,7 @@ class EvmGaslessFeeResolver(
         networkCurrenciesStatuses: List<CryptoCurrencyStatus>,
         transactionData: TransactionData,
         sentAmount: BigDecimal?,
+        approval: GaslessApproval?,
     ): Either<GetFeeError, TransactionFeeExtended> = either {
         val initialFee = initialTxFee.normal as? Fee.Ethereum
             ?: raiseIllegalStateError(
@@ -223,6 +241,8 @@ class EvmGaslessFeeResolver(
                 val total = status.value.amount ?: BigDecimal.ZERO
                 total > BigDecimal.ZERO || status.value.yieldSupplyStatus?.isActive == true
             }
+            // An approve batch cannot be combined with a yield-withdraw batch yet
+            .filter { approval == null || it.value.yieldSupplyStatus?.isActive != true }
             .sortedByDescending { status -> status.value.amount ?: BigDecimal.ZERO }
 
         val tokenForPayFeeStatus = candidates.firstOrNull() ?: raise(GaslessError.NoSupportedTokensFound)
@@ -235,7 +255,11 @@ class EvmGaslessFeeResolver(
             initialFee = initialFee,
             isYieldActive = isYieldActive,
             userWallet = userWallet,
+            approval = approval,
         ).bind()
+
+        // calculateTokenFee already set the approve plan; the attachment would replace it with a plain TokenPay
+        if (approval != null) return@either tokenFeeExtended
 
         attachGaslessFeePlan(
             resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,

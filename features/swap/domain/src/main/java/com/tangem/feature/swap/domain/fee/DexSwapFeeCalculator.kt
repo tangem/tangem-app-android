@@ -27,6 +27,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.GaslessApproval
+import com.tangem.domain.transaction.models.isGasless
 import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
 import com.tangem.domain.transaction.usecase.CreateTransactionDataExtrasUseCase
 import com.tangem.domain.transaction.usecase.GetEthSpecificFeeUseCase
@@ -170,24 +171,35 @@ class DexSwapFeeCalculator(
             extras = extras,
         )
 
+        val approval = (permissionState as? PermissionDataState.PermissionSettings)
+            ?.let { createGaslessApproval(fromSwapCurrencyStatus, transaction, it) }
+
         val feeExtended = when (val feeToken = selectedToken?.currency) {
             is CryptoCurrency.Token -> getFeeForTokenUseCase(
                 userWallet = fromSwapCurrencyStatus.userWallet,
                 token = feeToken,
                 transactionData = transactionData,
-                approval = (permissionState as? PermissionDataState.PermissionSettings)
-                    ?.let { createGaslessApproval(fromSwapCurrencyStatus, transaction, it) },
+                approval = approval,
             )
             is CryptoCurrency.Coin, null -> getFeeForGaslessUseCase(
                 userWallet = fromSwapCurrencyStatus.userWallet,
                 network = network,
                 transactionData = transactionData,
                 sentCurrencyStatus = fromSwapCurrencyStatus.status,
+                approval = approval,
             )
         }.bind()
 
+        // Paid in the native coin, the swap is a regular transaction and gets the native path's gas-limit margin
+        val swapFee = if (feeExtended.isGasless) {
+            feeExtended
+        } else {
+            val patchedFee = patchEthGasLimitForSwap(feeExtended.transactionFee)
+            feeExtended.copy(transactionFee = patchedFee, nativeFee = patchedFee)
+        }
+
         return DexFeeResult(
-            transactionFee = TransactionFeeResult.LoadedExtended(feeExtended),
+            transactionFee = TransactionFeeResult.LoadedExtended(swapFee),
             otherNativeFee = BigDecimal.ZERO,
             gas = transaction.gas,
         )
