@@ -47,12 +47,15 @@ internal class DefaultQuotesRepository(
      * The quotes API has no fiat-to-fiat rate, so it is derived from a coin priced in both currencies:
      * (coin price in USD) / (coin price in [fiatCurrencyCode]). Any coin gives the same ratio; Bitcoin is used
      * because it is the most widely quoted one.
+     *
+     * [QuotesFetcher.Field.ALL_PRICES] is requested although only two prices are read: the fetcher caches quotes per
+     * fiat and coin regardless of fields, so a partial quote would be served to wallet refreshes as a 0% price change.
      */
     override suspend fun getFiatUSDRate(fiatCurrencyCode: String): BigDecimal? {
         val quote = quotesFetcher.fetch(
             fiatCurrencyId = fiatCurrencyCode.uppercase(),
             currenciesIds = setOf(pivotCoinId),
-            fields = setOf(QuotesFetcher.Field.PRICE, QuotesFetcher.Field.PRICE_USD),
+            fields = setOf(QuotesFetcher.Field.ALL_PRICES),
         )
             .onLeft { TangemLogger.e("Unable to fetch $fiatCurrencyCode to USD rate: $it") }
             .getOrNull()
