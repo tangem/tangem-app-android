@@ -129,6 +129,8 @@ internal object MarketingDataModule {
 
     @Provides
     @Singleton
-    fun provideDemandSurveyRepository(tangemTechApi: TangemTechApi): DemandSurveyRepository =
-        DefaultDemandSurveyRepository(tangemTechApi = tangemTechApi)
+    fun provideDemandSurveyRepository(
+        tangemTechApi: TangemTechApi,
+        dispatchers: CoroutineDispatcherProvider,
+    ): DemandSurveyRepository = DefaultDemandSurveyRepository(tangemTechApi = tangemTechApi, dispatchers = dispatchers)
 }
