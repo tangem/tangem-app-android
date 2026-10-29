@@ -5,14 +5,15 @@ import arrow.core.left
 import com.tangem.domain.polymarket.PolymarketCredentialsLock
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketAddresses
-import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketClobAsset
 import com.tangem.domain.polymarket.model.PolymarketClobIdentity
 import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PredictionOrderSide
+import com.tangem.domain.polymarket.model.PredictionOrderSigningRoute
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderResult
 import com.tangem.domain.polymarket.model.PredictionSignedOrder
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionCredentialsProvider
 import com.tangem.utils.logging.TangemLogger
 
 /**
@@ -28,16 +29,43 @@ class PlacePredictionOrderUseCase(
     private val getApiCredentials: GetPolymarketApiCredentialsUseCase,
     private val invalidateCredentials: InvalidatePolymarketCredentialsUseCase,
     private val credentialsLock: PolymarketCredentialsLock,
+    private val sessionCredentialsProvider: PolymarketSessionCredentialsProvider,
 ) {
 
+    /** @param route the route [signedOrder] was signed on */
     suspend operator fun invoke(
         addresses: PolymarketAddresses,
         signedOrder: PredictionSignedOrder,
         version: PolymarketMarketVersion,
-    ): Either<PredictionPlaceOrderError, PredictionPlaceOrderResult> =
-        credentialsLock.withLock(addresses.userWalletId) {
+        route: PredictionOrderSigningRoute = PredictionOrderSigningRoute.Owner,
+    ): Either<PredictionPlaceOrderError, PredictionPlaceOrderResult> = when (route) {
+        PredictionOrderSigningRoute.Owner -> credentialsLock.withLock(addresses.userWalletId) {
             place(addresses = addresses, signedOrder = signedOrder, version = version)
         }
+        is PredictionOrderSigningRoute.Session -> placeWithSessionKey(
+            addresses = addresses,
+            identity = route.identity,
+            signedOrder = signedOrder,
+            version = version,
+        )
+    }
+
+    private suspend fun placeWithSessionKey(
+        addresses: PolymarketAddresses,
+        identity: PolymarketClobIdentity.Session,
+        signedOrder: PredictionSignedOrder,
+        version: PolymarketMarketVersion,
+    ): Either<PredictionPlaceOrderError, PredictionPlaceOrderResult> {
+        if (signedOrder.order.side == PredictionOrderSide.SELL) {
+            syncSharesBalance(identity = identity, signedOrder = signedOrder, version = version)
+        }
+
+        return polymarketRepository.placeOrder(identity = identity, signedOrder = signedOrder).onLeft { error ->
+            if (error is PredictionPlaceOrderError.Unauthorized) {
+                sessionCredentialsProvider.invalidate(userWalletId = addresses.userWalletId, identity = identity)
+            }
+        }
+    }
 
     private suspend fun place(
         addresses: PolymarketAddresses,
@@ -47,19 +75,13 @@ class PlacePredictionOrderUseCase(
         val credentials = getApiCredentials(userWalletId = addresses.userWalletId)
             ?: return PredictionPlaceOrderError.Unauthorized(detail = "No stored CLOB credentials").left()
 
+        val owner = PolymarketClobIdentity.Owner(address = addresses.ownerAddress, credentials = credentials)
+
         if (signedOrder.order.side == PredictionOrderSide.SELL) {
-            syncSharesBalance(
-                addresses = addresses,
-                credentials = credentials,
-                signedOrder = signedOrder,
-                version = version,
-            )
+            syncSharesBalance(identity = owner, signedOrder = signedOrder, version = version)
         }
 
-        return polymarketRepository.placeOrder(
-            identity = PolymarketClobIdentity.Owner(address = addresses.ownerAddress, credentials = credentials),
-            signedOrder = signedOrder,
-        ).onLeft { error ->
+        return polymarketRepository.placeOrder(identity = owner, signedOrder = signedOrder).onLeft { error ->
             if (error is PredictionPlaceOrderError.Unauthorized) {
                 invalidateCredentials(userWalletId = addresses.userWalletId)
             }
@@ -67,14 +89,13 @@ class PlacePredictionOrderUseCase(
     }
 
     private suspend fun syncSharesBalance(
-        addresses: PolymarketAddresses,
-        credentials: PolymarketApiCredentials,
+        identity: PolymarketClobIdentity,
         signedOrder: PredictionSignedOrder,
         version: PolymarketMarketVersion,
     ) {
         polymarketRepository.syncBalanceAllowance(
-            ownerAddress = addresses.ownerAddress,
-            credentials = credentials,
+            ownerAddress = identity.address,
+            credentials = identity.credentials,
             asset = PolymarketClobAsset.Shares(tokenId = signedOrder.order.tokenId.toString(), version = version),
         ).onLeft { error ->
             TangemLogger.e("Polymarket shares balance sync before SELL failed, sending the order anyway: $error")
