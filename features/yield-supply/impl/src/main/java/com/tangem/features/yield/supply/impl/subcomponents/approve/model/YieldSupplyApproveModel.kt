@@ -52,6 +52,7 @@ import javax.inject.Inject
 @Suppress("LongParameterList")
 @ModelScoped
 internal class YieldSupplyApproveModel @Inject constructor(
+    private val tangemBlogUrlBuilder: TangemBlogUrlBuilder,
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -115,7 +116,7 @@ internal class YieldSupplyApproveModel @Inject constructor(
 
     fun onReadMoreClick() {
         modelScope.launch {
-            urlOpener.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.WhatIsTransactionFee))
+            urlOpener.openUrl(tangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.WhatIsTransactionFee))
         }
     }
 
