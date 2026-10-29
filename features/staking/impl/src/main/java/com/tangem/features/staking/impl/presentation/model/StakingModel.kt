@@ -117,6 +117,7 @@ import javax.inject.Inject
 @Stable
 @ModelScoped
 internal class StakingModel @Inject constructor(
+    private val tangemBlogUrlBuilder: TangemBlogUrlBuilder,
     paramsContainer: ParamsContainer,
     private val stateController: StakingStateController,
     override val dispatchers: CoroutineDispatcherProvider,
@@ -631,7 +632,7 @@ internal class StakingModel @Inject constructor(
     override fun onInitialInfoBannerClick() {
         analyticsEventHandler.send(StakingAnalyticsEvent.WhatIsStaking())
         modelScope.launch {
-            innerRouter.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.HowToStake))
+            innerRouter.openUrl(tangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.HowToStake))
         }
     }
 
@@ -1097,7 +1098,7 @@ internal class StakingModel @Inject constructor(
 
     override fun onOpenLearnMoreAboutApproveClick() {
         modelScope.launch {
-            urlOpener.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.GiveRevokePermission))
+            urlOpener.openUrl(tangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.GiveRevokePermission))
         }
     }
 

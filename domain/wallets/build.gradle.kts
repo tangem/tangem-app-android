@@ -22,11 +22,6 @@ dependencies {
     implementation(deps.hilt.android)
     // endregion
 
-    // region Firebase
-    implementation(platform(deps.firebase.bom))
-    implementation(deps.firebase.analytics)
-    // endregion
-
     // region Core modules
     api(projects.core.analytics)
     api(projects.core.analytics.models)
