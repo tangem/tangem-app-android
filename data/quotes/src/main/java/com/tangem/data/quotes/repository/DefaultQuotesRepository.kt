@@ -1,5 +1,6 @@
 package com.tangem.data.quotes.repository
 
+import arrow.core.getOrElse
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.data.common.quote.QuotesFetcher
@@ -52,19 +53,25 @@ internal class DefaultQuotesRepository(
      * fiat and coin regardless of fields, so a partial quote would be served to wallet refreshes as a 0% price change.
      */
     override suspend fun getFiatUSDRate(fiatCurrencyCode: String): BigDecimal? {
-        val quote = quotesFetcher.fetch(
+        val response = quotesFetcher.fetch(
             fiatCurrencyId = fiatCurrencyCode.uppercase(),
             currenciesIds = setOf(pivotCoinId),
             fields = setOf(QuotesFetcher.Field.ALL_PRICES),
-        )
-            .onLeft { TangemLogger.e("Unable to fetch $fiatCurrencyCode to USD rate: $it") }
-            .getOrNull()
-            ?.quotes
-            ?.get(pivotCoinId)
-            ?: return null
+        ).getOrElse { error ->
+            TangemLogger.e("Unable to fetch $fiatCurrencyCode to USD rate: $error")
+            return null
+        }
 
-        val price = quote.price?.takeIf { it.signum() > 0 } ?: return null
-        val priceUsd = quote.priceUsd ?: return null
+        val quote = response.quotes[pivotCoinId]
+        val price = quote?.price?.takeIf { it.signum() > 0 }
+        val priceUsd = quote?.priceUsd
+        if (price == null || priceUsd == null) {
+            TangemLogger.e(
+                "Unable to derive $fiatCurrencyCode to USD rate from $pivotCoinId quote: " +
+                    "price=${quote?.price}, priceUsd=${quote?.priceUsd}",
+            )
+            return null
+        }
 
         return priceUsd.divide(price, MathContext.DECIMAL64)
     }
