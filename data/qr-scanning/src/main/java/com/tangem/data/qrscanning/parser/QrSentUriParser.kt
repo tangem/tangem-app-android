@@ -20,7 +20,7 @@ internal class QrSentUriParser {
         if (address.isBlank()) return null
 
         val params = extractParameters(withoutScheme)
-        val amount = params[PARAM_AMOUNT]?.toBigDecimalOrNull()
+        val amount = params[PARAM_AMOUNT]?.toBigDecimalOrNull()?.takeIf { it.signum() > 0 }
 
         val memoKey = MemoParam.keys.firstOrNull { it in params }
         val memo = memoKey?.let { key ->
