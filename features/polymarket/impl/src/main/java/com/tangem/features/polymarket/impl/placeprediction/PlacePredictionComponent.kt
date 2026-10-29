@@ -87,8 +87,8 @@ internal class PlacePredictionComponent(
     }
 
     private fun onChildBack() {
-        val summary = childStack.value.active.instance as? PlacePredictionSummaryComponent
-        if (summary?.isSubmitting() == true) return
+        val step = childStack.value.active.instance as? SubmittingStep
+        if (step?.isSubmitting() == true) return
 
         if (childStack.value.backStack.isEmpty()) {
             router.pop()
