@@ -1,6 +1,6 @@
 package com.tangem.data.polymarket.signer
 
-import com.tangem.domain.polymarket.model.PolymarketApiCredentials
+import com.tangem.domain.polymarket.model.PolymarketClobIdentity
 import javax.inject.Inject
 
 /**
@@ -17,17 +17,17 @@ internal class PolymarketL2HeaderBuilder @Inject constructor(
 
     @Suppress("LongParameterList")
     fun build(
-        ownerAddress: String,
-        credentials: PolymarketApiCredentials,
+        identity: PolymarketClobIdentity,
         requestPath: String,
         method: String = HTTP_METHOD_GET,
         timestamp: String = currentTimestampSeconds(),
         body: String? = null,
     ): Map<String, String> {
         val message = timestamp + method + requestPath + body.orEmpty()
+        val credentials = identity.credentials
         val signature = signer.sign(secret = credentials.secret, message = message)
         return mapOf(
-            HEADER_ADDRESS to ownerAddress,
+            HEADER_ADDRESS to identity.address,
             HEADER_SIGNATURE to signature,
             HEADER_TIMESTAMP to timestamp,
             HEADER_API_KEY to credentials.apiKey,
