@@ -51,6 +51,7 @@ import com.tangem.grow.datasource.polymarket.relayer.models.PolymarketNonceRespo
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
+import com.tangem.domain.polymarket.model.PolymarketClobIdentity
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketCategoryIcon
 import com.tangem.domain.polymarket.model.PolymarketEventError
@@ -747,8 +748,7 @@ internal class DefaultPolymarketRepositoryTest {
 
             // Act
             val result = repository.placeOrder(
-                ownerAddress = OWNER,
-                credentials = SYNC_CREDENTIALS,
+                identity = OWNER_IDENTITY,
                 signedOrder = signedOrder(),
             )
 
@@ -762,14 +762,45 @@ internal class DefaultPolymarketRepositoryTest {
         }
 
     @Test
+    fun `GIVEN a session identity WHEN placeOrder THEN the session key authenticates and owns the order`() = runTest {
+        // Arrange
+        val headers = slot<Map<String, String>>()
+        val body = slot<RequestBody>()
+        coEvery { clobApi.placeOrder(capture(headers), capture(body)) } returns ApiResponse.Success(placeOrderResponse())
+
+        // Act
+        val result = repository.placeOrder(identity = SESSION_IDENTITY, signedOrder = signedOrder())
+
+        // Assert
+        assertThat(result.isRight()).isTrue()
+        val sent = Buffer().also { body.captured.writeTo(it) }.readUtf8()
+        assertThat(headers.captured["POLY_ADDRESS"]).isEqualTo(SESSION_KEY)
+        assertThat(headers.captured["POLY_API_KEY"]).isEqualTo(SESSION_IDENTITY.credentials.apiKey)
+        assertThat(sent).contains(""""owner":"session-k"""")
+    }
+
+    @Test
+    fun `GIVEN a session identity WHEN getOrder THEN reads the order as the session key`() = runTest {
+        // Arrange
+        val headers = slot<Map<String, String>>()
+        coEvery { clobApi.getOrder(capture(headers), ORDER_ID) } returns httpError(code = Code.NOT_FOUND, body = null)
+
+        // Act
+        repository.getOrder(identity = SESSION_IDENTITY, orderId = ORDER_ID)
+
+        // Assert
+        assertThat(headers.captured["POLY_ADDRESS"]).isEqualTo(SESSION_KEY)
+        assertThat(headers.captured["POLY_API_KEY"]).isEqualTo(SESSION_IDENTITY.credentials.apiKey)
+    }
+
+    @Test
     fun `GIVEN a timeout WHEN placeOrder THEN the outcome is ambiguous rather than failed`() = runTest {
         // Arrange
         coEvery { clobApi.placeOrder(any(), any()) } returns timeoutError()
 
         // Act
         val result = repository.placeOrder(
-            ownerAddress = OWNER,
-            credentials = SYNC_CREDENTIALS,
+            identity = OWNER_IDENTITY,
             signedOrder = signedOrder(),
         )
 
@@ -787,8 +818,7 @@ internal class DefaultPolymarketRepositoryTest {
 
         // Act
         val result = repository.placeOrder(
-            ownerAddress = OWNER,
-            credentials = SYNC_CREDENTIALS,
+            identity = OWNER_IDENTITY,
             signedOrder = standardExchangeOrder,
         )
 
@@ -806,8 +836,7 @@ internal class DefaultPolymarketRepositoryTest {
 
         // Act
         val result = repository.placeOrder(
-            ownerAddress = OWNER,
-            credentials = SYNC_CREDENTIALS,
+            identity = OWNER_IDENTITY,
             signedOrder = signedOrder(),
         )
 
@@ -824,8 +853,7 @@ internal class DefaultPolymarketRepositoryTest {
 
         // Act
         val result = repository.placeOrder(
-            ownerAddress = OWNER,
-            credentials = SYNC_CREDENTIALS,
+            identity = OWNER_IDENTITY,
             signedOrder = signedOrder(),
         )
 
@@ -842,8 +870,7 @@ internal class DefaultPolymarketRepositoryTest {
 
         // Act
         val result = repository.placeOrder(
-            ownerAddress = OWNER,
-            credentials = SYNC_CREDENTIALS,
+            identity = OWNER_IDENTITY,
             signedOrder = signedOrder(),
         )
 
@@ -986,7 +1013,7 @@ internal class DefaultPolymarketRepositoryTest {
         )
 
         // Act
-        val result = repository.getOrder(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS, orderId = ORDER_ID)
+        val result = repository.getOrder(identity = OWNER_IDENTITY, orderId = ORDER_ID)
 
         // Assert
         assertThat(result).isEqualTo(
@@ -1007,7 +1034,7 @@ internal class DefaultPolymarketRepositoryTest {
         coEvery { clobApi.getOrder(any(), ORDER_ID) } returns httpError(code = Code.NOT_FOUND, body = "order not found")
 
         // Act
-        val result = repository.getOrder(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS, orderId = ORDER_ID)
+        val result = repository.getOrder(identity = OWNER_IDENTITY, orderId = ORDER_ID)
 
         // Assert
         assertThat(result).isEqualTo(PredictionOrderStateError.NotFound.left())
@@ -1019,7 +1046,7 @@ internal class DefaultPolymarketRepositoryTest {
         coEvery { clobApi.getOrder(any(), ORDER_ID) } returns httpError(code = Code.UNAUTHORIZED, body = "bad sig")
 
         // Act
-        val result = repository.getOrder(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS, orderId = ORDER_ID)
+        val result = repository.getOrder(identity = OWNER_IDENTITY, orderId = ORDER_ID)
 
         // Assert
         assertThat(result).isEqualTo(PredictionOrderStateError.Unauthorized(detail = "bad sig").left())
@@ -1031,7 +1058,7 @@ internal class DefaultPolymarketRepositoryTest {
         coEvery { clobApi.getOrder(any(), ORDER_ID) } returns timeoutError()
 
         // Act
-        val result = repository.getOrder(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS, orderId = ORDER_ID)
+        val result = repository.getOrder(identity = OWNER_IDENTITY, orderId = ORDER_ID)
 
         // Assert
         assertThat(result).isEqualTo(PredictionOrderStateError.Timeout.left())
@@ -1044,7 +1071,7 @@ internal class DefaultPolymarketRepositoryTest {
             httpError(code = Code.INTERNAL_SERVER_ERROR, body = "upstream")
 
         // Act
-        val result = repository.getOrder(ownerAddress = OWNER, credentials = SYNC_CREDENTIALS, orderId = ORDER_ID)
+        val result = repository.getOrder(identity = OWNER_IDENTITY, orderId = ORDER_ID)
 
         // Assert
         assertThat(result).isEqualTo(PredictionOrderStateError.Unknown(httpCode = 500, detail = "upstream").left())
@@ -1360,6 +1387,7 @@ internal class DefaultPolymarketRepositoryTest {
         const val SPENDER = "0xe111180000d2663c0091e4f400237545b87b996b"
         const val TIMESTAMP_TOLERANCE_SECONDS = 60L
         const val OWNER = "0xAbC0000000000000000000000000000000000001"
+        const val SESSION_KEY = "0x5e55000000000000000000000000000000000002"
         const val ORDER_ID = "0x6b2e"
         const val ASSET_ID = "1116047"
         const val WALLET_ID = "7CE25DC32EF792CFC32380007A4172F5B64F67E4F91D37F14B351A76DAFA33DA"
@@ -1444,6 +1472,11 @@ internal class DefaultPolymarketRepositoryTest {
             apiKey = "k",
             secret = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
             passphrase = "p",
+        )
+        val OWNER_IDENTITY = PolymarketClobIdentity.Owner(address = OWNER, credentials = SYNC_CREDENTIALS)
+        val SESSION_IDENTITY = PolymarketClobIdentity.Session(
+            address = SESSION_KEY,
+            credentials = SYNC_CREDENTIALS.copy(apiKey = "session-k"),
         )
 
         val EVENT_DTO = PolymarketEventDto(
