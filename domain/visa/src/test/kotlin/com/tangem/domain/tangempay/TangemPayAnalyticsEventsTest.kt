@@ -1,7 +1,9 @@
 package com.tangem.domain.tangempay
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -30,6 +32,19 @@ internal class TangemPayAnalyticsEventsTest {
         // Assert
         assertThat(productSet?.value).isEqualTo(model.expectedValue)
     }
+
+    @ParameterizedTest
+    @MethodSource("provideOrderErrorModels")
+    fun `GIVEN order error WHEN order failed event created THEN error code matches the spec`(model: OrderErrorModel) {
+        // Act
+        val event = TangemPayAnalyticsEvents.OnboardingOrderFailed(error = model.error, availableProducts = emptySet())
+
+        // Assert
+        assertThat(event.id).isEqualTo("[Visa Onboarding] Onboarding Order Failed")
+        assertThat(event.params).isEqualTo(mapOf("error_code" to model.expectedCode))
+    }
+
+    internal data class OrderErrorModel(val error: VisaApiError, val expectedCode: String)
 
     internal data class EventModel(
         val event: TangemPayAnalyticsEvents,
@@ -226,6 +241,150 @@ internal class TangemPayAnalyticsEventsTest {
             expectedId = "[Visa Tiers] Cancel Plus Move To Basic Clicked",
             expectedParams = mapOf("stage" to "before_deposit"),
         ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.VerificationResultReceived(
+                availableProducts = setOf(TangemPayProduct.PAYMENT_ACCOUNT, TangemPayProduct.BANKING_ACCOUNT),
+            ),
+            expectedId = "[Visa Onboarding] Verification Result Received",
+            expectedParams = mapOf(
+                "products_available" to "card+account",
+                "card_available" to "yes",
+                "account_available" to "yes",
+                "entry_intent" to "generic",
+            ),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.VerificationResultReceived(availableProducts = emptySet()),
+            expectedId = "[Visa Onboarding] Verification Result Received",
+            expectedParams = mapOf(
+                "products_available" to "none",
+                "card_available" to "no",
+                "account_available" to "no",
+                "entry_intent" to "generic",
+            ),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.EligibilityRetryScreenOpened(
+                stage = TangemPayAnalyticsEvents.EligibilityStage.EARLY_FILTER,
+            ),
+            expectedId = "[Visa Onboarding] Eligibility Retry Screen Opened",
+            expectedParams = mapOf("stage" to "early_filter"),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.EligibilityRetryScreenOpened(
+                stage = TangemPayAnalyticsEvents.EligibilityStage.AFTER_VERIFICATION,
+            ),
+            expectedId = "[Visa Onboarding] Eligibility Retry Screen Opened",
+            expectedParams = mapOf("stage" to "after_verification"),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.WalletSignatureRequested(
+                walletType = TangemPayAnalyticsEvents.WalletType.CARD,
+            ),
+            expectedId = "[Visa Onboarding] Wallet Signature Requested",
+            expectedParams = mapOf("wallet_type" to "card"),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.WalletSignatureRequested(
+                walletType = TangemPayAnalyticsEvents.WalletType.HOT,
+            ),
+            expectedId = "[Visa Onboarding] Wallet Signature Requested",
+            expectedParams = mapOf("wallet_type" to "hot"),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.WalletSignatureFinished(
+                result = TangemPayAnalyticsEvents.SignatureResult.SIGNED,
+                walletType = TangemPayAnalyticsEvents.WalletType.CARD,
+            ),
+            expectedId = "[Visa Onboarding] Wallet Signature Finished",
+            expectedParams = mapOf("result" to "signed", "wallet_type" to "card"),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.WalletSignatureFinished(
+                result = TangemPayAnalyticsEvents.SignatureResult.CANCELLED,
+                walletType = TangemPayAnalyticsEvents.WalletType.HOT,
+            ),
+            expectedId = "[Visa Onboarding] Wallet Signature Finished",
+            expectedParams = mapOf("result" to "cancelled", "wallet_type" to "hot"),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.WalletSignatureFinished(
+                result = TangemPayAnalyticsEvents.SignatureResult.FAILED,
+                walletType = TangemPayAnalyticsEvents.WalletType.CARD,
+            ),
+            expectedId = "[Visa Onboarding] Wallet Signature Finished",
+            expectedParams = mapOf("result" to "failed", "wallet_type" to "card"),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.OnboardingOrderCreated(
+                availableProducts = setOf(TangemPayProduct.PAYMENT_ACCOUNT, TangemPayProduct.BANKING_ACCOUNT),
+                plan = tariffPlan(isBasicTier = false),
+            ),
+            expectedId = "[Visa Onboarding] Onboarding Order Created",
+            expectedParams = mapOf(
+                "products" to "card+account",
+                "plan" to "plus",
+                "order_type" to "onboarding",
+                "is_existing_holder" to "no",
+                "entry_intent" to "generic",
+            ),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.OnboardingOrderCreated(
+                availableProducts = setOf(TangemPayProduct.PAYMENT_ACCOUNT),
+                plan = tariffPlan(isBasicTier = true),
+            ),
+            expectedId = "[Visa Onboarding] Onboarding Order Created",
+            expectedParams = mapOf(
+                "products" to "card",
+                "plan" to "basic",
+                "order_type" to "onboarding",
+                "is_existing_holder" to "no",
+                "entry_intent" to "generic",
+            ),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.OnboardingOrderCreated(
+                availableProducts = setOf(TangemPayProduct.BANKING_ACCOUNT),
+                plan = null,
+            ),
+            expectedId = "[Visa Onboarding] Onboarding Order Created",
+            expectedParams = mapOf(
+                "products" to "account",
+                "order_type" to "onboarding",
+                "is_existing_holder" to "no",
+                "entry_intent" to "generic",
+            ),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.OnboardingOrderFailed(
+                error = VisaApiError.CardIssueActiveOrderExists,
+                availableProducts = setOf(TangemPayProduct.PAYMENT_ACCOUNT, TangemPayProduct.BANKING_ACCOUNT),
+            ),
+            expectedId = "[Visa Onboarding] Onboarding Order Failed",
+            expectedParams = mapOf("error_code" to "active_order_exists", "products" to "card+account"),
+        ),
+    )
+
+    private fun provideOrderErrorModels() = listOf(
+        OrderErrorModel(error = VisaApiError.CardIssueOfferNotAvailable, expectedCode = "not_eligible"),
+        OrderErrorModel(error = VisaApiError.CustomerIsBlocked, expectedCode = "not_eligible"),
+        OrderErrorModel(error = VisaApiError.CardIssueActiveOrderExists, expectedCode = "active_order_exists"),
+        OrderErrorModel(error = VisaApiError.AccountIssueActiveOrderExists, expectedCode = "active_order_exists"),
+        OrderErrorModel(error = VisaApiError.ProductInstanceIsAlreadyActivated, expectedCode = "already_onboarded"),
+        OrderErrorModel(error = VisaApiError.ServerUnavailable, expectedCode = "network"),
+        OrderErrorModel(error = VisaApiError.UnknownWithoutCode, expectedCode = "network"),
+        OrderErrorModel(error = VisaApiError.Unspecified, expectedCode = "other"),
+        OrderErrorModel(error = VisaApiError.Unknown(errorCode = 104130100), expectedCode = "other"),
+    )
+
+    private fun tariffPlan(isBasicTier: Boolean) = TangemPayTariffPlan(
+        id = "plan",
+        tierId = if (isBasicTier) "BASIC" else "PLUS",
+        isBasicTier = isBasicTier,
+        name = "Plan",
+        programName = "program",
+        descriptionItems = emptyList(),
     )
 
     private fun provideProductSetModels() = listOf(
