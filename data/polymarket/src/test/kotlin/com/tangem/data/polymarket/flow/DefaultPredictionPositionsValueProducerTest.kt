@@ -7,7 +7,7 @@ import com.tangem.data.polymarket.store.PredictionPositionsValueStore
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.flow.PredictionPositionsValueProducer
-import com.tangem.domain.polymarket.model.PredictionPositionsValue
+import com.tangem.domain.models.account.PredictionPositionsValue
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
