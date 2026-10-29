@@ -735,7 +735,7 @@
   <string name="exсhange_token_description">ポートフォリオ内のアセットをこのトークンと交換する</string>
   <string name="fee_selector_choose_speed_description">速度を上げるほど承認は速くなりますが、\nネットワーク手数料も高くなります。%s</string>
   <string name="fee_selector_choose_speed_title">速度を選択</string>
-  <string name="fee_selector_choose_token_description">\nネットワーク手数料の支払いに使用するトークンを選択します。%s</string>
+  <string name="fee_selector_choose_token_description">ネットワーク手数料の支払いに使用するトークンを選択します。%s</string>
   <string name="fee_selector_choose_token_title">トークンを選択</string>
   <string name="feed_market_and_news">マーケット＆ニュース</string>
   <string name="feed_promo_earn_active_description">%2$sで最大%1$sのAPYを獲得</string>
@@ -1352,7 +1352,8 @@
   <string name="mobile_wallet_requires_min_os_warning_title">モバイルウォレットを使用するには、%1$s以降が必要です</string>
   <string name="money_account_add_funds_bank_description">銀行口座から ACH/Wire または SPEI で USD を受け取る</string>
   <string name="money_account_add_funds_receive_description">Polygon の USDC を口座アドレスに送金</string>
-  <string name="money_account_add_funds_swap_description">ウォレットの暗号資産で口座に入金</string>
+  <string name="money_account_add_funds_swap_description">ウォレットの暗号資産でUSD口座に入金</string>
+  <string name="money_account_close_account">口座を解約</string>
   <string name="money_account_main_name">USD口座</string>
   <string name="money_account_main_status_action_required">対応が必要です</string>
   <string name="money_account_main_status_activating">有効化中…</string>
@@ -1385,6 +1386,9 @@
   <string name="money_account_onboarding_transfers_card_caption">入金も、出金も。</string>
   <string name="money_account_onboarding_transfers_card_subtitle">銀行口座情報付きの専用口座で</string>
   <string name="money_account_onboarding_transfers_card_title">法定通貨の送金と受け取り</string>
+  <string name="money_account_send_fees_footer">手数料には%sのサービス料と推定ネットワーク手数料が含まれます</string>
+  <string name="money_account_send_network_fee_note">手数料には推定ネットワーク手数料%sが含まれ、ネットワークの混雑状況により変動します</string>
+  <string name="money_account_send_pay_button">%sを支払う</string>
   <string name="news_all_news">すべてのニュース</string>
   <string name="news_like">いいね</string>
   <plurals name="news_published_hours_ago">
@@ -1724,7 +1728,7 @@
   <plurals name="referral_number_of_wallets">
     <item quantity="other">%dのウォレット</item>
   </plurals>
-  <string name="referral_point_currencies_description">あなたの%2$sネットワークアドレス%3$sで友達が購入したウォレットごとに、^^30日後 ^^^^ %1$s ^^ をゲットできます </string>
+  <string name="referral_point_currencies_description">あなたの%2$sネットワークアドレス%3$sで友達が購入したウォレットごとに、^^30日後 ^^^^ %1$s ^^ をゲットできます</string>
   <string name="referral_point_currencies_title">あなた</string>
   <string name="referral_point_discount_description_prefix">以下を取得します。</string>
   <string name="referral_point_discount_description_suffix">tangem.comでウォレットを購入するとき</string>
@@ -2590,7 +2594,7 @@
   <string name="tangempay_residency_all_state">別の州を選択</string>
   <string name="tangempay_residency_search_empty">見つかりませんでした。検索条件を変更してお試しください</string>
   <string name="tangempay_residency_suggested_country">おすすめの国</string>
-  <string name="tangempay_residency_suggested_state"> おすすめの州</string>
+  <string name="tangempay_residency_suggested_state">おすすめの州</string>
   <string name="tangempay_residency_title_country">居住国</string>
   <string name="tangempay_residency_title_state">州を選択</string>
   <string name="tangempay_select_plan_btn_cancel">キャンセル</string>
@@ -2640,6 +2644,8 @@
   <string name="tangempay_unified_onboarding_fees_caption">見たままの価格で</string>
   <string name="tangempay_unified_onboarding_fees_subtitle">1 USDC = 1 USD</string>
   <string name="tangempay_unified_onboarding_fees_title">購入手数料なし。%1$s</string>
+  <string name="tangempay_unified_onboarding_interest_caption">利息</string>
+  <string name="tangempay_unified_onboarding_interest_title">保有するだけで最大4%の年利</string>
   <string name="tangempay_unified_onboarding_legal">開設できるものはお住まいの地域によって異なります。本人確認の直後にご案内します</string>
   <string name="tangempay_unified_onboarding_money_account_caption">とても便利</string>
   <string name="tangempay_unified_onboarding_money_account_header">USD口座</string>
@@ -2648,6 +2654,8 @@
   <string name="tangempay_unified_onboarding_payment_account_caption">好きな方法で支払い</string>
   <string name="tangempay_unified_onboarding_payment_account_header">Visaカード</string>
   <string name="tangempay_unified_onboarding_payment_account_title">オンラインまたは%1$s</string>
+  <string name="tangempay_unified_onboarding_payments_caption">支払い</string>
+  <string name="tangempay_unified_onboarding_payments_title">毎日の支払いにACH送金と電信送金</string>
   <string name="tangempay_unified_onboarding_plan_caption">ひとつのプラン</string>
   <string name="tangempay_unified_onboarding_plan_subtitle">Basic は無料。</string>
   <string name="tangempay_unified_onboarding_plan_title">%1$s Plus なら両方に加えて、さらに多くの特典</string>
@@ -2890,7 +2898,7 @@
   <string name="virtual_account_requisites_beneficiary_name">受取人名</string>
   <string name="virtual_account_requisites_clabe">CLABE</string>
   <string name="virtual_account_requisites_reference">参照番号</string>
-  <string name="virtual_account_requisites_routing_number">Routing number</string>
+  <string name="virtual_account_requisites_routing_number">ルーティング番号</string>
   <string name="virtual_account_title">USD口座</string>
   <string name="visa_balance_limits_details_aml_verified">AML認証済み</string>
   <string name="visa_balance_limits_details_available">利用可能</string>
@@ -2928,7 +2936,7 @@
   <string name="visa_onboarding_success_screen_description">準備完了です！</string>
   <string name="visa_onboarding_tangem_approve_description">Tangemカードを用意し、タップして承認してください。</string>
   <string name="visa_onboarding_tangem_approve_title">Tangemウォレットを準備してください。</string>
-  <string name="visa_onboarding_wallet_connect_description">\nサードパーティのWebサイト\nで接続手続きを完了し、その後Tangemアプリに戻ってください。</string>
+  <string name="visa_onboarding_wallet_connect_description">サードパーティのWebサイト\nで接続手続きを完了し、その後Tangemアプリに戻ってください。</string>
   <string name="visa_onboarding_wallet_connect_title">ウェブサイトに移動</string>
   <string name="visa_onboarding_wallet_connection_navigation_title">ウォレット接続</string>
   <string name="visa_onboarding_wallet_list_header">ウォレットを選択</string>
