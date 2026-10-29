@@ -39,7 +39,6 @@ dependencies {
     api(deps.androidx.appCompat)
     api(deps.kotlin.coroutines)
     implementation(deps.androidx.core)
-    implementation(deps.firebase.crashlytics)
     implementation(deps.sumsub.sdk)
     implementation(deps.arrow.core)
     runtimeOnly(deps.lottie)
