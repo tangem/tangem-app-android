@@ -19,23 +19,22 @@ import com.tangem.features.marketing.impl.ui.state.MarketingBannerListUM
 import com.tangem.features.marketing.impl.ui.state.MarketingBannerUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
 
-@OptIn(FlowPreview::class)
 @ModelScoped
 internal class MarketingBannerModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
@@ -88,20 +87,28 @@ internal class MarketingBannerModel @Inject constructor(
                 }
         }
 
+        // The previous screen's campaigns are cleared at once, so they're never filtered with the new amount.
         val campaigns: Flow<List<MarketingCampaign>> = requestFlow
             .map { it?.screen }
             .distinctUntilChanged()
-            .debounce(REQUEST_DEBOUNCE_MS)
-            .mapLatest { screen -> if (screen != null) fetch(screen) else emptyList() }
-            .map { list -> list.filter(::matchesUiType) }
+            .transformLatest { screen ->
+                emit(emptyList())
+                if (screen == null) return@transformLatest
+                delay(REQUEST_DEBOUNCE_MS)
+                emit(fetch(screen).filter(::matchesUiType))
+            }
 
         val amount: Flow<MarketingBannerAmount?> = requestFlow.map { it?.amount }.distinctUntilChanged()
 
         val amountMatchingCampaigns: Flow<List<MarketingCampaign>> = combine(campaigns, amount, ::Pair)
-            .mapLatest { (list, amount) ->
-                if (list.none(MarketingCampaign::hasAmountBounds)) return@mapLatest list
+            .transformLatest { (list, amount) ->
+                if (list.none(MarketingCampaign::hasAmountBounds)) {
+                    emit(list)
+                    return@transformLatest
+                }
+                if (!isUsdAvailableNow(amount)) emit(list.filterNot(MarketingCampaign::hasAmountBounds))
                 val usd = amount?.let { toUsd(it) }
-                list.filter { it.matchesUsdAmount(usd) }
+                emit(list.filter { it.matchesUsdAmount(usd) })
             }
 
         modelScope.launch {
@@ -125,10 +132,23 @@ internal class MarketingBannerModel @Inject constructor(
         is MarketingBannerAmount.Fiat -> getFiatUsdRate(amount.currencyCode)?.let(amount.value::multiply)
     }
 
+    private fun isUsdAvailableNow(amount: MarketingBannerAmount?): Boolean {
+        if (amount !is MarketingBannerAmount.Fiat) return true
+        return fiatUsdRateLookups[amount.currencyCode.uppercase()]?.isCompleted == true
+    }
+
+    /**
+     * A failed lookup evicts itself, even when nobody awaits it any more. It starts lazily, so it is already in the
+     * map when it completes.
+     */
     private suspend fun getFiatUsdRate(currencyCode: String): BigDecimal? {
         val code = currencyCode.uppercase()
-        val lookup = fiatUsdRateLookups.getOrPut(code) { modelScope.async { getFiatUSDRate(code) } }
-        return lookup.await().also { rate -> if (rate == null) fiatUsdRateLookups.remove(code, lookup) }
+        val lookup = fiatUsdRateLookups.getOrPut(code) {
+            modelScope.async(start = CoroutineStart.LAZY) {
+                getFiatUSDRate(code).also { rate -> if (rate == null) fiatUsdRateLookups.remove(code) }
+            }
+        }
+        return lookup.await()
     }
 
     private suspend fun fetch(screen: MarketingScreen): List<MarketingCampaign> =
