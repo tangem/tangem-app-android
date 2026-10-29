@@ -367,7 +367,7 @@ internal class PolymarketPositionDetailsModelTest {
     fun `GIVEN a position without a market WHEN buy tapped THEN market closed sheet is shown`() = runModelTest {
         // Arrange
         coEvery { repository.getPosition(addresses, position.id) } returns position.copy(marketId = null).right()
-        coEvery { getEvent("event") } returns createEvent(markets = listOf(createMarket())).right()
+        coEvery { getEvent(any(), "event") } returns createEvent(markets = listOf(createMarket())).right()
         val model = createModel()
         model.onResume()
         runCurrent()
@@ -400,7 +400,7 @@ internal class PolymarketPositionDetailsModelTest {
             assertThat(model.uiState.value.isMarketClosedSheetShown).isTrue()
             verify(exactly = 0) { router.push(any(), any()) }
             assertThat(model.data().event?.onClick).isNull()
-            coVerify(exactly = 0) { getEvent(any()) }
+            coVerify(exactly = 0) { getEvent(any(), any()) }
         }
 
     @Test
@@ -410,7 +410,7 @@ internal class PolymarketPositionDetailsModelTest {
             val event = CompletableDeferred<PolymarketEvent>()
             coEvery { repository.getPosition(addresses, position.id) } returns
                 position.copy(isAcceptingOrders = false).right()
-            coEvery { getEvent("event") } coAnswers { event.await().right() }
+            coEvery { getEvent(any(), "event") } coAnswers { event.await().right() }
             val model = createModel()
             model.onResume()
             runCurrent()
@@ -457,7 +457,7 @@ internal class PolymarketPositionDetailsModelTest {
     fun `GIVEN a loaded event WHEN the position size changes while indexing THEN the event is not read again`() =
         runModelTest {
             // Arrange
-            coEvery { getEvent("event") } returns createEvent(markets = listOf(createMarket())).right()
+            coEvery { getEvent(any(), "event") } returns createEvent(markets = listOf(createMarket())).right()
             val model = createModel()
             model.onResume()
             runCurrent()
@@ -474,7 +474,7 @@ internal class PolymarketPositionDetailsModelTest {
 
             // Assert
             assertThat(model.data().metrics.quantity).isEqualTo(stringReference("10"))
-            coVerify(exactly = 2) { getEvent("event") }
+            coVerify(exactly = 2) { getEvent(any(), "event") }
         }
 
     @Test
