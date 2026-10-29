@@ -3,8 +3,10 @@ package com.tangem.data.polymarket.flow
 import arrow.core.Option
 import arrow.core.some
 import com.tangem.data.polymarket.store.PredictionAccountStatusStore
+import com.tangem.data.polymarket.store.PredictionPositionsValueStore
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.account.PredictionAccountStatusValue
+import com.tangem.domain.models.account.PredictionPositionsValue
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusProducer
 import com.tangem.domain.polymarket.model.PredictionCollateral
@@ -32,6 +34,7 @@ internal class DefaultPredictionAccountStatusProducer @AssistedInject constructo
     @Assisted private val params: PredictionAccountStatusProducer.Params,
     override val flowProducerTools: FlowProducerTools,
     private val statusStore: PredictionAccountStatusStore,
+    private val positionsValueStore: PredictionPositionsValueStore,
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PredictionAccountStatusProducer {
@@ -43,8 +46,9 @@ internal class DefaultPredictionAccountStatusProducer @AssistedInject constructo
         return combine(
             statusStore.get(userWalletId = params.userWalletId),
             collateralRate(),
-        ) { stored, rate ->
-            priced(stored = stored, rate = rate)
+            positionsValueStore.get(userWalletId = params.userWalletId),
+        ) { stored, rate, positions ->
+            priced(stored = stored, rate = rate, positions = positions)
         }
             .flowOn(dispatchers.default)
     }
@@ -68,13 +72,17 @@ internal class DefaultPredictionAccountStatusProducer @AssistedInject constructo
      * an unpriced balance resolves to a failed contribution, and one failed contribution blanks the whole wallet
      * total, not just this account.
      */
-    private fun priced(stored: PredictionAccountStatusValue?, rate: CollateralRate): PredictionAccountStatusValue {
+    private fun priced(
+        stored: PredictionAccountStatusValue?,
+        rate: CollateralRate,
+        positions: PredictionPositionsValue,
+    ): PredictionAccountStatusValue {
         val value = stored ?: PredictionAccountStatusValue.Loading
         if (value !is PredictionAccountStatusValue.Active) return value
 
         return when (rate) {
             CollateralRate.Pending -> PredictionAccountStatusValue.Loading
-            is CollateralRate.Known -> value.copy(fiatRate = rate.value)
+            is CollateralRate.Known -> value.copy(fiatRate = rate.value, positions = positions)
         }
     }
 
