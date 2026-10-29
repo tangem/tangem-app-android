@@ -176,7 +176,9 @@ internal class DefaultQuotesRepositoryTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun getFiatUSDRate(model: GetFiatUSDRateModel) = runTest {
+        fun `GIVEN quotes fetch result WHEN getFiatUSDRate THEN returns derived rate or null`(
+            model: GetFiatUSDRateModel,
+        ) = runTest {
             // Arrange
             coEvery {
                 quotesFetcher.fetch(
