@@ -55,7 +55,7 @@ internal fun StakingValidatorListContent(
     LazyColumn(
         contentPadding = PaddingValues(bottom = bottomBarHeight),
         modifier = modifier
-            .background(TangemTheme.colors.background.secondary)
+            .background(TangemTheme.colors3.bg.primary)
             .padding(horizontal = 16.dp),
     ) {
         if (state is StakingStates.ValidatorState.Data) {
@@ -94,7 +94,7 @@ private fun ValidatorListItem(
                 radius = 12.dp,
                 addDefaultPadding = false,
             )
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(),
@@ -114,13 +114,13 @@ private fun ValidatorListItem(
             Text(
                 text = stringReference(item.name).resolveReference(),
                 style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
 
             Text(
                 text = item.getAprTextNeutral().resolveAnnotatedReference(),
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 modifier = Modifier.padding(top = 2.dp),
             )
         }
@@ -130,7 +130,7 @@ private fun ValidatorListItem(
                 painter = rememberVectorPainter(
                     image = ImageVector.vectorResource(id = R.drawable.ic_check_24),
                 ),
-                tint = TangemTheme.colors.icon.accent,
+                tint = TangemTheme.colors3.icon.accent.blue,
                 contentDescription = null,
             )
         }
@@ -148,7 +148,7 @@ private fun StakingTarget.getAprTextColored() = combinedReference(
         appendSpace()
         appendColored(
             text = rewardInfo?.rate.orZero().format { percent() },
-            color = TangemTheme.colors.text.accent,
+            color = TangemTheme.colors3.text.accent.blue,
         )
     },
 )

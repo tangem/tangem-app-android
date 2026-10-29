@@ -47,20 +47,26 @@ internal object BankOfframpOptionsConverter :
     }
 
     private fun convertDestination(value: BankOfframpOptionsResponse.Destination): OfframpDestination? {
-        val fee = value.fee ?: return null
-        val eta = value.eta ?: return null
         return OfframpDestination(
             rail = convertRail(value.rail) ?: return null,
-            fee = OfframpFee(
-                name = fee.name?.takeIf(String::isNotBlank),
-                amount = fee.amount ?: return null,
-                currency = fee.currency?.takeIf(String::isNotBlank) ?: return null,
-                description = fee.description?.takeIf(String::isNotBlank),
-            ),
-            eta = OfframpEta(
-                minDays = eta.minDays ?: return null,
-                maxDays = eta.maxDays ?: return null,
-            ),
+            fee = value.fee?.let(::convertFee) ?: return null,
+            eta = value.eta?.let(::convertEta) ?: return null,
+        )
+    }
+
+    fun convertFee(value: BankOfframpOptionsResponse.Fee): OfframpFee? {
+        return OfframpFee(
+            name = value.name?.takeIf(String::isNotBlank),
+            amount = value.amount ?: return null,
+            currency = value.currency?.takeIf(String::isNotBlank) ?: return null,
+            description = value.description?.takeIf(String::isNotBlank),
+        )
+    }
+
+    fun convertEta(value: BankOfframpOptionsResponse.Eta): OfframpEta? {
+        return OfframpEta(
+            minDays = value.minDays ?: return null,
+            maxDays = value.maxDays ?: return null,
         )
     }
 

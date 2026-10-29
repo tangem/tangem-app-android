@@ -75,6 +75,7 @@ Exception: `// Arrange`, `// Act`, `// Assert` in unit tests are required — se
 ## Other Rules
 
 - Unit testing: @.claude/rules/unit-testing.md
+- Analytics events — every added/changed event ships unit tests, creating the test file if it doesn't exist: @.claude/rules/analytics-testing.md
 - Decompose child contexts (`child(key)` / `childByContext`, never `this`): @.claude/rules/codestyle/decompose-child-context.md
 - Logging (`TangemLogger`; prefer `i`/`e` — only these persist to the log file): @.claude/rules/codestyle/logging.md
 - Drawable/image resource naming: @.claude/rules/codestyle/drawable-naming.md
@@ -155,7 +156,7 @@ duplication for new code. References: `ScanFailsModel`, `AppSettingsModel`.
 - **Local storage:** `AppPreferencesStore` for key-value pairs, `DataStore` for larger data
 - **Async:** Kotlin Coroutines + Flow. Inject `CoroutineDispatcherProvider` (from `core/utils`) instead of using `Dispatchers.*` directly — provides `main`, `mainImmediate`, `io`, `default`, `single`
 - **Error handling:** Arrow's `Either<Error, Success>` pattern throughout domain/data layers. `DataError` sealed hierarchy for domain errors. See `domain/core/CLAUDE.md` for the LCE pattern
-- **Analytics:** `AnalyticsEvent(category, event, params)` in `core/analytics/models/`. Feature events are sealed class hierarchies extending `AnalyticsEvent`. Send via injected `AnalyticsEventHandler`
+- **Analytics:** `AnalyticsEvent(category, event, params)` in `core/analytics/models/`. Feature events are sealed class hierarchies extending `AnalyticsEvent`. Send via injected `AnalyticsEventHandler`. New/changed events require unit tests — see `.claude/rules/analytics-testing.md`
 - **Feature toggles:** `FeatureTogglesManager` in `core/config-toggles/`. See `core/config-toggles/CLAUDE.md`.
 - **Supported languages:** `SupportedLanguages` in `core/utils/` defines the app's supported locales: en, ru, de, fr, it, ja, uk, zh, es. `getCurrentSupportedLanguageCode()` returns the device locale if supported, otherwise falls back to English. Used by API calls that accept a language parameter
 

@@ -86,7 +86,7 @@ internal fun OrganizeTokensScreen(state: OrganizeTokensState, modifier: Modifier
                 Actions(state.actions)
             }
         },
-        containerColor = TangemTheme.colors.background.secondary,
+        containerColor = TangemTheme.colors3.bg.primary,
     )
 
     EventEffect(state.scrollListToTop) {
@@ -192,7 +192,7 @@ private fun LazyItemScope.DraggableItem(
         isDragging = isItemDragging
 
         val modifierWithBackground = itemModifier
-            .background(color = TangemTheme.colors.background.primary)
+            .background(color = TangemTheme.colors3.bg.secondary)
             .semantics { lazyListItemPosition = index }
 
         when (item) {
@@ -248,7 +248,7 @@ private fun TopBar(
     Column(
         modifier = modifier
             .shadow(elevation)
-            .background(TangemTheme.colors.background.secondary)
+            .background(TangemTheme.colors3.bg.primary)
             .statusBarsPadding()
             .padding(horizontal = 16.dp)
             .fillMaxWidth(),
@@ -262,7 +262,7 @@ private fun TopBar(
             Text(
                 text = stringResourceSafe(id = R.string.organize_tokens_title),
                 style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 maxLines = 1,
             )
         }
@@ -284,7 +284,7 @@ private fun TopBar(
                     onClick = config.onSortClick,
                     shouldDimContent = config.isSortedByBalance,
                 ),
-                color = TangemTheme.colors.background.primary,
+                color = TangemTheme.colors3.bg.secondary,
             )
             RoundedActionButton(
                 modifier = Modifier
@@ -302,7 +302,7 @@ private fun TopBar(
                     isEnabled = config.isEnabled,
                     onClick = config.onGroupClick,
                 ),
-                color = TangemTheme.colors.background.primary,
+                color = TangemTheme.colors3.bg.secondary,
             )
         }
     }

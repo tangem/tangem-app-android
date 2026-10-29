@@ -45,7 +45,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.SwapTokenScreenTestTags
 import com.tangem.feature.swap.domain.models.domain.SwapUIMode
-import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.models.states.SwapNotificationUM
@@ -70,7 +69,7 @@ internal fun SwapScreenContent(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(color = TangemTheme.colors.background.secondary),
+            .background(color = TangemTheme.colors3.bg.primary),
     ) {
         Column(
             modifier = Modifier
@@ -149,12 +148,12 @@ internal fun SwapScreenContent(
                     Text(
                         text = stringResourceSafe(id = R.string.send_max_amount_label),
                         style = TangemTheme.typography.button,
-                        color = TangemTheme.colors.text.primary1,
+                        color = TangemTheme.colors3.text.primary,
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
                             .imePadding()
                             .fillMaxWidth()
-                            .background(TangemTheme.colors.button.secondary)
+                            .background(TangemTheme.colors3.bg.transparent.secondary)
                             .clickable { state.onMaxAmountSelected?.invoke() }
                             .padding(
                                 horizontal = 14.dp,
@@ -194,9 +193,7 @@ private fun MainInfo(state: SwapStateHolder) {
         modifier = Modifier.fillMaxWidth(),
     ) {
         val (topCard, bottomCard, button) = createRefs()
-        val priceImpact = state.priceImpact
         TransactionCard(
-            priceImpact = priceImpact,
             swapCardState = state.sendCardData,
             modifier = Modifier.constrainAs(topCard) {
                 top.linkTo(parent.top)
@@ -206,7 +203,6 @@ private fun MainInfo(state: SwapStateHolder) {
         val marginCard = 12.dp
         if (state.swapUIMode == SwapUIMode.Simple) {
             TransactionCardSimple(
-                priceImpact = priceImpact,
                 swapCardState = state.receiveCardData,
                 slippageUM = state.visibleSlippageUM,
                 modifier = Modifier.constrainAs(bottomCard) {
@@ -216,7 +212,6 @@ private fun MainInfo(state: SwapStateHolder) {
             )
         } else {
             TransactionCard(
-                priceImpact = priceImpact,
                 swapCardState = state.receiveCardData,
                 modifier = Modifier.constrainAs(bottomCard) {
                     top.linkTo(topCard.bottom, margin = marginCard)
@@ -266,16 +261,16 @@ private fun getAnnotatedStringForLegalsWithClick(
         val tosIndex = fullString.indexOf(tosTitle)
         val policyIndex = fullString.indexOf(policyTitle)
         val string = buildAnnotatedString {
-            withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
+            withStyle(SpanStyle(color = TangemTheme.colors3.text.secondary)) {
                 append(fullString.substring(0, tosIndex))
             }
-            withStyle(SpanStyle(color = TangemTheme.colors.text.accent)) {
+            withStyle(SpanStyle(color = TangemTheme.colors3.text.accent.blue)) {
                 append(fullString.substring(tosIndex, tosIndex + tosTitle.length))
             }
-            withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
+            withStyle(SpanStyle(color = TangemTheme.colors3.text.secondary)) {
                 append(fullString.substring(tosIndex + tosTitle.length, policyIndex))
             }
-            withStyle(SpanStyle(color = TangemTheme.colors.text.accent)) {
+            withStyle(SpanStyle(color = TangemTheme.colors3.text.accent.blue)) {
                 append(fullString.substring(policyIndex, policyIndex + policyTitle.length))
             }
         }
@@ -297,10 +292,10 @@ private fun getAnnotatedStringForLegalsWithClick(
         val fullString = stringResourceSafe(id = R.string.express_legal_one_placeholder, legal)
         val legalIndex = fullString.indexOf(legalTitle)
         val string = buildAnnotatedString {
-            withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
+            withStyle(SpanStyle(color = TangemTheme.colors3.text.secondary)) {
                 append(fullString.substring(0, legalIndex))
             }
-            withStyle(SpanStyle(color = TangemTheme.colors.text.accent)) {
+            withStyle(SpanStyle(color = TangemTheme.colors3.text.accent.blue)) {
                 append(fullString.substring(legalIndex, legalIndex + legalTitle.length))
             }
         }
@@ -335,7 +330,7 @@ private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
                 ),
             )
             .clip(CircleShape)
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .clickable(
                 enabled = state.changeCardsButtonState == ChangeCardsButtonState.ENABLED,
                 onClick = state.onChangeCardsClicked,
@@ -349,7 +344,7 @@ private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
                 Box {
                     CircularProgressIndicator(
                         modifier = Modifier.padding(12.dp),
-                        color = TangemTheme.colors.icon.primary1,
+                        color = TangemTheme.colors3.icon.primary,
                         strokeWidth = 2.dp,
                     )
                 }
@@ -358,7 +353,7 @@ private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_exchange_vertical_24),
                     contentDescription = null,
-                    tint = TangemTheme.colors.text.primary1,
+                    tint = TangemTheme.colors3.text.primary,
                     modifier = Modifier.padding(12.dp),
                 )
             }
@@ -366,7 +361,7 @@ private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_exchange_vertical_24),
                     contentDescription = null,
-                    tint = TangemTheme.colors.text.disabled,
+                    tint = TangemTheme.colors3.text.tertiary,
                     modifier = Modifier.padding(12.dp),
                 )
             }
@@ -386,7 +381,7 @@ private fun SwapNotifications(notifications: List<NotificationUM>, onTronBannerS
     }
     Column(
         modifier = Modifier
-            .background(color = TangemTheme.colors.background.secondary)
+            .background(color = TangemTheme.colors3.bg.primary)
             .fillMaxWidth(),
     ) {
         notifications.forEach { notification ->
@@ -401,7 +396,7 @@ private fun SwapNotifications(notifications: List<NotificationUM>, onTronBannerS
                             CircularProgressIndicator(
                                 modifier = Modifier
                                     .size(16.dp),
-                                color = TangemTheme.colors.icon.primary1,
+                                color = TangemTheme.colors3.icon.primary,
                                 strokeWidth = 2.dp,
                             )
                         },
@@ -411,7 +406,7 @@ private fun SwapNotifications(notifications: List<NotificationUM>, onTronBannerS
                     Notification(
                         config = notification.config,
                         iconTint = when (notification) {
-                            is SwapNotificationUM.Warning.TradeTooHigh -> TangemTheme.colors.icon.warning
+                            is SwapNotificationUM.Warning.TradeTooHigh -> TangemTheme.colors3.icon.accent.red
                             is SwapNotificationUM.Error.UnableToCoverFeeWarning,
                             is NotificationUM.Error.TokenExceedsBalance,
                             is NotificationUM.Error.ExceedsBalance,
@@ -420,7 +415,7 @@ private fun SwapNotifications(notifications: List<NotificationUM>, onTronBannerS
                             -> null
                             is SwapNotificationUM.Error.GenericError,
                             is NotificationUM.Error,
-                            -> TangemTheme.colors.icon.warning
+                            -> TangemTheme.colors3.icon.accent.red
                         },
                     )
                 }
@@ -502,7 +497,6 @@ private val state = SwapStateHolder(
     onChangeCardsClicked = {},
     permissionUM = SwapPermissionUM.Empty,
     providerState = ProviderState.Loading(),
-    priceImpact = PriceImpact.Empty,
     shouldShowMaxAmount = true,
     isInsufficientFunds = false,
     onSuccess = {},

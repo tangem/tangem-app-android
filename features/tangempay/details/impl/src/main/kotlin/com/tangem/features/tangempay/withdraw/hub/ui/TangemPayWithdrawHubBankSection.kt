@@ -41,15 +41,12 @@ import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.R
 
 @Composable
 internal fun BankSection(state: BankSectionUM, modifier: Modifier = Modifier) {
-    val isAvailable = (state as? BankSectionUM.Content)?.isAvailable != false
+    val unavailableSubtitle = (state as? BankSectionUM.Content)?.takeUnless { it.isAvailable }?.unavailableSubtitle
+    val isAvailable = unavailableSubtitle == null
     Column(modifier = modifier.fillMaxWidth().testTag(TangemPayTestTags.WITHDRAW_HUB_BANK_SECTION)) {
         HubSectionHeader(
             title = resourceReference(R.string.tangempay_withdraw_hub_bank_section_title),
-            subtitle = if (isAvailable) {
-                resourceReference(R.string.tangempay_withdraw_hub_bank_section_subtitle)
-            } else {
-                resourceReference(R.string.tangempay_withdraw_hub_bank_section_subtitle_unavailable)
-            },
+            subtitle = unavailableSubtitle ?: resourceReference(R.string.tangempay_withdraw_hub_bank_section_subtitle),
             subtitleColor = if (isAvailable) {
                 TangemTheme.colors3.text.secondary
             } else {

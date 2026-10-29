@@ -2,6 +2,7 @@ package com.tangem.features.txhistory.converter
 
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.domain.txhistory.model.ExpressTx
+import com.tangem.domain.txhistory.model.JointOperationTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
@@ -13,17 +14,20 @@ import com.tangem.utils.converter.Converter
  * On-chain rows render via the plain [TxHistoryItemToTransactionItemUMConverter] (which knows only `TxInfo`); since
  * that converter cannot reference the merged row, the row click is bound here to the **incoming** [OnChainTx] so the
  * model resolves it in the live list by [TxHistoryInfo.txId]. Express rows carry their own [TxHistoryInfo] and wire
- * the click themselves in [ExpressTxToTransactionItemUMConverter].
+ * the click themselves in [ExpressTxToTransactionItemUMConverter], and joint operations in
+ * [JointOperationTxToTransactionItemUMConverter].
  */
 internal class TxHistoryInfoToTransactionItemUMConverter(
     private val txInfoConverter: TxHistoryItemToTransactionItemUMConverter,
     private val expressConverter: ExpressTxToTransactionItemUMConverter,
+    private val jointConverter: JointOperationTxToTransactionItemUMConverter,
     private val txHistoryUiActions: TxHistoryUiActions,
 ) : Converter<TxHistoryInfo, TransactionItemUM> {
 
     override fun convert(value: TxHistoryInfo): TransactionItemUM = when (value) {
         is OnChainTx -> convertOnChain(value)
         is ExpressTx -> expressConverter.convert(value)
+        is JointOperationTx -> jointConverter.convert(value)
     }
 
     private fun convertOnChain(value: OnChainTx): TransactionItemUM = when (value) {

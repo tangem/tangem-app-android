@@ -42,7 +42,7 @@ fun MarketPriceBlock(state: MarketPriceBlockState, modifier: Modifier = Modifier
     Column(
         modifier = modifier
             .background(
-                color = TangemTheme.colors.background.primary,
+                color = TangemTheme.colors3.bg.secondary,
                 shape = TangemTheme.shapes.roundedCornersXMedium,
             )
             .fillMaxWidth()
@@ -66,7 +66,7 @@ private fun Title(currencyName: String, modifier: Modifier = Modifier) {
     ) {
         Text(
             text = stringResourceSafe(id = R.string.wallet_marketplace_block_title, currencyName),
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography.subtitle2,
             modifier = Modifier.testTag(MarketPriceBlockTestTags.TEXT),
         )
@@ -136,7 +136,7 @@ private fun Price(price: String, modifier: Modifier = Modifier) {
     Text(
         text = price,
         modifier = modifier,
-        color = TangemTheme.colors.text.primary1,
+        color = TangemTheme.colors3.text.primary,
         overflow = TextOverflow.Ellipsis,
         maxLines = 1,
         style = TangemTheme.typography.body2,
@@ -164,7 +164,7 @@ private fun LoadingContent() {
 private fun QuoteTimeStatus() {
     Text(
         text = stringResourceSafe(id = R.string.wallet_marketprice_block_update_time),
-        color = TangemTheme.colors.text.tertiary,
+        color = TangemTheme.colors3.text.secondary,
         style = TangemTheme.typography.body2,
     )
 }

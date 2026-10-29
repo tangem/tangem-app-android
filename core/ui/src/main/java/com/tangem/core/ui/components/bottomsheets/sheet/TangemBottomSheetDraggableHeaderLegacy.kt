@@ -16,7 +16,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.MainScreenTestTags
 
 @Composable
-fun TangemBottomSheetDraggableHeaderLegacy(color: Color = TangemTheme.colors.background.primary) {
+fun TangemBottomSheetDraggableHeaderLegacy(color: Color = TangemTheme.colors3.bg.primary) {
     Surface(
         modifier = Modifier.height(20.dp),
         color = color,
@@ -29,7 +29,7 @@ fun TangemBottomSheetDraggableHeaderLegacy(color: Color = TangemTheme.colors.bac
                     height = 4.dp,
                 )
                 .background(
-                    color = TangemTheme.colors.icon.inactive,
+                    color = TangemTheme.colors3.icon.tertiary,
                     shape = TangemTheme.shapes.roundedCornersSmall,
                 ),
         )

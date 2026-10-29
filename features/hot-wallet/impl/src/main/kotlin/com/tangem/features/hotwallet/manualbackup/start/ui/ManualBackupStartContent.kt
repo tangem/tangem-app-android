@@ -26,7 +26,7 @@ import com.tangem.features.hotwallet.manualbackup.start.entity.ManualBackupStart
 internal fun ManualBackupStartContent(state: ManualBackupStartUM, modifier: Modifier = Modifier) {
     Column(
         modifier
-            .background(TangemTheme.colors.background.primary)
+            .background(TangemTheme.colors3.bg.primary)
             .fillMaxSize()
             .padding(
                 start = 16.dp,
@@ -49,7 +49,7 @@ internal fun ManualBackupStartContent(state: ManualBackupStartUM, modifier: Modi
                     ),
                 text = stringResourceSafe(R.string.backup_info_title),
                 style = TangemTheme.typography.h2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 textAlign = TextAlign.Center,
             )
             Text(
@@ -64,7 +64,7 @@ internal fun ManualBackupStartContent(state: ManualBackupStartUM, modifier: Modi
                     state.seepPhraseLength.toString(),
                 ),
                 style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
             )
             FeatureBlock(

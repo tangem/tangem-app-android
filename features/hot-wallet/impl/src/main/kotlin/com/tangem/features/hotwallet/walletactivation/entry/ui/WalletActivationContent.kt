@@ -24,7 +24,7 @@ internal fun WalletActivationContent(
 ) {
     Column(
         modifier = modifier
-            .background(color = TangemTheme.colors.background.primary)
+            .background(color = TangemTheme.colors3.bg.primary)
             .fillMaxSize()
             .imePadding()
             .systemBarsPadding(),

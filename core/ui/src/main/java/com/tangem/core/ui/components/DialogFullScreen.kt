@@ -40,9 +40,9 @@ fun DialogFullScreen(
             ProvideSystemBarsIconsController {
                 val activityWindow = getActivityWindow()
                 val dialogWindow = getDialogWindow()
-                val parentView = LocalView.current.parent as View
+                val parentView = LocalView.current.parent as? View
                 SideEffect {
-                    if (activityWindow != null && dialogWindow != null) {
+                    if (activityWindow != null && dialogWindow != null && parentView != null) {
                         val attributes = WindowManager.LayoutParams().apply {
                             copyFrom(activityWindow.attributes)
                             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {

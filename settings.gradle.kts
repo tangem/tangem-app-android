@@ -252,6 +252,7 @@ include(":test:mock")
 // region Core modules
 include(":core:ab-tests")
 include(":core:analytics")
+include(":core:analytics:impl")
 include(":core:analytics:models")
 include(":core:biometric-auth:api")
 include(":core:biometric-auth:impl")
@@ -288,7 +289,6 @@ include(":common:ui-markets")
 include(":libs:auth")
 include(":libs:blockchain-sdk")
 include(":libs:crypto")
-include(":libs:visa")
 include(":libs:tangem-sdk-api")
 // endregion Libs modules
 
@@ -472,8 +472,6 @@ include(":features:joint-account:api")
 include(":features:joint-account:impl")
 
 /* Money Account */
-include(":features:money-account:onboarding:api")
-include(":features:money-account:onboarding:impl")
 
 include(":features:money-account:main:api")
 include(":features:money-account:main:impl")

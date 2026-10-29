@@ -44,7 +44,7 @@ fun TangemRadioButton(
             onClick = onClick,
         ),
     ) {
-        val color = TangemTheme.colors.stroke.secondary
+        val color = TangemTheme.colors3.border.tertiary
         val radius = with(LocalDensity.current) { 9.dp.toPx() }
         val width = with(LocalDensity.current) { 2.dp.toPx() }
         Canvas(

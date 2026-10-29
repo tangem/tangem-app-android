@@ -38,7 +38,7 @@ internal fun YieldSupplyAboutApyContent(baseApy: BigDecimal, rewardsApy: BigDeci
             content = TangemBottomSheetConfigContent.Empty,
         ),
         onBack = onDismiss,
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
         title = {
             // The design's only affordance is the drag indicator, which this sheet does not render — so the close
             // button stays as the one way out that is visible.
@@ -58,7 +58,7 @@ internal fun YieldSupplyAboutApyContent(baseApy: BigDecimal, rewardsApy: BigDeci
                 Text(
                     text = stringResourceSafe(R.string.yield_module_about_apy_sheet_subtitle),
                     style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                     textAlign = TextAlign.Start,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -71,7 +71,7 @@ internal fun YieldSupplyAboutApyContent(baseApy: BigDecimal, rewardsApy: BigDeci
                     )
                     HorizontalDivider(
                         thickness = 0.5.dp,
-                        color = TangemTheme.colors.stroke.primary,
+                        color = TangemTheme.colors3.border.secondary,
                     )
                     ApyBreakdownRow(
                         title = stringResourceSafe(R.string.yield_module_about_apy_extra_rewards_title),
@@ -95,13 +95,13 @@ private fun ApyBreakdownRow(title: String, value: String) {
         Text(
             text = title,
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         SpacerWMax()
         Text(
             text = value,
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
     }
 }

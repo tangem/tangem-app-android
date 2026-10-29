@@ -87,7 +87,7 @@ internal fun TokenDetailsScreen(
     val hazeState = rememberHazeState()
     val buttonsHazeState = rememberHazeState()
 
-    val rootBackground = TangemTheme.colors2.surface.level2
+    val rootBackground = TangemTheme.colors3.bg.primary
     var marketBlockHeight by remember { mutableStateOf(0.dp) }
     val effectiveBottomPadding = marketBlockHeight + 16.dp
 

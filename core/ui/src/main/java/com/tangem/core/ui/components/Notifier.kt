@@ -24,8 +24,8 @@ import com.tangem.core.ui.res.TangemThemePreview
 fun Notifier(
     text: String,
     modifier: Modifier = Modifier,
-    textColor: Color = TangemTheme.colors.text.primary1,
-    backgroundColor: Color = TangemTheme.colors.icon.inactive,
+    textColor: Color = TangemTheme.colors3.text.primary,
+    backgroundColor: Color = TangemTheme.colors3.icon.tertiary,
 ) {
     Box(
         modifier = modifier

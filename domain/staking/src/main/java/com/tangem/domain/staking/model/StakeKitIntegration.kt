@@ -1,7 +1,6 @@
 package com.tangem.domain.staking.model
 
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.staking.YieldToken
 import com.tangem.domain.staking.model.common.RewardClaiming
 import com.tangem.domain.staking.model.common.RewardSchedule
 import com.tangem.domain.staking.model.common.StakingActionArgs

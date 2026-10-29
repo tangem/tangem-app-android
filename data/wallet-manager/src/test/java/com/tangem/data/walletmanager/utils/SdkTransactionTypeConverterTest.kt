@@ -3,7 +3,10 @@ package com.tangem.data.walletmanager.utils
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.smartcontract.CompiledSmartContractCallData
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
+import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.SdkAmount
@@ -711,6 +714,69 @@ internal class SdkTransactionTypeConverterTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class UpgradeToAndCall {
+
+        private val converter = createConverter(
+            currency = currencyFactory.createToken(Blockchain.Ethereum, contractAddress = USDT_CONTRACT),
+        )
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun convert(model: UpgradeToAndCallModel) {
+            // Arrange
+            val item = item(
+                destination = singleContract(YIELD_MODULE_CONTRACT),
+                methodId = EthereumYieldSupplyUpgradeToAndCallCallData.METHOD_ID,
+                callData = model.callData,
+            )
+
+            // Act
+            val actual = converter.convert(item)
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            UpgradeToAndCallModel(
+                name = "claim inside",
+                callData = upgradeToAndCallData(innerCallData = CLAIM_OWNER_METHOD_ID + ZERO_WORD),
+                expected = TxInfo.TransactionType.IncentiveClaim,
+            ),
+            UpgradeToAndCallModel(
+                name = "enter inside",
+                callData = upgradeToAndCallData(
+                    innerCallData = ENTER_METHOD_ID + USDT_CONTRACT.removePrefix("0x").padStart(WORD_HEX_LENGTH, '0'),
+                ),
+                expected = TxInfo.TransactionType.YieldSupply.Enter(address = USDT_CONTRACT),
+            ),
+            UpgradeToAndCallModel(
+                name = "swap inside",
+                callData = upgradeToAndCallData(innerCallData = YIELD_SWAP_METHOD_ID + ZERO_WORD),
+                expected = TxInfo.TransactionType.Swap,
+            ),
+            UpgradeToAndCallModel(
+                name = "transfer inside",
+                callData = upgradeToAndCallData(innerCallData = TRANSFER_METHOD_ID + ZERO_WORD + ZERO_WORD),
+                expected = TxInfo.TransactionType.UnknownOperation,
+            ),
+            UpgradeToAndCallModel(
+                name = "truncated",
+                callData = upgradeToAndCallData(innerCallData = CLAIM_OWNER_METHOD_ID + ZERO_WORD).dropLast(
+                    WORD_HEX_LENGTH * 2,
+                ),
+                expected = TxInfo.TransactionType.UnknownOperation,
+            ),
+            UpgradeToAndCallModel(
+                name = "no call data",
+                callData = null,
+                expected = TxInfo.TransactionType.UnknownOperation,
+            ),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class Joint {
 
         private val jointNetwork: Network = currencyFactory.ethereum.network.let { network ->
@@ -961,14 +1027,15 @@ internal class SdkTransactionTypeConverterTest {
             GASLESS_METHOD_ID to SmartContractMethod(info = null, source = null, name = "gaslessTransaction"),
             APPROVE_METHOD_ID to SmartContractMethod(info = null, source = null, name = "approve"),
             TRANSFER_METHOD_ID to SmartContractMethod(info = null, source = null, name = "transfer"),
-            ENTER_METHOD_ID to SmartContractMethod(info = null, source = null, name = "enterProtocolByOwner"),
-            EXIT_METHOD_ID to SmartContractMethod(info = null, source = null, name = "withdrawAndDeactivate"),
-            TOPUP_METHOD_ID to SmartContractMethod(info = null, source = null, name = "supplyTopUp"),
-            DEPLOY_METHOD_ID to SmartContractMethod(info = null, source = null, name = "deployYieldModule"),
-            INIT_METHOD_ID to SmartContractMethod(info = null, source = null, name = "initYieldToken"),
-            REACTIVATE_METHOD_ID to SmartContractMethod(info = null, source = null, name = "reactivateToken"),
-            CLAIM_OWNER_METHOD_ID to SmartContractMethod(info = null, source = null, name = "claimMerklRewardsOwner"),
-            CLAIM_PROCESSOR_METHOD_ID to SmartContractMethod(info = null, source = null, name = "claimMerklRewards"),
+            ENTER_METHOD_ID to SmartContractMethod(info = YIELD_MODULE_INFO, source = null, name = "enterProtocolByOwner"),
+            EXIT_METHOD_ID to SmartContractMethod(info = YIELD_MODULE_INFO, source = null, name = "withdrawAndDeactivate"),
+            TOPUP_METHOD_ID to SmartContractMethod(info = YIELD_MODULE_INFO, source = null, name = "supplyTopUp"),
+            DEPLOY_METHOD_ID to SmartContractMethod(info = YIELD_MODULE_INFO, source = null, name = "deployYieldModule"),
+            INIT_METHOD_ID to SmartContractMethod(info = YIELD_MODULE_INFO, source = null, name = "initYieldToken"),
+            REACTIVATE_METHOD_ID to SmartContractMethod(info = YIELD_MODULE_INFO, source = null, name = "reactivateToken"),
+            CLAIM_OWNER_METHOD_ID to SmartContractMethod(info = YIELD_MODULE_INFO, source = null, name = "claimMerklRewardsOwner"),
+            CLAIM_PROCESSOR_METHOD_ID to SmartContractMethod(info = YIELD_MODULE_INFO, source = null, name = "claimMerklRewards"),
+            YIELD_SWAP_METHOD_ID to SmartContractMethod(info = YIELD_MODULE_INFO, source = null, name = "swap"),
         ),
         yieldSupplyAddresses = emptySet(),
         gaslessFeeAddresses = gaslessFeeAddresses,
@@ -976,6 +1043,11 @@ internal class SdkTransactionTypeConverterTest {
         networkTokens = networkTokens,
         getCachedTokenInfoUseCase = mockk(relaxed = true),
     )
+
+    private fun upgradeToAndCallData(innerCallData: String): String = EthereumYieldSupplyUpgradeToAndCallCallData(
+        newImplementation = NEW_IMPLEMENTATION,
+        innerCallData = CompiledSmartContractCallData(innerCallData.removePrefix("0x").hexToBytes()),
+    ).dataHex
 
     private fun item(
         destination: TransactionHistoryItem.DestinationType,
@@ -1021,6 +1093,12 @@ internal class SdkTransactionTypeConverterTest {
         val methodId: String,
         val currency: CryptoCurrency,
         val amount: BigDecimal,
+    )
+
+    internal data class UpgradeToAndCallModel(
+        val name: String,
+        val callData: String?,
+        val expected: TxInfo.TransactionType,
     )
 
     internal data class YieldModuleCallModel(
@@ -1170,7 +1248,11 @@ internal class SdkTransactionTypeConverterTest {
         const val REACTIVATE_METHOD_ID = "0xc478e956"
         const val CLAIM_OWNER_METHOD_ID = "0xb4701e3e"
         const val CLAIM_PROCESSOR_METHOD_ID = "0xbebc896c"
+        const val YIELD_SWAP_METHOD_ID = "0x4c3f521d"
+        const val NEW_IMPLEMENTATION = "0x5555555555555555555555555555555555555555"
+        const val ZERO_WORD = "0000000000000000000000000000000000000000000000000000000000000000"
         const val YIELD_MODULE_CONTRACT = "0x4444444444444444444444444444444444444444"
+        const val YIELD_MODULE_INFO = "yieldModule"
 
         /** An ABI word, in hex characters: 32 bytes. */
         const val WORD_HEX_LENGTH = 64

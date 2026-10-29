@@ -24,7 +24,7 @@ internal fun NorthernLightsStory(state: NorthernLightsStory, modifier: Modifier 
     Box(modifier = modifier.fillMaxSize()) {
         NorthernLightsBackground(
             modifier = Modifier.fillMaxSize(),
-            containerColor = TangemTheme.colors2.surface.level1,
+            containerColor = TangemTheme.colors3.bg.primary,
             forceSimpleVersion = state.variant == NorthernLightsStory.Variant.Simple,
         )
 

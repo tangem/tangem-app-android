@@ -7,6 +7,7 @@ import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCoinStatus
 import com.tangem.domain.demo.models.DemoConfig
@@ -17,6 +18,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.GaslessYieldRepository
+import com.tangem.domain.transaction.YieldModuleFeatureToggles
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
@@ -31,8 +33,10 @@ class EstimateFeeForTokenUseCase(
     private val walletManagersFacade: WalletManagersFacade,
     private val demoConfig: DemoConfig,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
+    private val yieldModuleFeatureToggles: YieldModuleFeatureToggles,
 ) {
 
     private val tokenFeeCalculator = TokenFeeCalculator(
@@ -67,12 +71,23 @@ class EstimateFeeForTokenUseCase(
                             error = "only Fee.Ethereum supported, but was different",
                         )
 
+                    val nativeInitialFee = tokenFeeCalculator.estimateNativeFee(
+                        userWallet = userWallet,
+                        amount = amount,
+                        txTokenCurrencyStatus = sendingTokenCurrencyStatus,
+                        initialFee = initialTxFee,
+                        isYieldModuleV3Enabled = yieldModuleFeatureToggles.isYieldModuleV3Enabled,
+                    ).bind()
+
                     val accountStatusList = singleAccountStatusListSupplier.getSyncOrNull(userWallet.walletId)
                         ?: raiseIllegalStateError("AccountStatusList is null for ${userWallet.walletId}")
 
-                    val nativeCurrencyStatus = accountStatusList.getCoinStatus(token.network).getOrElse {
-                        raiseIllegalStateError("No native currency found: ${token.network.id}")
-                    }
+                    val nativeCurrencyStatus = resolveNetworkFeeCurrencies(
+                        nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
+                        userWalletId = userWallet.walletId,
+                        network = token.network,
+                        portfolioCoinStatus = accountStatusList.getCoinStatus(token.network).getOrNull(),
+                    ).nativeCurrencyStatus
 
                     val walletManager = prepareWalletManager(userWallet, token.network)
 
@@ -95,12 +110,12 @@ class EstimateFeeForTokenUseCase(
                             tokenFeeExtended = tokenFeeExtended,
                             amount = amount,
                             nativeFeeResult = TransactionFeeExtended(
-                                transactionFee = initialTxFee,
+                                transactionFee = nativeInitialFee,
                                 feeTokenId = nativeCurrencyStatus.currency.id,
                             ),
-                        ).copy(nativeFee = initialTxFee)
+                        ).copy(nativeFee = nativeInitialFee)
                     } else {
-                        tokenFeeExtended.copy(nativeFee = initialTxFee)
+                        tokenFeeExtended.copy(nativeFee = nativeInitialFee)
                     }
                 },
                 catch = {

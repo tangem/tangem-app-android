@@ -66,12 +66,12 @@ private fun CameraDeniedBottomSheetHeader(modifier: Modifier = Modifier) {
         Text(
             text = stringResourceSafe(id = R.string.qr_scanner_camera_denied_title),
             style = TangemTheme.typography.subtitle1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         Text(
             text = stringResourceSafe(id = R.string.qr_scanner_camera_denied_text),
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
         )
     }
 }

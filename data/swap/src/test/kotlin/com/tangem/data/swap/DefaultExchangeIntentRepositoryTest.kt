@@ -137,15 +137,15 @@ internal class DefaultExchangeIntentRepositoryTest {
         private fun provideTestModels() = listOf(
             RawFailureModel(
                 failure = httpError(ApiResponseError.HttpException.Code.BAD_REQUEST),
-                resolved = ExpressError.UnknownError,
+                resolved = ExpressError.UnknownError(),
             ),
             RawFailureModel(
                 failure = httpError(ApiResponseError.HttpException.Code.FORBIDDEN),
-                resolved = ExpressError.UnknownError,
+                resolved = ExpressError.UnknownError(),
             ),
             RawFailureModel(
-                failure = ApiResponseError.NetworkException(),
-                resolved = ExpressError.UnknownError,
+                failure = ApiResponseError.UnknownException(IllegalStateException()),
+                resolved = ExpressError.UnknownError(),
             ),
         )
 
@@ -166,31 +166,41 @@ internal class DefaultExchangeIntentRepositoryTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class ServerFailure {
+    inner class ConnectionFailure {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN express fails with 5xx WHEN getExchangeIntent THEN server error with that code is reported`(
-            code: ApiResponseError.HttpException.Code,
+        fun `GIVEN no connection or timeout WHEN getExchangeIntent THEN unreachable is reported`(
+            failure: ApiResponseError,
         ) = runTest {
             // Arrange
-            stubError(httpError(code))
-            every { expressErrorResolver.resolve(any()) } returns ExpressError.UnknownError
+            stubError(failure)
 
             // Act
             val actual = repository.getExchangeIntent(walletId, INTENT_ID)
 
             // Assert
-            val expected = ExchangeIntentError.ServerError(intentId = INTENT_ID, httpCode = code.numericCode)
-            assertThat(actual).isEqualTo(Either.Left(expected))
+            assertThat(actual).isEqualTo(Either.Left(ExchangeIntentError.Unreachable(INTENT_ID)))
+        }
+
+        @Test
+        fun `GIVEN express fails with 5xx WHEN getExchangeIntent THEN the failure is returned as is`() = runTest {
+            // Arrange
+            val failure = httpError(ApiResponseError.HttpException.Code.SERVICE_UNAVAILABLE)
+            stubError(failure)
+            every { expressErrorResolver.resolve(any()) } returns ExpressError.UnknownError()
+
+            // Act
+            val actual = repository.getExchangeIntent(walletId, INTENT_ID)
+
+            // Assert
+            assertThat(actual).isEqualTo(Either.Left(failure))
         }
 
         @Suppress("unused")
-        private fun provideTestModels() = listOf(
-            ApiResponseError.HttpException.Code.INTERNAL_SERVER_ERROR,
-            ApiResponseError.HttpException.Code.BAD_GATEWAY,
-            ApiResponseError.HttpException.Code.SERVICE_UNAVAILABLE,
-            ApiResponseError.HttpException.Code.GATEWAY_TIMEOUT,
+        private fun provideTestModels(): List<ApiResponseError> = listOf(
+            ApiResponseError.NetworkException(),
+            ApiResponseError.TimeoutException(),
         )
     }
 

@@ -10,7 +10,6 @@ import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.create
 import com.tangem.datasource.utils.setTypes
-import com.tangem.domain.walletconnect.featuretoggle.WalletConnectFeatureToggles
 import com.tangem.domain.walletconnect.model.WcPendingApprovalSessionDTO
 import com.tangem.domain.walletconnect.model.WcSessionDTO
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -32,7 +31,6 @@ internal object WalletConnectModule {
         @ApplicationContext context: Context,
         scope: AppCoroutineScope,
         dataStoreFactory: AppDataStoreFactory,
-        featureToggles: WalletConnectFeatureToggles,
     ): WalletConnectStore {
         return DefaultWalletConnectStore(
             persistenceStore = if (dataStoreFactory.isKotlinxDataStoreEnabled) {
@@ -64,7 +62,6 @@ internal object WalletConnectModule {
                     scope = scope,
                 )
             },
-            featureToggles = featureToggles,
         )
     }
 }

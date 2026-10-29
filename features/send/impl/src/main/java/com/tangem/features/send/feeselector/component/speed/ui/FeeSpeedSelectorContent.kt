@@ -98,8 +98,8 @@ private fun Title(modifier: Modifier = Modifier, onLearnMoreClick: () -> Unit) {
     val linkText = stringResourceSafe(R.string.common_learn_more)
     val fullString = stringResourceSafe(R.string.fee_selector_choose_speed_description, linkText)
     val linkTextPosition = fullString.length - linkText.length
-    val defaultColor = TangemTheme.colors.text.secondary
-    val linkColor = TangemTheme.colors.text.accent
+    val defaultColor = TangemTheme.colors3.text.secondary
+    val linkColor = TangemTheme.colors3.text.accent.blue
     val annotatedString = remember(defaultColor, linkColor, onLearnMoreClick) {
         buildAnnotatedString {
             withStyle(SpanStyle(defaultColor)) {
@@ -145,14 +145,18 @@ private fun FeeSelectorItems(
         state.feeItems.fastForEachIndexed { index, item ->
             val isSelected = item.isSameClass(state.selectedFeeItem)
             val iconTint by animateColorAsState(
-                targetValue = if (isSelected) TangemTheme.colors.icon.accent else TangemTheme.colors.text.tertiary,
+                targetValue = if (isSelected) {
+                    TangemTheme.colors3.icon.accent.blue
+                } else {
+                    TangemTheme.colors3.text.secondary
+                },
                 label = "Fee selector icon tint change",
             )
             val iconBackgroundColor by animateColorAsState(
                 targetValue = if (isSelected) {
-                    TangemTheme.colors.icon.accent.copy(alpha = 0.1F)
+                    TangemTheme.colors3.icon.accent.blue.copy(alpha = 0.1F)
                 } else {
-                    TangemTheme.colors.background.secondary
+                    TangemTheme.colors3.bg.primary
                 },
                 label = "Fee selector icon background change",
             )
@@ -162,7 +166,7 @@ private fun FeeSelectorItems(
                 .selectedBorder(isSelected = isSelected)
                 .clickableSingle(onClick = { intents.onFeeItemSelected(item) })
                 .semantics { selected = isSelected }
-                .background(TangemTheme.colors.background.action)
+                .background(TangemTheme.colors3.bg.secondary)
             when (item) {
                 is FeeItem.Custom -> CustomFeeBlock(
                     modifier = itemModifier,
@@ -241,7 +245,7 @@ private fun CustomFeeBlock(
             Box(Modifier.heightIn(min = textHeight)) {
                 Text(
                     text = stringResourceSafe(R.string.common_custom),
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                     style = TangemTheme.typography.subtitle2,
                     modifier = Modifier
                         .align(Alignment.CenterStart)
@@ -280,7 +284,7 @@ private fun ExpandedCustomFeeItems(
                     decimals = field.decimals,
                     symbol = field.symbol,
                     title = field.title,
-                    titleColor = TangemTheme.colors.text.tertiary,
+                    titleColor = TangemTheme.colors3.text.secondary,
                     info = field.label,
                     description = field.footer,
                     keyboardOptions = field.keyboardOptions,
@@ -294,7 +298,7 @@ private fun ExpandedCustomFeeItems(
                     text = field.value,
                     decimals = field.decimals,
                     title = field.title,
-                    titleColor = TangemTheme.colors.text.tertiary,
+                    titleColor = TangemTheme.colors3.text.secondary,
                     symbol = field.symbol,
                     description = field.footer,
                     onValueChange = { onValueChange(index, it) },
@@ -313,11 +317,11 @@ private fun ExpandedCustomFeeItems(
                 onValueChange = nonce.onNonceChange,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 placeholder = resourceReference(R.string.send_nonce_hint),
-                titleColor = TangemTheme.colors.text.secondary,
+                titleColor = TangemTheme.colors3.text.secondary,
                 showDivider = false,
                 modifier = Modifier
                     .background(
-                        color = TangemTheme.colors.background.primary,
+                        color = TangemTheme.colors3.bg.secondary,
                         shape = TangemTheme.shapes.roundedCornersXMedium,
                     )
                     .testTag(SelectNetworkFeeBottomSheetTestTags.NONCE_INPUT_ITEM),
@@ -372,7 +376,7 @@ internal fun RegularFeeItemContent(
 
                 Icon(
                     imageVector = ImageVector.vectorResource(R.drawable.ic_select_18_24),
-                    tint = TangemTheme.colors.icon.informative,
+                    tint = TangemTheme.colors3.icon.secondary,
                     contentDescription = null,
                 )
             }
@@ -393,14 +397,14 @@ private fun FeeDescription(
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(
             text = title.resolveReference(),
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             style = TangemTheme.typography.subtitle2,
             modifier = Modifier.testTag(SelectNetworkFeeBottomSheetTestTags.REGULAR_ITEM_TITLE),
         )
         when {
             isNotEnoughFunds -> Text(
                 text = stringResourceSafe(R.string.gasless_not_enough_funds_to_cover_token_fee),
-                color = TangemTheme.colors.text.warning,
+                color = TangemTheme.colors3.text.accent.red,
                 style = TangemTheme.typography.caption1,
             )
             isLoading -> TextShimmer(
@@ -419,7 +423,7 @@ private fun FeeValueContent(preDot: TextReference, postDot: TextReference?, elli
     } else {
         TextEllipsis.OffsetEnd(ellipsizeOffset)
     }
-    val textColor = TangemTheme.colors.text.tertiary
+    val textColor = TangemTheme.colors3.text.secondary
     val textStyle = TangemTheme.typography.caption1
     Row {
         EllipsisText(
@@ -458,7 +462,7 @@ private fun Preview(
     state: FeeSelectorUM.Content,
 ) {
     TangemThemePreview {
-        Box(Modifier.background(TangemTheme.colors.background.secondary)) {
+        Box(Modifier.background(TangemTheme.colors3.bg.primary)) {
             FeeSpeedSelectorContent(
                 state = state,
                 intents = StubFeeSpeedSelectorIntents(),

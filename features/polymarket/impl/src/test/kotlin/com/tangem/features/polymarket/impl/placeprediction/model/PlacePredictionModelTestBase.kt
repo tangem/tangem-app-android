@@ -67,6 +67,8 @@ import org.junit.jupiter.api.BeforeEach
 import java.math.BigDecimal
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPrediction
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
+import kotlinx.coroutines.CoroutineScope
 
 internal abstract class PlacePredictionModelTestBase {
 
@@ -128,11 +130,11 @@ internal abstract class PlacePredictionModelTestBase {
         every { fundingWindow.isOpen(USER_WALLET_ID) } returns isFundingOpen
         coEvery { refreshRequisites(USER_WALLET_ID) } returns REQUISITES.right()
 
-        coEvery { getEventUseCase(eventId = EVENT_ID) } returns createEvent().right()
+        coEvery { getEventUseCase(any(), eventId = EVENT_ID) } returns createEvent().right()
         coEvery { deriveAddressesUseCase.stored(userWalletId = USER_WALLET_ID) } returns ADDRESSES
         coEvery { getBalanceInteractor(addresses = ADDRESSES) } returns
             PolymarketBalanceAllowance(balance = BigDecimal("100"), allowances = mapOf("0xspender" to BigDecimal("1000"))).right()
-        coEvery { getQuoteUseCase(request = any()) } returns createQuote().right()
+        coEvery { getQuoteUseCase(any(), request = any()) } returns createQuote().right()
         coEvery { getPriceUseCase(assetId = any(), side = any()) } returns BigDecimal("0.48").right()
         coEvery { checkGeoblockUseCase() } returns false.right()
         coEvery { signOrderInteractor(request = any()) } returns SIGNED_ORDER.right()
@@ -208,6 +210,19 @@ internal abstract class PlacePredictionModelTestBase {
             paramsContainer = MutableParamsContainer(value = order),
             router = router,
             urlOpener = urlOpener,
+            dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
+            orderSubmitterFactory = createOrderSubmitterFactory(testScope),
+        ).also(models::add)
+
+    private fun createOrderSubmitterFactory(testScope: TestScope) = object : PlacePredictionOrderSubmitter.Factory {
+        override fun create(
+            params: PlacePredictionComponent.Params,
+            uiState: MutableStateFlow<PlacePredictionUM>,
+            scope: CoroutineScope,
+        ) = PlacePredictionOrderSubmitter(
+            params = params,
+            uiState = uiState,
+            scope = scope,
             getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
             sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
             messageSender = messageSender,
@@ -220,7 +235,8 @@ internal abstract class PlacePredictionModelTestBase {
             positionsRepository = positionsRepository,
             predictionFundingWindow = fundingWindow,
             positionsUpdateEmitter = positionsUpdateEmitter,
-        ).also(models::add)
+        )
+    }
 
     protected fun createStatusModel(
         testScope: TestScope,

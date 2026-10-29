@@ -25,9 +25,11 @@ import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.quote.PriceChange
 import com.tangem.feature.wallet.impl.R
 import com.tangem.utils.StringsSigns
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.persistentListOf
 
+@RemoveWithToggle("AND_18663_REDESIGNED_ACCOUNT_ROWS_ENABLED")
 internal class WalletTokenAccountItemConverter(
     private val appCurrency: AppCurrency,
     private val expandedAccounts: Set<AccountId>,
@@ -106,7 +108,7 @@ internal class WalletTokenAccountItemConverter(
                     fiat(
                         fiatCurrencyCode = appCurrency.code,
                         fiatCurrencySymbol = appCurrency.symbol,
-                        spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
+                        spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.secondary) },
                     )
                 },
             )
@@ -122,12 +124,12 @@ internal class WalletTokenAccountItemConverter(
             TotalFiatBalance.Failed -> TangemTokenRowUM.EndContentUM.Content(
                 text = styledResourceReference(
                     id = R.string.common_unreachable,
-                    spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.status.attention) },
+                    spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.accent.yellow) },
                 ),
                 endIcons = persistentListOf(
                     TangemIconUM.Icon(
                         iconRes = R.drawable.ic_attention_default_24,
-                        tintReference = { TangemTheme.colors2.graphic.status.attention },
+                        tintReference = { TangemTheme.colors3.icon.accent.yellow },
                     ),
                 ),
             )

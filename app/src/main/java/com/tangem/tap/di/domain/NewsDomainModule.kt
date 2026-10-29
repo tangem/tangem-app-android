@@ -22,18 +22,8 @@ internal object NewsDomainModule {
     }
 
     @Provides
-    fun provideObserveTrendingNewsUseCase(repository: NewsRepository): ManageTrendingNewsUseCase {
-        return ManageTrendingNewsUseCase(repository)
-    }
-
-    @Provides
     fun provideGetNewsListBatchFlowUseCase(repository: NewsRepository): GetNewsListBatchFlowUseCase {
         return GetNewsListBatchFlowUseCase(repository)
-    }
-
-    @Provides
-    fun provideFetchTrendingNewsUseCase(repository: NewsRepository): FetchTrendingNewsUseCase {
-        return FetchTrendingNewsUseCase(repository)
     }
 
     @Provides

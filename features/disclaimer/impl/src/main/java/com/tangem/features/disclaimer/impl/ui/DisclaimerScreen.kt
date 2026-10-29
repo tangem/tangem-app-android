@@ -50,8 +50,8 @@ internal fun DisclaimerScreen(state: DisclaimerUM) {
     } else {
         bottomBarHeight + 64.dp
     }
-    val backgroundColor = TangemTheme.colors.background.primary
-    val (textColor, iconColor) = TangemTheme.colors.text.primary1 to TangemTheme.colors.icon.primary1
+    val backgroundColor = TangemTheme.colors3.bg.primary
+    val (textColor, iconColor) = TangemTheme.colors3.text.primary to TangemTheme.colors3.icon.primary
     Box(
         modifier = Modifier
             .background(backgroundColor)
@@ -89,7 +89,7 @@ internal fun DisclaimerScreen(state: DisclaimerUM) {
 
 @Composable
 private fun DisclaimerContent(url: String) {
-    val backgroundColor = TangemTheme.colors.background.primary
+    val backgroundColor = TangemTheme.colors3.bg.primary
 
     val loadingTimeoutJobHolder = remember { JobHolder() }
     var isLoading by remember { mutableStateOf(true) }
@@ -113,7 +113,7 @@ private fun DisclaimerContent(url: String) {
             state = webViewState,
             modifier = Modifier
                 .fillMaxSize()
-                .background(TangemTheme.colors.background.primary)
+                .background(TangemTheme.colors3.bg.primary)
                 .testTag(DisclaimerScreenTestTags.WEB_VIEW)
                 .semantics {
                     contentDescription = "WebView URL: ${webViewState.content.getCurrentUrl() ?: url}"
@@ -139,7 +139,7 @@ private fun DisclaimerContent(url: String) {
                     .background(backgroundColor),
             ) {
                 CircularProgressIndicator(
-                    color = TangemTheme.colors.icon.informative,
+                    color = TangemTheme.colors3.icon.secondary,
                     modifier = Modifier
                         .align(Alignment.Center)
                         .padding(8.dp),

@@ -94,6 +94,14 @@ internal class CollectiblesAccountStore(
         write(userWalletId) { stored -> value.copySealed(vaultBalance = value.balance ?: stored?.balance) }
     }
 
+    /** Applies [transform] to the record as it is when written. Nothing recorded stays nothing. */
+    suspend fun update(
+        userWalletId: UserWalletId,
+        transform: (CollectiblesAccountStatusValue) -> CollectiblesAccountStatusValue,
+    ) {
+        write(userWalletId) { stored -> stored?.let(transform) }
+    }
+
     /** Records a fresh read of the vault. Nothing recorded is no account, so there is nothing to attach it to. */
     suspend fun storeBalance(userWalletId: UserWalletId, balance: CollectiblesVaultBalance) {
         write(userWalletId) { stored ->

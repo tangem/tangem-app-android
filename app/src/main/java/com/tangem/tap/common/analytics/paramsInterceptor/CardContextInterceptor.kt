@@ -35,7 +35,6 @@ class CardContextInterceptor @AssistedInject constructor(
         return when (event) {
             is TrackingContextExcludedEvent -> false
             is IntroductionProcess.ButtonScanCard,
-            is IntroductionProcess.ButtonScanCardLegacy,
             is IntroductionProcess.ButtonImportExistingWallet,
             is SignIn.ScreenOpened,
             is SignIn.ButtonAddWallet,

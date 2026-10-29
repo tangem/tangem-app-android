@@ -59,9 +59,7 @@ class TangemPayBankOfframpTest : BaseTestCase() {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO, channelsWithoutBankOfframpState)
             }
             val channelsRequestsBefore = getWireMockRequestCount("GET", eligibilityChannelsEndpoint)
-            step("Click on Tangem Pay tile") {
-                onTangemPayMainScreen { mainScreenTile.performClick() }
-            }
+            step("Click on Tangem Pay tile") { clickTangemPayTileUntilPaymentAccountOpens() }
             step("Assert eligibility channels are requested again") {
                 assertTangemPayRequestSent("GET", eligibilityChannelsEndpoint, channelsRequestsBefore)
             }

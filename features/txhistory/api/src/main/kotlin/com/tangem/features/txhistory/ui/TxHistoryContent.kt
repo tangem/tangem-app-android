@@ -104,7 +104,7 @@ private fun TxHistoryLoadMoreFooter(
         ) {
             CircularProgressIndicator(
                 modifier = Modifier.size(24.dp),
-                color = TangemTheme.colors2.graphic.neutral.tertiaryConstant,
+                color = TangemTheme.colors3.icon.secondary,
                 strokeWidth = 2.dp,
             )
         }
