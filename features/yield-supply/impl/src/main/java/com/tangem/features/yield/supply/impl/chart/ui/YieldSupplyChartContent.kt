@@ -413,7 +413,7 @@ private fun MonthLabelsRow(labels: kotlinx.collections.immutable.ImmutableList<S
 private fun AverageLabel(avr: TextReference, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.background(
-            color = TangemTheme.colors3.bg.transparent.secondary,
+            color = TangemTheme.colors3.bg.tertiary,
             shape = TangemTheme.shapes.roundedCornersSmall2,
         ),
     ) {

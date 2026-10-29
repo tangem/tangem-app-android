@@ -16,6 +16,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
@@ -157,14 +158,17 @@ fun ActionBaseButton(
             .background(color = backgroundColor)
             .testTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON),
     ) {
-        content(Modifier.align(Alignment.Center))
+        content(
+            Modifier
+                .align(Alignment.Center)
+                .alpha(if (config.isInProgress) 0f else 1f),
+        )
 
         if (config.isInProgress) {
             Loading(
                 modifier = Modifier
                     .align(alignment = Alignment.Center)
                     .matchParentSize(),
-                backgroundColor = backgroundColor,
             )
         }
     }
@@ -213,9 +217,9 @@ private fun Text(text: TextReference, textColor: Color) {
 }
 
 @Composable
-private fun Loading(backgroundColor: Color, modifier: Modifier = Modifier) {
+private fun Loading(modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier.background(color = backgroundColor),
+        modifier = modifier,
         contentAlignment = Alignment.Center,
     ) {
         CircularProgressIndicator(
