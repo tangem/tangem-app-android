@@ -14,6 +14,7 @@ import com.tangem.domain.transaction.SolanaGaslessTransactionRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.swap.domain.models.domain.ExpressTransactionModel
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
+import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.lib.crypto.BlockchainUtils.SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
@@ -38,16 +39,17 @@ internal class SolanaGaslessSwapResolver @Inject constructor(
     private val resolutionMutex = Mutex()
     private var lastResolution: Resolution? = null
 
-    suspend fun resolveFeePayer(
-        providerId: String,
-        fromSwapCurrencyStatus: SwapCurrencyStatus,
-        swapData: SwapDataModel?,
-    ): String? {
-        if (!swapFeatureToggles.isSolanaGaslessEnabled) return null
-        if (providerId in EXCLUDED_PROVIDER_IDS) return null
-        val currency = fromSwapCurrencyStatus.currency
-        // Swapping from SOL itself means wrapping it into a rent-paying wSOL account the user cannot fund
-        if (currency !is CryptoCurrency.Token || !isSolana(currency.network.rawId)) return null
+    /**
+     * Hides the providers whose txs a sponsor cannot carry, so a swap that may be sponsored falls back to another
+     * provider instead of failing on it.
+     */
+    fun excludeUnsupportedProviders(fromCurrency: CryptoCurrency, providers: List<SwapProvider>): List<SwapProvider> {
+        if (!isSponsorable(fromCurrency)) return providers
+        return providers.filterNot { it.providerId in UNSUPPORTED_PROVIDER_IDS }
+    }
+
+    suspend fun resolveFeePayer(fromSwapCurrencyStatus: SwapCurrencyStatus, swapData: SwapDataModel?): String? {
+        if (!isSponsorable(fromSwapCurrencyStatus.currency)) return null
         val txData = (swapData?.transaction as? ExpressTransactionModel.DEX)?.txData ?: return null
 
         // A single fee load asks several times for the same quote; each ask would re-parse and log it, and the
@@ -70,6 +72,11 @@ internal class SolanaGaslessSwapResolver @Inject constructor(
     }
 
     /** Fails open: an unreachable node must not hide gasless, the backend simulates the tx again on submit. */
+    // Swapping from SOL itself means wrapping it into a rent-paying wSOL account the user cannot fund
+    private fun isSponsorable(fromCurrency: CryptoCurrency): Boolean = swapFeatureToggles.isSolanaGaslessEnabled &&
+        fromCurrency is CryptoCurrency.Token &&
+        isSolana(fromCurrency.network.rawId)
+
     private suspend fun simulates(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         txData: String,
@@ -120,8 +127,8 @@ internal class SolanaGaslessSwapResolver @Inject constructor(
 
     private companion object {
         const val SOLANA_PUBLIC_KEY_LENGTH = 32
+        const val LI_FI_PROVIDER_ID = "li-fi"
 
-        // LI.FI routes leave most pool accounts outside their lookup tables, so the tx rarely fits the sponsored size
-        val EXCLUDED_PROVIDER_IDS = setOf("li-fi")
+        val UNSUPPORTED_PROVIDER_IDS = setOf(LI_FI_PROVIDER_ID)
     }
 }
