@@ -6,6 +6,7 @@ import com.tangem.utils.SupportedLanguages
 
 class GenerateBuyTangemCardLinkUseCase(
     private val walletsPromoRepository: WalletsPromoRepository,
+    private val tangemSiteUrlBuilder: TangemSiteUrlBuilder,
 ) {
 
     suspend operator fun invoke(source: Source): String {
@@ -14,9 +15,9 @@ class GenerateBuyTangemCardLinkUseCase(
 
     suspend operator fun invoke(utmCampaign: String?): String {
         val refCode = walletsPromoRepository.getReferralCodeIfExists()
-        val refCodeTag = TangemSiteUrlBuilder.getRefCodeTag(refCode)
+        val refCodeTag = tangemSiteUrlBuilder.getRefCodeTag(refCode)
         val langCode = SupportedLanguages.getCurrentSupportedLanguageCode()
-        val utmTags = TangemSiteUrlBuilder.getUtmTags(utmCampaign)
+        val utmTags = tangemSiteUrlBuilder.getUtmTags(utmCampaign)
         return "https://buy.tangem.com/$langCode?$utmTags&$refCodeTag"
     }
 
