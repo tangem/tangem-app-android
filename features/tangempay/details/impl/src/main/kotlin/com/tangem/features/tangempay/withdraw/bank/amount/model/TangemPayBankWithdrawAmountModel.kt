@@ -11,6 +11,7 @@ import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.tangempay.withdraw.bank.amount.TangemPayBankWithdrawAmountComponent
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUMFactory
@@ -116,8 +117,13 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
                 token = currentSelection().source.token,
             ).fold(
                 ifLeft = { error ->
-                    TangemLogger.withTag(TAG).e("Failed to load the network fee of a bank withdraw: $error")
-                    NetworkFeeState.Unreachable
+                    if (error == GetFeeError.GaslessError.NotEnoughFunds) {
+                        TangemLogger.withTag(TAG).i("The balance does not cover the network fee of a bank withdraw")
+                        NetworkFeeState.NotEnoughFunds
+                    } else {
+                        TangemLogger.withTag(TAG).e("Failed to load the network fee of a bank withdraw: $error")
+                        NetworkFeeState.Unreachable
+                    }
                 },
                 ifRight = NetworkFeeState::Loaded,
             )
