@@ -664,6 +664,7 @@ internal class StateBuilder(
                     priceImpact = priceImpact,
                     swapFee = swapFee,
                     isTangemPayWithdrawal = isTangemPayWithdrawal,
+                    balanceStatus = quoteModel.preparedSwapConfigState.balanceStatus,
                 ),
                 isHoldToConfirm = fromSwapCurrencyStatus.userWallet.isHotWallet,
                 onClick = actions.onSwapClick,
@@ -784,8 +785,9 @@ internal class StateBuilder(
         priceImpact: PriceImpact,
         swapFee: SwapFee?,
         isTangemPayWithdrawal: Boolean,
+        balanceStatus: SwapBalanceStatus,
     ): Boolean {
-        val isSwapTxReady = isTangemPayWithdrawal || swapFee != null
+        val isSwapTxReady = (isTangemPayWithdrawal || swapFee != null) && !isSponsorPending(swapFee, balanceStatus)
         return isSwapTxReady && notifications.none { notification ->
             notification is SwapNotificationUM.Error || notification is NotificationUM.Error ||
                 notification is SwapNotificationUM.Warning.ExpressErrorWarning ||
@@ -798,6 +800,10 @@ internal class StateBuilder(
                 notification is SwapNotificationUM.Info.PermissionNeeded
         } && !priceImpact.shouldDisableButton()
     }
+
+    /** A sponsored fee is shown as zero, so the swap must wait for its sponsor rather than go out paid by the user. */
+    private fun isSponsorPending(swapFee: SwapFee?, balanceStatus: SwapBalanceStatus): Boolean =
+        swapFee?.isSponsored == true && balanceStatus !is SwapBalanceStatus.SponsoredFee
 
     @Suppress("LongParameterList")
     fun createQuotesErrorState(
@@ -1099,6 +1105,7 @@ internal class StateBuilder(
         onStatusClick: () -> Unit,
         txUrl: String,
         swapFee: SwapFee?,
+        isFeeSponsored: Boolean,
     ): SwapStateHolder {
         val fromSwapCurrencyStatus = requireNotNull(dataState.fromSwapCurrencyStatus)
         val toSwapCurrencyStatus = requireNotNull(dataState.toSwapCurrencyStatus)
@@ -1121,7 +1128,8 @@ internal class StateBuilder(
                 isTransferMode = false,
                 providerIcon = providerState?.iconUrl.orEmpty(),
                 rate = providerState?.subtitle ?: TextReference.EMPTY,
-                fee = swapFee?.let { fee -> formatSwapFeeForSuccess(fee) },
+                fee = swapFee?.let { fee -> formatSwapFeeForSuccess(fee, isFeeSponsored) },
+                isFeeSponsored = isFeeSponsored,
                 fromTitle = getCardAccountTitle(fromSwapCurrencyStatus.account, isFromCard = true),
                 toTitle = getCardAccountTitle(toSwapCurrencyStatus.account, isFromCard = false),
                 fromTokenAmount = stringReference(swapTransactionState.fromAmount.orEmpty()),
@@ -1324,10 +1332,10 @@ internal class StateBuilder(
         return source.copy(allProviders = source.allProviders.map(::updateState).toImmutableList())
     }
 
-    private fun formatSwapFeeForSuccess(swapFee: SwapFee): TextReference {
+    private fun formatSwapFeeForSuccess(swapFee: SwapFee, isFeeSponsored: Boolean): TextReference {
         val feeAmount = swapFee.fee.amount
         // fee.amount already includes the bridge fee (folded in SwapFeeFactory); no re-add.
-        val totalFeeValue = feeAmount.value ?: BigDecimal.ZERO
+        val totalFeeValue = if (isFeeSponsored) BigDecimal.ZERO else feeAmount.value ?: BigDecimal.ZERO
         val cryptoFormatted = totalFeeValue.format {
             crypto(symbol = feeAmount.currencySymbol, decimals = feeAmount.decimals)
         }
