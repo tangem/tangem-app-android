@@ -111,6 +111,7 @@ import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.transaction.combineTransactionFees
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.error.SolanaGaslessError
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.models.isGasless
@@ -149,6 +150,7 @@ import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.params.SponsoredFeeAvailability
 import com.tangem.features.send.impl.R
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.swap.SwapFeatureToggles
@@ -337,6 +339,14 @@ internal class SwapModel @Inject constructor(
         set(value) {
             dataStateStateFlow.value = value
         }
+
+    /**
+     * Once set, the rest of this screen falls back to "not enough for fee" instead of offering the sponsored swap.
+     * Also held while a sponsored send awaits its outcome.
+     */
+    @VisibleForTesting
+    internal var isSolanaGaslessSuppressed = false
+        private set
 
     private val isTargetOnlyDestination: Boolean
         get() {
@@ -1317,6 +1327,7 @@ internal class SwapModel @Inject constructor(
                                     state = state,
                                     fee = swapFee,
                                     lastReducedBalanceBy = lastReducedBalanceBy.value,
+                                    isSolanaGaslessSuppressed = isSolanaGaslessSuppressed,
                                 )
                             }
                             val patchedStates = dataState.lastLoadedSwapStates.toMutableMap().apply {
@@ -1757,6 +1768,47 @@ internal class SwapModel @Inject constructor(
         )
     }
 
+    /**
+     * A sponsored send that ended without a refusal makes the sponsored swap available again. The quote reload that
+     * follows a failed send asks the fee selector for the sponsorship again, so after a refusal it drops the option.
+     */
+    private fun endSponsoredSendHold(isSponsoredSend: Boolean, isRefusal: Boolean) {
+        if (isSponsoredSend) isSolanaGaslessSuppressed = isRefusal
+    }
+
+    /** Returns false when the swap must not be sent: the zero fee shown would then be charged to the user's SOL. */
+    private fun prepareSponsoredSend(swapFee: SwapFee?, isSponsoredSend: Boolean): Boolean {
+        if (swapFee?.isSponsored == true && !isSponsoredSend) {
+            TangemLogger.i("onSwapClick: the sponsored fee has no sponsor at send, the swap is not sent")
+            startLoadingQuotesFromLastState()
+            showTransactionErrorAlert(
+                SwapTransactionState.Error.SolanaGaslessError(SolanaGaslessError.ServiceUnavailable(code = null)),
+            )
+            return false
+        }
+        // The submit can take up to ~40 s, and a quote reloaded meanwhile (e.g. after an amount edit) re-enables
+        // the button: it must not offer a second sponsored swap before the answer
+        if (isSponsoredSend) isSolanaGaslessSuppressed = true
+        return true
+    }
+
+    private fun onSwapTransactionError(
+        provider: SwapProvider,
+        error: SwapTransactionState.Error,
+        isSponsoredSend: Boolean,
+    ) {
+        TangemLogger.e(messageString = "onSwapClick: swap transaction error: $error", shouldSanitize = false)
+        endSponsoredSendHold(isSponsoredSend = isSponsoredSend, isRefusal = error.isSolanaGaslessRefusal)
+        if (swapFeatureToggles.isHideRejectedCexProviderEnabled) {
+            hideProviderIfRejected(provider = provider, error = error)
+            startLoadingQuotesFromLastState()
+            showTransactionErrorAlert(error = error, providerName = provider.name)
+        } else {
+            startLoadingQuotesFromLastState()
+            showTransactionErrorAlert(error)
+        }
+    }
+
     @Suppress("LongMethod")
     private fun performSwap() {
         singleTaskScheduler.cancelTask()
@@ -1795,6 +1847,19 @@ internal class SwapModel @Inject constructor(
                 )
                 return@launch
             }
+            val balanceStatus = runCatching(dispatchers.io) {
+                swapInteractor.resolveSendBalanceStatus(
+                    quoteState = lastLoadedQuotesState,
+                    fee = swapFee,
+                    lastReducedBalanceBy = lastReducedBalanceBy.value,
+                    isSolanaGaslessSuppressed = isSolanaGaslessSuppressed,
+                )
+            }.getOrElse { error ->
+                TangemLogger.e("onSwapClick: cannot resolve the balance status to send with", error)
+                lastLoadedQuotesState.preparedSwapConfigState.balanceStatus
+            }
+            val isSponsoredSend = balanceStatus is SwapBalanceStatus.SponsoredFee
+            if (!prepareSponsoredSend(swapFee, isSponsoredSend)) return@launch
             runCatching(dispatchers.io) {
                 swapInteractor.onSwap(
                     fromSwapCurrencyStatus = fromSwapCurrencyStatus,
@@ -1802,7 +1867,7 @@ internal class SwapModel @Inject constructor(
                     swapProvider = provider,
                     swapData = lastLoadedQuotesState.swapDataModel,
                     amountToSwap = requireNotNull(dataState.amount),
-                    balanceStatus = lastLoadedQuotesState.preparedSwapConfigState.balanceStatus,
+                    balanceStatus = balanceStatus,
                     fee = swapFee,
                     expressOperationType = ExpressOperationType.SWAP,
                     isTangemPayWithdrawal = isTangemPayWithdrawal,
@@ -1835,12 +1900,14 @@ internal class SwapModel @Inject constructor(
                         }
 
                         updateWalletBalance()
+                        val isFeeSponsored = balanceStatus is SwapBalanceStatus.SponsoredFee
                         uiState = stateBuilder.createSuccessState(
                             uiState = uiState,
                             swapTransactionState = swapTransactionState,
                             dataState = dataState,
                             txUrl = url,
                             swapFee = swapFee,
+                            isFeeSponsored = isFeeSponsored,
                             onExploreClick = {
                                 if (swapTransactionState.txHash.isNotEmpty()) {
                                     urlOpener.openUrl(url)
@@ -1865,22 +1932,14 @@ internal class SwapModel @Inject constructor(
                         router.replaceAll(SwapRoute.Success)
                     }
                     SwapTransactionState.DemoMode -> {
+                        endSponsoredSendHold(isSponsoredSend = isSponsoredSend, isRefusal = false)
                         showDemoModeAlert()
                     }
-                    is SwapTransactionState.Error -> {
-                        TangemLogger.e(
-                            messageString = "onSwapClick: swap transaction error: $swapTransactionState",
-                            shouldSanitize = false,
-                        )
-                        if (swapFeatureToggles.isHideRejectedCexProviderEnabled) {
-                            hideProviderIfRejected(provider = provider, error = swapTransactionState)
-                            startLoadingQuotesFromLastState()
-                            showTransactionErrorAlert(error = swapTransactionState, providerName = provider.name)
-                        } else {
-                            startLoadingQuotesFromLastState()
-                            showTransactionErrorAlert(swapTransactionState)
-                        }
-                    }
+                    is SwapTransactionState.Error -> onSwapTransactionError(
+                        provider = provider,
+                        error = swapTransactionState,
+                        isSponsoredSend = isSponsoredSend,
+                    )
                     is SwapTransactionState.TangemPayWithdrawalData -> {
                         processTangemPayWithdrawal(
                             fromSwapCurrencyStatus = fromSwapCurrencyStatus,
@@ -1890,6 +1949,7 @@ internal class SwapModel @Inject constructor(
                 }
             }.onFailure { error ->
                 TangemLogger.e("Error", error)
+                endSponsoredSendHold(isSponsoredSend = isSponsoredSend, isRefusal = false)
                 startLoadingQuotesFromLastState()
                 showAlert()
             }
@@ -3377,6 +3437,7 @@ internal class SwapModel @Inject constructor(
             selectedFeeToken = feeStateUM.feeExtraInfo.feeCryptoCurrencyStatus,
             otherNativeFee = resolveOtherNativeFee(),
             feeBucket = feeStateUM.selectedFeeItem.toFeeBucket(),
+            isSponsored = feeStateUM.feeExtraInfo.isSponsoredFeeSelected,
         )
     }
 
@@ -3617,6 +3678,16 @@ internal class SwapModel @Inject constructor(
             ).map { combinedFee -> feeExtended.copy(transactionFee = combinedFee, nativeFee = combinedFee) }
         }
 
+        override suspend fun loadSponsoredFee(userPaidFee: TransactionFee): SponsoredFeeAvailability {
+            if (isSolanaGaslessSuppressed) return SponsoredFeeAvailability.Unavailable
+            val quoteState = dataState.getCurrentLoadedSwapState() ?: return SponsoredFeeAvailability.Unavailable
+            return swapInteractor.getSponsoredFeeAvailability(
+                state = quoteState,
+                userPaidFee = userPaidFee.normal.amount.value ?: BigDecimal.ZERO,
+                lastReducedBalanceBy = lastReducedBalanceBy.value,
+            )
+        }
+
         override fun onResult(newState: FeeSelectorUM) {
             state.value = newState
 
@@ -3651,6 +3722,7 @@ internal class SwapModel @Inject constructor(
                         state = quoteState,
                         fee = swapFee,
                         lastReducedBalanceBy = lastReducedBalanceBy.value,
+                        isSolanaGaslessSuppressed = isSolanaGaslessSuppressed,
                     )
                     val patchedStates = dataState.lastLoadedSwapStates.toMutableMap().apply {
                         put(quoteState.swapProvider, patchedState)
