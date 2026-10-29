@@ -8,6 +8,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.NFT
 import com.tangem.core.analytics.models.AnalyticsParam.Key.NO_COLLECTION
 import com.tangem.core.analytics.models.AnalyticsParam.Key.STANDARD
 import com.tangem.core.analytics.models.AnalyticsParam.Key.STATE
+import com.tangem.domain.nft.models.NFTAsset
 
 sealed class NFTAnalyticsEvent(
     event: String,
@@ -52,12 +53,12 @@ sealed class NFTAnalyticsEvent(
     object Details {
         data class ScreenOpened(
             private val blockchain: String,
-            private val standard: String?,
+            private val assetId: NFTAsset.Identifier,
         ) : NFTAnalyticsEvent(
             event = "NFT Details Screen Opened",
             params = buildMap {
                 put(BLOCKCHAIN, blockchain)
-                standard?.let {
+                assetId.standard()?.let {
                     put(STANDARD, it)
                 }
             },
@@ -69,3 +70,21 @@ sealed class NFTAnalyticsEvent(
         class ButtonSend : NFTAnalyticsEvent(event = "Button - Send")
     }
 }
+
+private fun NFTAsset.Identifier.standard(): String? = when (this) {
+    is NFTAsset.Identifier.EVM -> contractType.name
+    is NFTAsset.Identifier.Solana -> tokenStandard?.let { METAPLEX_INDEX_BY_SOLANA_STANDARD[it] ?: it }
+    is NFTAsset.Identifier.TON -> null
+    is NFTAsset.Identifier.Unknown -> null
+}
+
+/**
+ * Legacy Solana standards are reported as the Metaplex `TokenStandard` index the old Moralis endpoint returns, as
+ * analytics has always received them; standards that have no index (Core) go by name.
+ */
+private val METAPLEX_INDEX_BY_SOLANA_STANDARD = mapOf(
+    "Metaplex" to "0",
+    "MetaplexEdition" to "3",
+    "ProgrammableNft" to "4",
+    "ProgrammableNftEdition" to "5",
+)
