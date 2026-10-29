@@ -16,7 +16,7 @@ class ResolvePaymentAccountStatusFromSummaryUseCase(
 
     suspend operator fun invoke(userWalletId: UserWalletId, summary: CustomerSummary): PaymentAccountStatusValue? {
         return when (val state = TangemPayCustomerStateConverter.convert(summary)) {
-            TangemPayCustomerState.Hidden, TangemPayCustomerState.Blocked -> {
+            TangemPayCustomerState.Blocked -> {
                 PaymentAccountStatusValue.Empty
             }
             TangemPayCustomerState.KycRequired -> {
