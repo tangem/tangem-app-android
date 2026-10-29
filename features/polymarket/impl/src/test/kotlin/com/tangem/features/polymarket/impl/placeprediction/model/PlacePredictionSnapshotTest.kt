@@ -71,8 +71,8 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
         advanceTimeBy(QUOTE_DEBOUNCE_MILLIS + 1)
         val summary = createSummaryModel(this, amount)
         val accepted = summary.uiState.value
-        val fees = summary.feeSheetState.value
-        val sheet = FakeSlotHost(summary.feeSheetNavigation)
+        val fees = summary.feeSheet.state.value
+        val sheet = FakeSlotHost(summary.feeSheet.navigation)
         summary.onFeeClick()
 
         // Act
@@ -81,7 +81,7 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
 
         // Assert
         assertThat(summary.uiState.value).isEqualTo(accepted)
-        assertThat(summary.feeSheetState.value).isEqualTo(fees)
+        assertThat(summary.feeSheet.state.value).isEqualTo(fees)
         assertThat(sheet.configuration).isEqualTo(Unit)
         coVerify(exactly = 1) { getQuoteUseCase(any(), any()) }
     }
