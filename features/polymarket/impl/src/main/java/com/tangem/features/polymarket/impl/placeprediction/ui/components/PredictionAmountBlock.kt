@@ -44,6 +44,7 @@ import java.math.BigDecimal
 @Composable
 internal fun PredictionAmountBlock(
     amountValue: String,
+    isAmountFromFraction: Boolean,
     amountCaption: AmountCaptionUM?,
     balance: BigDecimal?,
     isAddFundsEnabled: Boolean,
@@ -55,6 +56,7 @@ internal fun PredictionAmountBlock(
         Column {
             AmountSection(
                 amountValue = amountValue,
+                isAmountFromFraction = isAmountFromFraction,
                 amountCaption = amountCaption,
                 onAmountChange = onAmountChange,
             )
@@ -99,7 +101,12 @@ internal fun PredictionAmountBlock(
 }
 
 @Composable
-private fun AmountSection(amountValue: String, amountCaption: AmountCaptionUM?, onAmountChange: (String) -> Unit) {
+private fun AmountSection(
+    amountValue: String,
+    isAmountFromFraction: Boolean,
+    amountCaption: AmountCaptionUM?,
+    onAmountChange: (String) -> Unit,
+) {
     val amountColor by animateColorAsState(
         targetValue = if (amountValue.isBlank()) {
             TangemTheme.colors3.text.tertiary
@@ -126,6 +133,7 @@ private fun AmountSection(amountValue: String, amountCaption: AmountCaptionUM?, 
             value = amountValue,
             decimals = PolymarketConst.COLLATERAL_DISPLAY_DECIMALS,
             onValueChange = onAmountChange,
+            isValuePasted = isAmountFromFraction,
             textStyle = TangemTheme.typography3.display.medium.copy(textAlign = TextAlign.Center),
             colors = AmountTextFieldColors(
                 textColor = amountColor,
