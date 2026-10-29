@@ -3,7 +3,6 @@ package com.tangem.core.analytics.handlers.appsflyer
 import android.content.Context
 import com.appsflyer.AppsFlyerLib
 import com.appsflyer.attribution.AppsFlyerRequestListener
-import com.appsflyer.deeplink.DeepLinkListener
 import com.tangem.core.analytics.api.EventLogger
 import com.tangem.core.analytics.api.UserIdHolder
 import com.tangem.core.analytics.converters.UnderscoreAnalyticsEventConverter
@@ -22,7 +21,7 @@ interface AppsFlyerAnalyticsClient : EventLogger, UserIdHolder
 class AppsFlyerClient @AssistedInject constructor(
     @Assisted apiKey: String,
     @ApplicationContext private val context: Context,
-    deepLinkListener: DeepLinkListener,
+    deepLinkListener: TangemAFDeepLinkListener,
     conversionListener: TangemAFConversionListener,
     private val appsFlyerRepository: AppsFlyerRepository,
     private val coroutineScope: AppCoroutineScope,
