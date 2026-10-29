@@ -34,7 +34,8 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
 - After the gate the region lives in the process-wide `PredictionRegionAccess`, refreshed by Main on open and
   on pull-to-refresh. While it is restricted, Main shows the banner, Add funds is dimmed, and every order
   entry (feed, search, event, Buy more, Close) shows the restrictions modal instead of opening. A failed check
-  keeps the last answer and counts as allowed only when there is none; the amount step still checks on its own.
+  keeps the last answer and counts as allowed only when there is none; the Amount and Order steps still check
+  on their own.
 - Main returns here (`replaceAll(Onboarding)`) the moment the stored credentials are gone, even from under a
   child: nothing above Main can sign without them. So the submitting step (Summary or Order) answers an
   `Unauthorized` placement with no dialog and leaves the gate to explain it.
@@ -79,8 +80,8 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
   to 2 decimals, never more than held; a count below 0.01 keeps its precision so a remainder is not shown
   as `0`. Steps move in whole shares; 100 % is the position itself, so a full close reaches the last fraction.
 - **Ambiguous orders.** A transport or inconclusive HTTP error does not prove rejection. The submitting
-  step (Summary or Order) shows the existing error dialog with Support; keep balance/position refreshes and never resubmit
-  automatically, because the order may already be live.
+  step (Summary or Order) shows the existing error dialog with Support; keep balance/position refreshes and
+  never resubmit automatically, because the order may already be live.
 - **Position indexing.** `/positions/outcome` answers `null` until the position is indexed — for several
   seconds even for an outcome the wallet already held. Details shows Unavailable at once on a first `null`
   and retries only for a shown position whose size lags the last order. The result screen waits longer
