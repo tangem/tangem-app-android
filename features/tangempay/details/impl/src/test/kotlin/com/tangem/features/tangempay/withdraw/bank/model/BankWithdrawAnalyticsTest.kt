@@ -82,7 +82,7 @@ internal class BankWithdrawAnalyticsTest {
             ),
             PaymentAccountModel(
                 step = "send failed",
-                report = { onSendFailed() },
+                report = { onSendFailed(errorCode = FORBIDDEN_ERROR_CODE) },
                 expectedEvents = listOf(TangemPayAnalyticsEvents.Offramp.SendErrorScreenOpened()),
             ),
             PaymentAccountModel(
@@ -178,8 +178,15 @@ internal class BankWithdrawAnalyticsTest {
                 expectedEvents = listOf(transferEvent("VA Offramp Recipient Transfer Confirmed")),
             ),
             MoneyAccountModel(
-                step = "send failed",
-                report = { onSendFailed() },
+                step = "send failed with an error code",
+                report = { onSendFailed(errorCode = FORBIDDEN_ERROR_CODE) },
+                expectedEvents = listOf(
+                    transferEvent(event = "VA Send failed", params = mapOf("error_code" to "104120100")),
+                ),
+            ),
+            MoneyAccountModel(
+                step = "send failed without an error code",
+                report = { onSendFailed(errorCode = null) },
                 expectedEvents = listOf(transferEvent("VA Send failed")),
             ),
             MoneyAccountModel(
@@ -214,5 +221,6 @@ internal class BankWithdrawAnalyticsTest {
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("011")
+        const val FORBIDDEN_ERROR_CODE = 104_120_100
     }
 }
