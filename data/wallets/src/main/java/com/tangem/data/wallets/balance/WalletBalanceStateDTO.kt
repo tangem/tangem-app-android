@@ -1,10 +1,10 @@
-package com.tangem.domain.analytics.model
+package com.tangem.data.wallets.balance
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = false)
-enum class WalletBalanceState {
+internal enum class WalletBalanceStateDTO {
     @Json(name = "ToppedUp") ToppedUp,
 
     @Json(name = "Empty") Empty,

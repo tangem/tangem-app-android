@@ -2,6 +2,7 @@ package com.tangem.domain.polymarket.usecase
 
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketAddresses
+import com.tangem.domain.polymarket.model.PolymarketClobIdentity
 import com.tangem.domain.polymarket.model.PredictionOrderState
 import com.tangem.domain.polymarket.model.PredictionOrderStateError
 import com.tangem.domain.polymarket.model.PredictionOrderStatus
@@ -25,12 +26,13 @@ class AwaitDelayedPredictionOrderUseCase(
     suspend operator fun invoke(addresses: PolymarketAddresses, orderId: String): DelayedPredictionOrderOutcome {
         val credentials = getApiCredentials(userWalletId = addresses.userWalletId)
             ?: return DelayedPredictionOrderOutcome.Failed(detail = "No stored CLOB credentials")
+        val owner = PolymarketClobIdentity.Owner(address = addresses.ownerAddress, credentials = credentials)
 
         repeat(times = MAX_READS) {
             delay(READ_INTERVAL)
 
             val outcome = polymarketRepository
-                .getOrder(ownerAddress = addresses.ownerAddress, credentials = credentials, orderId = orderId)
+                .getOrder(identity = owner, orderId = orderId)
                 .fold(
                     ifLeft = { error -> error.toOutcome(orderId = orderId) },
                     ifRight = { order -> order.toOutcome(orderId = orderId) },

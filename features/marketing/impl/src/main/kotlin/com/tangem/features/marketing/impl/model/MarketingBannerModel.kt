@@ -1,5 +1,6 @@
 package com.tangem.features.marketing.impl.model
 
+import android.net.Uri
 import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -7,6 +8,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.deeplink.DeeplinkLauncher
 import com.tangem.domain.marketing.DismissMarketingBannerUseCase
 import com.tangem.domain.marketing.GetMarketingBannerUseCase
+import com.tangem.domain.marketing.MarketingUidBindingRepository
 import com.tangem.domain.marketing.models.MarketingBanner
 import com.tangem.domain.marketing.models.MarketingCampaign
 import com.tangem.domain.marketing.models.MarketingScreen
@@ -17,6 +19,7 @@ import com.tangem.features.marketing.api.MarketingBannerAmount
 import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.marketing.impl.ui.state.MarketingBannerListUM
 import com.tangem.features.marketing.impl.ui.state.MarketingBannerUM
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineStart
@@ -35,6 +38,7 @@ import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class MarketingBannerModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
@@ -43,6 +47,8 @@ internal class MarketingBannerModel @Inject constructor(
     private val dismissMarketingBanner: DismissMarketingBannerUseCase,
     private val deeplinkLauncher: DeeplinkLauncher,
     private val getFiatUSDRate: GetFiatUSDRateUseCase,
+    private val marketingUidBindingRepository: MarketingUidBindingRepository,
+    private val appCoroutineScope: AppCoroutineScope,
 ) : Model() {
 
     private val params = paramsContainer.require<MarketingBannerComponent.Params>()
@@ -67,7 +73,13 @@ internal class MarketingBannerModel @Inject constructor(
         // generic launcher for external links and when no interceptor is provided.
         val isHandledByHost = (params as? MarketingBannerComponent.Params.Standalone)
             ?.onDeeplinkClick?.invoke(deeplink) == true
-        if (!isHandledByHost) deeplinkLauncher.launch(deeplink)
+        if (isHandledByHost) bindMarketingUid(deeplink) else deeplinkLauncher.launch(deeplink)
+    }
+
+    // A link handled by the host never reaches MainActivity, which binds the uid of every other link
+    private fun bindMarketingUid(deeplink: String) {
+        val uid = Uri.parse(deeplink).getQueryParameters(MARKETING_UID_PARAM).firstOrNull(String::isNotEmpty) ?: return
+        appCoroutineScope.launch { marketingUidBindingRepository.bind(uid) }
     }
 
     fun onDismiss(campaignId: Int) {
@@ -184,5 +196,6 @@ internal class MarketingBannerModel @Inject constructor(
 
     private companion object {
         const val REQUEST_DEBOUNCE_MS = 300L
+        const val MARKETING_UID_PARAM = "uid"
     }
 }
