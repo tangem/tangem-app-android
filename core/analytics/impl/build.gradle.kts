@@ -60,6 +60,7 @@ dependencies {
     implementation(projects.domain.analytics)
     implementation(projects.domain.appsflyer)
     implementation(projects.domain.settings)
+    implementation(projects.domain.wallets.models)
     // endregion
 
     // region Tests
