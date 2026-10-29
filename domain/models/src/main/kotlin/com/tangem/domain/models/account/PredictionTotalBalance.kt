@@ -1,7 +1,6 @@
-package com.tangem.domain.polymarket.model
+package com.tangem.domain.models.account
 
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.getResultStatusSource
 import java.math.BigDecimal
 
