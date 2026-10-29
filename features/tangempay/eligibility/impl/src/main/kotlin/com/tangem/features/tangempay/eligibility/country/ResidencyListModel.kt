@@ -174,6 +174,8 @@ internal class ResidencyListModel @Inject constructor(
 
             result.fold(
                 ifLeft = {
+                    val stage = TangemPayAnalyticsEvents.EligibilityStage.EARLY_FILTER
+                    analytics.send(TangemPayAnalyticsEvents.EligibilityRetryScreenOpened(stage = stage))
                     showError()
                     updateContent()
                 },
