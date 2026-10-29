@@ -2,18 +2,25 @@ package com.tangem.features.yield.supply.impl.promobottomsheet.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.center
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -25,11 +32,12 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.button.TangemButton
@@ -37,6 +45,7 @@ import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.YieldSupplyTestTags
@@ -44,10 +53,39 @@ import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.promobottomsheet.entity.YieldModePromoBottomSheetUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlin.math.exp
 
-private val ASSET_ICON_SIZE = 28.dp
-private val ASSET_ICON_STEP = 21.dp
+private val ASSET_ICON_SIZE = 36.dp
+private val ASSET_ICON_STEP = 24.dp
 private val ASSET_ICON_RING = 2.dp
+private val TOKENS_COUNT_MAX_WIDTH = 139.dp
+private val GRAPH_GLOW_COLOR = Color(0xFF0C9F3D)
+private val GRAPH_GLOW_OFFSET = DpOffset(x = 0.dp, y = 7.dp)
+private val GRAPH_HALO_SIGMA = 69.dp
+private val GRAPH_HALO_CENTER_OFFSET = DpOffset(x = 10.dp, y = 16.dp)
+private const val GRAPH_HALO_PEAK_ALPHA = 0.098f
+private const val GRAPH_HALO_RADIUS_IN_SIGMAS = 3f
+private const val GRAPH_HALO_STOPS = 12
+
+private const val GRAPH_VIEWPORT_WIDTH = 103.6f
+private const val GRAPH_VIEWPORT_HEIGHT = 92.5f
+
+// The bars of img_yield_promo_graph_104 in its viewport, so the glow follows the chart's outline
+private val GraphBarsShape = GenericShape { size, _ ->
+    val scaleX = size.width / GRAPH_VIEWPORT_WIDTH
+    val scaleY = size.height / GRAPH_VIEWPORT_HEIGHT
+    listOf(0f to 48.1f, 40.7f to 25.9f, 81.4f to 0f).forEach { (left, top) ->
+        addRoundRect(
+            RoundRect(
+                left = left * scaleX,
+                top = top * scaleY,
+                right = (left + 22.2f) * scaleX,
+                bottom = size.height,
+                cornerRadius = CornerRadius(x = 11.1f * scaleX, y = 11.1f * scaleY),
+            ),
+        )
+    }
+}
 
 @Composable
 internal fun YieldModePromoBottomSheet(state: YieldModePromoBottomSheetUM) {
@@ -61,6 +99,7 @@ internal fun YieldModePromoBottomSheet(state: YieldModePromoBottomSheetUM) {
         scrollableContent = false,
         chromePlacement = TangemModal.ChromePlacement.Overlay,
         containerColor = TangemTheme.colors3.bg.primary,
+        showDragIndicator = false,
         title = { content ->
             TangemModal.TopNavigation(
                 endButton = {
@@ -91,9 +130,13 @@ private fun Content(state: YieldModePromoBottomSheetUM, modifier: Modifier = Mod
                 .verticalScroll(rememberScrollState()),
         ) {
             HeaderArt()
-            Texts(title = state.title)
-            AssetsCapsule(tokensCount = state.tokensCount, iconUrls = state.tokenIconUrls)
-            SpacerH(12.dp)
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Texts(title = state.title)
+                AssetsCapsule(tokensCount = state.tokensCount, iconUrls = state.tokenIconUrls)
+            }
         }
 
         TangemFooter(
@@ -117,18 +160,42 @@ private fun Content(state: YieldModePromoBottomSheetUM, modifier: Modifier = Mod
 @Composable
 private fun HeaderArt() {
     Box(
-        contentAlignment = Alignment.Center,
+        contentAlignment = Alignment.TopCenter,
         modifier = Modifier
             .fillMaxWidth()
-            .height(220.dp),
+            .height(273.dp),
     ) {
-        Icon(
+        // VectorDrawable can't blur, so the design's glow is drawn in code
+        Image(
             imageVector = ImageVector.vectorResource(R.drawable.img_yield_promo_graph_104),
             contentDescription = null,
-            tint = Color.Unspecified,
-            modifier = Modifier.size(width = 104.dp, height = 93.dp),
+            modifier = Modifier
+                .padding(top = 111.dp)
+                .size(width = 104.dp, height = 93.dp)
+                .graphHalo()
+                .softLayerShadow(
+                    radius = 18.dp,
+                    color = GRAPH_GLOW_COLOR.copy(alpha = 0.2f),
+                    shape = GraphBarsShape,
+                    offset = GRAPH_GLOW_OFFSET,
+                ),
         )
     }
+}
+
+// The design's 126dp-blur shadow exceeds Skia's 128px blur sigma cap, so its Gaussian is drawn as a gradient
+private fun Modifier.graphHalo(): Modifier = drawWithCache {
+    val sigma = GRAPH_HALO_SIGMA.toPx()
+    val radius = sigma * GRAPH_HALO_RADIUS_IN_SIGMAS
+    val haloCenter = size.center + Offset(x = GRAPH_HALO_CENTER_OFFSET.x.toPx(), y = GRAPH_HALO_CENTER_OFFSET.y.toPx())
+    val colorStops = Array(GRAPH_HALO_STOPS + 1) { index ->
+        val fraction = index / GRAPH_HALO_STOPS.toFloat()
+        val distance = fraction * radius
+        val alpha = GRAPH_HALO_PEAK_ALPHA * exp(-distance * distance / (2 * sigma * sigma))
+        fraction to GRAPH_GLOW_COLOR.copy(alpha = alpha)
+    }
+    val brush = Brush.radialGradient(colorStops = colorStops, center = haloCenter, radius = radius)
+    onDrawBehind { drawCircle(brush = brush, radius = radius, center = haloCenter) }
 }
 
 @Composable
@@ -136,7 +203,7 @@ private fun Texts(title: TextReference) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 8.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
@@ -149,7 +216,7 @@ private fun Texts(title: TextReference) {
         )
         Text(
             text = stringResourceSafe(R.string.yield_module_main_promo_subtitle),
-            style = TangemTheme.typography3.subheading.medium,
+            style = TangemTheme.typography3.body.medium,
             color = TangemTheme.colors3.text.secondary,
         )
     }
@@ -159,24 +226,34 @@ private fun Texts(title: TextReference) {
 private fun AssetsCapsule(tokensCount: TextReference, iconUrls: ImmutableList<String>) {
     Row(
         modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 24.dp)
             .fillMaxWidth()
+            .conditional(!LocalIsInDarkTheme.current) {
+                softLayerShadow(
+                    radius = 20.dp,
+                    color = Color.Black.copy(alpha = 0.12f),
+                    shape = CircleShape,
+                    offset = DpOffset(x = 0.dp, y = 8.dp),
+                    isAlphaContentClip = true,
+                )
+            }
             .clip(CircleShape)
-            .background(TangemTheme.colors3.bg.secondary)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .background(TangemTheme.colors3.bg.transparent.onMaterial.primary)
+            .padding(start = 20.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        OverlappingAssetIcons(iconUrls = iconUrls)
         Text(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(weight = 1f, fill = false)
+                .widthIn(max = TOKENS_COUNT_MAX_WIDTH),
             text = tokensCount.resolveReference(),
-            style = TangemTheme.typography3.caption.medium,
+            style = TangemTheme.typography3.subheading.medium,
             color = TangemTheme.colors3.text.primary,
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis,
-            autoSize = TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = 12.sp),
+            autoSize = TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = 14.sp),
         )
+        OverlappingAssetIcons(iconUrls = iconUrls)
     }
 }
 
@@ -194,6 +271,7 @@ private fun OverlappingAssetIcons(iconUrls: ImmutableList<String>) {
                 placeholder = placeholder,
                 error = placeholder,
                 modifier = Modifier
+                    .zIndex((iconUrls.size - index).toFloat())
                     .padding(start = ASSET_ICON_STEP * index)
                     .size(ASSET_ICON_SIZE)
                     .border(width = ASSET_ICON_RING, color = ringColor, shape = CircleShape)
