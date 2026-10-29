@@ -20,6 +20,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.derivation.POLYMARKET_OWNER_DERIVATION_PATH
 import com.tangem.domain.polymarket.model.PolymarketApprovalCall
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
 import com.tangem.domain.polymarket.signing.PolymarketApprovalsPayload
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
@@ -49,6 +50,8 @@ internal class DefaultPolymarketTypedDataSignerWithdrawTest {
     private val hotSignerFactory: TangemHotWalletSigner.Factory = mockk()
     private val transactionSigner: TransactionSigner = mockk()
 
+    private val sessionKeyStore: PolymarketSessionKeyStore = mockk()
+
     private val signer = DefaultPolymarketTypedDataSigner(
         userWalletsListRepository = userWalletsListRepository,
         derivationsRepository = derivationsRepository,
@@ -56,6 +59,7 @@ internal class DefaultPolymarketTypedDataSignerWithdrawTest {
         hotSignerFactory = hotSignerFactory,
         digestFactory = PolymarketDigestFactory(),
         formatter = PolymarketSignatureFormatter(),
+        sessionKeyStore = sessionKeyStore,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
