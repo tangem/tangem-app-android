@@ -21,6 +21,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
+import com.tangem.features.jointaccount.JointAccountFeatureToggles
 
 /**
  * Default implementation of factory for creating list of [CryptoCurrency] for selected card
@@ -35,6 +36,7 @@ internal class DefaultCardCryptoCurrencyFactory(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val walletAccountsFetcher: WalletAccountsFetcher,
     private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
+    private val jointAccountFeatureToggles: JointAccountFeatureToggles,
 ) : CardCryptoCurrencyFactory {
 
     private val cryptoCurrencyFactory by lazy { CryptoCurrencyFactory(excludedBlockchains) }
@@ -203,6 +205,8 @@ internal class DefaultCardCryptoCurrencyFactory(
         userWallet: UserWallet,
         tokens: List<UserTokensResponse.Token>,
     ): List<CryptoCurrency> {
+        if (!jointAccountFeatureToggles.isJointAccountEnabled) return emptyList()
+
         val path = OwnerKeyIndex(accountDTO.derivationIndex).getOrNull()?.toNetworkDerivationPath()
             ?: return emptyList()
 
