@@ -6,7 +6,6 @@ import java.io.File
 
 internal data class TesterActionsContentState(
     val hideAllCurrenciesUM: HideAllCurrenciesUM,
-    val toggleHotWalletRestrictionUM: ToggleHotWalletRestrictionUM,
     val usedeskTokenTtlUM: UsedeskTokenTtlUM,
     val shareLogsUM: ShareLogsUM,
     val onBackClick: () -> Unit,
@@ -17,11 +16,6 @@ internal data class TesterActionsContentState(
 
         data object Progress : HideAllCurrenciesUM()
     }
-
-    data class ToggleHotWalletRestrictionUM(
-        val isEnabled: Boolean,
-        val onClick: () -> Unit,
-    )
 
     /**
      * State of the Usedesk chat token TTL setting.
