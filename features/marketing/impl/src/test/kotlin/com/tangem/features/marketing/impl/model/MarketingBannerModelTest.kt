@@ -29,10 +29,12 @@ import io.mockk.coVerify
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -97,6 +99,8 @@ internal class MarketingBannerModelTest {
     private val onrampScreen = MarketingScreen.Onramp("USD", "ethereum", "0xabc")
     private val eurScreen = MarketingScreen.Onramp("EUR", "ethereum", "0xabc")
 
+    private fun usdAmount(value: Int) = MarketingBannerAmount.Usd(java.math.BigDecimal(value))
+
     private fun eurAmount(value: String) =
         MarketingBannerAmount.Fiat(value = java.math.BigDecimal(value), currencyCode = "EUR")
 
@@ -119,7 +123,7 @@ internal class MarketingBannerModelTest {
         val screen = swapScreen()
         coEvery { getMarketingBanner(screen, null) } returns listOf(gatedCampaign(1)).right()
         val requests = MutableStateFlow<MarketingBannerRequest?>(
-            MarketingBannerRequest(screen, amount = MarketingBannerAmount.Usd(java.math.BigDecimal(10))), // below min -> hidden
+            MarketingBannerRequest(screen, usdAmount(10)), // below min -> hidden
         )
         val model = createModel(MarketingBannerComponent.Params.Standalone(requests))
 
@@ -127,7 +131,7 @@ internal class MarketingBannerModelTest {
         advanceUntilIdle()
         assertThat(model.uiState.value).isEqualTo(MarketingBannerListUM.Hidden) // 10 < 50
 
-        requests.value = MarketingBannerRequest(screen, amount = MarketingBannerAmount.Usd(java.math.BigDecimal(100))) // in range
+        requests.value = MarketingBannerRequest(screen, usdAmount(100)) // in range
         advanceUntilIdle()
         val content = model.uiState.value as MarketingBannerListUM.Content
         assertThat(content.banners.map { it.campaignId }).containsExactly(1)
@@ -220,6 +224,55 @@ internal class MarketingBannerModelTest {
         val content = model.uiState.value as MarketingBannerListUM.Content
         assertThat(content.banners.map { it.campaignId }).containsExactly(2)
         coVerify(exactly = 2) { quotesRepository.getFiatUSDRate("EUR") }
+    }
+
+    @Test
+    fun `GIVEN slow rate lookup WHEN amount changes meanwhile THEN lookup not restarted`() = runTest {
+        // Arrange
+        coEvery { getMarketingBanner(eurScreen, null) } returns listOf(gatedCampaign(1)).right()
+        coEvery { quotesRepository.getFiatUSDRate("EUR") } coAnswers {
+            delay(1_000)
+            java.math.BigDecimal("1.1")
+        }
+        val requests = MutableStateFlow<MarketingBannerRequest?>(
+            MarketingBannerRequest(eurScreen, amount = eurAmount("10")),
+        )
+        val model = createModel(MarketingBannerComponent.Params.Standalone(requests))
+        advanceTimeBy(500) // past the request debounce, lookup in flight
+
+        // Act
+        requests.value = MarketingBannerRequest(eurScreen, amount = eurAmount("100"))
+        advanceUntilIdle()
+
+        // Assert
+        val content = model.uiState.value as MarketingBannerListUM.Content
+        assertThat(content.banners.map { it.campaignId }).containsExactly(1)
+        coVerify(exactly = 1) { quotesRepository.getFiatUSDRate("EUR") }
+    }
+
+    @Test
+    fun `GIVEN bounds only on other ui type WHEN fiat amount emitted THEN rate not fetched`() = runTest {
+        // Arrange
+        val boundedLinked = gatedCampaign(2).let { base ->
+            base.copy(banner = base.banner.copy(uiType = MarketingBanner.UiType.LINKED_TO_PROVIDER))
+        }
+        coEvery { getMarketingBanner(eurScreen, null) } returns listOf(
+            campaign(1, MarketingBanner.UiType.STANDALONE),
+            boundedLinked,
+        ).right()
+        val model = createModel(
+            MarketingBannerComponent.Params.Standalone(
+                flowOf(MarketingBannerRequest(eurScreen, amount = eurAmount("100"))),
+            ),
+        )
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        val content = model.uiState.value as MarketingBannerListUM.Content
+        assertThat(content.banners.map { it.campaignId }).containsExactly(1)
+        coVerify(exactly = 0) { quotesRepository.getFiatUSDRate(any()) }
     }
 
     @Test
