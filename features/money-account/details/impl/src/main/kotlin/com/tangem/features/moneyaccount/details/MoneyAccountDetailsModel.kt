@@ -28,6 +28,8 @@ import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBankCredentialsUseCase
 import com.tangem.domain.moneyaccount.usecase.RenewTangemPaySessionUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.features.moneyaccount.details.addfunds.options.MoneyAccountAddFundsOptionsListener
@@ -62,6 +64,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     private val stateFactory = MoneyAccountDetailsStateFactory(
         onAddFundsClick = ::onAddFundsClick,
         onSendClick = ::onSendClick,
+        onMenuClick = ::onMenuClick,
         onTermsClick = ::onTermsClick,
         onSupportClick = ::onSupportClick,
         onBackClick = ::onBackClick,
@@ -80,14 +83,22 @@ internal class MoneyAccountDetailsModel @Inject constructor(
             .map { it.value }
             .onEach { value ->
                 when (value) {
-                    is MoneyAccountStatusValue.Account -> {
-                        currentState = value
-                        uiState.update { state -> stateFactory.createAccountState(prevState = state, account = value) }
-                    }
+                    is MoneyAccountStatusValue.Account -> onAccountLoaded(value)
                     else -> if (currentState == null) router.pop()
                 }
             }
             .launchIn(modelScope)
+    }
+
+    private fun onAccountLoaded(account: MoneyAccountStatusValue.Account) {
+        val previous = currentState
+        currentState = account
+        uiState.update { state -> stateFactory.createAccountState(prevState = state, account = account) }
+        if (previous == null) analytics.send(account.toScreenOpenedEvent())
+        val wasBalanceUnavailable = previous != null && previous.balance == null
+        if (account.balance == null && !wasBalanceUnavailable) {
+            analytics.send(MoneyAccountAnalyticsEvents.BalanceErrorBannerShown())
+        }
     }
 
     private fun onBackClick() {
@@ -138,6 +149,10 @@ internal class MoneyAccountDetailsModel @Inject constructor(
             val url = getExploreUrlUseCase(userWalletId = params.userWalletId, currency = currency)
             if (url.isNotBlank()) urlOpener.openUrl(url)
         }
+    }
+
+    fun onTransactionClick(item: TxHistoryInfo) {
+        analytics.send(item.toTransactionInListClicked())
     }
 
     private fun onAddFundsClick() {
@@ -206,6 +221,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     }
 
     override fun onBankDetailsLoaded(bankCredentials: BankCredentials) {
+        analytics.send(MoneyAccountAnalyticsEvents.AddFundsBankDetailsShown())
         bottomSheetNavigation.dismiss()
         router.push(MoneyAccountDetailsRoute.BankDetails(bankCredentials))
     }
@@ -213,14 +229,26 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     fun onBankDetailsSupportClick() {
         analytics.send(MoneyAccountAnalyticsEvents.DetailsErrorSupportTapped())
         bottomSheetNavigation.dismiss()
-        onSupportClick()
+        sendSupportEmail()
+    }
+
+    private fun onMenuClick() {
+        analytics.send(MoneyAccountAnalyticsEvents.AccountMenuClicked())
     }
 
     private fun onTermsClick() {
+        analytics.send(
+            TangemPayAnalyticsEvents.TermsAndLimitsClicked(product = TangemPayAnalyticsEvents.Product.ACCOUNT),
+        )
         urlOpener.openUrl(TERMS_OF_USE_URL)
     }
 
     private fun onSupportClick() {
+        analytics.send(MoneyAccountAnalyticsEvents.SupportClicked())
+        sendSupportEmail()
+    }
+
+    private fun sendSupportEmail() {
         val customerId = currentState?.customerId ?: return
         modelScope.launch {
             sendFeedbackEmailUseCase(
@@ -231,6 +259,15 @@ internal class MoneyAccountDetailsModel @Inject constructor(
             )
         }
     }
+
+    private fun MoneyAccountStatusValue.Account.toScreenOpenedEvent() = MoneyAccountAnalyticsEvents.AccountScreenOpened(
+        accountState = when (this) {
+            is MoneyAccountStatusValue.Account.Active -> MoneyAccountAnalyticsEvents.AccountState.ACTIVE
+            is MoneyAccountStatusValue.Account.Deactivated -> MoneyAccountAnalyticsEvents.AccountState.CLOSED
+        },
+        balanceBand = balance?.cryptoAmount?.let(MoneyAccountAnalyticsEvents.BalanceBand::of),
+        currency = balance?.currencyCode,
+    )
 
     private companion object {
         const val SWAP_SCREEN_SOURCE = "MoneyAccount"

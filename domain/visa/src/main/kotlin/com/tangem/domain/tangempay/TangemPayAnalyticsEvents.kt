@@ -85,9 +85,10 @@ sealed class TangemPayAnalyticsEvents(
         event = "Button - Card Settings",
     )
 
-    class TermsAndLimitsClicked : TangemPayAnalyticsEvents(
+    class TermsAndLimitsClicked(product: Product) : TangemPayAnalyticsEvents(
         categoryName = "Visa Screen",
         event = "Button - Terms And Limits",
+        params = mapOf("product" to product.value),
     )
 
     class FreezeCardClicked : TangemPayAnalyticsEvents(
@@ -190,10 +191,11 @@ sealed class TangemPayAnalyticsEvents(
         event = "Button - Go To Support On Beta Banner",
     )
 
-    class TransactionInListClicked(type: String, status: String) : TangemPayAnalyticsEvents(
+    class TransactionInListClicked(product: Product, type: String, status: String) : TangemPayAnalyticsEvents(
         categoryName = "Visa Screen",
         event = "Clicked On Transaction In List",
         params = mapOf(
+            "product" to product.value,
             "type" to type,
             "status" to status,
         ),
@@ -383,6 +385,7 @@ sealed class TangemPayAnalyticsEvents(
     object Tiers {
 
         private const val CATEGORY = "Visa Tiers"
+        private val PAYMENT_ACCOUNT_SOURCE = mapOf("source" to "payment_account")
 
         class TierSelectionScreenShowed : TangemPayAnalyticsEvents(
             categoryName = CATEGORY,
@@ -428,11 +431,13 @@ sealed class TangemPayAnalyticsEvents(
         class CurrentPlanClicked : TangemPayAnalyticsEvents(
             categoryName = CATEGORY,
             event = "Current Plan Clicked",
+            params = PAYMENT_ACCOUNT_SOURCE,
         )
 
         class ChangePlanClicked : TangemPayAnalyticsEvents(
             categoryName = CATEGORY,
             event = "Change Plan Clicked",
+            params = PAYMENT_ACCOUNT_SOURCE,
         )
 
         data class PlanChangeConfirmationScreenShowed(val tierId: String) : TangemPayAnalyticsEvents(
@@ -953,6 +958,11 @@ sealed class TangemPayAnalyticsEvents(
 
             return mapOf(AnalyticsParam.Key.TYPE to railName)
         }
+    }
+
+    enum class Product(val value: String) {
+        CARD("card"),
+        ACCOUNT("account"),
     }
 }
 
