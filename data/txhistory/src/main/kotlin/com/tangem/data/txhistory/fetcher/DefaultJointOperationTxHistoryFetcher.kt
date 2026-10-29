@@ -5,8 +5,6 @@ import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.default
 import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.receiveTriggerInstance
 import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.retryThreeTimes
 import com.tangem.data.txhistory.repository.DefaultJointOperationHistoryRepository
-import com.tangem.domain.account.supplier.SingleAccountListSupplier
-import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.fetcher.JointOperationTxHistoryFetcher
 import com.tangem.domain.txhistory.fetcher.TxHistoryJointOperationTrigger
@@ -23,7 +21,6 @@ internal class DefaultJointOperationTxHistoryFetcher @AssistedInject constructor
     @Assisted override val walletId: UserWalletId,
     private val utils: TxHistoryFetcherUtils,
     private val repository: DefaultJointOperationHistoryRepository,
-    private val singleAccountListSupplier: SingleAccountListSupplier,
 ) : JointOperationTxHistoryFetcher, TxHistoryFetcherUtils by utils {
 
     private var initialPaginationJob: Job? = null
@@ -44,8 +41,6 @@ internal class DefaultJointOperationTxHistoryFetcher @AssistedInject constructor
     private fun fetch() {
         if (deltaPaginationJob?.isActive == true) return
         deltaPaginationJob = fetcherScope.launch {
-            if (!isEnabled()) return@launch
-
             if (repository.syncState(walletId) == null) {
                 flow { emit(repository.fetchHistory(walletId)) }
                     .retryThreeTimes()
@@ -58,10 +53,6 @@ internal class DefaultJointOperationTxHistoryFetcher @AssistedInject constructor
 
             deltaPagination()
         }
-    }
-
-    private suspend fun isEnabled(): Boolean {
-        return singleAccountListSupplier.getSyncOrNull(walletId)?.accounts.orEmpty().any { it is Account.Joint }
     }
 
     private suspend fun initialPagination() {
