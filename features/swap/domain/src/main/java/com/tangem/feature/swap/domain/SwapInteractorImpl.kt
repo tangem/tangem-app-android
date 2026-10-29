@@ -2124,7 +2124,11 @@ internal class SwapInteractorImpl @Inject constructor(
             val feePayer = if (isSolanaGaslessSuppressed) {
                 null
             } else {
-                solanaGaslessSwapResolver.resolveFeePayer(fromSwapCurrencyStatus, state.swapDataModel)
+                solanaGaslessSwapResolver.resolveFeePayer(
+                    providerId = state.swapProvider.providerId,
+                    fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                    swapData = state.swapDataModel,
+                )
             }
             // Without a sponsor there is no fee to send with
             feePayer?.let(SwapBalanceStatus::SponsoredFee) ?: SwapBalanceStatus.Pending
@@ -2163,8 +2167,11 @@ internal class SwapInteractorImpl @Inject constructor(
         lastReducedBalanceBy: BigDecimal,
     ): SponsoredFeeAvailability {
         val fromSwapCurrencyStatus = state.fromTokenInfo.swapCurrencyStatus
-        solanaGaslessSwapResolver.resolveFeePayer(fromSwapCurrencyStatus, state.swapDataModel)
-            ?: return SponsoredFeeAvailability.Unavailable
+        solanaGaslessSwapResolver.resolveFeePayer(
+            providerId = state.swapProvider.providerId,
+            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+            swapData = state.swapDataModel,
+        ) ?: return SponsoredFeeAvailability.Unavailable
         val userPaidStatus = computeBalanceStatus(
             fromSwapCurrencyStatus = fromSwapCurrencyStatus,
             amount = state.fromTokenInfo.tokenAmount,
