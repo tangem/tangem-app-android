@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 
 interface AppsFlyerAnalyticsClient : EventLogger, UserIdHolder
 
-class AppsFlyerClient @AssistedInject constructor(
+internal class AppsFlyerClient @AssistedInject constructor(
     @Assisted apiKey: String,
     @ApplicationContext private val context: Context,
     deepLinkListener: TangemAFDeepLinkListener,
