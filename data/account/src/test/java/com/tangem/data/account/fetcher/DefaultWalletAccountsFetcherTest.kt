@@ -22,7 +22,6 @@ import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsRes
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
@@ -48,7 +47,6 @@ class DefaultWalletAccountsFetcherTest {
     private val fetchWalletAccountsErrorHandler: FetchWalletAccountsErrorHandler = mockk()
     private val defaultWalletAccountsResponseFactory: DefaultWalletAccountsResponseFactory = mockk()
     private val eTagsStore: ETagsStore = mockk(relaxUnitFun = true)
-    private val jointAccountFeatureToggles: JointAccountFeatureToggles = mockk()
 
     private val fetcher: DefaultWalletAccountsFetcher = DefaultWalletAccountsFetcher(
         walletAccountsApi = walletAccountsApi,
@@ -59,7 +57,6 @@ class DefaultWalletAccountsFetcherTest {
         walletAccountsETags = WalletAccountsETags(eTagsStore = eTagsStore),
         dispatchers = TestingCoroutineDispatcherProvider(),
         mainAccountTokensMigration = tokensMigration,
-        jointAccountFeatureToggles = jointAccountFeatureToggles,
     )
 
     private val userWalletId = UserWalletId("011")
@@ -78,7 +75,7 @@ class DefaultWalletAccountsFetcherTest {
 
     @BeforeEach
     fun setUpEach() {
-        every { jointAccountFeatureToggles.isJointAccountEnabled } returns false
+        every { walletAccountsApi.isV2Enabled } returns false
     }
 
     @AfterEach
@@ -105,6 +102,13 @@ class DefaultWalletAccountsFetcherTest {
             derivationIndex = 0,
             type = WalletAccountDTO.Type.JOINT,
         )
+        private val collectiblesAccount = createWalletAccountDTO(
+            userWalletId = userWalletId,
+            accountId = "5A0E8F2C7B9D4163A8E1C3F5B7D9024E6A8C0E2F4B6D8A0C2E4F6A8B0C2D4E6F",
+            derivationIndex = 999799,
+            tokens = null,
+            type = WalletAccountDTO.Type.COLLECTIBLES,
+        )
         private val v1Response = createGetWalletAccountsResponse(userWalletId).copy(accounts = listOf(ownAccount))
         private val v2Response = createGetWalletAccountsResponse(userWalletId).let { response ->
             response.copy(
@@ -116,7 +120,7 @@ class DefaultWalletAccountsFetcherTest {
         @Test
         fun `GIVEN toggle is off WHEN fetch THEN joint records do not reach the store`() = runTest {
             // Arrange
-            every { jointAccountFeatureToggles.isJointAccountEnabled } returns false
+            every { walletAccountsApi.isV2Enabled } returns false
 
             val stored = arrangeFetch(response = v2Response, requestETag = eTag)
 
@@ -130,7 +134,7 @@ class DefaultWalletAccountsFetcherTest {
         @Test
         fun `GIVEN toggle is on WHEN fetch THEN joint records reach the store`() = runTest {
             // Arrange
-            every { jointAccountFeatureToggles.isJointAccountEnabled } returns true
+            every { walletAccountsApi.isV2Enabled } returns true
 
             val stored = arrangeFetch(response = v2Response, requestETag = eTag)
 
@@ -144,9 +148,40 @@ class DefaultWalletAccountsFetcherTest {
         }
 
         @Test
+        fun `GIVEN toggle is off WHEN fetch THEN the collectibles record does not reach the store`() = runTest {
+            // Arrange
+            every { walletAccountsApi.isV2Enabled } returns false
+            val response = v1Response.copy(accounts = listOf(ownAccount, collectiblesAccount))
+
+            val stored = arrangeFetch(response = response, requestETag = eTag)
+
+            // Act
+            fetcher.fetch(userWalletId)
+
+            // Assert
+            Truth.assertThat(stored.captured.invoke(null)).isEqualTo(v1Response)
+        }
+
+        @Test
+        fun `GIVEN toggle is off and saved document with a collectibles record WHEN fetch THEN request is unconditional`() =
+            runTest {
+                // Arrange
+                every { walletAccountsApi.isV2Enabled } returns false
+                accountsResponseStoreFlow.value = v1Response.copy(accounts = listOf(ownAccount, collectiblesAccount))
+
+                val stored = arrangeFetch(response = v1Response, requestETag = null)
+
+                // Act
+                fetcher.fetch(userWalletId)
+
+                // Assert
+                Truth.assertThat(stored.captured.invoke(null)).isEqualTo(v1Response)
+            }
+
+        @Test
         fun `GIVEN toggle is on and saved v2 document WHEN fetch THEN request is conditional`() = runTest {
             // Arrange
-            every { jointAccountFeatureToggles.isJointAccountEnabled } returns true
+            every { walletAccountsApi.isV2Enabled } returns true
             accountsResponseStoreFlow.value = v2Response
 
             arrangeFetch(response = v2Response, requestETag = eTag)
@@ -161,7 +196,7 @@ class DefaultWalletAccountsFetcherTest {
         @Test
         fun `GIVEN toggle is on and saved v1 document WHEN fetch THEN request is unconditional`() = runTest {
             // Arrange
-            every { jointAccountFeatureToggles.isJointAccountEnabled } returns true
+            every { walletAccountsApi.isV2Enabled } returns true
             accountsResponseStoreFlow.value = v1Response
 
             val stored = arrangeFetch(response = v2Response, requestETag = null)
@@ -178,7 +213,7 @@ class DefaultWalletAccountsFetcherTest {
         @Test
         fun `GIVEN toggle is off and saved v2 document WHEN fetch THEN request is unconditional`() = runTest {
             // Arrange
-            every { jointAccountFeatureToggles.isJointAccountEnabled } returns false
+            every { walletAccountsApi.isV2Enabled } returns false
             accountsResponseStoreFlow.value = v2Response
 
             val stored = arrangeFetch(response = v1Response, requestETag = null)
@@ -194,7 +229,7 @@ class DefaultWalletAccountsFetcherTest {
         fun `GIVEN toggle is off and saved local document with joint records WHEN fetch THEN request is unconditional`() =
             runTest {
                 // Arrange
-                every { jointAccountFeatureToggles.isJointAccountEnabled } returns false
+                every { walletAccountsApi.isV2Enabled } returns false
                 accountsResponseStoreFlow.value = v2Response.copy(wallet = v2Response.wallet.copy(totalJointAccounts = null))
 
                 val stored = arrangeFetch(response = v1Response, requestETag = null)
@@ -210,7 +245,7 @@ class DefaultWalletAccountsFetcherTest {
         fun `GIVEN toggle is off and saved v2 document WHEN fetch THEN v1 shape is stored before the request`() =
             runTest {
                 // Arrange
-                every { jointAccountFeatureToggles.isJointAccountEnabled } returns false
+                every { walletAccountsApi.isV2Enabled } returns false
                 accountsResponseStoreFlow.value = v2Response
 
                 val stored = mutableListOf<suspend (GetWalletAccountsResponse?) -> GetWalletAccountsResponse?>()
@@ -234,7 +269,7 @@ class DefaultWalletAccountsFetcherTest {
         fun `GIVEN toggle is off and saved v2 document WHEN request fails THEN handler receives the v1 shape`() =
             runTest {
                 // Arrange
-                every { jointAccountFeatureToggles.isJointAccountEnabled } returns false
+                every { walletAccountsApi.isV2Enabled } returns false
                 accountsResponseStoreFlow.value = v2Response
                 coEvery { accountsResponseStore.updateData(any()) } returns v1Response
 

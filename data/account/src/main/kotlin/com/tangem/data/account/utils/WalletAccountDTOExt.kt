@@ -11,3 +11,7 @@ import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
  */
 internal val WalletAccountDTO.isJoint: Boolean
     get() = type == WalletAccountDTO.Type.JOINT
+
+/** Whether the record is one of the wallet's own crypto portfolios — the only kind whose index is a derivation index */
+internal val WalletAccountDTO.isPersonal: Boolean
+    get() = type == null || type == WalletAccountDTO.Type.CRYPTO

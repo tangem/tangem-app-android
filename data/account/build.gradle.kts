@@ -50,7 +50,6 @@ dependencies {
     api(projects.domain.tokens)
     implementation(projects.domain.card)
     implementation(projects.domain.jointAccount)
-    implementation(projects.domain.collectibles)
     implementation(projects.domain.polymarket)
     runtimeOnly(projects.domain.visa)
     runtimeOnly(projects.domain.wallets)
