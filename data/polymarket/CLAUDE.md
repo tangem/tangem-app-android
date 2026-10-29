@@ -48,7 +48,8 @@ provider strings and teams in provider order. `dataFetchedAt` dates the backend'
 - **`chainId` in bridge `/supported-assets` is a string**; `minCheckoutUsd` arrives as either string or number.
 - **L2 HMAC** signs `timestamp + method + requestPath [+ body]` with the base64url-decoded secret
   (mirrors `py-clob-client`). `requestPath` is verbatim — leading slash, no query string. The passphrase
-  travels in the clear and is not part of the HMAC. `GET price` is public: send no auth headers.
+  travels in the clear and is not part of the HMAC. `POLY_ADDRESS` is the address the API key belongs to — for
+  session credentials the session key's, lower-case as iOS sends it. `GET price` is public: send no auth headers.
 - **`ClobAuth` EIP-712 domain has no `verifyingContract`; the `DepositWallet` batch domain does.** The CTF
   and neg-risk exchanges share name and version `"2"` and differ only in `verifyingContract`; ExchangeV3 (V2
   markets) keeps the name with version `"3"`. Its separator is what the contract answers to `domainSeparator()`.

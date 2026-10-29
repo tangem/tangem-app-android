@@ -37,6 +37,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
+import com.tangem.domain.polymarket.model.PolymarketClobIdentity
 import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PolymarketClobAsset
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
@@ -219,8 +220,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
     }
 
     override suspend fun placeOrder(
-        ownerAddress: String,
-        credentials: PolymarketApiCredentials,
+        identity: PolymarketClobIdentity,
         signedOrder: PredictionSignedOrder,
     ): Either<PredictionPlaceOrderError, PredictionPlaceOrderResult> = withContext(dispatchers.io) {
         if (!signedOrder.isSignedFor(signedOrder.domain)) {
@@ -230,15 +230,17 @@ internal class DefaultPolymarketRepository @Inject constructor(
         }
 
         val json = Either
-            .catch { PolymarketPlaceOrderBodyBuilder.build(signedOrder = signedOrder, apiKey = credentials.apiKey) }
+            .catch { PolymarketPlaceOrderBodyBuilder.build(
+                signedOrder = signedOrder,
+                apiKey = identity.credentials.apiKey,
+            ) }
             .mapLeft { PredictionPlaceOrderError.NotSent(detail = it.message) }
             .getOrElse { return@withContext it.left() }
 
         val headers = Either
             .catch {
                 l2HeaderBuilder.build(
-                    ownerAddress = ownerAddress,
-                    credentials = credentials,
+                    identity = identity,
                     requestPath = PLACE_ORDER_SIGNED_PATH,
                     method = HTTP_METHOD_POST,
                     body = json,
@@ -269,15 +271,13 @@ internal class DefaultPolymarketRepository @Inject constructor(
     }
 
     override suspend fun getOrder(
-        ownerAddress: String,
-        credentials: PolymarketApiCredentials,
+        identity: PolymarketClobIdentity,
         orderId: String,
     ): Either<PredictionOrderStateError, PredictionOrderState> = withContext(dispatchers.io) {
         val headers = Either
             .catch {
                 l2HeaderBuilder.build(
-                    ownerAddress = ownerAddress,
-                    credentials = credentials,
+                    identity = identity,
                     requestPath = "$ORDER_READ_SIGNED_PATH/$orderId",
                 )
             }
@@ -534,8 +534,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
     ): Either<PolymarketAuthError, Map<String, String>> = Either
         .catch {
             l2HeaderBuilder.build(
-                ownerAddress = ownerAddress,
-                credentials = credentials,
+                identity = PolymarketClobIdentity.Owner(address = ownerAddress, credentials = credentials),
                 requestPath = requestPath,
             )
         }
