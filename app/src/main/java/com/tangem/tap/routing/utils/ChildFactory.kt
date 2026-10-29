@@ -30,6 +30,7 @@ import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensMode
 import com.tangem.features.managetokens.component.ManageTokensSource
+import com.tangem.features.marketing.api.promopage.PromoPageComponent
 import com.tangem.features.nft.component.NFTComponent
 import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
 import com.tangem.features.onramp.component.*
@@ -140,6 +141,7 @@ internal class ChildFactory @Inject constructor(
     private val polymarketComponentFactory: PolymarketComponent.Factory,
     private val feedEntryComponentFactory: FeedEntryComponent.Factory,
     private val addressBookComponentFactory: AddressBookComponent.Factory,
+    private val promoPageComponentFactory: PromoPageComponent.Factory,
 ) {
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -889,6 +891,13 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = AddressBookComponent.Params(addressBookOpenMode = route.addressBookOpenMode),
                     componentFactory = addressBookComponentFactory,
+                )
+            }
+            is AppRoute.PromoPage -> {
+                createComponentChild(
+                    context = context,
+                    params = PromoPageComponent.Params(url = route.url),
+                    componentFactory = promoPageComponentFactory,
                 )
             }
         }
