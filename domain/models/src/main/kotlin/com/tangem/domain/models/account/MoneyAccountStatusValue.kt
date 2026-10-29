@@ -45,6 +45,12 @@ sealed class MoneyAccountStatusValue {
             @SerialName("source") override val source: StatusSource,
             @SerialName("customer_id") override val customerId: String,
         ) : Onboarding()
+
+        @Serializable
+        data class Failed(
+            @SerialName("source") override val source: StatusSource,
+            @SerialName("customer_id") override val customerId: String,
+        ) : Onboarding()
     }
 
     @Serializable
