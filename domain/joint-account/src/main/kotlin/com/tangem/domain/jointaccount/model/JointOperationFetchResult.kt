@@ -4,6 +4,8 @@ sealed interface JointOperationFetchResult {
 
     data object Updated : JointOperationFetchResult
 
+    data object InFlight : JointOperationFetchResult
+
     /** The operation has not changed since the previous fetch */
     data object NotModified : JointOperationFetchResult
 
