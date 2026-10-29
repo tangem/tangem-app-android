@@ -47,8 +47,10 @@ internal class DefaultMarketingUidBindingRepository(
         val walletIds = userWalletsListRepository.userWalletsSync().map { it.walletId.stringValue }
         if (walletIds.isEmpty()) return
 
-        // taken atomically, so concurrent calls never send the same uid twice
-        pendingUids.getAndUpdate { emptySet() }.forEach { uid ->
+        pendingUids.value.forEach { uid ->
+            // claimed one by one: a concurrent call never sends it twice, an interrupted one keeps the rest pending
+            if (uid !in pendingUids.getAndUpdate { it - uid }) return@forEach
+
             val response = tangemTechApi.bindMarketingUidWallets(uid, BindMarketingUidWalletsBody(walletIds))
             if (response is ApiResponse.Error) TangemLogger.e("Marketing uid binding failed", response.cause)
         }

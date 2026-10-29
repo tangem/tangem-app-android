@@ -192,6 +192,23 @@ internal class DefaultMarketingUidBindingRepositoryTest {
         }
 
         @Test
+        fun `GIVEN a request throws WHEN bindPending THEN the uids not yet sent stay pending`() = runTest {
+            // Arrange
+            coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+            repository.bind(UID)
+            repository.bind(OTHER_UID)
+            coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(defaultWallet)
+            coEvery { tangemTechApi.bindMarketingUidWallets(UID, any()) } throws IllegalStateException()
+
+            // Act
+            repository.bindPending()
+            repository.bindPending()
+
+            // Assert
+            coVerify(exactly = 1) { tangemTechApi.bindMarketingUidWallets(OTHER_UID, any()) }
+        }
+
+        @Test
         fun `GIVEN nothing pending WHEN bindPending THEN wallets are not read`() = runTest {
             // Act
             repository.bindPending()
@@ -236,6 +253,7 @@ internal class DefaultMarketingUidBindingRepositoryTest {
 
     private companion object {
         const val UID = "spring-campaign"
+        const val OTHER_UID = "autumn-campaign"
         val WALLET_ID = "AB".repeat(32)
     }
 }

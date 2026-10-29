@@ -1,5 +1,6 @@
 package com.tangem.features.marketing.impl.model
 
+import android.net.Uri
 import app.cash.turbine.test
 import arrow.core.left
 import arrow.core.right
@@ -8,6 +9,7 @@ import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.navigation.deeplink.DeeplinkLauncher
 import com.tangem.domain.marketing.DismissMarketingBannerUseCase
 import com.tangem.domain.marketing.GetMarketingBannerUseCase
+import com.tangem.domain.marketing.MarketingUidBindingRepository
 import com.tangem.domain.marketing.models.MarketingBanner
 import com.tangem.domain.marketing.models.MarketingCampaign
 import com.tangem.domain.marketing.models.MarketingScreen
@@ -18,13 +20,17 @@ import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.marketing.impl.ui.state.MarketingBannerListUM
 import com.tangem.features.marketing.impl.ui.state.MarketingBannerUM
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import io.mockk.Runs
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -32,10 +38,13 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class MarketingBannerModelTest {
@@ -43,10 +52,22 @@ internal class MarketingBannerModelTest {
     private val getMarketingBanner: GetMarketingBannerUseCase = mockk()
     private val dismissMarketingBanner: DismissMarketingBannerUseCase = mockk()
     private val deeplinkLauncher: DeeplinkLauncher = mockk(relaxed = true)
+    private val marketingUidBindingRepository: MarketingUidBindingRepository = mockk(relaxed = true)
+
+    @BeforeAll
+    fun mockUriParsing() {
+        mockkStatic(Uri::class)
+    }
+
+    @AfterAll
+    fun unmockUriParsing() {
+        unmockkStatic(Uri::class)
+    }
 
     @BeforeEach
     fun setup() {
-        clearMocks(getMarketingBanner, dismissMarketingBanner, deeplinkLauncher)
+        clearMocks(getMarketingBanner, dismissMarketingBanner, deeplinkLauncher, marketingUidBindingRepository)
+        every { Uri.parse(any()) } returns uriWithUids()
     }
 
     private fun TestScope.createModel(params: MarketingBannerComponent.Params): MarketingBannerModel {
@@ -64,7 +85,13 @@ internal class MarketingBannerModelTest {
             getMarketingBanner = getMarketingBanner,
             dismissMarketingBanner = dismissMarketingBanner,
             deeplinkLauncher = deeplinkLauncher,
+            marketingUidBindingRepository = marketingUidBindingRepository,
+            appCoroutineScope = TestAppCoroutineScope(),
         )
+    }
+
+    private fun uriWithUids(vararg uids: String): Uri = mockk {
+        every { getQueryParameters("uid") } returns uids.toList()
     }
 
     private fun campaign(id: Int, uiType: MarketingBanner.UiType, providerIds: List<String>? = null) =
@@ -282,7 +309,32 @@ internal class MarketingBannerModelTest {
 
         // Assert
         verify(exactly = 1) { deeplinkLauncher.launch("https://tangem.com/promo") }
+        coVerify(exactly = 0) { marketingUidBindingRepository.bind(any()) }
     }
+
+    @ParameterizedTest
+    @MethodSource("provideHostHandledUidModels")
+    fun `GIVEN host handles deeplink WHEN clicked THEN the first non-empty uid is bound`(model: HostHandledUidModel) =
+        runTest {
+            // Arrange
+            every { Uri.parse(HOST_HANDLED_LINK) } returns uriWithUids(*model.uids.toTypedArray())
+            val bannerModel = createModel(
+                MarketingBannerComponent.Params.Standalone(
+                    requestFlow = MutableStateFlow(null),
+                    onDeeplinkClick = { true },
+                ),
+            )
+
+            // Act
+            bannerModel.onBannerClick(HOST_HANDLED_LINK)
+
+            // Assert
+            if (model.expectedUid != null) {
+                coVerify(exactly = 1) { marketingUidBindingRepository.bind(model.expectedUid) }
+            } else {
+                coVerify(exactly = 0) { marketingUidBindingRepository.bind(any()) }
+            }
+        }
 
     @ParameterizedTest
     @ProvideTestModels
@@ -332,4 +384,16 @@ internal class MarketingBannerModelTest {
             expected = MarketingBannerUM.IconAlign.RIGHT,
         ),
     )
+
+    internal data class HostHandledUidModel(val uids: List<String>, val expectedUid: String?)
+
+    private fun provideHostHandledUidModels() = listOf(
+        HostHandledUidModel(uids = listOf("", "spring-campaign", "other"), expectedUid = "spring-campaign"),
+        HostHandledUidModel(uids = listOf(""), expectedUid = null),
+        HostHandledUidModel(uids = emptyList(), expectedUid = null),
+    )
+
+    private companion object {
+        const val HOST_HANDLED_LINK = "tangem://buy"
+    }
 }
