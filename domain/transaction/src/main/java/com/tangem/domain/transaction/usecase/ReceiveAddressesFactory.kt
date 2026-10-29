@@ -15,6 +15,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
+import com.tangem.domain.nft.NFTFeatureToggles
 import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
 import com.tangem.domain.transaction.R
 import com.tangem.lib.crypto.BlockchainUtils
@@ -27,6 +28,7 @@ class ReceiveAddressesFactory(
     private val getDynamicReceiveAddressUseCase: GetDynamicReceiveAddressUseCase,
     private val dynamicAddressesRepository: DynamicAddressesRepository,
     private val userWalletsListRepository: UserWalletsListRepository,
+    private val nftFeatureToggles: NFTFeatureToggles,
 ) {
 
     suspend fun create(
@@ -151,7 +153,11 @@ class ReceiveAddressesFactory(
                 add(
                     TokenReceiveNotification(
                         title = R.string.nft_receive_unsupported_types,
-                        subtitle = R.string.nft_receive_unsupported_types_description,
+                        subtitle = if (nftFeatureToggles.isSolanaPnftAndCoreNftEnabled) {
+                            R.string.nft_receive_unsupported_cnft_description
+                        } else {
+                            R.string.nft_receive_unsupported_types_description
+                        },
                     ),
                 )
             }

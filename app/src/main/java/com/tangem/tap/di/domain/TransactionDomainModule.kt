@@ -13,6 +13,7 @@ import com.tangem.domain.transaction.GaslessYieldRepository
 import com.tangem.domain.transaction.usecase.gasless.ResolveGaslessFeePlanUseCase
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
+import com.tangem.domain.nft.NFTFeatureToggles
 import com.tangem.domain.notifications.repository.PushNotificationsRepository
 import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
@@ -288,6 +289,7 @@ internal object TransactionDomainModule {
         getDynamicReceiveAddressUseCase: GetDynamicReceiveAddressUseCase,
         dynamicAddressesRepository: DynamicAddressesRepository,
         userWalletsListRepository: UserWalletsListRepository,
+        nftFeatureToggles: NFTFeatureToggles,
     ): ReceiveAddressesFactory {
         return ReceiveAddressesFactory(
             getEnsNameUseCase = getEnsNameUseCase,
@@ -295,6 +297,7 @@ internal object TransactionDomainModule {
             getDynamicReceiveAddressUseCase = getDynamicReceiveAddressUseCase,
             dynamicAddressesRepository = dynamicAddressesRepository,
             userWalletsListRepository = userWalletsListRepository,
+            nftFeatureToggles = nftFeatureToggles,
         )
     }
 
