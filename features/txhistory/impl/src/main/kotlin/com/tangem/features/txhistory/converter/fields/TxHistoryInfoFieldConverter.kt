@@ -53,10 +53,8 @@ import com.tangem.features.txhistory.converter.toUiStatus
 import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.model.ResolvedOwner
 import com.tangem.features.txhistory.model.TxHistoryLookupContext
-import com.tangem.features.txhistory.model.reclassifyOwnOperationAsTransfer
 import com.tangem.features.txhistory.model.resolveCounterparty
 import com.tangem.features.txhistory.model.resolveSwapLegOwners
-import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
@@ -90,21 +88,18 @@ import java.math.BigDecimal
 @Suppress("TooManyFunctions")
 internal class TxHistoryInfoFieldConverter(
     private val currency: CryptoCurrency,
-    private val txHistoryUiActions: TxHistoryUiActions,
+    private val onRowClick: (TxHistoryInfo) -> Unit,
     private val lookup: TxHistoryLookupContext,
     private val networkTokens: Set<CryptoCurrency.Token> = emptySet(),
 ) : Converter<TxHistoryInfo, TransactionItemUM> {
 
     private val onChain = OnChainContentFields(currency, lookup, networkTokens)
-    private val pillConverter = TxHistoryStatusPillConverter(currency, txHistoryUiActions)
+    private val pillConverter = TxHistoryStatusPillConverter(currency)
     private val exchangeStatusConverter = ExpressExchangeStatusToUiStatusConverter()
     private val onrampStatusConverter = ExpressOnrampStatusToUiStatusConverter()
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
 
-    override fun convert(value: TxHistoryInfo): TransactionItemUM {
-        val row = value.normalized()
-        return row.pillOrNull() ?: row.content()
-    }
+    override fun convert(value: TxHistoryInfo): TransactionItemUM = value.pillOrNull() ?: value.content()
 
     private fun TxHistoryInfo.content(): TransactionItemUM.Content = TransactionItemUM.Content(
         txHash = txHash(this),
@@ -160,9 +155,8 @@ internal class TxHistoryInfoFieldConverter(
         is JointOperationTx -> row.operation.status.toUiStatus()
     }
 
-    /** Every row opens the in-app details sheet; the model resolves it in the live list by [TxHistoryInfo.txId]. */
     private fun onClick(row: TxHistoryInfo): () -> Unit {
-        val openDetails = { txHistoryUiActions.onTransactionClick(row) }
+        val clickRow = { onRowClick(row) }
 
         return when (row) {
             is OnChainTx.TangemPay -> TODO(TANGEM_PAY_TODO)
@@ -170,7 +164,7 @@ internal class TxHistoryInfoFieldConverter(
             is ExpressTx.Swap,
             is ExpressTx.Onramp,
             is JointOperationTx,
-            -> openDetails
+            -> clickRow
         }
     }
 
@@ -235,32 +229,16 @@ internal class TxHistoryInfoFieldConverter(
 
     // region Row shape
 
-    /**
-     * An unrecognized contract call whose counterparty is one of the user's own portfolios is really a transfer
-     * between them, so the row is reclassified before any cell is mapped and reads as Send / Receive / Transfer. A
-     * call that moved no coin is a fee row instead and keeps its type — the fee it cost is all there is to show.
-     */
-    private fun TxHistoryInfo.normalized(): TxHistoryInfo = when (this) {
-        is OnChainTx.BSDK -> {
-            val tx = txInfo
-            if (tx is TxInfo.Single && !tx.isFeeOnlyOperation(currency)) {
-                OnChainTx.BSDK(tx.reclassifyOwnOperationAsTransfer(lookup, currency.network.id.rawId))
-            } else {
-                this
-            }
-        }
-        is OnChainTx.TangemPay,
-        is ExpressTx.Swap,
-        is ExpressTx.Onramp,
-        is JointOperationTx,
-        -> this
-    }
-
     private fun TxHistoryInfo.pillOrNull(): TransactionItemUM.Pill? = when (this) {
         is OnChainTx.BSDK -> txInfo.pillSpecOrNull()?.let { spec ->
-            pillConverter
-                .convert(TxHistoryStatusPillConverter.Input(txInfo, onChain.status(txInfo), spec))
-                .copy(onClick = onClick(this))
+            pillConverter.convert(
+                TxHistoryStatusPillConverter.Input(
+                    tx = txInfo,
+                    uiStatus = onChain.status(txInfo),
+                    spec = spec,
+                    onClick = onClick(this),
+                ),
+            )
         }
         is OnChainTx.TangemPay,
         is ExpressTx.Swap,

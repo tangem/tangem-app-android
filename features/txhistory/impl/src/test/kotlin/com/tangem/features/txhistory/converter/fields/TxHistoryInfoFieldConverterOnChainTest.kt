@@ -1,4 +1,4 @@
-package com.tangem.features.txhistory.converter
+package com.tangem.features.txhistory.converter.fields
 
 import androidx.annotation.StringRes
 import com.google.common.truth.Truth.assertThat
@@ -32,9 +32,10 @@ import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.model.TestContacts
+import com.tangem.domain.txhistory.model.OnChainTx
+import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.features.txhistory.model.TxHistoryLookupContext
 import com.tangem.features.txhistory.model.WalletInfo
-import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.utils.StringsSigns
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.mockk
@@ -46,31 +47,32 @@ import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class TxHistoryItemToTransactionItemUMConverterTest {
+internal class TxHistoryInfoFieldConverterOnChainTest {
 
-    private val txHistoryUiActions: TxHistoryUiActions = mockk(relaxed = true)
+    private val onRowClick: (TxHistoryInfo) -> Unit = mockk(relaxed = true)
     private val coin: CryptoCurrency.Coin = createCoin(symbol = "ETH", decimals = 18)
     private val token: CryptoCurrency.Token = createToken(symbol = "USDT", decimals = 6)
 
-    private val coinConverter
-        get() = TxHistoryItemToTransactionItemUMConverter(
-            currency = coin,
-            txHistoryUiActions = txHistoryUiActions,
-        )
+    private val coinConverter get() = converterOf(coin)
 
-    private val tokenConverter
-        get() = TxHistoryItemToTransactionItemUMConverter(
-            currency = token,
-            txHistoryUiActions = txHistoryUiActions,
-        )
+    private val tokenConverter get() = converterOf(token)
 
     /** The coin history of a wallet that tracks [token] — the only case where a network-fee row can name its asset. */
-    private val networkFeeConverter
-        get() = TxHistoryItemToTransactionItemUMConverter(
-            currency = coin,
-            txHistoryUiActions = txHistoryUiActions,
-            networkTokens = setOf(token),
-        )
+    private val networkFeeConverter get() = converterOf(coin, networkTokens = setOf(token))
+
+    private fun converterOf(
+        currency: CryptoCurrency,
+        lookup: TxHistoryLookupContext = EMPTY_LOOKUP,
+        networkTokens: Set<CryptoCurrency.Token> = emptySet(),
+    ) = TxHistoryInfoFieldConverter(
+        currency = currency,
+        onRowClick = onRowClick,
+        lookup = lookup,
+        networkTokens = networkTokens,
+    )
+
+    /** The suite feeds raw on-chain transactions; the row they belong to is the plain blockchain-SDK one. */
+    private fun TxHistoryInfoFieldConverter.convert(tx: TxInfo): TransactionItemUM = convert(OnChainTx.BSDK(tx))
 
     // region Pill dispatch routing
 
@@ -562,10 +564,9 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     @Test
     fun `GIVEN Transfer with own account in accounts mode WHEN convert THEN OwnAccount subtitle and transferred title`() {
         val ownAccount = createMainAccount(UserWalletId(stringValue = "00"))
-        val converter = TxHistoryItemToTransactionItemUMConverter(
+        val converter = converterOf(
             currency = coin,
-            txHistoryUiActions = txHistoryUiActions,
-            lookupContext = TxHistoryLookupContext(
+            lookup = TxHistoryLookupContext(
                 ownAccountByNetwork = mapOf(coin.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
                 isAccountsModeEnabled = true,
                 walletInfoById = emptyMap(),
@@ -599,10 +600,9 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
                 color = CryptoPortfolioIcon.Color.Azure,
             ),
         )
-        val converter = TxHistoryItemToTransactionItemUMConverter(
+        val converter = converterOf(
             currency = coin,
-            txHistoryUiActions = txHistoryUiActions,
-            lookupContext = TxHistoryLookupContext(
+            lookup = TxHistoryLookupContext(
                 ownAccountByNetwork = mapOf(coin.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
                 isAccountsModeEnabled = true,
                 walletInfoById = emptyMap(),
@@ -630,10 +630,9 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     @Test
     fun `GIVEN Transfer to own Payment account in accounts mode WHEN convert THEN OwnPaymentAccount subtitle`() {
         val ownPaymentAccount = Account.Payment(UserWalletId(stringValue = "00"))
-        val converter = TxHistoryItemToTransactionItemUMConverter(
+        val converter = converterOf(
             currency = coin,
-            txHistoryUiActions = txHistoryUiActions,
-            lookupContext = TxHistoryLookupContext(
+            lookup = TxHistoryLookupContext(
                 ownAccountByNetwork = mapOf(coin.network.id.rawId to mapOf(USER_ADDRESS to ownPaymentAccount)),
                 isAccountsModeEnabled = true,
                 walletInfoById = emptyMap(),
@@ -655,10 +654,9 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
     @Test
     fun `GIVEN Transfer to own money account in accounts mode WHEN convert THEN money account subtitle`() {
-        val converter = TxHistoryItemToTransactionItemUMConverter(
+        val converter = converterOf(
             currency = coin,
-            txHistoryUiActions = txHistoryUiActions,
-            lookupContext = TxHistoryLookupContext(
+            lookup = TxHistoryLookupContext(
                 ownAccountByNetwork = mapOf(
                     coin.network.id.rawId to mapOf(USER_ADDRESS to Account.Money(UserWalletId(stringValue = "00"))),
                 ),
@@ -693,10 +691,9 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         val userWalletId = UserWalletId(stringValue = "01")
         val ownAccount = createMainAccount(userWalletId)
         val walletInfo = WalletInfo(name = "Main wallet", deviceIconUM = DeviceIconUM.Mobile)
-        val converter = TxHistoryItemToTransactionItemUMConverter(
+        val converter = converterOf(
             currency = coin,
-            txHistoryUiActions = txHistoryUiActions,
-            lookupContext = TxHistoryLookupContext(
+            lookup = TxHistoryLookupContext(
                 ownAccountByNetwork = mapOf(coin.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
                 isAccountsModeEnabled = false,
                 walletInfoById = mapOf(userWalletId to walletInfo),
@@ -827,10 +824,9 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     @Test
     fun `GIVEN Transfer with own account but missing wallet info in wallets mode WHEN convert THEN ExternalAddress subtitle`() {
         val ownAccount = createMainAccount(UserWalletId(stringValue = "02"))
-        val converter = TxHistoryItemToTransactionItemUMConverter(
+        val converter = converterOf(
             currency = coin,
-            txHistoryUiActions = txHistoryUiActions,
-            lookupContext = TxHistoryLookupContext(
+            lookup = TxHistoryLookupContext(
                 ownAccountByNetwork = mapOf(coin.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
                 isAccountsModeEnabled = false,
                 walletInfoById = emptyMap(),
@@ -864,10 +860,11 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
     // endregion
 
-    // region Content — Operation / UnknownOperation reclassified as own transfer
+    // region Content — Operation / UnknownOperation with an own counterparty
 
     @Test
-    fun `GIVEN incoming Operation whose sender is own WHEN convert THEN rendered as own transfer`() {
+    fun `GIVEN incoming Operation whose sender is own WHEN convert THEN operation row naming the own account`() {
+        // The call is not decoded, so the row stays an operation — only its counterparty is named.
         val tx = txInfo(
             type = TransactionType.Operation(name = "Mint"),
             isOutgoing = false,
@@ -877,32 +874,33 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         val result = ownAccountConverter(USER_ADDRESS).convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.title).isEqualTo(resRef(R.string.common_transferred))
-        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_down_20))
+        assertThat(result.title).isEqualTo(TextReference.Str("Mint"))
+        assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_document_20))
         val subtitle = result.subtitle as ContentSubtitle.OwnAccount
         assertThat(subtitle.direction).isEqualTo(ContentSubtitle.Direction.FROM)
     }
 
     @Test
-    fun `GIVEN outgoing UnknownOperation whose recipient is own WHEN convert THEN rendered as own transfer`() {
+    fun `GIVEN outgoing UnknownOperation whose recipient is own WHEN convert THEN operation row naming the own account`() {
         val tx = txInfo(
             type = TransactionType.UnknownOperation,
             isOutgoing = true,
             sourceAddress = EXTERNAL_ADDRESS,
             destinationAddress = USER_ADDRESS,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
         )
 
         val result = ownAccountConverter(USER_ADDRESS).convert(tx) as TransactionItemUM.Content
 
-        assertThat(result.title).isEqualTo(resRef(R.string.common_transferred))
+        assertThat(result.title).isEqualTo(resRef(R.string.transaction_history_operation))
         assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_up_20))
         val subtitle = result.subtitle as ContentSubtitle.OwnAccount
         assertThat(subtitle.direction).isEqualTo(ContentSubtitle.Direction.TO)
     }
 
     @Test
-    fun `GIVEN incoming Operation own only on destination side WHEN convert THEN stays Operation`() {
-        // The trap: for an incoming tx the counterparty is the sender; the own destination must not trigger reclassification.
+    fun `GIVEN incoming Operation own only on destination side WHEN convert THEN names the external sender`() {
+        // The trap: for an incoming tx the counterparty is the sender — the own destination is the viewed wallet.
         val tx = txInfo(
             type = TransactionType.Operation(name = "Mint"),
             isOutgoing = false,
@@ -914,6 +912,12 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
 
         assertThat(result.title).isEqualTo(TextReference.Str("Mint"))
         assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_document_20))
+        assertThat(result.subtitle).isEqualTo(
+            ContentSubtitle.ExternalAddress(
+                direction = ContentSubtitle.Direction.FROM,
+                rawAddress = EXTERNAL_ADDRESS,
+            ),
+        )
     }
 
     @Test
@@ -1083,10 +1087,9 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         // The reported bug: a non-withdraw Send to the user's own account must resolve the owner in the list too,
         // matching the details screen — not fall back to a raw address.
         val ownAccount = createMainAccount(UserWalletId(stringValue = "00"))
-        val converter = TxHistoryItemToTransactionItemUMConverter(
+        val converter = converterOf(
             currency = coin,
-            txHistoryUiActions = txHistoryUiActions,
-            lookupContext = TxHistoryLookupContext(
+            lookup = TxHistoryLookupContext(
                 ownAccountByNetwork = mapOf(coin.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
                 isAccountsModeEnabled = true,
                 walletInfoById = emptyMap(),
@@ -1392,7 +1395,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
-    fun `GIVEN any Content WHEN onClick invoked THEN openTxInExplorer called with txHash`() {
+    fun `GIVEN any Content WHEN onClick invoked THEN the row it stands for is clicked`() {
         val tx = txInfo(
             type = TransactionType.Operation(name = "Mint"),
             interactionAddressType = TxInfo.InteractionAddressType.Contract(USER_ADDRESS),
@@ -1401,7 +1404,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
         result.onClick()
 
-        verify { txHistoryUiActions.openTxInExplorer(TX_HASH) }
+        verify(exactly = 1) { onRowClick(OnChainTx.BSDK(tx)) }
     }
 
     @Test
@@ -1441,23 +1444,20 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         amount = amount,
     )
 
-    private fun ownAccountConverter(ownAddress: String): TxHistoryItemToTransactionItemUMConverter =
-        TxHistoryItemToTransactionItemUMConverter(
-            currency = coin,
-            txHistoryUiActions = txHistoryUiActions,
-            lookupContext = TxHistoryLookupContext(
-                ownAccountByNetwork = mapOf(coin.network.id.rawId to mapOf(ownAddress to createMainAccount(OWN_WALLET_ID))),
-                isAccountsModeEnabled = true,
-                walletInfoById = emptyMap(),
-            ),
-        )
+    private fun ownAccountConverter(ownAddress: String) = converterOf(
+        currency = coin,
+        lookup = TxHistoryLookupContext(
+            ownAccountByNetwork = mapOf(coin.network.id.rawId to mapOf(ownAddress to createMainAccount(OWN_WALLET_ID))),
+            isAccountsModeEnabled = true,
+            walletInfoById = emptyMap(),
+        ),
+    )
 
     private fun resRef(id: Int): TextReference = TextReference.Res(id = id)
 
-    private fun contactConverter(contacts: List<Contact>) = TxHistoryItemToTransactionItemUMConverter(
+    private fun contactConverter(contacts: List<Contact>) = converterOf(
         currency = coin,
-        txHistoryUiActions = txHistoryUiActions,
-        lookupContext = TxHistoryLookupContext(
+        lookup = TxHistoryLookupContext(
             ownAccountByNetwork = emptyMap(),
             isAccountsModeEnabled = true,
             walletInfoById = emptyMap(),
@@ -1520,6 +1520,11 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         const val EXTERNAL_ADDRESS = "0xExternalAddress5678"
         const val TOKEN_CONTRACT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
         val OWN_WALLET_ID = UserWalletId(stringValue = "00")
+        val EMPTY_LOOKUP = TxHistoryLookupContext(
+            ownAccountByNetwork = emptyMap(),
+            isAccountsModeEnabled = false,
+            walletInfoById = emptyMap(),
+        )
         val SAVED_CONTACT = TestContacts.create(
             name = "Binance",
             address = EXTERNAL_ADDRESS,

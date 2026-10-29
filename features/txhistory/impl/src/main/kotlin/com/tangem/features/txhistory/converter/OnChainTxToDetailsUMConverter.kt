@@ -31,7 +31,6 @@ import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.model.ResolvedOwner
 import com.tangem.features.txhistory.model.TxHistoryLookupContext
 import com.tangem.features.txhistory.model.mayCarryStakingTarget
-import com.tangem.features.txhistory.model.reclassifyOwnOperationAsTransfer
 import com.tangem.features.txhistory.model.resolveCounterparty
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.extensions.isZero
@@ -75,15 +74,7 @@ internal class OnChainTxToDetailsUMConverter(
         targetsByAddress.mapKeys { (address, _) -> address.lowercase() }
     }
 
-    fun convert(value: TxInfo): TxHistoryDetailsUM.SingleAsset {
-        // An unrecognized contract call between the user's own portfolios reads as a Transfer, not a raw operation —
-        // mirrors the history list so the two never disagree.
-        val tx = when {
-            // A call that moved no coin is the fee it cost, never a transfer between the user's own portfolios.
-            value.isFeeOnlyOperation(currency) -> value
-            value is TxInfo.Single -> value.reclassifyOwnOperationAsTransfer(lookup, currency.network.id.rawId)
-            else -> value
-        }
+    fun convert(tx: TxInfo): TxHistoryDetailsUM.SingleAsset {
         return TxHistoryDetailsUM.SingleAsset(
             header = tx.toHeaderUM(),
             isBalanceHidden = isBalanceHidden,
