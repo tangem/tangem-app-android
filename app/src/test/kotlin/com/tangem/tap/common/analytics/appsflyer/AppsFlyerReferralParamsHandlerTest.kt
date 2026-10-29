@@ -137,7 +137,7 @@ class AppsFlyerReferralParamsHandlerTest {
         @ParameterizedTest
         @ProvideTestModels
         fun handle(model: HandleParamsModel) = runTest {
-            handler.handle(params = model.params)
+            handler.handle(conversionData = model.params)
 
             if (model.shouldStore) {
                 val value = AppsFlyerConversionData(refcode = SUCCESS_REFCODE, campaign = SUCCESS_CAMPAIGN)
@@ -261,7 +261,7 @@ class AppsFlyerReferralParamsHandlerTest {
                 campaign = model.rawCampaign,
             )
 
-            handler.handle(params = params)
+            handler.handle(conversionData = params)
 
             val value = AppsFlyerConversionData(refcode = SUCCESS_REFCODE, campaign = model.expectedCampaign)
             coVerify { appsFlyerRepository.storeIfAbsent(value = value) }
@@ -287,7 +287,7 @@ class AppsFlyerReferralParamsHandlerTest {
 
         @Test
         fun `GIVEN tpay_mobileonboard params WHEN handle THEN navigation deeplink stored`() = runTest {
-            handler.handle(params = conversionData(deepLinkValue = "tpay_mobileonboard"))
+            handler.handle(conversionData = conversionData(deepLinkValue = "tpay_mobileonboard"))
 
             coVerify { appsFlyerRepository.storeNavigationDeeplink("tpay_mobileonboard") }
         }
@@ -301,7 +301,7 @@ class AppsFlyerReferralParamsHandlerTest {
 
         @Test
         fun `GIVEN referral params WHEN handle THEN navigation deeplink stored`() = runTest {
-            handler.handle(params = conversionData(deepLinkValue = "referral"))
+            handler.handle(conversionData = conversionData(deepLinkValue = "referral"))
 
             coVerify { appsFlyerRepository.storeNavigationDeeplink("referral") }
         }
@@ -316,7 +316,7 @@ class AppsFlyerReferralParamsHandlerTest {
         @Test
         fun `GIVEN referral with valid refcode WHEN handle THEN navigation and conversion stored`() = runTest {
             handler.handle(
-                params = conversionData(
+                conversionData = conversionData(
                     deepLinkValue = "referral",
                     refcode = SUCCESS_REFCODE,
                     campaign = SUCCESS_CAMPAIGN,
@@ -333,7 +333,7 @@ class AppsFlyerReferralParamsHandlerTest {
 
         @Test
         fun `GIVEN empty value with valid refcode WHEN handle THEN navigation deeplink not stored`() = runTest {
-            handler.handle(params = conversionData(deepLinkValue = "", refcode = SUCCESS_REFCODE))
+            handler.handle(conversionData = conversionData(deepLinkValue = "", refcode = SUCCESS_REFCODE))
 
             coVerify(inverse = true) { appsFlyerRepository.storeNavigationDeeplink(any()) }
         }
@@ -341,7 +341,7 @@ class AppsFlyerReferralParamsHandlerTest {
         @Test
         fun `GIVEN tpay_mobileonboard with valid refcode WHEN handle THEN navigation deeplink stored`() = runTest {
             handler.handle(
-                params = conversionData(deepLinkValue = "tpay_mobileonboard", refcode = SUCCESS_REFCODE),
+                conversionData = conversionData(deepLinkValue = "tpay_mobileonboard", refcode = SUCCESS_REFCODE),
             )
 
             coVerify { appsFlyerRepository.storeNavigationDeeplink("tpay_mobileonboard") }
@@ -350,7 +350,7 @@ class AppsFlyerReferralParamsHandlerTest {
         @Test
         fun `GIVEN unknown value with valid refcode WHEN handle THEN navigation deeplink not stored`() = runTest {
             handler.handle(
-                params = conversionData(deepLinkValue = "some_other_deep_link_value", refcode = SUCCESS_REFCODE),
+                conversionData = conversionData(deepLinkValue = "some_other_deep_link_value", refcode = SUCCESS_REFCODE),
             )
 
             coVerify(inverse = true) { appsFlyerRepository.storeNavigationDeeplink(any()) }
@@ -363,7 +363,7 @@ class AppsFlyerReferralParamsHandlerTest {
         @Test
         fun `GIVEN campaign value WHEN handle THEN value stored`() = runTest {
             // Act
-            handler.handle(params = conversionData(deepLinkValue = CAMPAIGN_VALUE))
+            handler.handle(conversionData = conversionData(deepLinkValue = CAMPAIGN_VALUE))
 
             // Assert
             coVerify { appsFlyerRepository.storeNavigationDeeplink(CAMPAIGN_VALUE) }
@@ -381,7 +381,7 @@ class AppsFlyerReferralParamsHandlerTest {
         @Test
         fun `GIVEN campaign prefix without key WHEN handle THEN nothing stored`() = runTest {
             // Act
-            handler.handle(params = conversionData(deepLinkValue = "tpay_for_"))
+            handler.handle(conversionData = conversionData(deepLinkValue = "tpay_for_"))
 
             // Assert
             coVerify(inverse = true) { appsFlyerRepository.storeNavigationDeeplink(any()) }
@@ -394,7 +394,7 @@ class AppsFlyerReferralParamsHandlerTest {
         @Test
         fun `GIVEN not a first launch WHEN handle THEN nothing stored`() = runTest {
             // Act
-            handler.handle(params = conversionData(deepLinkValue = CAMPAIGN_VALUE, isFirstLaunch = false))
+            handler.handle(conversionData = conversionData(deepLinkValue = CAMPAIGN_VALUE, isFirstLaunch = false))
 
             // Assert
             coVerify(inverse = true) { appsFlyerRepository.storeNavigationDeeplink(any()) }
@@ -404,7 +404,7 @@ class AppsFlyerReferralParamsHandlerTest {
         @Test
         fun `GIVEN no first launch flag WHEN handle THEN nothing stored`() = runTest {
             // Act
-            handler.handle(params = mapOf("deep_link_value" to CAMPAIGN_VALUE))
+            handler.handle(conversionData = mapOf("deep_link_value" to CAMPAIGN_VALUE))
 
             // Assert
             coVerify(inverse = true) { appsFlyerRepository.storeNavigationDeeplink(any()) }
@@ -413,7 +413,7 @@ class AppsFlyerReferralParamsHandlerTest {
         @Test
         fun `GIVEN first launch flag as string WHEN handle THEN navigation deeplink stored`() = runTest {
             // Act
-            handler.handle(params = conversionData(deepLinkValue = CAMPAIGN_VALUE, isFirstLaunch = "true"))
+            handler.handle(conversionData = conversionData(deepLinkValue = CAMPAIGN_VALUE, isFirstLaunch = "true"))
 
             // Assert
             coVerify(exactly = 1) { appsFlyerRepository.storeNavigationDeeplink(CAMPAIGN_VALUE) }
@@ -425,7 +425,7 @@ class AppsFlyerReferralParamsHandlerTest {
             handler.handleDeeplink(createDeepLink(deepLinkValue = CAMPAIGN_VALUE, isDeferred = true))
 
             // Act
-            handler.handle(params = conversionData(deepLinkValue = CAMPAIGN_VALUE))
+            handler.handle(conversionData = conversionData(deepLinkValue = CAMPAIGN_VALUE))
 
             // Assert
             coVerify(exactly = 1) { appsFlyerRepository.storeNavigationDeeplink(CAMPAIGN_VALUE) }
@@ -437,7 +437,7 @@ class AppsFlyerReferralParamsHandlerTest {
             handler.handleDeeplink(createDeepLink(deepLinkValue = CAMPAIGN_VALUE, isDeferred = false))
 
             // Act
-            handler.handle(params = conversionData(deepLinkValue = "referral", refcode = SUCCESS_REFCODE))
+            handler.handle(conversionData = conversionData(deepLinkValue = "referral", refcode = SUCCESS_REFCODE))
 
             // Assert
             coVerify(exactly = 1) { appsFlyerRepository.storeNavigationDeeplink("referral") }
@@ -452,7 +452,7 @@ class AppsFlyerReferralParamsHandlerTest {
             handler.handleDeeplink(createDeepLink(deepLinkValue = CAMPAIGN_VALUE, isDeferred = null))
 
             // Act
-            handler.handle(params = conversionData(deepLinkValue = CAMPAIGN_VALUE))
+            handler.handle(conversionData = conversionData(deepLinkValue = CAMPAIGN_VALUE))
 
             // Assert
             coVerify(exactly = 2) { appsFlyerRepository.storeNavigationDeeplink(CAMPAIGN_VALUE) }
@@ -474,7 +474,7 @@ class AppsFlyerReferralParamsHandlerTest {
             }
 
             // Act
-            handler.handle(params = params)
+            handler.handle(conversionData = params)
 
             // Assert
             if (model.expectedStored == null) {
@@ -544,7 +544,7 @@ class AppsFlyerReferralParamsHandlerTest {
         @Test
         fun `GIVEN known value in af_dp WHEN handle THEN navigation slot used`() = runTest {
             // Act
-            handler.handle(params = mapOf("is_first_launch" to true, "af_dp" to "referral"))
+            handler.handle(conversionData = mapOf("is_first_launch" to true, "af_dp" to "referral"))
 
             // Assert
             coVerify(exactly = 1) { appsFlyerRepository.storeNavigationDeeplink("referral") }
@@ -555,7 +555,7 @@ class AppsFlyerReferralParamsHandlerTest {
         fun `GIVEN known deep_link_value and af_dp uri WHEN handle THEN deep_link_value wins`() = runTest {
             // Act
             handler.handle(
-                params = mapOf(
+                conversionData = mapOf(
                     "is_first_launch" to true,
                     "deep_link_value" to "referral",
                     "af_dp" to DIRECT_URI,
@@ -571,7 +571,7 @@ class AppsFlyerReferralParamsHandlerTest {
         fun `GIVEN replayed payload WHEN handle THEN neither navigation nor referral stored`() = runTest {
             // Act
             handler.handle(
-                params = mapOf(
+                conversionData = mapOf(
                     "is_first_launch" to false,
                     "deep_link_value" to "referral",
                     "deep_link_sub1" to SUCCESS_REFCODE,
@@ -590,7 +590,7 @@ class AppsFlyerReferralParamsHandlerTest {
             clearMocks(appsFlyerRepository)
 
             // Act
-            handler.handle(params = mapOf("is_first_launch" to true, "af_dp" to DIRECT_URI))
+            handler.handle(conversionData = mapOf("is_first_launch" to true, "af_dp" to DIRECT_URI))
 
             // Assert
             coVerify(inverse = true) { appsFlyerRepository.storeNavigationDeeplink(any()) }
@@ -599,7 +599,7 @@ class AppsFlyerReferralParamsHandlerTest {
         @Test
         fun `GIVEN conversion data handled first WHEN deferred udl link arrives THEN udl value stored`() = runTest {
             // Arrange
-            handler.handle(params = mapOf("is_first_launch" to true, "af_dp" to DIRECT_URI))
+            handler.handle(conversionData = mapOf("is_first_launch" to true, "af_dp" to DIRECT_URI))
             clearMocks(appsFlyerRepository)
 
             // Act
@@ -619,7 +619,7 @@ class AppsFlyerReferralParamsHandlerTest {
                 clearMocks(appsFlyerRepository)
 
                 // Act
-                handler.handle(params = mapOf("is_first_launch" to true, "af_dp" to DIRECT_URI))
+                handler.handle(conversionData = mapOf("is_first_launch" to true, "af_dp" to DIRECT_URI))
 
                 // Assert
                 coVerify(exactly = 1) { appsFlyerRepository.storeNavigationDeeplink(DIRECT_URI) }
@@ -632,7 +632,7 @@ class AppsFlyerReferralParamsHandlerTest {
             clearMocks(appsFlyerRepository)
 
             // Act
-            handler.handle(params = mapOf("is_first_launch" to true, "af_dp" to DIRECT_URI))
+            handler.handle(conversionData = mapOf("is_first_launch" to true, "af_dp" to DIRECT_URI))
 
             // Assert
             coVerify(exactly = 1) { appsFlyerRepository.storeNavigationDeeplink(DIRECT_URI) }
