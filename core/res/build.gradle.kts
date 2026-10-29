@@ -14,12 +14,9 @@ dependencies {
     api(deps.androidx.annotation)
     // endregion
 
-    // region Firebase
-    implementation(platform(deps.firebase.bom))
-    implementation(deps.firebase.crashlytics)
-    // endregion
-
     // region Core modules
     implementation(projects.core.utils)
+
+    testImplementation(projects.test.core)
     // endregion
 }
