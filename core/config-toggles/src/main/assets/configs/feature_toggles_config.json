@@ -126,5 +126,9 @@
     {
         "name": "TWI_1799_MULTIPLE_HOT_WALLETS_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TWI_1732_PROMO_PAGE_ENABLED",
+        "version": "undefined"
     }
 ]
