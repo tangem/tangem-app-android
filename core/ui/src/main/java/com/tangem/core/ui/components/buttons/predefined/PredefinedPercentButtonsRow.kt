@@ -47,7 +47,7 @@ fun PredefinedPercentButtonsRow(items: ImmutableList<PredefinedPercentButtonUM>,
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .fillMaxWidth()
-            .background(TangemTheme.colors3.bg.transparent.secondary)
+            .background(TangemTheme.colors3.bg.secondary)
             .padding(start = 8.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
     ) {
         items.fastForEach { item ->
