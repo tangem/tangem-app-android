@@ -7,7 +7,6 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
-import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.jointaccount.model.FinishedJointOperation
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.txhistory.model.JointOperationTx
@@ -37,9 +36,7 @@ internal class JointOperationTxToTransactionItemUMConverter(
                 .format { crypto(symbol = "", decimals = currency.displayDecimals) }
                 .trim(),
             currencySymbol = currency.symbol,
-            time = value.timestampMillis.toTimeFormat(),
             status = status.toUiStatus(),
-            direction = TransactionItemUM.Content.Direction.OUTGOING,
             icon = TxIcon.Vector(Icons.ic_arrow_up_20),
             title = status.toTitle(),
             subtitle = lookup
@@ -48,7 +45,6 @@ internal class JointOperationTxToTransactionItemUMConverter(
                     networkRawId = currency.network.id.rawId,
                 )
                 .toSubtitle(ContentSubtitle.Direction.TO),
-            timestamp = value.timestampMillis,
             onClick = { txHistoryUiActions.onTransactionClick(value) },
         )
     }
