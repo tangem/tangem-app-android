@@ -5,6 +5,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.data.pay.analytics.TangemPayUserPropertiesSender
 import com.tangem.data.pay.store.CashbackSummaryStore
 import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.domain.models.pay.TangemPayProduct
@@ -16,6 +17,7 @@ import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.request.OrderRequest
+import com.tangem.spend.datasource.pay.models.response.CustomerMeResponse
 import com.tangem.spend.datasource.pay.models.response.FeesResponse
 import com.tangem.spend.datasource.pay.models.response.OrderResponse
 import com.tangem.test.core.ProvideTestModels
@@ -25,6 +27,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -39,6 +42,7 @@ internal class DefaultOnboardingRepositoryTest {
     private val requestHelper: TangemPayRequestPerformer = mockk()
     private val tangemPayStorage: TangemPayStorage = mockk(relaxed = true)
     private val cashbackSummaryStore: CashbackSummaryStore = mockk(relaxed = true)
+    private val userPropertiesSender: TangemPayUserPropertiesSender = mockk(relaxed = true)
 
     private val repository = DefaultOnboardingRepository(
         analytics = mockk(relaxed = true),
@@ -54,11 +58,12 @@ internal class DefaultOnboardingRepositoryTest {
         cashbackSummaryStore = cashbackSummaryStore,
         customerInfoStore = mockk(relaxed = true),
         derivationsRepository = mockk(relaxed = true),
+        userPropertiesSender = userPropertiesSender,
     )
 
     @BeforeEach
     fun setUp() {
-        clearMocks(tangemPayApi, requestHelper, tangemPayStorage, cashbackSummaryStore)
+        clearMocks(tangemPayApi, requestHelper, tangemPayStorage, cashbackSummaryStore, userPropertiesSender)
 
         coEvery {
             requestHelper.performRequest<Any>(userWalletId = any(), requestBlock = any())
@@ -74,6 +79,49 @@ internal class DefaultOnboardingRepositoryTest {
         coEvery { tangemPayStorage.isCampaignOrder(WALLET_ADDRESS) } returns false
         coEvery { tangemPayApi.createOrder(any(), any(), any()) } returns
             ApiResponse.Success(orderResponse(NEW_ORDER_ID))
+    }
+
+    @Nested
+    inner class GetCustomerInfo {
+
+        @Test
+        fun `GIVEN customer returned WHEN getCustomerInfo THEN user properties reported from it`() = runTest {
+            // Arrange
+            coEvery { tangemPayApi.getCustomerMe(any()) } returns ApiResponse.Success(
+                CustomerMeResponse(
+                    result = CustomerMeResponse.Result(
+                        id = "customer",
+                        state = "ACTIVE",
+                        createdAt = "2026-10-29T10:00:00Z",
+                        paymentAccount = null,
+                        kyc = null,
+                        balance = null,
+                        productInstances = emptyList(),
+                        cards = emptyList(),
+                    ),
+                ),
+            )
+
+            // Act
+            val customerInfo = repository.getCustomerInfo(USER_WALLET_ID).getOrNull()
+
+            // Assert
+            assertThat(customerInfo).isNotNull()
+            verify(exactly = 1) { userPropertiesSender.onCustomerInfoFetched(USER_WALLET_ID, customerInfo!!) }
+        }
+
+        @Test
+        fun `GIVEN backend error WHEN getCustomerInfo THEN user properties untouched`() = runTest {
+            // Arrange
+            coEvery { tangemPayApi.getCustomerMe(any()) } returns
+                ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<CustomerMeResponse>
+
+            // Act
+            repository.getCustomerInfo(USER_WALLET_ID)
+
+            // Assert
+            verify(exactly = 0) { userPropertiesSender.onCustomerInfoFetched(any(), any()) }
+        }
     }
 
     @Nested

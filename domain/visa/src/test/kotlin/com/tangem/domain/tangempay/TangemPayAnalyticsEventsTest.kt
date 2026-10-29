@@ -8,6 +8,9 @@ import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TangemPayAnalyticsEventsTest {
@@ -45,6 +48,26 @@ internal class TangemPayAnalyticsEventsTest {
     }
 
     internal data class OrderErrorModel(val error: VisaApiError, val expectedCode: String)
+
+    @ParameterizedTest
+    @MethodSource("provideMinutesBandModels")
+    fun `GIVEN time since order WHEN activation finished event created THEN minutes band matches the spec`(
+        model: MinutesBandModel,
+    ) {
+        // Act
+        val event = TangemPayAnalyticsEvents.ProductActivationFinished(
+            product = TangemPayAnalyticsEvents.Product.CARD,
+            result = TangemPayAnalyticsEvents.ActivationResult.ACTIVE,
+            failureReason = null,
+            sinceOrder = model.sinceOrder,
+            plan = null,
+        )
+
+        // Assert
+        assertThat(event.params["minutes_since_order"]).isEqualTo(model.expectedBand)
+    }
+
+    internal data class MinutesBandModel(val sinceOrder: Duration, val expectedBand: String)
 
     internal data class EventModel(
         val event: TangemPayAnalyticsEvents,
@@ -357,6 +380,86 @@ internal class TangemPayAnalyticsEventsTest {
             ),
         ),
         EventModel(
+            event = TangemPayAnalyticsEvents.ProductActivationFinished(
+                product = TangemPayAnalyticsEvents.Product.CARD,
+                result = TangemPayAnalyticsEvents.ActivationResult.ACTIVE,
+                failureReason = null,
+                sinceOrder = 30.seconds,
+                plan = tariffPlan(isBasicTier = false),
+            ),
+            expectedId = "[Visa Onboarding] Product Activation Finished",
+            expectedParams = mapOf(
+                "product" to "card",
+                "result" to "active",
+                "minutes_since_order" to "<1",
+                "plan" to "plus",
+            ),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.ProductActivationFinished(
+                product = TangemPayAnalyticsEvents.Product.ACCOUNT,
+                result = TangemPayAnalyticsEvents.ActivationResult.FAILED,
+                failureReason = TangemPayAnalyticsEvents.ActivationFailureReason.ISSUER_REJECTED,
+                sinceOrder = 3.minutes,
+                plan = null,
+            ),
+            expectedId = "[Visa Onboarding] Product Activation Finished",
+            expectedParams = mapOf(
+                "product" to "account",
+                "result" to "failed",
+                "failure_reason" to "issuer_rejected",
+                "minutes_since_order" to "1-5",
+            ),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.ProductActivationFinished(
+                product = TangemPayAnalyticsEvents.Product.CARD,
+                result = TangemPayAnalyticsEvents.ActivationResult.TIMED_OUT,
+                failureReason = TangemPayAnalyticsEvents.ActivationFailureReason.PLUS_DEPOSIT_TIMEOUT,
+                sinceOrder = 10.minutes,
+                plan = tariffPlan(isBasicTier = true),
+            ),
+            expectedId = "[Visa Onboarding] Product Activation Finished",
+            expectedParams = mapOf(
+                "product" to "card",
+                "result" to "timed_out",
+                "failure_reason" to "plus_deposit_timeout",
+                "minutes_since_order" to "5-15",
+                "plan" to "basic",
+            ),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.ProductActivationFinished(
+                product = TangemPayAnalyticsEvents.Product.ACCOUNT,
+                result = TangemPayAnalyticsEvents.ActivationResult.POLLING_STOPPED,
+                failureReason = null,
+                sinceOrder = 16.minutes,
+                plan = null,
+            ),
+            expectedId = "[Visa Onboarding] Product Activation Finished",
+            expectedParams = mapOf(
+                "product" to "account",
+                "result" to "polling_stopped",
+                "minutes_since_order" to ">15",
+            ),
+        ),
+        EventModel(
+            event = TangemPayAnalyticsEvents.ProductActivationFinished(
+                product = TangemPayAnalyticsEvents.Product.CARD,
+                result = TangemPayAnalyticsEvents.ActivationResult.FAILED,
+                failureReason = TangemPayAnalyticsEvents.ActivationFailureReason.OTHER,
+                sinceOrder = 1.minutes,
+                plan = null,
+            ),
+            expectedId = "[Visa Onboarding] Product Activation Finished",
+            expectedParams = mapOf(
+                "product" to "card",
+                "result" to "failed",
+                "failure_reason" to "other",
+                "minutes_since_order" to "1-5",
+            ),
+        ),
+        EventModel(
             event = TangemPayAnalyticsEvents.OnboardingOrderFailed(
                 error = VisaApiError.CardIssueActiveOrderExists,
                 availableProducts = setOf(TangemPayProduct.PAYMENT_ACCOUNT, TangemPayProduct.BANKING_ACCOUNT),
@@ -364,6 +467,15 @@ internal class TangemPayAnalyticsEventsTest {
             expectedId = "[Visa Onboarding] Onboarding Order Failed",
             expectedParams = mapOf("error_code" to "active_order_exists", "products" to "card+account"),
         ),
+    )
+
+    private fun provideMinutesBandModels() = listOf(
+        MinutesBandModel(sinceOrder = 59.seconds, expectedBand = "<1"),
+        MinutesBandModel(sinceOrder = 1.minutes, expectedBand = "1-5"),
+        MinutesBandModel(sinceOrder = 4.minutes + 59.seconds, expectedBand = "1-5"),
+        MinutesBandModel(sinceOrder = 5.minutes, expectedBand = "5-15"),
+        MinutesBandModel(sinceOrder = 15.minutes, expectedBand = "5-15"),
+        MinutesBandModel(sinceOrder = 15.minutes + 1.seconds, expectedBand = ">15"),
     )
 
     private fun provideOrderErrorModels() = listOf(
