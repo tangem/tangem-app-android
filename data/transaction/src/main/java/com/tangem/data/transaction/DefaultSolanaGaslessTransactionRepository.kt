@@ -131,9 +131,11 @@ internal class DefaultSolanaGaslessTransactionRepository(
                 SolanaGaslessError.RateLimited(isPerWallet = error.details?.scope == "wallet")
             errorCode == "SOLANA_BROADCAST_UNCERTAIN" || errorCode == "EXTERNAL_SERVICE_TIMEOUT" ->
                 SolanaGaslessError.MaybeSent(signature)
-            // A 409 other than a finished broadcast (in flight, validated, failed) may still land,
-            // so rebuilding risks a double spend
-            errorCode == DUPLICATE_SUBMISSION_CODE -> SolanaGaslessError.MaybeSent(signature)
+            // A 409 other than a finished broadcast (in flight, validated, failed, or one without the service's body)
+            // may still land, so rebuilding risks a double spend
+            errorCode == DUPLICATE_SUBMISSION_CODE ||
+                isSubmit && code == ApiResponseError.HttpException.Code.CONFLICT ->
+                SolanaGaslessError.MaybeSent(signature)
             code == ApiResponseError.HttpException.Code.UNPROCESSABLE_ENTITY ||
                 code == ApiResponseError.HttpException.Code.PAYLOAD_TOO_LARGE -> SolanaGaslessError.Rejected(errorCode)
             // A gateway 5xx (or an unrecognised code) on submit may come while the backend is still broadcasting,
