@@ -4,11 +4,11 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.entity.CollectiblesStartRoute
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.domain.account.models.AccountList
-import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.CollectiblesAccountStatusValue
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
@@ -24,6 +24,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -35,11 +36,12 @@ internal class CollectiblesBlockModelTest {
 
     private val router: Router = mockk(relaxed = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
-    private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
     private val portfolioSelectorController: PortfolioSelectorController = mockk(relaxed = true)
     private val portfolioFetcher: PortfolioFetcher = mockk(relaxed = true)
     private val portfolioFetcherFactory: PortfolioFetcher.Factory = mockk()
     private val featureToggles: CollectiblesFeatureToggles = mockk()
+    private val collectiblesAccountStatusSupplier: CollectiblesAccountStatusSupplier = mockk()
+    private val isEnabledPredicate = MutableStateFlow<(UserWallet, AccountStatus) -> Boolean> { _, _ -> true }
 
     private lateinit var selection: MutableStateFlow<Pair<UserWallet, AccountStatus.CryptoPortfolio>?>
 
@@ -55,10 +57,10 @@ internal class CollectiblesBlockModelTest {
         clearMocks(
             router,
             userWalletsListRepository,
-            singleAccountListSupplier,
             portfolioSelectorController,
             portfolioFetcherFactory,
             featureToggles,
+            collectiblesAccountStatusSupplier,
         )
         every { featureToggles.isCollectiblesEnabled } returns true
         every { portfolioFetcherFactory.create(any(), any()) } returns portfolioFetcher
@@ -66,7 +68,10 @@ internal class CollectiblesBlockModelTest {
         every { portfolioSelectorController.selectedAccountWithData(any()) } returns selection
         // the real controller clears its pick, and the model relies on that to see the next one
         every { portfolioSelectorController.selectAccount(accountId = null) } answers { selection.value = null }
-        coEvery { singleAccountListSupplier.getSyncOrNull(userWalletId = any()) } returns null
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(walletA, walletB))
+        every { collectiblesAccountStatusSupplier(any<UserWalletId>()) } returns
+            flowOf(CollectiblesAccountStatusValue.NotOnboarded)
+        every { portfolioSelectorController.isEnabled } returns isEnabledPredicate
     }
 
     /** An old single-currency card cannot derive the vault owner key, so the account does not exist for it. */
@@ -105,8 +110,7 @@ internal class CollectiblesBlockModelTest {
     fun `GIVEN one unlocked wallet with a collectibles account WHEN the block is tapped THEN main opens`() = runTest {
         // Arrange
         coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(walletA, lockedWallet)
-        coEvery { singleAccountListSupplier.getSyncOrNull(userWalletId = walletAId) } returns
-            accountList(walletAId, Account.Collectibles(walletAId))
+        every { collectiblesAccountStatusSupplier(walletAId) } returns flowOf(ONBOARDED)
         val model = createModel(testScope = this)
         val openedSheets = model.bottomSheetNavigation.trackSlot()
 
@@ -129,12 +133,10 @@ internal class CollectiblesBlockModelTest {
     }
 
     @Test
-    fun `GIVEN one unlocked wallet without a collectibles account WHEN the block is tapped THEN onboarding opens`() =
+    fun `GIVEN one unlocked wallet not onboarded WHEN the block is tapped THEN onboarding opens`() =
         runTest {
-            // Arrange
+            // Arrange — also the case of a backend record with no vault behind it
             coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(walletA)
-            coEvery { singleAccountListSupplier.getSyncOrNull(userWalletId = walletAId) } returns
-                accountList(walletAId, mockk<Account.Personal>())
             val model = createModel(testScope = this)
             val openedSheets = model.bottomSheetNavigation.trackSlot()
 
@@ -157,10 +159,11 @@ internal class CollectiblesBlockModelTest {
         }
 
     @Test
-    fun `GIVEN the account list cannot be read WHEN the block is tapped THEN onboarding opens`() = runTest {
+    fun `GIVEN an account awaiting the delegate update WHEN the block is tapped THEN main opens`() = runTest {
         // Arrange
         coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(walletA)
-        coEvery { singleAccountListSupplier.getSyncOrNull(userWalletId = walletAId) } returns null
+        every { collectiblesAccountStatusSupplier(walletAId) } returns
+            flowOf(CollectiblesAccountStatusValue.UpdateRequired(source = StatusSource.CACHE))
         val model = createModel(testScope = this)
 
         // Act
@@ -172,7 +175,7 @@ internal class CollectiblesBlockModelTest {
             router.push(
                 route = AppRoute.Collectibles(
                     userWalletId = walletAId,
-                    startRoute = CollectiblesStartRoute.Onboarding,
+                    startRoute = CollectiblesStartRoute.Main,
                 ),
                 onComplete = any(),
             )
@@ -219,8 +222,7 @@ internal class CollectiblesBlockModelTest {
     fun `GIVEN the selector is shown WHEN a wallet is picked THEN the sheet closes AND that wallet opens`() = runTest {
         // Arrange
         coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(walletA, walletB)
-        coEvery { singleAccountListSupplier.getSyncOrNull(userWalletId = walletBId) } returns
-            accountList(walletBId, Account.Collectibles(walletBId))
+        every { collectiblesAccountStatusSupplier(walletBId) } returns flowOf(ONBOARDED)
         val model = createModel(testScope = this)
         val openedSheets = model.bottomSheetNavigation.trackSlot()
         model.onClick()
@@ -295,20 +297,118 @@ internal class CollectiblesBlockModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN every wallet's account awaits the address sync WHEN the model is created THEN the block is hidden`() =
+        runTest {
+            // Arrange
+            every { collectiblesAccountStatusSupplier(any<UserWalletId>()) } returns
+                flowOf(CollectiblesAccountStatusValue.MissedDerivation)
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.isVisible.value).isFalse()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN one wallet's account awaits the address sync WHEN the model is created THEN the block is shown`() =
+        runTest {
+            // Arrange
+            every { collectiblesAccountStatusSupplier(walletAId) } returns
+                flowOf(CollectiblesAccountStatusValue.MissedDerivation)
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.isVisible.value).isTrue()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN the only wallet's account awaits the address sync WHEN the block is tapped THEN nothing opens`() =
+        runTest {
+            // Arrange
+            coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(walletA)
+            every { collectiblesAccountStatusSupplier(walletAId) } returns
+                flowOf(CollectiblesAccountStatusValue.MissedDerivation)
+            val model = createModel(testScope = this)
+
+            // Act
+            model.onClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(inverse = true) { router.push(route = any(), onComplete = any()) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a wallet awaits the address sync WHEN the selector is shown THEN that wallet is disabled`() = runTest {
+        // Arrange
+        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(walletA, walletB)
+        every { collectiblesAccountStatusSupplier(walletAId) } returns
+            flowOf(CollectiblesAccountStatusValue.MissedDerivation)
+        val model = createModel(testScope = this)
+
+        // Act
+        model.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        val isEnabled = isEnabledPredicate.value
+        assertThat(isEnabled(walletA, accountStatus)).isFalse()
+        assertThat(isEnabled(walletB, accountStatus)).isTrue()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN only locked wallets WHEN the model is created THEN the block stays shown`() = runTest {
+        // Arrange
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(lockedWallet))
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.isVisible.value).isTrue()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN every account awaits the address sync WHEN one gets synced THEN the block appears`() = runTest {
+        // Arrange
+        val statusA = MutableStateFlow<CollectiblesAccountStatusValue>(CollectiblesAccountStatusValue.MissedDerivation)
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(walletA))
+        every { collectiblesAccountStatusSupplier(walletAId) } returns statusA
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+        val hidden = model.isVisible.value
+
+        // Act
+        statusA.value = CollectiblesAccountStatusValue.UpdateRequired(source = StatusSource.ACTUAL)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(hidden).isFalse()
+        assertThat(model.isVisible.value).isTrue()
+        model.onDestroy()
+    }
+
     private fun createModel(testScope: TestScope): CollectiblesBlockModel = CollectiblesBlockModel(
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
         router = router,
         userWalletsListRepository = userWalletsListRepository,
-        singleAccountListSupplier = singleAccountListSupplier,
+        collectiblesAccountStatusSupplier = collectiblesAccountStatusSupplier,
         portfolioSelectorController = portfolioSelectorController,
         portfolioFetcherFactory = portfolioFetcherFactory,
         featureToggles = featureToggles,
     )
-
-    private fun accountList(userWalletId: UserWalletId, vararg accounts: Account): AccountList = mockk {
-        every { this@mockk.userWalletId } returns userWalletId
-        every { this@mockk.accounts } returns accounts.toList()
-    }
 
     private fun mockWallet(
         id: UserWalletId,
@@ -320,4 +420,7 @@ internal class CollectiblesBlockModelTest {
         every { this@mockk.isMultiCurrency } returns isMultiCurrency
     }
 
+    private companion object {
+        val ONBOARDED = CollectiblesAccountStatusValue.Onboarded(source = StatusSource.CACHE)
+    }
 }
