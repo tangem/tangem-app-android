@@ -7,6 +7,8 @@ import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.visa.error.VisaApiError
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 
 sealed class TangemPayAnalyticsEvents(
     categoryName: String,
@@ -276,12 +278,30 @@ sealed class TangemPayAnalyticsEvents(
         event = "Onboarding Order Created",
         params = buildMap {
             ProductSet.of(availableProducts)?.let { put("products", it.value) }
-            plan?.let { put("plan", if (it.isBasicTier) "basic" else "plus") }
+            plan?.let { put("plan", it.toPlanValue()) }
             put("order_type", "onboarding")
             put("is_existing_holder", "no")
             putAll(entryParams(entryChannel = null))
         },
     ), AppsFlyerIncludedEvent
+
+    class ProductActivationFinished(
+        product: Product,
+        result: ActivationResult,
+        failureReason: ActivationFailureReason?,
+        sinceOrder: Duration,
+        plan: TangemPayTariffPlan?,
+    ) : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Product Activation Finished",
+        params = buildMap {
+            put("product", product.value)
+            put("result", result.value)
+            failureReason?.let { put("failure_reason", it.value) }
+            put("minutes_since_order", sinceOrder.toMinutesBand())
+            plan?.let { put("plan", it.toPlanValue()) }
+        },
+    )
 
     class OnboardingOrderFailed(
         error: VisaApiError,
@@ -1093,6 +1113,19 @@ sealed class TangemPayAnalyticsEvents(
         CANCELLED("cancelled"),
         FAILED("failed"),
     }
+
+    enum class ActivationResult(val value: String) {
+        ACTIVE("active"),
+        FAILED("failed"),
+        TIMED_OUT("timed_out"),
+        POLLING_STOPPED("polling_stopped"),
+    }
+
+    enum class ActivationFailureReason(val value: String) {
+        ISSUER_REJECTED("issuer_rejected"),
+        PLUS_DEPOSIT_TIMEOUT("plus_deposit_timeout"),
+        OTHER("other"),
+    }
 }
 
 private const val MISSING_WIRE_TYPE = "missing"
@@ -1104,6 +1137,15 @@ private fun Boolean.toLowercaseYesNo(): String = if (this) "yes" else "no"
 private fun entryParams(entryChannel: TangemPayAnalyticsEvents.EntryChannel?): Map<String, String> = buildMap {
     put("entry_intent", "generic")
     entryChannel?.let { put("entry_channel", it.value) }
+}
+
+private fun TangemPayTariffPlan.toPlanValue(): String = if (isBasicTier) "basic" else "plus"
+
+private fun Duration.toMinutesBand(): String = when {
+    this < 1.minutes -> "<1"
+    this < 5.minutes -> "1-5"
+    this <= 15.minutes -> "5-15"
+    else -> ">15"
 }
 
 private fun VisaApiError.toOrderErrorCode(): String = when (this) {
