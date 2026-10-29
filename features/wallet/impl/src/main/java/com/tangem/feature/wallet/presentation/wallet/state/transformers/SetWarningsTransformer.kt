@@ -10,25 +10,19 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.logging.TangemLogger
 
 /**
- * @property promoCardsBalanceState how far the balance behind the notifications has loaded; set only when the promo
- * cards give way to system cards (TWI-1841)
+ * @property promoCardsBalanceState how far the balance behind the notifications has loaded
  * @property hasJointOperations whether the wallet has pending joint operations, whose banners are system cards;
- * `null` until they are known. Read only with [promoCardsBalanceState]
+ * `null` until they are known
  */
 internal class SetWarningsTransformer(
     userWalletId: UserWalletId,
     private val warnings: ImmutableList<WalletNotification>,
     private val notifications: ImmutableList<WalletNotificationUM> = persistentListOf(),
     private val notificationsCarousel: ImmutableList<WalletNotificationUM> = persistentListOf(),
-    @RemoveWithToggle(
-        toggleName = "TWI_1841_HIDE_MARKETING_BANNERS_WHILE_SYSTEM_ENABLED",
-        description = "Make it non-null and drop the branch that sets the notifications as they are",
-    )
-    private val promoCardsBalanceState: NotificationsBalanceState? = null,
+    private val promoCardsBalanceState: NotificationsBalanceState,
     private val hasJointOperations: Boolean?,
 ) : WalletStateTransformer(userWalletId) {
 
@@ -47,14 +41,7 @@ internal class SetWarningsTransformer(
 
     override fun transform(walletUM: WalletUM): WalletUM {
         return when (walletUM) {
-            is WalletUM.Content -> if (promoCardsBalanceState != null) {
-                setNotificationsHidingPromoCards(walletUM, promoCardsBalanceState)
-            } else {
-                walletUM.copy(
-                    notifications = notifications,
-                    notificationsCarousel = notificationsCarousel,
-                )
-            }
+            is WalletUM.Content -> setNotificationsHidingPromoCards(walletUM, promoCardsBalanceState)
             is WalletUM.Locked -> {
                 TangemLogger.w("Impossible to update notifications for locked wallet")
                 walletUM

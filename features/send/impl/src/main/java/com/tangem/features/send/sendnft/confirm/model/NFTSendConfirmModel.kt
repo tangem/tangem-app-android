@@ -366,6 +366,7 @@ internal class NFTSendConfirmModel @Inject constructor(
                     fee = confirmData.fee,
                     feeError = confirmData.feeError,
                     feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus, // TODO change when gasless implement
+                    isNFTTransfer = true,
                 ),
             )
         }

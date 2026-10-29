@@ -139,7 +139,8 @@ internal class PolymarketPositionDetailsModel @Inject constructor(
         eventJob?.cancel()
         isEventSettled = false
         eventJob = modelScope.launch {
-            val result = withContext(dispatchers.default) { getEvent(eventId) }
+            val result =
+                withContext(dispatchers.default) { getEvent(userWalletId = params.userWalletId, eventId = eventId) }
             ensureActive()
             if (position?.eventId != eventId) return@launch
             result.fold(

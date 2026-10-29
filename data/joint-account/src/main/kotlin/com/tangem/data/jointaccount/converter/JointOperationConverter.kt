@@ -24,6 +24,7 @@ internal class JointOperationConverter @Inject constructor(
                 address = vote.address.lowercase(),
                 state = convertVote(vote.vote),
                 at = vote.votedAt,
+                signature = vote.signature?.lowercase(),
             )
         },
     )

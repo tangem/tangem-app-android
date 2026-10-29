@@ -53,7 +53,7 @@ internal fun TransactionRequestInfoContent(
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
         onBack = onBack,
         title = {
             TangemModalBottomSheetTitle(
@@ -96,21 +96,21 @@ private fun TransactionRequestContent(state: WcTransactionRequestInfoUM, minHeig
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
-                        .background(TangemTheme.colors.background.action)
+                        .background(TangemTheme.colors3.bg.secondary)
                         .padding(start = 16.dp, end = 16.dp, top = 20.dp),
                 ) {
                     block.info.forEach { item ->
                         Text(
                             text = item.title.resolveReference(),
                             style = TangemTheme.typography.subtitle2,
-                            color = TangemTheme.colors.text.tertiary,
+                            color = TangemTheme.colors3.text.secondary,
                         )
                         if (item.description.isNotEmpty()) {
                             Text(
                                 text = item.description,
                                 modifier = Modifier.padding(top = 4.dp, bottom = 20.dp),
                                 style = TangemTheme.typography.body2,
-                                color = TangemTheme.colors.text.primary1,
+                                color = TangemTheme.colors3.text.primary,
                             )
                         } else {
                             Spacer(modifier = Modifier.size(12.dp))
@@ -136,7 +136,7 @@ private fun WcSignTransactionRequestInfoBottomSheetPreview(
                 onDismissRequest = {},
                 content = state,
             ),
-            containerColor = TangemTheme.colors.background.tertiary,
+            containerColor = TangemTheme.colors3.bg.primary,
             title = {
                 TangemModalBottomSheetTitle(
                     title = resourceReference(R.string.wc_transaction_request_title),

@@ -5,11 +5,11 @@ import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.unwrapYieldModuleUpgrade
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCoinStatus
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
@@ -55,30 +55,45 @@ class GetFeeForGaslessUseCase(
                     val accountStatusList = singleAccountStatusListSupplier.getSyncOrNull(userWallet.walletId)
                         ?: raiseIllegalStateError("AccountStatusList is null for ${userWallet.walletId}")
 
-                    val nativeCurrencyStatus = accountStatusList.getCoinStatus(network).getOrNull()
-                        ?: nonPortfolioCurrenciesProvider.getStatuses(userWallet.walletId, network)
-                            .firstOrNull { it.currency is CryptoCurrency.Coin }
-                        ?: raiseIllegalStateError("No native currency found: ${network.id}")
+                    val feeCurrencies = resolveNetworkFeeCurrencies(
+                        nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
+                        userWalletId = userWallet.walletId,
+                        network = network,
+                        portfolioCoinStatus = accountStatusList.getCoinStatus(network).getOrNull(),
+                    )
+                    val nativeCurrencyStatus = feeCurrencies.nativeCurrencyStatus
+                    val nonPortfolioFeeToken = feeCurrencies.nonPortfolioFeeToken
 
-                    if (currencyChecksRepository.isNetworkSupportedForGaslessTx(network)) {
-                        evmGaslessFeeResolver.resolveWithAutoFeeToken(
+                    when {
+                        !currencyChecksRepository.isNetworkSupportedForGaslessTx(network) -> {
+                            resolveNativeOrCompensationFee(
+                                userWallet = userWallet,
+                                network = network,
+                                transactionData = transactionData,
+                                nativeCurrencyStatus = nativeCurrencyStatus,
+                                accountStatusList = accountStatusList,
+                                sentCurrencyStatus = sentCurrencyStatus,
+                                onNativeFeePreferred = onNativeFeePreferred,
+                            )
+                        }
+                        nonPortfolioFeeToken != null -> evmGaslessFeeResolver.resolveWithSelectedFeeToken(
                             userWallet = userWallet,
                             network = network,
-                            transactionData = transactionData,
+                            transactionData = transactionData.unwrapYieldModuleUpgrade(),
                             nativeCurrencyStatus = nativeCurrencyStatus,
-                            accountStatusList = accountStatusList,
+                            tokenCurrencyStatus = nonPortfolioFeeToken,
+                            nativeTransactionData = transactionData,
                             sentAmount = sentAmount,
                         ).bind()
-                    } else {
-                        resolveNativeOrCompensationFee(
+                        else -> evmGaslessFeeResolver.resolveWithAutoFeeToken(
                             userWallet = userWallet,
                             network = network,
-                            transactionData = transactionData,
+                            transactionData = transactionData.unwrapYieldModuleUpgrade(),
                             nativeCurrencyStatus = nativeCurrencyStatus,
                             accountStatusList = accountStatusList,
-                            sentCurrencyStatus = sentCurrencyStatus,
-                            onNativeFeePreferred = onNativeFeePreferred,
-                        )
+                            nativeTransactionData = transactionData,
+                            sentAmount = sentAmount,
+                        ).bind()
                     }
                 },
                 catch = {

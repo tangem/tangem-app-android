@@ -28,7 +28,7 @@ fun RatingBlock(state: RatingUM, modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .testTag(RatingTestTags.BLOCK)
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -58,7 +58,7 @@ private fun UnratedState(state: RatingUM.RatingState.Unrated, onRatingSelect: (I
     Text(
         text = stringResourceSafe(R.string.swapping_rate_experience_title),
         style = TangemTheme.typography.subtitle2,
-        color = TangemTheme.colors.text.primary1,
+        color = TangemTheme.colors3.text.primary,
         textAlign = TextAlign.Center,
     )
     Spacer(modifier = Modifier.height(8.dp))
@@ -74,7 +74,7 @@ private fun AlreadyRatedState(rating: Int) {
     Text(
         text = stringResourceSafe(R.string.swapping_rate_experience_title),
         style = TangemTheme.typography.subtitle2,
-        color = TangemTheme.colors.text.primary1,
+        color = TangemTheme.colors3.text.primary,
         textAlign = TextAlign.Center,
     )
     Spacer(modifier = Modifier.height(8.dp))
@@ -99,9 +99,9 @@ private fun StarRow(selectedRating: Int?, isEnabled: Boolean, onRatingSelect: (I
                     painter = painterResource(R.drawable.ic_rating_star_24),
                     contentDescription = null,
                     tint = if (isFilled) {
-                        TangemTheme.colors.icon.attention
+                        TangemTheme.colors3.icon.accent.yellow
                     } else {
-                        TangemTheme.colors.icon.inactive
+                        TangemTheme.colors3.icon.tertiary
                     },
                     modifier = Modifier.size(32.dp),
                 )

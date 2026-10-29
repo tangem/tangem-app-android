@@ -27,7 +27,7 @@ fun ColumnScope.ExpressHideButton(isTerminal: Boolean, isAutoDisposable: Boolean
     ) {
         Text(
             text = stringResourceSafe(R.string.express_status_hide_button_text),
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography.button,
             textAlign = TextAlign.Center,
             modifier = Modifier

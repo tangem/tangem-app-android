@@ -5,7 +5,7 @@ import com.domain.blockaid.models.transaction.TransactionData
 import com.domain.blockaid.models.transaction.TransactionParams
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.JsonEncodingException
-import com.tangem.domain.models.staking.NetworkType
+import com.tangem.domain.staking.model.NetworkType
 import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic

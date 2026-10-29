@@ -43,7 +43,7 @@ internal fun StakingScreen(uiState: StakingUiState, marketingBannerComponent: Ma
     BackHandler(onBack = uiState.clickIntents::onPrevClick)
     Column(
         modifier = Modifier
-            .background(color = TangemTheme.colors.background.secondary)
+            .background(color = TangemTheme.colors3.bg.primary)
             .fillMaxSize()
             .imePadding()
             .systemBarsPadding()
@@ -100,7 +100,7 @@ private fun StakingAppBar(uiState: StakingUiState) {
         subtitle = uiState.subtitle?.resolveReference(),
         backIconRes = backIcon,
         onBackClick = click,
-        backgroundColor = TangemTheme.colors.background.secondary,
+        backgroundColor = TangemTheme.colors3.bg.primary,
         modifier = Modifier.height(56.dp),
     )
 }
@@ -167,7 +167,7 @@ private fun StakingScreenContent(
                 StakingStep.Amount -> AmountScreenContent(
                     amountState = uiState.amountState,
                     clickIntents = uiState.clickIntents,
-                    modifier = Modifier.background(TangemTheme.colors.background.secondary),
+                    modifier = Modifier.background(TangemTheme.colors3.bg.primary),
                     extraContent = {
                         marketingBannerComponent.Content(Modifier.fillMaxWidth())
                     },

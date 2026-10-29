@@ -27,7 +27,6 @@ import com.tangem.feature.tester.presentation.storybook.entity.TangemContextMenu
 import com.tangem.feature.tester.presentation.storybook.entity.TangemMessageStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemPagerIndicatorStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemSearchFieldStory
-import com.tangem.feature.tester.presentation.storybook.entity.TangemSegmentedPickerStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemTabStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemTokenRowStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemTopBarStory
@@ -41,6 +40,7 @@ import com.tangem.feature.tester.presentation.storybook.page.contextmenu.TangemC
 import com.tangem.feature.tester.presentation.storybook.page.deviceicon.DeviceIconStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.avatar.TangemAvatarStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.accountrow.TangemAccountRowStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.draggable.TangemDraggableStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.expandablerow.TangemExpandableRowStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.DsComponentsListStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.badge.TangemBadgeV2Story
@@ -78,7 +78,6 @@ import com.tangem.feature.tester.presentation.storybook.page.progress.ProgressIn
 import com.tangem.feature.tester.presentation.storybook.page.searchfield.TangemSearchFieldStory
 import com.tangem.feature.tester.presentation.storybook.page.storiesv2.StoriesV2Story
 import com.tangem.feature.tester.presentation.storybook.page.tab.TangemTabStory
-import com.tangem.feature.tester.presentation.storybook.page.tabs.TangemSegmentedPickerStory
 import com.tangem.feature.tester.presentation.storybook.page.tokenrow.TangemTokenRowStory
 import com.tangem.feature.tester.presentation.storybook.page.topbar.TangemTopBarStory
 import com.tangem.feature.tester.presentation.storybook.page.typography.TypographyStory
@@ -110,7 +109,6 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
                 OpportunitiesBGStory -> OpportunitiesBGStory()
                 is TangemMessageStory -> TangemMessageStory(state = storyState)
                 is TangemCheckboxStory -> TangemCheckboxStory(state = storyState)
-                TangemSegmentedPickerStory -> TangemSegmentedPickerStory()
                 is TangemTokenRowStory -> TangemTokenRowStory(state = storyState)
                 is TangemHeaderRowStory -> TangemHeaderRowStory(state = storyState)
                 is TangemContextMenuStory -> TangemContextMenuStory(state = storyState)
@@ -145,6 +143,7 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
                 is TangemStatusScreenStory -> TangemStatusScreenStory(state = storyState)
                 is TangemAccountRowStory -> TangemAccountRowStory(state = storyState)
                 is TangemExpandableRowStory -> TangemExpandableRowStory(state = storyState)
+                is TangemDraggableStory -> TangemDraggableStory(state = storyState)
                 is TangemAvatarStory -> TangemAvatarStory(state = storyState)
                 is TangemTokenRowV2Story -> TangemTokenRowV2Story(state = storyState)
                 is TangemTokenRowMarketStory -> TangemTokenRowMarketStory(state = storyState)

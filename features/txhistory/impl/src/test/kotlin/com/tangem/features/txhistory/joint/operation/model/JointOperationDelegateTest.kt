@@ -1,6 +1,5 @@
 package com.tangem.features.txhistory.joint.operation.model
 
-import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
@@ -16,22 +15,29 @@ import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
 import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
+import com.tangem.domain.jointaccount.model.FinishedJointOperation
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationSignerState
 import com.tangem.domain.jointaccount.model.JointOperationTransfer
 import com.tangem.domain.jointaccount.model.JointTransferIntent
 import com.tangem.domain.jointaccount.model.SafeTx
+import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.safe.JointOperationSignersResolver
 import com.tangem.domain.jointaccount.safe.JointOperationTransferResolver
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.RejectJointOperationUseCase
 import com.tangem.domain.jointaccount.usecase.SignJointOperationUseCase
+import com.tangem.domain.jointaccount.verifier.JointOperationDisplayGate
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.txhistory.model.JointOperationTx
+import com.tangem.domain.txhistory.repository.JointOperationHistoryRepository
+import com.tangem.features.txhistory.joint.operation.signers.FinishedJointOperationSigners
+import com.tangem.features.txhistory.joint.operation.signers.ui.state.JointOperationSignersUM
 import com.tangem.features.txhistory.model.TxHistoryOwnerLookupProducer
 import com.tangem.test.core.getEmittedValues
 import com.tangem.test.mock.MockAccounts
@@ -41,10 +47,10 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -52,11 +58,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigInteger
 
-/**
-
- * can be missing from this device's own cache for one fetch cycle, and the sheet must not resolve to `null`
- * (and dismiss itself) on that stale read.
- */
 @OptIn(ExperimentalCoroutinesApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class JointOperationDelegateTest {
@@ -65,9 +66,12 @@ internal class JointOperationDelegateTest {
     private val accountListSupplier: SingleAccountListSupplier = mockk()
     private val jointAccountListSupplier: SingleJointAccountListSupplier = mockk()
     private val jointAccountListFetcher: SingleJointAccountListFetcher = mockk()
+    private val historyRepository: JointOperationHistoryRepository = mockk()
+    private val finishedSigners: FinishedJointOperationSigners = mockk()
     private val transferResolver: JointOperationTransferResolver = mockk()
     private val signersResolver: JointOperationSignersResolver = mockk()
     private val ownerAddressResolver: JointOwnerAddressResolver = mockk()
+    private val networkReader: JointNetworkReader = mockk()
     private val signJointOperationUseCase: SignJointOperationUseCase = mockk()
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk()
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk()
@@ -77,6 +81,7 @@ internal class JointOperationDelegateTest {
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
+    private val displayGate: JointOperationDisplayGate = mockk()
 
     @BeforeEach
     fun resetMocks() {
@@ -85,9 +90,12 @@ internal class JointOperationDelegateTest {
             accountListSupplier,
             jointAccountListSupplier,
             jointAccountListFetcher,
+            historyRepository,
+            finishedSigners,
             transferResolver,
             signersResolver,
             ownerAddressResolver,
+            networkReader,
             signJointOperationUseCase,
             getWalletMetaInfoUseCase,
             sendFeedbackEmailUseCase,
@@ -97,34 +105,169 @@ internal class JointOperationDelegateTest {
             userWalletsListRepository,
             singleAccountStatusListSupplier,
             getSelectedAppCurrencyUseCase,
+            displayGate,
         )
 
         every { accountListSupplier(USER_WALLET_ID) } returns flowOf(accountListWithJointAccount)
+        coEvery { displayGate.isShown(any(), any(), any(), any(), any()) } returns true
         every {
             transferResolver.resolve(safeTx = any(), currencies = any(), network = any(), safeAddress = any())
         } returns JointOperationTransfer(currency = jointCurrency, intent = TRANSFER_INTENT)
-        every { signersResolver.signers(jointAccount = any(), operation = any()) } returns SIGNERS
+        every { signersResolver.signers(jointAccount = any(), operation = any<JointOperation>()) } returns SIGNERS
         every {
             signersResolver.canSign(jointAccount = any(), operation = any(), ownerAddress = any())
         } returns true
         coEvery {
             ownerAddressResolver.resolve(userWalletId = any(), ownerKeyIndex = any())
         } returns OWNER_ADDRESS.right()
+        coEvery { networkReader.getChainId(network = jointCurrency.network) } returns CHAIN_ID.right()
+        every { jointAccountListSupplier(USER_WALLET_ID) } returns flowOf(listOf(createJointAccount()))
         coEvery { jointAccountListFetcher(userWalletId = any()) } returns Unit.right()
+        every { historyRepository.observeOperation(USER_WALLET_ID, OPERATION_ID) } returns flowOf(null)
+        every { finishedSigners.signatures(jointAccount = any(), operation = any()) } returns SIGNATURES
     }
 
     @Test
-    fun `GIVEN operation in the first emission WHEN observe THEN state resolves without a refetch`() = runTest {
+    fun `GIVEN the operation in flight in the list WHEN observe THEN its state resolves`() = runTest {
+        // Act
+        val values = getEmittedValues(flow = createDelegate().observe(USER_WALLET_ID, jointCurrency, OPERATION_ID))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(values).containsExactly(JointOperationSnapshot.InFlight(expectedState))
+        coVerify(exactly = 0) { jointAccountListFetcher(userWalletId = any()) }
+    }
+
+    @Test
+    fun `GIVEN the operation missing from the list WHEN observe THEN the list is fetched once`() = runTest {
         // Arrange
-        every { jointAccountListSupplier(USER_WALLET_ID) } returns flowOf(listOf(createJointAccount()))
+        val accounts = MutableStateFlow(listOf(createJointAccount(inFlightOperations = emptyMap())))
+        every { jointAccountListSupplier(USER_WALLET_ID) } returns accounts
+        getEmittedValues(flow = createDelegate().observe(USER_WALLET_ID, jointCurrency, OPERATION_ID))
+        advanceUntilIdle()
+
+        // Act
+        accounts.value = listOf(createJointAccount(inFlightOperations = emptyMap(), threshold = THRESHOLD + 1))
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { jointAccountListFetcher(userWalletId = USER_WALLET_ID) }
+    }
+
+    @Test
+    fun `GIVEN the operation neither in flight nor finished WHEN observe THEN it is not synced yet`() = runTest {
+        // Arrange
+        every { jointAccountListSupplier(USER_WALLET_ID) } returns
+            flowOf(listOf(createJointAccount(inFlightOperations = emptyMap())))
 
         // Act
         val values = getEmittedValues(flow = createDelegate().observe(USER_WALLET_ID, jointCurrency, OPERATION_ID))
         advanceUntilIdle()
 
         // Assert
-        assertThat(values).containsExactly(expectedState)
-        coVerify(exactly = 0) { jointAccountListFetcher(userWalletId = any()) }
+        assertThat(values).containsExactly(JointOperationSnapshot.NotSynced)
+    }
+
+    @Test
+    fun `GIVEN the joint account list is not loaded yet WHEN observe THEN it is not synced yet`() = runTest {
+        // Arrange
+        every { jointAccountListSupplier(USER_WALLET_ID) } returns flowOf(emptyList())
+
+        // Act
+        val values = getEmittedValues(flow = createDelegate().observe(USER_WALLET_ID, jointCurrency, OPERATION_ID))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(values).containsExactly(JointOperationSnapshot.NotSynced)
+    }
+
+    @Test
+    fun `GIVEN a status this build does not know WHEN observe THEN it is unreadable`() = runTest {
+        // Arrange
+        every { jointAccountListSupplier(USER_WALLET_ID) } returns
+            flowOf(listOf(createJointAccount(operation = createOperation(status = JointOperation.Status.UNKNOWN))))
+
+        // Act
+        val values = getEmittedValues(flow = createDelegate().observe(USER_WALLET_ID, jointCurrency, OPERATION_ID))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(values).containsExactly(JointOperationSnapshot.Unreadable)
+    }
+
+    @Test
+    fun `GIVEN a finished operation still in the list WHEN observe THEN the outcome wins`() = runTest {
+        // Arrange
+        every { historyRepository.observeOperation(USER_WALLET_ID, OPERATION_ID) } returns
+            flowOf(finishedOperation)
+
+        // Act
+        val values = getEmittedValues(flow = createDelegate().observe(USER_WALLET_ID, jointCurrency, OPERATION_ID))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(values).containsExactly(
+            JointOperationSnapshot.Finished(
+                tx = JointOperationTx(
+                    operation = finishedOperation,
+                    transfer = JointOperationTransfer(currency = jointCurrency, intent = TRANSFER_INTENT),
+                    txInfo = null,
+                ),
+                signatures = SIGNATURES,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN a finished transfer this build cannot read WHEN observe THEN it is unreadable`() = runTest {
+        // Arrange
+        every { historyRepository.observeOperation(USER_WALLET_ID, OPERATION_ID) } returns
+            flowOf(finishedOperation)
+        every {
+            transferResolver.resolve(safeTx = any(), currencies = any(), network = any(), safeAddress = any())
+        } returns null
+
+        // Act
+        val values = getEmittedValues(flow = createDelegate().observe(USER_WALLET_ID, jointCurrency, OPERATION_ID))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(values).containsExactly(JointOperationSnapshot.Unreadable)
+    }
+
+    @Test
+    fun `GIVEN the operation shown in flight WHEN it stops passing the display gate THEN it is unreadable`() =
+        runTest {
+            // Arrange
+            val accounts = MutableStateFlow(listOf(createJointAccount()))
+            every { jointAccountListSupplier(USER_WALLET_ID) } returns accounts
+            val values = getEmittedValues(
+                flow = createDelegate().observe(USER_WALLET_ID, jointCurrency, OPERATION_ID),
+            )
+            advanceUntilIdle()
+
+            // Act
+            coEvery { displayGate.isShown(any(), any(), any(), any(), any()) } returns false
+            accounts.value = listOf(createJointAccount(threshold = THRESHOLD + 1))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(values.last()).isEqualTo(JointOperationSnapshot.Unreadable)
+        }
+
+    @Test
+    fun `GIVEN the operation does not pass the display gate WHEN observe THEN it is unreadable`() = runTest {
+        // Arrange
+        every { jointAccountListSupplier(USER_WALLET_ID) } returns flowOf(listOf(createJointAccount()))
+        coEvery { displayGate.isShown(any(), any(), any(), any(), any()) } returns false
+
+        // Act
+        val values = getEmittedValues(flow = createDelegate().observe(USER_WALLET_ID, jointCurrency, OPERATION_ID))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(values).containsExactly(JointOperationSnapshot.Unreadable)
+        coVerify(exactly = 0) { signersResolver.signers(jointAccount = any(), operation = any<JointOperation>()) }
     }
 
     @Test
@@ -139,9 +282,7 @@ internal class JointOperationDelegateTest {
             listOf(
                 createJointAccount(
                     cryptoAccountId = account.accountId.value,
-                    inFlightOperations = mapOf(
-                        CHAIN_ID to createOperation(safeTx = createSafeTx(gasToken = USDC_ADDRESS.uppercase())),
-                    ),
+                    operation = createOperation(safeTx = createSafeTx(gasToken = USDC_ADDRESS.uppercase())),
                 ),
             ),
         )
@@ -151,20 +292,16 @@ internal class JointOperationDelegateTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(values).containsExactly(expectedState.copy(account = account, feeCurrency = jointUsdc))
+        assertThat(values).containsExactly(
+            JointOperationSnapshot.InFlight(expectedState.copy(account = account, feeCurrency = jointUsdc)),
+        )
     }
 
     @Test
     fun `GIVEN a gas token outside the account WHEN observe THEN the state has no fee currency`() = runTest {
         // Arrange
         every { jointAccountListSupplier(USER_WALLET_ID) } returns flowOf(
-            listOf(
-                createJointAccount(
-                    inFlightOperations = mapOf(
-                        CHAIN_ID to createOperation(safeTx = createSafeTx(gasToken = USDC_ADDRESS)),
-                    ),
-                ),
-            ),
+            listOf(createJointAccount(operation = createOperation(safeTx = createSafeTx(gasToken = USDC_ADDRESS)))),
         )
 
         // Act
@@ -172,86 +309,102 @@ internal class JointOperationDelegateTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(values).containsExactly(expectedState.copy(feeCurrency = null))
+        assertThat(values).containsExactly(JointOperationSnapshot.InFlight(expectedState.copy(feeCurrency = null)))
     }
 
     @Test
-    fun `GIVEN operation missing from a stale cache WHEN observe THEN one forced refetch resolves it`() = runTest {
+    fun `GIVEN a finished operation of another Safe WHEN observe THEN it is unreadable`() = runTest {
         // Arrange
-        val accounts = MutableStateFlow(listOf(createJointAccount(inFlightOperations = emptyMap())))
-        every { jointAccountListSupplier(USER_WALLET_ID) } returns accounts
-        coEvery { jointAccountListFetcher(userWalletId = USER_WALLET_ID) } answers {
-            accounts.value = listOf(createJointAccount())
-            Unit.right()
-        }
+        every { historyRepository.observeOperation(USER_WALLET_ID, OPERATION_ID) } returns
+            flowOf(finishedOperation.copy(safeAddress = "0xanothersafe"))
 
         // Act
         val values = getEmittedValues(flow = createDelegate().observe(USER_WALLET_ID, jointCurrency, OPERATION_ID))
         advanceUntilIdle()
 
         // Assert
-        assertThat(values).containsExactly(expectedState)
-        coVerify(exactly = 1) { jointAccountListFetcher(userWalletId = USER_WALLET_ID) }
+        assertThat(values).containsExactly(JointOperationSnapshot.Unreadable)
     }
 
     @Test
-    fun `GIVEN operation gone even after the refetch WHEN cache emits again THEN it is refetched only once`() =
+    fun `GIVEN a finished operation in another network WHEN observe THEN it is unreadable`() = runTest {
+        // Arrange
+        every { historyRepository.observeOperation(USER_WALLET_ID, OPERATION_ID) } returns
+            flowOf(finishedOperation.copy(chainId = CHAIN_ID + 1))
+
+        // Act
+        val values = getEmittedValues(flow = createDelegate().observe(USER_WALLET_ID, jointCurrency, OPERATION_ID))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(values).containsExactly(JointOperationSnapshot.Unreadable)
+    }
+
+    @Test
+    fun `GIVEN another operation in the slot WHEN observe THEN it is not synced yet`() = runTest {
+        // Arrange
+        every { jointAccountListSupplier(USER_WALLET_ID) } returns
+            flowOf(listOf(createJointAccount(operation = createOperation(operationId = "operation-2"))))
+
+        // Act
+        val values = getEmittedValues(flow = createDelegate().observe(USER_WALLET_ID, jointCurrency, OPERATION_ID))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(values).containsExactly(JointOperationSnapshot.NotSynced)
+    }
+
+    @Test
+    fun `GIVEN the operation leaves the list WHEN its outcome is not stored yet THEN the last state is held`() =
         runTest {
             // Arrange
-            val accounts = MutableStateFlow(listOf(createJointAccount(inFlightOperations = emptyMap())))
-            val collectedSnapshots = mutableListOf<List<JointAccount>>()
-            every { jointAccountListSupplier(USER_WALLET_ID) } returns accounts.onEach(collectedSnapshots::add)
+            val accounts = MutableStateFlow(listOf(createJointAccount()))
+            every { jointAccountListSupplier(USER_WALLET_ID) } returns accounts
+            val values = getEmittedValues(
+                flow = createDelegate().observe(USER_WALLET_ID, jointCurrency, OPERATION_ID),
+            )
+            advanceUntilIdle()
 
             // Act
-            val values = getEmittedValues(flow = createDelegate().observe(USER_WALLET_ID, jointCurrency, OPERATION_ID))
-            advanceUntilIdle()
-            val secondStaleSnapshot = listOf(
-                createJointAccount(inFlightOperations = emptyMap(), source = StatusSource.ONLY_CACHE),
-            )
-            accounts.value = secondStaleSnapshot
+            accounts.value = listOf(createJointAccount(inFlightOperations = emptyMap()))
             advanceUntilIdle()
 
             // Assert
-            assertThat(values).containsExactly(null)
-            assertThat(collectedSnapshots).contains(secondStaleSnapshot)
-            coVerify(exactly = 1) { jointAccountListFetcher(userWalletId = USER_WALLET_ID) }
+            assertThat(values).containsExactly(
+                JointOperationSnapshot.InFlight(expectedState),
+                JointOperationSnapshot.InFlight(expectedState, isHeld = true),
+            ).inOrder()
         }
 
     @Test
-    fun `GIVEN the forced refetch fails WHEN observe THEN state is null and nothing is retried`() = runTest {
+    fun `GIVEN the operation in flight WHEN its outcome is stored THEN it is finished`() = runTest {
         // Arrange
-        val accounts = MutableStateFlow(listOf(createJointAccount(inFlightOperations = emptyMap())))
-        every { jointAccountListSupplier(USER_WALLET_ID) } returns accounts
-        coEvery {
-            jointAccountListFetcher(userWalletId = USER_WALLET_ID)
-        } returns IllegalStateException("fetch failed").left()
-
-        // Act
+        val finished = MutableStateFlow<FinishedJointOperation?>(null)
+        every { historyRepository.observeOperation(USER_WALLET_ID, OPERATION_ID) } returns finished
         val values = getEmittedValues(flow = createDelegate().observe(USER_WALLET_ID, jointCurrency, OPERATION_ID))
         advanceUntilIdle()
-        accounts.value = listOf(createJointAccount(inFlightOperations = emptyMap(), source = StatusSource.ONLY_CACHE))
+
+        // Act
+        finished.value = finishedOperation
         advanceUntilIdle()
 
         // Assert
-        assertThat(values).containsExactly(null)
-        coVerify(exactly = 1) { jointAccountListFetcher(userWalletId = USER_WALLET_ID) }
+        assertThat(values.last()).isInstanceOf(JointOperationSnapshot.Finished::class.java)
     }
 
     @Test
-    fun `GIVEN the wallet has no joint account for the currency WHEN observe THEN nothing is refetched`() = runTest {
+    fun `GIVEN the wallet has no joint account for the currency WHEN observe THEN it is unreadable`() = runTest {
         // Arrange
         every { accountListSupplier(USER_WALLET_ID) } returns flowOf(
             MockAccounts.createAccountList(activeAccounts = 1, userWalletId = USER_WALLET_ID),
         )
-        every { jointAccountListSupplier(USER_WALLET_ID) } returns flowOf(listOf(createJointAccount()))
 
         // Act
         val values = getEmittedValues(flow = createDelegate().observe(USER_WALLET_ID, jointCurrency, OPERATION_ID))
         advanceUntilIdle()
 
         // Assert
-        assertThat(values).containsExactly(null)
-        coVerify(exactly = 0) { jointAccountListFetcher(userWalletId = any()) }
+        assertThat(values).containsExactly(JointOperationSnapshot.Unreadable)
     }
 
     @Test
@@ -263,9 +416,9 @@ internal class JointOperationDelegateTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(values).containsExactly(null)
+        assertThat(values).containsExactly(JointOperationSnapshot.Unreadable)
         verify(exactly = 0) { jointAccountListSupplier(USER_WALLET_ID) }
-        coVerify(exactly = 0) { jointAccountListFetcher(userWalletId = any()) }
+        verify(exactly = 0) { historyRepository.observeOperation(any(), any()) }
     }
 
     private fun createDelegate() = JointOperationDelegate(
@@ -273,9 +426,12 @@ internal class JointOperationDelegateTest {
         accountListSupplier = accountListSupplier,
         jointAccountListSupplier = jointAccountListSupplier,
         jointAccountListFetcher = jointAccountListFetcher,
+        historyRepository = historyRepository,
+        finishedSigners = finishedSigners,
         transferResolver = transferResolver,
         signersResolver = signersResolver,
         ownerAddressResolver = ownerAddressResolver,
+        networkReader = networkReader,
         signJointOperationUseCase = signJointOperationUseCase,
         getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
         sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
@@ -285,6 +441,7 @@ internal class JointOperationDelegateTest {
         userWalletsListRepository = userWalletsListRepository,
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
         getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
+        displayGate = displayGate,
     )
 
     private fun createJointAccount(
@@ -295,7 +452,8 @@ internal class JointOperationDelegateTest {
         status: JointAccount.Status = JointAccount.Status.ACTIVE,
         members: List<JointAccount.Member> = listOf(MEMBER),
         source: StatusSource = StatusSource.ACTUAL,
-        inFlightOperations: Map<Long, JointOperation> = mapOf(CHAIN_ID to createOperation()),
+        operation: JointOperation = createOperation(),
+        inFlightOperations: Map<Long, JointOperation> = mapOf(CHAIN_ID to operation),
     ) = JointAccount(
         cryptoAccountId = cryptoAccountId,
         membersCount = membersCount,
@@ -381,6 +539,36 @@ internal class JointOperationDelegateTest {
                 answer = JointOperationSignerState.Answer.CREATED,
                 at = null,
             ),
+        )
+
+        val SIGNATURES = FinishedJointOperationSigners.Signatures(
+            collected = 1,
+            threshold = THRESHOLD,
+            signers = JointOperationSignersUM(membersCount = MEMBERS_COUNT, signers = persistentListOf()),
+        )
+
+        val finishedOperation = FinishedJointOperation(
+            operationId = OPERATION_ID,
+            chainId = CHAIN_ID,
+            safeAddress = SAFE_ADDRESS,
+            safeTx = SafeTx(
+                to = RECIPIENT,
+                value = BigInteger.TEN,
+                data = "0x",
+                operation = SafeTx.OPERATION_CALL,
+                safeTxGas = SAFE_TX_GAS,
+                baseGas = BASE_GAS,
+                gasPrice = GAS_PRICE,
+                gasToken = ZERO_ADDRESS,
+                refundReceiver = ZERO_ADDRESS,
+                nonce = BigInteger.ZERO,
+            ),
+            status = FinishedJointOperation.Status.CANCELLED,
+            initiator = OWNER_ADDRESS,
+            signatures = emptyList(),
+            createdAt = "2026-10-14T09:20:37.000Z",
+            finishedAtMillis = 1_000L,
+            txHash = null,
         )
 
         val nonJointCurrency: CryptoCurrency.Coin = MockCryptoCurrencyFactory().ethereum

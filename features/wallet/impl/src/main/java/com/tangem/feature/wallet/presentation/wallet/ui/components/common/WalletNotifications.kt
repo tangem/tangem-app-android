@@ -54,8 +54,8 @@ internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotificati
                     Notification(
                         config = item.config.copy(title = annotatedReference(yieldBoostPromoTitle())),
                         modifier = modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
-                        iconTint = TangemTheme.colors.icon.accent,
-                        subtitleColor = TangemTheme.colors.text.secondary,
+                        iconTint = TangemTheme.colors3.icon.accent.blue,
+                        subtitleColor = TangemTheme.colors3.text.secondary,
                     )
                 }
                 is WalletNotification.Critical.BackupError -> {
@@ -64,8 +64,8 @@ internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotificati
                         modifier = modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
                         containerColor = TangemColorPalette.Amaranth_30,
                         borderColor = TangemColorPalette.Amaranth,
-                        iconTint = TangemTheme.colors.icon.warning,
-                        subtitleColor = TangemTheme.colors.text.primary1,
+                        iconTint = TangemTheme.colors3.icon.accent.red,
+                        subtitleColor = TangemTheme.colors3.text.primary,
                     )
                 }
                 is WalletNotification.CreateTangemPayAccount -> {
@@ -96,20 +96,20 @@ private fun LazyItemScope.DefaultWalletNotification(item: WalletNotification, mo
         config = item.config,
         modifier = taggedModifier,
         iconTint = when (item) {
-            is WalletNotification.Critical -> TangemTheme.colors.icon.warning
-            is WalletNotification.Informational -> TangemTheme.colors.icon.accent
-            is WalletNotification.RateApp -> TangemTheme.colors.icon.attention
-            is WalletNotification.UnlockWallets -> TangemTheme.colors.icon.primary1
-            is WalletNotification.UsedOutdatedData -> TangemTheme.colors.text.attention
+            is WalletNotification.Critical -> TangemTheme.colors3.icon.accent.red
+            is WalletNotification.Informational -> TangemTheme.colors3.icon.accent.blue
+            is WalletNotification.RateApp -> TangemTheme.colors3.icon.accent.yellow
+            is WalletNotification.UnlockWallets -> TangemTheme.colors3.icon.primary
+            is WalletNotification.UsedOutdatedData -> TangemTheme.colors3.text.accent.yellow
             else -> null
         },
-        subtitleColor = TangemTheme.colors.text.secondary,
+        subtitleColor = TangemTheme.colors3.text.secondary,
     )
 }
 
 @Composable
 private fun yieldBoostPromoTitle(): AnnotatedString {
-    val accent = TangemTheme.colors.text.accent
+    val accent = TangemTheme.colors3.text.accent.blue
     val baseTitle = stringResourceSafe(com.tangem.core.res.R.string.yield_apy_boost_banner_title)
     val tailTitle = stringResourceSafe(com.tangem.core.res.R.string.yield_apy_boost_banner_title_apy_multiplied)
     return buildAnnotatedString {

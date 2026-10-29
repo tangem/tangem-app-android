@@ -27,9 +27,9 @@ fun TokenPriceText(
     modifier: Modifier = Modifier,
     priceChangeType: PriceChangeType? = null,
 ) {
-    val growColor = TangemTheme.colors2.text.status.accent
-    val fallColor = TangemTheme.colors2.text.status.warning
-    val generalColor = TangemTheme.colors2.text.neutral.primary
+    val growColor = TangemTheme.colors3.text.accent.blue
+    val fallColor = TangemTheme.colors3.text.accent.red
+    val generalColor = TangemTheme.colors3.text.primary
 
     val color = remember(generalColor) { Animatable(generalColor) }
     var isAnimationSkipped by remember { mutableStateOf(false) }

@@ -73,7 +73,7 @@ internal class YieldSupplyStopEarningComponent(
 
         TangemModalBottomSheetWithFooter<TangemBottomSheetConfigContent.Empty>(
             config = config,
-            containerColor = TangemTheme.colors.background.tertiary,
+            containerColor = TangemTheme.colors3.bg.primary,
             title = {
                 TangemModalBottomSheetTitle(
                     endIconRes = R.drawable.ic_close_24,
@@ -114,12 +114,12 @@ internal class YieldSupplyStopEarningComponent(
                     Box(
                         modifier = Modifier
                             .size(56.dp)
-                            .background(TangemTheme.colors.icon.attention.copy(0.1f), CircleShape),
+                            .background(TangemTheme.colors3.bg.accent.yellow.copy(0.1f), CircleShape),
                     ) {
                         Icon(
                             imageVector = ImageVector.vectorResource(R.drawable.ic_alert_triangle_20),
                             contentDescription = null,
-                            tint = TangemTheme.colors.icon.attention,
+                            tint = TangemTheme.colors3.icon.accent.yellow,
                             modifier = Modifier
                                 .padding(12.dp)
                                 .size(32.dp),

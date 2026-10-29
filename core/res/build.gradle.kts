@@ -16,7 +16,6 @@ dependencies {
 
     // region Firebase
     implementation(platform(deps.firebase.bom))
-    implementation(deps.firebase.analytics)
     implementation(deps.firebase.crashlytics)
     // endregion
 

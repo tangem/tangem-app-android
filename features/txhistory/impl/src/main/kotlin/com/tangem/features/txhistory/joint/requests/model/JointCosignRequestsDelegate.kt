@@ -6,10 +6,12 @@ import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.safe.JointOperationTransferResolver
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
+import com.tangem.domain.jointaccount.verifier.JointOperationDisplayGate
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.isJoint
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.txhistory.repository.JointOperationHistoryRepository
 import com.tangem.features.txhistory.joint.ownJointAccount
 import com.tangem.features.txhistory.model.TxHistoryLookupContext
 import com.tangem.features.txhistory.model.TxHistoryOwnerLookupProducer
@@ -22,14 +24,18 @@ import javax.inject.Inject
 
 /**
  * A joint account holds one operation per network at a time, so there is at most one: awaiting signatures, or past
- * the threshold and on its way to the network until the chain reports it.
+ * the threshold and on its way to the network until the chain reports it. The operation history can learn that it
+ * finished before the account list does; from then on the history row stands for it and the request is dropped.
  */
+@Suppress("LongParameterList")
 internal class JointCosignRequestsDelegate @Inject constructor(
     private val accountListSupplier: SingleAccountListSupplier,
     private val jointAccountListSupplier: SingleJointAccountListSupplier,
     private val networkReader: JointNetworkReader,
     private val transferResolver: JointOperationTransferResolver,
     private val ownerLookupProducer: TxHistoryOwnerLookupProducer,
+    private val operationHistoryRepository: JointOperationHistoryRepository,
+    private val displayGate: JointOperationDisplayGate,
 ) {
 
     fun observe(userWalletId: UserWalletId, currency: CryptoCurrency): Flow<JointCosignRequest?> {
@@ -39,8 +45,15 @@ internal class JointCosignRequestsDelegate @Inject constructor(
             flow = accountListSupplier.ownJointAccount(userWalletId = userWalletId, currency = currency),
             flow2 = jointAccountListSupplier(userWalletId = userWalletId),
             flow3 = ownerLookupProducer(userWalletId = userWalletId),
-        ) { account, accounts, lookup ->
-            resolve(account = account, accounts = accounts, currency = currency, lookup = lookup)
+            flow4 = operationHistoryRepository.getFinishedOperationIds(userWalletId = userWalletId),
+        ) { account, accounts, lookup, finishedIds ->
+            resolve(
+                account = account,
+                accounts = accounts,
+                finishedIds = finishedIds,
+                currency = currency,
+                lookup = lookup,
+            )
         }
             .distinctUntilChanged()
     }
@@ -48,6 +61,7 @@ internal class JointCosignRequestsDelegate @Inject constructor(
     private suspend fun resolve(
         account: Account.Joint?,
         accounts: List<JointAccount>,
+        finishedIds: Set<String>,
         currency: CryptoCurrency,
         lookup: TxHistoryLookupContext,
     ): JointCosignRequest? {
@@ -59,7 +73,7 @@ internal class JointCosignRequestsDelegate @Inject constructor(
         val chainId = networkReader.getChainId(network = currency.network).getOrNull() ?: return null
 
         val operation = jointAccount.inFlightOperations[chainId]
-            ?.takeIf { it.status != JointOperation.Status.UNKNOWN }
+            ?.takeIf { it.status != JointOperation.Status.UNKNOWN && it.operationId !in finishedIds }
             ?: return null
         // The row belongs to one token: an operation moving another token of the same network stays out
         val transfer = transferResolver.resolve(
@@ -68,6 +82,14 @@ internal class JointCosignRequestsDelegate @Inject constructor(
             network = currency.network,
             safeAddress = safeAddress,
         ) ?: return null
+        val isShown = displayGate.isShown(
+            account = account,
+            jointAccount = jointAccount,
+            operation = operation,
+            network = currency.network,
+            transfer = transfer,
+        )
+        if (!isShown) return null
 
         return JointCosignRequest(
             operation = operation,

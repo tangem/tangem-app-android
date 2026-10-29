@@ -63,7 +63,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
 
     @Suppress("CyclomaticComplexMethod")
     override fun convert(value: TxInfo): TransactionItemUM {
-        val uiStatus = value.status.toUiStatus()
+        val uiStatus = value.displayedStatus(currency).toUiStatus()
         if (value.isFeeOnlyOperation(currency)) return feeOnlyOperationContent(value, uiStatus)
         return when (val type = value.type) {
             // region Pill
@@ -414,7 +414,7 @@ internal class TxHistoryItemToTransactionItemUMConverter(
 private fun TxInfo.formatContentAmount(currency: CryptoCurrency): String {
     val value = amountOrFee(currency)
     val prefix = when {
-        status is TxInfo.TransactionStatus.Failed -> ""
+        readsFailed(currency) -> ""
         value.isZero() -> ""
         type is TransactionType.Staking.ClaimRewards -> ""
         else -> if (isOutgoing) StringsSigns.MINUS_SIGN else StringsSigns.PLUS
@@ -443,7 +443,11 @@ private fun resolveOwnSubtitle(
 
 /** One of the user's own portfolios — a saved contact or an external address is somebody else's. */
 private fun ResolvedOwner?.isOwnPortfolio(): Boolean = when (this) {
-    is ResolvedOwner.OwnAccount, is ResolvedOwner.OwnPaymentAccount, is ResolvedOwner.OwnWallet -> true
+    is ResolvedOwner.OwnAccount,
+    is ResolvedOwner.OwnPaymentAccount,
+    is ResolvedOwner.OwnMoneyAccount,
+    is ResolvedOwner.OwnWallet,
+    -> true
     is ResolvedOwner.Foreign, null -> false
 }
 
@@ -456,6 +460,11 @@ internal fun ResolvedOwner.toSubtitle(direction: ContentSubtitle.Direction): Con
     is ResolvedOwner.OwnPaymentAccount -> ContentSubtitle.OwnPaymentAccount(
         direction = direction,
         accountName = account.accountName.toUM().value,
+    )
+    is ResolvedOwner.OwnMoneyAccount -> ContentSubtitle.OwnAccount(
+        direction = direction,
+        accountName = moneyAccountOwnerName,
+        avatar = moneyAccountOwnerIcon.toPortfolioAvatar(name = moneyAccountOwnerName),
     )
     is ResolvedOwner.OwnWallet -> ContentSubtitle.OwnWallet(
         direction = direction,

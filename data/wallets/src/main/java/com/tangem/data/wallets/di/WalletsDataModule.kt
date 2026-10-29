@@ -8,6 +8,7 @@ import com.tangem.data.wallets.DefaultWalletNamesMigrationRepository
 import com.tangem.data.wallets.DefaultWalletsPromoRepository
 import com.tangem.data.wallets.DefaultWalletsRepository
 import com.tangem.data.wallets.backup.DefaultWalletCardsBackupDeliveryScheduler
+import com.tangem.data.wallets.balance.DefaultWalletBalanceStateRepository
 import com.tangem.data.wallets.cold.DefaultColdMapDerivationsRepository
 import com.tangem.data.wallets.derivations.DefaultDerivationsHelper
 import com.tangem.data.wallets.derivations.DefaultDerivationsRepository
@@ -33,6 +34,7 @@ import com.tangem.domain.wallets.backup.WalletCardsBackupDeliveryScheduler
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.wallets.derivations.HotMapDerivationsRepository
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
+import com.tangem.domain.wallets.repository.WalletBalanceStateRepository
 import com.tangem.domain.wallets.repository.WalletCardsBackupRepository
 import com.tangem.domain.wallets.repository.WalletNamesMigrationRepository
 import com.tangem.domain.wallets.repository.WalletsPromoRepository
@@ -173,4 +175,8 @@ internal interface WalletsDataBindsModule {
     fun bindWalletCardsBackupDeliveryScheduler(
         impl: DefaultWalletCardsBackupDeliveryScheduler,
     ): WalletCardsBackupDeliveryScheduler
+
+    @Binds
+    @Singleton
+    fun bindWalletBalanceStateRepository(impl: DefaultWalletBalanceStateRepository): WalletBalanceStateRepository
 }

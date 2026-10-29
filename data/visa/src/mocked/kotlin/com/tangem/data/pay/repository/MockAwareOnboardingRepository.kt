@@ -11,12 +11,12 @@ import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.pay.TangemPayCustomerResidency
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.AccountFeeGroupType
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.CustomerOrderRequest
-import com.tangem.domain.pay.model.CustomerSummary
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayInitialCredentials
@@ -96,9 +96,6 @@ internal class MockAwareOnboardingRepository @Inject constructor(
     override suspend fun getCustomerInfo(userWalletId: UserWalletId): Either<VisaApiError, CustomerInfo> =
         real.getCustomerInfo(userWalletId)
 
-    override suspend fun getCustomerSummary(userWalletId: UserWalletId): Either<VisaApiError, CustomerSummary> =
-        real.getCustomerSummary(userWalletId)
-
     override suspend fun getBankCredentials(
         userWalletId: UserWalletId,
         productInstanceId: String,
@@ -106,8 +103,9 @@ internal class MockAwareOnboardingRepository @Inject constructor(
 
     override suspend fun getFees(
         userWalletId: UserWalletId,
+        product: TangemPayProduct,
         types: Set<AccountFeeGroupType>,
-    ): Either<VisaApiError, List<AccountFee>> = real.getFees(userWalletId, types)
+    ): Either<VisaApiError, List<AccountFee>> = real.getFees(userWalletId, product, types)
 
     override suspend fun createOrder(
         userWalletId: UserWalletId,

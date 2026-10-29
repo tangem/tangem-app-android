@@ -1,5 +1,6 @@
 package com.tangem.features.send.subcomponents.notifications.model
 
+import arrow.core.None
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Amount
@@ -189,6 +190,8 @@ internal class NotificationsModelTest {
         balance: BigDecimal,
         enteredAmount: BigDecimal,
         fee: Fee = tronGaslessFee(),
+        destinationAddress: String? = null,
+        isNFTTransfer: Boolean = false,
     ): NotificationsModel {
         // The fee token IS the sent token, so both statuses are the same snapshot.
         val status = loadedStatus(currency = tronUsdt, balance = balance)
@@ -198,7 +201,7 @@ internal class NotificationsModelTest {
             cryptoCurrencyStatus = status,
             appCurrency = AppCurrency.Default,
             notificationData = NotificationData(
-                destinationAddress = null,
+                destinationAddress = destinationAddress,
                 memo = null,
                 amountValue = enteredAmount,
                 reduceAmountBy = BigDecimal.ZERO,
@@ -206,6 +209,7 @@ internal class NotificationsModelTest {
                 fee = fee,
                 feeError = null,
                 feeCryptoCurrencyStatus = status,
+                isNFTTransfer = isNFTTransfer,
             ),
             callback = mockk(relaxed = true),
         )
@@ -304,6 +308,33 @@ internal class NotificationsModelTest {
 
         // Assert
         assertThat(sut.uiState.value.filterIsInstance<NotificationUM.Info>()).hasSize(1)
+        sut.onDestroy()
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [false, true])
+    fun `GIVEN recipient entered WHEN notifications built THEN only a non-NFT transfer is validated`(
+        isNFTTransfer: Boolean,
+    ) = runTest {
+        // Arrange
+        coEvery { getAccountCurrencyByAddressUseCase(any()) } returns None
+        coEvery { validateTransactionUseCase(any(), any(), any(), any(), any(), any()) } returns Unit.right()
+        val sut = createModel(
+            testScope = this,
+            balance = BigDecimal("100"),
+            enteredAmount = BigDecimal.ZERO,
+            fee = trxFee(),
+            destinationAddress = "TRecipient",
+            isNFTTransfer = isNFTTransfer,
+        )
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = if (isNFTTransfer) 0 else 1) {
+            validateTransactionUseCase(any(), any(), any(), any(), any(), any())
+        }
         sut.onDestroy()
     }
 

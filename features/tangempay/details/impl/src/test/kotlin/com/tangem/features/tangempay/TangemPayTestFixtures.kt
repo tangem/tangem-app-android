@@ -23,7 +23,11 @@ import org.joda.time.DateTime
 import java.math.BigDecimal
 import java.util.Currency
 
-internal fun bankCredentials(depositLimit: BankCredentials.DepositLimit? = null): BankCredentials = BankCredentials(
+internal fun bankCredentials(
+    rail: String? = "ACH",
+    depositFee: BankCredentials.DepositFee? = null,
+    depositLimit: BankCredentials.DepositLimit? = null,
+): BankCredentials = BankCredentials(
     type = "ACH",
     beneficiaryName = "Rain Payments Inc",
     beneficiaryAddress = "123 Finance St",
@@ -31,18 +35,26 @@ internal fun bankCredentials(depositLimit: BankCredentials.DepositLimit? = null)
     beneficiaryBankAddress = "8700 Perry Highway",
     accountNumber = "123456",
     routingNumber = "654321",
+    rail = rail,
     transferMessage = null,
-    depositFee = null,
+    depositFee = depositFee,
     depositLimit = depositLimit,
 )
 
-internal fun onrampFee(amount: BigDecimal = BigDecimal.ZERO): AccountFee = AccountFee(
-    type = "ACH_ONRAMP",
-    name = "ACH",
+internal fun onrampFee(
+    type: String = "ACH_ONRAMP",
+    name: String = "ACH",
+    calculationType: AccountFee.CalculationType = AccountFee.CalculationType.FIXED,
+    amount: BigDecimal = BigDecimal.ZERO,
+    currency: String = "USD",
+): AccountFee = AccountFee(
+    type = type,
+    name = name,
     paymentMethodId = null,
     group = AccountFeeGroupType.ONRAMP,
+    calculationType = calculationType,
     amount = amount,
-    currency = "USD",
+    currency = currency,
 )
 
 internal fun <T : Any> SlotNavigation<T>.trackSlot(): List<T?> {

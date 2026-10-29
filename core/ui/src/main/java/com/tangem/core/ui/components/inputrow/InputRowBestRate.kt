@@ -84,7 +84,7 @@ fun InputRowBestRate(
                 Text(
                     text = subtitle.resolveReference(),
                     style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                     modifier = Modifier.padding(top = 2.dp),
                 )
             }
@@ -93,7 +93,7 @@ fun InputRowBestRate(
                 Icon(
                     painter = painterResource(id = R.drawable.ic_chevron_right_24),
                     contentDescription = null,
-                    tint = TangemTheme.colors.icon.informative,
+                    tint = TangemTheme.colors3.icon.secondary,
                     modifier = Modifier
                         .padding(vertical = 10.dp)
                         .clickable(
@@ -113,12 +113,12 @@ private fun InnerTitle(title: TextReference, titleExtra: TextReference, showTag:
         Text(
             text = title.resolveReference(),
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         Text(
             text = titleExtra.resolveReference(),
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier
                 .padding(start = 4.dp),
         )
@@ -126,11 +126,11 @@ private fun InnerTitle(title: TextReference, titleExtra: TextReference, showTag:
             Text(
                 text = stringResourceSafe(R.string.express_provider_best_rate),
                 style = TangemTheme.typography.caption1,
-                color = TangemTheme.colors.icon.accent,
+                color = TangemTheme.colors3.icon.accent.blue,
                 modifier = Modifier
                     .padding(start = 4.dp)
                     .background(
-                        color = TangemTheme.colors.icon.accent.copy(alpha = 0.1f),
+                        color = TangemTheme.colors3.bg.accent.blueSubtle,
                         shape = RoundedCornerShape(20.dp),
                     )
                     .padding(horizontal = 6.dp),
@@ -155,7 +155,7 @@ private fun InputRowBestRatePreview(
             showTag = data.shouldShowTag,
             onIconClick = data.iconClick,
             modifier = Modifier
-                .background(TangemTheme.colors.background.action),
+                .background(TangemTheme.colors3.bg.secondary),
         )
     }
 }

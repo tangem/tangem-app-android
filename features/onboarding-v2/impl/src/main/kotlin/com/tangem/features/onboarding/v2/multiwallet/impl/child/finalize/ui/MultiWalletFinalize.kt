@@ -44,7 +44,7 @@ internal fun MultiWalletFinalize(state: MultiWalletFinalizeUM, modifier: Modifie
                         else -> R.string.onboarding_title_backup_card
                     },
                 ),
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 textAlign = TextAlign.Center,
                 style = TangemTheme.typography.h2,
             )
@@ -59,7 +59,7 @@ internal fun MultiWalletFinalize(state: MultiWalletFinalizeUM, modifier: Modifie
                         state.cardNumber,
                     )
                 },
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
                 style = TangemTheme.typography.body1,
             )

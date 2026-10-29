@@ -7,20 +7,18 @@ import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.data.pay.store.CashbackSummaryStore
 import com.tangem.data.pay.store.TangemPayStorage
-import com.tangem.domain.models.kyc.KycStatus
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.AccountFeeGroupType
-import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.CustomerOrderRequest
-import com.tangem.domain.pay.model.CustomerSummary
 import com.tangem.domain.pay.model.OrderType
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.request.OrderRequest
-import com.tangem.spend.datasource.pay.models.response.CustomerSummaryResponse
 import com.tangem.spend.datasource.pay.models.response.FeesResponse
 import com.tangem.spend.datasource.pay.models.response.OrderResponse
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -31,6 +29,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 internal class DefaultOnboardingRepositoryTest {
@@ -306,6 +306,7 @@ internal class DefaultOnboardingRepositoryTest {
     }
 
     @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class GetFees {
 
         @Test
@@ -318,12 +319,14 @@ internal class DefaultOnboardingRepositoryTest {
                     fee(type = "ACH_OFFRAMP", group = "OFFRAMP", paymentMethodId = "ACH", amount = BigDecimal("1.50")),
                 ),
             )
-            coEvery { tangemPayApi.getFees(authHeader = AUTH_HEADER, groups = expectedGroups) } returns
-                ApiResponse.Success(response)
+            coEvery {
+                tangemPayApi.getFees(authHeader = AUTH_HEADER, accountType = ACCOUNT_TYPE, groups = expectedGroups)
+            } returns ApiResponse.Success(response)
 
             // Act
             val actual = repository.getFees(
                 userWalletId = USER_WALLET_ID,
+                product = PRODUCT,
                 types = setOf(AccountFeeGroupType.ONRAMP, AccountFeeGroupType.OFFRAMP),
             )
 
@@ -334,6 +337,7 @@ internal class DefaultOnboardingRepositoryTest {
                     name = "ACH",
                     paymentMethodId = "ACH",
                     group = AccountFeeGroupType.ONRAMP,
+                    calculationType = AccountFee.CalculationType.FIXED,
                     amount = BigDecimal("1.00"),
                     currency = "USD",
                 ),
@@ -342,12 +346,15 @@ internal class DefaultOnboardingRepositoryTest {
                     name = "ACH",
                     paymentMethodId = "ACH",
                     group = AccountFeeGroupType.OFFRAMP,
+                    calculationType = AccountFee.CalculationType.FIXED,
                     amount = BigDecimal("1.50"),
                     currency = "USD",
                 ),
             )
             assertThat(actual).isEqualTo(expected.right())
-            coVerify(exactly = 1) { tangemPayApi.getFees(authHeader = AUTH_HEADER, groups = expectedGroups) }
+            coVerify(exactly = 1) {
+                tangemPayApi.getFees(authHeader = AUTH_HEADER, accountType = ACCOUNT_TYPE, groups = expectedGroups)
+            }
         }
 
         @Test
@@ -359,11 +366,11 @@ internal class DefaultOnboardingRepositoryTest {
                     fee(type = "ACH_ONRAMP", group = "ONRAMP", paymentMethodId = "ACH", currency = " "),
                 ),
             )
-            coEvery { tangemPayApi.getFees(authHeader = AUTH_HEADER, groups = any()) } returns
+            coEvery { tangemPayApi.getFees(authHeader = AUTH_HEADER, accountType = any(), groups = any()) } returns
                 ApiResponse.Success(response)
 
             // Act
-            val actual = repository.getFees(USER_WALLET_ID, setOf(AccountFeeGroupType.ONRAMP))
+            val actual = repository.getFees(USER_WALLET_ID, PRODUCT, setOf(AccountFeeGroupType.ONRAMP))
 
             // Assert
             assertThat(actual).isEqualTo(emptyList<AccountFee>().right())
@@ -376,11 +383,11 @@ internal class DefaultOnboardingRepositoryTest {
                 val response = FeesResponse(
                     result = listOf(fee(type = "ACH_ONRAMP", group = "onramp", paymentMethodId = null)),
                 )
-                coEvery { tangemPayApi.getFees(authHeader = AUTH_HEADER, groups = any()) } returns
+                coEvery { tangemPayApi.getFees(authHeader = AUTH_HEADER, accountType = any(), groups = any()) } returns
                     ApiResponse.Success(response)
 
                 // Act
-                val actual = repository.getFees(USER_WALLET_ID, setOf(AccountFeeGroupType.ONRAMP))
+                val actual = repository.getFees(USER_WALLET_ID, PRODUCT, setOf(AccountFeeGroupType.ONRAMP))
 
                 // Assert
                 val expected = AccountFee(
@@ -388,6 +395,7 @@ internal class DefaultOnboardingRepositoryTest {
                     name = "ACH",
                     paymentMethodId = null,
                     group = AccountFeeGroupType.ONRAMP,
+                    calculationType = AccountFee.CalculationType.FIXED,
                     amount = BigDecimal.ONE,
                     currency = "USD",
                 )
@@ -395,13 +403,58 @@ internal class DefaultOnboardingRepositoryTest {
             }
 
         @Test
+        fun `GIVEN percentage and missing calculation types WHEN getFees THEN missing one is fixed`() =
+            runTest {
+                // Arrange
+                val response = FeesResponse(
+                    result = listOf(
+                        fee(
+                            type = "SPEI_ONRAMP",
+                            group = "ONRAMP",
+                            paymentMethodId = "SPEI",
+                            calculationType = "PERCENTAGE",
+                        ),
+                        fee(type = "ACH_ONRAMP", group = "ONRAMP", paymentMethodId = "ACH", calculationType = null),
+                    ),
+                )
+                coEvery { tangemPayApi.getFees(authHeader = AUTH_HEADER, accountType = any(), groups = any()) } returns
+                    ApiResponse.Success(response)
+
+                // Act
+                val actual = repository.getFees(USER_WALLET_ID, PRODUCT, setOf(AccountFeeGroupType.ONRAMP))
+
+                // Assert
+                val expected = listOf(
+                    AccountFee(
+                        type = "SPEI_ONRAMP",
+                        name = "ACH",
+                        paymentMethodId = "SPEI",
+                        group = AccountFeeGroupType.ONRAMP,
+                        calculationType = AccountFee.CalculationType.PERCENTAGE,
+                        amount = BigDecimal.ONE,
+                        currency = "USD",
+                    ),
+                    AccountFee(
+                        type = "ACH_ONRAMP",
+                        name = "ACH",
+                        paymentMethodId = "ACH",
+                        group = AccountFeeGroupType.ONRAMP,
+                        calculationType = AccountFee.CalculationType.FIXED,
+                        amount = BigDecimal.ONE,
+                        currency = "USD",
+                    ),
+                )
+                assertThat(actual).isEqualTo(expected.right())
+            }
+
+        @Test
         fun `GIVEN response without result WHEN getFees THEN error`() = runTest {
             // Arrange
-            coEvery { tangemPayApi.getFees(authHeader = AUTH_HEADER, groups = any()) } returns
+            coEvery { tangemPayApi.getFees(authHeader = AUTH_HEADER, accountType = any(), groups = any()) } returns
                 ApiResponse.Success(FeesResponse(result = null))
 
             // Act
-            val actual = repository.getFees(USER_WALLET_ID, setOf(AccountFeeGroupType.ONRAMP))
+            val actual = repository.getFees(USER_WALLET_ID, PRODUCT, setOf(AccountFeeGroupType.ONRAMP))
 
             // Assert
             assertThat(actual).isEqualTo(VisaApiError.UnknownWithoutCode.left())
@@ -410,20 +463,45 @@ internal class DefaultOnboardingRepositoryTest {
         @Test
         fun `GIVEN failing request WHEN getFees THEN api error`() = runTest {
             // Arrange
-            coEvery { tangemPayApi.getFees(authHeader = AUTH_HEADER, groups = any()) } returns
+            coEvery { tangemPayApi.getFees(authHeader = AUTH_HEADER, accountType = any(), groups = any()) } returns
                 ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<FeesResponse>
 
             // Act
-            val actual = repository.getFees(USER_WALLET_ID, setOf(AccountFeeGroupType.ONRAMP))
+            val actual = repository.getFees(USER_WALLET_ID, PRODUCT, setOf(AccountFeeGroupType.ONRAMP))
 
             // Assert
             assertThat(actual).isEqualTo(VisaApiError.Unspecified.left())
         }
 
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN product WHEN getFees THEN fees requested for its account type`(
+            model: FeesAccountTypeModel,
+        ) = runTest {
+            // Arrange
+            coEvery {
+                tangemPayApi.getFees(authHeader = AUTH_HEADER, accountType = model.expectedAccountType, groups = any())
+            } returns ApiResponse.Success(FeesResponse(result = emptyList()))
+
+            // Act
+            repository.getFees(USER_WALLET_ID, model.product, setOf(AccountFeeGroupType.ONRAMP))
+
+            // Assert
+            coVerify(exactly = 1) {
+                tangemPayApi.getFees(authHeader = AUTH_HEADER, accountType = model.expectedAccountType, groups = any())
+            }
+        }
+
+        private fun provideTestModels() = listOf(
+            FeesAccountTypeModel(product = TangemPayProduct.PAYMENT_ACCOUNT, expectedAccountType = ACCOUNT_TYPE),
+            FeesAccountTypeModel(product = TangemPayProduct.BANKING_ACCOUNT, expectedAccountType = "BANKING_ACCOUNT"),
+        )
+
         private fun fee(
             type: String,
             group: String?,
             paymentMethodId: String?,
+            calculationType: String? = "FIXED",
             amount: BigDecimal? = BigDecimal.ONE,
             currency: String? = "USD",
         ) = FeesResponse.Fee(
@@ -431,96 +509,10 @@ internal class DefaultOnboardingRepositoryTest {
             group = group,
             name = "ACH",
             paymentMethodId = paymentMethodId,
-            calculationType = "FIXED",
+            calculationType = calculationType,
             amount = amount,
             currency = currency,
             description = "fee",
-        )
-    }
-
-    @Nested
-    inner class GetCustomerSummary {
-
-        @Test
-        fun `GIVEN summary returned WHEN getCustomerSummary THEN converted summary returned`() = runTest {
-            // Arrange
-            coEvery { tangemPayApi.getCustomerSummary(authHeader = AUTH_HEADER) } returns
-                ApiResponse.Success(CustomerSummaryResponse(result = customerSummaryResult()))
-            val expected = CustomerSummary(
-                customerId = "customer",
-                customerStatus = CustomerInfo.State.ACTIVE,
-                isHidden = false,
-                kycStatus = KycStatus.APPROVED,
-                paymentAccount = CustomerSummary.PaymentAccount(
-                    id = "payment-account",
-                    activation = CustomerSummary.Activation(
-                        status = CustomerSummary.Activation.Status.COMPLETED,
-                        step = null,
-                        failureReason = null,
-                    ),
-                    cards = CustomerSummary.Cards(active = 1, frozen = 0, pending = 0),
-                ),
-                bankingAccount = CustomerSummary.BankingAccount(
-                    id = null,
-                    activation = CustomerSummary.Activation(
-                        status = CustomerSummary.Activation.Status.PROCESSING,
-                        step = CustomerSummary.Activation.Step.AWAITING_KYC,
-                        failureReason = null,
-                    ),
-                ),
-            )
-
-            // Act
-            val actual = repository.getCustomerSummary(USER_WALLET_ID)
-
-            // Assert
-            assertThat(actual).isEqualTo(expected.right())
-        }
-
-        @Test
-        fun `GIVEN response without result WHEN getCustomerSummary THEN error`() = runTest {
-            // Arrange
-            coEvery { tangemPayApi.getCustomerSummary(authHeader = AUTH_HEADER) } returns
-                ApiResponse.Success(CustomerSummaryResponse(result = null))
-
-            // Act
-            val actual = repository.getCustomerSummary(USER_WALLET_ID)
-
-            // Assert
-            assertThat(actual).isEqualTo(VisaApiError.UnknownWithoutCode.left())
-        }
-
-        @Test
-        fun `GIVEN failing request WHEN getCustomerSummary THEN api error`() = runTest {
-            // Arrange
-            coEvery { tangemPayApi.getCustomerSummary(authHeader = AUTH_HEADER) } returns
-                ApiResponse.Error(ApiResponseError.NetworkException()) as ApiResponse<CustomerSummaryResponse>
-
-            // Act
-            val actual = repository.getCustomerSummary(USER_WALLET_ID)
-
-            // Assert
-            assertThat(actual).isEqualTo(VisaApiError.Unspecified.left())
-        }
-
-        private fun customerSummaryResult() = CustomerSummaryResponse.Result(
-            customerId = "customer",
-            customerStatus = "ACTIVE",
-            isHidden = false,
-            kycStatus = "APPROVED",
-            paymentAccount = CustomerSummaryResponse.PaymentAccount(
-                id = "payment-account",
-                activation = CustomerSummaryResponse.Activation(status = "COMPLETED", step = null, failureReason = null),
-                cards = CustomerSummaryResponse.Cards(active = 1, frozen = 0, pending = 0),
-            ),
-            bankingAccount = CustomerSummaryResponse.BankingAccount(
-                id = null,
-                activation = CustomerSummaryResponse.Activation(
-                    status = "PROCESSING",
-                    step = "AWAITING_KYC",
-                    failureReason = null,
-                ),
-            ),
         )
     }
 
@@ -550,9 +542,13 @@ internal class DefaultOnboardingRepositoryTest {
         ),
     )
 
+    internal data class FeesAccountTypeModel(val product: TangemPayProduct, val expectedAccountType: String)
+
     private companion object {
         val USER_WALLET_ID = UserWalletId("011")
+        val PRODUCT = TangemPayProduct.PAYMENT_ACCOUNT
         const val AUTH_HEADER = "auth-header"
+        const val ACCOUNT_TYPE = "PAYMENT_ACCOUNT"
         const val WALLET_ADDRESS = "0xabc"
         const val CAMPAIGN_KEY = "tpay_for_oxford"
         const val CAMPAIGN_SPECIFICATION = "SP_000009"

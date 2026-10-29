@@ -65,7 +65,7 @@ internal class DefaultMarketsTokenListComponent(
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_back_28),
                     contentDescription = null,
-                    tint = TangemTheme.colors2.graphic.neutral.primary,
+                    tint = TangemTheme.colors3.icon.primary,
                     modifier = Modifier
                         .size(44.dp)
                         .clip(CircleShape)
@@ -111,7 +111,6 @@ internal class DefaultMarketsTokenListComponent(
     data class Params(
         val preselectedSortType: SortByTypeUM,
         val preselectedInterval: MarketsListUM.TrendInterval,
-        val shouldAlwaysShowSearchBar: Boolean,
     )
 
     data class ClickIntents(

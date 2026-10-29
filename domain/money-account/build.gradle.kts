@@ -20,7 +20,6 @@ dependencies {
 
     // region Core modules
     api(projects.core.analytics.models)
-    api(projects.core.security)
     api(projects.core.utils)
     // endregion
 

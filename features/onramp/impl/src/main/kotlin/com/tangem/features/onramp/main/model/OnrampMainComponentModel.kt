@@ -30,6 +30,8 @@ import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.marketing.api.LinkedBannerRequest
 import com.tangem.features.marketing.api.MarketingBannerRequest
+import com.tangem.features.marketing.api.concierge.ConciergeDemandSurveyComponent
+import com.tangem.features.onramp.deeplink.ConciergeWaitlistListener
 import com.tangem.features.onramp.main.OnrampMainComponent
 import com.tangem.features.onramp.main.entity.*
 import com.tangem.features.onramp.main.entity.factory.OnrampAmountButtonUMStateFactory
@@ -41,9 +43,11 @@ import com.tangem.features.onramp.utils.sendProviderCalculatedEvent
 import com.tangem.features.onramp.utils.showDemoModeWarningIfNeeded
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.PeriodicTask
 import com.tangem.utils.coroutines.SingleTaskScheduler
 import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.isNullOrZero
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.*
@@ -68,6 +72,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val messageSender: UiMessageSender,
     private val getCurrencyUSDQuoteUseCase: GetCurrencyUSDQuoteUseCase,
+    private val conciergeWaitlistListener: ConciergeWaitlistListener,
     paramsContainer: ParamsContainer,
     getWalletsUseCase: GetWalletsUseCase,
 ) : Model(), OnrampIntents {
@@ -177,8 +182,10 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     private val quotesTaskScheduler = SingleTaskScheduler<Unit>()
     private var sentGeoRestrictionProviders: Set<String> = emptySet()
+    private val conciergeWaitlistJobHolder = JobHolder()
 
     val bottomSheetNavigation: SlotNavigation<OnrampMainBottomSheetConfig> = SlotNavigation()
+    val demandSurveyNavigation: SlotNavigation<ConciergeDemandSurveyComponent.Params> = SlotNavigation()
     val userWallet = getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }
 
     init {
@@ -274,8 +281,28 @@ internal class OnrampMainComponentModel @Inject constructor(
         }
     }
 
+    fun onStart() {
+        conciergeWaitlistListener.openWaitlistFlow
+            .onEach { openDemandSurvey() }
+            .launchIn(modelScope)
+            .saveIn(conciergeWaitlistJobHolder)
+    }
+
+    // The survey would render under the sheets' dialog windows; residency confirmation keeps priority over the link.
+    private fun openDemandSurvey() {
+        bottomSheetNavigation.navigate(
+            transformer = { sheet -> sheet as? OnrampMainBottomSheetConfig.ConfirmResidency },
+            onComplete = { sheet, _ ->
+                if (sheet == null) {
+                    demandSurveyNavigation.activate(ConciergeDemandSurveyComponent.Params(params.userWalletId))
+                }
+            },
+        )
+    }
+
     fun onStop() {
         quotesTaskScheduler.cancelTask()
+        conciergeWaitlistJobHolder.cancel()
     }
 
     fun handleOnrampAvailable() {

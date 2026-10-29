@@ -16,6 +16,7 @@ import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.safe.JointTransferPayloadCodec
 import com.tangem.domain.jointaccount.safe.SafeAddressCalculator
 import com.tangem.domain.jointaccount.safe.SafeSingleton
+import com.tangem.domain.jointaccount.signing.JointSignatureRecoverer
 import java.math.BigInteger
 
 /**
@@ -25,23 +26,26 @@ import java.math.BigInteger
  * 2. this wallet's own owner address is among the members;
  * 3. the `SafeTx` decodes to exactly what the UI shows the user — recipient, amount, asset;
  * 4. the payload has one of the two allowed shapes and never targets the Safe itself;
- * 5. the refund fields pay what the operation was built to pay, and no one else.
+ * 5. the refund fields pay what the operation was built to pay, and no one else;
+ * 6. every `approve` vote the backend relays, the initiator's own included, recovers to the member it names.
  */
 class JointOperationVerifier(
     private val payloadCodec: JointTransferPayloadCodec,
     private val safeAddressCalculator: SafeAddressCalculator,
+    private val signatureRecoverer: JointSignatureRecoverer,
 ) {
 
     /**
      * What the refund fields are allowed to say, read from the same sources the creation path used.
      *
      * @param refundReceiver the fee recipient `SafeTxGasBuilder` puts into an operation it creates
-     * @param networkGasPrice the current gas price of the network in the coin, the reference the ceiling is taken from
+     * @param networkGasPrice the current gas price of the network in the coin, the reference the ceiling is taken
+     * from; `null` leaves the ceiling unchecked
      * @param gasToken the operation's gas token as the creation path prices it
      */
     data class RefundBounds(
         val refundReceiver: String,
-        val networkGasPrice: BigInteger,
+        val networkGasPrice: BigInteger?,
         val gasToken: SafeGasToken,
     )
 
@@ -65,6 +69,41 @@ class JointOperationVerifier(
         checkDisplayedPayload(safeTx = operation.safeTx, displayed = displayed)
         checkForm(safeTx = operation.safeTx, safeAddress = safeAddress)
         checkRefund(safeTx = operation.safeTx, bounds = refundBounds)
+        checkVotes(jointAccount = jointAccount, operation = operation, safeAddress = safeAddress)
+    }
+
+    /**
+     * The relayer executes with the very signatures relayed here, so one that does not recover to its member means
+     * a signature set other than the one on screen would execute. The initiator signs by creating the operation and
+     * is shown as approving, so their vote must be among them. A `reject` carries none and is not checked.
+     */
+    private fun Raise<JointOperationSignError>.checkVotes(
+        jointAccount: JointAccount,
+        operation: JointOperation,
+        safeAddress: String,
+    ) {
+        val voteMismatch = VerificationFailed(reason = VerificationFailed.Reason.VOTE_SIGNATURE_MISMATCH)
+        val approvals = operation.signatures.filter { it.state == JointOperation.MemberSignature.State.SIGNED }
+
+        operation.initiator?.let { initiator ->
+            ensure(approvals.any { it.address.equals(initiator, ignoreCase = true) }) { voteMismatch }
+        }
+        approvals
+            .forEach { vote ->
+                val signature = ensureNotNull(vote.signature) { voteMismatch }
+                val isMember = jointAccount.members.any { it.address.equals(vote.address, ignoreCase = true) }
+                ensure(isMember) { voteMismatch }
+
+                val signer = signatureRecoverer
+                    .recoverSafeTxSigner(
+                        safeTx = operation.safeTx,
+                        chainId = operation.chainId,
+                        safeAddress = safeAddress,
+                        signature = signature,
+                    )
+                    .getOrNull()
+                ensure(signer != null && signer.equals(vote.address, ignoreCase = true)) { voteMismatch }
+            }
     }
 
     /**
@@ -91,9 +130,10 @@ class JointOperationVerifier(
         ensure(refundReceiver == normalized(bounds.refundReceiver)) { refundMismatch }
         ensure(safeTx.baseGas in ALLOWED_BASE_GAS) { refundMismatch }
         ensure(safeTx.gasPrice.signum() >= 0) { refundMismatch }
+        val networkGasPrice = bounds.networkGasPrice ?: return
         // Scaled before the conversion: rounding a sub-unit token price up first would multiply the rounding too
         val gasPriceCeiling = bounds.gasToken.gasPriceInTokenCurrency(
-            coinGasPrice = bounds.networkGasPrice * GAS_PRICE_CEILING_MULTIPLIER,
+            coinGasPrice = networkGasPrice * GAS_PRICE_CEILING_MULTIPLIER,
         )
         ensure(safeTx.gasPrice <= gasPriceCeiling) { refundMismatch }
     }

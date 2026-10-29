@@ -73,7 +73,7 @@ internal fun QrScanningContent(
                 iconRes = uiState.topBarConfig.startIcon,
                 onClicked = uiState.onBackClick,
             ),
-            textColor = TangemTheme.colors.text.constantWhite,
+            textColor = TangemTheme.colors3.text.staticDark.primary,
             iconTint = TangemColorPalette.White,
             containerColor = Color.Transparent,
             endContent = {
@@ -117,7 +117,7 @@ private fun Overlay(
     pasteAction: PasteAction,
     overlayColor: Color = TangemColorPalette.Black.copy(alpha = 0.7f),
 ) {
-    val whiteColor = TangemTheme.colors.text.constantWhite
+    val whiteColor = TangemTheme.colors3.text.staticDark.primary
     val borderWidth = with(LocalDensity.current) { 4.dp.toPx() }
     val borderLength = with(LocalDensity.current) { 20.dp.toPx() }
 

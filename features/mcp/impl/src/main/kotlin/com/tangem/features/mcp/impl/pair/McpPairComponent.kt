@@ -58,14 +58,16 @@ internal class McpPairComponent @AssistedInject constructor(
         model = model,
     )
 
-    private val portfolioSelectorComponent: PortfolioSelectorComponent = portfolioSelectorComponentFactory.create(
-        context = child(key = "mcpPortfolioSelector", router = innerRouter),
-        params = PortfolioSelectorComponent.Params(
-            portfolioFetcher = model.portfolioFetcher,
-            controller = model.selectorController,
-            settings = PortfolioSelectorComponent.Settings(isWalletSelectionOnly = true),
-        ),
-    )
+    private val portfolioSelectorComponent: PortfolioSelectorComponent by lazy {
+        portfolioSelectorComponentFactory.create(
+            context = child(key = "mcpPortfolioSelector", router = innerRouter),
+            params = PortfolioSelectorComponent.Params(
+                portfolioFetcher = model.portfolioFetcher,
+                controller = model.selectorController,
+                settings = PortfolioSelectorComponent.Settings(isWalletSelectionOnly = true),
+            ),
+        )
+    }
 
     private val contentStack = childStack(
         key = "mcpPairStack",
@@ -85,7 +87,6 @@ internal class McpPairComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val stack by contentStack.subscribeAsState()
         val state by model.uiState.collectAsStateWithLifecycle()
-        val selectorTitle by portfolioSelectorComponent.title.collectAsStateWithLifecycle()
 
         RequestPushPermissionEffect()
 
@@ -93,14 +94,17 @@ internal class McpPairComponent @AssistedInject constructor(
         McpPairBottomSheet(
             stack = stack,
             state = state,
-            title = when (stack.active.configuration) {
-                McpPairRoutes.AgentInfo -> resourceReference(R.string.wc_new_connection)
-                McpPairRoutes.PortfolioSelector -> selectorTitle
-                McpPairRoutes.Success -> TextReference.EMPTY
-            },
+            title = title(route = stack.active.configuration),
             onBack = ::onBack,
             onDismiss = model::onClose,
         )
+    }
+
+    @Composable
+    private fun title(route: McpPairRoutes): TextReference = when (route) {
+        McpPairRoutes.AgentInfo -> resourceReference(R.string.wc_new_connection)
+        McpPairRoutes.PortfolioSelector -> portfolioSelectorComponent.title.collectAsStateWithLifecycle().value
+        McpPairRoutes.Success -> TextReference.EMPTY
     }
 
     @Composable

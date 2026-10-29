@@ -1,8 +1,12 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.marketing.DemandSurveyRepository
 import com.tangem.domain.marketing.DismissMarketingBannerUseCase
+import com.tangem.domain.marketing.GetDemandSurveyCompletedUseCase
 import com.tangem.domain.marketing.GetMarketingBannerUseCase
 import com.tangem.domain.marketing.MarketingRepository
+import com.tangem.domain.marketing.ObserveDemandSurveyCompletedUseCase
+import com.tangem.domain.marketing.SubmitDemandSurveyUseCase
 import com.tangem.domain.marketing.WarmUpMarketingCampaignsUseCase
 import dagger.Module
 import dagger.Provides
@@ -28,4 +32,20 @@ internal object MarketingDomainModule {
     @Singleton
     fun provideWarmUpMarketingCampaignsUseCase(repository: MarketingRepository): WarmUpMarketingCampaignsUseCase =
         WarmUpMarketingCampaignsUseCase(repository)
+
+    @Provides
+    @Singleton
+    fun provideSubmitDemandSurveyUseCase(repository: DemandSurveyRepository): SubmitDemandSurveyUseCase =
+        SubmitDemandSurveyUseCase(repository)
+
+    @Provides
+    @Singleton
+    fun provideGetDemandSurveyCompletedUseCase(repository: DemandSurveyRepository): GetDemandSurveyCompletedUseCase =
+        GetDemandSurveyCompletedUseCase(repository)
+
+    @Provides
+    @Singleton
+    fun provideObserveDemandSurveyCompletedUseCase(
+        repository: DemandSurveyRepository,
+    ): ObserveDemandSurveyCompletedUseCase = ObserveDemandSurveyCompletedUseCase(repository)
 }

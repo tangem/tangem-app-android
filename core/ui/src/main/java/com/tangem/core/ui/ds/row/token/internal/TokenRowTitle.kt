@@ -62,9 +62,9 @@ private fun ContentTitle(titleUM: TangemTokenRowUM.TitleUM.Content, modifier: Mo
             text = titleUM.text.resolveAnnotatedReference(),
             modifier = Modifier.weight(weight = 1f, fill = false),
             color = if (titleUM.isAvailable) {
-                TangemTheme.colors2.text.neutral.primary
+                TangemTheme.colors3.text.primary
             } else {
-                TangemTheme.colors2.text.status.disabled
+                TangemTheme.colors3.text.tertiary
             },
             overflow = TextOverflow.Ellipsis,
             maxLines = 1,

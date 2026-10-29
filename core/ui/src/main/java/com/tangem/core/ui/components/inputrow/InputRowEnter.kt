@@ -60,13 +60,13 @@ fun InputRowEnter(
     modifier: Modifier = Modifier,
     placeholder: TextReference? = null,
     description: TextReference? = null,
-    titleColor: Color = TangemTheme.colors.text.secondary,
-    textColor: Color = TangemTheme.colors.text.primary1,
+    titleColor: Color = TangemTheme.colors3.text.secondary,
+    textColor: Color = TangemTheme.colors3.text.primary,
     isSingleLine: Boolean = false,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     iconRes: Int? = null,
-    iconTint: Color = TangemTheme.colors.icon.informative,
+    iconTint: Color = TangemTheme.colors3.icon.secondary,
     onIconClick: (() -> Unit)? = null,
     showDivider: Boolean = false,
 ) {
@@ -99,7 +99,7 @@ fun InputRowEnter(
                                 Icon(
                                     modifier = contentModifier.size(16.dp),
                                     painter = painterResource(R.drawable.ic_token_info_24),
-                                    tint = TangemTheme.colors.icon.informative,
+                                    tint = TangemTheme.colors3.icon.secondary,
                                     contentDescription = null,
                                 )
                             },
@@ -154,7 +154,7 @@ private fun InputRowEnterPreview(
             showDivider = data.shouldShowDivider,
             description = stringReference(""),
             onValueChange = {},
-            modifier = Modifier.background(TangemTheme.colors.background.action),
+            modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
         )
     }
 }

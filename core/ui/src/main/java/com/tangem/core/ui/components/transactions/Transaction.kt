@@ -57,7 +57,7 @@ import java.util.UUID
 fun Transaction(state: TransactionState, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier
-            .background(TangemTheme.colors.background.primary)
+            .background(TangemTheme.colors3.bg.secondary)
             .clickable(
                 enabled = state is TransactionState.Content,
                 onClick = (state as? TransactionState.Content)?.onClick ?: {},
@@ -68,7 +68,7 @@ fun Transaction(state: TransactionState, isBalanceHidden: Boolean, modifier: Mod
                 vertical = 8.dp,
                 horizontal = 12.dp,
             ),
-        color = TangemTheme.colors.background.primary,
+        color = TangemTheme.colors3.bg.secondary,
     ) {
         @Suppress("DestructuringDeclarationWithTooManyEntries")
         // FIXME: split this composable to small composables(loading/content/error) to properly handle onClick
@@ -155,9 +155,9 @@ private fun Icon(state: TransactionState, modifier: Modifier = Modifier) {
                     .size(40.dp)
                     .background(
                         color = when (state.status) {
-                            is Status.Unconfirmed -> TangemTheme.colors.icon.attention.copy(alpha = 0.1f)
-                            is Status.Confirmed -> TangemTheme.colors.background.secondary
-                            is Status.Failed -> TangemTheme.colors.icon.warning.copy(alpha = 0.1f)
+                            is Status.Unconfirmed -> TangemTheme.colors3.bg.accent.yellowSubtle
+                            is Status.Confirmed -> TangemTheme.colors3.bg.primary
+                            is Status.Failed -> TangemTheme.colors3.bg.accent.redSubtle
                         },
                         shape = CircleShape,
                     ),
@@ -169,9 +169,9 @@ private fun Icon(state: TransactionState, modifier: Modifier = Modifier) {
                         .size(20.dp)
                         .align(Alignment.Center),
                     tint = when (state.status) {
-                        Status.Confirmed -> TangemTheme.colors.icon.informative
-                        Status.Unconfirmed -> TangemTheme.colors.icon.attention
-                        Status.Failed -> TangemTheme.colors.icon.warning
+                        Status.Confirmed -> TangemTheme.colors3.icon.secondary
+                        Status.Unconfirmed -> TangemTheme.colors3.icon.accent.yellow
+                        Status.Failed -> TangemTheme.colors3.icon.accent.red
                     },
                 )
             }
@@ -185,7 +185,7 @@ private fun Icon(state: TransactionState, modifier: Modifier = Modifier) {
                     modifier = Modifier
                         .matchParentSize()
                         .background(
-                            color = TangemTheme.colors.button.secondary,
+                            color = TangemTheme.colors3.bg.transparent.secondary,
                             shape = CircleShape,
                         ),
                 )
@@ -204,7 +204,7 @@ private fun Title(state: TransactionState, modifier: Modifier = Modifier) {
             ) {
                 Text(
                     text = state.title.resolveReference(),
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                     style = TangemTheme.typography.subtitle2,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
@@ -243,7 +243,7 @@ private fun Subtitle(state: TransactionState, modifier: Modifier = Modifier) {
                 },
                 modifier = modifier,
                 textAlign = TextAlign.Start,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 style = TangemTheme.typography.caption2,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -271,10 +271,10 @@ private fun Amount(state: TransactionState, isBalanceHidden: Boolean, modifier: 
                 modifier = modifier,
                 textAlign = TextAlign.End,
                 color = when (state.status) {
-                    Status.Failed -> TangemTheme.colors.text.warning
+                    Status.Failed -> TangemTheme.colors3.text.accent.red
                     else -> when (state.direction) {
-                        Direction.INCOMING -> TangemTheme.colors.text.accent
-                        Direction.OUTGOING -> TangemTheme.colors.text.primary1
+                        Direction.INCOMING -> TangemTheme.colors3.text.accent.blue
+                        Direction.OUTGOING -> TangemTheme.colors3.text.primary
                     }
                 },
                 style = TangemTheme.typography.body2,
@@ -303,7 +303,7 @@ private fun Timestamp(state: TransactionState, modifier: Modifier = Modifier) {
                 text = state.time,
                 modifier = modifier,
                 textAlign = TextAlign.End,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 style = TangemTheme.typography.caption2,
             )
         }
@@ -324,7 +324,7 @@ private fun Timestamp(state: TransactionState, modifier: Modifier = Modifier) {
 private fun LockedContent(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.background(
-            color = TangemTheme.colors.field.primary,
+            color = TangemTheme.colors3.bg.tertiary,
             shape = RoundedCornerShape(6.dp),
         ),
     )

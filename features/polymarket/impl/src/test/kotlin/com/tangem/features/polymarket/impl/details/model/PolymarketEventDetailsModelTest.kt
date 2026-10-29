@@ -55,7 +55,7 @@ internal class PolymarketEventDetailsModelTest {
     @Test
     fun `GIVEN a displayed source WHEN refresh removes it THEN the source row disappears`() = runTest {
         // Arrange
-        coEvery { getEventUseCase(eventId = "event-1") } returnsMany listOf(
+        coEvery { getEventUseCase(any(), eventId = "event-1") } returnsMany listOf(
             createEvent().copy(resolutionSource = "https://www.binance.com/en/trade/BTC_USDT").right(),
             createEvent().copy(resolutionSource = null).right(),
         )
@@ -76,7 +76,7 @@ internal class PolymarketEventDetailsModelTest {
     fun `GIVEN an updated source WHEN tapped THEN opens the full current URL`() = runTest {
         // Arrange
         val latestUrl = "https://www.twitch.tv/ESLCS?lang=en#live"
-        coEvery { getEventUseCase(eventId = "event-1") } returnsMany listOf(
+        coEvery { getEventUseCase(any(), eventId = "event-1") } returnsMany listOf(
             createEvent().copy(resolutionSource = "https://example.com/old").right(),
             createEvent().copy(resolutionSource = latestUrl).right(),
         )
@@ -105,14 +105,14 @@ internal class PolymarketEventDetailsModelTest {
     @Test
     fun `GIVEN event loads WHEN model created THEN content shown`() = runTest {
         // Arrange
-        coEvery { getEventUseCase(eventId = "event-1") } returns createEvent().right()
+        coEvery { getEventUseCase(any(), eventId = "event-1") } returns createEvent().right()
 
         // Act
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 1) { getEventUseCase(eventId = "event-1") }
+        coVerify(exactly = 1) { getEventUseCase(any(), eventId = "event-1") }
         assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Content::class.java)
         assertThat((model.uiState.value as PolymarketEventDetailsUM.Content).categoryLabel).isNull()
     }
@@ -141,7 +141,7 @@ internal class PolymarketEventDetailsModelTest {
     @Test
     fun `GIVEN initial load fails once WHEN two seconds pass THEN retry shows content without an error`() = runTest {
         // Arrange
-        coEvery { getEventUseCase(eventId = "event-1") } returnsMany listOf(
+        coEvery { getEventUseCase(any(), eventId = "event-1") } returnsMany listOf(
             PolymarketEventError.Network.left(),
             createEvent().right(),
         )
@@ -153,13 +153,13 @@ internal class PolymarketEventDetailsModelTest {
         runCurrent()
 
         // Assert
-        coVerify(exactly = 1) { getEventUseCase(eventId = "event-1") }
+        coVerify(exactly = 1) { getEventUseCase(any(), eventId = "event-1") }
         assertThat(model.uiState.value).isEqualTo(PolymarketEventDetailsUM.Loading)
 
         advanceTimeBy(1)
         runCurrent()
 
-        coVerify(exactly = 2) { getEventUseCase(eventId = "event-1") }
+        coVerify(exactly = 2) { getEventUseCase(any(), eventId = "event-1") }
         assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Content::class.java)
         verify(exactly = 0) { messageSender.send(any()) }
     }
@@ -167,7 +167,7 @@ internal class PolymarketEventDetailsModelTest {
     @Test
     fun `GIVEN initial load keeps failing WHEN silent retry fails THEN error is shown without further retries`() = runTest {
         // Arrange
-        coEvery { getEventUseCase(eventId = "event-1") } returns PolymarketEventError.Network.left()
+        coEvery { getEventUseCase(any(), eventId = "event-1") } returns PolymarketEventError.Network.left()
         val model = createModel(testScope = this)
         runCurrent()
 
@@ -176,7 +176,7 @@ internal class PolymarketEventDetailsModelTest {
         runCurrent()
 
         // Assert
-        coVerify(exactly = 1) { getEventUseCase(eventId = "event-1") }
+        coVerify(exactly = 1) { getEventUseCase(any(), eventId = "event-1") }
         assertThat(model.uiState.value).isEqualTo(PolymarketEventDetailsUM.Loading)
 
         advanceTimeBy(1)
@@ -184,14 +184,14 @@ internal class PolymarketEventDetailsModelTest {
 
         assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Error::class.java)
         advanceUntilIdle()
-        coVerify(exactly = 2) { getEventUseCase(eventId = "event-1") }
+        coVerify(exactly = 2) { getEventUseCase(any(), eventId = "event-1") }
         verify(exactly = 0) { messageSender.send(any()) }
     }
 
     @Test
     fun `GIVEN load and silent retry fail WHEN manual retry tapped THEN reload can retry silently to content`() = runTest {
         // Arrange
-        coEvery { getEventUseCase(eventId = "event-1") } returnsMany listOf(
+        coEvery { getEventUseCase(any(), eventId = "event-1") } returnsMany listOf(
             PolymarketEventError.Network.left(),
             PolymarketEventError.Network.left(),
             PolymarketEventError.Network.left(),
@@ -206,20 +206,20 @@ internal class PolymarketEventDetailsModelTest {
         runCurrent()
 
         // Assert
-        coVerify(exactly = 3) { getEventUseCase(eventId = "event-1") }
+        coVerify(exactly = 3) { getEventUseCase(any(), eventId = "event-1") }
         assertThat(model.uiState.value).isEqualTo(PolymarketEventDetailsUM.Loading)
 
         advanceTimeBy(RETRY_DELAY_MILLIS)
         runCurrent()
 
-        coVerify(exactly = 4) { getEventUseCase(eventId = "event-1") }
+        coVerify(exactly = 4) { getEventUseCase(any(), eventId = "event-1") }
         assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Content::class.java)
     }
 
     @Test
     fun `GIVEN initial retry is pending WHEN model destroyed THEN no second request is sent`() = runTest {
         // Arrange
-        coEvery { getEventUseCase(eventId = "event-1") } returns PolymarketEventError.Network.left()
+        coEvery { getEventUseCase(any(), eventId = "event-1") } returns PolymarketEventError.Network.left()
         val model = createModel(testScope = this)
         runCurrent()
 
@@ -228,13 +228,13 @@ internal class PolymarketEventDetailsModelTest {
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 1) { getEventUseCase(eventId = "event-1") }
+        coVerify(exactly = 1) { getEventUseCase(any(), eventId = "event-1") }
     }
 
     @Test
     fun `WHEN back clicked THEN router pops`() = runTest {
         // Arrange
-        coEvery { getEventUseCase(eventId = "event-1") } returns createEvent().right()
+        coEvery { getEventUseCase(any(), eventId = "event-1") } returns createEvent().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -248,7 +248,7 @@ internal class PolymarketEventDetailsModelTest {
     @Test
     fun `GIVEN content WHEN share clicked THEN event link shared`() = runTest {
         // Arrange
-        coEvery { getEventUseCase(eventId = "event-1") } returns createEvent().right()
+        coEvery { getEventUseCase(any(), eventId = "event-1") } returns createEvent().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -262,7 +262,7 @@ internal class PolymarketEventDetailsModelTest {
     @Test
     fun `GIVEN content WHEN outcome clicked THEN place prediction flow pushed`() = runTest {
         // Arrange
-        coEvery { getEventUseCase(eventId = "event-1") } returns createEvent().right()
+        coEvery { getEventUseCase(any(), eventId = "event-1") } returns createEvent().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -290,7 +290,7 @@ internal class PolymarketEventDetailsModelTest {
     @Test
     fun `GIVEN a blocked region WHEN outcome clicked THEN the restriction is explained AND no order opens`() = runTest {
         // Arrange
-        coEvery { getEventUseCase(eventId = "event-1") } returns createEvent().right()
+        coEvery { getEventUseCase(any(), eventId = "event-1") } returns createEvent().right()
         val model = createModel(testScope = this, regionAccess = createPredictionRegionAccess(isBlocked = true))
         advanceUntilIdle()
         val message = slot<EventMessage>()
@@ -312,7 +312,7 @@ internal class PolymarketEventDetailsModelTest {
     @Test
     fun `GIVEN content WHEN closed markets clicked THEN section toggles`() = runTest {
         // Arrange
-        coEvery { getEventUseCase(eventId = "event-1") } returns createEvent().right()
+        coEvery { getEventUseCase(any(), eventId = "event-1") } returns createEvent().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -326,7 +326,7 @@ internal class PolymarketEventDetailsModelTest {
     @Test
     fun `GIVEN content WHEN read more clicked THEN description expands`() = runTest {
         // Arrange
-        coEvery { getEventUseCase(eventId = "event-1") } returns createEvent().right()
+        coEvery { getEventUseCase(any(), eventId = "event-1") } returns createEvent().right()
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -340,7 +340,7 @@ internal class PolymarketEventDetailsModelTest {
     @Test
     fun `GIVEN content shown WHEN screen resumed THEN the event is refreshed at once`() = runTest {
         // Arrange
-        coEvery { getEventUseCase(eventId = "event-1") } returnsMany listOf(
+        coEvery { getEventUseCase(any(), eventId = "event-1") } returnsMany listOf(
             createEvent().right(),
             createEvent(title = "Fresh title").right(),
         )
@@ -352,7 +352,7 @@ internal class PolymarketEventDetailsModelTest {
         runCurrent()
 
         // Assert
-        coVerify(exactly = 2) { getEventUseCase(eventId = "event-1") }
+        coVerify(exactly = 2) { getEventUseCase(any(), eventId = "event-1") }
         assertThat((model.uiState.value as PolymarketEventDetailsUM.Content).title)
             .isEqualTo(stringReference("Fresh title"))
         model.onDestroy()
@@ -361,7 +361,7 @@ internal class PolymarketEventDetailsModelTest {
     @Test
     fun `GIVEN screen resumed WHEN the poll interval passes THEN the event is requested again`() = runTest {
         // Arrange
-        coEvery { getEventUseCase(eventId = "event-1") } returns createEvent().right()
+        coEvery { getEventUseCase(any(), eventId = "event-1") } returns createEvent().right()
         val model = createModel(testScope = this)
         model.onResume()
         runCurrent()
@@ -373,14 +373,14 @@ internal class PolymarketEventDetailsModelTest {
         runCurrent()
 
         // Assert
-        coVerify(exactly = 3) { getEventUseCase(eventId = "event-1") }
+        coVerify(exactly = 3) { getEventUseCase(any(), eventId = "event-1") }
         model.onDestroy()
     }
 
     @Test
     fun `GIVEN screen paused WHEN the poll interval passes THEN the event is not requested`() = runTest {
         // Arrange
-        coEvery { getEventUseCase(eventId = "event-1") } returns createEvent().right()
+        coEvery { getEventUseCase(any(), eventId = "event-1") } returns createEvent().right()
         val model = createModel(testScope = this)
         model.onResume()
         runCurrent()
@@ -391,14 +391,14 @@ internal class PolymarketEventDetailsModelTest {
         runCurrent()
 
         // Assert
-        coVerify(exactly = 1) { getEventUseCase(eventId = "event-1") }
+        coVerify(exactly = 1) { getEventUseCase(any(), eventId = "event-1") }
         model.onDestroy()
     }
 
     @Test
     fun `GIVEN load failed WHEN screen resumed THEN the event is not polled`() = runTest {
         // Arrange
-        coEvery { getEventUseCase(eventId = "event-1") } returns PolymarketEventError.Network.left()
+        coEvery { getEventUseCase(any(), eventId = "event-1") } returns PolymarketEventError.Network.left()
         val model = createModel(testScope = this)
         advanceUntilIdle()
 
@@ -408,7 +408,7 @@ internal class PolymarketEventDetailsModelTest {
         runCurrent()
 
         // Assert
-        coVerify(exactly = 2) { getEventUseCase(eventId = "event-1") }
+        coVerify(exactly = 2) { getEventUseCase(any(), eventId = "event-1") }
         assertThat(model.uiState.value).isInstanceOf(PolymarketEventDetailsUM.Error::class.java)
         model.onDestroy()
     }
@@ -416,7 +416,7 @@ internal class PolymarketEventDetailsModelTest {
     @Test
     fun `GIVEN a refresh fails once WHEN the retry delay passes THEN it is retried silently`() = runTest {
         // Arrange
-        coEvery { getEventUseCase(eventId = "event-1") } returnsMany listOf(
+        coEvery { getEventUseCase(any(), eventId = "event-1") } returnsMany listOf(
             createEvent().right(),
             PolymarketEventError.Network.left(),
             createEvent(title = "Fresh title").right(),
@@ -430,7 +430,7 @@ internal class PolymarketEventDetailsModelTest {
         runCurrent()
 
         // Assert
-        coVerify(exactly = 3) { getEventUseCase(eventId = "event-1") }
+        coVerify(exactly = 3) { getEventUseCase(any(), eventId = "event-1") }
         assertThat((model.uiState.value as PolymarketEventDetailsUM.Content).title)
             .isEqualTo(stringReference("Fresh title"))
         verify(exactly = 0) { messageSender.send(any()) }
@@ -441,7 +441,7 @@ internal class PolymarketEventDetailsModelTest {
     fun `GIVEN refreshes keep failing WHEN polled THEN the last event stays and outdated is reported once`() =
         runTest {
             // Arrange
-            coEvery { getEventUseCase(eventId = "event-1") } returnsMany listOf(
+            coEvery { getEventUseCase(any(), eventId = "event-1") } returnsMany listOf(
                 createEvent().right(),
                 PolymarketEventError.Network.left(),
             )
@@ -456,7 +456,7 @@ internal class PolymarketEventDetailsModelTest {
             }
 
             // Assert
-            coVerify(exactly = 5) { getEventUseCase(eventId = "event-1") }
+            coVerify(exactly = 5) { getEventUseCase(any(), eventId = "event-1") }
             assertThat((model.uiState.value as PolymarketEventDetailsUM.Content).title)
                 .isEqualTo(stringReference("Event title"))
             verify(exactly = 1) {
@@ -468,7 +468,7 @@ internal class PolymarketEventDetailsModelTest {
     @Test
     fun `GIVEN a refresh succeeded after failures WHEN it fails again THEN outdated is reported again`() = runTest {
         // Arrange
-        coEvery { getEventUseCase(eventId = "event-1") } returnsMany listOf(
+        coEvery { getEventUseCase(any(), eventId = "event-1") } returnsMany listOf(
             createEvent().right(),
             PolymarketEventError.Network.left(),
             PolymarketEventError.Network.left(),
@@ -495,7 +495,7 @@ internal class PolymarketEventDetailsModelTest {
     @Test
     fun `GIVEN closed markets unfolded WHEN the event is refreshed THEN the fold stays open`() = runTest {
         // Arrange
-        coEvery { getEventUseCase(eventId = "event-1") } returns createEvent().right()
+        coEvery { getEventUseCase(any(), eventId = "event-1") } returns createEvent().right()
         val model = createModel(testScope = this)
         model.onResume()
         runCurrent()
@@ -506,7 +506,7 @@ internal class PolymarketEventDetailsModelTest {
         runCurrent()
 
         // Assert
-        coVerify(exactly = 2) { getEventUseCase(eventId = "event-1") }
+        coVerify(exactly = 2) { getEventUseCase(any(), eventId = "event-1") }
         assertThat((model.uiState.value as PolymarketEventDetailsUM.Content).isClosedMarketsExpanded).isTrue()
         model.onDestroy()
     }

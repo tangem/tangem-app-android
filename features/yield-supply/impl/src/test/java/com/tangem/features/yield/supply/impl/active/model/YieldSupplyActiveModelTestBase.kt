@@ -2,6 +2,7 @@ package com.tangem.features.yield.supply.impl.active.model
 
 import arrow.core.right
 import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -73,6 +74,7 @@ internal abstract class YieldSupplyActiveModelTestBase {
     }
 
     protected fun createModel(dispatchers: CoroutineDispatcherProvider): YieldSupplyActiveModel = YieldSupplyActiveModel(
+        tangemBlogUrlBuilder = mockk(),
         paramsContainer = MutableParamsContainer(
             YieldSupplyActiveComponent.Params(userWalletId = userWalletId, cryptoCurrency = token),
         ),

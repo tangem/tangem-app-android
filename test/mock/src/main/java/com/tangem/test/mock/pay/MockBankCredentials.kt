@@ -1,7 +1,6 @@
 package com.tangem.test.mock.pay
 
 import com.tangem.domain.models.account.BankCredentials
-import java.math.BigDecimal
 
 object MockBankCredentials {
 
@@ -14,8 +13,9 @@ object MockBankCredentials {
         beneficiaryBankAddress: String = "456 Bank Ave, New York, NY 10002, US",
         accountNumber: String = "9876543210",
         routingNumber: String = "021000021",
+        rail: String? = "ACH",
         transferMessage: String? = null,
-        depositFee: BigDecimal? = null,
+        depositFee: BankCredentials.DepositFee? = null,
         depositLimit: BankCredentials.DepositLimit? = null,
     ) = BankCredentials(
         type = type,
@@ -25,6 +25,7 @@ object MockBankCredentials {
         beneficiaryBankAddress = beneficiaryBankAddress,
         accountNumber = accountNumber,
         routingNumber = routingNumber,
+        rail = rail,
         transferMessage = transferMessage,
         depositFee = depositFee,
         depositLimit = depositLimit,

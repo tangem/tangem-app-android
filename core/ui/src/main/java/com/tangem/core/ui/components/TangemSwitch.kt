@@ -28,12 +28,13 @@ fun TangemSwitch(
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
-    checkedColor: Color = TangemTheme.colors.control.checked,
-    uncheckedColor: Color = TangemTheme.colors.icon.informative,
     size: Dp = 48.dp,
     checked: Boolean = false,
     enabled: Boolean = true,
 ) {
+    val checkedColor = TangemTheme.colors3.bg.status.info
+    val uncheckedColor = TangemTheme.colors3.bg.special.switch
+
     val transition = updateTransition(checked, label = "SwitchState")
     val color by transition.animateColor(
         transitionSpec = {
@@ -83,7 +84,7 @@ fun TangemSwitch(
                     .size(this.maxWidth / 2)
                     .offset(x = xOffset, y = 0.dp)
                     .padding(3.dp)
-                    .background(color = Color.White, shape = RoundedCornerShape(100)),
+                    .background(color = TangemTheme.colors3.icon.staticDark, shape = RoundedCornerShape(100)),
             )
         }
     }

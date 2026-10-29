@@ -2,11 +2,13 @@ package com.tangem.features.details.utils
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.settings.HotWalletRestrictionManager
+import com.tangem.domain.wallets.analytics.Settings
 import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.impl.R
 import com.tangem.features.mcp.api.McpFeatureToggles
@@ -22,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class ItemsBuilderTest {
@@ -29,16 +32,18 @@ internal class ItemsBuilderTest {
     private val router: Router = mockk(relaxUnitFun = true)
     private val hotWalletRestrictionManager: HotWalletRestrictionManager = mockk()
     private val mcpFeatureToggles: McpFeatureToggles = mockk()
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
 
     private val itemsBuilder = ItemsBuilder(
         router = router,
         hotWalletRestrictionManager = hotWalletRestrictionManager,
         mcpFeatureToggles = mcpFeatureToggles,
+        analyticsEventHandler = analyticsEventHandler,
     )
 
     @BeforeEach
     fun setUp() {
-        clearMocks(router, hotWalletRestrictionManager, mcpFeatureToggles)
+        clearMocks(router, hotWalletRestrictionManager, mcpFeatureToggles, analyticsEventHandler)
         every { hotWalletRestrictionManager.isCreationEnabledSync() } returns false
         every { mcpFeatureToggles.isMcpEnabled } returns false
     }
@@ -98,6 +103,25 @@ internal class ItemsBuilderTest {
 
         // Assert
         verify(exactly = 1) { router.push(route = AppRoute.WalletConnectSessions(USER_WALLET_ID), onComplete = any()) }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN mcp toggle WHEN walletConnect item clicked THEN connections button is sent only with mcp`(
+        isMcpEnabled: Boolean,
+    ) {
+        // Arrange
+        every { mcpFeatureToggles.isMcpEnabled } returns isMcpEnabled
+        val block = buildAll(isWalletConnectAvailable = true).first() as DetailsItemUM.WalletActionBlock
+        val walletConnect = block.items
+            .filterIsInstance<DetailsItemUM.WalletActionBlock.Item.WalletConnect>()
+            .single()
+
+        // Act
+        walletConnect.onClick()
+
+        // Assert
+        verify(exactly = if (isMcpEnabled) 1 else 0) { analyticsEventHandler.send(Settings.ButtonConnections()) }
     }
 
     @Test
@@ -208,21 +232,6 @@ internal class ItemsBuilderTest {
         // Assert
         val shop = result.single { it.id == "shop" } as DetailsItemUM.Basic
         assertThat(shop.items.map { it.id }).containsExactly("buy_tangem_wallet", "get_tangem_pay").inOrder()
-    }
-
-    @Test
-    fun `GIVEN shop block with money account item WHEN addMoneyAccountItem THEN item not duplicated`() {
-        // Arrange
-        val items: ImmutableList<DetailsItemUM> = persistentListOf(
-            basicBlock(id = "shop", itemIds = listOf("buy_tangem_wallet", "get_money_account")),
-        )
-
-        // Act
-        val result = itemsBuilder.addMoneyAccountItem(items = items, onClick = {})
-
-        // Assert
-        val shop = result.single { it.id == "shop" } as DetailsItemUM.Basic
-        assertThat(shop.items.map { it.id }).containsExactly("buy_tangem_wallet", "get_money_account").inOrder()
     }
 
     @ParameterizedTest

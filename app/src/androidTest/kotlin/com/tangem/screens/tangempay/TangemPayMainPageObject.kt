@@ -19,6 +19,8 @@ import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import androidx.compose.ui.test.hasAnyDescendant as withAnyDescendant
+import androidx.compose.ui.test.hasClickAction as withClickAction
 import androidx.compose.ui.test.hasProgressBarRangeInfo as withProgressBarRangeInfo
 import androidx.compose.ui.test.hasTestTag as withTestTag
 import androidx.compose.ui.test.hasText as withText
@@ -208,6 +210,13 @@ class TangemPayMainPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
     fun transactionCashbackBadge(amount: String): KNode = child {
         hasTestTag(TangemPayTestTags.TRANSACTION_CASHBACK_BADGE)
         hasAnyDescendant(withText(amount))
+        useUnmergedTree = true
+    }
+
+    fun transactionCashbackBadgeInRow(transactionName: String, amount: String): KNode = child {
+        hasTestTag(TangemPayTestTags.TRANSACTION_CASHBACK_BADGE)
+        hasAnyDescendant(withText(amount))
+        hasAnyAncestor(withClickAction() and withAnyDescendant(withText(transactionName)))
         useUnmergedTree = true
     }
 

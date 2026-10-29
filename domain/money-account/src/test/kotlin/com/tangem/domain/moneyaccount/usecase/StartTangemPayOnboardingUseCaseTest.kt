@@ -14,6 +14,7 @@ import com.tangem.domain.pay.usecase.CreateOnboardingOrderUseCase
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.MoneyAccountDepositCredentials
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.core.TestAppCoroutineScope
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -29,19 +30,23 @@ internal class StartTangemPayOnboardingUseCaseTest {
 
     private val activateMoneyAccountUseCase: ActivateMoneyAccountUseCase = mockk()
     private val createOnboardingOrderUseCase: CreateOnboardingOrderUseCase = mockk()
+    private val pollTangemPayAccountStatusesUseCase: PollTangemPayAccountStatusesUseCase = mockk()
 
     private val useCase = StartTangemPayOnboardingUseCase(
         activateMoneyAccountUseCase = activateMoneyAccountUseCase,
         createOnboardingOrderUseCase = createOnboardingOrderUseCase,
+        pollTangemPayAccountStatusesUseCase = pollTangemPayAccountStatusesUseCase,
+        appCoroutineScope = TestAppCoroutineScope(),
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(activateMoneyAccountUseCase, createOnboardingOrderUseCase)
+        clearMocks(activateMoneyAccountUseCase, createOnboardingOrderUseCase, pollTangemPayAccountStatusesUseCase)
+        coEvery { pollTangemPayAccountStatusesUseCase(any()) } returns Unit
     }
 
     @Test
-    fun `GIVEN banking account available WHEN invoke THEN activates money account and creates order with credentials`() =
+    fun `GIVEN banking account available WHEN invoke THEN creates order with credentials and starts polling`() =
         runTest {
             // Arrange
             coEvery { activateMoneyAccountUseCase(USER_WALLET_ID) } returns CREDENTIALS.right()
@@ -63,31 +68,34 @@ internal class StartTangemPayOnboardingUseCaseTest {
                     depositCredentials = CREDENTIALS,
                 )
             }
+            coVerify(exactly = 1) { pollTangemPayAccountStatusesUseCase(USER_WALLET_ID) }
         }
 
     @Test
-    fun `GIVEN banking account unavailable WHEN invoke THEN creates order without activation`() = runTest {
-        // Arrange
-        coEvery { createOnboardingOrderUseCase(any(), any(), any()) } returns Unit.right()
+    fun `GIVEN banking account unavailable WHEN invoke THEN creates order without activation and starts polling`() =
+        runTest {
+            // Arrange
+            coEvery { createOnboardingOrderUseCase(any(), any(), any()) } returns Unit.right()
 
-        // Act
-        val actual = useCase(
-            userWalletId = USER_WALLET_ID,
-            tariffPlanTransition = TRANSITION,
-            availableProducts = emptySet(),
-        )
-
-        // Assert
-        assertThat(actual).isEqualTo(Unit.right())
-        coVerify(exactly = 0) { activateMoneyAccountUseCase(any()) }
-        coVerify(exactly = 1) {
-            createOnboardingOrderUseCase(
+            // Act
+            val actual = useCase(
                 userWalletId = USER_WALLET_ID,
                 tariffPlanTransition = TRANSITION,
-                depositCredentials = null,
+                availableProducts = emptySet(),
             )
+
+            // Assert
+            assertThat(actual).isEqualTo(Unit.right())
+            coVerify(exactly = 0) { activateMoneyAccountUseCase(any()) }
+            coVerify(exactly = 1) {
+                createOnboardingOrderUseCase(
+                    userWalletId = USER_WALLET_ID,
+                    tariffPlanTransition = TRANSITION,
+                    depositCredentials = null,
+                )
+            }
+            coVerify(exactly = 1) { pollTangemPayAccountStatusesUseCase(USER_WALLET_ID) }
         }
-    }
 
     @ParameterizedTest
     @ProvideTestModels
@@ -106,10 +114,11 @@ internal class StartTangemPayOnboardingUseCaseTest {
             // Assert
             assertThat(actual).isEqualTo(model.expected)
             coVerify(exactly = 0) { createOnboardingOrderUseCase(any(), any(), any()) }
+            coVerify(exactly = 0) { pollTangemPayAccountStatusesUseCase(any()) }
         }
 
     @Test
-    fun `GIVEN order creation fails WHEN invoke THEN returns failed`() = runTest {
+    fun `GIVEN order creation fails WHEN invoke THEN returns failed and skips polling`() = runTest {
         // Arrange
         coEvery {
             createOnboardingOrderUseCase(any(), any(), any())
@@ -124,6 +133,7 @@ internal class StartTangemPayOnboardingUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(StartTangemPayOnboardingError.Failed.left())
+        coVerify(exactly = 0) { pollTangemPayAccountStatusesUseCase(any()) }
     }
 
     private fun provideTestModels() = listOf(

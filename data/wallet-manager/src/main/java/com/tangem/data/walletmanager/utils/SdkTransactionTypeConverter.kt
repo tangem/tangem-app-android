@@ -5,6 +5,7 @@ import com.tangem.blockchain.blockchains.ethereum.tokenmethods.TransferERC20Toke
 import com.tangem.blockchain.blockchains.tron.tokenmethods.TronApprovalTokenCallData
 import com.tangem.blockchain.blockchains.tron.tokenmethods.TronTransferTokenCallData
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.extensions.formatHex
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem.TransactionType
@@ -12,6 +13,7 @@ import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldS
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyExitCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyInitTokenCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyReactivateTokenCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.domain.express.models.ExpressAsset
@@ -58,13 +60,7 @@ internal class SdkTransactionTypeConverter(
         safeExecutionDecoder.refund(value)?.let { return it }
 
         return when (val type = value.type) {
-            is TransactionType.ContractMethod -> {
-                getTransactionType(
-                    methodName = smartContractMethods[type.id.toSelectorKey()]?.name,
-                    callData = type.callData,
-                    historyItem = value,
-                )
-            }
+            is TransactionType.ContractMethod -> getTypeForContractMethod(type, value)
             is TransactionType.ContractMethodName -> {
                 getTransactionType(
                     methodName = type.name,
@@ -98,6 +94,24 @@ internal class SdkTransactionTypeConverter(
                 TxInfo.TransactionType.Staking.Withdraw
             }
         }
+    }
+
+    private fun getTypeForContractMethod(
+        type: TransactionType.ContractMethod,
+        historyItem: TransactionHistoryItem,
+    ): TxInfo.TransactionType {
+        val yieldModuleCallData = type.callData?.let(::decodeYieldModuleCallInsideUpgrade)
+        val selector = yieldModuleCallData?.methodId ?: type.id
+        return getTransactionType(
+            methodName = smartContractMethods[selector.toSelectorKey()]?.name,
+            callData = yieldModuleCallData?.dataHex ?: type.callData,
+            historyItem = historyItem,
+        )
+    }
+
+    private fun decodeYieldModuleCallInsideUpgrade(callData: String): SmartContractCallData? {
+        val innerCallData = EthereumYieldSupplyUpgradeToAndCallCallData.decode(callData)?.innerCallData
+        return innerCallData?.takeIf { smartContractMethods[it.methodId.toSelectorKey()]?.info == YIELD_MODULE_INFO }
     }
 
     @Suppress("CyclomaticComplexMethod")
@@ -327,5 +341,9 @@ internal class SdkTransactionTypeConverter(
 
             else -> fallbackOperation(methodName)
         }
+    }
+
+    private companion object {
+        const val YIELD_MODULE_INFO = "yieldModule"
     }
 }

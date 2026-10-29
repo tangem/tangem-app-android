@@ -1,12 +1,16 @@
 package com.tangem.common
 
+import javax.inject.Inject
+
 /**
 [REDACTED_AUTHOR]
  */
-object TangemBlogUrlBuilder {
+class TangemBlogUrlBuilder @Inject constructor(
+    private val tangemSiteUrlBuilder: TangemSiteUrlBuilder,
+) {
 
     suspend fun build(post: Post): String {
-        return TangemSiteUrlBuilder.url(
+        return tangemSiteUrlBuilder.url(
             path = "/embed/blog/post/${post.path}/",
             campaign = "articles",
         )

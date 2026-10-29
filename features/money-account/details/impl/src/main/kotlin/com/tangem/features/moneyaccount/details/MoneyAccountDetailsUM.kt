@@ -3,6 +3,7 @@ package com.tangem.features.moneyaccount.details
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.models.currency.CryptoCurrency
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
@@ -15,6 +16,7 @@ internal data class MoneyAccountDetailsUM(
     val onBackClick: () -> Unit,
     val onAddFundsClick: () -> Unit,
     val onSendClick: () -> Unit,
+    val txHistoryCurrency: CryptoCurrency.Token?,
 )
 
 @Immutable

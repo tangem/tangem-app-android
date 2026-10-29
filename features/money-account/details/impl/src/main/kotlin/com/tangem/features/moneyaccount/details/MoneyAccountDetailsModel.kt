@@ -20,7 +20,6 @@ import com.tangem.domain.models.ReceiveAddressModel
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.MoneyAccountStatusValue
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBankCredentialsUseCase
@@ -49,7 +48,6 @@ internal class MoneyAccountDetailsModel @Inject constructor(
 ) : Model(), MoneyAccountAddFundsOptionsListener {
 
     private val params = paramsContainer.require<MoneyAccountDetailsComponent.Params>()
-    val txHistorySlotNavigation = SlotNavigation<CryptoCurrency.Token>()
     private val stateFactory = MoneyAccountDetailsStateFactory(
         onAddFundsClick = ::onAddFundsClick,
         onSendClick = ::onSendClick,
@@ -71,7 +69,6 @@ internal class MoneyAccountDetailsModel @Inject constructor(
                 when (value) {
                     is MoneyAccountStatusValue.Account -> {
                         currentState = value
-                        txHistorySlotNavigation.activate(value.cryptoCurrency)
                         uiState.update { stateFactory.createAccountState(value) }
                     }
                     else -> if (currentState == null) router.pop()
@@ -103,7 +100,11 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     private fun onSendClick() {
         val account = currentState ?: return
         if (account.balance == null) return
-        router.push(AppRoute.Send(userWalletId = params.userWalletId, currency = account.cryptoCurrency))
+        analytics.send(MoneyAccountAnalyticsEvents.SendClicked())
+        val bankTransferProductInstanceId = (account as? MoneyAccountStatusValue.Account.Active)
+            ?.takeIf { it.isBankOfframpAvailable == true }
+            ?.productInstanceId
+        router.push(MoneyAccountDetailsRoute.WithdrawHub(productInstanceId = bankTransferProductInstanceId))
     }
 
     override fun onSwapClick() {
@@ -172,7 +173,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
         val customerId = currentState?.customerId ?: return
         modelScope.launch {
             sendFeedbackEmailUseCase(
-                type = FeedbackEmailType.Visa.DirectUserRequest(
+                type = FeedbackEmailType.Visa.MoneyAccountRequest(
                     walletMetaInfo = WalletMetaInfo(userWalletId = params.userWalletId),
                     customerId = customerId,
                 ),

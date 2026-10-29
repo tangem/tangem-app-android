@@ -4,8 +4,8 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.data.staking.MockP2PEthPoolAccountResponseFactory.createWithBalance
 import com.tangem.common.test.data.staking.MockP2PEthPoolAccountResponseFactory.createWithEmptyBalance
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.staking.StakingBalance
-import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.staking.model.StakingBalance
+import com.tangem.domain.staking.model.StakingID
 import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolAccountResponse
 import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolExitQueueDTO
 import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolExitRequestDTO

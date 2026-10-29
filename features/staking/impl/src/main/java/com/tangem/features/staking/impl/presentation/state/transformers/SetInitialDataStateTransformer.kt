@@ -17,7 +17,7 @@ import com.tangem.core.ui.utils.SECONDS_IN_HOUR
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.StakingBalanceEntry
+import com.tangem.domain.staking.model.StakingBalanceEntry
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.model.Period
 import com.tangem.domain.staking.model.StakingIntegration

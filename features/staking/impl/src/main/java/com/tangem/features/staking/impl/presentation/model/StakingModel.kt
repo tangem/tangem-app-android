@@ -49,13 +49,12 @@ import com.tangem.domain.marketing.models.MarketingScreen
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.*
-import com.tangem.domain.models.staking.action.StakingActionType
+import com.tangem.domain.staking.model.*
+import com.tangem.domain.staking.model.action.StakingActionType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.*
 import com.tangem.domain.staking.analytics.StakeScreenSource
 import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
-import com.tangem.domain.staking.model.*
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
@@ -118,6 +117,7 @@ import javax.inject.Inject
 @Stable
 @ModelScoped
 internal class StakingModel @Inject constructor(
+    private val tangemBlogUrlBuilder: TangemBlogUrlBuilder,
     paramsContainer: ParamsContainer,
     private val stateController: StakingStateController,
     override val dispatchers: CoroutineDispatcherProvider,
@@ -632,7 +632,7 @@ internal class StakingModel @Inject constructor(
     override fun onInitialInfoBannerClick() {
         analyticsEventHandler.send(StakingAnalyticsEvent.WhatIsStaking())
         modelScope.launch {
-            innerRouter.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.HowToStake))
+            innerRouter.openUrl(tangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.HowToStake))
         }
     }
 
@@ -1098,7 +1098,7 @@ internal class StakingModel @Inject constructor(
 
     override fun onOpenLearnMoreAboutApproveClick() {
         modelScope.launch {
-            urlOpener.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.GiveRevokePermission))
+            urlOpener.openUrl(tangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.GiveRevokePermission))
         }
     }
 

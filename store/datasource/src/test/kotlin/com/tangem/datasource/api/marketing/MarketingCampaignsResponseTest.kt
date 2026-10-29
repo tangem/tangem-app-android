@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
+import com.tangem.datasource.api.marketing.models.BannerDto
 import com.tangem.datasource.api.marketing.models.MarketingCampaignsResponse
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -72,6 +73,48 @@ internal class MarketingCampaignsResponseTest {
         // Assert
         assertThat(tokens.map { it.id }).containsExactly("1696501400", "3296501412")
         assertThat(tokens.all { it.networkId == null }).isTrue()
+    }
+
+    @Test
+    fun `GIVEN pseudo_provider response WHEN parsed THEN call-to-action fields mapped`() {
+        // Arrange
+        val json = """
+            {"campaigns":[{"id":3,"type":"onramp","priority":1,"minAmount":30000,
+            "banner":{"uiType":"pseudo_provider","text":"Personal support manager","deeplink":"tangem://support",
+            "dismissible":false,"categoryLabel":"Concierge for large purchases","subtitle":"Pay by bank transfer",
+            "etaLabel":"up to 4 hours","partnerLabel":"via Partner","buttonText":"Request","glow":true}}]}
+        """.trimIndent()
+
+        // Act
+        val banner = adapter.fromJson(json)!!.campaigns.single().banner
+
+        // Assert
+        assertThat(banner).isEqualTo(
+            BannerDto(
+                uiType = "pseudo_provider",
+                text = "Personal support manager",
+                deeplink = "tangem://support",
+                isDismissible = false,
+                categoryLabel = "Concierge for large purchases",
+                subtitle = "Pay by bank transfer",
+                etaLabel = "up to 4 hours",
+                partnerLabel = "via Partner",
+                buttonText = "Request",
+                hasGlow = true,
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN banner without glow WHEN parsed THEN glow is off`() {
+        // Arrange
+        val json = """{"campaigns":[{"id":3,"type":"onramp","priority":1,"banner":{"uiType":"standalone_cta"}}]}"""
+
+        // Act
+        val banner = adapter.fromJson(json)!!.campaigns.single().banner
+
+        // Assert
+        assertThat(banner.hasGlow).isFalse()
     }
 
     private class TestBigDecimalAdapter {

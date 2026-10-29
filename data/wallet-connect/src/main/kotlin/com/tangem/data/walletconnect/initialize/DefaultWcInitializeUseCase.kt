@@ -3,7 +3,6 @@ package com.tangem.data.walletconnect.initialize
 import com.tangem.data.walletconnect.sdk.WcSdk
 import com.tangem.data.walletconnect.store.WalletConnectStore
 import com.tangem.domain.walletconnect.WC_TAG
-import com.tangem.domain.walletconnect.featuretoggle.WalletConnectFeatureToggles
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -16,17 +15,11 @@ import kotlinx.coroutines.withContext
 internal class DefaultWcInitializeUseCase(
     private val wcSdk: WcSdk,
     private val store: WalletConnectStore,
-    private val featureToggles: WalletConnectFeatureToggles,
     private val scope: AppCoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : WcInitializeUseCase {
 
     override fun invoke() {
-        if (!featureToggles.isOnDemandInitEnabled) {
-            wcSdk.initializeNow()
-            return
-        }
-
         scope.launch {
             runSuspendCatching { if (hasLiveWork()) wcSdk.ensureInitialized() }
                 .onFailure { error -> TangemLogger.withTag(WC_TAG).e("Failed to start WalletConnect", error) }

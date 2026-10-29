@@ -155,7 +155,12 @@ internal class ManageCryptoCurrenciesUseCaseTest {
             singleAccountStatusListSupplier.getSyncOrNull(SingleAccountStatusListProducer.Params(userWalletId))
         } returns createJointAccountStatusList(
             account = account,
-            value = JointAccountStatusValue.Pending(source = StatusSource.ACTUAL, joinedMembers = 1, totalMembers = 2),
+            value = JointAccountStatusValue.Pending(
+                source = StatusSource.ACTUAL,
+                joinedMembers = 1,
+                totalMembers = 2,
+                threshold = 2,
+            ),
         )
 
         // Act
@@ -172,6 +177,7 @@ internal class ManageCryptoCurrenciesUseCaseTest {
             source = StatusSource.ACTUAL,
             totalMembers = 2,
             safeAddress = "0x5afe000000000000000000000000000000000001",
+            threshold = 2,
         ),
     ): com.tangem.domain.account.models.AccountStatusList {
         return com.tangem.domain.account.models.AccountStatusList(

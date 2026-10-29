@@ -49,8 +49,8 @@ import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.StakingDetailsScreenTestTags
-import com.tangem.domain.models.staking.BalanceType
-import com.tangem.domain.models.staking.RewardBlockType
+import com.tangem.domain.staking.model.BalanceType
+import com.tangem.domain.staking.model.RewardBlockType
 import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.staking.impl.R
@@ -88,7 +88,7 @@ internal fun StakingInitialInfoContent(
             verticalArrangement = alignLastToBottom(),
             modifier = Modifier
                 .fillMaxSize()
-                .background(TangemTheme.colors.background.secondary)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(horizontal = 16.dp),
         ) {
             if (state.isBannerVisible) {
@@ -152,7 +152,7 @@ private fun LazyListScope.activeStakingBlock(
             Text(
                 text = stringResourceSafe(id = R.string.staking_your_stakes),
                 style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 modifier = Modifier
                     .roundedShapeItemDecoration(
                         currentIndex = 0,
@@ -160,7 +160,7 @@ private fun LazyListScope.activeStakingBlock(
                         addDefaultPadding = false,
                     )
                     .fillMaxWidth()
-                    .background(TangemTheme.colors.background.action)
+                    .background(TangemTheme.colors3.bg.secondary)
                     .padding(
                         top = 12.dp,
                         start = 12.dp,
@@ -249,28 +249,28 @@ private fun StakingRewardBlock(
                 append(DOT)
                 appendSpace()
                 append(reward.rewardsCrypto.orMaskWithStars(isBalanceHidden))
-            } to TangemTheme.colors.text.primary1
+            } to TangemTheme.colors3.text.primary
         }
         RewardBlockType.EthereumEarnedRewards -> {
             resourceReference(
                 id = R.string.staking_details_autocompound_rewards_earned,
                 formatArgs = wrappedList(reward.rewardsCrypto.orMaskWithStars(isBalanceHidden)),
-            ) to TangemTheme.colors.text.primary1
+            ) to TangemTheme.colors3.text.primary
         }
         RewardBlockType.RewardUnavailable.DefaultRewardUnavailable -> {
             resourceReference(R.string.staking_details_auto_claiming_rewards_daily_text) to
-                TangemTheme.colors.text.tertiary
+                TangemTheme.colors3.text.secondary
         }
         RewardBlockType.RewardUnavailable.SolanaRewardUnavailable -> {
             resourceReference(R.string.staking_solana_details_auto_claiming_rewards_daily_text) to
-                TangemTheme.colors.text.tertiary
+                TangemTheme.colors3.text.secondary
         }
         RewardBlockType.CardanoNoRewards -> {
             resourceReference(R.string.staking_cardano_details_rewards_info_text) to
-                TangemTheme.colors.text.tertiary
+                TangemTheme.colors3.text.secondary
         }
         RewardBlockType.NoRewards -> {
-            resourceReference(R.string.staking_details_no_rewards_to_claim) to TangemTheme.colors.text.tertiary
+            resourceReference(R.string.staking_details_no_rewards_to_claim) to TangemTheme.colors3.text.secondary
         }
     }
     val isShowIcon = reward.rewardBlockType == RewardBlockType.Rewards && yieldBalanceState.isActionable
@@ -282,7 +282,7 @@ private fun StakingRewardBlock(
         textColor = textColor,
         modifier = Modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(),
@@ -307,7 +307,7 @@ private fun ActiveStakingBlock(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(),
@@ -330,7 +330,7 @@ private fun ActiveStakingBlock(
                 Text(
                     text = balance.title.resolveReference(),
                     style = TangemTheme.typography.subtitle2,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                     modifier = Modifier.testTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_TITLE),
                 )
                 if (balance.isPending) {
@@ -339,7 +339,7 @@ private fun ActiveStakingBlock(
                         painter = rememberVectorPainter(
                             image = ImageVector.vectorResource(id = R.drawable.ic_staking_pending_transaction),
                         ),
-                        tint = TangemTheme.colors.icon.informative,
+                        tint = TangemTheme.colors3.icon.secondary,
                         contentDescription = null,
                         modifier = Modifier
                             .size(18.dp)
@@ -351,7 +351,7 @@ private fun ActiveStakingBlock(
             Text(
                 text = caption.resolveAnnotatedReference(),
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 modifier = Modifier
                     .padding(top = 2.dp)
                     .testTag(StakingDetailsScreenTestTags.ACTIVE_STAKING_SUBTITLE),
@@ -364,12 +364,12 @@ private fun ActiveStakingBlock(
             Text(
                 text = balance.formattedFiatAmount.orMaskWithStars(isBalanceHidden).resolveReference(),
                 style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
             Text(
                 text = balance.formattedCryptoAmount.orMaskWithStars(isBalanceHidden).resolveReference(),
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 modifier = Modifier.padding(top = 2.dp),
             )
         }
@@ -442,7 +442,7 @@ private fun BalanceState.getAprTextColored() = combinedReference(
         appendSpace()
         appendColored(
             text = target?.rewardInfo?.rate?.orZero().format { percent() },
-            color = TangemTheme.colors.text.accent,
+            color = TangemTheme.colors3.text.accent.blue,
         )
     },
 )
@@ -455,10 +455,10 @@ private fun BalanceState.getAprTextNeutral() = combinedReference(
 
 @Composable
 private fun BalanceType.getIcon() = when (this) {
-    BalanceType.UNSTAKING -> R.drawable.ic_connection_18 to TangemTheme.colors.icon.accent
-    BalanceType.UNSTAKED -> R.drawable.ic_connection_18 to TangemTheme.colors.icon.informative
-    BalanceType.LOCKED -> R.drawable.ic_lock_24 to TangemTheme.colors.icon.informative
-    else -> null to TangemTheme.colors.icon.informative
+    BalanceType.UNSTAKING -> R.drawable.ic_connection_18 to TangemTheme.colors3.icon.accent.blue
+    BalanceType.UNSTAKED -> R.drawable.ic_connection_18 to TangemTheme.colors3.icon.secondary
+    BalanceType.LOCKED -> R.drawable.ic_lock_24 to TangemTheme.colors3.icon.secondary
+    else -> null to TangemTheme.colors3.icon.secondary
 }
 
 private fun BalanceState.hasImage() = when (type) {

@@ -9,7 +9,7 @@ import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
-import com.tangem.domain.models.staking.StakingBalance
+import com.tangem.domain.staking.model.StakingBalance
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.model.common.RewardInfo
@@ -57,18 +57,25 @@ internal class EarnApyConverter(
                 -> R.string.yield_module_earn_badge
             }
             if (stakingInfo.rate != null) {
-                return earnApyInfo(badgeRes = rewardTypeRes, rate = stakingInfo.rate, isActive = stakingInfo.isActive)
+                return earnApyInfo(
+                    badgeRes = rewardTypeRes,
+                    rate = stakingInfo.rate,
+                    isActive = stakingInfo.isActive,
+                    isStaking = true,
+                )
             }
         }
 
         return null
     }
 
-    private fun earnApyInfo(badgeRes: Int, rate: BigDecimal, isActive: Boolean) = EarnApyInfo(
-        text = resourceReference(badgeRes, wrappedList(rate.formatEarnRate())),
-        isActive = isActive,
-        rate = rate,
-    )
+    private fun earnApyInfo(badgeRes: Int, rate: BigDecimal, isActive: Boolean, isStaking: Boolean = false) =
+        EarnApyInfo(
+            text = resourceReference(badgeRes, wrappedList(rate.formatEarnRate())),
+            isActive = isActive,
+            rate = rate,
+            isStaking = isStaking,
+        )
 
     private fun findStakingRate(
         currencyStatus: CryptoCurrencyStatus,
@@ -137,6 +144,7 @@ internal class EarnApyConverter(
         val text: TextReference?,
         val isActive: Boolean,
         val rate: BigDecimal,
+        val isStaking: Boolean = false,
     )
 
     companion object {

@@ -39,15 +39,13 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.security.DisableAutofillEffect
+import com.tangem.core.ui.security.excludeFromAutofill
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.visa.impl.child.pincode.ui.state.OnboardingVisaPinCodeUM
 import kotlinx.coroutines.delay
 
 @Composable
 internal fun OnboardingVisaPinCode(state: OnboardingVisaPinCodeUM, modifier: Modifier = Modifier) {
-    DisableAutofillEffect()
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -64,7 +62,7 @@ internal fun OnboardingVisaPinCode(state: OnboardingVisaPinCodeUM, modifier: Mod
             Text(
                 text = stringResourceSafe(R.string.visa_onboarding_pin_code_title),
                 style = TangemTheme.typography.h2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 textAlign = TextAlign.Center,
             )
 
@@ -73,7 +71,7 @@ internal fun OnboardingVisaPinCode(state: OnboardingVisaPinCodeUM, modifier: Mod
             Text(
                 text = stringResourceSafe(R.string.visa_onboarding_pin_code_description),
                 style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
             )
 
@@ -116,7 +114,7 @@ private fun PinCodeSection(state: OnboardingVisaPinCodeUM, modifier: Modifier = 
                 Text(
                     text = error.resolveReference(),
                     style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.warning,
+                    color = TangemTheme.colors3.text.accent.red,
                     textAlign = TextAlign.Center,
                 )
             }
@@ -164,6 +162,7 @@ private fun PinCode(
                 },
             ),
             modifier = Modifier
+                .excludeFromAutofill()
                 .alpha(alpha = 0.01f)
                 .focusRequester(focusRequester),
             textStyle = TextStyle.Default.copy(color = Transparent),
@@ -185,7 +184,7 @@ private fun PinCode(
                 Box(
                     modifier = Modifier
                         .background(
-                            color = TangemTheme.colors.field.primary,
+                            color = TangemTheme.colors3.bg.tertiary,
                             shape = TangemTheme.shapes.roundedCornersXMedium,
                         )
                         .padding(
@@ -198,7 +197,7 @@ private fun PinCode(
                         modifier = Modifier.widthIn(min = measureTextWidth("0", TangemTheme.typography.h1)),
                         text = value.getOrNull(index)?.toString().orEmpty(),
                         style = TangemTheme.typography.h1,
-                        color = TangemTheme.colors.text.primary1,
+                        color = TangemTheme.colors3.text.primary,
                     )
                 }
             }

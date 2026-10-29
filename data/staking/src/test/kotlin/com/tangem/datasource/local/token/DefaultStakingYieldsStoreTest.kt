@@ -3,7 +3,7 @@ package com.tangem.datasource.local.token
 import androidx.datastore.core.DataStore
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.data.staking.MockYieldDTOFactory
-import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.staking.model.StakingID
 import com.tangem.grow.datasource.stakekit.models.response.model.YieldDTO
 import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.test.mock.staking.MockStaking

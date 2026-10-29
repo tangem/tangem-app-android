@@ -57,6 +57,7 @@ import javax.inject.Inject
 @Stable
 @ModelScoped
 internal class MultiWalletSeedPhraseModel @Inject constructor(
+    private val tangemBlogUrlBuilder: TangemBlogUrlBuilder,
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val mnemonicRepository: MnemonicRepository,
@@ -171,7 +172,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
             onLearnMoreClicked = {
                 modelScope.launch {
                     urlOpener.openUrl(
-                        TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.SeedPhraseRiskySolution),
+                        tangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.SeedPhraseRiskySolution),
                     )
                 }
             },

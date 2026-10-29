@@ -10,6 +10,8 @@ import com.tangem.domain.jointaccount.model.JointOperationSignError.Verification
 import com.tangem.domain.jointaccount.model.JointTransferIntent
 import com.tangem.data.jointaccount.safe.DefaultJointTransferPayloadCodec
 import com.tangem.data.jointaccount.safe.DefaultSafeAddressCalculator
+import com.tangem.data.jointaccount.safe.SafeTxTypedDataBuilder
+import com.tangem.data.jointaccount.signing.DefaultJointSignatureRecoverer
 import com.tangem.domain.jointaccount.model.SafeGasToken
 import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.jointaccount.verifier.JointOperationVerifier
@@ -20,6 +22,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.web3j.crypto.ECKeyPair
+import org.web3j.crypto.Sign
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -29,6 +33,7 @@ internal class JointOperationVerifierTest {
     private val verifier = JointOperationVerifier(
         payloadCodec = DefaultJointTransferPayloadCodec(),
         safeAddressCalculator = DefaultSafeAddressCalculator(),
+        signatureRecoverer = DefaultJointSignatureRecoverer(),
     )
 
     @Test
@@ -399,14 +404,31 @@ internal class JointOperationVerifierTest {
             gasToken = gasToken,
         )
 
+        /** Carries the initiator's own approval, signed with the key behind [ALICE] over the very [safeTx] */
         fun operation(safeTx: SafeTx): JointOperation = JointOperation(
             operationId = "3f1a2b4c-5d6e-7f80-91a2-b3c4d5e6f708",
             chainId = 137,
             safeTx = safeTx,
             status = JointOperation.Status.AWAITING_SIGNATURES,
             initiator = ALICE.lowercase(),
-            signatures = emptyList(),
+            signatures = listOf(
+                JointOperation.MemberSignature(
+                    address = ALICE.lowercase(),
+                    state = JointOperation.MemberSignature.State.SIGNED,
+                    at = "2026-09-07T10:00:00Z",
+                    signature = aliceSignature(safeTx),
+                ),
+            ),
         )
+
+        /** A [SafeTx] no digest can be built for gets no signature either; the verifier refuses it before the votes */
+        private fun aliceSignature(safeTx: SafeTx): String? {
+            val digest = runCatching {
+                SafeTxTypedDataBuilder.digest(safeTx = safeTx, chainId = 137, verifyingContract = COMPUTED_SAFE)
+            }.getOrNull() ?: return null
+            val signature = Sign.signMessage(digest, ECKeyPair.create(BigInteger.ONE), false)
+            return "0x" + (signature.r + signature.s + signature.v).joinToString(separator = "") { "%02x".format(it) }
+        }
 
         fun nativeSafeTx(
             to: String = RECIPIENT,

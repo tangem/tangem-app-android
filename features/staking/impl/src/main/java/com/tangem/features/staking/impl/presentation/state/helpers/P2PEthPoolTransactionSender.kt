@@ -7,7 +7,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.extensions.formatHex
 import com.tangem.common.extensions.toHexString
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.NetworkType
+import com.tangem.domain.staking.model.NetworkType
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.CheckStakingTransactionUseCase
 import com.tangem.domain.staking.StakingTransactionVerdict

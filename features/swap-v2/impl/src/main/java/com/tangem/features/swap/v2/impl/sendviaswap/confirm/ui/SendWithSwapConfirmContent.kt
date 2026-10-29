@@ -16,7 +16,9 @@ import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorBlockCo
 import com.tangem.features.send.api.subcomponents.notifications.SendNotificationsComponent
 import com.tangem.features.send.api.subcomponents.destination.SendDestinationBlockComponent
 import com.tangem.features.swap.v2.impl.amount.SwapAmountBlockComponent
+import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.common.entity.ConfirmUM
+import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent
 import com.tangem.features.swap.v2.impl.sendviaswap.entity.SendWithSwapUM
 import kotlinx.collections.immutable.ImmutableList
@@ -35,6 +37,7 @@ internal fun SendWithSwapConfirmContent(
     modifier: Modifier = Modifier,
 ) {
     val confirmUM = sendWithSwapUM.confirmUM as? ConfirmUM.Content
+    val isProviderUnavailable = (sendWithSwapUM.amountUM as? SwapAmountUM.Content)?.selectedQuote is SwapQuoteUM.Empty
 
     LazyColumn(
         modifier = modifier
@@ -46,7 +49,9 @@ internal fun SendWithSwapConfirmContent(
             ) {
                 amountBlockComponent.Content(Modifier)
                 sendDestinationBlockComponent.Content(Modifier)
-                feeSelectorBlockComponent.Content(Modifier.clip(RoundedCornerShape(16.dp)))
+                if (!isProviderUnavailable) {
+                    feeSelectorBlockComponent.Content(Modifier.clip(RoundedCornerShape(16.dp)))
+                }
             }
         }
         if (confirmUM != null) {

@@ -36,10 +36,7 @@ internal sealed interface WalletUM {
     val collectiblesWalletBlockUM: CollectiblesWalletBlockUM
     val jointOperationBanners: ImmutableList<JointOperationBannerUM>
 
-    /**
-     * Whether the marketing block is shown. Read only when the promo cards give way to system cards (TWI-1841);
-     * otherwise it is always shown.
-     */
+    /** Whether the marketing block is shown; it gives way to system cards */
     val isMarketingBlockVisible: Boolean
 
     data class Content(

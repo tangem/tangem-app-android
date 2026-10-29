@@ -22,6 +22,13 @@ data class BankOfframpOrderResult(
     val bankAccountId: String?,
 )
 
+data class BankOfframpRoute(
+    val depositAddress: String,
+    val fee: OfframpFee,
+    val eta: OfframpEta,
+    val bankAccountId: String,
+)
+
 sealed interface BankOfframpOrderState {
     data class Processing(val step: OrderStep) : BankOfframpOrderState
     data class AwaitingSignature(val payloadHash: String) : BankOfframpOrderState

@@ -5,12 +5,14 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.domain.txhistory.model.ExpressTx
+import com.tangem.domain.txhistory.model.JointOperationTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 import com.tangem.features.txhistory.impl.BuildConfig
 import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.model.TxHistoryLookupContext
+import com.tangem.features.txhistory.model.resolveCounterparty
 import com.tangem.utils.converter.Converter
 
 /**
@@ -18,7 +20,8 @@ import com.tangem.utils.converter.Converter
  * per-shape converters: an [OnChainTx.BSDK] renders as [TxHistoryDetailsUM.SingleAsset] (see
  * [OnChainTxToDetailsUMConverter]) while an [ExpressTx] (swap / onramp) renders as [TxHistoryDetailsUM.TwoAssets] (see
  * [ExpressTxToDetailsUMConverter]). The header overflow menu is built once here and shared by both; each shape then
- * prepends its own "Copy address" row for the counterparty it resolved.
+ * prepends its own "Copy address" row for the counterparty it resolved. A [JointOperationTx] renders from the operation
+ * itself ([JointOperationTxToDetailsUMConverter]).
  */
 internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
     currency: CryptoCurrency,
@@ -77,12 +80,24 @@ internal class TxHistoryInfoToTxHistoryDetailsUMConverter(
         onGoToRefundedTokenClick = onGoToRefundedTokenClick,
     )
 
+    private val jointConverter = JointOperationTxToDetailsUMConverter(
+        currency = currency,
+        onCopyAddress = onCopyAddress,
+        menu = menu,
+        isBalanceHidden = isBalanceHidden,
+        resolveRecipient = { address ->
+            lookup.resolveCounterparty(address = address, networkRawId = currency.network.id.rawId)
+        },
+        fiatConversion = fiatConversion,
+    )
+
     override fun convert(value: TxHistoryInfo): TxHistoryDetailsUM {
         var um = when (value) {
             is OnChainTx.BSDK -> onChainConverter.convert(value.txInfo)
             // todo txHistory: build the details card for standalone TangemPay rows when TangemPay is wired in
             is OnChainTx.TangemPay -> TODO("TangemPay on-chain details rendering is not implemented yet")
             is ExpressTx -> expressConverter.convert(value)
+            is JointOperationTx -> jointConverter.convert(value)
         }
         if (isDebugMenuEnabled) {
             um = when (um) {

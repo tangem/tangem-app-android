@@ -17,7 +17,7 @@ import com.tangem.grow.datasource.stakekit.models.response.model.YieldBalanceWra
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.test.core.assertEitherLeft

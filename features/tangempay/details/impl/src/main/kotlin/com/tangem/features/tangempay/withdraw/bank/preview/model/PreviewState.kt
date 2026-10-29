@@ -1,31 +1,38 @@
 package com.tangem.features.tangempay.withdraw.bank.preview.model
 
+import com.tangem.domain.pay.model.bankofframp.BankOfframpError
+import com.tangem.features.tangempay.withdraw.bank.preview.completion.CompletionState
+
 internal data class PreviewState(
-    val send: SendState = SendState.Idle,
-    val failure: PreviewFailure? = null,
-    /** Set when a failure left a live order behind, so Retry resumes that order instead of creating a second one. */
-    val resumableOrderId: String? = null,
+    val completion: CompletionState = CompletionState.Idle,
     /** A cold wallet signs the transfer with a card tap; a hot one signs without a card. */
     val isColdWallet: Boolean = true,
     val isBalanceHidden: Boolean = false,
 ) {
 
-    val isSending: Boolean get() = send != SendState.Idle
-}
+    val isSending: Boolean get() = completion == CompletionState.Sending
 
-/** How far the send has got. The screen only needs "busy or not"; the model needs the order it is driving. */
-internal sealed interface SendState {
-
-    data object Idle : SendState
-
-    data object CreatingOrder : SendState
-
-    /** The order exists and is polled until the backend asks for a signature. */
-    data class AwaitingSignature(val orderId: String) : SendState
-
-    /** The card (or hot wallet) is signing the payload and the signature is being submitted. */
-    data class Signing(val orderId: String) : SendState
+    val failure: PreviewFailure? get() = (completion as? CompletionState.Failed)?.failure
 }
 
 /** Outcomes that replace the summary with a full-screen result; only [General] offers Retry. */
-internal enum class PreviewFailure { RecipientRegion, SenderRegion, Business, UnsupportedConfiguration, General }
+internal enum class PreviewFailure {
+    RecipientRegion,
+    SenderRegion,
+    Business,
+    UnsupportedConfiguration,
+    General,
+    TransferOutcomeUnknown,
+}
+
+internal fun BankOfframpError.toFailure(): PreviewFailure = when (this) {
+    BankOfframpError.RecipientRegionUnsupported -> PreviewFailure.RecipientRegion
+    BankOfframpError.SenderRegionUnsupported -> PreviewFailure.SenderRegion
+    BankOfframpError.BusinessUnsupported -> PreviewFailure.Business
+    BankOfframpError.UnsupportedConfiguration -> PreviewFailure.UnsupportedConfiguration
+    BankOfframpError.Validation,
+    BankOfframpError.PollingTimeout,
+    BankOfframpError.WithdrawalInProgress,
+    is BankOfframpError.Unknown,
+    -> PreviewFailure.General
+}

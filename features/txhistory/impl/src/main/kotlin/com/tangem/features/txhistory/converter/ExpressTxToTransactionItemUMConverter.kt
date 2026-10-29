@@ -96,16 +96,21 @@ internal class ExpressTxToTransactionItemUMConverter(
     }
 
     /**
-     * Maps a resolved counterparty owner to the "in {owner}" subtitle tail: another own portfolio, or the contact a
-     * saved payout address belongs to. An address in no address book names no one, so it adds no tail (`null`).
+     * Maps a resolved counterparty owner to the subtitle tail: another own portfolio reads as "in {owner}", a foreign
+     * payout address as "for {contact}" / "from {contact}" — by its address-book name, or as the address itself when
+     * no book holds it.
      */
-    private fun ResolvedOwner.toAssetOwner(): ContentSubtitle.AssetOwner? = when (this) {
+    private fun ResolvedOwner.toAssetOwner(): ContentSubtitle.AssetOwner = when (this) {
         is ResolvedOwner.OwnAccount -> ContentSubtitle.AssetOwner.Account(
             name = account.accountName.toUM().value,
             avatar = account.icon.toPortfolioAvatar(name = account.accountName.toUM().value),
         )
         is ResolvedOwner.OwnPaymentAccount -> ContentSubtitle.AssetOwner.PaymentAccount(
             name = account.accountName.toUM().value,
+        )
+        is ResolvedOwner.OwnMoneyAccount -> ContentSubtitle.AssetOwner.Account(
+            name = moneyAccountOwnerName,
+            avatar = moneyAccountOwnerIcon.toPortfolioAvatar(name = moneyAccountOwnerName),
         )
         is ResolvedOwner.OwnWallet -> ContentSubtitle.AssetOwner.Wallet(
             name = walletInfo.name,
@@ -115,7 +120,7 @@ internal class ExpressTxToTransactionItemUMConverter(
             name = contact.name.value,
             avatar = contact.toContactAvatar(),
         )
-        is ResolvedOwner.External -> null
+        is ResolvedOwner.External -> ContentSubtitle.AssetOwner.Address(rawAddress = address)
     }
 
     private fun onrampContent(onramp: ExpressTx.Onramp): TransactionItemUM.Content {
