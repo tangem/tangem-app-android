@@ -25,14 +25,12 @@ internal class MoneyAccountBankDetailsAnalyticsTest {
     }
 
     @Test
-    fun `GIVEN details screen WHEN shown THEN deposit details screen opened event sent`() {
+    fun `GIVEN details screen WHEN shown THEN account details screen opened event sent`() {
         // Act
         analytics.onDetailsShown()
 
         // Assert
-        verify(exactly = 1) {
-            analyticsEventHandler.send(ofType<MoneyAccountAnalyticsEvents.DepositDetailsScreenOpened>())
-        }
+        verify(exactly = 1) { analyticsEventHandler.send(MoneyAccountAnalyticsEvents.AccountDetailsScreenOpened()) }
     }
 
     @Test
@@ -52,7 +50,7 @@ internal class MoneyAccountBankDetailsAnalyticsTest {
 
         // Assert
         verify(exactly = 1) {
-            analyticsEventHandler.send(MoneyAccountAnalyticsEvents.DetailsFieldCopied(fieldName = model.fieldName))
+            analyticsEventHandler.send(MoneyAccountAnalyticsEvents.DetailsFieldCopied(field = model.fieldName))
         }
     }
 
@@ -60,9 +58,9 @@ internal class MoneyAccountBankDetailsAnalyticsTest {
         FieldModel(field = RequisiteField.ACCOUNT_NUMBER, fieldName = "account_number"),
         FieldModel(field = RequisiteField.ROUTING_NUMBER, fieldName = "routing_number"),
         FieldModel(field = RequisiteField.BENEFICIARY_NAME, fieldName = "beneficiary"),
-        FieldModel(field = RequisiteField.BENEFICIARY_ADDRESS, fieldName = "beneficiary"),
-        FieldModel(field = RequisiteField.BANK_NAME, fieldName = "bank"),
-        FieldModel(field = RequisiteField.BANK_ADDRESS, fieldName = "bank"),
+        FieldModel(field = RequisiteField.BENEFICIARY_ADDRESS, fieldName = "beneficiary_address"),
+        FieldModel(field = RequisiteField.BANK_NAME, fieldName = "bank_name"),
+        FieldModel(field = RequisiteField.BANK_ADDRESS, fieldName = "bank_address"),
     )
 
     data class FieldModel(val field: RequisiteField, val fieldName: String)

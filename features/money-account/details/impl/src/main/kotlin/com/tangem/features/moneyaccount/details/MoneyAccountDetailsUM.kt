@@ -16,6 +16,7 @@ internal data class MoneyAccountDetailsUM(
     val isBalanceHidden: Boolean,
     val messageBanner: TangemMessageBanner.State?,
     val menuItems: ImmutableList<MoneyAccountMenuItemUM>,
+    val onMenuClick: () -> Unit,
     val onBackClick: () -> Unit,
     val onAddFundsClick: () -> Unit,
     val onSendClick: () -> Unit,
