@@ -1118,7 +1118,7 @@
   <string name="joint_account_members_signers_subtitle">Для подтверждения операций</string>
   <string name="joint_account_members_signers_title">Нужно подписей</string>
   <string name="joint_account_members_subtitle">Укажите, сколько человек будет пользоваться аккаунтом. Каждую транзакцию должны подписать %1$s из %2$s участников. Позже это изменить нельзя</string>
-  <string name="joint_account_members_subtitle_helper_part"> %1$s из %2$s участников</string>
+  <string name="joint_account_members_subtitle_helper_part">%1$s из %2$s участников</string>
   <string name="joint_account_members_subtitle_main_part">Укажите, сколько человек будет пользоваться аккаунтом. Каждую транзакцию должны подписать %1$s. Позже это изменить нельзя</string>
   <string name="joint_account_members_title">Участники</string>
   <string name="joint_account_members_total_subtitle">Максимум %1$s человек, включая вас</string>
@@ -1409,7 +1409,8 @@
   <string name="mobile_wallet_requires_min_os_warning_title">Мобильный кошелек требует %1$s или новее.</string>
   <string name="money_account_add_funds_bank_description">Получайте USD с банковского счёта через ACH/Wire или SPEI</string>
   <string name="money_account_add_funds_receive_description">Отправьте USDC в сети Polygon на адрес счёта</string>
-  <string name="money_account_add_funds_swap_description">Пополните счёт криптой из вашего кошелька</string>
+  <string name="money_account_add_funds_swap_description">Пополните счёт в USD криптовалютой из вашего кошелька</string>
+  <string name="money_account_close_account">Закрыть счёт</string>
   <string name="money_account_main_name">Счёт в USD</string>
   <string name="money_account_main_status_action_required">Требуется действие</string>
   <string name="money_account_main_status_activating">Активация…</string>
@@ -1442,6 +1443,9 @@
   <string name="money_account_onboarding_transfers_card_caption">Пополнение. Вывод.</string>
   <string name="money_account_onboarding_transfers_card_subtitle">с отдельным счётом и банковскими реквизитами</string>
   <string name="money_account_onboarding_transfers_card_title">Отправляйте и получайте фиатные платежи</string>
+  <string name="money_account_send_fees_footer">Комиссии включают плату за сервис %s и расчётную комиссию сети</string>
+  <string name="money_account_send_network_fee_note">Комиссии включают расчётную комиссию сети %s, которая может меняться в зависимости от нагрузки на сеть</string>
+  <string name="money_account_send_pay_button">Оплатить %s</string>
   <string name="news_all_news">Все новости</string>
   <string name="news_like">Нравится</string>
   <plurals name="news_published_hours_ago">
@@ -2682,7 +2686,7 @@
   <string name="tangempay_residency_all_state">Выбрать другой штат</string>
   <string name="tangempay_residency_search_empty">Ничего не найдено. Попробуйте изменить запрос</string>
   <string name="tangempay_residency_suggested_country">Предлагаемая страна</string>
-  <string name="tangempay_residency_suggested_state"> Предлагаемый штат</string>
+  <string name="tangempay_residency_suggested_state">Предлагаемый штат</string>
   <string name="tangempay_residency_title_country">Страна проживания</string>
   <string name="tangempay_residency_title_state">Выберите штат</string>
   <string name="tangempay_select_plan_btn_cancel">Отменить</string>
@@ -2732,6 +2736,8 @@
   <string name="tangempay_unified_onboarding_fees_caption">Без скрытых комиссий</string>
   <string name="tangempay_unified_onboarding_fees_subtitle">1 USDC = 1 USD</string>
   <string name="tangempay_unified_onboarding_fees_title">Без комиссий за покупки. %1$s</string>
+  <string name="tangempay_unified_onboarding_interest_caption">Проценты</string>
+  <string name="tangempay_unified_onboarding_interest_title">Храните средства и получайте до 4% годовых</string>
   <string name="tangempay_unified_onboarding_legal">Что вам доступно, зависит от вашего региона. Мы подтвердим это сразу после верификации</string>
   <string name="tangempay_unified_onboarding_money_account_caption">Очень удобно</string>
   <string name="tangempay_unified_onboarding_money_account_header">Счёт в USD</string>
@@ -2740,6 +2746,8 @@
   <string name="tangempay_unified_onboarding_payment_account_caption">Платите как удобно</string>
   <string name="tangempay_unified_onboarding_payment_account_header">Карта Visa</string>
   <string name="tangempay_unified_onboarding_payment_account_title">Онлайн или %1$s</string>
+  <string name="tangempay_unified_onboarding_payments_caption">Платежи</string>
+  <string name="tangempay_unified_onboarding_payments_title">ACH и банковские переводы на каждый день</string>
   <string name="tangempay_unified_onboarding_plan_caption">Один тариф</string>
   <string name="tangempay_unified_onboarding_plan_subtitle">Basic — бесплатно.</string>
   <string name="tangempay_unified_onboarding_plan_title">%1$s Plus включает оба продукта и гораздо больше</string>
@@ -2984,7 +2992,7 @@
   <string name="virtual_account_requisites_beneficiary_name">Имя получателя</string>
   <string name="virtual_account_requisites_clabe">CLABE</string>
   <string name="virtual_account_requisites_reference">Референс</string>
-  <string name="virtual_account_requisites_routing_number">Routing number</string>
+  <string name="virtual_account_requisites_routing_number">Маршрутный номер</string>
   <string name="virtual_account_title">Счёт в USD</string>
   <string name="visa_onboarding_access_code_navigation_title">Код доступа</string>
   <string name="visa_onboarding_account_activation_navigation_title">Активация аккаунта</string>
@@ -3151,6 +3159,8 @@
   <string name="warning_hedera_token_association_not_enough_hbar_message">Недостаточно %s. Пополните ваш аккаунт Hedera для ассоциации этого токена</string>
   <string name="warning_incomplete_backup_notification_message">Мы обнаружили, что процесс активации карты не завершен должным образом из-за проблем с NFC-модулем устройства или неправильного прикладывания карт к телефону. Пожалуйста, обратитесь в службу поддержки для уточнения деталей.</string>
   <string name="warning_incomplete_backup_notification_title">Требуется действие. Не используйте кошелек!</string>
+  <string name="warning_incomplete_balance_message">На этом адресе больше %1$s UTXO, поэтому сеть %2$s возвращает только часть из них. Ваши средства в безопасности. Чтобы увидеть полный баланс, объедините UTXO, отправив %3$s на свой адрес.</string>
+  <string name="warning_incomplete_balance_title">Баланс может отображаться не полностью</string>
   <string name="warning_kaspa_unfinished_token_transaction_discard_message">Вы уверены что хотите отменить эту транзакцию? Вы не сможете отправить ее еще раз</string>
   <string name="warning_kaspa_unfinished_token_transaction_message">Ваша транзакция %1$s %2$s не была завершена. Вы можете попробовать отправить ее еще раз.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">У вас есть незавершенная транзакция</string>

@@ -1285,7 +1285,8 @@
   <string name="mobile_wallet_requires_min_os_warning_title">Le portefeuille mobile nécessite %1$s ou une version supérieure.</string>
   <string name="money_account_add_funds_bank_description">Recevez des USD depuis un compte bancaire via ACH/Wire ou SPEI</string>
   <string name="money_account_add_funds_receive_description">Envoyez des USDC sur Polygon à l\'adresse de votre compte</string>
-  <string name="money_account_add_funds_swap_description">Utilisez la crypto de votre wallet pour alimenter votre compte</string>
+  <string name="money_account_add_funds_swap_description">Utilisez les cryptos de votre portefeuille pour alimenter votre compte en USD</string>
+  <string name="money_account_close_account">Clôturer le compte</string>
   <string name="money_account_main_name">Compte en USD</string>
   <string name="money_account_main_status_action_required">Action requise</string>
   <string name="money_account_main_status_activating">Activation…</string>
@@ -1318,6 +1319,9 @@
   <string name="money_account_onboarding_transfers_card_caption">Entrées. Sorties.</string>
   <string name="money_account_onboarding_transfers_card_subtitle">avec un compte dédié et des coordonnées bancaires</string>
   <string name="money_account_onboarding_transfers_card_title">Envoyez et recevez des paiements en fiat</string>
+  <string name="money_account_send_fees_footer">Les frais incluent le service %s et les frais réseau estimés</string>
+  <string name="money_account_send_network_fee_note">Les frais incluent des frais réseau estimés à %s, variables selon l’activité du réseau</string>
+  <string name="money_account_send_pay_button">Payer %s</string>
   <string name="news_all_news">Toutes les actualités</string>
   <string name="news_like">Like</string>
   <plurals name="news_published_hours_ago">
@@ -2502,7 +2506,7 @@
   <string name="tangempay_residency_all_state">Sélectionner un autre État</string>
   <string name="tangempay_residency_search_empty">Aucun résultat. Essayez de modifier votre recherche</string>
   <string name="tangempay_residency_suggested_country">Pays suggéré</string>
-  <string name="tangempay_residency_suggested_state"> État suggéré</string>
+  <string name="tangempay_residency_suggested_state">État suggéré</string>
   <string name="tangempay_residency_title_country">Pays de résidence</string>
   <string name="tangempay_residency_title_state">Sélectionner un État</string>
   <string name="tangempay_select_plan_btn_cancel">Annuler</string>
@@ -2552,6 +2556,8 @@
   <string name="tangempay_unified_onboarding_fees_caption">Pas de frais cachés</string>
   <string name="tangempay_unified_onboarding_fees_subtitle">1 USDC = 1 USD</string>
   <string name="tangempay_unified_onboarding_fees_title">Aucuns frais sur les achats. %1$s</string>
+  <string name="tangempay_unified_onboarding_interest_caption">Intérêts</string>
+  <string name="tangempay_unified_onboarding_interest_title">Conservez vos fonds, gagnez jusqu’à 4% par an</string>
   <string name="tangempay_unified_onboarding_legal">Ce que vous pouvez ouvrir dépend de votre lieu de résidence. Nous vous le confirmerons juste après la vérification</string>
   <string name="tangempay_unified_onboarding_money_account_caption">Très pratique</string>
   <string name="tangempay_unified_onboarding_money_account_header">Compte en USD</string>
@@ -2560,6 +2566,8 @@
   <string name="tangempay_unified_onboarding_payment_account_caption">Payez comme vous voulez</string>
   <string name="tangempay_unified_onboarding_payment_account_header">Carte Visa</string>
   <string name="tangempay_unified_onboarding_payment_account_title">En ligne ou %1$s</string>
+  <string name="tangempay_unified_onboarding_payments_caption">Paiements</string>
+  <string name="tangempay_unified_onboarding_payments_title">Virements ACH et bancaires au quotidien</string>
   <string name="tangempay_unified_onboarding_plan_caption">Un seul forfait</string>
   <string name="tangempay_unified_onboarding_plan_subtitle">Basic est gratuit.</string>
   <string name="tangempay_unified_onboarding_plan_title">%1$s Plus couvre les deux et bien plus encore</string>
@@ -2784,7 +2792,7 @@
   <string name="virtual_account_requisites_beneficiary_name">Nom du bénéficiaire</string>
   <string name="virtual_account_requisites_clabe">CLABE</string>
   <string name="virtual_account_requisites_reference">Référence</string>
-  <string name="virtual_account_requisites_routing_number">Routing number</string>
+  <string name="virtual_account_requisites_routing_number">Numéro de routage</string>
   <string name="virtual_account_title">Compte en USD</string>
   <string name="visa_balance_limits_details_aml_verified">AML vérifié</string>
   <string name="visa_balance_limits_details_available">Disponible</string>
