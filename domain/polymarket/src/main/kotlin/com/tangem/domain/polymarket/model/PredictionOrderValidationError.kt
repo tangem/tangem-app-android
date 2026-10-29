@@ -40,5 +40,11 @@ sealed interface PredictionOrderValidationError : PolymarketError {
 
     data class SignatureNotWrapped(val length: Int) : PredictionOrderValidationError
 
+    /**
+     * @property expected the session key that should have signed, `null` on the owner route
+     * @property found the session key the envelope names, `null` if there is none
+     */
+    data class SessionKeyMismatch(val expected: String?, val found: String?) : PredictionOrderValidationError
+
     data class StaleQuote(val ageMillis: Long) : PredictionOrderValidationError
 }
