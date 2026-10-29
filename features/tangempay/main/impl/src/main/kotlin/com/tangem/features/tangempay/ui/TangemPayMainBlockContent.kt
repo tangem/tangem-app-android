@@ -60,7 +60,7 @@ internal fun TangemPayMainBlockContent(
             onClick = state.onClick,
         )
         is TangemPayMainUM.IssuingCard -> TangemPayRow(
-            subtitle = resourceReference(R.string.tangempay_issuing_your_card),
+            subtitle = resourceReference(R.string.money_account_main_status_activating),
             modifier = modifier,
             onClick = state.onClick,
         )

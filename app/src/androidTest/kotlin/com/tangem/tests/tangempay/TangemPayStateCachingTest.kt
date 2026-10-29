@@ -200,7 +200,7 @@ class TangemPayStateCachingTest : BaseTestCase() {
     fun mainScreenKeepsCachedKycInProgressWhenCustomerRequestFailsTest() {
         val kycInProgressState = "InProgress"
         val kycInProgressText = getResourceString(CoreResR.string.tangempay_kyc_in_progress)
-        val issuingCardText = getResourceString(CoreResR.string.tangempay_issuing_your_card)
+        val activatingText = getResourceString(CoreResR.string.money_account_main_status_activating)
         val customerInfoEndpoint = "/bff-v2/v1/customer/me"
 
         setupHooks(
@@ -235,8 +235,8 @@ class TangemPayStateCachingTest : BaseTestCase() {
                     onTangemPayMainScreen { tileWithSubtitle(kycInProgressText).assertIsDisplayed() }
                 }
             }
-            step("Assert Tangem Pay tile with '$issuingCardText' is not displayed") {
-                onTangemPayMainScreen { tileWithSubtitle(issuingCardText).assertDoesNotExist() }
+            step("Assert Tangem Pay tile with '$activatingText' is not displayed") {
+                onTangemPayMainScreen { tileWithSubtitle(activatingText).assertDoesNotExist() }
             }
         }
     }

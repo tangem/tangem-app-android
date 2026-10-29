@@ -48,7 +48,7 @@ class TangemPayCampaignCardTest : BaseTestCase() {
     private val campaignKey = "tpay_for_unical1"
     private val validatedCampaignLink = "tangem://marketing/$campaignKey"
     private val kycInProgressText = getResourceString(CoreResR.string.tangempay_kyc_in_progress)
-    private val issuingYourCardText = getResourceString(CoreResR.string.tangempay_issuing_your_card)
+    private val activatingText = getResourceString(CoreResR.string.money_account_main_status_activating)
     private val residencyCountry = "United States"
     private val residencyRegion = "California"
 
@@ -124,7 +124,7 @@ class TangemPayCampaignCardTest : BaseTestCase() {
                 setWireMockScenarioState(campaignCardScenario, kycApprovedIssuingState)
             }
             step("Wait for the card issuing status on Main") {
-                refreshMainUntilTangemPayTileSubtitle(issuingYourCardText)
+                refreshMainUntilTangemPayTileSubtitle(activatingText)
             }
             step("Close 'Finalize wallet setup' sheet if it is displayed") { closeFinishWalletActivationSheetIfShown() }
             step("Click on Tangem Pay tile") {
