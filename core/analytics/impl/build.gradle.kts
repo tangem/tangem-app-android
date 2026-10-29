@@ -31,6 +31,10 @@ dependencies {
     implementation(platform(deps.firebase.bom))
     implementation(deps.firebase.analytics)
     implementation(deps.firebase.crashlytics)
+    implementation(deps.firebase.perf) {
+        exclude(group = "com.google.firebase", module = "protolite-well-known-types")
+        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
+    }
     implementation(platform(deps.otel.bom))
     implementation(deps.otel.api)
     implementation(deps.otel.sdk.common)
