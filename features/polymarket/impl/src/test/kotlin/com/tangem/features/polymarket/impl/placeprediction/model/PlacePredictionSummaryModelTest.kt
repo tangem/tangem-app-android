@@ -777,7 +777,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             amountModel.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             val model = createSummaryModel(testScope = this, amountModel = amountModel)
-            val slot = FakeSlotHost(model.feeSheetNavigation)
+            val slot = FakeSlotHost(model.feeSheet.navigation)
 
             val expected = PredictionFeeSheetUMConverter.convert(
                 quote = createQuote(),
@@ -790,7 +790,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
 
             // Assert
             assertThat(slot.configuration).isEqualTo(Unit)
-            assertThat(model.feeSheetState.value).isEqualTo(expected)
+            assertThat(model.feeSheet.state.value).isEqualTo(expected)
 
             model.onDestroy()
         }
@@ -804,7 +804,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             amountModel.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             val model = createSummaryModel(testScope = this, amountModel = amountModel)
-            val slot = FakeSlotHost(model.feeSheetNavigation)
+            val slot = FakeSlotHost(model.feeSheet.navigation)
             coEvery { placeOrderUseCase(any(), any(), any()) } coAnswers {
                 // Act
                 model.onFeeClick()
@@ -830,7 +830,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             amountModel.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             val model = createSummaryModel(testScope = this, amountModel = amountModel)
-            val slot = FakeSlotHost(model.feeSheetNavigation)
+            val slot = FakeSlotHost(model.feeSheet.navigation)
             model.onFeeClick()
 
             // Act
