@@ -4,4 +4,6 @@ interface HotWalletFeatureToggles {
 
     /** Whether Google Drive cloud backup is usable — requires Google Play Services on the device */
     val isGoogleDriveBackupEnabled: Boolean
+
+    val isMultipleHotWalletsEnabled: Boolean
 }
