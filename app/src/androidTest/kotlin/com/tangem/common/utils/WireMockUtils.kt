@@ -1,5 +1,6 @@
 package com.tangem.common.utils
 
+import android.net.Uri
 import com.tangem.datasource.remote.interceptors.WireMockRedirectInterceptor
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
@@ -197,6 +198,37 @@ fun findWireMockRequestTimestampsByQueryParam(
         .put("queryParameters", JSONObject().put(queryParam, JSONObject().put("equalTo", queryValue))),
     baseUrl = baseUrl,
 ).map { request -> request.getLong("loggedDate") }.sorted()
+
+fun findWireMockRequestTimestamps(
+    method: String,
+    urlPath: String,
+    baseUrl: String = getWireMockBaseUrl(),
+): List<Long> = findWireMockRequests(
+    requestPattern = JSONObject().put("method", method).put("urlPath", urlPath),
+    baseUrl = baseUrl,
+).map { request -> request.getLong("loggedDate") }.sorted()
+
+fun findWireMockRequestQueryParamValues(
+    method: String,
+    urlPath: String,
+    queryParam: String,
+    baseUrl: String = getWireMockBaseUrl(),
+): List<String> = findWireMockRequests(
+    requestPattern = JSONObject().put("method", method).put("urlPath", urlPath),
+    baseUrl = baseUrl,
+).mapNotNull { request -> Uri.parse(request.getString("url")).getQueryParameter(queryParam) }
+
+fun findWireMockRequestHeaders(
+    method: String,
+    urlPath: String,
+    baseUrl: String = getWireMockBaseUrl(),
+): List<Map<String, String>> = findWireMockRequests(
+    requestPattern = JSONObject().put("method", method).put("urlPath", urlPath),
+    baseUrl = baseUrl,
+).map { request ->
+    val headers = request.optJSONObject("headers") ?: JSONObject()
+    headers.keys().asSequence().associate { name -> name.lowercase() to headers.optString(name) }
+}
 
 private fun findWireMockRequestBodies(requestPattern: JSONObject, baseUrl: String): List<String> =
     findWireMockRequests(requestPattern, baseUrl).map { request -> request.optString("body") }
