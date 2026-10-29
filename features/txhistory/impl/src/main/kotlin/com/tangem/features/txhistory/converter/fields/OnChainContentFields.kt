@@ -52,7 +52,7 @@ import com.tangem.utils.extensions.isZero
  */
 internal class OnChainContentFields(
     private val currency: CryptoCurrency,
-    private val lookup: TxHistoryLookupContext?,
+    private val lookup: TxHistoryLookupContext,
     private val networkTokens: Set<CryptoCurrency.Token>,
 ) {
 
@@ -166,14 +166,13 @@ internal class OnChainContentFields(
         return resolveCounterparty(address).isOwnPortfolio()
     }
 
-    /** "to / from" the counterparty the transfer settled with: its portfolio, its contact name, or its address. */
+    /** "to / from" the counterparty the transfer settled with: its portfolio, its contact name, or its raw address. */
     private fun TxInfo.transferSubtitle(): ContentSubtitle {
         val address = (interactionAddressType as? TxInfo.InteractionAddressType.User)?.address
             ?: return addressSubtitle()
         val direction = subtitleDirection()
 
-        return resolveCounterparty(address)?.toSubtitle(direction)
-            ?: ContentSubtitle.ExternalAddress(direction = direction, rawAddress = address)
+        return resolveCounterparty(address).toSubtitle(direction)
     }
 
     /**
@@ -259,11 +258,11 @@ internal class OnChainContentFields(
      */
     private fun namedCounterpartySubtitle(address: String, direction: ContentSubtitle.Direction): ContentSubtitle? =
         resolveCounterparty(address)
-            ?.takeIf { it !is ResolvedOwner.External }
+            .takeIf { it !is ResolvedOwner.External }
             ?.toSubtitle(direction)
 
-    private fun resolveCounterparty(address: String): ResolvedOwner? =
-        lookup?.resolveCounterparty(address = address, networkRawId = currency.network.id.rawId)
+    private fun resolveCounterparty(address: String): ResolvedOwner =
+        lookup.resolveCounterparty(address = address, networkRawId = currency.network.id.rawId)
 }
 
 // region Per-cell helpers
@@ -277,13 +276,13 @@ private fun TxInfo.subtitleDirection(): ContentSubtitle.Direction = if (isOutgoi
 private fun TxInfo.directionalIcon(): TxIcon =
     TxIcon.Vector(if (isOutgoing) Icons.ic_arrow_up_20 else Icons.ic_arrow_down_20)
 
-private fun ResolvedOwner?.isOwnPortfolio(): Boolean = when (this) {
+private fun ResolvedOwner.isOwnPortfolio(): Boolean = when (this) {
     is ResolvedOwner.OwnAccount,
     is ResolvedOwner.OwnPaymentAccount,
     is ResolvedOwner.OwnMoneyAccount,
     is ResolvedOwner.OwnWallet,
     -> true
-    is ResolvedOwner.Foreign, null -> false
+    is ResolvedOwner.Foreign -> false
 }
 
 private fun TxInfo.InteractionAddressType?.displayedAddress(): String? = when (this) {
