@@ -18,5 +18,5 @@ internal sealed interface CompletionState {
 
     data object WithdrawalInProgress : CompletionState
 
-    data class Failed(val failure: PreviewFailure) : CompletionState
+    data class Failed(val failure: PreviewFailure, val errorCode: Int? = null) : CompletionState
 }
