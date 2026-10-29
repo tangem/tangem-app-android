@@ -12,11 +12,17 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -120,7 +126,7 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
     }
 
     @Test
-    fun `GIVEN sell engine resumed before hold WHEN hold ends THEN sources not re-read`() = runTest {
+    fun `GIVEN sell engine resumed before hold WHEN hold ends THEN position not re-read`() = runTest {
         // Arrange
         val (engine, _) = createEngine(params = SELL_PARAMS)
         advanceUntilIdle()
@@ -132,8 +138,33 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
         runCurrent()
 
         // Assert
-        verify(exactly = 1) { balancePoller.subscribe(userWalletId = USER_WALLET_ID) }
         coVerify(exactly = 2) { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) }
+
+        engine.onPause()
+    }
+
+    @Test
+    fun `GIVEN engine resumed WHEN held THEN balance polling pauses until the hold ends`() = runTest {
+        // Arrange
+        val activePolls = MutableStateFlow(0)
+        every { balancePoller.subscribe(userWalletId = USER_WALLET_ID) } returns flow<Nothing> { awaitCancellation() }
+            .onStart { activePolls.update { it + 1 } }
+            .onCompletion { activePolls.update { it - 1 } }
+        val (engine, _) = createEngine()
+        advanceUntilIdle()
+        engine.onResume()
+        runCurrent()
+
+        // Act
+        val pollsDuringHold = engine.holdDuring {
+            runCurrent()
+            activePolls.value
+        }
+        runCurrent()
+
+        // Assert
+        assertThat(pollsDuringHold).isEqualTo(0)
+        assertThat(activePolls.value).isEqualTo(1)
 
         engine.onPause()
     }

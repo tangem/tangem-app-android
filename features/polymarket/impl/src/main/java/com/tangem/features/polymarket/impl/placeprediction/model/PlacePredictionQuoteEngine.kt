@@ -144,11 +144,15 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
     private fun resumeSources() {
         if (tradingPermission.value == TradingPermissionUM.Unknown) loadTradingAllowance()
         addFunds.retryIfFailed()
+        pollBalance()
+        if (params is PlacePredictionComponent.Params.Sell) loadPosition(params = params)
+        restartQuoteLoop(withDebounce = false)
+    }
+
+    private fun pollBalance() {
         predictionBalancePoller.subscribe(userWalletId = params.userWalletId)
             .launchIn(scope)
             .saveIn(balancePollJobHolder)
-        if (params is PlacePredictionComponent.Params.Sell) loadPosition(params = params)
-        restartQuoteLoop(withDebounce = false)
     }
 
     fun onPause() {
@@ -197,6 +201,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
     suspend fun <T> holdDuring(block: suspend () -> T): T {
         isHeld = true
         quoteJobHolder.cancel()
+        balancePollJobHolder.cancel()
         return try {
             block()
         } finally {
@@ -211,7 +216,10 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         when {
             !isResumed -> Unit
             wasResumeSkipped -> resumeSources()
-            else -> restartQuoteLoop(withDebounce = false)
+            else -> {
+                pollBalance()
+                restartQuoteLoop(withDebounce = false)
+            }
         }
     }
 
