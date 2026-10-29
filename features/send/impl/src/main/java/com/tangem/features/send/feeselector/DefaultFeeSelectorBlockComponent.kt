@@ -57,6 +57,7 @@ internal class DefaultFeeSelectorBlockComponent @AssistedInject constructor(
                     userWalletId = params.userWalletId,
                     shouldShowOnlySpeedOption = model.shouldShowOnlySpeedOption,
                     isTronGaslessSupported = params.isTronGaslessSupported,
+                    onLoadSponsoredFee = params.onLoadSponsoredFee,
                 ),
                 onDismiss = {
                     model.feeSelectorBottomSheet.dismiss()
@@ -86,8 +87,8 @@ internal class DefaultFeeSelectorBlockComponent @AssistedInject constructor(
 
         val isScreenSource = params.feeDisplaySource == FeeSelectorParams.FeeDisplaySource.Screen
         val isNotSingleFee = (state as? FeeSelectorUM.Content)?.feeItems?.isSingleItem() == false
-        val isGaslessAvailable = state is FeeSelectorUM.Content &&
-            (state as FeeSelectorUM.Content).feeExtraInfo.transactionFeeExtended != null
+        val isGaslessAvailable = (state as? FeeSelectorUM.Content)?.feeExtraInfo
+            ?.let { it.transactionFeeExtended != null || it.isSponsoredFeeAvailable } == true
         FeeSelectorBlockContent(
             state = state,
             onReadMoreClick = model::onReadMoreClicked,
