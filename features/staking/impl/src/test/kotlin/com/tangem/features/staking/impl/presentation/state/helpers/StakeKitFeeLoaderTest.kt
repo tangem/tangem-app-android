@@ -11,8 +11,8 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.EstimateGasUseCase
-import com.tangem.domain.models.staking.PendingAction
-import com.tangem.domain.models.staking.action.StakingActionType
+import com.tangem.domain.staking.model.PendingAction
+import com.tangem.domain.staking.model.action.StakingActionType
 import com.tangem.domain.staking.model.StakeKitIntegration
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.model.stakekit.StakingError
