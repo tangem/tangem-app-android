@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
@@ -29,6 +30,7 @@ import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountPresetUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
@@ -57,6 +59,7 @@ internal fun PlacePredictionOrderContent(
 ) {
     var footerHeight by remember { mutableIntStateOf(0) }
     val isIdle = state.submit is SubmitUM.Idle
+    val focusManager = LocalFocusManager.current
 
     TangemTopBarScaffold(
         modifier = modifier,
@@ -79,7 +82,10 @@ internal fun PlacePredictionOrderContent(
                     order = state.order,
                     isLoading = !isIdle,
                     isEnabled = state.isPrimaryButtonEnabled,
-                    onClick = intents::onPlaceClick,
+                    onClick = {
+                        focusManager.clearFocus()
+                        intents.onPlaceClick()
+                    },
                 )
             }
         },
@@ -123,6 +129,7 @@ private fun OrderBody(
             PredictionAmountPresets(
                 presets = presets,
                 isEnabled = isIdle,
+                isMaxEnabled = state.isMaxPresetEnabled(),
                 onPresetClick = intents::onPresetClick,
                 onMaxClick = intents::onMaxClick,
             )
@@ -145,6 +152,11 @@ private fun OrderBody(
         }
         Spacer(modifier = Modifier.height(with(LocalDensity.current) { footerHeight.toDp() }))
     }
+}
+
+private fun PlacePredictionUM.isMaxPresetEnabled(): Boolean = when (val order = order) {
+    is OrderSideUM.Buy -> order.balance != null
+    is OrderSideUM.Sell -> true
 }
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 800)
