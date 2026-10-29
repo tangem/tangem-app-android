@@ -122,5 +122,9 @@
     {
         "name": "TWI_1822_SOLANA_PNFT_AND_METAPLEX_CORE_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TWI_1799_MULTIPLE_HOT_WALLETS_ENABLED",
+        "version": "undefined"
     }
 ]
