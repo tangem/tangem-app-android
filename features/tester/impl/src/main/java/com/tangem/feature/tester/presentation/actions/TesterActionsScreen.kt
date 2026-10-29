@@ -32,7 +32,6 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.findActivity
 import com.tangem.feature.tester.impl.R
 import com.tangem.feature.tester.presentation.actions.TesterActionsContentState.HideAllCurrenciesUM
-import com.tangem.feature.tester.presentation.actions.TesterActionsContentState.ToggleHotWalletRestrictionUM
 import com.tangem.feature.tester.presentation.actions.TesterActionsContentState.UsedeskTokenTtlUM
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.toImmutableList
@@ -67,16 +66,6 @@ internal fun TesterActionsScreen(state: TesterActionsContentState, modifier: Mod
                 name = stringResourceSafe(R.string.hide_all_currencies),
                 progress = state.hideAllCurrenciesUM is HideAllCurrenciesUM.Progress,
                 onClick = onClick,
-            )
-        }
-
-        item {
-            val config = state.toggleHotWalletRestrictionUM
-            val statusText = if (config.isEnabled) "ON" else "OFF"
-
-            TesterActionItem(
-                name = stringResourceSafe(id = R.string.toggle_hot_wallet_restriction, statusText),
-                onClick = config.onClick,
             )
         }
 
@@ -221,7 +210,6 @@ private fun TesterActionsScreenSample(modifier: Modifier = Modifier) {
         TesterActionsScreen(
             state = TesterActionsContentState(
                 hideAllCurrenciesUM = HideAllCurrenciesUM.Clickable {},
-                toggleHotWalletRestrictionUM = ToggleHotWalletRestrictionUM(isEnabled = true) {},
                 usedeskTokenTtlUM = UsedeskTokenTtlUM(
                     currentLabel = "7 days",
                     presets = listOf(

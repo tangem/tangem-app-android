@@ -8,10 +8,8 @@ import androidx.lifecycle.viewModelScope
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.repository.FeedbackRepository
-import com.tangem.domain.settings.HotWalletRestrictionManager
 import com.tangem.domain.settings.UsedeskTokenTtlManager
 import com.tangem.feature.tester.presentation.actions.TesterActionsContentState.HideAllCurrenciesUM
-import com.tangem.feature.tester.presentation.actions.TesterActionsContentState.ToggleHotWalletRestrictionUM
 import com.tangem.feature.tester.presentation.actions.TesterActionsContentState.UsedeskTokenTtlUM
 import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,17 +28,12 @@ internal class TesterActionsViewModel @Inject constructor(
     private val feedbackRepository: FeedbackRepository,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val walletAccountsSaver: WalletAccountsSaver,
-    private val hotWalletRestrictionManager: HotWalletRestrictionManager,
     private val usedeskTokenTtlManager: UsedeskTokenTtlManager,
 ) : ViewModel() {
 
     private val initialState: TesterActionsContentState
         get() = TesterActionsContentState(
             hideAllCurrenciesUM = HideAllCurrenciesUM.Clickable(this::hideAllCurrencies),
-            toggleHotWalletRestrictionUM = ToggleHotWalletRestrictionUM(
-                isEnabled = hotWalletRestrictionManager.isCreationEnabledSync(),
-                onClick = this::toggleHotWalletRestriction,
-            ),
             usedeskTokenTtlUM = UsedeskTokenTtlUM(
                 currentLabel = formatTtl(usedeskTokenTtlManager.getTokenTtlMillisSync()),
                 presets = TTL_PRESETS,
@@ -55,7 +48,6 @@ internal class TesterActionsViewModel @Inject constructor(
         private set
 
     init {
-        bootstrapHotWalletRestrictionUpdates()
         bootstrapUsedeskTokenTtlUpdates()
     }
 
@@ -87,24 +79,8 @@ internal class TesterActionsViewModel @Inject constructor(
         )
     }
 
-    private fun toggleHotWalletRestriction() = viewModelScope.launch {
-        hotWalletRestrictionManager.toggleCreationEnabled()
-    }
-
     private fun setUsedeskTokenTtl(millis: Long) = viewModelScope.launch {
         usedeskTokenTtlManager.setTokenTtlMillis(millis)
-    }
-
-    private fun bootstrapHotWalletRestrictionUpdates() {
-        hotWalletRestrictionManager.isCreationEnabled()
-            .onEach { isEnabled ->
-                uiState = uiState.copy(
-                    toggleHotWalletRestrictionUM = uiState.toggleHotWalletRestrictionUM.copy(
-                        isEnabled = isEnabled,
-                    ),
-                )
-            }
-            .launchIn(viewModelScope)
     }
 
     private fun bootstrapUsedeskTokenTtlUpdates() {

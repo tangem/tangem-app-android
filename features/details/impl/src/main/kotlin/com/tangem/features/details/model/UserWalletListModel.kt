@@ -17,7 +17,6 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.settings.HotWalletRestrictionManager
 import com.tangem.domain.wallets.analytics.Settings
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.ApplyUserWalletListSortingUseCase
@@ -27,6 +26,7 @@ import com.tangem.features.details.entity.UserWalletListUM
 import com.tangem.features.details.entity.WalletReorderUM
 import com.tangem.features.details.impl.R
 import com.tangem.features.details.utils.UserWalletSaver
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -45,7 +45,7 @@ internal class UserWalletListModel @Inject constructor(
     private val messageSender: UiMessageSender,
     override val dispatchers: CoroutineDispatcherProvider,
     private val userWalletSaver: UserWalletSaver,
-    hotWalletRestrictionManager: HotWalletRestrictionManager,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val unlockWalletUseCase: UnlockWalletUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val applyUserWalletListSortingUseCase: ApplyUserWalletListSortingUseCase,
@@ -53,8 +53,6 @@ internal class UserWalletListModel @Inject constructor(
 ) : Model() {
 
     private val isWalletSavingInProgress: MutableStateFlow<Boolean> = MutableStateFlow(value = false)
-    private val isWalletCreationRestrictionEnabled: StateFlow<Boolean> =
-        hotWalletRestrictionManager.isCreationEnabled()
     private val userWalletsFetcher = userWalletsFetcherFactory.create(
         messageSender = messageSender,
         onlyMultiCurrency = false,
@@ -109,7 +107,7 @@ internal class UserWalletListModel @Inject constructor(
     private fun onAddNewWalletClick() {
         analyticsEventHandler.send(SignIn.ButtonAddWallet(AnalyticsParam.ScreensSources.Settings))
 
-        if (isWalletCreationRestrictionEnabled.value) {
+        if (!hotWalletFeatureToggles.isMultipleHotWalletsEnabled) {
             showAddWalletBottomSheet()
         } else {
             router.push(AppRoute.CreateWalletSelection)
