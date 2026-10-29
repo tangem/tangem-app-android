@@ -7,6 +7,7 @@ import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.right
 import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
@@ -29,6 +30,7 @@ import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeNonce
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams
+import com.tangem.features.send.api.subcomponents.feeSelector.params.SponsoredFeeAvailability
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorCheckReloadListener
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorCheckReloadTrigger
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadListener
@@ -76,6 +78,12 @@ internal class FeeSelectorLogic @AssistedInject constructor(
 ) : FeeSelectorIntents {
 
     private var appCurrency: AppCurrency = AppCurrency.Default
+
+    /**
+     * The user's pick between the sponsored fee and the coin, null before any. A quote reload resets the state to
+     * [FeeSelectorUM.Loading], which carries no pick, so it is kept here.
+     */
+    private var isSponsoredFeePicked: Boolean? = null
     private val loadFeeJobHolder = JobHolder()
     val uiState = MutableStateFlow(params.state)
 
@@ -95,7 +103,19 @@ internal class FeeSelectorLogic @AssistedInject constructor(
         subscribeOnFeeReloadTriggerUpdates()
         subscribeOnFeeCheckReloadTriggerUpdates()
         subscribeOnFeeLoadingStateTriggerUpdates()
+        if (params.onLoadSponsoredFee != null) rememberSponsoredFeePick()
         loadFee()
+    }
+
+    private fun rememberSponsoredFeePick() {
+        uiState
+            .onEach { state ->
+                val feeExtraInfo = (state as? FeeSelectorUM.Content)?.feeExtraInfo ?: return@onEach
+                if (feeExtraInfo.isFeeTokenSelectedByUser) {
+                    isSponsoredFeePicked = feeExtraInfo.isSponsoredFeePickedByUser
+                }
+            }
+            .launchIn(modelScope)
     }
 
     private fun initAppCurrency() {
@@ -155,6 +175,14 @@ internal class FeeSelectorLogic @AssistedInject constructor(
 
     override fun onTokenSelected(status: CryptoCurrencyStatus) {
         uiState.update(FeeSelectorTokenSelectedTransformer(status))
+        loadFee()
+    }
+
+    override fun onSponsoredFeeSelected() {
+        val feeExtraInfo = (uiState.value as? FeeSelectorUM.Content)?.feeExtraInfo ?: return
+        uiState.update(
+            FeeSelectorTokenSelectedTransformer(feeExtraInfo.feeCryptoCurrencyStatus, isSponsoredFee = true),
+        )
         loadFee()
     }
 
@@ -255,7 +283,9 @@ internal class FeeSelectorLogic @AssistedInject constructor(
     private suspend fun callLoadFee(): Either<GetFeeError, LoadedFeeResult> {
         val extended = params.onLoadFeeExtended
         if (extended == null || !isGaslessEnabled) {
-            return params.onLoadFee().map { LoadedFeeResult.Basic(it) }
+            val onLoadSponsoredFee = params.onLoadSponsoredFee
+                ?: return params.onLoadFee().map { LoadedFeeResult.Basic(it) }
+            return loadSponsorableFee(onLoadSponsoredFee)
         }
 
         // Only an explicit pick pins the fee token. The state also carries the coin a
@@ -336,6 +366,24 @@ internal class FeeSelectorLogic @AssistedInject constructor(
             ?: getNativeCoinStatusOrNull()
     }
 
+    private suspend fun loadSponsorableFee(
+        onLoadSponsoredFee: suspend (TransactionFee) -> SponsoredFeeAvailability,
+    ): Either<GetFeeError, LoadedFeeResult> = params.onLoadFee().map { userPaidFee ->
+        val availability = onLoadSponsoredFee(userPaidFee)
+        if (availability == SponsoredFeeAvailability.Unavailable) return@map LoadedFeeResult.Basic(userPaidFee)
+
+        val isSmartGasPickedByUser = isSponsoredFeePicked
+        val isSponsoredFeeSelected = isSmartGasPickedByUser ?: (availability == SponsoredFeeAvailability.Preferred)
+        LoadedFeeResult.Sponsorable(
+            fee = if (isSponsoredFeeSelected) userPaidFee.sponsored() else userPaidFee,
+            isSponsoredFeeSelected = isSponsoredFeeSelected,
+            isSponsoredFeePickedByUser = isSmartGasPickedByUser,
+        )
+    }
+
+    private fun TransactionFee.sponsored(): TransactionFee =
+        TransactionFee.Single(Fee.Common(normal.amount.copy(value = BigDecimal.ZERO)))
+
     private suspend fun populateExtendedFee(
         fee: TransactionFeeExtended,
     ): Either<GetFeeError, LoadedFeeResult.Extended> = either {
@@ -397,16 +445,29 @@ internal class FeeSelectorLogic @AssistedInject constructor(
             val feeCurrencyStatus: CryptoCurrencyStatus? = null,
         ) : LoadedFeeResult()
 
+        /**
+         * [fee] is zero while the sponsored fee is selected: the sponsor pays it, not the user.
+         * [isSponsoredFeePickedByUser] is the user's choice of the sponsored fee over the coin, null when the
+         * selection is the default one.
+         */
+        data class Sponsorable(
+            val fee: TransactionFee,
+            val isSponsoredFeeSelected: Boolean,
+            val isSponsoredFeePickedByUser: Boolean? = null,
+        ) : LoadedFeeResult()
+
         val feeCurrencyStatusOrNull: CryptoCurrencyStatus?
             get() = when (this) {
                 is Extended -> selectedToken
                 is Basic -> feeCurrencyStatus
+                is Sponsorable -> null
             }
 
         val transactionFee: TransactionFee
             get() = when (this) {
                 is Extended -> fee.transactionFee
                 is Basic -> fee
+                is Sponsorable -> fee
             }
     }
 
