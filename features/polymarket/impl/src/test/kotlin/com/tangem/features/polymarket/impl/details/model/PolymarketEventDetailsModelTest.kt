@@ -120,7 +120,7 @@ internal class PolymarketEventDetailsModelTest {
     @Test
     fun `GIVEN a source category WHEN event details refresh THEN its label remains in the header`() = runTest {
         // Arrange
-        coEvery { getEventUseCase(eventId = "event-1") } returnsMany listOf(
+        coEvery { getEventUseCase(any(), eventId = "event-1") } returnsMany listOf(
             createEvent(title = "Original title").right(),
             createEvent(title = "Updated title").right(),
         )

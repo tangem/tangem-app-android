@@ -847,7 +847,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             runTest {
                 // Arrange
                 coEvery { getQuoteUseCase(any(), request = any()) } answers {
-                    val request = firstArg<PredictionOrderQuoteRequest>()
+                    val request = secondArg<PredictionOrderQuoteRequest>()
                     if (request.slippagePercent == BigDecimal("10")) {
                         createQuote(status = PredictionQuoteStatus.BELOW_MIN_ORDER_AMOUNT)
                             .copy(worstCasePrice = BigDecimal("0.82"))
