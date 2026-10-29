@@ -19,6 +19,7 @@ import javax.inject.Inject
 
 @ModelScoped
 internal class ScanFailsModel @Inject constructor(
+    private val tangemBlogUrlBuilder: TangemBlogUrlBuilder,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
@@ -59,7 +60,7 @@ internal class ScanFailsModel @Inject constructor(
             ),
         )
         modelScope.launch {
-            urlOpener.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.HowToScan))
+            urlOpener.openUrl(tangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.HowToScan))
         }
     }
 
