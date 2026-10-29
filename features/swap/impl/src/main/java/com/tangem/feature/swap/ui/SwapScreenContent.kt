@@ -153,7 +153,7 @@ internal fun SwapScreenContent(
                             .align(Alignment.BottomCenter)
                             .imePadding()
                             .fillMaxWidth()
-                            .background(TangemTheme.colors3.bg.transparent.secondary)
+                            .background(TangemTheme.colors3.bg.tertiary)
                             .clickable { state.onMaxAmountSelected?.invoke() }
                             .padding(
                                 horizontal = 14.dp,
