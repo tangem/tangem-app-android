@@ -22,7 +22,7 @@ interface HistoryTxListManager {
     /**
      * Reactive stream of a single row tracked by its [TxHistoryInfo.txId], for the in-app details sheet.
      */
-    fun txExpressHistoryItemFlow(txId: String): Flow<TxHistoryInfo>
+    fun txHistoryItemFlow(txId: String): Flow<TxHistoryInfo>
 
     fun reload()
 

@@ -4,7 +4,7 @@ import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.cancelS
 import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.defaultLaunchIn
 import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.receiveTriggerInstance
 import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.retryThreeTimes
-import com.tangem.data.txhistory.repository.DefaultJointOperationHistoryRepository
+import com.tangem.data.txhistory.repository.JointOperationHistorySyncer
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.fetcher.JointOperationTxHistoryFetcher
 import com.tangem.domain.txhistory.fetcher.TxHistoryJointOperationTrigger
@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
 internal class DefaultJointOperationTxHistoryFetcher @AssistedInject constructor(
     @Assisted override val walletId: UserWalletId,
     private val utils: TxHistoryFetcherUtils,
-    private val repository: DefaultJointOperationHistoryRepository,
+    private val syncer: JointOperationHistorySyncer,
 ) : JointOperationTxHistoryFetcher, TxHistoryFetcherUtils by utils {
 
     private var initialPaginationJob: Job? = null
@@ -41,8 +41,8 @@ internal class DefaultJointOperationTxHistoryFetcher @AssistedInject constructor
     private fun fetch() {
         if (deltaPaginationJob?.isActive == true) return
         deltaPaginationJob = fetcherScope.launch {
-            if (repository.syncState(walletId) == null) {
-                flow { emit(repository.fetchHistory(walletId)) }
+            if (syncer.syncState(walletId) == null) {
+                flow { emit(syncer.fetchHistory(walletId)) }
                     .retryThreeTimes()
                     .firstOrNull() ?: return@launch
             }
@@ -56,10 +56,10 @@ internal class DefaultJointOperationTxHistoryFetcher @AssistedInject constructor
     }
 
     private suspend fun initialPagination() {
-        if (repository.syncState(walletId)?.isInitialCompleted == true) return
+        if (syncer.syncState(walletId)?.isInitialCompleted == true) return
         var hasMore = true
         while (hasMore) {
-            val page = flow { emit(repository.fetchHistory(walletId)) }
+            val page = flow { emit(syncer.fetchHistory(walletId)) }
                 .retryThreeTimes()
                 .firstOrNull() ?: return
             hasMore = page.pagination.hasMore
@@ -69,7 +69,7 @@ internal class DefaultJointOperationTxHistoryFetcher @AssistedInject constructor
     private suspend fun deltaPagination() {
         var hasMore = true
         while (hasMore) {
-            val page = flow { emit(repository.fetchHistoryDelta(walletId)) }
+            val page = flow { emit(syncer.fetchHistoryDelta(walletId)) }
                 .retryThreeTimes()
                 .firstOrNull() ?: return
             hasMore = page.pagination.hasMore
