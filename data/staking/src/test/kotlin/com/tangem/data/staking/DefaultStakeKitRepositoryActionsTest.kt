@@ -13,9 +13,9 @@ import com.tangem.data.staking.StakeKitRepositoryFixtures.tokenDTO
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.datasource.local.token.converter.YieldTokenConverter
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.staking.NetworkType
-import com.tangem.domain.models.staking.YieldToken
-import com.tangem.domain.models.staking.action.StakingActionType
+import com.tangem.domain.staking.model.NetworkType
+import com.tangem.domain.staking.model.YieldToken
+import com.tangem.domain.staking.model.action.StakingActionType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus

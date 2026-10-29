@@ -1,7 +1,7 @@
 package com.tangem.features.staking.impl.presentation.state.transformers.validator
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.models.staking.action.StakingActionType
+import com.tangem.domain.staking.model.action.StakingActionType
 import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.model.StakingTarget

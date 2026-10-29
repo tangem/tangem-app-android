@@ -1,4 +1,4 @@
-package com.tangem.domain.account.status.contribution
+package com.tangem.domain.staking.contribution
 
 import arrow.core.left
 import arrow.core.right
@@ -9,17 +9,18 @@ import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.balance.ContributionResolver
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
-import com.tangem.domain.models.staking.BalanceItem
-import com.tangem.domain.models.staking.BalanceType
-import com.tangem.domain.models.staking.P2PEthPoolExitQueue
-import com.tangem.domain.models.staking.P2PEthPoolExitRequest
-import com.tangem.domain.models.staking.P2PEthPoolStake
-import com.tangem.domain.models.staking.P2PEthPoolStakingAccount
-import com.tangem.domain.models.staking.StakingBalance
-import com.tangem.domain.models.staking.StakingID
-import com.tangem.domain.models.staking.YieldBalanceItem
+import com.tangem.domain.staking.model.BalanceItem
+import com.tangem.domain.staking.model.BalanceType
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolExitQueue
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolExitRequest
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolStake
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingAccount
+import com.tangem.domain.staking.model.StakingBalance
+import com.tangem.domain.staking.model.StakingID
+import com.tangem.domain.staking.model.YieldBalanceItem
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceProducer
 import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier

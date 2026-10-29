@@ -1,8 +1,8 @@
 package com.tangem.datasource.local.token.converter
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.models.staking.PendingAction
-import com.tangem.domain.models.staking.action.StakingActionType
+import com.tangem.domain.staking.model.PendingAction
+import com.tangem.domain.staking.model.action.StakingActionType
 import com.tangem.grow.datasource.stakekit.models.response.model.BalanceDTO
 import com.tangem.grow.datasource.stakekit.models.response.model.action.StakingActionTypeDTO
 import org.junit.jupiter.api.Test

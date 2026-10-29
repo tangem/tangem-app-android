@@ -13,11 +13,11 @@ import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.fixtures.currencyStatus
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.staking.MockStaking
-import com.tangem.domain.models.staking.BalanceType
-import com.tangem.domain.models.staking.PendingAction
-import com.tangem.domain.models.staking.PendingActionConstraints
-import com.tangem.domain.models.staking.RewardBlockType
-import com.tangem.domain.models.staking.action.StakingActionType
+import com.tangem.domain.staking.model.BalanceType
+import com.tangem.domain.staking.model.PendingAction
+import com.tangem.domain.staking.model.PendingActionConstraints
+import com.tangem.domain.staking.model.RewardBlockType
+import com.tangem.domain.staking.model.action.StakingActionType
 import com.tangem.domain.staking.analytics.StakeScreenSource
 import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
 import com.tangem.domain.staking.model.StakingTarget

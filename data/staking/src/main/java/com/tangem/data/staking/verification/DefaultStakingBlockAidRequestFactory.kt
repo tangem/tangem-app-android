@@ -8,7 +8,7 @@ import com.tangem.blockchain.extensions.decodeBase58
 import com.tangem.blockchain.extensions.encodeBase64NoWrap
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.data.staking.verification.model.EvmStakingTx
-import com.tangem.domain.models.staking.NetworkType
+import com.tangem.domain.staking.model.NetworkType
 import com.tangem.domain.staking.verification.StakingBlockAidRequestFactory
 
 internal class DefaultStakingBlockAidRequestFactory : StakingBlockAidRequestFactory {

@@ -5,7 +5,7 @@ import com.tangem.grow.datasource.ethpool.models.response.P2PEthPoolAccountRespo
 import com.tangem.grow.datasource.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.local.token.converter.StakingBalanceConverter
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.staking.StakingBalance
+import com.tangem.domain.staking.model.StakingBalance
 
 internal fun YieldBalanceWrapperDTO.toDomain(source: StatusSource = StatusSource.CACHE): StakingBalance {
     return StakingBalanceConverter(isCached = source == StatusSource.CACHE).convert(this)!!
