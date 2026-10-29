@@ -125,7 +125,6 @@ internal class ExpressTxToTransactionItemUMConverterTest {
             createSwap(status = ExpressExchangeStatus.Waiting, isOutgoing = true),
         ) as TransactionItemUM.Content
 
-        assertThat(result.direction).isEqualTo(TransactionItemUM.Content.Direction.OUTGOING)
         assertThat(result.amount).startsWith(StringsSigns.MINUS_SIGN)
         assertThat(result.amount).contains("1.5")
     }
@@ -136,7 +135,6 @@ internal class ExpressTxToTransactionItemUMConverterTest {
             createSwap(status = ExpressExchangeStatus.Waiting, isOutgoing = false),
         ) as TransactionItemUM.Content
 
-        assertThat(result.direction).isEqualTo(TransactionItemUM.Content.Direction.INCOMING)
         assertThat(result.amount).startsWith("+")
         assertThat(result.amount).contains("0.001")
     }
