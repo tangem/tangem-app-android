@@ -2,7 +2,8 @@
 <resources>
   <string name="money_account_add_funds_bank_description">은행 계좌에서 ACH/Wire 또는 SPEI로 USD 수취</string>
   <string name="money_account_add_funds_receive_description">Polygon 네트워크의 USDC를 계좌 주소로 전송</string>
-  <string name="money_account_add_funds_swap_description">지갑의 암호화폐로 계좌에 입금</string>
+  <string name="money_account_add_funds_swap_description">지갑의 암호화폐로 USD 계좌에 입금</string>
+  <string name="money_account_close_account">계좌 해지</string>
   <string name="money_account_main_name">USD 계좌</string>
   <string name="money_account_main_status_action_required">조치 필요</string>
   <string name="money_account_main_status_activating">활성화 중…</string>
@@ -35,6 +36,9 @@
   <string name="money_account_onboarding_transfers_card_caption">입금도, 출금도.</string>
   <string name="money_account_onboarding_transfers_card_subtitle">은행 계좌 정보가 포함된 전용 계좌로</string>
   <string name="money_account_onboarding_transfers_card_title">법정화폐 송금 및 수취</string>
+  <string name="money_account_send_fees_footer">수수료에는 %s 서비스 요금과 예상 네트워크 수수료가 포함됩니다</string>
+  <string name="money_account_send_network_fee_note">수수료에는 예상 네트워크 수수료 %s가 포함되며, 네트워크 활동에 따라 달라질 수 있습니다</string>
+  <string name="money_account_send_pay_button">%s 결제</string>
   <string name="tangempay_residency_search_empty">검색 결과가 없습니다. 검색어를 변경해 주세요</string>
   <string name="tangempay_unified_onboarding_cashback_caption">캐시백</string>
   <string name="tangempay_unified_onboarding_cashback_subtitle">USDC로 지급</string>
@@ -44,6 +48,8 @@
   <string name="tangempay_unified_onboarding_fees_caption">보이는 그대로 결제</string>
   <string name="tangempay_unified_onboarding_fees_subtitle">1 USDC = 1 USD</string>
   <string name="tangempay_unified_onboarding_fees_title">구매 수수료 없음. %1$s</string>
+  <string name="tangempay_unified_onboarding_interest_caption">이자</string>
+  <string name="tangempay_unified_onboarding_interest_title">보유만 해도 최대 연 4% 수익</string>
   <string name="tangempay_unified_onboarding_legal">개설 가능한 상품은 거주 지역에 따라 다릅니다. 인증 직후 확인해 드립니다</string>
   <string name="tangempay_unified_onboarding_money_account_caption">아주 편리하게</string>
   <string name="tangempay_unified_onboarding_money_account_header">USD 계좌</string>
@@ -52,6 +58,8 @@
   <string name="tangempay_unified_onboarding_payment_account_caption">원하는 방식으로 결제</string>
   <string name="tangempay_unified_onboarding_payment_account_header">Visa 카드</string>
   <string name="tangempay_unified_onboarding_payment_account_title">온라인 또는 %1$s</string>
+  <string name="tangempay_unified_onboarding_payments_caption">결제</string>
+  <string name="tangempay_unified_onboarding_payments_title">일상에 필요한 ACH 및 전신 송금</string>
   <string name="tangempay_unified_onboarding_plan_caption">하나의 플랜</string>
   <string name="tangempay_unified_onboarding_plan_subtitle">Basic은 무료입니다.</string>
   <string name="tangempay_unified_onboarding_plan_title">%1$s Plus는 두 가지 모두에 훨씬 더 많은 혜택까지</string>
@@ -78,6 +86,6 @@
   <string name="virtual_account_requisites_beneficiary_name">수취인 이름</string>
   <string name="virtual_account_requisites_clabe">CLABE</string>
   <string name="virtual_account_requisites_reference">참조 번호</string>
-  <string name="virtual_account_requisites_routing_number">Routing number</string>
+  <string name="virtual_account_requisites_routing_number">라우팅 번호</string>
   <string name="virtual_account_title">USD 계좌</string>
 </resources>
