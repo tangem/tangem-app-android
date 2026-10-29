@@ -27,6 +27,14 @@ internal interface OnrampDeeplinkModule {
     @Singleton
     fun bindSellDeepLinkHandler(impl: DefaultSellDeepLinkHandler.Factory): SellDeepLinkHandler.Factory
 
+    @Binds
+    @Singleton
+    fun bindConciergeWaitlistTrigger(impl: DefaultConciergeWaitlistTrigger): ConciergeWaitlistTrigger
+
+    @Binds
+    @Singleton
+    fun bindConciergeWaitlistListener(impl: DefaultConciergeWaitlistTrigger): ConciergeWaitlistListener
+
     companion object {
 
         // Temporary bridge to the legacy factory: once the legacy routing is removed, the handler itself must be
