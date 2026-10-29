@@ -43,9 +43,7 @@ fun TangemTooltip(
         enabled = enabled,
         tooltipContent = {
             Text(
-                modifier = Modifier
-                    .background(TangemTheme.colors3.icon.secondary)
-                    .padding(horizontal = 6.dp, vertical = 8.dp),
+                modifier = Modifier.padding(horizontal = 6.dp, vertical = 8.dp),
                 text = text.resolveAnnotatedReference(),
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors3.text.inverse.primary,
@@ -82,7 +80,7 @@ private fun InternalTangemTooltip(
                 caretShape = TooltipDefaults.caretShape(),
                 maxWidth = windowSize - 24.dp,
                 contentColor = TangemTheme.colors3.text.inverse.primary,
-                containerColor = TangemTheme.colors3.icon.secondary,
+                containerColor = TangemTheme.colors3.bg.inverse,
                 content = { tooltipContent() },
             )
         },
