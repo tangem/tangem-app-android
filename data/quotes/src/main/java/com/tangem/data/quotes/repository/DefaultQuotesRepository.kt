@@ -1,20 +1,27 @@
 package com.tangem.data.quotes.repository
 
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toCoinId
+import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.utils.logging.TangemLogger
+import java.math.BigDecimal
+import java.math.MathContext
 
 /**
  * Default implementation of [QuotesRepository]
  *
  * @property quotesStatusesStore quotes statuses store
+ * @property quotesFetcher       quotes fetcher
  *
 [REDACTED_AUTHOR]
  */
 internal class DefaultQuotesRepository(
     private val quotesStatusesStore: QuotesStatusesStore,
+    private val quotesFetcher: QuotesFetcher,
 ) : QuotesRepository {
 
     override suspend fun getMultiQuoteSyncOrNull(currenciesIds: Set<CryptoCurrency.RawID>): Set<QuoteStatus> {
@@ -34,5 +41,32 @@ internal class DefaultQuotesRepository(
 
     override suspend fun getCurrencyUSDQuote(currencyId: CryptoCurrency.RawID): QuoteStatus? {
         return getMultiQuoteSyncOrNull(currenciesIds = setOf(currencyId)).firstOrNull()
+    }
+
+    /**
+     * The quotes API has no fiat-to-fiat rate, so it is derived from a coin priced in both currencies:
+     * (coin price in USD) / (coin price in [fiatCurrencyCode]). Any coin gives the same ratio; Bitcoin is used
+     * because it is the most widely quoted one.
+     */
+    override suspend fun getFiatUSDRate(fiatCurrencyCode: String): BigDecimal? {
+        val quote = quotesFetcher.fetch(
+            fiatCurrencyId = fiatCurrencyCode.lowercase(),
+            currenciesIds = setOf(pivotCoinId),
+            fields = setOf(QuotesFetcher.Field.PRICE, QuotesFetcher.Field.PRICE_USD),
+        )
+            .onLeft { TangemLogger.e("Unable to fetch $fiatCurrencyCode to USD rate: $it") }
+            .getOrNull()
+            ?.quotes
+            ?.get(pivotCoinId)
+            ?: return null
+
+        val price = quote.price?.takeIf { it.signum() > 0 } ?: return null
+        val priceUsd = quote.priceUsd ?: return null
+
+        return priceUsd.divide(price, MathContext.DECIMAL64)
+    }
+
+    private companion object {
+        val pivotCoinId = Blockchain.Bitcoin.toCoinId()
     }
 }
