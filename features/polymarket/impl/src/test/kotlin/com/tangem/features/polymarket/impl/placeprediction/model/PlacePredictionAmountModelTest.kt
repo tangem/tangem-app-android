@@ -1172,6 +1172,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             assertThat(model.uiState.value.amountValue).isEqualTo("50")
             coVerify(exactly = 1) {
                 getQuoteUseCase(
+                    any(),
                     request = PredictionOrderQuoteRequest(
                         marketId = MARKET_ID,
                         assetId = ASSET_ID,
@@ -1189,7 +1190,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a priced quote with steep fees WHEN Max is tapped twice THEN the fees still fit into the balance`() =
             runTest {
                 // Arrange
-                coEvery { getQuoteUseCase(request = any()) } returns createQuote().copy(
+                coEvery { getQuoteUseCase(any(), request = any()) } returns createQuote().copy(
                     fees = PredictionOrderFees(market = BigDecimal("2"), builder = BigDecimal.ZERO, total = BigDecimal("2")),
                 ).right()
                 val model = createAmountModel(testScope = this)
@@ -1245,7 +1246,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
 
             // Assert
             assertThat(model.uiState.value.amountValue).isEmpty()
-            coVerify(exactly = 0) { getQuoteUseCase(request = any()) }
+            coVerify(exactly = 0) { getQuoteUseCase(any(), request = any()) }
 
             model.onDestroy()
         }
