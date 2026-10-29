@@ -448,6 +448,14 @@ subprojects {
     // already resolved by the root `plugins {}` block keeps it in the same classloader as AGP/Kotlin.
     apply(plugin = "com.autonomousapps.dependency-analysis")
 
+    configurations.configureEach {
+        resolutionStrategy.force(
+            deps.kotlin.coroutines,
+            deps.kotlin.coroutines.jvm,
+            deps.kotlin.coroutines.android,
+        )
+    }
+
     // App module
     plugins.withId("com.android.application") {
         // AGP registers variant tasks (testGoogleDebugUnitTest, testDebugUnitTest) in its own
