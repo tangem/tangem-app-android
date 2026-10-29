@@ -1,18 +1,19 @@
-package com.tangem.domain.analytics
+package com.tangem.domain.wallets.usecase
 
 import arrow.core.Either
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
-import com.tangem.domain.analytics.model.WalletBalanceState
-import com.tangem.domain.analytics.repository.AnalyticsRepository
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.models.WalletBalanceState
+import com.tangem.domain.wallets.repository.WalletBalanceStateRepository
+import javax.inject.Inject
 
 /**
  * Check if wallet has been topped up now.
  * */
-class CheckIsWalletToppedUpUseCase(
-    private val analyticsRepository: AnalyticsRepository,
+class CheckIsWalletToppedUpUseCase @Inject constructor(
+    private val walletBalanceStateRepository: WalletBalanceStateRepository,
 ) {
 
     /**
@@ -43,13 +44,13 @@ class CheckIsWalletToppedUpUseCase(
     }
 
     private suspend fun Raise<Throwable>.getStoredBalanceState(userWalletId: UserWalletId) = catch(
-        block = { analyticsRepository.getWalletBalanceState(userWalletId) },
+        block = { walletBalanceStateRepository.getWalletBalanceState(userWalletId) },
         catch = ::raise,
     )
 
     private suspend fun Raise<Throwable>.setBalanceState(userWalletId: UserWalletId, balanceState: WalletBalanceState) {
         catch(
-            block = { analyticsRepository.setWalletBalanceState(userWalletId, balanceState) },
+            block = { walletBalanceStateRepository.setWalletBalanceState(userWalletId, balanceState) },
             catch = ::raise,
         )
     }
