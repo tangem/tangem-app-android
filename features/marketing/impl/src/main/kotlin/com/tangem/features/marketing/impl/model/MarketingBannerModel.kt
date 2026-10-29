@@ -19,7 +19,9 @@ import com.tangem.features.marketing.impl.ui.state.MarketingBannerListUM
 import com.tangem.features.marketing.impl.ui.state.MarketingBannerUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -47,8 +49,11 @@ internal class MarketingBannerModel @Inject constructor(
     private val params = paramsContainer.require<MarketingBannerComponent.Params>()
     private val dismissedIds = MutableStateFlow<Set<Int>>(emptySet())
 
-    /** Only successful rates are kept, so a failed currency is retried on its next amount change. */
-    private val fiatUsdRates = mutableMapOf<String, BigDecimal>()
+    /**
+     * One lookup per currency, run in [modelScope] so a new amount awaits it instead of restarting it. A failed
+     * lookup is dropped, so that currency is retried on its next amount change.
+     */
+    private val fiatUsdRateLookups = mutableMapOf<String, Deferred<BigDecimal?>>()
 
     val uiState: StateFlow<MarketingBannerListUM>
         field = MutableStateFlow<MarketingBannerListUM>(MarketingBannerListUM.Hidden)
@@ -88,6 +93,7 @@ internal class MarketingBannerModel @Inject constructor(
             .distinctUntilChanged()
             .debounce(REQUEST_DEBOUNCE_MS)
             .mapLatest { screen -> if (screen != null) fetch(screen) else emptyList() }
+            .map { list -> list.filter(::matchesUiType) }
 
         val amount: Flow<MarketingBannerAmount?> = requestFlow.map { it?.amount }.distinctUntilChanged()
 
@@ -102,7 +108,6 @@ internal class MarketingBannerModel @Inject constructor(
             combine(amountMatchingCampaigns, dismissedIds) { list, dismissed ->
                 list.asSequence()
                     .filterNot { it.id in dismissed }
-                    .filter { matchesUiType(it) }
                     .map { it.toUM() }
                     .toList()
             }.collect { banners ->
@@ -117,12 +122,13 @@ internal class MarketingBannerModel @Inject constructor(
 
     private suspend fun toUsd(amount: MarketingBannerAmount): BigDecimal? = when (amount) {
         is MarketingBannerAmount.Usd -> amount.value
-        is MarketingBannerAmount.Fiat -> getCachedFiatUsdRate(amount.currencyCode)?.let(amount.value::multiply)
+        is MarketingBannerAmount.Fiat -> getFiatUsdRate(amount.currencyCode)?.let(amount.value::multiply)
     }
 
-    private suspend fun getCachedFiatUsdRate(currencyCode: String): BigDecimal? {
+    private suspend fun getFiatUsdRate(currencyCode: String): BigDecimal? {
         val code = currencyCode.uppercase()
-        return fiatUsdRates[code] ?: getFiatUSDRate(code)?.also { fiatUsdRates[code] = it }
+        val lookup = fiatUsdRateLookups.getOrPut(code) { modelScope.async { getFiatUSDRate(code) } }
+        return lookup.await().also { rate -> if (rate == null) fiatUsdRateLookups.remove(code, lookup) }
     }
 
     private suspend fun fetch(screen: MarketingScreen): List<MarketingCampaign> =
