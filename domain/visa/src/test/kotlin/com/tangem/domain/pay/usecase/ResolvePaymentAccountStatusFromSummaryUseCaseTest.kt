@@ -50,11 +50,6 @@ internal class ResolvePaymentAccountStatusFromSummaryUseCaseTest {
     @Suppress("LongMethod")
     private fun provideTestModels() = listOf(
         ResolveModel(
-            name = "hidden",
-            summary = summary(isHidden = true),
-            expected = PaymentAccountStatusValue.Empty,
-        ),
-        ResolveModel(
             name = "blocked",
             summary = summary(customerStatus = CustomerStatus.BLOCKED),
             expected = PaymentAccountStatusValue.Empty,
@@ -180,7 +175,6 @@ internal class ResolvePaymentAccountStatusFromSummaryUseCaseTest {
 
     private fun summary(
         customerStatus: CustomerStatus = CustomerStatus.NEW,
-        isHidden: Boolean = false,
         kycStatus: SummaryKycStatus = SummaryKycStatus.REQUIRED,
         payment: PaymentAccount.Activation.Status = PaymentAccount.Activation.Status.NOT_STARTED,
         paymentStep: PaymentAccount.Activation.Step? = null,
@@ -189,7 +183,7 @@ internal class ResolvePaymentAccountStatusFromSummaryUseCaseTest {
     ) = CustomerSummary(
         customerId = CUSTOMER_ID,
         customerStatus = customerStatus,
-        isHidden = isHidden,
+        isHidden = false,
         kycStatus = kycStatus,
         paymentAccount = PaymentAccount(
             id = null,

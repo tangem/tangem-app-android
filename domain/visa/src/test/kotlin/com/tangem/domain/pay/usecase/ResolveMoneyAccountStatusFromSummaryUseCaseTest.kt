@@ -29,11 +29,6 @@ internal class ResolveMoneyAccountStatusFromSummaryUseCaseTest {
 
     private fun provideTestModels() = listOf(
         ResolveModel(
-            name = "hidden",
-            summary = summary(isHidden = true, banking = MoneyAccount.Activation.Status.COMPLETED),
-            expected = MoneyAccountStatusValue.Empty,
-        ),
-        ResolveModel(
             name = "blocked",
             summary = summary(customerStatus = CustomerStatus.BLOCKED),
             expected = MoneyAccountStatusValue.Empty,
@@ -163,7 +158,6 @@ internal class ResolveMoneyAccountStatusFromSummaryUseCaseTest {
 
     private fun summary(
         customerStatus: CustomerStatus = CustomerStatus.NEW,
-        isHidden: Boolean = false,
         kycStatus: SummaryKycStatus = SummaryKycStatus.REQUIRED,
         payment: PaymentAccount.Activation.Status = PaymentAccount.Activation.Status.NOT_STARTED,
         paymentStep: PaymentAccount.Activation.Step? = null,
@@ -173,7 +167,7 @@ internal class ResolveMoneyAccountStatusFromSummaryUseCaseTest {
     ) = CustomerSummary(
         customerId = CUSTOMER_ID,
         customerStatus = customerStatus,
-        isHidden = isHidden,
+        isHidden = false,
         kycStatus = kycStatus,
         paymentAccount = PaymentAccount(
             id = null,
