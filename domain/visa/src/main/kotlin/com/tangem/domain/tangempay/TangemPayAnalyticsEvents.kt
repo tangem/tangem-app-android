@@ -3,6 +3,7 @@ package com.tangem.domain.tangempay
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.pay.model.bankofframp.BankRail
 
 sealed class TangemPayAnalyticsEvents(
@@ -11,9 +12,10 @@ sealed class TangemPayAnalyticsEvents(
     params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = categoryName, event = event, params = params) {
 
-    class ActivationScreenOpened : TangemPayAnalyticsEvents(
+    class ActivationScreenOpened(entryChannel: EntryChannel?) : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa Activation Screen Opened",
+        params = entryParams(entryChannel) + ("first_product_listed" to Product.CARD.value),
     ), AppsFlyerIncludedEvent
 
     class ShortForHwActivationScreenOpened : TangemPayAnalyticsEvents(
@@ -28,16 +30,19 @@ sealed class TangemPayAnalyticsEvents(
     class ViewTermsClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Button - Visa View Terms",
+        params = mapOf("link" to "terms"),
     )
 
-    class GetCardClicked : TangemPayAnalyticsEvents(
+    class GetCardClicked(entryChannel: EntryChannel?) : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Button - Visa Get Card",
+        params = entryParams(entryChannel),
     ), AppsFlyerIncludedEvent
 
     class KycFlowOpened : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa KYC Flow Opened",
+        params = entryParams(entryChannel = null),
     ), AppsFlyerIncludedEvent
 
     class IssuingBannerDisplayed : TangemPayAnalyticsEvents(
@@ -48,11 +53,13 @@ sealed class TangemPayAnalyticsEvents(
     class PermanentBannerShowed : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa Permanent Banner Showed",
+        params = entryParams(EntryChannel.BANNER),
     )
 
     class PermanentButtonShowed : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa Permanent Button Showed",
+        params = entryParams(EntryChannel.DETAILS),
     )
 
     class MainScreenOpened : TangemPayAnalyticsEvents(
@@ -279,11 +286,13 @@ sealed class TangemPayAnalyticsEvents(
     class MainVisaPermanentBannerClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa Permanent Banner Clicked",
+        params = entryParams(EntryChannel.BANNER),
     )
 
     class DetailsVisaPermanentButtonClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa Permanent Button Clicked",
+        params = entryParams(EntryChannel.DETAILS),
     )
 
     class CobrandOnboardingNewHotWallet : TangemPayAnalyticsEvents(
@@ -387,9 +396,13 @@ sealed class TangemPayAnalyticsEvents(
         private const val CATEGORY = "Visa Tiers"
         private val PAYMENT_ACCOUNT_SOURCE = mapOf("source" to "payment_account")
 
-        class TierSelectionScreenShowed : TangemPayAnalyticsEvents(
+        class TierSelectionScreenShowed(products: ProductSet?) : TangemPayAnalyticsEvents(
             categoryName = CATEGORY,
             event = "Tier Selection Screen Showed",
+            params = buildMap {
+                products?.let { put("products", it.value) }
+                put("consent_line_shown", "no")
+            },
         )
 
         class TiersSwiped : TangemPayAnalyticsEvents(
@@ -412,10 +425,18 @@ sealed class TangemPayAnalyticsEvents(
             event = "Plans Comparison Popup Closed",
         )
 
-        data class PlanSelectedClick(val tierId: String) : TangemPayAnalyticsEvents(
+        data class PlanSelectedClick(
+            val tierId: String,
+            val products: ProductSet?,
+            val context: PlanContext,
+        ) : TangemPayAnalyticsEvents(
             categoryName = CATEGORY,
             event = "Plan Selected Click",
-            params = mapOf("Plan" to tierId),
+            params = buildMap {
+                put("Plan", tierId)
+                products?.let { put("products", it.value) }
+                put("context", context.value)
+            },
         )
 
         class TopUpBannerForPlusShowed : TangemPayAnalyticsEvents(
@@ -426,6 +447,7 @@ sealed class TangemPayAnalyticsEvents(
         class CancelPlusMoveToBasicClicked : TangemPayAnalyticsEvents(
             categoryName = CATEGORY,
             event = "Cancel Plus Move To Basic Clicked",
+            params = mapOf("stage" to "before_deposit"),
         )
 
         class CurrentPlanClicked : TangemPayAnalyticsEvents(
@@ -475,6 +497,11 @@ sealed class TangemPayAnalyticsEvents(
             categoryName = CATEGORY,
             event = "Stay On Plus Popup Clicked",
         )
+
+        enum class PlanContext(val value: String) {
+            ONBOARDING("onboarding"),
+            CHANGE_PLAN("change_plan"),
+        }
     }
 
     object Plastic {
@@ -692,14 +719,16 @@ sealed class TangemPayAnalyticsEvents(
         )
 
         data class EligibilityCheckResult(
-            val isEligible: Boolean,
+            val availableProducts: Set<TangemPayProduct>,
             val country: String,
             val state: String?,
         ) : TangemPayAnalyticsEvents(
             categoryName = CATEGORY,
             event = "VA Eligibility Check Result",
             params = buildMap {
-                put("result", if (isEligible) "eligible" else "not_eligible")
+                put("result", if (availableProducts.isNotEmpty()) "eligible" else "not_eligible")
+                put("card_eligible", (TangemPayProduct.PAYMENT_ACCOUNT in availableProducts).toLowercaseYesNo())
+                put("account_eligible", (TangemPayProduct.BANKING_ACCOUNT in availableProducts).toLowercaseYesNo())
                 put("country", country)
                 if (state != null) put("state", state)
             },
@@ -964,8 +993,41 @@ sealed class TangemPayAnalyticsEvents(
         CARD("card"),
         ACCOUNT("account"),
     }
+
+    enum class ProductSet(val value: String) {
+        CARD_AND_ACCOUNT("card+account"),
+        CARD("card"),
+        ACCOUNT("account"),
+        ;
+
+        companion object {
+            fun of(products: Set<TangemPayProduct>): ProductSet? {
+                val hasCard = TangemPayProduct.PAYMENT_ACCOUNT in products
+                val hasAccount = TangemPayProduct.BANKING_ACCOUNT in products
+                return when {
+                    hasCard && hasAccount -> CARD_AND_ACCOUNT
+                    hasCard -> CARD
+                    hasAccount -> ACCOUNT
+                    else -> null
+                }
+            }
+        }
+    }
+
+    enum class EntryChannel(val value: String) {
+        BANNER("banner"),
+        DETAILS("details"),
+        DEEPLINK("deeplink"),
+    }
 }
 
 private const val MISSING_WIRE_TYPE = "missing"
 
 private fun Boolean.toYesNo(): String = if (this) "Yes" else "No"
+
+private fun Boolean.toLowercaseYesNo(): String = if (this) "yes" else "no"
+
+private fun entryParams(entryChannel: TangemPayAnalyticsEvents.EntryChannel?): Map<String, String> = buildMap {
+    put("entry_intent", "generic")
+    entryChannel?.let { put("entry_channel", it.value) }
+}
