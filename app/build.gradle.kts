@@ -476,10 +476,7 @@ dependencies {
     implementation(deps.coil)
     implementation(deps.coil.gif)
     implementation(deps.coil.svg)
-    implementation(deps.appsflyer)
-    implementation(deps.appsflyer.oaid)
     implementation(deps.customerio.messaging)
-    runtimeOnly("com.android.installreferrer:installreferrer:2.2")
     runtimeOnly(deps.spongecastle.core)
     // Credential Manager resolves its providers at runtime, so this belongs to the app rather than to
     // whichever feature happens to use credentials
