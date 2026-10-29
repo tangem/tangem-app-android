@@ -1,7 +1,6 @@
 package com.tangem.features.txhistory.converter
 
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
-import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Direction as RowDirection
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
@@ -16,7 +15,6 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
 import com.tangem.core.ui.res.generated.icons.ic_card_20
-import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.express.models.ExpressExchangeStatus
 import com.tangem.domain.express.models.ExpressOnrampStatus
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -73,7 +71,6 @@ internal class ExpressTxToTransactionItemUMConverter(
             tx = swap,
             status = status,
             amount = formatAmount(viewedAmount, prefix),
-            direction = if (swap.isOutgoing) RowDirection.OUTGOING else RowDirection.INCOMING,
             icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
             title = swapTitle(status),
             subtitle = ContentSubtitle.Asset(
@@ -134,7 +131,6 @@ internal class ExpressTxToTransactionItemUMConverter(
             tx = onramp,
             status = status,
             amount = formatAmount(onramp.tx.toAsset.amount, prefix),
-            direction = RowDirection.INCOMING,
             icon = TxIcon.Vector(Icons.ic_card_20),
             title = onrampTitle(status),
             subtitle = ContentSubtitle.Asset(
@@ -154,7 +150,6 @@ internal class ExpressTxToTransactionItemUMConverter(
         tx: ExpressTx,
         status: Status,
         amount: String?,
-        direction: RowDirection,
         icon: TxIcon,
         title: TextReference,
         subtitle: ContentSubtitle,
@@ -165,14 +160,11 @@ internal class ExpressTxToTransactionItemUMConverter(
             txHash = tx.explorerHash ?: tx.txId,
             amount = amount,
             currencySymbol = currency.symbol,
-            time = tx.timestampMillis.toTimeFormat(),
             status = status,
-            direction = direction,
             onClick = { txHistoryUiActions.onTransactionClick(tx) },
             icon = icon,
             title = title,
             subtitle = subtitle,
-            timestamp = tx.timestampMillis,
             warning = warning,
         )
     }

@@ -20,7 +20,6 @@ import com.tangem.core.ui.res.generated.icons.ic_document_20
 import com.tangem.core.ui.res.generated.icons.ic_percent_20
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.addressbook.model.Contact
 import com.tangem.domain.addressbook.model.portfolioIcon
 import com.tangem.domain.models.account.CryptoPortfolioIcon
@@ -398,13 +397,10 @@ internal class TxHistoryItemToTransactionItemUMConverter(
         txHash = tx.txHash,
         amount = tx.formatContentAmount(currency),
         currencySymbol = currency.symbol,
-        time = tx.timestampInMillis.toTimeFormat(),
         status = uiStatus,
-        direction = tx.extractDirection(),
         icon = icon,
         title = title,
         subtitle = subtitle,
-        timestamp = tx.timestampInMillis,
         onClick = { txHistoryUiActions.openTxInExplorer(tx.txHash) },
     )
 }
@@ -590,11 +586,5 @@ private fun TxInfo.directionalAddressRes(): Int = if (isOutgoing) {
 
 private fun TxInfo.directionalIcon(): TxIcon =
     TxIcon.Vector(if (isOutgoing) Icons.ic_arrow_up_20 else Icons.ic_arrow_down_20)
-
-private fun TxInfo.extractDirection(): TransactionItemUM.Content.Direction = if (isOutgoing) {
-    TransactionItemUM.Content.Direction.OUTGOING
-} else {
-    TransactionItemUM.Content.Direction.INCOMING
-}
 
 // endregion

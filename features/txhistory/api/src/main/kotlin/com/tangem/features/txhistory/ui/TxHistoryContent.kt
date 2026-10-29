@@ -50,7 +50,7 @@ fun LazyListScope.txHistoryItems(listState: LazyListState, state: TxHistoryItems
         is TxHistoryItemsUM.Content -> contentItems(listState, state)
         is TxHistoryItemsUM.Empty -> emptyItem(state)
         is TxHistoryItemsUM.Error -> errorItem(state)
-        is TxHistoryItemsUM.Loading -> loadingItems(state)
+        is TxHistoryItemsUM.Loading -> loadingItems()
         is TxHistoryItemsUM.NotSupported -> notSupportedItem(state)
     }
 }
@@ -123,9 +123,9 @@ private fun LazyListScope.errorItem(state: TxHistoryItemsUM.Error) {
     }
 }
 
-private fun LazyListScope.loadingItems(state: TxHistoryItemsUM.Loading) {
+private fun LazyListScope.loadingItems() {
     item(key = "tx_history_loading", contentType = "tx_history_loading") {
-        TxHistoryLoadingBlock(state = state)
+        TxHistoryLoadingBlock()
     }
 }
 
@@ -172,11 +172,11 @@ private fun TxHistoryErrorBlock(state: TxHistoryItemsUM.Error, modifier: Modifie
 }
 
 @Composable
-private fun TxHistoryLoadingBlock(state: TxHistoryItemsUM.Loading, modifier: Modifier = Modifier) {
-    val lastIndex = state.items.lastIndex
+private fun TxHistoryLoadingBlock(modifier: Modifier = Modifier) {
+    val lastIndex = TxHistoryItemsUM.Loading.SHIMMER_ROW_COUNT - 1
     Column(modifier = modifier.fillMaxWidth()) {
         TxHistoryLoadingDateHeader()
-        state.items.forEachIndexed { index, _ ->
+        repeat(TxHistoryItemsUM.Loading.SHIMMER_ROW_COUNT) { index ->
             val fraction = if (lastIndex <= 0) 0f else index.toFloat() / lastIndex
             val alpha = lerp(start = 1f, stop = LOADING_TRANSACTION_MIN_ALPHA, fraction = fraction)
             TxHistoryLoadingTransaction(modifier = Modifier.alpha(alpha))
@@ -258,12 +258,7 @@ private fun TxHistoryNotSupportedBlock(state: TxHistoryItemsUM.NotSupported, mod
 @Composable
 private fun TxHistoryLoadingBlock_Preview() {
     TangemThemePreviewRedesign {
-        TxHistoryLoadingBlock(
-            state = TxHistoryItemsUM.Loading(
-                isBalanceHidden = false,
-                onExploreClick = {},
-            ),
-        )
+        TxHistoryLoadingBlock()
     }
 }
 // endregion Preview

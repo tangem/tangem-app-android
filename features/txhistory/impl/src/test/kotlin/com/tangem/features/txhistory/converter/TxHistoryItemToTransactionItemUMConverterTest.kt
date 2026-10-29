@@ -481,7 +481,6 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
         assertThat(result.title).isEqualTo(resRef(R.string.common_sent))
-        assertThat(result.direction).isEqualTo(TransactionItemUM.Content.Direction.OUTGOING)
         assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_up_20))
         val subtitle = result.subtitle as ContentSubtitle.ExternalAddress
         assertThat(subtitle.direction).isEqualTo(ContentSubtitle.Direction.TO)
@@ -527,7 +526,6 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
         assertThat(result.title).isEqualTo(resRef(R.string.common_received))
-        assertThat(result.direction).isEqualTo(TransactionItemUM.Content.Direction.INCOMING)
         assertThat(result.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_down_20))
         val subtitle = result.subtitle as ContentSubtitle.ExternalAddress
         assertThat(subtitle.direction).isEqualTo(ContentSubtitle.Direction.FROM)
@@ -969,7 +967,6 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
             amount = null,
             currencySymbol = null,
             subtitle = null,
-            timestamp = TIMESTAMP,
             onClick = result.onClick,
             isSuccess = true,
         )
@@ -1408,7 +1405,7 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
-    fun `GIVEN tx WHEN convert THEN txHash and timestamp propagated`() {
+    fun `GIVEN tx WHEN convert THEN txHash propagated`() {
         val tx = txInfo(
             type = TransactionType.Operation(name = "Mint"),
             interactionAddressType = TxInfo.InteractionAddressType.Contract(USER_ADDRESS),
@@ -1417,7 +1414,6 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         val result = coinConverter.convert(tx) as TransactionItemUM.Content
 
         assertThat(result.txHash).isEqualTo(TX_HASH)
-        assertThat(result.timestamp).isEqualTo(TIMESTAMP)
     }
 
     // endregion

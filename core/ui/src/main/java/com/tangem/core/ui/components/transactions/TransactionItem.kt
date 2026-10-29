@@ -46,7 +46,6 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
-import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Direction
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.ContentSubtitle
 import com.tangem.core.ui.components.transactions.state.TxIcon
@@ -87,9 +86,6 @@ fun TransactionItem(state: TransactionItemUM, isBalanceHidden: Boolean, modifier
             isBalanceHidden = isBalanceHidden,
             modifier = modifier,
         )
-        is TransactionItemUM.Loading,
-        is TransactionItemUM.Locked,
-        -> Unit
     }
 }
 
@@ -783,7 +779,6 @@ private fun String.stripLeadingSign(): String = when {
 private fun previewContent(
     txHash: String,
     icon: TxIcon,
-    direction: Direction,
     status: Status,
     title: String,
     subtitle: String,
@@ -793,14 +788,11 @@ private fun previewContent(
     txHash = txHash,
     amount = amount,
     currencySymbol = currencySymbol,
-    time = "",
     status = status,
-    direction = direction,
     onClick = {},
     icon = icon,
     title = stringReference(title),
     subtitle = ContentSubtitle.Plain(stringReference(subtitle)),
-    timestamp = 0L,
 )
 
 @Composable
@@ -825,7 +817,6 @@ private fun Preview_TransactionItem_Receive() {
                 previewContent(
                     txHash = "rcv-c",
                     icon = TxIcon.Vector(Icons.ic_arrow_down_20),
-                    direction = Direction.INCOMING,
                     status = Status.Confirmed,
                     title = "Received",
                     subtitle = "from: 33BdfS...ga2B",
@@ -834,7 +825,6 @@ private fun Preview_TransactionItem_Receive() {
                 previewContent(
                     txHash = "rcv-u",
                     icon = TxIcon.Vector(Icons.ic_arrow_down_20),
-                    direction = Direction.INCOMING,
                     status = Status.Unconfirmed,
                     title = "Receiving",
                     subtitle = "from: 33BdfS...ga2B",
@@ -843,7 +833,6 @@ private fun Preview_TransactionItem_Receive() {
                 previewContent(
                     txHash = "rcv-f",
                     icon = TxIcon.Vector(Icons.ic_cross_20),
-                    direction = Direction.INCOMING,
                     status = Status.Failed,
                     title = "Receiving failed",
                     subtitle = "from: 33BdfS...ga2B",
@@ -864,7 +853,6 @@ private fun Preview_TransactionItem_Send() {
                 previewContent(
                     txHash = "snd-c",
                     icon = TxIcon.Vector(Icons.ic_arrow_up_20),
-                    direction = Direction.OUTGOING,
                     status = Status.Confirmed,
                     title = "Sent",
                     subtitle = "to: 33BdfS...ga2B",
@@ -873,7 +861,6 @@ private fun Preview_TransactionItem_Send() {
                 previewContent(
                     txHash = "snd-u",
                     icon = TxIcon.Vector(Icons.ic_arrow_up_20),
-                    direction = Direction.OUTGOING,
                     status = Status.Unconfirmed,
                     title = "Sending",
                     subtitle = "to: 33BdfS...ga2B",
@@ -882,7 +869,6 @@ private fun Preview_TransactionItem_Send() {
                 previewContent(
                     txHash = "snd-f",
                     icon = TxIcon.Vector(Icons.ic_cross_20),
-                    direction = Direction.OUTGOING,
                     status = Status.Failed,
                     title = "Sending failed",
                     subtitle = "to: 33BdfS...ga2B",
@@ -905,9 +891,7 @@ private fun Preview_TransactionItem_Send_Contact() {
                     txHash = "snd-contact",
                     amount = "-350.31",
                     currencySymbol = "USDT",
-                    time = "",
                     status = Status.Confirmed,
-                    direction = Direction.OUTGOING,
                     onClick = {},
                     icon = TxIcon.Vector(Icons.ic_arrow_up_20),
                     title = stringReference("Sent"),
@@ -919,15 +903,12 @@ private fun Preview_TransactionItem_Send_Contact() {
                             color = Color(0xFF007FFF),
                         ),
                     ),
-                    timestamp = 0L,
                 ),
                 TransactionItemUM.Content(
                     txHash = "snd-contact-icon",
                     amount = "-350.31",
                     currencySymbol = "USDT",
-                    time = "",
                     status = Status.Failed,
-                    direction = Direction.OUTGOING,
                     onClick = {},
                     icon = TxIcon.Vector(Icons.ic_cross_20),
                     title = stringReference("Sending failed"),
@@ -939,7 +920,6 @@ private fun Preview_TransactionItem_Send_Contact() {
                             color = Color(0xFF32CB77),
                         ),
                     ),
-                    timestamp = 0L,
                 ),
             ),
         )
@@ -956,7 +936,6 @@ private fun Preview_TransactionItem_PendingSignature() {
                 previewContent(
                     txHash = "snd-pending",
                     icon = TxIcon.Vector(Icons.ic_arrow_up_20),
-                    direction = Direction.OUTGOING,
                     status = Status.PendingSignature,
                     title = "Send",
                     subtitle = "to: 33BdfS...ga2B",
@@ -979,9 +958,7 @@ private fun Preview_TransactionItem_YieldWithdraw() {
                     txHash = "wd-u",
                     amount = "+350.31",
                     currencySymbol = "USDT",
-                    time = "",
                     status = Status.Unconfirmed,
-                    direction = Direction.INCOMING,
                     onClick = {},
                     icon = TxIcon.Vector(Icons.ic_arrow_down_20),
                     title = stringReference("Withdrawing"),
@@ -990,15 +967,12 @@ private fun Preview_TransactionItem_YieldWithdraw() {
                         name = stringReference("Aave"),
                         iconResId = R.drawable.img_aave_22,
                     ),
-                    timestamp = 0L,
                 ),
                 TransactionItemUM.Content(
                     txHash = "wd-c",
                     amount = "+350.31",
                     currencySymbol = "USDT",
-                    time = "",
                     status = Status.Confirmed,
-                    direction = Direction.INCOMING,
                     onClick = {},
                     icon = TxIcon.Vector(Icons.ic_arrow_down_20),
                     title = stringReference("Withdrawn"),
@@ -1007,7 +981,6 @@ private fun Preview_TransactionItem_YieldWithdraw() {
                         name = stringReference("Aave"),
                         iconResId = R.drawable.img_aave_22,
                     ),
-                    timestamp = 0L,
                 ),
             ),
         )
@@ -1024,7 +997,6 @@ private fun Preview_TransactionItem_Swap() {
                 previewContent(
                     txHash = "swp-c",
                     icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
-                    direction = Direction.INCOMING,
                     status = Status.Confirmed,
                     title = "Swapped",
                     subtitle = "to: POL",
@@ -1033,7 +1005,6 @@ private fun Preview_TransactionItem_Swap() {
                 previewContent(
                     txHash = "swp-u",
                     icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
-                    direction = Direction.INCOMING,
                     status = Status.Unconfirmed,
                     title = "Swapping",
                     subtitle = "to: POL",
@@ -1042,7 +1013,6 @@ private fun Preview_TransactionItem_Swap() {
                 previewContent(
                     txHash = "swp-f",
                     icon = TxIcon.Vector(Icons.ic_cross_20),
-                    direction = Direction.INCOMING,
                     status = Status.Failed,
                     title = "Swapping failed",
                     subtitle = "to: POL",
@@ -1064,9 +1034,7 @@ private fun Preview_TransactionItem_Express() {
                     txHash = "exp-swap-u",
                     amount = "-390.00",
                     currencySymbol = "USDT",
-                    time = "",
                     status = Status.Unconfirmed,
-                    direction = Direction.OUTGOING,
                     onClick = {},
                     icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
                     title = stringReference("Swapping"),
@@ -1080,16 +1048,13 @@ private fun Preview_TransactionItem_Express() {
                             shouldShowCustomBadge = false,
                         ),
                     ),
-                    timestamp = 0L,
                     warning = stringReference("KYC verification required by provider"),
                 ),
                 TransactionItemUM.Content(
                     txHash = "exp-onramp-c",
                     amount = "+0.006339",
                     currencySymbol = "BTC",
-                    time = "",
                     status = Status.Confirmed,
-                    direction = Direction.INCOMING,
                     onClick = {},
                     icon = TxIcon.Vector(Icons.ic_card_20),
                     title = stringReference("Topped up"),
@@ -1098,15 +1063,12 @@ private fun Preview_TransactionItem_Express() {
                         symbol = "SEK",
                         icon = null,
                     ),
-                    timestamp = 0L,
                 ),
                 TransactionItemUM.Content(
                     txHash = "exp-onramp-f",
                     amount = "0.006339",
                     currencySymbol = "BTC",
-                    time = "",
                     status = Status.Failed,
-                    direction = Direction.INCOMING,
                     onClick = {},
                     icon = TxIcon.Vector(Icons.ic_card_20),
                     title = stringReference("Top up failed"),
@@ -1115,7 +1077,6 @@ private fun Preview_TransactionItem_Express() {
                         symbol = "SEK",
                         icon = null,
                     ),
-                    timestamp = 0L,
                 ),
             ),
         )
@@ -1140,9 +1101,7 @@ private fun Preview_TransactionItem_Express_Owner() {
                     txHash = "exp-swap-account",
                     amount = "-390.00",
                     currencySymbol = "USDT",
-                    time = "",
                     status = Status.Confirmed,
-                    direction = Direction.OUTGOING,
                     onClick = {},
                     icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
                     title = stringReference("Swapped"),
@@ -1158,16 +1117,13 @@ private fun Preview_TransactionItem_Express_Owner() {
                             ),
                         ),
                     ),
-                    timestamp = 0L,
                 ),
                 // Cross-wallet swap: "from: {token} ETH in My Wallet {deviceIcon}".
                 TransactionItemUM.Content(
                     txHash = "exp-swap-wallet",
                     amount = "+0.006339",
                     currencySymbol = "BTC",
-                    time = "",
                     status = Status.Confirmed,
-                    direction = Direction.INCOMING,
                     onClick = {},
                     icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
                     title = stringReference("Swapped"),
@@ -1180,7 +1136,6 @@ private fun Preview_TransactionItem_Express_Owner() {
                             deviceIconUM = DeviceIconUM.Card(mainColor = Color(0xFF1E1E1E), secondColor = null),
                         ),
                     ),
-                    timestamp = 0L,
                 ),
             ),
         )
@@ -1205,9 +1160,7 @@ private fun Preview_TransactionItem_Express_Foreign_Owner() {
                     txHash = "exp-swap-contact",
                     amount = "-390.00",
                     currencySymbol = "USDT",
-                    time = "",
                     status = Status.Confirmed,
-                    direction = Direction.OUTGOING,
                     onClick = {},
                     icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
                     title = stringReference("Swapped"),
@@ -1223,16 +1176,13 @@ private fun Preview_TransactionItem_Express_Foreign_Owner() {
                             ),
                         ),
                     ),
-                    timestamp = 0L,
                 ),
                 // Swap received from an address in no address book: "from: {token} ETH from {identicon} 33Bd…21412B".
                 TransactionItemUM.Content(
                     txHash = "exp-swap-address",
                     amount = "+0.006339",
                     currencySymbol = "BTC",
-                    time = "",
                     status = Status.Confirmed,
-                    direction = Direction.INCOMING,
                     onClick = {},
                     icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
                     title = stringReference("Swapped"),
@@ -1244,7 +1194,6 @@ private fun Preview_TransactionItem_Express_Foreign_Owner() {
                             rawAddress = "33BdzQp2p2oHyC1cEZga21412BqMkvcwEx",
                         ),
                     ),
-                    timestamp = 0L,
                 ),
             ),
         )
