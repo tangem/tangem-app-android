@@ -263,12 +263,13 @@ internal object AuthModule {
     fun provideNonceRequestTracker(
         analyticsEventHandler: AnalyticsEventHandler,
         performanceTracer: PerformanceTracer,
-    ): NonceRequestTracker =
-        TimeoutReportingNonceRequestTracker(
+    ): NonceRequestTracker {
+        return TimeoutReportingNonceRequestTracker(
             delegate = TracingNonceRequestTracker(performanceTracer),
             analyticsEventHandler = analyticsEventHandler,
             timeout = NONCE_REQUEST_TIMEOUT,
         )
+    }
 
     @Provides
     @Singleton
