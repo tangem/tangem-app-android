@@ -327,6 +327,12 @@ internal class DefaultSolanaGaslessTransactionRepositoryTest {
             ),
             SolanaGaslessError.MaybeSent(signature = null),
         ),
+        // A 409 without the service's body comes from a proxy, which says nothing about whether the bytes went out
+        ErrorModel(httpError(ApiResponseError.HttpException.Code.CONFLICT), SolanaGaslessError.MaybeSent(signature = null)),
+        ErrorModel(
+            httpError(ApiResponseError.HttpException.Code.CONFLICT, err("SOMETHING_NEW")),
+            SolanaGaslessError.MaybeSent(signature = null),
+        ),
         // A connection reset or a malformed 200 body after submit may still mean the tx was broadcast
         ErrorModel(ApiResponseError.NetworkException(), SolanaGaslessError.MaybeSent(signature = null)),
         ErrorModel(ApiResponseError.TimeoutException(), SolanaGaslessError.MaybeSent(signature = null)),
