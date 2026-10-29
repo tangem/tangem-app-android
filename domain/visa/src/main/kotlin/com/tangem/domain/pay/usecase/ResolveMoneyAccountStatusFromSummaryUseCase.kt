@@ -21,23 +21,35 @@ class ResolveMoneyAccountStatusFromSummaryUseCase {
                 MoneyAccountStatusValue.Empty
             }
             is TangemPayCustomerState.Former -> {
-                account(state.moneyAccount, summary)
+                account(state.moneyAccount, summary, isFormer = true)
             }
             is TangemPayCustomerState.Accounts,
             -> {
-                account(state.moneyAccount, summary)
+                account(state.moneyAccount, summary, isFormer = false)
             }
         }
     }
 
-    private fun account(state: MoneyAccountActivationState, summary: CustomerSummary): MoneyAccountStatusValue? {
+    private fun account(
+        state: MoneyAccountActivationState,
+        summary: CustomerSummary,
+        isFormer: Boolean,
+    ): MoneyAccountStatusValue? {
         return when (state) {
             MoneyAccountActivationState.NotStarted,
             MoneyAccountActivationState.Unavailable,
             is MoneyAccountActivationState.AwaitingKyc,
-            is MoneyAccountActivationState.Failed,
             -> {
                 MoneyAccountStatusValue.Empty
+            }
+
+            is MoneyAccountActivationState.Failed -> if (isFormer) {
+                MoneyAccountStatusValue.Empty
+            } else {
+                MoneyAccountStatusValue.Onboarding.Failed(
+                    source = StatusSource.ACTUAL,
+                    customerId = summary.customerId,
+                )
             }
 
             MoneyAccountActivationState.Issuing -> {

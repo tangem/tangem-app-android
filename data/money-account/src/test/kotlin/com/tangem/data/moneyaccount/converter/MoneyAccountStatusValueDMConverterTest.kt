@@ -57,6 +57,23 @@ internal class MoneyAccountStatusValueDMConverterTest {
         assertThat(restored).isEqualTo(MoneyAccountStatusValue.Error.Unavailable)
     }
 
+    @Test
+    fun `GIVEN failed onboarding WHEN cached and restored THEN failed from cache`() {
+        // Arrange
+        val failed = MoneyAccountStatusValue.Onboarding.Failed(
+            source = StatusSource.ACTUAL,
+            customerId = "customer-1",
+        )
+
+        // Act
+        val cached = converter.convert(failed)
+        val restored = converter.convertBack(userWalletId = USER_WALLET_ID, value = cached)
+
+        // Assert
+        assertThat(cached).isEqualTo(MoneyAccountStatusValueDM.Failed(customerId = "customer-1"))
+        assertThat(restored).isEqualTo(failed.copy(source = StatusSource.CACHE))
+    }
+
     private companion object {
         val USER_WALLET_ID = UserWalletId("011")
     }
