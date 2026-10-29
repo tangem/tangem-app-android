@@ -24,6 +24,8 @@ dependencies {
     // region Analytics SDKs
     implementation(deps.amplitude)
     implementation(deps.appsflyer)
+    implementation(deps.appsflyer.oaid)
+    runtimeOnly(deps.installreferrer)
     implementation(deps.customerio.analytics)
     implementation(deps.customerio.messaging)
     implementation(platform(deps.firebase.bom))

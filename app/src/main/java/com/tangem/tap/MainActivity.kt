@@ -30,7 +30,6 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
-import com.appsflyer.AppsFlyerLib
 import com.tangem.common.routing.deeplink.PayloadToDeeplinkConverter
 import com.tangem.common.routing.deeplink.PushDeeplinkPolicy
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -359,9 +358,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         TangemLogger.i("onNewIntent: data=${intent.data}, extras=${intent.extras?.keySet()}")
-
-        // Warm start: let the AppsFlyer SDK resolve a OneLink delivered while the app is already running.
-        AppsFlyerLib.getInstance().performOnDeepLinking(intent, this)
 
         val isFromPush = intent.extras?.containsKey(OPENED_FROM_GCM_PUSH) == true
         if (isFromPush) {
