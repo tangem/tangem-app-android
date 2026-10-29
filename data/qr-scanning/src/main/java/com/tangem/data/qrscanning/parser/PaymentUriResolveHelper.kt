@@ -15,7 +15,7 @@ internal class PaymentUriResolveHelper {
     fun resolveTokenTransfer(
         context: ResolveContext,
         contractAddress: String,
-        interpretAmount: (BigDecimal, Int) -> BigDecimal = { raw, _ -> raw },
+        interpretAmount: (BigDecimal, Int) -> BigDecimal? = { raw, _ -> raw },
     ): PaymentUriParser.ParseResult {
         val matchingTokens = context.allCurrencies.filterIsInstance<CryptoCurrency.Token>()
             .filter { token ->
@@ -48,7 +48,7 @@ internal class PaymentUriResolveHelper {
 
     fun resolveNativeOrAll(
         context: ResolveContext,
-        interpretAmount: (BigDecimal, Int) -> BigDecimal = { raw, _ -> raw },
+        interpretAmount: (BigDecimal, Int) -> BigDecimal? = { raw, _ -> raw },
     ): PaymentUriParser.ParseResult {
         val decimals = context.matchingCoins.firstOrNull()?.decimals
         val amount = if (decimals != null) {
