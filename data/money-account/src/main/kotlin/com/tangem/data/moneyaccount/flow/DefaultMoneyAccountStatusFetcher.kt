@@ -117,8 +117,13 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
     }
 
     private suspend fun VisaApiError.toCachedStatusOrEmpty(userWalletId: UserWalletId): MoneyAccountStatusValue {
-        return getCachedAccountOrNull(userWalletId = userWalletId, error = toErrorValue())
-            ?: MoneyAccountStatusValue.Empty
+        return getCachedAccountOrNull(
+            userWalletId = userWalletId,
+            error = when (this) {
+                is VisaApiError.RefreshTokenExpired -> MoneyAccountStatusValue.Error.NotSynced
+                else -> MoneyAccountStatusValue.Error.Unavailable
+            },
+        ) ?: MoneyAccountStatusValue.Empty
     }
 
     private suspend fun getCachedAccountOrNull(
@@ -127,10 +132,5 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
     ): MoneyAccountStatusValue.Account? {
         val cached = moneyAccountStatusesStore.getSyncOrNull(userWalletId)?.value as? MoneyAccountStatusValue.Account
         return cached?.copySealed(source = StatusSource.ONLY_CACHE, error = error)
-    }
-
-    private fun VisaApiError.toErrorValue(): MoneyAccountStatusValue.Error = when (this) {
-        is VisaApiError.RefreshTokenExpired -> MoneyAccountStatusValue.Error.NotSynced
-        else -> MoneyAccountStatusValue.Error.Unavailable
     }
 }

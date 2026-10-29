@@ -18,6 +18,7 @@ import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.features.moneyaccount.details.impl.R
 import kotlinx.collections.immutable.persistentListOf
 
+@Suppress("LongParameterList")
 internal class MoneyAccountDetailsStateFactory(
     private val onAddFundsClick: () -> Unit,
     private val onSendClick: () -> Unit,
