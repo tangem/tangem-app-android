@@ -2,6 +2,7 @@ package com.tangem.feature.swap.domain.di
 
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
+import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
 import com.tangem.domain.transaction.usecase.CreateTransactionDataExtrasUseCase
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
@@ -9,6 +10,7 @@ import com.tangem.domain.transaction.usecase.GetEthSpecificFeeUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForGaslessTxUseCase
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForTokenUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
@@ -74,6 +76,7 @@ internal class SwapDomainModule {
     @Singleton
     fun provideDexSwapFeeCalculator(
         getFeeUseCase: GetFeeUseCase,
+        getFeeForGaslessUseCase: GetFeeForGaslessUseCase,
         getEthSpecificFeeUseCase: GetEthSpecificFeeUseCase,
         getFeeForTokenUseCase: GetFeeForTokenUseCase,
         createTransactionExtrasUseCase: CreateTransactionDataExtrasUseCase,
@@ -82,8 +85,10 @@ internal class SwapDomainModule {
         wrapYieldSwapCallDataWithUpgradeUseCase: WrapYieldSwapCallDataWithUpgradeUseCase,
         getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase,
         isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
+        createApprovalTransactionUseCase: CreateApprovalTransactionUseCase
     ): DexSwapFeeCalculator = DexSwapFeeCalculator(
         getFeeUseCase = getFeeUseCase,
+        getFeeForGaslessUseCase = getFeeForGaslessUseCase,
         getEthSpecificFeeUseCase = getEthSpecificFeeUseCase,
         getFeeForTokenUseCase = getFeeForTokenUseCase,
         createTransactionExtrasUseCase = createTransactionExtrasUseCase,
@@ -92,6 +97,7 @@ internal class SwapDomainModule {
         wrapYieldSwapCallDataWithUpgradeUseCase = wrapYieldSwapCallDataWithUpgradeUseCase,
         getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
         isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
+        createApprovalTransactionUseCase = createApprovalTransactionUseCase
     )
 
     @Provides

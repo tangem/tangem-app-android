@@ -3501,6 +3501,23 @@ internal class SwapModel @Inject constructor(
                     return Either.Left(GetFeeError.UnknownError)
                 }
 
+                // The integrated approve is quoted only by the native path; paying it in a token needs an explicit pick
+                val isIntegratedApproval = quoteState.permissionState is PermissionDataState.PermissionSettings
+                if (isIntegratedApproval && isGaslessDexSwap(fromSwapCurrencyStatus) && selectedToken == null) {
+                    val nativeFeeToken = dataState.feePaidCryptoCurrency ?: return Either.Left(GetFeeError.UnknownError)
+                    return loadSwapModeFee(
+                        fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                        toSwapCurrencyStatus = toSwapCurrencyStatus,
+                        amount = amount,
+                    ).map { fee ->
+                        TransactionFeeExtended(
+                            transactionFee = fee,
+                            feeTokenId = nativeFeeToken.currency.id,
+                            nativeFee = fee,
+                        )
+                    }
+                }
+
                 val swapAmount = SwapAmount(amount, fromSwapCurrencyStatus.currency.decimals)
 
                 // swap-xyz native transfers (txType=SEND) re-route to the CEX-style flow, so they take the CEX
@@ -3510,6 +3527,8 @@ internal class SwapModel @Inject constructor(
                         if (quoteState.txType == ExpressTxType.SEND) {
                             null
                         } else if (isTronGaslessDexSwap(fromSwapCurrencyStatus)) {
+                            quoteState.swapDataModel ?: return Either.Left(GetFeeError.UnknownError)
+                        } else if (isGaslessDexSwap(fromSwapCurrencyStatus)) {
                             quoteState.swapDataModel ?: return Either.Left(GetFeeError.UnknownError)
                         } else {
                             return Either.Left(GetFeeError.GaslessError.NetworkIsNotSupported)
@@ -3683,6 +3702,9 @@ internal class SwapModel @Inject constructor(
 
     private fun isTronGaslessDexSwap(fromSwapCurrencyStatus: SwapCurrencyStatus): Boolean =
         swapFeatureToggles.isTronGaslessDexSwapEnabled && isTron(fromSwapCurrencyStatus.currency.network.rawId)
+
+    private fun isGaslessDexSwap(fromSwapCurrencyStatus: SwapCurrencyStatus): Boolean =
+        true
 
     /**
      * Loads the approval transaction + its fee, stores both on the current
