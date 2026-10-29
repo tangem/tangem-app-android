@@ -55,4 +55,10 @@ sealed interface SwapBalanceStatus {
         val feeCurrencyName: String?,
         val feeCurrencySymbol: String?,
     ) : SwapBalanceStatus
+
+    /**
+     * Solana DEX only: the native balance cannot cover the fee, but the gasless service pays it as [feePayer].
+     * Treated as [Sufficient] everywhere except sending, which goes through the gasless service.
+     */
+    data class SponsoredFee(val feePayer: String) : SwapBalanceStatus
 }
