@@ -9,7 +9,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
-import com.tangem.domain.models.account.isPlanTransitioningState
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.feature.wallet.child.wallet.model.intents.TangemPayIntents
 import com.tangem.features.tangempay.entity.TangemPayMainUM
@@ -84,7 +83,7 @@ internal class TangemPayMainBlockConverter(
                 onClick = { tangemPayClickIntents.openDetails(value) },
             )
             is PaymentAccountStatusValue.Loaded -> {
-                if (statusValue.tariffPlan?.isPlanTransitioningState == true) {
+                if (statusValue.isPaymentAccountIssuing) {
                     return TangemPayMainUM.IssuingCard(onClick = { tangemPayClickIntents.openDetails(value) })
                 }
                 val cardsCount = statusValue.cards.count()
