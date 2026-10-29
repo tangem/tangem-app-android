@@ -25,19 +25,27 @@
     },
     {
         "name": "AND_16204_POLYMARKET_ENABLED",
-        "version": "undefined"
+        "version": "6.6"
     },
     {
         "name": "TWI_1850_TRON_GASLESS_DEX_SWAP_ENABLED",
         "version": "undefined"
     },
     {
-        "name": "TWI_1586_CARD_LINKED_STATUS_UPDATE",
+        "name": "TWI_1858_TRON_CLIENT_ENERGY_ENABLED",
         "version": "undefined"
     },
     {
-        "name": "TWI_1524_NEW_FIRMWARE_SUPPORT",
+        "name": "AND_17201_TRON_LOWER_FEE_TYPE_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TWI_1586_CARD_LINKED_STATUS_UPDATE",
+        "version": "6.6"
+    },
+    {
+        "name": "TWI_1524_NEW_FIRMWARE_SUPPORT",
+        "version": "6.6"
     },
     {
         "name": "TWI_1611_JOINT_ACCOUNT_ENABLED",
@@ -49,7 +57,7 @@
     },
     {
         "name": "TWI_1520_MERKL_INCENTIVES_ENABLED",
-        "version": "undefined"
+        "version": "6.6"
     },
     {
         "name": "TWI_1062_GOOGLE_WALLET_PUSH_PROVISIONING_ENABLED",

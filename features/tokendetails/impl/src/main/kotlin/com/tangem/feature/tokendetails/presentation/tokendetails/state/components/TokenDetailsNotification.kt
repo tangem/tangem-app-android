@@ -250,6 +250,18 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         ),
     )
 
+    data class IncompleteBalance(
+        private val unspentsLimit: String,
+        private val networkName: String,
+        private val currencySymbol: String,
+    ) : Warning(
+        title = resourceReference(id = R.string.warning_incomplete_balance_title),
+        subtitle = resourceReference(
+            id = R.string.warning_incomplete_balance_message,
+            formatArgs = wrappedList(unspentsLimit, networkName, currencySymbol),
+        ),
+    )
+
     data object UsedOutdatedData : TokenDetailsNotification(
         config = NotificationConfig(
             subtitle = resourceReference(R.string.warning_some_token_balances_not_updated),

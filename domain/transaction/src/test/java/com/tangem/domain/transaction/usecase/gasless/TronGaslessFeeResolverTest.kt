@@ -17,6 +17,7 @@ import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.transaction.TransactionFeatureToggles
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
@@ -40,6 +41,7 @@ internal class TronGaslessFeeResolverTest {
 
     private val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase = mockk()
     private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase = mockk()
+    private val transactionFeatureToggles: TransactionFeatureToggles = mockk()
 
     private val network = trx.network
     private val userWalletId = UserWalletId(stringValue = "0123456789")
@@ -47,11 +49,14 @@ internal class TronGaslessFeeResolverTest {
     private val resolver = TronGaslessFeeResolver(
         getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
         isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
+        transactionFeatureToggles = transactionFeatureToggles,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(getTronGaslessFeeUseCase, isTronGaslessSupportedUseCase)
+        clearMocks(getTronGaslessFeeUseCase, isTronGaslessSupportedUseCase, transactionFeatureToggles)
+        every { transactionFeatureToggles.isTronClientEnergyEnabled } returns true
+        every { transactionFeatureToggles.isTronLowerFeeTypeEnabled } returns true
         coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
         coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns gaslessFee(GASLESS_FEE).right()
     }
@@ -221,6 +226,68 @@ internal class TronGaslessFeeResolverTest {
             FiatComparisonModel(nativeFee = "1", nativeBalance = "0.5", expectsNative = false),
             FiatComparisonModel(nativeFee = "1", trxRate = null, expectsNative = false),
         )
+
+        @ParameterizedTest
+        @MethodSource("provideTogglesModels")
+        fun `GIVEN Tron TRX fee toggles WHEN resolveWithAutoFeeToken THEN only enabled preferences pick TRX`(
+            model: TogglesModel,
+        ) = runTest {
+            // Arrange
+            every { transactionFeatureToggles.isTronClientEnergyEnabled } returns model.isClientEnergyEnabled
+            every { transactionFeatureToggles.isTronLowerFeeTypeEnabled } returns model.isLowerFeeTypeEnabled
+            nativeFeeStub.reset(model.nativeFee.right())
+
+            // Act
+            val actual = resolve(
+                sentBalance = model.sentBalance,
+                nativeCurrencyStatus = statusOf(trx, "50", rate = model.trxRate),
+            )
+
+            // Assert
+            val expected = if (model.expectsNative) model.nativeFee else gaslessFee(GASLESS_FEE)
+            assertThat(actual).isEqualTo(expected.right())
+            assertThat(nativeFeeStub.calls).isEqualTo(model.expectedNativeFeeLoads)
+        }
+
+        private fun provideTogglesModels(): List<TogglesModel> {
+            val energyCoveredFee = tronNativeFee(value = "0.35", remainingEnergy = 70_000, feeEnergy = 65_000)
+            return listOf(
+                TogglesModel(nativeFee = energyCoveredFee, expectsNative = false, expectedNativeFeeLoads = 0),
+                TogglesModel(nativeFee = nativeFee("1"), expectsNative = false, expectedNativeFeeLoads = 0),
+                TogglesModel(
+                    nativeFee = nativeFee(NATIVE_FEE),
+                    sentBalance = "2",
+                    expectsNative = true,
+                    expectedNativeFeeLoads = 1,
+                ),
+                TogglesModel(
+                    nativeFee = nativeFee("1"),
+                    isClientEnergyEnabled = true,
+                    expectsNative = false,
+                    expectedNativeFeeLoads = 1,
+                ),
+                TogglesModel(
+                    nativeFee = energyCoveredFee,
+                    isClientEnergyEnabled = true,
+                    trxRate = null,
+                    expectsNative = true,
+                    expectedNativeFeeLoads = 1,
+                ),
+                TogglesModel(
+                    nativeFee = energyCoveredFee,
+                    isLowerFeeTypeEnabled = true,
+                    trxRate = null,
+                    expectsNative = false,
+                    expectedNativeFeeLoads = 1,
+                ),
+                TogglesModel(
+                    nativeFee = nativeFee("1"),
+                    isLowerFeeTypeEnabled = true,
+                    expectsNative = true,
+                    expectedNativeFeeLoads = 1,
+                ),
+            )
+        }
 
         @Test
         fun `GIVEN token balance equals the fee and TRX covers native WHEN resolveWithAutoFeeToken THEN native fee`() =
@@ -499,6 +566,16 @@ internal class TronGaslessFeeResolverTest {
         val nativeFee: String,
         val expectsNative: Boolean,
         val nativeBalance: String = "50",
+        val trxRate: String? = TRX_FIAT_RATE,
+    )
+
+    internal data class TogglesModel(
+        val nativeFee: TransactionFeeExtended,
+        val expectsNative: Boolean,
+        val expectedNativeFeeLoads: Int,
+        val isClientEnergyEnabled: Boolean = false,
+        val isLowerFeeTypeEnabled: Boolean = false,
+        val sentBalance: String = "100",
         val trxRate: String? = TRX_FIAT_RATE,
     )
 

@@ -27,7 +27,8 @@ internal sealed interface PolymarketEventDetailsUM {
      *  (the BFF does not serve subcategories yet)
      * @property activeMarkets markets open for trading
      * @property closedMarkets resolved markets, hidden behind the "Closed Markets" chip
-     * @property isClosedMarketsExpanded whether the closed markets are unfolded under the chip
+     * @property isClosedMarketsExpanded whether closed markets are shown; always true when no active markets remain
+     * @property categoryLabel category of the source feed, absent when opened without a category
      * @property description resolution criteria text, `null` when blank
      * @property isDescriptionExpanded whether the description shows in full or clipped with "Read more"
      * @property resolutionDate formatted resolution date of the event, a dash when unknown
@@ -55,6 +56,7 @@ internal sealed interface PolymarketEventDetailsUM {
         val onReadMoreClick: () -> Unit,
         val resolutionSource: PolymarketResolutionSourceUM? = null,
         val onResolutionSourceClick: (String) -> Unit = {},
+        val categoryLabel: TextReference? = null,
     ) : PolymarketEventDetailsUM
 }
 

@@ -25,6 +25,7 @@ import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForTokenUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
 import com.tangem.domain.utils.convertToSdkAmount
+import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
@@ -42,7 +43,9 @@ import java.math.BigDecimal
  *    energy covers the transfer or it is no dearer in fiat than the [GetTronGaslessFeeUseCase] compensation,
  *    otherwise that compensation. When the quote is unavailable, the native fee if TRX covers it, else the
  *    `null` path below. The swap screen reloads the fee without a selected token after every quote reload,
- *    so this is what keeps a wallet without TRX on the token fee.
+ *    so this is what keeps a wallet without TRX on the token fee. With both
+ *    [SwapFeatureToggles.isTronClientEnergyEnabled] and [SwapFeatureToggles.isTronLowerFeeTypeEnabled] off, TRX
+ *    is not estimated: the compensation, or the `null` path below when the quote is unavailable.
  *  - `null` → gasless. Calls [EstimateFeeForGaslessTxUseCase] which itself decides whether to use
  *    a native or token fee. When it resolves to a **native** Ethereum fee, the 5% gas-limit bump is
  *    applied for parity with the explicit native path; token-paid fees carry their own safety
@@ -65,6 +68,7 @@ class CexSwapFeeCalculator(
     private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
     private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
+    private val swapFeatureToggles: SwapFeatureToggles,
     private val patchEthGasLimitForSwap: PatchEthGasLimitForSwap,
 ) {
 
@@ -149,8 +153,14 @@ class CexSwapFeeCalculator(
         val token = fromSwapCurrencyStatus.currency as? CryptoCurrency.Token ?: return@either null
         if (!isTronGaslessSupportedUseCase(token.network, token)) return@either null
 
-        val native = estimateNativeTronFeeOrNull(userWallet, fromSwapCurrencyStatus, amount)
-        if (native != null && native.fee.isPaidByOwnTronEnergy(native.status)) {
+        val isClientEnergyEnabled = swapFeatureToggles.isTronClientEnergyEnabled
+        val isLowerFeeTypeEnabled = swapFeatureToggles.isTronLowerFeeTypeEnabled
+        val native = if (isClientEnergyEnabled || isLowerFeeTypeEnabled) {
+            estimateNativeTronFeeOrNull(userWallet, fromSwapCurrencyStatus, amount)
+        } else {
+            null
+        }
+        if (isClientEnergyEnabled && native != null && native.fee.isPaidByOwnTronEnergy(native.status)) {
             TangemLogger.i("Own energy covers the Tron swap fee, paying it in the network coin")
             return@either native.toExtended()
         }
@@ -167,7 +177,7 @@ class CexSwapFeeCalculator(
             return@either native?.takeIf { it.status.canPayNativeFee(it.fee) }?.toExtended()
         }
 
-        val isNativePreferred = native != null && native.fee.isPreferredOverTronGasless(
+        val isNativePreferred = isLowerFeeTypeEnabled && native != null && native.fee.isPreferredOverTronGasless(
             gaslessFee = gaslessFee.transactionFee,
             nativeStatus = native.status,
             gaslessTokenStatus = fromSwapCurrencyStatus.status,
