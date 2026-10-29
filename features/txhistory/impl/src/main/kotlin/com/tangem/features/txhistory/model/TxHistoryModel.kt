@@ -12,6 +12,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
+import com.tangem.core.ui.components.transactions.state.TransactionItemUM
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
@@ -31,12 +32,14 @@ import com.tangem.features.txhistory.converter.ExpressTxToTransactionItemUMConve
 import com.tangem.features.txhistory.converter.JointOperationTxToTransactionItemUMConverter
 import com.tangem.features.txhistory.converter.TxHistoryInfoToTransactionItemUMConverter
 import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionItemUMConverter
+import com.tangem.features.txhistory.converter.fields.TxHistoryInfoFieldConverter
 import com.tangem.features.txhistory.entity.TxHistoryItemsUM
 import com.tangem.features.txhistory.entity.TxHistoryUpdateListener
 import com.tangem.features.txhistory.joint.JointHistoryPoller
 import com.tangem.features.txhistory.state.TxHistoryItemsSnapshot
 import com.tangem.features.txhistory.state.TxHistoryStateController
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
+import com.tangem.utils.converter.Converter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.ImmutableList
@@ -159,25 +162,35 @@ internal class TxHistoryModel @Inject constructor(
         lookup: TxHistoryLookupContext,
         networkTokens: Set<CryptoCurrency.Token>,
     ): ImmutableList<TxHistoryItemsUM.TxHistoryItemUM> {
-        val converter = TxHistoryInfoToTransactionItemUMConverter(
-            txInfoConverter = TxHistoryItemToTransactionItemUMConverter(
+        val isFieldConverterEnabled = true
+        val converter: Converter<TxHistoryInfo, TransactionItemUM> = if (isFieldConverterEnabled) {
+            TxHistoryInfoFieldConverter(
                 currency = params.currency,
                 txHistoryUiActions = this,
-                lookupContext = lookup,
+                lookup = lookup,
                 networkTokens = networkTokens,
-            ),
-            expressConverter = ExpressTxToTransactionItemUMConverter(
-                currency = params.currency,
+            )
+        } else {
+            TxHistoryInfoToTransactionItemUMConverter(
+                txInfoConverter = TxHistoryItemToTransactionItemUMConverter(
+                    currency = params.currency,
+                    txHistoryUiActions = this,
+                    lookupContext = lookup,
+                    networkTokens = networkTokens,
+                ),
+                expressConverter = ExpressTxToTransactionItemUMConverter(
+                    currency = params.currency,
+                    txHistoryUiActions = this,
+                    lookup = lookup,
+                ),
+                jointConverter = JointOperationTxToTransactionItemUMConverter(
+                    currency = params.currency,
+                    txHistoryUiActions = this,
+                    lookup = lookup,
+                ),
                 txHistoryUiActions = this,
-                lookup = lookup,
-            ),
-            jointConverter = JointOperationTxToTransactionItemUMConverter(
-                currency = params.currency,
-                txHistoryUiActions = this,
-                lookup = lookup,
-            ),
-            txHistoryUiActions = this,
-        )
+            )
+        }
 
         val items = mutableListOf<TxHistoryItemsUM.TxHistoryItemUM>()
         var lastDate: String? = null

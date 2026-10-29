@@ -367,13 +367,12 @@ internal class TxHistoryStatusPillConverterTest {
     }
 
     @Test
-    fun `GIVEN tx WHEN convert THEN txHash and timestamp propagated`() {
+    fun `GIVEN tx WHEN convert THEN txHash propagated`() {
         val tx = txInfo(type = TransactionType.Staking.Stake)
 
         val result = converter.convert(Input(tx, Status.Confirmed, StakeSpec))
 
         assertThat(result.txHash).isEqualTo(TX_HASH)
-        assertThat(result.timestamp).isEqualTo(TIMESTAMP)
     }
 
     // endregion
@@ -398,7 +397,6 @@ internal class TxHistoryStatusPillConverterTest {
             amount = null,
             currencySymbol = null,
             subtitle = null,
-            timestamp = TIMESTAMP,
             onClick = result.onClick,
             isSuccess = model.isSuccess,
         )
