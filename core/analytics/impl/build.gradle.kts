@@ -52,12 +52,12 @@ dependencies {
 
     // region Core modules
     api(projects.core.analytics)
-    // Core shouldn't depend on core, but with utils and logging it's necessary.
+    // Core shouldn't depend on core, but with utils, logging and preferences storage it's necessary.
+    implementation(projects.core.local)
     implementation(projects.core.utils)
     // endregion
 
     // region Domain
-    implementation(projects.domain.analytics)
     implementation(projects.domain.appsflyer)
     implementation(projects.domain.settings)
     // endregion
