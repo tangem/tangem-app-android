@@ -50,7 +50,7 @@ internal class DefaultQuotesRepository(
      */
     override suspend fun getFiatUSDRate(fiatCurrencyCode: String): BigDecimal? {
         val quote = quotesFetcher.fetch(
-            fiatCurrencyId = fiatCurrencyCode.lowercase(),
+            fiatCurrencyId = fiatCurrencyCode.uppercase(),
             currenciesIds = setOf(pivotCoinId),
             fields = setOf(QuotesFetcher.Field.PRICE, QuotesFetcher.Field.PRICE_USD),
         )

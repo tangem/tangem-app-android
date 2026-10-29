@@ -19,10 +19,9 @@ import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.onramp.model.error.OnrampError
-import com.tangem.domain.quotes.GetFiatUSDRateUseCase
-import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.marketing.api.LinkedBannerRequest
+import com.tangem.features.marketing.api.MarketingBannerAmount
 import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.marketing.api.concierge.ConciergeDemandSurveyComponent
 import com.tangem.features.onramp.deeplink.DefaultConciergeWaitlistTrigger
@@ -32,7 +31,6 @@ import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.Runs
 import io.mockk.clearMocks
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -82,7 +80,6 @@ internal class OnrampMainComponentModelTest {
     private val getWalletsUseCase: GetWalletsUseCase = mockk()
     private val getOnrampCountryUseCase: GetOnrampCountryUseCase = mockk()
     private val fetchPairsUseCase: OnrampFetchPairsUseCase = mockk()
-    private val quotesRepository: QuotesRepository = mockk()
 
     private val cryptoCurrency = MockCryptoCurrencyFactory().ethereum
     private val userWallet: UserWallet = mockk(relaxed = true) {
@@ -100,7 +97,6 @@ internal class OnrampMainComponentModelTest {
             getWalletsUseCase,
             getOnrampCountryUseCase,
             fetchPairsUseCase,
-            quotesRepository,
         )
         every { getWalletsUseCase.invokeSync() } returns listOf(userWallet)
         every { getOnrampCountryUseCase.invoke() } returns emptyFlow()
@@ -389,7 +385,7 @@ internal class OnrampMainComponentModelTest {
     }
 
     @Test
-    fun `GIVEN amount above every provider limit WHEN amount typed THEN marketing requests carry usd amount`() {
+    fun `GIVEN amount above every provider limit WHEN amount typed THEN marketing requests carry fiat amount`() {
         // Arrange
         val scheduler = TestCoroutineScheduler()
         val quotes = listOf(createAmountErrorQuote(OnrampError.AmountError.TooBigError(BigDecimal("1000"))))
@@ -404,18 +400,16 @@ internal class OnrampMainComponentModelTest {
 
         // Assert
         val expectedScreen = onrampScreen(fiatCode = "USD")
-        assertThat(requests.last())
-            .isEqualTo(MarketingBannerRequest(screen = expectedScreen, amountUsd = BigDecimal("50000")))
-        assertThat(linkedRequests.last())
-            .isEqualTo(LinkedBannerRequest(screen = expectedScreen, amountUsd = BigDecimal("50000")))
+        val expectedAmount = MarketingBannerAmount.Fiat(value = BigDecimal("50000"), currencyCode = "USD")
+        assertThat(requests.last()).isEqualTo(MarketingBannerRequest(screen = expectedScreen, amount = expectedAmount))
+        assertThat(linkedRequests.last()).isEqualTo(LinkedBannerRequest(screen = expectedScreen, amount = expectedAmount))
         model.onDestroy()
     }
 
     @Test
-    fun `GIVEN eur selected WHEN amount typed THEN usd amount converted with eur rate`() {
+    fun `GIVEN eur selected WHEN amount typed THEN request carries eur amount`() {
         // Arrange
         val scheduler = TestCoroutineScheduler()
-        coEvery { quotesRepository.getFiatUSDRate("EUR") } returns BigDecimal("1.1")
         val model = createModel(scheduler = scheduler, quotes = emptyList(), fiatCode = "EUR")
         val requests = collectAll(scheduler, model.marketingRequest)
         scheduler.runCurrent()
@@ -425,13 +419,14 @@ internal class OnrampMainComponentModelTest {
         scheduler.runCurrent()
 
         // Assert
+        val expectedAmount = MarketingBannerAmount.Fiat(value = BigDecimal("100"), currencyCode = "EUR")
         assertThat(requests.last())
-            .isEqualTo(MarketingBannerRequest(screen = onrampScreen("EUR"), amountUsd = BigDecimal("110.0")))
+            .isEqualTo(MarketingBannerRequest(screen = onrampScreen("EUR"), amount = expectedAmount))
         model.onDestroy()
     }
 
     @Test
-    fun `GIVEN usd selected WHEN amount typed THEN usd amount unchanged and no rate fetched`() {
+    fun `GIVEN typed zero WHEN amount typed THEN request carries zero amount`() {
         // Arrange
         val scheduler = TestCoroutineScheduler()
         val model = createModel(scheduler = scheduler, quotes = emptyList(), fiatCode = "USD")
@@ -439,32 +434,31 @@ internal class OnrampMainComponentModelTest {
         scheduler.runCurrent()
 
         // Act
-        model.onAmountValueChanged("250")
+        model.onAmountValueChanged("0")
         scheduler.runCurrent()
 
         // Assert
+        val expectedAmount = MarketingBannerAmount.Fiat(value = BigDecimal("0"), currencyCode = "USD")
         assertThat(requests.last())
-            .isEqualTo(MarketingBannerRequest(screen = onrampScreen("USD"), amountUsd = BigDecimal("250")))
-        coVerify(exactly = 0) { quotesRepository.getFiatUSDRate(any()) }
+            .isEqualTo(MarketingBannerRequest(screen = onrampScreen("USD"), amount = expectedAmount))
         model.onDestroy()
     }
 
     @Test
-    fun `GIVEN selected currency rate unavailable WHEN amount typed THEN usd amount is null`() {
+    fun `GIVEN typed amount WHEN field cleared THEN request has no amount`() {
         // Arrange
         val scheduler = TestCoroutineScheduler()
-        coEvery { quotesRepository.getFiatUSDRate("EUR") } returns null
-        val model = createModel(scheduler = scheduler, quotes = emptyList(), fiatCode = "EUR")
+        val model = createModel(scheduler = scheduler, quotes = emptyList(), fiatCode = "USD")
         val requests = collectAll(scheduler, model.marketingRequest)
-        scheduler.runCurrent()
-
-        // Act
         model.onAmountValueChanged("100")
         scheduler.runCurrent()
 
+        // Act
+        model.onAmountValueChanged("")
+        scheduler.runCurrent()
+
         // Assert
-        assertThat(requests.last())
-            .isEqualTo(MarketingBannerRequest(screen = onrampScreen("EUR"), amountUsd = null))
+        assertThat(requests.last()).isEqualTo(MarketingBannerRequest(screen = onrampScreen("USD"), amount = null))
         model.onDestroy()
     }
 
@@ -592,7 +586,6 @@ internal class OnrampMainComponentModelTest {
             getOnrampOffersUseCase = mockk(relaxed = true),
             isDemoCardUseCase = mockk(relaxed = true),
             messageSender = mockk(relaxed = true),
-            getFiatUSDRateUseCase = GetFiatUSDRateUseCase(quotesRepository),
             conciergeWaitlistListener = conciergeWaitlistTrigger,
             paramsContainer = MutableParamsContainer(value = params),
             getWalletsUseCase = getWalletsUseCase,

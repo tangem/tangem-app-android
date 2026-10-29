@@ -10,7 +10,10 @@ import com.tangem.domain.marketing.GetMarketingBannerUseCase
 import com.tangem.domain.marketing.models.MarketingBanner
 import com.tangem.domain.marketing.models.MarketingCampaign
 import com.tangem.domain.marketing.models.MarketingScreen
+import com.tangem.domain.marketing.models.hasAmountBounds
 import com.tangem.domain.marketing.models.matchesUsdAmount
+import com.tangem.domain.quotes.GetFiatUSDRateUseCase
+import com.tangem.features.marketing.api.MarketingBannerAmount
 import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.marketing.impl.ui.state.MarketingBannerListUM
 import com.tangem.features.marketing.impl.ui.state.MarketingBannerUM
@@ -38,10 +41,14 @@ internal class MarketingBannerModel @Inject constructor(
     private val getMarketingBanner: GetMarketingBannerUseCase,
     private val dismissMarketingBanner: DismissMarketingBannerUseCase,
     private val deeplinkLauncher: DeeplinkLauncher,
+    private val getFiatUSDRate: GetFiatUSDRateUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<MarketingBannerComponent.Params>()
     private val dismissedIds = MutableStateFlow<Set<Int>>(emptySet())
+
+    /** Only successful rates are kept, so a failed currency is retried on its next amount change. */
+    private val fiatUsdRates = mutableMapOf<String, BigDecimal>()
 
     val uiState: StateFlow<MarketingBannerListUM>
         field = MutableStateFlow<MarketingBannerListUM>(MarketingBannerListUM.Hidden)
@@ -68,11 +75,11 @@ internal class MarketingBannerModel @Inject constructor(
         val requestFlow: Flow<MarketingRequest?> = when (val p = params) {
             is MarketingBannerComponent.Params.Standalone ->
                 p.requestFlow.map { request ->
-                    request?.let { MarketingRequest(screen = it.screen, amountUsd = it.amountUsd) }
+                    request?.let { MarketingRequest(screen = it.screen, amount = it.amount) }
                 }
             is MarketingBannerComponent.Params.Linked ->
                 p.requestFlow.map { request ->
-                    request?.let { MarketingRequest(screen = it.screen, amountUsd = it.amountUsd) }
+                    request?.let { MarketingRequest(screen = it.screen, amount = it.amount) }
                 }
         }
 
@@ -82,17 +89,19 @@ internal class MarketingBannerModel @Inject constructor(
             .debounce(REQUEST_DEBOUNCE_MS)
             .mapLatest { screen -> if (screen != null) fetch(screen) else emptyList() }
 
-        val amountUsd: Flow<BigDecimal?> = requestFlow.map { it?.amountUsd }.distinctUntilChanged()
+        val amount: Flow<MarketingBannerAmount?> = requestFlow.map { it?.amount }.distinctUntilChanged()
+
+        val amountMatchingCampaigns: Flow<List<MarketingCampaign>> = combine(campaigns, amount, ::Pair)
+            .mapLatest { (list, amount) ->
+                if (list.none(MarketingCampaign::hasAmountBounds)) return@mapLatest list
+                val usd = amount?.let { toUsd(it) }
+                list.filter { it.matchesUsdAmount(usd) }
+            }
 
         modelScope.launch {
-            combine(
-                flow = campaigns,
-                flow2 = amountUsd,
-                flow3 = dismissedIds,
-            ) { list, usd, dismissed ->
+            combine(amountMatchingCampaigns, dismissedIds) { list, dismissed ->
                 list.asSequence()
                     .filterNot { it.id in dismissed }
-                    .filter { it.matchesUsdAmount(usd) }
                     .filter { matchesUiType(it) }
                     .map { it.toUM() }
                     .toList()
@@ -104,6 +113,16 @@ internal class MarketingBannerModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private suspend fun toUsd(amount: MarketingBannerAmount): BigDecimal? = when (amount) {
+        is MarketingBannerAmount.Usd -> amount.value
+        is MarketingBannerAmount.Fiat -> getCachedFiatUsdRate(amount.currencyCode)?.let(amount.value::multiply)
+    }
+
+    private suspend fun getCachedFiatUsdRate(currencyCode: String): BigDecimal? {
+        val code = currencyCode.uppercase()
+        return fiatUsdRates[code] ?: getFiatUSDRate(code)?.also { fiatUsdRates[code] = it }
     }
 
     private suspend fun fetch(screen: MarketingScreen): List<MarketingCampaign> =
@@ -118,7 +137,7 @@ internal class MarketingBannerModel @Inject constructor(
 
     private data class MarketingRequest(
         val screen: MarketingScreen,
-        val amountUsd: BigDecimal?,
+        val amount: MarketingBannerAmount?,
     )
 
     private fun MarketingCampaign.toUM() = MarketingBannerUM(
