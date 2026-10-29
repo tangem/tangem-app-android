@@ -54,6 +54,7 @@ import javax.inject.Inject
 @ModelScoped
 @Suppress("LongParameterList", "LargeClass")
 internal class GiveApprovalModel @Inject constructor(
+    private val tangemBlogUrlBuilder: TangemBlogUrlBuilder,
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
     private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
@@ -134,7 +135,7 @@ internal class GiveApprovalModel @Inject constructor(
 
     fun onOpenLearnMoreAboutApproveClick() {
         modelScope.launch {
-            urlOpener.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.GiveRevokePermission))
+            urlOpener.openUrl(tangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.GiveRevokePermission))
         }
     }
 

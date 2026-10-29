@@ -599,8 +599,7 @@ internal class StakingModelNavigationTest : StakingModelTestBase() {
     fun `GIVEN blog url WHEN onInitialInfoBannerClick THEN analytics sent and url opened`() = runTest {
         // Arrange
         val expectedUrl = "https://tangem.com/blog/post/how-to-stake-cryptocurrency/?utm_source=tangem-app"
-        mockkObject(TangemBlogUrlBuilder)
-        coEvery { TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.HowToStake) } returns expectedUrl
+        coEvery { tangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.HowToStake) } returns expectedUrl
         every { innerRouter.openUrl(any()) } just Runs
         var model: StakingModel? = null
 
@@ -619,7 +618,6 @@ internal class StakingModelNavigationTest : StakingModelTestBase() {
             verify { innerRouter.openUrl(expectedUrl) }
         } finally {
             model?.onDestroy()
-            unmockkObject(TangemBlogUrlBuilder)
         }
     }
 
@@ -833,8 +831,7 @@ internal class StakingModelNavigationTest : StakingModelTestBase() {
     fun `GIVEN approve blog url WHEN onOpenLearnMoreAboutApproveClick THEN urlOpener opens approve url`() = runTest {
         // Arrange
         val expectedUrl = "https://tangem.com/blog/post/give-revoke-permission/?utm_source=tangem-app"
-        mockkObject(TangemBlogUrlBuilder)
-        coEvery { TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.GiveRevokePermission) } returns expectedUrl
+        coEvery { tangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.GiveRevokePermission) } returns expectedUrl
         every { urlOpener.openUrl(any()) } just Runs
         var model: StakingModel? = null
 
@@ -850,7 +847,6 @@ internal class StakingModelNavigationTest : StakingModelTestBase() {
             verify { urlOpener.openUrl(expectedUrl) }
         } finally {
             model?.onDestroy()
-            unmockkObject(TangemBlogUrlBuilder)
         }
     }
 

@@ -2,6 +2,7 @@ package com.tangem.features.staking.impl.presentation.model
 
 import arrow.core.Either
 import arrow.core.right
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.ParamsInterceptorHolder
 import com.tangem.core.decompose.model.MutableParamsContainer
@@ -113,6 +114,7 @@ internal abstract class StakingModelTestBase {
     private val coroutineScope: AppCoroutineScope = mockk()
     protected val innerRouter: InnerStakingRouter = mockk()
     protected val messageSender: UiMessageSender = mockk()
+    protected val tangemBlogUrlBuilder: TangemBlogUrlBuilder = mockk()
 
     @BeforeEach
     fun setUp() {
@@ -161,6 +163,7 @@ internal abstract class StakingModelTestBase {
         coroutineScope: AppCoroutineScope = this.coroutineScope,
     ): StakingModel {
         return StakingModel(
+            tangemBlogUrlBuilder = tangemBlogUrlBuilder,
             paramsContainer = paramsContainer,
             stateController = stateController,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),

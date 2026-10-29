@@ -30,6 +30,7 @@ import javax.inject.Inject
 @Suppress("LongParameterList")
 @ModelScoped
 internal class CreateWalletSelectionModel @Inject constructor(
+    private val tangemBlogUrlBuilder: TangemBlogUrlBuilder,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val trackingContextProxy: TrackingContextProxy,
@@ -97,7 +98,7 @@ internal class CreateWalletSelectionModel @Inject constructor(
 
     private fun onWhatToChooseClick() {
         modelScope.launch {
-            urlOpener.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.WhatWalletToChoose))
+            urlOpener.openUrl(tangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.WhatWalletToChoose))
         }
     }
 }

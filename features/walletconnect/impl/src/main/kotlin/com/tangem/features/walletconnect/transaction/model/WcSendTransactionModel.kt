@@ -76,6 +76,7 @@ import kotlin.properties.Delegates
 @Stable
 @ModelScoped
 internal class WcSendTransactionModel @Inject constructor(
+    private val tangemBlogUrlBuilder: TangemBlogUrlBuilder,
     paramsContainer: ParamsContainer,
     portfolioNameDelegateFactory: WcPortfolioNameDelegate.Factory,
     override val messageSender: UiMessageSender,
@@ -333,7 +334,7 @@ internal class WcSendTransactionModel @Inject constructor(
 
     private fun onApproveLearnMoreClick() {
         modelScope.launch {
-            urlOpener.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.GiveRevokePermission))
+            urlOpener.openUrl(tangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.GiveRevokePermission))
         }
     }
 
