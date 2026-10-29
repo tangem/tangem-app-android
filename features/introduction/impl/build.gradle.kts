@@ -30,7 +30,6 @@ dependencies {
     implementation(projects.core.utils)
 
     /** Domain */
-    implementation(projects.domain.analytics)
     implementation(projects.domain.appsflyer)
     implementation(projects.domain.card)
     implementation(projects.domain.cloudBackup)

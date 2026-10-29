@@ -3,8 +3,8 @@ package com.tangem.features.introduction.impl.model
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.api.OneTimeEventStore
 import com.tangem.core.analytics.models.AnalyticsEvent
-import com.tangem.domain.analytics.repository.AnalyticsRepository
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.card.analytics.IntroductionProcess.ScreenOpened.EntryReason
 import io.mockk.clearMocks
@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test
 
 internal class IntroductionEntryReasonTrackerTest {
 
-    private val analyticsRepository: AnalyticsRepository = mockk(relaxed = true)
+    private val oneTimeEventStore: OneTimeEventStore = mockk()
     private val analyticsEventHandler: AnalyticsEventHandler = mockk()
 
     private val sentEvents = mutableListOf<AnalyticsEvent>()
@@ -29,36 +29,35 @@ internal class IntroductionEntryReasonTrackerTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(analyticsRepository, analyticsEventHandler)
-        coEvery { analyticsRepository.checkIsEventSent(any()) } returns true
+        clearMocks(oneTimeEventStore, analyticsEventHandler)
+        coEvery { oneTimeEventStore.markSent(any()) } returns true
         sentEvents.clear()
         every { analyticsEventHandler.send(capture(sentEvents)) } just runs
-        tracker = IntroductionEntryReasonTracker(analyticsRepository, analyticsEventHandler)
+        tracker = IntroductionEntryReasonTracker(oneTimeEventStore, analyticsEventHandler)
     }
 
     @Test
     fun `GIVEN the screen was never shown WHEN the first opening is consumed THEN it is the first launch and gets recorded`() =
         runTest {
             // Arrange
-            coEvery { analyticsRepository.checkIsEventSent(any()) } returns false
+            coEvery { oneTimeEventStore.markSent(any()) } returns false
 
             // Act
             tracker.reportOpening(AppRoute.Home.EntryReason.Launch)
 
             // Assert
             assertThat(sentEvents).containsExactly(IntroductionProcess.ScreenOpened(EntryReason.FirstLaunch))
-            coVerify(exactly = 1) { analyticsRepository.setIsEventSent("introduction_welcome_opened") }
+            coVerify(exactly = 1) { oneTimeEventStore.markSent("introduction_welcome_opened") }
         }
 
     @Test
-    fun `GIVEN the screen was shown before WHEN the first opening is consumed THEN it is no wallets and nothing is written`() =
+    fun `GIVEN the screen was shown before WHEN the first opening is consumed THEN it is no wallets`() =
         runTest {
             // Act
             tracker.reportOpening(AppRoute.Home.EntryReason.Launch)
 
             // Assert
             assertThat(sentEvents).containsExactly(IntroductionProcess.ScreenOpened(EntryReason.NoWallets))
-            coVerify(exactly = 0) { analyticsRepository.setIsEventSent(any()) }
         }
 
     @Test
@@ -91,7 +90,7 @@ internal class IntroductionEntryReasonTrackerTest {
     @Test
     fun `GIVEN the store fails WHEN the first opening is consumed THEN it falls back to no wallets`() = runTest {
         // Arrange
-        coEvery { analyticsRepository.checkIsEventSent(any()) } throws IllegalStateException("corrupt store")
+        coEvery { oneTimeEventStore.markSent(any()) } throws IllegalStateException("corrupt store")
 
         // Act
         tracker.reportOpening(AppRoute.Home.EntryReason.Launch)
