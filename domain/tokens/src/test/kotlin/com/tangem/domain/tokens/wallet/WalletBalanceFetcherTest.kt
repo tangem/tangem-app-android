@@ -18,6 +18,7 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencies
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
+import com.tangem.domain.polymarket.flow.PredictionPositionsValueFetcher
 import com.tangem.domain.polymarket.model.PredictionCollateral
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
@@ -64,6 +65,7 @@ internal class WalletBalanceFetcherTest {
         every { isMoneyAccountsEnabled } returns false
     }
     private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher = mockk()
+    private val predictionPositionsValueFetcher: PredictionPositionsValueFetcher = mockk()
     private val polymarketFeatureToggles: PolymarketFeatureToggles = mockk {
         every { isPolymarketEnabled } returns false
     }
@@ -84,6 +86,7 @@ internal class WalletBalanceFetcherTest {
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
         moneyAccountStatusFetcher = moneyAccountStatusFetcher,
         predictionAccountStatusFetcher = predictionAccountStatusFetcher,
+        predictionPositionsValueFetcher = predictionPositionsValueFetcher,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
         stakingIdFactory = stakingIdFactory,
         moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
@@ -107,6 +110,7 @@ internal class WalletBalanceFetcherTest {
             paymentAccountStatusFetcher,
             moneyAccountStatusFetcher,
             predictionAccountStatusFetcher,
+            predictionPositionsValueFetcher,
             collectiblesAccountStatusFetcher,
         )
         mockkStatic(UserWalletsListRepository::getSyncStrict)
@@ -926,6 +930,40 @@ internal class WalletBalanceFetcherTest {
     }
 
     @Test
+    fun `GIVEN prediction source and polymarket enabled WHEN fetch THEN the positions value is fetched`() = runTest {
+        // Arrange
+        arrangePredictionFetch()
+        coEvery { predictionAccountStatusFetcher(params = any()) } returns Unit.right()
+
+        // Act
+        val actual = createFetcher(isPolymarketEnabled = true).invoke(WalletBalanceFetcher.Params(userWalletId))
+
+        // Assert
+        assertEither(actual, Unit.right())
+        coVerify(exactly = 1) {
+            predictionPositionsValueFetcher(
+                params = PredictionPositionsValueFetcher.Params(userWalletId = userWalletId),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN the positions value fails WHEN fetch THEN the wallet fetch and the prediction status still run`() =
+        runTest {
+            // Arrange
+            arrangePredictionFetch()
+            coEvery { predictionAccountStatusFetcher(params = any()) } returns Unit.right()
+            coEvery { predictionPositionsValueFetcher(params = any()) } returns IllegalStateException("Error").left()
+
+            // Act
+            val actual = createFetcher(isPolymarketEnabled = true).invoke(WalletBalanceFetcher.Params(userWalletId))
+
+            // Assert
+            assertEither(actual, Unit.right())
+            coVerify(exactly = 1) { predictionAccountStatusFetcher(params = any()) }
+        }
+
+    @Test
     fun `GIVEN prediction source and polymarket disabled WHEN fetch THEN prediction status is not fetched`() =
         runTest {
             // Arrange
@@ -937,6 +975,7 @@ internal class WalletBalanceFetcherTest {
             // Assert
             assertEither(actual, Unit.right())
             coVerify(inverse = true) { predictionAccountStatusFetcher(params = any()) }
+            coVerify(inverse = true) { predictionPositionsValueFetcher(params = any()) }
         }
 
     /**
@@ -1067,7 +1106,10 @@ internal class WalletBalanceFetcherTest {
         coVerify(exactly = 1) { multiNetworkStatusFetcher(params = any()) }
     }
 
-    private fun arrangePredictionFetch() = arrangeSpecialAccountFetch(source = WalletFetchingSource.Prediction)
+    private fun arrangePredictionFetch() {
+        arrangeSpecialAccountFetch(source = WalletFetchingSource.Prediction)
+        coEvery { predictionPositionsValueFetcher(params = any()) } returns Unit.right()
+    }
 
     private fun arrangeCollectiblesFetch() = arrangeSpecialAccountFetch(source = WalletFetchingSource.Collectibles)
 
@@ -1111,6 +1153,7 @@ internal class WalletBalanceFetcherTest {
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
         moneyAccountStatusFetcher = moneyAccountStatusFetcher,
         predictionAccountStatusFetcher = predictionAccountStatusFetcher,
+        predictionPositionsValueFetcher = predictionPositionsValueFetcher,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
         stakingIdFactory = stakingIdFactory,
         moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
