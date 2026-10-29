@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
@@ -13,6 +14,7 @@ import com.tangem.core.ui.ds2.ambient.TangemAmbientBackground
 import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.PredictionTestTags
 import com.tangem.features.feed.components.v2.blocks.model.PredictionsBlockModel
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.v2.FeedBlockIconBadge
@@ -52,7 +54,7 @@ internal class PredictionsBlockComponent(
             description = stringResourceSafe(R.string.prediction_account_subtitle),
             ambientVariant = TangemAmbientBackground.Variant.Violet,
             onClick = { router.push(AppRoute.Polymarket()) },
-            modifier = modifier,
+            modifier = modifier.testTag(PredictionTestTags.FEED_BANNER),
             icon = { PredictionsIcon() },
         )
     }
