@@ -94,7 +94,7 @@ internal class RouteBankWithdrawCompletion @AssistedInject constructor(
         if (error == BankOfframpError.Validation) {
             onState(CompletionState.Idle)
         } else {
-            onState(CompletionState.Failed(error.toFailure()))
+            onState(CompletionState.Failed(failure = error.toFailure(), errorCode = error.errorCode))
         }
     }
 
