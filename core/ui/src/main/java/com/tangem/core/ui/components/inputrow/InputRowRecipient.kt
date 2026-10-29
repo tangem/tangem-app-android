@@ -143,7 +143,7 @@ fun InputRowRecipient(
                     PasteButton(
                         isPasteButtonVisible = value.isBlank(),
                         onClick = onPasteClick,
-                        backgroundColorEnabled = TangemTheme.colors3.bg.transparent.secondary,
+                        backgroundColorEnabled = TangemTheme.colors3.bg.tertiary,
                         textColor = TangemTheme.colors3.text.primary,
                         modifier = Modifier
                             .padding(start = 8.dp)
@@ -171,7 +171,7 @@ private fun QrButton(visible: Boolean, onQrCodeClick: () -> Unit, modifier: Modi
         TangemIconButton(
             iconRes = R.drawable.ic_scan_16,
             onClick = onQrCodeClick,
-            background = TangemTheme.colors3.bg.transparent.secondary,
+            background = TangemTheme.colors3.bg.tertiary,
             iconTint = TangemTheme.colors3.text.primary,
         )
     }

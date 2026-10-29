@@ -195,7 +195,7 @@ private fun SwapAmountDivider(modifier: Modifier = Modifier) {
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors3.text.secondary,
             modifier = Modifier
-                .background(TangemTheme.colors3.bg.transparent.secondary, RoundedCornerShape(32.dp))
+                .background(TangemTheme.colors3.bg.tertiary, RoundedCornerShape(32.dp))
                 .padding(horizontal = 11.dp, vertical = 5.dp)
                 .align(Alignment.Center),
         )
