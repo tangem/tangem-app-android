@@ -1061,6 +1061,7 @@
   <string name="hw_cloud_backup_permissions_title_v2">Allow full %1$s access</string>
   <string name="hw_cloud_backup_remove_title">%1$s %2$s backup</string>
   <string name="hw_cloud_backup_removed">Backup removed</string>
+  <string name="hw_cloud_backup_restore_all_added_hint">All backups in this %1$s account are already in Tangem</string>
   <string name="hw_cloud_backup_restore_error_title">Something went wrong</string>
   <string name="hw_cloud_backup_restore_error_with_recovery">Please try again later or import your recovery phrase.</string>
   <string name="hw_cloud_backup_restore_navtitle">Cloud backup</string>
@@ -1155,6 +1156,8 @@
   <string name="hw_upgrade_title">Upgrade to our Hardware Wallet</string>
   <string name="hw_upgrade_to_cold_banner_description">Keep your crypto safe with Tangem\'s top-tier hardware wallet.</string>
   <string name="hw_upgrade_to_cold_banner_title">Upgrade your wallet to hardware security</string>
+  <string name="hw_wallets_limit_alert_message">You can have up to %1$s mobile wallets in Tangem. To create or import a new one, remove one of your existing mobile wallets first.</string>
+  <string name="hw_wallets_limit_alert_title">You’ve reached the mobile wallet limit</string>
   <string name="information_generated_with_ai">This information was generated with AI.\nTap here if you find any errors.</string>
   <string name="initial_message_change_access_code_body">To change the access code tap the card or ring as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_change_passcode_body">To change the passcode tap the card as shown above and do not remove until the end of the operation</string>
@@ -1325,7 +1328,7 @@
     <item quantity="other">%d members still need to confirm</item>
   </plurals>
   <string name="joint_account_members_subtitle">Set how many people share the account. Every transaction waits for %1$s of %2$s to sign. This can\'t be changed later</string>
-  <string name="joint_account_members_subtitle_helper_part"> %1$s of %2$s to sign</string>
+  <string name="joint_account_members_subtitle_helper_part">%1$s of %2$s to sign</string>
   <string name="joint_account_members_subtitle_main_part">Set how many people share the account. Every transaction waits for %1$s. This can\'t be changed later</string>
   <string name="joint_account_members_title">Members</string>
   <string name="joint_account_members_total_subtitle">Max %1$s people, including you</string>
@@ -1639,12 +1642,15 @@
   <string name="mobile_wallet_requires_min_os_warning_body">You must update to %1$s before creating a mobile wallet</string>
   <string name="mobile_wallet_requires_min_os_warning_title">Mobile Wallet requires %1$s or later</string>
   <string name="money_account_add_funds_bank_description">Receive USD from a bank account via ACH/Wire or SPEI</string>
-  <string name="money_account_add_funds_receive_description">Send USDC Polygon to your account\'s address</string>
-  <string name="money_account_add_funds_swap_description">Use crypto from your wallet to topup your banking account</string>
+  <string name="money_account_add_funds_receive_description">Send USDC on Polygon to your account address</string>
+  <string name="money_account_add_funds_swap_description">Use crypto from your wallet to top up your USD account</string>
+  <string name="money_account_balance_unavailable_description">We’re having trouble loading your balance. Try again later</string>
+  <string name="money_account_balance_unavailable_title">Balance unavailable</string>
+  <string name="money_account_close_account">Close account</string>
   <string name="money_account_main_name">USD account</string>
   <string name="money_account_main_status_action_required">Action required</string>
   <string name="money_account_main_status_activating">Activating…</string>
-  <string name="money_account_main_status_active">%1$s network</string>
+  <string name="money_account_main_status_active">%1$s ACH</string>
   <string name="money_account_main_status_dialog_activating_description">We\'re getting your account ready. This may take a little time</string>
   <string name="money_account_main_status_dialog_activating_title">Creating your banking account</string>
   <string name="money_account_main_status_dialog_country_not_supported_description">We\'re working on expanding to more regions. Need help?</string>
@@ -1668,8 +1674,8 @@
   <string name="money_account_onboarding_fees_title">Fees</string>
   <string name="money_account_onboarding_secondary_button">Terms and fees</string>
   <string name="money_account_onboarding_terms_link">Terms of Service</string>
-  <string name="money_account_onboarding_terms_notice">By using service, you agree with provider %1$s</string>
-  <string name="money_account_onboarding_title">Get USD account</string>
+  <string name="money_account_onboarding_terms_notice">By using the service, you agree to the provider’s %1$s</string>
+  <string name="money_account_onboarding_title">Get a USD account</string>
   <string name="money_account_onboarding_transfers_card_caption">Money in. Money out.</string>
   <string name="money_account_onboarding_transfers_card_subtitle">with a dedicated account with banking details</string>
   <string name="money_account_onboarding_transfers_card_title">Send and receive fiat payments</string>
@@ -2474,10 +2480,16 @@
   <string name="social_login_creating_wallet_description">This will only take a few seconds</string>
   <string name="social_login_error_account_linked">This %s account is already linked to another wallet.</string>
   <string name="social_login_error_backup_not_saved">Couldn\'t save backup — make sure your cloud storage is available and try again</string>
+  <string name="social_login_error_backup_not_saved_description">Make sure your cloud storage is available and try again.</string>
+  <string name="social_login_error_backup_not_saved_title">Couldn\'t save backup</string>
   <string name="social_login_error_cloud_access_description">Make sure Tangem has access to your %s account, then try again</string>
   <string name="social_login_error_cloud_access_title">Couldn\'t restore wallet</string>
   <string name="social_login_error_generic">Something went wrong. Please try again</string>
+  <string name="social_login_error_generic_v2">Please check your internet connection and try again.</string>
+  <string name="social_login_error_network_description">Check your connection and try again.</string>
+  <string name="social_login_error_network_title">No internet connection</string>
   <string name="social_login_error_no_account">Add your %s account to this device to continue.</string>
+  <string name="social_login_error_no_account_title">No %1$s account on this device</string>
   <string name="social_login_error_restore_failed_description">We couldn\'t restore the wallet for this account. Try again or contact support</string>
   <string name="social_login_error_session_expired">Session expired. Please try again</string>
   <string name="social_login_error_support">Contact support</string>
@@ -2486,6 +2498,8 @@
   <string name="social_login_restoring_wallet_description">Getting your tokens back in place</string>
   <string name="social_login_toast_wallet_added">Wallet added</string>
   <string name="social_login_toast_wallet_created">Wallet created</string>
+  <string name="social_wallet_already_added_alert_message">Only one wallet on this device can use Sign in with %1$s. To use a different account, log out of the current one first.</string>
+  <string name="social_wallet_already_added_alert_title">You’re already signed in with %1$s</string>
   <string name="social_wallet_delete_anyway">Delete anyway</string>
   <string name="social_wallet_delete_attention_acknowledge">I understand that if I haven\'t backed up my recovery phrase, I\'ll lose access to this wallet forever.</string>
   <string name="social_wallet_delete_attention_description">This will delete the wallet from this device, unlink it from your %1$s account and delete your encrypted keys from the cloud. Signing in with %1$s will no longer restore it.</string>
@@ -3030,7 +3044,7 @@
   <string name="tangempay_daily_limit_set_button">Set limits</string>
   <string name="tangempay_declined_reason_1">insufficient funds</string>
   <string name="tangempay_declined_reason_10">card spending limit exceeded</string>
-  <string name="tangempay_declined_reason_11">СVV2 match fail</string>
+  <string name="tangempay_declined_reason_11">CVV2 match fail</string>
   <string name="tangempay_declined_reason_12">wrong expiry date</string>
   <string name="tangempay_declined_reason_13">incorrect PIN</string>
   <string name="tangempay_declined_reason_14">prohibited transaction</string>
@@ -3552,6 +3566,7 @@
   <string name="user_wallet_list_delete_prompt">Are you sure you want to forget this wallet?</string>
   <string name="user_wallet_list_error_unable_to_unlock">An error has occurred, please scan your card or ring to log in</string>
   <string name="user_wallet_list_error_wallet_already_saved">This wallet has already been saved, you can add another one</string>
+  <string name="user_wallet_list_error_wallet_already_saved_title">Wallet already added</string>
   <string name="user_wallet_list_rename_popup_error_already_exists">A wallet named %s already exists</string>
   <string name="user_wallet_list_rename_popup_placeholder">Wallet name</string>
   <string name="user_wallet_list_rename_popup_title">Rename wallet</string>
