@@ -11,7 +11,6 @@ import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.features.txhistory.converter.TxHistoryStatusPillConverter.Input
 import com.tangem.features.txhistory.impl.R
-import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.mockk
 import io.mockk.verify
@@ -23,9 +22,9 @@ import java.math.BigDecimal
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TxHistoryStatusPillConverterTest {
 
-    private val txHistoryUiActions: TxHistoryUiActions = mockk(relaxed = true)
     private val coin = createCoin(symbol = "ETH", decimals = 18)
-    private val converter = TxHistoryStatusPillConverter(coin, txHistoryUiActions)
+    private val converter = TxHistoryStatusPillConverter(coin)
+    private val onRowClick: () -> Unit = mockk(relaxed = true)
 
     // region Approve
 
@@ -38,7 +37,7 @@ internal class TxHistoryStatusPillConverterTest {
             ),
         )
 
-        val result = converter.convert(Input(tx, Status.Confirmed, ApproveSpec))
+        val result = converter.convert(Input(tx, Status.Confirmed, ApproveSpec, onRowClick))
 
         assertThat(result.kind).isEqualTo(TransactionItemUM.PillKind.APPROVE)
         assertThat(result.status).isEqualTo(Status.Confirmed)
@@ -58,7 +57,7 @@ internal class TxHistoryStatusPillConverterTest {
             ),
         )
 
-        val result = converter.convert(Input(tx, Status.Unconfirmed, ApproveSpec))
+        val result = converter.convert(Input(tx, Status.Unconfirmed, ApproveSpec, onRowClick))
 
         assertThat(result.label).isEqualTo(resRef(R.string.common_approving))
     }
@@ -72,7 +71,7 @@ internal class TxHistoryStatusPillConverterTest {
             ),
         )
 
-        val result = converter.convert(Input(tx, Status.Failed, ApproveSpec))
+        val result = converter.convert(Input(tx, Status.Failed, ApproveSpec, onRowClick))
 
         assertThat(result.label).isEqualTo(resRef(R.string.common_approving))
         assertThat(result.subtitle).isNull()
@@ -88,7 +87,7 @@ internal class TxHistoryStatusPillConverterTest {
             ),
         )
 
-        val result = converter.convert(Input(tx, Status.Confirmed, ApproveSpec))
+        val result = converter.convert(Input(tx, Status.Confirmed, ApproveSpec, onRowClick))
 
         assertThat((result.amount as TextReference.Str).value).startsWith("21")
         assertThat(result.currencySymbol).isEqualTo("USDC")
@@ -100,7 +99,7 @@ internal class TxHistoryStatusPillConverterTest {
         // wording the details screen uses, with the approved token's symbol.
         val tx = txInfo(type = TransactionType.Approve(amount = SdkAmount(currencySymbol = "USDT", value = null, decimals = 6), address = USER_ADDRESS))
 
-        val result = converter.convert(Input(tx, Status.Confirmed, ApproveSpec))
+        val result = converter.convert(Input(tx, Status.Confirmed, ApproveSpec, onRowClick))
 
         assertThat(result.amount).isEqualTo(resRef(R.string.transaction_history_unlimited))
         assertThat(result.currencySymbol).isEqualTo("USDT")
@@ -116,7 +115,7 @@ internal class TxHistoryStatusPillConverterTest {
     fun `GIVEN Stake uiStatus Confirmed WHEN convert THEN staked label and amount`() {
         val tx = txInfo(type = TransactionType.Staking.Stake, amount = BigDecimal("1.5"))
 
-        val result = converter.convert(Input(tx, Status.Confirmed, StakeSpec))
+        val result = converter.convert(Input(tx, Status.Confirmed, StakeSpec, onRowClick))
 
         assertThat(result.kind).isEqualTo(TransactionItemUM.PillKind.STAKING)
         assertThat(result.label).isEqualTo(resRef(R.string.common_staked))
@@ -128,7 +127,7 @@ internal class TxHistoryStatusPillConverterTest {
     fun `GIVEN Stake uiStatus Failed WHEN convert THEN stake failed label and no amount`() {
         val tx = txInfo(type = TransactionType.Staking.Stake)
 
-        val result = converter.convert(Input(tx, Status.Failed, StakeSpec))
+        val result = converter.convert(Input(tx, Status.Failed, StakeSpec, onRowClick))
 
         assertThat(result.label).isEqualTo(resRef(R.string.transaction_history_status_stake_failed))
         assertThat(result.amount).isNull()
@@ -139,7 +138,7 @@ internal class TxHistoryStatusPillConverterTest {
     fun `GIVEN Unstake uiStatus Confirmed WHEN convert THEN unstaked label`() {
         val tx = txInfo(type = TransactionType.Staking.Unstake)
 
-        val result = converter.convert(Input(tx, Status.Confirmed, UnstakeSpec))
+        val result = converter.convert(Input(tx, Status.Confirmed, UnstakeSpec, onRowClick))
 
         assertThat(result.label).isEqualTo(resRef(R.string.staking_unstaked))
     }
@@ -148,7 +147,7 @@ internal class TxHistoryStatusPillConverterTest {
     fun `GIVEN Unstake uiStatus Failed WHEN convert THEN unstake failed label`() {
         val tx = txInfo(type = TransactionType.Staking.Unstake)
 
-        val result = converter.convert(Input(tx, Status.Failed, UnstakeSpec))
+        val result = converter.convert(Input(tx, Status.Failed, UnstakeSpec, onRowClick))
 
         assertThat(result.label).isEqualTo(resRef(R.string.transaction_history_status_unstake_failed))
     }
@@ -157,7 +156,7 @@ internal class TxHistoryStatusPillConverterTest {
     fun `GIVEN Restake uiStatus Confirmed WHEN convert THEN restaked label`() {
         val tx = txInfo(type = TransactionType.Staking.Restake)
 
-        val result = converter.convert(Input(tx, Status.Confirmed, RestakeSpec))
+        val result = converter.convert(Input(tx, Status.Confirmed, RestakeSpec, onRowClick))
 
         assertThat(result.label).isEqualTo(resRef(R.string.transaction_history_rewards_restaked))
     }
@@ -166,7 +165,7 @@ internal class TxHistoryStatusPillConverterTest {
     fun `GIVEN Restake uiStatus Unconfirmed WHEN convert THEN restaking rewards label`() {
         val tx = txInfo(type = TransactionType.Staking.Restake)
 
-        val result = converter.convert(Input(tx, Status.Unconfirmed, RestakeSpec))
+        val result = converter.convert(Input(tx, Status.Unconfirmed, RestakeSpec, onRowClick))
 
         assertThat(result.label).isEqualTo(resRef(R.string.transaction_history_status_restaking_rewards))
     }
@@ -175,7 +174,7 @@ internal class TxHistoryStatusPillConverterTest {
     fun `GIVEN Restake uiStatus Failed WHEN convert THEN rewards restake failed label`() {
         val tx = txInfo(type = TransactionType.Staking.Restake)
 
-        val result = converter.convert(Input(tx, Status.Failed, RestakeSpec))
+        val result = converter.convert(Input(tx, Status.Failed, RestakeSpec, onRowClick))
 
         assertThat(result.label).isEqualTo(resRef(R.string.transaction_history_status_rewards_restake_failed))
     }
@@ -184,7 +183,7 @@ internal class TxHistoryStatusPillConverterTest {
     fun `GIVEN Vote uiStatus Confirmed WHEN convert THEN vote label and no amount`() {
         val tx = txInfo(type = TransactionType.Staking.Vote(validatorAddress = "0xv"))
 
-        val result = converter.convert(Input(tx, Status.Confirmed, VoteSpec))
+        val result = converter.convert(Input(tx, Status.Confirmed, VoteSpec, onRowClick))
 
         assertThat(result.label).isEqualTo(resRef(R.string.staking_vote))
         assertThat(result.amount).isNull()
@@ -194,7 +193,7 @@ internal class TxHistoryStatusPillConverterTest {
     fun `GIVEN Vote uiStatus Failed WHEN convert THEN composed failed vote label`() {
         val tx = txInfo(type = TransactionType.Staking.Vote(validatorAddress = "0xv"))
 
-        val result = converter.convert(Input(tx, Status.Failed, VoteSpec))
+        val result = converter.convert(Input(tx, Status.Failed, VoteSpec, onRowClick))
 
         assertThat(result.label).isEqualTo(
             resRef(R.string.common_action_failed, listOf(resRef(R.string.staking_vote))),
@@ -205,7 +204,7 @@ internal class TxHistoryStatusPillConverterTest {
     fun `GIVEN Withdraw uiStatus Confirmed WHEN convert THEN withdraw label and no amount`() {
         val tx = txInfo(type = TransactionType.Staking.Withdraw)
 
-        val result = converter.convert(Input(tx, Status.Confirmed, WithdrawSpec))
+        val result = converter.convert(Input(tx, Status.Confirmed, WithdrawSpec, onRowClick))
 
         assertThat(result.label).isEqualTo(resRef(R.string.staking_withdraw))
         assertThat(result.amount).isNull()
@@ -219,7 +218,7 @@ internal class TxHistoryStatusPillConverterTest {
     fun `GIVEN YieldEnter uiStatus Confirmed WHEN convert THEN two-tone Yield mode Enabled`() {
         val tx = txInfo(type = TransactionType.YieldSupply.Enter(address = USER_ADDRESS))
 
-        val result = converter.convert(Input(tx, Status.Confirmed, YieldEnterSpec))
+        val result = converter.convert(Input(tx, Status.Confirmed, YieldEnterSpec, onRowClick))
 
         assertThat(result.kind).isEqualTo(TransactionItemUM.PillKind.YIELD_MODE)
         assertThat(result.label).isEqualTo(resRef(R.string.common_yield_mode_inline))
@@ -231,7 +230,7 @@ internal class TxHistoryStatusPillConverterTest {
     fun `GIVEN YieldEnter uiStatus Unconfirmed WHEN convert THEN single-tone enabling label`() {
         val tx = txInfo(type = TransactionType.YieldSupply.Enter(address = USER_ADDRESS))
 
-        val result = converter.convert(Input(tx, Status.Unconfirmed, YieldEnterSpec))
+        val result = converter.convert(Input(tx, Status.Unconfirmed, YieldEnterSpec, onRowClick))
 
         assertThat(result.label).isEqualTo(resRef(R.string.transaction_history_enabling_yield_mode))
         assertThat(result.amount).isNull()
@@ -241,7 +240,7 @@ internal class TxHistoryStatusPillConverterTest {
     fun `GIVEN YieldEnter uiStatus Failed WHEN convert THEN composed failed yield mode label`() {
         val tx = txInfo(type = TransactionType.YieldSupply.Enter(address = USER_ADDRESS))
 
-        val result = converter.convert(Input(tx, Status.Failed, YieldEnterSpec))
+        val result = converter.convert(Input(tx, Status.Failed, YieldEnterSpec, onRowClick))
 
         assertThat(result.label).isEqualTo(
             resRef(R.string.common_action_failed, listOf(resRef(R.string.common_yield_mode_inline))),
@@ -253,7 +252,7 @@ internal class TxHistoryStatusPillConverterTest {
     fun `GIVEN YieldExit uiStatus Confirmed WHEN convert THEN two-tone Yield mode Disabled`() {
         val tx = txInfo(type = TransactionType.YieldSupply.Exit(address = USER_ADDRESS))
 
-        val result = converter.convert(Input(tx, Status.Confirmed, YieldExitSpec))
+        val result = converter.convert(Input(tx, Status.Confirmed, YieldExitSpec, onRowClick))
 
         assertThat(result.label).isEqualTo(resRef(R.string.common_yield_mode_inline))
         assertThat(result.amount).isEqualTo(resRef(R.string.common_disabled))
@@ -263,7 +262,7 @@ internal class TxHistoryStatusPillConverterTest {
     fun `GIVEN YieldExit uiStatus Failed WHEN convert THEN composed failed label`() {
         val tx = txInfo(type = TransactionType.YieldSupply.Exit(address = USER_ADDRESS))
 
-        val result = converter.convert(Input(tx, Status.Failed, YieldExitSpec))
+        val result = converter.convert(Input(tx, Status.Failed, YieldExitSpec, onRowClick))
 
         assertThat(result.label).isEqualTo(
             resRef(
@@ -277,7 +276,7 @@ internal class TxHistoryStatusPillConverterTest {
     fun `GIVEN YieldSupply uiStatus Confirmed WHEN convert THEN supplied label and Aave provider`() {
         val tx = txInfo(type = TransactionType.YieldSupply.Topup)
 
-        val result = converter.convert(Input(tx, Status.Confirmed, YieldSupplySpec))
+        val result = converter.convert(Input(tx, Status.Confirmed, YieldSupplySpec, onRowClick))
 
         assertThat(result.kind).isEqualTo(TransactionItemUM.PillKind.YIELD_SUPPLY)
         assertThat(result.label).isEqualTo(resRef(R.string.yield_module_transaction_supplied))
@@ -296,7 +295,7 @@ internal class TxHistoryStatusPillConverterTest {
     fun `GIVEN YieldSupply uiStatus Unconfirmed WHEN convert THEN supplying label keeps the provider`() {
         val tx = txInfo(type = TransactionType.YieldSupply.Topup)
 
-        val result = converter.convert(Input(tx, Status.Unconfirmed, YieldSupplySpec))
+        val result = converter.convert(Input(tx, Status.Unconfirmed, YieldSupplySpec, onRowClick))
 
         assertThat(result.label).isEqualTo(resRef(R.string.common_supplying))
         assertThat(result.subtitle).isInstanceOf(TransactionItemUM.PillSubtitle.Provider::class.java)
@@ -306,7 +305,7 @@ internal class TxHistoryStatusPillConverterTest {
     fun `GIVEN YieldSupply uiStatus Failed WHEN convert THEN composed supply failed label and no provider`() {
         val tx = txInfo(type = TransactionType.YieldSupply.Topup)
 
-        val result = converter.convert(Input(tx, Status.Failed, YieldSupplySpec))
+        val result = converter.convert(Input(tx, Status.Failed, YieldSupplySpec, onRowClick))
 
         assertThat(result.label).isEqualTo(
             resRef(R.string.common_action_failed, listOf(resRef(R.string.yield_module_supply))),
@@ -318,7 +317,7 @@ internal class TxHistoryStatusPillConverterTest {
     fun `GIVEN YieldWithdraw uiStatus Confirmed WHEN convert THEN withdrawn label and Aave provider`() {
         val tx = txInfo(type = TransactionType.YieldSupply.Send(isYieldSupplyWithdraw = true))
 
-        val result = converter.convert(Input(tx, Status.Confirmed, YieldWithdrawSpec))
+        val result = converter.convert(Input(tx, Status.Confirmed, YieldWithdrawSpec, onRowClick))
 
         assertThat(result.kind).isEqualTo(TransactionItemUM.PillKind.YIELD_SUPPLY)
         assertThat(result.label).isEqualTo(resRef(R.string.transaction_history_withdrawn))
@@ -336,7 +335,7 @@ internal class TxHistoryStatusPillConverterTest {
     fun `GIVEN YieldWithdraw uiStatus Unconfirmed WHEN convert THEN withdrawing label`() {
         val tx = txInfo(type = TransactionType.YieldSupply.Send(isYieldSupplyWithdraw = true))
 
-        val result = converter.convert(Input(tx, Status.Unconfirmed, YieldWithdrawSpec))
+        val result = converter.convert(Input(tx, Status.Unconfirmed, YieldWithdrawSpec, onRowClick))
 
         assertThat(result.label).isEqualTo(resRef(R.string.common_withdrawing))
     }
@@ -345,7 +344,7 @@ internal class TxHistoryStatusPillConverterTest {
     fun `GIVEN YieldWithdraw uiStatus Failed WHEN convert THEN composed withdrawal failed label`() {
         val tx = txInfo(type = TransactionType.YieldSupply.Send(isYieldSupplyWithdraw = true))
 
-        val result = converter.convert(Input(tx, Status.Failed, YieldWithdrawSpec))
+        val result = converter.convert(Input(tx, Status.Failed, YieldWithdrawSpec, onRowClick))
 
         assertThat(result.label).isEqualTo(
             resRef(R.string.common_action_failed, listOf(resRef(R.string.common_withdrawal))),
@@ -357,20 +356,20 @@ internal class TxHistoryStatusPillConverterTest {
     // region Misc
 
     @Test
-    fun `GIVEN any Pill WHEN onClick invoked THEN openTxInExplorer called with txHash`() {
+    fun `GIVEN any Pill WHEN onClick invoked THEN the row click runs`() {
         val tx = txInfo(type = TransactionType.Staking.Stake)
 
-        val result = converter.convert(Input(tx, Status.Confirmed, StakeSpec))
+        val result = converter.convert(Input(tx, Status.Confirmed, StakeSpec, onRowClick))
         result.onClick()
 
-        verify { txHistoryUiActions.openTxInExplorer(TX_HASH) }
+        verify(exactly = 1) { onRowClick() }
     }
 
     @Test
     fun `GIVEN tx WHEN convert THEN txHash propagated`() {
         val tx = txInfo(type = TransactionType.Staking.Stake)
 
-        val result = converter.convert(Input(tx, Status.Confirmed, StakeSpec))
+        val result = converter.convert(Input(tx, Status.Confirmed, StakeSpec, onRowClick))
 
         assertThat(result.txHash).isEqualTo(TX_HASH)
     }
@@ -386,7 +385,7 @@ internal class TxHistoryStatusPillConverterTest {
         val tx = txInfo(type = TransactionType.IncentiveClaim, amount = BigDecimal.ZERO)
 
         // Act
-        val result = converter.convert(Input(tx, model.status, IncentiveClaimSpec))
+        val result = converter.convert(Input(tx, model.status, IncentiveClaimSpec, onRowClick))
 
         // Assert
         val expected = TransactionItemUM.Pill(
