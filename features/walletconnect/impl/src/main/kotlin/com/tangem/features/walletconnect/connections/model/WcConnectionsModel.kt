@@ -33,6 +33,7 @@ import com.tangem.domain.mcp.repository.McpSessionsLce
 import com.tangem.domain.qrscanning.models.QrResultSource
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
+import com.tangem.domain.walletconnect.ConnectionsAnalyticEvents
 import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.model.WcPairRequest
@@ -71,7 +72,7 @@ internal class WcConnectionsModel @Inject constructor(
     private val mcpFeatureToggles: McpFeatureToggles,
     private val mcpRepository: McpRepository,
     override val dispatchers: CoroutineDispatcherProvider,
-    analytics: AnalyticsEventHandler,
+    private val analytics: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -93,7 +94,13 @@ internal class WcConnectionsModel @Inject constructor(
     }
 
     init {
-        analytics.send(WcAnalyticEvents.ScreenOpened())
+        analytics.send(
+            if (mcpFeatureToggles.isMcpEnabled) {
+                ConnectionsAnalyticEvents.ScreenOpened()
+            } else {
+                WcAnalyticEvents.ScreenOpened()
+            },
+        )
         listenQrUpdates()
         listenWcSessions()
     }
@@ -211,6 +218,13 @@ internal class WcConnectionsModel @Inject constructor(
     }
 
     private fun disconnectAllSessions() {
+        analytics.send(
+            if (mcpFeatureToggles.isMcpEnabled) {
+                ConnectionsAnalyticEvents.ButtonDisconnectAll()
+            } else {
+                WcAnalyticEvents.ButtonDisconnectAll()
+            },
+        )
         modelScope.launch {
             coroutineScope {
                 if (mcpFeatureToggles.isMcpEnabled) launch { mcpRepository.revokeAllSessions() }

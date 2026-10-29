@@ -1,6 +1,7 @@
 package com.tangem.features.details.utils
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.features.mcp.api.McpFeatureToggles
@@ -8,6 +9,7 @@ import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.settings.HotWalletRestrictionManager
+import com.tangem.domain.wallets.analytics.Settings
 import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.impl.R
 import kotlinx.collections.immutable.ImmutableList
@@ -23,6 +25,7 @@ internal class ItemsBuilder @Inject constructor(
     private val router: Router,
     private val hotWalletRestrictionManager: HotWalletRestrictionManager,
     private val mcpFeatureToggles: McpFeatureToggles,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) {
 
     @Suppress("LongParameterList")
@@ -94,9 +97,14 @@ internal class ItemsBuilder @Inject constructor(
     private fun buildWalletConnectButton(
         userWalletId: UserWalletId,
     ): DetailsItemUM.WalletActionBlock.Item.WalletConnect {
+        val isMcpEnabled = mcpFeatureToggles.isMcpEnabled
         return DetailsItemUM.WalletActionBlock.Item.WalletConnect(
-            onClick = { router.push(AppRoute.WalletConnectSessions(userWalletId)) },
-            isMcpEnabled = mcpFeatureToggles.isMcpEnabled,
+            onClick = {
+                // Only the Connections row is tracked: the Wallet Connect one never had an event on Android.
+                if (isMcpEnabled) analyticsEventHandler.send(Settings.ButtonConnections())
+                router.push(AppRoute.WalletConnectSessions(userWalletId))
+            },
+            isMcpEnabled = isMcpEnabled,
         )
     }
 
