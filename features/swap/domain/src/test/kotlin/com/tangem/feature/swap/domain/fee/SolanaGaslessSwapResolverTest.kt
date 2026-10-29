@@ -199,6 +199,24 @@ internal class SolanaGaslessSwapResolverTest {
         }
 
     @Test
+    fun `GIVEN quote carries a bridge fee WHEN resolveFeePayer THEN returns null and getFeePayer is not called`() =
+        runTest {
+            // Arrange
+            val from = buildSwapCurrencyStatus(networkRawId = solanaNetwork, isCoin = false)
+            val swapData = buildDexSwapData(
+                message = providerMessage(size = SIZE_FITS),
+                otherNativeFeeWei = BigDecimal("5000"),
+            )
+
+            // Act
+            val actual = sut.resolveFeePayer(from, swapData)
+
+            // Assert
+            assertThat(actual).isNull()
+            coVerify(exactly = 0) { solanaGaslessTransactionRepository.getFeePayer() }
+        }
+
+    @Test
     fun `GIVEN everything fits WHEN resolveFeePayer THEN returns the fee payer`() = runTest {
         // Arrange
         val from = buildSwapCurrencyStatus(networkRawId = solanaNetwork, isCoin = false)
@@ -382,7 +400,11 @@ internal class SolanaGaslessSwapResolverTest {
         return header + ByteArray(size - header.size)
     }
 
-    private fun buildDexSwapData(message: ByteArray, signerCount: Int = 1): SwapDataModel {
+    private fun buildDexSwapData(
+        message: ByteArray,
+        signerCount: Int = 1,
+        otherNativeFeeWei: BigDecimal? = null,
+    ): SwapDataModel {
         val txData = Base64.getEncoder().encodeToString(
             byteArrayOf(signerCount.toByte()) + ByteArray(signerCount * SIGNATURE_LENGTH) + message,
         )
@@ -397,7 +419,7 @@ internal class SolanaGaslessSwapResolverTest {
                 txExtraId = null,
                 txFrom = "SolanaSender",
                 txData = txData,
-                otherNativeFeeWei = null,
+                otherNativeFeeWei = otherNativeFeeWei,
                 gas = BigInteger.ZERO,
             ),
         )
