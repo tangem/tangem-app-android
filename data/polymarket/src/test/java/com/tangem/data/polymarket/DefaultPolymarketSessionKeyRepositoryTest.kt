@@ -18,6 +18,7 @@ import com.tangem.data.polymarket.signer.PolymarketHmacSigner
 import com.tangem.data.polymarket.signer.PolymarketL2HeaderBuilder
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
+import com.tangem.domain.polymarket.model.PolymarketClobIdentity
 import com.tangem.domain.polymarket.model.PolymarketApprovalCall
 import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyAuthorization
@@ -198,7 +199,7 @@ internal class DefaultPolymarketSessionKeyRepositoryTest {
         )
 
         // Act
-        val actual = repository.getSessionSigners(ownerAddress = OWNER, credentials = CREDENTIALS)
+        val actual = repository.getSessionSigners(owner = PolymarketClobIdentity.Owner(address = OWNER, credentials = CREDENTIALS))
 
         // Assert
         assertThat(actual).isEqualTo(
@@ -223,7 +224,7 @@ internal class DefaultPolymarketSessionKeyRepositoryTest {
         )
 
         // Act
-        val actual = repository.getSessionSigners(ownerAddress = OWNER, credentials = CREDENTIALS)
+        val actual = repository.getSessionSigners(owner = PolymarketClobIdentity.Owner(address = OWNER, credentials = CREDENTIALS))
 
         // Assert
         assertThat(actual).isEqualTo(PolymarketAuthError.InvalidSignature.left())
@@ -234,8 +235,7 @@ internal class DefaultPolymarketSessionKeyRepositoryTest {
         runTest {
             // Act
             val actual = repository.getSessionSigners(
-                ownerAddress = OWNER,
-                credentials = CREDENTIALS.copy(secret = "%%%"),
+                owner = PolymarketClobIdentity.Owner(address = OWNER, credentials = CREDENTIALS.copy(secret = "%%%")),
             )
 
             // Assert
