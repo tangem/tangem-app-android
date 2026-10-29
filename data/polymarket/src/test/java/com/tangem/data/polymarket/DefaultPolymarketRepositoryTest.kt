@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyEnvelope
 import com.tangem.domain.polymarket.model.PolymarketExchangeDomain
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
@@ -769,7 +770,10 @@ internal class DefaultPolymarketRepositoryTest {
         coEvery { clobApi.placeOrder(capture(headers), capture(body)) } returns ApiResponse.Success(placeOrderResponse())
 
         // Act
-        val result = repository.placeOrder(identity = SESSION_IDENTITY, signedOrder = signedOrder())
+        val result = repository.placeOrder(
+            identity = SESSION_IDENTITY,
+            signedOrder = signedOrder(signature = sessionSignature()),
+        )
 
         // Assert
         assertThat(result.isRight()).isTrue()
@@ -777,6 +781,36 @@ internal class DefaultPolymarketRepositoryTest {
         assertThat(headers.captured["POLY_ADDRESS"]).isEqualTo(SESSION_KEY)
         assertThat(headers.captured["POLY_API_KEY"]).isEqualTo(SESSION_IDENTITY.credentials.apiKey)
         assertThat(sent).contains(""""owner":"session-k"""")
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class PlaceOrderSigner {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a signature that is not of the placing identity WHEN placeOrder THEN nothing is sent`(
+            model: ForeignSignatureModel,
+        ) = runTest {
+            // Act
+            val result = repository.placeOrder(
+                identity = model.identity,
+                signedOrder = signedOrder(signature = model.signature),
+            )
+
+            // Assert
+            assertThat(result.leftOrNull()).isInstanceOf(PredictionPlaceOrderError.NotSent::class.java)
+            coVerify(exactly = 0) { clobApi.placeOrder(any(), any()) }
+        }
+
+        private fun provideTestModels() = listOf(
+            ForeignSignatureModel(identity = OWNER_IDENTITY, signature = sessionSignature()),
+            ForeignSignatureModel(identity = SESSION_IDENTITY, signature = standardExchangeSignature()),
+            ForeignSignatureModel(
+                identity = SESSION_IDENTITY,
+                signature = sessionSignature(sessionKey = "0x01d0000000000000000000000000000000000009"),
+            ),
+        )
     }
 
     @Test
@@ -1383,6 +1417,8 @@ internal class DefaultPolymarketRepositoryTest {
     private fun <T : Any> timeoutError(): ApiResponse<T> =
         ApiResponse.Error(ApiResponseError.TimeoutException()) as ApiResponse<T>
 
+    data class ForeignSignatureModel(val identity: PolymarketClobIdentity, val signature: String)
+
     private companion object {
         const val SPENDER = "0xe111180000d2663c0091e4f400237545b87b996b"
         const val TIMESTAMP_TOLERANCE_SECONDS = 60L
@@ -1428,6 +1464,10 @@ internal class DefaultPolymarketRepositoryTest {
         fun standardExchangeSignature(): String = "0x" + "11".repeat(n = 65) +
             PolymarketOrderTypedDataBuilder.domainSeparator(PolymarketExchangeDomain.CTF)
                 .joinToString(separator = "") { byte -> "%02x".format(byte) }
+
+        fun sessionSignature(sessionKey: String = SESSION_KEY): String = PolymarketSessionKeyEnvelope
+            .wrap(depositWalletSignature = standardExchangeSignature(), sessionKeyAddress = sessionKey)
+            .getOrNull()!!
 
         fun signedOrder(
             signature: String = standardExchangeSignature(),
