@@ -462,8 +462,9 @@ private fun messageBannerRipple(): RippleConfiguration = RippleConfiguration(
 /**
  * What [TangemMessageBanner.Variant.Default] renders as. Provided by surfaces whose background the default
  * translucent fill doesn't suit (see [TangemMessageBanner.Variant.Default]); explicit variants are never remapped.
+ * Screens built for the shtorka but also shown full-screen provide [TangemMessageBanner.Variant.Light] themselves.
  */
-internal val LocalMessageBannerDefaultVariant = compositionLocalOf { TangemMessageBanner.Variant.Default }
+val LocalMessageBannerDefaultVariant = compositionLocalOf { TangemMessageBanner.Variant.Default }
 
 /** Resolved appearance tokens for a [TangemMessageBanner.Variant]. */
 private data class MessageBannerTokens(val background: Color, val glowRing: TangemGlowRing.Variant)

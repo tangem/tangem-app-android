@@ -14,6 +14,8 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
+import com.tangem.core.ui.ds2.messagebanner.LocalMessageBannerDefaultVariant
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -218,6 +220,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
         CompositionLocalProvider(
             LocalMainBottomSheetColor provides remember { mutableStateOf(primaryBackground) }
                 .apply { value = primaryBackground },
+            LocalMessageBannerDefaultVariant provides TangemMessageBanner.Variant.Light,
         ) {
             EntryContent(
                 bottomSheetState = bottomSheetState,
