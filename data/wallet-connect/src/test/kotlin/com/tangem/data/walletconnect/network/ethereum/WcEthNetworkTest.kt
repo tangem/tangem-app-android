@@ -141,13 +141,31 @@ internal class WcEthNetworkTest {
         assertThat(method.params.message?.contents).isEqualTo("hi")
     }
 
+    @Test
+    fun `GIVEN eth method on solana chainId WHEN toUseCase THEN rejected without creating use case`() = runTest {
+        // Arrange
+        val request = createTypedDataRequest(
+            params = "[\"0xabc\", {}]",
+            chainId = "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+        )
+
+        // Act
+        val result = network.toUseCase(request)
+
+        // Assert
+        assertThat(network.toWcMethodName(request)).isNull()
+        assertThat(result.leftOrNull()).isEqualTo(HandleMethodError.UnknownError("Unknown method name"))
+        verify(exactly = 0) { signTypedDataFactory.create(any(), any()) }
+    }
+
     private fun createTypedDataRequest(
         params: String,
         dAppMetaData: WcAppMetaData = emptyMetadata(),
+        chainId: String = "eip155:1",
     ): WcSdkSessionRequest {
         return WcSdkSessionRequest(
             topic = "topic",
-            chainId = "eip155:1",
+            chainId = chainId,
             dAppMetaData = dAppMetaData,
             request = WcSdkSessionRequest.JSONRPCRequest(
                 id = 1L,
