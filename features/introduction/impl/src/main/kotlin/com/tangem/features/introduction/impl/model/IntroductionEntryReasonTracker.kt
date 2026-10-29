@@ -2,7 +2,7 @@ package com.tangem.features.introduction.impl.model
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.domain.analytics.repository.AnalyticsRepository
+import com.tangem.core.analytics.api.OneTimeEventStore
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.card.analytics.IntroductionProcess.ScreenOpened.EntryReason
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -17,7 +17,7 @@ import javax.inject.Singleton
  */
 @Singleton
 internal class IntroductionEntryReasonTracker @Inject constructor(
-    private val analyticsRepository: AnalyticsRepository,
+    private val oneTimeEventStore: OneTimeEventStore,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) {
 
@@ -45,9 +45,7 @@ internal class IntroductionEntryReasonTracker @Inject constructor(
 
     /** Records this showing and tells whether the screen had been shown on this installation before. */
     private suspend fun markShown(): Boolean = runSuspendCatching {
-        analyticsRepository.checkIsEventSent(WELCOME_OPENED_EVENT_ID).also { wasShown ->
-            if (!wasShown) analyticsRepository.setIsEventSent(WELCOME_OPENED_EVENT_ID)
-        }
+        oneTimeEventStore.markSent(eventId = WELCOME_OPENED_EVENT_ID)
     }.getOrDefault(defaultValue = true)
 
     private companion object {
