@@ -66,6 +66,7 @@ internal class DefaultQrScanningEventsRepository(
         if (valueStr != null) {
             result.amount = valueStr.parseBigDecimalOrNull()
                 ?.toPlainString()?.toBigDecimalOrNull()
+                ?.takeIf { it.signum() > 0 }
                 ?.divide(BigDecimal.TEN.pow(cryptoCurrency.decimals))
         }
 

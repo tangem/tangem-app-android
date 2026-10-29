@@ -8,6 +8,7 @@ import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.common.ui.amountScreen.utils.checkExceedBalance
 import com.tangem.common.ui.amountScreen.utils.getFiatValue
 import com.tangem.common.ui.amountScreen.utils.getKeyboardAction
+import com.tangem.common.ui.amountScreen.utils.isNullOrNotPositive
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -16,7 +17,6 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.utils.isNullOrZero
 import com.tangem.utils.transformer.Transformer
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -54,10 +54,14 @@ class AmountReduceToTransformer(
         val checkValue = if (amountTextField.isFiatValue) fiatValue else cryptoValue
         val isExceedBalance = checkValue.checkExceedBalance(maxEnterAmount, amountTextField)
         val isLessThanMinimumIfProvided = minimumTransactionAmount?.amount?.let { decimalCryptoValue < it } == true
-        val isZero = if (amountTextField.isFiatValue) decimalFiatValue.isNullOrZero() else value.isNullOrZero()
+        val isNotPositive = if (amountTextField.isFiatValue) {
+            decimalFiatValue.isNullOrNotPositive()
+        } else {
+            value.isNullOrNotPositive()
+        }
         val isCheckFailed = isExceedBalance || isLessThanMinimumIfProvided
         return prevState.copy(
-            isPrimaryButtonEnabled = !isZero && !isCheckFailed,
+            isPrimaryButtonEnabled = !isNotPositive && !isCheckFailed,
             amountTextField = amountTextField.copy(
                 value = cryptoValue,
                 fiatValue = fiatValue,
