@@ -54,7 +54,6 @@ internal class TxHistoryStatusPillConverter(
             },
             currencySymbol = if (hasAmount) allowance?.currencySymbol ?: currency.symbol else null,
             subtitle = tx.buildPillSubtitle(uiStatus, spec),
-            timestamp = tx.timestampInMillis,
             onClick = { txHistoryUiActions.openTxInExplorer(tx.txHash) },
             isSuccess = spec.isSuccessWhenSettled && uiStatus.isSettled(),
         )
