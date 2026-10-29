@@ -18,19 +18,16 @@ import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartPeriod
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartUM
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyMarketChartDataUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 import java.math.BigDecimal
 import java.math.RoundingMode
-import java.text.SimpleDateFormat
-import java.time.Month
 import java.time.format.TextStyle
-import java.util.Calendar
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
@@ -123,8 +120,8 @@ internal class YieldSupplyChartModel @Inject constructor(
                                 x = chartData.x.toImmutableList(),
                                 avr = chartData.avr,
                                 percentFormat = getPercentFormatPattern(chartData.y),
+                                xLabels = monthStartLabels(chartData.bucketStarts).toImmutableList(),
                             ),
-                            monthLables = lastMonthLabels().toImmutableList(),
                         )
                     }
                     params.callback?.onIncentiveChanged(null)
@@ -177,7 +174,6 @@ internal class YieldSupplyChartModel @Inject constructor(
                 rewardCaps = caps.map(BigDecimal::toDouble).toImmutableList(),
                 xLabels = axisLabels(points = history.points, period = period).toImmutableList(),
             ),
-            monthLables = persistentListOf(),
             incentive = incentive(averageApy = average, period = period),
         )
     }
@@ -200,19 +196,7 @@ internal class YieldSupplyChartModel @Inject constructor(
             YieldSupplyChartPeriod.Week -> points.map {
                 it.date.dayOfWeek.getDisplayName(TextStyle.NARROW, locale)
             }
-            YieldSupplyChartPeriod.ThreeMonths -> {
-                var previousMonth: Month? = null
-
-                points.map { point ->
-                    val month = point.date.month
-                    if (month == previousMonth) {
-                        ""
-                    } else {
-                        previousMonth = month
-                        month.getDisplayName(TextStyle.SHORT, locale)
-                    }
-                }
-            }
+            YieldSupplyChartPeriod.ThreeMonths -> monthStartLabels(points.map(YieldAprHistory.Point::date))
         }
     }
 
@@ -259,14 +243,18 @@ internal class YieldSupplyChartModel @Inject constructor(
         }
     }
 
-    private fun lastMonthLabels(n: Int = MONTH_LABELS_COUNT, locale: Locale = Locale.getDefault()): List<String> {
-        val calendar = Calendar.getInstance()
-        val formatter = SimpleDateFormat("MMM", locale)
+    /** At most [MONTH_LABELS_COUNT], thinned from the newest month so the current one is always named. */
+    private fun monthStartLabels(bucketStarts: List<LocalDate>): List<String> {
+        val locale = Locale.getDefault()
+        val monthStarts = bucketStarts.indices.filter { index ->
+            index == 0 || bucketStarts[index].month != bucketStarts[index - 1].month
+        }
+        val step = ((monthStarts.size + MONTH_LABELS_COUNT - 1) / MONTH_LABELS_COUNT).coerceAtLeast(1)
+        val labelled = monthStarts.reversed().filterIndexed { position, _ -> position % step == 0 }.toSet()
 
-        return (n downTo 1).map {
-            calendar.add(Calendar.MONTH, -1)
-            formatter.format(calendar.time)
-        }.reversed()
+        return bucketStarts.mapIndexed { index, date ->
+            if (index in labelled) date.month.getDisplayName(TextStyle.SHORT, locale) else ""
+        }
     }
 
     companion object {
