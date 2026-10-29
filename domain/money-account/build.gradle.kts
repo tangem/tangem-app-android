@@ -19,6 +19,7 @@ dependencies {
     // endregion
 
     // region Core modules
+    api(projects.core.analytics)
     api(projects.core.analytics.models)
     api(projects.core.utils)
     // endregion
