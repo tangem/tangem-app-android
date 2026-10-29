@@ -18,6 +18,7 @@ import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.GaslessYieldRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
+import com.tangem.domain.transaction.models.GaslessApproval
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.raiseIllegalStateError
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -84,14 +85,20 @@ class EvmGaslessFeeResolver(
         nativeCurrencyStatus: CryptoCurrencyStatus,
         tokenCurrencyStatus: CryptoCurrencyStatus,
         sentAmount: BigDecimal? = null,
+        approval: GaslessApproval? = null,
     ): Either<GetFeeError, TransactionFeeExtended> = either {
         val walletManager = prepareWalletManager(userWallet, network)
+
+        val isYieldActive = tokenCurrencyStatus.value.yieldSupplyStatus?.isActive == true
+        // Both build a batch around the main tx; combining approve with yield-withdraw is not supported yet
+        if (approval != null && isYieldActive) raise(GaslessError.NetworkIsNotSupported)
 
         val initialTxFee = tokenFeeCalculator.calculateInitialFee(
             userWallet = userWallet,
             network = network,
             walletManager = walletManager,
             transactionData = transactionData,
+            allowanceSpenderAddress = approval?.spenderAddress
         ).bind()
 
         val initialFee = initialTxFee.normal as? Fee.Ethereum
@@ -99,7 +106,6 @@ class EvmGaslessFeeResolver(
                 error = "only Fee.Ethereum supported, but was ${initialTxFee.normal::class.qualifiedName}",
             )
 
-        val isYieldActive = tokenCurrencyStatus.value.yieldSupplyStatus?.isActive == true
 
         val tokenFeeExtended = tokenFeeCalculator.calculateTokenFee(
             walletManager = walletManager,
@@ -108,6 +114,7 @@ class EvmGaslessFeeResolver(
             initialFee = initialFee,
             isYieldActive = isYieldActive,
             userWallet = userWallet,
+            approval = approval
         ).bind()
 
         // Only the yield path needs a plan: without an active position the fee token is spent straight

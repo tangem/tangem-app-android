@@ -916,6 +916,7 @@ internal class SwapInteractorImpl @Inject constructor(
     ): SwapTransactionState {
         val networkId = fromSwapCurrencyStatus.currency.network.rawId
         val tronGaslessFee = fee?.tronGaslessFeeOrNull()
+        val evmGaslessFee = fee?.evmGaslessFeeOrNull()
         return when {
             fee != null && tronGaslessFee != null -> onSwapTronGaslessDex(
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
@@ -925,6 +926,15 @@ internal class SwapInteractorImpl @Inject constructor(
                 amountToSwap = amountToSwap,
                 swapFee = fee,
                 tronGaslessFee = tronGaslessFee,
+            )
+            fee != null && evmGaslessFee != null -> onSwapEvmGaslessDex(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                toSwapCurrencyStatus = toSwapCurrencyStatus,
+                provider = swapProvider,
+                swapData = swapData,
+                amountToSwap = amountToSwap,
+                swapFee = fee,
+                evmGaslessFee = evmGaslessFee,
             )
             isSolana(networkId) -> onSwapSolanaDex(
                 provider = swapProvider,
@@ -1129,9 +1139,56 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
+    @Suppress("LongParameterList")
+    private suspend fun onSwapEvmGaslessDex(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        toSwapCurrencyStatus: SwapCurrencyStatus,
+        provider: SwapProvider,
+        swapData: SwapDataModel,
+        amountToSwap: String,
+        swapFee: SwapFee,
+        evmGaslessFee: TransactionFeeExtended,
+    ): SwapTransactionState {
+        val amountDecimal = requireNotNull(toBigDecimalOrNull(amountToSwap)) { "wrong amount format" }
+        val dexTransaction = swapData.transaction as ExpressTransactionModel.DEX
+
+        val swapTxData = createPlainDexTransaction(
+            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+            dexTransaction = dexTransaction,
+            swapFee = swapFee,
+            tronPayload = null,
+        ).getOrElse { error ->
+            TangemLogger.e("Failed to create EVM gasless swap tx data", error)
+            return SwapTransactionState.Error.UnknownError
+        }
+
+        return createAndSendGaslessTransactionUseCase(
+            userWallet = fromSwapCurrencyStatus.userWallet,
+            transactionData = swapTxData,
+            fee = evmGaslessFee,
+        ).fold(
+            ifLeft = { error -> SwapTransactionState.Error.TransactionError(error) },
+            ifRight = { txHash ->
+                finalizeDexSwapSuccess(
+                    fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                    toSwapCurrencyStatus = toSwapCurrencyStatus,
+                    provider = provider,
+                    swapData = swapData,
+                    amount = SwapAmount(amountDecimal, fromSwapCurrencyStatus.currency.decimals),
+                    txHash = txHash,
+                    payInAddress = getPayoutAddress(swapTxData),
+                )
+            },
+        )
+    }
+
     private fun SwapFee.tronGaslessFeeOrNull(): TransactionFeeExtended? =
         (transactionFeeResult as? TransactionFeeResult.LoadedExtended)?.fee
             ?.takeIf { it.gaslessProtocolData is GaslessProtocolData.Tron }
+
+    private fun SwapFee.evmGaslessFeeOrNull(): TransactionFeeExtended? =
+        (transactionFeeResult as? TransactionFeeResult.LoadedExtended)?.fee
+            ?.takeIf { it.gaslessProtocolData is GaslessProtocolData.Evm }
 
     /**
      * [REDACTED_TASK_KEY] — selects the approval [Fee] matching the user-picked [FeeBucket] tier. Mirrors
