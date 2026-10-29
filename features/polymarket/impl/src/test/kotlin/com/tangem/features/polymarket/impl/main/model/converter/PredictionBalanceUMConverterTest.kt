@@ -3,7 +3,7 @@ package com.tangem.features.polymarket.impl.main.model.converter
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
-import com.tangem.domain.polymarket.model.PredictionPositionsValue
+import com.tangem.domain.models.account.PredictionPositionsValue
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.model.PolymarketChainFamily
 import com.tangem.domain.polymarket.model.PolymarketDepositNetwork
