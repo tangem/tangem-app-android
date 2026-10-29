@@ -14,12 +14,14 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.features.txhistory.impl.R
-import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.utils.converter.Converter
 
+/**
+ * Builds the compact status pill of a staking / yield / approve row. The row's click is the caller's — the pill is
+ * the same chip wherever it is shown, and only the caller knows what the row it belongs to opens.
+ */
 internal class TxHistoryStatusPillConverter(
     private val currency: CryptoCurrency,
-    private val txHistoryUiActions: TxHistoryUiActions,
 ) : Converter<TxHistoryStatusPillConverter.Input, TransactionItemUM.Pill> {
 
     override fun convert(value: Input): TransactionItemUM.Pill {
@@ -54,7 +56,7 @@ internal class TxHistoryStatusPillConverter(
             },
             currencySymbol = if (hasAmount) allowance?.currencySymbol ?: currency.symbol else null,
             subtitle = tx.buildPillSubtitle(uiStatus, spec),
-            onClick = { txHistoryUiActions.openTxInExplorer(tx.txHash) },
+            onClick = value.onClick,
             isSuccess = spec.isSuccessWhenSettled && uiStatus.isSettled(),
         )
     }
@@ -63,6 +65,7 @@ internal class TxHistoryStatusPillConverter(
         val tx: TxInfo,
         val uiStatus: TransactionItemUM.Content.Status,
         val spec: PillSpec,
+        val onClick: () -> Unit,
     )
 }
 
