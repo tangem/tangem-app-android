@@ -8,6 +8,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.offramp.model.PendingOfframp
 import com.tangem.domain.offramp.repository.OfframpRepository
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -19,7 +20,10 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultSellRedirectDeepLinkHandlerTest {
 
     private val appRouter: AppRouter = mockk(relaxed = true)
@@ -87,6 +91,23 @@ internal class DefaultSellRedirectDeepLinkHandlerTest {
         coVerify(exactly = 0) { singleAccountListSupplier.getSyncOrNull(any<UserWalletId>()) }
         verify(exactly = 0) { appRouter.push(any()) }
     }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN non-positive or invalid amount WHEN deeplink handled THEN rejected`(amount: String) = runTest {
+        // Arrange
+        coEvery { offrampRepository.resolvePendingOfframp(requestId, userWalletId, currencyId) } returns pendingOfframp()
+
+        // Act
+        createHandler(validParams() + ("baseCurrencyAmount" to amount))
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { offrampRepository.resolvePendingOfframp(any(), any(), any()) }
+        verify(exactly = 0) { appRouter.push(any()) }
+    }
+
+    private fun provideTestModels() = listOf("-10", "0", "abc")
 
     private fun TestScope.createHandler(queryParams: Map<String, String>) = DefaultSellRedirectDeepLinkHandler(
         scope = this,
