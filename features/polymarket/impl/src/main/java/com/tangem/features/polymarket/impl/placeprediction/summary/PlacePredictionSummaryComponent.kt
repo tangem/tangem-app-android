@@ -23,12 +23,15 @@ internal class PlacePredictionSummaryComponent(
     private val model: PlacePredictionSummaryModel = getOrCreateModel(params = params)
 
     private val feeSheetSlot = childSlot(
-        source = model.feeSheetNavigation,
+        source = model.feeSheet.navigation,
         serializer = null,
         key = "feeSheet",
         handleBackButton = false,
         childFactory = { _, componentContext ->
-            PredictionFeeSheetComponent(appComponentContext = childByContext(componentContext), model = model)
+            PredictionFeeSheetComponent(
+                appComponentContext = childByContext(componentContext),
+                feeSheet = model.feeSheet,
+            )
         },
     )
 
