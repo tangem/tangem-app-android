@@ -14,6 +14,7 @@ import com.tangem.domain.pay.model.CustomerSummary.PaymentAccount
 import com.tangem.domain.pay.model.CustomerSummary.MoneyAccount.Activation.Status as MoneyStatus
 import com.tangem.domain.pay.model.CustomerSummary.PaymentAccount.Activation.Status as PaymentStatus
 import com.tangem.domain.pay.usecase.GetCustomerSummaryUseCase
+import com.tangem.domain.pay.utils.TangemPayCustomerStateConverter
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -64,6 +65,32 @@ internal class PollTangemPayAccountStatusesUseCaseTest {
         // Assert
         assertThat(currentTime).isEqualTo(0)
         verifyFetched(times = 1)
+    }
+
+    @Test
+    fun `GIVEN terminal summary WHEN invoke THEN its customer state returned`() = runTest {
+        // Arrange
+        coEvery { getCustomerSummaryUseCase(USER_WALLET_ID, CachePolicy.ONLY_CACHE) } returns terminalSummary().right()
+
+        // Act
+        val actual = useCase(USER_WALLET_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(TangemPayCustomerStateConverter.convert(terminalSummary()))
+    }
+
+    @Test
+    fun `GIVEN summary in progress for 15 minutes WHEN invoke THEN polling stops without a final state`() = runTest {
+        // Arrange
+        coEvery { getCustomerSummaryUseCase(USER_WALLET_ID, CachePolicy.ONLY_CACHE) } returns
+            inProgressSummary().right()
+
+        // Act
+        val actual = useCase(USER_WALLET_ID)
+
+        // Assert
+        assertThat(actual).isNull()
+        assertThat(currentTime).isEqualTo(15.minutes.inWholeMilliseconds)
     }
 
     @Test

@@ -8,6 +8,7 @@ import com.tangem.domain.models.account.TangemPayTariffPlanTransition
 import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isColdWallet
+import com.tangem.domain.moneyaccount.analytics.ProductActivationFinishedEvents
 import com.tangem.domain.moneyaccount.model.MoneyAccountActivationError
 import com.tangem.domain.moneyaccount.model.StartTangemPayOnboardingError
 import com.tangem.domain.pay.usecase.CreateOnboardingOrderUseCase
@@ -16,6 +17,7 @@ import com.tangem.domain.tangempay.TangemPayAnalyticsEvents.SignatureResult
 import com.tangem.domain.visa.model.MoneyAccountDepositCredentials
 import com.tangem.utils.coroutines.AppCoroutineScope
 import kotlinx.coroutines.launch
+import kotlin.time.TimeSource
 
 class StartTangemPayOnboardingUseCase(
     private val activateMoneyAccountUseCase: ActivateMoneyAccountUseCase,
@@ -24,6 +26,7 @@ class StartTangemPayOnboardingUseCase(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val analytics: AnalyticsEventHandler,
     private val appCoroutineScope: AppCoroutineScope,
+    private val timeSource: TimeSource = TimeSource.Monotonic,
 ) {
     suspend operator fun invoke(
         userWalletId: UserWalletId,
@@ -60,7 +63,16 @@ class StartTangemPayOnboardingUseCase(
             .mapLeft { StartTangemPayOnboardingError.Failed }
             .bind()
 
-        appCoroutineScope.launch { pollTangemPayAccountStatusesUseCase(userWalletId) }
+        val orderedAt = timeSource.markNow()
+        appCoroutineScope.launch {
+            val finalState = pollTangemPayAccountStatusesUseCase(userWalletId)
+            ProductActivationFinishedEvents.of(
+                finalState = finalState,
+                orderedProducts = availableProducts,
+                sinceOrder = orderedAt.elapsedNow(),
+                plan = tariffPlanTransition?.plan,
+            ).forEach(analytics::send)
+        }
     }
 
     private suspend fun activateMoneyAccount(
