@@ -115,6 +115,7 @@ import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedFor
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.analytics.SwapQuotePerformanceTracker
+import com.tangem.core.analytics.api.PerformanceTracer
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
 import com.tangem.feature.swap.component.slippage.SwapSlippageComponent
 import com.tangem.feature.swap.converters.SwapProviderResolver
@@ -220,6 +221,7 @@ internal class SwapModel @Inject constructor(
     private val recordTokenTransferFromSwapUseCase: RecordTokenTransferFromSwapUseCase,
     private val predictionTopUpLimitsResolver: PredictionTopUpLimitsResolver,
     private val getPredictionDepositCurrencyStatusesUseCase: GetPredictionDepositCurrencyStatusesUseCase,
+    performanceTracer: PerformanceTracer,
 ) : Model() {
 
     private val params = paramsContainer.require<SwapComponent.Params>()
@@ -323,7 +325,7 @@ internal class SwapModel @Inject constructor(
     private val amountDebouncer = Debouncer()
     private val transferModeDebouncer = Debouncer()
     private val singleTaskScheduler = SingleTaskScheduler<Map<SwapProvider, SwapState>>()
-    private val performanceTracker = SwapQuotePerformanceTracker()
+    private val performanceTracker = SwapQuotePerformanceTracker(performanceTracer)
 
     val dataStateStateFlow = MutableStateFlow(SwapProcessDataState())
     var dataState
