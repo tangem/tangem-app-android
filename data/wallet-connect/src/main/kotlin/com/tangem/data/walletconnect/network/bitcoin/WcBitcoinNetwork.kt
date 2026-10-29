@@ -38,7 +38,10 @@ internal class WcBitcoinNetwork(
     private val walletManagersFacade: WalletManagersFacade,
 ) : WcRequestToUseCaseConverter {
 
+    override val namespaceKey: NamespaceKey = NamespaceKey(NAMESPACE)
+
     override fun toWcMethodName(request: WcSdkSessionRequest): WcBitcoinMethodName? {
+        if (!isOwnNamespace(request)) return null
         val methodKey = request.request.method
         return WcBitcoinMethodName.entries.find { it.raw == methodKey }
     }

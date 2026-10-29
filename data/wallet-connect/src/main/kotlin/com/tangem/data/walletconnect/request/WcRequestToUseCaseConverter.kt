@@ -5,12 +5,22 @@ import arrow.core.left
 import arrow.core.right
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapter
+import com.tangem.data.walletconnect.model.CAIP2
+import com.tangem.data.walletconnect.model.NamespaceKey
 import com.tangem.domain.walletconnect.model.HandleMethodError
 import com.tangem.domain.walletconnect.model.WcMethodName
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletconnect.usecase.method.WcMethodUseCase
 
-interface WcRequestToUseCaseConverter {
+internal interface WcRequestToUseCaseConverter {
+
+    val namespaceKey: NamespaceKey
+
+    /**
+     * Returns `null` when [request] is not this converter's, including when its `chainId` belongs to another
+     * namespace: a dApp may list a method under a foreign namespace, and dispatching by method name alone
+     * would sign the payload with that namespace's key.
+     */
     fun toWcMethodName(request: WcSdkSessionRequest): WcMethodName?
     suspend fun toUseCase(request: WcSdkSessionRequest): Either<HandleMethodError, WcMethodUseCase>
 
@@ -20,6 +30,10 @@ interface WcRequestToUseCaseConverter {
      * and goes on to a confirmation screen as before.
      */
     suspend fun respondWithoutUi(request: WcSdkSessionRequest): Boolean = false
+
+    fun isOwnNamespace(request: WcSdkSessionRequest): Boolean {
+        return CAIP2.fromRaw(request.chainId.orEmpty())?.namespace == namespaceKey.key
+    }
 
     companion object {
         @OptIn(ExperimentalStdlibApi::class)
