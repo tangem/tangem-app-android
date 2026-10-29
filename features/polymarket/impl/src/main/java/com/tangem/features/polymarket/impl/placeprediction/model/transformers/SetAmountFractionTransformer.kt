@@ -1,5 +1,7 @@
 package com.tangem.features.polymarket.impl.placeprediction.model.transformers
 
+import com.tangem.core.ui.utils.parseBigDecimal
+import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountFractionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
@@ -18,8 +20,8 @@ internal class SetAmountFractionTransformer(
             feeRate = prevState.lastFeeRate,
         )
 
-        return SetAmountTransformer(value = amount.stripTrailingZeros().toPlainString())
-            .transform(prevState)
-            .copy(isAmountFromFraction = true)
+        val value = amount.parseBigDecimal(decimals = PolymarketConst.COLLATERAL_DISPLAY_DECIMALS)
+
+        return SetAmountTransformer(value = value).transform(prevState).copy(isAmountFromFraction = true)
     }
 }

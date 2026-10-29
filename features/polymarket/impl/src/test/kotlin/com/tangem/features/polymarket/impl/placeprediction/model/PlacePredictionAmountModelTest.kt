@@ -18,6 +18,7 @@ import com.tangem.domain.polymarket.model.PredictionOrderQuoteRequest
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionPriceError
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
+import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionUM
@@ -39,9 +40,12 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.util.Locale
 import kotlinx.coroutines.test.runCurrent
 
 
@@ -1156,6 +1160,18 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
     @Nested
     inner class Fractions {
 
+        private val defaultLocale = Locale.getDefault()
+
+        @BeforeEach
+        fun pinLocale() {
+            Locale.setDefault(Locale.US)
+        }
+
+        @AfterEach
+        fun restoreLocale() {
+            Locale.setDefault(defaultLocale)
+        }
+
         @Test
         fun `GIVEN a balance WHEN a fraction is tapped THEN its share is entered AND quoted at once`() = runTest {
             // Arrange
@@ -1207,6 +1223,35 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
                 // Assert
                 assertThat(afterFirstTap).isEqualTo("83.33")
                 assertThat(model.uiState.value.amountValue).isEqualTo("83.33")
+
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN a German locale WHEN Max is tapped THEN the amount is written with the locale separator`() =
+            runTest {
+                // Arrange
+                Locale.setDefault(Locale.GERMANY)
+                coEvery { getQuoteUseCase(any(), request = any()) } returns createQuote().copy(
+                    fees = PredictionOrderFees(market = BigDecimal("2"), builder = BigDecimal.ZERO, total = BigDecimal("2")),
+                ).right()
+                val model = createAmountModel(testScope = this)
+                advanceUntilIdle()
+                model.onResume()
+                model.onAmountChange(value = "10")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+
+                // Act
+                model.onFractionClick(fraction = AmountFractionUM.Max)
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.amountValue).isEqualTo("83,33")
+                assertThat(model.uiState.value.amountValue.parseToBigDecimal(decimals = 2))
+                    .isEqualTo(BigDecimal("83.33"))
+                coVerify(exactly = 1) {
+                    getQuoteUseCase(any(), request = match { it.amount.compareTo(BigDecimal("83.33")) == 0 })
+                }
 
                 model.onDestroy()
             }
