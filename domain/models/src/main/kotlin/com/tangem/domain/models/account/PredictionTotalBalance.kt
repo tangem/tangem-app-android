@@ -12,13 +12,18 @@ data class PredictionTotalBalance(val amount: BigDecimal, val source: StatusSour
 
     companion object {
 
-        /** @return `null` while the positions value has never been read */
+        /** @return `null` while the positions value is not known */
         fun of(
             status: PredictionAccountStatusValue.Active,
             positions: PredictionPositionsValue,
         ): PredictionTotalBalance? {
-            if (positions !is PredictionPositionsValue.Known) return null
+            return (positions as? PredictionPositionsValue.Known)?.let { of(status = status, positions = it) }
+        }
 
+        fun of(
+            status: PredictionAccountStatusValue.Active,
+            positions: PredictionPositionsValue.Known,
+        ): PredictionTotalBalance {
             return PredictionTotalBalance(
                 amount = status.balance + positions.amount,
                 source = listOf(status.source, positions.source).getResultStatusSource(),
