@@ -29,7 +29,6 @@ import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds2.button.TangemButton
-import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.resolveReference
@@ -54,7 +53,6 @@ private val InitialTopBarHeight: Dp = 64.dp
 private const val TOP_FADE_MID_STOP = 0.8f
 private const val TOP_FADE_MID_ALPHA = 0.8f
 private const val UNAVAILABLE_BALANCE_ALPHA = 0.4f
-private val MessageBannerCornerRadius: Dp = 28.dp
 
 @Composable
 internal fun MoneyAccountDetailsScreen(
@@ -130,10 +128,11 @@ private fun LazyListScope.body(state: MoneyAccountDetailsUM, listState: LazyList
         SpacerH24()
         ActionBlock(state = state, modifier = Modifier.alpha(balanceAlpha))
     }
-    if (isBalanceUnavailable) {
-        item("balanceUnavailableBanner") {
+    if (state.messageBanner != null) {
+        item("messageBanner") {
             SpacerH24()
-            BalanceUnavailableBanner(
+            TangemMessageBanner(
+                state = state.messageBanner,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
@@ -177,32 +176,6 @@ private fun BalanceBlock(
         label = resourceReference(R.string.token_details_balance_total),
         modifier = modifier,
     )
-}
-
-@Composable
-private fun BalanceUnavailableBanner(modifier: Modifier = Modifier) {
-    Box(modifier = modifier) {
-        TangemMessageBanner(
-            modifier = Modifier.fillMaxWidth(),
-            title = stringReference("Balance unavailable"),
-            description = stringReference("We're having trouble loading your balance. Try again later"),
-            showGlowRing = false,
-            slotEnd = {
-                TangemIcon(
-                    modifier = Modifier.size(20.dp),
-                    tangemIconUM = TangemIconUM.Icon(
-                        imageVector = Icons.ic_error_20,
-                        tintReference = { TangemTheme.colors3.icon.primary },
-                    ),
-                )
-            },
-        )
-        TangemGlowRing(
-            modifier = Modifier.matchParentSize(),
-            variant = TangemGlowRing.Variant.Error,
-            cornerRadius = MessageBannerCornerRadius,
-        )
-    }
 }
 
 @Composable
@@ -316,6 +289,7 @@ private fun MoneyAccountDetailsScreenPreview() {
                     isBalanceFlickering = false,
                 ),
                 isBalanceHidden = false,
+                messageBanner = null,
                 menuItems = persistentListOf(),
                 onBackClick = {},
                 onAddFundsClick = {},
@@ -339,6 +313,11 @@ private fun MoneyAccountDetailsScreenBalanceUnavailablePreview() {
                 subtitle = resourceReference(R.string.tangempay_usdc_on_polygon_network),
                 balance = MoneyAccountBalanceBlockState.Unavailable,
                 isBalanceHidden = false,
+                messageBanner = TangemMessageBanner.State(
+                    title = resourceReference(R.string.money_account_balance_unavailable_title),
+                    variant = TangemMessageBanner.Variant.Error,
+                    description = resourceReference(R.string.money_account_balance_unavailable_description),
+                ),
                 menuItems = persistentListOf(),
                 onBackClick = {},
                 onAddFundsClick = {},

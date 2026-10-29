@@ -29,6 +29,7 @@ dependencies {
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.models)
     implementation(projects.domain.moneyAccount)
+    implementation(projects.domain.visa)
     implementation(projects.domain.visa.models)
     implementation(projects.domain.wallets)
 
