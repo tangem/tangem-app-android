@@ -10,8 +10,10 @@ import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PredictionOrder
 import com.tangem.domain.polymarket.model.PredictionOrderDraft
 import com.tangem.domain.polymarket.model.PredictionOrderSide
+import com.tangem.domain.polymarket.model.PredictionOrderSigningRoute
 import com.tangem.domain.polymarket.model.PredictionOrderValidationError
 import com.tangem.domain.polymarket.model.PredictionSignedOrder
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyEnvelope
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -28,6 +30,7 @@ class ValidatePredictionOrderUseCase {
         isNegRisk: Boolean,
         quoteReceivedAtMillis: Long,
         nowMillis: Long,
+        route: PredictionOrderSigningRoute = PredictionOrderSigningRoute.Owner,
     ): Either<PredictionOrderValidationError, Unit> = either {
         val order = signedOrder.order
 
@@ -42,13 +45,24 @@ class ValidatePredictionOrderUseCase {
         ensureIdentity(order = order, draft = draft, depositWalletAddress = depositWalletAddress)
         ensureTimestamp(order = order, nowMillis = nowMillis)
 
-        val signatureLength = signedOrder.signature.removePrefix(PolymarketContracts.HEX_PREFIX).length
+        val depositWalletSignature = unwrapSignature(signature = signedOrder.signature, route = route)
+        val signatureLength = depositWalletSignature.removePrefix(PolymarketContracts.HEX_PREFIX).length
         ensure(signatureLength > PolymarketContracts.SIGNATURE_RSV_HEX_LENGTH) {
             PredictionOrderValidationError.SignatureNotWrapped(length = signatureLength)
         }
 
         val age = nowMillis - quoteReceivedAtMillis
         ensure(age in 0..MAX_QUOTE_AGE_MILLIS) { PredictionOrderValidationError.StaleQuote(ageMillis = age) }
+    }
+
+    private fun ValidationRaise.unwrapSignature(signature: String, route: PredictionOrderSigningRoute): String {
+        val envelope = PolymarketSessionKeyEnvelope.unwrap(signature)
+        val expected = (route as? PredictionOrderSigningRoute.Session)?.identity?.address
+        ensure(envelope?.sessionKeyAddress.equals(expected, ignoreCase = true)) {
+            PredictionOrderValidationError.SessionKeyMismatch(expected = expected, found = envelope?.sessionKeyAddress)
+        }
+
+        return envelope?.depositWalletSignature ?: signature
     }
 
     private fun ValidationRaise.ensureMarket(
