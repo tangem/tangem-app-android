@@ -23,6 +23,7 @@ import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.core.remote.response.ETAG_HEADER
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
+import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.datasource.api.tangemTech.models.account.isCollectibles
 import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
@@ -34,6 +35,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.replaceBy
@@ -57,10 +59,14 @@ internal class DefaultAccountsCRUDRepository(
     private val resources: Resources,
     private val dispatchers: CoroutineDispatcherProvider,
     private val jointAccountFeatureToggles: JointAccountFeatureToggles,
+    private val collectiblesFeatureToggles: CollectiblesFeatureToggles,
 ) : AccountsCRUDRepository {
 
     private val WalletAccountDTO.isDisabledJoint: Boolean
         get() = isJoint && !jointAccountFeatureToggles.isJointAccountEnabled
+
+    private val WalletAccountDTO.isDisabled: Boolean
+        get() = isDisabledJoint || isCollectibles && !collectiblesFeatureToggles.isCollectiblesEnabled
 
     override suspend fun getAccountListSync(userWalletId: UserWalletId): Option<AccountList> = option {
         val accountListResponse = getAccountsResponseSync(userWalletId = userWalletId)
@@ -144,10 +150,25 @@ internal class DefaultAccountsCRUDRepository(
         val converter = convertersContainer.createWalletAccountsResponseConverter(
             userWalletId = accountList.userWalletId,
         )
+        val stored = getAccountsResponseSync(userWalletId = accountList.userWalletId)
+        val response = converter.convert(accountList)
+        val storedJointCounter = stored?.wallet?.totalJointAccounts
+            ?.takeIf { walletAccountsApi.isV2Enabled && !jointAccountFeatureToggles.isJointAccountEnabled }
 
         walletAccountsSaver.store(
             userWalletId = accountList.userWalletId,
-            response = converter.convert(accountList),
+            response = response.copy(
+                wallet = if (storedJointCounter == null) {
+                    response.wallet
+                } else {
+                    response.wallet.copy(totalJointAccounts = storedJointCounter)
+                },
+                accounts = mergeDisabledRows(
+                    shownRows = response.accounts,
+                    storedRows = stored?.accounts.orEmpty(),
+                    convertedStoredRows = stored?.accounts.orEmpty(),
+                ),
+            ),
         )
     }
 
@@ -157,9 +178,18 @@ internal class DefaultAccountsCRUDRepository(
      * joint accounts on any edit of an ordinary one.
      */
     override suspend fun saveAccounts(accountList: AccountList) {
+        val storedRows = getAccountsResponseSync(userWalletId = accountList.userWalletId)?.accounts.orEmpty()
+        val body = SaveWalletAccountsResponseConverter.convert(value = accountList)
+
         val syncedResponse = walletAccountsSaver.push(
             userWalletId = accountList.userWalletId,
-            body = SaveWalletAccountsResponseConverter.convert(value = accountList),
+            body = body.copy(
+                accounts = mergeDisabledRows(
+                    shownRows = body.accounts,
+                    storedRows = storedRows,
+                    convertedStoredRows = SaveWalletAccountsResponse(accounts = storedRows).accounts,
+                ),
+            ),
         )
             ?: error("Failed to push accounts for wallet: ${accountList.userWalletId}")
 
@@ -234,6 +264,30 @@ internal class DefaultAccountsCRUDRepository(
         archivedAccountsETagStore.update {
             it + (userWalletId.stringValue to eTag)
         }
+    }
+
+    /**
+     * Walks [storedRows]: a row of a feature that is off keeps its place, every other place takes the next of
+     * [shownRows] or drops out once they run out; the rest of [shownRows] goes to the end.
+     */
+    private fun <T> mergeDisabledRows(
+        shownRows: List<T>,
+        storedRows: List<WalletAccountDTO>,
+        convertedStoredRows: List<T>,
+    ): List<T> {
+        // `v1` has no typed rows at all: one passed through would be stored as a crypto account
+        if (!walletAccountsApi.isV2Enabled || storedRows.none { it.isDisabled }) return shownRows
+
+        val shown = shownRows.iterator()
+        val merged = storedRows.indices.mapNotNull { index ->
+            when {
+                storedRows[index].isDisabled -> convertedStoredRows[index]
+                shown.hasNext() -> shown.next()
+                else -> null
+            }
+        }
+
+        return merged + shown.asSequence()
     }
 
     private suspend fun getAccountsResponseSync(userWalletId: UserWalletId): GetWalletAccountsResponse? {

@@ -18,6 +18,7 @@ import com.tangem.core.local.datastore.RuntimeStateStore
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.tokens.MainAccountTokensMigration
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
+import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -44,6 +45,7 @@ internal object AccountDataModule {
         @ApplicationContext context: Context,
         dispatchers: CoroutineDispatcherProvider,
         jointAccountFeatureToggles: JointAccountFeatureToggles,
+        collectiblesFeatureToggles: CollectiblesFeatureToggles,
     ): AccountsCRUDRepository {
         return DefaultAccountsCRUDRepository(
             walletAccountsApi = walletAccountsApi,
@@ -56,6 +58,7 @@ internal object AccountDataModule {
             resources = context.resources,
             dispatchers = dispatchers,
             jointAccountFeatureToggles = jointAccountFeatureToggles,
+            collectiblesFeatureToggles = collectiblesFeatureToggles,
         )
     }
 
