@@ -1,12 +1,7 @@
 package com.tangem.domain.onboarding
 
-import arrow.core.Either
-import arrow.core.left
-import arrow.core.right
 import com.tangem.domain.onboarding.repository.OnboardingRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.map
+import com.tangem.utils.coroutines.runSuspendCatching
 
 /**
  * Use case for checking if twins onboarding was shown
@@ -19,15 +14,9 @@ class WasTwinsOnboardingShownUseCase(
     private val onboardingRepository: OnboardingRepository,
 ) {
 
-    /** Get flow with twins onboarding state or error [Throwable] */
-    operator fun invoke(): Flow<Either<Throwable, Boolean>> {
-        return onboardingRepository.wasTwinsOnboardingShown()
-            .map(Boolean::right)
-            .catch { it.left() }
-    }
-
     /** Get twins onboarding state synchronously or default value if exception will be thrown */
     suspend fun invokeSync(): Boolean {
-        return runCatching { onboardingRepository.wasTwinsOnboardingShownSync() }.getOrDefault(defaultValue = false)
+        return runSuspendCatching { onboardingRepository.wasTwinsOnboardingShownSync() }
+            .getOrDefault(defaultValue = false)
     }
 }

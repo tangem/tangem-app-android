@@ -37,7 +37,7 @@ internal fun AddressesInfoScreen(uiModel: AddressesInfoScreenUM) {
                 modifier = Modifier.statusBarsPadding(),
             )
         },
-        containerColor = TangemTheme.colors.background.secondary,
+        containerColor = TangemTheme.colors3.bg.primary,
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -46,12 +46,12 @@ internal fun AddressesInfoScreen(uiModel: AddressesInfoScreenUM) {
         ) {
             TabRow(
                 selectedTabIndex = selectedTab,
-                containerColor = TangemTheme.colors.background.secondary,
-                contentColor = TangemTheme.colors.text.primary1,
+                containerColor = TangemTheme.colors3.bg.primary,
+                contentColor = TangemTheme.colors3.text.primary,
                 indicator = { tabPositions ->
                     TabRowDefaults.Indicator(
                         modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                        color = TangemTheme.colors.text.accent,
+                        color = TangemTheme.colors3.text.accent.blue,
                     )
                 },
             ) {
@@ -64,14 +64,14 @@ internal fun AddressesInfoScreen(uiModel: AddressesInfoScreenUM) {
                                 text = title,
                                 style = TangemTheme.typography.subtitle2,
                                 color = if (selectedTab == index) {
-                                    TangemTheme.colors.text.primary1
+                                    TangemTheme.colors3.text.primary
                                 } else {
-                                    TangemTheme.colors.text.secondary
+                                    TangemTheme.colors3.text.secondary
                                 },
                             )
                         },
-                        selectedContentColor = TangemTheme.colors.text.primary1,
-                        unselectedContentColor = TangemTheme.colors.text.secondary,
+                        selectedContentColor = TangemTheme.colors3.text.primary,
+                        unselectedContentColor = TangemTheme.colors3.text.secondary,
                     )
                 }
             }
@@ -92,7 +92,7 @@ internal fun AddressesInfoScreen(uiModel: AddressesInfoScreenUM) {
                     Icon(
                         imageVector = ImageVector.vectorResource(R.drawable.ic_copy_24),
                         contentDescription = "Copy",
-                        tint = TangemTheme.colors.icon.primary1,
+                        tint = TangemTheme.colors3.icon.primary,
                     )
                 }
             }
@@ -111,7 +111,7 @@ internal fun AddressesInfoScreen(uiModel: AddressesInfoScreenUM) {
                                 Text(
                                     text = uiModel.addressesText,
                                     style = TangemTheme.typography.body1,
-                                    color = TangemTheme.colors.text.primary1,
+                                    color = TangemTheme.colors3.text.primary,
                                 )
                             }
                         }
@@ -130,7 +130,7 @@ internal fun AddressesInfoScreen(uiModel: AddressesInfoScreenUM) {
                                 Text(
                                     text = uiModel.addressesJson,
                                     style = TangemTheme.typography.body1,
-                                    color = TangemTheme.colors.text.primary1,
+                                    color = TangemTheme.colors3.text.primary,
                                 )
                             }
                         }

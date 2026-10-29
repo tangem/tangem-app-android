@@ -15,14 +15,10 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
-import com.tangem.features.tangempay.TangemPayFeatureToggles
-import com.tangem.domain.moneyaccount.model.MoneyAccountEligibility
-import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountEligibilityUseCase
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.utils.ItemsBuilder
@@ -60,9 +56,6 @@ internal abstract class DetailsModelTestBase {
     protected val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase = mockk()
     protected val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
     protected val tangemPayEligibilityManager: TangemPayEligibilityManager = mockk()
-    protected val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
-    protected val getMoneyAccountEligibilityUseCase: GetMoneyAccountEligibilityUseCase = mockk()
-    protected val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
 
     // Captured from itemsBuilder.buildAll(...) so the feature buttons can be driven.
     protected val wcSlot = slot<Boolean>()
@@ -82,11 +75,7 @@ internal abstract class DetailsModelTestBase {
         every { socialsBuilder.buildAll() } returns persistentListOf()
         every { appInfoProvider.appVersion } returns "1.2.3"
         every { appInfoProvider.appVersionCode } returns 456
-        coEvery { tangemPayEligibilityManager.getEligibleWallets(any(), any()) } returns emptyList()
         coEvery { tangemPayEligibilityManager.getCompatibleWalletsIds(any()) } returns emptyList()
-        every { tangemPayFeatureToggles.isResidencyStepEnabled } returns false
-        coEvery { getMoneyAccountEligibilityUseCase() } returns MoneyAccountEligibility.NotAvailable
-        every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
 
         every {
             itemsBuilder.buildAll(
@@ -100,7 +89,6 @@ internal abstract class DetailsModelTestBase {
         every { itemsBuilder.addTangemPayItem(any(), capture(onTangemPaySlot)) } answers { firstArg() }
         every { itemsBuilder.removeTangemPayItem(any()) } answers { firstArg() }
         every { itemsBuilder.hasTangemPayItem(any()) } returns false
-        every { itemsBuilder.removeMoneyAccountItem(any()) } answers { firstArg() }
     }
 
     @AfterEach
@@ -125,9 +113,6 @@ internal abstract class DetailsModelTestBase {
         generateBuyTangemCardLinkUseCase = generateBuyTangemCardLinkUseCase,
         analyticsEventHandler = analyticsEventHandler,
         tangemPayEligibilityManager = tangemPayEligibilityManager,
-        tangemPayFeatureToggles = tangemPayFeatureToggles,
-        getMoneyAccountEligibilityUseCase = getMoneyAccountEligibilityUseCase,
-        moneyAccountFeatureToggles = moneyAccountFeatureToggles,
     ).also(DetailsModel::onResume)
 
     protected fun stubBuildAllReturns(list: ImmutableList<DetailsItemUM>) {

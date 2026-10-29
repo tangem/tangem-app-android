@@ -25,7 +25,7 @@ internal fun RefreshButton(isRefreshing: Boolean, onRefreshBalanceClick: () -> U
         modifier = modifier
             .size(48.dp)
             .shadow(elevation = 2.dp, shape = CircleShape)
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .clickable(
                 enabled = !isRefreshing,
                 onClick = onRefreshBalanceClick,
@@ -36,14 +36,14 @@ internal fun RefreshButton(isRefreshing: Boolean, onRefreshBalanceClick: () -> U
         if (isRefreshing) {
             CircularProgressIndicator(
                 modifier = Modifier.padding(12.dp),
-                color = TangemTheme.colors.icon.primary1,
+                color = TangemTheme.colors3.icon.primary,
                 strokeWidth = 2.dp,
             )
         } else {
             Icon(
                 painter = painterResource(id = R.drawable.ic_refresh_24),
                 contentDescription = null,
-                tint = TangemTheme.colors.text.primary1,
+                tint = TangemTheme.colors3.text.primary,
                 modifier = Modifier.padding(12.dp),
             )
         }

@@ -114,10 +114,10 @@ private fun ContentFiatAmount(
 
 @Composable
 private fun IconTint.color() = when (this) {
-    IconTint.Accent -> TangemTheme.colors.icon.accent
-    IconTint.Warning -> TangemTheme.colors.icon.attention
-    IconTint.Inactive -> TangemTheme.colors.icon.inactive
-    IconTint.Informative -> TangemTheme.colors.icon.informative
+    IconTint.Accent -> TangemTheme.colors3.icon.accent.blue
+    IconTint.Warning -> TangemTheme.colors3.icon.accent.yellow
+    IconTint.Inactive -> TangemTheme.colors3.icon.tertiary
+    IconTint.Informative -> TangemTheme.colors3.icon.secondary
 }
 
 @Composable
@@ -134,7 +134,7 @@ private fun FiatAmountText(
         overflow = TextOverflow.Ellipsis,
         style = TangemTheme.typography.body2.applyBladeBrush(
             isEnabled = isFlickering,
-            textColor = if (isAvailable) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.tertiary,
+            textColor = if (isAvailable) TangemTheme.colors3.text.primary else TangemTheme.colors3.text.secondary,
         ),
     )
 }
@@ -153,7 +153,7 @@ private fun FiatAmountAnnotatedText(
         overflow = TextOverflow.Ellipsis,
         style = TangemTheme.typography.body2.applyBladeBrush(
             isEnabled = isFlickering,
-            textColor = if (isAvailable) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.tertiary,
+            textColor = if (isAvailable) TangemTheme.colors3.text.primary else TangemTheme.colors3.text.secondary,
         ),
     )
 }

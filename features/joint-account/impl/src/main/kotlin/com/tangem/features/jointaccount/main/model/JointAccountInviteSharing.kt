@@ -5,25 +5,13 @@ import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.domain.jointaccount.model.JointAccount
-import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
-import com.tangem.domain.jointaccount.usecase.MarkJointAccountInviteSharedUseCase
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.jointaccount.deeplink.JointAccountInviteLinkBuilder
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
 import javax.inject.Inject
 import com.tangem.core.ui.R as CoreUiR
 
 @ModelScoped
 internal class JointAccountInviteSharing @Inject constructor(
     private val shareManager: ShareManager,
-    private val getJointAccountInvitesUseCase: GetJointAccountInvitesUseCase,
-    private val markJointAccountInviteSharedUseCase: MarkJointAccountInviteSharedUseCase,
 ) {
 
     fun message(inviteId: String, accountName: TextReference): TextReference = resourceReference(
@@ -34,33 +22,4 @@ internal class JointAccountInviteSharing @Inject constructor(
     fun share(message: String) {
         shareManager.shareTrackedText(text = message)
     }
-
-    /**
-     * Records an invite once its link is sent, not when the share sheet merely opens. Keyed to the account id: the
-     * account updates on every poll, and restarting on each would cancel a write or drop a pick
-     */
-    @OptIn(ExperimentalCoroutinesApi::class)
-    fun recordShared(userWalletId: UserWalletId, account: Flow<JointAccount?>): Flow<Unit> = account
-        .mapNotNull { it?.cryptoAccountId }
-        .distinctUntilChanged()
-        .flatMapLatest { cryptoAccountId ->
-            shareManager.sharedTexts
-                .mapNotNull { text ->
-                    getJointAccountInvitesUseCase(userWalletId = userWalletId, cryptoAccountId = cryptoAccountId)
-                        .firstOrNull { invite -> text.containsLink(JointAccountInviteLinkBuilder.build(invite.id)) }
-                        ?.id
-                }
-                .map { inviteId ->
-                    markJointAccountInviteSharedUseCase(
-                        userWalletId = userWalletId,
-                        cryptoAccountId = cryptoAccountId,
-                        inviteId = inviteId,
-                    )
-                }
-        }
 }
-
-/** A whole word of the message, so one invite's link never matches another's that merely starts with it */
-private fun String.containsLink(link: String): Boolean = split(WHITESPACE).any { word -> word == link }
-
-private val WHITESPACE = Regex(pattern = "\\s+")

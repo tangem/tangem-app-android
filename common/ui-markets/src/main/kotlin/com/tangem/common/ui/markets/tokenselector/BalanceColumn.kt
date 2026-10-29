@@ -60,7 +60,7 @@ private fun FlickeringBalanceColumn(state: BalanceDisplayState.Flickering, modif
             modifier = flickerModifier,
             text = state.fiatBalance.resolveAnnotatedReference(),
             style = TangemTheme.typography2.bodyMedium16,
-            color = TangemTheme.colors2.text.neutral.primary,
+            color = TangemTheme.colors3.text.primary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -68,7 +68,7 @@ private fun FlickeringBalanceColumn(state: BalanceDisplayState.Flickering, modif
             modifier = flickerModifier,
             text = state.cryptoBalance.resolveReference(),
             style = TangemTheme.typography2.captionMedium12,
-            color = TangemTheme.colors2.text.neutral.secondary,
+            color = TangemTheme.colors3.text.secondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -83,13 +83,13 @@ private fun StaleBalanceColumn(state: BalanceDisplayState.Stale, modifier: Modif
                 modifier = Modifier.size(16.dp),
                 painter = painterResource(id = R.drawable.ic_error_sync_24),
                 contentDescription = null,
-                tint = TangemTheme.colors2.markers.iconGray,
+                tint = TangemTheme.colors3.icon.secondary,
             )
             SpacerW(2.dp)
             Text(
                 text = state.fiatBalance.resolveAnnotatedReference(),
                 style = TangemTheme.typography2.bodyMedium16,
-                color = TangemTheme.colors2.text.neutral.primary,
+                color = TangemTheme.colors3.text.primary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -97,7 +97,7 @@ private fun StaleBalanceColumn(state: BalanceDisplayState.Stale, modifier: Modif
         Text(
             text = state.cryptoBalance.resolveReference(),
             style = TangemTheme.typography2.captionMedium12,
-            color = TangemTheme.colors2.text.neutral.secondary,
+            color = TangemTheme.colors3.text.secondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -110,7 +110,7 @@ private fun UnreachableBalanceColumn(modifier: Modifier = Modifier) {
         Text(
             text = StringsSigns.DASH_SIGN,
             style = TangemTheme.typography2.bodyMedium16,
-            color = TangemTheme.colors2.text.neutral.primary,
+            color = TangemTheme.colors3.text.primary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -118,7 +118,7 @@ private fun UnreachableBalanceColumn(modifier: Modifier = Modifier) {
             Text(
                 text = stringResourceSafe(R.string.common_unreachable),
                 style = TangemTheme.typography2.captionMedium12,
-                color = TangemTheme.colors2.text.status.attention,
+                color = TangemTheme.colors3.text.accent.yellow,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -127,7 +127,7 @@ private fun UnreachableBalanceColumn(modifier: Modifier = Modifier) {
                 modifier = Modifier.size(16.dp),
                 painter = painterResource(id = R.drawable.ic_alert_triange_24),
                 contentDescription = null,
-                tint = TangemTheme.colors2.graphic.status.attention,
+                tint = TangemTheme.colors3.icon.accent.yellow,
             )
         }
     }
@@ -139,13 +139,13 @@ private fun LoadedBalanceColumn(state: BalanceDisplayState.Loaded, modifier: Mod
         Text(
             text = state.fiatBalance.resolveAnnotatedReference(),
             style = TangemTheme.typography2.bodySemibold16,
-            color = TangemTheme.colors2.text.neutral.primary,
+            color = TangemTheme.colors3.text.primary,
             maxLines = 1,
         )
         Text(
             text = state.cryptoBalance.resolveReference(),
             style = TangemTheme.typography2.captionMedium12,
-            color = TangemTheme.colors2.text.neutral.secondary,
+            color = TangemTheme.colors3.text.secondary,
             maxLines = 1,
         )
     }
@@ -157,13 +157,13 @@ private fun HiddenBalance(modifier: Modifier = Modifier) {
         Text(
             text = StringsSigns.THREE_STARS,
             style = TangemTheme.typography2.bodySemibold16,
-            color = TangemTheme.colors2.text.neutral.primary,
+            color = TangemTheme.colors3.text.primary,
             maxLines = 1,
         )
         Text(
             text = StringsSigns.THREE_STARS,
             style = TangemTheme.typography2.captionMedium12,
-            color = TangemTheme.colors2.text.neutral.secondary,
+            color = TangemTheme.colors3.text.secondary,
             maxLines = 1,
         )
     }

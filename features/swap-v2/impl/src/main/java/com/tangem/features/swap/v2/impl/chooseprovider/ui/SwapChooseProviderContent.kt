@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
@@ -59,6 +60,7 @@ fun SwapChooseProviderContent(
     onFinishAnimation: () -> Unit,
     showFCAWarning: Boolean,
     modifier: Modifier = Modifier,
+    isProviderUnavailable: Boolean = false,
 ) {
     Column(
         modifier = modifier.clickable(
@@ -70,7 +72,7 @@ fun SwapChooseProviderContent(
     ) {
         HorizontalDivider(
             thickness = 0.5.dp,
-            color = TangemTheme.colors.stroke.primary,
+            color = TangemTheme.colors3.border.secondary,
             modifier = Modifier.padding(horizontal = 12.dp),
         )
         Row {
@@ -78,19 +80,20 @@ fun SwapChooseProviderContent(
                 painter = rememberVectorPainter(
                     ImageVector.vectorResource(R.drawable.ic_stack_new_24),
                 ),
-                tint = TangemTheme.colors.icon.accent,
+                tint = TangemTheme.colors3.icon.accent.blue,
                 contentDescription = null,
                 modifier = Modifier.padding(start = 12.dp, top = 12.dp, bottom = 12.dp),
             )
             Text(
                 text = stringResourceSafe(R.string.express_provider),
                 style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 modifier = Modifier.padding(start = 8.dp, top = 12.dp, bottom = 12.dp),
             )
             SpacerWMax()
             ProviderInfo(
                 expressProvider = expressProvider,
+                isProviderUnavailable = isProviderUnavailable,
                 isBestRate = isBestRate,
                 isSingleProvider = isSingleProvider,
                 showBestRateAnimation = showBestRateAnimation,
@@ -114,21 +117,23 @@ private fun FcaProviderWarning(modifier: Modifier = Modifier) {
         Icon(
             modifier = Modifier.size(16.dp),
             painter = painterResource(id = R.drawable.ic_warning_16),
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
             contentDescription = null,
         )
         SpacerW8()
         Text(
             text = stringResourceSafe(R.string.express_provider_in_fca_warning_list),
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun ProviderInfo(
     expressProvider: ExpressProvider?,
+    isProviderUnavailable: Boolean,
     isBestRate: Boolean,
     isSingleProvider: Boolean,
     showBestRateAnimation: Boolean,
@@ -137,35 +142,19 @@ private fun ProviderInfo(
 ) {
     ConstraintLayout(modifier = modifier) {
         val (imageRef, nameRef, iconRef) = createRefs()
-        SubcomposeAsyncImage(
-            model = ImageRequest.Builder(context = LocalContext.current)
-                .data(expressProvider?.imageLarge)
-                .crossfade(enable = true)
-                .allowHardware(false)
-                .build(),
-            loading = { RectangleShimmer(radius = 4.dp) },
-            error = {
-                Box(
-                    modifier = Modifier.background(
-                        color = TangemColorPalette.Light1,
-                        shape = RoundedCornerShape(4.dp),
-                    ),
-                )
+        ProviderImage(
+            expressProvider = expressProvider,
+            isProviderUnavailable = isProviderUnavailable,
+            modifier = Modifier.constrainAs(imageRef) {
+                start.linkTo(parent.start)
+                top.linkTo(parent.top, 14.dp)
+                bottom.linkTo(parent.bottom, 14.dp)
             },
-            contentDescription = null,
-            modifier = Modifier
-                .size(20.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .constrainAs(imageRef) {
-                    start.linkTo(parent.start)
-                    top.linkTo(parent.top, 14.dp)
-                    bottom.linkTo(parent.bottom, 14.dp)
-                },
         )
         Text(
             text = expressProvider?.name.orEmpty(),
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier
                 .padding(start = 6.dp)
                 .constrainAs(nameRef) {
@@ -180,7 +169,7 @@ private fun ProviderInfo(
             painter = rememberVectorPainter(
                 ImageVector.vectorResource(R.drawable.ic_select_18_24),
             ),
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
             contentDescription = null,
             modifier = Modifier
                 .padding(start = 4.dp)
@@ -197,6 +186,44 @@ private fun ProviderInfo(
             isBestRate = isBestRate && !isSingleProvider,
             ref = imageRef,
             onFinishAnimation = onFinishAnimation,
+        )
+    }
+}
+
+@Composable
+private fun ProviderImage(
+    expressProvider: ExpressProvider?,
+    isProviderUnavailable: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val imageModifier = modifier
+        .size(20.dp)
+        .clip(RoundedCornerShape(4.dp))
+    if (isProviderUnavailable) {
+        Icon(
+            painter = painterResource(id = R.drawable.ic_alert_circle_red_20),
+            tint = Color.Unspecified,
+            contentDescription = null,
+            modifier = imageModifier,
+        )
+    } else {
+        SubcomposeAsyncImage(
+            model = ImageRequest.Builder(context = LocalContext.current)
+                .data(expressProvider?.imageLarge)
+                .crossfade(enable = true)
+                .allowHardware(false)
+                .build(),
+            loading = { RectangleShimmer(radius = 4.dp) },
+            error = {
+                Box(
+                    modifier = Modifier.background(
+                        color = TangemColorPalette.Light1,
+                        shape = RoundedCornerShape(4.dp),
+                    ),
+                )
+            },
+            contentDescription = null,
+            modifier = imageModifier,
         )
     }
 }
@@ -278,16 +305,16 @@ private fun ConstraintLayoutScope.BestRateBadge(
                 top.linkTo(ref.bottom, topMargin)
                 visibility = if (isBestRate) Visibility.Visible else Visibility.Gone
             }
-            .background(TangemTheme.colors.stroke.transparency, RoundedCornerShape(120.dp))
+            .background(TangemTheme.colors3.bg.secondary, RoundedCornerShape(120.dp))
             .padding(1.5.dp)
-            .background(TangemTheme.colors.icon.accent, RoundedCornerShape(120.dp)),
+            .background(TangemTheme.colors3.bg.accent.blue, RoundedCornerShape(120.dp)),
     ) {
         Icon(
             painter = rememberVectorPainter(
                 ImageVector.vectorResource(R.drawable.ic_rounded_star_24),
             ),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.constant,
+            tint = TangemTheme.colors3.icon.staticDark,
             modifier = Modifier
                 .padding(iconHorizontalPaddings, iconVerticalPaddings)
                 .size(iconSize)
@@ -305,7 +332,7 @@ private fun ConstraintLayoutScope.BestRateBadge(
             Text(
                 text = stringResourceSafe(R.string.express_provider_best_rate),
                 style = TangemTheme.typography.caption1,
-                color = TangemTheme.colors.text.constantWhite,
+                color = TangemTheme.colors3.text.staticDark.primary,
             )
         }
     }
@@ -332,7 +359,7 @@ private fun rememberBestRateAnimationSpec(animateState: MutableTransitionState<B
 private fun SwapChooseProviderContent_Preview() {
     TangemThemePreview {
         Box(
-            modifier = Modifier.background(TangemTheme.colors.background.tertiary),
+            modifier = Modifier.background(TangemTheme.colors3.bg.primary),
         ) {
             SwapChooseProviderContent(
                 isSingleProvider = false,

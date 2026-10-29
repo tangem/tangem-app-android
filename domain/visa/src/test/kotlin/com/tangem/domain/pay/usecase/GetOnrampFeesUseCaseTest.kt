@@ -2,6 +2,7 @@ package com.tangem.domain.pay.usecase
 
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.AccountFeeGroupType
@@ -21,6 +22,7 @@ internal class GetOnrampFeesUseCaseTest {
     private val useCase = GetOnrampFeesUseCase(getAccountFeesUseCase = getAccountFeesUseCase)
 
     private val userWalletId = UserWalletId("011")
+    private val product = TangemPayProduct.BANKING_ACCOUNT
 
     @BeforeEach
     fun resetMocks() {
@@ -28,7 +30,7 @@ internal class GetOnrampFeesUseCaseTest {
     }
 
     @Test
-    fun `GIVEN onramp fees WHEN invoke THEN only onramp group requested`() = runTest {
+    fun `GIVEN onramp fees WHEN invoke THEN only onramp group of the product requested`() = runTest {
         // Arrange
         val fees = listOf(
             AccountFee(
@@ -36,17 +38,18 @@ internal class GetOnrampFeesUseCaseTest {
                 name = "ACH",
                 paymentMethodId = "ACH",
                 group = AccountFeeGroupType.ONRAMP,
+                calculationType = AccountFee.CalculationType.FIXED,
                 amount = BigDecimal.ONE,
                 currency = "USD",
             ),
         )
-        coEvery { getAccountFeesUseCase(userWalletId, setOf(AccountFeeGroupType.ONRAMP)) } returns fees.right()
+        coEvery { getAccountFeesUseCase(userWalletId, product, setOf(AccountFeeGroupType.ONRAMP)) } returns fees.right()
 
         // Act
-        val actual = useCase(userWalletId)
+        val actual = useCase(userWalletId, product)
 
         // Assert
         assertThat(actual).isEqualTo(fees.right())
-        coVerify(exactly = 1) { getAccountFeesUseCase(userWalletId, setOf(AccountFeeGroupType.ONRAMP)) }
+        coVerify(exactly = 1) { getAccountFeesUseCase(userWalletId, product, setOf(AccountFeeGroupType.ONRAMP)) }
     }
 }

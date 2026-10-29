@@ -57,7 +57,7 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 internal class SingleAccountStatusListProducerJointAccountsTest {
 
     private val jointAccountCompositionVerifier: JointAccountCompositionVerifier = mockk {
-        coEvery { isVerified(userWalletId = any(), ownerKeyIndex = any(), jointAccount = any()) } returns true
+        coEvery { isVerified(account = any(), jointAccount = any()) } returns true
         coEvery { ownerAddress(userWalletId = any(), ownerKeyIndex = any()) } returns null
     }
 
@@ -82,7 +82,12 @@ internal class SingleAccountStatusListProducerJointAccountsTest {
 
             // Assert
             assertThat(status.value).isEqualTo(
-                JointAccountStatusValue.Active(source = StatusSource.ACTUAL, totalMembers = 3, safeAddress = SAFE),
+                JointAccountStatusValue.Active(
+                    source = StatusSource.ACTUAL,
+                    totalMembers = 3,
+                    safeAddress = SAFE,
+                    threshold = 2,
+                ),
             )
             val currencyStatus = status.tokenList.flattenCurrencies().single()
             assertThat(currencyStatus.currency).isEqualTo(jointEthereum)
@@ -96,7 +101,7 @@ internal class SingleAccountStatusListProducerJointAccountsTest {
     @BeforeEach
     fun resetVerifier() {
         coEvery {
-            jointAccountCompositionVerifier.isVerified(userWalletId = any(), ownerKeyIndex = any(), jointAccount = any())
+            jointAccountCompositionVerifier.isVerified(account = any(), jointAccount = any())
         } returns true
     }
 
@@ -105,11 +110,7 @@ internal class SingleAccountStatusListProducerJointAccountsTest {
         runTest {
             // Arrange
             coEvery {
-                jointAccountCompositionVerifier.isVerified(
-                    userWalletId = any(),
-                    ownerKeyIndex = any(),
-                    jointAccount = any(),
-                )
+                jointAccountCompositionVerifier.isVerified(account = any(), jointAccount = any())
             } returns false
             val producer = createProducer(jointAccounts = flowOf(listOf(jointRecord(JointAccount.Status.ACTIVE))))
 
@@ -142,7 +143,12 @@ internal class SingleAccountStatusListProducerJointAccountsTest {
         // Assert
         val status = list.jointStatus()
         assertThat(status.value).isEqualTo(
-            JointAccountStatusValue.Pending(source = StatusSource.ACTUAL, joinedMembers = 2, totalMembers = 3),
+            JointAccountStatusValue.Pending(
+                source = StatusSource.ACTUAL,
+                joinedMembers = 2,
+                totalMembers = 3,
+                threshold = 2,
+            ),
         )
         assertThat(status.tokenList).isEqualTo(TokenList.Empty)
         assertThat(list.totalFiatBalance).isInstanceOf(TotalFiatBalance.Loaded::class.java)

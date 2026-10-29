@@ -60,8 +60,8 @@ internal class AddExistingWalletImportModel @Inject constructor(
         importSeedPhraseUiStateBuilder = ImportSeedPhraseUiStateBuilder(
             modelScope = modelScope,
             mnemonicRepository = mnemonicRepository,
-            updateUiState = { block -> uiState.update { block(it) } },
-            readyToImport = { ready -> uiState.update { it.copy(isReadyToImport = ready) } },
+            updateUiState = ::onUpdateUi,
+            readyToImport = ::onReadyToImport,
             importWallet = { mnemonic: Mnemonic, passphrase: String? ->
                 importWallet(
                     mnemonic = mnemonic,
@@ -113,5 +113,13 @@ internal class AddExistingWalletImportModel @Inject constructor(
 
     private fun onPassphraseInfoClick() {
         uiMessageSender.send(passphraseInfoAlertBS)
+    }
+
+    private fun onUpdateUi(block: (AddExistingWalletImportUM) -> AddExistingWalletImportUM) {
+        uiState.update { block(it) }
+    }
+
+    private fun onReadyToImport(isReadyToImport: Boolean) {
+        uiState.update { it.copy(isReadyToImport = isReadyToImport) }
     }
 }

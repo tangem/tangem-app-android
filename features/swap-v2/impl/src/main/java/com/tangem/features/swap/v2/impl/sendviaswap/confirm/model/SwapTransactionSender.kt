@@ -4,6 +4,7 @@ import arrow.core.getOrElse
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySendCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.unwrapYieldModuleUpgrade
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.express.models.ExpressProvider
@@ -72,7 +73,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
                     messageString = "Provider $providerType is not supported in Send With Swap",
                     shouldSanitize = false,
                 )
-                onExpressError(ExpressError.UnknownError)
+                onExpressError(ExpressError.UnknownError())
             }
         }
     }
@@ -162,7 +163,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
         val swapTransaction = if (swapData.transaction is SwapDataTransactionModel.CEX) {
             swapData.transaction
         } else {
-            onExpressError(ExpressError.UnknownError)
+            onExpressError(ExpressError.UnknownError())
             return
         }
 
@@ -180,11 +181,11 @@ internal class SwapTransactionSender @AssistedInject constructor(
         }
 
         if (txData.extras == null && swapTransaction.txExtraId != null) {
-            onExpressError(ExpressError.UnknownError)
+            onExpressError(ExpressError.UnknownError())
             return
         }
 
-        val ethereumCallData = (txData.extras as? EthereumTransactionExtras)?.callData
+        val ethereumCallData = (txData.extras as? EthereumTransactionExtras)?.callData?.unwrapYieldModuleUpgrade()
         val payInAddress = if (ethereumCallData is EthereumYieldSupplySendCallData) {
             ethereumCallData.destinationAddress
         } else {

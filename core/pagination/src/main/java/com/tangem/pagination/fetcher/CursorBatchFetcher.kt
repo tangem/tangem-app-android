@@ -2,6 +2,7 @@ package com.tangem.pagination.fetcher
 
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.exception.EndOfPaginationException
+import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,7 +41,7 @@ class CursorBatchFetcher<TRequestParams : Any, TItem : Any>(
             params = requestParams,
         )
 
-        val result = runCatching {
+        val result = runSuspendCatching {
             subFetcher.fetch(request = request, lastResult = null, isFirstBatchFetching = true)
         }.getOrElse { throwable ->
             currentCoroutineContext().ensureActive()
@@ -79,7 +80,7 @@ class CursorBatchFetcher<TRequestParams : Any, TItem : Any>(
                 lastRequest.copy(limit = batchSize, params = overrideRequestParams ?: lastRequest.params)
             }
 
-        val result = runCatching {
+        val result = runSuspendCatching {
             subFetcher.fetch(request = nextReq, lastResult = lastResult, isFirstBatchFetching = false)
         }.getOrElse { throwable ->
             currentCoroutineContext().ensureActive()

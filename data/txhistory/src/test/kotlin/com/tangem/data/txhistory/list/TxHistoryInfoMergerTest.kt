@@ -8,11 +8,16 @@ import com.tangem.domain.express.models.ExpressExchangeStatus
 import com.tangem.domain.express.models.ExpressOnrampStatus
 import com.tangem.domain.express.models.ExpressTransactionAsset
 import com.tangem.domain.express.models.OnrampTransaction
+import com.tangem.domain.jointaccount.model.FinishedJointOperation
+import com.tangem.domain.jointaccount.model.JointOperationTransfer
+import com.tangem.domain.jointaccount.model.JointTransferIntent
+import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.tokens.model.AmountType
 import com.tangem.domain.txhistory.model.ExpressTx
+import com.tangem.domain.txhistory.model.JointOperationTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.txhistory.model.explorerHash
@@ -22,6 +27,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
+import java.math.BigInteger
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TxHistoryInfoMergerTest {
@@ -705,13 +711,139 @@ internal class TxHistoryInfoMergerTest {
         }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class JointOperations {
+
+        @Test
+        fun `GIVEN executed operation with its relayer tx loaded WHEN merge THEN one row carrying the on-chain leg`() {
+            // Arrange
+            val onChain = listOf(createTxInfo(txHash = "0xabc", timestamp = 100))
+            val joint = listOf(createJointOperation(txHash = "0xABC", finishedAtMillis = 150))
+
+            // Act
+            val result = merge(onChain, express = emptyList(), joint = joint)
+
+            // Assert
+            assertThat(result).containsExactly(joint.single().copy(txInfo = OnChainTx.BSDK(onChain.single())))
+        }
+
+        @Test
+        fun `GIVEN cancelled operation WHEN merge THEN standalone row ordered by finish time`() {
+            // Arrange
+            val onChain = listOf(createTxInfo(txHash = "h1", timestamp = 300), createTxInfo(txHash = "h2", timestamp = 100))
+            val cancelled = createJointOperation(txHash = null, finishedAtMillis = 200)
+
+            // Act
+            val result = merge(onChain, express = emptyList(), joint = listOf(cancelled))
+
+            // Assert
+            assertThat(result).containsExactly(
+                OnChainTx.BSDK(onChain[0]),
+                cancelled,
+                OnChainTx.BSDK(onChain[1]),
+            ).inOrder()
+        }
+
+        @Test
+        fun `GIVEN failed operation with its relayer tx loaded WHEN merge THEN one row carrying the on-chain leg`() {
+            // Arrange
+            val onChain = listOf(createTxInfo(txHash = "0xabc", timestamp = 100))
+            val failed = createJointOperation(
+                txHash = "0xABC",
+                finishedAtMillis = 150,
+                status = FinishedJointOperation.Status.FAILED,
+            )
+
+            // Act
+            val result = merge(onChain, express = emptyList(), joint = listOf(failed))
+
+            // Assert
+            assertThat(result).containsExactly(failed.copy(txInfo = OnChainTx.BSDK(onChain.single())))
+        }
+
+        @Test
+        fun `GIVEN only the Safe refund under the operation hash WHEN merge THEN operation standalone and refund passes through`() {
+            // Arrange
+            val refund = createTxInfo(txHash = "0xabc", timestamp = 100, type = TxInfo.TransactionType.GaslessFee)
+            val operation = createJointOperation(
+                txHash = "0xabc",
+                finishedAtMillis = 150,
+                status = FinishedJointOperation.Status.FAILED,
+            )
+
+            // Act
+            val result = merge(onChain = listOf(refund), express = emptyList(), joint = listOf(operation))
+
+            // Assert
+            assertThat(result).containsExactly(operation, OnChainTx.BSDK(refund)).inOrder()
+        }
+
+        @Test
+        fun `GIVEN executed operation whose relayer tx is not loaded WHEN merge THEN standalone row`() {
+            // Arrange
+            val executed = createJointOperation(txHash = "0xmissing", finishedAtMillis = 200)
+
+            // Act
+            val result = merge(onChain = emptyList(), express = emptyList(), joint = listOf(executed))
+
+            // Assert
+            assertThat(result).containsExactly(executed)
+        }
+    }
+
     internal data class HashCaseModel(val onChainHash: String, val expressHash: String)
 
     private fun merge(
         onChain: List<TxInfo>,
         express: List<ExpressTx>,
         currency: CryptoCurrency = FROM_CURRENCY,
-    ): List<TxHistoryInfo> = mergeTxHistoryInfos(onChain = onChain, express = express, currency = currency)
+        joint: List<JointOperationTx> = emptyList(),
+    ): List<TxHistoryInfo> = mergeTxHistoryInfos(
+        onChain = onChain,
+        express = express,
+        currency = currency,
+        joint = joint,
+    )
+
+    private fun createJointOperation(
+        txHash: String?,
+        finishedAtMillis: Long,
+        status: FinishedJointOperation.Status = if (txHash == null) {
+            FinishedJointOperation.Status.CANCELLED
+        } else {
+            FinishedJointOperation.Status.EXECUTED
+        },
+    ) = JointOperationTx(
+        operation = FinishedJointOperation(
+            operationId = "operation-$finishedAtMillis",
+            chainId = 1,
+            safeAddress = "0xsafe",
+            safeTx = SafeTx(
+                to = "0xrecipient",
+                value = BigInteger.ONE,
+                data = "0x",
+                operation = SafeTx.OPERATION_CALL,
+                safeTxGas = BigInteger.ONE,
+                baseGas = BigInteger.ONE,
+                gasPrice = BigInteger.ONE,
+                gasToken = "0x0",
+                refundReceiver = "0xrelayer",
+                nonce = BigInteger.ONE,
+            ),
+            status = status,
+            initiator = "0xalice",
+            signatures = emptyList(),
+            createdAt = "2026-09-08T09:20:37.000Z",
+            finishedAtMillis = finishedAtMillis,
+            txHash = txHash,
+        ),
+        transfer = JointOperationTransfer(
+            currency = FROM_CURRENCY,
+            intent = JointTransferIntent.Native(recipient = "0xrecipient", amountWei = BigInteger.ONE),
+        ),
+        txInfo = null,
+    )
 
     private fun createTxInfo(
         txHash: String,

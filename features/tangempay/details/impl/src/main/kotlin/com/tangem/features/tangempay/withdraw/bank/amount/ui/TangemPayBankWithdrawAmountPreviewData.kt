@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.withdraw.bank.amount.ui
 
+import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -10,6 +11,7 @@ import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWit
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.RouteRowUM
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.SheetUM
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.SourceRowUM
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawFromUM
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderUM
 
 internal object TangemPayBankWithdrawAmountPreviewData {
@@ -18,6 +20,11 @@ internal object TangemPayBankWithdrawAmountPreviewData {
         title = resourceReference(R.string.tangempay_withdraw_hub_to_personal_account),
         subtitle = stringReference("1 of 5"),
         onCloseClick = {},
+    )
+
+    private val from = BankWithdrawFromUM(
+        title = resourceReference(R.string.tangempay_payment_account),
+        icon = AccountIconUM.Payment,
     )
 
     private val amount = AmountFieldUM(
@@ -45,8 +52,14 @@ internal object TangemPayBankWithdrawAmountPreviewData {
         onClick = {},
     )
 
-    val empty = TangemPayBankWithdrawAmountUM(
+    private val moneyAccountFrom = BankWithdrawFromUM(
+        title = resourceReference(R.string.money_account_main_name),
+        icon = AccountIconUM.Money,
+    )
+
+    val empty = TangemPayBankWithdrawAmountUM.Content(
         header = header,
+        from = from,
         amount = amount.copy(value = ""),
         source = source,
         route = route,
@@ -56,8 +69,9 @@ internal object TangemPayBankWithdrawAmountPreviewData {
         onContinueClick = {},
     )
 
-    val content = TangemPayBankWithdrawAmountUM(
+    val content = TangemPayBankWithdrawAmountUM.Content(
         header = header,
+        from = from,
         amount = amount,
         source = source,
         route = route,
@@ -73,5 +87,23 @@ internal object TangemPayBankWithdrawAmountPreviewData {
             error = stringReference("Please set amount from $1 to $10,000"),
         ),
         isContinueEnabled = false,
+    )
+
+    val moneyAccount = content.copy(
+        from = moneyAccountFrom,
+        source = source.copy(onClick = null),
+    )
+
+    val loading = TangemPayBankWithdrawAmountUM.Loading(
+        header = header,
+        from = moneyAccountFrom,
+        currencySymbol = "$",
+        onBackClick = {},
+    )
+
+    val feeUnreachable = TangemPayBankWithdrawAmountUM.FeeUnreachable(
+        header = header,
+        onRetryClick = {},
+        onBackClick = {},
     )
 }

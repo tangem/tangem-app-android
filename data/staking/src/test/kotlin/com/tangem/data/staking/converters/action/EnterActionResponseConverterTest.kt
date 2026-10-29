@@ -4,7 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.data.staking.converters.transaction.StakingTransactionConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionStatusConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionTypeConverter
-import com.tangem.domain.models.staking.action.StakingActionType
+import com.tangem.domain.staking.model.action.StakingActionType
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
 import com.tangem.grow.datasource.stakekit.models.response.ActionDTO

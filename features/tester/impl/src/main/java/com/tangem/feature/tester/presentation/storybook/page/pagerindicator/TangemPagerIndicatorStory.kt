@@ -24,7 +24,7 @@ internal fun TangemPagerIndicatorStory(modifier: Modifier = Modifier) {
         modifier = modifier
             .statusBarsPadding()
             .fillMaxSize()
-            .background(TangemTheme.colors2.surface.level1),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         item("section_page_counts") {
             SectionTitle(text = "Page counts")
@@ -89,11 +89,11 @@ private fun SectionTitle(text: String) {
     Text(
         text = text,
         style = TangemTheme.typography.subtitle1,
-        color = TangemTheme.colors.text.primary1,
+        color = TangemTheme.colors3.text.primary,
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
     )
     HorizontalDivider(
-        color = TangemTheme.colors2.border.neutral.secondary,
+        color = TangemTheme.colors3.border.tertiary,
         modifier = Modifier.padding(horizontal = 16.dp),
     )
 }
@@ -110,7 +110,7 @@ private fun IndicatorRow(label: String, pageCount: Int, currentPage: Int) {
         Text(
             text = label,
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
         )
         TangemPagerIndicator(
             pagerState = rememberPagerState(currentPage) { pageCount },
@@ -130,12 +130,12 @@ private fun IndicatorRowWithOverlay(pageCount: Int, currentPage: Int) {
         Text(
             text = "With overlay",
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
         )
         TangemPagerIndicator(
             pagerState = rememberPagerState(currentPage) { pageCount },
             colors = TangemPagerIndicatorColors.copy(
-                overlay = TangemTheme.colors2.tabs.backgroundSecondary,
+                overlay = TangemTheme.colors3.bg.transparent.secondary,
             ),
         )
     }

@@ -137,28 +137,32 @@ internal fun TangemAvatar.Appearance.tokens(): AvatarAppearanceTokens {
 }
 
 /**
- * Avatar fill palette, as raw brand hexes. These are deliberately not DS3 tokens: the Figma
- * `Avatar Module [Fill Color]` fills carry no variable bindings, so an avatar keeps the same colour in
- * light and dark.
+ * Avatar fill palette. The account fills are `colors3.account` tokens; the Figma fills of the remaining
+ * built-in kinds carry no variable bindings, so those stay raw brand hexes.
  */
 @Suppress("CyclomaticComplexMethod")
-internal fun TangemAvatar.FillColor.toColor(): Color = when (this) {
-    TangemAvatar.FillColor.DarkBlue -> Color(color = 0xFF001EFF)
-    TangemAvatar.FillColor.LightBlue -> Color(color = 0xFF2EB8EA)
-    TangemAvatar.FillColor.Lavender -> Color(color = 0xFFA38CF2)
-    TangemAvatar.FillColor.Violet -> Color(color = 0xFF734DF1)
-    TangemAvatar.FillColor.Golden -> Color(color = 0xFFCD8742)
-    TangemAvatar.FillColor.LightPurple -> Color(color = 0xFF9F38E3)
-    TangemAvatar.FillColor.DarkPurple -> Color(color = 0xFF8333EC)
-    TangemAvatar.FillColor.Pink -> Color(color = 0xFFFF42A6)
-    TangemAvatar.FillColor.Red -> Color(color = 0xFFFF3531)
-    TangemAvatar.FillColor.Yellow -> Color(color = 0xFFFF932D)
-    TangemAvatar.FillColor.LightGreen -> Color(color = 0xFF96AF30)
-    TangemAvatar.FillColor.DarkGreen -> Color(color = 0xFF2D8F1C)
-    TangemAvatar.FillColor.Predictions -> Color(color = 0xFFA967FD)
-    TangemAvatar.FillColor.Gacha -> Color(color = 0xFFE68A03)
-    TangemAvatar.FillColor.PayVisa -> Color(color = 0xFF593BF3)
-    TangemAvatar.FillColor.Money -> Color(color = 0xFF2DA30D)
+@Composable
+@ReadOnlyComposable
+internal fun TangemAvatar.FillColor.toColor(): Color {
+    val account = TangemTheme.colors3.account
+    return when (this) {
+        TangemAvatar.FillColor.AzureBlue -> account.azureBlue
+        TangemAvatar.FillColor.CaribbeanBlue -> account.caribbeanBlue
+        TangemAvatar.FillColor.DullLavender -> account.dullLavender
+        TangemAvatar.FillColor.CandyGrapeFizz -> account.candyGrapeFizz
+        TangemAvatar.FillColor.SweetDesire -> account.sweetDesire
+        TangemAvatar.FillColor.PalatinateBlue -> account.palatinateBlue
+        TangemAvatar.FillColor.FuchsiaNebula -> account.fuchsiaNebula
+        TangemAvatar.FillColor.MexicanPink -> account.mexicanPink
+        TangemAvatar.FillColor.Pelati -> account.pelati
+        TangemAvatar.FillColor.Pattypan -> account.pattypan
+        TangemAvatar.FillColor.UfoGreen -> account.ufoGreen
+        TangemAvatar.FillColor.VitalGreen -> account.vitalGreen
+        TangemAvatar.FillColor.Predictions -> Color(color = 0xFFA967FD)
+        TangemAvatar.FillColor.Gacha -> Color(color = 0xFFE68A03)
+        TangemAvatar.FillColor.PayVisa -> account.visa
+        TangemAvatar.FillColor.Money -> Color(color = 0xFF2DA30D)
+    }
 }
 
 /** Figma maps the three transaction states onto three of the [TangemAvatar.Appearance] colour schemes. */

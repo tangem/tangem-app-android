@@ -75,9 +75,9 @@ fun RowText(
                 text = mainText,
                 style = TangemTheme.typography.subtitle2,
                 color = if (isEnabled) {
-                    if (accentMainText) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.secondary
+                    if (accentMainText) TangemTheme.colors3.text.primary else TangemTheme.colors3.text.secondary
                 } else {
-                    TangemTheme.colors.text.disabled
+                    TangemTheme.colors3.text.tertiary
                 },
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -88,9 +88,9 @@ fun RowText(
                 text = secondText,
                 style = TangemTheme.typography.body2,
                 color = if (isEnabled) {
-                    if (accentSecondText) TangemTheme.colors.text.accent else TangemTheme.colors.text.secondary
+                    if (accentSecondText) TangemTheme.colors3.text.accent.blue else TangemTheme.colors3.text.secondary
                 } else {
-                    TangemTheme.colors.text.disabled
+                    TangemTheme.colors3.text.tertiary
                 },
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -101,7 +101,7 @@ fun RowText(
             Text(
                 text = subtitle.resolveReference(),
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )

@@ -25,9 +25,9 @@ internal class UpdateActionButtonsTransformer(
             tangemIconUM = (prev.swapButton.tangemIconUM as? TangemIconUM.Icon)?.copy(
                 tint = {
                     if (isSwapEnabled) {
-                        TangemTheme.colors2.graphic.neutral.primary
+                        TangemTheme.colors3.icon.primary
                     } else {
-                        TangemTheme.colors2.graphic.neutral.quaternary
+                        TangemTheme.colors3.icon.tertiary
                     }
                 },
             ) ?: prev.swapButton.tangemIconUM,

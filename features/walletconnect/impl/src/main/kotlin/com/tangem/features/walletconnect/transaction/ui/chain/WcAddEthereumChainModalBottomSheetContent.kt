@@ -50,7 +50,7 @@ internal fun WcAddEthereumChainModalBottomSheetContent(
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
         onBack = onBack,
         title = {
             TangemModalBottomSheetTitle(
@@ -67,7 +67,7 @@ internal fun WcAddEthereumChainModalBottomSheetContent(
                 Column(
                     modifier = Modifier
                         .clip(RoundedCornerShape(14.dp))
-                        .background(color = TangemTheme.colors.background.action)
+                        .background(color = TangemTheme.colors3.bg.secondary)
                         .fillMaxWidth()
                         .animateContentSize(),
                 ) {
@@ -109,7 +109,7 @@ private fun WcAddEthereumChainItems(state: WcAddEthereumChainItemUM) {
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(14.dp))
-            .background(color = TangemTheme.colors.background.action)
+            .background(color = TangemTheme.colors3.bg.secondary)
             .fillMaxWidth()
             .animateContentSize(),
     ) {
@@ -139,7 +139,7 @@ private fun WcAddEthereumChainBottomSheetPreview(
                 onDismissRequest = {},
                 content = state,
             ),
-            containerColor = TangemTheme.colors.background.tertiary,
+            containerColor = TangemTheme.colors3.bg.primary,
             title = {
                 TangemModalBottomSheetTitle(
                     title = resourceReference(R.string.wallet_connect_title),

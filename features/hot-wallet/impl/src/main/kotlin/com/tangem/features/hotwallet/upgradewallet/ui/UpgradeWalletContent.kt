@@ -34,7 +34,7 @@ import com.tangem.features.hotwallet.upgradewallet.entity.UpgradeWalletUM
 internal fun UpgradeWalletContent(state: UpgradeWalletUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(TangemTheme.colors.background.primary)
+            .background(TangemTheme.colors3.bg.primary)
             .fillMaxSize()
             .systemBarsPadding(),
     ) {
@@ -71,7 +71,7 @@ internal fun UpgradeWalletContent(state: UpgradeWalletUM, modifier: Modifier = M
                     ),
                 text = stringResourceSafe(R.string.hw_upgrade_title),
                 style = TangemTheme.typography.h2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 textAlign = TextAlign.Center,
             )
             FeatureBlock(

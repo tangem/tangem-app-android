@@ -118,20 +118,20 @@ private fun SwapAmountBlockSeparator(onClick: () -> Unit, modifier: Modifier = M
         modifier = modifier
             .heightIn(max = 28.dp)
             .clip(RoundedCornerShape(32.dp))
-            .background(TangemTheme.colors.button.secondary)
+            .background(TangemTheme.colors3.bg.transparent.secondary)
             .clickable(onClick = onClick)
             .padding(vertical = 6.dp, horizontal = 12.dp),
     ) {
         Text(
             text = stringResourceSafe(R.string.common_convert),
             style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
         Icon(
             painter = rememberVectorPainter(
                 ImageVector.vectorResource(R.drawable.ic_close_24),
             ),
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
             contentDescription = null,
             modifier = Modifier
                 .size(16.dp)
@@ -155,7 +155,7 @@ private fun SwapAmountBlock(
             .padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(16.dp))
             .fillMaxWidth()
-            .background(TangemTheme.colors.background.action),
+            .background(TangemTheme.colors3.bg.secondary),
     ) {
         AnimatedVisibility(isSelectedAmountType) {
             Box {
@@ -173,7 +173,7 @@ private fun SwapAmountBlock(
                         .align(Alignment.BottomCenter)
                         .padding(horizontal = 16.dp),
                     thickness = 0.5.dp,
-                    color = TangemTheme.colors.stroke.primary,
+                    color = TangemTheme.colors3.border.secondary,
                 )
             }
         }
@@ -239,7 +239,7 @@ private fun SwapRateBadge(isFixedRate: Boolean, onClick: () -> Unit, modifier: M
             .clickable(onClick = onClick)
             .border(
                 width = 1.dp,
-                color = TangemTheme.colors.stroke.primary,
+                color = TangemTheme.colors3.border.secondary,
                 shape = RoundedCornerShape(6.dp),
             )
             .padding(vertical = 2.dp, horizontal = 4.dp),
@@ -249,13 +249,13 @@ private fun SwapRateBadge(isFixedRate: Boolean, onClick: () -> Unit, modifier: M
         Icon(
             painter = rememberVectorPainter(ImageVector.vectorResource(id = iconRes)),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
             modifier = Modifier.padding(start = 2.dp),
         )
         Text(
             text = stringResourceSafe(textRes),
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
     }
 }
@@ -335,7 +335,7 @@ private fun SwapAmountInfoMain(
                 Text(
                     text = amountFieldUM.title.resolveReference(),
                     style = TangemTheme.typography.subtitle2,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                     maxLines = 1,
                     modifier = Modifier.testTag(SendScreenTestTags.SWAP_TOKEN_NAME),
                 )
@@ -375,14 +375,14 @@ private fun SwapAmountSubtitle(amountFieldUM: SwapAmountFieldUM) {
                 EllipsisText(
                     text = amountFieldUM.subtitleLeft.resolveReference(),
                     style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                     ellipsis = amountFieldUM.subtitleEllipsisLeft,
                     modifier = Modifier.weight(1f, fill = false),
                 )
                 EllipsisText(
                     text = amountFieldUM.subtitleRight.resolveReference(),
                     style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                     ellipsis = amountFieldUM.subtitleEllipsisRight,
                     modifier = Modifier.testTag(SendScreenTestTags.SWAP_SUBTITLE_RIGHT),
                 )
@@ -394,12 +394,12 @@ private fun SwapAmountSubtitle(amountFieldUM: SwapAmountFieldUM) {
                     Text(
                         text = amountFieldUM.sendSubtitle.label.resolveReference(),
                         style = TangemTheme.typography.caption2,
-                        color = TangemTheme.colors.text.tertiary,
+                        color = TangemTheme.colors3.text.secondary,
                     )
                     EllipsisText(
                         text = amountFieldUM.sendSubtitle.value.resolveReference(),
                         style = TangemTheme.typography.caption2,
-                        color = TangemTheme.colors.text.primary1,
+                        color = TangemTheme.colors3.text.primary,
                         ellipsis = amountFieldUM.sendSubtitle.valueEllipsis,
                         modifier = Modifier
                             .weight(1f, fill = false)
@@ -422,11 +422,11 @@ private fun AmountMaxButton(onMaxAmountClick: () -> Unit) {
     Text(
         text = stringResourceSafe(R.string.send_max_amount),
         style = TangemTheme.typography.caption1,
-        color = TangemTheme.colors.text.primary1,
+        color = TangemTheme.colors3.text.primary,
         modifier = Modifier
             .padding(end = 16.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(TangemTheme.colors.button.secondary)
+            .background(TangemTheme.colors3.bg.transparent.secondary)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(),
@@ -456,7 +456,7 @@ private fun SwapAmountInfoQuote(quoteUM: SwapQuoteUM?, isFixedRate: Boolean, onS
         ) { quote ->
             when (quote) {
                 is SwapQuoteUM.Loading -> CircularProgressIndicator(
-                    color = TangemTheme.colors.icon.inactive,
+                    color = TangemTheme.colors3.icon.tertiary,
                     modifier = Modifier
                         .padding(end = 4.dp)
                         .size(20.dp),
@@ -469,7 +469,7 @@ private fun SwapAmountInfoQuote(quoteUM: SwapQuoteUM?, isFixedRate: Boolean, onS
             painter = rememberVectorPainter(
                 ImageVector.vectorResource(R.drawable.ic_chevron_24),
             ),
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
             contentDescription = null,
             modifier = Modifier
                 .padding(

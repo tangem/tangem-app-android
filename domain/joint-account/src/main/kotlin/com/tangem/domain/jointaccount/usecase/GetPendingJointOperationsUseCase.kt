@@ -9,6 +9,7 @@ import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.safe.JointOperationSignersResolver
 import com.tangem.domain.jointaccount.safe.JointOperationTransferResolver
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
+import com.tangem.domain.jointaccount.verifier.JointOperationDisplayGate
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
@@ -27,6 +28,7 @@ class GetPendingJointOperationsUseCase(
     private val signersResolver: JointOperationSignersResolver,
     private val ownerAddressResolver: JointOwnerAddressResolver,
     private val networkReader: JointNetworkReader,
+    private val displayGate: JointOperationDisplayGate,
 ) {
 
     operator fun invoke(userWalletId: UserWalletId, accounts: List<Account.Joint>): Flow<List<JointPendingOperation>> {
@@ -80,6 +82,14 @@ class GetPendingJointOperationsUseCase(
             network = network,
             safeAddress = safeAddress,
         ) ?: return null
+        val isShown = displayGate.isShown(
+            account = account,
+            jointAccount = jointAccount,
+            operation = operation,
+            network = network,
+            transfer = transfer,
+        )
+        if (!isShown) return null
 
         val signers = signersResolver.signers(jointAccount = jointAccount, operation = operation)
         val ownAnswer = ownerAddress?.let { own ->

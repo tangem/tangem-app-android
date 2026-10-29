@@ -44,7 +44,7 @@ import kotlinx.collections.immutable.toPersistentList
 internal fun SwapChooseTokenNetworkBottomSheet(config: TangemBottomSheetConfig) {
     TangemModalBottomSheet<SwapChooseTokenNetworkContentUM>(
         config = config,
-        containerColor = TangemTheme.colors.background.primary,
+        containerColor = TangemTheme.colors3.bg.primary,
         title = {
             AnimatedContent(
                 targetState = config.content is SwapChooseTokenNetworkContentUM.Content,
@@ -81,7 +81,7 @@ internal fun SwapChooseTokenNetworkContent(state: SwapChooseTokenNetworkContentU
                     )
                     if (targetState is SwapChooseTokenNetworkContentUM.Loading) {
                         CircularProgressIndicator(
-                            color = TangemTheme.colors.icon.inactive,
+                            color = TangemTheme.colors3.icon.tertiary,
                             modifier = Modifier
                                 .align(Alignment.Center),
                         )
@@ -134,15 +134,15 @@ private fun SwapChooseTokenNetworkContentList(swapNetworks: ImmutableList<SwapCh
                         .testTag(ChooseNetworkBottomSheetTestTags.NETWORK_TITLE),
                     text = network.title.resolveReference(),
                     style = TangemTheme.typography.subtitle2,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                 )
                 Text(
                     text = network.subtitle.resolveReference(),
                     style = TangemTheme.typography.caption1,
                     color = if (network.isMainNetwork) {
-                        TangemTheme.colors.text.accent
+                        TangemTheme.colors3.text.accent.blue
                     } else {
-                        TangemTheme.colors.text.tertiary
+                        TangemTheme.colors3.text.secondary
                     },
                     modifier = Modifier.testTag(ChooseNetworkBottomSheetTestTags.NETWORK_SUBTITLE),
                 )

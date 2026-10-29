@@ -8,10 +8,11 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.message.ToastMessage
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.mcp.models.McpAgent
 import com.tangem.domain.mcp.repository.McpRepository
@@ -23,6 +24,7 @@ import com.tangem.domain.transaction.error.SendIntentError
 import com.tangem.domain.transaction.models.SendIntent
 import com.tangem.domain.transaction.usecase.GetSendIntentUseCase
 import com.tangem.features.send.api.mcp.SendIntentComponent
+import com.tangem.features.send.impl.R
 import com.tangem.features.send.mcp.SendIntentSendRouteConverter
 import com.tangem.features.send.mcp.SendIntentSource
 import com.tangem.features.send.mcp.SendIntentSourceResolver
@@ -61,12 +63,14 @@ import java.util.Locale
 internal class SendIntentModelTest {
 
     private val router: Router = mockk(relaxed = true)
-    private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val getSendIntentUseCase: GetSendIntentUseCase = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val sourceResolver: SendIntentSourceResolver = mockk()
     private val mcpRepository: McpRepository = mockk()
-    private val offerConverter = SendIntentOfferConverter()
+    private val amountTextConverter = SendIntentAmountTextConverter()
+    private val offerConverter = SendIntentOfferConverter(amountTextConverter)
+    private val processedConverter = SendIntentProcessedConverter(amountTextConverter)
+    private val cantReachConverter = SendIntentCantReachConverter()
     private val sendRouteConverter = SendIntentSendRouteConverter()
 
     private val walletId = UserWalletId("011")
@@ -92,7 +96,6 @@ internal class SendIntentModelTest {
         Locale.setDefault(Locale.US)
         clearMocks(
             router,
-            messageSender,
             getSendIntentUseCase,
             userWalletsListRepository,
             sourceResolver,
@@ -127,7 +130,7 @@ internal class SendIntentModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.offer.value).isNull()
+        assertThat(model.sheet.value).isNull()
         model.onDestroy()
     }
 
@@ -139,7 +142,10 @@ internal class SendIntentModelTest {
 
         // Assert
         assertThat(model.shownOffer().title).isEqualTo(
-            stringReference("mcp.claude.com Agent wants to send 42.00\u00A0USDT"),
+            resourceReference(
+                R.string.mcp_send_intent_offer_title,
+                wrappedList(stringReference("mcp.claude.com"), "42.00\u00A0USDT"),
+            ),
         )
         model.onDestroy()
     }
@@ -169,7 +175,7 @@ internal class SendIntentModelTest {
 
             // Assert
             assertThat(model.shownOffer().agent).isEqualTo(
-                SendIntentAgentUM.Unknown(iconUrl = null, label = stringReference("Unknown")),
+                SendIntentAgentUM.Unknown(iconUrl = null, label = resourceReference(R.string.mcp_intent_host)),
             )
             model.onDestroy()
         }
@@ -183,21 +189,24 @@ internal class SendIntentModelTest {
         val model = createModel(testScope = this)
         advanceTimeBy(AGENT_LOOKUP_TIMEOUT_MILLIS - 1)
         runCurrent()
-        val offerBeforeTimeout = model.offer.value
+        val offerBeforeTimeout = model.sheet.value
         advanceTimeBy(2)
         runCurrent()
 
         // Assert
         assertThat(offerBeforeTimeout).isNull()
         assertThat(model.shownOffer().title).isEqualTo(
-            stringReference("Unknown Agent wants to send 42.00\u00A0USDT"),
+            resourceReference(
+                R.string.mcp_send_intent_offer_title,
+                wrappedList(resourceReference(R.string.mcp_intent_unknown_agent_name), "42.00\u00A0USDT"),
+            ),
         )
         model.onDestroy()
     }
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN intent that cannot be offered WHEN model created THEN toast is sent and sheet closes`(
+    fun `GIVEN intent that cannot be reached WHEN model created THEN can't reach sheet is shown and closes once`(
         model: CloseModel,
     ) = runTest {
         // Arrange
@@ -206,12 +215,16 @@ internal class SendIntentModelTest {
         // Act
         val sendIntentModel = createModel(testScope = this)
         advanceUntilIdle()
-        sendIntentModel.onClose()
+        val status = sendIntentModel.shownStatus()
+        status.primaryButton.onClick()
+        status.primaryButton.onClick()
 
         // Assert
-        verify(exactly = 1) { messageSender.send(any<ToastMessage>()) }
+        assertThat(status.variant).isEqualTo(TangemModalStatus.Variant.Warning)
+        assertThat(status.title).isEqualTo(resourceReference(R.string.mcp_send_intent_cant_reach_title))
+        assertThat(status.subtitle).isNull()
+        assertThat(status.primaryButton.text).isEqualTo(resourceReference(R.string.common_got_it))
         verify(exactly = 1) { router.pop(any()) }
-        assertThat(sendIntentModel.offer.value).isNull()
         verify(exactly = 0) { router.navigate(any(), any()) }
         coVerify(exactly = 0) { mcpRepository.getAgent(any()) }
         sendIntentModel.onDestroy()
@@ -223,17 +236,11 @@ internal class SendIntentModelTest {
 
     @Suppress("unused")
     private fun provideTestModels() = listOf(
-        CloseModel(description = "no wallet is selected") {
-            coEvery { userWalletsListRepository.selectedUserWalletSync() } returns null
-        },
         CloseModel(description = "intent not found") {
             coEvery { getSendIntentUseCase(INTENT_ID) } returns SendIntentError.NotFound(INTENT_ID).left()
         },
         CloseModel(description = "network failure") {
             coEvery { getSendIntentUseCase(INTENT_ID) } returns ApiResponseError.NetworkException().left()
-        },
-        CloseModel(description = "intent was already carried out") {
-            coEvery { getSendIntentUseCase(INTENT_ID) } returns intent.copy(isHandled = true).right()
         },
         CloseModel(description = "wallet does not send from the intent address") {
             coEvery { sourceResolver.resolve(walletId, any()) } returns SendIntentSource.NotFound
@@ -265,6 +272,142 @@ internal class SendIntentModelTest {
     )
 
     @Test
+    fun `GIVEN no wallet is selected WHEN model created THEN no sheet is shown and the slot is released once`() =
+        runTest {
+            // Arrange
+            coEvery { userWalletsListRepository.selectedUserWalletSync() } returns null
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            model.onClose()
+
+            // Assert
+            assertThat(model.sheet.value).isNull()
+            verify(exactly = 1) { router.pop(any()) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN intent already carried out WHEN model created THEN processed sheet names the send and closes once`() =
+        runTest {
+            // Arrange
+            coEvery { getSendIntentUseCase(INTENT_ID) } returns intent.copy(isHandled = true).right()
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            val status = model.shownStatus()
+            status.primaryButton.onClick()
+            status.primaryButton.onClick()
+
+            // Assert
+            assertThat(status.variant).isEqualTo(TangemModalStatus.Variant.Info)
+            assertThat(status.title).isEqualTo(resourceReference(R.string.mcp_intent_processed_title))
+            assertThat(status.subtitle).isEqualTo(
+                resourceReference(R.string.mcp_send_intent_processed_subtitle, wrappedList("42.00\u00a0USDT")),
+            )
+            assertThat(status.primaryButton.text).isEqualTo(resourceReference(R.string.common_got_it))
+            verify(exactly = 1) { router.pop(any()) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN intent already carried out and not sent from the wallet WHEN model created THEN processed has no subtitle`() =
+        runTest {
+            // Arrange
+            coEvery { getSendIntentUseCase(INTENT_ID) } returns intent.copy(isHandled = true).right()
+            coEvery { sourceResolver.resolve(walletId, any()) } returns SendIntentSource.NotFound
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.shownStatus().subtitle).isNull()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN the service reports the intent as completed WHEN model created THEN processed sheet has no subtitle`() =
+        runTest {
+            // Arrange
+            coEvery { getSendIntentUseCase(INTENT_ID) } returns SendIntentError.AlreadyCompleted(INTENT_ID).left()
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            val status = model.shownStatus()
+            assertThat(status.variant).isEqualTo(TangemModalStatus.Variant.Info)
+            assertThat(status.subtitle).isNull()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN no connection WHEN model created THEN can't reach sheet offers to try again`() = runTest {
+        // Arrange
+        coEvery { getSendIntentUseCase(INTENT_ID) } returns SendIntentError.Unreachable(INTENT_ID).left()
+
+        // Act
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Assert
+        val status = model.shownStatus()
+        assertThat(status.variant).isEqualTo(TangemModalStatus.Variant.Warning)
+        assertThat(status.primaryButton.text).isEqualTo(resourceReference(R.string.alert_button_try_again))
+        verify(exactly = 0) { router.pop(any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN no connection WHEN try again and the intent is read THEN the offer replaces the status`() = runTest {
+        // Arrange
+        val unreachable: Either<Throwable, SendIntent> = SendIntentError.Unreachable(INTENT_ID).left()
+        coEvery { getSendIntentUseCase(INTENT_ID) } returnsMany listOf(unreachable, intent.right())
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.shownStatus().primaryButton.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.shownOffer().title.toString()).contains("USDT")
+        coVerify(exactly = 2) { getSendIntentUseCase(INTENT_ID) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN no connection WHEN try again is tapped while reading THEN the sheet stays and reading is not repeated`() =
+        runTest {
+            // Arrange
+            val response = CompletableDeferred<Either<Throwable, SendIntent>>()
+            val unreachable: Either<Throwable, SendIntent> =
+                SendIntentError.Unreachable(INTENT_ID).left()
+            var calls = 0
+            coEvery { getSendIntentUseCase(INTENT_ID) } coAnswers { if (calls++ == 0) unreachable else response.await() }
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            val status = model.shownStatus()
+
+            // Act
+            status.primaryButton.onClick()
+            status.primaryButton.onClick()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.sheet.value).isSameInstanceAs(status)
+            coVerify(exactly = 2) { getSendIntentUseCase(INTENT_ID) }
+            response.complete(intent.right())
+            advanceUntilIdle()
+            assertThat(model.shownOffer().title.toString()).contains("USDT")
+            model.onDestroy()
+        }
+
+    @Test
     fun `GIVEN offer WHEN proceed THEN send opens bound to the intent and sheet closes`() = runTest {
         // Arrange
         val model = createModel(testScope = this)
@@ -286,8 +429,7 @@ internal class SendIntentModelTest {
         // Assert
         assertThat(rootStack).containsExactly(expectedRoute)
         verify(exactly = 1) { router.pop(any()) }
-        verify(exactly = 0) { messageSender.send(any<ToastMessage>()) }
-        assertThat(model.offer.value).isEqualTo(offer)
+        assertThat(model.sheet.value).isEqualTo(offer)
         model.onDestroy()
     }
 
@@ -349,8 +491,11 @@ internal class SendIntentModelTest {
 
             // Assert
             assertThat(rootStack).containsExactly(expectedSendRoute(), covering).inOrder()
-            verify(exactly = 1) { messageSender.send(any<ToastMessage>()) }
+            val status = model.shownStatus()
+            verify(exactly = 0) { router.pop(any()) }
+            status.primaryButton.onClick()
             verify(exactly = 1) { router.pop(any()) }
+            assertThat(status.title).isEqualTo(resourceReference(R.string.mcp_send_intent_cant_reach_title))
             model.onDestroy()
         }
 
@@ -367,7 +512,6 @@ internal class SendIntentModelTest {
 
         // Assert
         assertThat(rootStack).containsExactly(expectedSendRoute())
-        verify(exactly = 0) { messageSender.send(any<ToastMessage>()) }
         verify(exactly = 1) { router.pop(any()) }
         model.onDestroy()
     }
@@ -403,10 +547,9 @@ internal class SendIntentModelTest {
             model.onClose()
 
             // Assert
-            assertThat(model.offer.value).isEqualTo(offer)
+            assertThat(model.sheet.value).isEqualTo(offer)
             verify(exactly = 1) { router.pop(any()) }
             verify(exactly = 0) { router.navigate(any(), any()) }
-            verify(exactly = 0) { messageSender.send(any<ToastMessage>()) }
             model.onDestroy()
         }
 
@@ -442,12 +585,13 @@ internal class SendIntentModelTest {
 
         // Assert
         verify(exactly = 1) { router.pop(any()) }
-        verify(exactly = 0) { messageSender.send(any<ToastMessage>()) }
-        assertThat(model.offer.value).isNull()
+        assertThat(model.sheet.value).isNull()
         model.onDestroy()
     }
 
-    private fun SendIntentModel.shownOffer(): SendIntentUM = checkNotNull(offer.value)
+    private fun SendIntentModel.shownOffer(): SendIntentUM.Offer = sheet.value as SendIntentUM.Offer
+
+    private fun SendIntentModel.shownStatus(): SendIntentUM.Status = sheet.value as SendIntentUM.Status
 
     private fun expectedSendRoute() = sendRouteConverter.convert(
         SendIntentSendRouteConverter.Input(intent = intent, userWalletId = walletId, currency = usdt),
@@ -456,12 +600,13 @@ internal class SendIntentModelTest {
     private fun createModel(testScope: TestScope): SendIntentModel = SendIntentModel(
         dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
         router = router,
-        messageSender = messageSender,
         getSendIntentUseCase = getSendIntentUseCase,
         userWalletsListRepository = userWalletsListRepository,
         sourceResolver = sourceResolver,
         mcpRepository = mcpRepository,
         offerConverter = offerConverter,
+        processedConverter = processedConverter,
+        cantReachConverter = cantReachConverter,
         sendRouteConverter = sendRouteConverter,
         paramsContainer = MutableParamsContainer(value = SendIntentComponent.Params(intentId = INTENT_ID)),
     )

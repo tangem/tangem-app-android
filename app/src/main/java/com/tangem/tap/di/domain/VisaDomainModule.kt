@@ -1,10 +1,7 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.domain.visa.GetVisaCurrencyUseCase
-import com.tangem.domain.visa.GetVisaTxHistoryUseCase
 import com.tangem.domain.visa.SetVisaPinCodeUseCase
 import com.tangem.domain.visa.repository.VisaActivationRepository
-import com.tangem.domain.visa.repository.VisaRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -13,16 +10,6 @@ import dagger.hilt.components.SingletonComponent
 @Module
 @InstallIn(SingletonComponent::class)
 internal object VisaDomainModule {
-
-    @Provides
-    fun provideVisaCurrencyUseCase(visaRepository: VisaRepository): GetVisaCurrencyUseCase {
-        return GetVisaCurrencyUseCase(visaRepository)
-    }
-
-    @Provides
-    fun provideGetVisaTxHistoryUseCase(visaRepository: VisaRepository): GetVisaTxHistoryUseCase {
-        return GetVisaTxHistoryUseCase(visaRepository)
-    }
 
     @Provides
     fun provideSetVisaPinCodeUseCase(

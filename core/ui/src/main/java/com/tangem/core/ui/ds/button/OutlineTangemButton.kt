@@ -70,18 +70,18 @@ fun OutlineTangemButton(
     shape: TangemButtonShape = TangemButtonShape.Default,
 ) {
     val contentColor = if (isEnabled) {
-        TangemTheme.colors2.text.neutral.primary
+        TangemTheme.colors3.text.primary
     } else {
-        TangemTheme.colors2.text.status.disabled
+        TangemTheme.colors3.text.tertiary
     }
     TangemButtonInternal(
         onClick = onClick,
         modifier = modifier
             .clip(shape.toShape(size))
-            .background(TangemTheme.colors2.surface.level1)
+            .background(TangemTheme.colors3.bg.primary)
             .border(
                 width = 1.dp,
-                color = TangemTheme.colors2.border.neutral.primary,
+                color = TangemTheme.colors3.border.secondary,
                 shape = shape.toShape(size),
             ),
         text = text,
@@ -106,7 +106,7 @@ private fun OutlineTangemButton_Preview(
         Row(
             horizontalArrangement = Arrangement.spacedBy(21.dp),
             modifier = Modifier
-                .background(TangemTheme.colors2.surface.level1)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(8.dp),
         ) {
             repeat(4) { yIndex ->
@@ -129,9 +129,9 @@ private fun OutlineTangemButton_Preview(
                                 iconRes = R.drawable.ic_tangem_24,
                                 tintReference = {
                                     if (isEnabled) {
-                                        TangemTheme.colors2.graphic.neutral.primary
+                                        TangemTheme.colors3.icon.primary
                                     } else {
-                                        TangemTheme.colors2.graphic.neutral.quaternary
+                                        TangemTheme.colors3.icon.tertiary
                                     }
                                 },
                             ),

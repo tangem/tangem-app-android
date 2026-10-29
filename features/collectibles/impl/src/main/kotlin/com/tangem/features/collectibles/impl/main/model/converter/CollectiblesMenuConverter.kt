@@ -68,7 +68,7 @@ internal class CollectiblesMenuConverter(
                 )
             },
 
-            // TODO move to test menu
+            // TODO temporary, testing only: remove before release
             item(
                 item = CollectiblesMenuItem.CLOSE_ACCOUNT,
                 icon = Icons.ic_trash_bin_20,

@@ -46,7 +46,7 @@ internal fun OnboardingVisaChooseWallet(state: OnboardingVisaChooseWalletUM, mod
                     subtitle = resourceReference(R.string.visa_onboarding_approve_wallet_selector_notification_message),
                     iconResId = R.drawable.ic_alert_circle_24,
                 ),
-                iconTint = TangemTheme.colors.icon.accent,
+                iconTint = TangemTheme.colors3.icon.accent.blue,
             )
 
             Text(
@@ -59,7 +59,7 @@ internal fun OnboardingVisaChooseWallet(state: OnboardingVisaChooseWalletUM, mod
                     ),
                 text = stringResourceSafe(R.string.visa_onboarding_wallet_list_header),
                 style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
 
             SelectableChainRows(
@@ -114,7 +114,7 @@ private fun SelectableChainRow(
         icon = {
             Icon(
                 imageVector = ImageVector.vectorResource(id = state.icon),
-                tint = if (selected) TangemTheme.colors.icon.primary1 else TangemTheme.colors.icon.informative,
+                tint = if (selected) TangemTheme.colors3.icon.primary else TangemTheme.colors3.icon.secondary,
                 contentDescription = null,
             )
         },
@@ -122,7 +122,7 @@ private fun SelectableChainRow(
             Text(
                 text = state.text.resolveReference(),
                 style = TangemTheme.typography.button,
-                color = if (selected) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.secondary,
+                color = if (selected) TangemTheme.colors3.text.primary else TangemTheme.colors3.text.secondary,
             )
         },
         action = {},

@@ -6,13 +6,12 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.R
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.mcp.models.McpAgent
 import com.tangem.domain.mcp.repository.McpRepository
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.transaction.error.SendIntentError
 import com.tangem.domain.transaction.models.SendIntent
 import com.tangem.domain.transaction.usecase.GetSendIntentUseCase
 import com.tangem.features.send.api.mcp.SendIntentComponent
@@ -34,19 +33,20 @@ private const val AGENT_LOOKUP_TIMEOUT_MILLIS = 3_000L
 
 /**
  * Reads the send intent for the selected wallet, offers it to the owner and hands it over to the Send screen that
- * carries it out. An intent the wallet cannot act on closes the sheet.
+ * carries it out. An intent the wallet cannot act on is said so by the sheet.
  */
 @Suppress("LongParameterList")
 @ModelScoped
 internal class SendIntentModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-    private val messageSender: UiMessageSender,
     private val getSendIntentUseCase: GetSendIntentUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val sourceResolver: SendIntentSourceResolver,
     private val mcpRepository: McpRepository,
     private val offerConverter: SendIntentOfferConverter,
+    private val processedConverter: SendIntentProcessedConverter,
+    private val cantReachConverter: SendIntentCantReachConverter,
     private val sendRouteConverter: SendIntentSendRouteConverter,
     paramsContainer: ParamsContainer,
 ) : Model() {
@@ -57,7 +57,7 @@ internal class SendIntentModel @Inject constructor(
     private var loadedRoute: AppRoute.Send? = null
     private var isFinished = false
 
-    val offer: StateFlow<SendIntentUM?>
+    val sheet: StateFlow<SendIntentUM?>
         field = MutableStateFlow(null)
 
     init {
@@ -86,18 +86,20 @@ internal class SendIntentModel @Inject constructor(
 
     private suspend fun loadIntent() {
         val walletId = userWalletsListRepository.selectedUserWalletSync()?.walletId
-            ?: return close(reason = "no wallet is selected")
+            ?: return closeWithoutSheet(reason = "no wallet is selected")
 
         val intent = getSendIntentUseCase(intentId = params.intentId)
-            .getOrElse { error -> return close(reason = "the intent cannot be read", error = error) }
-        if (intent.isHandled) return close(reason = "the intent has already been carried out")
+            .getOrElse { error -> return showReadFailure(error) }
+        if (intent.isHandled) return showProcessed(walletId = walletId, intent = intent)
 
         val source = sourceResolver.resolve(userWalletId = walletId, intent = intent)
-        if (source !is SendIntentSource.Found) return close(reason = "the wallet does not send from it: $source")
+        if (source !is SendIntentSource.Found) {
+            return showCantReach(reason = "the wallet does not send from it: $source")
+        }
 
         val route = sendRouteConverter.convert(
             SendIntentSendRouteConverter.Input(intent = intent, userWalletId = walletId, currency = source.currency),
-        ).getOrElse { error -> return close(reason = "the amount of the intent is invalid", error = error) }
+        ).getOrElse { error -> return showCantReach(reason = "the amount of the intent is invalid", error = error) }
 
         val offer = offerConverter.convert(
             SendIntentOfferConverter.Input(
@@ -106,11 +108,36 @@ internal class SendIntentModel @Inject constructor(
                 agent = getAgent(intent),
                 onProceed = ::onProceed,
             ),
-        ) ?: return close(reason = "the amount of the intent is malformed")
+        ) ?: return showCantReach(reason = "the amount of the intent is malformed")
 
         currentCoroutineContext().ensureActive()
         loadedRoute = route
-        this.offer.value = offer
+        sheet.value = offer
+    }
+
+    private fun showReadFailure(error: Throwable) {
+        when (error) {
+            is SendIntentError.AlreadyCompleted -> showProcessed(intent = null, currency = null)
+            else -> showCantReach(
+                reason = "the intent cannot be read",
+                error = error,
+                canRetry = error is SendIntentError.Unreachable,
+            )
+        }
+    }
+
+    private suspend fun showProcessed(walletId: UserWalletId, intent: SendIntent) {
+        val source = sourceResolver.resolve(userWalletId = walletId, intent = intent) as? SendIntentSource.Found
+
+        showProcessed(intent = intent, currency = source?.currency)
+    }
+
+    private fun showProcessed(intent: SendIntent?, currency: CryptoCurrency?) {
+        if (isFinished) return
+        TangemLogger.i("Send intent ${params.intentId} has already been carried out")
+        sheet.value = processedConverter.convert(
+            SendIntentProcessedConverter.Input(intent = intent, currency = currency, onClose = ::onClose),
+        )
     }
 
     /** Not knowing the agent must not hold the offer back, so a slow or failed lookup gives the unknown agent. */
@@ -121,11 +148,24 @@ internal class SendIntentModel @Inject constructor(
             ?: McpAgent.unknown(clientId)
     }
 
-    private fun close(reason: String, error: Throwable? = null) {
-        if (!finish()) return
+    private fun showCantReach(reason: String, error: Throwable? = null, canRetry: Boolean = false) {
+        if (isFinished) return
         TangemLogger.e("Send intent ${params.intentId} is not offered: $reason", error)
-        messageSender.send(ToastMessage(message = resourceReference(R.string.common_something_went_wrong)))
+        sheet.value = cantReachConverter.convert(
+            SendIntentCantReachConverter.Input(onRetry = if (canRetry) ::onRetry else null, onClose = ::onClose),
+        )
+    }
+
+    private fun closeWithoutSheet(reason: String) {
+        if (!finish()) return
+        TangemLogger.i("Send intent ${params.intentId} is not offered: $reason")
         router.pop()
+    }
+
+    /** The sheet stays on screen until the new answer replaces it: removing it would dismiss the model. */
+    private fun onRetry() {
+        if (isFinished || loadJob?.isActive == true) return
+        loadJob = modelScope.launch { loadIntent() }
     }
 
     private fun onProceed() {
@@ -142,8 +182,8 @@ internal class SendIntentModel @Inject constructor(
             },
             onComplete = { isSuccess ->
                 when {
-                    !isSuccess -> close(reason = "the send could not be opened")
-                    isCoveredByOtherScreen -> close(reason = "the send is already open behind another screen")
+                    !isSuccess -> showCantReach(reason = "the send could not be opened")
+                    isCoveredByOtherScreen -> showCantReach(reason = "the send is already open behind another screen")
                     else -> onSendOpened()
                 }
             },

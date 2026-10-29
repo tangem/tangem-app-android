@@ -6,18 +6,31 @@ import com.tangem.domain.express.models.ExchangeTransaction
 import com.tangem.domain.express.models.ExpressAsset.ID as ExpressAssetId
 import com.tangem.domain.express.models.ExpressExchangeStatus
 import com.tangem.domain.express.models.ExpressTransactionAsset
+import com.tangem.domain.jointaccount.model.FinishedJointOperation
+import com.tangem.domain.jointaccount.model.JointOperationTransfer
+import com.tangem.domain.jointaccount.model.JointTransferIntent
+import com.tangem.domain.jointaccount.model.SafeTx
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.SdkAmount
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.domain.txhistory.model.ExpressTx
+import com.tangem.domain.txhistory.model.JointOperationTx
 import com.tangem.domain.txhistory.model.OnChainTx
+import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.features.txhistory.impl.R
+import com.tangem.features.txhistory.model.TxHistoryLookupContext
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
+import com.google.common.truth.Truth.assertThat
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import com.tangem.test.core.ProvideTestModels
 import java.math.BigDecimal
+import java.math.BigInteger
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class TxHistoryInfoToTransactionItemUMConverterTest {
@@ -34,7 +47,116 @@ internal class TxHistoryInfoToTransactionItemUMConverterTest {
             currency = currency,
             txHistoryUiActions = txHistoryUiActions,
         ),
+        jointConverter = JointOperationTxToTransactionItemUMConverter(
+            currency = currency,
+            txHistoryUiActions = txHistoryUiActions,
+            lookup = TxHistoryLookupContext(
+                ownAccountByNetwork = emptyMap(),
+                isAccountsModeEnabled = false,
+                walletInfoById = emptyMap(),
+            ),
+        ),
         txHistoryUiActions = txHistoryUiActions,
+    )
+
+    @Test
+    fun `GIVEN joint operation matched to its chain tx WHEN row clicked THEN routes the joint operation`() {
+        // Arrange
+        val item = jointOperation(status = FinishedJointOperation.Status.EXECUTED)
+            .copy(txInfo = OnChainTx.BSDK(txInfo(type = TransactionType.Transfer)))
+
+        // Act
+        val result = converter.convert(item) as TransactionItemUM.Content
+        result.onClick()
+
+        // Assert
+        assertThat(result.txHash).isEqualTo(TX_HASH)
+        verify { txHistoryUiActions.onTransactionClick(item) }
+    }
+
+    @Test
+    fun `GIVEN failed joint operation carrying its chain tx WHEN convert THEN rendered from the operation`() {
+        // Arrange
+        val item = jointOperation(status = FinishedJointOperation.Status.FAILED)
+            .copy(txInfo = OnChainTx.BSDK(txInfo(type = TransactionType.Transfer)))
+
+        // Act
+        val result = converter.convert(item) as TransactionItemUM.Content
+
+        // Assert
+        assertThat(listOf(result.status, result.title, result.amount)).containsExactly(
+            Status.Failed,
+            resourceReference(R.string.transaction_history_status_send_failed),
+            "1.00",
+        ).inOrder()
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN standalone joint operation WHEN convert THEN status title and amount follow how it ended`(
+        model: JointRowModel,
+    ) {
+        // Act
+        val result = converter.convert(jointOperation(status = model.status)) as TransactionItemUM.Content
+
+        // Assert
+        assertThat(listOf(result.status, result.title, result.amount))
+            .containsExactly(model.expectedStatus, resourceReference(model.expectedTitle), model.expectedAmount)
+            .inOrder()
+    }
+
+    internal data class JointRowModel(
+        val status: FinishedJointOperation.Status,
+        val expectedStatus: Status,
+        val expectedTitle: Int,
+        val expectedAmount: String,
+    )
+
+    private fun provideTestModels() = listOf(
+        JointRowModel(FinishedJointOperation.Status.EXECUTED, Status.Confirmed, R.string.common_sent, "-1.00"),
+        JointRowModel(
+            FinishedJointOperation.Status.FAILED,
+            Status.Failed,
+            R.string.transaction_history_status_send_failed,
+            "1.00",
+        ),
+        JointRowModel(
+            FinishedJointOperation.Status.CANCELLED,
+            Status.Failed,
+            R.string.express_exchange_status_canceled,
+            "1.00",
+        ),
+    )
+
+    private fun jointOperation(status: FinishedJointOperation.Status) = JointOperationTx(
+        operation = FinishedJointOperation(
+            operationId = "operation-1",
+            chainId = 1,
+            safeAddress = "0xsafe",
+            safeTx = SafeTx(
+                to = USER_ADDRESS,
+                value = BigInteger.TEN.pow(18),
+                data = "0x",
+                operation = SafeTx.OPERATION_CALL,
+                safeTxGas = BigInteger.ONE,
+                baseGas = BigInteger.ONE,
+                gasPrice = BigInteger.ONE,
+                gasToken = "0x0",
+                refundReceiver = "0xrelayer",
+                nonce = BigInteger.ONE,
+            ),
+            status = status,
+            initiator = USER_ADDRESS,
+            signatures = emptyList(),
+            createdAt = "2026-09-08T09:20:37.000Z",
+            finishedAtMillis = TIMESTAMP,
+            txHash = TX_HASH.takeIf { status == FinishedJointOperation.Status.EXECUTED },
+        ),
+        transfer = JointOperationTransfer(
+            currency = currency,
+            intent = JointTransferIntent.Native(recipient = USER_ADDRESS, amountWei = BigInteger.TEN.pow(18)),
+        ),
+        txInfo = null,
     )
 
     @Test
