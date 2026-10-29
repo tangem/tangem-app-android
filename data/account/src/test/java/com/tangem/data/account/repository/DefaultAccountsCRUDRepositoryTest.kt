@@ -23,6 +23,7 @@ import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.models.account.*
 import com.tangem.domain.models.account.Account.Personal
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
@@ -58,6 +59,8 @@ class DefaultAccountsCRUDRepositoryTest {
 
     private val resources: Resources = mockk()
 
+    private val jointAccountFeatureToggles: JointAccountFeatureToggles = mockk()
+
     private val repository = DefaultAccountsCRUDRepository(
         walletAccountsApi = walletAccountsApi,
         walletAccountsSaver = walletAccountsSaver,
@@ -68,6 +71,7 @@ class DefaultAccountsCRUDRepositoryTest {
         convertersContainer = convertersContainer,
         resources = resources,
         dispatchers = TestingCoroutineDispatcherProvider(),
+        jointAccountFeatureToggles = jointAccountFeatureToggles,
     )
 
     private val userWalletId = UserWalletId("011")
@@ -85,6 +89,7 @@ class DefaultAccountsCRUDRepositoryTest {
     @BeforeEach
     fun setupEach() {
         every { archivedAccountsStoreFactory.create(userWalletId) } returns archivedAccountsStore
+        every { jointAccountFeatureToggles.isJointAccountEnabled } returns true
     }
 
     @AfterEach
@@ -580,6 +585,41 @@ class DefaultAccountsCRUDRepositoryTest {
             Truth.assertThat(archivedAccountsStore.getSyncOrNull())
                 .containsExactly(ArchivedAccountConverter(userWalletId).convert(accountDTO))
         }
+
+        @Test
+        fun `GIVEN joint accounts disabled WHEN fetchArchivedAccounts THEN an archived joint record is left out`() =
+            runTest {
+                // Arrange
+                every { jointAccountFeatureToggles.isJointAccountEnabled } returns false
+                val accountDTO = WalletAccountDTO(
+                    id = accountId.value,
+                    name = "Archived Account",
+                    derivationIndex = 0,
+                    icon = CryptoPortfolioIcon.Icon.Wallet.name,
+                    iconColor = CryptoPortfolioIcon.Color.DullLavender.name,
+                    totalNetworks = 0,
+                    totalTokens = 0,
+                )
+                val jointDTO = accountDTO.copy(
+                    id = "4B2F1C8A9E7D6053A1B4C7E2F8D9A0B3C5E7F1A2D4B6C8E0F2A4B6C8D0E2F4A6",
+                    name = "Archived Joint",
+                    type = WalletAccountDTO.Type.JOINT,
+                )
+                val apiResponse = mockk<GetWalletArchivedAccountsResponse> {
+                    every { this@mockk.accounts } returns listOf(accountDTO, jointDTO)
+                }
+                coEvery { archivedAccountsETagStore.getSyncOrNull() } returns emptyMap()
+                coEvery {
+                    walletAccountsApi.getArchivedAccounts(userWalletId.stringValue, null)
+                } returns ApiResponse.Success(apiResponse)
+
+                // Act
+                repository.fetchArchivedAccounts(userWalletId)
+
+                // Assert
+                Truth.assertThat(archivedAccountsStore.getSyncOrNull())
+                    .containsExactly(ArchivedAccountConverter(userWalletId).convert(accountDTO))
+            }
 
         @Test
         fun `fetchArchivedAccounts should throw exception if API returns error`() = runTest {
