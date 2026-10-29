@@ -73,7 +73,22 @@ internal class SolanaGaslessSwapResolverTest {
         val swapData = buildDexSwapData(message = providerMessage(size = SIZE_FITS))
 
         // Act
-        val actual = sut.resolveFeePayer(from, swapData)
+        val actual = sut.resolveFeePayer(PROVIDER_ID, from, swapData)
+
+        // Assert
+        assertThat(actual).isNull()
+        coVerify(exactly = 0) { solanaGaslessTransactionRepository.getFeePayer() }
+    }
+
+    @Test
+    fun `GIVEN LI_FI provider WHEN resolveFeePayer THEN returns null and getFeePayer is not called`() = runTest {
+        // Arrange
+        val from = buildSwapCurrencyStatus(networkRawId = solanaNetwork, isCoin = false)
+        val swapData = buildDexSwapData(message = providerMessage(size = SIZE_FITS))
+        coEvery { solanaGaslessTransactionRepository.getFeePayer() } returns "FeePayer".right()
+
+        // Act
+        val actual = sut.resolveFeePayer("li-fi", from, swapData)
 
         // Assert
         assertThat(actual).isNull()
@@ -87,7 +102,7 @@ internal class SolanaGaslessSwapResolverTest {
         val swapData = buildDexSwapData(message = providerMessage(size = SIZE_FITS))
 
         // Act
-        val actual = sut.resolveFeePayer(from, swapData)
+        val actual = sut.resolveFeePayer(PROVIDER_ID, from, swapData)
 
         // Assert
         assertThat(actual).isNull()
@@ -100,7 +115,7 @@ internal class SolanaGaslessSwapResolverTest {
         val swapData = buildDexSwapData(message = providerMessage(size = SIZE_FITS))
 
         // Act
-        val actual = sut.resolveFeePayer(from, swapData)
+        val actual = sut.resolveFeePayer(PROVIDER_ID, from, swapData)
 
         // Assert
         assertThat(actual).isNull()
@@ -113,7 +128,7 @@ internal class SolanaGaslessSwapResolverTest {
         val swapData = buildDexSwapData(message = providerMessage(size = SIZE_TOO_BIG))
 
         // Act
-        val actual = sut.resolveFeePayer(from, swapData)
+        val actual = sut.resolveFeePayer(PROVIDER_ID, from, swapData)
 
         // Assert
         assertThat(actual).isNull()
@@ -127,7 +142,7 @@ internal class SolanaGaslessSwapResolverTest {
         coEvery { solanaGaslessTransactionRepository.getFeePayer() } returns SolanaGaslessError.Unauthorized.left()
 
         // Act
-        val actual = sut.resolveFeePayer(from, swapData)
+        val actual = sut.resolveFeePayer(PROVIDER_ID, from, swapData)
 
         // Assert
         assertThat(actual).isNull()
@@ -140,10 +155,10 @@ internal class SolanaGaslessSwapResolverTest {
             .copy(userWallet = mockk<UserWallet.Hot>(relaxed = true))
         val swapData = buildDexSwapData(message = providerMessage(size = SIZE_FITS))
         coEvery { solanaGaslessTransactionRepository.getFeePayer() } returns "FeePayer".right()
-        sut.resolveFeePayer(from, swapData)
+        sut.resolveFeePayer(PROVIDER_ID, from, swapData)
 
         // Act
-        val actual = sut.resolveFeePayer(from, swapData)
+        val actual = sut.resolveFeePayer(PROVIDER_ID, from, swapData)
 
         // Assert
         assertThat(actual).isEqualTo("FeePayer")
@@ -164,10 +179,10 @@ internal class SolanaGaslessSwapResolverTest {
             val swapData = buildDexSwapData(message = providerMessage(size = SIZE_TOO_BIG))
             mockkObject(SolanaTransactionHelper)
             try {
-                sut.resolveFeePayer(from, swapData)
+                sut.resolveFeePayer(PROVIDER_ID, from, swapData)
 
                 // Act
-                val actual = sut.resolveFeePayer(from, swapData)
+                val actual = sut.resolveFeePayer(PROVIDER_ID, from, swapData)
 
                 // Assert
                 assertThat(actual).isNull()
@@ -188,10 +203,10 @@ internal class SolanaGaslessSwapResolverTest {
                 SolanaGaslessError.Unauthorized.left(),
                 "FeePayer".right(),
             )
-            sut.resolveFeePayer(from, swapData)
+            sut.resolveFeePayer(PROVIDER_ID, from, swapData)
 
             // Act
-            val actual = sut.resolveFeePayer(from, swapData)
+            val actual = sut.resolveFeePayer(PROVIDER_ID, from, swapData)
 
             // Assert
             assertThat(actual).isEqualTo("FeePayer")
@@ -206,7 +221,7 @@ internal class SolanaGaslessSwapResolverTest {
         coEvery { solanaGaslessTransactionRepository.getFeePayer() } returns "FeePayer".right()
 
         // Act
-        val actual = sut.resolveFeePayer(from, swapData)
+        val actual = sut.resolveFeePayer(PROVIDER_ID, from, swapData)
 
         // Assert
         assertThat(actual).isEqualTo("FeePayer")
@@ -226,7 +241,7 @@ internal class SolanaGaslessSwapResolverTest {
         } returns Result.Success(SolanaGaslessSimulation.Failed(error = "InsufficientFundsForRent", logs = emptyList()))
 
         // Act
-        val actual = sut.resolveFeePayer(from, swapData)
+        val actual = sut.resolveFeePayer(PROVIDER_ID, from, swapData)
 
         // Assert
         assertThat(actual).isNull()
@@ -249,7 +264,7 @@ internal class SolanaGaslessSwapResolverTest {
         } returns simulation
 
         // Act
-        val actual = sut.resolveFeePayer(from, swapData)
+        val actual = sut.resolveFeePayer(PROVIDER_ID, from, swapData)
 
         // Assert
         assertThat(actual).isEqualTo("FeePayer")
@@ -267,7 +282,7 @@ internal class SolanaGaslessSwapResolverTest {
         coEvery { solanaGaslessTransactionRepository.getFeePayer() } returns "FeePayer".right()
 
         // Act
-        val actual = sut.resolveFeePayer(from, swapData)
+        val actual = sut.resolveFeePayer(PROVIDER_ID, from, swapData)
 
         // Assert
         assertThat(actual).isEqualTo(if (model.isOffered) "FeePayer" else null)
@@ -282,7 +297,7 @@ internal class SolanaGaslessSwapResolverTest {
         coEvery { solanaGaslessTransactionRepository.getFeePayer() } returns "FeePayer".right()
 
         // Act
-        val actual = sut.resolveFeePayer(from, swapData)
+        val actual = sut.resolveFeePayer(PROVIDER_ID, from, swapData)
 
         // Assert
         assertThat(actual).isNull()
@@ -350,6 +365,7 @@ internal class SolanaGaslessSwapResolverTest {
     }
 
     private companion object {
+        const val PROVIDER_ID = "jupiter"
         const val SIGNATURE_LENGTH = 64
         const val SIZE_FITS = 931 // exactly SolanaTransactionHelper.MAX_GASLESS_MESSAGE_SIZE — boundary case
         const val SIZE_TOO_BIG = 932

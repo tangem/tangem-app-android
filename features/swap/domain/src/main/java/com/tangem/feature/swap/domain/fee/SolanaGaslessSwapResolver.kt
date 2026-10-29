@@ -38,8 +38,13 @@ internal class SolanaGaslessSwapResolver @Inject constructor(
     private val resolutionMutex = Mutex()
     private var lastResolution: Resolution? = null
 
-    suspend fun resolveFeePayer(fromSwapCurrencyStatus: SwapCurrencyStatus, swapData: SwapDataModel?): String? {
+    suspend fun resolveFeePayer(
+        providerId: String,
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        swapData: SwapDataModel?,
+    ): String? {
         if (!swapFeatureToggles.isSolanaGaslessEnabled) return null
+        if (providerId in EXCLUDED_PROVIDER_IDS) return null
         val currency = fromSwapCurrencyStatus.currency
         // Swapping from SOL itself means wrapping it into a rent-paying wSOL account the user cannot fund
         if (currency !is CryptoCurrency.Token || !isSolana(currency.network.rawId)) return null
@@ -115,5 +120,8 @@ internal class SolanaGaslessSwapResolver @Inject constructor(
 
     private companion object {
         const val SOLANA_PUBLIC_KEY_LENGTH = 32
+
+        // LI.FI routes leave most pool accounts outside their lookup tables, so the tx rarely fits the sponsored size
+        val EXCLUDED_PROVIDER_IDS = setOf("li-fi")
     }
 }
