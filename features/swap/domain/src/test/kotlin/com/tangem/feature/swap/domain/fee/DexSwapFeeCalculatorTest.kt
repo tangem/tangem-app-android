@@ -18,9 +18,11 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
 import com.tangem.domain.transaction.usecase.CreateTransactionDataExtrasUseCase
 import com.tangem.domain.transaction.usecase.GetEthSpecificFeeUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
@@ -67,6 +69,8 @@ internal class DexSwapFeeCalculatorTest {
     private val wrapYieldSwapCallDataWithUpgradeUseCase: WrapYieldSwapCallDataWithUpgradeUseCase = mockk(relaxed = true)
     private val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase = mockk()
     private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase = mockk()
+    private val getFeeForGaslessUseCase: GetFeeForGaslessUseCase = mockk(relaxed = true)
+    private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase = mockk(relaxed = true)
 
     private val dexBump = PatchEthGasLimitForSwap(percentage = PatchEthGasLimitForSwap.DEX_PERCENTAGE)
 
@@ -81,6 +85,8 @@ internal class DexSwapFeeCalculatorTest {
             wrapYieldSwapCallDataWithUpgradeUseCase = wrapYieldSwapCallDataWithUpgradeUseCase,
             getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
             isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
+            getFeeForGaslessUseCase = getFeeForGaslessUseCase,
+            createApprovalTransactionUseCase = createApprovalTransactionUseCase,
         )
     }
 
