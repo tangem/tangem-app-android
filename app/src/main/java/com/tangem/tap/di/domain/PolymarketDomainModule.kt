@@ -50,6 +50,7 @@ import com.tangem.domain.polymarket.usecase.ObservePolymarketCredentialsPresence
 import com.tangem.domain.polymarket.usecase.SearchPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionCredentialsProvider
 import com.tangem.domain.polymarket.usecase.SubmitApprovalsUseCase
 import com.tangem.domain.polymarket.usecase.SyncBalanceAllowanceUseCase
 import com.tangem.domain.polymarket.usecase.ValidatePredictionOrderUseCase
@@ -271,11 +272,13 @@ internal object PolymarketDomainModule {
         getApiCredentials: GetPolymarketApiCredentialsUseCase,
         invalidateCredentials: InvalidatePolymarketCredentialsUseCase,
         credentialsLock: PolymarketCredentialsLock,
+        sessionCredentialsProvider: PolymarketSessionCredentialsProvider,
     ): PlacePredictionOrderUseCase = PlacePredictionOrderUseCase(
         polymarketRepository = polymarketRepository,
         getApiCredentials = getApiCredentials,
         invalidateCredentials = invalidateCredentials,
         credentialsLock = credentialsLock,
+        sessionCredentialsProvider = sessionCredentialsProvider,
     )
 
     @Provides

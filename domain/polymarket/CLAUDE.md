@@ -99,6 +99,11 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
   and the draft carries the table's constants, never the quoted strings. The signed order is re-validated
   against the draft, the domain, the deposit wallet, the market and the quote age (60 s) before it is sent,
   and the repository checks the signature tail against the domain once more.
+- An order on `PredictionOrderSigningRoute.Session` keeps `maker = signer = deposit wallet`: the session key signs
+  the same ERC-7739 digest, and the wrapped signature goes into `PolymarketSessionKeyEnvelope`. Validation and the
+  repository unwrap it and refuse an envelope the placing identity's key did not make — or any envelope on the
+  owner route. The order is placed and read back under the route's session identity. Choosing the route is the
+  caller's.
 - SELL: `makerAmount = shares`, `takerAmount = collateral`; BUY the reverse.
 - A claim signs only redeem calls the BFF served, and only after `PredictionRedeemCallValidator` accepted
   them against the position: one adapter `redeemPositions` call on the root collection of the condition for
