@@ -35,7 +35,7 @@ import com.tangem.core.ui.ds2.tabnavigation.TangemTabItem
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageEffect
 import com.tangem.core.ui.message.EventMessageHandler
@@ -73,7 +73,7 @@ internal fun ConciergeDemandSurveyModal(
                 TangemModal.TopNavigation(endButton = { TangemButton.Close(onClick = state.onDismiss) })
             } else {
                 TangemModal.TopNavigation(
-                    title = stringReference(ConciergeDemandSurveyTexts.NAVIGATION_TITLE),
+                    title = resourceReference(R.string.survey_demand_navigation_title),
                     onClose = state.onDismiss,
                 )
             }
@@ -106,7 +106,7 @@ internal fun ConciergeDemandSurveyContent(state: ConciergeDemandSurveyUM, modifi
             windowInsets = TangemFooter.ModalWindowInsets,
             extraTop = {
                 Text(
-                    text = ConciergeDemandSurveyTexts.FOOTER,
+                    text = stringResourceSafe(R.string.survey_demand_footer),
                     style = TangemTheme.typography3.caption.medium,
                     color = TangemTheme.colors3.text.secondary,
                     textAlign = TextAlign.Center,
@@ -117,7 +117,7 @@ internal fun ConciergeDemandSurveyContent(state: ConciergeDemandSurveyUM, modifi
                 modifier = Modifier.fillMaxWidth(),
                 variant = TangemButton.Variant.Primary,
                 size = TangemButton.Size.X12,
-                text = stringReference(ConciergeDemandSurveyTexts.BUTTON),
+                text = resourceReference(R.string.survey_demand_button),
                 isEnabled = state.isSubmitEnabled,
                 isLoading = state.isSubmitting,
                 onClick = state.onSubmitClick,
@@ -133,13 +133,13 @@ private fun Header(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .padding(vertical = 12.dp)
                 .semantics { heading() },
-            text = ConciergeDemandSurveyTexts.TITLE,
+            text = stringResourceSafe(R.string.survey_demand_title),
             style = TangemTheme.typography3.heading.small,
             color = TangemTheme.colors3.text.primary,
         )
         Text(
             modifier = Modifier.padding(bottom = 12.dp),
-            text = ConciergeDemandSurveyTexts.SUBTITLE,
+            text = stringResourceSafe(R.string.survey_demand_subtitle),
             style = TangemTheme.typography3.subheading.medium,
             color = TangemTheme.colors3.text.secondary,
         )
@@ -166,7 +166,7 @@ private fun Question(question: ConciergeDemandSurveyUM.QuestionUM, modifier: Mod
                 )
                 if (question.isOptional) {
                     Text(
-                        text = ConciergeDemandSurveyTexts.OPTIONAL,
+                        text = stringResourceSafe(R.string.survey_demand_optional),
                         style = TangemTheme.typography3.caption.medium,
                         color = TangemTheme.colors3.text.tertiary,
                     )
@@ -209,8 +209,8 @@ internal fun ConciergeDemandSurveySuccessContent(onDoneClick: () -> Unit, modifi
                 .weight(weight = 1f, fill = false)
                 .verticalScroll(rememberScrollState()),
             variant = TangemModalStatus.Variant.Success,
-            title = stringReference(ConciergeDemandSurveyTexts.SUCCESS_TITLE),
-            description = stringReference(ConciergeDemandSurveyTexts.SUCCESS_DESCRIPTION),
+            title = resourceReference(R.string.survey_demand_success_title),
+            description = resourceReference(R.string.survey_demand_success_description),
         )
         TangemFooter(
             modifier = Modifier.fillMaxWidth(),
@@ -226,20 +226,6 @@ internal fun ConciergeDemandSurveySuccessContent(onDoneClick: () -> Unit, modifi
             )
         }
     }
-}
-
-// TODO [REDACTED_TASK_KEY] Replace the hardcoded texts with the survey_demand_* Lokalise keys
-private object ConciergeDemandSurveyTexts {
-    const val NAVIGATION_TITLE = "Waitlist"
-    const val BUTTON = "Join waitlist"
-    const val SUCCESS_TITLE = "You’re all set"
-    const val SUCCESS_DESCRIPTION = "We’re launching Concierge country by country. " +
-        "We’ll message you in the app as soon as it’s available where you are."
-    const val FOOTER = "No commitment – your answers only help us plan the launch"
-    const val TITLE = "Join the waitlist"
-    const val SUBTITLE = "Concierge isn’t available for you yet. " +
-        "A few quick questions help us decide where to launch next."
-    const val OPTIONAL = "Optional"
 }
 
 // region Preview
