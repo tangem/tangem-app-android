@@ -12,9 +12,9 @@ import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.features.polymarket.impl.common.PolymarketOutcomeAccent
 import com.tangem.features.polymarket.impl.common.formatSlippagePercent
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import com.tangem.utils.StringsSigns.DASH_SIGN
 import java.math.BigDecimal
 
 @Immutable
