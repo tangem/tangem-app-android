@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import com.tangem.test.core.ProvideTestModels
+import com.tangem.utils.StringsSigns
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -102,7 +103,7 @@ internal class TxHistoryInfoFieldConverterRowTest {
     )
 
     private fun provideTestModels() = listOf(
-        JointRowModel(FinishedJointOperation.Status.EXECUTED, Status.Confirmed, R.string.common_sent, "-1.00"),
+        JointRowModel(FinishedJointOperation.Status.EXECUTED, Status.Confirmed, R.string.common_sent, "${StringsSigns.MINUS_SIGN}1.00"),
         JointRowModel(
             FinishedJointOperation.Status.FAILED,
             Status.Failed,
