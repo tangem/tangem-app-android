@@ -2,8 +2,6 @@ package com.tangem.spend.datasource.visa.entity
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
-import com.tangem.domain.models.account.MoneyAccountStatusValue
-import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.test.core.ProvideTestModels
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
@@ -56,10 +54,9 @@ internal class MoneyAccountStatusValueDMJsonFormatTest {
     }
 
     @Test
-    fun `GIVEN active account cached with product_instance_id WHEN decode THEN field is ignored`() {
+    fun `GIVEN active account cached without product_instance_id WHEN decode THEN product instance is null`() {
         // Arrange
-        val cached = """{"__type":"active_account","customer_id":"cust-2","product_instance_id":"pi-2",""" +
-            """"balance":null}"""
+        val cached = """{"__type":"active_account","customer_id":"cust-2","balance":null}"""
 
         // Act
         val actual = json.decodeFromString(MoneyAccountStatusValueDM.serializer(), cached)
@@ -83,38 +80,17 @@ internal class MoneyAccountStatusValueDMJsonFormatTest {
         FormatModel(status = MoneyAccountStatusValueDM.Empty, json = """{"__type":"empty"}"""),
         FormatModel(status = MoneyAccountStatusValueDM.NotCreated, json = """{"__type":"not_created"}"""),
         FormatModel(
-            status = MoneyAccountStatusValueDM.CountryNotSupported(countryCode = null, customerId = "cust-1"),
-            json = """{"__type":"country_not_supported","country_code":null,"customer_id":"cust-1"}""",
-        ),
-        FormatModel(
-            status = MoneyAccountStatusValueDM.CountryNotSupported(countryCode = "US", customerId = "cust-1"),
-            json = """{"__type":"country_not_supported","country_code":"US","customer_id":"cust-1"}""",
-        ),
-        FormatModel(
-            status = MoneyAccountStatusValueDM.Issuing(
-                step = MoneyAccountStatusValue.IssuingStep.RAIN_APPROVAL,
-                customerId = "cust-1",
-            ),
-            json = """{"__type":"issuing","step":"RAIN_APPROVAL","customer_id":"cust-1"}""",
-        ),
-        FormatModel(
-            status = MoneyAccountStatusValueDM.UnderReview(kycStatus = KycStatus.REJECTED, customerId = "cust-2"),
-            json = """{"__type":"kyc_status","kyc_status":"declined","customer_id":"cust-2"}""",
-        ),
-        FormatModel(
-            status = MoneyAccountStatusValueDM.VerificationDeclined(customerId = "cust-2"),
-            json = """{"__type":"verification_declined","customer_id":"cust-2"}""",
-        ),
-        FormatModel(
             status = MoneyAccountStatusValueDM.Activating(customerId = "cust-2"),
             json = """{"__type":"activating","customer_id":"cust-2"}""",
         ),
         FormatModel(
             status = MoneyAccountStatusValueDM.ActiveAccount(
                 customerId = "cust-2",
+                productInstanceId = "pi-2",
                 balance = BALANCE,
             ),
-            json = """{"__type":"active_account","customer_id":"cust-2","balance":$BALANCE_JSON}""",
+            json = """{"__type":"active_account","customer_id":"cust-2","product_instance_id":"pi-2",""" +
+                """"balance":$BALANCE_JSON}""",
         ),
         FormatModel(
             status = MoneyAccountStatusValueDM.Deactivated(

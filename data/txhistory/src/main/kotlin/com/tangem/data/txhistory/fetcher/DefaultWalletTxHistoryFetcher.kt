@@ -23,6 +23,7 @@ internal class DefaultWalletTxHistoryFetcher @AssistedInject constructor(
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val accountTxHistoryFetcher: DefaultAccountTxHistoryFetcher.Factory,
     expressTxHistoryFetcher: DefaultExpressTxHistoryFetcher.Factory,
+    jointOperationTxHistoryFetcher: DefaultJointOperationTxHistoryFetcher.Factory,
 ) : WalletTxHistoryFetcher, TxHistoryFetcherUtils by utils {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -31,8 +32,11 @@ internal class DefaultWalletTxHistoryFetcher @AssistedInject constructor(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal val expressFetcher: ExpressTxHistoryFetcher = expressTxHistoryFetcher.create(walletId)
 
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal val jointOperationFetcher: JointOperationTxHistoryFetcher = jointOperationTxHistoryFetcher.create(walletId)
+
     init {
-        defaultLaunchIn(buildOnlyExpressHistory())
+        defaultLaunchIn(buildWalletLevelHistory())
     }
 
     override fun invoke(params: TxHistoryFetchTrigger) {
@@ -42,18 +46,20 @@ internal class DefaultWalletTxHistoryFetcher @AssistedInject constructor(
     override fun close() {
         cancelScope()
         expressFetcher.close()
+        jointOperationFetcher.close()
         fetchers.forEach { (_, fetcher) -> fetcher.close() }
         fetchers.clear()
     }
 
-    private fun buildOnlyExpressHistory(): Flow<Unit> = receiveTrigger()
-        .map { trigger ->
-            when (trigger) {
-                is TxHistoryExpressTrigger -> expressFetcher.invoke(trigger)
-            }
-        }
+    private fun buildWalletLevelHistory(): Flow<Unit> = receiveTrigger()
+        .map { trigger -> routeToWalletFetchers(trigger) }
 
-    // Kept until per-account on-chain history is wired: only the express part of the pipeline is live for now.
+    private fun routeToWalletFetchers(trigger: TxHistoryFetchTrigger) {
+        if (trigger is TxHistoryExpressTrigger) expressFetcher.invoke(trigger)
+        if (trigger is TxHistoryJointOperationTrigger) jointOperationFetcher.invoke(trigger)
+    }
+
+    // Kept until per-account on-chain history is wired: only the wallet-level part (express, joint operations) is live for now.
     @Suppress("UnusedPrivateMember")
     private fun buildFlow(): Flow<Unit> = channelFlow {
         val accountListFlow = singleAccountListSupplier(walletId)
@@ -72,11 +78,7 @@ internal class DefaultWalletTxHistoryFetcher @AssistedInject constructor(
             .launchIn(this)
 
         receiveTrigger()
-            .onEach { trigger ->
-                when (trigger) {
-                    is TxHistoryExpressTrigger -> expressFetcher.invoke(trigger)
-                }
-            }
+            .onEach { trigger -> routeToWalletFetchers(trigger) }
             .collect {}
     }
 

@@ -89,7 +89,7 @@ private fun LazyListScope.networks(items: List<NFTNetworkUM>) {
                         this
                     }
                 }
-                .background(TangemTheme.colors.background.primary)
+                .background(TangemTheme.colors3.bg.secondary)
                 .clickable { network.onItemClick() },
             model = network.chainRowUM,
         )
@@ -105,7 +105,7 @@ private fun Title(text: TextReference, modifier: Modifier = Modifier) {
                 top = 8.dp,
             )
             .background(
-                color = TangemTheme.colors.background.primary,
+                color = TangemTheme.colors3.bg.secondary,
                 shape = RoundedCornerShape(
                     topStart = 16.dp,
                     topEnd = 16.dp,
@@ -119,7 +119,7 @@ private fun Title(text: TextReference, modifier: Modifier = Modifier) {
             ),
         text = text.resolveReference(),
         style = TangemTheme.typography.subtitle2,
-        color = TangemTheme.colors.text.tertiary,
+        color = TangemTheme.colors3.text.secondary,
     )
 }
 

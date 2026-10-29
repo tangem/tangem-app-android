@@ -25,7 +25,7 @@ fun TangemDropdownItem(item: TangemDropdownMenuItem, dismissParent: () -> Unit, 
     val textColor = if (item.isEnabled) {
         item.textColor.resolveReference()
     } else {
-        TangemTheme.colors.text.tertiary
+        TangemTheme.colors3.text.secondary
     }
     Text(
         modifier = modifier
@@ -53,11 +53,11 @@ fun TangemDropdownItem(item: TangemDropdownMenuItem, dismissParent: () -> Unit, 
 private fun Preview_TokenDetailsAppBarDropdownItem() {
     TangemThemePreview {
         TangemDropdownItem(
-            modifier = Modifier.background(TangemTheme.colors.background.primary),
+            modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
             dismissParent = {},
             item = TangemDropdownMenuItem(
                 title = TextReference.Res(id = R.string.token_details_hide_token),
-                textColor = themedColor { TangemTheme.colors.text.warning },
+                textColor = themedColor { TangemTheme.colors3.text.accent.red },
                 onClick = { },
             ),
         )

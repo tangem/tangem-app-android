@@ -105,7 +105,7 @@ private fun ContentContainer(state: MessageBottomSheetUM.InfoBlock, modifier: Mo
                     .testTag(WarningBottomSheetTestTags.TITLE),
                 text = title.resolveReference(),
                 style = TangemTheme.typography.h3,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 textAlign = TextAlign.Center,
             )
         }
@@ -117,7 +117,7 @@ private fun ContentContainer(state: MessageBottomSheetUM.InfoBlock, modifier: Mo
                     .testTag(WarningBottomSheetTestTags.MESSAGE),
                 text = body.resolveAnnotatedReference(),
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
             )
         }
@@ -153,19 +153,19 @@ private fun BottomSheetIconContainer(
 private fun BottomSheetIcon(icon: MessageBottomSheetUM.Icon, modifier: Modifier = Modifier) {
     val tint = when (icon.type) {
         MessageBottomSheetUM.Icon.Type.Unspecified -> Color.Unspecified
-        MessageBottomSheetUM.Icon.Type.Accent -> TangemTheme.colors.icon.accent
-        MessageBottomSheetUM.Icon.Type.Informative -> TangemTheme.colors.icon.informative
-        MessageBottomSheetUM.Icon.Type.Attention -> TangemTheme.colors.icon.attention
-        MessageBottomSheetUM.Icon.Type.Warning -> TangemTheme.colors.icon.warning
+        MessageBottomSheetUM.Icon.Type.Accent -> TangemTheme.colors3.icon.accent.blue
+        MessageBottomSheetUM.Icon.Type.Informative -> TangemTheme.colors3.icon.secondary
+        MessageBottomSheetUM.Icon.Type.Attention -> TangemTheme.colors3.icon.accent.yellow
+        MessageBottomSheetUM.Icon.Type.Warning -> TangemTheme.colors3.icon.accent.red
     }
 
     val backgroundColor = when (icon.backgroundType) {
-        MessageBottomSheetUM.Icon.BackgroundType.Unspecified -> TangemTheme.colors.icon.informative
+        MessageBottomSheetUM.Icon.BackgroundType.Unspecified -> TangemTheme.colors3.icon.secondary
         MessageBottomSheetUM.Icon.BackgroundType.SameAsTint -> tint
-        MessageBottomSheetUM.Icon.BackgroundType.Accent -> TangemTheme.colors.icon.accent
-        MessageBottomSheetUM.Icon.BackgroundType.Informative -> TangemTheme.colors.icon.informative
-        MessageBottomSheetUM.Icon.BackgroundType.Attention -> TangemTheme.colors.icon.attention
-        MessageBottomSheetUM.Icon.BackgroundType.Warning -> TangemTheme.colors.icon.warning
+        MessageBottomSheetUM.Icon.BackgroundType.Accent -> TangemTheme.colors3.icon.accent.blue
+        MessageBottomSheetUM.Icon.BackgroundType.Informative -> TangemTheme.colors3.icon.secondary
+        MessageBottomSheetUM.Icon.BackgroundType.Attention -> TangemTheme.colors3.icon.accent.yellow
+        MessageBottomSheetUM.Icon.BackgroundType.Warning -> TangemTheme.colors3.icon.accent.red
     }
 
     HighlightedIcon(
@@ -179,8 +179,8 @@ private fun BottomSheetIcon(icon: MessageBottomSheetUM.Icon, modifier: Modifier 
 @Composable
 private fun BottomSheetChip(chip: MessageBottomSheetUM.Chip, modifier: Modifier = Modifier) {
     val color = when (chip.type) {
-        MessageBottomSheetUM.Chip.Type.Unspecified -> TangemTheme.colors.text.primary1
-        MessageBottomSheetUM.Chip.Type.Warning -> TangemTheme.colors.text.warning
+        MessageBottomSheetUM.Chip.Type.Unspecified -> TangemTheme.colors3.text.primary
+        MessageBottomSheetUM.Chip.Type.Warning -> TangemTheme.colors3.text.accent.red
     }
 
     Text(

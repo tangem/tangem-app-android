@@ -57,7 +57,7 @@ fun FeeExtendedSelectorContent(state: FeeExtendedSelectorUM, modifier: Modifier 
         TokenItem(
             modifier = Modifier
                 .clip(RoundedCornerShape(14.dp))
-                .background(color = TangemTheme.colors.background.action),
+                .background(color = TangemTheme.colors3.bg.secondary),
             state = state.token,
             isBalanceHidden = false,
         )
@@ -76,13 +76,13 @@ fun FeeExtendedSelectorContent(state: FeeExtendedSelectorUM, modifier: Modifier 
                     clickable(onClick = state.onFeeClick)
                 }
                 .background(
-                    TangemTheme.colors.background.action,
+                    TangemTheme.colors3.bg.secondary,
                     RoundedCornerShape(14.dp),
                 ),
             title = state.fee.title,
             iconRes = state.fee.iconRes,
-            iconBackgroundColor = TangemTheme.colors.icon.accent.copy(alpha = 0.1F),
-            iconTint = TangemTheme.colors.icon.accent,
+            iconBackgroundColor = TangemTheme.colors3.icon.accent.blue.copy(alpha = 0.1F),
+            iconTint = TangemTheme.colors3.icon.accent.blue,
             preDot = stringReference(
                 fee.amount.value.format {
                     crypto(
@@ -161,7 +161,7 @@ private fun Preview() {
 
     TangemThemePreview {
         FeeExtendedSelectorContent(
-            modifier = Modifier.background(TangemTheme.colors.background.tertiary),
+            modifier = Modifier.background(TangemTheme.colors3.bg.primary),
             state = FeeExtendedSelectorUM(
                 parent = FeeSelectorUM.Content(
                     isPrimaryButtonEnabled = true,

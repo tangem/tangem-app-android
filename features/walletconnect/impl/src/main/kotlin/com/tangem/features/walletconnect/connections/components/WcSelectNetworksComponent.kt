@@ -95,7 +95,7 @@ private fun WcSelectNetworksBS(
             content = TangemBottomSheetConfigContent.Empty,
         ),
         onBack = onBack,
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
         title = {
             TangemModalBottomSheetTitle(
                 title = resourceReference(R.string.common_choose_network),
@@ -126,7 +126,7 @@ private fun WcSelectNetworksBS(
 private fun WcSelectNetworksContent(state: WcSelectNetworksUM, modifier: Modifier = Modifier) {
     val blocksModifier = Modifier
         .clip(RoundedCornerShape(14.dp))
-        .background(color = TangemTheme.colors.background.action)
+        .background(color = TangemTheme.colors3.bg.secondary)
         .fillMaxWidth()
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
         if (state.missing.isNotEmpty()) {
@@ -156,13 +156,13 @@ private fun MissingRequiredBlock(missingNetworks: ImmutableList<WcNetworkInfoIte
     Column(modifier = modifier) {
         Notification(
             config = notificationUM.config,
-            containerColor = TangemTheme.colors.background.action,
-            iconTint = TangemTheme.colors.icon.attention,
+            containerColor = TangemTheme.colors3.bg.secondary,
+            iconTint = TangemTheme.colors3.icon.accent.yellow,
         )
         HorizontalDivider(
             modifier = Modifier.fillMaxWidth(),
             thickness = 1.dp,
-            color = TangemTheme.colors.stroke.primary,
+            color = TangemTheme.colors3.border.secondary,
         )
         missingNetworks.fastForEach { network ->
             key(network.id) {
@@ -183,7 +183,7 @@ private fun AvailableNetworksBlock(
             modifier = Modifier.padding(top = 12.dp, bottom = 4.dp, start = 12.dp, end = 12.dp),
             text = stringResourceSafe(R.string.common_available_networks),
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
         required.fastForEach { network ->
             key(network.id) {
@@ -205,7 +205,7 @@ private fun NotAddedBlock(notAdded: ImmutableList<WcNetworkInfoItem>, modifier: 
             modifier = Modifier.padding(top = 12.dp, bottom = 4.dp, start = 12.dp, end = 12.dp),
             text = stringResourceSafe(R.string.common_not_added),
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
         notAdded.fastForEach { network ->
             key(network.id) {
@@ -232,10 +232,10 @@ private fun NetworkItems(networkItem: WcNetworkInfoItem, modifier: Modifier = Mo
                 modifier = Modifier
                     .size(24.dp)
                     .clip(CircleShape)
-                    .background(TangemTheme.colors.button.secondary),
+                    .background(TangemTheme.colors3.bg.transparent.secondary),
                 painter = painterResource(networkItem.icon),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.informative,
+                tint = TangemTheme.colors3.icon.secondary,
             )
         }
         NetworkNameAndSymbol(
@@ -257,7 +257,7 @@ private fun NetworkItems(networkItem: WcNetworkInfoItem, modifier: Modifier = Mo
             is WcNetworkInfoItem.Required -> Text(
                 text = stringResourceSafe(R.string.common_required),
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
             is WcNetworkInfoItem.Checked -> {
                 if (networkItem.isEnabled) {
@@ -284,11 +284,11 @@ private fun NetworkNameAndSymbol(name: String, symbol: String, modifier: Modifie
             modifier = Modifier.weight(1f, fill = false),
             text = name,
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        Text(text = symbol, style = TangemTheme.typography.caption1, color = TangemTheme.colors.text.tertiary)
+        Text(text = symbol, style = TangemTheme.typography.caption1, color = TangemTheme.colors3.text.secondary)
     }
 }
 

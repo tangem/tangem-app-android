@@ -66,7 +66,7 @@ fun PortfolioSelectRow(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         SpacerW12()
         if (state.icon != null) {
@@ -84,7 +84,7 @@ fun PortfolioSelectRow(
                 .testTag(WalletConnectBottomSheetTestTags.WALLET_NAME),
             text = state.name.resolveReference(),
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         if (state.isMultiChoice) {
             Icon(
@@ -92,7 +92,7 @@ fun PortfolioSelectRow(
                     .size(width = 18.dp, height = 24.dp),
                 painter = painterResource(id = R.drawable.ic_select_18_24),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.informative,
+                tint = TangemTheme.colors3.icon.secondary,
             )
         }
     }
@@ -145,7 +145,7 @@ fun PortfolioSelectRowV2(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 style = TangemTheme.typography2.captionMedium12,
-                color = TangemTheme.colors2.text.neutral.secondary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
 
@@ -155,7 +155,7 @@ fun PortfolioSelectRowV2(
             overflow = TextOverflow.Ellipsis,
             text = state.name.resolveReference(),
             style = TangemTheme.typography2.bodyMedium16,
-            color = TangemTheme.colors2.text.neutral.primary,
+            color = TangemTheme.colors3.text.primary,
         )
         if (state.isMultiChoice) {
             Icon(
@@ -164,7 +164,7 @@ fun PortfolioSelectRowV2(
                     .size(20.dp),
                 painter = painterResource(id = R.drawable.ic_select_choice_20),
                 contentDescription = null,
-                tint = TangemTheme.colors2.graphic.neutral.secondary,
+                tint = TangemTheme.colors3.icon.secondary,
             )
         }
     }
@@ -244,7 +244,7 @@ private fun PortfolioSelectRowPreview(@PreviewParameter(PreviewProvider::class) 
     TangemThemePreview {
         PortfolioSelectRow(
             state = state,
-            modifier = Modifier.background(TangemTheme.colors.background.tertiary),
+            modifier = Modifier.background(TangemTheme.colors3.bg.primary),
         )
     }
 }
@@ -256,7 +256,7 @@ private fun PortfolioSelectRowPreviewV2(@PreviewParameter(PreviewProvider::class
     TangemThemePreviewRedesign {
         PortfolioSelectRowV2(
             state = state,
-            modifier = Modifier.background(TangemTheme.colors2.surface.level3),
+            modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
         )
     }
 }

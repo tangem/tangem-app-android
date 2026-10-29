@@ -4,9 +4,8 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
-import com.tangem.core.ui.ds.tabs.TangemSegmentUM
-import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
+import com.tangem.core.ui.ds2.segmentedcontrol.TangemSegmentedControl
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.foryou.impl.components.state.DonutSegmentColor
 import com.tangem.features.foryou.impl.components.state.MarketChartUM
@@ -18,8 +17,7 @@ internal data class ForYouUM(
     val portfolioReviewUM: PortfolioReviewUM,
     val earnOpportunities: EarnOpportunitiesUM,
     val notifications: ImmutableList<ForYouNotification>,
-    val periodPickerUM: TangemSegmentedPickerUM,
-    val onPeriodClick: (tangemSegmentUM: TangemSegmentUM) -> Unit,
+    val periodPickerUM: ImmutableList<TangemSegmentedControl.Item>,
     val portfolioFilter: TangemFilterItemUM,
 )
 

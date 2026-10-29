@@ -13,7 +13,6 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.features.account.AccountDetailsComponent
 import com.tangem.features.account.details.ui.AccountDetailsContent
-import com.tangem.features.jointaccount.supportednetworks.JointSupportedNetworksComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -21,22 +20,21 @@ import dagger.assisted.AssistedInject
 internal class DefaultAccountDetailsComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted params: AccountDetailsComponent.Params,
-    private val jointSupportedNetworksComponentFactory: JointSupportedNetworksComponent.Factory,
+    private val childFactory: AccountDetailsChildFactory,
 ) : AppComponentContext by appComponentContext, AccountDetailsComponent {
 
     private val model: AccountDetailsModel = getOrCreateModel(params)
 
-    private val jointSupportedNetworksSlot = childSlot(
-        source = model.jointSupportedNetworksNavigation,
+    private val bottomSheetSlot = childSlot(
+        source = model.bottomSheetNavigation,
         serializer = null,
         handleBackButton = false,
-        key = "jointSupportedNetworksSlot",
-        childFactory = { _, componentContext ->
-            jointSupportedNetworksComponentFactory.create(
-                context = childByContext(componentContext),
-                params = JointSupportedNetworksComponent.Params(
-                    onDismiss = model.jointSupportedNetworksNavigation::dismiss,
-                ),
+        key = "bottomSheetSlot",
+        childFactory = { config, componentContext ->
+            childFactory.createChild(
+                config = config,
+                appComponentContext = childByContext(componentContext),
+                model = model,
             )
         },
     )
@@ -44,20 +42,16 @@ internal class DefaultAccountDetailsComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
-        val jointSupportedNetworks by jointSupportedNetworksSlot.subscribeAsState()
+        val bottomSheet by bottomSheetSlot.subscribeAsState()
 
         BackHandler {
-            if (jointSupportedNetworks.child != null) {
-                model.jointSupportedNetworksNavigation.dismiss()
-            } else {
-                state.onCloseClick()
-            }
+            if (bottomSheet.child != null) model.bottomSheetNavigation.dismiss() else state.onCloseClick()
         }
         AccountDetailsContent(
             modifier = modifier,
             state = state,
         )
-        jointSupportedNetworks.child?.instance?.BottomSheet()
+        bottomSheet.child?.instance?.BottomSheet()
     }
 
     @AssistedFactory

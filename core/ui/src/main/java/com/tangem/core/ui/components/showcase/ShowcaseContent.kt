@@ -33,7 +33,7 @@ fun ShowcaseContent(
         Icon(
             painter = painterResource(id = headerIconRes),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.primary1,
+            tint = TangemTheme.colors3.icon.primary,
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .size(56.dp),
@@ -41,7 +41,7 @@ fun ShowcaseContent(
         Text(
             text = headerText.resolveReference(),
             style = TangemTheme.typography.h2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)

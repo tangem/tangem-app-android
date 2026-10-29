@@ -246,7 +246,7 @@ private fun Preview() {
     TangemThemePreview {
         Box(
             modifier = Modifier
-                .background(TangemTheme.colors.background.primary)
+                .background(TangemTheme.colors3.bg.primary)
                 .fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {

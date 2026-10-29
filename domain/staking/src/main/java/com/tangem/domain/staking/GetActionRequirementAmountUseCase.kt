@@ -1,7 +1,7 @@
 package com.tangem.domain.staking
 
 import com.tangem.domain.staking.model.StakingIntegrationID
-import com.tangem.domain.models.staking.action.StakingActionType
+import com.tangem.domain.staking.model.action.StakingActionType
 import java.math.BigDecimal
 
 class GetActionRequirementAmountUseCase {

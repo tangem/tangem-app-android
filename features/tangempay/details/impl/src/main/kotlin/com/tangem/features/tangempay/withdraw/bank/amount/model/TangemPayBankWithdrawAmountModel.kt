@@ -14,15 +14,20 @@ import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.withdraw.bank.amount.TangemPayBankWithdrawAmountComponent
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUMFactory
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawAnalytics
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.isZero
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
@@ -33,17 +38,21 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-    private val analytics: AnalyticsEventHandler,
+    analytics: AnalyticsEventHandler,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
+    private val networkFeeLoader: BankWithdrawNetworkFeeLoader,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayBankWithdrawAmountComponent.Params>()
+
+    private val withdrawAnalytics = BankWithdrawAnalytics(sourceAccount = params.sourceAccount, analytics = analytics)
 
     /** An amount restored from the draft was entered on an earlier visit, so it must not be reported again. */
     private var isAmountEntered = params.draft.value.amount != null
 
     private val umFactory = TangemPayBankWithdrawAmountUMFactory(
         step = params.step,
+        sourceAccount = params.sourceAccount,
         callbacks = TangemPayBankWithdrawAmountUMFactory.Callbacks(
             onBackClick = router::pop,
             onCloseClick = params.onCloseFlow,
@@ -55,10 +64,13 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
             onRouteSelected = ::onRouteSelected,
             onSheetDismiss = ::closeSheet,
             onContinueClick = ::onContinueClick,
+            onRetryFeeClick = ::loadNetworkFee,
         ),
     )
 
     private val state = MutableStateFlow(AmountState())
+
+    private val networkFeeJobHolder = JobHolder()
 
     private var previousValidation: BankWithdrawAmountValidator.Result? = null
 
@@ -68,11 +80,14 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
                 draft = params.draft.value,
                 selection = currentSelection(),
                 sheet = state.value.sheet,
+                networkFee = state.value.networkFee,
                 isBalanceHidden = true,
             ),
         )
 
     init {
+        withdrawAnalytics.onAmountScreenOpened()
+        loadNetworkFee()
         combine(
             flow = params.draft,
             flow2 = params.options,
@@ -85,6 +100,7 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
                 draft = draft,
                 selection = selection,
                 sheet = amountState.sheet,
+                networkFee = amountState.networkFee,
                 isBalanceHidden = isBalanceHidden,
             )
         }
@@ -92,12 +108,29 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
             .launchIn(modelScope)
     }
 
+    private fun loadNetworkFee() {
+        state.update { it.copy(networkFee = NetworkFeeState.Loading) }
+        modelScope.launch {
+            val networkFee = networkFeeLoader.load(
+                account = params.sourceAccount,
+                token = currentSelection().source.token,
+            ).fold(
+                ifLeft = { error ->
+                    TangemLogger.withTag(TAG).e("Failed to load the network fee of a bank withdraw: $error")
+                    NetworkFeeState.Unreachable
+                },
+                ifRight = NetworkFeeState::Loaded,
+            )
+            state.update { it.copy(networkFee = networkFee) }
+        }.saveIn(networkFeeJobHolder)
+    }
+
     /** Reported on every entry into the shortage, so re-entering it after a valid amount reports it again. */
     private fun trackInsufficientFunds(validation: BankWithdrawAmountValidator.Result) {
         val wasNotEnoughFunds = previousValidation == BankWithdrawAmountValidator.Result.NotEnoughFunds
         previousValidation = validation
         if (!wasNotEnoughFunds && validation == BankWithdrawAmountValidator.Result.NotEnoughFunds) {
-            analytics.send(TangemPayAnalyticsEvents.Offramp.InsufficientFundsStateShowed())
+            withdrawAnalytics.sendPaymentAccountOnly(TangemPayAnalyticsEvents.Offramp.InsufficientFundsStateShowed())
         }
     }
 
@@ -126,31 +159,31 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
     private fun trackAmountEntered(amount: BigDecimal?) {
         if (isAmountEntered || amount == null || !amount.isPositive()) return
         isAmountEntered = true
-        analytics.send(TangemPayAnalyticsEvents.Offramp.AmountEntered())
+        withdrawAnalytics.sendPaymentAccountOnly(TangemPayAnalyticsEvents.Offramp.AmountEntered())
     }
 
     private fun onSourceClick() {
-        analytics.send(TangemPayAnalyticsEvents.Offramp.CoinSelectorClicked())
-        analytics.send(TangemPayAnalyticsEvents.Offramp.CoinSelectionSheetOpened())
+        withdrawAnalytics.sendPaymentAccountOnly(TangemPayAnalyticsEvents.Offramp.CoinSelectorClicked())
+        withdrawAnalytics.sendPaymentAccountOnly(TangemPayAnalyticsEvents.Offramp.CoinSelectionSheetOpened())
         openSheet(AmountSheet.TOKENS)
     }
 
     private fun onSourceSelected(sourceId: String) {
         if (sourceId != currentSelection().source.id) {
-            analytics.send(TangemPayAnalyticsEvents.Offramp.CoinInSelectionSheetClicked())
+            withdrawAnalytics.sendPaymentAccountOnly(TangemPayAnalyticsEvents.Offramp.CoinInSelectionSheetClicked())
         }
         state.update { it.copy(selectedSourceId = sourceId, sheet = null) }
     }
 
     private fun onRouteClick() {
-        analytics.send(TangemPayAnalyticsEvents.Offramp.RailSelectorClicked())
-        analytics.send(TangemPayAnalyticsEvents.Offramp.RailSelectionSheetOpened())
+        withdrawAnalytics.sendPaymentAccountOnly(TangemPayAnalyticsEvents.Offramp.RailSelectorClicked())
+        withdrawAnalytics.sendPaymentAccountOnly(TangemPayAnalyticsEvents.Offramp.RailSelectionSheetOpened())
         openSheet(AmountSheet.ROUTES)
     }
 
     private fun onRouteSelected(rail: BankRail) {
         if (rail != currentSelection().destination.rail) {
-            analytics.send(TangemPayAnalyticsEvents.Offramp.RailInSelectionSheetClicked())
+            withdrawAnalytics.sendPaymentAccountOnly(TangemPayAnalyticsEvents.Offramp.RailInSelectionSheetClicked())
         }
         state.update { it.copy(selectedRail = rail, sheet = null) }
     }
@@ -165,7 +198,7 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
 
     private fun onContinueClick() {
         val result = currentSelection().toResult() ?: return
-        analytics.send(TangemPayAnalyticsEvents.Offramp.AmountContinueClicked())
+        withdrawAnalytics.sendPaymentAccountOnly(TangemPayAnalyticsEvents.Offramp.AmountContinueClicked())
         params.onContinue(result)
         state.update { it.copy(value = null) }
     }
@@ -173,3 +206,5 @@ internal class TangemPayBankWithdrawAmountModel @Inject constructor(
     private fun currentSelection(): AmountSelection =
         state.value.resolve(draft = params.draft.value, options = params.options.value)
 }
+
+private const val TAG = "TangemPayBankWithdrawAmountModel"

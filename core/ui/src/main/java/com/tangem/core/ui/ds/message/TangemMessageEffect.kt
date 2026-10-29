@@ -358,7 +358,7 @@ private fun TangemMessageEffect_Preview() {
     TangemThemePreviewRedesign {
         Column(
             modifier = Modifier
-                .background(TangemTheme.colors2.surface.level1)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -368,7 +368,7 @@ private fun TangemMessageEffect_Preview() {
                         .messageEffectBackground(
                             messageEffect = messageEffect,
                             radius = 16.dp,
-                            contentColor = TangemTheme.colors2.surface.level1,
+                            contentColor = TangemTheme.colors3.bg.primary,
                         )
                         .fillMaxWidth()
                         .height(height = 100.dp),

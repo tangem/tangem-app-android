@@ -209,6 +209,53 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
     }
 
     @Test
+    fun `GIVEN failed NetworkFee WHEN convert THEN row reads confirmed and keeps the signed amount`() {
+        val tx = txInfo(
+            type = TransactionType.NetworkFee(amount = null, address = EXTERNAL_ADDRESS),
+            amount = BigDecimal.ZERO,
+            isOutgoing = true,
+            status = TxInfo.TransactionStatus.Failed,
+            interactionAddressType = null,
+        ).copy(fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.000015"), decimals = 18))
+
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.status).isEqualTo(TransactionItemUM.Content.Status.Confirmed)
+        assertThat(result.amount).isEqualTo("${StringsSigns.MINUS_SIGN}0.000015")
+    }
+
+    @Test
+    fun `GIVEN unconfirmed NetworkFee WHEN convert THEN row still reads pending`() {
+        val tx = txInfo(
+            type = TransactionType.NetworkFee(amount = null, address = EXTERNAL_ADDRESS),
+            amount = BigDecimal.ZERO,
+            isOutgoing = true,
+            status = TxInfo.TransactionStatus.Unconfirmed,
+            interactionAddressType = null,
+        ).copy(fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.000015"), decimals = 18))
+
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.status).isEqualTo(TransactionItemUM.Content.Status.Unconfirmed)
+    }
+
+    @Test
+    fun `GIVEN failed zero-amount Operation in coin history WHEN convert THEN fee row reads confirmed`() {
+        val tx = txInfo(
+            type = TransactionType.Operation(name = "YieldSend"),
+            amount = BigDecimal.ZERO,
+            isOutgoing = true,
+            status = TxInfo.TransactionStatus.Failed,
+            interactionAddressType = TxInfo.InteractionAddressType.Contract(EXTERNAL_ADDRESS),
+        ).copy(fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.000015"), decimals = 18))
+
+        val result = coinConverter.convert(tx) as TransactionItemUM.Content
+
+        assertThat(result.status).isEqualTo(TransactionItemUM.Content.Status.Confirmed)
+        assertThat(result.amount).isEqualTo("${StringsSigns.MINUS_SIGN}0.000015")
+    }
+
+    @Test
     fun `GIVEN NetworkFee for an untracked token WHEN convert THEN generic for-sending subtitle`() {
         val tx = txInfo(
             type = TransactionType.NetworkFee(amount = null, address = EXTERNAL_ADDRESS),
@@ -606,6 +653,41 @@ internal class TxHistoryItemToTransactionItemUMConverterTest {
         val subtitle = result.subtitle as ContentSubtitle.OwnPaymentAccount
         assertThat(subtitle.direction).isEqualTo(ContentSubtitle.Direction.TO)
         assertThat(subtitle.accountName).isEqualTo(ownPaymentAccount.accountName.toUM().value)
+    }
+
+    @Test
+    fun `GIVEN Transfer to own money account in accounts mode WHEN convert THEN money account subtitle`() {
+        val converter = TxHistoryItemToTransactionItemUMConverter(
+            currency = coin,
+            txHistoryUiActions = txHistoryUiActions,
+            lookupContext = TxHistoryLookupContext(
+                ownAccountByNetwork = mapOf(
+                    coin.network.id.rawId to mapOf(USER_ADDRESS to Account.Money(UserWalletId(stringValue = "00"))),
+                ),
+                isAccountsModeEnabled = true,
+                walletInfoById = emptyMap(),
+            ),
+        )
+        val tx = txInfo(
+            type = TransactionType.Transfer,
+            isOutgoing = true,
+            interactionAddressType = TxInfo.InteractionAddressType.User(USER_ADDRESS),
+        )
+
+        val result = converter.convert(tx) as TransactionItemUM.Content
+
+        val moneyAccountName = resRef(R.string.tangempay_unified_onboarding_money_account_header)
+        assertThat(result.title).isEqualTo(resRef(R.string.common_transferred))
+        assertThat(result.subtitle).isEqualTo(
+            ContentSubtitle.OwnAccount(
+                direction = ContentSubtitle.Direction.TO,
+                accountName = moneyAccountName,
+                avatar = ContentSubtitle.PortfolioAvatar.Resource(
+                    resId = CryptoPortfolioIcon.Icon.Safe.getResId(),
+                    color = CryptoPortfolioIcon.Color.VitalGreen.getUiColor(),
+                ),
+            ),
+        )
     }
 
     @Test

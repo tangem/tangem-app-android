@@ -71,7 +71,6 @@ internal class CexSwapFeeCalculatorTest {
 
     @BeforeEach
     fun setUp() {
-        every { swapFeatureToggles.isTronGaslessSwapEnabled } returns true
         every { swapFeatureToggles.isTronClientEnergyEnabled } returns true
         every { swapFeatureToggles.isTronLowerFeeTypeEnabled } returns true
         // estimateFeeUseCase is relaxed and would otherwise return a non-Right/Left stub.
@@ -563,38 +562,6 @@ internal class CexSwapFeeCalculatorTest {
             estimateFeeForGaslessTxUseCase(amount = any(), userWallet = any(), sendingTokenCurrencyStatus = any())
         }
     }
-
-    @Test
-    fun `GIVEN Tron gasless swap toggle disabled WHEN calculate without fee token THEN native fee path is used`() =
-        runTest {
-            // Arrange
-            val fromStatus = tronUsdtStatus()
-            val nativeFee = TransactionFeeExtended(
-                transactionFee = TransactionFee.Single(normal = mockk<Fee.Common>(relaxed = true)),
-                feeTokenId = fromStatus.currency.id,
-            )
-            every { swapFeatureToggles.isTronGaslessSwapEnabled } returns false
-            coEvery {
-                estimateFeeForGaslessTxUseCase(amount = any(), userWallet = any(), sendingTokenCurrencyStatus = any())
-            } returns nativeFee.right()
-
-            // Act
-            val result = sut.calculate(
-                userWallet = fromStatus.userWallet,
-                fromSwapCurrencyStatus = fromStatus,
-                amount = BigDecimal("10"),
-                selectedFeeToken = null,
-                isGasless = true,
-            )
-
-            // Assert
-            val loaded = result.getOrNull()?.transactionFee as? TransactionFeeResult.LoadedExtended
-            assertThat(loaded?.fee).isSameInstanceAs(nativeFee)
-            coVerify(exactly = 0) {
-                isTronGaslessSupportedUseCase(any(), any())
-                getTronGaslessFeeUseCase(any(), any(), any())
-            }
-        }
 
     @Test
     fun `GIVEN own energy covers the fee and TRX covers the rest WHEN calculate THEN native fee without gasless quote`() =

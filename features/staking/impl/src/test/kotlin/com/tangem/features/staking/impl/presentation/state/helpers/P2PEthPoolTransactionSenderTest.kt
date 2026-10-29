@@ -5,7 +5,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.domain.models.staking.NetworkType
+import com.tangem.domain.staking.model.NetworkType
 import com.tangem.domain.staking.CheckStakingTransactionUseCase
 import com.tangem.domain.staking.StakingTransactionVerdict
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolBroadcastResult

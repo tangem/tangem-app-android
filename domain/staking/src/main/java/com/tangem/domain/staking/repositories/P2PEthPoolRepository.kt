@@ -1,7 +1,7 @@
 package com.tangem.domain.staking.repositories
 
 import arrow.core.Either
-import com.tangem.domain.models.staking.P2PEthPoolStakingAccount
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingAccount
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolBroadcastResult
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolNetwork

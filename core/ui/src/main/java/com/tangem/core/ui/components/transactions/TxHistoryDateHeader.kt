@@ -15,7 +15,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 fun TxHistoryDateHeader(title: String, modifier: Modifier = Modifier) {
     Text(
         text = title,
-        color = TangemTheme.colors2.text.neutral.primary,
+        color = TangemTheme.colors3.text.primary,
         style = TangemTheme.typography2.bodyMedium16,
         modifier = modifier
             .fillMaxWidth()

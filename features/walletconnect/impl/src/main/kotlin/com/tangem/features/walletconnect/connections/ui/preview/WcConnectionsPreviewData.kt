@@ -9,6 +9,7 @@ import com.tangem.features.walletconnect.connections.entity.*
 import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.ui.sign.accountPortfolioName
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 
 internal object WcConnectionsPreviewData {
 
@@ -51,7 +52,7 @@ internal object WcConnectionsPreviewData {
     private val mainWallet = WcWalletConnectionsUM(
         userWalletId = "wallet_id_1",
         walletName = "New Wallet",
-        agents = agents,
+        agents = WcAgentsUM.Content(agents),
         dAppGroups = persistentListOf(
             WcDAppGroupUM(id = "group_1", title = accountPortfolioName, connectedApps = dApps),
             WcDAppGroupUM(
@@ -65,7 +66,7 @@ internal object WcConnectionsPreviewData {
     private val secondWallet = WcWalletConnectionsUM(
         userWalletId = "wallet_id_2",
         walletName = "My Wallet",
-        agents = persistentListOf(),
+        agents = WcAgentsUM.Content(persistentListOf()),
         dAppGroups = persistentListOf(
             WcDAppGroupUM(id = "group_3", title = null, connectedApps = persistentListOf(dApps.last())),
         ),
@@ -76,7 +77,7 @@ internal object WcConnectionsPreviewData {
             startButtonUM = TopAppBarButtonUM.Back(onBackClicked = {}),
             disconnectAllItem = TangemDropdownMenuItem(
                 title = resourceReference(R.string.wc_disconnect_all),
-                textColor = themedColor { TangemTheme.colors.text.warning },
+                textColor = themedColor { TangemTheme.colors3.text.accent.red },
                 onClick = {},
             ),
         ),
@@ -99,4 +100,26 @@ internal object WcConnectionsPreviewData {
             onWalletSelect = {},
         ),
     )
+
+    val loadingState = emptyState.copy(connections = WcConnections.Loading)
+
+    val loadingAgentsState = singleWalletState.withAgents(WcAgentsUM.Loading)
+
+    val failedAgentsState = singleWalletState.withAgents(
+        WcAgentsUM.Error(isReloading = false, onReloadClick = {}),
+    )
+
+    val reloadingAgentsState = singleWalletState.withAgents(
+        WcAgentsUM.Error(isReloading = true, onReloadClick = {}),
+    )
+
+    private fun WcConnectionsState.withAgents(agents: WcAgentsUM): WcConnectionsState {
+        val content = connections as WcConnections.Content
+
+        return copy(
+            connections = content.copy(
+                wallets = content.wallets.map { it.copy(agents = agents) }.toPersistentList(),
+            ),
+        )
+    }
 }

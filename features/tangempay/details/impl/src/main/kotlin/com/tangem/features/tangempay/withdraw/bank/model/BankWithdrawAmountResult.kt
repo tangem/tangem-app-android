@@ -7,4 +7,5 @@ internal data class BankWithdrawAmountResult(
     val amount: BigDecimal,
     val source: BankWithdrawSource,
     val destination: OfframpDestination,
+    val networkFee: BigDecimal,
 )

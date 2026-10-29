@@ -34,7 +34,7 @@ fun EmptyTransactionBlockLegacy(state: EmptyTransactionsBlockState, modifier: Mo
     Column(
         modifier = modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(color = TangemTheme.colors.background.primary)
+            .background(color = TangemTheme.colors3.bg.secondary)
             .padding(vertical = 24.dp)
             .testTag(EmptyTransactionBlockTestTags.BLOCK),
         verticalArrangement = Arrangement.spacedBy(24.dp),
@@ -45,7 +45,7 @@ fun EmptyTransactionBlockLegacy(state: EmptyTransactionsBlockState, modifier: Mo
                 .size(64.dp)
                 .testTag(EmptyTransactionBlockTestTags.ICON),
             painter = painterResource(id = state.iconRes),
-            tint = TangemTheme.colors.icon.inactive,
+            tint = TangemTheme.colors3.icon.tertiary,
             contentDescription = null,
         )
 
@@ -56,7 +56,7 @@ fun EmptyTransactionBlockLegacy(state: EmptyTransactionsBlockState, modifier: Mo
             textAlign = TextAlign.Center,
             text = state.text.resolveReference(),
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
 
         Buttons(

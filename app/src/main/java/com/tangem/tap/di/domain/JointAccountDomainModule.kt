@@ -18,22 +18,22 @@ import com.tangem.domain.jointaccount.safe.SafeAddressCalculator
 import com.tangem.domain.jointaccount.safe.SafeCompositionChecker
 import com.tangem.domain.jointaccount.signing.JointAccountSigner
 import com.tangem.domain.jointaccount.signing.JointOperationSigner
+import com.tangem.domain.jointaccount.signing.JointSignatureRecoverer
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
-import com.tangem.domain.jointaccount.usecase.ActivateJointAccountUseCase
+import com.tangem.domain.jointaccount.usecase.ConfirmJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.CreateJointAccountUseCase
 import com.tangem.domain.jointaccount.usecase.CreateJointOperationUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitePreviewUseCase
-import com.tangem.domain.jointaccount.usecase.GetJointAccountInvitesUseCase
+import com.tangem.domain.jointaccount.usecase.IssueJointAccountInviteUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointAccountSupportedNetworksUseCase
 import com.tangem.domain.jointaccount.usecase.GetJointOperationSlotUseCase
 import com.tangem.domain.jointaccount.usecase.GetMissingJointOwnerKeysCountUseCase
 import com.tangem.domain.jointaccount.usecase.GetPendingJointOperationsUseCase
-import com.tangem.domain.jointaccount.usecase.GetSharedJointAccountInvitesUseCase
 import com.tangem.domain.jointaccount.usecase.JoinJointAccountUseCase
-import com.tangem.domain.jointaccount.usecase.MarkJointAccountInviteSharedUseCase
 import com.tangem.domain.jointaccount.usecase.RejectJointOperationUseCase
 import com.tangem.domain.jointaccount.usecase.SignJointOperationUseCase
 import com.tangem.domain.jointaccount.verifier.JointAccountCompositionVerifier
+import com.tangem.domain.jointaccount.verifier.JointOperationDisplayGate
 import com.tangem.domain.jointaccount.verifier.JointOperationVerifier
 import com.tangem.tap.domain.jointaccount.DefaultJointAccountSigner
 import dagger.Module
@@ -57,24 +57,11 @@ internal object JointAccountDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetJointAccountInvitesUseCase(repository: JointAccountRepository): GetJointAccountInvitesUseCase {
-        return GetJointAccountInvitesUseCase(repository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideGetSharedJointAccountInvitesUseCase(
+    fun provideIssueJointAccountInviteUseCase(
         repository: JointAccountRepository,
-    ): GetSharedJointAccountInvitesUseCase {
-        return GetSharedJointAccountInvitesUseCase(repository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideMarkJointAccountInviteSharedUseCase(
-        repository: JointAccountRepository,
-    ): MarkJointAccountInviteSharedUseCase {
-        return MarkJointAccountInviteSharedUseCase(repository)
+        fetcher: SingleJointAccountListFetcher,
+    ): IssueJointAccountInviteUseCase {
+        return IssueJointAccountInviteUseCase(repository = repository, fetcher = fetcher)
     }
 
     @Provides
@@ -125,14 +112,14 @@ internal object JointAccountDomainModule {
 
     @Provides
     @Singleton
-    fun provideActivateJointAccountUseCase(
+    fun provideConfirmJointAccountUseCase(
         repository: JointAccountRepository,
         signer: JointAccountSigner,
         fetcher: SingleJointAccountListFetcher,
         supplier: SingleJointAccountListSupplier,
         safeAddressCalculator: SafeAddressCalculator,
-    ): ActivateJointAccountUseCase {
-        return ActivateJointAccountUseCase(
+    ): ConfirmJointAccountUseCase {
+        return ConfirmJointAccountUseCase(
             repository = repository,
             signer = signer,
             fetcher = fetcher,
@@ -198,9 +185,11 @@ internal object JointAccountDomainModule {
     fun provideJointAccountCompositionVerifier(
         ownerAddressResolver: JointOwnerAddressResolver,
         safeAddressCalculator: SafeAddressCalculator,
+        signatureRecoverer: JointSignatureRecoverer,
     ): JointAccountCompositionVerifier = JointAccountCompositionVerifier(
         ownerAddressResolver = ownerAddressResolver,
         safeAddressCalculator = safeAddressCalculator,
+        signatureRecoverer = signatureRecoverer,
     )
 
     @Provides
@@ -208,9 +197,25 @@ internal object JointAccountDomainModule {
     fun provideJointOperationVerifier(
         payloadCodec: JointTransferPayloadCodec,
         safeAddressCalculator: SafeAddressCalculator,
+        signatureRecoverer: JointSignatureRecoverer,
     ): JointOperationVerifier = JointOperationVerifier(
         payloadCodec = payloadCodec,
         safeAddressCalculator = safeAddressCalculator,
+        signatureRecoverer = signatureRecoverer,
+    )
+
+    @Provides
+    @Singleton
+    fun provideJointOperationDisplayGate(
+        verifier: JointOperationVerifier,
+        compositionVerifier: JointAccountCompositionVerifier,
+        refundReceiverProvider: JointRefundReceiverProvider,
+        gasTokenResolver: JointGasTokenResolver,
+    ): JointOperationDisplayGate = JointOperationDisplayGate(
+        verifier = verifier,
+        compositionVerifier = compositionVerifier,
+        refundReceiverProvider = refundReceiverProvider,
+        gasTokenResolver = gasTokenResolver,
     )
 
     @Provides
@@ -231,6 +236,7 @@ internal object JointAccountDomainModule {
         signersResolver: JointOperationSignersResolver,
         ownerAddressResolver: JointOwnerAddressResolver,
         networkReader: JointNetworkReader,
+        displayGate: JointOperationDisplayGate,
     ): GetPendingJointOperationsUseCase {
         return GetPendingJointOperationsUseCase(
             jointAccountListSupplier = supplier,
@@ -238,6 +244,7 @@ internal object JointAccountDomainModule {
             signersResolver = signersResolver,
             ownerAddressResolver = ownerAddressResolver,
             networkReader = networkReader,
+            displayGate = displayGate,
         )
     }
 
@@ -265,6 +272,7 @@ internal object JointAccountDomainModule {
         compositionChecker: SafeCompositionChecker,
         refundReceiverProvider: JointRefundReceiverProvider,
         gasTokenResolver: JointGasTokenResolver,
+        compositionVerifier: JointAccountCompositionVerifier,
     ): SignJointOperationUseCase {
         return SignJointOperationUseCase(
             repository = repository,
@@ -278,6 +286,7 @@ internal object JointAccountDomainModule {
             compositionChecker = compositionChecker,
             refundReceiverProvider = refundReceiverProvider,
             gasTokenResolver = gasTokenResolver,
+            compositionVerifier = compositionVerifier,
         )
     }
 

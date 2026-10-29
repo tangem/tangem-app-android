@@ -16,7 +16,6 @@ import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorBlockCo
 import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams
-import com.tangem.features.swap.SwapFeatureToggles
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -26,7 +25,6 @@ class SwapFeeSelectorBlockComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted params: Params,
     feeSelectorBlockComponentFactory: FeeSelectorBlockComponent.Factory,
-    swapFeatureToggles: SwapFeatureToggles,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
     private val feeSelectorBlockComponent =
@@ -52,7 +50,7 @@ class SwapFeeSelectorBlockComponent @AssistedInject constructor(
                 analyticsCategoryName = params.analyticsParams.analyticsCategoryName,
                 analyticsSendSource = params.analyticsParams.analyticsSendSource,
                 bottomSheetShown = params.repository::choosingInProgress,
-                isTronGaslessSupported = !params.isTransferMode && swapFeatureToggles.isTronGaslessSwapEnabled,
+                isTronGaslessSupported = !params.isTransferMode,
                 blockAppearance = FeeSelectorParams.BlockAppearance.Plain,
             ),
             onResult = params.repository::onResult,

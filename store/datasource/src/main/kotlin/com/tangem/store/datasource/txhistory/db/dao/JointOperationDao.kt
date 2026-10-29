@@ -62,7 +62,7 @@ interface JointOperationDao {
           AND operation.chain_id = :chainId
           AND operation.status IN (:statuses)
           AND operation.finished_at >= :fromFinishedAtIso
-        ORDER BY operation.finished_at DESC
+        ORDER BY operation.finished_at DESC, operation.operation_id
         """,
     )
     fun observeWithVotes(
@@ -82,6 +82,25 @@ interface JointOperationDao {
         """,
     )
     fun observeIds(userWalletId: String, statuses: List<String>): Flow<List<String>>
+
+    fun observeById(userWalletId: String, operationId: String): Flow<JointOperationWithVotes?> =
+        observeByIdWithVotes(userWalletId = userWalletId, operationId = operationId)
+            .map { rows -> toOperationsWithVotes(rows).firstOrNull() }
+
+    @Query(
+        """
+        SELECT *
+        FROM joint_operation AS operation
+        LEFT JOIN joint_operation_vote AS vote
+          ON vote.user_wallet_id = operation.user_wallet_id AND vote.operation_id = operation.operation_id
+        WHERE operation.user_wallet_id = :userWalletId
+          AND operation.operation_id = :operationId
+        """,
+    )
+    fun observeByIdWithVotes(
+        userWalletId: String,
+        operationId: String,
+    ): Flow<Map<JointOperationEntity, List<JointOperationVoteEntity>>>
 }
 
 private fun toOperationsWithVotes(

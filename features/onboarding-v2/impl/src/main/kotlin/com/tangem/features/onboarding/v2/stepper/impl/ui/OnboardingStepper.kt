@@ -57,7 +57,7 @@ internal fun OnboardingStepper(
             } else {
                 state.title.text
             },
-            containerColor = TangemTheme.colors.background.primary,
+            containerColor = TangemTheme.colors3.bg.primary,
         )
 
         TangemLinearProgressIndicator(
@@ -67,8 +67,8 @@ internal fun OnboardingStepper(
                 .height(4.dp)
                 .fillMaxWidth(),
             progress = { animatedIndicatorFraction },
-            color = TangemTheme.colors.icon.primary1,
-            backgroundColor = TangemTheme.colors.icon.primary1.copy(alpha = 0.4f),
+            color = TangemTheme.colors3.icon.primary,
+            backgroundColor = TangemTheme.colors3.icon.primary.copy(alpha = 0.4f),
             strokeCap = StrokeCap.Round,
         )
     }
@@ -82,7 +82,7 @@ private fun OnboardingStepper_Preview() {
         Box(
             Modifier
                 .fillMaxSize()
-                .background(TangemTheme.colors.background.primary),
+                .background(TangemTheme.colors3.bg.primary),
         ) {
             OnboardingStepper(
                 modifier = Modifier.align(Alignment.TopCenter),

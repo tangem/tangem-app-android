@@ -14,8 +14,8 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.earn.EarnRewardType
 import com.tangem.domain.models.earn.EarnTopToken
-import com.tangem.domain.models.staking.BalanceItem
-import com.tangem.domain.models.staking.StakingBalance
+import com.tangem.domain.staking.model.BalanceItem
+import com.tangem.domain.staking.model.StakingBalance
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingIntegrationID

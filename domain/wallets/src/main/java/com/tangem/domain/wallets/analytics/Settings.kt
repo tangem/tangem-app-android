@@ -17,6 +17,8 @@ sealed class Settings(
 
     class ButtonOpenChat : Settings(event = "Button - Open Chat")
 
+    class ButtonConnections : Settings(event = "Button - Connections")
+
     class ButtonAddHardwareWallet(
         walletsType: AnalyticsParam.WalletsType?,
     ) : Settings(

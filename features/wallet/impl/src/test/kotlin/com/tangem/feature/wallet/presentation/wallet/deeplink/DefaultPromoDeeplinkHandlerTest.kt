@@ -14,6 +14,8 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -68,6 +70,9 @@ class DefaultPromoDeeplinkHandlerTest {
 
     @MockK
     private lateinit var multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier
+
+    @MockK
+    private lateinit var singleAccountListSupplier: SingleAccountListSupplier
 
     @MockK
     private lateinit var activatePromoCodeUseCase: ActivatePromoCodeUseCase
@@ -139,6 +144,7 @@ class DefaultPromoDeeplinkHandlerTest {
             uiMessageSender = uiMessageSender,
             multiNetworkStatusSupplier = multiNetworkStatusSupplier,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+            singleAccountListSupplier = singleAccountListSupplier,
             activatePromoCodeUseCase = activatePromoCodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
@@ -174,6 +180,7 @@ class DefaultPromoDeeplinkHandlerTest {
             uiMessageSender = uiMessageSender,
             multiNetworkStatusSupplier = multiNetworkStatusSupplier,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+            singleAccountListSupplier = singleAccountListSupplier,
             activatePromoCodeUseCase = activatePromoCodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
@@ -237,6 +244,7 @@ class DefaultPromoDeeplinkHandlerTest {
             uiMessageSender = uiMessageSender,
             multiNetworkStatusSupplier = multiNetworkStatusSupplier,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+            singleAccountListSupplier = singleAccountListSupplier,
             activatePromoCodeUseCase = activatePromoCodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
@@ -276,6 +284,7 @@ class DefaultPromoDeeplinkHandlerTest {
             uiMessageSender = uiMessageSender,
             multiNetworkStatusSupplier = multiNetworkStatusSupplier,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+            singleAccountListSupplier = singleAccountListSupplier,
             activatePromoCodeUseCase = activatePromoCodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
@@ -319,6 +328,7 @@ class DefaultPromoDeeplinkHandlerTest {
             uiMessageSender = uiMessageSender,
             multiNetworkStatusSupplier = multiNetworkStatusSupplier,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+            singleAccountListSupplier = singleAccountListSupplier,
             activatePromoCodeUseCase = activatePromoCodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
@@ -677,6 +687,7 @@ class DefaultPromoDeeplinkHandlerTest {
         uiMessageSender = uiMessageSender,
         multiNetworkStatusSupplier = multiNetworkStatusSupplier,
         multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+        singleAccountListSupplier = singleAccountListSupplier,
         activatePromoCodeUseCase = activatePromoCodeUseCase,
         getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
         bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
@@ -707,6 +718,7 @@ class DefaultPromoDeeplinkHandlerTest {
             uiMessageSender = uiMessageSender,
             multiNetworkStatusSupplier = multiNetworkStatusSupplier,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+            singleAccountListSupplier = singleAccountListSupplier,
             activatePromoCodeUseCase = activatePromoCodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
@@ -740,6 +752,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 uiMessageSender = uiMessageSender,
                 multiNetworkStatusSupplier = multiNetworkStatusSupplier,
                 multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+                singleAccountListSupplier = singleAccountListSupplier,
                 activatePromoCodeUseCase = activatePromoCodeUseCase,
                 getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
                 bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
@@ -782,6 +795,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 uiMessageSender = uiMessageSender,
                 multiNetworkStatusSupplier = multiNetworkStatusSupplier,
                 multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+                singleAccountListSupplier = singleAccountListSupplier,
                 activatePromoCodeUseCase = activatePromoCodeUseCase,
                 getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
                 bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
@@ -854,6 +868,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 uiMessageSender = uiMessageSender,
                 multiNetworkStatusSupplier = multiNetworkStatusSupplier,
                 multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+                singleAccountListSupplier = singleAccountListSupplier,
                 activatePromoCodeUseCase = activatePromoCodeUseCase,
                 getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
                 bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
@@ -911,6 +926,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 uiMessageSender = uiMessageSender,
                 multiNetworkStatusSupplier = multiNetworkStatusSupplier,
                 multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+                singleAccountListSupplier = singleAccountListSupplier,
                 activatePromoCodeUseCase = activatePromoCodeUseCase,
                 getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
                 bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
@@ -971,6 +987,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 uiMessageSender = uiMessageSender,
                 multiNetworkStatusSupplier = multiNetworkStatusSupplier,
                 multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+                singleAccountListSupplier = singleAccountListSupplier,
                 activatePromoCodeUseCase = activatePromoCodeUseCase,
                 getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
                 bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
@@ -1032,6 +1049,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 uiMessageSender = uiMessageSender,
                 multiNetworkStatusSupplier = multiNetworkStatusSupplier,
                 multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+                singleAccountListSupplier = singleAccountListSupplier,
                 activatePromoCodeUseCase = activatePromoCodeUseCase,
                 getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
                 bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
@@ -1088,6 +1106,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 uiMessageSender = uiMessageSender,
                 multiNetworkStatusSupplier = multiNetworkStatusSupplier,
                 multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+                singleAccountListSupplier = singleAccountListSupplier,
                 activatePromoCodeUseCase = activatePromoCodeUseCase,
                 getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
                 bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
@@ -1144,6 +1163,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 uiMessageSender = uiMessageSender,
                 multiNetworkStatusSupplier = multiNetworkStatusSupplier,
                 multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+                singleAccountListSupplier = singleAccountListSupplier,
                 activatePromoCodeUseCase = activatePromoCodeUseCase,
                 getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
                 bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
@@ -1170,9 +1190,61 @@ class DefaultPromoDeeplinkHandlerTest {
             }
         }
 
-    private fun mockUserWallet(id: String): UserWallet {
-        val userWallet = mockk<UserWallet>(relaxed = true)
+    @ParameterizedTest
+    @MethodSource("walletCurrencySourceModels")
+    fun `GIVEN legacy BTC link WHEN wallet currencies resolved THEN supplier matches wallet type`(
+        model: WalletCurrencySourceModel,
+    ) = runTest {
+        // Arrange
+        val promoCode = "PROMO123"
+        val walletId = UserWalletId("ABCDEF")
+        val userWallet = mockUserWallet(id = "ABCDEF", isMultiCurrency = model.isMultiCurrency)
+        every { getSelectedWalletSyncUseCase.invoke() } returns Either.Right(userWallet)
+        val btcStatus = buildNetworkStatus(rawNetworkId = Blockchain.Bitcoin.toNetworkId(), address = "bc1qxyz")
+        coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flowOf(setOf(btcStatus))
+        val currencies = if (model.hasBitcoin) {
+            listOf(buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.toNetworkId()))
+        } else {
+            listOf(buildCryptoCurrency(rawNetworkId = "ethereum"))
+        }
+        if (model.isMultiCurrency) {
+            coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns currencies.toSet()
+        } else {
+            val accountList = mockk<AccountList>()
+            every { accountList.flattenCurrencies() } returns currencies
+            coEvery { singleAccountListSupplier.getSyncOrNull(walletId) } returns accountList
+        }
+        coEvery { activatePromoCodeUseCase.invoke(walletId, "bc1qxyz", promoCode, null) } returns
+            Either.Right(activation)
+
+        // Act
+        createHandler(mapOf(DeeplinkConst.PROMO_CODE_KEY to promoCode))
+        advanceUntilIdle()
+
+        // Assert
+        val sent = messages.last { it is DialogMessage } as DialogMessage
+        Truth.assertThat(sent.title).isEqualTo(model.expectedTitle)
+        Truth.assertThat(sent.message).isEqualTo(model.expectedMessage)
+        coVerify(exactly = if (model.hasBitcoin) 1 else 0) {
+            activatePromoCodeUseCase.invoke(walletId, "bc1qxyz", promoCode, null)
+        }
+        coVerify(exactly = if (model.isMultiCurrency) 1 else 0) {
+            multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any())
+        }
+        coVerify(exactly = if (model.isMultiCurrency) 0 else 1) { singleAccountListSupplier.getSyncOrNull(walletId) }
+    }
+
+    data class WalletCurrencySourceModel(
+        val isMultiCurrency: Boolean,
+        val hasBitcoin: Boolean,
+        val expectedTitle: TextReference,
+        val expectedMessage: TextReference,
+    )
+
+    private fun mockUserWallet(id: String, isMultiCurrency: Boolean = true): UserWallet {
+        val userWallet = mockk<UserWallet.Cold>(relaxed = true)
         every { userWallet.walletId } returns UserWalletId(id)
+        every { userWallet.isMultiCurrency } returns isMultiCurrency
         return userWallet
     }
 
@@ -1280,6 +1352,43 @@ class DefaultPromoDeeplinkHandlerTest {
     }
 
     private companion object {
+        @JvmStatic
+        fun walletCurrencySourceModels(): List<WalletCurrencySourceModel> {
+            val successTitle = resourceReference(R.string.bitcoin_promo_activation_success_title)
+            val successMessage = resourceReference(
+                id = R.string.promo_code_activation_success,
+                formatArgs = wrappedList("Bitcoin"),
+            )
+            val noAddressTitle = resourceReference(
+                id = R.string.promo_code_no_address_title,
+                formatArgs = wrappedList("Bitcoin"),
+            )
+            val noAddressMessage = resourceReference(
+                id = R.string.promo_code_no_address,
+                formatArgs = wrappedList("Bitcoin"),
+            )
+            return listOf(
+                WalletCurrencySourceModel(
+                    isMultiCurrency = false,
+                    hasBitcoin = true,
+                    expectedTitle = successTitle,
+                    expectedMessage = successMessage,
+                ),
+                WalletCurrencySourceModel(
+                    isMultiCurrency = false,
+                    hasBitcoin = false,
+                    expectedTitle = noAddressTitle,
+                    expectedMessage = noAddressMessage,
+                ),
+                WalletCurrencySourceModel(
+                    isMultiCurrency = true,
+                    hasBitcoin = true,
+                    expectedTitle = successTitle,
+                    expectedMessage = successMessage,
+                ),
+            )
+        }
+
         @JvmStatic
         fun incompletePayoutLinks() = listOf(
             mapOf("payment_network" to "stellar"),

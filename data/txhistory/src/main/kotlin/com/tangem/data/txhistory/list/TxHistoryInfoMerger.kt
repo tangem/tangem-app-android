@@ -9,6 +9,7 @@ import com.tangem.domain.express.models.OnrampTransaction
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.txhistory.model.ExpressTx
+import com.tangem.domain.txhistory.model.JointOperationTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.txhistory.model.explorerHash
@@ -38,6 +39,11 @@ import kotlin.math.abs
  *                surface as a phantom incoming row. A successful (finished) incoming swap, the outgoing / refund side,
  *                and every onramp purchase are always kept so the user still sees their deals.
  *
+ * Finished joint operations ([joint]) claim their relayer transaction by hash before any express op, and stay standalone
+ * when it is not in the loaded page — a cancelled one never has it. A failed one carries it too, for the refund the Safe
+ * paid. Only the transfer row is claimed: a hash holding nothing but the refund passes through as the fee row it is,
+ * rather than standing for the transfer.
+ *
  * On-chain transactions no express op claimed pass through as [OnChainTx]. Claiming is per *tx identity*
  * ([identityKey]), not per hash: one on-chain hash can surface as several rows — the deal's payload and the events
  * kept out of it. Express rows are emitted before the pass-through ones and the sort is stable, so a row kept apart
@@ -51,12 +57,23 @@ internal fun mergeTxHistoryInfos(
     onChain: List<TxInfo>,
     express: List<ExpressTx>,
     currency: CryptoCurrency,
+    joint: List<JointOperationTx> = emptyList(),
 ): List<TxHistoryInfo> {
     val currencyAssetId: ExpressAsset.ID = ExpressAsset.ID(currency)
     val isUtxoNetwork: Boolean = currency.network.toBlockchain().isUTXO
     val onChainByHash: Map<String, List<TxInfo>> = onChain.groupBy { it.txHash.asHashKey() }
     val claimedKeys = mutableSetOf<String>()
     val result = mutableListOf<TxHistoryInfo>()
+
+    // Phase 0 — a finished joint operation claims its relayer transaction by hash.
+    joint.forEach { op ->
+        val leg = op.operation.txHash
+            ?.asHashKey()
+            ?.let(onChainByHash::get)
+            ?.firstOrNull { it.type.isDealPayload() }
+            ?.takeIf { claimedKeys.add(it.identityKey()) }
+        result += if (leg != null) op.copy(txInfo = OnChainTx.BSDK(leg)) else op
+    }
 
     // Phase 1 — deterministic hash match takes priority (payin_hash / payout_hash via ExpressTx.matchHash).
     val unmatched = mutableListOf<ExpressTx>()
