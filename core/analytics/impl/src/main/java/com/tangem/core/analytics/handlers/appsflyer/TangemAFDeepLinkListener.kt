@@ -8,7 +8,7 @@ import com.tangem.core.analytics.api.AppsFlyerDeepLinkHandler
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
-class TangemAFDeepLinkListener @Inject internal constructor(
+internal class TangemAFDeepLinkListener @Inject constructor(
     private val deepLinkHandler: AppsFlyerDeepLinkHandler,
 ) : DeepLinkListener {
 
