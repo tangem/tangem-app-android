@@ -102,12 +102,7 @@ configurations.all {
                 .using(module("org.bouncycastle:bcprov-jdk18on:1.73"))
         }
 
-        force(
-            "org.bouncycastle:bcpkix-jdk15on:1.70",
-            deps.kotlin.coroutines,
-            deps.kotlin.coroutines.jvm,
-            deps.kotlin.coroutines.android,
-        )
+        force("org.bouncycastle:bcpkix-jdk15on:1.70")
     }
 }
 
