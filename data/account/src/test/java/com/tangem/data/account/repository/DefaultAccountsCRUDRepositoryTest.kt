@@ -23,6 +23,7 @@ import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.models.account.*
 import com.tangem.domain.models.account.Account.Personal
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -60,6 +61,7 @@ class DefaultAccountsCRUDRepositoryTest {
     private val resources: Resources = mockk()
 
     private val jointAccountFeatureToggles: JointAccountFeatureToggles = mockk()
+    private val collectiblesFeatureToggles: CollectiblesFeatureToggles = mockk()
 
     private val repository = DefaultAccountsCRUDRepository(
         walletAccountsApi = walletAccountsApi,
@@ -72,6 +74,7 @@ class DefaultAccountsCRUDRepositoryTest {
         resources = resources,
         dispatchers = TestingCoroutineDispatcherProvider(),
         jointAccountFeatureToggles = jointAccountFeatureToggles,
+        collectiblesFeatureToggles = collectiblesFeatureToggles,
     )
 
     private val userWalletId = UserWalletId("011")
@@ -90,6 +93,8 @@ class DefaultAccountsCRUDRepositoryTest {
     fun setupEach() {
         every { archivedAccountsStoreFactory.create(userWalletId) } returns archivedAccountsStore
         every { jointAccountFeatureToggles.isJointAccountEnabled } returns true
+        every { collectiblesFeatureToggles.isCollectiblesEnabled } returns true
+        every { walletAccountsApi.isV2Enabled } returns true
     }
 
     @AfterEach
@@ -708,6 +713,83 @@ class DefaultAccountsCRUDRepositoryTest {
         }
 
         @Test
+        fun `GIVEN joint accounts disabled WHEN saveAccounts THEN the stored joint row is pushed back in its place`() =
+            runTest {
+                // Arrange
+                every { jointAccountFeatureToggles.isJointAccountEnabled } returns false
+                val mainAccount = Personal.createMainAccount(userWalletId = userWalletId)
+                val accountList = AccountList.empty(userWalletId = userWalletId)
+                accountsResponseStoreFlow.value = storedResponse(jointRow(), mainRow(mainAccount))
+                val bodySlot = slot<SaveWalletAccountsResponse>()
+                coEvery {
+                    walletAccountsSaver.push(userWalletId = userWalletId, body = capture(bodySlot))
+                } returns createGetWalletAccountsResponse(userWalletId)
+
+                // Act
+                repository.saveAccounts(accountList)
+
+                // Assert
+                Truth.assertThat(bodySlot.captured.accounts.map { it.id to it.type }).containsExactly(
+                    JOINT_ROW_ID to WalletAccountDTO.Type.JOINT,
+                    mainAccount.accountId.value to WalletAccountDTO.Type.CRYPTO,
+                ).inOrder()
+            }
+
+        @Test
+        fun `GIVEN accounts API v1 WHEN saveAccounts THEN a stored joint row is not pushed`() = runTest {
+            // Arrange
+            every { walletAccountsApi.isV2Enabled } returns false
+            every { jointAccountFeatureToggles.isJointAccountEnabled } returns false
+            every { collectiblesFeatureToggles.isCollectiblesEnabled } returns false
+            val accountList = AccountList.empty(userWalletId = userWalletId)
+            val expectedBody = SaveWalletAccountsResponseConverter.convert(value = accountList)
+            accountsResponseStoreFlow.value = storedResponse(
+                jointRow(),
+                mainRow(Personal.createMainAccount(userWalletId = userWalletId)),
+            )
+            val bodySlot = slot<SaveWalletAccountsResponse>()
+            coEvery {
+                walletAccountsSaver.push(userWalletId = userWalletId, body = capture(bodySlot))
+            } returns createGetWalletAccountsResponse(userWalletId)
+
+            // Act
+            repository.saveAccounts(accountList)
+
+            // Assert
+            Truth.assertThat(bodySlot.captured).isEqualTo(expectedBody)
+        }
+
+        @Test
+        fun `GIVEN collectibles disabled WHEN saveAccounts THEN the stored row keeps its place among reordered ones`() =
+            runTest {
+                // Arrange
+                every { collectiblesFeatureToggles.isCollectiblesEnabled } returns false
+                val mainAccount = Personal.createMainAccount(userWalletId = userWalletId)
+                val accountList = AccountList(
+                    userWalletId = userWalletId,
+                    accounts = listOf(jointAccount(), mainAccount),
+                    totalAccounts = 1,
+                    totalArchivedAccounts = 0,
+                    totalJointAccounts = 1,
+                ).getOrNull()!!
+                accountsResponseStoreFlow.value = storedResponse(mainRow(mainAccount), collectiblesRecord(), jointRow())
+                val bodySlot = slot<SaveWalletAccountsResponse>()
+                coEvery {
+                    walletAccountsSaver.push(userWalletId = userWalletId, body = capture(bodySlot))
+                } returns createGetWalletAccountsResponse(userWalletId)
+
+                // Act
+                repository.saveAccounts(accountList)
+
+                // Assert
+                Truth.assertThat(bodySlot.captured.accounts.map { it.type }).containsExactly(
+                    WalletAccountDTO.Type.JOINT,
+                    WalletAccountDTO.Type.COLLECTIBLES,
+                    WalletAccountDTO.Type.CRYPTO,
+                ).inOrder()
+            }
+
+        @Test
         fun `saveAccounts if API request is failed`() = runTest {
             // Arrange
             val accountList = AccountList.empty(userWalletId = userWalletId)
@@ -846,6 +928,95 @@ class DefaultAccountsCRUDRepositoryTest {
             type = WalletAccountDTO.Type.COLLECTIBLES,
         )
     }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SaveAccountsLocally {
+
+        private val responseConverter: GetWalletAccountsResponseConverter = mockk()
+
+        @BeforeEach
+        fun setupConverter() {
+            every { convertersContainer.createWalletAccountsResponseConverter(userWalletId) } returns responseConverter
+        }
+
+        @Test
+        fun `GIVEN joint accounts disabled WHEN saveAccountsLocally THEN the joint row and its counter are kept`() =
+            runTest {
+                // Arrange
+                every { jointAccountFeatureToggles.isJointAccountEnabled } returns false
+                val mainAccount = Personal.createMainAccount(userWalletId = userWalletId)
+                val accountList = AccountList.empty(userWalletId = userWalletId)
+                val stored = storedResponse(mainRow(mainAccount), jointRow(), totalJointAccounts = 1)
+                val converted = storedResponse(mainRow(mainAccount))
+                accountsResponseStoreFlow.value = stored
+                every { responseConverter.convert(accountList) } returns converted
+
+                // Act
+                repository.saveAccountsLocally(accountList)
+
+                // Assert
+                coVerify(exactly = 1) {
+                    walletAccountsSaver.store(
+                        userWalletId = userWalletId,
+                        response = converted.copy(
+                            wallet = converted.wallet.copy(totalJointAccounts = 1),
+                            accounts = stored.accounts,
+                        ),
+                    )
+                }
+            }
+
+        @Test
+        fun `GIVEN all features enabled WHEN saveAccountsLocally THEN the list is stored as converted`() = runTest {
+            // Arrange
+            val mainAccount = Personal.createMainAccount(userWalletId = userWalletId)
+            val accountList = AccountList.empty(userWalletId = userWalletId)
+            val converted = storedResponse(mainRow(mainAccount))
+            accountsResponseStoreFlow.value = storedResponse(mainRow(mainAccount), jointRow(), totalJointAccounts = 1)
+            every { responseConverter.convert(accountList) } returns converted
+
+            // Act
+            repository.saveAccountsLocally(accountList)
+
+            // Assert
+            coVerify(exactly = 1) { walletAccountsSaver.store(userWalletId = userWalletId, response = converted) }
+        }
+    }
+
+    private fun storedResponse(
+        vararg rows: WalletAccountDTO,
+        totalJointAccounts: Int? = null,
+    ): GetWalletAccountsResponse = GetWalletAccountsResponse(
+        wallet = GetWalletAccountsResponse.Wallet(
+            group = null,
+            sort = null,
+            totalAccounts = 1,
+            totalArchivedAccounts = 0,
+            totalJointAccounts = totalJointAccounts,
+        ),
+        accounts = rows.toList(),
+        unassignedTokens = emptyList(),
+    )
+
+    private fun mainRow(mainAccount: Personal): WalletAccountDTO = WalletAccountDTO(
+        id = mainAccount.accountId.value,
+        name = null,
+        derivationIndex = 0,
+        icon = CryptoPortfolioIcon.Icon.Wallet.name,
+        iconColor = CryptoPortfolioIcon.Color.Azure.name,
+        type = WalletAccountDTO.Type.CRYPTO,
+    )
+
+    private fun jointRow(): WalletAccountDTO = WalletAccountDTO(
+        id = JOINT_ROW_ID,
+        name = "Family",
+        derivationIndex = 1,
+        icon = CryptoPortfolioIcon.Icon.Star.name,
+        iconColor = CryptoPortfolioIcon.Color.Azure.name,
+        type = WalletAccountDTO.Type.JOINT,
+        tokens = emptyList(),
+    )
 
     private companion object {
         const val JOINT_ROW_ID = "4B2F1C8A9E7D6053A1B4C7E2F8D9A0B3C5E7F1A2D4B6C8E0F2A4B6C8D0E2F4A6"
