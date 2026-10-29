@@ -44,8 +44,8 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
 
 - **Available vs Total** (tap the header label): Available is the CLOB collateral (default); Total adds the
   positions value and is offered only once that value has been read — until then the toggle is disabled but
-  the chosen mode is kept and returns with the value. The wallet screen and wallet total count Available
-  only, as on iOS.
+  the chosen mode is kept and returns with the value. The wallet-screen row and the wallet total count
+  Total, as on iOS ([REDACTED_TASK_KEY]); the main screen's wallet refresh reads the positions value too.
 - **Add funds** needs a confirmed deposit address; without one, report an unknown error rather than offer
   an address that may be wrong. The buy amount step offers the same sheet, shut until the region check
   answers, and shows the account-status balance only once `ACTUAL`.
