@@ -1,5 +1,6 @@
 package com.tangem.core.analytics.handlers.appsflyer
 
+import android.app.Application
 import com.tangem.core.analytics.api.AnalyticsHandler
 import com.tangem.core.analytics.config.AnalyticsEnvironmentConfig
 import com.tangem.core.analytics.impl.BuildConfig
@@ -31,5 +32,11 @@ internal object AppsFlyerModule {
         }
 
         return AppsFlyerAnalyticsHandler(client)
+    }
+
+    @Provides
+    @IntoSet
+    fun provideNewIntentObserver(observer: AppsFlyerNewIntentObserver): Application.ActivityLifecycleCallbacks {
+        return observer
     }
 }

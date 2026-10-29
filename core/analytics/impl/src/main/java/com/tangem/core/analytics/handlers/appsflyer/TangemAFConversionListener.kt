@@ -7,7 +7,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class TangemAFConversionListener @Inject internal constructor(
+internal class TangemAFConversionListener @Inject constructor(
     private val googleAdsConversionDataReporter: GoogleAdsConversionDataReporter,
     private val conversionDataHandlers: Set<@JvmSuppressWildcards AppsFlyerConversionDataHandler>,
 ) : AppsFlyerConversionListener {

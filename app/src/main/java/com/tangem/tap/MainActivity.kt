@@ -33,7 +33,6 @@ import arrow.core.getOrElse
 import com.tangem.common.routing.deeplink.PayloadToDeeplinkConverter
 import com.tangem.common.routing.deeplink.PushDeeplinkPolicy
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.analytics.handlers.appsflyer.AppsFlyerIntentProcessor
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.di.RootAppComponentContext
 import com.tangem.core.ui.extensions.LocalUserInteractionTracker
@@ -139,9 +138,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     internal lateinit var lockUserWalletsTimer: LockUserWalletsTimer
-
-    @Inject
-    internal lateinit var appsFlyerIntentProcessor: AppsFlyerIntentProcessor
 
     @Inject
     internal lateinit var walletDeepLinkActionTrigger: WalletDeepLinkActionTrigger
@@ -362,9 +358,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         TangemLogger.i("onNewIntent: data=${intent.data}, extras=${intent.extras?.keySet()}")
-
-        // Warm start: let the AppsFlyer SDK resolve a OneLink delivered while the app is already running.
-        appsFlyerIntentProcessor.process(intent = intent, activity = this)
 
         val isFromPush = intent.extras?.containsKey(OPENED_FROM_GCM_PUSH) == true
         if (isFromPush) {
