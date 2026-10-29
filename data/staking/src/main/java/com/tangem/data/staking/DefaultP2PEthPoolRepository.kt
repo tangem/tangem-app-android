@@ -18,7 +18,7 @@ import com.tangem.data.staking.store.P2PEthPoolRegionBlockedStore
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.data.staking.store.P2PVaultLimitsStore
 import com.tangem.store.datasource.txhistory.db.dao.P2PEthPoolVaultDao
-import com.tangem.domain.models.staking.P2PEthPoolStakingAccount
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingAccount
 import com.tangem.domain.staking.model.P2PEthPoolIntegration
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingIntegrationID

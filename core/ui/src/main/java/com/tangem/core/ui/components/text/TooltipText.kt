@@ -47,7 +47,7 @@ fun TooltipText(
             modifier = Modifier.weight(1f, fill = false),
             text = text.resolveReference(),
             style = textStyle,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -62,7 +62,7 @@ fun TooltipText(
             Icon(
                 modifier = Modifier.size(16.dp),
                 painter = painterResource(id = R.drawable.ic_information_24),
-                tint = TangemTheme.colors.icon.informative,
+                tint = TangemTheme.colors3.icon.secondary,
                 contentDescription = null,
             )
         }
@@ -78,7 +78,7 @@ private fun Preview_TooltipText() {
         Box(
             modifier = Modifier
                 .width(width = 90.dp)
-                .background(color = TangemTheme.colors.background.primary),
+                .background(color = TangemTheme.colors3.bg.secondary),
         ) {
             TooltipText(
                 text = stringReference("Text"),

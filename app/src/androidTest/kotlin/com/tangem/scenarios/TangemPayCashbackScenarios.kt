@@ -1,12 +1,19 @@
 package com.tangem.scenarios
 
+import androidx.test.platform.app.InstrumentationRegistry
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.core.res.R as CoreResR
 import com.tangem.screens.tangempay.onTangemPayCashbackScreen
 import com.tangem.screens.tangempay.onTangemPayMainScreen
+import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.Allure.step
+import org.joda.time.LocalDate
+import java.time.Month
+import java.time.format.TextStyle
+import java.util.Locale
 
 /** Mirrors UITEST_CASHBACK_FROM_API_KEY in MockAwareCashbackRepository — cashback comes from WireMock. */
 private const val CASHBACK_FROM_API_KEY = "uitest.tangempay.cashback_from_api"
@@ -98,3 +105,21 @@ fun BaseTestCase.assertTangemPayCashbackBanner(text: String) {
         onTangemPayCashbackScreen { banner.assertTextContainsSafe(text) }
     }
 }
+
+fun tangemPayCashbackWidgetTitle(amount: String, month: LocalDate): String =
+    getResourceString(CoreResR.string.tangempay_cashback_widget_title, amount, tangemPayCashbackFullMonth(month))
+
+fun tangemPayCashbackEarnedTitle(amount: String, month: LocalDate): String {
+    val monthIn = InstrumentationRegistry.getInstrumentation().targetContext.resources
+        .getStringArray(CoreResR.array.common_month_in)[month.monthOfYear - 1]
+    return getResourceString(CoreResR.string.tangempay_cashback_earned_title, amount, monthIn)
+}
+
+fun tangemPayCashbackTotalTitle(amount: String): String =
+    getResourceString(CoreResR.string.tangempay_cashback_total_earned, amount)
+
+fun tangemPayCashbackFullMonth(date: LocalDate): String =
+    Month.of(date.monthOfYear).getDisplayName(TextStyle.FULL_STANDALONE, Locale.getDefault())
+
+fun tangemPayCashbackShortMonth(date: LocalDate): String =
+    Month.of(date.monthOfYear).getDisplayName(TextStyle.SHORT_STANDALONE, Locale.getDefault())

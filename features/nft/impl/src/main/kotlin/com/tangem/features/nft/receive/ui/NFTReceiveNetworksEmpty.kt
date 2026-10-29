@@ -19,14 +19,14 @@ internal fun NFTReceiveNetworksEmpty(modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
-            .background(TangemTheme.colors.background.secondary),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         Text(
             modifier = Modifier
                 .align(Alignment.Center),
             text = stringResourceSafe(id = R.string.nft_empty_search),
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
     }
 }

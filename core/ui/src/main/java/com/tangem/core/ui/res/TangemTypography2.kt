@@ -432,7 +432,7 @@ private fun TangemTypography2_Preview() {
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
-                .background(TangemTheme.colors2.surface.level1)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(4.dp),
         ) {
             typographyList.forEach { textStyle ->
@@ -440,7 +440,7 @@ private fun TangemTypography2_Preview() {
                     Text(
                         text = "Lorem ipsum",
                         style = textStyle,
-                        color = TangemTheme.colors2.text.neutral.primary,
+                        color = TangemTheme.colors3.text.primary,
                         modifier = Modifier.align(Alignment.Center),
                     )
                 }

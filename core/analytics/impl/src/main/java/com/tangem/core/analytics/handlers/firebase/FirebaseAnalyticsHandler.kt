@@ -1,0 +1,47 @@
+package com.tangem.core.analytics.handlers.firebase
+
+import com.tangem.core.analytics.api.AnalyticsErrorHandler
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.analytics.api.AnalyticsHandler
+import com.tangem.core.analytics.api.AnalyticsUserIdHandler
+import com.tangem.core.analytics.converters.AnalyticsErrorConverter
+import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
+
+class FirebaseAnalyticsHandler(
+    private val client: FirebaseAnalyticsClient,
+) : AnalyticsHandler, AnalyticsErrorHandler, AnalyticsExceptionHandler, AnalyticsUserIdHandler {
+
+    private val errorConverter = AnalyticsErrorConverter()
+
+    override fun id(): String = ID
+
+    override fun setUserId(userId: String) {
+        client.setUserId(userId)
+    }
+
+    override fun clearUserId() {
+        client.clearUserId()
+    }
+
+    override fun send(event: AnalyticsEvent) {
+        client.logEvent(event.id, event.params)
+    }
+
+    override fun sendException(event: ExceptionAnalyticsEvent) {
+        if (!errorConverter.canBeHandled(event.exception)) return
+
+        val errorParams = errorConverter.convert(event.exception).toMutableMap()
+        errorParams.putAll(event.params)
+
+        client.logException(event.exception, errorParams)
+    }
+
+    override fun sendErrorEvent(event: AnalyticsEvent) {
+        send(event)
+    }
+
+    companion object {
+        const val ID = "Firebase"
+    }
+}

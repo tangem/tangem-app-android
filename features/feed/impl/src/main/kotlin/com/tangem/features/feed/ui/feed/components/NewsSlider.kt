@@ -65,3 +65,5 @@ internal fun NewsSlider(newsSliderConfig: NewsSliderConfig) {
         }
     }
 }
+
+private const val FOURTH_ITEM_INDEX = 3

@@ -72,7 +72,7 @@ private fun LazyListScope.countryListError(state: CountryListUM.Error) {
             Text(
                 text = stringResourceSafe(id = R.string.markets_loading_error_title),
                 style = TangemTheme.typography.caption1,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
             SecondarySmallButton(
                 modifier = Modifier.padding(top = 12.dp),
@@ -157,14 +157,14 @@ private fun ContentCountryItem(state: CountryItemState.WithContent.Content, modi
             overflow = TextOverflow.Ellipsis,
             maxLines = 1,
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         if (state.isSelected) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_check_24),
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
-                tint = TangemTheme.colors.icon.accent,
+                tint = TangemTheme.colors3.icon.accent.blue,
             )
         }
     }
@@ -192,13 +192,13 @@ private fun UnavailableCountryItem(state: CountryItemState.WithContent.Unavailab
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.disabled,
+            color = TangemTheme.colors3.text.tertiary,
         )
         Text(
             text = stringResourceSafe(R.string.onramp_country_unavailable),
             maxLines = 1,
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
     }
 }

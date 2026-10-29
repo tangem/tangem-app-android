@@ -22,3 +22,7 @@ interface AccountTxHistoryFetcher : TxHistoryFetcher<TxHistoryFetchTrigger> {
 interface ExpressTxHistoryFetcher : TxHistoryFetcher<TxHistoryExpressTrigger> {
     val walletId: UserWalletId
 }
+
+interface JointOperationTxHistoryFetcher : TxHistoryFetcher<TxHistoryJointOperationTrigger> {
+    val walletId: UserWalletId
+}

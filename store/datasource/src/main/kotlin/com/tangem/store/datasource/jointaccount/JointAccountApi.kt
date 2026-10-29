@@ -1,14 +1,17 @@
 package com.tangem.store.datasource.jointaccount
 
 import com.tangem.core.remote.response.ApiResponse
-import com.tangem.store.datasource.jointaccount.models.ActivateJointAccountRequest
+import com.tangem.store.datasource.jointaccount.models.ConfirmJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.CreateJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.CreateJointOperationRequest
 import com.tangem.store.datasource.jointaccount.models.GetJointAccountsResponse
+import com.tangem.store.datasource.jointaccount.models.IssueJointAccountInviteRequest
 import com.tangem.store.datasource.jointaccount.models.JointAccountDto
 import com.tangem.store.datasource.jointaccount.models.JointAccountInvitePreviewDto
+import com.tangem.store.datasource.jointaccount.models.JointAccountIssuedInviteDto
 import com.tangem.store.datasource.jointaccount.models.JointOperationDto
 import com.tangem.store.datasource.jointaccount.models.JointOperationHistoryDeltaResponse
+import com.tangem.store.datasource.jointaccount.models.JointOperationHistoryItemDto
 import com.tangem.store.datasource.jointaccount.models.JointOperationHistoryResponse
 import com.tangem.store.datasource.jointaccount.models.JoinJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.SignJointOperationRequest
@@ -20,9 +23,9 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 /**
- * Joint accounts API: creation, retrieval, joining, activation.
+ * Joint accounts API: creation, retrieval, joining, confirmation.
  *
- * Contract: OpenAPI spec v1.2.
+ * Contract: OpenAPI spec v1.6.
  *
  * The paths carry the `api/` prefix, unlike the neighbouring `/v1/wallets/{walletId}/accounts` of
  * `TangemTechApi`. That is not a typo and not a copy-paste: v1.2 moved the joint endpoints under `/api/v1`, and
@@ -32,8 +35,8 @@ import retrofit2.http.Query
 interface JointAccountApi {
 
     /**
-     * Creates the account in `pending` with the caller as its creator and first participant, and issues one invite
-     * per free slot.
+     * Creates the account in `pending` with the caller as its creator and first participant. The invites are not
+     * issued here: the creator issues one per free slot with [issueJointAccountInvite] (v1.6).
      *
      * Errors: 400 — field validation, `creator.walletId` not equal to the path, a signature that does not recover
      * to `creator.address`, or the wallet already participates in 20 active joint accounts; 409 — `creator.address`
@@ -45,6 +48,19 @@ interface JointAccountApi {
         @Path("walletId") walletId: String,
         @Body body: CreateJointAccountRequest,
     ): ApiResponse<JointAccountDto>
+
+    /**
+     * Issues the invite of one free slot of the creator's `pending` account. The code comes back only here and lives
+     * 24 hours; a repeated call on the same slot replaces it, and the old link answers 404 from then on.
+     *
+     * Errors: 400 — `slot` outside `1..membersCount - 1`; 403 — a member, not the creator; 404 — no such account for
+     * the wallet; 409 — the account left `pending`, or the slot is taken.
+     */
+    @POST("api/v1/wallets/{walletId}/joint-accounts/invites")
+    suspend fun issueJointAccountInvite(
+        @Path("walletId") walletId: String,
+        @Body body: IssueJointAccountInviteRequest,
+    ): ApiResponse<JointAccountIssuedInviteDto>
 
     /**
      * Returns every joint account the wallet participates in, archived ones excluded — they come from
@@ -65,7 +81,8 @@ interface JointAccountApi {
      * though the invitee has not yet decided which wallet to join with — that is what lets the preview report the
      * wallet already holds a slot before the card is tapped rather than after.
      *
-     * Errors: 404 — no such invite; 409 — the invite is already redeemed, or this wallet already holds a slot.
+     * Errors: 404 — no such invite, a code replaced by a reissue included; 409 — the invite expired or is already
+     * redeemed, the account no longer accepts participants, or this wallet already holds a slot.
      */
     @GET("api/v1/wallets/{walletId}/joint-accounts/invites/{inviteId}")
     suspend fun getJointAccountInvite(
@@ -78,9 +95,9 @@ interface JointAccountApi {
      * the Safe address and moves the account to `confirming`.
      *
      * Errors: 400 — field validation, `member.walletId` not equal to the path, a signature that does not recover to
-     * `member.address`, or the wallet already participates in 20 active joint accounts; 404 — no such invite or
-     * wallet. Every 409 is terminal for that invite link, except `member.address` already registered, which is
-     * resolved as in creation. A joiner who lost the response finds the account in [getJointAccounts]; retrying
+     * `member.address`, or the wallet already participates in 20 active joint accounts; 404 — no such invite (a
+     * code replaced by a reissue included) or wallet. Every 409 is terminal for that invite link — an expired
+     * invite among them — except `member.address` already registered, which is resolved as in creation. A joiner who lost the response finds the account in [getJointAccounts]; retrying
      * is 409.
      */
     @POST("api/v1/wallets/{walletId}/joint-accounts/join")
@@ -90,18 +107,19 @@ interface JointAccountApi {
     ): ApiResponse<JointAccountDto>
 
     /**
-     * Confirms the composition and activates the account. Idempotent: activating an already `active` account is a
-     * success, so a lost response is retried automatically rather than shown as an error.
+     * Records this wallet's confirmation of the composition; the account turns `active` with the last member's
+     * signature. Idempotent: a repeated confirmation is the same success, so a lost response is retried
+     * automatically.
      *
-     * Errors: 400 — `payload.walletId` not equal to the path, a malformed signature, or one that does not recover
-     * to this wallet's own participant address; 403 — this wallet's slot is not the creator's; 404 — this wallet
-     * has no such joint account; 409 — the account is still `pending`, or `config` differs from what the account
+     * Errors: 400 — a malformed signature, one that does not recover to this wallet's slot, or `safeAddress`
+     * not in lower case; 403 — this wallet is not a member; 404 — no account holds this Safe address, a
+     * `pending` account included; 409 — the account is cancelled, or `payload` differs from what the account
      * holds.
      */
-    @POST("api/v1/wallets/{walletId}/joint-accounts/activate")
-    suspend fun activateJointAccount(
+    @POST("api/v1/wallets/{walletId}/joint-accounts/confirm")
+    suspend fun confirmJointAccount(
         @Path("walletId") walletId: String,
-        @Body body: ActivateJointAccountRequest,
+        @Body body: ConfirmJointAccountRequest,
     ): ApiResponse<JointAccountDto>
 
     @POST("api/v1/wallets/{walletId}/joint-accounts/operations")
@@ -146,4 +164,16 @@ interface JointAccountApi {
         @Query("beforeCursor") beforeCursor: String?,
         @Query("limit") limit: Int,
     ): ApiResponse<JointOperationHistoryDeltaResponse>
+
+    /**
+     * One operation in any status. [eTag] asks the backend to answer `304` while the operation has not changed.
+     *
+     * Errors: 403 — the wallet holds no slot in the operation's joint account; 404 — no such operation.
+     */
+    @GET("api/v1/wallets/{walletId}/joint-accounts/operations/{operationId}")
+    suspend fun getJointOperation(
+        @Path("walletId") walletId: String,
+        @Path("operationId") operationId: String,
+        @Header("If-None-Match") eTag: String? = null,
+    ): ApiResponse<JointOperationHistoryItemDto>
 }

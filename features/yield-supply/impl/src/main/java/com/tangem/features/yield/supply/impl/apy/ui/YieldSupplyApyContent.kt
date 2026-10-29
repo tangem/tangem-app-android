@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,9 +45,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.core.ui.ds.tabs.TangemSegmentUM
-import com.tangem.core.ui.ds.tabs.TangemSegmentedPicker
-import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
+import com.tangem.core.ui.ds2.segmentedcontrol.TangemSegmentedControl
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -60,7 +59,7 @@ import com.tangem.core.ui.res.generated.icons.ic_triangle_up_12
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartIncentiveUM
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartPeriod
-import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 /** Never rendered as text: it only gives a shimmer the width a rate would take, so the row keeps its height. */
 private const val RATE_PLACEHOLDER = "0.00%"
@@ -81,7 +80,7 @@ internal fun YieldSupplyApyContent(
             content = TangemBottomSheetConfigContent.Empty,
         ),
         onBack = onBackClick,
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
         title = {
             TangemModalBottomSheetTitle(
                 title = resourceReference(
@@ -104,11 +103,7 @@ internal fun YieldSupplyApyContent(
             ) {
                 if (incentive != null) {
                     SpacerH24()
-                    TangemSegmentedPicker(
-                        tangemSegmentedPickerUM = incentive.picker,
-                        onClick = { incentive.onPeriodSelected(it.id) },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                    PeriodPicker(incentive = incentive, modifier = Modifier.fillMaxWidth())
                 } else {
                     PlainRateDescription()
                 }
@@ -118,7 +113,7 @@ internal fun YieldSupplyApyContent(
                 val chartModifier = if (incentive == null) {
                     Modifier
                         .clip(RoundedCornerShape(14.dp))
-                        .background(TangemTheme.colors.background.action)
+                        .background(TangemTheme.colors3.bg.secondary)
                         .padding(12.dp)
                 } else {
                     Modifier
@@ -149,19 +144,34 @@ internal fun YieldSupplyApyContent(
 }
 
 @Composable
+private fun PeriodPicker(incentive: YieldSupplyChartIncentiveUM, modifier: Modifier = Modifier) {
+    val items = remember(incentive.period, incentive.onPeriodSelected) {
+        YieldSupplyChartPeriod.entries.map { period ->
+            TangemSegmentedControl.Item(
+                id = period.name,
+                label = resourceReference(period.titleRes),
+                isSelected = period == incentive.period,
+                onClick = { incentive.onPeriodSelected(period.name) },
+            )
+        }.toImmutableList()
+    }
+    TangemSegmentedControl(items = items, modifier = modifier)
+}
+
+@Composable
 private fun PlainRateDescription() {
     SpacerH8()
     Text(
         text = stringResourceSafe(R.string.yield_module_rate_info_sheet_description),
         style = TangemTheme.typography.body2,
-        color = TangemTheme.colors.text.secondary,
+        color = TangemTheme.colors3.text.secondary,
         textAlign = TextAlign.Center,
     )
     SpacerH12()
     val inlineIconId = "aaveIcon"
     Text(
         style = TangemTheme.typography.body2,
-        color = TangemTheme.colors.text.tertiary,
+        color = TangemTheme.colors3.text.secondary,
         textAlign = TextAlign.Center,
         text = buildAnnotatedString {
             append(stringResourceSafe(R.string.yield_module_rate_info_sheet_powered_by))
@@ -192,13 +202,13 @@ private fun PoweredByMerkl(modifier: Modifier = Modifier) {
         Text(
             text = stringResourceSafe(R.string.yield_module_incentive_chart_powered_by_title),
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         SpacerH2()
         Text(
             text = stringResourceSafe(R.string.yield_module_incentive_chart_powered_by_description),
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
     }
 }
@@ -250,7 +260,7 @@ private fun PlainApyChart(
             Text(
                 text = stringResourceSafe(R.string.yield_module_historical_returns),
                 style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
             SpacerH2()
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -259,7 +269,7 @@ private fun PlainApyChart(
                 Text(
                     text = stringResourceSafe(R.string.yield_module_supply_apr),
                     style = TangemTheme.typography.subtitle2,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                 )
             }
         }
@@ -271,7 +281,7 @@ private fun PlainApyChart(
             SpacerH12()
             Box(
                 modifier = Modifier
-                    .background(TangemTheme.colors.stroke.primary)
+                    .background(TangemTheme.colors3.border.secondary)
                     .fillMaxWidth()
                     .height(1.dp),
             )
@@ -281,7 +291,7 @@ private fun PlainApyChart(
                     modifier = Modifier.weight(1.0f),
                     text = stringResourceSafe(R.string.yield_module_earn_sheet_current_apy_title),
                     style = TangemTheme.typography.body1,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                 )
                 SpacerW12()
                 if (apy == null) {
@@ -289,7 +299,7 @@ private fun PlainApyChart(
                 } else {
                     Icon(
                         painter = painterResource(R.drawable.ic_arrow_up_8),
-                        tint = TangemTheme.colors.text.accent,
+                        tint = TangemTheme.colors3.text.accent.blue,
                         contentDescription = null,
                         modifier = Modifier
                             .padding(end = 6.dp)
@@ -298,7 +308,7 @@ private fun PlainApyChart(
                     Text(
                         text = apy.resolveReference(),
                         style = TangemTheme.typography.body1,
-                        color = TangemTheme.colors.text.accent,
+                        color = TangemTheme.colors3.text.accent.blue,
                     )
                 }
             }
@@ -389,7 +399,7 @@ private fun AccentDot(modifier: Modifier = Modifier) {
         modifier = modifier
             .padding(4.dp)
             .size(8.dp)
-            .background(color = TangemTheme.colors.icon.accent, shape = CircleShape),
+            .background(color = TangemTheme.colors3.bg.accent.blue, shape = CircleShape),
     )
 }
 
@@ -413,25 +423,12 @@ private fun YieldSupplyApyContentContentPreview() {
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun YieldSupplyApyContentIncentivisedPreview() {
-    val segments = persistentListOf(
-        TangemSegmentUM(id = "Week", title = resourceReference(R.string.yield_module_incentive_chart_period_week)),
-        TangemSegmentUM(
-            id = "ThreeMonths",
-            title = resourceReference(R.string.yield_module_incentive_chart_period_three_months),
-        ),
-    )
-
     TangemThemePreview {
         YieldSupplyApyContent(
             apy = stringReference("7.3%"),
             isLoading = false,
             incentive = YieldSupplyChartIncentiveUM(
                 period = YieldSupplyChartPeriod.Week,
-                picker = TangemSegmentedPickerUM(
-                    items = segments,
-                    initialSelectedItem = segments.first(),
-                    isFixed = true,
-                ),
                 averageApy = stringReference("6.84%"),
                 onPeriodSelected = {},
             ),

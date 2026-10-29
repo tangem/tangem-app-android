@@ -1,7 +1,6 @@
 package com.tangem.domain.staking.model
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.models.staking.YieldToken
 import com.tangem.test.mock.staking.MockStaking
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test

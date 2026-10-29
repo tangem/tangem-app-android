@@ -3,6 +3,7 @@ package com.tangem.features.tangempay.components
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.account.BankCredentials
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 
 interface TangemPayBankTransferOnrampDetailsComponent : ComposableContentComponent {
@@ -10,8 +11,14 @@ interface TangemPayBankTransferOnrampDetailsComponent : ComposableContentCompone
     data class Params(
         val userWalletId: UserWalletId,
         val bankCredentials: BankCredentials,
+        val feeSource: FeeSource,
         val analytics: Analytics,
     )
+
+    sealed interface FeeSource {
+        data class Catalogue(val product: TangemPayProduct) : FeeSource
+        data object Route : FeeSource
+    }
 
     interface Analytics {
         fun onDetailsShown()

@@ -30,7 +30,7 @@ internal fun TangemCheckmarkStory(state: TangemCheckmarkStory, modifier: Modifie
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(TangemTheme.colors.background.primary)
+            .background(TangemTheme.colors3.bg.primary)
             .padding(vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -93,7 +93,7 @@ private fun Section(label: String, content: @Composable () -> Unit) {
             modifier = Modifier.padding(horizontal = 16.dp),
             text = label,
             style = TangemTheme.typography.subtitle1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         content()
     }
@@ -105,7 +105,7 @@ private fun ToggleRow(label: String, checked: Boolean, onToggle: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(TangemTheme.colors2.surface.level2)
+            .background(TangemTheme.colors3.bg.primary)
             .clickable(onClick = onToggle)
             .padding(horizontal = 12.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -114,12 +114,12 @@ private fun ToggleRow(label: String, checked: Boolean, onToggle: () -> Unit) {
         Text(
             text = label,
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         Text(
             text = if (checked) "ON" else "OFF",
             style = TangemTheme.typography.caption2,
-            color = if (checked) TangemTheme.colors.text.accent else TangemTheme.colors.text.secondary,
+            color = if (checked) TangemTheme.colors3.text.accent.blue else TangemTheme.colors3.text.secondary,
         )
     }
 }

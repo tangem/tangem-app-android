@@ -15,7 +15,7 @@ internal fun AddCustomTokenDescription(modifier: Modifier = Modifier) {
         modifier = modifier.fillMaxWidth(fraction = 0.7f),
         text = stringResourceSafe(id = R.string.custom_token_subtitle),
         style = TangemTheme.typography.caption2,
-        color = TangemTheme.colors.text.secondary,
+        color = TangemTheme.colors3.text.secondary,
         textAlign = TextAlign.Center,
     )
 }

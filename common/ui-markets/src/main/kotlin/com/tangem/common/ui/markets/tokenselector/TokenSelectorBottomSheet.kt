@@ -40,7 +40,7 @@ fun TokenSelectorBottomSheet(config: TangemBottomSheetConfig) {
     TangemBottomSheet<TokenSelectorContentUM>(
         config = config,
         type = TangemBottomSheetType.Modal,
-        containerColor = TangemTheme.colors2.surface.level2,
+        containerColor = TangemTheme.colors3.bg.primary,
         content = { content ->
             TokenSelectorContent(
                 content = content,
@@ -95,7 +95,7 @@ private fun TokenSelectorContent(
     Box(modifier = modifier.fillMaxWidth()) {
         val bottomFadeReserve = if (embedded) 0.dp else 40.dp
         val bottomListPadding = bottomFadeReserve + scrollBottomInset
-        val topFadeColor = TangemTheme.colors2.surface.level2.copy(alpha = .95f)
+        val topFadeColor = TangemTheme.colors3.bg.primary.copy(alpha = .95f)
         LazyColumn(
             state = listState,
             modifier = Modifier
@@ -144,7 +144,7 @@ private fun TokenSelectorSheetTopBar(
             Icon(
                 imageVector = ImageVector.vectorResource(id = R.drawable.ic_close_24),
                 contentDescription = null,
-                tint = TangemTheme.colors2.graphic.neutral.primary,
+                tint = TangemTheme.colors3.icon.primary,
                 modifier = Modifier
                     .size(44.dp)
                     .clip(CircleShape)

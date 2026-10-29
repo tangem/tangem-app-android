@@ -51,6 +51,7 @@ internal class FetchWalletAccountsErrorHandler @Inject constructor(
      * @param pushWalletAccounts    function to push wallet accounts to the server
      * @param storeWalletAccounts   function to store wallet accounts locally
      */
+    @Suppress("CanBeNonNullable") // null when nothing is saved yet: falls back to the default accounts
     suspend fun handle(
         error: ApiResponseError,
         userWalletId: UserWalletId,

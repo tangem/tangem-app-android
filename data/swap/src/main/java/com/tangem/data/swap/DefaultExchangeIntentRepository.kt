@@ -50,8 +50,8 @@ internal class DefaultExchangeIntentRepository(
 
     private fun convertError(intentId: String, cause: ApiResponseError): Throwable {
         return when {
-            cause is ApiResponseError.HttpException && cause.isServerError() -> {
-                ExchangeIntentError.ServerError(intentId = intentId, httpCode = cause.code.numericCode)
+            cause is ApiResponseError.NetworkException || cause is ApiResponseError.TimeoutException -> {
+                ExchangeIntentError.Unreachable(intentId)
             }
             else -> when (expressErrorResolver.resolve(cause)) {
                 is ExpressError.IntentOfAnotherWalletError -> {

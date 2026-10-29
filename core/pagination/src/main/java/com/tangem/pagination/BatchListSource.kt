@@ -2,6 +2,7 @@ package com.tangem.pagination
 
 import com.tangem.pagination.exception.OperationWIthTheSameIdInProgress
 import com.tangem.pagination.fetcher.BatchFetcher
+import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.*
@@ -246,7 +247,7 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
     }
 
     private suspend fun reloadTask(action: BatchAction.Reload<TRequestParams>) {
-        val res = runCatching {
+        val res = runSuspendCatching {
             batchFetcher.fetchFirst(action.requestParams)
         }.getOrElse { throwable ->
             currentCoroutineContext().ensureActive()
@@ -306,7 +307,7 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
 
         state.update { it.copy(status = PaginationStatus.NextBatchLoading) }
 
-        val res = runCatching {
+        val res = runSuspendCatching {
             batchFetcher.fetchNext(action.requestParams, lastResult)
         }.getOrElse { BatchFetchResult.Error(it) }
 
@@ -383,7 +384,7 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
         val updateContext = UpdateContext(request = action.updateRequest, action.keys)
 
         with(updateFetcher) {
-            runCatching {
+            runSuspendCatching {
                 updateContext.fetchUpdateAsync(batchesToUpdate, action.updateRequest)
                 currentCoroutineContext().ensureActive()
             }.getOrElse {

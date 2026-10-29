@@ -74,6 +74,7 @@ dependencies {
 
     // region Domain models
     implementation(projects.domain.express.models)
+    implementation(projects.domain.jointAccount)
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory.models)

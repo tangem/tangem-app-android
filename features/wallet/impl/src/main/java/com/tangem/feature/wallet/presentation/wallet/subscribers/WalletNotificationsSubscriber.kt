@@ -9,13 +9,11 @@ import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarni
 import com.tangem.feature.wallet.presentation.wallet.domain.GetPendingJointOperationsFlowFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.GetWalletNotificationsCarouselFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.GetWalletNotificationsFactory
-import com.tangem.feature.wallet.presentation.wallet.domain.WalletNotificationsSnapshot
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotificationUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetWarningsTransformer
 import com.tangem.features.hotwallet.HardwareUpgradeLauncher
-import com.tangem.features.promobanners.api.PromoBannersFeatureToggles
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -39,19 +37,17 @@ internal class WalletNotificationsSubscriber @AssistedInject constructor(
     private val walletWarningsSingleEventSender: WalletWarningsSingleEventSender,
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val hardwareUpgradeLauncher: HardwareUpgradeLauncher,
-    private val promoBannersFeatureToggles: PromoBannersFeatureToggles,
 ) : WalletSubscriber() {
 
     override fun create(coroutineScope: CoroutineScope): Flow<ImmutableList<WalletNotificationUM>> {
         if (userWallet is UserWallet.Hot) hardwareUpgradeLauncher.prefetch()
 
-        val isHidingPromoCards = promoBannersFeatureToggles.isHideMarketingBannersWhileSystemEnabled
-        val promoCardsTriggerFlow = if (isHidingPromoCards) getPromoCardsTriggerFlow() else flowOf(null)
-
         return combine(
-            flow = getWalletNotificationsFactory.create(userWallet, clickIntents).distinct(isHidingPromoCards),
-            flow2 = getWalletNotificationsCarouselFactory.create(userWallet, clickIntents).distinct(isHidingPromoCards),
-            flow3 = promoCardsTriggerFlow,
+            flow = getWalletNotificationsFactory.create(userWallet, clickIntents).conflate().distinctUntilChanged(),
+            flow2 = getWalletNotificationsCarouselFactory.create(userWallet, clickIntents)
+                .conflate()
+                .distinctUntilChanged(),
+            flow3 = getPromoCardsTriggerFlow(),
         ) { notificationsSnapshot, notificationsCarouselSnapshot, hasJointOperations ->
             val notifications = notificationsSnapshot.notifications
             val notificationsCarousel = notificationsCarouselSnapshot.notifications
@@ -86,20 +82,15 @@ internal class WalletNotificationsSubscriber @AssistedInject constructor(
                     warnings = persistentListOf(),
                     notifications = notifications,
                     notificationsCarousel = alteredNotificationsCarousel,
-                    promoCardsBalanceState = if (isHidingPromoCards) {
-                        minOf(notificationsSnapshot.balanceState, notificationsCarouselSnapshot.balanceState)
-                    } else {
-                        null
-                    },
+                    promoCardsBalanceState = minOf(
+                        notificationsSnapshot.balanceState,
+                        notificationsCarouselSnapshot.balanceState,
+                    ),
                     hasJointOperations = hasJointOperations,
                 ),
             )
 
-            val totalNotifications = if (isHidingPromoCards) {
-                getShownNotifications()
-            } else {
-                (notifications + alteredNotificationsCarousel).toPersistentList()
-            }
+            val totalNotifications = getShownNotifications()
 
             walletWarningsAnalyticsSender.send(
                 userWalletId = userWallet.walletId,
@@ -113,17 +104,6 @@ internal class WalletNotificationsSubscriber @AssistedInject constructor(
             )
 
             totalNotifications
-        }
-    }
-
-    /** Without hiding the promo cards nothing reads the balance state, so only the notifications themselves count */
-    private fun Flow<WalletNotificationsSnapshot>.distinct(
-        isHidingPromoCards: Boolean,
-    ): Flow<WalletNotificationsSnapshot> {
-        return if (isHidingPromoCards) {
-            conflate().distinctUntilChanged()
-        } else {
-            conflate().distinctUntilChangedBy(WalletNotificationsSnapshot::notifications)
         }
     }
 

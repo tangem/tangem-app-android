@@ -313,6 +313,7 @@ private fun MoneyAccountDetailsScreenPreview() {
                 onBackClick = {},
                 onAddFundsClick = {},
                 onSendClick = {},
+                txHistoryCurrency = null,
             ),
             txHistoryComponent = PreviewTxHistoryComponent,
         )
@@ -334,6 +335,7 @@ private fun MoneyAccountDetailsScreenBalanceUnavailablePreview() {
                 onBackClick = {},
                 onAddFundsClick = {},
                 onSendClick = {},
+                txHistoryCurrency = null,
             ),
             txHistoryComponent = PreviewTxHistoryComponent,
         )

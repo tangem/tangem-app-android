@@ -19,9 +19,11 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
+import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
 import com.tangem.domain.collectibles.usecase.CloseCollectiblesVaultUseCase
 import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
+import com.tangem.domain.collectibles.usecase.CreateOrReactivateCollectiblesAccountUseCase
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
 import com.tangem.domain.models.account.CollectiblesVaultBalance
@@ -35,6 +37,7 @@ import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesAc
 import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesBalanceConverter
 import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesMenuItem
 import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesMenuConverter
+import com.tangem.features.collectibles.impl.main.model.converter.CollectiblesRelinkConverter
 import com.tangem.features.collectibles.impl.main.ui.state.CollectiblesMainUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
@@ -42,6 +45,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -59,7 +63,9 @@ internal class CollectiblesMainModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val closeCollectiblesVaultUseCase: CloseCollectiblesVaultUseCase,
+    private val createOrReactivateCollectiblesAccountUseCase: CreateOrReactivateCollectiblesAccountUseCase,
     private val collectiblesAccountStatusSupplier: CollectiblesAccountStatusSupplier,
+    private val collectiblesAccountRepository: CollectiblesAccountRepository,
     private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val hotDelegate: CollectiblesHotDelegate,
@@ -79,6 +85,7 @@ internal class CollectiblesMainModel @Inject constructor(
         onDismiss = ::onMenuDismiss,
         onItemClick = ::onMenuItemClick,
     )
+    private val relinkConverter = CollectiblesRelinkConverter(onRelinkClick = ::onRelinkClick)
 
     val bottomSheetNavigation = SlotNavigation<CollectiblesMainBottomSheetConfig>()
 
@@ -91,7 +98,16 @@ internal class CollectiblesMainModel @Inject constructor(
 
     init {
         observeBalance()
+        observeCollectiblesStatus()
         loadHotDelegate()
+    }
+
+    /** Every return to the screen re-reads the vault, so a vault re-pointed by another phone shows the relink banner */
+    fun onScreenResumed() {
+        modelScope.launch {
+            collectiblesAccountStatusFetcher(CollectiblesAccountStatusFetcher.Params(params.userWalletId))
+                .onLeft { error -> TangemLogger.e("Unable to refresh the collectibles account", error) }
+        }
     }
 
     // TODO testing only, remove once Gasless pays the spin fee
@@ -126,6 +142,17 @@ internal class CollectiblesMainModel @Inject constructor(
             .launchIn(modelScope)
     }
 
+    private fun observeCollectiblesStatus() {
+        collectiblesAccountRepository.getStatus(params.userWalletId)
+            .map { record ->
+                relinkConverter.convert(
+                    CollectiblesRelinkConverter.Input(record = record, isLoading = isRelinkLoading()),
+                )
+            }
+            .onEach { relink -> uiState.update { state -> state.copy(relink = relink) } }
+            .launchIn(modelScope)
+    }
+
     private fun buildInitialState(): CollectiblesMainUM {
         return CollectiblesMainUM(
             title = TextReference.Res(R.string.collectibles_main_title),
@@ -146,6 +173,7 @@ internal class CollectiblesMainModel @Inject constructor(
                 ),
                 onClick = ::onCollectionClick,
             ),
+            relink = CollectiblesMainUM.RelinkUM.Hidden,
             menu = menuConverter.convert(null),
             isBalanceRefreshing = false,
             onBackClick = ::onBackClick,
@@ -262,6 +290,39 @@ internal class CollectiblesMainModel @Inject constructor(
         hotDelegateAddress?.let { address -> clipboardManager.setText(text = address, isSensitive = false) }
     }
 
+    private fun isRelinkLoading(): Boolean {
+        return (uiState.value.relink as? CollectiblesMainUM.RelinkUM.Shown)?.isLoading == true
+    }
+
+    private fun onRelinkClick() {
+        if (isRelinkLoading()) return
+
+        setRelinkLoading(true)
+
+        modelScope.launch {
+            val userWallet = userWalletsListRepository.getSyncOrNull(params.userWalletId)
+
+            if (userWallet == null) {
+                sendUnknownErrorMessage()
+            } else {
+                createOrReactivateCollectiblesAccountUseCase(userWallet).fold(
+                    ifLeft = ::onVaultActionFailed,
+                    ifRight = { loadHotDelegate() },
+                )
+            }
+
+            setRelinkLoading(false)
+        }
+    }
+
+    private fun setRelinkLoading(isLoading: Boolean) {
+        uiState.update { state ->
+            val relink = state.relink as? CollectiblesMainUM.RelinkUM.Shown ?: return@update state
+            state.copy(relink = relink.copy(isLoading = isLoading))
+        }
+    }
+
+    // TODO temporary, testing only: remove before release
     private fun onCloseAccountClick() {
         onMenuDismiss()
 
@@ -269,13 +330,13 @@ internal class CollectiblesMainModel @Inject constructor(
             val userWallet = userWalletsListRepository.getSyncOrNull(params.userWalletId) ?: return@launch
 
             closeCollectiblesVaultUseCase(userWallet).fold(
-                ifLeft = ::onCloseFailed,
+                ifLeft = ::onVaultActionFailed,
                 ifRight = { router.pop() },
             )
         }
     }
 
-    private fun onCloseFailed(failure: CollectiblesAccountError) {
+    private fun onVaultActionFailed(failure: CollectiblesAccountError) {
         // A card refusal is already on the NFC sheet, and a cancellation is the user's own choice: neither needs one
         if (failure is CollectiblesAccountError.CardError || failure is CollectiblesAccountError.Cancelled) return
 

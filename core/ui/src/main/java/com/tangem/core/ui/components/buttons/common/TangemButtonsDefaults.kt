@@ -22,20 +22,20 @@ object TangemButtonsDefaults {
         @Composable
         @ReadOnlyComposable
         get() = ButtonColors(
-            containerColor = TangemTheme.colors.button.primary,
-            contentColor = TangemTheme.colors.text.primary2,
-            disabledContainerColor = TangemTheme.colors.button.disabled,
-            disabledContentColor = TangemTheme.colors.text.disabled,
+            containerColor = TangemTheme.colors3.bg.inverse,
+            contentColor = TangemTheme.colors3.text.inverse.primary,
+            disabledContainerColor = TangemTheme.colors3.bg.disabled,
+            disabledContentColor = TangemTheme.colors3.text.tertiary,
         )
 
     val secondaryButtonColors: ButtonColors
         @Composable
         @ReadOnlyComposable
         get() = ButtonColors(
-            containerColor = TangemTheme.colors.button.secondary,
-            contentColor = TangemTheme.colors.text.primary1,
-            disabledContainerColor = TangemTheme.colors.button.disabled,
-            disabledContentColor = TangemTheme.colors.text.disabled,
+            containerColor = TangemTheme.colors3.bg.transparent.secondary,
+            contentColor = TangemTheme.colors3.text.primary,
+            disabledContainerColor = TangemTheme.colors3.bg.disabled,
+            disabledContentColor = TangemTheme.colors3.text.tertiary,
         )
 
     val defaultTextButtonColors: ButtonColors
@@ -43,9 +43,9 @@ object TangemButtonsDefaults {
         @ReadOnlyComposable
         get() = ButtonColors(
             containerColor = Color.Transparent,
-            contentColor = TangemTheme.colors.text.secondary,
+            contentColor = TangemTheme.colors3.text.secondary,
             disabledContainerColor = Color.Transparent,
-            disabledContentColor = TangemTheme.colors.text.disabled,
+            disabledContentColor = TangemTheme.colors3.text.tertiary,
         )
 
     val warningTextButtonColors: ButtonColors
@@ -53,9 +53,9 @@ object TangemButtonsDefaults {
         @ReadOnlyComposable
         get() = ButtonColors(
             containerColor = Color.Transparent,
-            contentColor = TangemTheme.colors.text.warning,
+            contentColor = TangemTheme.colors3.text.accent.red,
             disabledContainerColor = Color.Transparent,
-            disabledContentColor = TangemTheme.colors.text.disabled,
+            disabledContentColor = TangemTheme.colors3.text.tertiary,
         )
 
     val selectorButtonColors: ButtonColors
@@ -63,9 +63,9 @@ object TangemButtonsDefaults {
         @ReadOnlyComposable
         get() = ButtonColors(
             containerColor = Color.Transparent,
-            contentColor = TangemTheme.colors.text.tertiary,
+            contentColor = TangemTheme.colors3.text.secondary,
             disabledContainerColor = Color.Transparent,
-            disabledContentColor = TangemTheme.colors.text.disabled,
+            disabledContentColor = TangemTheme.colors3.text.tertiary,
         )
 
     val positiveButtonColors: ButtonColors
@@ -73,8 +73,8 @@ object TangemButtonsDefaults {
         @ReadOnlyComposable
         get() = ButtonColors(
             containerColor = Color.Transparent,
-            contentColor = TangemTheme.colors.text.accent,
+            contentColor = TangemTheme.colors3.text.accent.blue,
             disabledContainerColor = Color.Transparent,
-            disabledContentColor = TangemTheme.colors.text.disabled,
+            disabledContentColor = TangemTheme.colors3.text.tertiary,
         )
 }

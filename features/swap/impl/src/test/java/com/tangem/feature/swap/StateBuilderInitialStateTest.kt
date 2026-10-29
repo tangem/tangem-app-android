@@ -11,7 +11,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedForNetwork
-import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.ProviderState
@@ -243,18 +242,6 @@ internal class StateBuilderInitialStateTest {
         }
 
         @Test
-        fun `WHEN called THEN priceImpact is Empty`() {
-            val result = sut.createInitialReadyState(
-                uiStateHolder = baseState,
-                emptyAmountState = emptyAmountState,
-                fromSwapCurrencyStatus = null,
-                toSwapCurrencyStatus = null,
-            )
-
-            assertThat(result.priceImpact).isEqualTo(PriceImpact.Empty)
-        }
-
-        @Test
         fun `WHEN called THEN notifications is empty`() {
             val result = sut.createInitialReadyState(
                 uiStateHolder = baseState,
@@ -326,7 +313,7 @@ internal class StateBuilderInitialStateTest {
             every { walletId } returns userWalletId
         }
 
-        private val expressError: ExpressError = ExpressError.UnknownError
+        private val expressError: ExpressError = ExpressError.UnknownError()
 
         private fun buildBaseStateWithSwapCardData(userWallet: UserWallet): SwapStateHolder {
             val emptyAmountState = SwapState.EmptyAmountState(

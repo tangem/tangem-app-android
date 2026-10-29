@@ -7,8 +7,6 @@ import com.tangem.features.collectibles.impl.discovery.CollectiblesDiscoveryComp
 import com.tangem.features.collectibles.impl.discovery.DefaultCollectiblesDiscoveryComponent
 import com.tangem.features.collectibles.impl.packopening.video.DefaultPackRevealVideoPlayerFactory
 import com.tangem.features.collectibles.impl.packopening.video.PackRevealVideoPlayer
-import com.tangem.features.collectibles.impl.packopening.video.source.DefaultPackRevealMediaSourceFactory
-import com.tangem.features.collectibles.impl.packopening.video.source.PackRevealMediaSourceFactory
 import com.tangem.features.collectibles.impl.walletblock.DefaultCollectiblesWalletBlockComponent
 import dagger.Binds
 import dagger.Module
@@ -41,8 +39,4 @@ internal interface CollectiblesComponentModule {
     @Binds
     @Singleton
     fun bindPackRevealVideoPlayerFactory(impl: DefaultPackRevealVideoPlayerFactory): PackRevealVideoPlayer.Factory
-
-    @Binds
-    @Singleton
-    fun bindPackRevealMediaSourceFactory(impl: DefaultPackRevealMediaSourceFactory): PackRevealMediaSourceFactory
 }

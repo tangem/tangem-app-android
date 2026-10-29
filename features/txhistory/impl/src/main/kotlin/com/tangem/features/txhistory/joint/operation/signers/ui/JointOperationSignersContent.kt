@@ -23,12 +23,15 @@ import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.modal.TangemModal
+import com.tangem.core.ui.ds2.modal.TopNavigation
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -51,6 +54,23 @@ internal fun JointOperationSignersContent(state: JointOperationSignersUM, modifi
             SignerRow(signer = signer)
         }
     }
+}
+
+/** The signers screen's title bar, shared by the operation sheet and the transaction details sheet */
+@Composable
+internal fun JointOperationSignersTopNavigation(membersCount: Int?, onBackClick: () -> Unit, onCloseClick: () -> Unit) {
+    TangemModal.TopNavigation(
+        title = resourceReference(CoreUiR.string.joint_operation_signers_title),
+        subtitle = membersCount?.let { count ->
+            pluralReference(
+                id = CoreUiR.plurals.joint_account_members_count,
+                count = count,
+                formatArgs = wrappedList(count),
+            )
+        },
+        onBack = onBackClick,
+        onClose = onCloseClick,
+    )
 }
 
 @Composable

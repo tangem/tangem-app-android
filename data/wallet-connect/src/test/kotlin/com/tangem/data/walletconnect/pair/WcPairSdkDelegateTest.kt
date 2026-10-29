@@ -4,7 +4,6 @@ import arrow.core.right
 import com.tangem.data.walletconnect.sdk.WcSdk
 import com.tangem.data.walletconnect.store.WalletConnectStore
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.walletconnect.featuretoggle.WalletConnectFeatureToggles
 import com.tangem.domain.walletconnect.model.WcPendingApprovalSessionDTO
 import com.tangem.domain.walletconnect.model.WcSessionDTO
 import com.tangem.test.core.TestAppCoroutineScope
@@ -24,13 +23,11 @@ internal class WcPairSdkDelegateTest {
 
     private val store: WalletConnectStore = mockk()
     private val wcSdk: WcSdk = mockk()
-    private val featureToggles: WalletConnectFeatureToggles = mockk()
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(store, wcSdk, featureToggles)
+        clearMocks(store, wcSdk)
         coEvery { wcSdk.subscribe(any()) } returns Unit.right()
-        every { featureToggles.isOnDemandInitEnabled } returns true
     }
 
     @Test
@@ -64,27 +61,11 @@ internal class WcPairSdkDelegateTest {
         coVerify(exactly = 0) { wcSdk.subscribe(any()) }
     }
 
-    @Test
-    fun `GIVEN toggle disabled WHEN onWcSdkInit THEN does not subscribe`() = runTest {
-        // Arrange
-        every { featureToggles.isOnDemandInitEnabled } returns false
-        every { store.pendingApproval } returns flowOf(setOf(createPendingApproval(pairingTopic = "first")))
-        val delegate = createDelegate(this)
-
-        // Act
-        delegate.onWcSdkInit()
-        runCurrent()
-
-        // Assert
-        coVerify(exactly = 0) { wcSdk.subscribe(any()) }
-    }
-
     // The delegate keeps a settle listener running for its whole life, so it lives on the background scope
     private fun createDelegate(testScope: TestScope) = WcPairSdkDelegate(
         scope = TestAppCoroutineScope(testScope.backgroundScope.coroutineContext),
         store = store,
         wcSdk = wcSdk,
-        featureToggles = featureToggles,
     )
 
     private fun createPendingApproval(pairingTopic: String) = WcPendingApprovalSessionDTO(

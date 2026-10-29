@@ -39,7 +39,7 @@ internal class PolymarketOnboardingErrorMappingTest {
     @Test
     fun `GIVEN no internet connection WHEN mapped THEN returns Network`() {
         // Act
-        val actual = DataError.NetworkError.NoInternetConnection.toOnboardingError()
+        val actual = DataError.NetworkError.NoInternetConnection().toOnboardingError()
 
         // Assert
         assertThat(actual).isEqualTo(PolymarketOnboardingError.Network)

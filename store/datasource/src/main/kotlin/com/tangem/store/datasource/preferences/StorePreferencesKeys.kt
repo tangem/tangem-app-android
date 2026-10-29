@@ -125,6 +125,9 @@ class StorePreferencesKeys @Inject constructor() {
     val pushNotificationFirstActivationDoneWalletIdsKey: Preferences.Key<Set<String>> =
         stringSetPreferencesKey(name = "pushNotificationFirstActivationDoneWalletIds")
 
+    val addressesSharingWalletIdsKey: Preferences.Key<Set<String>> =
+        stringSetPreferencesKey(name = "addressesSharingWalletIds")
+
     val tronNetworkFeeNotificationShowCountKey: Preferences.Key<Int> =
         intPreferencesKey(name = "tronNetworkFeeNotificationShowCount")
 
@@ -136,9 +139,6 @@ class StorePreferencesKeys @Inject constructor() {
 
     fun getShouldShowAskNotificationPermissionViaBs(): Preferences.Key<Boolean> =
         booleanPreferencesKey("ShouldShowAskNotificationPermissionViaBs")
-
-    fun getShouldShowInitialPermissionScreen(permission: String): Preferences.Key<Boolean> =
-        booleanPreferencesKey("shouldShowInitialPushPermissionScreen_$permission")
 
     fun getHotWalletUnlockAttemptsKey(attemptId: String): Preferences.Key<Int> =
         intPreferencesKey(name = "hotWalletUnlockAttempts_$attemptId")

@@ -1,6 +1,6 @@
 package com.tangem.domain.staking.model.stakekit.transaction
 
-import com.tangem.domain.models.staking.YieldToken
+import com.tangem.domain.staking.model.YieldToken
 import java.math.BigDecimal
 
 data class StakingGasEstimate(

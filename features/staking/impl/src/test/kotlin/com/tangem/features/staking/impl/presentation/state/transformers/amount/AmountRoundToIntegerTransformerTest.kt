@@ -53,6 +53,25 @@ internal class AmountRoundToIntegerTransformerTest {
     }
 
     @Test
+    fun `GIVEN no quote WHEN transform THEN crypto rounded down and fiat empty`() {
+        // Arrange
+        val noQuoteStatus = currencyStatus(currency = coin(Blockchain.Tron), fiatRate = null)
+        val input = stakingUiState(
+            amountState = amountData(BigDecimal("10.5"), value = "10.5", isWarning = true, cryptoDecimals = 6),
+        )
+
+        // Act
+        val actual = field(AmountRoundToIntegerTransformer(noQuoteStatus).transform(input))
+
+        // Assert
+        assertThat(actual.cryptoAmount.value).isEqualTo(BigDecimal("10"))
+        assertThat(actual.fiatAmount.value).isNull()
+        assertThat(actual.value).isEqualTo("10")
+        assertThat(actual.fiatValue).isEmpty()
+        assertThat(actual.isWarning).isFalse()
+    }
+
+    @Test
     fun `GIVEN empty text value WHEN transform THEN same state`() {
         // Arrange
         val input = stakingUiState(amountState = amountData(value = ""))
