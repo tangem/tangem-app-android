@@ -182,7 +182,7 @@ internal class DefaultQuotesRepositoryTest {
                 quotesFetcher.fetch(
                     fiatCurrencyId = "EUR",
                     currenciesIds = setOf("bitcoin"),
-                    fields = setOf(QuotesFetcher.Field.PRICE, QuotesFetcher.Field.PRICE_USD),
+                    fields = setOf(QuotesFetcher.Field.ALL_PRICES),
                 )
             } returns model.fetchResult
 
