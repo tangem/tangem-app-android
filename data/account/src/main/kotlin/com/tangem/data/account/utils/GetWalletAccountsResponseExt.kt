@@ -38,7 +38,7 @@ internal fun List<WalletAccountDTO>.assignTokens(
 
     return map { accountDTO ->
         val accountTokens = enrichedTokensByAccountId[accountDTO.id].orEmpty()
-        val isMainAccount = !accountDTO.isJoint && accountDTO.derivationIndex == DerivationIndex.Main.value
+        val isMainAccount = accountDTO.isPersonal && accountDTO.derivationIndex == DerivationIndex.Main.value
 
         val assignedTokens = if (isMainAccount) {
             val existingAccountIds = map(WalletAccountDTO::id).toSet()

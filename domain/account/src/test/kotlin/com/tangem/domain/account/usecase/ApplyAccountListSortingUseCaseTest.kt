@@ -7,6 +7,7 @@ import com.google.common.truth.Truth
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.usecase.ApplyAccountListSortingUseCase.Error
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.mock.MockAccounts
@@ -206,6 +207,27 @@ class ApplyAccountListSortingUseCaseTest {
             accountsCRUDRepository.getAccountListSync(userWalletId)
             accountsCRUDRepository.saveAccounts(updatedAccountList)
         }
+    }
+
+    /** Only portfolios are reordered in the settings, so the collectibles account is not among the ids */
+    @Test
+    fun `GIVEN a collectibles account WHEN invoke THEN portfolios are reordered and it keeps its place`() = runTest {
+        // Arrange
+        val collectibles = Account.Collectibles(userWalletId = defaultAccountList.userWalletId)
+        val accountList = defaultAccountList.withAccounts(defaultAccountList.accounts + collectibles).getOrNull()!!
+        val accountIds = defaultAccountList.toAccountIds().reversed()
+        val updatedAccountList = accountList.withAccounts(
+            accounts = defaultAccountList.accounts.reversed() + collectibles,
+        ).getOrNull()!!
+
+        coEvery { accountsCRUDRepository.getAccountListSync(userWalletId) } returns accountList.some()
+
+        // Act
+        val actual = useCase(accountIds)
+
+        // Assert
+        Truth.assertThat(actual).isEqualTo(Unit.right())
+        coVerify(exactly = 1) { accountsCRUDRepository.saveAccounts(updatedAccountList) }
     }
 
     private fun AccountList.toAccountIds(): List<AccountId> {
