@@ -402,7 +402,8 @@ internal class OnrampMainComponentModelTest {
         val expectedScreen = onrampScreen(fiatCode = "USD")
         val expectedAmount = MarketingBannerAmount.Fiat(value = BigDecimal("50000"), currencyCode = "USD")
         assertThat(requests.last()).isEqualTo(MarketingBannerRequest(screen = expectedScreen, amount = expectedAmount))
-        assertThat(linkedRequests.last()).isEqualTo(LinkedBannerRequest(screen = expectedScreen, amount = expectedAmount))
+        assertThat(linkedRequests.last())
+            .isEqualTo(LinkedBannerRequest(screen = expectedScreen, amount = expectedAmount))
         model.onDestroy()
     }
 
@@ -450,14 +451,19 @@ internal class OnrampMainComponentModelTest {
         val scheduler = TestCoroutineScheduler()
         val model = createModel(scheduler = scheduler, quotes = emptyList(), fiatCode = "USD")
         val requests = collectAll(scheduler, model.marketingRequest)
+        scheduler.runCurrent()
         model.onAmountValueChanged("100")
         scheduler.runCurrent()
+        val requestBeforeClearing = requests.last()
 
         // Act
         model.onAmountValueChanged("")
         scheduler.runCurrent()
 
         // Assert
+        val typedAmount = MarketingBannerAmount.Fiat(value = BigDecimal("100"), currencyCode = "USD")
+        assertThat(requestBeforeClearing)
+            .isEqualTo(MarketingBannerRequest(screen = onrampScreen("USD"), amount = typedAmount))
         assertThat(requests.last()).isEqualTo(MarketingBannerRequest(screen = onrampScreen("USD"), amount = null))
         model.onDestroy()
     }
@@ -534,7 +540,13 @@ internal class OnrampMainComponentModelTest {
         image = "",
         alpha3 = "CCC",
         continent = "Europe",
-        defaultCurrency = OnrampCurrency(name = fiatCode, code = fiatCode, image = null, precision = 2, unit = fiatCode),
+        defaultCurrency = OnrampCurrency(
+            name = fiatCode,
+            code = fiatCode,
+            image = null,
+            precision = 2,
+            unit = fiatCode,
+        ),
         isOnrampAvailable = true,
     )
 

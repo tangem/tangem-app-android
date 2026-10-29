@@ -36,6 +36,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -248,6 +249,86 @@ internal class MarketingBannerModelTest {
         val content = model.uiState.value as MarketingBannerListUM.Content
         assertThat(content.banners.map { it.campaignId }).containsExactly(1)
         coVerify(exactly = 1) { quotesRepository.getFiatUSDRate("EUR") }
+    }
+
+    @Test
+    fun `GIVEN lookup fails after amount cleared WHEN amount retyped THEN rate fetched again`() = runTest {
+        // Arrange
+        coEvery { getMarketingBanner(eurScreen, null) } returns listOf(gatedCampaign(1)).right()
+        coEvery { quotesRepository.getFiatUSDRate("EUR") } coAnswers {
+            delay(1_000)
+            null
+        } andThen java.math.BigDecimal("1.1")
+        val requests = MutableStateFlow<MarketingBannerRequest?>(
+            MarketingBannerRequest(eurScreen, amount = eurAmount("100")),
+        )
+        val model = createModel(MarketingBannerComponent.Params.Standalone(requests))
+        advanceTimeBy(500) // past the request debounce, lookup in flight
+        requests.value = MarketingBannerRequest(eurScreen, amount = null)
+        advanceUntilIdle() // the unawaited lookup fails
+
+        // Act
+        requests.value = MarketingBannerRequest(eurScreen, amount = eurAmount("100"))
+        advanceUntilIdle()
+
+        // Assert
+        val content = model.uiState.value as MarketingBannerListUM.Content
+        assertThat(content.banners.map { it.campaignId }).containsExactly(1)
+        coVerify(exactly = 2) { quotesRepository.getFiatUSDRate("EUR") }
+    }
+
+    @Test
+    fun `GIVEN shown banner WHEN screen changes THEN hidden until new campaigns fetched`() = runTest {
+        // Arrange
+        coEvery { getMarketingBanner(onrampScreen, null) } returns listOf(
+            campaign(1, MarketingBanner.UiType.STANDALONE),
+        ).right()
+        coEvery { getMarketingBanner(eurScreen, null) } coAnswers {
+            delay(1_000)
+            listOf(campaign(2, MarketingBanner.UiType.STANDALONE)).right()
+        }
+        val requests = MutableStateFlow<MarketingBannerRequest?>(MarketingBannerRequest(onrampScreen))
+        val model = createModel(MarketingBannerComponent.Params.Standalone(requests))
+        advanceUntilIdle()
+        val stateBefore = model.uiState.value
+
+        // Act
+        requests.value = MarketingBannerRequest(eurScreen)
+        runCurrent()
+        val stateWhileFetching = model.uiState.value
+        advanceUntilIdle()
+
+        // Assert
+        assertThat((stateBefore as MarketingBannerListUM.Content).banners.map { it.campaignId }).containsExactly(1)
+        assertThat(stateWhileFetching).isEqualTo(MarketingBannerListUM.Hidden)
+        val content = model.uiState.value as MarketingBannerListUM.Content
+        assertThat(content.banners.map { it.campaignId }).containsExactly(2)
+    }
+
+    @Test
+    fun `GIVEN shown bounded banner WHEN new amount awaits conversion THEN hidden until converted`() = runTest {
+        // Arrange
+        coEvery { getMarketingBanner(eurScreen, null) } returns listOf(gatedCampaign(1)).right()
+        coEvery { quotesRepository.getFiatUSDRate("EUR") } coAnswers {
+            delay(1_000)
+            java.math.BigDecimal("1.1")
+        }
+        val requests = MutableStateFlow<MarketingBannerRequest?>(MarketingBannerRequest(eurScreen, usdAmount(100)))
+        val model = createModel(MarketingBannerComponent.Params.Standalone(requests))
+        advanceUntilIdle()
+        val stateBefore = model.uiState.value
+
+        // Act
+        requests.value = MarketingBannerRequest(eurScreen, amount = eurAmount("100"))
+        runCurrent()
+        val stateWhileConverting = model.uiState.value
+        advanceUntilIdle()
+
+        // Assert
+        assertThat((stateBefore as MarketingBannerListUM.Content).banners.map { it.campaignId }).containsExactly(1)
+        assertThat(stateWhileConverting).isEqualTo(MarketingBannerListUM.Hidden)
+        val content = model.uiState.value as MarketingBannerListUM.Content
+        assertThat(content.banners.map { it.campaignId }).containsExactly(1)
     }
 
     @Test
