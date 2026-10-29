@@ -116,9 +116,13 @@ internal class MoneyAccountDetailsModel @Inject constructor(
 
     private fun updateRenewSessionProgress(isLoading: Boolean) {
         uiState.update { state ->
-            val banner = state.messageBanner ?: return@update state
-            val button = banner.secondaryButton ?: return@update state
-            state.copy(messageBanner = banner.copy(secondaryButton = button.copy(isLoading = isLoading)))
+            val banner = state.messageBanner
+            val button = banner?.secondaryButton
+            if (banner == null || button == null) {
+                state
+            } else {
+                state.copy(messageBanner = banner.copy(secondaryButton = button.copy(isLoading = isLoading)))
+            }
         }
     }
 
