@@ -7,6 +7,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.shorted
+import com.tangem.core.ui.format.bigdecimal.simple
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
@@ -154,6 +155,11 @@ internal class TokenDetailsNotificationConverter(
                 onMigrationClick = clickIntents::onCloreMigrationClick,
             )
             is CryptoCurrencyWarning.UsedOutdatedDataWarning -> UsedOutdatedData
+            is CryptoCurrencyWarning.IncompleteBalance -> IncompleteBalance(
+                unspentsLimit = warning.unspentsLimit.toBigDecimal().format { simple(decimals = 0) },
+                networkName = warning.networkName,
+                currencySymbol = warning.currencySymbol,
+            )
             is DynamicAddressesWarnings.FundsFound -> DynamicAddressesFundsFound(
                 onLearnMoreClick = clickIntents::onDynamicAddressesFundsFoundLearnMoreClick,
             )
