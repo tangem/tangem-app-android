@@ -12,7 +12,10 @@ import com.tangem.domain.marketing.models.MarketingBanner
 import com.tangem.domain.marketing.models.MarketingCampaign
 import com.tangem.domain.marketing.models.MarketingScreen
 import com.tangem.domain.marketing.models.MarketingScreenType
+import com.tangem.domain.quotes.GetFiatUSDRateUseCase
+import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.features.marketing.api.LinkedBannerRequest
+import com.tangem.features.marketing.api.MarketingBannerAmount
 import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.marketing.impl.ui.state.MarketingBannerListUM
@@ -43,10 +46,11 @@ internal class MarketingBannerModelTest {
     private val getMarketingBanner: GetMarketingBannerUseCase = mockk()
     private val dismissMarketingBanner: DismissMarketingBannerUseCase = mockk()
     private val deeplinkLauncher: DeeplinkLauncher = mockk(relaxed = true)
+    private val quotesRepository: QuotesRepository = mockk()
 
     @BeforeEach
     fun setup() {
-        clearMocks(getMarketingBanner, dismissMarketingBanner, deeplinkLauncher)
+        clearMocks(getMarketingBanner, dismissMarketingBanner, deeplinkLauncher, quotesRepository)
     }
 
     private fun TestScope.createModel(params: MarketingBannerComponent.Params): MarketingBannerModel {
@@ -64,6 +68,7 @@ internal class MarketingBannerModelTest {
             getMarketingBanner = getMarketingBanner,
             dismissMarketingBanner = dismissMarketingBanner,
             deeplinkLauncher = deeplinkLauncher,
+            getFiatUSDRate = GetFiatUSDRateUseCase(quotesRepository),
         )
     }
 
@@ -90,6 +95,10 @@ internal class MarketingBannerModelTest {
         )
 
     private val onrampScreen = MarketingScreen.Onramp("USD", "ethereum", "0xabc")
+    private val eurScreen = MarketingScreen.Onramp("EUR", "ethereum", "0xabc")
+
+    private fun eurAmount(value: String) =
+        MarketingBannerAmount.Fiat(value = java.math.BigDecimal(value), currencyCode = "EUR")
 
     private fun swapScreen(fromContract: String = "0xF") =
         MarketingScreen.Swap(fromNetwork = "eth", fromContractAddress = fromContract, toNetwork = "btc", toContractAddress = "0xT")
@@ -110,7 +119,7 @@ internal class MarketingBannerModelTest {
         val screen = swapScreen()
         coEvery { getMarketingBanner(screen, null) } returns listOf(gatedCampaign(1)).right()
         val requests = MutableStateFlow<MarketingBannerRequest?>(
-            MarketingBannerRequest(screen, amountUsd = java.math.BigDecimal(10)), // below min -> hidden
+            MarketingBannerRequest(screen, amount = MarketingBannerAmount.Usd(java.math.BigDecimal(10))), // below min -> hidden
         )
         val model = createModel(MarketingBannerComponent.Params.Standalone(requests))
 
@@ -118,13 +127,99 @@ internal class MarketingBannerModelTest {
         advanceUntilIdle()
         assertThat(model.uiState.value).isEqualTo(MarketingBannerListUM.Hidden) // 10 < 50
 
-        requests.value = MarketingBannerRequest(screen, amountUsd = java.math.BigDecimal(100)) // in range
+        requests.value = MarketingBannerRequest(screen, amount = MarketingBannerAmount.Usd(java.math.BigDecimal(100))) // in range
         advanceUntilIdle()
         val content = model.uiState.value as MarketingBannerListUM.Content
         assertThat(content.banners.map { it.campaignId }).containsExactly(1)
 
         // fetched once for the pair, despite two different amounts
         coVerify(exactly = 1) { getMarketingBanner(screen, null) }
+    }
+
+    @Test
+    fun `GIVEN bounded campaign and eur amount WHEN amount changes THEN filtered by converted usd amount`() = runTest {
+        // Arrange
+        coEvery { getMarketingBanner(eurScreen, null) } returns listOf(gatedCampaign(1)).right()
+        coEvery { quotesRepository.getFiatUSDRate("EUR") } returns java.math.BigDecimal("1.1")
+        val requests = MutableStateFlow<MarketingBannerRequest?>(
+            MarketingBannerRequest(eurScreen, amount = eurAmount("40")), // 44 USD < 50 -> hidden
+        )
+        val model = createModel(MarketingBannerComponent.Params.Standalone(requests))
+
+        // Act
+        advanceUntilIdle()
+        val stateBelowMin = model.uiState.value
+        requests.value = MarketingBannerRequest(eurScreen, amount = eurAmount("50")) // 55 USD -> shown
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(stateBelowMin).isEqualTo(MarketingBannerListUM.Hidden)
+        val content = model.uiState.value as MarketingBannerListUM.Content
+        assertThat(content.banners.map { it.campaignId }).containsExactly(1)
+        coVerify(exactly = 1) { quotesRepository.getFiatUSDRate("EUR") }
+    }
+
+    @Test
+    fun `GIVEN no bounded campaigns WHEN fiat amount emitted THEN rate not fetched`() = runTest {
+        // Arrange
+        coEvery { getMarketingBanner(eurScreen, null) } returns listOf(
+            campaign(1, MarketingBanner.UiType.STANDALONE),
+        ).right()
+        val model = createModel(
+            MarketingBannerComponent.Params.Standalone(
+                flowOf(MarketingBannerRequest(eurScreen, amount = eurAmount("100"))),
+            ),
+        )
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        val content = model.uiState.value as MarketingBannerListUM.Content
+        assertThat(content.banners.map { it.campaignId }).containsExactly(1)
+        coVerify(exactly = 0) { quotesRepository.getFiatUSDRate(any()) }
+    }
+
+    @Test
+    fun `GIVEN bounded campaign and usd fiat amount WHEN emitted THEN shown without fetching a rate`() = runTest {
+        // Arrange
+        coEvery { getMarketingBanner(onrampScreen, null) } returns listOf(gatedCampaign(1)).right()
+        val amount = MarketingBannerAmount.Fiat(value = java.math.BigDecimal("100"), currencyCode = "USD")
+        val model = createModel(
+            MarketingBannerComponent.Params.Standalone(flowOf(MarketingBannerRequest(onrampScreen, amount))),
+        )
+
+        // Act
+        advanceUntilIdle()
+
+        // Assert
+        val content = model.uiState.value as MarketingBannerListUM.Content
+        assertThat(content.banners.map { it.campaignId }).containsExactly(1)
+        coVerify(exactly = 0) { quotesRepository.getFiatUSDRate(any()) }
+    }
+
+    @Test
+    fun `GIVEN rate unavailable WHEN fiat amount emitted THEN only unbounded campaigns shown`() = runTest {
+        // Arrange
+        coEvery { getMarketingBanner(eurScreen, null) } returns listOf(
+            gatedCampaign(1),
+            campaign(2, MarketingBanner.UiType.STANDALONE),
+        ).right()
+        coEvery { quotesRepository.getFiatUSDRate("EUR") } returns null
+        val requests = MutableStateFlow<MarketingBannerRequest?>(
+            MarketingBannerRequest(eurScreen, amount = eurAmount("100")),
+        )
+        val model = createModel(MarketingBannerComponent.Params.Standalone(requests))
+
+        // Act
+        advanceUntilIdle()
+        requests.value = MarketingBannerRequest(eurScreen, amount = eurAmount("200"))
+        advanceUntilIdle()
+
+        // Assert
+        val content = model.uiState.value as MarketingBannerListUM.Content
+        assertThat(content.banners.map { it.campaignId }).containsExactly(2)
+        coVerify(exactly = 2) { quotesRepository.getFiatUSDRate("EUR") }
     }
 
     @Test
@@ -135,7 +230,7 @@ internal class MarketingBannerModelTest {
             campaign(2, MarketingBanner.UiType.LINKED_TO_PROVIDER),
         ).right()
         val params = MarketingBannerComponent.Params.Standalone(
-            requestFlow = flowOf(MarketingBannerRequest(onrampScreen, amountUsd = null)),
+            requestFlow = flowOf(MarketingBannerRequest(onrampScreen, amount = null)),
         )
         val model = createModel(params)
 
@@ -189,7 +284,7 @@ internal class MarketingBannerModelTest {
         ).right()
         val model = createModel(
             MarketingBannerComponent.Params.Linked(
-                flowOf(LinkedBannerRequest(onrampScreen, amountUsd = null)),
+                flowOf(LinkedBannerRequest(onrampScreen, amount = null)),
             ),
         )
 
