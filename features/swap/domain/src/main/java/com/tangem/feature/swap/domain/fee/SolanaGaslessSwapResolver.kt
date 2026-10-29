@@ -50,7 +50,10 @@ internal class SolanaGaslessSwapResolver @Inject constructor(
 
     suspend fun resolveFeePayer(fromSwapCurrencyStatus: SwapCurrencyStatus, swapData: SwapDataModel?): String? {
         if (!isSponsorable(fromSwapCurrencyStatus.currency)) return null
-        val txData = (swapData?.transaction as? ExpressTransactionModel.DEX)?.txData ?: return null
+        val dexTransaction = swapData?.transaction as? ExpressTransactionModel.DEX ?: return null
+        // The sponsor pays only the network fee: a bridge fee would still come from the user's SOL, behind a $0 fee
+        if (dexTransaction.otherNativeFeeWei?.signum() == 1) return null
+        val txData = dexTransaction.txData
 
         // A single fee load asks several times for the same quote; each ask would re-parse and log it, and the
         // simulation is a node round trip
