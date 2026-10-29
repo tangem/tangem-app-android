@@ -39,9 +39,9 @@ internal class BankWithdrawAnalytics(
         send(paymentAccountEvent = null, moneyAccountEvent = draft.toSendConfirmed())
     }
 
-    fun onSendFailed() = send(
+    fun onSendFailed(errorCode: Int?) = send(
         paymentAccountEvent = TangemPayAnalyticsEvents.Offramp.SendErrorScreenOpened(),
-        moneyAccountEvent = MoneyAccountAnalyticsEvents.SendFailed(),
+        moneyAccountEvent = MoneyAccountAnalyticsEvents.SendFailed(errorCode = errorCode),
     )
 
     fun onSendSucceeded(rail: BankRail?) = send(
