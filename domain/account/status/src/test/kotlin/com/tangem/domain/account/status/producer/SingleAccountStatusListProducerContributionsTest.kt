@@ -7,9 +7,6 @@ import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.domain.account.models.AccountList
-import com.tangem.domain.account.status.contribution.BalanceContributionProvider
-import com.tangem.domain.account.status.contribution.StakingContributionProvider
-import com.tangem.domain.account.status.contribution.YieldSupplyContributionProvider
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.StatusSource
@@ -18,10 +15,11 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.balance.BalanceContributionProvider
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.quote.QuoteStatus
-import com.tangem.domain.models.staking.*
+import com.tangem.domain.staking.model.*
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
@@ -30,9 +28,11 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.quotes.multi.MultiQuoteStatusSupplier
 import com.tangem.domain.staking.StakingIdFactory
+import com.tangem.domain.staking.contribution.StakingContributionProvider
 import com.tangem.domain.staking.model.stakingBalanceData
 import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
+import com.tangem.domain.account.status.contribution.YieldSupplyContributionProvider
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
