@@ -32,7 +32,7 @@ object TangemButtonsDefaults {
         @Composable
         @ReadOnlyComposable
         get() = ButtonColors(
-            containerColor = TangemTheme.colors3.bg.transparent.secondary,
+            containerColor = TangemTheme.colors3.bg.tertiary,
             contentColor = TangemTheme.colors3.text.primary,
             disabledContainerColor = TangemTheme.colors3.bg.disabled,
             disabledContentColor = TangemTheme.colors3.text.tertiary,

@@ -41,7 +41,7 @@ fun PasteButton(
     onClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     backgroundColorEnabled: Color = TangemTheme.colors3.bg.inverse,
-    backgroundColorDisabled: Color = TangemTheme.colors3.bg.transparent.secondary,
+    backgroundColorDisabled: Color = TangemTheme.colors3.bg.tertiary,
     textColor: Color = TangemTheme.colors3.text.inverse.primary,
 ) {
     val clipboardManager = LocalClipboardManager.current
