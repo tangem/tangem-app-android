@@ -16,6 +16,10 @@ import org.burnoutcrew.reorderable.ReorderableState
  * Probably because of compose compiler's bug and new foundation `animateItem` API.
  * @see [org.burnoutcrew.reorderable.ReorderableItem]
  */
+@Deprecated(
+    "Use LazyItemScope.TangemDraggable with rememberTangemDraggableState " +
+        "from com.tangem.core.ui.ds2.draggable",
+)
 @Suppress("ComposableFunctionName")
 @Composable
 inline fun LazyItemScope.ReorderableItem(
@@ -41,6 +45,10 @@ inline fun LazyItemScope.ReorderableItem(
  * Probably because of compose compiler's bug and new foundation `animateItem` API.
  * @see [org.burnoutcrew.reorderable.ReorderableItem]
  */
+@Deprecated(
+    "Use LazyItemScope.TangemDraggable with rememberTangemDraggableState " +
+        "from com.tangem.core.ui.ds2.draggable",
+)
 @Suppress("ComposableFunctionName")
 @Composable
 inline fun LazyGridItemScope.ReorderableItem(
@@ -65,6 +73,10 @@ inline fun LazyGridItemScope.ReorderableItem(
  * Probably because of compose compiler's bug and new foundation `animateItem` API.
  * @see [org.burnoutcrew.reorderable.ReorderableItem]
  */
+@Deprecated(
+    "Use LazyItemScope.TangemDraggable with rememberTangemDraggableState " +
+        "from com.tangem.core.ui.ds2.draggable",
+)
 @Composable
 inline fun ReorderableItem(
     state: ReorderableState<*>,
