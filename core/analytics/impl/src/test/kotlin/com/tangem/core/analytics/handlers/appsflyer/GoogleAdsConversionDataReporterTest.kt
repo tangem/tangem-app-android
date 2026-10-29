@@ -1,4 +1,4 @@
-package com.tangem.tap.common.analytics.appsflyer
+package com.tangem.core.analytics.handlers.appsflyer
 
 import android.content.Context
 import com.appsflyer.AppsFlyerLib
@@ -49,7 +49,7 @@ internal class GoogleAdsConversionDataReporterTest {
         @Test
         fun `GIVEN first launch of a google ads install WHEN report THEN payload sent as AppsFlyer event`() {
             // Act
-            reporter.report(conversionData = GOOGLE_ADS_PAYLOAD)
+            reporter.handle(conversionData = GOOGLE_ADS_PAYLOAD)
 
             // Assert
             verify(exactly = 1) { appsFlyerLib.logEvent(context, REPORT_EVENT_NAME, REPORT_VALUES) }
@@ -59,7 +59,7 @@ internal class GoogleAdsConversionDataReporterTest {
         @ProvideTestModels
         fun `GIVEN not a google ads first launch WHEN report THEN nothing sent`(model: NotSentModel) {
             // Act
-            reporter.report(conversionData = model.conversionData)
+            reporter.handle(conversionData = model.conversionData)
 
             // Assert
             verify(exactly = 0) { appsFlyerLib.logEvent(any(), any(), any()) }

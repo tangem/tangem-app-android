@@ -1,4 +1,4 @@
-package com.tangem.tap.common.analytics.appsflyer
+package com.tangem.core.analytics.handlers.appsflyer
 
 import android.content.Context
 import com.appsflyer.AppsFlyerLib
@@ -8,11 +8,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class GoogleAdsConversionDataReporter @Inject constructor(
+internal class GoogleAdsConversionDataReporter @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
 
-    fun report(conversionData: Map<String?, Any?>) {
+    fun handle(conversionData: Map<String?, Any?>) {
         if (conversionData[MEDIA_SOURCE]?.toString() != GOOGLE_ADS_MEDIA_SOURCE) return
         if (conversionData[IS_FIRST_LAUNCH]?.toString() != "true") return
 
