@@ -626,7 +626,7 @@
   <string name="dynamic_addresses_enter_features_receving_description">通过自动生成地址，轻松在基于UTXO的网络中接收资金——无需手动管理地址。</string>
   <string name="dynamic_addresses_enter_features_receving_title">无缝接收</string>
   <string name="dynamic_addresses_enter_main_button_title">启用动态地址</string>
-  <string name="dynamic_addresses_enter_subtitle">动态地址每次都会创建一个新地址，以增强隐私保护——您的总余额保持不变。 </string>
+  <string name="dynamic_addresses_enter_subtitle">动态地址每次都会创建一个新地址，以增强隐私保护——您的总余额保持不变。</string>
   <string name="dynamic_addresses_error_has_custom_token_description">无法启用动态地址，因为某些自定义地址/代币使用的是修改后的派生路径，不符合所需的标准。</string>
   <string name="dynamic_addresses_error_has_custom_token_title">动态地址不可用</string>
   <string name="dynamic_addresses_error_service_unavailable_description">我们目前无法连接到服务提供商，请稍后再试。</string>
@@ -1062,7 +1062,7 @@
   <string name="joint_account_join_invalid_link_title">邀请链接无效</string>
   <string name="joint_account_join_load_failed">无法加载邀请页面。点击重新加载</string>
   <string name="joint_account_join_subtitle">这是一个联合账户。该账户的每笔交易都需要 %1$s 签字</string>
-  <string name="joint_account_join_subtitle_value"> %2$s分之%1$s 的成员</string>
+  <string name="joint_account_join_subtitle_value">%2$s分之%1$s 的成员</string>
   <string name="joint_account_join_success_message">账户已添加</string>
   <string name="joint_account_join_title">您已受邀参加 %1$s</string>
   <string name="joint_account_join_to_account_btn_text">联合账户</string>
@@ -1109,7 +1109,7 @@
   <string name="joint_account_send_sends_automatically">收集完成后自动发送</string>
   <string name="joint_account_send_sends_automatically_setup_fee">收集完成后自动发送。首次发送包含一次性设置费。</string>
   <string name="joint_account_send_setup_fee_note">%1$s上的首笔交易。该手续费包含一次 %2$s ，用于在链上开设联名账户。</string>
-  <string name="joint_account_send_signatures_required"> 需要 %2$s 中的%1$s个签名</string>
+  <string name="joint_account_send_signatures_required">需要 %2$s 中的%1$s个签名</string>
   <plurals name="joint_account_send_signatures_required_banner">
     <item quantity="other">需要%1$d签名</item>
   </plurals>
@@ -1354,7 +1354,8 @@
   <string name="mobile_wallet_requires_min_os_warning_title">手机钱包需要 %1$s 或更高版本</string>
   <string name="money_account_add_funds_bank_description">通过 ACH/Wire 或 SPEI 从银行账户接收 USD</string>
   <string name="money_account_add_funds_receive_description">将 Polygon 网络的 USDC 发送至账户地址</string>
-  <string name="money_account_add_funds_swap_description">使用钱包中的加密资产为账户充值</string>
+  <string name="money_account_add_funds_swap_description">使用钱包中的加密资产为美元账户充值</string>
+  <string name="money_account_close_account">关闭账户</string>
   <string name="money_account_main_name">美元账户</string>
   <string name="money_account_main_status_action_required">需要操作</string>
   <string name="money_account_main_status_activating">正在激活…</string>
@@ -1387,6 +1388,9 @@
   <string name="money_account_onboarding_transfers_card_caption">入账。出账。</string>
   <string name="money_account_onboarding_transfers_card_subtitle">使用带有银行信息的专属账户</string>
   <string name="money_account_onboarding_transfers_card_title">以法币付款和收款</string>
+  <string name="money_account_send_fees_footer">费用包含%s服务费和预估网络费</string>
+  <string name="money_account_send_network_fee_note">费用包含预估网络费%s，可能随网络活跃度变化</string>
+  <string name="money_account_send_pay_button">支付 %s</string>
   <string name="news_all_news">所有新闻</string>
   <string name="news_like">喜欢</string>
   <plurals name="news_published_hours_ago">
@@ -2093,7 +2097,7 @@
   <string name="support_selector_view_chat_button">打开聊天</string>
   <string name="support_selector_view_email_button">打开邮件</string>
   <string name="swap_approve_description">批准后，您即允许智能合约在未来的交易中使用您的代币。</string>
-  <string name="swap_custom_slippage_info">该服务商无法自定义滑点，在极少数情况下滑点可能高达 %s </string>
+  <string name="swap_custom_slippage_info">该服务商无法自定义滑点，在极少数情况下滑点可能高达 %s</string>
   <string name="swap_detailed_mode">详细模式</string>
   <string name="swap_exchange_rates_info_text">显示的费用包含服务提供商的费用。</string>
   <string name="swap_exchange_rates_info_title">汇率</string>
@@ -2580,7 +2584,7 @@
   <string name="tangempay_residency_all_state">选择其他州</string>
   <string name="tangempay_residency_search_empty">未找到结果，请尝试更改搜索内容</string>
   <string name="tangempay_residency_suggested_country">推荐国家</string>
-  <string name="tangempay_residency_suggested_state"> 推荐州</string>
+  <string name="tangempay_residency_suggested_state">推荐州</string>
   <string name="tangempay_residency_title_country">居住国家</string>
   <string name="tangempay_residency_title_state">选择州</string>
   <string name="tangempay_select_plan_btn_cancel">取消</string>
@@ -2630,6 +2634,8 @@
   <string name="tangempay_unified_onboarding_fees_caption">所见即所付</string>
   <string name="tangempay_unified_onboarding_fees_subtitle">1 USDC = 1 USD</string>
   <string name="tangempay_unified_onboarding_fees_title">消费免手续费。%1$s</string>
+  <string name="tangempay_unified_onboarding_interest_caption">利息</string>
+  <string name="tangempay_unified_onboarding_interest_title">持有即可赚取最高4%的年化收益</string>
   <string name="tangempay_unified_onboarding_legal">可开通的产品取决于您所在地区。验证完成后我们会立即确认</string>
   <string name="tangempay_unified_onboarding_money_account_caption">十分方便</string>
   <string name="tangempay_unified_onboarding_money_account_header">美元账户</string>
@@ -2638,6 +2644,8 @@
   <string name="tangempay_unified_onboarding_payment_account_caption">随心支付</string>
   <string name="tangempay_unified_onboarding_payment_account_header">Visa 卡</string>
   <string name="tangempay_unified_onboarding_payment_account_title">线上或 %1$s</string>
+  <string name="tangempay_unified_onboarding_payments_caption">支付</string>
+  <string name="tangempay_unified_onboarding_payments_title">满足日常所需的ACH和电汇转账</string>
   <string name="tangempay_unified_onboarding_plan_caption">一个套餐</string>
   <string name="tangempay_unified_onboarding_plan_subtitle">Basic 免费。</string>
   <string name="tangempay_unified_onboarding_plan_title">%1$s Plus 涵盖两者，还有更多权益</string>
@@ -2654,7 +2662,7 @@
   <string name="tangempay_verified_choose_plan">选择套餐</string>
   <string name="tangempay_verified_description_all">您可以同时拥有 Visa 卡和美元账户。\n选择套餐后，我们将为您开通</string>
   <string name="tangempay_verified_description_money_account">您可以开通美元账户。Visa 卡暂未在您所在地区推出，推出后我们会通知您</string>
-  <string name="tangempay_verified_description_none">产品暂不可用</string>
+  <string name="tangempay_verified_description_none">产品不可用</string>
   <string name="tangempay_verified_description_payment_account">您可以获取 Visa 卡。美元账户暂未在您所在地区推出，推出后我们会通知您</string>
   <string name="tangempay_verified_money_account_subtitle">通过银行转账收付款</string>
   <string name="tangempay_verified_notify_money_account">美元账户上线时通知我</string>
@@ -2662,7 +2670,7 @@
   <string name="tangempay_verified_open_money_account">开通美元账户</string>
   <string name="tangempay_verified_payment_account_subtitle">Apple Pay、Google Pay</string>
   <string name="tangempay_verified_payment_account_title">Visa 卡</string>
-  <string name="tangempay_verified_product_not_available">您所在的国家/地区暂不可用</string>
+  <string name="tangempay_verified_product_not_available">您所在的国家/地区不可用</string>
   <string name="tangempay_verified_title">身份验证已完成</string>
   <string name="tangempay_visa_benefits">Visa 权益</string>
   <string name="tangempay_waitlist_description">在您所在地区开通后，我们会第一时间通过邮件通知您</string>
@@ -2873,7 +2881,7 @@
   <string name="virtual_account_requisites_beneficiary_name">收款人姓名</string>
   <string name="virtual_account_requisites_clabe">CLABE</string>
   <string name="virtual_account_requisites_reference">参考号</string>
-  <string name="virtual_account_requisites_routing_number">Routing number</string>
+  <string name="virtual_account_requisites_routing_number">银行路由号码</string>
   <string name="virtual_account_title">美元账户</string>
   <string name="visa_balance_limits_details_aml_verified">已通过反洗钱（AML）验证</string>
   <string name="visa_balance_limits_details_available">可用</string>
@@ -3096,6 +3104,8 @@
   <string name="warning_hedera_token_association_not_enough_hbar_message">%s不够。请为您的 Hedera 账户充值以关联此代币</string>
   <string name="warning_incomplete_backup_notification_message">我们发现，由于您的设备NFC模块存在问题，或者将卡片轻触手机的方式不正确，导致卡片激活流程未能正常完成。请联系我们的客服团队以获取更多详情。</string>
   <string name="warning_incomplete_backup_notification_title">必须采取行动。不要用你的钱包！</string>
+  <string name="warning_incomplete_balance_message">该地址拥有超过 %1$s 个UTXO，因此 %2$s 网络仅返回其中一部分。您的资金是安全的。若要查看完整余额，请通过向您自己的地址发送 %3$s 来合并这些UTXO。</string>
+  <string name="warning_incomplete_balance_title">余额可能不完整</string>
   <string name="warning_kaspa_unfinished_token_transaction_discard_message">您确定要取消交易吗？取消后您将无法再次尝试交易。</string>
   <string name="warning_kaspa_unfinished_token_transaction_message">您金额为 %1$s %2$s 的交易未完成。您可以再次尝试完成交易。</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">您有未完成的交易</string>
