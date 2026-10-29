@@ -3,6 +3,7 @@ package com.tangem.domain.polymarket.usecase
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketClobIdentity
+import com.tangem.domain.polymarket.model.PredictionOrderSigningRoute
 import com.tangem.domain.polymarket.model.PredictionOrderState
 import com.tangem.domain.polymarket.model.PredictionOrderStateError
 import com.tangem.domain.polymarket.model.PredictionOrderStatus
@@ -23,16 +24,26 @@ class AwaitDelayedPredictionOrderUseCase(
     private val getApiCredentials: GetPolymarketApiCredentialsUseCase,
 ) {
 
-    suspend operator fun invoke(addresses: PolymarketAddresses, orderId: String): DelayedPredictionOrderOutcome {
-        val credentials = getApiCredentials(userWalletId = addresses.userWalletId)
-            ?: return DelayedPredictionOrderOutcome.Failed(detail = "No stored CLOB credentials")
-        val owner = PolymarketClobIdentity.Owner(address = addresses.ownerAddress, credentials = credentials)
+    /** @param route the route the order was placed on; its identity reads the order back */
+    suspend operator fun invoke(
+        addresses: PolymarketAddresses,
+        orderId: String,
+        route: PredictionOrderSigningRoute = PredictionOrderSigningRoute.Owner,
+    ): DelayedPredictionOrderOutcome {
+        val identity = when (route) {
+            PredictionOrderSigningRoute.Owner -> {
+                val credentials = getApiCredentials(userWalletId = addresses.userWalletId)
+                    ?: return DelayedPredictionOrderOutcome.Failed(detail = "No stored CLOB credentials")
+                PolymarketClobIdentity.Owner(address = addresses.ownerAddress, credentials = credentials)
+            }
+            is PredictionOrderSigningRoute.Session -> route.identity
+        }
 
         repeat(times = MAX_READS) {
             delay(READ_INTERVAL)
 
             val outcome = polymarketRepository
-                .getOrder(identity = owner, orderId = orderId)
+                .getOrder(identity = identity, orderId = orderId)
                 .fold(
                     ifLeft = { error -> error.toOutcome(orderId = orderId) },
                     ifRight = { order -> order.toOutcome(orderId = orderId) },
