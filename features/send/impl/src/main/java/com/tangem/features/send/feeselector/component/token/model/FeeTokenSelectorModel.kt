@@ -32,6 +32,7 @@ import javax.inject.Inject
 @Stable
 @ModelScoped
 internal class FeeTokenSelectorModel @Inject constructor(
+    private val tangemBlogUrlBuilder: TangemBlogUrlBuilder,
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val urlOpener: UrlOpener,
@@ -94,7 +95,7 @@ internal class FeeTokenSelectorModel @Inject constructor(
     override fun onLearnMoreClick() {
         modelScope.launch {
             urlOpener.openUrl(
-                TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.WhatIsTransactionFee),
+                tangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.WhatIsTransactionFee),
             )
         }
     }
