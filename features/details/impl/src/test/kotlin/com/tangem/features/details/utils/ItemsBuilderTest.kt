@@ -7,10 +7,10 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.settings.HotWalletRestrictionManager
 import com.tangem.domain.wallets.analytics.Settings
 import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.impl.R
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.mcp.api.McpFeatureToggles
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
@@ -30,21 +30,21 @@ import org.junit.jupiter.params.provider.ValueSource
 internal class ItemsBuilderTest {
 
     private val router: Router = mockk(relaxUnitFun = true)
-    private val hotWalletRestrictionManager: HotWalletRestrictionManager = mockk()
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles = mockk()
     private val mcpFeatureToggles: McpFeatureToggles = mockk()
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
 
     private val itemsBuilder = ItemsBuilder(
         router = router,
-        hotWalletRestrictionManager = hotWalletRestrictionManager,
+        hotWalletFeatureToggles = hotWalletFeatureToggles,
         mcpFeatureToggles = mcpFeatureToggles,
         analyticsEventHandler = analyticsEventHandler,
     )
 
     @BeforeEach
     fun setUp() {
-        clearMocks(router, hotWalletRestrictionManager, mcpFeatureToggles, analyticsEventHandler)
-        every { hotWalletRestrictionManager.isCreationEnabledSync() } returns false
+        clearMocks(router, hotWalletFeatureToggles, mcpFeatureToggles, analyticsEventHandler)
+        every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns true
         every { mcpFeatureToggles.isMcpEnabled } returns false
     }
 
@@ -141,9 +141,9 @@ internal class ItemsBuilderTest {
     }
 
     @Test
-    fun `GIVEN creation enabled AND has mobile wallet WHEN buildAll THEN under section text is added`() {
+    fun `GIVEN multiple hot wallets disabled AND has mobile wallet WHEN buildAll THEN under section text is added`() {
         // Arrange
-        every { hotWalletRestrictionManager.isCreationEnabledSync() } returns true
+        every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns false
 
         // Act
         val result = buildAll(hasAnyMobileWallet = true)
@@ -159,20 +159,20 @@ internal class ItemsBuilderTest {
     }
 
     @Test
-    fun `GIVEN creation disabled OR no mobile wallet WHEN buildAll THEN no under section text`() {
-        // Arrange — creation enabled but no mobile wallet
-        every { hotWalletRestrictionManager.isCreationEnabledSync() } returns true
+    fun `GIVEN multiple hot wallets enabled OR no mobile wallet WHEN buildAll THEN no under section text`() {
+        // Arrange — multiple hot wallets disabled but no mobile wallet
+        every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns false
 
         // Act
         val noMobileWallet = buildAll(hasAnyMobileWallet = false)
 
-        // Arrange — has mobile wallet but creation disabled
-        every { hotWalletRestrictionManager.isCreationEnabledSync() } returns false
-        val creationDisabled = buildAll(hasAnyMobileWallet = true)
+        // Arrange — has mobile wallet but multiple hot wallets enabled
+        every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns true
+        val multipleEnabled = buildAll(hasAnyMobileWallet = true)
 
         // Assert
         assertThat(noMobileWallet.filterIsInstance<DetailsItemUM.UnderSectionText>()).isEmpty()
-        assertThat(creationDisabled.filterIsInstance<DetailsItemUM.UnderSectionText>()).isEmpty()
+        assertThat(multipleEnabled.filterIsInstance<DetailsItemUM.UnderSectionText>()).isEmpty()
     }
 
     @Test
