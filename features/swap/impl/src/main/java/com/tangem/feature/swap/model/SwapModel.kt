@@ -140,6 +140,7 @@ import com.tangem.feature.swap.utils.getContractAddress
 import com.tangem.features.approval.api.GiveApprovalComponent
 import com.tangem.features.approval.api.SelectApprovalTypeComponent
 import com.tangem.features.commonfeatures.api.choosetoken.*
+import com.tangem.features.marketing.api.MarketingBannerAmount
 import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
@@ -368,7 +369,7 @@ internal class SwapModel @Inject constructor(
                 toNetwork = toCurrency.network.rawId,
                 toContractAddress = (toCurrency as? CryptoCurrency.Token)?.contractAddress.orEmpty(),
             ),
-            amountUsd = amountUsd,
+            amount = amountUsd?.let(MarketingBannerAmount::Usd),
         )
     }
 
