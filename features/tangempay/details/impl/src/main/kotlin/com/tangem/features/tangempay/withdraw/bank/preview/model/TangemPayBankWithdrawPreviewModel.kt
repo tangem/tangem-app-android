@@ -125,16 +125,16 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
             CompletionState.WithdrawalInProgress -> uiMessageSender.send(
                 TangemPayMessagesFactory.createErrorMessage(errorType = TangemPayDetailsErrorType.WithdrawInProgress),
             )
-            is CompletionState.Failed -> onCompletionFailed(completionState.failure)
+            is CompletionState.Failed -> onCompletionFailed(completionState)
             CompletionState.Idle,
             CompletionState.Sending,
             -> Unit
         }
     }
 
-    private fun onCompletionFailed(failure: PreviewFailure) {
-        withdrawAnalytics.onSendFailed()
-        if (failure == PreviewFailure.TransferOutcomeUnknown) params.onTransferOutcomeUnknown()
+    private fun onCompletionFailed(failed: CompletionState.Failed) {
+        withdrawAnalytics.onSendFailed(errorCode = failed.errorCode)
+        if (failed.failure == PreviewFailure.TransferOutcomeUnknown) params.onTransferOutcomeUnknown()
     }
 
     private fun onBackClick() {

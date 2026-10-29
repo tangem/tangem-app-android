@@ -10,6 +10,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.pay.model.bankofframp.BankAccountType
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.pay.model.bankofframp.OfframpDestination
@@ -497,6 +498,31 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     }
 
     @Test
+    fun `GIVEN money account failure with an error code WHEN send THEN VA Send failed carries the code`() {
+        // Arrange
+        completionReports(
+            CompletionState.Sending,
+            CompletionState.Failed(
+                failure = PreviewFailure.UnsupportedConfiguration,
+                errorCode = FORBIDDEN_ERROR_CODE,
+            ),
+        )
+        val model = createModel(
+            sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, productInstanceId = "instance-1"),
+        )
+
+        // Act
+        summary(model).onSendClick()
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(MoneyAccountAnalyticsEvents.SendFailed(errorCode = FORBIDDEN_ERROR_CODE))
+        }
+        verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents>()) }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN failed send WHEN retry fails too THEN only the first tap reported and the error screen twice`() {
         // Arrange
         completionReports(CompletionState.Sending, CompletionState.Failed(PreviewFailure.General))
@@ -614,6 +640,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     private fun createModel(
         draft: BankWithdrawDraft = savedRecipientDraft(),
         isBalanceHidden: Boolean = false,
+        sourceAccount: BankWithdrawSourceAccount = this.sourceAccount,
     ): TangemPayBankWithdrawPreviewModel =
         TangemPayBankWithdrawPreviewModel(
             paramsContainer = MutableParamsContainer(
@@ -636,4 +663,8 @@ internal class TangemPayBankWithdrawPreviewModelTest {
             analytics = analytics,
             getBalanceHidingSettingsUseCase = mockk { every { isBalanceHidden() } returns flowOf(isBalanceHidden) },
         )
+
+    private companion object {
+        const val FORBIDDEN_ERROR_CODE = 104_120_100
+    }
 }

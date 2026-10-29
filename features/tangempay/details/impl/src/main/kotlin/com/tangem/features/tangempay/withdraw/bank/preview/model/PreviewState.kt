@@ -29,7 +29,9 @@ internal fun BankOfframpError.toFailure(): PreviewFailure = when (this) {
     BankOfframpError.RecipientRegionUnsupported -> PreviewFailure.RecipientRegion
     BankOfframpError.SenderRegionUnsupported -> PreviewFailure.SenderRegion
     BankOfframpError.BusinessUnsupported -> PreviewFailure.Business
-    BankOfframpError.UnsupportedConfiguration -> PreviewFailure.UnsupportedConfiguration
+    BankOfframpError.UnsupportedConfiguration,
+    is BankOfframpError.Unavailable,
+    -> PreviewFailure.UnsupportedConfiguration
     BankOfframpError.Validation,
     BankOfframpError.PollingTimeout,
     BankOfframpError.WithdrawalInProgress,

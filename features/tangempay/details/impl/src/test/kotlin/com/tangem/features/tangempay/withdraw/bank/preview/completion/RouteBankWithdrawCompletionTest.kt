@@ -321,11 +321,21 @@ internal class RouteBankWithdrawCompletionTest {
     private fun provideTestModels() = listOf(
         RouteErrorModel(
             error = BankOfframpError.UnsupportedConfiguration,
-            state = CompletionState.Failed(PreviewFailure.UnsupportedConfiguration),
+            state = CompletionState.Failed(
+                failure = PreviewFailure.UnsupportedConfiguration,
+                errorCode = BankOfframpError.UnsupportedConfiguration.errorCode,
+            ),
         ),
         RouteErrorModel(
-            error = BankOfframpError.Unknown(cause = null),
-            state = CompletionState.Failed(PreviewFailure.General),
+            error = BankOfframpError.Unavailable(errorCode = FORBIDDEN_ERROR_CODE),
+            state = CompletionState.Failed(
+                failure = PreviewFailure.UnsupportedConfiguration,
+                errorCode = FORBIDDEN_ERROR_CODE,
+            ),
+        ),
+        RouteErrorModel(
+            error = BankOfframpError.Unknown(cause = null, errorCode = BAD_REQUEST_ERROR_CODE),
+            state = CompletionState.Failed(failure = PreviewFailure.General, errorCode = BAD_REQUEST_ERROR_CODE),
         ),
         RouteErrorModel(
             error = BankOfframpError.Unknown(cause = null, isOutcomeUnknown = true),
@@ -368,5 +378,7 @@ internal class RouteBankWithdrawCompletionTest {
         val SAVED_RECIPIENT = BankOfframpRecipient.Saved(bankAccountId = "acc-1")
         val NETWORK_FEE = BigDecimal("0.03")
         val RAISED_NETWORK_FEE = BigDecimal("0.05")
+        const val FORBIDDEN_ERROR_CODE = 104_120_100
+        const val BAD_REQUEST_ERROR_CODE = 104_130_100
     }
 }
