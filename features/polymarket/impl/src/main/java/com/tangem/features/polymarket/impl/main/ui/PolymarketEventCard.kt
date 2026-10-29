@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -28,6 +29,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.PredictionTestTags
 import com.tangem.features.polymarket.impl.common.ui.PolymarketEventCardFrame
 import com.tangem.features.polymarket.impl.common.ui.PolymarketOutcomeButton
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventRowUM
@@ -149,7 +151,8 @@ private fun EventOutcomes(outcomes: ImmutableList<PolymarketOutcomeUM>, isExpand
         // position, not by label, since upstream labels aren't always "Yes"/"No".
         outcomes.forEachIndexed { index, outcome ->
             PolymarketOutcomeButton(
-                modifier = if (isExpanded) Modifier.weight(1f) else Modifier.widthIn(max = OutcomeButtonMaxWidth),
+                modifier = (if (isExpanded) Modifier.weight(1f) else Modifier.widthIn(max = OutcomeButtonMaxWidth))
+                    .testTag(PredictionTestTags.OUTCOME_BUTTON),
                 title = outcome.title,
                 price = outcome.price,
                 appearance = if (index == 0) {
