@@ -2,7 +2,6 @@ package com.tangem.features.txhistory.ui
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -108,7 +107,6 @@ internal fun TxHistoryDetailsModalBottomSheetContent(
                     fadeIn(tween(durationMillis = ANIMATION_MILLIS)) togetherWith
                         fadeOut(tween(durationMillis = ANIMATION_MILLIS))
                 },
-                modifier = Modifier.animateContentSize(),
                 label = "TxHistoryDetailsRoute",
             ) { shown ->
                 when (shown) {
