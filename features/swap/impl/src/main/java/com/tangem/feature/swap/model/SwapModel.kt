@@ -1771,6 +1771,7 @@ internal class SwapModel @Inject constructor(
     /**
      * A sponsored send that ended without a refusal makes the sponsored swap available again. The quote reload that
      * follows a failed send asks the fee selector for the sponsorship again, so after a refusal it drops the option.
+     * An exception counts as a refusal: it may come after the submit, e.g. from storing the sent swap.
      */
     private fun endSponsoredSendHold(isSponsoredSend: Boolean, isRefusal: Boolean) {
         if (isSponsoredSend) isSolanaGaslessSuppressed = isRefusal
@@ -1949,7 +1950,7 @@ internal class SwapModel @Inject constructor(
                 }
             }.onFailure { error ->
                 TangemLogger.e("Error", error)
-                endSponsoredSendHold(isSponsoredSend = isSponsoredSend, isRefusal = false)
+                endSponsoredSendHold(isSponsoredSend = isSponsoredSend, isRefusal = true)
                 startLoadingQuotesFromLastState()
                 showAlert()
             }
