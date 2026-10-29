@@ -244,7 +244,6 @@ dependencies {
     implementation(projects.data.assetsdiscovery)
     implementation(projects.data.txhistory)
     implementation(projects.data.wallets)
-    implementation(projects.data.analytics)
     implementation(projects.data.appsflyer)
     implementation(projects.data.transaction)
     implementation(projects.data.visa)
