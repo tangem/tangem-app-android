@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -55,8 +56,12 @@ internal fun PredictionOrderHeader(market: MarketHeaderUM, modifier: Modifier = 
                     title = market.outcomeTitle,
                     accent = market.outcomeAccent,
                 )
-                market.priceLabel()?.let {
-                    PredictionPriceBadge(text = it, isEntryToLive = market.entryPrice != null)
+                market.priceLabel()?.let { priceLabel ->
+                    PredictionPriceBadge(
+                        modifier = Modifier.weight(1f, fill = false),
+                        text = priceLabel,
+                        isEntryToLive = market.entryPrice != null,
+                    )
                 }
             }
         }
@@ -118,6 +123,15 @@ private fun PredictionOrderHeaderPreview() {
                     outcomeAccent = PolymarketOutcomeAccent.Info,
                     entryPrice = "85¢",
                     outcomePrice = "86¢",
+                ),
+            )
+            PredictionOrderHeader(
+                modifier = Modifier.width(240.dp),
+                market = PreviewMarketHeader.copy(
+                    outcomeTitle = "Uzbekistan national football team",
+                    outcomeAccent = PolymarketOutcomeAccent.Info,
+                    entryPrice = "85.5¢",
+                    outcomePrice = "86.5¢",
                 ),
             )
         }
