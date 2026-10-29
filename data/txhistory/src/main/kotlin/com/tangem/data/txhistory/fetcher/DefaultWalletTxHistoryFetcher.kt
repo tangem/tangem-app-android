@@ -12,6 +12,8 @@ import com.tangem.domain.txhistory.fetcher.*
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.*
 
 internal class DefaultWalletTxHistoryFetcher @AssistedInject constructor(
@@ -26,6 +28,7 @@ internal class DefaultWalletTxHistoryFetcher @AssistedInject constructor(
     internal val expressFetcher: ExpressTxHistoryFetcher = expressTxHistoryFetcher.create(walletId)
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @Volatile
     internal var jointOperationFetcher: JointOperationTxHistoryFetcher? = null
 
     init {
@@ -47,8 +50,6 @@ internal class DefaultWalletTxHistoryFetcher @AssistedInject constructor(
         if (trigger is TxHistoryJointOperationTrigger) jointOperationFetcher?.invoke(trigger)
     }
 
-    // Kept until per-account on-chain history is wired: only the wallet-level part (express, joint operations) is live for now.
-    @Suppress("UnusedPrivateMember")
     private fun buildFlow(): Flow<Unit> = channelFlow {
         val accountListFlow = singleAccountListSupplier(walletId)
             .stateIn(this)
@@ -69,7 +70,8 @@ internal class DefaultWalletTxHistoryFetcher @AssistedInject constructor(
             .collect {}
     }
 
-    private fun List<Account>.createForNewAccounts() = forEach { account ->
+    private suspend fun List<Account>.createForNewAccounts() = forEach { account ->
+        currentCoroutineContext().ensureActive()
         if (account is Account.Joint && jointOperationFetcher == null) {
             jointOperationFetcher = jointOperationTxHistoryFetcher.create(walletId)
         }
