@@ -21,5 +21,6 @@ internal data class PolymarketActivityRowUM(
         WITHDRAWN,
         REDEEMED,
         LOST,
+        SPLIT,
     }
 }
