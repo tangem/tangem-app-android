@@ -26,6 +26,8 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -36,6 +38,18 @@ import java.util.Locale
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
+
+    private val defaultLocale = Locale.getDefault()
+
+    @BeforeEach
+    fun pinLocale() {
+        Locale.setDefault(Locale.US)
+    }
+
+    @AfterEach
+    fun restoreLocale() {
+        Locale.setDefault(defaultLocale)
+    }
 
     @Nested
     inner class Place {
@@ -394,23 +408,18 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a German locale WHEN max clicked THEN the amount is entered with a comma the screen reads back`() =
             runOrderTest {
                 // Arrange
-                val defaultLocale = Locale.getDefault()
                 Locale.setDefault(Locale.GERMANY)
-                try {
-                    statusFlow.value = activeStatus(balance = BigDecimal("10.019"))
-                    val model = createOrderModel(testScope = this)
-                    advanceUntilIdle()
+                statusFlow.value = activeStatus(balance = BigDecimal("10.019"))
+                val model = createOrderModel(testScope = this)
+                advanceUntilIdle()
 
-                    // Act
-                    model.onMaxClick()
+                // Act
+                model.onMaxClick()
 
-                    // Assert
-                    assertThat(model.uiState.value.amountValue).isEqualTo("9,01")
-                    assertThat(model.uiState.value.enteredAmount())
-                        .isEquivalentAccordingToCompareTo(BigDecimal("9.01"))
-                } finally {
-                    Locale.setDefault(defaultLocale)
-                }
+                // Assert
+                assertThat(model.uiState.value.amountValue).isEqualTo("9,01")
+                assertThat(model.uiState.value.enteredAmount())
+                    .isEquivalentAccordingToCompareTo(BigDecimal("9.01"))
             }
 
         @Test
