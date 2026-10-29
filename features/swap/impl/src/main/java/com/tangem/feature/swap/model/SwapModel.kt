@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.getOrElse
+import arrow.core.right
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
@@ -111,6 +112,7 @@ import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.domain.transaction.models.isGasless
 import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedForNetwork
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.feature.swap.analytics.SwapEvents
@@ -3501,23 +3503,6 @@ internal class SwapModel @Inject constructor(
                     return Either.Left(GetFeeError.UnknownError)
                 }
 
-                // The integrated approve is quoted only by the native path; paying it in a token needs an explicit pick
-                val isIntegratedApproval = quoteState.permissionState is PermissionDataState.PermissionSettings
-                if (isIntegratedApproval && isGaslessDexSwap(fromSwapCurrencyStatus) && selectedToken == null) {
-                    val nativeFeeToken = dataState.feePaidCryptoCurrency ?: return Either.Left(GetFeeError.UnknownError)
-                    return loadSwapModeFee(
-                        fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-                        toSwapCurrencyStatus = toSwapCurrencyStatus,
-                        amount = amount,
-                    ).map { fee ->
-                        TransactionFeeExtended(
-                            transactionFee = fee,
-                            feeTokenId = nativeFeeToken.currency.id,
-                            nativeFee = fee,
-                        )
-                    }
-                }
-
                 val swapAmount = SwapAmount(amount, fromSwapCurrencyStatus.currency.decimals)
 
                 // swap-xyz native transfers (txType=SEND) re-route to the CEX-style flow, so they take the CEX
@@ -3557,6 +3542,20 @@ internal class SwapModel @Inject constructor(
                             feeTokenId = swapFee.selectedFeeToken.currency.id,
                             nativeFee = res.fee,
                         )
+                    }
+                }.flatMap { feeExtended ->
+                    val permissionSettings = quoteState.permissionState as? PermissionDataState.PermissionSettings
+                    if (permissionSettings == null || feeExtended.isGasless) {
+                        // A gasless fee already carries the approve inside its batch.
+                        feeExtended.right()
+                    } else {
+                        loadAndStoreIntegratedApproval(
+                            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                            quoteState = quoteState,
+                            permissionSettings = permissionSettings,
+                            approvalAmount = amount,
+                            swapTxFee = feeExtended.transactionFee,
+                        ).map { combinedFee -> feeExtended.copy(transactionFee = combinedFee, nativeFee = combinedFee) }
                     }
                 }
             }
