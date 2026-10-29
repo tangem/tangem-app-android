@@ -43,7 +43,6 @@ data class AccountId internal constructor(
         const val MoneyAccountIdPrefix = "money_"
         const val PredictionAccountIdPrefix = "prediction_"
 
-        private val sha256Digest: MessageDigest by lazy { MessageDigest.getInstance("SHA-256") }
         private val hexRegex = Regex("^[a-fA-F0-9]{64}$")
 
         fun forMainCryptoPortfolio(userWalletId: UserWalletId): AccountId {
@@ -70,7 +69,7 @@ data class AccountId internal constructor(
          */
         fun forCryptoPortfolio(userWalletId: UserWalletId, derivationIndex: DerivationIndex): AccountId {
             val input = userWalletId.value + derivationIndex.value.toByteArray()
-            val value = sha256Digest.digest(input).toHexString()
+            val value = MessageDigest.getInstance("SHA-256").digest(input).toHexString()
 
             return AccountId(value = value, userWalletId = userWalletId)
         }
