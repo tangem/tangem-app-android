@@ -22,6 +22,7 @@ import kotlinx.collections.immutable.persistentListOf
 internal class MoneyAccountDetailsStateFactory(
     private val onAddFundsClick: () -> Unit,
     private val onSendClick: () -> Unit,
+    private val onMenuClick: () -> Unit,
     private val onTermsClick: () -> Unit,
     private val onSupportClick: () -> Unit,
     private val onBackClick: () -> Unit,
@@ -52,6 +53,7 @@ internal class MoneyAccountDetailsStateFactory(
                 onClick = onSupportClick,
             ),
         ),
+        onMenuClick = onMenuClick,
         onBackClick = onBackClick,
         onAddFundsClick = onAddFundsClick,
         onSendClick = onSendClick,

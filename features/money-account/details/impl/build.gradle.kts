@@ -29,6 +29,7 @@ dependencies {
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.models)
     implementation(projects.domain.moneyAccount)
+    implementation(projects.domain.txhistory)
     implementation(projects.domain.visa)
     implementation(projects.domain.visa.models)
     implementation(projects.domain.wallets)
@@ -63,6 +64,8 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Tests */
+    testImplementation(projects.domain.express.models)
+    testImplementation(projects.domain.jointAccount)
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
 }
