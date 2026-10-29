@@ -1,7 +1,8 @@
 package com.tangem.tap.common.analytics.appsflyer
 
-import com.appsflyer.deeplink.DeepLink
 import com.tangem.core.analytics.api.AppsFlyerConversionDataHandler
+import com.tangem.core.analytics.api.AppsFlyerDeepLink
+import com.tangem.core.analytics.api.AppsFlyerDeepLinkHandler
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.appsflyer.AppsFlyerDeeplinkTarget
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
@@ -18,7 +19,7 @@ import javax.inject.Singleton
 class AppsFlyerReferralParamsHandler @Inject constructor(
     private val appsFlyerRepository: AppsFlyerRepository,
     private val coroutineScope: AppCoroutineScope,
-) : AppsFlyerConversionDataHandler {
+) : AppsFlyerConversionDataHandler, AppsFlyerDeepLinkHandler {
 
     private val isDeferredDeepLinkHandled = AtomicBoolean(false)
 
@@ -42,17 +43,14 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
         )
     }
 
-    fun handleDeeplink(deepLink: DeepLink) {
-        @Suppress("NullableToStringCall")
-        TangemLogger.i("AppsFlyer UDL payload: deferred=${deepLink.isDeferred}, click=${deepLink.clickEvent}")
-
+    override fun handle(deepLink: AppsFlyerDeepLink) {
         val isDeferredDelivery = deepLink.isDeferred == true
 
         val isHandled = handle(
             deepLinkValue = deepLink.deepLinkValue,
-            afDp = deepLink.getStringValue(AF_DP),
-            deepLinkSub1 = deepLink.getStringValue(DEEP_LINK_SUB_1),
-            deepLinkSub2 = deepLink.getStringValue(DEEP_LINK_SUB_2),
+            afDp = deepLink.afDp,
+            deepLinkSub1 = deepLink.deepLinkSub1,
+            deepLinkSub2 = deepLink.deepLinkSub2,
             isDeferredDelivery = isDeferredDelivery,
         )
 

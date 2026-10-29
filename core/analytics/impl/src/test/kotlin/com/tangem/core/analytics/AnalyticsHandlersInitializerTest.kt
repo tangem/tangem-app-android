@@ -1,10 +1,13 @@
 package com.tangem.core.analytics
 
+import android.app.Application
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsHandler
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import dagger.Lazy
+import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -14,6 +17,9 @@ import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class AnalyticsHandlersInitializerTest {
+
+    private val application: Application = mockk(relaxUnitFun = true)
+    private val activityLifecycleCallbacks: Application.ActivityLifecycleCallbacks = mockk()
 
     @Test
     fun `GIVEN handlers WHEN initialize THEN they are resolved once and await returns`() = runTest {
@@ -53,6 +59,19 @@ internal class AnalyticsHandlersInitializerTest {
     }
 
     @Test
+    fun `GIVEN activity lifecycle callbacks WHEN initialize THEN they are registered before handlers are resolved`() =
+        runTest {
+            // Arrange
+            val initializer = createInitializer(handlers = Lazy { emptySet() })
+
+            // Act
+            initializer.initialize()
+
+            // Assert
+            verify(exactly = 1) { application.registerActivityLifecycleCallbacks(activityLifecycleCallbacks) }
+        }
+
+    @Test
     fun `GIVEN initialize never called WHEN await THEN returns immediately`() = runTest {
         // Arrange
         val initializer = createInitializer(handlers = Lazy { emptySet() })
@@ -67,6 +86,8 @@ internal class AnalyticsHandlersInitializerTest {
     }
 
     private fun TestScope.createInitializer(handlers: Lazy<Set<AnalyticsHandler>>) = AnalyticsHandlersInitializer(
+        application = application,
+        activityLifecycleCallbacks = setOf(activityLifecycleCallbacks),
         handlers = handlers,
         appScope = TestAppCoroutineScope(testScope = this),
         dispatchers = TestingCoroutineDispatcherProvider(io = StandardTestDispatcher(testScheduler)),
