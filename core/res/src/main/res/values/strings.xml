@@ -1304,6 +1304,8 @@
   <string name="joint_account_join_to_account_btn_text">Join account</string>
   <string name="joint_account_join_to_approve">To approve</string>
   <string name="joint_account_main_cant_verify">Can\'t verify</string>
+  <string name="joint_account_main_paused_for_safety">Paused for safety</string>
+  <string name="joint_account_main_unavailable">Unavailable</string>
   <plurals name="joint_account_main_waiting_confirmations">
     <item quantity="one">Waiting for %d confirmation</item>
     <item quantity="other">Waiting for %d confirmations</item>
@@ -1656,6 +1658,8 @@
   <string name="money_account_main_status_dialog_country_not_supported_description">We\'re working on expanding to more regions. Need help?</string>
   <string name="money_account_main_status_dialog_country_not_supported_description_template">We\'re working on expanding to more regions. Need help? %s</string>
   <string name="money_account_main_status_dialog_country_not_supported_title">Not available in your region yet</string>
+  <string name="money_account_main_status_dialog_failed_description">Something went wrong during activation</string>
+  <string name="money_account_main_status_dialog_failed_title">We couldn\'t activate your account</string>
   <string name="money_account_main_status_dialog_hide_account">Hide account from home</string>
   <string name="money_account_main_status_dialog_join_waitlist">Join the waitlist</string>
   <string name="money_account_main_status_dialog_verification_declined_description">Sorry, we couldn\'t verify your identity based on the information provided</string>
@@ -1663,6 +1667,7 @@
   <string name="money_account_main_status_dialog_verification_description">This usually takes a few minutes. You can check the status below</string>
   <string name="money_account_main_status_dialog_verification_title">Verifying your identity</string>
   <string name="money_account_main_status_dialog_view_status">View status</string>
+  <string name="money_account_main_status_failed">Failed</string>
   <string name="money_account_main_status_verification">Verification in progress…</string>
   <string name="money_account_onboarding_currency_card_caption">Account currency</string>
   <string name="money_account_onboarding_description">Works just like a regular bank account. But powered by crypto and fully under your control.</string>
