@@ -17,6 +17,7 @@ import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayCountry
 import com.tangem.domain.models.pay.TangemPayRegion
 import com.tangem.domain.models.pay.TangemPayCustomerResidency
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ClearTangemPayCustomerResidencyUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayCountriesUseCase
@@ -97,17 +98,17 @@ internal class ResidencyListModel @Inject constructor(
                 isSuggested = fromSuggested,
             ),
         )
-        checkAvailability(itemId = country.code, countryCode = country.code, regionCode = null) { isAvailable ->
+        checkAvailability(itemId = country.code, countryCode = country.code, regionCode = null) { availableProducts ->
             when {
-                !isAvailable -> {
-                    sendAnalyticsEventEligibilityCheckResult(isAvailable = false, countryName = country.name)
+                availableProducts.isEmpty() -> {
+                    sendEligibilityCheckResult(availableProducts = availableProducts, countryName = country.name)
                     openRegionUnavailableScreen(itemId = country.code, countryCode = country.code, regionCode = null)
                 }
                 country.hasRegions -> {
                     openRegionsScreen(country)
                 }
                 else -> {
-                    sendAnalyticsEventEligibilityCheckResult(isAvailable = true, countryName = country.name)
+                    sendEligibilityCheckResult(availableProducts = availableProducts, countryName = country.name)
                     continueOnboarding(itemId = country.code)
                 }
             }
@@ -125,13 +126,13 @@ internal class ResidencyListModel @Inject constructor(
             itemId = region.code,
             countryCode = country.countryCode,
             regionCode = region.code,
-        ) { isAvailable ->
-            sendAnalyticsEventEligibilityCheckResult(
-                isAvailable = isAvailable,
+        ) { availableProducts ->
+            sendEligibilityCheckResult(
+                availableProducts = availableProducts,
                 countryName = country.countryName,
                 region = region,
             )
-            if (isAvailable) {
+            if (availableProducts.isNotEmpty()) {
                 continueOnboarding(itemId = region.code)
             } else {
                 openRegionUnavailableScreen(
@@ -143,14 +144,14 @@ internal class ResidencyListModel @Inject constructor(
         }
     }
 
-    private fun sendAnalyticsEventEligibilityCheckResult(
-        isAvailable: Boolean,
+    private fun sendEligibilityCheckResult(
+        availableProducts: Set<TangemPayProduct>,
         countryName: String,
         region: TangemPayRegion? = null,
     ) {
         analytics.send(
             TangemPayAnalyticsEvents.Eligibility.EligibilityCheckResult(
-                isEligible = isAvailable,
+                availableProducts = availableProducts,
                 country = countryName,
                 state = region?.name,
             ),
@@ -161,7 +162,7 @@ internal class ResidencyListModel @Inject constructor(
         itemId: String,
         countryCode: String,
         regionCode: String?,
-        onChecked: suspend (isAvailable: Boolean) -> Unit,
+        onChecked: suspend (availableProducts: Set<TangemPayProduct>) -> Unit,
     ) {
         if (isBusy()) return
         checkingItemId = itemId
@@ -176,7 +177,7 @@ internal class ResidencyListModel @Inject constructor(
                     showError()
                     updateContent()
                 },
-                ifRight = { availableProducts -> onChecked(availableProducts.isNotEmpty()) },
+                ifRight = { availableProducts -> onChecked(availableProducts) },
             )
         }
     }

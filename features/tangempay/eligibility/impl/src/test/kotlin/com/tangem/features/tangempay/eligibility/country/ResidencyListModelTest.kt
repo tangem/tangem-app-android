@@ -195,7 +195,7 @@ internal class ResidencyListModelTest {
             assertThat(sentEvents.filterIsInstance<TangemPayAnalyticsEvents.Eligibility.EligibilityCheckResult>())
                 .containsExactly(
                     TangemPayAnalyticsEvents.Eligibility.EligibilityCheckResult(
-                        isEligible = true,
+                        availableProducts = setOf(TangemPayProduct.BANKING_ACCOUNT),
                         country = USA.name,
                         state = TEXAS.name,
                     ),
