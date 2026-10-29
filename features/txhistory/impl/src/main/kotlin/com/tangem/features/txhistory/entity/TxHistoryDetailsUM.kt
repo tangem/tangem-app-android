@@ -167,7 +167,7 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
          */
         data class Account(
             override val name: TextReference,
-            val icon: AccountIconUM.CryptoPortfolio,
+            val icon: AccountIconUM,
         ) : AssetOwnerUM
 
         /** User's own Tangem Pay (Payment) account — the Visa icon, shown **before** the [name]. */
@@ -326,7 +326,7 @@ internal sealed interface TxHistoryDetailsUM : TangemBottomSheetConfigContent {
          */
         data class Account(
             val name: TextReference,
-            val icon: AccountIconUM.CryptoPortfolio,
+            val icon: AccountIconUM,
         ) : CounterpartyAvatar
 
         /** User's own Tangem Pay (Payment) account — rendered as the Visa icon. */
