@@ -86,6 +86,7 @@ fun UserWalletItemRow(state: UserWalletItemUM, modifier: Modifier = Modifier) {
         NameAndInfo(
             modifier = Modifier.weight(1f),
             name = state.name,
+            isDimmed = state.isDimmed,
             titleBadge = state.titleBadge,
             information = state.information,
             balance = state.balance,
@@ -121,6 +122,7 @@ fun UserWalletItemRow(state: UserWalletItemUM, modifier: Modifier = Modifier) {
 @Composable
 private fun NameAndInfo(
     name: TextReference,
+    isDimmed: Boolean,
     titleBadge: TangemBadgeUM?,
     information: UserWalletItemUM.Information,
     balance: UserWalletItemUM.Balance,
@@ -139,7 +141,7 @@ private fun NameAndInfo(
                 modifier = Modifier.weight(weight = 1f, fill = false),
                 text = name.resolveReference(),
                 style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors3.text.primary,
+                color = if (isDimmed) TangemTheme.colors3.text.secondary else TangemTheme.colors3.text.primary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
