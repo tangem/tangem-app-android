@@ -67,7 +67,9 @@ internal class TangemPayBankWithdrawAmountUMFactory(
                 onRetryClick = callbacks.onRetryFeeClick,
                 onBackClick = callbacks.onBackClick,
             )
-            is NetworkFeeState.Loaded -> TangemPayBankWithdrawAmountUM.Content(
+            NetworkFeeState.NotEnoughFunds,
+            is NetworkFeeState.Loaded,
+            -> TangemPayBankWithdrawAmountUM.Content(
                 header = header,
                 from = from,
                 amount = createAmountField(selection = selection),
@@ -181,14 +183,15 @@ internal class TangemPayBankWithdrawAmountUMFactory(
             )
         }
 
-    private fun createNetworkFeeNote(selection: AmountSelection): TextReference? = if (isNetworkFeeCharged) {
-        resourceReference(
-            R.string.money_account_send_network_fee_note,
-            wrappedList(selection.networkFee.formatFiat(selection.currency)),
-        )
-    } else {
-        null
-    }
+    private fun createNetworkFeeNote(selection: AmountSelection): TextReference? =
+        if (isNetworkFeeCharged && selection.isNetworkFeeQuoted) {
+            resourceReference(
+                R.string.money_account_send_network_fee_note,
+                wrappedList(selection.networkFee.formatFiat(selection.currency)),
+            )
+        } else {
+            null
+        }
 
     data class Callbacks(
         val onBackClick: () -> Unit,
