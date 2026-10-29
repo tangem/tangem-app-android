@@ -1,6 +1,7 @@
 package com.tangem.features.walletconnect.connections.model
 
 import com.tangem.common.ui.account.PortfolioSelectUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -10,6 +11,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.mcp.models.McpSession
+import com.tangem.domain.mcp.models.analytics.McpSessionsAnalyticsEvent
 import com.tangem.domain.mcp.repository.McpRepository
 import com.tangem.features.walletconnect.connections.components.McpSessionInfoComponent
 import com.tangem.features.walletconnect.connections.entity.McpSessionInfoUM
@@ -30,6 +32,7 @@ internal class McpSessionInfoModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val mcpRepository: McpRepository,
     private val messageSender: UiMessageSender,
+    private val analytics: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -67,17 +70,18 @@ internal class McpSessionInfoModel @Inject constructor(
             onClick = {},
         ),
         isRevoking = isRevoking,
-        onRevokeClick = ::revokeSession,
+        onRevokeClick = { revokeSession(session = this) },
         onDismiss = params.onDismiss,
     )
 
-    private fun revokeSession() {
+    private fun revokeSession(session: McpSession) {
         modelScope.launch {
             uiState.update { state -> state?.copy(isRevoking = true) }
-            val isRevoked = mcpRepository.revokeSession(params.sessionId).isRight()
+            val isRevoked = mcpRepository.revokeSession(session.id).isRight()
             uiState.update { state -> state?.copy(isRevoking = false) }
 
             if (isRevoked) {
+                analytics.send(McpSessionsAnalyticsEvent.AgentDisconnected(session))
                 params.onDismiss()
             } else {
                 messageSender.send(SnackbarMessage(message = resourceReference(R.string.mcp_session_revoke_failed)))
