@@ -32,6 +32,7 @@ internal sealed class WalletSettingsItemUM {
         val isEnabled: Boolean,
         val imageState: ImageState,
         val additionalBlock: BlockUM? = null,
+        val isSocialLogin: Boolean = false,
         val onClick: () -> Unit,
     ) : WalletSettingsItemUM()
 
