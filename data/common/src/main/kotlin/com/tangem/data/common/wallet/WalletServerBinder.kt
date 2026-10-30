@@ -23,4 +23,7 @@ interface WalletServerBinder {
      * Returns an [ApiResponse] indicating the result of the binding operation.
      */
     suspend fun bind(userWallet: UserWallet): ApiResponse<Unit>
+
+    /** Suspends until the server has the wallet [userWalletId]: it was there already or [bind] has created it */
+    suspend fun awaitBound(userWalletId: UserWalletId)
 }

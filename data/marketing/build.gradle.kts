@@ -22,6 +22,7 @@ dependencies {
     implementation(deps.kotlin.serialization.core)
     implementation(deps.arrow.core)
 
+    implementation(projects.data.common)
     implementation(projects.domain.common)
     implementation(projects.domain.marketing)
     implementation(projects.domain.marketing.models)
