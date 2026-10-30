@@ -2,7 +2,6 @@ package com.tangem.domain.pay.model
 
 sealed interface TangemPayCustomerState {
 
-    data object Hidden : TangemPayCustomerState
     data object Blocked : TangemPayCustomerState
 
     data object KycRequired : TangemPayCustomerState

@@ -15,7 +15,6 @@ class ResolveMoneyAccountStatusFromSummaryUseCase {
             TangemPayCustomerState.KycInProgress,
             TangemPayCustomerState.KycDeclined,
             TangemPayCustomerState.KycApproved,
-            TangemPayCustomerState.Hidden,
             TangemPayCustomerState.Blocked,
             -> {
                 MoneyAccountStatusValue.Empty
