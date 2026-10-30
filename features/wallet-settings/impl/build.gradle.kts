@@ -78,4 +78,8 @@ dependencies {
     /** Tangem libraries */
     implementation(tangemDeps.hot.core)
     implementation(tangemDeps.card.core)
+
+    /* Test */
+    testImplementation(projects.common.test)
+    testImplementation(projects.test.core)
 }
