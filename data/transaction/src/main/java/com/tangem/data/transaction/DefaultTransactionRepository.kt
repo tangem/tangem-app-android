@@ -8,6 +8,7 @@ import com.tangem.blockchain.blockchains.cosmos.CosmosTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.hedera.HederaTransactionExtras
 import com.tangem.blockchain.blockchains.icp.ICPTransactionExtras
+import com.tangem.blockchain.blockchains.solana.nft.SolanaNFTTransferExtras
 import com.tangem.blockchain.blockchains.stellar.StellarMemo
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
 import com.tangem.blockchain.blockchains.ton.TonTransactionExtras
@@ -227,15 +228,15 @@ internal class DefaultTransactionRepository(
             blockchain = blockchain,
         )
 
-        val extras = if (nftTransferCallData != null) {
-            createTransactionDataExtras(
+        val extras = when {
+            nftTransferCallData != null -> createTransactionDataExtras(
                 callData = nftTransferCallData,
                 network = network,
                 nonce = null,
                 gasLimit = null,
             )
-        } else {
-            null
+            nftAsset.identifier is NFTAsset.Identifier.Solana -> SolanaNFTTransferExtras
+            else -> null
         }
 
         val contractAddress = when (val identifier = nftAsset.identifier) {

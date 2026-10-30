@@ -3,8 +3,10 @@ package com.tangem.features.mcp.impl.deeplink
 import com.tangem.common.routing.deeplink.DeeplinkConst.INTENT_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.SOURCE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.mcp.McpRequestService
 import com.tangem.domain.mcp.models.McpRequest
+import com.tangem.domain.mcp.models.analytics.McpIntentAnalyticsEvent
 import com.tangem.features.mcp.api.deeplink.McpIntentDeepLinkHandler
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
@@ -21,6 +23,7 @@ import dagger.assisted.AssistedInject
 internal class DefaultMcpIntentDeepLinkHandler @AssistedInject constructor(
     @Assisted queryParams: Map<String, String>,
     mcpRequestService: McpRequestService,
+    analyticsEventHandler: AnalyticsEventHandler,
 ) : McpIntentDeepLinkHandler {
 
     init {
@@ -33,6 +36,7 @@ internal class DefaultMcpIntentDeepLinkHandler @AssistedInject constructor(
         } else {
             val intentSource = parseSource(source = source, type = type)
             if (intentSource != null && intentSource in SUPPORTED_SOURCES) {
+                analyticsEventHandler.send(McpIntentAnalyticsEvent.IntentReceived(intentId = id, source = intentSource))
                 mcpRequestService.request(McpRequest.Intent(id = id, source = intentSource))
             } else {
                 TangemLogger.e("MCP intent of an unsupported kind: $SOURCE_KEY=$source, $TYPE_KEY=$type")

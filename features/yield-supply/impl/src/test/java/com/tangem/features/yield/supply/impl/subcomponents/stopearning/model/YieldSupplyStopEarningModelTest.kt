@@ -32,9 +32,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
 import io.mockk.slot
-import io.mockk.unmockkObject
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -59,6 +57,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
     private val withdrawalClaimPreparer: YieldSupplyWithdrawalClaimPreparer = mockk()
     private val claimTracker: YieldSupplyClaimTracker = mockk(relaxed = true)
     private val callback: YieldSupplyStopEarningComponent.ModelCallback = mockk(relaxed = true)
+    private val tangemBlogUrlBuilder: TangemBlogUrlBuilder = mockk()
 
     @BeforeEach
     fun setUp() {
@@ -247,21 +246,16 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
     @Test
     fun `WHEN onReadMoreClick THEN opens url`() = runTest {
         // Arrange
-        mockkObject(TangemBlogUrlBuilder)
-        try {
-            coEvery { TangemBlogUrlBuilder.build(any()) } returns BLOG_URL
-            val model = createModel()
-            advanceUntilIdle()
+        coEvery { tangemBlogUrlBuilder.build(any()) } returns BLOG_URL
+        val model = createModel()
+        advanceUntilIdle()
 
-            // Act
-            model.onReadMoreClick()
-            advanceUntilIdle()
+        // Act
+        model.onReadMoreClick()
+        advanceUntilIdle()
 
-            // Assert
-            verify { urlOpener.openUrl(BLOG_URL) }
-        } finally {
-            unmockkObject(TangemBlogUrlBuilder)
-        }
+        // Assert
+        verify { urlOpener.openUrl(BLOG_URL) }
     }
 
     @Nested
@@ -603,6 +597,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
     private fun TestScope.createModel(
         statusFlow: StateFlow<CryptoCurrencyStatus> = cryptoCurrencyStatusFlow,
     ): YieldSupplyStopEarningModel = YieldSupplyStopEarningModel(
+        tangemBlogUrlBuilder = tangemBlogUrlBuilder,
         dispatchers = createTestingCoroutineDispatcherProvider(),
         paramsContainer = MutableParamsContainer(
             YieldSupplyStopEarningComponent.Params(

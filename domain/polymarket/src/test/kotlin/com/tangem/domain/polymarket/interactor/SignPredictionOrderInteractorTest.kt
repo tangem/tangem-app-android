@@ -1,5 +1,8 @@
 package com.tangem.domain.polymarket.interactor
 
+import com.tangem.domain.polymarket.model.PredictionOrderSigningRoute
+import com.tangem.domain.polymarket.model.PolymarketClobIdentity
+import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
@@ -56,7 +59,7 @@ internal class SignPredictionOrderInteractorTest {
 
         every { buildDraft(any(), any(), any(), any()) } returns DRAFT.right()
         coEvery { signer.signOrder(any(), any()) } returns SIGNED_ORDER.right()
-        every { validateOrder(any(), any(), any(), any(), any(), any(), any(), any()) } returns Unit.right()
+        every { validateOrder(any(), any(), any(), any(), any(), any(), any(), any(), any()) } returns Unit.right()
     }
 
     @Test
@@ -94,13 +97,37 @@ internal class SignPredictionOrderInteractorTest {
     }
 
     @Test
+    fun `GIVEN the session route WHEN signed THEN the session key signs and the checks expect its envelope`() =
+        runTest {
+            // Arrange
+            val route = PredictionOrderSigningRoute.Session(
+                identity = PolymarketClobIdentity.Session(
+                    address = SESSION_KEY,
+                    credentials = PolymarketApiCredentials(apiKey = "session", secret = "s", passphrase = "p"),
+                ),
+            )
+            coEvery { signer.signOrderWithSessionKey(any(), any(), any()) } returns SIGNED_ORDER.right()
+
+            // Act
+            val actual = interactor(request = createRequest(route = route))
+
+            // Assert
+            assertThat(actual).isEqualTo(SIGNED_ORDER.right())
+            coVerify(exactly = 1) { signer.signOrderWithSessionKey(UserWalletId("011"), SESSION_KEY, any()) }
+            coVerify(exactly = 0) { signer.signOrder(any(), any()) }
+            verify(exactly = 1) {
+                validateOrder(any(), any(), any(), any(), any(), any(), any(), any(), route)
+            }
+        }
+
+    @Test
     fun `GIVEN the checks run WHEN signed THEN they judge the quote's own age and not the signing moment`() =
         runTest {
             // Arrange
             val receivedAt = slot<Long>()
             val now = slot<Long>()
             every {
-                validateOrder(any(), any(), any(), any(), any(), any(), capture(receivedAt), capture(now))
+                validateOrder(any(), any(), any(), any(), any(), any(), capture(receivedAt), capture(now), any())
             } returns Unit.right()
 
             // Act
@@ -189,7 +216,7 @@ internal class SignPredictionOrderInteractorTest {
     fun `GIVEN the order fails its checks WHEN signed THEN the failure is returned and not the order`() = runTest {
         // Arrange
         val error = PredictionOrderValidationError.StaleQuote(ageMillis = 120_000)
-        every { validateOrder(any(), any(), any(), any(), any(), any(), any(), any()) } returns error.left()
+        every { validateOrder(any(), any(), any(), any(), any(), any(), any(), any(), any()) } returns error.left()
 
         // Act
         val actual = interactor(request = createRequest())
@@ -216,6 +243,7 @@ internal class SignPredictionOrderInteractorTest {
                 capture(isNegRisk),
                 any(),
                 any(),
+                any(),
             )
         } returns Unit.right()
 
@@ -230,13 +258,16 @@ internal class SignPredictionOrderInteractorTest {
         assertThat(isNegRisk.captured).isFalse()
     }
 
-    private fun createRequest() = PredictionSignRequest(
+    private fun createRequest(
+        route: PredictionOrderSigningRoute = PredictionOrderSigningRoute.Owner,
+    ) = PredictionSignRequest(
         addresses = ADDRESSES,
         quote = QUOTE,
         assetId = ASSET_ID,
         side = PredictionOrderSide.BUY,
         isNegRisk = false,
         quoteReceivedAtMillis = RECEIVED_AT,
+        route = route,
     )
 
     private fun createPlaceableQuote(
@@ -271,7 +302,7 @@ internal class SignPredictionOrderInteractorTest {
     )
 
     private fun verifyNothingValidated() {
-        verify(exactly = 0) { validateOrder(any(), any(), any(), any(), any(), any(), any(), any()) }
+        verify(exactly = 0) { validateOrder(any(), any(), any(), any(), any(), any(), any(), any(), any()) }
     }
 
     private companion object {
@@ -282,6 +313,7 @@ internal class SignPredictionOrderInteractorTest {
         const val DEPOSIT_WALLET = "0x5A057dc6394196fBa51D84457DA3FB8FA241Fc20"
         const val RECEIVED_AT = 1_787_300_000_000L
         const val MILLIS_THRESHOLD = 1_000_000_000_000L
+        const val SESSION_KEY = "0x5e55000000000000000000000000000000000001"
         const val FOREIGN_EXCHANGE = "0x000000000000000000000000000000000000dEaD"
 
         val ADDRESSES: PolymarketAddresses = mockk(relaxed = true) {

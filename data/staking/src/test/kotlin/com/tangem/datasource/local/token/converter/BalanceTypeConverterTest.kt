@@ -1,7 +1,7 @@
 package com.tangem.datasource.local.token.converter
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.models.staking.BalanceType
+import com.tangem.domain.staking.model.BalanceType
 import com.tangem.grow.datasource.stakekit.models.response.model.BalanceDTO.BalanceTypeDTO
 import org.junit.jupiter.api.Test
 

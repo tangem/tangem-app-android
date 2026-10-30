@@ -16,6 +16,7 @@ dependencies {
     api(projects.features.details.api)
     api(projects.features.onboardingV2.api)
     api(projects.features.wallet.api)
+    implementation(projects.features.hotWallet.api)
     implementation(projects.features.mcp.api)
     implementation(projects.features.tangempay.details.api)
 

@@ -29,7 +29,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.common.ui.account.AccountIcon
 import com.tangem.common.ui.account.AccountIconUM
-import com.tangem.core.ui.R
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.haze.ProvideHaze
 import com.tangem.core.ui.ds.contextmenu.TangemContextMenu
@@ -38,6 +37,7 @@ import com.tangem.core.ui.ds.image.TangemDeviceIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
+import com.tangem.core.ui.extensions.copy
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
@@ -45,6 +45,8 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_chevron_left_20
+import com.tangem.core.ui.res.generated.icons.ic_dots_horizontal_20
 import com.tangem.core.ui.res.generated.icons.ic_eye_cross_24
 import com.tangem.core.ui.res.generated.icons.ic_globe_24
 import com.tangem.core.ui.test.PopUpMenuTestTags
@@ -61,13 +63,14 @@ internal fun TokenDetailsTopBar(topAppBarUM: TokenDetailsTopAppBarUM, modifier: 
     TangemTopNavigation(
         modifier = modifier,
         contentAlign = TangemTopNavigation.ContentAlign.Center,
+        contentPadding = TangemTopNavigation.DefaultContentPadding.copy(top = 16.dp),
         blurBackground = false,
         startButton = {
             TangemButton(
                 modifier = Modifier.testTag(TokenDetailsTopBarTestTags.BACK_BUTTON),
                 variant = TangemButton.Variant.Material,
                 size = TangemButton.Size.X11,
-                iconStart = TangemIconUM.Icon(iconRes = R.drawable.ic_arrow_back_28),
+                iconStart = TangemIconUM.Icon(Icons.ic_chevron_left_20),
                 onClick = topAppBarUM.onBackClick,
             )
         },
@@ -108,7 +111,7 @@ private fun TokenDetailsOverflowMenu(
             modifier = Modifier.testTag(TokenDetailsTopBarTestTags.MORE_BUTTON),
             variant = TangemButton.Variant.Material,
             size = TangemButton.Size.X11,
-            iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_more_default_24),
+            iconStart = TangemIconUM.Icon(Icons.ic_dots_horizontal_20),
             onClick = { isMenuShown = true },
         )
         TangemContextMenu(

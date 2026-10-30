@@ -303,6 +303,7 @@ internal abstract class SwapModelTestBase {
         backupErrorWarningSender = backupErrorWarningSender,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
         moneyAccountStatusFetcher = moneyAccountStatusFetcher,
+        performanceTracer = mockk(relaxed = true),
     )
 
     // region builders

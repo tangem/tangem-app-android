@@ -102,12 +102,7 @@ configurations.all {
                 .using(module("org.bouncycastle:bcprov-jdk18on:1.73"))
         }
 
-        force(
-            "org.bouncycastle:bcpkix-jdk15on:1.70",
-            deps.kotlin.coroutines,
-            deps.kotlin.coroutines.jvm,
-            deps.kotlin.coroutines.android,
-        )
+        force("org.bouncycastle:bcpkix-jdk15on:1.70")
     }
 }
 
@@ -152,7 +147,6 @@ dependencies {
     implementation(projects.domain.pushNotificationPreferences)
     implementation(projects.domain.transaction)
     implementation(projects.domain.transaction.models)
-    implementation(projects.domain.analytics)
     implementation(projects.domain.visa)
     implementation(projects.domain.onboarding)
     implementation(projects.domain.feedback)
@@ -250,7 +244,6 @@ dependencies {
     implementation(projects.data.assetsdiscovery)
     implementation(projects.data.txhistory)
     implementation(projects.data.wallets)
-    implementation(projects.data.analytics)
     implementation(projects.data.appsflyer)
     implementation(projects.data.transaction)
     implementation(projects.data.visa)
@@ -482,20 +475,7 @@ dependencies {
     implementation(deps.coil)
     implementation(deps.coil.gif)
     implementation(deps.coil.svg)
-    implementation(deps.appsflyer)
-    implementation(platform(deps.otel.bom))
-    implementation(deps.otel.api)
-    implementation(deps.otel.sdk.common)
-    implementation(deps.otel.sdk.metrics)
-    implementation(deps.otel.exporter.otlp) {
-        // OTel is compiled against OkHttp 5, whose okhttp-jvm artifact duplicates the OkHttp 4
-        // classes already on the classpath; the sender runs on the project-wide OkHttp 4.12.
-        exclude(group = "com.squareup.okhttp3", module = "okhttp-jvm")
-    }
-    implementation(deps.otel.disk.buffering)
-    implementation(deps.appsflyer.oaid)
     implementation(deps.customerio.messaging)
-    runtimeOnly("com.android.installreferrer:installreferrer:2.2")
     runtimeOnly(deps.spongecastle.core)
     // Credential Manager resolves its providers at runtime, so this belongs to the app rather than to
     // whichever feature happens to use credentials
