@@ -5,10 +5,12 @@ import arrow.core.flatMap
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.raise.either
+import arrow.core.right
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCoinStatus
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -280,7 +282,12 @@ internal class FeeSelectorLogic @AssistedInject constructor(
                 when {
                     error is GetFeeError.GaslessError.NotEnoughFunds -> error.left()
                     error.isTronActivationRefusal() -> error.left()
-                    // The amount does not fit next to the compensation; a TRX fee the wallet usually lacks hides that.
+                    // An unpayable TRX fee would hide that the amount does not fit next to the compensation.
+                    error is GetFeeError.GaslessError.TronAllowanceTooHigh && selectedTokenOrNull == null -> {
+                        val nativeFee = loadPayableNativeFeeOrNull() ?: return error.left()
+                        shouldShowOnlySpeedOption.value = true
+                        LoadedFeeResult.Basic(nativeFee).right()
+                    }
                     error is GetFeeError.GaslessError.TronAllowanceTooHigh -> error.left()
                     // Only the automatic choice may fall back to the basic fee. Overriding a token the
                     // user picked explicitly would move the fee to the network coin behind their back,
@@ -298,6 +305,18 @@ internal class FeeSelectorLogic @AssistedInject constructor(
                 populateExtendedFee(fee)
             },
         )
+    }
+
+    private suspend fun loadPayableNativeFeeOrNull(): TransactionFee? {
+        val nativeFee = params.onLoadFee().getOrNull() ?: return null
+        val feeValue = nativeFee.normal.amount.value ?: return null
+        val nativeBalance = singleAccountStatusListSupplier.getSyncOrNull(params.userWalletId)
+            ?.getCoinStatus(params.cryptoCurrencyStatus.currency.network)
+            ?.getOrNull()
+            ?.value
+            ?.amount
+            ?: return null
+        return nativeFee.takeIf { nativeBalance >= feeValue }
     }
 
     private suspend fun populateExtendedFee(

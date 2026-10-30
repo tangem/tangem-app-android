@@ -295,6 +295,50 @@ internal class SwapInteractorImplApprovalInProgressTest : SwapInteractorImplTest
         assertThat(loaded.permissionState).isEqualTo(PermissionDataState.Empty)
     }
 
+    @Test
+    fun `GIVEN tron reapproval not sent WHEN reapprovals cleared THEN requirement dropped`() = runTest {
+        // Arrange
+        inProgress = false
+        stubAllowance(AllowanceInfo.Enough(allowance = BigDecimal("10")))
+        val provider = stubTronDexQuote()
+        val fromStatus = buildTronTokenStatus()
+        sut.requireTronReapproval(
+            fromSwapCurrencyStatus = fromStatus,
+            spenderAddress = spender,
+            maxAllowance = reapproval,
+        )
+
+        // Act
+        sut.clearTronReapprovals()
+        val result = invokeTronTokenQuote(provider, amountToSwap = "4", fromStatus = fromStatus)
+
+        // Assert
+        val loaded = result[provider] as SwapState.QuotesLoadedState
+        assertThat(loaded.permissionState).isEqualTo(PermissionDataState.Empty)
+    }
+
+    @Test
+    fun `GIVEN tron reapproval sent WHEN reapprovals cleared THEN requirement kept`() = runTest {
+        // Arrange
+        every { allowPermissionsHandler.getApprovedAmount(any()) } returns reapproval
+        stubAllowance(AllowanceInfo.Enough(allowance = BigDecimal("10")))
+        val provider = stubTronDexQuote()
+        val fromStatus = buildTronTokenStatus()
+        sut.requireTronReapproval(
+            fromSwapCurrencyStatus = fromStatus,
+            spenderAddress = spender,
+            maxAllowance = reapproval,
+        )
+
+        // Act
+        sut.clearTronReapprovals()
+        val result = invokeTronTokenQuote(provider, amountToSwap = "4", fromStatus = fromStatus)
+
+        // Assert
+        val loaded = result[provider] as SwapState.QuotesLoadedState
+        assertThat(loaded.permissionState).isEqualTo(PermissionDataState.PermissionLoading)
+    }
+
     private fun provideTestModels() = listOf(
         // The new approval landed
         TronReapprovalDropModel(allowance = reapproval, amountToSwap = "4"),
