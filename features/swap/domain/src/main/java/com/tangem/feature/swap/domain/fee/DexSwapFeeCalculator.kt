@@ -157,9 +157,9 @@ class DexSwapFeeCalculator(
             nativeAmount
         }
         // The gasless executor always calls with value = 0, and a bridge fee is paid in the native coin
-        val requiresNativeCoin = nativeAmount.value.orZero().signum() != 0 ||
+        val isNativeCoinRequired = nativeAmount.value.orZero().signum() != 0 ||
             transaction.otherNativeFeeWei.orZero().signum() != 0
-        if (requiresNativeCoin) raise(GetFeeError.GaslessError.NetworkIsNotSupported)
+        if (isNativeCoinRequired) raise(GetFeeError.GaslessError.NetworkIsNotSupported)
 
         val extras = createTransactionExtrasUseCase(data = transaction.txData, network = network)
             .getOrNull() ?: raise(GetFeeError.UnknownError)
