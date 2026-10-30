@@ -1,7 +1,6 @@
 package com.tangem.common.constants
 
 data class TangemPayBankRecipient(
-    val displayName: String,
     val firstName: String,
     val lastName: String,
     val businessName: String? = null,
@@ -26,7 +25,6 @@ data class TangemPayBankRecipient(
 object TangemPayBankAccounts {
 
     val JOHN = TangemPayBankRecipient(
-        displayName = "Rent payments",
         firstName = "John",
         lastName = "Doe",
         accountNumber = "123456789012",
@@ -35,7 +33,6 @@ object TangemPayBankAccounts {
     )
 
     val ACME = TangemPayBankRecipient(
-        displayName = "Supplier invoices",
         firstName = "",
         lastName = "",
         businessName = "Acme Corp",
@@ -45,7 +42,6 @@ object TangemPayBankAccounts {
     )
 
     val ALICE = TangemPayBankRecipient(
-        displayName = "Family savings",
         firstName = "Alice",
         lastName = "Smith",
         accountNumber = "555500001111",
@@ -54,7 +50,6 @@ object TangemPayBankAccounts {
     )
 
     val BOB = TangemPayBankRecipient(
-        displayName = "Bob personal",
         firstName = "Bob",
         lastName = "Brown",
         accountNumber = "444400002222",
@@ -63,7 +58,6 @@ object TangemPayBankAccounts {
     )
 
     val CAROL = TangemPayBankRecipient(
-        displayName = "Carol personal",
         firstName = "Carol",
         lastName = "White",
         accountNumber = "333300003333",
@@ -72,7 +66,6 @@ object TangemPayBankAccounts {
     )
 
     val JANE = TangemPayBankRecipient(
-        displayName = "Jane Roe",
         firstName = "Jane",
         lastName = "Roe",
         accountNumber = "246813579024",
@@ -81,7 +74,6 @@ object TangemPayBankAccounts {
     )
 
     val MICHAEL = TangemPayBankRecipient(
-        displayName = "Michael Scott",
         firstName = "Michael",
         lastName = "Scott",
         accountNumber = "9876543210",
@@ -91,7 +83,6 @@ object TangemPayBankAccounts {
     )
 
     val EMILY = TangemPayBankRecipient(
-        displayName = "Emily Clark",
         firstName = "Emily",
         lastName = "Clark",
         accountNumber = "8765432109",
@@ -101,7 +92,6 @@ object TangemPayBankAccounts {
     )
 
     val DUNDER = TangemPayBankRecipient(
-        displayName = "Dunder Mifflin",
         firstName = "",
         lastName = "",
         businessName = "Dunder Mifflin",

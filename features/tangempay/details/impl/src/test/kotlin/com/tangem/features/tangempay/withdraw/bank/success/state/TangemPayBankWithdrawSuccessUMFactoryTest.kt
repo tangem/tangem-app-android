@@ -132,12 +132,17 @@ internal class TangemPayBankWithdrawSuccessUMFactoryTest {
         RecipientModel(
             draft = savedDraft(),
             expectedName = "Andrei Melnikov",
-            description = "saved individual -> display name",
+            description = "saved individual -> first and last name",
         ),
         RecipientModel(
             draft = savedDraft().copy(recipient = bankAccount(beneficiary = Beneficiary.Business("Arasaka"))),
             expectedName = "Arasaka",
-            description = "saved business -> display name",
+            description = "saved business -> registered name",
+        ),
+        RecipientModel(
+            draft = savedDraft().copy(recipient = bankAccount().copy(displayName = "Andrei Melnikov Test Bank")),
+            expectedName = "Andrei Melnikov",
+            description = "saved with backend display name -> beneficiary name, not name plus bank",
         ),
         RecipientModel(
             draft = newRecipientDraft(),
