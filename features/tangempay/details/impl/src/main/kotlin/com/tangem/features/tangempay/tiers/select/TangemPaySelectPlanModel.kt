@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.tiers.select
 
 import androidx.compose.runtime.Stable
+import arrow.core.raise.either
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
@@ -75,7 +76,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     private var isProcessing: Boolean = false
 
     val state: StateFlow<TangemPaySelectPlanUM>
-        field = MutableStateFlow(buildState())
+        field = MutableStateFlow(buildState(content = TangemPaySelectPlanUM.Content.Loading))
 
     init {
         analytics.send(TangemPayAnalyticsEvents.Tiers.TierSelectionScreenShowed())
@@ -83,13 +84,24 @@ internal class TangemPaySelectPlanModel @Inject constructor(
     }
 
     private fun loadData() {
+        state.update { buildState(content = TangemPaySelectPlanUM.Content.Loading) }
         modelScope.launch {
             val transitionsDeferred = async { getTransitions(params.userWalletId) }
             val tariffPlanDeferred = async { getCurrentTariffUseCase(params.userWalletId) }
 
-            transitionsDeferred.await().onRight { transitions = it }
-            tariffPlanDeferred.await().onRight { tariffPlan = it }
-            state.update { buildState() }
+            either {
+                val loadedTransitions = transitionsDeferred.await().bind()
+                val loadedTariffPlan = tariffPlanDeferred.await().bind()
+                transitions = loadedTransitions
+                tariffPlan = loadedTariffPlan
+            }.fold(
+                ifLeft = {
+                    state.update {
+                        buildState(content = TangemPaySelectPlanUM.Content.Error(onRetryClick = ::loadData))
+                    }
+                },
+                ifRight = { state.update { buildState() } },
+            )
         }
     }
 
@@ -208,7 +220,10 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         }
     }
 
-    private fun buildState(showPlanCompare: Boolean = false): TangemPaySelectPlanUM = TangemPaySelectPlanUM(
+    private fun buildState(
+        showPlanCompare: Boolean = false,
+        content: TangemPaySelectPlanUM.Content = if (isConfirm) buildConfirmContent() else buildSelectContent(),
+    ): TangemPaySelectPlanUM = TangemPaySelectPlanUM(
         topBarTitle = resourceReference(
             if (isConfirm) {
                 R.string.tangempay_select_plan_confirm_title
@@ -222,7 +237,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         onBackClick = ::onBackClick,
         onCloseClick = ::onCloseClick,
         onLinkClick = urlOpener::openUrl,
-        content = if (isConfirm) buildConfirmContent() else buildSelectContent(),
+        content = content,
         compare = if (showPlanCompare) buildCompare() else null,
     )
 
