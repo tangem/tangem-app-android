@@ -1,6 +1,6 @@
 package com.tangem.data.txhistory.fetcher
 
-import com.tangem.data.txhistory.repository.DefaultJointOperationHistoryRepository
+import com.tangem.data.txhistory.repository.JointOperationHistorySyncer
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
 import com.tangem.store.datasource.jointaccount.models.JointOperationHistoryDeltaResponse
@@ -25,21 +25,21 @@ import org.junit.jupiter.api.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class DefaultJointOperationTxHistoryFetcherTest {
 
-    private val repository: DefaultJointOperationHistoryRepository = mockk()
+    private val syncer: JointOperationHistorySyncer = mockk()
 
     @BeforeEach
     fun setup() {
-        clearMocks(repository)
+        clearMocks(syncer)
     }
 
     @Test
     fun `GIVEN no sync state WHEN triggered THEN the delta runs after the first page without waiting for the walk`() =
         runTest {
             // Arrange
-            coEvery { repository.syncState(WALLET_ID) } returnsMany listOf(null, incompleteSyncState())
-            coEvery { repository.fetchHistory(WALLET_ID, any()) } returns historyResponse(hasMore = true) coAndThen
+            coEvery { syncer.syncState(WALLET_ID) } returnsMany listOf(null, incompleteSyncState())
+            coEvery { syncer.fetchHistory(WALLET_ID, any()) } returns historyResponse(hasMore = true) coAndThen
                 { slowLastHistoryPage() }
-            coEvery { repository.fetchHistoryDelta(WALLET_ID, any()) } returns deltaResponse(hasMore = false)
+            coEvery { syncer.fetchHistoryDelta(WALLET_ID, any()) } returns deltaResponse(hasMore = false)
             val fetcher = createFetcher(createUtils())
 
             // Act
@@ -48,10 +48,10 @@ internal class DefaultJointOperationTxHistoryFetcherTest {
 
             // Assert
             coVerifyOrder {
-                repository.fetchHistory(WALLET_ID, any())
-                repository.fetchHistoryDelta(WALLET_ID, any())
+                syncer.fetchHistory(WALLET_ID, any())
+                syncer.fetchHistoryDelta(WALLET_ID, any())
             }
-            coVerify(exactly = 2) { repository.fetchHistory(WALLET_ID, any()) }
+            coVerify(exactly = 2) { syncer.fetchHistory(WALLET_ID, any()) }
             advanceUntilIdle()
         }
 
@@ -59,9 +59,9 @@ internal class DefaultJointOperationTxHistoryFetcherTest {
     fun `GIVEN walk in progress WHEN triggered again THEN the delta runs again and the walk is not restarted`() =
         runTest {
             // Arrange
-            coEvery { repository.syncState(WALLET_ID) } returns incompleteSyncState()
-            coEvery { repository.fetchHistory(WALLET_ID, any()) } coAnswers { slowLastHistoryPage() }
-            coEvery { repository.fetchHistoryDelta(WALLET_ID, any()) } returns deltaResponse(hasMore = false)
+            coEvery { syncer.syncState(WALLET_ID) } returns incompleteSyncState()
+            coEvery { syncer.fetchHistory(WALLET_ID, any()) } coAnswers { slowLastHistoryPage() }
+            coEvery { syncer.fetchHistoryDelta(WALLET_ID, any()) } returns deltaResponse(hasMore = false)
             val fetcher = createFetcher(createUtils())
 
             // Act
@@ -71,16 +71,16 @@ internal class DefaultJointOperationTxHistoryFetcherTest {
             runCurrent()
 
             // Assert
-            coVerify(exactly = 2) { repository.fetchHistoryDelta(WALLET_ID, any()) }
-            coVerify(exactly = 1) { repository.fetchHistory(WALLET_ID, any()) }
+            coVerify(exactly = 2) { syncer.fetchHistoryDelta(WALLET_ID, any()) }
+            coVerify(exactly = 1) { syncer.fetchHistory(WALLET_ID, any()) }
             advanceUntilIdle()
         }
 
     @Test
     fun `GIVEN the first history page fails WHEN triggered THEN the delta does not run`() = runTest {
         // Arrange
-        coEvery { repository.syncState(WALLET_ID) } returns null
-        coEvery { repository.fetchHistory(WALLET_ID, any()) } throws IllegalStateException("offline")
+        coEvery { syncer.syncState(WALLET_ID) } returns null
+        coEvery { syncer.fetchHistory(WALLET_ID, any()) } throws IllegalStateException("offline")
         val fetcher = createFetcher(createUtils())
 
         // Act
@@ -88,14 +88,14 @@ internal class DefaultJointOperationTxHistoryFetcherTest {
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 0) { repository.fetchHistoryDelta(any(), any()) }
+        coVerify(exactly = 0) { syncer.fetchHistoryDelta(any(), any()) }
     }
 
     @Test
     fun `GIVEN completed initial walk WHEN polled THEN only the delta runs until it has no more`() = runTest {
         // Arrange
-        coEvery { repository.syncState(WALLET_ID) } returns completedSyncState()
-        coEvery { repository.fetchHistoryDelta(WALLET_ID, any()) } returnsMany listOf(
+        coEvery { syncer.syncState(WALLET_ID) } returns completedSyncState()
+        coEvery { syncer.fetchHistoryDelta(WALLET_ID, any()) } returnsMany listOf(
             deltaResponse(hasMore = true),
             deltaResponse(hasMore = false),
         )
@@ -106,15 +106,15 @@ internal class DefaultJointOperationTxHistoryFetcherTest {
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 0) { repository.fetchHistory(any(), any()) }
-        coVerify(exactly = 2) { repository.fetchHistoryDelta(WALLET_ID, any()) }
+        coVerify(exactly = 0) { syncer.fetchHistory(any(), any()) }
+        coVerify(exactly = 2) { syncer.fetchHistoryDelta(WALLET_ID, any()) }
     }
 
     @Test
     fun `GIVEN delta drops the sync state WHEN polled THEN the delta is not retried`() = runTest {
         // Arrange
-        coEvery { repository.syncState(WALLET_ID) } returns completedSyncState()
-        coEvery { repository.fetchHistoryDelta(WALLET_ID, any()) } returns null
+        coEvery { syncer.syncState(WALLET_ID) } returns completedSyncState()
+        coEvery { syncer.fetchHistoryDelta(WALLET_ID, any()) } returns null
         val fetcher = createFetcher(createUtils())
 
         // Act
@@ -122,7 +122,7 @@ internal class DefaultJointOperationTxHistoryFetcherTest {
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 1) { repository.fetchHistoryDelta(WALLET_ID, any()) }
+        coVerify(exactly = 1) { syncer.fetchHistoryDelta(WALLET_ID, any()) }
     }
 
     private fun TestScope.createUtils(): DefaultTxHistoryFetcherUtils = DefaultTxHistoryFetcherUtils(
@@ -134,7 +134,7 @@ internal class DefaultJointOperationTxHistoryFetcherTest {
     private fun createFetcher(utils: DefaultTxHistoryFetcherUtils) = DefaultJointOperationTxHistoryFetcher(
         walletId = WALLET_ID,
         utils = utils,
-        repository = repository,
+        syncer = syncer,
     )
 
     private fun historyResponse(hasMore: Boolean) = JointOperationHistoryResponse(

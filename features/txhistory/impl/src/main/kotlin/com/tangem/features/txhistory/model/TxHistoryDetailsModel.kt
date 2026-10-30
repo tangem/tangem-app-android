@@ -114,7 +114,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
     private val params: TxHistoryDetailsComponent.Params = paramsContainer.require()
 
     private val shareTextConverter = ExpressTxToShareTextConverter()
-    private val txHistoryInfo = params.historyTxListManager.txExpressHistoryItemFlow(params.txId)
+    private val txHistoryInfo = params.historyTxListManager.txHistoryItemFlow(params.txId)
         .shareIn(modelScope, SharingStarted.WhileSubscribed(), replay = 1)
 
     /**

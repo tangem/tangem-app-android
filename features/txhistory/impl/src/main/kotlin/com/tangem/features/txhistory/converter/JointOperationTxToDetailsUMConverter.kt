@@ -59,7 +59,9 @@ internal class JointOperationTxToDetailsUMConverter(
             isBalanceHidden = isBalanceHidden,
             amountBlock = TxHistoryDetailsUM.AmountBlockUM(
                 icon = TxHistoryDetailsUM.AmountIconUM.Single(iconStateConverter.convert(currency)),
-                amount = stringReference(if (isExecuted) "${StringsSigns.MINUS} $amount" else amount),
+                amount = stringReference(
+                    if (isExecuted) "${StringsSigns.MINUS_SIGN}${StringsSigns.THIN_SPACE}$amount" else amount,
+                ),
                 isFailed = !isExecuted,
                 fiatAmount = fiatConversion.convert(cryptoAmount),
             ),
