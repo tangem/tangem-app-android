@@ -123,15 +123,21 @@ private fun OrderBody(
                 onAmountChange = intents::onAmountChange,
                 onAddFundsClick = intents::onAddFundsClick,
                 isEnabled = isIdle,
-            )
-        }
-        if (presets.isNotEmpty()) {
-            PredictionAmountPresets(
-                presets = presets,
-                isEnabled = isIdle,
-                isMaxEnabled = state.isMaxPresetEnabled(),
-                onPresetClick = intents::onPresetClick,
-                onMaxClick = intents::onMaxClick,
+                presets = if (presets.isEmpty()) {
+                    null
+                } else {
+                    {
+                        PredictionAmountPresets(
+                            modifier = Modifier.padding(top = 12.dp, bottom = 16.dp),
+                            presets = presets,
+                            isEnabled = isIdle,
+                            isMaxEnabled = state.isMaxPresetEnabled(),
+                            onPresetClick = intents::onPresetClick,
+                            onMaxClick = intents::onMaxClick,
+                        )
+                    }
+                },
+                isCalculatorDivided = true,
             )
         }
         Column(
