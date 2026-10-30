@@ -1,5 +1,6 @@
 package com.tangem.data.transaction
 
+import android.os.SystemClock
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
@@ -25,7 +26,8 @@ internal class DefaultSolanaGaslessTransactionRepository(
     private val api: SolanaGaslessApi,
     private val errorAdapter: JsonAdapter<GaslessErrorResponse>,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val currentTimeMillis: () -> Long = System::currentTimeMillis,
+    // Monotonic, so a wall clock set back cannot keep a cached fee payer (or failure) alive past its TTL
+    private val elapsedRealtimeMillis: () -> Long = SystemClock::elapsedRealtime,
 ) : SolanaGaslessTransactionRepository {
 
     private val feePayerMutex = Mutex()
@@ -42,7 +44,7 @@ internal class DefaultSolanaGaslessTransactionRepository(
         withContext(dispatchers.io) { api.getFeePayer().unwrap(isSubmit = false) { it.feePayer } }
             .also { fetched ->
                 cachedFeePayer = fetched
-                cachedFeePayerAtMillis = currentTimeMillis()
+                cachedFeePayerAtMillis = elapsedRealtimeMillis()
             }
     }
 
@@ -70,7 +72,7 @@ internal class DefaultSolanaGaslessTransactionRepository(
     private fun ApiResponse<*>.alreadyBroadcastSignature(): String? {
         val httpError = (this as? ApiResponse.Error)?.cause as? ApiResponseError.HttpException ?: return null
         if (httpError.code != ApiResponseError.HttpException.Code.CONFLICT) return null
-        val error = httpError.parseError() ?: return null
+        val error = httpError.parseError(errorAdapter) ?: return null
         val isBroadcast = error.code == DUPLICATE_SUBMISSION_CODE && error.details?.status == BROADCAST_STATUS
         return error.details?.signature?.takeIf { isBroadcast }
             ?.also { TangemLogger.i("Solana gasless submit: the service already broadcast $it") }
@@ -82,7 +84,7 @@ internal class DefaultSolanaGaslessTransactionRepository(
 
     private fun isCacheExpired(cached: Either<SolanaGaslessError, String>): Boolean {
         val ttlMillis = if (cached.isRight()) FEE_PAYER_CACHE_MILLIS else FAILED_FEE_PAYER_CACHE_MILLIS
-        return currentTimeMillis() - cachedFeePayerAtMillis >= ttlMillis
+        return elapsedRealtimeMillis() - cachedFeePayerAtMillis >= ttlMillis
     }
 
     private inline fun <T : Any, R> ApiResponse<GaslessServiceResponse<T>>.unwrap(
@@ -100,7 +102,7 @@ internal class DefaultSolanaGaslessTransactionRepository(
     }
 
     private fun ApiResponseError.toSolanaGaslessError(isSubmit: Boolean): SolanaGaslessError = when (this) {
-        is ApiResponseError.HttpException -> mapHttp(code, parseError(), isSubmit)
+        is ApiResponseError.HttpException -> mapHttp(code, parseError(errorAdapter), isSubmit)
         // Only submit broadcasts bytes; a timeout, connection reset or malformed body there may still mean the tx
         // landed, so rebuilding risks a double spend. getFeePayer never broadcasts, so it keeps the plain mapping.
         is ApiResponseError.TimeoutException,
@@ -146,17 +148,20 @@ internal class DefaultSolanaGaslessTransactionRepository(
                 code = errorCode,
                 isSponsorshipUnavailable = errorCode in SPONSORSHIP_UNAVAILABLE_CODES,
             )
+            // Any other 4xx on submit is the service judging this tx, so sending it again fails the same way
+            isSubmit && code.numericCode in HTTP_CLIENT_ERRORS && code !in RETRIABLE_CLIENT_ERRORS ->
+                SolanaGaslessError.Rejected(errorCode)
             else -> SolanaGaslessError.Unknown(error?.message)
         }
     }
 
-    private fun ApiResponseError.HttpException.parseError(): GaslessErrorDto? {
-        val body = errorBody?.takeIf(String::isNotBlank) ?: return null
-        return runCatching { errorAdapter.fromJson(body)?.error }.getOrNull()
-    }
-
     private companion object {
         const val HTTP_SERVER_ERROR = 500
+        val HTTP_CLIENT_ERRORS = 400 until HTTP_SERVER_ERROR
+        val RETRIABLE_CLIENT_ERRORS = setOf(
+            ApiResponseError.HttpException.Code.REQUEST_TIMEOUT,
+            ApiResponseError.HttpException.Code.TOO_MANY_REQUESTS,
+        )
         const val FEE_PAYER_CACHE_MILLIS = 600_000L
         const val FAILED_FEE_PAYER_CACHE_MILLIS = 60_000L
         const val DUPLICATE_SUBMISSION_CODE = "SOLANA_DUPLICATE_SUBMISSION"
