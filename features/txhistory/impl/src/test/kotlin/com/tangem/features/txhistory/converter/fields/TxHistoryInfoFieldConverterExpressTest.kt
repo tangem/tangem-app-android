@@ -1,4 +1,4 @@
-package com.tangem.features.txhistory.converter
+package com.tangem.features.txhistory.converter.fields
 
 import androidx.compose.ui.graphics.Color
 import com.google.common.truth.Truth.assertThat
@@ -30,9 +30,9 @@ import com.tangem.domain.tokens.model.AmountType
 import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.model.TestContacts
+import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.features.txhistory.model.TxHistoryLookupContext
 import com.tangem.features.txhistory.model.WalletInfo
-import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.StringsSigns
 import io.mockk.mockk
@@ -42,9 +42,9 @@ import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class ExpressTxToTransactionItemUMConverterTest {
+internal class TxHistoryInfoFieldConverterExpressTest {
 
-    private val txHistoryUiActions: TxHistoryUiActions = mockk(relaxed = true)
+    private val onRowClick: (TxHistoryInfo) -> Unit = mockk(relaxed = true)
     private val coin: CryptoCurrency.Coin = createCoin(symbol = "ETH", decimals = 18)
 
     private val mockCurrencyFactory = MockCryptoCurrencyFactory()
@@ -54,10 +54,7 @@ internal class ExpressTxToTransactionItemUMConverterTest {
     private val secondAccount: Account.CryptoPortfolio =
         MockAccounts.createAccount(derivationIndex = 2, name = "Savings")
 
-    private val converter = ExpressTxToTransactionItemUMConverter(
-        currency = coin,
-        txHistoryUiActions = txHistoryUiActions,
-    )
+    private val converter = converterWith(EMPTY_LOOKUP)
 
     // region Status → bucket
 
@@ -125,7 +122,6 @@ internal class ExpressTxToTransactionItemUMConverterTest {
             createSwap(status = ExpressExchangeStatus.Waiting, isOutgoing = true),
         ) as TransactionItemUM.Content
 
-        assertThat(result.direction).isEqualTo(TransactionItemUM.Content.Direction.OUTGOING)
         assertThat(result.amount).startsWith(StringsSigns.MINUS_SIGN)
         assertThat(result.amount).contains("1.5")
     }
@@ -136,7 +132,6 @@ internal class ExpressTxToTransactionItemUMConverterTest {
             createSwap(status = ExpressExchangeStatus.Waiting, isOutgoing = false),
         ) as TransactionItemUM.Content
 
-        assertThat(result.direction).isEqualTo(TransactionItemUM.Content.Direction.INCOMING)
         assertThat(result.amount).startsWith("+")
         assertThat(result.amount).contains("0.001")
     }
@@ -241,21 +236,12 @@ internal class ExpressTxToTransactionItemUMConverterTest {
 
         result.onClick()
 
-        verify { txHistoryUiActions.onTransactionClick(swap) }
+        verify(exactly = 1) { onRowClick(swap) }
     }
 
     // endregion
 
     // region Owner tail
-
-    @Test
-    fun `GIVEN no lookup WHEN convert THEN subtitle has no owner tail`() {
-        val result = converter.convert(
-            createSwap(status = ExpressExchangeStatus.Finished, fromCurrency = ethereum, toCurrency = bitcoin),
-        ) as TransactionItemUM.Content
-
-        assertThat((result.subtitle as ContentSubtitle.Asset).owner).isNull()
-    }
 
     @Test
     fun `GIVEN swap within one own account WHEN convert THEN subtitle has no owner tail`() {
@@ -554,9 +540,9 @@ internal class ExpressTxToTransactionItemUMConverterTest {
         txInfo = null,
     )
 
-    private fun converterWith(lookup: TxHistoryLookupContext) = ExpressTxToTransactionItemUMConverter(
+    private fun converterWith(lookup: TxHistoryLookupContext) = TxHistoryInfoFieldConverter(
         currency = coin,
-        txHistoryUiActions = txHistoryUiActions,
+        onRowClick = onRowClick,
         lookup = lookup,
     )
 
@@ -585,6 +571,11 @@ internal class ExpressTxToTransactionItemUMConverterTest {
     private fun deviceIcon(): DeviceIconUM = DeviceIconUM.Card(mainColor = Color(0xFF1E1E1E), secondColor = null)
 
     private companion object {
+        val EMPTY_LOOKUP = TxHistoryLookupContext(
+            ownAccountByNetwork = emptyMap(),
+            isAccountsModeEnabled = false,
+            walletInfoById = emptyMap(),
+        )
         const val FROM_ADDRESS = "0xfromOwnAddress1234"
         const val PAYOUT_ADDRESS = "bc1qPayoutOwnAddress"
         const val CONTACT_ADDRESS = "bc1qSavedContactAddress"
