@@ -117,6 +117,7 @@ sealed class AnalyticsParam {
         ColdCreation("Cold Creation"),
         FirstSignIn("First Sign In"),
         MainRequestSheet("Main Request Sheet"),
+        Deeplink("Deeplink"),
     }
 
     sealed class TxSentFrom(val value: String) {
@@ -240,8 +241,6 @@ sealed class AnalyticsParam {
         data object PrivateKey : WalletCreationType(value = "Private Key")
         data object NewSeed : WalletCreationType(value = "New Seed")
         data object SeedImport : WalletCreationType(value = "Seed Import")
-        data object NewSocialLogin : WalletCreationType(value = "New Social Login")
-        data object SocialLoginImport : WalletCreationType(value = "Social Login Import")
     }
 
     sealed class WalletType(val value: String) {
@@ -348,6 +347,8 @@ sealed class AnalyticsParam {
         const val SOURCE = "Source"
         const val BALANCE = "Balance"
         const val TOKENS_COUNT = "Tokens Count"
+        const val APY = "APY"
+        const val CLOSE_METHOD = "Close Method"
         const val STATE = "State"
         const val BATCH = "Batch"
         const val TYPE = "Type"

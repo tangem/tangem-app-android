@@ -1,81 +1,65 @@
 package com.tangem.domain.pay.usecase
 
+import arrow.core.left
+import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
 import com.tangem.domain.models.account.TangemPayTariffPlan
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import io.mockk.coVerify
+import com.tangem.domain.pay.model.CustomerInfo
+import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.visa.error.VisaApiError
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 internal class GetCurrentTariffUseCaseTest {
 
-    private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk(relaxed = true)
-    private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
+    private val onboardingRepository: OnboardingRepository = mockk()
 
-    private val useCase = GetCurrentTariffUseCase(
-        paymentAccountStatusFetcher = paymentAccountStatusFetcher,
-        paymentAccountStatusSupplier = paymentAccountStatusSupplier,
-    )
+    private val useCase = GetCurrentTariffUseCase(onboardingRepository = onboardingRepository)
 
     @Test
-    fun `GIVEN status with tariff WHEN invoke THEN fetches and returns source with tariff`() = runTest {
+    fun `GIVEN customer info with tariff WHEN invoke THEN returns tariff`() = runTest {
         // GIVEN
-        val status = paymentStatus(value = awaitingPlanSelection(StatusSource.ACTUAL, CUSTOMER_TARIFF))
-        every { paymentAccountStatusSupplier.invoke(USER_WALLET_ID) } returns flowOf(status)
+        coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns customerInfo(CUSTOMER_TARIFF).right()
 
         // WHEN
         val result = useCase(USER_WALLET_ID)
 
         // THEN
-        assertThat(result).isEqualTo(StatusSource.ACTUAL to CUSTOMER_TARIFF)
-        coVerify(exactly = 1) { paymentAccountStatusFetcher.invoke(USER_WALLET_ID) }
+        assertThat(result).isEqualTo(CUSTOMER_TARIFF.right())
     }
 
     @Test
-    fun `GIVEN empty supplier flow WHEN invoke THEN returns null`() = runTest {
+    fun `GIVEN customer info without tariff WHEN invoke THEN returns null`() = runTest {
         // GIVEN
-        every { paymentAccountStatusSupplier.invoke(USER_WALLET_ID) } returns emptyFlow()
+        coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns customerInfo(null).right()
 
         // WHEN
         val result = useCase(USER_WALLET_ID)
 
         // THEN
-        assertThat(result).isNull()
+        assertThat(result).isEqualTo(null.right())
     }
 
     @Test
-    fun `GIVEN status without tariff WHEN invoke THEN returns null`() = runTest {
+    fun `GIVEN customer info request fails WHEN invoke THEN returns error`() = runTest {
         // GIVEN
-        val status = paymentStatus(value = PaymentAccountStatusValue.NotCreated)
-        every { paymentAccountStatusSupplier.invoke(USER_WALLET_ID) } returns flowOf(status)
+        coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns VisaApiError.Unspecified.left()
 
         // WHEN
         val result = useCase(USER_WALLET_ID)
 
         // THEN
-        assertThat(result).isNull()
+        assertThat(result).isEqualTo(VisaApiError.Unspecified.left())
     }
 
-    private fun paymentStatus(value: PaymentAccountStatusValue) = AccountStatus.Payment(
-        account = mockk(),
-        value = value,
-    )
-
-    private fun awaitingPlanSelection(source: StatusSource, tariff: TangemPayCustomerTariffPlan) =
-        PaymentAccountStatusValue.AwaitingPlanSelection(
-            source = source,
-            tariffPlan = tariff,
-        )
+    private fun customerInfo(tariffPlan: TangemPayCustomerTariffPlan?): CustomerInfo = mockk {
+        every { this@mockk.tariffPlan } returns tariffPlan
+    }
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("aabbcc112233")

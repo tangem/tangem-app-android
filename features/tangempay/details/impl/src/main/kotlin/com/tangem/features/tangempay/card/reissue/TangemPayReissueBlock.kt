@@ -29,7 +29,7 @@ internal fun TangemPayReissueBlock(title: TextReference, modifier: Modifier = Mo
             modifier = Modifier
                 .size(40.dp)
                 .background(
-                    color = TangemTheme.colors3.bg.opaque.primary,
+                    color = TangemTheme.colors3.bg.transparent.primary,
                     shape = CircleShape,
                 ),
             contentAlignment = Alignment.Center,

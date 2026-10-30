@@ -48,7 +48,7 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
                 name = "My Wallet",
                 hotWalletId = HotWalletId("", HotWalletId.AuthType.NoPassword),
                 wallets = null,
-                backedUp = false,
+                isBackedUp = false,
             ),
             isReferralAvailable = true,
             isLinkMoreCardsAvailable = true,

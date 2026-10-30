@@ -139,13 +139,13 @@ private fun WalletSelector(isShown: Boolean, onDismissRequest: () -> Unit, conte
             content = content,
         ),
         titleText = stringReference("Choose wallet"),
-    ) { content: AccountsUM.WalletSelector ->
-        content.wallets.fastForEachIndexed { index, wallet ->
+    ) { walletSelector: AccountsUM.WalletSelector ->
+        walletSelector.wallets.fastForEachIndexed { index, wallet ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
-                        content.onWalletSelect(wallet)
+                        walletSelector.onWalletSelect(wallet)
                         onDismissRequest()
                     }
                     .padding(horizontal = 24.dp, vertical = 12.dp),
@@ -158,7 +158,7 @@ private fun WalletSelector(isShown: Boolean, onDismissRequest: () -> Unit, conte
                     color = TangemTheme.colors.text.primary1,
                 )
 
-                if (wallet.walletId == content.selected?.walletId) {
+                if (wallet.walletId == walletSelector.selected?.walletId) {
                     Icon(
                         painter = painterResource(R.drawable.ic_check_24),
                         contentDescription = null,
@@ -167,7 +167,7 @@ private fun WalletSelector(isShown: Boolean, onDismissRequest: () -> Unit, conte
                 }
             }
 
-            if (index == content.wallets.lastIndex) {
+            if (index == walletSelector.wallets.lastIndex) {
                 Spacer(modifier = Modifier.height(16.dp))
             } else {
                 DividerWithPadding(start = 16.dp, end = 16.dp)
@@ -189,9 +189,9 @@ private fun AccountList(
             content = content,
         ),
         titleText = stringReference("Accounts"),
-    ) { content: AccountsUM.AccountListBottomSheetConfig ->
+    ) { accountList: AccountsUM.AccountListBottomSheetConfig ->
         LazyColumn {
-            itemsIndexed(content.accounts) { index, account ->
+            itemsIndexed(accountList.accounts) { index, account ->
                 val accountName = account.accountName.toUM().value.resolveReference()
                 Text(
                     text = "$accountName [#${account.derivationIndex?.value ?: "joint"}]",
@@ -202,7 +202,7 @@ private fun AccountList(
                     color = TangemTheme.colors.text.primary1,
                 )
 
-                if (index == content.accounts.lastIndex) {
+                if (index == accountList.accounts.lastIndex) {
                     Spacer(modifier = Modifier.height(16.dp))
                 } else {
                     DividerWithPadding(start = 16.dp, end = 16.dp)

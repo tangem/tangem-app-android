@@ -35,7 +35,7 @@ sealed class WalletArtworksState {
     data object Fan : WalletArtworksState()
 
     data class Stack(
-        val threeCards: Boolean = true,
+        val hasThreeCards: Boolean = true,
     ) : WalletArtworksState()
 
     data class Unfold(
@@ -47,7 +47,7 @@ sealed class WalletArtworksState {
     }
 
     data class Leapfrog(
-        val threeCards: Boolean = true,
+        val hasThreeCards: Boolean = true,
         val step: Step = Step.Second,
     ) : WalletArtworksState() {
         enum class Step {
@@ -94,8 +94,8 @@ fun WalletArtworks(
                 density = density,
                 maxHeightDp = maxHeight.value,
             )
-            animationSetState.fastForEach {
-                animationState = it
+            animationSetState.fastForEach { animationStep ->
+                animationState = animationStep
                 val maxTime = maxOf(
                     transition1.totalDurationNanos,
                     transition2.totalDurationNanos,
@@ -242,7 +242,7 @@ private fun AnimatedWalletCards(
 
 private fun WalletArtworksState.toTransitionSetState(maxWidthDp: Float, maxHeightDp: Float, density: Float) =
     when (this) {
-        WalletArtworksState.Hidden -> listOf()
+        WalletArtworksState.Hidden -> emptyList()
         is WalletArtworksState.Folded -> listOf(
             CardsTransitionState(
                 WalletCardTransitionState(alpha = 1f),
@@ -274,7 +274,7 @@ private fun WalletArtworksState.toTransitionSetState(maxWidthDp: Float, maxHeigh
                     yScale = 0.83f,
                 ),
                 walletCard3 = WalletCardTransitionState().copy(
-                    alpha = if (threeCards) 0.55f else 0f,
+                    alpha = if (hasThreeCards) 0.55f else 0f,
                     xTranslation = 0f,
                     yTranslation = (maxHeightDp * (1 - 0.72f) / 4 + 24) * density,
                     rotation = 0f,
@@ -359,7 +359,7 @@ private fun WalletArtworksState.toTransitionSetState(maxWidthDp: Float, maxHeigh
                 yScale = 0.83f,
             )
             val thirdCardPlace = WalletCardTransitionState().copy(
-                alpha = if (threeCards) 0.55f else 0f,
+                alpha = if (hasThreeCards) 0.55f else 0f,
                 xTranslation = 0f,
                 yTranslation = (maxHeightDp * (1 - 0.72f) / 4 + 24) * density,
                 rotation = 0f,

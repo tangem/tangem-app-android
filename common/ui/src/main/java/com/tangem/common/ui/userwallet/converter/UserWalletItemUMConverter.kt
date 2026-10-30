@@ -62,7 +62,7 @@ class UserWalletItemUMConverter(
     private fun getTitleBadge(userWallet: UserWallet): TangemBadgeUM? {
         val isSeedPhraseWallet = when (userWallet) {
             is UserWallet.Cold -> userWallet.isImported
-            is UserWallet.Hot -> userWallet.backedUp
+            is UserWallet.Hot -> userWallet.isBackedUp
         }
 
         return if (isSeedPhraseWallet) {

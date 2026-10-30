@@ -20,8 +20,10 @@ import com.tangem.domain.cloudbackup.repository.CloudBackupRepository
 import com.tangem.google.auth.GoogleAuthError
 import com.tangem.google.drive.DriveFile
 import com.tangem.google.drive.DriveFileMetadata
+import com.tangem.google.drive.GoogleDriveAccount
 import com.tangem.google.drive.GoogleDriveApi
 import com.tangem.google.drive.GoogleDriveTokenProvider
+import com.tangem.google.drive.store.DriveAccountStore
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -49,9 +51,11 @@ import kotlin.coroutines.cancellation.CancellationException
  * (transparency over security by obscurity). Tangem files are marked and looked up
  * by [KEY_IS_TANGEM_BACKUP] in `appProperties`, so renames done by the user don't break discovery.
  */
+@Suppress("LargeClass")
 internal class DefaultCloudBackupRepository(
     private val api: GoogleDriveApi,
     private val tokenProvider: GoogleDriveTokenProvider,
+    private val accountStore: DriveAccountStore,
     private val store: CloudBackupStore,
     private val cipher: CloudBackupCipher,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -170,7 +174,7 @@ internal class DefaultCloudBackupRepository(
     }
 
     override suspend fun signOut() = withContext(dispatchers.io) {
-        tokenProvider.signOut()
+        tokenProvider.invalidate()
     }
 
     override suspend fun readBackup(
@@ -259,6 +263,18 @@ internal class DefaultCloudBackupRepository(
 
     override suspend fun setBackedUp(walletId: String, backedUp: Boolean) {
         store.setBackedUp(walletId, backedUp)
+
+        if (!backedUp) {
+            accountStore.setAccountName(walletId, accountName = null)
+            return
+        }
+        // an account Google picked itself is not pinned, so only Drive can tell which one it was
+        val accountName = tokenProvider.currentAccountName() ?: getAccountInfo(interactive = false).getOrNull()?.email
+        accountStore.setAccountName(walletId, accountName)
+    }
+
+    override suspend fun <T> withAccountOf(walletId: String, block: suspend () -> T): T {
+        return withContext(GoogleDriveAccount(accountStore.getAccountName(walletId))) { block() }
     }
 
     private suspend fun <T> withAuthRetry(
@@ -362,7 +378,7 @@ internal class DefaultCloudBackupRepository(
             HttpURLConnection.HTTP_UNAUTHORIZED,
             HttpURLConnection.HTTP_FORBIDDEN,
             -> {
-                tokenProvider.invalidate()
+                tokenProvider.invalidateToken()
                 CloudBackupError.AuthPermissionsMissing
             }
             HttpURLConnection.HTTP_NOT_FOUND -> CloudBackupError.BackupNotFound

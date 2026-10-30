@@ -15,7 +15,7 @@ internal class WcNetworksSelectedTransformer(
         val contentState = prevState as? WcAppInfoUM.Content ?: return prevState
         return contentState.copy(
             connectButtonConfig = contentState.connectButtonConfig.copy(
-                enabled = WcConnectButtonAvailabilityConverter.convert(
+                isEnabled = WcConnectButtonAvailabilityConverter.convert(
                     WcConnectButtonAvailabilityConverter.Input(
                         missingNetworks = missingNetworks,
                         requiredNetworks = requiredNetworks,

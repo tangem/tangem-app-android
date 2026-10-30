@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 
 /**
@@ -46,7 +47,7 @@ fun SimpleDialogTextField(
             readOnly = !isEnabled,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = TangemTheme.dimens.spacing24)
+                .padding(horizontal = 24.dp)
                 .drawBehind {
                     val strokeWidth = 2f
                     val y = size.height - strokeWidth / 2
@@ -88,7 +89,7 @@ fun SimpleDialogTextField(
                     color = TangemTheme.colors.text.warning,
                     modifier = Modifier
                         .padding(
-                            horizontal = TangemTheme.dimens.spacing24,
+                            horizontal = 24.dp,
                         ),
                 )
             }

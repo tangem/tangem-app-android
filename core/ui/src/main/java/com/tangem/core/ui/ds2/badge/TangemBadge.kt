@@ -251,7 +251,7 @@ private fun resolveColorTokens(variant: TangemBadge.Variant, status: TangemBadge
     return when (variant) {
         TangemBadge.Variant.Tinted -> when (status) {
             TangemBadge.Status.Neutral -> BadgeColorTokens(
-                backgroundColor = colors.bg.opaque.primary,
+                backgroundColor = colors.bg.transparent.primary,
                 textColor = colors.text.secondary,
                 iconTint = colors.icon.secondary,
             )
@@ -278,7 +278,7 @@ private fun resolveColorTokens(variant: TangemBadge.Variant, status: TangemBadge
         }
         TangemBadge.Variant.Outline -> when (status) {
             TangemBadge.Status.Neutral -> BadgeColorTokens(
-                backgroundColor = colors.bg.opaque.primary,
+                backgroundColor = colors.bg.transparent.primary,
                 textColor = colors.text.secondary,
                 iconTint = colors.icon.secondary,
                 borderColor = colors.border.primary,
@@ -310,7 +310,7 @@ private fun resolveColorTokens(variant: TangemBadge.Variant, status: TangemBadge
         }
         TangemBadge.Variant.Solid -> when (status) {
             TangemBadge.Status.Neutral -> BadgeColorTokens(
-                backgroundColor = colors.bg.opaque.primary,
+                backgroundColor = colors.bg.transparent.primary,
                 textColor = colors.text.primary,
                 iconTint = colors.icon.primary,
             )

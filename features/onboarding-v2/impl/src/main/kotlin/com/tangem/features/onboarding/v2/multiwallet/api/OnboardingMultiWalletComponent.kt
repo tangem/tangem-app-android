@@ -13,7 +13,7 @@ interface OnboardingMultiWalletComponent : ComposableContentComponent, InnerNavi
     data class Params(
         val titleProvider: TitleProvider,
         val scanResponse: ScanResponse,
-        val withSeedPhraseFlow: Boolean,
+        val isSeedPhraseFlow: Boolean,
         val mode: Mode,
         val onDone: (UserWallet.Cold) -> Unit,
         val onForceExit: () -> Unit,

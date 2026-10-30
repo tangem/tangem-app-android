@@ -72,7 +72,7 @@ enum class TangemFieldShape {
     @Composable
     internal fun toShape(): Shape {
         return when (this) {
-            RoundedCorners -> RoundedCornerShape(TangemTheme.dimens2.x4)
+            RoundedCorners -> RoundedCornerShape(16.dp)
             Circle -> CircleShape
         }
     }
@@ -106,7 +106,7 @@ fun TangemSearchField(
     }
     BasicTextField(
         modifier = modifier
-            .heightIn(min = TangemTheme.dimens2.x11)
+            .heightIn(min = 44.dp)
             .onFocusChanged { focusState ->
                 if (!isInitialComposition) {
                     if (focusState.isFocused) {
@@ -183,15 +183,15 @@ private fun DecorationBox(
                 .hazeEffectTangem {
                     blurRadius = 8.dp
                 }
-                .padding(TangemTheme.dimens2.x3),
+                .padding(12.dp),
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Icon(
                     modifier = Modifier
-                        .size(TangemTheme.dimens2.x5)
+                        .size(20.dp)
                         .testTag(SearchBarTestTags.ICON),
                     painter = painterResource(id = R.drawable.ic_search_default_24),
                     tint = TangemTheme.colors2.graphic.neutral.tertiaryConstant,
@@ -221,7 +221,7 @@ private fun Field(state: SearchBarUM, modifier: Modifier = Modifier, innerTextFi
     Box(
         contentAlignment = Alignment.CenterStart,
         modifier = modifier
-            .heightIn(min = TangemTheme.dimens2.x5)
+            .heightIn(min = 20.dp)
             .then(if (state.query.isEmpty()) Modifier.width(IntrinsicSize.Max) else Modifier),
     ) {
         innerTextField()
@@ -247,7 +247,7 @@ private fun ClearButton(state: SearchBarUM) {
             tint = TangemTheme.colors2.graphic.neutral.tertiary,
             contentDescription = null,
             modifier = Modifier
-                .size(TangemTheme.dimens2.x5)
+                .size(20.dp)
                 .clip(CircleShape)
                 .clickable(
                     onClick = state.onClearClick,
@@ -276,7 +276,7 @@ private fun CancelButton(
         GhostTangemButton(
             text = resourceReference(R.string.common_cancel),
             size = TangemButtonSize.X9,
-            modifier = Modifier.padding(start = TangemTheme.dimens2.x3),
+            modifier = Modifier.padding(start = 12.dp),
             onClick = {
                 if (state.query.isNotEmpty()) {
                     state.onQueryChange("")
@@ -302,10 +302,10 @@ private fun TangemSearchField_Preview(@PreviewParameter(TangemSearchFieldPreview
     var state by remember { mutableStateOf(params) }
     TangemThemePreviewRedesign {
         Column(
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x4),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier
                 .background(TangemTheme.colors2.surface.level1)
-                .padding(TangemTheme.dimens2.x4),
+                .padding(16.dp),
         ) {
             TangemFieldShape.entries.fastForEach { shape ->
                 TangemSearchField(

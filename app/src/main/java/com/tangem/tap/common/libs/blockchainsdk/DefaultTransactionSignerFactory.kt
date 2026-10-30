@@ -13,7 +13,6 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.update
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.tap.domain.TangemSigner
 import com.tangem.tap.domain.TangemSignerResponse
 import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
@@ -28,7 +27,6 @@ internal class DefaultTransactionSignerFactory(
     // Lazy breaks a DI cycle: WalletRegistrationLauncher -> HotWalletAccessor -> LegacySettingsRepository
     // -> TangemSdkManager -> CardSdkConfigRepository -> TransactionSignerFactory.
     private val walletRegistrationLauncher: Lazy<WalletRegistrationLauncher>,
-    private val authFeatureToggles: AuthFeatureToggles,
 ) : TransactionSignerFactory {
 
     override fun createTransactionSigner(
@@ -44,7 +42,6 @@ internal class DefaultTransactionSignerFactory(
             initialMessage = Message(),
             twinKey = twinKey,
             walletRegistrationLauncher = walletRegistrationLauncher.get(),
-            authFeatureToggles = authFeatureToggles,
             signerCallback = { signResponse ->
                 onSignerResponse(userWalletId, signResponse)
             },

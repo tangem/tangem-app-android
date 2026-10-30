@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.account
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -18,18 +19,19 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.tangempay.addfunds.va.deposit.TangemPayVirtualAccountDepositSuccessComponent
-import com.tangem.features.tangempay.addfunds.bankTransferOnramp.details.TangemPayBankTransferOnrampDetailsComponent
+import com.tangem.features.tangempay.addfunds.bankTransferOnramp.details.TangemPayBankTransferOnrampDetailsAnalytics
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.onboarding.TangemPayBankTransferOnrampOnboardingComponent
 import com.tangem.features.tangempay.card.details.TangemPayCardPageComponent
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToWalletComponent
 import com.tangem.features.tangempay.cashback.api.TangemPayCashbackComponent
 import com.tangem.features.tangempay.common.tariffPlan
 import com.tangem.features.tangempay.common.userWalletId
+import com.tangem.features.tangempay.components.TangemPayBankTransferOnrampDetailsComponent
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
+import com.tangem.features.tangempay.components.TangemPaySelectPlanComponent
 import com.tangem.features.tangempay.eligibility.TangemPayCountrySelectorComponent
 import com.tangem.features.tangempay.orderCard.api.TangemPayOrderCardComponent
 import com.tangem.features.tangempay.tiers.current.TangemPayCurrentPlanComponent
-import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanComponent
 import com.tangem.features.tangempay.tiers.select.TangemPaySelectPlanSource
 import com.tangem.features.tangempay.withdraw.hub.TangemPayWithdrawHubComponent
 import com.tangem.features.tokendetails.ExpressTransactionsComponent
@@ -51,6 +53,9 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
     private val cashbackComponentFactory: TangemPayCashbackComponent.Factory,
     private val orderCardComponentFactory: TangemPayOrderCardComponent.Factory,
     private val countrySelectorComponentFactory: TangemPayCountrySelectorComponent.Factory,
+    private val selectPlanComponentFactory: TangemPaySelectPlanComponent.Factory,
+    private val bankDetailsComponentFactory: TangemPayBankTransferOnrampDetailsComponent.Factory,
+    private val bankDetailsAnalytics: TangemPayBankTransferOnrampDetailsAnalytics,
 ) : AppComponentContext by appComponentContext, TangemPayDetailsContainerComponent {
 
     private val stackNavigation = StackNavigation<TangemPayAccountDetailsInnerRoute>()
@@ -80,12 +85,8 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
             TangemPayDetailsInitialRoute.ORDER_CARD,
             -> TangemPayAccountDetailsInnerRoute.AccountDetails
             TangemPayDetailsInitialRoute.TIERS_ONBOARDING -> {
-                val tariffPlan = params.initialStatus.tariffPlan
-                if (tariffPlan != null) {
-                    TangemPayAccountDetailsInnerRoute.SelectPlan(
-                        tariffPlan = tariffPlan,
-                        source = TangemPaySelectPlanSource.TIERS_ONBOARDING,
-                    )
+                if (params.initialStatus.tariffPlan != null) {
+                    TangemPayAccountDetailsInnerRoute.SelectPlan(source = TangemPaySelectPlanSource.TIERS_ONBOARDING)
                 } else {
                     TangemPayAccountDetailsInnerRoute.AccountDetails
                 }
@@ -98,8 +99,8 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
         val childStack by childStack.subscribeAsState()
 
         BackHandler(onBack = router::pop)
-        Children(stack = childStack, animation = stackAnimation()) { child ->
-            child.instance.Content(modifier = modifier)
+        Children(stack = childStack, modifier = modifier, animation = stackAnimation()) { child ->
+            child.instance.Content(modifier = Modifier.fillMaxSize())
         }
     }
 
@@ -138,12 +139,14 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
                 tariffPlan = config.tariffPlan,
             ),
         )
-        is TangemPayAccountDetailsInnerRoute.SelectPlan -> TangemPaySelectPlanComponent(
-            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+        is TangemPayAccountDetailsInnerRoute.SelectPlan -> selectPlanComponentFactory.create(
+            context = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPaySelectPlanComponent.Params(
                 userWalletId = params.initialStatus.userWalletId,
-                tariffPlan = config.tariffPlan,
-                source = config.source,
+                mode = when (config.source) {
+                    TangemPaySelectPlanSource.TIERS_ONBOARDING -> TangemPaySelectPlanComponent.Mode.TiersOnboarding
+                    TangemPaySelectPlanSource.CHANGE_PLAN -> TangemPaySelectPlanComponent.Mode.ChangePlan
+                },
             ),
         )
         TangemPayAccountDetailsInnerRoute.VirtualAccountDepositSuccess ->
@@ -157,11 +160,12 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
                     userWalletId = params.initialStatus.userWalletId,
                 ),
             )
-        is TangemPayAccountDetailsInnerRoute.BankTransferOnrampDetails -> TangemPayBankTransferOnrampDetailsComponent(
-            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+        is TangemPayAccountDetailsInnerRoute.BankTransferOnrampDetails -> bankDetailsComponentFactory.create(
+            context = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayBankTransferOnrampDetailsComponent.Params(
                 userWalletId = params.initialStatus.userWalletId,
                 bankCredentials = config.bankCredentials,
+                analytics = bankDetailsAnalytics,
             ),
         )
         TangemPayAccountDetailsInnerRoute.Cashback -> cashbackComponentFactory.create(

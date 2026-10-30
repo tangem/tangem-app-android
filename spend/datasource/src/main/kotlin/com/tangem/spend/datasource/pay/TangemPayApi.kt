@@ -29,6 +29,9 @@ interface TangemPayApi {
     @GET("v1/customer/me")
     suspend fun getCustomerMe(@Header("Authorization") authHeader: String): ApiResponse<CustomerMeResponse>
 
+    @GET("v1/customer/summary")
+    suspend fun getCustomerSummary(@Header("Authorization") authHeader: String): ApiResponse<CustomerSummaryResponse>
+
     @GET("v1/customer/tariff-plan/transitions")
     suspend fun getTariffPlanTransitions(
         @Header("Authorization") authHeader: String,

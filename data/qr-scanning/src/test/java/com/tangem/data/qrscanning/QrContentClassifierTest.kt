@@ -5,6 +5,7 @@ import com.tangem.data.qrscanning.parser.PaymentUriParser
 import com.tangem.data.qrscanning.parser.QrContentClassifierParser
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.qrscanning.QrDeepLinkMatcher
 import com.tangem.domain.qrscanning.models.ClassifiedQrContent
 import io.mockk.every
 import io.mockk.mockk
@@ -24,9 +25,13 @@ internal class QrContentClassifierTest {
     private val paymentUriParser = mockk<PaymentUriParser> {
         every { parse(any(), any(), any()) } returns PaymentUriParser.ParseResult.NotRecognized
     }
+    private val deepLinkMatcher = mockk<QrDeepLinkMatcher> {
+        every { isDeepLink(any()) } returns false
+    }
     private val classifier = QrContentClassifierParser(
         blockchainDataProvider = blockchainDataProvider,
         paymentUriParsers = setOf(paymentUriParser),
+        deepLinkMatcher = deepLinkMatcher,
     )
 
     // region WalletConnect
@@ -122,6 +127,61 @@ internal class QrContentClassifierTest {
 
         // Assert
         assertThat(result).isInstanceOf(ClassifiedQrContent.Error.Unrecognized::class.java)
+    }
+
+    // endregion
+
+    // region DeepLink
+
+    @Test
+    fun `GIVEN link accepted by deep link matcher WHEN parse THEN deep link`() {
+        // Arrange
+        val link = "tangem://promo?promo_code=TEST123"
+        every { deepLinkMatcher.isDeepLink(link) } returns true
+
+        // Act
+        val result = classifier.parse(link, listOf(bitcoinCoin))
+
+        // Assert
+        assertThat(result).isEqualTo(ClassifiedQrContent.DeepLink(link))
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "https://tangem.com/app/wc?uri=wc:6ea45@2?relay-protocol=irn&symKey=f2de",
+            "tangem://mcp.authorization?user_code=WDJB-MJHT",
+        ],
+    )
+    fun `GIVEN WalletConnect or MCP link accepted by deep link matcher WHEN parse THEN not a deep link`(link: String) {
+        // Arrange
+        every { deepLinkMatcher.isDeepLink(link) } returns true
+
+        // Act
+        val result = classifier.parse(link, listOf(bitcoinCoin))
+
+        // Assert
+        assertThat(result).isNotInstanceOf(ClassifiedQrContent.DeepLink::class.java)
+    }
+
+    @Test
+    fun `GIVEN payment URI accepted by deep link matcher WHEN parse THEN payment URI`() {
+        // Arrange
+        val link = "https://tangem.com/pay?address=0xRecipient"
+        val expected = ClassifiedQrContent.PaymentUri(
+            address = "0xRecipient",
+            amount = null,
+            memo = null,
+            matchingCurrencies = listOf(ethereumCoin),
+        )
+        every { paymentUriParser.parse(link, any(), any()) } returns PaymentUriParser.ParseResult.Success(expected)
+        every { deepLinkMatcher.isDeepLink(link) } returns true
+
+        // Act
+        val result = classifier.parse(link, listOf(ethereumCoin))
+
+        // Assert
+        assertThat(result).isEqualTo(expected)
     }
 
     // endregion

@@ -14,6 +14,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.polymarket.impl.common.funding.RequisitesState
+import com.tangem.features.polymarket.impl.common.region.PredictionRegionStatus
 import com.tangem.features.polymarket.impl.main.model.PredictionBalanceMode
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.EMPTY_BALANCE_SIGN
 import com.tangem.test.core.ProvideTestModels
@@ -44,7 +45,7 @@ internal class PredictionBalanceUMConverterTest {
                 status = status,
                 positions = PredictionPositionsValue.Unknown,
                 requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
-                isTradingAllowed = model.isTradingAllowed,
+                regionStatus = model.regionStatus,
                 mode = PredictionBalanceMode.AVAILABLE,
             ),
         )
@@ -67,7 +68,7 @@ internal class PredictionBalanceUMConverterTest {
                 status = status,
                 positions = PredictionPositionsValue.Unknown,
                 requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
-                isTradingAllowed = true,
+                regionStatus = PredictionRegionStatus.ALLOWED,
                 mode = PredictionBalanceMode.AVAILABLE,
             ),
         )
@@ -77,7 +78,7 @@ internal class PredictionBalanceUMConverterTest {
     }
 
     @Test
-    fun `GIVEN a positive balance and failed deposit requisites WHEN converting THEN withdraw stays enabled`() {
+    fun `GIVEN a positive balance and failed deposit requisites WHEN converting THEN withdraw is dimmed but tappable`() {
         // Arrange
         val status = active(balance = "12.5")
 
@@ -87,13 +88,56 @@ internal class PredictionBalanceUMConverterTest {
                 status = status,
                 positions = PredictionPositionsValue.Unknown,
                 requisites = RequisitesState.Failed,
-                isTradingAllowed = true,
+                regionStatus = PredictionRegionStatus.ALLOWED,
                 mode = PredictionBalanceMode.AVAILABLE,
             ),
         )
 
         // Assert
         assertThat(actual.withdraw.isEnabled).isTrue()
+        assertThat(actual.withdraw.isDimmed).isTrue()
+    }
+
+    @Test
+    fun `GIVEN a positive balance and requisites still loading WHEN converting THEN withdraw is disabled`() {
+        // Arrange
+        val status = active(balance = "12.5")
+
+        // Act
+        val actual = converter.convert(
+            PredictionBalanceUMConverter.Input(
+                status = status,
+                positions = PredictionPositionsValue.Unknown,
+                requisites = RequisitesState.Loading,
+                regionStatus = PredictionRegionStatus.ALLOWED,
+                mode = PredictionBalanceMode.AVAILABLE,
+            ),
+        )
+
+        // Assert
+        assertThat(actual.withdraw.isEnabled).isFalse()
+        assertThat(actual.withdraw.isDimmed).isFalse()
+    }
+
+    @Test
+    fun `GIVEN a restricted region and ready requisites WHEN converting THEN withdraw is enabled and not dimmed`() {
+        // Arrange
+        val status = active(balance = "12.5")
+
+        // Act
+        val actual = converter.convert(
+            PredictionBalanceUMConverter.Input(
+                status = status,
+                positions = PredictionPositionsValue.Unknown,
+                requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
+                regionStatus = PredictionRegionStatus.RESTRICTED,
+                mode = PredictionBalanceMode.AVAILABLE,
+            ),
+        )
+
+        // Assert
+        assertThat(actual.withdraw.isEnabled).isTrue()
+        assertThat(actual.withdraw.isDimmed).isFalse()
     }
 
     @Test
@@ -208,7 +252,7 @@ internal class PredictionBalanceUMConverterTest {
             status = ACTIVE,
             positions = PredictionPositionsValue.Unknown,
             requisites = RequisitesState.Loading,
-            isTradingAllowed = true,
+            regionStatus = PredictionRegionStatus.ALLOWED,
             mode = PredictionBalanceMode.AVAILABLE,
         )
 
@@ -228,7 +272,7 @@ internal class PredictionBalanceUMConverterTest {
             status = ACTIVE,
             positions = PredictionPositionsValue.Unknown,
             requisites = RequisitesState.Failed,
-            isTradingAllowed = true,
+            regionStatus = PredictionRegionStatus.ALLOWED,
             mode = PredictionBalanceMode.AVAILABLE,
         )
 
@@ -247,7 +291,7 @@ internal class PredictionBalanceUMConverterTest {
             status = ACTIVE,
             positions = PredictionPositionsValue.Unknown,
             requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
-            isTradingAllowed = true,
+            regionStatus = PredictionRegionStatus.ALLOWED,
             mode = PredictionBalanceMode.AVAILABLE,
         )
 
@@ -265,7 +309,7 @@ internal class PredictionBalanceUMConverterTest {
             status = ACTIVE,
             positions = PredictionPositionsValue.Unknown,
             requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
-            isTradingAllowed = true,
+            regionStatus = PredictionRegionStatus.ALLOWED,
             mode = PredictionBalanceMode.AVAILABLE,
         )
 
@@ -277,13 +321,13 @@ internal class PredictionBalanceUMConverterTest {
     }
 
     @Test
-    fun `GIVEN trading not allowed WHEN requisites are ready THEN add funds stays disabled`() {
+    fun `GIVEN the region not checked yet WHEN requisites are ready THEN add funds stays disabled`() {
         // Arrange
         val input = PredictionBalanceUMConverter.Input(
             status = ACTIVE,
             positions = PredictionPositionsValue.Unknown,
             requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
-            isTradingAllowed = false,
+            regionStatus = PredictionRegionStatus.UNKNOWN,
             mode = PredictionBalanceMode.AVAILABLE,
         )
 
@@ -295,13 +339,32 @@ internal class PredictionBalanceUMConverterTest {
     }
 
     @Test
+    fun `GIVEN a restricted region WHEN converting THEN add funds is dimmed but tappable`() {
+        // Arrange
+        val input = PredictionBalanceUMConverter.Input(
+            status = ACTIVE,
+            positions = PredictionPositionsValue.Unknown,
+            requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
+            regionStatus = PredictionRegionStatus.RESTRICTED,
+            mode = PredictionBalanceMode.AVAILABLE,
+        )
+
+        // Act
+        val actual = converter.convert(input)
+
+        // Assert
+        assertThat(actual.addFunds.isEnabled).isTrue()
+        assertThat(actual.addFunds.isDimmed).isTrue()
+    }
+
+    @Test
     fun `GIVEN no deposit address WHEN requisites are ready THEN add funds stays disabled`() {
         // Arrange
         val input = PredictionBalanceUMConverter.Input(
             status = ACTIVE.copy(depositAddress = null),
             positions = PredictionPositionsValue.Unknown,
             requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
-            isTradingAllowed = true,
+            regionStatus = PredictionRegionStatus.ALLOWED,
             mode = PredictionBalanceMode.AVAILABLE,
         )
 
@@ -319,7 +382,7 @@ internal class PredictionBalanceUMConverterTest {
             status = ACTIVE.copy(depositAddress = null),
             positions = PredictionPositionsValue.Unknown,
             requisites = RequisitesState.Failed,
-            isTradingAllowed = true,
+            regionStatus = PredictionRegionStatus.ALLOWED,
             mode = PredictionBalanceMode.AVAILABLE,
         )
 
@@ -338,7 +401,7 @@ internal class PredictionBalanceUMConverterTest {
             status = PredictionAccountStatusValue.NotOnboarded,
             positions = PredictionPositionsValue.Unknown,
             requisites = RequisitesState.Failed,
-            isTradingAllowed = true,
+            regionStatus = PredictionRegionStatus.ALLOWED,
             mode = PredictionBalanceMode.AVAILABLE,
         )
 
@@ -354,7 +417,7 @@ internal class PredictionBalanceUMConverterTest {
         val addFundsEnabled: Boolean,
         val withdrawEnabled: Boolean,
         val isLoading: Boolean = false,
-        val isTradingAllowed: Boolean = true,
+        val regionStatus: PredictionRegionStatus = PredictionRegionStatus.ALLOWED,
     )
 
     private fun provideTestModels() = listOf(
@@ -376,15 +439,28 @@ internal class PredictionBalanceUMConverterTest {
         ),
         GatingModel(
             status = active(balance = "12.5"),
-            isTradingAllowed = false,
+            regionStatus = PredictionRegionStatus.UNKNOWN,
             addFundsEnabled = false,
             withdrawEnabled = true,
         ),
         GatingModel(
             status = active(balance = "0"),
-            isTradingAllowed = false,
+            regionStatus = PredictionRegionStatus.UNKNOWN,
             addFundsEnabled = false,
             withdrawEnabled = false,
+        ),
+        GatingModel(
+            status = active(balance = "12.5"),
+            regionStatus = PredictionRegionStatus.RESTRICTED,
+            addFundsEnabled = true,
+            withdrawEnabled = true,
+        ),
+        GatingModel(
+            status = PredictionAccountStatusValue.Loading,
+            regionStatus = PredictionRegionStatus.RESTRICTED,
+            addFundsEnabled = true,
+            withdrawEnabled = false,
+            isLoading = true,
         ),
         GatingModel(
             status = PredictionAccountStatusValue.Onboarded(source = StatusSource.ACTUAL),
@@ -425,7 +501,7 @@ internal class PredictionBalanceUMConverterTest {
             status = status,
             positions = positions,
             requisites = RequisitesState.Loading,
-            isTradingAllowed = true,
+            regionStatus = PredictionRegionStatus.ALLOWED,
             mode = mode,
         )
 

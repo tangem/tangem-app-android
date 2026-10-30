@@ -3,7 +3,6 @@ package com.tangem.tap.common.analytics.appsflyer
 import com.appsflyer.deeplink.DeepLink
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.TestAppCoroutineScope
 import io.mockk.clearMocks
@@ -21,18 +20,15 @@ import org.junit.jupiter.params.ParameterizedTest
 class AppsFlyerReferralParamsHandlerTest {
 
     private val appsFlyerRepository: AppsFlyerRepository = mockk(relaxUnitFun = true)
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
 
     private lateinit var handler: AppsFlyerReferralParamsHandler
 
     @BeforeEach
     fun setUp() {
         clearMocks(appsFlyerRepository)
-        every { tangemPayFeatureToggles.isCustomCardsCobrandEnabled } returns true
         handler = AppsFlyerReferralParamsHandler(
             appsFlyerRepository = appsFlyerRepository,
             coroutineScope = TestAppCoroutineScope(),
-            tangemPayFeatureToggles = tangemPayFeatureToggles,
         )
     }
 
@@ -198,6 +194,22 @@ class AppsFlyerReferralParamsHandlerTest {
                     shouldStore = false,
                 ),
                 HandleParamsModel(
+                    params = conversionData(deepLinkValue = "referral", refcode = "NULL", campaign = SUCCESS_CAMPAIGN),
+                    shouldStore = false,
+                ),
+                HandleParamsModel(
+                    params = conversionData(deepLinkValue = "referral", refcode = " ", campaign = SUCCESS_CAMPAIGN),
+                    shouldStore = false,
+                ),
+                HandleParamsModel(
+                    params = conversionData(
+                        deepLinkValue = "referral",
+                        refcode = " $SUCCESS_REFCODE ",
+                        campaign = " $SUCCESS_CAMPAIGN ",
+                    ),
+                    shouldStore = true,
+                ),
+                HandleParamsModel(
                     params = conversionData(deepLinkValue = "some_other_deep_link_value"),
                     shouldStore = false,
                 ),
@@ -262,6 +274,8 @@ class AppsFlyerReferralParamsHandlerTest {
                 CampaignModel(rawCampaign = "", expectedCampaign = null),
                 CampaignModel(rawCampaign = " ", expectedCampaign = null),
                 CampaignModel(rawCampaign = "null", expectedCampaign = null),
+                CampaignModel(rawCampaign = "NULL", expectedCampaign = null),
+                CampaignModel(rawCampaign = " $SUCCESS_CAMPAIGN ", expectedCampaign = SUCCESS_CAMPAIGN),
             )
         }
     }
@@ -347,10 +361,7 @@ class AppsFlyerReferralParamsHandlerTest {
     inner class CampaignDeeplink {
 
         @Test
-        fun `GIVEN campaign value AND toggle enabled WHEN handle THEN value stored`() = runTest {
-            // Arrange
-            every { tangemPayFeatureToggles.isCustomCardsCobrandEnabled } returns true
-
+        fun `GIVEN campaign value WHEN handle THEN value stored`() = runTest {
             // Act
             handler.handle(params = conversionData(deepLinkValue = CAMPAIGN_VALUE))
 
@@ -359,10 +370,7 @@ class AppsFlyerReferralParamsHandlerTest {
         }
 
         @Test
-        fun `GIVEN campaign deeplink AND toggle enabled WHEN handleDeeplink THEN value stored`() = runTest {
-            // Arrange
-            every { tangemPayFeatureToggles.isCustomCardsCobrandEnabled } returns true
-
+        fun `GIVEN campaign deeplink WHEN handleDeeplink THEN value stored`() = runTest {
             // Act
             handler.handleDeeplink(createDeepLink(deepLinkValue = CAMPAIGN_VALUE))
 
@@ -371,39 +379,12 @@ class AppsFlyerReferralParamsHandlerTest {
         }
 
         @Test
-        fun `GIVEN campaign value AND toggle disabled WHEN handle THEN nothing stored`() = runTest {
-            // Arrange
-            every { tangemPayFeatureToggles.isCustomCardsCobrandEnabled } returns false
-
-            // Act
-            handler.handle(params = conversionData(deepLinkValue = CAMPAIGN_VALUE))
-
-            // Assert
-            coVerify(inverse = true) { appsFlyerRepository.storeNavigationDeeplink(any()) }
-        }
-
-        @Test
         fun `GIVEN campaign prefix without key WHEN handle THEN nothing stored`() = runTest {
-            // Arrange
-            every { tangemPayFeatureToggles.isCustomCardsCobrandEnabled } returns true
-
             // Act
             handler.handle(params = conversionData(deepLinkValue = "tpay_for_"))
 
             // Assert
             coVerify(inverse = true) { appsFlyerRepository.storeNavigationDeeplink(any()) }
-        }
-
-        @Test
-        fun `GIVEN referral AND toggle disabled WHEN handle THEN navigation deeplink still stored`() = runTest {
-            // Arrange
-            every { tangemPayFeatureToggles.isCustomCardsCobrandEnabled } returns false
-
-            // Act
-            handler.handle(params = conversionData(deepLinkValue = "referral"))
-
-            // Assert
-            coVerify { appsFlyerRepository.storeNavigationDeeplink("referral") }
         }
     }
 
@@ -642,21 +623,6 @@ class AppsFlyerReferralParamsHandlerTest {
 
                 // Assert
                 coVerify(exactly = 1) { appsFlyerRepository.storeNavigationDeeplink(DIRECT_URI) }
-            }
-
-        @Test
-        fun `GIVEN deferred campaign link AND toggle disabled WHEN handle follows THEN conversion data processed`() =
-            runTest {
-                // Arrange
-                every { tangemPayFeatureToggles.isCustomCardsCobrandEnabled } returns false
-                handler.handleDeeplink(createDeepLink(deepLinkValue = CAMPAIGN_VALUE, isDeferred = true))
-
-                // Act
-                handler.handle(params = mapOf("is_first_launch" to true, "af_dp" to DIRECT_URI))
-
-                // Assert
-                coVerify(exactly = 1) { appsFlyerRepository.storeNavigationDeeplink(DIRECT_URI) }
-                coVerify(inverse = true) { appsFlyerRepository.storeNavigationDeeplink(CAMPAIGN_VALUE) }
             }
 
         @Test

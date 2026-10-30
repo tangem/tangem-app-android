@@ -29,7 +29,7 @@ internal class TokenDetailsActionButtonsConverter(
                 when (action) {
                     is TokenActionsState.ActionState.Buy -> {
                         TokenDetailsActionButton.Buy(
-                            dimContent = !action.unavailabilityReason.rendersActionAsEnabled(),
+                            shouldDimContent = !action.unavailabilityReason.rendersActionAsEnabled(),
                             onClick = { clickIntents.onBuyClick(action.unavailabilityReason) },
                         )
                     }
@@ -41,21 +41,21 @@ internal class TokenDetailsActionButtonsConverter(
                     }
                     is TokenActionsState.ActionState.Sell -> {
                         TokenDetailsActionButton.Sell(
-                            dimContent = !action.unavailabilityReason.rendersActionAsEnabled(),
+                            shouldDimContent = !action.unavailabilityReason.rendersActionAsEnabled(),
                             onClick = { clickIntents.onSellClick(action.unavailabilityReason) },
                         )
                     }
                     is TokenActionsState.ActionState.Send -> {
                         TokenDetailsActionButton.Send(
-                            dimContent = !action.unavailabilityReason.rendersActionAsEnabled(),
+                            shouldDimContent = !action.unavailabilityReason.rendersActionAsEnabled(),
                             onClick = { clickIntents.onSendClick(action.unavailabilityReason) },
                         )
                     }
                     is TokenActionsState.ActionState.Swap -> {
                         TokenDetailsActionButton.Swap(
-                            dimContent = !action.unavailabilityReason.rendersSwapAsEnabled(),
+                            shouldDimContent = !action.unavailabilityReason.rendersSwapAsEnabled(),
                             onClick = { clickIntents.onSwapClick(action.unavailabilityReason) },
-                            showBadge = action.shouldShowBadge,
+                            shouldShowBadge = action.shouldShowBadge,
                         )
                     }
                     else -> {

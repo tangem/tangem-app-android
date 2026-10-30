@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
@@ -24,13 +25,13 @@ internal fun WcAddressItem(address: String, modifier: Modifier = Modifier) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         var isTooltipEnabled by remember { mutableStateOf(false) }
         Icon(
-            modifier = Modifier.size(TangemTheme.dimens.size24),
+            modifier = Modifier.size(24.dp),
             painter = painterResource(R.drawable.ic_user_square_24),
             contentDescription = null,
             tint = TangemTheme.colors.icon.accent,
         )
         Text(
-            modifier = Modifier.padding(start = TangemTheme.dimens.spacing8),
+            modifier = Modifier.padding(start = 8.dp),
             text = stringResourceSafe(R.string.common_address),
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.primary1,
@@ -38,7 +39,7 @@ internal fun WcAddressItem(address: String, modifier: Modifier = Modifier) {
         )
         SpacerWMax()
         TangemTooltip(
-            modifier = Modifier.padding(start = TangemTheme.dimens.spacing16),
+            modifier = Modifier.padding(start = 16.dp),
             text = stringReference(address),
             enabled = isTooltipEnabled,
             content = { contentModifier ->

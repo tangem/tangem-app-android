@@ -3,9 +3,7 @@ package com.tangem.features.feed.rwa.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,6 +17,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.features.feed.rwa.ui.state.RwaSearchListUM
 import com.tangem.features.feed.rwa.ui.state.RwaSearchPortfolioUM
 import com.tangem.features.feed.rwa.ui.state.RwaSearchUM
+import com.tangem.features.feed.ui.FeedSearchListState
 import com.tangem.features.feed.ui.FeedSearchNoResults
 import com.tangem.features.feed.ui.FeedSearchSectionHeader
 
@@ -36,22 +35,19 @@ private const val LIST_SHIMMER_COUNT = 10
 @Composable
 internal fun RwaSearchContent(
     state: RwaSearchUM,
-    listState: LazyListState,
+    listState: FeedSearchListState,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
     val bottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 24.dp
     val hasPortfolio = state.portfolio is RwaSearchPortfolioUM.Content
 
-    // a new query is a different result set, so start reading it from the top. Keyed on the query and not
-    // on the list state, which deliberately stays Content while the query is refined and so would never
-    // re-trigger this
-    LaunchedEffect(state.query, hasPortfolio) {
-        listState.requestScrollToItem(0)
-    }
+    // keyed on the query and not on the list state, which deliberately stays Content while the query is
+    // refined and so would never re-trigger this
+    listState.ScrollToTopOnNewResults(results = state.query to hasPortfolio)
 
     LazyColumn(
-        state = listState,
+        state = listState.lazyListState,
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(
             start = 16.dp,
@@ -72,7 +68,7 @@ internal fun RwaSearchContent(
     }
 
     InfiniteListHandler(
-        listState = listState,
+        listState = listState.lazyListState,
         buffer = LOAD_NEXT_PAGE_ON_END_INDEX,
         triggerLoadMoreCheckOnItemsCountChange = true,
         onLoadMore = remember(state.list) {

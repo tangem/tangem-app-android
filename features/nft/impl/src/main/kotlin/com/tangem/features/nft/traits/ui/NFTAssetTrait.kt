@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.nft.traits.entity.NFTAssetTraitUM
 
@@ -20,7 +21,7 @@ internal fun NFTAssetTrait(state: NFTAssetTraitUM, modifier: Modifier = Modifier
         )
         Text(
             modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing4),
+                .padding(top = 4.dp),
             text = state.value,
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.primary1,

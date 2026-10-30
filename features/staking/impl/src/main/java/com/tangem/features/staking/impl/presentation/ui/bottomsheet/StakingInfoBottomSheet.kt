@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheetTitle
@@ -36,8 +37,8 @@ fun StakingInfoBottomSheet(config: TangemBottomSheetConfig) {
                 color = TangemTheme.colors.text.secondary,
                 style = TangemTheme.typography.body2,
                 modifier = Modifier.padding(
-                    horizontal = TangemTheme.dimens.spacing28,
-                    vertical = TangemTheme.dimens.spacing16,
+                    horizontal = 28.dp,
+                    vertical = 16.dp,
                 ),
             )
         }

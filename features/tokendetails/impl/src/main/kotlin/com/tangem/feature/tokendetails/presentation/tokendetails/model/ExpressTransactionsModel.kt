@@ -73,8 +73,6 @@ internal class ExpressTransactionsModel @Inject constructor(
     private var ratingRequestedTxId: String? = null
     private val expressTxStatusTaskScheduler = SingleTaskScheduler<PersistentList<ExpressTransactionStateUM>>()
 
-    private val waitForFirstExpressStatusEmit = MutableStateFlow(false)
-
     private val currentStateProvider: Provider<ExpressTransactionsBlockState> = Provider { internalUiState.value }
 
     private val stateFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
@@ -196,16 +194,8 @@ internal class ExpressTransactionsModel @Inject constructor(
                 when (event) {
                     ExpressTransactionsEvent.Update -> subscribeOnExpressTransactionsUpdates()
                     ExpressTransactionsEvent.Clear -> clear()
-                    is ExpressTransactionsEvent.OpenTx -> openTxOnFirstEmit(event.txId)
                 }
             }
-        }
-    }
-
-    private fun openTxOnFirstEmit(txId: String) {
-        modelScope.launch {
-            waitForFirstExpressStatusEmit.first { it }
-            onExpressTransactionClick(txId)
         }
     }
 
@@ -251,7 +241,6 @@ internal class ExpressTransactionsModel @Inject constructor(
         expressTxStatusTaskScheduler.cancelTask()
         expressStatusFactory.getExpressStatuses()
             .distinctUntilChanged()
-            .onEach { waitForFirstExpressStatusEmit.value = true }
             .onEach { expressTxs ->
                 internalUiState.value = expressStatusFactory.getStateWithUpdatedExpressTxs(
                     expressTxs = expressTxs,

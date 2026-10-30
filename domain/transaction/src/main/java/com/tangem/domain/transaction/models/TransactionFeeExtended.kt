@@ -2,7 +2,6 @@ package com.tangem.domain.transaction.models
 
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.transaction.models.tron.TronGaslessQuote
 import java.math.BigInteger
 
 data class TransactionFeeExtended(
@@ -28,13 +27,10 @@ data class TransactionFeeExtended(
      */
     val withdrawGasLimit: BigInteger? = null,
     /**
-     * Non-null only on the Tron gasless path (Tron does not use the EVM EIP-712/7702 machinery above).
-     * Carries the backend compensation quote (recipient, compensation amount, quoteId). When set, the
-     * displayed fee is the compensation amount and the send step routes to the Tron submit flow via
-     * [com.tangem.domain.transaction.usecase.gasless.CreateAndSendTronGaslessTransactionUseCase],
-     * NOT the EVM gasless path.
+     * Non-null exactly when the fee is gasless — every resolver quoting one must set it. Null means the
+     * fee is paid in the network's own coin.
      */
-    val tronGaslessQuote: TronGaslessQuote? = null,
+    val gaslessProtocolData: GaslessProtocolData? = null,
     /**
      * Native-coin estimation of the same transaction. Equals [transactionFee] when the fee is paid in
      * the native coin. Consumers use it to decide whether the native coin has enough balance to be
@@ -43,3 +39,6 @@ data class TransactionFeeExtended(
      */
     val nativeFee: TransactionFee? = null,
 )
+
+val TransactionFeeExtended.isGasless: Boolean
+    get() = gaslessProtocolData != null

@@ -146,18 +146,18 @@ private fun DropdownMenuContent(
                 transformOrigin = transformOriginState.value
             }
             .shadow(
-                elevation = TangemTheme.dimens2.x2,
-                shape = RoundedCornerShape(TangemTheme.dimens2.x5),
+                elevation = 8.dp,
+                shape = RoundedCornerShape(20.dp),
                 clip = false,
             )
-            .clip(RoundedCornerShape(TangemTheme.dimens2.x5)),
+            .clip(RoundedCornerShape(20.dp)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Column(
             modifier = modifier
                 .width(IntrinsicSize.Max)
                 .verticalScroll(rememberScrollState())
-                .clip(RoundedCornerShape(TangemTheme.dimens2.x5))
+                .clip(RoundedCornerShape(20.dp))
                 .background(TangemTheme.colors2.contextMenu.background)
                 .testTag(PopUpMenuTestTags.CONTAINER),
             content = content,

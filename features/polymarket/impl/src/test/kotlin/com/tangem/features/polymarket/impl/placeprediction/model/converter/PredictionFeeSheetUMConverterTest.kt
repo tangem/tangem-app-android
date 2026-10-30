@@ -5,6 +5,8 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.WrappedList
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderSide
@@ -124,6 +126,9 @@ internal class PredictionFeeSheetUMConverterTest {
         minOrderAmount = BigDecimal.ONE,
         tickSize = BigDecimal("0.01"),
         isLive = false,
+        version = PolymarketMarketVersion.V1,
+        exchange = PolymarketContracts.CTF_EXCHANGE,
+        signingDomainVersion = "2",
     )
 
     data class ConvertCase(

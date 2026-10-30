@@ -6,9 +6,6 @@ import com.tangem.core.analytics.api.EventLogger
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.OtelIncludedEvent
 import com.tangem.core.analytics.models.OtelMetric
-import com.tangem.tap.common.analytics.AnalyticsEventsLogger
-import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
-import com.tangem.wallet.BuildConfig
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.metrics.DoubleHistogram
 import io.opentelemetry.api.metrics.LongCounter
@@ -16,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Mirrors [OtelIncludedEvent]-marked analytics events to OTLP metrics. Does nothing until the OTel
- * pipeline is initialized (feature toggle on + api key configured) and for unmarked events.
+ * pipeline is initialized (api key configured) and for unmarked events.
  */
 internal class OpenTelemetryAnalyticsHandler(
     private val metricsHolder: OpenTelemetryMetricsHolder,
@@ -79,19 +76,5 @@ internal class OpenTelemetryAnalyticsHandler(
         const val ID = "OpenTelemetry"
 
         private const val CATEGORY_ATTRIBUTE = "category"
-    }
-
-    class Builder(
-        private val metricsHolder: OpenTelemetryMetricsHolder,
-    ) : AnalyticsHandlerBuilder {
-
-        override fun build(data: AnalyticsHandlerBuilder.Data): AnalyticsHandler {
-            val logger = if (BuildConfig.TESTER_MENU_ENABLED && data.logConfig.isOpenTelemetryLogEnabled) {
-                AnalyticsEventsLogger(name = ID)
-            } else {
-                null
-            }
-            return OpenTelemetryAnalyticsHandler(metricsHolder = metricsHolder, logger = logger)
-        }
     }
 }

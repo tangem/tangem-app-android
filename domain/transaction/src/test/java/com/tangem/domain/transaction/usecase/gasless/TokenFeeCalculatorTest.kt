@@ -14,6 +14,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.domain.transaction.GaslessTransactionRepository
@@ -222,6 +223,9 @@ class TokenFeeCalculatorTest {
             assertNotNull(feeExtended)
             assertEquals(tokenStatus.currency.id, feeExtended.feeTokenId)
             assertTrue(feeExtended.transactionFee is TransactionFee.Single)
+            // Every fee this calculator produces is relayed over EIP-712/7702, and the send step
+            // dispatches on that marker alone.
+            assertEquals(GaslessProtocolData.Evm, feeExtended.gaslessProtocolData)
             // main-tx per-call gas = initialFee.gasLimit * 1.40; no withdraw on the non-yield path
             assertEquals(BigInteger("140000"), feeExtended.mainTransactionGasLimit)
             assertNull(feeExtended.withdrawGasLimit)

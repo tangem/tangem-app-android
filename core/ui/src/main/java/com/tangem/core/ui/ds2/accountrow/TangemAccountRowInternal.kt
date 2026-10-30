@@ -23,26 +23,22 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_cloud_exclamation_20
 import com.tangem.utils.StringsSigns
 
-/** Collapsed subtitle: `2 tokens · 2 members`. The separating dot is dropped with the members count. */
+/** Collapsed subtitle: `label · description`. The separating dot is dropped with either side. */
 @Composable
-internal fun AccountRowSubtitle(
-    tokensAmount: TextReference?,
-    membersAmount: TextReference?,
-    modifier: Modifier = Modifier,
-) {
+internal fun AccountRowSubtitle(label: TextReference?, description: TextReference?, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (tokensAmount != null) {
-            ExpandableCaptionText(text = tokensAmount)
+        if (label != null) {
+            ExpandableCaptionText(text = label)
         }
-        if (tokensAmount != null && membersAmount != null) {
+        if (label != null && description != null) {
             ExpandableDot()
         }
-        if (membersAmount != null) {
-            ExpandableCaptionText(text = membersAmount)
+        if (description != null) {
+            ExpandableCaptionText(text = description)
         }
     }
 }

@@ -87,6 +87,7 @@ internal class DefaultTangemPayAccountDeepLinkHandler @AssistedInject constructo
         is PaymentAccountStatusValue.KycRequired,
         is PaymentAccountStatusValue.UnderReview,
         is PaymentAccountStatusValue.IssuingCard,
+        is PaymentAccountStatusValue.Verified,
         -> false
         PaymentAccountStatusValue.Loading,
         is PaymentAccountStatusValue.AwaitingPlanSelection,

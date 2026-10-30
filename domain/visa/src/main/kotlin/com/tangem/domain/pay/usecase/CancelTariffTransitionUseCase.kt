@@ -15,9 +15,8 @@ class CancelTariffTransitionUseCase(
     suspend operator fun invoke(userWalletId: UserWalletId, orderId: String): Either<VisaApiError, Unit> = either {
         cancelTangemPayOrderUseCase.invoke(userWalletId, orderId).bind()
 
-        val (source, tariff) = getCurrentTariffUseCase(userWalletId) ?: return@either
-
-        if (source.isActual() && tariff.isDefaultTariff) {
+        val tariff = getCurrentTariffUseCase(userWalletId).getOrNull() ?: return@either
+        if (tariff.isDefaultTariff) {
             val transitions = getTariffTransitionUseCase.invoke(userWalletId).bind()
             val basicPlanTransition = transitions.find { it.plan.isBasicTier } ?: return@either
             submitTariffTransitionUseCase.invoke(userWalletId, basicPlanTransition).bind()

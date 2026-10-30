@@ -2,6 +2,8 @@ package com.tangem.feature.swap
 
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.common.routing.AppRoute.Swap.AccountFlow
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
@@ -19,6 +21,7 @@ import com.tangem.domain.models.quote.PriceChange
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.usecase.GetPredictionDepositCurrencyStatusesUseCase
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.swap.domain.account.AccountUnderlyingCurrencies
@@ -32,6 +35,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -41,6 +46,7 @@ internal class DefaultInitialCurrenciesResolverTest {
     private val singleAccountStatusListSupplier = mockk<SingleAccountStatusListSupplier>()
     private val rampStateManager = mockk<RampStateManager>()
     private val accountUnderlyingCurrencies = mockk<AccountUnderlyingCurrencies>()
+    private val getPredictionDepositCurrencyStatusesUseCase = mockk<GetPredictionDepositCurrencyStatusesUseCase>()
 
     private val userWalletId = UserWalletId("0011")
     private val userWallet = mockk<UserWallet> {
@@ -52,6 +58,7 @@ internal class DefaultInitialCurrenciesResolverTest {
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
         rampStateManager = rampStateManager,
         accountUnderlyingCurrencies = accountUnderlyingCurrencies,
+        getPredictionDepositCurrencyStatusesUseCase = getPredictionDepositCurrencyStatusesUseCase,
     )
 
     private var uniqueIndex = 0
@@ -60,6 +67,7 @@ internal class DefaultInitialCurrenciesResolverTest {
     fun setup() {
         coEvery { getUserWalletUseCase(userWalletId) } returns userWallet.right()
         coEvery { accountUnderlyingCurrencies.get(any()) } returns emptyList()
+        coEvery { getPredictionDepositCurrencyStatusesUseCase(any()) } returns emptyList()
     }
 
     // region no initial currency
@@ -1834,33 +1842,174 @@ internal class DefaultInitialCurrenciesResolverTest {
         return AccountStatus.Payment(account = Account.Payment(userWalletId), value = statusValue)
     }
 
-    @Test
-    fun `GIVEN the gacha vault WHEN the top-up flow opens THEN it lands as TO with a portfolio FROM`() = runTest {
+    @ParameterizedTest
+    @MethodSource("provideTargetAccountTopUps")
+    fun `GIVEN a target account WHEN its top-up flow opens THEN it lands as TO with a portfolio FROM`(
+        topUp: TargetAccountTopUp,
+    ) = runTest {
         // Arrange
-        val walletCurrency = mockCryptoCurrency()
-        val walletStatus = createCurrencyStatus(walletCurrency, fiatAmount = BigDecimal("100"))
-        val vaultCurrency = mockCryptoCurrency()
-        val vaultStatus = createCurrencyStatus(vaultCurrency, fiatAmount = BigDecimal.ZERO)
-        setupSupplier(
-            listOf(
-                createCryptoPortfolioAccountStatus(listOf(walletStatus)),
-                createCollectiblesAccountStatus(vaultStatus),
-            ),
-        )
-        setupAvailability(linkedMapOf(walletCurrency to true))
-        setupAvailability(linkedMapOf(vaultCurrency to true))
+        val walletStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("100"))
+        val targetCurrency = mockAccountToken()
+        val (targetStatus, expectedToStatus) = topUp.createTarget(targetCurrency)
+        setupSupplier(listOf(createCryptoPortfolioAccountStatus(listOf(walletStatus)), targetStatus))
+        setupAvailabilityForAnyCurrency()
 
         // Act
         val (from, to) = resolver.invoke(
             userWalletId,
-            initialCryptoCurrency = vaultCurrency,
+            initialCryptoCurrency = targetCurrency,
             swapCurrencyPosition = CurrencyPosition.TO,
-            accountFlow = AccountFlow.CollectiblesTopUp,
+            accountFlow = topUp.accountFlow,
         )
 
         // Assert
-        assertThat(to?.status).isSameInstanceAs(vaultStatus)
+        assertThat(to?.account).isEqualTo(targetStatus.account)
+        assertThat(to?.status).isEqualTo(expectedToStatus)
         assertThat(from?.status).isSameInstanceAs(walletStatus)
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideTargetAccountTopUps")
+    fun `GIVEN a funded target token in the wallet WHEN its top-up flow opens THEN it is FROM over a richer token`(
+        topUp: TargetAccountTopUp,
+    ) = runTest {
+        // Arrange
+        val richStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("500"))
+        val walletUsdc = mockCryptoCurrency(id = mockCurrencyId(SOLANA_NETWORK_ID, SOLANA_USDC_MINT))
+        val walletUsdcStatus = createCurrencyStatus(walletUsdc, fiatAmount = BigDecimal("50"))
+        val targetCurrency = mockAccountToken(id = mockCurrencyId(SOLANA_NETWORK_ID, SOLANA_USDC_MINT))
+        setupSupplier(
+            listOf(
+                createCryptoPortfolioAccountStatus(listOf(richStatus, walletUsdcStatus)),
+                topUp.createTarget(targetCurrency).first,
+            ),
+        )
+        setupAvailabilityForAnyCurrency()
+
+        // Act
+        val (from, to) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = targetCurrency,
+            swapCurrencyPosition = CurrencyPosition.TO,
+            accountFlow = topUp.accountFlow,
+        )
+
+        // Assert
+        assertThat(from?.status).isSameInstanceAs(walletUsdcStatus)
+        assertThat(to?.currency).isSameInstanceAs(targetCurrency)
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideTargetAccountTopUps")
+    fun `GIVEN an empty target token in the wallet WHEN its top-up flow opens THEN FROM is the most-funded token`(
+        topUp: TargetAccountTopUp,
+    ) = runTest {
+        // Arrange
+        val richStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("500"))
+        val walletUsdc = mockCryptoCurrency(id = mockCurrencyId(SOLANA_NETWORK_ID, SOLANA_USDC_MINT))
+        val walletUsdcStatus = createCurrencyStatus(walletUsdc, fiatAmount = BigDecimal.ZERO)
+        val targetCurrency = mockAccountToken(id = mockCurrencyId(SOLANA_NETWORK_ID, SOLANA_USDC_MINT))
+        setupSupplier(
+            listOf(
+                createCryptoPortfolioAccountStatus(listOf(richStatus, walletUsdcStatus)),
+                topUp.createTarget(targetCurrency).first,
+            ),
+        )
+        setupAvailabilityForAnyCurrency()
+
+        // Act
+        val (from, _) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = targetCurrency,
+            swapCurrencyPosition = CurrencyPosition.TO,
+            accountFlow = topUp.accountFlow,
+        )
+
+        // Assert
+        assertThat(from?.status).isSameInstanceAs(richStatus)
+    }
+
+    private fun provideTargetAccountTopUps() = listOf(
+        TargetAccountTopUp(accountFlow = AccountFlow.CollectiblesTopUp) { token ->
+            val vaultStatus = createCurrencyStatus(token, fiatAmount = BigDecimal.ZERO)
+            createCollectiblesAccountStatus(vaultStatus) to vaultStatus
+        },
+        TargetAccountTopUp(accountFlow = AccountFlow.MoneyTopUp) { token ->
+            val accountValue = createActiveMoneyAccountValue(token)
+            val accountStatus = AccountStatus.Money(account = Account.Money(userWalletId), value = accountValue)
+            accountStatus to requireNotNull(accountValue.cryptoCurrencyStatus)
+        },
+    )
+
+    class TargetAccountTopUp(
+        val accountFlow: AccountFlow,
+        val createTarget: (CryptoCurrency.Token) -> Pair<AccountStatus, CryptoCurrencyStatus>,
+    ) {
+        override fun toString(): String = accountFlow.toString()
+    }
+
+    @Test
+    fun `GIVEN a funded deposit token WHEN prediction top-up THEN it is FROM over a richer token`() = runTest {
+        // Arrange
+        val richCurrency = mockCryptoCurrency()
+        val richStatus = createCurrencyStatus(richCurrency, fiatAmount = BigDecimal("500"))
+        val arbitrumUsdc = mockToken(Blockchain.Arbitrum, ARBITRUM_USDC_CHECKSUM)
+        val arbitrumUsdcStatus = createCurrencyStatus(arbitrumUsdc, fiatAmount = BigDecimal("50"))
+        val collateral = mockCryptoCurrency()
+        val collateralStatus = createCurrencyStatus(collateral, fiatAmount = BigDecimal.ZERO)
+        setupSupplier(
+            listOf(
+                createCryptoPortfolioAccountStatus(listOf(richStatus, arbitrumUsdcStatus)),
+                createPredictionAccountStatus(collateralStatus),
+            ),
+        )
+        setupAvailabilityForAnyCurrency()
+        coEvery { getPredictionDepositCurrencyStatusesUseCase(userWalletId) } returns listOf(
+            createCurrencyStatus(mockToken(Blockchain.Arbitrum, ARBITRUM_USDC_CHECKSUM.lowercase()), BigDecimal.ZERO),
+        )
+
+        // Act
+        val (from, to) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = collateral,
+            swapCurrencyPosition = CurrencyPosition.TO,
+            accountFlow = AccountFlow.PredictionTopUp,
+        )
+
+        // Assert
+        assertThat(from?.status).isSameInstanceAs(arbitrumUsdcStatus)
+        assertThat(to?.status).isSameInstanceAs(collateralStatus)
+    }
+
+    @Test
+    fun `GIVEN no funded deposit token WHEN prediction top-up THEN FROM is the most-funded token`() = runTest {
+        // Arrange
+        val richCurrency = mockCryptoCurrency()
+        val richStatus = createCurrencyStatus(richCurrency, fiatAmount = BigDecimal("500"))
+        val arbitrumUsdc = mockToken(Blockchain.Arbitrum, ARBITRUM_USDC_CHECKSUM)
+        val arbitrumUsdcStatus = createCurrencyStatus(arbitrumUsdc, fiatAmount = BigDecimal.ZERO)
+        val collateral = mockCryptoCurrency()
+        setupSupplier(
+            listOf(
+                createCryptoPortfolioAccountStatus(listOf(richStatus, arbitrumUsdcStatus)),
+                createPredictionAccountStatus(createCurrencyStatus(collateral, fiatAmount = BigDecimal.ZERO)),
+            ),
+        )
+        setupAvailabilityForAnyCurrency()
+        coEvery { getPredictionDepositCurrencyStatusesUseCase(userWalletId) } returns listOf(
+            createCurrencyStatus(mockToken(Blockchain.Arbitrum, ARBITRUM_USDC_CHECKSUM.lowercase()), BigDecimal.ZERO),
+        )
+
+        // Act
+        val (from, _) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = collateral,
+            swapCurrencyPosition = CurrencyPosition.TO,
+            accountFlow = AccountFlow.PredictionTopUp,
+        )
+
+        // Assert
+        assertThat(from?.status).isSameInstanceAs(richStatus)
     }
 
     @Test
@@ -2093,6 +2242,90 @@ internal class DefaultInitialCurrenciesResolverTest {
             assertThat(to).isNull()
         }
 
+    @Test
+    fun `GIVEN the money account WHEN it is not active THEN its token is not found`() = runTest {
+        // Arrange
+        val walletCurrency = mockCryptoCurrency()
+        val walletStatus = createCurrencyStatus(walletCurrency, fiatAmount = BigDecimal("100"))
+        val accountCurrency = mockAccountToken()
+        val inactiveStatus = AccountStatus.Money(
+            account = Account.Money(userWalletId),
+            value = MoneyAccountStatusValue.NotCreated,
+        )
+        setupSupplier(listOf(createCryptoPortfolioAccountStatus(listOf(walletStatus)), inactiveStatus))
+        setupAvailability(linkedMapOf(walletCurrency to true))
+        setupAvailability(linkedMapOf())
+
+        // Act
+        val (from, to) = resolver.invoke(
+            userWalletId,
+            initialCryptoCurrency = accountCurrency,
+            swapCurrencyPosition = CurrencyPosition.TO,
+            accountFlow = AccountFlow.MoneyTopUp,
+        )
+
+        // Assert
+        assertThat(to).isNull()
+        assertThat(from).isNull()
+    }
+
+    @Test
+    fun `GIVEN the account token in the wallet with another address case WHEN money top-up THEN it is FROM`() =
+        runTest {
+            // Arrange
+            val richStatus = createCurrencyStatus(mockCryptoCurrency(), fiatAmount = BigDecimal("500"))
+            val walletUsdc = mockPolygonToken(contractAddress = POLYGON_USDC_CHECKSUM)
+            val walletUsdcStatus = createCurrencyStatus(walletUsdc, fiatAmount = BigDecimal("50"))
+            val accountToken = mockPolygonToken(contractAddress = POLYGON_USDC_CHECKSUM.lowercase())
+            setupSupplier(
+                listOf(
+                    createCryptoPortfolioAccountStatus(listOf(richStatus, walletUsdcStatus)),
+                    createMoneyAccountStatus(accountToken),
+                ),
+            )
+            setupAvailabilityForAnyCurrency()
+
+            // Act
+            val (from, _) = resolver.invoke(
+                userWalletId,
+                initialCryptoCurrency = accountToken,
+                swapCurrencyPosition = CurrencyPosition.TO,
+                accountFlow = AccountFlow.MoneyTopUp,
+            )
+
+            // Assert
+            assertThat(from?.status).isSameInstanceAs(walletUsdcStatus)
+        }
+
+    private fun mockPolygonToken(contractAddress: String): CryptoCurrency.Token = mockk(relaxed = true) {
+        every { id } returns mockCurrencyId(
+            rawNetworkId = Blockchain.Polygon.toNetworkId(),
+            contractAddress = contractAddress,
+        )
+        every { network.rawId } returns Blockchain.Polygon.toNetworkId()
+    }
+
+    private fun createMoneyAccountStatus(accountCurrency: CryptoCurrency.Token): AccountStatus.Money {
+        return AccountStatus.Money(
+            account = Account.Money(userWalletId),
+            value = createActiveMoneyAccountValue(accountCurrency),
+        )
+    }
+
+    private fun createActiveMoneyAccountValue(
+        accountCurrency: CryptoCurrency.Token,
+    ): MoneyAccountStatusValue.Account.Active = MoneyAccountStatusValue.Account.Active(
+        source = StatusSource.ACTUAL,
+        cryptoCurrency = accountCurrency,
+        balance = MoneyAccountStatusValue.Balance(
+            cryptoAmount = BigDecimal.ZERO,
+            depositAddress = "0xdeposit",
+            currencyCode = "USD",
+            fiatRate = BigDecimal.ONE,
+        ),
+        customerId = "customer",
+    )
+
     private fun createCollectiblesAccountStatus(vaultStatus: CryptoCurrencyStatus?): AccountStatus.Collectibles {
         val statusValue = mockk<CollectiblesAccountStatusValue.Onboarded>(relaxed = true) {
             every { cryptoCurrencyStatus } returns vaultStatus
@@ -2112,6 +2345,15 @@ internal class DefaultInitialCurrenciesResolverTest {
     ): CryptoCurrency = mockk(relaxed = true) {
         every { this@mockk.id } returns id
     }
+
+    private fun mockToken(blockchain: Blockchain, contractAddress: String): CryptoCurrency.Token = mockk(relaxed = true) {
+        every { id } returns mockCurrencyId()
+        every { network.rawId } returns blockchain.toNetworkId()
+        every { this@mockk.contractAddress } returns contractAddress
+    }
+
+    private fun mockAccountToken(id: CryptoCurrency.ID = mockCurrencyId()): CryptoCurrency.Token =
+        mockk(relaxed = true) { every { this@mockk.id } returns id }
 
     private fun mockCurrencyId(
         rawNetworkId: String = "net-${uniqueIndex++}",
@@ -2244,4 +2486,11 @@ internal class DefaultInitialCurrenciesResolverTest {
     }
 
     // endregion
+
+    private companion object {
+        const val ARBITRUM_USDC_CHECKSUM = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+        const val SOLANA_NETWORK_ID = "solana"
+        const val SOLANA_USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+        const val POLYGON_USDC_CHECKSUM = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+    }
 }

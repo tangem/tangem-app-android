@@ -246,7 +246,7 @@ internal class YieldSupplyEntryModelTest {
         maxFeeUSD = BigDecimal.ZERO,
         campaign = YieldIncentiveCampaign(
             hasActiveCampaign = hasCampaign,
-            rewardsApr = BigDecimal("1.5"),
+            rewardsApy = BigDecimal("1.5"),
             totalApyEst = BigDecimal("5.5"),
         ),
     )

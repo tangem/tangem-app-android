@@ -27,7 +27,7 @@ data class UserWalletId(
      *
      * @param value the byte array to be converted into a hexadecimal string
      */
-    constructor(value: ByteArray?) : this(stringValue = value?.toHexString() ?: "")
+    constructor(value: ByteArray?) : this(stringValue = value?.toHexString().orEmpty())
 
     override fun toString() = "UserWalletId(${stringValue.take(n = 3)}...${stringValue.takeLast(n = 3)})"
 }

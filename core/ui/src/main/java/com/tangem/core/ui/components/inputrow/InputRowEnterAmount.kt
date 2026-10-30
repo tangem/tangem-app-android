@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.fields.AmountTextField
 import com.tangem.core.ui.components.fields.TangemAmountTextFieldColors
 import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
@@ -68,7 +69,7 @@ fun InputRowEnterAmount(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(TangemTheme.dimens.spacing12),
+                .padding(12.dp),
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -91,7 +92,7 @@ fun InputRowEnterAmount(
                     keyboardOptions = keyboardOptions,
                     keyboardActions = keyboardActions,
                     modifier = Modifier
-                        .padding(top = TangemTheme.dimens.spacing8),
+                        .padding(top = 8.dp),
                 )
             }
             iconRes?.let { iconRes ->
@@ -101,8 +102,8 @@ fun InputRowEnterAmount(
                     tint = iconTint,
                     modifier = Modifier
                         .padding(
-                            top = TangemTheme.dimens.spacing10,
-                            bottom = TangemTheme.dimens.spacing10,
+                            top = 10.dp,
+                            bottom = 10.dp,
                         )
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },

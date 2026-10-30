@@ -13,6 +13,9 @@ sealed interface PolymarketRedeemError : PolymarketError {
     /** `404` — the id is unknown **or belongs to another wallet**; stop polling, never retry. */
     data object NotFound : PolymarketRedeemError
 
+    /** `409` on the call lookup — the position holds nothing to redeem, or its market's version is unsupported. */
+    data class NothingToRedeem(val detail: String?) : PolymarketRedeemError
+
     /** `422` — the relayer refused: not claimable, bad signature, expired deadline or a reused nonce. */
     data class RelayerRejected(val detail: String?) : PolymarketRedeemError
 

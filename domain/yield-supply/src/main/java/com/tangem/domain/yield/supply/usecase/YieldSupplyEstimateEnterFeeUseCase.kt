@@ -104,7 +104,10 @@ class YieldSupplyEstimateEnterFeeUseCase(
         val withEstimatedFees = transactionDataList.filter {
             (it.extras as? EthereumTransactionExtras)?.callData is EthereumYieldSupplyEnterCallData
         }.map { transaction ->
-            transaction.copy(fee = calculatedFee.fixFee(cryptoCurrency, ETHEREUM_CONSTANT_GAS_LIMIT))
+            transaction.copy(
+                fee = calculatedFee.fixFee(cryptoCurrency, ETHEREUM_CONSTANT_GAS_LIMIT)
+                    .increaseGasLimitBy(INCREASE_GAS_LIMIT_FOR_SUPPLY),
+            )
         }
 
         // First return calculated fees then estimated

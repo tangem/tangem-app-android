@@ -44,7 +44,7 @@ private fun MostlyUsedItemPlaceholder(modifier: Modifier = Modifier) {
             .width(178.dp)
             .height(130.dp)
             .background(
-                color = TangemTheme.colors3.bg.opaque.primary,
+                color = TangemTheme.colors3.bg.transparent.primary,
                 shape = RoundedCornerShape(24.dp),
             )
             .padding(12.dp),

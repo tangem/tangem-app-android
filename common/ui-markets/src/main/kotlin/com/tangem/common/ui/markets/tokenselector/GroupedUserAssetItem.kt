@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.button.*
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -23,7 +24,7 @@ fun GroupedUserAssetItem(item: UserAssetItemUM.Grouped, modifier: Modifier = Mod
     Box(
         modifier = modifier.background(
             color = TangemTheme.colors2.surface.level3,
-            shape = RoundedCornerShape(TangemTheme.dimens2.x5),
+            shape = RoundedCornerShape(20.dp),
         ),
     ) {
         TangemRowContainer(
@@ -32,7 +33,7 @@ fun GroupedUserAssetItem(item: UserAssetItemUM.Grouped, modifier: Modifier = Mod
                 LayeringIcons(
                     modifier = Modifier
                         .layoutId(layoutId = TangemRowLayoutId.HEAD)
-                        .padding(end = TangemTheme.dimens2.x1),
+                        .padding(end = 4.dp),
                     tangemIconUM = item.icon,
                     count = item.tokensCount,
                 )
@@ -63,7 +64,7 @@ fun GroupedUserAssetItem(item: UserAssetItemUM.Grouped, modifier: Modifier = Mod
 
                 TangemButton(
                     modifier = Modifier
-                        .padding(start = TangemTheme.dimens2.x2)
+                        .padding(start = 8.dp)
                         .layoutId(TangemRowLayoutId.TAIL),
                     buttonUM = TangemButtonUM(
                         type = TangemButtonType.Secondary,

@@ -122,6 +122,6 @@ internal class AssociateNetworksDelegate(
 
     companion object {
         internal fun Map<String, Namespace.Proposal>.setOfChainId(): Set<String> =
-            this.values.flatMap { proposal -> proposal.chains ?: listOf() }.toSet()
+            this.values.flatMap { proposal -> proposal.chains.orEmpty() }.toSet()
     }
 }

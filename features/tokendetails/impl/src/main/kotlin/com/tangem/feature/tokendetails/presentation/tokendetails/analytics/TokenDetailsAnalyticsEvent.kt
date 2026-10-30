@@ -7,7 +7,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.utils
 
 internal open class TokenDetailsAnalyticsEvent(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = "Token", event, params) {
 
     class DynamicAddressesScreenOpened(currency: CryptoCurrency) : TokenDetailsAnalyticsEvent(
@@ -37,7 +37,7 @@ internal open class TokenDetailsAnalyticsEvent(
 
     open class Notice(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, String> = emptyMap(),
     ) : TokenDetailsAnalyticsEvent(event = "Notice - $event", params) {
 
         class NetworkUnreachable(currency: CryptoCurrency) : Notice(

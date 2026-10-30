@@ -2,6 +2,7 @@ package com.tangem.data.polymarket.builder
 
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.toKeccak
 import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.domain.polymarket.model.PolymarketExchangeDomain
 import com.tangem.domain.polymarket.model.PredictionOrder
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import org.json.JSONArray
@@ -26,19 +27,12 @@ object PolymarketOrderTypedDataBuilder {
 
     fun orderTypeHash(): ByteArray = ORDER_TYPE.toByteArray().toKeccak()
 
-    /** The exchange the order is signed against: the only thing a neg-risk market changes. */
-    fun exchangeAddress(isNegRisk: Boolean): String = if (isNegRisk) {
-        PolymarketContracts.NEG_RISK_CTF_EXCHANGE
-    } else {
-        PolymarketContracts.CTF_EXCHANGE
-    }
-
-    fun domainSeparator(isNegRisk: Boolean): ByteArray = concat(
+    fun domainSeparator(domain: PolymarketExchangeDomain): ByteArray = concat(
         DOMAIN_TYPE.toByteArray().toKeccak(),
         PolymarketContracts.EXCHANGE_DOMAIN_NAME.toByteArray().toKeccak(),
-        PolymarketContracts.EXCHANGE_DOMAIN_VERSION.toByteArray().toKeccak(),
+        domain.version.toByteArray().toKeccak(),
         word(BigInteger.valueOf(PolymarketContracts.CHAIN_ID)),
-        addressWord(exchangeAddress(isNegRisk)),
+        addressWord(domain.exchange),
     ).toKeccak()
 
     /**
@@ -62,14 +56,14 @@ object PolymarketOrderTypedDataBuilder {
         bytes32Word(order.builder),
     ).toKeccak()
 
-    fun digest(order: PredictionOrder, isNegRisk: Boolean): ByteArray =
-        concat(EIP191_PREFIX, domainSeparator(isNegRisk), hashStruct(order)).toKeccak()
+    fun digest(order: PredictionOrder, domain: PolymarketExchangeDomain): ByteArray =
+        concat(EIP191_PREFIX, domainSeparator(domain), hashStruct(order)).toKeccak()
 
     /** Only for the digest cross-check in tests: production hashes the struct directly. */
-    fun buildOrderJson(order: PredictionOrder, isNegRisk: Boolean): String = JSONObject().apply {
+    fun buildOrderJson(order: PredictionOrder, domain: PolymarketExchangeDomain): String = JSONObject().apply {
         put("types", orderTypes())
         put("primaryType", "Order")
-        put("domain", orderDomain(isNegRisk = isNegRisk))
+        put("domain", orderDomain(domain))
         put("message", orderMessage(order))
     }.toString()
 
@@ -78,11 +72,11 @@ object PolymarketOrderTypedDataBuilder {
         put("Order", orderTypeFields())
     }
 
-    private fun orderDomain(isNegRisk: Boolean): JSONObject = JSONObject().apply {
+    private fun orderDomain(domain: PolymarketExchangeDomain): JSONObject = JSONObject().apply {
         put("name", PolymarketContracts.EXCHANGE_DOMAIN_NAME)
-        put("version", PolymarketContracts.EXCHANGE_DOMAIN_VERSION)
+        put("version", domain.version)
         put("chainId", PolymarketContracts.CHAIN_ID)
-        put("verifyingContract", exchangeAddress(isNegRisk))
+        put("verifyingContract", domain.exchange)
     }
 
     private fun orderMessage(order: PredictionOrder): JSONObject = JSONObject().apply {
