@@ -189,7 +189,7 @@ class TangemPayCashbackTest : BaseTestCase() {
             }
             step("Open Tangem Pay") { openTangemPay() }
             step("Assert cashback widget with '$positiveAmount' is displayed") {
-                assertTangemPayCashbackWidget(widgetTitle(positiveAmount))
+                assertTangemPayCashbackWidget(tangemPayCashbackWidgetTitle(positiveAmount, today))
             }
             step("Open 'More' menu") { openTangemPayMoreActionsMenu() }
             step("Assert 'Cashback in $currentMonth' menu item is not displayed") {
