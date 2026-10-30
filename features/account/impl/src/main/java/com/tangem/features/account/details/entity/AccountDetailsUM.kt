@@ -7,13 +7,14 @@ import com.tangem.core.ui.extensions.TextReference
 internal data class AccountDetailsUM(
     val title: TextReference,
     val accountName: TextReference,
+    val accountSubtitle: TextReference,
     val accountIcon: AccountIconUM.CryptoPortfolio,
     val archiveMode: ArchiveMode,
     val isManageTokensAvailable: Boolean,
     val onCloseClick: () -> Unit,
     val onManageTokensClick: () -> Unit,
     val onAccountEditClick: (() -> Unit)?,
-    val isPendingActivation: Boolean = false,
+    val requiredApprovals: RequiredApprovalsUM? = null,
     val members: MembersRowUM? = null,
     val networksInfo: NetworksInfoUM? = null,
 ) {
@@ -27,9 +28,14 @@ internal data class AccountDetailsUM(
         ) : ArchiveMode
     }
 
+    data class RequiredApprovalsUM(
+        val value: TextReference,
+        val onInfoClick: () -> Unit,
+    )
+
     data class MembersRowUM(
         val title: TextReference,
-        val membersCount: TextReference,
+        val progress: TextReference?,
         val onClick: () -> Unit,
     )
 

@@ -41,10 +41,13 @@ internal class PolymarketActivityBatchFetcher(
 
     private suspend fun fetch(config: PolymarketActivityListConfig): BatchFetchResult<List<PolymarketActivity>> =
         runSuspendCatching {
-            val page = fetchPage(config, nextCursor, batchSize).getOrElse { error("Activity request failed: $it") }
-            require(page.nextCursor == null || page.nextCursor !in cursors) { "Activity cursor did not advance" }
-            page.nextCursor?.let(cursors::add)
-            nextCursor = page.nextCursor
+            var page: PolymarketActivityPage
+            do {
+                page = fetchPage(config, nextCursor, batchSize).getOrElse { error("Activity request failed: $it") }
+                require(page.nextCursor == null || page.nextCursor !in cursors) { "Activity cursor did not advance" }
+                page.nextCursor?.let(cursors::add)
+                nextCursor = page.nextCursor
+            } while (page.items.isEmpty() && nextCursor != null)
             BatchFetchResult.Success(data = page.items, isEmpty = page.items.isEmpty(), isLast = nextCursor == null)
         }.getOrElse { BatchFetchResult.Error(it) }
 }

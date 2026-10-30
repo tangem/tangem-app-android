@@ -380,20 +380,32 @@ internal class DefaultBankOfframpOrderRepositoryTest {
                 expected = BankOfframpError.UnsupportedConfiguration,
             ),
             ApiErrorModel(
-                apiError = VisaApiError.Unknown(errorCode = 104_000_409),
-                expected = BankOfframpError.Unknown(cause = null, isOutcomeUnknown = false),
+                apiError = VisaApiError.Unknown(errorCode = 104_120_100),
+                expected = BankOfframpError.Unavailable(errorCode = 104_120_100),
             ),
             ApiErrorModel(
                 apiError = VisaApiError.NotFound,
-                expected = BankOfframpError.Unknown(cause = null, isOutcomeUnknown = false),
+                expected = BankOfframpError.Unavailable(errorCode = VisaApiError.NotFound.errorCode),
+            ),
+            ApiErrorModel(
+                apiError = VisaApiError.Unknown(errorCode = 104_130_100),
+                expected = BankOfframpError.Unknown(cause = null, isOutcomeUnknown = false, errorCode = 104_130_100),
             ),
             ApiErrorModel(
                 apiError = VisaApiError.ServerUnavailable,
-                expected = BankOfframpError.Unknown(cause = null, isOutcomeUnknown = true),
+                expected = BankOfframpError.Unknown(
+                    cause = null,
+                    isOutcomeUnknown = true,
+                    errorCode = VisaApiError.ServerUnavailable.errorCode,
+                ),
             ),
             ApiErrorModel(
                 apiError = VisaApiError.UnknownWithoutCode,
-                expected = BankOfframpError.Unknown(cause = null, isOutcomeUnknown = true),
+                expected = BankOfframpError.Unknown(
+                    cause = null,
+                    isOutcomeUnknown = true,
+                    errorCode = VisaApiError.UnknownWithoutCode.errorCode,
+                ),
             ),
         )
 

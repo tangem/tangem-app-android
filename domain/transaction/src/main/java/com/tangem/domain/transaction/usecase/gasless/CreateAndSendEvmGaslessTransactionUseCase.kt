@@ -15,6 +15,7 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.formatHex
 import com.tangem.blockchain.extensions.normalizeByteArray
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySendCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.common.extensions.toHexString
@@ -55,7 +56,14 @@ class CreateAndSendEvmGaslessTransactionUseCase(
                 val uncompiledTxData = validateTransactionData(transactionData)
                 val context = prepareGaslessContext(userWallet, uncompiledTxData, fee)
                 val signedData = signGaslessTransactionByUser(userWallet, context, uncompiledTxData)
-                signAndSendTransactionOnBackend(context, signedData, uncompiledTxData)
+                signAndSendTransactionOnBackend(context, signedData, uncompiledTxData).also {
+                    if (fee.gaslessFeePlan.upgradesYieldModule()) {
+                        walletManagersFacade.resetYieldSendUpgradeDecision(
+                            userWalletId = userWallet.walletId,
+                            network = context.currency.network,
+                        )
+                    }
+                }
             },
             catch = {
                 raise(it.mapToGaslessSendError())
@@ -445,6 +453,11 @@ class CreateAndSendEvmGaslessTransactionUseCase(
                     nonce = nonce,
                 )
             )
+        }
+
+        internal fun GaslessFeePlan?.upgradesYieldModule(): Boolean {
+            val withdrawCallData = (this as? GaslessFeePlan.TokenPayWithYieldWithdraw)?.withdrawCallData
+            return withdrawCallData is EthereumYieldSupplyUpgradeToAndCallCallData
         }
 
         fun BigInteger.toFormattedHex(bytes: Int): String {

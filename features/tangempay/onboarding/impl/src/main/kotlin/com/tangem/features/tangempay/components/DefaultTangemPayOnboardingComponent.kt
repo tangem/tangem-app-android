@@ -7,6 +7,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.essenty.lifecycle.doOnPause
+import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -34,11 +36,17 @@ internal class DefaultTangemPayOnboardingComponent @AssistedInject constructor(
         childFactory = ::bottomSheetChild,
     )
 
+    init {
+        lifecycle.doOnResume { model.setVideoRunning(isRunning = true) }
+        lifecycle.doOnPause { model.setVideoRunning(isRunning = false) }
+    }
+
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
+        val video = model.videoState?.collectAsStateWithLifecycle()?.value
         val bottomSheet by bottomSheetSlot.subscribeAsState()
-        TangemPayOnboardingScreen(modifier = modifier, state = state)
+        TangemPayOnboardingScreen(modifier = modifier, state = state, video = video?.surface)
         bottomSheet.child?.instance?.BottomSheet()
     }
 

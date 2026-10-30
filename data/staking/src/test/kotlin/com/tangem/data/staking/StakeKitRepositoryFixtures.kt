@@ -4,8 +4,8 @@ import com.squareup.moshi.Moshi
 import com.tangem.common.test.data.staking.MockYieldDTOFactory
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
-import com.tangem.domain.models.staking.NetworkType
-import com.tangem.domain.models.staking.action.StakingActionType
+import com.tangem.domain.staking.model.NetworkType
+import com.tangem.domain.staking.model.action.StakingActionType
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction

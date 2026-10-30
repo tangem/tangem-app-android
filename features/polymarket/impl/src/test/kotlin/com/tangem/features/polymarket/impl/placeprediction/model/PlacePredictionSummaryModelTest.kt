@@ -37,6 +37,9 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PredictionFeeSheetUMConverter
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
+import com.tangem.domain.polymarket.model.PolymarketApiCredentials
+import com.tangem.domain.polymarket.model.PolymarketClobIdentity
+import com.tangem.domain.polymarket.model.PredictionOrderSigningRoute
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -46,6 +49,7 @@ import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -66,7 +70,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         fun `GIVEN a quote at the display bound WHEN placed THEN signing keeps the raw quote`() = runTest {
             // Arrange
             val quote = createQuote().copy(averagePrice = BigDecimal("0.9995"))
-            coEvery { getQuoteUseCase(request = any()) } returns quote.right()
+            coEvery { getQuoteUseCase(any(), request = any()) } returns quote.right()
             val amountModel = createAmountModel(testScope = this)
             advanceUntilIdle()
             amountModel.onResume()
@@ -106,7 +110,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
 
             // Assert
-            coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+            coVerify(exactly = 1) { getQuoteUseCase(any(), request = any()) }
             assertThat(model.uiState.value.submit).isNotEqualTo(SubmitUM.Idle)
 
             model.onDestroy()
@@ -630,7 +634,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
 
             // Assert
             assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
-            coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+            coVerify(exactly = 1) { getQuoteUseCase(any(), request = any()) }
 
             model.onDestroy()
         }
@@ -653,7 +657,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
 
             // Assert
-            coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+            coVerify(exactly = 1) { getQuoteUseCase(any(), request = any()) }
 
             model.onDestroy()
         }
@@ -713,7 +717,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         @Test
         fun `GIVEN a cheap quote but too few shares WHEN place clicked THEN the shares leg decides`() = runTest {
             // Arrange
-            coEvery { getQuoteUseCase(request = any()) } returns
+            coEvery { getQuoteUseCase(any(), request = any()) } returns
                 createSellQuote(shares = BigDecimal("40")).copy(total = BigDecimal("0.5")).right()
             val amountModel = createAmountModel(testScope = this, params = SELL_PARAMS)
             advanceUntilIdle()
@@ -740,7 +744,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         fun `GIVEN the market stopped accepting orders WHEN place clicked THEN nothing is signed AND the user is told`() =
             runTest {
                 // Arrange
-                coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
+                coEvery { getQuoteUseCase(any(), request = any()) } returns createSellQuote().right()
                 val amountModel = createAmountModel(testScope = this, params = SELL_PARAMS)
                 advanceUntilIdle()
                 amountModel.onResume()
@@ -777,7 +781,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             amountModel.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             val model = createSummaryModel(testScope = this, amountModel = amountModel)
-            val slot = FakeSlotHost(model.feeSheetNavigation)
+            val slot = FakeSlotHost(model.feeSheet.navigation)
 
             val expected = PredictionFeeSheetUMConverter.convert(
                 quote = createQuote(),
@@ -790,7 +794,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
 
             // Assert
             assertThat(slot.configuration).isEqualTo(Unit)
-            assertThat(model.feeSheetState.value).isEqualTo(expected)
+            assertThat(model.feeSheet.state.value).isEqualTo(expected)
 
             model.onDestroy()
         }
@@ -804,7 +808,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             amountModel.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             val model = createSummaryModel(testScope = this, amountModel = amountModel)
-            val slot = FakeSlotHost(model.feeSheetNavigation)
+            val slot = FakeSlotHost(model.feeSheet.navigation)
             coEvery { placeOrderUseCase(any(), any(), any()) } coAnswers {
                 // Act
                 model.onFeeClick()
@@ -830,7 +834,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             amountModel.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             val model = createSummaryModel(testScope = this, amountModel = amountModel)
-            val slot = FakeSlotHost(model.feeSheetNavigation)
+            val slot = FakeSlotHost(model.feeSheet.navigation)
             model.onFeeClick()
 
             // Act
@@ -851,7 +855,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         fun `GIVEN a partial sale below the minimum order size WHEN quoted THEN it is priced AND signed`() =
             runTest {
                 // Arrange
-                coEvery { getQuoteUseCase(request = any()) } returns
+                coEvery { getQuoteUseCase(any(), request = any()) } returns
                     createSellQuote(shares = BigDecimal("3")).copy(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE).right()
                 val amountModel = createAmountModel(testScope = this, params = SELL_PARAMS)
                 advanceUntilIdle()
@@ -878,7 +882,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         fun `GIVEN a priced sell WHEN place clicked THEN the position is re-read and invalidated`(filledShares: String) =
             runTest {
                 // Arrange
-                coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
+                coEvery { getQuoteUseCase(any(), request = any()) } returns createSellQuote().right()
                 val amountModel = createAmountModel(testScope = this, params = SELL_PARAMS)
                 advanceUntilIdle()
                 amountModel.onResume()
@@ -910,7 +914,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         fun `GIVEN the position shrank below the quoted shares WHEN place clicked THEN nothing is signed AND the user is told`() =
             runTest {
                 // Arrange
-                coEvery { getQuoteUseCase(request = any()) } returns createSellQuote(shares = BigDecimal("12.8")).right()
+                coEvery { getQuoteUseCase(any(), request = any()) } returns createSellQuote(shares = BigDecimal("12.8")).right()
                 val amountModel = createAmountModel(testScope = this, params = SELL_PARAMS)
                 advanceUntilIdle()
                 amountModel.onResume()
@@ -940,7 +944,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         @Test
         fun `GIVEN the position is gone WHEN place clicked THEN nothing is signed AND the user is told`() = runTest {
             // Arrange
-            coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
+            coEvery { getQuoteUseCase(any(), request = any()) } returns createSellQuote().right()
             val amountModel = createAmountModel(testScope = this, params = SELL_PARAMS)
             advanceUntilIdle()
             amountModel.onResume()
@@ -965,9 +969,36 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         }
 
         @Test
+        fun `GIVEN the position is gone WHEN place clicked again THEN the position is not read again`() = runTest {
+            // Arrange
+            coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } returns createSellQuote().right()
+            val amountModel = createAmountModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+            amountModel.onResume()
+            amountModel.onAmountChange(value = "12.80")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            val model = createSummaryModel(testScope = this, amountModel = amountModel)
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns null.right()
+            amountModel.onPause()
+            model.onPlaceClick()
+            advanceUntilIdle()
+            clearMocks(positionsRepository, answers = false)
+
+            // Act
+            model.onPlaceClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) { positionsRepository.getPosition(addresses = any(), id = any()) }
+            coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+
+            model.onDestroy()
+        }
+
+        @Test
         fun `GIVEN the position cannot be re-read WHEN place clicked THEN the user is told instead of nothing`() = runTest {
             // Arrange
-            coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
+            coEvery { getQuoteUseCase(any(), request = any()) } returns createSellQuote().right()
             val amountModel = createAmountModel(testScope = this, params = SELL_PARAMS)
             advanceUntilIdle()
             amountModel.onResume()
@@ -994,7 +1025,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         fun `GIVEN a priced sell WHEN the position turns out to be gone THEN the stale proceeds go with it`() =
             runTest {
                 // Arrange
-                coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
+                coEvery { getQuoteUseCase(any(), request = any()) } returns createSellQuote().right()
                 val amountModel = createAmountModel(testScope = this, params = SELL_PARAMS)
                 advanceUntilIdle()
                 amountModel.onResume()
@@ -1015,5 +1046,75 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
 
                 model.onDestroy()
             }
+    }
+
+    @Nested
+    inner class SigningRoute {
+
+        @Test
+        fun `GIVEN session keys turned off WHEN placed THEN the owner key signs and the router is never asked`() =
+            runTest {
+                // Arrange
+                val model = createSummaryModel(testScope = this, amountModel = pricedAmountModel())
+
+                // Act
+                model.onPlaceClick()
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 0) { signingRouter.route(any()) }
+                coVerify(exactly = 1) {
+                    signOrderInteractor(request = match { it.route == PredictionOrderSigningRoute.Owner })
+                }
+                coVerify(exactly = 1) {
+                    placeOrderUseCase(any(), any(), PolymarketMarketVersion.V1, PredictionOrderSigningRoute.Owner)
+                }
+
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN session keys turned on WHEN a delayed order is placed THEN the router's route signs and reads it back`() =
+            runTest {
+                // Arrange
+                every { featureToggles.isPolymarketSessionKeysEnabled } returns true
+                coEvery { signingRouter.route(ADDRESSES) } returns SESSION_ROUTE
+                coEvery { placeOrderUseCase(any(), any(), any(), SESSION_ROUTE) } returns
+                    createPlaceResult(status = "delayed").right()
+                coEvery { awaitDelayedOrderUseCase(addresses = ADDRESSES, orderId = ORDER_ID, route = SESSION_ROUTE) } returns
+                    DelayedPredictionOrderOutcome.Unconfirmed
+                val model = createSummaryModel(testScope = this, amountModel = pricedAmountModel())
+
+                // Act
+                model.onPlaceClick()
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 1) { signOrderInteractor(request = match { it.route == SESSION_ROUTE }) }
+                coVerify(exactly = 1) {
+                    awaitDelayedOrderUseCase(addresses = ADDRESSES, orderId = ORDER_ID, route = SESSION_ROUTE)
+                }
+                coVerify(exactly = 0) { placeOrderUseCase(any(), any(), any(), PredictionOrderSigningRoute.Owner) }
+
+                model.onDestroy()
+            }
+
+        private fun TestScope.pricedAmountModel(): PlacePredictionAmountModel {
+            val amountModel = createAmountModel(testScope = this)
+            advanceUntilIdle()
+            amountModel.onResume()
+            amountModel.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            return amountModel
+        }
+    }
+
+    private companion object {
+        val SESSION_ROUTE = PredictionOrderSigningRoute.Session(
+            identity = PolymarketClobIdentity.Session(
+                address = "0x5e55000000000000000000000000000000000001",
+                credentials = PolymarketApiCredentials(apiKey = "session", secret = "c2VjcmV0", passphrase = "pass"),
+            ),
+        )
     }
 }

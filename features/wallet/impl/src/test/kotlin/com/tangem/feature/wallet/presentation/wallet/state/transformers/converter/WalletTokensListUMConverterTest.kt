@@ -32,7 +32,6 @@ import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokensListItemUM2
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListUM
-import com.tangem.features.jointaccount.main.JointAccountMainUM
 import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.StringsSigns
 import io.mockk.every
@@ -116,7 +115,7 @@ internal class WalletTokensListUMConverterTest {
         // Assert
         val content = result as WalletTokensListUM.Content
         val row = content.tokenList.single() as TokensListItemUM2.JointPending
-        assertThat(row.state).isInstanceOf(JointAccountMainUM.WaitingMembers::class.java)
+        assertThat(row.state).isInstanceOf(TangemAccountRow.State.NotActive::class.java)
     }
 
     @Test
@@ -212,7 +211,12 @@ internal class WalletTokensListUMConverterTest {
     private fun pendingJointStatus(): AccountStatus.Joint {
         return AccountStatus.Joint(
             account = jointAccount(),
-            value = JointAccountStatusValue.Pending(StatusSource.ACTUAL, joinedMembers = 1, totalMembers = 3),
+            value = JointAccountStatusValue.Pending(
+                StatusSource.ACTUAL,
+                joinedMembers = 1,
+                totalMembers = 3,
+                threshold = 2,
+            ),
             tokenList = TokenList.Empty,
             priceChangeLce = Unit.lceError(),
         )
@@ -221,7 +225,12 @@ internal class WalletTokensListUMConverterTest {
     private fun activeJointStatus(): AccountStatus.Joint {
         return AccountStatus.Joint(
             account = jointAccount(),
-            value = JointAccountStatusValue.Active(StatusSource.ACTUAL, totalMembers = 3, safeAddress = "0x5afe"),
+            value = JointAccountStatusValue.Active(
+                StatusSource.ACTUAL,
+                totalMembers = 3,
+                safeAddress = "0x5afe",
+                threshold = 2,
+            ),
             tokenList = ungroupedTokenList(),
             priceChangeLce = Unit.lceError(),
         )

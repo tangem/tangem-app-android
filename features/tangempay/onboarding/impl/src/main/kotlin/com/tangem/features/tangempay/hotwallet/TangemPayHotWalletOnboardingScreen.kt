@@ -10,6 +10,7 @@ import com.tangem.core.ui.components.legal.LegalCaption
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.tangempay.ui.TangemPayBundleIntroductionLayout
 import com.tangem.features.tangempay.ui.TangemPayOnboardingLayout
+import com.tangem.features.tangempay.ui.TangemPayUnifiedOnboardingLayout
 
 @Composable
 internal fun TangemPayHotWalletOnboardingScreen(
@@ -17,7 +18,16 @@ internal fun TangemPayHotWalletOnboardingScreen(
     video: VideoSurfaceState?,
     modifier: Modifier = Modifier,
 ) {
-    if (state.isPayBundleIntroductionEnabled) {
+    if (state.isUnifiedOnboarding) {
+        TangemPayUnifiedOnboardingLayout(
+            modifier = modifier,
+            video = video,
+            isGetStartedLoading = state.isLoading,
+            onGetStartedClick = state.onGetCardClick,
+            onTermsClick = state.onTermsClick,
+            onCloseClick = null,
+        )
+    } else if (state.isPayBundleIntroductionEnabled) {
         TangemPayBundleIntroductionLayout(state = state, video = video, modifier = modifier)
     } else {
         TangemPayOnboardingLayout(
@@ -42,6 +52,7 @@ private fun TangemPayHotWalletOnboardingScreenPreview() {
         TangemPayHotWalletOnboardingScreen(
             state = TangemPayHotWalletOnboardingUM(
                 isPayBundleIntroductionEnabled = false,
+                isUnifiedOnboarding = false,
                 isLoading = false,
                 onGetCardClick = {},
                 onTermsClick = {},

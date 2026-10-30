@@ -1,5 +1,6 @@
 package com.tangem.domain.polymarket.usecase
 
+import com.tangem.domain.polymarket.model.PredictionOrderSigningRoute
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
@@ -8,6 +9,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
+import com.tangem.domain.polymarket.model.PolymarketClobIdentity
 import com.tangem.domain.polymarket.model.PredictionOrderState
 import com.tangem.domain.polymarket.model.PredictionOrderStateError
 import com.tangem.domain.polymarket.model.PredictionOrderStatus
@@ -49,7 +51,7 @@ internal class AwaitDelayedPredictionOrderUseCaseTest {
         runTest {
             // Arrange
             val matched = order(status = PredictionOrderStatus.Matched)
-            coEvery { repository.getOrder(OWNER, CREDENTIALS, ORDER_ID) } returns matched.right()
+            coEvery { repository.getOrder(OWNER_IDENTITY, ORDER_ID) } returns matched.right()
 
             // Act
             val actual = useCase(addresses = ADDRESSES, orderId = ORDER_ID)
@@ -57,7 +59,7 @@ internal class AwaitDelayedPredictionOrderUseCaseTest {
             // Assert
             assertThat(actual).isEqualTo(DelayedPredictionOrderOutcome.Matched(order = matched))
             assertThat(currentTime).isEqualTo(READ_INTERVAL_MILLIS)
-            coVerify(exactly = 1) { repository.getOrder(OWNER, CREDENTIALS, ORDER_ID) }
+            coVerify(exactly = 1) { repository.getOrder(OWNER_IDENTITY, ORDER_ID) }
         }
 
     @ParameterizedTest
@@ -67,7 +69,7 @@ internal class AwaitDelayedPredictionOrderUseCaseTest {
     ) = runTest {
         // Arrange
         val matched = order(status = PredictionOrderStatus.Matched)
-        coEvery { repository.getOrder(OWNER, CREDENTIALS, ORDER_ID) } returnsMany listOf(
+        coEvery { repository.getOrder(OWNER_IDENTITY, ORDER_ID) } returnsMany listOf(
             error.left(),
             error.left(),
             matched.right(),
@@ -79,7 +81,7 @@ internal class AwaitDelayedPredictionOrderUseCaseTest {
         // Assert
         assertThat(actual).isEqualTo(DelayedPredictionOrderOutcome.Matched(order = matched))
         assertThat(currentTime).isEqualTo(READ_INTERVAL_MILLIS * MAX_READS)
-        coVerify(exactly = 3) { repository.getOrder(OWNER, CREDENTIALS, ORDER_ID) }
+        coVerify(exactly = 3) { repository.getOrder(OWNER_IDENTITY, ORDER_ID) }
     }
 
     @ParameterizedTest
@@ -88,7 +90,7 @@ internal class AwaitDelayedPredictionOrderUseCaseTest {
         error: PredictionOrderStateError,
     ) = runTest {
         // Arrange
-        coEvery { repository.getOrder(OWNER, CREDENTIALS, ORDER_ID) } returns error.left()
+        coEvery { repository.getOrder(OWNER_IDENTITY, ORDER_ID) } returns error.left()
 
         // Act
         val actual = useCase(addresses = ADDRESSES, orderId = ORDER_ID)
@@ -96,7 +98,7 @@ internal class AwaitDelayedPredictionOrderUseCaseTest {
         // Assert
         assertThat(actual).isEqualTo(DelayedPredictionOrderOutcome.Unconfirmed)
         assertThat(currentTime).isEqualTo(READ_INTERVAL_MILLIS * MAX_READS)
-        coVerify(exactly = MAX_READS) { repository.getOrder(OWNER, CREDENTIALS, ORDER_ID) }
+        coVerify(exactly = MAX_READS) { repository.getOrder(OWNER_IDENTITY, ORDER_ID) }
     }
 
     private fun provideUnknownStatusErrors() = listOf(
@@ -112,7 +114,7 @@ internal class AwaitDelayedPredictionOrderUseCaseTest {
         model: FinalAnswerModel,
     ) = runTest {
         // Arrange
-        coEvery { repository.getOrder(OWNER, CREDENTIALS, ORDER_ID) } returns model.answer
+        coEvery { repository.getOrder(OWNER_IDENTITY, ORDER_ID) } returns model.answer
 
         // Act
         val actual = useCase(addresses = ADDRESSES, orderId = ORDER_ID)
@@ -120,7 +122,7 @@ internal class AwaitDelayedPredictionOrderUseCaseTest {
         // Assert
         assertThat(actual).isInstanceOf(DelayedPredictionOrderOutcome.Failed::class.java)
         assertThat(currentTime).isEqualTo(READ_INTERVAL_MILLIS)
-        coVerify(exactly = 1) { repository.getOrder(OWNER, CREDENTIALS, ORDER_ID) }
+        coVerify(exactly = 1) { repository.getOrder(OWNER_IDENTITY, ORDER_ID) }
     }
 
     internal data class FinalAnswerModel(
@@ -156,6 +158,29 @@ internal class AwaitDelayedPredictionOrderUseCaseTest {
     )
 
     @Test
+    fun `GIVEN an order placed on the session route WHEN invoked THEN it is read with the session identity`() = runTest {
+        // Arrange
+        val session = PolymarketClobIdentity.Session(
+            address = "0x5e55000000000000000000000000000000000001",
+            credentials = PolymarketApiCredentials(apiKey = "session", secret = "s", passphrase = "p"),
+        )
+        coEvery { repository.getOrder(session, ORDER_ID) } returns
+            PredictionOrderStateError.NotFound.left()
+
+        // Act
+        val actual = useCase(
+            addresses = ADDRESSES,
+            orderId = ORDER_ID,
+            route = PredictionOrderSigningRoute.Session(identity = session),
+        )
+
+        // Assert
+        assertThat(actual).isInstanceOf(DelayedPredictionOrderOutcome.Failed::class.java)
+        coVerify(exactly = 1) { repository.getOrder(session, ORDER_ID) }
+        coVerify(exactly = 0) { getApiCredentials(any()) }
+    }
+
+    @Test
     fun `GIVEN no stored credentials WHEN invoked THEN nothing is read and the wait fails`() = runTest {
         // Arrange
         coEvery { getApiCredentials(userWalletId = USER_WALLET_ID) } returns null
@@ -165,13 +190,13 @@ internal class AwaitDelayedPredictionOrderUseCaseTest {
 
         // Assert
         assertThat(actual).isInstanceOf(DelayedPredictionOrderOutcome.Failed::class.java)
-        coVerify(exactly = 0) { repository.getOrder(any(), any(), any()) }
+        coVerify(exactly = 0) { repository.getOrder(any(), any()) }
     }
 
     @Test
     fun `GIVEN the first read is pending WHEN time passes THEN the first read waits out one interval`() = runTest {
         // Arrange
-        coEvery { repository.getOrder(OWNER, CREDENTIALS, ORDER_ID) } returns
+        coEvery { repository.getOrder(OWNER_IDENTITY, ORDER_ID) } returns
             order(status = PredictionOrderStatus.Matched).right()
 
         // Act
@@ -179,9 +204,9 @@ internal class AwaitDelayedPredictionOrderUseCaseTest {
         advanceTimeBy(delayTimeMillis = READ_INTERVAL_MILLIS)
 
         // Assert
-        coVerify(exactly = 0) { repository.getOrder(any(), any(), any()) }
+        coVerify(exactly = 0) { repository.getOrder(any(), any()) }
         advanceTimeBy(delayTimeMillis = 1)
-        coVerify(exactly = 1) { repository.getOrder(OWNER, CREDENTIALS, ORDER_ID) }
+        coVerify(exactly = 1) { repository.getOrder(OWNER_IDENTITY, ORDER_ID) }
         job.cancel()
     }
 
@@ -200,6 +225,7 @@ internal class AwaitDelayedPredictionOrderUseCaseTest {
 
         val USER_WALLET_ID = UserWalletId("011")
         val CREDENTIALS = PolymarketApiCredentials(apiKey = "key", secret = "secret", passphrase = "pass")
+        val OWNER_IDENTITY = PolymarketClobIdentity.Owner(address = OWNER, credentials = CREDENTIALS)
         val ADDRESSES = PolymarketAddresses(
             ownerAddress = OWNER,
             depositWalletAddress = "0x2222222222222222222222222222222222222222",
