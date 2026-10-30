@@ -1,5 +1,7 @@
 package com.tangem.feature.swap.domain
 
+import com.tangem.domain.swap.models.SwapPairModel
+import com.tangem.domain.models.wallet.UserWalletId
 import android.util.Base64
 import arrow.core.left
 import arrow.core.right
@@ -84,7 +86,7 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
         runTest {
             // Arrange
             coEvery { walletManagersFacade.getNativeTokenBalance(any(), any(), any()) } returns BigDecimal.ZERO
-            coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any()) } returns "FeePayer123"
+            coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any(), any()) } returns "FeePayer123"
             val state = buildSolanaQuotesLoadedState(fromBalance = BigDecimal("10"))
             val swapFee = buildSolanaSwapFee(feeValue = BigDecimal.ZERO, isSponsored = true)
 
@@ -97,6 +99,7 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
             coVerify {
                 solanaGaslessSwapResolver.resolveFeePayer(
                     fromSwapCurrencyStatus = state.fromTokenInfo.swapCurrencyStatus,
+                    provider = state.swapProvider,
                     swapData = state.swapDataModel,
                 )
             }
@@ -107,7 +110,7 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
         runTest {
             // Arrange
             coEvery { walletManagersFacade.getNativeTokenBalance(any(), any(), any()) } returns BigDecimal.ZERO
-            coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any()) } returns null
+            coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any(), any()) } returns null
             val state = buildSolanaQuotesLoadedState(fromBalance = BigDecimal("10"))
             val swapFee = buildSolanaSwapFee(feeValue = BigDecimal.ZERO, isSponsored = true)
 
@@ -123,7 +126,7 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
         runTest {
             // Arrange
             coEvery { walletManagersFacade.getNativeTokenBalance(any(), any(), any()) } returns BigDecimal.ZERO
-            coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any()) } returns "FeePayer123"
+            coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any(), any()) } returns "FeePayer123"
             val state = buildSolanaQuotesLoadedState(fromBalance = BigDecimal("10"))
             val swapFee = buildSolanaSwapFee(feeValue = BigDecimal.ZERO, isSponsored = true)
 
@@ -132,14 +135,14 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
 
             // Assert
             assertThat(patched.preparedSwapConfigState.balanceStatus).isEqualTo(SwapBalanceStatus.Pending)
-            coVerify(exactly = 0) { solanaGaslessSwapResolver.resolveFeePayer(any(), any()) }
+            coVerify(exactly = 0) { solanaGaslessSwapResolver.resolveFeePayer(any(), any(), any()) }
         }
 
     @Test
     fun `GIVEN sponsored fee picked AND amount above balance WHEN applySwapFee THEN InsufficientAmount`() = runTest {
         // Arrange
         coEvery { walletManagersFacade.getNativeTokenBalance(any(), any(), any()) } returns BigDecimal.ZERO
-        coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any()) } returns "FeePayer123"
+        coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any(), any()) } returns "FeePayer123"
         val state = buildSolanaQuotesLoadedState(fromBalance = BigDecimal("0.5"))
         val swapFee = buildSolanaSwapFee(feeValue = BigDecimal.ZERO, isSponsored = true)
 
@@ -155,7 +158,7 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
         runTest {
             // Arrange
             coEvery { walletManagersFacade.getNativeTokenBalance(any(), any(), any()) } returns BigDecimal.ZERO
-            coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any()) } returns "FeePayer123"
+            coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any(), any()) } returns "FeePayer123"
             val state = buildSolanaQuotesLoadedState(fromBalance = BigDecimal("10"))
             val swapFee = buildSolanaSwapFee(feeValue = BigDecimal("0.01"))
 
@@ -165,7 +168,7 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
             // Assert
             assertThat(patched.preparedSwapConfigState.balanceStatus)
                 .isInstanceOf(SwapBalanceStatus.InsufficientFee::class.java)
-            coVerify(exactly = 0) { solanaGaslessSwapResolver.resolveFeePayer(any(), any()) }
+            coVerify(exactly = 0) { solanaGaslessSwapResolver.resolveFeePayer(any(), any(), any()) }
         }
 
     @ParameterizedTest
@@ -173,7 +176,7 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
     fun getSponsoredFeeAvailability(model: SponsoredFeeAvailabilityModel) = runTest {
         // Arrange
         coEvery { walletManagersFacade.getNativeTokenBalance(any(), any(), any()) } returns model.nativeBalance
-        coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any()) } returns model.feePayer
+        coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any(), any()) } returns model.feePayer
         val state = buildSolanaQuotesLoadedState(fromBalance = BigDecimal("10"))
 
         // Act
@@ -193,8 +196,8 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
                 toNetworkRawId = solanaNetwork,
             )
             coEvery { getSwapPairUseCase.invoke(any(), any(), any(), any()) } returns listOf(pairModel).right()
-            every {
-                solanaGaslessSwapResolver.excludeUnsupportedProviders(pairModel.from.currency, any())
+            coEvery {
+                solanaGaslessSwapResolver.excludeUnsupportedProviders(any(), pairModel.from, any())
             } returns emptyList()
 
             // Act
@@ -206,8 +209,37 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
 
             // Assert
             assertThat(pairs?.single()?.providers).isEmpty()
-            verify(exactly = 1) {
-                solanaGaslessSwapResolver.excludeUnsupportedProviders(pairModel.from.currency, any())
+            coVerify(exactly = 1) {
+                solanaGaslessSwapResolver.excludeUnsupportedProviders(any(), pairModel.from, any())
+            }
+        }
+
+    @Test
+    fun `GIVEN tokens in different wallets WHEN getPair THEN each direction is resolved in its from token's wallet`() =
+        runTest {
+            // Arrange
+            val fromWalletId = UserWalletId("aa")
+            val toWalletId = UserWalletId("bb")
+            val from = buildSwapCurrencyStatus(networkRawId = solanaNetwork, userWalletId = fromWalletId)
+            val to = buildSwapCurrencyStatus(networkRawId = solanaNetwork, userWalletId = toWalletId)
+            val providers = listOf(buildExpressProvider())
+            val pairs = listOf(
+                SwapPairModel(from = from.status, to = to.status, providers = providers),
+                SwapPairModel(from = to.status, to = from.status, providers = providers),
+            )
+            coEvery { getSwapPairUseCase.invoke(any(), any(), any(), any()) } returns pairs.right()
+
+            // Act
+            sut.getPair(
+                fromSwapCurrencyStatus = from,
+                toSwapCurrencyStatus = to,
+                filterProviderTypes = listOf(ExchangeProviderType.DEX),
+            )
+
+            // Assert
+            coVerify(exactly = 1) {
+                solanaGaslessSwapResolver.excludeUnsupportedProviders(fromWalletId, from.status, any())
+                solanaGaslessSwapResolver.excludeUnsupportedProviders(toWalletId, to.status, any())
             }
         }
 
@@ -228,7 +260,7 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
         runTest {
             // Arrange
             coEvery { walletManagersFacade.getNativeTokenBalance(any(), any(), any()) } returns BigDecimal.ZERO
-            coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any()) } returns "FeePayer123"
+            coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any(), any()) } returns "FeePayer123"
             val state = buildSolanaQuotesLoadedState(fromBalance = BigDecimal("10"))
             val swapFee = buildSolanaSwapFee(feeValue = BigDecimal.ZERO, isSponsored = true)
 
@@ -263,7 +295,7 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
     fun `GIVEN SponsoredFee with dust SOL balance WHEN applySwapFee THEN no rent warning is raised`() = runTest {
         // Arrange: 0 < nativeBalance < fee — dust below the rent-exempt minimum, but left untouched by the sponsor
         coEvery { walletManagersFacade.getNativeTokenBalance(any(), any(), any()) } returns BigDecimal("0.0001")
-        coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any()) } returns "FeePayer123"
+        coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any(), any()) } returns "FeePayer123"
         val state = buildSolanaQuotesLoadedState(fromBalance = BigDecimal("10"))
         val swapFee = buildSolanaSwapFee(feeValue = BigDecimal.ZERO, isSponsored = true)
 
