@@ -347,6 +347,33 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             // Assert
             assertThat(model.uiState.value.amountValue).isEqualTo("1000")
         }
+
+        @Test
+        fun `GIVEN a buy WHEN a preset clicked THEN the field moves the cursor past it`() = runOrderTest {
+            // Arrange
+            val model = createOrderModel(testScope = this)
+            advanceUntilIdle()
+
+            // Act
+            model.onPresetClick(preset = model.amountPresets.first())
+
+            // Assert
+            assertThat(model.uiState.value.isAmountFromFraction).isTrue()
+        }
+
+        @Test
+        fun `GIVEN a picked preset WHEN an amount is typed THEN the field keeps the typed cursor`() = runOrderTest {
+            // Arrange
+            val model = createOrderModel(testScope = this)
+            advanceUntilIdle()
+            model.onPresetClick(preset = model.amountPresets.first())
+
+            // Act
+            model.onAmountChange(value = "1005")
+
+            // Assert
+            assertThat(model.uiState.value.isAmountFromFraction).isFalse()
+        }
     }
 
     @Nested
@@ -403,6 +430,28 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             // Assert
             assertThat(model.uiState.value.amountValue).isEqualTo(expected)
         }
+
+        @Test
+        fun `GIVEN a fee capped max WHEN max clicked again before its quote returns THEN the fee cap holds`() =
+            runOrderTest {
+                // Arrange
+                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } returns createQuote().copy(
+                    notional = BigDecimal(100),
+                    fees = PredictionOrderFees(
+                        market = BigDecimal(20),
+                        builder = BigDecimal.ZERO,
+                        total = BigDecimal(20),
+                    ),
+                ).right()
+                val model = createQuotedModel()
+                model.onMaxClick()
+
+                // Act
+                model.onMaxClick()
+
+                // Assert
+                assertThat(model.uiState.value.amountValue).isEqualTo("83.33")
+            }
 
         @Test
         fun `GIVEN a German locale WHEN max clicked THEN the amount is entered with a comma the screen reads back`() =
