@@ -302,7 +302,7 @@ internal class TxHistoryInfoFieldConverter(
         transfer.intent.amountWei.toBigDecimal().movePointLeft(currency.decimals)
 
     private fun JointOperationTx.amountPrefix(): String =
-        if (operation.status == FinishedJointOperation.Status.EXECUTED) StringsSigns.MINUS else ""
+        if (operation.status == FinishedJointOperation.Status.EXECUTED) StringsSigns.MINUS_SIGN else ""
 
     private fun formatAmount(amount: BigDecimal?, prefix: String): String? =
         amount?.let { prefix + it.format { crypto(symbol = "", decimals = currency.displayDecimals) }.trim() }
