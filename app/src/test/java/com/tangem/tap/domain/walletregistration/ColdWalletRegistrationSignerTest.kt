@@ -1,19 +1,35 @@
 package com.tangem.tap.domain.walletregistration
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.TangemSdk
+import com.tangem.common.CompletionResult
 import com.tangem.common.card.CardWallet
 import com.tangem.common.card.EllipticCurve
+import com.tangem.common.core.CardSession
+import com.tangem.common.core.CardSessionRunnable
+import com.tangem.common.core.TangemSdkError
 import com.tangem.common.test.domain.card.MockScanResponseFactory
+import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.crypto.CryptoUtils
 import com.tangem.crypto.CryptoUtils.generatePublicKey
 import com.tangem.crypto.sign
+import com.tangem.data.wallets.cold.UserWalletIdPreflightReadFilter
 import com.tangem.domain.card.configs.GenericCardConfig
+import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.lib.auth.session.WalletSignatureBundle
 import com.tangem.operations.attestation.AttestWalletKeyResponse
+import com.tangem.operations.preflightread.PreflightReadFilter
+import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
+import io.mockk.CapturingSlot
 import io.mockk.clearMocks
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -27,7 +43,15 @@ internal class ColdWalletRegistrationSignerTest {
 
     private val curve = EllipticCurve.Secp256k1
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
-    private val signer = ColdWalletRegistrationSigner(analyticsEventHandler)
+    private val tangemSdk: TangemSdk = mockk()
+    private val cardSdkConfigRepository: CardSdkConfigRepository = mockk {
+        every { sdk } returns tangemSdk
+    }
+    private val signer = ColdWalletRegistrationSigner(
+        analyticsEventHandler = analyticsEventHandler,
+        cardSdkConfigRepository = cardSdkConfigRepository,
+        dispatchers = TestingCoroutineDispatcherProvider(),
+    )
 
     private val nonceBytes = "nonce-value".toByteArray()
     private val salt = ByteArray(SALT) { 7 }
@@ -44,7 +68,66 @@ internal class ColdWalletRegistrationSignerTest {
     ).card
 
     @BeforeEach
-    fun setup() = clearMocks(analyticsEventHandler)
+    fun setup() = clearMocks(analyticsEventHandler, tangemSdk)
+
+    @Test
+    fun `GIVEN card session signs WHEN own-session signer signs THEN returns the bundle for this wallet only`() =
+        runTest {
+            // Arrange
+            val bundle = mockk<WalletSignatureBundle>()
+            val preflightFilter = slot<PreflightReadFilter>()
+            stubCardSession(
+                preflightFilter = preflightFilter,
+            ) { _, callback -> callback(CompletionResult.Success(bundle)) }
+
+            // Act
+            val actual = signer.signerFor(MockUserWalletFactory.create()).sign(nonceBytes)
+
+            // Assert
+            assertThat(actual).isSameInstanceAs(bundle)
+            assertThat(preflightFilter.captured).isInstanceOf(UserWalletIdPreflightReadFilter::class.java)
+        }
+
+    @Test
+    fun `GIVEN card session fails WHEN own-session signer signs THEN throws the card SDK error`() = runTest {
+        // Arrange
+        val error = TangemSdkError.UserCancelled()
+        stubCardSession { _, callback -> callback(CompletionResult.Failure(error)) }
+
+        // Act
+        val actual = runSuspendCatching { signer.signerFor(MockUserWalletFactory.create()).sign(nonceBytes) }
+            .exceptionOrNull()
+
+        // Assert
+        assertThat(actual).isSameInstanceAs(error)
+    }
+
+    @Test
+    fun `GIVEN no card read WHEN own-session signer signs THEN fails with MissingPreflightRead`() = runTest {
+        // Arrange
+        val session = mockk<CardSession> { every { environment.card } returns null }
+        stubCardSession { runnable, callback -> runnable.run(session, callback) }
+
+        // Act
+        val actual = runSuspendCatching { signer.signerFor(MockUserWalletFactory.create()).sign(nonceBytes) }
+            .exceptionOrNull()
+
+        // Assert
+        assertThat(actual).isInstanceOf(TangemSdkError.MissingPreflightRead::class.java)
+    }
+
+    @Test
+    fun `GIVEN attestation fails WHEN ColdWalletAttestationException created THEN keeps the card SDK error`() {
+        // Arrange
+        val error = TangemSdkError.UserCancelled()
+
+        // Act
+        val actual = ColdWalletAttestationException(error)
+
+        // Assert
+        assertThat(actual.error).isSameInstanceAs(error)
+        assertThat(actual.cause).isSameInstanceAs(error)
+    }
 
     @Test
     fun `firstSecpWalletPublicKey returns the first wallet key when it is secp256k1`() {
@@ -185,6 +268,29 @@ internal class ColdWalletRegistrationSignerTest {
         walletStatus = walletStatus,
         counter = null,
     )
+
+    private fun stubCardSession(
+        preflightFilter: CapturingSlot<PreflightReadFilter> = slot(),
+        session: (
+            runnable: CardSessionRunnable<WalletSignatureBundle>,
+            callback: (CompletionResult<WalletSignatureBundle>) -> Unit,
+        ) -> Unit,
+    ) {
+        val runnable = slot<CardSessionRunnable<WalletSignatureBundle>>()
+        every {
+            tangemSdk.startSessionWithRunnable(
+                runnable = capture(runnable),
+                cardId = any(),
+                initialMessage = any(),
+                accessCode = any(),
+                preflightReadFilter = capture(preflightFilter),
+                iconScanRes = any(),
+                callback = any(),
+            )
+        } answers {
+            session(runnable.captured, lastArg())
+        }
+    }
 
     private companion object {
         const val KEY = 32
