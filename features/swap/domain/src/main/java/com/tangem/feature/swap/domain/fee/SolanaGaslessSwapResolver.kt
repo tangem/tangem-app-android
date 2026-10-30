@@ -6,7 +6,9 @@ import com.tangem.blockchain.blockchains.solana.SolanaTransactionHelper
 import com.tangem.blockchain.blockchains.solana.gasless.SolanaGaslessSimulation
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.extensions.Result
+import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.swap.models.SwapCurrencyStatus
@@ -34,22 +36,33 @@ internal class SolanaGaslessSwapResolver @Inject constructor(
     private val swapFeatureToggles: SwapFeatureToggles,
     private val solanaGaslessTransactionRepository: SolanaGaslessTransactionRepository,
     private val walletManagersFacade: WalletManagersFacade,
+    private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
 ) {
 
     private val resolutionMutex = Mutex()
     private var lastResolution: Resolution? = null
 
     /**
-     * Hides the providers whose txs a sponsor cannot carry, so a swap that may be sponsored falls back to another
-     * provider instead of failing on it.
+     * Hides the providers whose txs a sponsor cannot carry when the swap can go only sponsored, so another provider
+     * is picked instead of failing on it. With SOL for the fee they stay, offered without the sponsored fee.
      */
-    fun excludeUnsupportedProviders(fromCurrency: CryptoCurrency, providers: List<SwapProvider>): List<SwapProvider> {
-        if (!isSponsorable(fromCurrency)) return providers
+    suspend fun excludeUnsupportedProviders(
+        userWalletId: UserWalletId,
+        fromStatus: CryptoCurrencyStatus,
+        providers: List<SwapProvider>,
+    ): List<SwapProvider> {
+        if (!isSponsorable(fromStatus.currency) || hasCoinForFee(userWalletId, fromStatus)) return providers
         return providers.filterNot { it.providerId in UNSUPPORTED_PROVIDER_IDS }
     }
 
-    suspend fun resolveFeePayer(fromSwapCurrencyStatus: SwapCurrencyStatus, swapData: SwapDataModel?): String? {
-        if (!isSponsorable(fromSwapCurrencyStatus.currency)) return null
+    suspend fun resolveFeePayer(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        provider: SwapProvider,
+        swapData: SwapDataModel?,
+    ): String? {
+        if (!isSponsorable(fromSwapCurrencyStatus.currency) || provider.providerId in UNSUPPORTED_PROVIDER_IDS) {
+            return null
+        }
         val dexTransaction = swapData?.transaction as? ExpressTransactionModel.DEX ?: return null
         // The sponsor pays only the network fee: a bridge fee would still come from the user's SOL, behind a $0 fee
         if (dexTransaction.otherNativeFeeWei?.signum() == 1) return null
@@ -79,6 +92,11 @@ internal class SolanaGaslessSwapResolver @Inject constructor(
     private fun isSponsorable(fromCurrency: CryptoCurrency): Boolean = swapFeatureToggles.isSolanaGaslessEnabled &&
         fromCurrency is CryptoCurrency.Token &&
         isSolana(fromCurrency.network.rawId)
+
+    private suspend fun hasCoinForFee(userWalletId: UserWalletId, fromStatus: CryptoCurrencyStatus): Boolean {
+        val coinStatus = getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId, fromStatus).getOrNull()
+        return coinStatus?.value?.amount?.signum() == 1
+    }
 
     private suspend fun simulates(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
