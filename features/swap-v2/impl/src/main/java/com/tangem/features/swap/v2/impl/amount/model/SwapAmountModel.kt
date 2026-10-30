@@ -119,6 +119,8 @@ internal class SwapAmountModel @Inject constructor(
     private val amountAnalyticsSender = SwapAmountAnalyticsSender(analyticsEventHandler)
 
     private var autoUpdateSubscriberJob: Job? = null
+    private var hiddenProvidersSubscriberJob: Job? = null
+    private var quotesLoadingJob: Job? = null
 
     val uiState: StateFlow<SwapAmountUM>
         field = MutableStateFlow(params.amountUM)
@@ -153,15 +155,17 @@ internal class SwapAmountModel @Inject constructor(
             task = loadQuotesTask(initialDelay = initialDelay),
         )
         subscribeOnAutoupdateEnabling()
+        subscribeOnHiddenProvidersUpdates()
     }
 
     fun onStop() {
-        quoteTaskScheduler.cancelTask()
+        cancelQuotesLoading()
         autoUpdateSubscriberJob?.cancel()
+        hiddenProvidersSubscriberJob?.cancel()
     }
 
     override fun onDestroy() {
-        quoteTaskScheduler.cancelTask()
+        cancelQuotesLoading()
         super.onDestroy()
     }
 
@@ -246,7 +250,7 @@ internal class SwapAmountModel @Inject constructor(
                 isBalanceHidden = params.isBalanceHidingFlow.value,
             ),
         )
-        quoteTaskScheduler.cancelTask()
+        cancelQuotesLoading()
         amountDebouncer.debounce(
             coroutineScope = modelScope,
             waitMs = DEBOUNCE_AMOUNT_DELAY,
@@ -537,6 +541,22 @@ internal class SwapAmountModel @Inject constructor(
             .launchIn(modelScope)
     }
 
+    private fun subscribeOnHiddenProvidersUpdates() {
+        hiddenProvidersSubscriberJob = params.hiddenProviderIdsFlow
+            .filter { hiddenProviderIds -> hiddenProviderIds.isNotEmpty() }
+            .onEach { hiddenProviderIds ->
+                val prevState = uiState.value
+                uiState.transformerUpdate(
+                    SwapAmountHideProvidersTransformer(
+                        providerIds = hiddenProviderIds,
+                        isBalanceHidden = params.isBalanceHidingFlow.value,
+                    ),
+                )
+                if (uiState.value !== prevState) startLoadingQuotesTask(isSilentReload = false)
+            }
+            .launchIn(modelScope)
+    }
+
     private fun subscribeOnAutoupdateEnabling() {
         autoUpdateSubscriberJob = swapAmountUpdateListener.autoUpdateTriggerFlow
             .distinctUntilChanged()
@@ -544,7 +564,7 @@ internal class SwapAmountModel @Inject constructor(
                 if (isEnabled) {
                     startLoadingQuotesTask(isSilentReload = true)
                 } else {
-                    quoteTaskScheduler.cancelTask()
+                    cancelQuotesLoading()
                 }
             }
             .launchIn(modelScope)
@@ -773,7 +793,8 @@ internal class SwapAmountModel @Inject constructor(
 
         if (!isSilentReload) uiState.transformerUpdate(SwapQuoteLoadingStateTransformer)
 
-        modelScope.launch {
+        quotesLoadingJob?.cancel()
+        quotesLoadingJob = modelScope.launch {
             val quotes = state.swapCurrencies.getGroupWithDirection(state.swapDirection).available
                 .asSequence()
                 .filter { swapCurrencyStatus -> swapCurrencyStatus.currencyStatus.currency.id == toCryptoCurrency.id }
@@ -871,6 +892,11 @@ internal class SwapAmountModel @Inject constructor(
         )
     }
 
+    private fun cancelQuotesLoading() {
+        quoteTaskScheduler.cancelTask()
+        quotesLoadingJob?.cancel()
+    }
+
     private fun startLoadingQuotesTask(isSilentReload: Boolean) {
         quoteTaskScheduler.cancelTask()
         loadQuotes(isSilentReload = isSilentReload)
@@ -911,7 +937,7 @@ internal class SwapAmountModel @Inject constructor(
 
     private fun showErrorAlert(errorMessage: String?) {
         swapAlertFactory.getGenericErrorState(
-            expressError = ExpressError.UnknownError,
+            expressError = ExpressError.UnknownError(),
             onFailedTxEmailClick = {
                 modelScope.launch {
                     swapAlertFactory.onFailedTxEmailClick(

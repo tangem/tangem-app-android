@@ -3,7 +3,6 @@ package com.tangem.feature.wallet.child.wallet.model.intents
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
@@ -18,6 +17,7 @@ import com.tangem.core.analytics.models.event.JointAccountFakedoorAnalyticsEvent
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.analytics.models.event.OfframpAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
@@ -142,7 +142,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val urlOpener: UrlOpener,
     private val vibratorHapticManager: VibratorHapticManager,
     private val clipboardManager: ClipboardManager,
-    private val appRouter: AppRouter,
+    private val navigationRouter: Router,
     private val rampStateManager: RampStateManager,
     private val saveViewedTokenReceiveWarningUseCase: SaveViewedTokenReceiveWarningUseCase,
     private val receiveAddressesFactory: ReceiveAddressesFactory,
@@ -356,7 +356,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         if (handleUnavailabilityReason(unavailabilityReason)) return
 
         warnAboutBackupErrorOrProceed(accountId.userWalletId) {
-            appRouter.push(
+            navigationRouter.push(
                 AppRoute.Onramp(
                     userWalletId = accountId.userWalletId,
                     currency = cryptoCurrencyStatus.currency,
@@ -432,7 +432,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                 ),
                 imageUrl = cryptoCurrencyStatus.currency.iconUrl,
             )
-            appRouter.push(
+            navigationRouter.push(
                 AppRoute.MarketsTokenDetails(
                     token = tokenMarketParams,
                     appCurrency = getSelectedAppCurrencyUseCase.unwrap(),
@@ -460,7 +460,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         modelScope.launch {
             val cryptoCurrency = cryptoCurrencyStatus.currency
 
-            appRouter.push(
+            navigationRouter.push(
                 AppRoute.Staking(
                     userWalletId = accountId.userWalletId,
                     cryptoCurrency = cryptoCurrency,
@@ -659,7 +659,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private fun handleContent(route: AppRoute, eventCreator: (AnalyticsParam.Status) -> MainScreenAnalyticsEvent) {
         analyticsEventHandler.send(event = eventCreator(AnalyticsParam.Status.Success))
 
-        appRouter.push(route = route)
+        navigationRouter.push(route = route)
     }
 
     private fun handleLoading(eventCreator: (AnalyticsParam.Status) -> MainScreenAnalyticsEvent) {
@@ -702,11 +702,11 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             userWalletId = userWalletId,
         )
 
-        appRouter.push(route)
+        navigationRouter.push(route)
     }
 
     private fun navigateToSwap(cryptoCurrencyStatus: CryptoCurrencyStatus, userWalletId: UserWalletId) {
-        appRouter.push(
+        navigationRouter.push(
             AppRoute.Swap(
                 fromCryptoCurrency = cryptoCurrencyStatus.currency,
                 userWalletId = userWalletId,

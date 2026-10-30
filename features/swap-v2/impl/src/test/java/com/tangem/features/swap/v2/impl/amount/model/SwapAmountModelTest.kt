@@ -109,7 +109,7 @@ internal class SwapAmountModelTest {
         coEvery { selectInitialPairUseCase(any(), any(), any(), any(), any()) } returns ethereumSwapCurrency
         coEvery {
             getSwapQuoteUseCase(any(), any(), any(), any(), any(), any(), any())
-        } returns ExpressError.UnknownError.left()
+        } returns ExpressError.UnknownError().left()
         coEvery { getSelectedAppCurrencyUseCase.invokeSync() } returns AppCurrency.Default.right()
         every { getUserCountryUseCase.invokeSync() } returns UserCountry.fromDeviceLocale().right()
         coEvery { swapBestRateAnimationStore.getSyncOrNull() } returns false
@@ -182,6 +182,7 @@ internal class SwapAmountModelTest {
             callback = callback,
             route = SendWithSwapRoute.Amount(isEditMode = false),
             filterProviderTypes = emptyList(),
+            hiddenProviderIdsFlow = MutableStateFlow(emptySet()),
             onCloseFlow = {},
         )
         return SwapAmountModel(

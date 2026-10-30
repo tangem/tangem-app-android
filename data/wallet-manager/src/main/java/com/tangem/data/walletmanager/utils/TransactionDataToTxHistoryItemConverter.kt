@@ -9,6 +9,7 @@ import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldS
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyInitTokenCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyReactivateTokenCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.MerklClaimCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.unwrapYieldModuleUpgrade
 import com.tangem.blockchainsdk.models.UpdateWalletManagerResult.Address
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
@@ -109,7 +110,7 @@ internal class TransactionDataToTxHistoryItemConverter(
     private fun getTransactionType(transactionData: TransactionData.Uncompiled?): TxInfo.TransactionType {
         return when (val extras = transactionData?.extras) {
             is EthereumTransactionExtras -> {
-                when (val callData = extras.callData) {
+                when (val callData = extras.callData?.unwrapYieldModuleUpgrade()) {
                     is EthereumYieldSupplyDeployCallData -> TxInfo.TransactionType.YieldSupply.DeployContract(
                         transactionData.destinationAddress,
                     )

@@ -18,6 +18,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.EventMessage
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.collectibles.models.BuybackError
 import com.tangem.domain.collectibles.models.CollectibleBuybackOffer
@@ -44,7 +45,7 @@ import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPa
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.SellBackButtonUM
 import com.tangem.features.collectibles.impl.packopening.ui.state.CollectiblesPackOpeningUM.Stage
 import com.tangem.features.collectibles.impl.packopening.video.PackRevealVideoPlayer
-import com.tangem.features.collectibles.impl.packopening.video.PackRevealVideoPlayer.VideoLoadState
+import com.tangem.core.media.VideoLoadState
 import com.tangem.features.collectibles.impl.packopening.video.source.PackRevealAsset
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -56,6 +57,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
@@ -81,6 +83,7 @@ internal class CollectiblesPackOpeningModelTest {
     private val getMachineUseCase: GetCollectibleGachaMachineUseCase = mockk()
     private val router: Router = mockk(relaxed = true)
     private val accountStatusSupplier: CollectiblesAccountStatusSupplier = mockk()
+    private val accountStatusFetcher: CollectiblesAccountStatusFetcher = mockk()
     private val openCollectiblePackUseCase: OpenCollectiblePackUseCase = mockk()
     private val getBuybackOfferUseCase: GetCollectibleBuybackOfferUseCase = mockk()
     private val buybackCollectibleUseCase: BuybackCollectibleUseCase = mockk()
@@ -102,6 +105,7 @@ internal class CollectiblesPackOpeningModelTest {
             getMachineUseCase,
             router,
             accountStatusSupplier,
+            accountStatusFetcher,
             openCollectiblePackUseCase,
             getBuybackOfferUseCase,
             buybackCollectibleUseCase,
@@ -115,11 +119,12 @@ internal class CollectiblesPackOpeningModelTest {
         every { openCollectiblePackUseCase(any(), any()) } returns flowOf(OpenPackStep.Opened(PACK))
         statusFlow.value = onboarded(usdcAmount = "1000")
         videoLoadState.value = VideoLoadState.Loading
-        every { playerFactory.create(capture(playerListener)) } returns player
+        every { playerFactory.create(any(), capture(playerListener)) } returns player
         stubCardImages(CompletableDeferred(mockk<ImageResult>()))
         every { player.videoLoadState } returns videoLoadState
         coEvery { getMachineUseCase(any(), any()) } returns createMachine().right()
         every { accountStatusSupplier(USER_WALLET_ID) } returns statusFlow
+        coEvery { accountStatusFetcher(any()) } returns Unit.right()
     }
 
     @AfterEach
@@ -563,6 +568,30 @@ internal class CollectiblesPackOpeningModelTest {
     }
 
     @Test
+    fun `GIVEN the screen opens WHEN model created THEN the vault link is re-checked`() = runTest {
+        // Act
+        startModel()
+
+        // Assert
+        coVerify(exactly = 1) { accountStatusFetcher(CollectiblesAccountStatusFetcher.Params(USER_WALLET_ID)) }
+    }
+
+    @Test
+    fun `GIVEN the vault answers to another phone WHEN model created THEN approve is blocked`() = runTest {
+        // Arrange
+        statusFlow.value = CollectiblesAccountStatusValue.UpdateRequired(
+            source = StatusSource.ACTUAL,
+            vaultBalance = MockCollectibles.vaultBalance(amount = BigDecimal("1000"), fiatRate = BigDecimal.ONE),
+        )
+
+        // Act
+        val model = startModel()
+
+        // Assert
+        assertThat(model.order().button.isEnabled).isFalse()
+    }
+
+    @Test
     fun `GIVEN approve is blocked WHEN the vault is topped up THEN approve becomes available`() = runTest {
         // Arrange
         statusFlow.value = onboarded(usdcAmount = "0")
@@ -842,6 +871,23 @@ internal class CollectiblesPackOpeningModelTest {
             // Assert
             verify(exactly = 0) { player.skipToReveal() }
         }
+
+        @Test
+        fun `GIVEN the screen WHEN it goes to the background and comes back THEN the video pauses and goes on`() =
+            runTest {
+                // Arrange
+                val model = startModel()
+
+                // Act
+                model.onPause()
+                model.onResume()
+
+                // Assert
+                verifyOrder {
+                    player.setRunning(isRunning = false)
+                    player.setRunning(isRunning = true)
+                }
+            }
 
         @Test
         fun `GIVEN the model WHEN destroyed THEN the player is released`() = runTest {
@@ -1316,6 +1362,7 @@ internal class CollectiblesPackOpeningModelTest {
             dispatchers = createTestingCoroutineDispatcherProvider(),
             getMachineUseCase = getMachineUseCase,
             accountStatusSupplier = accountStatusSupplier,
+            accountStatusFetcher = accountStatusFetcher,
             openCollectiblePackUseCase = openCollectiblePackUseCase,
             getBuybackOfferUseCase = getBuybackOfferUseCase,
             buybackCollectibleUseCase = buybackCollectibleUseCase,

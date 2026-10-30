@@ -40,7 +40,7 @@ fun Badge(@DrawableRes iconRes: Int, text: TextReference, modifier: Modifier = M
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         modifier = modifier
-            .border(1.dp, TangemTheme.colors.stroke.primary, RoundedCornerShape(4.dp))
+            .border(1.dp, TangemTheme.colors3.border.secondary, RoundedCornerShape(4.dp))
             .padding(horizontal = 4.dp),
     ) {
         Icon(
@@ -48,13 +48,13 @@ fun Badge(@DrawableRes iconRes: Int, text: TextReference, modifier: Modifier = M
                 ImageVector.vectorResource(iconRes),
             ),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
             modifier = Modifier.size(12.dp),
         )
         Text(
             text = text.resolveReference(),
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
     }
 }

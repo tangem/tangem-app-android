@@ -49,6 +49,8 @@ internal class DefaultWalletManagersFacadeSafeManagerTest {
         getCachedTokenInfoUseCase = mockk(),
         jointRefundReceiverProvider = { SafeTestFixtures.REFUND_RECEIVER },
         blockchainSDKFactory = blockchainSDKFactory,
+        yieldModuleFeatureToggles = mockk { every { isYieldModuleV3Enabled } returns false },
+        yieldSendUpgradeDecisions = YieldSendUpgradeDecisions(),
     )
 
     @BeforeEach

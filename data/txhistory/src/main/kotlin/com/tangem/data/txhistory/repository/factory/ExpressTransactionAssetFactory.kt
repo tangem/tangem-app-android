@@ -79,13 +79,20 @@ internal class ExpressTransactionAssetFactory @Inject constructor(
             legKeys.forEach { key ->
                 val currency = portfolioStatuses.findHolding(key)
                     ?: historyCurrency.takeIf { it.matches(key.assetId) }
-                    ?: portfolioStatuses.findMatching(key.assetId)
                     ?: resolveUnmatched(key.assetId, cachedTokens, userWallet)
+                    ?: portfolioStatuses.findMatching(key.assetId)
                 if (currency != null) put(key, currency)
             }
         }
     }
 
+    /**
+     * Builds the leg from catalog metadata alone, on the network's default derivation. Preferred over any portfolio
+     * copy ([findMatching]) once the leg's address matched nothing: which copy the leg sat on is then unknown, and
+     * guessing one lends the leg that copy's derivation — so a custom-derivation twin of the asset would brand the
+     * transaction with a custom badge it never had. The catalog build carries the same name, symbol and icon without
+     * claiming a derivation, and is never custom.
+     */
     private fun resolveUnmatched(
         id: ExpressAsset.ID,
         cachedTokens: Map<ExpressAsset.ID, CryptoCurrency.Token>,
@@ -115,8 +122,9 @@ internal class ExpressTransactionAssetFactory @Inject constructor(
     }
 
     /**
-     * Fallback for a leg whose address resolves to no portfolio: an address the user does not own (a send-and-swap
-     * payout) or one not loaded yet. Any copy of the asset then carries the name, symbol and icon to show.
+     * Last resort for a leg the catalog cannot describe either — a hand-added token with no `rawCurrencyId`, which is
+     * never written to the token-info cache. Such an asset is custom by definition, so the copy's custom flag is the
+     * truth here rather than a guess; any copy then carries the name, symbol and icon to show.
      */
     private fun List<CryptoCurrencyStatus>.findMatching(id: ExpressAsset.ID): CryptoCurrency? =
         firstOrNull { status -> status.currency.matches(id) }?.currency

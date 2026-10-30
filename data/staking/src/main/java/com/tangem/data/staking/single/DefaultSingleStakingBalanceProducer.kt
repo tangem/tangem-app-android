@@ -4,7 +4,7 @@ import arrow.core.Option
 import arrow.core.some
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.domain.core.flow.FlowProducerTools
-import com.tangem.domain.models.staking.StakingBalance
+import com.tangem.domain.staking.model.StakingBalance
 import com.tangem.domain.staking.multi.MultiStakingBalanceProducer
 import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier
 import com.tangem.domain.staking.single.SingleStakingBalanceProducer

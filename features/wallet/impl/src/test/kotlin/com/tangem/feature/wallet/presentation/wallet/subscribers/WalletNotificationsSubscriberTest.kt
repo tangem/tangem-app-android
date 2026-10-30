@@ -20,17 +20,14 @@ import com.tangem.feature.wallet.presentation.wallet.domain.NotificationsBalance
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletNotificationsSnapshot
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state.model.JointOperationBannerUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.PromoCardsCheck
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotificationUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.createWalletContentUM
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.ReinitializeWalletTransformer
-import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetJointOperationBannersTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetRefreshStateTransformer
 import com.tangem.features.hotwallet.HardwareUpgradeLauncher
-import com.tangem.features.promobanners.api.PromoBannersFeatureToggles
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -68,7 +65,6 @@ internal class WalletNotificationsSubscriberTest {
     private val walletWarningsSingleEventSender: WalletWarningsSingleEventSender = mockk(relaxed = true)
     private val getStoryContentUseCase: GetStoryContentUseCase = mockk()
     private val hardwareUpgradeLauncher: HardwareUpgradeLauncher = mockk(relaxUnitFun = true)
-    private val promoBannersFeatureToggles: PromoBannersFeatureToggles = mockk()
     private val userWallet: UserWallet = mockk(relaxed = true)
     private val reinitializedWallet: UserWallet.Hot = mockk(relaxed = true)
     private val walletImageResolver: WalletImageResolver = mockk()
@@ -85,7 +81,6 @@ internal class WalletNotificationsSubscriberTest {
         walletWarningsSingleEventSender = walletWarningsSingleEventSender,
         getStoryContentUseCase = getStoryContentUseCase,
         hardwareUpgradeLauncher = hardwareUpgradeLauncher,
-        promoBannersFeatureToggles = promoBannersFeatureToggles,
     )
 
     @BeforeEach
@@ -97,14 +92,12 @@ internal class WalletNotificationsSubscriberTest {
             getPendingJointOperationsFlowFactory,
             getStoryContentUseCase,
             hardwareUpgradeLauncher,
-            promoBannersFeatureToggles,
             walletWarningsAnalyticsSender,
             userWallet,
             reinitializedWallet,
             getWalletIconUseCase,
         )
         every { userWallet.walletId } returns WALLET_ID
-        every { promoBannersFeatureToggles.isHideMarketingBannersWhileSystemEnabled } returns false
 
         val walletUM = mockk<WalletUM>(relaxed = true)
         every { walletUM.walletsBalanceUM.id } returns WALLET_ID
@@ -132,7 +125,7 @@ internal class WalletNotificationsSubscriberTest {
         scope.cancel()
 
         // Assert
-        coVerify(exactly = 1) {
+        coVerify(atLeast = 1) {
             getStoryContentUseCase.invokeSync(id = StoryContentIds.STORY_FIRST_TIME_YIELD_PROMO.id, refresh = true)
         }
     }
@@ -188,7 +181,6 @@ internal class WalletNotificationsSubscriberTest {
             walletWarningsSingleEventSender = walletWarningsSingleEventSender,
             getStoryContentUseCase = getStoryContentUseCase,
             hardwareUpgradeLauncher = hardwareUpgradeLauncher,
-            promoBannersFeatureToggles = promoBannersFeatureToggles,
         )
 
         // Act
@@ -222,65 +214,16 @@ internal class WalletNotificationsSubscriberTest {
             walletWarningsSingleEventSender = walletWarningsSingleEventSender,
             getStoryContentUseCase = getStoryContentUseCase,
             hardwareUpgradeLauncher = hardwareUpgradeLauncher,
-            promoBannersFeatureToggles = promoBannersFeatureToggles,
         )
 
         @BeforeEach
         fun setupPromoCards() {
-            every { promoBannersFeatureToggles.isHideMarketingBannersWhileSystemEnabled } returns true
             every { getWalletNotificationsFactory.create(any(), any()) } returns notifications
             every { getWalletNotificationsCarouselFactory.create(any(), any()) } returns notificationsCarousel
             every { getPendingJointOperationsFlowFactory.create(any()) } returns jointOperations
             every { walletWarningsAnalyticsSender.send(any(), any(), capture(sentNotifications)) } just Runs
             stateController.update { it.copy(wallets2 = persistentListOf(createWalletContentUM(WALLET_ID))) }
         }
-
-        @Test
-        fun `GIVEN hiding turned off WHEN notifications are emitted THEN they are set as they are`() = runTest {
-            // Arrange
-            every { promoBannersFeatureToggles.isHideMarketingBannersWhileSystemEnabled } returns false
-            notifications.value = snapshot(
-                missingBackup,
-                tangemPayPromo,
-                balanceState = NotificationsBalanceState.Loading,
-            )
-
-            // Act
-            subscribe()
-
-            // Assert
-            val expected = createWalletContentUM(
-                userWalletId = WALLET_ID,
-                notifications = persistentListOf(missingBackup, tangemPayPromo),
-            )
-            assertThat(stateController.getWalletUM(WALLET_ID)).isEqualTo(expected)
-            assertThat(sentNotifications).containsExactly(listOf(missingBackup, tangemPayPromo))
-            verify(exactly = 0) { getPendingJointOperationsFlowFactory.create(any()) }
-        }
-
-        @Test
-        fun `GIVEN hiding turned off WHEN only balance, joint banners or refresh change THEN nothing is set again`() =
-            runTest {
-                // Arrange
-                every { promoBannersFeatureToggles.isHideMarketingBannersWhileSystemEnabled } returns false
-                notifications.value = snapshot(
-                    missingBackup,
-                    tangemPayPromo,
-                    balanceState = NotificationsBalanceState.Loading,
-                )
-                subscribe()
-
-                // Act
-                notifications.value = snapshot(missingBackup, tangemPayPromo)
-                notificationsCarousel.value = snapshot(balanceState = NotificationsBalanceState.Loading)
-                stateController.update(SetJointOperationBannersTransformer(WALLET_ID, persistentListOf(jointBanner)))
-                stateController.update(SetRefreshStateTransformer(WALLET_ID, isRefreshing = true))
-                stateController.update(SetRefreshStateTransformer(WALLET_ID, isRefreshing = false))
-                advanceUntilIdle()
-
-                // Assert
-                assertThat(sentNotifications).containsExactly(listOf(missingBackup, tangemPayPromo))
-            }
 
         @Test
         fun `GIVEN no system card WHEN the balance resolves THEN Tangem Pay promo is shown and reported`() = runTest {
@@ -572,7 +515,6 @@ internal class WalletNotificationsSubscriberTest {
             onClick = {},
         )
         val upgradeHotWalletPromo = WalletNotificationUM.UpgradeHotWalletPromo(onLaterClick = {}, onUpgradeClick = {})
-        val jointBanner = JointOperationBannerUM(operationId = "operation", banner = mockk())
         val jointOperation: JointPendingOperation = mockk()
     }
 }

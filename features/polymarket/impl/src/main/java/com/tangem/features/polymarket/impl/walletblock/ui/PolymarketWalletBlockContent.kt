@@ -109,7 +109,7 @@ private fun PolymarketWalletBlockUM.Content.endContent(text: TextReference) = Ta
         addIf(
             element = TangemIconUM.Icon(
                 iconRes = CoreUiR.drawable.ic_error_sync_default_24,
-                tintReference = { TangemTheme.colors2.graphic.neutral.tertiary },
+                tintReference = { TangemTheme.colors3.icon.secondary },
             ),
             condition = isBalanceFromCache,
         )

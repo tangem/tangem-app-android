@@ -1,7 +1,6 @@
 package com.tangem.domain.staking.model
 
 import com.tangem.domain.models.serialization.SerializedBigDecimal
-import com.tangem.domain.models.staking.YieldToken
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import com.tangem.domain.staking.model.stakekit.Yield
 

@@ -20,6 +20,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -37,6 +38,11 @@ class UserTokensResponseAddressesEnricherTest {
     )
 
     private val userWalletId = UserWalletId("1234567890abcdef")
+
+    @BeforeEach
+    fun setUp() {
+        coEvery { walletsRepository.isAddressesSharingRequired(userWalletId) } returns false
+    }
 
     @AfterEach
     fun tearDown() {
@@ -204,6 +210,81 @@ class UserTokensResponseAddressesEnricherTest {
         // THEN
         assertThat(result.tokens.single().addresses).isEmpty()
         coVerify { safeAddressResolver wasNot Called }
+    }
+
+    @Test
+    fun `GIVEN notifications disabled but addresses sharing required WHEN invoke THEN addresses are sent`() = runTest {
+        // GIVEN
+        val token = createToken()
+        val response = createUserTokensResponse(tokens = listOf(token))
+        val addresses = setOf(Address(value = "0x123", type = AddressType.Default))
+        val wallet = mockk<Wallet> { every { this@mockk.addresses } returns addresses }
+        val walletManager = mockk<WalletManager> { every { this@mockk.wallet } returns wallet }
+
+        coEvery { walletsRepository.isNotificationsEnabled(userWalletId) } returns false
+        coEvery { walletsRepository.isAddressesSharingRequired(userWalletId) } returns true
+        coEvery {
+            walletManagersFacade.getOrCreateWalletManager(
+                userWalletId = userWalletId,
+                blockchain = Blockchain.Ethereum,
+                derivationPath = token.derivationPath,
+            )
+        } returns walletManager
+
+        // WHEN
+        val result = enricher(userWalletId, response)
+
+        // THEN
+        assertThat(result.tokens.single().addresses).containsExactly("0x123")
+    }
+
+    @Test
+    fun `GIVEN only addresses sharing required WHEN invoke THEN notifyStatus stays false`() = runTest {
+        // GIVEN
+        val token = createToken()
+        val response = createUserTokensResponse(tokens = listOf(token))
+        val wallet = mockk<Wallet> {
+            every { this@mockk.addresses } returns setOf(Address(value = "0x123", type = AddressType.Default))
+        }
+        val walletManager = mockk<WalletManager> { every { this@mockk.wallet } returns wallet }
+
+        coEvery { walletsRepository.isNotificationsEnabled(userWalletId) } returns false
+        coEvery { walletsRepository.isAddressesSharingRequired(userWalletId) } returns true
+        coEvery {
+            walletManagersFacade.getOrCreateWalletManager(
+                userWalletId = userWalletId,
+                blockchain = Blockchain.Ethereum,
+                derivationPath = token.derivationPath,
+            )
+        } returns walletManager
+
+        // WHEN
+        val result = enricher(userWalletId, response)
+
+        // THEN
+        assertThat(result.notifyStatus).isFalse()
+    }
+
+    @Test
+    fun `GIVEN notifications enabled WHEN invoke THEN notifyStatus is true`() = runTest {
+        // GIVEN
+        val token = createToken()
+        val response = createUserTokensResponse(tokens = listOf(token))
+
+        coEvery { walletsRepository.isNotificationsEnabled(userWalletId) } returns true
+        coEvery {
+            walletManagersFacade.getOrCreateWalletManager(
+                userWalletId = userWalletId,
+                blockchain = Blockchain.Ethereum,
+                derivationPath = token.derivationPath,
+            )
+        } returns null
+
+        // WHEN
+        val result = enricher(userWalletId, response)
+
+        // THEN
+        assertThat(result.notifyStatus).isTrue()
     }
 
     private fun createToken(

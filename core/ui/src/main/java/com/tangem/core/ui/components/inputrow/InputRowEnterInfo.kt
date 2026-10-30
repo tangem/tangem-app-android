@@ -44,9 +44,9 @@ fun InputRowEnterInfo(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     info: TextReference? = null,
-    titleColor: Color = TangemTheme.colors.text.secondary,
-    textColor: Color = TangemTheme.colors.text.primary1,
-    infoColor: Color = TangemTheme.colors.text.tertiary,
+    titleColor: Color = TangemTheme.colors3.text.secondary,
+    textColor: Color = TangemTheme.colors3.text.primary,
+    infoColor: Color = TangemTheme.colors3.text.secondary,
     isSingleLine: Boolean = false,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
@@ -107,7 +107,7 @@ private fun InputRowEnterInfoPreview(
             info = data.info,
             showDivider = data.shouldShowDivider,
             onValueChange = {},
-            modifier = Modifier.background(TangemTheme.colors.background.action),
+            modifier = Modifier.background(TangemTheme.colors3.bg.secondary),
         )
     }
 }

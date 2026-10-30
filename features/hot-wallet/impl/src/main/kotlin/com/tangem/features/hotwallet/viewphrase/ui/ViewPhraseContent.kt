@@ -25,7 +25,7 @@ import kotlinx.collections.immutable.toImmutableList
 internal fun ViewPhraseContent(state: ViewPhraseUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(TangemTheme.colors.background.primary)
+            .background(TangemTheme.colors3.bg.primary)
             .fillMaxSize()
             .systemBarsPadding(),
     ) {
@@ -66,7 +66,7 @@ private fun TitleBlock(state: ViewPhraseUM, modifier: Modifier = Modifier) {
         Text(
             text = stringResourceSafe(R.string.backup_seed_title),
             style = TangemTheme.typography.h2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -76,7 +76,7 @@ private fun TitleBlock(state: ViewPhraseUM, modifier: Modifier = Modifier) {
                 state.words.size,
             ),
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )

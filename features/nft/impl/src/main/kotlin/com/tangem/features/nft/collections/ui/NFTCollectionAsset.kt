@@ -58,7 +58,7 @@ internal fun NFTCollectionAsset(state: NFTCollectionAssetUM, modifier: Modifier 
         Text(
             text = state.name,
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -74,14 +74,14 @@ private fun Placeholder(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.field.focused),
+            .background(TangemTheme.colors3.bg.transparent.secondary),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             modifier = Modifier.size(52.dp),
             painter = painterResource(R.drawable.ic_nft_placeholder_120),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.primary1,
+            tint = TangemTheme.colors3.icon.primary,
         )
     }
 }

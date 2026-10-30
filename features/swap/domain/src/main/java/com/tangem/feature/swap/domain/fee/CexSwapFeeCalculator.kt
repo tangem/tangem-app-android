@@ -102,8 +102,7 @@ class CexSwapFeeCalculator(
                     ).bind().patchIfNativeEthereumFee()
                     TransactionFeeResult.LoadedExtended(feeExtended)
                 }
-                swapFeatureToggles.isTronGaslessSwapEnabled &&
-                    selectedFeeToken.currency is CryptoCurrency.Token &&
+                selectedFeeToken.currency is CryptoCurrency.Token &&
                     isTron(fromSwapCurrencyStatus.currency.network.rawId) -> {
                     val feeExtended = estimateTronGaslessFee(
                         userWallet = userWallet,
@@ -151,7 +150,6 @@ class CexSwapFeeCalculator(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         amount: BigDecimal,
     ): Either<GetFeeError, TransactionFeeExtended?> = either {
-        if (!swapFeatureToggles.isTronGaslessSwapEnabled) return@either null
         val token = fromSwapCurrencyStatus.currency as? CryptoCurrency.Token ?: return@either null
         if (!isTronGaslessSupportedUseCase(token.network, token)) return@either null
 

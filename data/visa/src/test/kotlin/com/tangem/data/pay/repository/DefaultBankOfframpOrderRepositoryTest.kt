@@ -15,13 +15,19 @@ import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderRequest
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderState
 import com.tangem.domain.pay.model.bankofframp.BankOfframpRecipient
+import com.tangem.domain.pay.model.bankofframp.BankOfframpRoute
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
+import com.tangem.domain.pay.model.bankofframp.OfframpEta
+import com.tangem.domain.pay.model.bankofframp.OfframpFee
 import com.tangem.domain.pay.model.bankofframp.PostalAddress
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.request.BankOfframpPlaceOrderRequest
+import com.tangem.spend.datasource.pay.models.request.BankOfframpRouteRequest
 import com.tangem.spend.datasource.pay.models.request.BankOfframpSignatureRequest
+import com.tangem.spend.datasource.pay.models.response.BankOfframpOptionsResponse
+import com.tangem.spend.datasource.pay.models.response.BankOfframpRouteResponse
 import com.tangem.spend.datasource.pay.models.response.OrderResponse
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -30,8 +36,13 @@ import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import org.web3j.crypto.StructuredDataEncoder
+import java.math.BigDecimal
 
 @Suppress("UNCHECKED_CAST")
 internal class DefaultBankOfframpOrderRepositoryTest {
@@ -238,6 +249,197 @@ internal class DefaultBankOfframpOrderRepositoryTest {
         coVerify(exactly = 1) { tangemPayApi.cancelOrder(AUTH_HEADER, ORDER_ID) }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CreateRoute {
+
+        @Test
+        fun `GIVEN saved recipient WHEN createRoute THEN its id and the key sent and the route returned`() =
+            runTest {
+                // Arrange
+                val body = slot<BankOfframpRouteRequest>()
+                coEvery {
+                    tangemPayApi.createBankOfframpRoute(AUTH_HEADER, KEY, capture(body))
+                } returns ApiResponse.Success(BankOfframpRouteResponse(result = routeResult()))
+
+                // Act
+                val actual = repository.createRoute(
+                    userWalletId = WALLET_ID,
+                    productInstanceId = PRODUCT_INSTANCE_ID,
+                    rail = BankRail.ACH,
+                    recipient = BankOfframpRecipient.Saved(bankAccountId = BANK_ACCOUNT_ID),
+                    idempotencyKey = KEY,
+                )
+
+                // Assert
+                assertThat(actual).isEqualTo(
+                    BankOfframpRoute(
+                        depositAddress = DEPOSIT_ADDRESS,
+                        fee = OfframpFee(
+                            name = "ACH",
+                            amount = BigDecimal("1.50"),
+                            currency = "USD",
+                            description = "ACH offramp fee",
+                        ),
+                        eta = OfframpEta(minDays = 1, maxDays = 3),
+                        bankAccountId = BANK_ACCOUNT_ID,
+                    ).right(),
+                )
+                assertThat(body.captured).isEqualTo(
+                    BankOfframpRouteRequest(productInstanceId = PRODUCT_INSTANCE_ID, bankAccountId = BANK_ACCOUNT_ID),
+                )
+                coVerify(exactly = 1) { tangemPayApi.createBankOfframpRoute(AUTH_HEADER, KEY, any()) }
+            }
+
+        @Test
+        fun `GIVEN new recipient WHEN createRoute THEN the full details sent with the picked rail`() = runTest {
+            // Arrange
+            val body = slot<BankOfframpRouteRequest>()
+            coEvery {
+                tangemPayApi.createBankOfframpRoute(AUTH_HEADER, KEY, capture(body))
+            } returns ApiResponse.Success(BankOfframpRouteResponse(result = routeResult()))
+
+            // Act
+            repository.createRoute(
+                userWalletId = WALLET_ID,
+                productInstanceId = PRODUCT_INSTANCE_ID,
+                rail = BankRail.WIRE,
+                recipient = BankOfframpRecipient.New(details().copy(rail = BankRail.ACH)),
+                idempotencyKey = KEY,
+            )
+
+            // Assert
+            assertThat(body.captured).isEqualTo(
+                BankOfframpRouteRequest(productInstanceId = PRODUCT_INSTANCE_ID, bankAccount = expectedBankAccount()),
+            )
+        }
+
+        @Test
+        fun `GIVEN incomplete new recipient WHEN createRoute THEN validation error and nothing sent`() = runTest {
+            // Act
+            val actual = repository.createRoute(
+                userWalletId = WALLET_ID,
+                productInstanceId = PRODUCT_INSTANCE_ID,
+                rail = BankRail.WIRE,
+                recipient = BankOfframpRecipient.New(details().copy(bankName = null)),
+                idempotencyKey = KEY,
+            )
+
+            // Assert
+            assertThat(actual).isEqualTo(BankOfframpError.Validation.left())
+            coVerify(exactly = 0) { tangemPayApi.createBankOfframpRoute(any(), any(), any()) }
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideApiErrorModels")
+        fun `GIVEN api error WHEN createRoute THEN the bank off-ramp error returned`(model: ApiErrorModel) = runTest {
+            // Arrange
+            coEvery {
+                requestPerformer.performRequest<Any>(userWalletId = any(), requestBlock = any())
+            } returns model.apiError.left()
+
+            // Act
+            val actual = createSavedRecipientRoute()
+
+            // Assert
+            assertThat(actual.mapLeft(::withoutCause)).isEqualTo(model.expected.left())
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideUnusableResponses")
+        fun `GIVEN response without a usable route WHEN createRoute THEN unknown error`(
+            response: BankOfframpRouteResponse,
+        ) = runTest {
+            // Arrange
+            coEvery { tangemPayApi.createBankOfframpRoute(AUTH_HEADER, KEY, any()) } returns
+                ApiResponse.Success(response)
+
+            // Act
+            val actual = createSavedRecipientRoute()
+
+            // Assert
+            assertThat(actual.mapLeft(::withoutCause))
+                .isEqualTo(BankOfframpError.Unknown(cause = null, isOutcomeUnknown = false).left())
+        }
+
+        private suspend fun createSavedRecipientRoute() = repository.createRoute(
+            userWalletId = WALLET_ID,
+            productInstanceId = PRODUCT_INSTANCE_ID,
+            rail = BankRail.ACH,
+            recipient = BankOfframpRecipient.Saved(bankAccountId = BANK_ACCOUNT_ID),
+            idempotencyKey = KEY,
+        )
+
+        private fun withoutCause(error: BankOfframpError): BankOfframpError {
+            return if (error is BankOfframpError.Unknown) error.copy(cause = null) else error
+        }
+
+        private fun provideApiErrorModels() = listOf(
+            ApiErrorModel(
+                apiError = VisaApiError.BankOfframpUnsupportedConfiguration,
+                expected = BankOfframpError.UnsupportedConfiguration,
+            ),
+            ApiErrorModel(
+                apiError = VisaApiError.Unknown(errorCode = 104_120_100),
+                expected = BankOfframpError.Unavailable(errorCode = 104_120_100),
+            ),
+            ApiErrorModel(
+                apiError = VisaApiError.NotFound,
+                expected = BankOfframpError.Unavailable(errorCode = VisaApiError.NotFound.errorCode),
+            ),
+            ApiErrorModel(
+                apiError = VisaApiError.Unknown(errorCode = 104_130_100),
+                expected = BankOfframpError.Unknown(cause = null, isOutcomeUnknown = false, errorCode = 104_130_100),
+            ),
+            ApiErrorModel(
+                apiError = VisaApiError.ServerUnavailable,
+                expected = BankOfframpError.Unknown(
+                    cause = null,
+                    isOutcomeUnknown = true,
+                    errorCode = VisaApiError.ServerUnavailable.errorCode,
+                ),
+            ),
+            ApiErrorModel(
+                apiError = VisaApiError.UnknownWithoutCode,
+                expected = BankOfframpError.Unknown(
+                    cause = null,
+                    isOutcomeUnknown = true,
+                    errorCode = VisaApiError.UnknownWithoutCode.errorCode,
+                ),
+            ),
+        )
+
+        private fun provideUnusableResponses() = listOf(
+            BankOfframpRouteResponse(result = null),
+            BankOfframpRouteResponse(result = routeResult().copy(depositAddress = null)),
+            BankOfframpRouteResponse(result = routeResult().copy(depositAddress = " ")),
+            BankOfframpRouteResponse(result = routeResult().copy(fee = null)),
+            BankOfframpRouteResponse(result = routeResult().copy(fee = routeFee().copy(amount = null))),
+            BankOfframpRouteResponse(result = routeResult().copy(eta = null)),
+            BankOfframpRouteResponse(result = routeResult().copy(eta = routeEta().copy(maxDays = null))),
+            BankOfframpRouteResponse(result = routeResult().copy(bankAccountId = null)),
+        )
+
+        private fun routeResult() = BankOfframpRouteResponse.Result(
+            depositAddress = DEPOSIT_ADDRESS,
+            fee = routeFee(),
+            eta = routeEta(),
+            bankAccountId = BANK_ACCOUNT_ID,
+        )
+
+        private fun routeFee() = BankOfframpOptionsResponse.Fee(
+            name = "ACH",
+            calculationType = "FIXED",
+            amount = BigDecimal("1.50"),
+            currency = "USD",
+            description = "ACH offramp fee",
+        )
+
+        private fun routeEta() = BankOfframpOptionsResponse.Eta(minDays = 1, maxDays = 3)
+    }
+
+    data class ApiErrorModel(val apiError: VisaApiError, val expected: BankOfframpError)
+
     private fun consistentHash(): String = "0x" + StructuredDataEncoder(STRUCTURED_DATA)
         .hashStructuredData()
         .toHexString()
@@ -306,24 +508,26 @@ internal class DefaultBankOfframpOrderRepositoryTest {
             chainId = request.chainId,
             amountInCents = request.amountInCents,
             tokenContractAddress = request.tokenContractAddress,
-            bankAccount = BankOfframpPlaceOrderRequest.BankAccount(
-                details = BankOfframpPlaceOrderRequest.Details(
-                    currency = "USD",
-                    rail = "WIRE",
-                    isThirdParty = false,
-                    beneficiary = BankOfframpPlaceOrderRequest.Beneficiary(
-                        type = "INDIVIDUAL",
-                        firstName = "John",
-                        lastName = "Doe",
-                    ),
-                    beneficiaryAddress = expectedAddress(),
-                    bankName = "Chase Bank",
-                    bankAddress = expectedAddress(),
-                    accountNumber = "1234567890",
-                    routingNumber = "021000021",
-                    bankAccountType = "SAVINGS",
-                ),
+            bankAccount = expectedBankAccount(),
+        ),
+    )
+
+    private fun expectedBankAccount() = BankOfframpPlaceOrderRequest.BankAccount(
+        details = BankOfframpPlaceOrderRequest.Details(
+            currency = "USD",
+            rail = "WIRE",
+            isThirdParty = false,
+            beneficiary = BankOfframpPlaceOrderRequest.Beneficiary(
+                type = "INDIVIDUAL",
+                firstName = "John",
+                lastName = "Doe",
             ),
+            beneficiaryAddress = expectedAddress(),
+            bankName = "Chase Bank",
+            bankAddress = expectedAddress(),
+            accountNumber = "1234567890",
+            routingNumber = "021000021",
+            bankAccountType = "SAVINGS",
         ),
     )
 
@@ -349,6 +553,9 @@ internal class DefaultBankOfframpOrderRepositoryTest {
         const val AUTH_HEADER = "Bearer token"
         const val KEY = "idempotency-key"
         const val ORDER_ID = "order-1"
+        const val PRODUCT_INSTANCE_ID = "123e4567-e89b-12d3-a456-426614174000"
+        const val BANK_ACCOUNT_ID = "7b0f7d70-ec8f-4d4d-b3f1-41f52b6f4d10"
+        const val DEPOSIT_ADDRESS = "0x1234567890abcdef1234567890abcdef12345678"
 
         val STRUCTURED_DATA = """
             {

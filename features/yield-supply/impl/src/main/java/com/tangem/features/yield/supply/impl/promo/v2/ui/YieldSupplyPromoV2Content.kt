@@ -72,7 +72,7 @@ internal fun YieldSupplyPromoV2Content(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(TangemTheme.colors.background.tertiary)
+            .background(TangemTheme.colors3.bg.primary)
             .imePadding()
             .systemBarsPadding(),
     ) {
@@ -135,7 +135,7 @@ private fun Title(title: TextReference) {
             lineHeight = 34.sp,
             fontWeight = FontWeight.SemiBold,
         ),
-        color = TangemTheme.colors.text.primary1,
+        color = TangemTheme.colors3.text.primary,
     )
 }
 
@@ -197,16 +197,16 @@ private fun PromoPoint(icon: ImageVector, title: TextReference, subtitle: TextRe
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = TangemTheme.colors.icon.primary1,
+            tint = TangemTheme.colors3.icon.primary,
             modifier = Modifier.size(20.dp),
         )
         Text(
             text = buildAnnotatedString {
-                withStyle(SpanStyle(color = TangemTheme.colors.text.primary1)) {
+                withStyle(SpanStyle(color = TangemTheme.colors3.text.primary)) {
                     append(title.resolveReference())
                 }
                 append(" ")
-                withStyle(SpanStyle(color = TangemTheme.colors.text.secondary)) {
+                withStyle(SpanStyle(color = TangemTheme.colors3.text.secondary)) {
                     append(subtitle.resolveReference())
                 }
             },
@@ -248,7 +248,7 @@ private fun TermsDisclaimer(tosLink: String, policyLink: String, onClick: (Strin
     )
     val tosIndex = fullString.indexOf(tosTitle)
     val policyIndex = fullString.indexOf(policyTitle)
-    val linkStyle = SpanStyle(color = TangemTheme.colors.text.primary1, fontWeight = FontWeight.SemiBold)
+    val linkStyle = SpanStyle(color = TangemTheme.colors3.text.primary, fontWeight = FontWeight.SemiBold)
 
     Text(
         text = buildAnnotatedString {
@@ -275,7 +275,7 @@ private fun TermsDisclaimer(tosLink: String, policyLink: String, onClick: (Strin
         },
         textAlign = TextAlign.Center,
         style = TangemTheme.typography.caption2,
-        color = TangemTheme.colors.text.secondary,
+        color = TangemTheme.colors3.text.secondary,
         modifier = Modifier.fillMaxWidth(),
     )
 }
@@ -289,10 +289,10 @@ private fun TopBar(onBackClick: () -> Unit, onHowItWorksClick: () -> Unit) {
         Icon(
             imageVector = ImageVector.vectorResource(R.drawable.ic_back_24),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.primary1,
+            tint = TangemTheme.colors3.icon.primary,
             modifier = Modifier
                 .clip(CircleShape)
-                .background(TangemTheme.colors.button.secondary)
+                .background(TangemTheme.colors3.bg.transparent.secondary)
                 .clickable(onClick = onBackClick)
                 .size(44.dp)
                 .padding(12.dp),
@@ -301,10 +301,10 @@ private fun TopBar(onBackClick: () -> Unit, onHowItWorksClick: () -> Unit) {
         Text(
             text = stringResourceSafe(R.string.yield_module_promo_screen_how_it_works_button_title),
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             modifier = Modifier
                 .clip(CircleShape)
-                .background(TangemTheme.colors.button.secondary)
+                .background(TangemTheme.colors3.bg.transparent.secondary)
                 .clickable(onClick = onHowItWorksClick)
                 .padding(horizontal = 14.dp, vertical = 8.dp),
         )

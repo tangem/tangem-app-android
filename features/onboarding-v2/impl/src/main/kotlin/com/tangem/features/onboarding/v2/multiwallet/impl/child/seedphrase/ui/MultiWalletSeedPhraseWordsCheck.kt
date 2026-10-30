@@ -27,7 +27,6 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.security.DisableAutofillEffect
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM
 import kotlinx.collections.immutable.persistentListOf
 
@@ -36,8 +35,6 @@ internal fun MultiWalletSeedPhraseWordsCheck(
     state: MultiWalletSeedPhraseUM.GeneratedWordsCheck,
     modifier: Modifier = Modifier,
 ) {
-    DisableAutofillEffect()
-
     if (state.dialog != null) {
         BasicDialog(
             title = state.dialog.title.resolveReference(),
@@ -68,7 +65,7 @@ internal fun MultiWalletSeedPhraseWordsCheck(
             Text(
                 text = stringResourceSafe(R.string.onboarding_seed_user_validation_title),
                 style = TangemTheme.typography.h2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .padding(top = 48.dp, start = 36.dp, end = 36.dp, bottom = 16.dp)
@@ -77,7 +74,7 @@ internal fun MultiWalletSeedPhraseWordsCheck(
             Text(
                 text = stringResourceSafe(R.string.onboarding_seed_user_validation_message),
                 style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .padding(horizontal = 36.dp)
@@ -116,6 +113,7 @@ private fun Fields(state: MultiWalletSeedPhraseUM.GeneratedWordsCheck, modifier:
         DisableContextMenu {
             state.wordFields.fastForEachIndexed { index, field ->
                 OutlineTextField(
+                    isExcludedFromAutofill = true,
                     value = field.word,
                     onValueChange = field.onChange,
                     label = field.index.toString(),

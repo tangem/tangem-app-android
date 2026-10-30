@@ -43,5 +43,6 @@ interface TangemPayCurrencyFactory {
         const val TOKEN_NAME = "USDC"
         const val TOKEN_CONTRACT_ADDRESS = "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359"
         const val TOKEN_DECIMALS = 6
+        const val TOKEN_CHAIN_ID = 137L
     }
 }

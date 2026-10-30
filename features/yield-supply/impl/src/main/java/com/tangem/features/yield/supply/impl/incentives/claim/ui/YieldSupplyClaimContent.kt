@@ -55,7 +55,7 @@ internal fun YieldSupplyClaimContent(
         Text(
             text = state.total.resolveReference(),
             style = TangemTheme.typography.h1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         SpacerH(48.dp)
 
@@ -70,7 +70,7 @@ internal fun YieldSupplyClaimContent(
             state.notification?.let { notification ->
                 Notification(
                     config = notification.config,
-                    containerColor = TangemTheme.colors.background.action,
+                    containerColor = TangemTheme.colors3.bg.secondary,
                 )
             }
 
@@ -86,7 +86,7 @@ internal fun YieldSupplyClaimContent(
             Text(
                 text = stringResourceSafe(R.string.yield_module_claim_footer_note),
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -107,7 +107,7 @@ private fun FeesCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .padding(vertical = 4.dp),
     ) {
         YieldSupplyFeeRow(
@@ -121,7 +121,7 @@ private fun FeesCard(
         if (isServiceFeeVisible) {
             HorizontalDivider(
                 thickness = 0.5.dp,
-                color = TangemTheme.colors.stroke.primary,
+                color = TangemTheme.colors3.border.secondary,
                 modifier = Modifier.padding(horizontal = 12.dp),
             )
             YieldSupplyFeeRow(
@@ -141,7 +141,7 @@ private fun RewardGroup(group: YieldSupplyClaimUM.RewardGroupUM) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(TangemTheme.colors.background.action),
+            .background(TangemTheme.colors3.bg.secondary),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -152,7 +152,7 @@ private fun RewardGroup(group: YieldSupplyClaimUM.RewardGroupUM) {
             Text(
                 text = group.title.resolveReference(),
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
             group.storage?.let { storage ->
                 SpacerWMax()
@@ -161,7 +161,7 @@ private fun RewardGroup(group: YieldSupplyClaimUM.RewardGroupUM) {
                     icon = storage.icon,
                     iconSize = AccountIconSize.ExtraSmall,
                     nameStyle = TangemTheme.typography.caption2,
-                    nameColor = TangemTheme.colors.text.tertiary,
+                    nameColor = TangemTheme.colors3.text.secondary,
                 )
             }
         }
@@ -169,7 +169,7 @@ private fun RewardGroup(group: YieldSupplyClaimUM.RewardGroupUM) {
             if (index > 0) {
                 HorizontalDivider(
                     thickness = 0.5.dp,
-                    color = TangemTheme.colors.stroke.primary,
+                    color = TangemTheme.colors3.border.secondary,
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
             }
@@ -195,12 +195,12 @@ private fun RewardRow(reward: YieldSupplyClaimUM.RewardUM) {
             Text(
                 text = reward.symbol,
                 style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
             Text(
                 text = reward.networkName,
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
         SpacerWMax()
@@ -209,13 +209,13 @@ private fun RewardRow(reward: YieldSupplyClaimUM.RewardUM) {
                 Text(
                     text = fiat.resolveReference(),
                     style = TangemTheme.typography.subtitle2,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                 )
             }
             Text(
                 text = reward.amount.resolveReference(),
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
     }

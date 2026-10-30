@@ -50,10 +50,10 @@ internal fun NFTCollectionsLoading(state: NFTCollectionsUM.Loading, modifier: Mo
                     ),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = TangemTheme.colors.background.primary,
-                    contentColor = TangemTheme.colors.text.primary1,
-                    disabledContainerColor = TangemTheme.colors.background.primary,
-                    disabledContentColor = TangemTheme.colors.text.primary1,
+                    containerColor = TangemTheme.colors3.bg.secondary,
+                    contentColor = TangemTheme.colors3.text.primary,
+                    disabledContainerColor = TangemTheme.colors3.bg.secondary,
+                    disabledContentColor = TangemTheme.colors3.text.primary,
                 ),
             ) {
                 Column {
@@ -94,7 +94,7 @@ private fun CollectionPlaceholder(modifier: Modifier = Modifier) {
                     modifier = Modifier
                         .size(36.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(TangemTheme.colors.field.primary),
+                        .background(TangemTheme.colors3.bg.tertiary),
                 )
             }
             Column(

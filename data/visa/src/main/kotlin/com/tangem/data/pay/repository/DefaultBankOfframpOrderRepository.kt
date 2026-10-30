@@ -6,11 +6,16 @@ import arrow.core.raise.ensureNotNull
 import com.tangem.data.pay.util.BankOfframpErrorConverter
 import com.tangem.data.pay.util.BankOfframpOrderRequestConverter
 import com.tangem.data.pay.util.BankOfframpOrderStateConverter
+import com.tangem.data.pay.util.BankOfframpRouteConverter
+import com.tangem.data.pay.util.BankOfframpRouteRequestConverter
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderRequest
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderState
+import com.tangem.domain.pay.model.bankofframp.BankOfframpRecipient
+import com.tangem.domain.pay.model.bankofframp.BankOfframpRoute
+import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.repository.BankOfframpOrderRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.spend.datasource.pay.TangemPayApi
@@ -80,10 +85,49 @@ internal class DefaultBankOfframpOrderRepository @Inject constructor(
             .mapLeft { error -> error.toBankOfframpError(operation = "cancelOrder") }
     }
 
+    override suspend fun createRoute(
+        userWalletId: UserWalletId,
+        productInstanceId: String,
+        rail: BankRail,
+        recipient: BankOfframpRecipient,
+        idempotencyKey: String,
+    ): Either<BankOfframpError, BankOfframpRoute> = either {
+        val body = BankOfframpRouteRequestConverter.convert(
+            BankOfframpRouteRequestConverter.Input(
+                productInstanceId = productInstanceId,
+                rail = rail,
+                recipient = recipient,
+            ),
+        ).bind()
+        val response = requestPerformer.performRequest(userWalletId) { authHeader ->
+            tangemPayApi.createBankOfframpRoute(
+                authHeader = authHeader,
+                idempotencyKey = idempotencyKey,
+                body = body,
+            )
+        }.mapLeft { error -> error.toRouteError() }.bind()
+
+        val result = ensureNotNull(response.result) { emptyResult(operation = "createRoute") }
+        ensureNotNull(BankOfframpRouteConverter.convert(result)) { incompleteResult(operation = "createRoute") }
+    }
+
     private fun VisaApiError.toBankOfframpError(operation: String) =
         BankOfframpErrorConverter.convert(BankOfframpErrorConverter.Input(error = this, operation = operation))
+
+    private fun VisaApiError.toRouteError(): BankOfframpError =
+        if (this == VisaApiError.NotFound || errorCode == FORBIDDEN_ERROR_CODE) {
+            BankOfframpError.Unavailable(errorCode = errorCode)
+        } else {
+            toBankOfframpError(operation = "createRoute")
+        }
 
     private fun emptyResult(operation: String) = BankOfframpError.Unknown(
         cause = IllegalStateException("Bank off-ramp $operation returned an empty result"),
     )
+
+    private fun incompleteResult(operation: String) = BankOfframpError.Unknown(
+        cause = IllegalStateException("Bank off-ramp $operation returned an incomplete result"),
+    )
 }
+
+private const val FORBIDDEN_ERROR_CODE = 104_120_100

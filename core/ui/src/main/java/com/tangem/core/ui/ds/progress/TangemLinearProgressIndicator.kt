@@ -141,7 +141,7 @@ private fun LinearProgressIndicator_Preview() {
     TangemThemePreviewRedesign {
         Column(
             modifier = Modifier
-                .background(TangemTheme.colors.background.secondary)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -150,8 +150,8 @@ private fun LinearProgressIndicator_Preview() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(6.dp),
-                dotColor = TangemTheme.colors2.fill.status.accent,
-                backgroundColor = TangemTheme.colors2.graphic.neutral.primaryInvertedConstant,
+                dotColor = TangemTheme.colors3.bg.accent.blue,
+                backgroundColor = TangemTheme.colors3.icon.staticDark,
             )
         }
     }

@@ -12,8 +12,6 @@ import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 
 sealed class OnboardingRoute : Route {
 
-    data object None : OnboardingRoute()
-
     data class Note(
         val titleProvider: TitleProvider,
         val scanResponse: ScanResponse,

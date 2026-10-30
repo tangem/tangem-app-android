@@ -48,7 +48,7 @@ internal fun LazyListScope.amountFieldV2(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .clip(RoundedCornerShape(16.dp))
-                .background(TangemTheme.colors.background.action),
+                .background(TangemTheme.colors3.bg.secondary),
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -75,7 +75,7 @@ internal fun LazyListScope.amountFieldV2(
             HorizontalDivider(
                 modifier = Modifier.padding(horizontal = 12.dp),
                 thickness = 0.5.dp,
-                color = TangemTheme.colors.stroke.primary,
+                color = TangemTheme.colors3.border.secondary,
             )
             AmountInfo(
                 amountUM = amountState,
@@ -109,11 +109,11 @@ private fun AmountInfo(amountUM: AmountState, onMaxAmountClick: () -> Unit, modi
         Text(
             text = stringResourceSafe(R.string.send_max_amount),
             style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             modifier = Modifier
                 .padding(end = 16.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(TangemTheme.colors.button.secondary)
+                .background(TangemTheme.colors3.bg.transparent.secondary)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = ripple(),
@@ -141,7 +141,7 @@ private fun AmountInfoMain(amountUM: AmountState, modifier: Modifier = Modifier)
                     Text(
                         text = currentAmount.tokenName.resolveReference(),
                         style = TangemTheme.typography.subtitle2,
-                        color = TangemTheme.colors.text.primary1,
+                        color = TangemTheme.colors3.text.primary,
                         maxLines = 1,
                         modifier = Modifier.testTag(SendScreenTestTags.TOKEN_NAME),
                     )
@@ -149,7 +149,7 @@ private fun AmountInfoMain(amountUM: AmountState, modifier: Modifier = Modifier)
                         EllipsisText(
                             text = currentAmount.availableBalanceCrypto.resolveReference(),
                             style = TangemTheme.typography.caption2,
-                            color = TangemTheme.colors.text.tertiary,
+                            color = TangemTheme.colors3.text.secondary,
                             ellipsis = TextEllipsis.OffsetEnd(
                                 currentAmount.amountTextField.cryptoAmount.currencySymbol.length,
                             ),
@@ -160,7 +160,7 @@ private fun AmountInfoMain(amountUM: AmountState, modifier: Modifier = Modifier)
                         EllipsisText(
                             text = currentAmount.availableBalanceFiat.resolveReference(),
                             style = TangemTheme.typography.caption2,
-                            color = TangemTheme.colors.text.tertiary,
+                            color = TangemTheme.colors3.text.secondary,
                             ellipsis = TextEllipsis.OffsetEnd(
                                 currentAmount.amountTextField.fiatAmount.currencySymbol.length,
                             ),

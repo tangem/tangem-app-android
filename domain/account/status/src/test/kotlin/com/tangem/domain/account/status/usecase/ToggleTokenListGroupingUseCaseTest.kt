@@ -204,7 +204,12 @@ class ToggleTokenListGroupingUseCaseTest {
         val statuses = listOf(createStatus(currency = cryptoCurrencyFactory.ethereum, fiatAmount = BigDecimal.ONE))
         val jointStatus = AccountStatus.Joint(
             account = MockAccounts.createJointAccount(userWalletId = userWalletId),
-            value = JointAccountStatusValue.Pending(source = StatusSource.ACTUAL, joinedMembers = 1, totalMembers = 2),
+            value = JointAccountStatusValue.Pending(
+                source = StatusSource.ACTUAL,
+                joinedMembers = 1,
+                totalMembers = 2,
+                threshold = 2,
+            ),
             tokenList = TokenList.Empty,
             priceChangeLce = Unit.lceError(),
         )

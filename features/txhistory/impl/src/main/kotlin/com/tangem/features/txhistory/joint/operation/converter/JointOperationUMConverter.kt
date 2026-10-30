@@ -54,7 +54,11 @@ internal class JointOperationUMConverter(
         return TxHistoryDetailsUM.SingleAsset(
             header = header(
                 state = state,
-                menu = menu(state = state, canCreateContact = value.recipient.canCreateContact),
+                menu = menu(
+                    state = state,
+                    canCreateContact = value.recipient.canCreateContact,
+                    canRefuse = !value.isRefusing,
+                ),
             ),
             isBalanceHidden = value.isBalanceHidden,
             amountBlock = TxHistoryDetailsUM.AmountBlockUM(
@@ -116,7 +120,7 @@ internal class JointOperationUMConverter(
         onInfoClick = onSignersClick,
     )
 
-    private fun menu(state: JointOperationState, canCreateContact: Boolean) = buildList {
+    private fun menu(state: JointOperationState, canCreateContact: Boolean, canRefuse: Boolean) = buildList {
         add(
             TxHistoryDetailsUM.MenuItemUM(
                 icon = Icons.ic_copy_24,
@@ -133,7 +137,7 @@ internal class JointOperationUMConverter(
                 ),
             )
         }
-        if (state.isSending || !state.canRefuse) return@buildList
+        if (state.isSending || !state.canRefuse || !canRefuse) return@buildList
         val isInitiator = state.role == Role.INITIATOR
         add(
             TxHistoryDetailsUM.MenuItemUM(
@@ -157,7 +161,7 @@ internal class JointOperationUMConverter(
         // The model overlays a local answer into the state, so the answer alone says whether this member signed;
         // [hasAnswered] also covers a local decline and only blocks a second tap
         val hasSigned = state.ownAnswer == Answer.SIGNED || state.ownAnswer == Answer.CREATED
-        if (state.isSending) return sentAction(hasSigned = hasSigned)
+        if (state.isSending) return sentAction(ownAnswer = state.ownAnswer)
 
         val canSign = state.canSign && !hasAnswered && !isRefusing
 
@@ -182,9 +186,12 @@ internal class JointOperationUMConverter(
         )
     }
 
-    /** Nothing left to do once the threshold is reached: the button only records whether this member signed */
-    private fun sentAction(hasSigned: Boolean): TxHistoryDetailsUM.CosignActionUM {
-        val buttonText = if (hasSigned) CoreUiR.string.joint_operation_signed else CoreUiR.string.common_sign
+    private fun sentAction(ownAnswer: Answer?): TxHistoryDetailsUM.CosignActionUM {
+        val buttonText = when (ownAnswer) {
+            Answer.CREATED, Answer.SIGNED -> CoreUiR.string.joint_operation_signed
+            Answer.DECLINED -> CoreUiR.string.joint_operation_declined
+            Answer.WAITING, null -> CoreUiR.string.common_sign
+        }
 
         return TxHistoryDetailsUM.CosignActionUM(
             buttonText = resourceReference(buttonText),

@@ -46,7 +46,7 @@ internal fun EnvironmentTogglesScreen(uiModel: EnvironmentTogglesScreenUM) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(TangemTheme.colors.background.secondary),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         stickyHeader {
             AppBarWithBackButton(
@@ -90,7 +90,7 @@ private fun EnvironmentConfigBlock(
         ) {
             Text(
                 text = uiModel.name,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 maxLines = 1,
                 style = TangemTheme.typography.h3,
             )
@@ -98,7 +98,7 @@ private fun EnvironmentConfigBlock(
             AnimatedContent(targetState = uiModel.url, label = "") { url ->
                 Text(
                     text = url,
-                    color = TangemTheme.colors.text.accent,
+                    color = TangemTheme.colors3.text.accent.blue,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
                     style = TangemTheme.typography.body2,
@@ -143,11 +143,11 @@ private fun EnvironmentButtons(uiModel: EnvironmentTogglesScreenUM.ApiInfoUM, on
                     },
                     colors = SegmentedButtonDefaults.colors(
                         activeContainerColor = TangemTheme.colors.control.checked,
-                        activeContentColor = TangemTheme.colors.text.primary2,
+                        activeContentColor = TangemTheme.colors3.text.inverse.primary,
                         inactiveContainerColor = TangemTheme.colors.control.default,
-                        inactiveContentColor = TangemTheme.colors.text.primary1,
+                        inactiveContentColor = TangemTheme.colors3.text.primary,
                     ),
-                    border = BorderStroke(0.dp, TangemTheme.colors.background.tertiary),
+                    border = BorderStroke(0.dp, TangemTheme.colors3.bg.primary),
                 ) {
                     Text(text = environment, style = TangemTheme.typography.subtitle2)
                 }

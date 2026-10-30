@@ -85,6 +85,7 @@ import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
@@ -544,7 +545,7 @@ internal class WalletModel @Inject constructor(
                 PeriodicTask(
                     delay = EXPRESS_STATUS_UPDATE_DELAY,
                     task = {
-                        runCatching {
+                        runSuspendCatching {
                             onrampStatusFactory.updateOnrmapTransactionStatuses(userWallet)
                         }
                     },

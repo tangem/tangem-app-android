@@ -1,8 +1,0 @@
-<?xml version="1.0" ?>
-<SmellBaseline>
-  <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>PropertyUsedBeforeDeclaration:AddExistingWalletImportModel.kt$AddExistingWalletImportModel$uiState</ID>
-    <ID>SuspendFunSwallowedCancellation:ManualBackupCheckModel.kt$ManualBackupCheckModel$runCatching</ID>
-  </CurrentIssues>
-</SmellBaseline>

@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.common.pagination.Page
+import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
@@ -184,8 +185,28 @@ interface WalletManagersFacade {
      * @param amount of transaction
      * @param userWalletId selected wallet id
      * @param network network of currency
+     * @param isYieldModuleUpgradeAllowed whether a yield send may be estimated as part of the module upgrade call,
+     * the way it is sent; `false` for flows that send the bare call, such as gasless
      */
-    suspend fun estimateFee(amount: Amount, userWalletId: UserWalletId, network: Network): Result<TransactionFee>?
+    suspend fun estimateFee(
+        amount: Amount,
+        userWalletId: UserWalletId,
+        network: Network,
+        isYieldModuleUpgradeAllowed: Boolean,
+    ): Result<TransactionFee>?
+
+    /**
+     * Wraps a yield send into the module upgrade the way it was last priced for this wallet and network; without
+     * a recent decision the module version is checked now, and a failed check leaves [callData] as is.
+     */
+    suspend fun wrapYieldSendWithModuleUpgrade(
+        userWalletId: UserWalletId,
+        network: Network,
+        callData: SmartContractCallData,
+    ): SmartContractCallData
+
+    /** Called once a module upgrade is sent, which outdates the decision of [wrapYieldSendWithModuleUpgrade]. */
+    fun resetYieldSendUpgradeDecision(userWalletId: UserWalletId, network: Network)
 
     /**
      * Validates transaction

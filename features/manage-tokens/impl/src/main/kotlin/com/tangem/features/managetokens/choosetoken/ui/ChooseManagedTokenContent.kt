@@ -43,7 +43,7 @@ internal fun ChooseManagedTokenContent(state: ChooseManagedTokenUM, modifier: Mo
 
     Scaffold(
         modifier = modifier,
-        containerColor = TangemTheme.colors.background.tertiary,
+        containerColor = TangemTheme.colors3.bg.primary,
         contentWindowInsets = WindowInsetsZero,
         topBar = {
             ManageTokensTopBar(
@@ -108,7 +108,7 @@ private fun Currencies(
             item(key = "notification_key") {
                 Notification(
                     config = notificationUM.config,
-                    iconTint = TangemTheme.colors.icon.accent,
+                    iconTint = TangemTheme.colors3.icon.accent.blue,
                     modifier = Modifier
                         .animateItem()
                         .padding(bottom = 12.dp),
@@ -158,7 +158,7 @@ private fun LazyListScope.contentItems(items: ImmutableList<CurrencyItemUM>) {
                             lastIndex = items.lastIndex,
                         )
                         .clickable(onClick = item.onExpandClick)
-                        .background(TangemTheme.colors.background.action),
+                        .background(TangemTheme.colors3.bg.secondary),
                 )
             }
             is CurrencyItemUM.Loading -> {
@@ -170,7 +170,7 @@ private fun LazyListScope.contentItems(items: ImmutableList<CurrencyItemUM>) {
                             lastIndex = items.lastIndex,
                         )
                         .fillMaxWidth()
-                        .background(TangemTheme.colors.background.action),
+                        .background(TangemTheme.colors3.bg.secondary),
                 )
             }
             is CurrencyItemUM.SearchNothingFound -> {
@@ -181,7 +181,7 @@ private fun LazyListScope.contentItems(items: ImmutableList<CurrencyItemUM>) {
                             addDefaultPadding = false,
                             lastIndex = items.lastIndex,
                         )
-                        .background(TangemTheme.colors.background.action)
+                        .background(TangemTheme.colors3.bg.secondary)
                         .fillParentMaxSize(),
                 )
             }

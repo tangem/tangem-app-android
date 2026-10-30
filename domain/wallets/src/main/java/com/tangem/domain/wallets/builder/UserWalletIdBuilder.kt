@@ -89,9 +89,9 @@ class UserWalletIdBuilder private constructor(
         }
 
         fun walletPublicKey(publicKey: ByteArray): UserWalletId {
-            return UserWalletIdBuilder(
-                publicKey = publicKey,
-            ).build()!!
+            return requireNotNull(UserWalletIdBuilder(publicKey = publicKey).build()) {
+                "UserWalletId can't be built from the wallet public key"
+            }
         }
 
         private fun findPublicKey(wallets: List<CardDTO.Wallet>): ByteArray? {

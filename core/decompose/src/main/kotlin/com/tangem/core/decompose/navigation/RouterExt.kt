@@ -6,7 +6,7 @@ package com.tangem.core.decompose.navigation
  * @param R The route to pop to.
  * @param onComplete The callback to be invoked when the operation is complete.
  */
-inline fun <reified R : Route> Router.popTo(noinline onComplete: (isSuccess: Boolean) -> Unit = {}) {
+inline fun <reified R : Route> Router.popTo(noinline onComplete: (isSuccess: Boolean) -> Unit = Router.NoCompletion) {
     popTo(R::class, onComplete)
 }
 
@@ -29,4 +29,20 @@ fun Router.popToOrReplaceCurrent(route: Route) {
  */
 inline fun <reified R : Route> Router.popToOrReplaceCurrent(route: R, noinline predicate: (R) -> Boolean) {
     popToMatching(R::class, predicate) { isFound -> if (!isFound) replaceCurrent(route) }
+}
+
+/**
+ * Returns [onComplete], or a callback that hands the result to [Router.defaultCompletionHandler] when the caller passed
+ * [Router.NoCompletion].
+ *
+ * @param onComplete The callback the caller passed.
+ * @param errorMessage Describes the operation if it fails.
+ */
+fun Router.withDefaultCompletion(
+    onComplete: (isSuccess: Boolean) -> Unit,
+    errorMessage: () -> String,
+): (isSuccess: Boolean) -> Unit {
+    if (onComplete !== Router.NoCompletion) return onComplete
+
+    return { isSuccess -> defaultCompletionHandler(isSuccess, errorMessage()) }
 }

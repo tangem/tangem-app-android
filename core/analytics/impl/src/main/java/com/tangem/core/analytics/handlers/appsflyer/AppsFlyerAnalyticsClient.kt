@@ -1,0 +1,107 @@
+package com.tangem.core.analytics.handlers.appsflyer
+
+import android.content.Context
+import com.appsflyer.AppsFlyerLib
+import com.appsflyer.attribution.AppsFlyerRequestListener
+import com.tangem.core.analytics.api.EventLogger
+import com.tangem.core.analytics.api.UserIdHolder
+import com.tangem.core.analytics.converters.UnderscoreAnalyticsEventConverter
+import com.tangem.core.analytics.impl.BuildConfig
+import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
+import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.utils.logging.TangemLogger
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.launch
+
+interface AppsFlyerAnalyticsClient : EventLogger, UserIdHolder
+
+internal class AppsFlyerClient @AssistedInject constructor(
+    @Assisted apiKey: String,
+    @ApplicationContext private val context: Context,
+    deepLinkListener: TangemAFDeepLinkListener,
+    conversionListener: TangemAFConversionListener,
+    private val appsFlyerRepository: AppsFlyerRepository,
+    private val coroutineScope: AppCoroutineScope,
+) : AppsFlyerAnalyticsClient {
+
+    private val appsFlyerLib: AppsFlyerLib = AppsFlyerLib.getInstance()
+    private val eventConverter = UnderscoreAnalyticsEventConverter()
+
+    init {
+        with(appsFlyerLib) {
+            setAppId(context.packageName)
+            setDebugLog(BuildConfig.LOG_ENABLED)
+
+            init(apiKey, conversionListener, context)
+            subscribeForDeepLink(deepLinkListener)
+            setOneLinkCustomDomain(BRANDED_ONELINK_DOMAIN)
+
+            TangemLogger.i("Starting AppsFlyer SDK")
+            start(context, apiKey, InitializationListener)
+            TangemLogger.i("AppsFlyer SDK started")
+
+            saveUID()
+        }
+    }
+
+    override fun setUserId(userId: String) {
+        appsFlyerLib.setCustomerUserId(userId)
+    }
+
+    override fun clearUserId() {
+        appsFlyerLib.setCustomerUserId(null)
+    }
+
+    override fun logEvent(event: String, params: Map<String, String>) {
+        TangemLogger.withTag("AppsFlyer").i("Logging event: $event with params: $params")
+        appsFlyerLib.logEvent(
+            context,
+            event,
+            eventConverter.convertEventParams(params),
+            LogEventListener,
+        )
+    }
+
+    private fun saveUID() {
+        coroutineScope.launch {
+            val appsFlyerUID = appsFlyerLib.getAppsFlyerUID(context)
+
+            if (appsFlyerUID != null) {
+                appsFlyerRepository.storeUIDIfAbsent(appsFlyerUID)
+            }
+        }
+    }
+
+    private object InitializationListener : AppsFlyerRequestListener {
+        override fun onSuccess() {
+            TangemLogger.d("AppsFlyer initialized successfully")
+        }
+
+        override fun onError(p0: Int, p1: String) {
+            TangemLogger.e("AppsFlyer initialization error: $p0, $p1")
+        }
+    }
+
+    private object LogEventListener : AppsFlyerRequestListener {
+        override fun onSuccess() {
+            TangemLogger.withTag("AppsFlyerClient").i("AppsFlyerRequestListener send")
+        }
+
+        override fun onError(p0: Int, p1: String) {
+            TangemLogger.withTag("AppsFlyerClient").e("AppsFlyerRequestListener onError: $p0, $p1")
+        }
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(apiKey: String): AppsFlyerClient
+    }
+
+    private companion object {
+        // Branded AppsFlyer OneLink domain (matches the join.tangem.com App Link filter in AndroidManifest).
+        const val BRANDED_ONELINK_DOMAIN = "join.tangem.com"
+    }
+}
