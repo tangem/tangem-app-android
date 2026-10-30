@@ -62,9 +62,8 @@ internal fun PlacePredictionSummaryContent(
                 onClose = intents::onCloseClick,
             )
         },
-        overlay = { contentPadding ->
+        overlay = { _ ->
             PredictionPlaceFooter(
-                contentPadding = contentPadding,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .onSizeChanged { footerHeight = it.height },
