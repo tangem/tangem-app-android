@@ -5,6 +5,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -64,6 +65,7 @@ internal class TangemPayAddToGoogleWalletControllerTest {
     private val uiMessageSender: UiMessageSender = mockk()
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val featureToggles: TangemPayFeatureToggles = mockk()
+    private val abTestsManager: ABTestsManager = mockk()
     private val context: Context = mockk()
 
     private val walletChanges = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
@@ -71,10 +73,19 @@ internal class TangemPayAddToGoogleWalletControllerTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(provisioner, cardDetailsRepository, uiMessageSender, analytics, featureToggles, context)
+        clearMocks(
+            provisioner,
+            cardDetailsRepository,
+            uiMessageSender,
+            analytics,
+            featureToggles,
+            abTestsManager,
+            context,
+        )
         sentMessages.clear()
         every { featureToggles.isGoogleWalletPushProvisioningEnabled } returns true
         every { featureToggles.isGoogleWalletButtonAlwaysShown } returns false
+        coEvery { abTestsManager.getValue(EXPERIMENT_KEY, OFF_VARIANT) } returns ON_VARIANT
         every { context.getString(R.string.tangempay_title) } returns DEFAULT_CARD_NAME
         every { uiMessageSender.send(capture(sentMessages)) } just runs
         every { provisioner.environment } returns Environment.TEST
@@ -85,6 +96,11 @@ internal class TangemPayAddToGoogleWalletControllerTest {
         coEvery { provisioner.resumeAddingCard(any(), any()) } returns AddResult.Added
         every { cardDetailsRepository.isProductionEnvironment() } returns false
         coEvery { cardDetailsRepository.getProvisioningData(any(), any()) } returns PROVISIONING_DATA.right()
+    }
+
+    @AfterEach
+    fun resetLogWriters() {
+        TangemLogger.setLogWriters(emptyList())
     }
 
     @Nested
@@ -157,6 +173,7 @@ internal class TangemPayAddToGoogleWalletControllerTest {
             // Assert
             assertThat(controller.entry.value).isEqualTo(model.expected)
             verify { provisioner wasNot Called }
+            verify { abTestsManager wasNot Called }
         }
 
         private fun provideDisabledModels() = listOf(
@@ -218,6 +235,87 @@ internal class TangemPayAddToGoogleWalletControllerTest {
             // Assert
             assertThat(controller.entry.value).isEqualTo(Entry.Hidden)
         }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Experiment {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN experiment variant WHEN card shown THEN push provisioning follows it`(model: ExperimentModel) =
+            runTest {
+                // Arrange
+                coEvery { abTestsManager.getValue(EXPERIMENT_KEY, OFF_VARIANT) } returns model.variant
+                val controller = createController()
+
+                // Act
+                controller.show(card = addableCard())
+                controller.onStart()
+                runCurrent()
+
+                // Assert
+                assertThat(controller.entry.value).isEqualTo(model.expected)
+                coVerify(exactly = model.expectedStatusChecks) { provisioner.getCardStatus(LAST_FOUR_DIGITS) }
+            }
+
+        private fun provideTestModels() = listOf(
+            ExperimentModel(variant = "on", expected = BUTTON, expectedStatusChecks = 1),
+            ExperimentModel(variant = "off", expected = Entry.ManualGuide, expectedStatusChecks = 0),
+            ExperimentModel(variant = "control", expected = Entry.ManualGuide, expectedStatusChecks = 0),
+        )
+
+        @Test
+        fun `GIVEN experiment variant WHEN it arrives THEN variant logged`() = runTest {
+            // Arrange
+            val logs = RecordingLogWriter()
+            TangemLogger.setLogWriters(listOf(logs))
+
+            // Act
+            createController()
+            runCurrent()
+
+            // Assert
+            assertThat(logs.entries).containsExactly(Severity.Info to "Push provisioning experiment variant: on")
+        }
+
+        @Test
+        fun `GIVEN experiment variant not fetched yet WHEN card shown THEN entry hidden and wallet not checked`() =
+            runTest {
+                // Arrange
+                coEvery { abTestsManager.getValue(any(), any()) } coAnswers { awaitCancellation() }
+                val controller = createController()
+
+                // Act
+                controller.show(card = addableCard())
+                controller.onStart()
+                runCurrent()
+
+                // Assert
+                assertThat(controller.entry.value).isEqualTo(Entry.Hidden)
+                verify { provisioner wasNot Called }
+            }
+
+        @Test
+        fun `GIVEN screen started before variant fetched WHEN variant is on THEN wallet changes re-check status`() =
+            runTest {
+                // Arrange
+                val variant = CompletableDeferred<String>()
+                coEvery { abTestsManager.getValue(any(), any()) } coAnswers { variant.await() }
+                val controller = createController()
+                controller.show(card = addableCard())
+                controller.onStart()
+                runCurrent()
+                variant.complete(ON_VARIANT)
+                runCurrent()
+
+                // Act
+                walletChanges.tryEmit(Unit)
+                runCurrent()
+
+                // Assert
+                coVerify(exactly = 2) { provisioner.getCardStatus(LAST_FOUR_DIGITS) }
+            }
     }
 
     @Nested
@@ -304,17 +402,12 @@ internal class TangemPayAddToGoogleWalletControllerTest {
     @Nested
     inner class AddCard {
 
-        @AfterEach
-        fun resetLogWriters() {
-            TangemLogger.setLogWriters(emptyList())
-        }
-
         @Test
         fun `GIVEN card not in wallet WHEN add clicked THEN tap logged with the card status`() = runTest {
             // Arrange
+            val controller = createStartedController()
             val logs = RecordingLogWriter()
             TangemLogger.setLogWriters(listOf(logs))
-            val controller = createStartedController()
 
             // Act
             controller.onAddClick()
@@ -647,6 +740,7 @@ internal class TangemPayAddToGoogleWalletControllerTest {
         cardDetailsRepository = cardDetailsRepository,
         uiMessageSender = uiMessageSender,
         analytics = analytics,
+        abTestsManager = abTestsManager,
         featureToggles = featureToggles,
     )
 
@@ -706,6 +800,8 @@ internal class TangemPayAddToGoogleWalletControllerTest {
         val expected: Entry,
     )
 
+    internal data class ExperimentModel(val variant: String, val expected: Entry, val expectedStatusChecks: Int)
+
     internal data class DisabledModel(
         val card: TangemPayCard?,
         val frozenState: TangemPayCardFrozenState,
@@ -734,6 +830,9 @@ internal class TangemPayAddToGoogleWalletControllerTest {
         const val DEFAULT_CARD_NAME = "Tangem Pay"
         const val PROCESSOR_CARD_ID = "processor-card-id"
         const val CARD_SECRET = "time-based-secret"
+        const val EXPERIMENT_KEY = "twi_1062_google_wallet_push_provisioning"
+        const val ON_VARIANT = "on"
+        const val OFF_VARIANT = "off"
 
         val BUTTON = Entry.Button(isLoading = false)
 
