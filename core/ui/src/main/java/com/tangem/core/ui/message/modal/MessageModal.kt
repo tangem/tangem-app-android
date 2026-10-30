@@ -143,6 +143,7 @@ private fun Buttons(buttons: ImmutableList<MessageModalUM.Button>, actionScope: 
                     iconStart = button.iconStart,
                     iconEnd = button.iconEnd,
                     text = button.text,
+                    isLoading = button.isLoading,
                     onClick = { button.onClick(actionScope) },
                 )
             }
