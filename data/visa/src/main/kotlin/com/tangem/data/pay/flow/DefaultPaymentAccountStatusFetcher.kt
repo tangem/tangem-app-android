@@ -657,7 +657,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             virtualAccount = virtualAccount,
             isBankOfframpAvailable = channels?.contains(TangemPayEligibilityType.BANK_OFFRAMP),
             tariffPlan = tariffPlanState,
-            isPaymentAccountIssuing = isPaymentAccountIssuing,
+            isPaymentAccountIssuing = isPaymentAccountIssuing || tariffPlanState?.isPlanTransitioningState == true,
         )
     }
 
