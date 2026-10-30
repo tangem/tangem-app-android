@@ -45,7 +45,7 @@ internal class DefaultSolanaGaslessTransactionRepositoryTest {
             api = api,
             errorAdapter = Moshi.Builder().build().adapter(GaslessErrorResponse::class.java),
             dispatchers = TestingCoroutineDispatcherProvider(),
-            currentTimeMillis = { nowMillis },
+            elapsedRealtimeMillis = { nowMillis },
         )
     }
 
@@ -333,6 +333,15 @@ internal class DefaultSolanaGaslessTransactionRepositoryTest {
             httpError(ApiResponseError.HttpException.Code.CONFLICT, err("SOMETHING_NEW")),
             SolanaGaslessError.MaybeSent(signature = null),
         ),
+        // A 4xx the mapper has no case for still judges this tx, so it must not be offered for sponsoring again
+        ErrorModel(
+            httpError(ApiResponseError.HttpException.Code.BAD_REQUEST, err("SOLANA_DECODE_FAILED")),
+            SolanaGaslessError.Rejected("SOLANA_DECODE_FAILED"),
+        ),
+        ErrorModel(httpError(ApiResponseError.HttpException.Code.NOT_FOUND), SolanaGaslessError.Rejected(code = null)),
+        // A timeout or a rate limit without the service's code passes, so the tx may be sent again
+        ErrorModel(httpError(ApiResponseError.HttpException.Code.REQUEST_TIMEOUT), SolanaGaslessError.Unknown(null)),
+        ErrorModel(httpError(ApiResponseError.HttpException.Code.TOO_MANY_REQUESTS), SolanaGaslessError.Unknown(null)),
         // A connection reset or a malformed 200 body after submit may still mean the tx was broadcast
         ErrorModel(ApiResponseError.NetworkException(), SolanaGaslessError.MaybeSent(signature = null)),
         ErrorModel(ApiResponseError.TimeoutException(), SolanaGaslessError.MaybeSent(signature = null)),
