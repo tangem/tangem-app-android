@@ -52,6 +52,7 @@ internal fun PredictionAmountBlock(
     onAddFundsClick: () -> Unit,
     modifier: Modifier = Modifier,
     isEnabled: Boolean = true,
+    footer: (@Composable () -> Unit)? = null,
 ) {
     TangemSurface(modifier = modifier, color = TangemTheme.colors3.bg.secondary, shape = PolymarketCardShape) {
         Column {
@@ -98,6 +99,13 @@ internal fun PredictionAmountBlock(
                     )
                 },
             )
+            if (footer != null) {
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    color = TangemTheme.colors3.border.secondary,
+                )
+                footer()
+            }
         }
     }
 }
