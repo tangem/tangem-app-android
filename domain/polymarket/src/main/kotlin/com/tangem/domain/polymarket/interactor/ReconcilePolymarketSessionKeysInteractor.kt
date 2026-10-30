@@ -73,7 +73,7 @@ class ReconcilePolymarketSessionKeysInteractor(
         if (tradingStore.isRefused(userWalletId, own.address)) return
         if (!tradingStore.isReadyOnExchange(userWalletId, own.address, validUntil)) {
             TangemLogger.i("Polymarket lists the session key ${own.address}, marking it ready")
-            tradingStore.markReadyOnExchange(userWalletId, own.address, validUntil)
+            tradingStore.restoreReadyOnExchange(userWalletId, own.address, validUntil)
         }
     }
 
