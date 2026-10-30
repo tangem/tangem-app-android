@@ -558,6 +558,10 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
             useUnmergedTree = true
         }.child<KNode> {
             hasTestTag(TokenElementsTestTags.TOKEN_EARN_APY_BADGE)
+            useUnmergedTree = true
+        }.child<KNode> {
+            addSemanticsMatcher(SemanticsMatcher.keyIsDefined(SemanticsProperties.Text))
+            useUnmergedTree = true
         }
     }
 
