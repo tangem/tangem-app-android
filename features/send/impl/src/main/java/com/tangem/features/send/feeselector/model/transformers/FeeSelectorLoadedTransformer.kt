@@ -9,6 +9,7 @@ import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeFiatRate
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeNonce
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.SponsoredFeeState
 import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams
 import com.tangem.features.send.feeselector.model.FeeSelectorIntents
 import com.tangem.features.send.feeselector.model.FeeSelectorLogic
@@ -86,11 +87,13 @@ internal class FeeSelectorLoadedTransformer(
                 isFeeTokenSelectedByUser = (prevState as? FeeSelectorUM.Content)
                     ?.feeExtraInfo?.isFeeTokenSelectedByUser == true ||
                     isSponsoredFeePicked != null,
-                isSponsoredFeeAvailable = fees is FeeSelectorLogic.LoadedFeeResult.Sponsorable,
-                isSponsoredFeeSelected = (fees as? FeeSelectorLogic.LoadedFeeResult.Sponsorable)
-                    ?.isSponsoredFeeSelected == true,
-                isSponsoredFeePickedByUser = isSponsoredFeePicked ?: ((prevState as? FeeSelectorUM.Content)
-                    ?.feeExtraInfo?.isSponsoredFeePickedByUser == true),
+                sponsoredFee = SponsoredFeeState(
+                    isAvailable = fees is FeeSelectorLogic.LoadedFeeResult.Sponsorable,
+                    isSelected = (fees as? FeeSelectorLogic.LoadedFeeResult.Sponsorable)
+                        ?.isSponsoredFeeSelected == true,
+                    isSmartGasPickedByUser = isSponsoredFeePicked ?: ((prevState as? FeeSelectorUM.Content)
+                        ?.feeExtraInfo?.sponsoredFee?.isSmartGasPickedByUser == true),
+                ),
             ),
             feeFiatRateUM = feeCryptoCurrencyStatus.value.fiatRate?.let { rate ->
                 FeeFiatRateUM(

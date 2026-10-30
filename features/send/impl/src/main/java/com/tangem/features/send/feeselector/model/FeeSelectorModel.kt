@@ -137,7 +137,7 @@ internal class FeeSelectorModel @Inject constructor(
         return when {
             params.shouldShowOnlySpeedOption -> FeeSelectorRoute.ChooseSpeed
             feeSelectorLogic.isGaslessEnabled -> FeeSelectorRoute.NetworkFee
-            (uiState.value as? FeeSelectorUM.Content)?.feeExtraInfo?.isSponsoredFeeAvailable == true ->
+            (uiState.value as? FeeSelectorUM.Content)?.feeExtraInfo?.sponsoredFee?.isAvailable == true ->
                 FeeSelectorRoute.NetworkFee
             else -> FeeSelectorRoute.ChooseSpeed
         }

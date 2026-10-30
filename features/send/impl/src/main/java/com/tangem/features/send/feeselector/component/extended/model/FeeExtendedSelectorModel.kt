@@ -61,12 +61,12 @@ class FeeExtendedSelectorModel @Inject constructor(
             appCurrencyProvider = Provider { appCurrency },
             onTokenClick = { router.push(FeeSelectorRoute.ChooseToken) },
             isTokenSelectionAvailable = state.feeExtraInfo.availableFeeCurrencies.orEmpty().size > 1 ||
-                state.feeExtraInfo.isSponsoredFeeAvailable,
-            isSponsoredFeeAvailable = state.feeExtraInfo.isSponsoredFeeAvailable,
+                state.feeExtraInfo.sponsoredFee.isAvailable,
+            isSponsoredFeeAvailable = state.feeExtraInfo.sponsoredFee.isAvailable,
         )
         val feeCurrencyStatus = state.feeExtraInfo.feeCryptoCurrencyStatus
         val feeCurrencyToken = tokenConverter.convert(feeCurrencyStatus)
-        val token = if (state.feeExtraInfo.isSponsoredFeeSelected) {
+        val token = if (state.feeExtraInfo.sponsoredFee.isSelected) {
             feeCurrencyToken.asSponsoredFee(feeCurrencyStatus.currency.symbol)
         } else {
             feeCurrencyToken
