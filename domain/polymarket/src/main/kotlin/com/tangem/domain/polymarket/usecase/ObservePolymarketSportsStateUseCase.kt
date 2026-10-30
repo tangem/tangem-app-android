@@ -6,6 +6,8 @@ import com.tangem.domain.polymarket.model.PolymarketLiveScore
 import com.tangem.domain.polymarket.model.PolymarketSportsState
 import com.tangem.domain.polymarket.sports.PolymarketSportsMerger
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
@@ -15,6 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -22,8 +25,6 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.isActive
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.TimeSource
 
 class ObservePolymarketSportsStateUseCase(
     private val repository: PolymarketLiveScoresRepository,
@@ -36,8 +37,8 @@ class ObservePolymarketSportsStateUseCase(
         events: Flow<List<PolymarketEvent>>,
         isResumed: Flow<Boolean> = flowOf(true),
     ): Flow<PolymarketSportsState> = flow {
-        val connections = repository.observeConnectionRevision()
-        val merger = PolymarketSportsMerger(time, initialConnection = connections.value)
+        val connections = repository.observeConnectionState()
+        val merger = PolymarketSportsMerger(time)
         val gameIds = MutableStateFlow(emptySet<String>())
         merge(
             events.map(Update::Rest),
@@ -48,7 +49,7 @@ class ObservePolymarketSportsStateUseCase(
             when (update) {
                 is Update.Rest -> gameIds.value = merger.setEvents(update.events)
                 is Update.Score -> merger.update(update.value)
-                is Update.Connection -> merger.connected(update.revision)
+                Update.Connected -> merger.connected()
                 Update.Tick -> Unit
             }
             emit(merger.snapshot())
@@ -56,9 +57,9 @@ class ObservePolymarketSportsStateUseCase(
     }.distinctUntilChanged().conflate().flowOn(dispatchers.default)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private fun liveUpdates(gameIds: StateFlow<Set<String>>, connections: StateFlow<Long>): Flow<Update> = merge(
+    private fun liveUpdates(gameIds: StateFlow<Set<String>>, connections: Flow<Boolean>): Flow<Update> = merge(
         gameIds.flatMapLatest(repository::observeLiveScores).map(Update::Score),
-        connections.map(Update::Connection),
+        connections.filter { it }.map { Update.Connected },
         flow {
             while (currentCoroutineContext().isActive) {
                 delay(1.seconds)
@@ -70,7 +71,7 @@ class ObservePolymarketSportsStateUseCase(
     private sealed interface Update {
         data class Rest(val events: List<PolymarketEvent>) : Update
         data class Score(val value: PolymarketLiveScore) : Update
-        data class Connection(val revision: Long) : Update
+        data object Connected : Update
         data object Tick : Update
     }
 }
