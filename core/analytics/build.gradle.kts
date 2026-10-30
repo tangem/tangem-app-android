@@ -12,9 +12,4 @@ dependencies {
     // region Domain models
     api(projects.domain.models)
     // endregion
-
-    // region Tests
-    testImplementation(deps.test.junit5)
-    testImplementation(deps.test.truth)
-    // endregion
 }
