@@ -3,16 +3,21 @@ package com.tangem.features.send.feeselector.model
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import arrow.core.toOption
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations
+import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCoinStatus
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.error.GetFeeError
@@ -42,6 +47,8 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import io.mockk.verify
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -51,11 +58,13 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -97,8 +106,15 @@ internal class FeeSelectorLogicTest {
     @BeforeEach
     fun setUp() {
         MockKAnnotations.init(this)
-        // PER_CLASS parameterized nested classes reuse one instance — reset analytics recorded calls between rows.
-        clearMocks(analyticsEventHandler, answers = false, recordedCalls = true, childMocks = false)
+        // PER_CLASS parameterized nested classes reuse one instance — reset recorded calls between rows.
+        clearMocks(
+            analyticsEventHandler,
+            onLoadFee,
+            onLoadFeeExtended,
+            answers = false,
+            recordedCalls = true,
+            childMocks = false,
+        )
         coEvery { onLoadFee() } returns GetFeeError.UnknownError.left()
         coEvery { onLoadFeeExtended(any()) } returns GetFeeError.UnknownError.left()
         coEvery { getSelectedAppCurrencyUseCase.invokeSync() } returns AppCurrency.Default.right()
@@ -332,17 +348,71 @@ internal class FeeSelectorLogicTest {
             assertThat(sut.uiState.value).isEqualTo(FeeSelectorUM.Error(refusal))
         }
 
+        @ParameterizedTest
+        @MethodSource("provideAllowanceRefusalModels")
+        fun `GIVEN allowance refusal WHEN load fee THEN fall back to TRX only when payable`(
+            model: AllowanceRefusalModel,
+        ) = runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            val accountStatusList: AccountStatusList = mockk()
+            coEvery { onLoadFeeExtended(any()) } returns allowanceRefusal.left()
+            coEvery { onLoadFee() } returns model.nativeFee
+            coEvery { singleAccountStatusListSupplier.getSyncOrNull(any<UserWalletId>()) } returns accountStatusList
+            val trxStatus = model.trxBalance?.let { loadedStatus(trxCoinStatus.currency, balance = BigDecimal(it)) }
+            mockkObject(CryptoCurrencyStatusOperations)
+            every {
+                with(CryptoCurrencyStatusOperations) { accountStatusList.getCoinStatus(any<Network>()) }
+            } returns trxStatus.toOption()
+
+            // Act
+            val sut = buildModel(gaslessEnabled = true)
+            advanceUntilIdle()
+
+            // Assert
+            val state = sut.uiState.value
+            if (model.expectsNativeFee) {
+                assertThat(state).isInstanceOf(FeeSelectorUM.Content::class.java)
+                assertThat(sut.shouldShowOnlySpeedOption.value).isTrue()
+            } else {
+                assertThat(state).isEqualTo(FeeSelectorUM.Error(allowanceRefusal))
+            }
+        }
+
+        @AfterEach
+        fun unmockStatusOperations() {
+            unmockkObject(CryptoCurrencyStatusOperations)
+        }
+
         private fun provideTestModels() = listOf(
             GetFeeError.GaslessError.TronActivationNotEnoughFunds(minimumAmount = BigDecimal(5), tokenSymbol = "USDT"),
             GetFeeError.GaslessError.TronActivationRateLimited(isPerWallet = true),
             GetFeeError.GaslessError.TronActivationRateLimited(isPerWallet = false),
-            GetFeeError.GaslessError.TronAllowanceTooHigh(
-                balance = BigDecimal(50),
-                required = BigDecimal(51),
-                allowance = BigDecimal(49),
+        )
+
+        private fun provideAllowanceRefusalModels() = listOf(
+            AllowanceRefusalModel(trxBalance = "10", nativeFee = singleFee("5").right(), expectsNativeFee = true),
+            AllowanceRefusalModel(trxBalance = "5", nativeFee = singleFee("5").right(), expectsNativeFee = true),
+            AllowanceRefusalModel(trxBalance = "1", nativeFee = singleFee("5").right(), expectsNativeFee = false),
+            AllowanceRefusalModel(trxBalance = null, nativeFee = singleFee("5").right(), expectsNativeFee = false),
+            AllowanceRefusalModel(
+                trxBalance = "10",
+                nativeFee = GetFeeError.UnknownError.left(),
+                expectsNativeFee = false,
             ),
         )
     }
+
+    private val allowanceRefusal = GetFeeError.GaslessError.TronAllowanceTooHigh(
+        balance = BigDecimal(50),
+        required = BigDecimal(51),
+        allowance = BigDecimal(49),
+    )
+
+    data class AllowanceRefusalModel(
+        val trxBalance: String?,
+        val nativeFee: Either<GetFeeError, TransactionFee>,
+        val expectsNativeFee: Boolean,
+    )
 
     @Nested
     inner class CheckLoadFee {
