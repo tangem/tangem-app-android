@@ -33,6 +33,8 @@ import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
 
 private val PAGE_LOAD_TIMEOUT = 15.seconds
+private const val MIME_TYPE_HTML = "text/html"
+private const val CHARSET_UTF8 = "UTF-8"
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
@@ -93,8 +95,16 @@ private class PromoPageWebViewClient(
     override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean =
         request.isForMainFrame && !PromoPageUrlValidator.isAllowed(request.url)
 
+    // POST navigations bypass shouldOverrideUrlLoading: a disallowed one gets an empty page instead of being sent,
+    // and onPageCommitVisible closes the screen on it
+    override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? =
+        if (request.isForMainFrame && !PromoPageUrlValidator.isAllowed(request.url)) {
+            WebResourceResponse(MIME_TYPE_HTML, CHARSET_UTF8, "".byteInputStream())
+        } else {
+            null
+        }
+
     override fun onPageCommitVisible(view: WebView, url: String) {
-        // POST navigations bypass shouldOverrideUrlLoading
         if (!PromoPageUrlValidator.isAllowed(url.toUri())) {
             onLoadError("page is not allowed")
             return
