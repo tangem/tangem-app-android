@@ -821,8 +821,8 @@ internal class FeeSelectorLogicTest {
     private fun FeeSelectorUM.toSponsoredFeeResult(): SponsoredFeeResult? {
         val content = this as? FeeSelectorUM.Content ?: return null
         return SponsoredFeeResult(
-            isAvailable = content.feeExtraInfo.isSponsoredFeeAvailable,
-            isSelected = content.feeExtraInfo.isSponsoredFeeSelected,
+            isAvailable = content.feeExtraInfo.sponsoredFee.isAvailable,
+            isSelected = content.feeExtraInfo.sponsoredFee.isSelected,
             fee = content.fees.normal.amount.value,
         )
     }

@@ -112,7 +112,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
             .onEach { state ->
                 val feeExtraInfo = (state as? FeeSelectorUM.Content)?.feeExtraInfo ?: return@onEach
                 if (feeExtraInfo.isFeeTokenSelectedByUser) {
-                    isSponsoredFeePicked = feeExtraInfo.isSponsoredFeePickedByUser
+                    isSponsoredFeePicked = feeExtraInfo.sponsoredFee.isSmartGasPickedByUser
                 }
             }
             .launchIn(modelScope)
