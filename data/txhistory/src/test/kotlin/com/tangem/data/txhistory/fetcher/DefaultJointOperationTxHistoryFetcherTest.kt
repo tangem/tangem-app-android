@@ -1,7 +1,6 @@
 package com.tangem.data.txhistory.fetcher
 
 import com.tangem.data.txhistory.repository.DefaultJointOperationHistoryRepository
-import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
 import com.tangem.store.datasource.jointaccount.models.JointOperationHistoryDeltaResponse
@@ -27,13 +26,10 @@ import org.junit.jupiter.api.Test
 internal class DefaultJointOperationTxHistoryFetcherTest {
 
     private val repository: DefaultJointOperationHistoryRepository = mockk()
-    private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
 
     @BeforeEach
     fun setup() {
-        clearMocks(repository, singleAccountListSupplier)
-        coEvery { singleAccountListSupplier.getSyncOrNull(WALLET_ID) } returns
-            MockAccounts.createAccountList(activeAccounts = 1, jointAccounts = 1)
+        clearMocks(repository)
     }
 
     @Test
@@ -129,22 +125,6 @@ internal class DefaultJointOperationTxHistoryFetcherTest {
         coVerify(exactly = 1) { repository.fetchHistoryDelta(WALLET_ID, any()) }
     }
 
-    @Test
-    fun `GIVEN wallet without joint accounts WHEN triggered THEN nothing is fetched`() = runTest {
-        // Arrange
-        coEvery { singleAccountListSupplier.getSyncOrNull(WALLET_ID) } returns
-            MockAccounts.createAccountList(activeAccounts = 1, jointAccounts = 0)
-        val fetcher = createFetcher(createUtils())
-
-        // Act
-        fetcher.invoke(TxHistoryFetchTrigger.WalletSelected(walletId = WALLET_ID))
-        advanceUntilIdle()
-
-        // Assert
-        coVerify(exactly = 0) { repository.fetchHistory(any(), any()) }
-        coVerify(exactly = 0) { repository.fetchHistoryDelta(any(), any()) }
-    }
-
     private fun TestScope.createUtils(): DefaultTxHistoryFetcherUtils = DefaultTxHistoryFetcherUtils(
         appScope = TestAppCoroutineScope(testScope = this),
         analyticsEventHandler = mockk(relaxed = true),
@@ -155,7 +135,6 @@ internal class DefaultJointOperationTxHistoryFetcherTest {
         walletId = WALLET_ID,
         utils = utils,
         repository = repository,
-        singleAccountListSupplier = singleAccountListSupplier,
     )
 
     private fun historyResponse(hasMore: Boolean) = JointOperationHistoryResponse(

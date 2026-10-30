@@ -1,16 +1,13 @@
 package com.tangem.blockchainsdk.providers
 
 import com.google.common.truth.Truth
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchainsdk.providers.BlockchainProvidersResponseMergerTest.Companion.localResponse
 import com.tangem.blockchainsdk.providers.BlockchainProvidersResponseMergerTest.Companion.remoteResponse
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
-import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.blockchainsdk.providers.models.ProviderModel
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 /**
@@ -20,11 +17,7 @@ internal class BlockchainProvidersResponseLoaderTest {
 
     private val blockchainProvidersApi = mockk<BlockchainProvidersApi>()
     private val blockchainProvidersStorage = mockk<BlockchainProvidersStorage>()
-    private val analyticsExceptionHandler = object : AnalyticsExceptionHandler {
-        override fun sendException(event: ExceptionAnalyticsEvent) {
-            FirebaseCrashlytics.getInstance().recordException(event.exception)
-        }
-    }
+    private val analyticsExceptionHandler: AnalyticsExceptionHandler = mockk(relaxed = true)
 
     private val loader = BlockchainProvidersResponseLoader(
         blockchainProvidersApi = blockchainProvidersApi,
@@ -32,14 +25,6 @@ internal class BlockchainProvidersResponseLoaderTest {
         blockchainProvidersResponseMerger = BlockchainProvidersResponseMerger(analyticsExceptionHandler),
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
-
-    @BeforeEach
-    fun setup() {
-        mockkStatic(FirebaseCrashlytics::class)
-        val firebaseCrashlytics = mockk<FirebaseCrashlytics>()
-        every { FirebaseCrashlytics.getInstance() } returns firebaseCrashlytics
-        every { firebaseCrashlytics.recordException(any()) } just Runs
-    }
 
     @Test
     fun test_if_local_config_is_empty() = runTest {
