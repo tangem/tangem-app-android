@@ -71,6 +71,16 @@ internal object WalletBalancePreview {
 
     val hiddenBalanceContent = content.copy(balance = content.balance.orMaskWithStars(true))
 
+    val socialLoginContent = content.copy(
+        name = "Google wallet",
+        deviceIcon = DeviceIconUM.Mobile,
+        additionalInfo = WalletAdditionalInfo(
+            isHideable = false,
+            content = WalletAdditionalInfo.Content.Text(stringReference("Mobile wallet")),
+            isSocialLogin = true,
+        ),
+    )
+
     val loading: WalletBalanceUM.Loading = WalletBalanceUM.Loading(
         id = UserWalletId("1"),
         name = "My Wallet",
