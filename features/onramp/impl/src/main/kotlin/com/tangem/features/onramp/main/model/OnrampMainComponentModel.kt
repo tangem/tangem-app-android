@@ -15,6 +15,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.fields.InputManager
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.marketing.ObserveDemandSurveyCompletedUseCase
 import com.tangem.domain.marketing.models.MarketingScreen
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.onramp.*
@@ -27,6 +28,7 @@ import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.onramp.model.isRestricted
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.features.marketing.api.CtaBannerRequest
 import com.tangem.features.marketing.api.LinkedBannerRequest
 import com.tangem.features.marketing.api.MarketingBannerAmount
 import com.tangem.features.marketing.api.MarketingBannerRequest
@@ -71,6 +73,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val messageSender: UiMessageSender,
     private val conciergeWaitlistListener: ConciergeWaitlistListener,
+    private val observeDemandSurveyCompletedUseCase: ObserveDemandSurveyCompletedUseCase,
     paramsContainer: ParamsContainer,
     getWalletsUseCase: GetWalletsUseCase,
 ) : Model(), OnrampIntents {
@@ -135,6 +138,26 @@ internal class OnrampMainComponentModel @Inject constructor(
                 toContractAddress = (params.cryptoCurrency as? CryptoCurrency.Token)?.contractAddress.orEmpty(),
             ),
             amount = contentState.amountBlockState.toMarketingAmount(),
+        )
+    }
+
+    /**
+     * Request flow for the PSEUDO_PROVIDER / STANDALONE_CTA banners above the payment methods. The demand survey
+     * status is requested once per Buy session, not per amount change. Until it arrives the Waitlist strip stays
+     * hidden, so a wallet that has answered never sees it flash; a failed request reports `false` and shows it.
+     * Shared because the banner collects the request flow more than once and each collection requests the status.
+     */
+    val ctaMarketingRequest: Flow<CtaBannerRequest?> = combine(
+        marketingRequest,
+        observeDemandSurveyCompletedUseCase(params.userWalletId)
+            .onStart { emit(true) }
+            .shareIn(scope = modelScope, started = SharingStarted.Lazily, replay = 1),
+    ) { request, isDemandSurveyCompleted ->
+        val screen = request?.screen as? MarketingScreen.Onramp ?: return@combine null
+        CtaBannerRequest(
+            screen = screen,
+            amount = request.amount,
+            isDemandSurveyCompleted = isDemandSurveyCompleted,
         )
     }
 
