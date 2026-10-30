@@ -18,6 +18,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
 import com.tangem.domain.txhistory.list.HistoryTxListManager.HistorySources
 import com.tangem.domain.txhistory.list.HistoryTxListManager.HistoryState
@@ -64,6 +65,7 @@ internal class DefaultHistoryTxListManagerTest {
 
     private val expressServiceFetcher = mockk<ExpressServiceFetcher>()
     private val paymentAccountCurrency = mockk<GetPaymentAccountCryptoCurrencyStatusUseCase>()
+    private val moneyAccountCurrency = mockk<GetMoneyAccountCryptoCurrencyStatusUseCase>()
     private val getAccountCurrencyStatusUseCase = mockk<GetAccountCurrencyStatusUseCase>()
     private val txHistoryItemsCountUseCase = mockk<GetTxHistoryItemsCountUseCase>()
     private val analyticsExceptionHandler = mockk<AnalyticsExceptionHandler>(relaxed = true)
@@ -81,6 +83,7 @@ internal class DefaultHistoryTxListManagerTest {
         clearMocks(
             expressServiceFetcher,
             paymentAccountCurrency,
+            moneyAccountCurrency,
             getAccountCurrencyStatusUseCase,
             txHistoryItemsCountUseCase,
             analyticsExceptionHandler,
@@ -99,8 +102,9 @@ internal class DefaultHistoryTxListManagerTest {
         every { tangemPay.history() } returns emptyFlow()
         every { indexTable.history() } returns emptyFlow()
 
-        // Defaults: not a crypto portfolio, not a payment account, express available.
+        // Defaults: not a crypto portfolio, not a money account, not a payment account, express available.
         coEvery { getAccountCurrencyStatusUseCase.invokeSync(any<UserWalletId>(), any<CryptoCurrency>()) } returns none()
+        coEvery { moneyAccountCurrency.invokeSync(any<UserWalletId>(), any<CryptoCurrency>()) } returns none()
         coEvery { paymentAccountCurrency.invokeSync(any<UserWalletId>(), any<CryptoCurrency>()) } returns none()
         coEvery { txHistoryItemsCountUseCase(any(), any()) } returns 5.right()
         coEvery { expressServiceFetcher.getOrFetch(any(), any()) } returns asset(exchange = true, onramp = false).right()
@@ -115,6 +119,8 @@ internal class DefaultHistoryTxListManagerTest {
         coEvery { getAccountCurrencyStatusUseCase.invokeSync(any<UserWalletId>(), any<CryptoCurrency>()) } returns
             if (model.isCryptoPortfolio) mockk<AccountCryptoCurrencyStatus>().some() else none()
         model.itemsCount?.let { coEvery { txHistoryItemsCountUseCase(any(), any()) } returns it }
+        coEvery { moneyAccountCurrency.invokeSync(any<UserWalletId>(), any<CryptoCurrency>()) } returns
+            if (model.isMoneyAccount) (mockk<Account.Money>() to mockk<CryptoCurrencyStatus>()).some() else none()
         coEvery { paymentAccountCurrency.invokeSync(any<UserWalletId>(), any<CryptoCurrency>()) } returns
             if (model.isPayment) (mockk<Account.Payment>() to mockk<CryptoCurrencyStatus>()).some() else none()
 
@@ -144,6 +150,27 @@ internal class DefaultHistoryTxListManagerTest {
         ResolutionModel(
             name = "crypto portfolio without tx history support",
             isCryptoPortfolio = true,
+            itemsCount = Either.Left(TxHistoryStateError.TxHistoryNotImplemented),
+            expected = OnChainSource.IndexTable,
+        ),
+        ResolutionModel(
+            name = "money account with tx history",
+            isCryptoPortfolio = false,
+            isMoneyAccount = true,
+            itemsCount = 5.right(),
+            expected = OnChainSource.BSDK,
+        ),
+        ResolutionModel(
+            name = "money account with empty tx history",
+            isCryptoPortfolio = false,
+            isMoneyAccount = true,
+            itemsCount = Either.Left(TxHistoryStateError.EmptyTxHistories),
+            expected = OnChainSource.BSDK,
+        ),
+        ResolutionModel(
+            name = "money account without tx history support",
+            isCryptoPortfolio = false,
+            isMoneyAccount = true,
             itemsCount = Either.Left(TxHistoryStateError.TxHistoryNotImplemented),
             expected = OnChainSource.IndexTable,
         ),
@@ -375,6 +402,7 @@ internal class DefaultHistoryTxListManagerTest {
         dispatchers = testDispatchers(),
         expressServiceFetcher = expressServiceFetcher,
         paymentAccountCurrency = paymentAccountCurrency,
+        moneyAccountCurrency = moneyAccountCurrency,
         getAccountCryptoCurrencyStatusUseCase = getAccountCurrencyStatusUseCase,
         txHistoryItemsCountUseCase = txHistoryItemsCountUseCase,
         analyticsExceptionHandler = analyticsExceptionHandler,
@@ -410,6 +438,7 @@ internal class DefaultHistoryTxListManagerTest {
         val name: String,
         val isCryptoPortfolio: Boolean,
         val itemsCount: Either<TxHistoryStateError, Int>? = null,
+        val isMoneyAccount: Boolean = false,
         val isPayment: Boolean = false,
         val expected: OnChainSource,
     ) {

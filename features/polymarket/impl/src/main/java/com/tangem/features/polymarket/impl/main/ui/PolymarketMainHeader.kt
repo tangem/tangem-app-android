@@ -46,6 +46,7 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_up_24
 import com.tangem.core.ui.res.generated.icons.ic_chevron_double_vertical_16
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoneyStyled
 import com.tangem.features.polymarket.impl.common.funding.PredictionAwaitingFundsBanner
+import com.tangem.features.polymarket.impl.common.region.PredictionRegionRestrictedBanner
 import com.tangem.features.polymarket.impl.main.ui.state.PredictionBalanceUM
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.persistentListOf
@@ -61,6 +62,7 @@ internal fun PolymarketMainHeader(
     balance: PredictionBalanceUM,
     isAwaitingFunds: Boolean,
     modifier: Modifier = Modifier,
+    isRegionRestricted: Boolean = false,
     positions: (@Composable (Modifier) -> Unit)? = null,
 ) {
     Column(
@@ -77,6 +79,12 @@ internal fun PolymarketMainHeader(
             withdraw = balance.withdraw,
             modifier = Modifier.padding(top = 32.dp),
         )
+
+        if (isRegionRestricted) {
+            PredictionRegionRestrictedBanner(
+                modifier = Modifier.padding(top = 24.dp, start = 16.dp, end = 16.dp),
+            )
+        }
 
         if (isAwaitingFunds) {
             PredictionAwaitingFundsBanner(
@@ -202,6 +210,27 @@ private fun PolymarketMainHeaderAwaitingFundsPreview() {
         PolymarketMainHeader(
             balance = state,
             isAwaitingFunds = true,
+            modifier = Modifier.background(TangemTheme.colors3.bg.primary),
+        )
+    }
+}
+
+@Preview(name = "Header Region Restricted Light", showBackground = true, widthDp = 360)
+@Preview(
+    name = "Header Region Restricted Dark",
+    showBackground = true,
+    widthDp = 360,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
+@Composable
+private fun PolymarketMainHeaderRegionRestrictedPreview() {
+    TangemThemePreviewRedesign {
+        val state = previewPredictionBalance(BigDecimal("1234.56"))
+
+        PolymarketMainHeader(
+            balance = state,
+            isAwaitingFunds = false,
+            isRegionRestricted = true,
             modifier = Modifier.background(TangemTheme.colors3.bg.primary),
         )
     }

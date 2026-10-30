@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
@@ -80,16 +81,16 @@ fun TangemHeaderRow(
             .fillMaxWidth()
             .clickableSingle(enabled = onItemClick != null, onClick = { onItemClick?.invoke() })
             .padding(
-                top = TangemTheme.dimens2.x4,
-                bottom = TangemTheme.dimens2.x3,
-                start = TangemTheme.dimens2.x4,
-                end = TangemTheme.dimens2.x4,
+                top = 16.dp,
+                bottom = 12.dp,
+                start = 16.dp,
+                end = 16.dp,
             ),
     ) {
         headContent(
             Modifier
-                .padding(end = TangemTheme.dimens2.x2)
-                .size(TangemTheme.dimens2.x4),
+                .padding(end = 8.dp)
+                .size(16.dp),
         )
         titleContent(Modifier)
         AnimatedVisibility(
@@ -103,7 +104,7 @@ fun TangemHeaderRow(
                     maxLines = 1,
                     modifier = Modifier
                         .testTag(tag = TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT)
-                        .padding(start = TangemTheme.dimens2.x1),
+                        .padding(start = 4.dp),
                 )
             }
         }
@@ -140,10 +141,10 @@ fun TangemHeaderRow(
             .fillMaxWidth()
             .clickableSingle(enabled = isEnabled && onItemClick != null, onClick = { onItemClick?.invoke() })
             .padding(
-                top = TangemTheme.dimens2.x4,
-                bottom = TangemTheme.dimens2.x3,
-                start = TangemTheme.dimens2.x4,
-                end = TangemTheme.dimens2.x4,
+                top = 16.dp,
+                bottom = 12.dp,
+                start = 16.dp,
+                end = 16.dp,
             ),
     ) {
         AnimatedVisibility(
@@ -153,8 +154,8 @@ fun TangemHeaderRow(
             TangemIcon(
                 tangemIconUM = wrappedIconUM,
                 modifier = Modifier
-                    .padding(end = TangemTheme.dimens2.x2)
-                    .size(TangemTheme.dimens2.x4),
+                    .padding(end = 8.dp)
+                    .size(16.dp),
             )
         }
         Text(
@@ -175,7 +176,7 @@ fun TangemHeaderRow(
                     maxLines = 1,
                     modifier = Modifier
                         .testTag(tag = TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT)
-                        .padding(start = TangemTheme.dimens2.x1),
+                        .padding(start = 4.dp),
                 )
             }
         }

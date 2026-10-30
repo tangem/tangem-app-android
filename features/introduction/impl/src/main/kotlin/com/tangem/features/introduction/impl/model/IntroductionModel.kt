@@ -1,7 +1,5 @@
 package com.tangem.features.introduction.impl.model
 
-import android.view.SurfaceView
-import androidx.compose.ui.unit.IntSize
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -14,6 +12,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.media.LoopingVideoController
+import com.tangem.core.media.LoopingVideoState
+import com.tangem.core.media.VideoFrameSize
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
@@ -30,7 +31,6 @@ import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.introduction.IntroductionComponent
 import com.tangem.features.introduction.impl.R
 import com.tangem.features.introduction.impl.analytics.SocialLoginAnalyticsEvents
-import com.tangem.features.introduction.impl.engine.IntroductionVideoPlayer
 import com.tangem.features.introduction.impl.ui.state.CreateWalletUM
 import com.tangem.features.introduction.impl.ui.state.WalletOptionUM
 import com.tangem.features.introduction.impl.ui.state.IntroductionUM
@@ -39,7 +39,6 @@ import com.tangem.features.introduction.impl.ui.state.SocialLoginProgressUM
 import com.tangem.features.storiesv2.StoriesV2PendingAction
 import com.tangem.features.storiesv2.StoriesV2Result
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,14 +52,13 @@ import kotlin.time.Duration.Companion.milliseconds
 import com.tangem.core.res.R as CoreResR
 import kotlinx.coroutines.withContext
 
-// TODO [REDACTED_TASK_KEY]: already at the LargeClass limit before social login. The fix is a
-//  CreateWalletSheetController mirroring HaveWalletSheetController, too wide a refactor to carry here.
+// TODO [REDACTED_TASK_KEY]: over the LargeClass limit; extract a CreateWalletSheetController like HaveWalletSheetController.
 @Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class IntroductionModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
-    videoPlayerFactory: IntroductionVideoPlayer.Factory,
+    videoFactory: LoopingVideoController.Factory,
     private val urlOpener: UrlOpener,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val entryReasonTracker: IntroductionEntryReasonTracker,
@@ -76,7 +74,7 @@ internal class IntroductionModel @Inject constructor(
     private val legalLinks: IntroductionLegalLinks,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
-) : Model(), IntroductionVideoPlayer.Listener, HaveWalletSheetController.Host, IntroductionStories.Host {
+) : Model(), HaveWalletSheetController.Host, IntroductionStories.Host {
 
     private val params = paramsContainer.require<IntroductionComponent.Params>()
 
@@ -85,12 +83,17 @@ internal class IntroductionModel @Inject constructor(
     private var isCreatingMobileWallet = false
     private var isScanningCard = false
     private var isSigningInSocially = false
-    private var hasRenderedFrame = false
 
-    private val videoPlayer = videoPlayerFactory.create(
+    private val video = videoFactory.create(
+        scope = modelScope,
         videoRes = R.raw.introduction_background,
-        listener = this,
+        frameSize = BACKGROUND_VIDEO_SIZE,
+        diagnosticsSubject = "Welcome video",
+        onFailed = { _, hasRenderedFrame -> reportVideoFailed(hasRenderedFrame) },
     )
+
+    val videoState: StateFlow<LoopingVideoState>
+        get() = video.state
 
     private val haveWalletSheet = HaveWalletSheetController(
         host = this,
@@ -126,12 +129,6 @@ internal class IntroductionModel @Inject constructor(
     val uiState: StateFlow<IntroductionUM>
         field = MutableStateFlow(
             IntroductionUM(
-                isVideoReady = false,
-                videoSize = BACKGROUND_VIDEO_SIZE,
-                videoSurfaceKey = 0,
-                isVideoFailed = false,
-                isVideoRunning = false,
-                isMotionEnabled = videoPlayer.isMotionEnabled,
                 scenes = welcomeScenes,
                 bottomSheetConfig = null,
                 haveWalletBottomSheetConfig = null,
@@ -142,17 +139,11 @@ internal class IntroductionModel @Inject constructor(
                 onBuyTangemClick = ::onBuyTangemClick,
                 onCreateWalletSheetCollapsed = ::onCreateWalletSheetCollapsed,
                 onTermsOfServiceClick = legalLinks::openTermsOfService,
+                onPrivacyPolicyClick = legalLinks::openPrivacyPolicy,
             ),
         )
 
     override val haveWalletSheetConfig: TangemBottomSheetConfig? get() = uiState.value.haveWalletBottomSheetConfig
-
-    private val outputWatchdog = IntroductionVideoOutputWatchdog(
-        scope = modelScope,
-        videoPlayer = videoPlayer,
-        onReplaceSurface = ::replaceVideoSurface,
-        onGiveUp = ::onError,
-    )
 
     init {
         reportScreenOpened()
@@ -169,7 +160,7 @@ internal class IntroductionModel @Inject constructor(
     }
 
     override fun onDestroy() {
-        videoPlayer.release()
+        video.release()
         super.onDestroy()
     }
 
@@ -178,58 +169,16 @@ internal class IntroductionModel @Inject constructor(
         modelScope.launch { withContext(NonCancellable) { entryReasonTracker.reportOpening(params.entryReason) } }
     }
 
-    override fun onFirstFrameRendered() {
-        hasRenderedFrame = true
-        updateVideoReady()
-    }
-
-    /**
-     * The surface keeps [BACKGROUND_VIDEO_SIZE] whatever the file turns out to be: a new surface would race the first
-     * frame the old one reports right after this, and the cropping scale mode fits a file that disagrees into it.
-     */
-    override fun onVideoSizeChanged(width: Int, height: Int) {
-        if (IntSize(width, height) == BACKGROUND_VIDEO_SIZE) return
-        TangemLogger.e("Welcome video is ${width}x$height, but $BACKGROUND_VIDEO_SIZE is declared for it")
-    }
-
-    override fun onPlayingChanged(isPlaying: Boolean) = outputWatchdog.onPlayingChanged(isPlaying)
-
-    /** The new surface is composed before the old one is released, and stays empty until its first frame. */
-    private fun replaceVideoSurface() {
-        uiState.update { it.copy(videoSurfaceKey = it.videoSurfaceKey + 1, isVideoReady = false) }
-    }
-
-    private fun updateVideoReady() {
-        if (!hasRenderedFrame || !videoPlayer.isSurfaceAttached) return
-        uiState.update { it.copy(isVideoReady = true) }
-    }
-
-    override fun onError(error: Throwable) {
+    private fun reportVideoFailed(hasRenderedFrame: Boolean) {
         val stage = if (hasRenderedFrame) {
             IntroductionProcess.WelcomeMediaError.Stage.Playback
         } else {
             IntroductionProcess.WelcomeMediaError.Stage.Load
         }
         analyticsEventHandler.send(IntroductionProcess.WelcomeMediaError(stage))
-        TangemLogger.e("Welcome background video failed at the ${stage.value} stage", error)
-        // Only a rendered frame lifts the shutter, and the player never recovers from an error: uncovering the
-        // SurfaceView here would expose the hole it punches through the window (see IntroductionScreen).
-        uiState.update { it.copy(isVideoFailed = true) }
-        // A player error stops the player by itself; a stalled output given up on by the watchdog does not.
-        applyVideoRunning()
     }
 
-    fun videoPositionMs(): Long = videoPlayer.positionMs
-
-    fun attachSurface(surfaceView: SurfaceView) {
-        videoPlayer.attachSurface(surfaceView)
-    }
-
-    fun detachSurface(surfaceView: SurfaceView) {
-        videoPlayer.detachSurface(surfaceView)
-        if (videoPlayer.isSurfaceAttached) return
-        uiState.update { it.copy(isVideoReady = false) }
-    }
+    fun videoPositionMs(): Long = video.positionMs
 
     fun setVideoRunning(isRunning: Boolean) {
         isScreenResumed = isRunning
@@ -239,7 +188,7 @@ internal class IntroductionModel @Inject constructor(
         }
         if (isRunning && isVideoRestartPendingResume) {
             isVideoRestartPendingResume = false
-            videoPlayer.restart()
+            video.restart()
         }
         applyVideoRunning()
     }
@@ -247,14 +196,11 @@ internal class IntroductionModel @Inject constructor(
     override fun onStoryVisibilityChanged() = applyVideoRunning()
 
     /**
-     * Independent reasons to stop the background video, so none may override another: the screen is not resumed, the
-     * story is on top of it, or the video has failed. A slot child leaves its host resumed, so returning from
-     * background while the story plays would otherwise restart the video behind it.
+     * A slot child leaves its host resumed, so returning from background while the story plays would otherwise
+     * restart the video behind it.
      */
     private fun applyVideoRunning() {
-        val isRunning = isScreenResumed && !stories.isShown && !uiState.value.isVideoFailed
-        videoPlayer.setRunning(isRunning = isRunning)
-        uiState.update { it.copy(isVideoRunning = isRunning) }
+        video.setRunning(isRunning = isScreenResumed && !stories.isShown)
     }
 
     private fun onCreateWalletClick() {
@@ -306,6 +252,7 @@ internal class IntroductionModel @Inject constructor(
     }
 
     private fun onCreateWalletSheetCloseClicked() {
+        if (isSigningInSocially) return
         reportCreateWalletSheetDismissed(IntroductionProcess.SheetDismissed.DismissReason.CloseButton)
     }
 
@@ -353,7 +300,6 @@ internal class IntroductionModel @Inject constructor(
         socialLoginHandler.start(
             scope = modelScope,
             provider = provider,
-            source = source,
             host = SocialLoginHost(),
         )
     }
@@ -373,17 +319,26 @@ internal class IntroductionModel @Inject constructor(
 
     private inner class SocialLoginHost : IntroductionSocialLoginHandler.Host {
 
-        /** The sheet steps aside for the first surface, but the flag holds the welcome screen shut */
+        /**
+         * The tapped row already spins in the sheet, so a bare loader would only swap the sheet for the same
+         * spinner on a blank screen. The sheet steps aside for the first surface that says something, and the
+         * flag holds the welcome screen shut after it.
+         */
         override fun onProgress(progress: SocialLoginProgressUM?) {
-            if (progress != null && isAnySheetShown()) {
-                onBottomSheetDismissed()
-                haveWalletSheet.dismiss()
-            }
+            if (progress == SocialLoginProgressUM.Loader && isAnySheetShown()) return
+            if (progress != null) dismissSheets()
             uiState.update { it.copy(socialLoginProgress = progress) }
         }
 
         override fun onConsent(consent: SocialLoginConsentUM?) {
+            if (consent != null) dismissSheets()
             uiState.update { it.copy(socialLoginConsent = consent) }
+        }
+
+        private fun dismissSheets() {
+            if (!isAnySheetShown()) return
+            onBottomSheetDismissed()
+            haveWalletSheet.dismiss()
         }
 
         override fun onFinished() {
@@ -509,10 +464,7 @@ internal class IntroductionModel @Inject constructor(
     private companion object {
         val SHEET_COLLAPSE_TIMEOUT = 600.milliseconds
 
-        /**
-         * The size of `R.raw.introduction_background`, declared rather than read from the file so the surface takes
-         * its final shape before the first frame: resizing it under a playing decoder is what can get its output stuck.
-         */
-        val BACKGROUND_VIDEO_SIZE = IntSize(width = 1080, height = 1920)
+        /** Must match `R.raw.introduction_background`: a file of another size is only logged. */
+        val BACKGROUND_VIDEO_SIZE = VideoFrameSize(width = 1080, height = 1920)
     }
 }

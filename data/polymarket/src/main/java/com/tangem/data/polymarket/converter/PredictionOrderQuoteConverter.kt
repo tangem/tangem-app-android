@@ -31,6 +31,9 @@ internal object PredictionOrderQuoteConverter : Converter<PolymarketOrderQuoteRe
         minOrderAmount = value.minOrderAmount?.let(::BigDecimal),
         tickSize = BigDecimal(value.tickSize),
         isLive = value.isLive,
+        version = PolymarketMarketVersionConverter.convert(value.version),
+        exchange = value.exchange,
+        signingDomainVersion = value.signingDomainVersion,
     )
 
     fun toRequestBody(request: PredictionOrderQuoteRequest): PolymarketOrderQuoteRequest = PolymarketOrderQuoteRequest(

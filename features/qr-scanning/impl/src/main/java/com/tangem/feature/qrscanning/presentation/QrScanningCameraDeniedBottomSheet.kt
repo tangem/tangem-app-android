@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SimpleSettingsRow
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -46,7 +47,7 @@ private fun CameraDeniedBottomSheet(content: CameraDeniedBottomSheetConfig) {
             title = stringResourceSafe(id = R.string.common_close),
             icon = R.drawable.ic_close_24,
             onItemsClick = content.onCancelClick,
-            modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing16),
+            modifier = Modifier.padding(bottom = 16.dp),
         )
     }
 }
@@ -56,11 +57,11 @@ private fun CameraDeniedBottomSheetHeader(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .padding(
-                vertical = TangemTheme.dimens.spacing16,
-                horizontal = TangemTheme.dimens.spacing20,
+                vertical = 16.dp,
+                horizontal = 20.dp,
             ),
         horizontalAlignment = Alignment.Start,
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
             text = stringResourceSafe(id = R.string.qr_scanner_camera_denied_title),

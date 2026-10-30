@@ -1,11 +1,5 @@
 <?xml version="1.0" ?>
 <SmellBaseline>
   <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>MultilineLambdaItParameter:DefaultMultiAccountStatusListProducer.kt$DefaultMultiAccountStatusListProducer${ singleAccountStatusListSupplier( params = SingleAccountStatusListProducer.Params(it.walletId), ) }</ID>
-    <ID>UnnecessaryAbstractClass:MultiAccountStatusListSupplier.kt$MultiAccountStatusListSupplier$MultiAccountStatusListSupplier</ID>
-    <ID>UnnecessaryAbstractClass:SingleAccountStatusListSupplier.kt$SingleAccountStatusListSupplier$SingleAccountStatusListSupplier</ID>
-    <ID>UnnecessaryAbstractClass:SingleAccountStatusSupplier.kt$SingleAccountStatusSupplier$SingleAccountStatusSupplier</ID>
-    <ID>UnnecessaryLet:RecoverCryptoPortfolioUseCase.kt$RecoverCryptoPortfolioUseCase$let(AccountName::invoke)</ID>
-  </CurrentIssues>
+  <CurrentIssues/>
 </SmellBaseline>

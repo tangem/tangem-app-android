@@ -90,13 +90,13 @@ private fun Content(
         modifier = modifier.testTag(DetailsScreenTestTags.SCREEN_CONTAINER),
         verticalArrangement = Arrangement.SpaceBetween,
         contentPadding = PaddingValues(
-            top = TangemTheme.dimens.spacing12,
-            bottom = TangemTheme.dimens.spacing16,
+            top = 12.dp,
+            bottom = 16.dp,
         ),
     ) {
         item {
             Text(
-                modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+                modifier = Modifier.padding(horizontal = 16.dp),
                 text = stringResourceSafe(R.string.details_title),
                 style = TangemTheme.typography.h1,
                 color = TangemTheme.colors.text.primary1,
@@ -107,7 +107,7 @@ private fun Content(
             key = DetailsItemUM::id,
         ) { block ->
             Block(
-                modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+                modifier = Modifier.padding(horizontal = 16.dp),
                 model = block,
                 userWalletListBlockContent = userWalletListBlockContent,
             )
@@ -116,7 +116,7 @@ private fun Content(
         item(key = "footer") {
             SpacerH16()
             Footer(
-                modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing12),
+                modifier = Modifier.padding(horizontal = 12.dp),
                 model = state.footer,
             )
         }
@@ -314,12 +314,12 @@ private fun Footer(model: DetailsFooterUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .padding(
-                top = TangemTheme.dimens.spacing12,
-                bottom = TangemTheme.dimens.spacing16,
+                top = 12.dp,
+                bottom = 16.dp,
             )
             .fillMaxWidth(),
         horizontalAlignment = Alignment.Start,
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         val socialsScrollState = rememberScrollState()
 
@@ -328,16 +328,16 @@ private fun Footer(model: DetailsFooterUM, modifier: Modifier = Modifier) {
                 .fillMaxWidth()
                 .scrollable(socialsScrollState, orientation = Orientation.Horizontal),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             model.socials.forEach { social ->
                 key(social.id) {
                     IconButton(
-                        modifier = Modifier.size(TangemTheme.dimens.size32),
+                        modifier = Modifier.size(32.dp),
                         onClick = social.onClick,
                     ) {
                         Icon(
-                            modifier = Modifier.size(TangemTheme.dimens.size24),
+                            modifier = Modifier.size(24.dp),
                             painter = painterResource(id = social.iconResId),
                             tint = TangemTheme.colors.icon.informative,
                             contentDescription = null,
@@ -349,7 +349,7 @@ private fun Footer(model: DetailsFooterUM, modifier: Modifier = Modifier) {
 
         Text(
             modifier = Modifier
-                .padding(horizontal = TangemTheme.dimens.spacing6)
+                .padding(horizontal = 6.dp)
                 .testTag(DetailsScreenTestTags.VERSION_NAME),
             text = model.appVersion,
             style = TangemTheme.typography.caption2,

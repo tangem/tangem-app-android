@@ -1,11 +1,13 @@
 package com.tangem.data.wallets
 
+import android.util.Base64
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.tangem.data.common.wallet.WalletServerBinder
 import com.tangem.data.wallets.converters.UserWalletRemoteInfoConverter
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.core.remote.response.ApiResponseError.HttpException
 import com.tangem.datasource.api.common.response.fold
 import com.tangem.datasource.api.common.response.getOrThrow
@@ -23,10 +25,13 @@ import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.models.PromoCodeActivation
+import com.tangem.domain.wallets.models.PromoPayout
 import com.tangem.domain.wallets.models.UserWalletRemoteInfo
 import com.tangem.domain.wallets.models.WalletSyncResult
 import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -41,6 +46,7 @@ internal class DefaultWalletsRepository(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val dispatchers: CoroutineDispatcherProvider,
     private val walletServerBinder: WalletServerBinder,
+    private val walletRegistrar: WalletRegistrar,
     private val moshi: com.squareup.moshi.Moshi,
 ) : WalletsRepository {
 
@@ -110,6 +116,10 @@ internal class DefaultWalletsRepository(
         return appPreferencesStore
             .getSyncOrDefault(key = storePreferencesKeys.addedWalletsWithRingKey, default = emptySet())
             .contains(element = userWalletId.stringValue)
+    }
+
+    override suspend fun isWalletRegistered(userWalletId: UserWalletId): Boolean {
+        return walletRegistrar.isRegistered(walletId = Base64.encodeToString(userWalletId.value, Base64.NO_WRAP))
     }
 
     override suspend fun setHasWalletsWithRing(userWalletId: UserWalletId) {
@@ -256,23 +266,33 @@ internal class DefaultWalletsRepository(
     override suspend fun activatePromoCode(
         userWalletId: UserWalletId,
         promoCode: String,
-        bitcoinAddress: String,
-    ): Either<ActivatePromoCodeError, String> = withContext(dispatchers.io) {
+        address: String,
+        payout: PromoPayout?,
+    ): Either<ActivatePromoCodeError, PromoCodeActivation> = withContext(dispatchers.io) {
         tangemTechApi.activatePromoCode(
             body = PromocodeActivationBody(
                 promoCode = promoCode,
-                address = bitcoinAddress,
+                address = address,
                 walletId = userWalletId.stringValue,
+                paymentNetwork = payout?.networkId,
+                paymentCurrency = payout?.currencySymbol,
             ),
         ).fold(
-            onSuccess = { it.status.right() },
+            onSuccess = { response ->
+                PromoCodeActivation(programId = response.promoProgram?.id).right()
+            },
             onError = { apiResponseError ->
                 val error = when (apiResponseError) {
                     is HttpException -> when (apiResponseError.code) {
                         HttpException.Code.NOT_FOUND -> ActivatePromoCodeError.InvalidPromoCode
                         HttpException.Code.CONFLICT -> ActivatePromoCodeError.PromocodeAlreadyUsed
+                        HttpException.Code.BAD_REQUEST -> ActivatePromoCodeError.InvalidRequest
+                        HttpException.Code.UNPROCESSABLE_ENTITY -> ActivatePromoCodeError.CampaignExpired
                         else -> ActivatePromoCodeError.ActivationFailed
                     }
+                    is ApiResponseError.NetworkException,
+                    is ApiResponseError.TimeoutException,
+                    -> ActivatePromoCodeError.NetworkError
                     else -> ActivatePromoCodeError.ActivationFailed
                 }
 

@@ -61,8 +61,8 @@ internal class DefaultTangemPayTxHistoryRepository @Inject constructor(
                 )
                 BatchFetchResult.Success(
                     data = items,
-                    last = items.size < request.limit,
-                    empty = items.isEmpty(),
+                    isLast = items.size < request.limit,
+                    isEmpty = items.isEmpty(),
                 )
             },
             cursorFromItem = { item -> item.id }, // last item’s id becomes next cursor

@@ -22,7 +22,7 @@ class GetCompletedBackupsUseCase @Inject constructor(
     private suspend fun completedBackups(wallet: UserWallet): Set<AnalyticsParam.BackupType> = when (wallet) {
         is UserWallet.Cold -> emptySet()
         is UserWallet.Hot -> buildSet {
-            if (wallet.backedUp) add(AnalyticsParam.BackupType.Manual)
+            if (wallet.isBackedUp) add(AnalyticsParam.BackupType.Manual)
             if (cloudBackupRepository.isBackedUp(wallet.walletId.stringValue)) {
                 add(AnalyticsParam.BackupType.Cloud)
             }

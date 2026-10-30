@@ -9,11 +9,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.R
 import com.tangem.core.ui.components.SecondaryButtonIconStart
 import com.tangem.core.ui.components.SpacerW12
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
 @Composable
@@ -33,7 +33,7 @@ fun SendDoneButtons(
         exit = slideOutVertically().plus(fadeOut()),
         label = "Animate show sent state buttons",
     ) {
-        Row(modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12)) {
+        Row(modifier = Modifier.padding(bottom = 12.dp)) {
             SecondaryButtonIconStart(
                 text = stringResourceSafe(id = R.string.common_explore),
                 iconResId = R.drawable.ic_web_24,

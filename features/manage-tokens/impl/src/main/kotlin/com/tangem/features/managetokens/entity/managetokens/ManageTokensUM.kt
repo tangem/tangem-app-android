@@ -42,7 +42,7 @@ internal sealed class ManageTokensUM {
         val saveChanges: () -> Unit,
         val hasChanges: Boolean,
         val isSavingInProgress: Boolean,
-        val needToInteractWithColdWallet: Boolean,
+        val shouldInteractWithColdWallet: Boolean,
     ) : ManageTokensUM()
 
     fun copySealed(
@@ -53,7 +53,7 @@ internal sealed class ManageTokensUM {
         isNextBatchLoading: Boolean = this.isNextBatchLoading,
         isSavingInProgress: Boolean = this is ManageContent && this.isSavingInProgress,
         scrollToTop: StateEvent<Unit> = this.scrollToTop,
-        needToInteractWithColdWallet: Boolean = this is ManageContent && this.needToInteractWithColdWallet,
+        needToInteractWithColdWallet: Boolean = this is ManageContent && this.shouldInteractWithColdWallet,
         topBar: ManageTokensTopBarUM? = this.topBar,
     ): ManageTokensUM {
         return when (this) {
@@ -65,7 +65,7 @@ internal sealed class ManageTokensUM {
                 isNextBatchLoading = isNextBatchLoading,
                 isSavingInProgress = isSavingInProgress,
                 scrollToTop = scrollToTop,
-                needToInteractWithColdWallet = needToInteractWithColdWallet,
+                shouldInteractWithColdWallet = needToInteractWithColdWallet,
                 topBar = topBar,
             )
             is ReadContent -> copy(

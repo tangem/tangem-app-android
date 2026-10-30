@@ -73,7 +73,7 @@ fun InputRowEnterInfoAmount(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(TangemTheme.dimens.spacing12),
+                .padding(12.dp),
         ) {
             Text(
                 text = title.resolveReference(),
@@ -97,7 +97,7 @@ fun InputRowEnterInfoAmount(
                     keyboardOptions = keyboardOptions,
                     keyboardActions = keyboardActions,
                     modifier = Modifier
-                        .padding(top = TangemTheme.dimens.spacing8)
+                        .padding(top = 8.dp)
                         .weight(1f),
                 )
                 info?.let { info ->
@@ -106,7 +106,7 @@ fun InputRowEnterInfoAmount(
                         style = TangemTheme.typography.body2,
                         color = infoColor,
                         modifier = Modifier
-                            .padding(start = TangemTheme.dimens.spacing8)
+                            .padding(start = 8.dp)
                             .align(Alignment.Bottom),
                     )
                 }
@@ -191,7 +191,7 @@ fun InputRowEnterInfoAmountV2(
                     keyboardOptions = keyboardOptions,
                     keyboardActions = keyboardActions,
                     modifier = Modifier
-                        .padding(top = TangemTheme.dimens.spacing8)
+                        .padding(top = 8.dp)
                         .weight(1f)
                         .testTag(SelectNetworkFeeBottomSheetTestTags.CUSTOM_INPUT_ITEM_INPUT_TEXT_FIELD),
                 )
@@ -201,7 +201,7 @@ fun InputRowEnterInfoAmountV2(
                         style = TangemTheme.typography.body2,
                         color = infoColor,
                         modifier = Modifier
-                            .padding(start = TangemTheme.dimens.spacing8)
+                            .padding(start = 8.dp)
                             .align(Alignment.Bottom)
                             .testTag(SelectNetworkFeeBottomSheetTestTags.CUSTOM_INPUT_ITEM_FIAT_AMOUNT),
                     )

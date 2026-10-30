@@ -65,8 +65,8 @@ internal fun SettingsScreensScaffold(
                     Text(
                         text = stringResourceSafe(id = titleRes),
                         modifier = Modifier
-                            .padding(horizontal = TangemTheme.dimens.spacing20)
-                            .padding(bottom = TangemTheme.dimens.spacing36),
+                            .padding(horizontal = 20.dp)
+                            .padding(bottom = 36.dp),
                         style = TangemTheme.typography.h1,
                         color = TangemTheme.colors.text.primary1,
                     )

@@ -10,6 +10,7 @@ import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketAuthError
+import com.tangem.domain.polymarket.model.PolymarketClobAsset
 import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.InvalidatePolymarketCredentialsUseCase
@@ -46,7 +47,7 @@ internal class GetPolymarketBalanceInteractorTest {
     fun `GIVEN credentials are stored WHEN invoke THEN reads the balance of the owner address`() = runTest {
         // Arrange
         coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
-        coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS) } returns Unit.right()
+        coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS, PolymarketClobAsset.Collateral) } returns Unit.right()
         coEvery { repository.getBalanceAllowance(OWNER, CREDENTIALS) } returns BALANCE.right()
 
         // Act
@@ -60,7 +61,7 @@ internal class GetPolymarketBalanceInteractorTest {
     fun `GIVEN a wallet funded after onboarding WHEN invoke THEN refreshes the cache before reading it`() = runTest {
         // Arrange
         coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
-        coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS) } returns Unit.right()
+        coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS, PolymarketClobAsset.Collateral) } returns Unit.right()
         coEvery { repository.getBalanceAllowance(OWNER, CREDENTIALS) } returns BALANCE.right()
 
         // Act
@@ -68,7 +69,7 @@ internal class GetPolymarketBalanceInteractorTest {
 
         // Assert
         coVerifyOrder {
-            repository.syncBalanceAllowance(OWNER, CREDENTIALS)
+            repository.syncBalanceAllowance(OWNER, CREDENTIALS, PolymarketClobAsset.Collateral)
             repository.getBalanceAllowance(OWNER, CREDENTIALS)
         }
     }
@@ -77,7 +78,7 @@ internal class GetPolymarketBalanceInteractorTest {
     fun `GIVEN the refresh fails WHEN invoke THEN still reports the cached balance`() = runTest {
         // Arrange
         coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
-        coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS) } returns
+        coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS, PolymarketClobAsset.Collateral) } returns
             PolymarketAuthError.Network.left()
         coEvery { repository.getBalanceAllowance(OWNER, CREDENTIALS) } returns BALANCE.right()
 
@@ -98,7 +99,7 @@ internal class GetPolymarketBalanceInteractorTest {
 
         // Assert
         assertThat(actual).isEqualTo(PolymarketAuthError.KeyNotFound.left())
-        coVerify(exactly = 0) { repository.syncBalanceAllowance(any(), any()) }
+        coVerify(exactly = 0) { repository.syncBalanceAllowance(any(), any(), any()) }
         coVerify(exactly = 0) { repository.getBalanceAllowance(any(), any()) }
     }
 
@@ -106,7 +107,7 @@ internal class GetPolymarketBalanceInteractorTest {
     fun `GIVEN the request is rejected WHEN invoke THEN propagates the auth error`() = runTest {
         // Arrange
         coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
-        coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS) } returns Unit.right()
+        coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS, PolymarketClobAsset.Collateral) } returns Unit.right()
         coEvery { repository.getBalanceAllowance(OWNER, CREDENTIALS) } returns
             PolymarketAuthError.InvalidSignature.left()
 
@@ -121,7 +122,7 @@ internal class GetPolymarketBalanceInteractorTest {
     fun `GIVEN the refresh is unauthorized WHEN invoke THEN clears the credentials and skips the read`() = runTest {
         // Arrange
         coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
-        coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS) } returns
+        coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS, PolymarketClobAsset.Collateral) } returns
             PolymarketAuthError.InvalidSignature.left()
 
         // Act
@@ -137,7 +138,7 @@ internal class GetPolymarketBalanceInteractorTest {
     fun `GIVEN the read is unauthorized WHEN invoke THEN clears the credentials`() = runTest {
         // Arrange
         coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
-        coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS) } returns Unit.right()
+        coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS, PolymarketClobAsset.Collateral) } returns Unit.right()
         coEvery { repository.getBalanceAllowance(OWNER, CREDENTIALS) } returns
             PolymarketAuthError.InvalidSignature.left()
 
@@ -153,7 +154,7 @@ internal class GetPolymarketBalanceInteractorTest {
     fun `GIVEN the read fails on network WHEN invoke THEN keeps the credentials`() = runTest {
         // Arrange
         coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
-        coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS) } returns Unit.right()
+        coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS, PolymarketClobAsset.Collateral) } returns Unit.right()
         coEvery { repository.getBalanceAllowance(OWNER, CREDENTIALS) } returns PolymarketAuthError.Network.left()
 
         // Act
@@ -167,7 +168,7 @@ internal class GetPolymarketBalanceInteractorTest {
     fun `GIVEN the exchange reports no key WHEN invoke THEN keeps the credentials`() = runTest {
         // Arrange
         coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
-        coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS) } returns Unit.right()
+        coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS, PolymarketClobAsset.Collateral) } returns Unit.right()
         coEvery { repository.getBalanceAllowance(OWNER, CREDENTIALS) } returns PolymarketAuthError.KeyNotFound.left()
 
         // Act

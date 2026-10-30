@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.amountScreen.AmountScreenContent
 import com.tangem.common.ui.navigationButtons.NavigationButtonsBlock
 import com.tangem.common.ui.navigationButtons.NavigationButtonsState
@@ -62,9 +63,9 @@ internal fun StakingScreen(uiState: StakingUiState, marketingBannerComponent: Ma
                 ?: NavigationButtonsState.Empty,
             footerText = confirmationState?.footerText.takeIf { uiState.currentStep == StakingStep.Confirmation },
             modifier = Modifier.padding(
-                start = TangemTheme.dimens.spacing16,
-                end = TangemTheme.dimens.spacing16,
-                bottom = TangemTheme.dimens.spacing16,
+                start = 16.dp,
+                end = 16.dp,
+                bottom = 16.dp,
             ),
         )
         StakingBottomSheet(bottomSheetConfig = uiState.bottomSheetConfig)
@@ -100,7 +101,7 @@ private fun StakingAppBar(uiState: StakingUiState) {
         backIconRes = backIcon,
         onBackClick = click,
         backgroundColor = TangemTheme.colors.background.secondary,
-        modifier = Modifier.height(TangemTheme.dimens.size56),
+        modifier = Modifier.height(56.dp),
     )
 }
 

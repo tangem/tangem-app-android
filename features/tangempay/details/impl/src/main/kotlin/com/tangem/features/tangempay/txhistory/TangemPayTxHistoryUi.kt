@@ -77,7 +77,7 @@ private fun LazyListScope.nonContentItem(
                     state = state,
                     modifier = modifier
                         .then(fillRemaining)
-                        .padding(horizontal = TangemTheme.dimens2.x4, vertical = TangemTheme.dimens2.x3)
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
                         .fillMaxWidth(),
                 )
             }
@@ -86,7 +86,7 @@ private fun LazyListScope.nonContentItem(
                     state = state,
                     modifier = modifier
                         .then(fillRemaining)
-                        .padding(horizontal = TangemTheme.dimens2.x4, vertical = TangemTheme.dimens2.x3)
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
                         .fillMaxWidth(),
                 )
             }
@@ -180,8 +180,8 @@ private fun GroupTitleBlock(
             modifier = modifier
                 .fillMaxWidth()
                 .padding(
-                    vertical = TangemTheme.dimens2.x3,
-                    horizontal = TangemTheme.dimens2.x4,
+                    vertical = 12.dp,
+                    horizontal = 16.dp,
                 ),
             text = state.title,
             style = TangemTheme.typography3.subheading.medium,
@@ -202,7 +202,7 @@ private fun TangemPayTransaction(
             enabled = transactionState is TangemPayTransactionState.Content,
             onClick = (transactionState as? TangemPayTransactionState.Content)?.onClick ?: {},
         ),
-        startSlot = { Icon(state = transactionState, modifier = Modifier.size(TangemTheme.dimens2.x10)) },
+        startSlot = { Icon(state = transactionState, modifier = Modifier.size(40.dp)) },
         titleSlot = { Title(state = transactionState) },
         subtitleSlot = { Subtitle(state = transactionState) },
         valueSlot = { Amount(state = transactionState, isBalanceHidden = isBalanceHidden) },
@@ -241,8 +241,8 @@ private fun Icon(state: TangemPayTransactionState, modifier: Modifier = Modifier
             modifier = modifier,
         )
         is TangemPayTransactionState.Loading -> TangemShimmer(
-            modifier = modifier.size(TangemTheme.dimens2.x10),
-            radius = TangemTheme.dimens2.x25,
+            modifier = modifier.size(40.dp),
+            radius = 100.dp,
         )
     }
 }
@@ -254,21 +254,21 @@ private fun TransactionListIcon(iconState: TangemIconUM, modifier: Modifier = Mo
             TangemIcon(
                 tangemIconUM = iconState,
                 modifier = modifier
-                    .size(TangemTheme.dimens2.x10)
+                    .size(40.dp)
                     .clip(CircleShape),
             )
         }
         else -> {
             Box(
                 modifier = modifier
-                    .size(TangemTheme.dimens2.x10)
+                    .size(40.dp)
                     .clip(CircleShape)
-                    .background(TangemTheme.colors3.bg.opaque.primary),
+                    .background(TangemTheme.colors3.bg.transparent.primary),
                 contentAlignment = Alignment.Center,
             ) {
                 TangemIcon(
                     tangemIconUM = iconState,
-                    modifier = Modifier.size(TangemTheme.dimens.size20),
+                    modifier = Modifier.size(20.dp),
                 )
             }
         }
@@ -336,14 +336,14 @@ private fun TangemPayTransactionEmptyBlock(
 ) {
     Column(
         modifier = modifier.testTag(EmptyTransactionBlockTestTags.BLOCK),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x3, Alignment.CenterVertically),
+        verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(
             modifier = Modifier
-                .size(TangemTheme.dimens2.x10)
+                .size(40.dp)
                 .background(
-                    color = TangemTheme.colors3.bg.opaque.primary,
+                    color = TangemTheme.colors3.bg.transparent.primary,
                     shape = CircleShape,
                 )
                 .padding(10.dp)
@@ -355,7 +355,7 @@ private fun TangemPayTransactionEmptyBlock(
 
         Text(
             modifier = Modifier
-                .padding(horizontal = TangemTheme.dimens.spacing32)
+                .padding(horizontal = 32.dp)
                 .testTag(EmptyTransactionBlockTestTags.TEXT),
             textAlign = TextAlign.Center,
             text = state.text.resolveReference(),
@@ -372,7 +372,7 @@ private fun TangemPayFailedTransactionBlock(
 ) {
     Column(
         modifier = modifier.testTag(EmptyTransactionBlockTestTags.BLOCK),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x3, Alignment.CenterVertically),
+        verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         TangemButton(

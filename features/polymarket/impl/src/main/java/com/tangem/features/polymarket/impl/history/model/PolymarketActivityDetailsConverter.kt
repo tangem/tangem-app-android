@@ -1,0 +1,133 @@
+package com.tangem.features.polymarket.impl.history.model
+
+import com.tangem.core.res.R
+import com.tangem.core.ui.ds2.badge.TangemBadge
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.format.bigdecimal.anyDecimals
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.domain.polymarket.model.PolymarketActivity
+import com.tangem.domain.polymarket.model.PolymarketActivity.RedeemResult
+import com.tangem.domain.polymarket.model.PolymarketActivity.Type
+import com.tangem.features.polymarket.impl.common.PolymarketConst
+import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
+import com.tangem.features.polymarket.impl.common.formatPolymarketPrice
+import com.tangem.features.polymarket.impl.common.formatPolymarketShares
+import com.tangem.features.polymarket.impl.common.polymarketOutcomeAccent
+import com.tangem.features.polymarket.impl.common.toBadgeStatus
+import com.tangem.features.polymarket.impl.history.ui.state.PolymarketActivityDetailsUM
+import com.tangem.features.polymarket.impl.history.ui.state.PolymarketActivityDetailsUM.Row
+import com.tangem.utils.StringsSigns.MINUS
+import kotlinx.collections.immutable.toImmutableList
+import java.math.BigDecimal
+import java.math.RoundingMode
+import java.text.NumberFormat
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatterBuilder
+import java.time.format.FormatStyle
+
+internal class PolymarketActivityDetailsConverter(
+    private val dateFormatter: DateTimeFormatter = DateTimeFormatterBuilder()
+        .appendLocalized(FormatStyle.MEDIUM, null)
+        .appendLiteral(" · ")
+        .appendLocalized(null, FormatStyle.SHORT)
+        .toFormatter().withZone(ZoneId.systemDefault()),
+) {
+
+    fun convert(activity: PolymarketActivity, onGoToPrediction: (() -> Unit)?): PolymarketActivityDetailsUM {
+        val fundingDirection = fundingDirection(activity.type)
+        val isRedemption = activity.type == Type.REDEEM
+        val isLoss = isRedemption && activity.redeemResult == RedeemResult.LOST
+        val outcome = activity.market?.outcome?.takeIf { it.isNotBlank() && fundingDirection == null }
+        return PolymarketActivityDetailsUM(
+            title = when {
+                isLoss -> resourceReference(R.string.prediction_history_loss)
+                activity.type == Type.DEPOSIT -> resourceReference(R.string.prediction_history_deposited)
+                else -> activity.rowType().title()
+            },
+            date = stringReference(dateFormatter.format(activity.occurredAt)),
+            headline = if (isRedemption) redemptionHeadline(activity.redeemResult) else null,
+            amount = if (isLoss) null else stringReference(activity.detailsAmount()),
+            marketTitle = activity.marketTitle.takeIf { it.isNotBlank() && fundingDirection == null }?.let(
+                ::stringReference,
+            ),
+            iconUrl = activity.historyIconUrl,
+            fundingDirection = fundingDirection,
+            outcomePrice = activity.order?.averagePrice?.takeIf { outcome != null }
+                ?.formatPolymarketPrice(isResolved = true)?.let(::stringReference),
+            outcome = outcome?.let(::stringReference),
+            outcomeStatus = when {
+                outcome.equals("Yes", ignoreCase = true) -> TangemBadge.Status.Success
+                else -> polymarketOutcomeAccent(activity.market?.outcomeIndex, outcome.orEmpty()).toBadgeStatus()
+            },
+            rows = if (isRedemption || fundingDirection != null) {
+                emptyList<Row>().toImmutableList()
+            } else {
+                tradeRows(activity)
+            },
+            onGoToPrediction = onGoToPrediction.takeIf { fundingDirection == null },
+        )
+    }
+
+    private fun fundingDirection(type: Type) = when (type) {
+        Type.DEPOSIT -> PolymarketActivityDetailsUM.FundingDirection.Deposit
+        Type.WITHDRAW -> PolymarketActivityDetailsUM.FundingDirection.Withdraw
+        else -> null
+    }
+
+    private fun redemptionHeadline(result: RedeemResult?) = when (result) {
+        RedeemResult.WON -> resourceReference(R.string.prediction_history_prediction_won)
+        RedeemResult.LOST -> resourceReference(R.string.prediction_history_prediction_lost)
+        RedeemResult.SPLIT -> resourceReference(R.string.prediction_history_prediction_split)
+        null -> null
+    }
+
+    private fun PolymarketActivity.detailsAmount(): String {
+        val money = amount.abs().formatPolymarketMoney()
+        return when (type) {
+            Type.BUY, Type.WITHDRAW -> "$MINUS$money"
+            else -> money
+        }
+    }
+
+    private fun tradeRows(activity: PolymarketActivity) = buildList {
+        activity.market?.let { market ->
+            add(row(resourceReference(R.string.prediction_positions_quantity), market.shares.formatQuantity()))
+        }
+        activity.order?.let { order ->
+            add(row(resourceReference(R.string.prediction_history_price), order.averagePrice.formatPrice()))
+            add(
+                row(
+                    resourceReference(R.string.prediction_history_fees),
+                    (order.platformFee + order.builderFee).formatPolymarketMoney(),
+                ),
+            )
+            add(
+                row(
+                    resourceReference(R.string.prediction_history_notional_gross),
+                    order.notional.formatPolymarketMoney(),
+                ),
+            )
+        }
+    }.toImmutableList()
+
+    private fun row(title: TextReference, value: String) = Row(title, stringReference(value))
+
+    private fun BigDecimal.formatQuantity(): String {
+        if (signum() > 0 && this < PolymarketConst.SHARES_DISPLAY_STEP) return formatPolymarketShares()
+        return NumberFormat.getNumberInstance().apply {
+            minimumFractionDigits = PolymarketConst.SHARES_DISPLAY_DECIMALS
+            maximumFractionDigits = PolymarketConst.SHARES_DISPLAY_DECIMALS
+            roundingMode = RoundingMode.FLOOR
+        }.format(this)
+    }
+
+    // Historical average execution prices can have sub-cent precision; never clamp them as a live quote.
+    private fun BigDecimal.formatPrice(): String = format {
+        fiat(PolymarketConst.USD_CODE, PolymarketConst.USD_SYMBOL)
+            .anyDecimals(stripTrailingZeros().scale().coerceAtLeast(2))
+    }
+}

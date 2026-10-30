@@ -2,11 +2,11 @@ package com.tangem.features.staking.impl.presentation.model
 
 import arrow.core.Either
 import arrow.core.right
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.ParamsInterceptorHolder
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
@@ -79,7 +79,7 @@ internal abstract class StakingModelTestBase {
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
     protected val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase = mockk()
     protected val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
-    protected val appRouter: AppRouter = mockk()
+    protected val router: Router = mockk()
 
     protected val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
     protected val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase = mockk()
@@ -203,7 +203,7 @@ internal abstract class StakingModelTestBase {
             coroutineScope = coroutineScope,
             innerRouter = innerRouter,
             messageSender = messageSender,
-            appRouter = appRouter,
+            router = router,
         )
     }
 

@@ -118,7 +118,7 @@ internal fun NotificationBaseContainer(
     Surface(
         onClick = onClick ?: {},
         modifier = modifier
-            .defaultMinSize(minHeight = TangemTheme.dimens.size44)
+            .defaultMinSize(minHeight = 44.dp)
             .fillMaxWidth(),
         enabled = onClick != null && isEnabled,
         shape = TangemTheme.shapes.roundedCornersXMedium,
@@ -128,9 +128,9 @@ internal fun NotificationBaseContainer(
         Box {
             Column(
                 modifier = Modifier
-                    .padding(all = TangemTheme.dimens.spacing12)
+                    .padding(all = 12.dp)
                     .testTag(NotificationTestTags.CONTAINER),
-                verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing12),
+                verticalArrangement = Arrangement.spacedBy(space = 12.dp),
             ) {
                 content()
 
@@ -182,7 +182,7 @@ private fun MainContent(
             )
         }
 
-        SpacerW(width = TangemTheme.dimens.spacing10)
+        SpacerW(width = 10.dp)
 
         TextsBlock(
             title = title,
@@ -193,7 +193,7 @@ private fun MainContent(
                 .weight(1f, fill = false)
                 .then(
                     if (hasCloseButton && !showArrowIcon) {
-                        Modifier.padding(end = TangemTheme.dimens.size32)
+                        Modifier.padding(end = 32.dp)
                     } else {
                         Modifier
                     },
@@ -201,13 +201,13 @@ private fun MainContent(
         )
 
         if (showArrowIcon) {
-            SpacerW(width = TangemTheme.dimens.spacing8)
+            SpacerW(width = 8.dp)
 
             Icon(
                 painter = painterResource(id = R.drawable.ic_chevron_right_24),
                 contentDescription = null,
                 modifier = Modifier
-                    .size(size = TangemTheme.dimens.size20)
+                    .size(size = 20.dp)
                     .align(alignment = Alignment.CenterVertically),
                 tint = TangemTheme.colors.icon.informative,
             )
@@ -278,7 +278,7 @@ internal fun TextsBlock(
                 modifier = Modifier.testTag(NotificationTestTags.TITLE),
             )
 
-            SpacerH(height = TangemTheme.dimens.spacing2)
+            SpacerH(height = 2.dp)
         }
 
         val subtitleText = subtitle.resolveAnnotatedReference()
@@ -359,7 +359,7 @@ private fun SinglePrimaryButton(config: NotificationButtonsState.PrimaryButtonCo
 
 @Composable
 private fun PairButtons(config: NotificationButtonsState.PairButtonsConfig, isEnabled: Boolean = true) {
-    Row(horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8)) {
+    Row(horizontalArrangement = Arrangement.spacedBy(space = 8.dp)) {
         SecondaryButton(
             text = config.secondaryText.resolveReference(),
             onClick = config.onSecondaryClick,
@@ -383,7 +383,7 @@ private fun SecondaryPairButtons(
     config: NotificationButtonsState.SecondaryPairButtonsConfig,
     isEnabled: Boolean = true,
 ) {
-    Row(horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8)) {
+    Row(horizontalArrangement = Arrangement.spacedBy(space = 8.dp)) {
         SecondaryButton(
             text = config.leftText.resolveReference(),
             onClick = config.onLeftClick,
@@ -419,7 +419,7 @@ fun CloseableIconButton(
          */
         Box(
             modifier = Modifier
-                .size(size = TangemTheme.dimens.size40)
+                .size(size = 40.dp)
                 .clip(shape = CircleShape)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
@@ -433,7 +433,7 @@ fun CloseableIconButton(
                 painter = painterResource(id = R.drawable.ic_close_24),
                 contentDescription = null,
                 modifier = Modifier
-                    .size(size = TangemTheme.dimens.size16)
+                    .size(size = 16.dp)
                     .align(alignment = Alignment.Center),
                 tint = iconTint,
             )

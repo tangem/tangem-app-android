@@ -25,7 +25,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 @Composable
 fun InputRowChecked(text: TextReference, checked: Boolean, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier.padding(TangemTheme.dimens.spacing12),
+        modifier = modifier.padding(12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -48,7 +48,7 @@ fun InputRowChecked(text: TextReference, checked: Boolean, modifier: Modifier = 
             )
         }
         if (checked.not()) {
-            Box(Modifier.height(TangemTheme.dimens.size24))
+            Box(Modifier.height(24.dp))
         }
     }
 }

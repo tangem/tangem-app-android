@@ -5,6 +5,7 @@ import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointAccountActivationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationPayload
 import com.tangem.domain.jointaccount.model.JointAccountCreationResult
+import com.tangem.domain.jointaccount.model.JointAccountInvite
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreview
 import com.tangem.domain.jointaccount.model.JointAccountInvitePreviewError
 import com.tangem.domain.jointaccount.model.JointAccountJoinPayload
@@ -106,7 +107,7 @@ interface JointAccountRepository {
      * list also answers "this device is not the creator's". Never throws: a store that cannot be read is an
      * empty list, so a screen built on this keeps rendering everything else.
      */
-    suspend fun getInvites(userWalletId: UserWalletId, cryptoAccountId: String): List<String>
+    suspend fun getInvites(userWalletId: UserWalletId, cryptoAccountId: String): List<JointAccountInvite>
 
     /** The invites of [cryptoAccountId] already shared from this device. Never fails: an unreadable store is empty. */
     fun getSharedInvites(userWalletId: UserWalletId, cryptoAccountId: String): Flow<Set<String>>

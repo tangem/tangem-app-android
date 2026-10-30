@@ -69,9 +69,9 @@ internal fun NetworkSelectionScreen(state: NetworkSelectionUM, onDismiss: () -> 
             )
             SearchBar(
                 state = state.searchBar,
-                modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing22),
+                modifier = Modifier.padding(horizontal = 22.dp),
             )
-            Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing8))
+            Spacer(modifier = Modifier.height(8.dp))
             if (state.walletGroups.isEmpty() && state.searchBar.query.isNotBlank()) {
                 NetworkSelectionEmpty(modifier = Modifier.weight(1f))
             } else {
@@ -87,7 +87,7 @@ private fun NetworkSelectionEmpty(modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center,
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = TangemTheme.dimens.spacing16),
+            .padding(horizontal = 16.dp),
     ) {
         Text(
             text = stringResourceSafe(R.string.common_no_results),
@@ -102,7 +102,7 @@ private fun NetworkSelectionEmpty(modifier: Modifier = Modifier) {
 private fun NetworkSelectionContent(state: NetworkSelectionUM) {
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(bottom = TangemTheme.dimens.spacing12),
+        contentPadding = PaddingValues(bottom = 12.dp),
     ) {
         state.walletGroups.forEach { walletGroup ->
             item(key = "wallet_header_${walletGroup.userWalletId}") {
@@ -137,7 +137,7 @@ private fun LazyListScope.accountGroupItems(
                 modifier = Modifier.roundedShapeItemDecoration(
                     currentIndex = 0,
                     lastIndex = lastIndex,
-                    radius = TangemTheme.dimens.radius14,
+                    radius = 14.dp,
                     backgroundColor = TangemTheme.colors.background.action,
                 ),
             )
@@ -160,7 +160,7 @@ private fun LazyListScope.accountGroupItems(
                 modifier = Modifier.roundedShapeItemDecoration(
                     currentIndex = indexWithHeader,
                     lastIndex = lastIndex,
-                    radius = TangemTheme.dimens.radius14,
+                    radius = 14.dp,
                     backgroundColor = TangemTheme.colors.background.action,
                 ),
             )
@@ -180,7 +180,7 @@ private fun LazyListScope.accountGroupItems(
                     modifier = Modifier.roundedShapeItemDecoration(
                         currentIndex = lastIndex,
                         lastIndex = lastIndex,
-                        radius = TangemTheme.dimens.radius14,
+                        radius = 14.dp,
                         backgroundColor = TangemTheme.colors.background.action,
                     ),
                 )
@@ -200,8 +200,8 @@ private fun WalletHeader(walletGroup: WalletGroupUM) {
             .fillMaxWidth()
             .clickable(onClick = walletGroup.onExpandToggle)
             .padding(
-                horizontal = TangemTheme.dimens.spacing16,
-                vertical = TangemTheme.dimens.spacing12,
+                horizontal = 16.dp,
+                vertical = 12.dp,
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -214,7 +214,7 @@ private fun WalletHeader(walletGroup: WalletGroupUM) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(TangemTheme.dimens.size24)
+                .size(24.dp)
                 .background(
                     color = TangemTheme.colors.button.secondary,
                     shape = CircleShape,
@@ -225,7 +225,7 @@ private fun WalletHeader(walletGroup: WalletGroupUM) {
                 contentDescription = null,
                 tint = TangemTheme.colors.icon.informative,
                 modifier = Modifier
-                    .size(TangemTheme.dimens.size16)
+                    .size(16.dp)
                     .rotate(chevronRotation),
             )
         }
@@ -239,18 +239,18 @@ private fun AccountHeader(accountGroup: AccountGroupUM, modifier: Modifier = Mod
         modifier = modifier
             .fillMaxWidth()
             .padding(
-                start = TangemTheme.dimens.spacing12,
-                top = TangemTheme.dimens.spacing10,
-                bottom = TangemTheme.dimens.spacing6,
-                end = TangemTheme.dimens.spacing12,
+                start = 12.dp,
+                top = 10.dp,
+                bottom = 6.dp,
+                end = 12.dp,
             ),
     ) {
         accountGroup.iconState?.let { iconState ->
             CurrencyIcon(
                 state = iconState,
-                modifier = Modifier.size(TangemTheme.dimens.size18),
+                modifier = Modifier.size(18.dp),
             )
-            Spacer(modifier = Modifier.width(TangemTheme.dimens.spacing6))
+            Spacer(modifier = Modifier.width(6.dp))
         }
         Text(
             text = accountGroup.accountName.resolveReference(),
@@ -266,26 +266,26 @@ private fun HiddenTokensFooter(count: Int, modifier: Modifier = Modifier) {
         HorizontalDivider(
             thickness = 0.5.dp,
             color = TangemTheme.colors.stroke.primary,
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing14),
+            modifier = Modifier.padding(horizontal = 14.dp),
         )
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    start = TangemTheme.dimens.spacing12,
-                    end = TangemTheme.dimens.spacing12,
-                    top = TangemTheme.dimens.spacing10,
-                    bottom = TangemTheme.dimens.spacing10,
+                    start = 12.dp,
+                    end = 12.dp,
+                    top = 10.dp,
+                    bottom = 10.dp,
                 ),
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_eye_off_outline_24),
                 contentDescription = null,
                 tint = TangemTheme.colors.icon.informative,
-                modifier = Modifier.size(TangemTheme.dimens.size16),
+                modifier = Modifier.size(16.dp),
             )
-            Spacer(modifier = Modifier.width(TangemTheme.dimens.spacing8))
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = pluralStringResourceSafe(
                     id = R.plurals.send_network_selection_hidden_tokens,

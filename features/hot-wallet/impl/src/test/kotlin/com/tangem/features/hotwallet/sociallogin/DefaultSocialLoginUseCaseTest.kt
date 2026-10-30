@@ -88,7 +88,7 @@ internal class DefaultSocialLoginUseCaseTest {
         walletId = WALLET_ID,
         hotWalletId = hotWalletId,
         wallets = emptyList(),
-        backedUp = false,
+        isBackedUp = false,
     )
     private val savedWallet = userWallet.copy(isSocialBackupCompleted = true)
     private val restoredHotWalletId: HotWalletId = mockk()
@@ -97,7 +97,7 @@ internal class DefaultSocialLoginUseCaseTest {
         walletId = RESTORED_WALLET_ID,
         hotWalletId = restoredHotWalletId,
         wallets = emptyList(),
-        backedUp = false,
+        isBackedUp = false,
     )
     private val savedRestoredWallet = restoredWallet.copy(isSocialBackupCompleted = true)
 
@@ -216,7 +216,7 @@ internal class DefaultSocialLoginUseCaseTest {
         // Assert
         assertThat(actual).isEqualTo(error.left())
         coVerifyOrder {
-            revokeSocialRecoveryUseCase(WALLET_ID)
+            revokeSocialRecoveryUseCase(userWallet)
             tangemHotSdk.delete(hotWalletId)
         }
         coVerify(exactly = 0) {
@@ -232,6 +232,38 @@ internal class DefaultSocialLoginUseCaseTest {
     )
 
     @Test
+    fun `GIVEN the release fails once WHEN register fails THEN the release is retried until it succeeds`() = runTest {
+        // Arrange
+        coEvery { registerSocialRecoveryUseCase(any(), any(), any()) } returns SocialLoginError.NetworkError.left()
+        coEvery { revokeSocialRecoveryUseCase(userWallet) } returnsMany listOf(
+            SocialLoginError.NetworkError.left(),
+            Unit.right(),
+        )
+
+        // Act
+        useCase.signIn(PROVIDER) { CONSENT }
+
+        // Assert
+        coVerify(exactly = 2) { revokeSocialRecoveryUseCase(userWallet) }
+        coVerify(exactly = 1) { tangemHotSdk.delete(hotWalletId) }
+    }
+
+    @Test
+    fun `GIVEN the release keeps failing WHEN register fails THEN it gives up after three attempts`() = runTest {
+        // Arrange
+        coEvery { registerSocialRecoveryUseCase(any(), any(), any()) } returns SocialLoginError.NetworkError.left()
+        coEvery { revokeSocialRecoveryUseCase(userWallet) } returns SocialLoginError.NetworkError.left()
+
+        // Act
+        val actual = useCase.signIn(PROVIDER) { CONSENT }
+
+        // Assert
+        assertThat(actual).isEqualTo(SocialLoginError.NetworkError.left())
+        coVerify(exactly = 3) { revokeSocialRecoveryUseCase(userWallet) }
+        coVerify(exactly = 1) { tangemHotSdk.delete(hotWalletId) }
+    }
+
+    @Test
     fun `GIVEN the cloud write fails AND no retry WHEN signIn THEN the binding is released AND the wallet deleted`() =
         runTest {
             // Arrange
@@ -243,7 +275,7 @@ internal class DefaultSocialLoginUseCaseTest {
             // Assert
             assertThat(actual).isEqualTo(SocialLoginError.BackupAbandoned.left())
             coVerifyOrder {
-                revokeSocialRecoveryUseCase(WALLET_ID)
+                revokeSocialRecoveryUseCase(userWallet)
                 tangemHotSdk.delete(hotWalletId)
             }
             coVerify(exactly = 0) { saveWalletUseCase(any()) }
@@ -350,7 +382,7 @@ internal class DefaultSocialLoginUseCaseTest {
         // Assert
         assertThat(actual).isInstanceOf(CancellationException::class.java)
         coVerifyOrder {
-            revokeSocialRecoveryUseCase(WALLET_ID)
+            revokeSocialRecoveryUseCase(userWallet)
             tangemHotSdk.delete(hotWalletId)
         }
     }

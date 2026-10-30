@@ -102,12 +102,7 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
 
     private fun onChangePlanClick() {
         analytics.send(TangemPayAnalyticsEvents.Tiers.ChangePlanClicked())
-        router.push(
-            TangemPayAccountDetailsInnerRoute.SelectPlan(
-                tariffPlan = currentPlanState.tariff,
-                source = TangemPaySelectPlanSource.CHANGE_PLAN,
-            ),
-        )
+        router.push(TangemPayAccountDetailsInnerRoute.SelectPlan(source = TangemPaySelectPlanSource.CHANGE_PLAN))
     }
 
     private fun createNotification(planState: TangemPayTariffPlanState): TangemPayCurrentPlanUM.Notification? {

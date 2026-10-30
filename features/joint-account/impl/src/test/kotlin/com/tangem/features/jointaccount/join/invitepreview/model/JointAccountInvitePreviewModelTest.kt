@@ -2,6 +2,7 @@ package com.tangem.features.jointaccount.join.invitepreview.model
 
 import arrow.core.left
 import arrow.core.right
+import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
@@ -21,6 +22,7 @@ import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
+import com.tangem.features.jointaccount.join.invitepreview.entity.JointAccountInvitePreviewSheetConfig
 import com.tangem.features.jointaccount.join.invitepreview.state.JointAccountInvitePreviewStateController
 import com.tangem.features.jointaccount.join.invitepreview.ui.state.JointAccountInvitePreviewUM
 import com.tangem.features.jointaccount.join.model.JointAccountJoinChildParams
@@ -309,7 +311,7 @@ internal class JointAccountInvitePreviewModelTest {
     }
 
     @Test
-    fun `GIVEN preview loaded WHEN continue tapped THEN the name step opens without the confirmation sheet`() = runTest {
+    fun `GIVEN preview loaded WHEN continue tapped THEN the name step opens`() = runTest {
         // Arrange
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet))
         every { portfolioSelectorController.selectedAccountWithData(any()) } returns MutableStateFlow(wallet to mockk())
@@ -322,8 +324,31 @@ internal class JointAccountInvitePreviewModelTest {
         advanceUntilIdle()
 
         // Assert
-        assertThat((model.uiState.value as JointAccountInvitePreviewUM.Content).confirmation).isNull()
         verify(exactly = 1) { router.push(JointAccountJoinRoute.DisplayName) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN preview loaded WHEN required approvals tapped THEN the About signatures sheet opens`() = runTest {
+        // Arrange
+        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet))
+        every { portfolioSelectorController.selectedAccountWithData(any()) } returns MutableStateFlow(wallet to mockk())
+        coEvery { getJointAccountInvitePreviewUseCase(any(), INVITE_ID) } returns preview().right()
+        val model = createModel(testScope = this)
+        val bottomSheet = FakeSlotHost(model.bottomSheetNavigation)
+        advanceUntilIdle()
+        val content = model.uiState.value as JointAccountInvitePreviewUM.Content
+
+        // Act
+        content.onRequiredApprovalsClick()
+
+        // Assert
+        assertThat(bottomSheet.configuration).isEqualTo(
+            JointAccountInvitePreviewSheetConfig.AboutSignatures(
+                threshold = content.requiredToSign,
+                total = content.totalMembers,
+            ),
+        )
         model.onDestroy()
     }
 
@@ -372,5 +397,19 @@ internal class JointAccountInvitePreviewModelTest {
         const val INVITE_ID = "invite-id"
         val WALLET_ID = UserWalletId("aabbcc")
         val OTHER_WALLET_ID = UserWalletId("ddeeff")
+    }
+
+    private class FakeSlotHost<C : Any>(navigation: SlotNavigation<C>) {
+
+        var configuration: C? = null
+            private set
+
+        init {
+            navigation.subscribe { event ->
+                val old = configuration
+                configuration = event.transformer(old)
+                event.onComplete(configuration, old)
+            }
+        }
     }
 }

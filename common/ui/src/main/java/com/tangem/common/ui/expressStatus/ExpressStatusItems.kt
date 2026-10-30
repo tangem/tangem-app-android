@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.R
 import com.tangem.common.ui.expressStatus.state.*
 import com.tangem.core.ui.components.atoms.text.EllipsisText
@@ -70,7 +71,7 @@ private fun ExpressTransactionItem(
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors2.surface.level3)
             .clickable(onClick = info.onClick)
-            .padding(TangemTheme.dimens2.x4)
+            .padding(16.dp)
             .testTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM),
     ) {
         TitleRow(
@@ -85,7 +86,7 @@ private fun ExpressTransactionItem(
                 color = TangemTheme.colors3.text.tertiary,
             )
         }
-        Spacer(Modifier.size(TangemTheme.dimens2.x3))
+        Spacer(Modifier.size(12.dp))
         AmountsRow(info = info)
     }
 }
@@ -106,7 +107,7 @@ private fun TitleRow(title: String, infoIconRes: Int?, infoIconTint: Color?) {
                 painter = painterResource(infoIconRes),
                 contentDescription = null,
                 tint = infoIconTint,
-                modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x3),
+                modifier = Modifier.padding(horizontal = 12.dp),
             )
         }
     }
@@ -116,13 +117,13 @@ private fun TitleRow(title: String, infoIconRes: Int?, infoIconTint: Color?) {
 private fun AmountsRow(info: ExpressTransactionStateInfoUM) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1_5),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         CurrencyIcon(
             state = info.fromCurrencyIcon,
             shouldDisplayNetwork = false,
             modifier = Modifier
-                .size(TangemTheme.dimens.size18)
+                .size(18.dp)
                 .testTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_FROM_ICON),
         )
         EllipsisText(
@@ -139,14 +140,14 @@ private fun AmountsRow(info: ExpressTransactionStateInfoUM) {
             contentDescription = null,
             tint = TangemTheme.colors3.icon.tertiary,
             modifier = Modifier
-                .size(TangemTheme.dimens.size18)
+                .size(18.dp)
                 .testTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_SWAP_ICON),
         )
         CurrencyIcon(
             state = info.toCurrencyIcon,
             shouldDisplayNetwork = false,
             modifier = Modifier
-                .size(TangemTheme.dimens.size18)
+                .size(18.dp)
                 .testTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM_TO_ICON),
         )
         EllipsisText(
@@ -168,8 +169,8 @@ private fun AmountsRow(info: ExpressTransactionStateInfoUM) {
 private fun ExpressTransactionItemPreview() {
     TangemThemePreviewRedesign {
         Column(
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
-            modifier = Modifier.padding(TangemTheme.dimens2.x4),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(16.dp),
         ) {
             ExpressTransactionItem(
                 state = PreviewExpressTransactionState,

@@ -13,7 +13,7 @@ private const val DEFAULT_FRACTION_DIGITS = 2
  */
 class BigDecimalPercentFormat(
     val isWithoutSign: Boolean = true,
-    val withPercentSign: Boolean = true,
+    val hasPercentSign: Boolean = true,
     val locale: Locale = Locale.getDefault(),
     val minFractionDigits: Int = DEFAULT_FRACTION_DIGITS,
     val maxFractionDigits: Int = DEFAULT_FRACTION_DIGITS,
@@ -41,7 +41,7 @@ fun BigDecimalFormatScope.percent(
     return BigDecimalPercentFormat(
         isWithoutSign = withoutSign,
         locale = locale,
-        withPercentSign = withPercentSign,
+        hasPercentSign = withPercentSign,
         minFractionDigits = minFractionDigits,
         maxFractionDigits = maxFractionDigits,
         canBeLower = canBeLower,
@@ -51,7 +51,7 @@ fun BigDecimalFormatScope.percent(
 // == Formatters ==
 
 private fun BigDecimalPercentFormat.default(): BigDecimalFormat = BigDecimalFormat { value ->
-    val formatter = if (withPercentSign) {
+    val formatter = if (hasPercentSign) {
         NumberFormat.getPercentInstance(locale)
     } else {
         NumberFormat.getNumberInstance(locale)
@@ -69,7 +69,7 @@ private fun BigDecimalPercentFormat.default(): BigDecimalFormat = BigDecimalForm
     val isBelowThreshold = canBeLower && valueToFormat.signum() > 0 && valueToFormat < threshold
 
     val shownValue = if (isBelowThreshold) threshold else valueToFormat
-    val finalValue = if (withPercentSign) shownValue else shownValue.movePointRight(2)
+    val finalValue = if (hasPercentSign) shownValue else shownValue.movePointRight(2)
     val formatted = formatter.format(finalValue)
 
     if (isBelowThreshold) BigDecimalFormatConstants.CAN_BE_LOWER_SIGN + formatted else formatted

@@ -12,7 +12,10 @@ import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.operations.wallet.CreateWalletTask
 import com.tangem.operations.wallet.PurgeWalletCommand
 
-class CreateFirstTwinWalletTask(private val firstCardId: String) : CardSessionRunnable<CreateWalletResponse> {
+class CreateFirstTwinWalletTask(
+    private val firstCardId: String,
+    private val wrongTwinCardMessage: String,
+) : CardSessionRunnable<CreateWalletResponse> {
 
     override val allowsRequestAccessCodeFromRepository: Boolean = false
 
@@ -25,8 +28,8 @@ class CreateFirstTwinWalletTask(private val firstCardId: String) : CardSessionRu
         if (walletIndex != null) {
             val requiredTwinCardNumber = TwinsHelper.getTwinCardNumber(firstCardId)
             if (requiredTwinCardNumber != TwinsHelper.getTwinCardNumber(card.cardId)) {
-                requiredTwinCardNumber?.let {
-                    callback(CompletionResult.Failure(WrongTwinCard(it)))
+                if (requiredTwinCardNumber != null) {
+                    callback(CompletionResult.Failure(WrongTwinCard(wrongTwinCardMessage)))
                 }
                 return
             }

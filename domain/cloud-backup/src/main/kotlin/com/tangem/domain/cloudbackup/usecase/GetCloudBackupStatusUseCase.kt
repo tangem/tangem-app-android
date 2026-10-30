@@ -11,7 +11,9 @@ class GetCloudBackupStatusUseCase @Inject constructor(
     suspend operator fun invoke(walletId: String): CloudBackupStatus {
         if (!cloudBackupRepository.isBackedUp(walletId)) return CloudBackupStatus.Incomplete
 
-        return cloudBackupRepository.findBackups().fold(
+        val found = cloudBackupRepository.withAccountOf(walletId) { cloudBackupRepository.findBackups() }
+
+        return found.fold(
             ifLeft = { CloudBackupStatus.ActionRequired },
             ifRight = { backups ->
                 if (backups.any { it.walletId == walletId }) {

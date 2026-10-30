@@ -230,6 +230,7 @@ fun BigDecimalCryptoFormat.uncapped() = BigDecimalFormat { value ->
  * [roundingMode] is worth setting to [RoundingMode.DOWN] for an amount the user is about to receive, so the figure
  * is never larger than what arrives. With [canBeLower], an amount too small for [maxDecimals] keeps its lower-bound
  * sign — "<0.00000001 WMON" — rather than reading as the plain zero a user would take for "nothing".
+ * With [BigDecimalCryptoFormat.shouldIgnoreSymbolPosition] the symbol always follows the amount, as in "<0.01 WMON".
  */
 fun BigDecimalCryptoFormat.anyDecimals(
     maxDecimals: Int = decimals,
@@ -237,6 +238,22 @@ fun BigDecimalCryptoFormat.anyDecimals(
     roundingMode: RoundingMode = RoundingMode.HALF_UP,
     canBeLower: Boolean = false,
 ) = BigDecimalFormat { value ->
+    val smallest = BigDecimal.ONE.movePointLeft(maxDecimals)
+
+    if (shouldIgnoreSymbolPosition) {
+        val plainFormatter = NumberFormat.getInstance(locale).apply {
+            maximumFractionDigits = maxDecimals
+            minimumFractionDigits = minDecimals
+            isGroupingUsed = true
+            this.roundingMode = roundingMode
+        }
+        val isLower = canBeLower && value > BigDecimal.ZERO && value < smallest
+        val sign = if (isLower) CAN_BE_LOWER_SIGN else ""
+
+        return@BigDecimalFormat sign + plainFormatter.format(if (isLower) smallest else value) +
+            NON_BREAKING_SPACE + symbol
+    }
+
     val formatter = NumberFormat.getCurrencyInstance(locale).apply {
         currency = usdCurrency
         maximumFractionDigits = maxDecimals
@@ -244,8 +261,6 @@ fun BigDecimalCryptoFormat.anyDecimals(
         isGroupingUsed = true
         this.roundingMode = roundingMode
     }
-
-    val smallest = BigDecimal.ONE.movePointLeft(maxDecimals)
 
     if (canBeLower && value > BigDecimal.ZERO && value < smallest) {
         CAN_BE_LOWER_SIGN + formatter.format(smallest)

@@ -3,6 +3,8 @@ package com.tangem.domain.wallets.repository
 import arrow.core.Either
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.models.PromoCodeActivation
+import com.tangem.domain.wallets.models.PromoPayout
 import com.tangem.domain.wallets.models.UserWalletRemoteInfo
 import com.tangem.domain.wallets.models.WalletSyncResult
 import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
@@ -20,6 +22,8 @@ interface WalletsRepository {
     suspend fun setRequireAccessCode(value: Boolean)
 
     suspend fun isWalletWithRing(userWalletId: UserWalletId): Boolean
+
+    suspend fun isWalletRegistered(userWalletId: UserWalletId): Boolean
 
     suspend fun setHasWalletsWithRing(userWalletId: UserWalletId)
 
@@ -57,6 +61,7 @@ interface WalletsRepository {
     suspend fun activatePromoCode(
         userWalletId: UserWalletId,
         promoCode: String,
-        bitcoinAddress: String,
-    ): Either<ActivatePromoCodeError, String>
+        address: String,
+        payout: PromoPayout?,
+    ): Either<ActivatePromoCodeError, PromoCodeActivation>
 }

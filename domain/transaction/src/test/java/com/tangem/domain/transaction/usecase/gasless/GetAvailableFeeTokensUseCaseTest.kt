@@ -31,7 +31,6 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.AvailableFeeTokens
 import com.tangem.domain.transaction.models.tron.TronGaslessToken
 import com.tangem.domain.transaction.usecase.gasless.GetAvailableFeeTokensUseCase.Companion.isEligibleFeeToken
-import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -306,8 +305,7 @@ internal class GetAvailableFeeTokensUseCaseTest {
 
         @BeforeEach
         fun resetMocks() {
-            clearMocks(singleAccountStatusListSupplier, tronGaslessTransactionRepository, walletManagersFacade)
-            isAccountActivationSponsored = true
+            clearMocks(singleAccountStatusListSupplier, tronGaslessTransactionRepository)
 
             coEvery { tronGaslessTransactionRepository.getSupportedTokens() } returns listOf(
                 TronGaslessToken(contractAddress = USDT_TRON_CONTRACT, symbol = "USDT", decimals = 6),
@@ -334,34 +332,6 @@ internal class GetAvailableFeeTokensUseCaseTest {
             assertThat(actual.offeredCurrencies()).containsExactly(trx, usdtTron).inOrder()
             assertThat(actual.notEnoughForFeeIds()).isEmpty()
         }
-
-        @ParameterizedTest
-        @ProvideTestModels
-        fun `GIVEN account activation state WHEN invoke THEN token is offered only when gasless can pay`(
-            model: ActivationModel,
-        ) = runTest {
-            // Arrange
-            isAccountActivationSponsored = model.isActivationSponsored
-            coEvery {
-                walletManagersFacade.isTronAccountActivated(userWalletId, tronNetwork)
-            } returns model.isActivated
-
-            // Act
-            val actual = createUseCase().invoke(
-                userWallet = userWallet,
-                network = tronNetwork,
-                sentCurrencyStatus = usdtTron.status(),
-            )
-
-            // Assert
-            assertThat(actual.offeredCurrencies()).containsExactlyElementsIn(model.expected).inOrder()
-        }
-
-        private fun provideTestModels() = listOf(
-            ActivationModel(isActivationSponsored = true, isActivated = false, expected = listOf(trx, usdtTron)),
-            ActivationModel(isActivationSponsored = false, isActivated = true, expected = listOf(trx, usdtTron)),
-            ActivationModel(isActivationSponsored = false, isActivated = false, expected = listOf(trx)),
-        )
 
         @Test
         fun `GIVEN a non-gasless token is sent WHEN invoke THEN only native coin is offered`() = runTest {
@@ -431,18 +401,12 @@ internal class GetAvailableFeeTokensUseCaseTest {
     private val gaslessTransactionRepository: GaslessTransactionRepository = mockk()
     private val tronGaslessTransactionRepository: TronGaslessTransactionRepository = mockk()
     private val currencyChecksRepository: CurrencyChecksRepository = mockk()
-    private val walletManagersFacade: WalletManagersFacade = mockk()
-    private var isAccountActivationSponsored = true
 
     private fun createUseCase() = GetAvailableFeeTokensUseCase(
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
         gaslessTransactionRepository = gaslessTransactionRepository,
         currencyChecksRepository = currencyChecksRepository,
-        isTronGaslessSupportedUseCase = IsTronGaslessSupportedUseCase(
-            repository = tronGaslessTransactionRepository,
-            walletManagersFacade = walletManagersFacade,
-            isAccountActivationSponsored = { isAccountActivationSponsored },
-        ),
+        isTronGaslessSupportedUseCase = IsTronGaslessSupportedUseCase(repository = tronGaslessTransactionRepository),
     )
 
     private fun CryptoCurrency.status(balance: BigDecimal = BigDecimal.TEN) =
@@ -600,12 +564,6 @@ internal class GetAvailableFeeTokensUseCaseTest {
     internal data class EligibilityModel(
         val yieldSupplyStatus: YieldSupplyStatus?,
         val expected: Boolean,
-    )
-
-    internal data class ActivationModel(
-        val isActivationSponsored: Boolean,
-        val isActivated: Boolean,
-        val expected: List<CryptoCurrency>,
     )
 
     // endregion

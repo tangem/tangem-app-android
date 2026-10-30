@@ -33,7 +33,8 @@ import kotlin.math.roundToInt
  *
  * `INLINE_*` are the compact copies that sit after the title while the row is expanded — the account
  * row uses two (dot, balance), the expandable row four (dot, value, dot, caption). `CONTENT_SLOT` and
- * `HEADING_SLOT` replace the structured children when the caller supplies its own content.
+ * `HEADING_SLOT` replace the structured children when the caller supplies its own content. `FOOTER`
+ * spans the inner width under the collapsed heading, e.g. the account row's action message.
  *
  * There is no id for an expanded body: the card is the heading only, so a host can keep its rows as
  * siblings in its own lazy list. See [ExpandableCard].
@@ -53,6 +54,7 @@ internal enum class ExpandableCardLayoutId {
     ARROW,
     CONTENT_SLOT,
     HEADING_SLOT,
+    FOOTER,
 }
 
 /** How much of the row's inner width the collapsed end column may take before the title shrinks. */
@@ -83,6 +85,8 @@ private val InlineIds = listOf(
  *
  * @param contentGap Space between the start and end columns of the collapsed row. The account row
  * uses 12dp, the expandable row 8dp.
+ * @param avatarGap Space between the avatar and the title of the collapsed row. The expanded heading
+ * always uses 8dp. The account row uses 12dp, the expandable row 8dp.
  * @param shape Card background and clip. Defaults to the standalone 24dp card; a host that continues
  * the card with sibling items passes a shape whose bottom corners are square.
  */
@@ -93,6 +97,7 @@ internal fun ExpandableCard(
     interactionSource: MutableInteractionSource,
     modifier: Modifier = Modifier,
     contentGap: Dp = 12.dp,
+    avatarGap: Dp = 8.dp,
     shape: Shape = ExpandableCardShape,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
@@ -125,13 +130,15 @@ internal fun ExpandableCard(
     Layout(content = content, modifier = cardModifier) { measurables, constraints ->
         val progress = motion.expansion
         val padding = 16.dp.roundToPx()
-        val avatarGap = 8.dp.roundToPx()
+        val avatarGapCollapsed = avatarGap.roundToPx()
+        val avatarGapExpanded = 8.dp.roundToPx()
         val columnGap = contentGap.roundToPx()
         val inlineGap = 2.dp.roundToPx()
         val avatarCollapsed = 40.dp.roundToPx()
         val avatarExpanded = 16.dp.roundToPx()
         val expandedLineHeight = 20.dp.roundToPx()
         val expandedBottomPadding = 8.dp.roundToPx()
+        val footerGap = 16.dp.roundToPx()
 
         val width = constraints.maxWidth
         val innerWidth = max(0, width - padding * 2)
@@ -148,11 +155,11 @@ internal fun ExpandableCard(
         val endSingle = measurables.measureById(ExpandableCardLayoutId.END_SINGLE, endConstraints)
 
         val endWidth = maxOf(endSingle.widthOrZero(), endTop.widthOrZero(), endBottom.widthOrZero())
-        val startWidthCollapsed = max(0, innerWidth - avatarCollapsed - avatarGap - columnGap - endWidth)
+        val startWidthCollapsed = max(0, innerWidth - avatarCollapsed - avatarGapCollapsed - columnGap - endWidth)
         val inlineWidth = inline.sumOf { it.width + inlineGap }
         val titleWidthExpanded = max(
             0,
-            innerWidth - avatarExpanded - avatarGap - arrow.widthOrZero() - avatarGap - inlineWidth,
+            innerWidth - avatarExpanded - avatarGapExpanded - arrow.widthOrZero() - avatarGapExpanded - inlineWidth,
         )
         val titleScale = motion.titleScale
         val titleBudgetExpanded = (titleWidthExpanded / ROW_TITLE_EXPANDED_SCALE).roundToInt()
@@ -176,7 +183,7 @@ internal fun ExpandableCard(
         )
         val contentSlot = measurables.measureById(
             id = ExpandableCardLayoutId.CONTENT_SLOT,
-            constraints = Constraints(maxWidth = max(0, innerWidth - avatarCollapsed - avatarGap)),
+            constraints = Constraints(maxWidth = max(0, innerWidth - avatarCollapsed - avatarGapCollapsed)),
         )
         val headingSlot = measurables.measureById(
             id = ExpandableCardLayoutId.HEADING_SLOT,
@@ -192,7 +199,9 @@ internal fun ExpandableCard(
             else -> max(endTop.heightOrZero(), endBottom.heightOrZero())
         }
         val mainHeight = maxOf(avatarCollapsed, startClusterHeight, endClusterHeight)
-        val collapsedHeight = mainHeight + padding * 2
+        val footer = measurables.measureById(ExpandableCardLayoutId.FOOTER, Constraints.fixedWidth(innerWidth))
+        val footerHeight = if (footer != null) footerGap + footer.height else 0
+        val collapsedHeight = mainHeight + footerHeight + padding * 2
 
         val lineHeight = maxOf(
             expandedLineHeight,
@@ -209,8 +218,8 @@ internal fun ExpandableCard(
             avatar?.placeRelative(x = padding, y = avatarCenterY - avatar.height / 2)
 
             val titleX = lerp(
-                padding + avatarCollapsed + avatarGap,
-                padding + avatarExpanded + avatarGap,
+                padding + avatarCollapsed + avatarGapCollapsed,
+                padding + avatarExpanded + avatarGapExpanded,
                 progress,
             )
             val startClusterTop = padding + (mainHeight - startClusterHeight) / 2
@@ -237,8 +246,8 @@ internal fun ExpandableCard(
             )
 
             val titleRight = lerp(
-                padding + avatarCollapsed + avatarGap + title.widthOrZero(),
-                padding + avatarExpanded + avatarGap + titleAnchor.widthOrZero(),
+                padding + avatarCollapsed + avatarGapCollapsed + title.widthOrZero(),
+                padding + avatarExpanded + avatarGapExpanded + titleAnchor.widthOrZero(),
                 progress,
             )
             var inlineX = titleRight + inlineGap
@@ -246,6 +255,8 @@ internal fun ExpandableCard(
                 placeable.placeRelative(x = inlineX, y = titleCenterY - placeable.height / 2)
                 inlineX += placeable.width + inlineGap
             }
+
+            footer?.placeRelative(x = padding, y = padding + mainHeight + footerGap)
 
             arrow?.placeRelative(
                 x = endRight - arrow.width,

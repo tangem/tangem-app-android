@@ -22,7 +22,6 @@ dependencies {
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.common)
-    implementation(projects.domain.feed.search)
     implementation(projects.domain.markets)
     implementation(projects.domain.markets.models)
     implementation(projects.domain.models)

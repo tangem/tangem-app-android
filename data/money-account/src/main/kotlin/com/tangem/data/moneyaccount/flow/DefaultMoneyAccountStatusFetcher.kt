@@ -11,6 +11,7 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.repository.MoneyAccountOrderRepository
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBalanceUseCase
@@ -28,6 +29,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
     private val moneyAccountStatusesStore: MoneyAccountStatusesStore,
     private val orderRepository: MoneyAccountOrderRepository,
@@ -35,6 +37,7 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val getMoneyAccountBalanceUseCase: GetMoneyAccountBalanceUseCase,
     private val deviceSecurity: DeviceSecurityInfoProvider,
+    private val moneyAccountCurrencyFactory: MoneyAccountCurrencyFactory,
 ) : MoneyAccountStatusFetcher {
 
     override suspend fun invoke(params: MoneyAccountStatusFetcher.Params): Either<Throwable, Unit> {
@@ -68,7 +71,8 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
                     return@either MoneyAccountStatusValue.Error.ExposedDevice
                 }
 
-                val balanceDeferred = async { getMoneyAccountBalanceUseCase.invoke(userWalletId) }
+                val cryptoCurrency = moneyAccountCurrencyFactory.create(userWalletId)
+                val balanceDeferred = async { getMoneyAccountBalanceUseCase.invoke(userWalletId, cryptoCurrency) }
                 val customerInfoDeferred = async { onboardingRepository.getCustomerInfo(userWalletId) }
 
                 val customerInfo = customerInfoDeferred.await().getOrElse { error ->
@@ -89,25 +93,25 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
                     customerInfo.state == CustomerInfo.State.FORMER -> {
                         MoneyAccountStatusValue.Account.Deactivated(
                             source = StatusSource.ACTUAL,
+                            cryptoCurrency = cryptoCurrency,
                             balance = balance,
                             customerId = customerInfo.customerId,
-                            productInstanceId = instance.id,
                         )
                     }
                     instance.status == CustomerInfo.ProductInstance.Status.DEACTIVATED -> {
                         MoneyAccountStatusValue.Account.Deactivated(
                             source = StatusSource.ACTUAL,
+                            cryptoCurrency = cryptoCurrency,
                             balance = balance,
                             customerId = customerInfo.customerId,
-                            productInstanceId = instance.id,
                         )
                     }
                     instance.status == CustomerInfo.ProductInstance.Status.ACTIVE -> {
                         MoneyAccountStatusValue.Account.Active(
                             source = StatusSource.ACTUAL,
+                            cryptoCurrency = cryptoCurrency,
                             balance = balance,
                             customerId = customerInfo.customerId,
-                            productInstanceId = instance.id,
                         )
                     }
                     else -> onboardingStatus(userWalletId = userWalletId, customerInfo = customerInfo).bind()

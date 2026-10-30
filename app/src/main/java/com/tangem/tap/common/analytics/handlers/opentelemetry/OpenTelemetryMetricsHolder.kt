@@ -6,6 +6,7 @@ import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import com.tangem.wallet.BuildConfig
 import io.opentelemetry.api.metrics.Meter
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -13,15 +14,14 @@ import javax.inject.Singleton
 
 /**
 
- * (its disk storage must not be touched on the main thread) and only when the feature toggle is on
- * and the OTLP api key is configured, so consumers observe it through this holder instead of
+ * (its disk storage must not be touched on the main thread) and only when the OTLP api key is
+ * configured, so consumers observe it through this holder instead of
  * injecting the client directly.
  */
 @Singleton
 class OpenTelemetryMetricsHolder @Inject constructor(
     private val application: Application,
     private val environmentConfig: EnvironmentConfig,
-    private val featureToggles: OtelFeatureToggles,
     private val settingsRepository: SettingsRepository,
     private val dispatchers: CoroutineDispatcherProvider,
     private val appScope: AppCoroutineScope,
@@ -32,7 +32,8 @@ class OpenTelemetryMetricsHolder @Inject constructor(
 
     fun initialize() {
         val apiKey = environmentConfig.otlpApiKey
-        if (!featureToggles.isMetricsEnabled || apiKey.isNullOrEmpty()) return
+        // The OTLP exporter has its own HTTP client, so mocked builds would bypass WireMock and hit the real gateway
+        if (BuildConfig.MOCK_DATA_SOURCE || apiKey.isNullOrEmpty()) return
 
         // telemetry must never crash the app, so setup failures are logged and swallowed
         appScope.launch(dispatchers.io) {

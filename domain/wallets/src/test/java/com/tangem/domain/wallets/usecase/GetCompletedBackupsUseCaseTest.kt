@@ -104,7 +104,7 @@ internal class GetCompletedBackupsUseCaseTest {
         walletId = UserWalletId(WALLET_ID),
         hotWalletId = mockk(relaxed = true),
         wallets = null,
-        backedUp = backedUp,
+        isBackedUp = backedUp,
     )
 
     private companion object {

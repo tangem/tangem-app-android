@@ -44,7 +44,7 @@ internal class WalletManagerFactoryCreator @Inject constructor(
                 isSolanaScaledUiAmountEnabled = true,
                 isHederaErc20Enabled = true,
                 isStateOverrideGasEstimateEnabled = true,
-                isMonadYieldSupplyEnabled = featureToggleValues.isMonadYieldSupplyEnabled,
+                isMonadEnabled = featureToggleValues.isMonadEnabled,
             ),
             blockchainDataStorage = blockchainDataStorage,
             loggers = listOf(blockchainSDKLogger),
@@ -53,6 +53,6 @@ internal class WalletManagerFactoryCreator @Inject constructor(
 
     data class FeatureToggleValues(
         val isYieldModeSwapEnabled: Boolean,
-        val isMonadYieldSupplyEnabled: Boolean,
+        val isMonadEnabled: Boolean,
     )
 }

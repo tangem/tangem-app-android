@@ -16,6 +16,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerW4
@@ -54,7 +55,7 @@ internal fun TokenPrice(state: TokenPriceState?, modifier: Modifier = Modifier) 
             PriceText(text = DASH_SIGN, isFlickering = false, modifier = modifier)
         }
         is TokenPriceState.Loading -> {
-            RectangleShimmer(modifier = modifier.placeholderSize(), radius = TangemTheme.dimens.radius4)
+            RectangleShimmer(modifier = modifier.placeholderSize(), radius = 4.dp)
         }
         is TokenPriceState.Locked -> {
             LockedRectangle(modifier = modifier.placeholderSize())
@@ -126,9 +127,9 @@ private fun PriceChangeIcon(type: PriceChangeType, modifier: Modifier = Modifier
     AnimatedContent(
         targetState = type,
         label = "Update the price change's arrow",
+        modifier = modifier,
     ) { animatedType ->
         Icon(
-            modifier = modifier,
             painter = painterResource(
                 id = when (animatedType) {
                     PriceChangeType.UP -> R.drawable.ic_arrow_up_8
@@ -173,8 +174,8 @@ private fun PriceChangeText(
 
 private fun Modifier.placeholderSize(): Modifier = composed {
     return@composed this
-        .padding(vertical = TangemTheme.dimens.spacing2)
-        .size(width = TangemTheme.dimens.size52, height = TangemTheme.dimens.size12)
+        .padding(vertical = 2.dp)
+        .size(width = 52.dp, height = 12.dp)
 }
 
 @Preview(showBackground = true)

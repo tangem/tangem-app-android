@@ -6,7 +6,7 @@ import com.tangem.features.tokenreceive.entity.ReceiveAddress
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class ReceiveAssetsUM(
-    val showMemoDisclaimer: Boolean,
+    val shouldShowMemoDisclaimer: Boolean,
     val addresses: ImmutableList<ReceiveAddress>,
     val onOpenQrCodeClick: (address: String) -> Unit,
     val onCopyClick: (address: ReceiveAddress) -> Unit,

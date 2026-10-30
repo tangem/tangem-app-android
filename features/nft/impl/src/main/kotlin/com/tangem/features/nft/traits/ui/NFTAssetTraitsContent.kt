@@ -14,7 +14,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.block.information.InformationBlock
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.nft.traits.entity.NFTAssetTraitUM
 import com.tangem.features.nft.traits.entity.NFTAssetTraitsUM
@@ -25,7 +24,7 @@ internal fun NFTAssetTraitsContent(state: NFTAssetTraitsUM, modifier: Modifier =
     InformationBlock(
         modifier = modifier
             .fillMaxWidth()
-            .padding(TangemTheme.dimens.spacing16),
+            .padding(16.dp),
         title = null,
         contentHorizontalPadding = 0.dp,
     ) {
@@ -39,8 +38,8 @@ internal fun NFTAssetTraitsContent(state: NFTAssetTraitsUM, modifier: Modifier =
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(
-                                horizontal = TangemTheme.dimens.spacing12,
-                                vertical = TangemTheme.dimens.spacing8,
+                                horizontal = 12.dp,
+                                vertical = 8.dp,
                             ),
                         state = trait,
                     )

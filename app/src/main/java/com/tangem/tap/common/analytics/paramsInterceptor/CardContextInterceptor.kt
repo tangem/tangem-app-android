@@ -4,6 +4,7 @@ import com.tangem.core.analytics.api.ParamsInterceptor
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.models.TrackingContextExcludedEvent
 import com.tangem.core.analytics.models.event.SignIn
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.card.analytics.ParamCardCurrencyConverter
@@ -11,15 +12,19 @@ import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
+import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.tap.features.demo.DemoHelper
-import com.tangem.tap.walletsRepository
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.runBlocking
 
 /**
 [REDACTED_AUTHOR]
  */
-class CardContextInterceptor(
-    private val scanResponse: ScanResponse,
+class CardContextInterceptor @AssistedInject constructor(
+    @Assisted private val scanResponse: ScanResponse,
+    private val walletsRepository: WalletsRepository,
 ) : ParamsInterceptor {
 
     private val userWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
@@ -28,6 +33,7 @@ class CardContextInterceptor(
 
     override fun canBeAppliedTo(event: AnalyticsEvent): Boolean {
         return when (event) {
+            is TrackingContextExcludedEvent -> false
             is IntroductionProcess.ButtonScanCard,
             is IntroductionProcess.ButtonScanCardLegacy,
             is IntroductionProcess.ButtonImportExistingWallet,
@@ -80,6 +86,11 @@ class CardContextInterceptor(
                 else -> "Demo Other"
             }
         }
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(scanResponse: ScanResponse): CardContextInterceptor
     }
 
     companion object {

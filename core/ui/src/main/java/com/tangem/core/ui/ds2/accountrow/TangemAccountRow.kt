@@ -21,12 +21,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.DsVersion
+import com.tangem.core.ui.ds2.actionmessage.TangemActionMessage
 import com.tangem.core.ui.ds2.avatar.TangemAvatar
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.expandable.ExpandableAvatar
@@ -49,14 +50,17 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.assets.il_account_airplane
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_info_16
 
 /**
  * Design-system v2 (DS3) **Account Row** — a portfolio card for one account. Collapsed it is a
- * summary line (avatar, name, `2 tokens · 2 members`, fiat balance and price change); expanded it
+ * summary line (avatar, name, `label · description`, fiat balance and price change); expanded it
  * shrinks that line into a compact heading. The account's [TangemTokenRow]s are emitted by the
  * host next to the row, not nested inside it.
  *
- * Version: 1.0.0
+ * Version: 1.1.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=10694-21239)
  *
@@ -74,9 +78,9 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * it expands — pass the state, not a pre-sized composable. See [TangemAvatar.UiState].
  * @param title Account name. Single line, ellipsized.
  * @param modifier Modifier applied to the card. The card always fills the available width.
- * @param tokensAmount Localized token count (e.g. `"2 tokens"`). `null` hides it.
- * @param membersAmount Localized member count (e.g. `"2 members"`). `null` hides it and the dot
- * separating it from [tokensAmount].
+ * @param label Leading subtitle text, e.g. the token count (`"2 tokens"`). `null` hides it.
+ * @param description Subtitle text after [label], e.g. the member count (`"2 members"`). `null` hides it and the dot
+ * separating it from [label].
  * @param balance Total fiat balance. Shown large at the end while collapsed and small next to the
  * title while expanded. `null` hides it, the separator dot with it.
  * @param priceChange Price change under the collapsed balance. `null` hides it.
@@ -100,8 +104,8 @@ fun TangemAccountRow(
     avatar: TangemAvatar.UiState,
     title: TextReference,
     modifier: Modifier = Modifier,
-    tokensAmount: TextReference? = null,
-    membersAmount: TextReference? = null,
+    label: TextReference? = null,
+    description: TextReference? = null,
     balance: TextReference? = null,
     priceChange: TangemPriceChange.State? = null,
     showUpdateWarning: Boolean = false,
@@ -119,8 +123,8 @@ fun TangemAccountRow(
         avatar = avatar,
         title = title,
         modifier = modifier,
-        tokensAmount = tokensAmount,
-        membersAmount = membersAmount,
+        label = label,
+        description = description,
         balance = balance,
         priceChange = priceChange,
         showUpdateWarning = showUpdateWarning,
@@ -139,7 +143,24 @@ fun TangemAccountRow(
 /** Public API surface of [TangemAccountRow]. */
 object TangemAccountRow {
 
-    val version = DsVersion(major = 1, minor = 0, patch = 0)
+    val version = DsVersion(major = 1, minor = 1, patch = 0)
+
+    /**
+     * Action message under a [NotActive] row's heading, leading the user to activate the account.
+     * Rendered as a [TangemActionMessage] spanning the card's inner width.
+     *
+     * @param text Single-line message, ellipsized.
+     * @param icon Leading 16dp icon.
+     * @param onClick Invoked when the message is tapped. It takes the tap instead of the card.
+     * @param variant Message colors. See [TangemActionMessage.Variant].
+     */
+    @Immutable
+    data class ActionMessage(
+        val text: TextReference,
+        val icon: ImageVector,
+        val onClick: () -> Unit,
+        val variant: TangemActionMessage.Variant = TangemActionMessage.Variant.Neutral,
+    )
 
     /**
      * State model of [TangemAccountRow] — one subtype per Figma variant. Render it with the
@@ -156,8 +177,9 @@ object TangemAccountRow {
          *
          * @param id Unique id.
          * @param title Account name.
-         * @param tokensAmount Localized token count. `null` hides it.
-         * @param membersAmount Localized member count. `null` hides it and the separating dot.
+         * @param label Leading subtitle text, e.g. the token count. `null` hides it.
+         * @param description Subtitle text after [label], e.g. the member count. `null` hides it and the
+         * separating dot.
          * @param balance Total fiat balance. `null` hides it.
          * @param priceChange Price change under the collapsed balance. `null` hides it.
          * @param shouldShowUpdateWarning Shows the update-error icon before the collapsed balance.
@@ -168,8 +190,8 @@ object TangemAccountRow {
         data class Content(
             override val id: String,
             val title: TextReference,
-            val tokensAmount: TextReference? = null,
-            val membersAmount: TextReference? = null,
+            val label: TextReference? = null,
+            val description: TextReference? = null,
             val balance: TextReference? = null,
             val priceChange: TangemPriceChange.State? = null,
             val shouldShowUpdateWarning: Boolean = false,
@@ -185,8 +207,9 @@ object TangemAccountRow {
          * @param id Unique id.
          * @param title Account name.
          * @param badge Localized badge label (e.g. `"Unreachable"`).
-         * @param tokensAmount Localized token count. `null` hides it.
-         * @param membersAmount Localized member count. `null` hides it and the separating dot.
+         * @param label Leading subtitle text, e.g. the token count. `null` hides it.
+         * @param description Subtitle text after [label], e.g. the member count. `null` hides it and the
+         * separating dot.
          * @param onClick Card click handler. `null` with no [onLongClick] makes it non-interactive.
          * @param onLongClick Card long-press handler. `null` disables long-press.
          */
@@ -194,8 +217,8 @@ object TangemAccountRow {
             override val id: String,
             val title: TextReference,
             val badge: TextReference,
-            val tokensAmount: TextReference? = null,
-            val membersAmount: TextReference? = null,
+            val label: TextReference? = null,
+            val description: TextReference? = null,
             val onClick: (() -> Unit)? = null,
             val onLongClick: (() -> Unit)? = null,
         ) : State()
@@ -206,16 +229,45 @@ object TangemAccountRow {
          *
          * @param id Unique id.
          * @param title Account name.
-         * @param tokensAmount Localized token count. `null` hides it.
-         * @param membersAmount Localized member count. `null` hides it and the separating dot.
+         * @param label Leading subtitle text, e.g. the token count. `null` hides it.
+         * @param description Subtitle text after [label], e.g. the member count. `null` hides it and the
+         * separating dot.
          * @param onClick Card click handler. `null` with no [onLongClick] makes it non-interactive.
          * @param onLongClick Card long-press handler. `null` disables long-press.
          */
         data class BalanceError(
             override val id: String,
             val title: TextReference,
-            val tokensAmount: TextReference? = null,
-            val membersAmount: TextReference? = null,
+            val label: TextReference? = null,
+            val description: TextReference? = null,
+            val onClick: (() -> Unit)? = null,
+            val onLongClick: (() -> Unit)? = null,
+        ) : State()
+
+        /**
+         * Not-active variant — the account exists but is not activated yet: the balance and the price
+         * change are dimmed, and an optional [actionMessage] under the heading leads to activation.
+         * The row never expands.
+         *
+         * @param id Unique id.
+         * @param title Account name.
+         * @param label Leading subtitle text, e.g. the token count. `null` hides it.
+         * @param description Subtitle text after [label], e.g. the member count. `null` hides it and the
+         * separating dot.
+         * @param balance Total fiat balance, dimmed. `null` hides it.
+         * @param priceChange Price change under the balance, dimmed. `null` hides it.
+         * @param actionMessage Message under the heading. `null` hides it.
+         * @param onClick Card click handler. `null` with no [onLongClick] makes it non-interactive.
+         * @param onLongClick Card long-press handler. `null` disables long-press.
+         */
+        data class NotActive(
+            override val id: String,
+            val title: TextReference,
+            val label: TextReference? = null,
+            val description: TextReference? = null,
+            val balance: TextReference? = null,
+            val priceChange: TangemPriceChange.State? = null,
+            val actionMessage: ActionMessage? = null,
             val onClick: (() -> Unit)? = null,
             val onLongClick: (() -> Unit)? = null,
         ) : State()
@@ -241,15 +293,17 @@ object TangemAccountRow {
  * it expands — pass the state, not a pre-sized composable. See [TangemAvatar.UiState].
  * @param state Card state model. See [TangemAccountRow.State].
  * @param modifier Modifier applied to the card.
- * @param isExpanded Whether the row is open. Ignored unless [isExpandable].
+ * @param isExpanded Whether the row is open. Ignored unless [isExpandable], and by
+ * [TangemAccountRow.State.NotActive], which never expands.
  * @param isBalanceHidden When `true`, the balance is masked with stars. Kept outside [state] because
  * it is an app-wide setting, as on [TangemTokenRow].
  * @param collapseContentDescription Accessibility label of the collapse arrow.
- * @param isExpandable Whether the row can be opened at all. `false` hides the collapse arrow.
+ * @param isExpandable Whether the row can be opened at all. `false` hides the collapse arrow. Ignored by
+ * [TangemAccountRow.State.NotActive].
  * @param shape Card background and clip. Pass a shape with square bottom corners when sibling
  * items continue the card below.
  */
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LongMethod")
 @Composable
 fun TangemAccountRow(
     avatar: TangemAvatar.UiState,
@@ -266,8 +320,8 @@ fun TangemAccountRow(
             avatar = avatar,
             title = state.title,
             modifier = modifier,
-            tokensAmount = state.tokensAmount,
-            membersAmount = state.membersAmount,
+            label = state.label,
+            description = state.description,
             balance = state.balance,
             priceChange = state.priceChange,
             showUpdateWarning = state.shouldShowUpdateWarning,
@@ -285,8 +339,8 @@ fun TangemAccountRow(
             title = state.title,
             badge = state.badge,
             modifier = modifier,
-            tokensAmount = state.tokensAmount,
-            membersAmount = state.membersAmount,
+            label = state.label,
+            description = state.description,
             isExpanded = isExpanded,
             collapseContentDescription = collapseContentDescription,
             onClick = state.onClick,
@@ -298,13 +352,27 @@ fun TangemAccountRow(
             avatar = avatar,
             title = state.title,
             modifier = modifier,
-            tokensAmount = state.tokensAmount,
-            membersAmount = state.membersAmount,
+            label = state.label,
+            description = state.description,
             isExpanded = isExpanded,
             collapseContentDescription = collapseContentDescription,
             onClick = state.onClick,
             onLongClick = state.onLongClick,
             isExpandable = isExpandable,
+            shape = shape,
+        )
+        is TangemAccountRow.State.NotActive -> TangemAccountRow.NotActive(
+            avatar = avatar,
+            title = state.title,
+            modifier = modifier,
+            label = state.label,
+            description = state.description,
+            balance = state.balance,
+            priceChange = state.priceChange,
+            isBalanceHidden = isBalanceHidden,
+            actionMessage = state.actionMessage,
+            onClick = state.onClick,
+            onLongClick = state.onLongClick,
             shape = shape,
         )
         is TangemAccountRow.State.Shimmer -> TangemAccountRow.Shimmer(
@@ -325,8 +393,9 @@ fun TangemAccountRow(
  * @param title Account name.
  * @param badge Localized badge label (e.g. `"Unreachable"`).
  * @param modifier Modifier applied to the card.
- * @param tokensAmount Localized token count. `null` hides it.
- * @param membersAmount Localized member count. `null` hides it and the separating dot.
+ * @param label Leading subtitle text, e.g. the token count. `null` hides it.
+ * @param description Subtitle text after [label], e.g. the member count. `null` hides it and the
+ * separating dot.
  * @param isExpanded Whether the row is open. Ignored unless [isExpandable].
  * @param collapseContentDescription Accessibility label of the collapse arrow.
  * @param onClick Card click handler. `null` with no [onLongClick] makes it non-interactive.
@@ -342,8 +411,8 @@ fun TangemAccountRow.Unreachable(
     title: TextReference,
     badge: TextReference,
     modifier: Modifier = Modifier,
-    tokensAmount: TextReference? = null,
-    membersAmount: TextReference? = null,
+    label: TextReference? = null,
+    description: TextReference? = null,
     isExpanded: Boolean = false,
     collapseContentDescription: String? = null,
     onClick: (() -> Unit)? = null,
@@ -355,8 +424,8 @@ fun TangemAccountRow.Unreachable(
         avatar = avatar,
         title = title,
         modifier = modifier,
-        tokensAmount = tokensAmount,
-        membersAmount = membersAmount,
+        label = label,
+        description = description,
         badge = badge,
         isExpanded = isExpanded,
         collapseContentDescription = collapseContentDescription,
@@ -377,8 +446,9 @@ fun TangemAccountRow.Unreachable(
  * it expands — pass the state, not a pre-sized composable. See [TangemAvatar.UiState].
  * @param title Account name.
  * @param modifier Modifier applied to the card.
- * @param tokensAmount Localized token count. `null` hides it.
- * @param membersAmount Localized member count. `null` hides it and the separating dot.
+ * @param label Leading subtitle text, e.g. the token count. `null` hides it.
+ * @param description Subtitle text after [label], e.g. the member count. `null` hides it and the
+ * separating dot.
  * @param isExpanded Whether the row is open. Ignored unless [isExpandable].
  * @param collapseContentDescription Accessibility label of the collapse arrow.
  * @param onClick Card click handler. `null` with no [onLongClick] makes it non-interactive.
@@ -393,8 +463,8 @@ fun TangemAccountRow.BalanceError(
     avatar: TangemAvatar.UiState,
     title: TextReference,
     modifier: Modifier = Modifier,
-    tokensAmount: TextReference? = null,
-    membersAmount: TextReference? = null,
+    label: TextReference? = null,
+    description: TextReference? = null,
     isExpanded: Boolean = false,
     collapseContentDescription: String? = null,
     onClick: (() -> Unit)? = null,
@@ -406,14 +476,71 @@ fun TangemAccountRow.BalanceError(
         avatar = avatar,
         title = title,
         modifier = modifier,
-        tokensAmount = tokensAmount,
-        membersAmount = membersAmount,
+        label = label,
+        description = description,
         hasBalanceError = true,
         isExpanded = isExpanded,
         collapseContentDescription = collapseContentDescription,
         onClick = onClick,
         onLongClick = onLongClick,
         isExpandable = isExpandable,
+        shape = shape,
+    )
+}
+
+/**
+ * Design-system v2 (DS3) **Account Row / Not Active** — the account exists but is not activated yet.
+ * Its balance and price change are dimmed to 40 %, and an optional [actionMessage] under the heading
+ * leads the user to activate it.
+ *
+ * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=12906-4827)
+ *
+ * The row has no expanded state and shows no collapse arrow. A tap on [actionMessage] goes to its own
+ * handler, not to [onClick].
+ *
+ * @param avatar Leading account avatar. See [TangemAvatar.UiState].
+ * @param title Account name. Single line, ellipsized.
+ * @param modifier Modifier applied to the card. The card always fills the available width.
+ * @param label Leading subtitle text, e.g. the token count. `null` hides it.
+ * @param description Subtitle text after [label], e.g. the member count. `null` hides it and the
+ * separating dot.
+ * @param balance Total fiat balance, dimmed. `null` hides it.
+ * @param priceChange Price change under the balance, dimmed. `null` hides it.
+ * @param isBalanceHidden When `true`, [balance] is masked with stars.
+ * @param actionMessage Message under the heading. `null` hides it. See [TangemAccountRow.ActionMessage].
+ * @param onClick Card click handler. `null` with no [onLongClick] makes the card non-interactive.
+ * @param onLongClick Card long-press handler. `null` disables long-press.
+ * @param shape Card background and clip.
+ */
+@Suppress("LongParameterList")
+@Composable
+fun TangemAccountRow.NotActive(
+    avatar: TangemAvatar.UiState,
+    title: TextReference,
+    modifier: Modifier = Modifier,
+    label: TextReference? = null,
+    description: TextReference? = null,
+    balance: TextReference? = null,
+    priceChange: TangemPriceChange.State? = null,
+    isBalanceHidden: Boolean = false,
+    actionMessage: TangemAccountRow.ActionMessage? = null,
+    onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
+    shape: Shape = ExpandableCardShape,
+) {
+    AccountRowScaffold(
+        avatar = avatar,
+        title = title,
+        modifier = modifier,
+        label = label,
+        description = description,
+        balance = balance,
+        priceChange = priceChange,
+        isBalanceHidden = isBalanceHidden,
+        isNotActive = true,
+        actionMessage = actionMessage,
+        onClick = onClick,
+        onLongClick = onLongClick,
         shape = shape,
     )
 }
@@ -468,6 +595,7 @@ fun TangemAccountRow.Shimmer(modifier: Modifier = Modifier, shape: Shape = Expan
         motion = rememberExpansionMotion(isExpanded = false),
         interactionSource = interactionSource,
         modifier = modifier,
+        avatarGap = 12.dp,
         shape = shape,
     ) {
         TangemAvatar(
@@ -528,6 +656,8 @@ fun TangemAccountRow.Section(title: TextReference, modifier: Modifier = Modifier
     )
 }
 
+private const val NOT_ACTIVE_END_ALPHA = 0.4f
+
 /**
  * Shared assembly of every [TangemAccountRow] variant: composes each Figma element into the slot the
  * container's layout expects and applies the press dim plus the per-element expansion alphas.
@@ -542,12 +672,14 @@ private fun AccountRowScaffold(
     collapseContentDescription: String? = null,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
-    tokensAmount: TextReference? = null,
-    membersAmount: TextReference? = null,
+    label: TextReference? = null,
+    description: TextReference? = null,
     balance: TextReference? = null,
     priceChange: TangemPriceChange.State? = null,
     badge: TextReference? = null,
     hasBalanceError: Boolean = false,
+    isNotActive: Boolean = false,
+    actionMessage: TangemAccountRow.ActionMessage? = null,
     showUpdateWarning: Boolean = false,
     showCompactBalance: Boolean = true,
     isBalanceHidden: Boolean = false,
@@ -558,11 +690,13 @@ private fun AccountRowScaffold(
     val interactionSource = remember { MutableInteractionSource() }
     val pressAlpha by rememberRowPressAlpha(interactionSource)
     val motion = rememberExpansionMotion(isExpanded = isExpanded && isExpandable)
+    val endAlpha = if (isNotActive) NOT_ACTIVE_END_ALPHA else 1f
 
     ExpandableCard(
         motion = motion,
         interactionSource = interactionSource,
         modifier = modifier,
+        avatarGap = 12.dp,
         shape = shape,
         onClick = onClick,
         onLongClick = onLongClick,
@@ -584,10 +718,10 @@ private fun AccountRowScaffold(
         )
         ExpandableTitleAnchor(title = title, modifier = Modifier.layoutId(ExpandableCardLayoutId.TITLE_ANCHOR))
 
-        if (tokensAmount != null || membersAmount != null) {
+        if (label != null || description != null) {
             AccountRowSubtitle(
-                tokensAmount = tokensAmount,
-                membersAmount = membersAmount,
+                label = label,
+                description = description,
                 modifier = Modifier
                     .layoutId(ExpandableCardLayoutId.SUBTITLE)
                     .graphicsLayer { alpha = pressAlpha * motion.subtitleAlpha },
@@ -616,7 +750,7 @@ private fun AccountRowScaffold(
                 isFlickering = isBalanceFlickering,
                 modifier = Modifier
                     .layoutId(ExpandableCardLayoutId.END_TOP)
-                    .graphicsLayer { alpha = pressAlpha * motion.endTopAlpha },
+                    .graphicsLayer { alpha = pressAlpha * endAlpha * motion.endTopAlpha },
             )
         }
 
@@ -625,11 +759,11 @@ private fun AccountRowScaffold(
                 state = priceChange,
                 modifier = Modifier
                     .layoutId(ExpandableCardLayoutId.END_BOTTOM)
-                    .graphicsLayer { alpha = pressAlpha * motion.endBottomAlpha },
+                    .graphicsLayer { alpha = pressAlpha * endAlpha * motion.endBottomAlpha },
             )
         }
 
-        if (balance != null && showCompactBalance) {
+        if (balance != null && showCompactBalance && !isNotActive) {
             ExpandableDot(
                 modifier = Modifier
                     .layoutId(ExpandableCardLayoutId.INLINE_1)
@@ -646,7 +780,17 @@ private fun AccountRowScaffold(
             )
         }
 
-        if (isExpandable) {
+        if (actionMessage != null) {
+            TangemActionMessage(
+                text = actionMessage.text,
+                icon = actionMessage.icon,
+                onClick = actionMessage.onClick,
+                variant = actionMessage.variant,
+                modifier = Modifier.layoutId(ExpandableCardLayoutId.FOOTER),
+            )
+        }
+
+        if (isExpandable && !isNotActive) {
             ExpandableCollapseArrow(
                 contentDescription = collapseContentDescription,
                 modifier = Modifier
@@ -667,8 +811,7 @@ private fun TangemAccountRowCollapsedPreview() {
         TangemAccountRow(
             avatar = avatar,
             title = stringReference("Title"),
-            tokensAmount = stringReference("2 tokens"),
-            membersAmount = stringReference("2 members"),
+            label = stringReference("Subtitle"),
             balance = stringReference("$12,000.00"),
             priceChange = TangemPriceChange.State(
                 value = stringReference("2.08%"),
@@ -680,14 +823,28 @@ private fun TangemAccountRowCollapsedPreview() {
             avatar = avatar,
             title = stringReference("Title"),
             badge = stringReference("Unreachable"),
-            tokensAmount = stringReference("2 tokens"),
-            membersAmount = stringReference("2 members"),
+            label = stringReference("Subtitle"),
         )
         TangemAccountRow.BalanceError(
             avatar = avatar,
             title = stringReference("Title"),
-            tokensAmount = stringReference("2 tokens"),
-            membersAmount = stringReference("2 members"),
+            label = stringReference("Subtitle"),
+        )
+        TangemAccountRow.NotActive(
+            avatar = avatar,
+            title = stringReference("Title"),
+            label = stringReference("Subtitle"),
+            balance = stringReference("$0.00"),
+            priceChange = TangemPriceChange.State(
+                value = stringReference("0%"),
+                direction = TangemPriceChange.Direction.Neutral,
+            ),
+            actionMessage = TangemAccountRow.ActionMessage(
+                text = stringReference("Description"),
+                icon = Icons.ic_info_16,
+                onClick = {},
+            ),
+            onClick = {},
         )
         TangemAccountRow.Shimmer()
     }
@@ -702,8 +859,7 @@ private fun TangemAccountRowExpandedPreview() {
             TangemAccountRow(
                 avatar = avatar,
                 title = stringReference("Title"),
-                tokensAmount = stringReference("2 tokens"),
-                membersAmount = stringReference("2 members"),
+                label = stringReference("Subtitle"),
                 balance = stringReference("$12,000.00"),
                 priceChange = TangemPriceChange.State(
                     value = stringReference("2.08%"),
@@ -721,8 +877,7 @@ private fun TangemAccountRowExpandedPreview() {
             TangemAccountRow(
                 avatar = avatar,
                 title = stringReference("Title"),
-                tokensAmount = stringReference("0 tokens"),
-                membersAmount = stringReference("2 members"),
+                label = stringReference("Subtitle"),
                 isExpandable = true,
                 isExpanded = true,
                 shape = PreviewOpenShape,
@@ -748,7 +903,7 @@ private fun TangemAccountRowSectionPreview() {
             TangemAccountRow(
                 avatar = avatar,
                 title = stringReference("Title"),
-                tokensAmount = stringReference("2 tokens"),
+                label = stringReference("Subtitle"),
                 isExpandable = true,
                 isExpanded = true,
                 shape = PreviewOpenShape,
@@ -797,7 +952,7 @@ private fun PreviewTokenRow(shape: Shape = RectangleShape) {
 @Composable
 private fun PreviewContainer(content: @Composable (avatar: TangemAvatar.UiState) -> Unit) {
     val avatar = TangemAvatar.UiState.Account(
-        iconRes = R.drawable.ic_airplane_mode_24,
+        imageVector = Icons.il_account_airplane,
         color = TangemAvatar.FillColor.DarkBlue,
     )
     TangemThemePreviewRedesign {

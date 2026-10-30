@@ -141,7 +141,7 @@ private fun ContentBlock(state: PortfolioBlockUM.Content, modifier: Modifier = M
             TangemButton(
                 modifier = Modifier
                     .layoutId(TangemRowLayoutId.TAIL)
-                    .padding(start = TangemTheme.dimens2.x3),
+                    .padding(start = 12.dp),
                 buttonUM = TangemButtonUM(
                     type = TangemButtonType.Secondary,
                     tangemIconUM = TangemIconUM.Icon(
@@ -191,7 +191,7 @@ private fun AddTokenBlock(state: PortfolioBlockUM.AddToken, modifier: Modifier =
                 maxLines = 2,
             )
 
-            SpacerW(TangemTheme.dimens2.x2)
+            SpacerW(8.dp)
 
             TangemButton(
                 buttonUM = TangemButtonUM(
@@ -251,14 +251,14 @@ private fun FloatingCard(modifier: Modifier = Modifier, content: @Composable () 
             .fillMaxWidth()
             .widthIn(max = BottomSheetDefaults.SheetMaxWidth)
             .padding(
-                start = TangemTheme.dimens2.x4,
-                end = TangemTheme.dimens2.x4,
-                bottom = TangemTheme.dimens2.x2,
+                start = 16.dp,
+                end = 16.dp,
+                bottom = 8.dp,
             )
-            .clip(RoundedCornerShape(size = TangemTheme.dimens2.x5))
+            .clip(RoundedCornerShape(size = 20.dp))
             .background(
                 color = TangemTheme.colors2.surface.level3,
-                shape = RoundedCornerShape(size = TangemTheme.dimens2.x5),
+                shape = RoundedCornerShape(size = 20.dp),
             ),
     ) {
         content()

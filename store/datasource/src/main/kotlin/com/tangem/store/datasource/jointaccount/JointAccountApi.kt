@@ -8,6 +8,8 @@ import com.tangem.store.datasource.jointaccount.models.GetJointAccountsResponse
 import com.tangem.store.datasource.jointaccount.models.JointAccountDto
 import com.tangem.store.datasource.jointaccount.models.JointAccountInvitePreviewDto
 import com.tangem.store.datasource.jointaccount.models.JointOperationDto
+import com.tangem.store.datasource.jointaccount.models.JointOperationHistoryDeltaResponse
+import com.tangem.store.datasource.jointaccount.models.JointOperationHistoryResponse
 import com.tangem.store.datasource.jointaccount.models.JoinJointAccountRequest
 import com.tangem.store.datasource.jointaccount.models.SignJointOperationRequest
 import retrofit2.http.Body
@@ -15,6 +17,7 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 /**
  * Joint accounts API: creation, retrieval, joining, activation.
@@ -119,4 +122,28 @@ interface JointAccountApi {
         @Path("walletId") walletId: String,
         @Path("operationId") operationId: String,
     ): ApiResponse<Unit>
+
+    /**
+     * Operations of every joint account the wallet holds a slot in, archived ones included, in every status.
+     *
+     * @param afterCursor `endCursor` of the previous page; absent on the first page
+     */
+    @GET("api/v1/wallets/{walletId}/joint-accounts/operations/history")
+    suspend fun getJointOperationHistory(
+        @Path("walletId") walletId: String,
+        @Query("afterCursor") afterCursor: String?,
+        @Query("limit") limit: Int,
+    ): ApiResponse<JointOperationHistoryResponse>
+
+    /**
+     * Operations that changed after the cursor. The client upserts by `operationId`.
+     *
+     * @param beforeCursor `startDeltaCursor` of the first history page, then `startCursor` of the previous delta page
+     */
+    @GET("api/v1/wallets/{walletId}/joint-accounts/operations/history/delta")
+    suspend fun getJointOperationHistoryDelta(
+        @Path("walletId") walletId: String,
+        @Query("beforeCursor") beforeCursor: String?,
+        @Query("limit") limit: Int,
+    ): ApiResponse<JointOperationHistoryDeltaResponse>
 }

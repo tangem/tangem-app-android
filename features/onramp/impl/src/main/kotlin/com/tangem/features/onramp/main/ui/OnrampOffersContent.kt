@@ -401,7 +401,7 @@ private fun LoadingBlock(modifier: Modifier = Modifier) {
         CircularProgressIndicator(
             modifier = Modifier.size(20.dp),
             color = TangemTheme.colors.icon.informative,
-            strokeWidth = TangemTheme.dimens.size2,
+            strokeWidth = 2.dp,
         )
     }
 }

@@ -31,8 +31,6 @@ internal class DefaultSwapRepositoryTest {
         growPreferencesKeys = mockk(),
         expressUtils = expressUtils,
         expressHistoryRepository = mockk(),
-        txHistoryFeatureToggles = mockk(),
-        swapFeatureToggles = mockk(),
         moshi = mockk(relaxed = true),
     )
 

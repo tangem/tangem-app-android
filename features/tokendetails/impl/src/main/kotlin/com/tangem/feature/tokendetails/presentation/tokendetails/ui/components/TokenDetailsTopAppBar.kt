@@ -26,7 +26,7 @@ import com.tangem.features.tokendetails.impl.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun TokenDetailsTopAppBar(config: TokenDetailsTopAppBarConfig) {
-    var showDropdownMenu by rememberSaveable { mutableStateOf(false) }
+    var shouldShowDropdownMenu by rememberSaveable { mutableStateOf(false) }
     TopAppBar(
         navigationIcon = {
             IconButton(onClick = config.onBackClick) {
@@ -44,7 +44,7 @@ internal fun TokenDetailsTopAppBar(config: TokenDetailsTopAppBarConfig) {
                 visible = config.tokenDetailsAppBarMenuConfig != null &&
                     config.tokenDetailsAppBarMenuConfig.items.isNotEmpty(),
             ) {
-                IconButton(onClick = { showDropdownMenu = true }) {
+                IconButton(onClick = { shouldShowDropdownMenu = true }) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_more_vertical_24),
                         tint = TangemTheme.colors.icon.primary1,
@@ -55,14 +55,14 @@ internal fun TokenDetailsTopAppBar(config: TokenDetailsTopAppBarConfig) {
             }
 
             TangemDropdownMenu(
-                expanded = showDropdownMenu,
+                expanded = shouldShowDropdownMenu,
                 modifier = Modifier.background(TangemTheme.colors.background.primary),
-                onDismissRequest = { showDropdownMenu = false },
+                onDismissRequest = { shouldShowDropdownMenu = false },
                 content = {
-                    config.tokenDetailsAppBarMenuConfig?.items?.fastForEach {
+                    config.tokenDetailsAppBarMenuConfig?.items?.fastForEach { item ->
                         TangemDropdownItem(
-                            item = it,
-                            dismissParent = { showDropdownMenu = false },
+                            item = item,
+                            dismissParent = { shouldShowDropdownMenu = false },
                         )
                     }
                 },

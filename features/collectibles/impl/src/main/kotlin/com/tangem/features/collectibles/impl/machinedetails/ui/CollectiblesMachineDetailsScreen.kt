@@ -45,7 +45,7 @@ internal fun CollectiblesMachineDetailsScreen(
             TangemTopNavigation(
                 title = (state as? CollectiblesMachineDetailsUM.Content)?.title ?: TextReference.EMPTY,
                 contentAlign = TangemTopNavigation.ContentAlign.Center,
-                onBack = state.onBackClick,
+                onClose = state.onCloseClick,
             )
         },
         overlay = {

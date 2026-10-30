@@ -9,8 +9,8 @@ interface PolymarketDataApi {
 
     /**
      * @param user deposit wallet address whose open positions are valued
-     * @return one entry per known user; empty when the wallet holds no positions
+     * @return the wallet's total, zero when it holds no positions
      */
-    @GET("value")
-    suspend fun getPositionsValue(@Query("user") user: String): ApiResponse<List<PolymarketPositionsValueResponse>>
+    @GET("v2/value")
+    suspend fun getPositionsValue(@Query("user") user: String): ApiResponse<PolymarketPositionsValueResponse>
 }

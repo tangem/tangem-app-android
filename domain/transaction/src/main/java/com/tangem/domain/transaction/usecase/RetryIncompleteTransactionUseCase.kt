@@ -36,16 +36,15 @@ class RetryIncompleteTransactionUseCase(
                     )) {
                         is SimpleResult.Failure -> {
                             val error = result.error as? BlockchainSdkError
-                            when (error) {
+                            val sendError = when (error) {
                                 is BlockchainSdkError.WrappedTangemError -> parseWrappedError(error)
                                 null -> SendTransactionError.UnknownError()
                                 else -> SendTransactionError.BlockchainSdkError(
                                     code = error.code,
                                     message = error.customMessage,
                                 )
-                            }.let {
-                                raise(IncompleteTransactionError.SendError(it))
                             }
+                            raise(IncompleteTransactionError.SendError(sendError))
                         }
                         SimpleResult.Success -> Unit
                     }

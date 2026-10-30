@@ -47,8 +47,8 @@ fun TangemTokenRow(
                 tangemIconUM = tokenRowUM.headIconUM,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.HEAD)
-                    .padding(end = TangemTheme.dimens2.x3)
-                    .size(TangemTheme.dimens2.x10)
+                    .padding(end = 12.dp)
+                    .size(40.dp)
                     .testTag(tag = TokenElementsTestTags.TOKEN_ICON),
             )
 
@@ -56,7 +56,7 @@ fun TangemTokenRow(
                 titleUM = tokenRowUM.titleUM,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.START_TOP)
-                    .padding(end = TangemTheme.dimens2.x2)
+                    .padding(end = 8.dp)
                     .testTag(tag = TokenElementsTestTags.TOKEN_TITLE),
             )
 
@@ -64,7 +64,7 @@ fun TangemTokenRow(
                 subtitleUM = tokenRowUM.subtitleUM,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.START_BOTTOM)
-                    .padding(end = TangemTheme.dimens2.x2)
+                    .padding(end = 8.dp)
                     .testTag(tag = TokenElementsTestTags.TOKEN_PRICE),
             )
 
@@ -73,7 +73,7 @@ fun TangemTokenRow(
                 isBalanceHidden = isBalanceHidden,
                 textStyle = TangemTheme.typography2.bodySemibold16,
                 textColor = TangemTheme.colors2.text.neutral.primary,
-                placeholderWidth = TangemTheme.dimens2.x20,
+                placeholderWidth = 80.dp,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.END_TOP)
                     .testTag(tag = TokenElementsTestTags.TOKEN_FIAT_AMOUNT),
@@ -84,7 +84,7 @@ fun TangemTokenRow(
                 isBalanceHidden = isBalanceHidden,
                 textStyle = TangemTheme.typography2.captionSemibold12,
                 textColor = TangemTheme.colors2.text.neutral.secondary,
-                placeholderWidth = TangemTheme.dimens2.x11,
+                placeholderWidth = 44.dp,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.END_BOTTOM)
                     .testTag(tag = TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT),
@@ -107,7 +107,7 @@ fun TangemTokenRow(
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.EXTRA_BOTTOM)
                     .testTag(tag = TokenElementsTestTags.TOKEN_YIELD_PROMO_BANNER)
-                    .padding(start = promoBannerStartPadding, bottom = TangemTheme.dimens2.x2)
+                    .padding(start = promoBannerStartPadding, bottom = 8.dp)
                     .fillMaxWidth(),
             )
         },
@@ -144,7 +144,7 @@ fun TangemTokenRow(
             headComponent(
                 Modifier
                     .layoutId(layoutId = TangemRowLayoutId.HEAD)
-                    .padding(end = TangemTheme.dimens2.x2)
+                    .padding(end = 8.dp)
                     .testTag(tag = TokenElementsTestTags.TOKEN_ICON),
             )
 
@@ -153,14 +153,14 @@ fun TangemTokenRow(
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.EXTRA_TOP)
                     .testTag(tag = TokenElementsTestTags.TOKEN_YIELD_PROMO_BANNER)
-                    .padding(horizontal = TangemTheme.dimens2.x3)
+                    .padding(horizontal = 12.dp)
                     .fillMaxWidth(),
             )
 
             titleComponent(
                 Modifier
                     .layoutId(layoutId = TangemRowLayoutId.START_TOP)
-                    .padding(end = TangemTheme.dimens2.x2)
+                    .padding(end = 8.dp)
                     .testTag(tag = TokenElementsTestTags.TOKEN_TITLE),
             )
 
@@ -168,7 +168,7 @@ fun TangemTokenRow(
                 subtitleUM = tokenRowUM.subtitleUM,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.START_BOTTOM)
-                    .padding(end = TangemTheme.dimens2.x2)
+                    .padding(end = 8.dp)
                     .testTag(tag = TokenElementsTestTags.TOKEN_PRICE),
             )
 
@@ -177,7 +177,7 @@ fun TangemTokenRow(
                 isBalanceHidden = isBalanceHidden,
                 textStyle = TangemTheme.typography2.bodySemibold16,
                 textColor = TangemTheme.colors2.text.neutral.primary,
-                placeholderWidth = TangemTheme.dimens2.x20,
+                placeholderWidth = 80.dp,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.END_TOP)
                     .testTag(tag = TokenElementsTestTags.TOKEN_FIAT_AMOUNT),
@@ -188,7 +188,7 @@ fun TangemTokenRow(
                 isBalanceHidden = isBalanceHidden,
                 textStyle = TangemTheme.typography2.captionSemibold12,
                 textColor = TangemTheme.colors2.text.neutral.secondary,
-                placeholderWidth = TangemTheme.dimens2.x11,
+                placeholderWidth = 44.dp,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.END_BOTTOM)
                     .testTag(tag = TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT),

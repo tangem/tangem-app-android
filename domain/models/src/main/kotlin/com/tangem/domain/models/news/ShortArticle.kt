@@ -1,5 +1,6 @@
 package com.tangem.domain.models.news
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
@@ -28,5 +29,5 @@ data class ShortArticle(
     val isTrending: Boolean,
     val title: String,
     val newsUrl: String,
-    val viewed: Boolean,
+    @SerialName("viewed") val isViewed: Boolean,
 )

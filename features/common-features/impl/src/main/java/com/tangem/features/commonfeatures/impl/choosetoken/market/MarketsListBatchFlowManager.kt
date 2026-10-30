@@ -229,7 +229,7 @@ internal class MarketsListBatchFlowManager @AssistedInject constructor(
                             interval = TokenMarketListConfig.Interval.H24,
                             currency = appCurrency.value.code,
                         ),
-                        async = true,
+                        isAsync = true,
                         operationId = batchesKeysToLoad.toString() + "h24",
                     ),
                 )

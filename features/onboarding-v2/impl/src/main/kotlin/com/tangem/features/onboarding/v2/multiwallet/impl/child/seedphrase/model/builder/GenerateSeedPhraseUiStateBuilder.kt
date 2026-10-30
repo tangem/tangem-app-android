@@ -33,9 +33,9 @@ internal class GenerateSeedPhraseUiStateBuilder(
                 GeneratedWordsType.Words12 -> words12
                 GeneratedWordsType.Words24 -> words24
             },
-            onOptionChange = {
+            onOptionChange = { wordsType ->
                 switchType(
-                    newType = it,
+                    newType = wordsType,
                     generatedWords12 = words12,
                     generatedWords24 = words24,
                 )
