@@ -258,6 +258,12 @@ sealed interface Account {
             error("Can not create account name for Collectibles account with userWalletId = ${accountId.userWalletId}")
         }
 
+        val icon: CryptoPortfolioIcon
+            get() = CryptoPortfolioIcon.ofCustomAccount(
+                value = CryptoPortfolioIcon.Icon.Package,
+                color = CryptoPortfolioIcon.Color.Azure,
+            )
+
         companion object {
             operator fun invoke(userWalletId: UserWalletId): Collectibles {
                 return Collectibles(accountId = AccountId.forCollectiblesAccount(userWalletId = userWalletId))

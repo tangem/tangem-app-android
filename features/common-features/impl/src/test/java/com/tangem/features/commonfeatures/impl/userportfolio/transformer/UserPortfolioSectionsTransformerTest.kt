@@ -37,7 +37,12 @@ internal class UserPortfolioSectionsTransformerTest {
         )
         val joint = AccountStatus.Joint(
             account = MockAccounts.createJointAccount(cryptoCurrencies = listOf(token)),
-            value = JointAccountStatusValue.Active(StatusSource.ACTUAL, totalMembers = 3, safeAddress = SAFE),
+            value = JointAccountStatusValue.Active(
+                StatusSource.ACTUAL,
+                totalMembers = 3,
+                safeAddress = SAFE,
+                threshold = 2,
+            ),
             tokenList = tokenList(),
             priceChangeLce = Unit.lceError(),
         )

@@ -521,6 +521,8 @@ internal fun ExpressDataError.toExpressError(): ExpressError = when (this) {
     is ExpressDataError.ExchangeNotPossibleError -> ExpressError.ExchangeNotPossibleError(code)
     is ExpressDataError.ExchangeNotEnoughBalanceError -> ExpressError.NotEnoughBalanceError(code)
     is ExpressDataError.ExchangeInvalidAddressError -> ExpressError.InvalidAddressError(code)
+    is ExpressDataError.ExchangeProviderAddressBannedByAmlError ->
+        ExpressError.ExchangeProviderAddressBannedByAmlError(code)
     is ExpressDataError.ExchangeTooSmallAmountError -> ExpressError.AmountError.TooSmallError(code, amount.value)
     is ExpressDataError.ExchangeTooBigAmountError -> ExpressError.AmountError.TooBigError(code, amount.value)
     is ExpressDataError.ExchangeNotEnoughAllowanceError -> ExpressError.AmountError.NotEnoughAllowanceError(
@@ -542,7 +544,7 @@ internal fun ExpressDataError.toExpressError(): ExpressError = when (this) {
     is ExpressDataError.InvalidRequestIdError -> ExpressError.InvalidRequestIdError(code)
     is ExpressDataError.InvalidPayoutAddressError -> ExpressError.InvalidPayoutAddressError(code)
     is ExpressDataError.UnknownErrorWithCode -> ExpressError.InternalError(code)
-    is ExpressDataError.UnknownError -> ExpressError.UnknownError
+    is ExpressDataError.UnknownError -> ExpressError.UnknownError()
     is ExpressDataError.TooLargeSolanaTransactionError -> ExpressError.TooLargeSolanaTransactionError()
     is ExpressDataError.DexActiveSupplyError -> ExpressError.DexActiveSupplyError()
 }

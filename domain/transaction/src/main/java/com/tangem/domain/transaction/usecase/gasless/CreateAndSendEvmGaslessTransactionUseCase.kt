@@ -1,7 +1,6 @@
 package com.tangem.domain.transaction.usecase.gasless
 
 import arrow.core.Either
-import arrow.core.getOrElse
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
@@ -15,9 +14,11 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.formatHex
 import com.tangem.blockchain.extensions.normalizeByteArray
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySendCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.common.extensions.toHexString
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.utils.CryptoCurrencyOperations.getCryptoCurrency
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -37,6 +38,7 @@ import java.math.BigInteger
 class CreateAndSendEvmGaslessTransactionUseCase(
     private val walletManagersFacade: WalletManagersFacade,
     private val singleAccountListSupplier: SingleAccountListSupplier,
+    private val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
     private val gaslessTransactionRepository: GaslessTransactionRepository,
     private val gaslessSignerProvider: GaslessSignerProvider,
 ) {
@@ -51,7 +53,14 @@ class CreateAndSendEvmGaslessTransactionUseCase(
                 val uncompiledTxData = validateTransactionData(transactionData)
                 val context = prepareGaslessContext(userWallet, uncompiledTxData, fee)
                 val signedData = signGaslessTransactionByUser(userWallet, context, uncompiledTxData)
-                signAndSendTransactionOnBackend(context, signedData, uncompiledTxData)
+                signAndSendTransactionOnBackend(context, signedData, uncompiledTxData).also {
+                    if (fee.gaslessFeePlan.upgradesYieldModule()) {
+                        walletManagersFacade.resetYieldSendUpgradeDecision(
+                            userWalletId = userWallet.walletId,
+                            network = context.currency.network,
+                        )
+                    }
+                }
             },
             catch = {
                 raise(it.mapToGaslessSendError())
@@ -84,7 +93,9 @@ class CreateAndSendEvmGaslessTransactionUseCase(
     ): GaslessContext {
         val currency = singleAccountListSupplier.getSyncOrNull(userWalletId = userWallet.walletId)
             .getCryptoCurrency(currencyId = fee.feeTokenId, network = null)
-            .getOrElse { error("Token for fee not found") }
+            .getOrNull()
+            ?: nonPortfolioCurrenciesProvider.findCurrency(userWallet.walletId, fee.feeTokenId)
+            ?: error("Token for fee not found")
 
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
             userWallet.walletId,
@@ -421,6 +432,11 @@ class CreateAndSendEvmGaslessTransactionUseCase(
                 GaslessTransactionData(transaction = mainTx, fee = feeObj, nonce = nonce),
             )
             is GaslessFeePlan.NativePay -> error("NativePay must not reach the gasless send path")
+        }
+
+        internal fun GaslessFeePlan?.upgradesYieldModule(): Boolean {
+            val withdrawCallData = (this as? GaslessFeePlan.TokenPayWithYieldWithdraw)?.withdrawCallData
+            return withdrawCallData is EthereumYieldSupplyUpgradeToAndCallCallData
         }
 
         fun BigInteger.toFormattedHex(bytes: Int): String {

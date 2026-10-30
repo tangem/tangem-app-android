@@ -40,13 +40,19 @@ class EvmGaslessFeeResolver(
         gaslessYieldRepository = gaslessYieldRepository,
     )
 
-    /** @param sentAmount required for a yield-supply send, whose [TransactionData.Uncompiled.amount] is zeroed. */
+    /**
+     * @param transactionData what the relayer executes, the basis of any token fee.
+     * @param nativeTransactionData what is sent when the network coin pays, so its fee is estimated on this one.
+     * @param sentAmount required for a yield-supply send, whose [TransactionData.Uncompiled.amount] is zeroed.
+     */
+    @Suppress("LongParameterList")
     suspend fun resolveWithAutoFeeToken(
         userWallet: UserWallet,
         network: Network,
         transactionData: TransactionData,
         nativeCurrencyStatus: CryptoCurrencyStatus,
         accountStatusList: AccountStatusList,
+        nativeTransactionData: TransactionData,
         sentAmount: BigDecimal? = null,
     ): Either<GetFeeError, TransactionFeeExtended> = either {
         val walletManager = prepareWalletManager(userWallet, network)
@@ -58,6 +64,15 @@ class EvmGaslessFeeResolver(
             transactionData = transactionData,
         ).bind()
 
+        val nativeInitialFee = calculateNativeFee(
+            userWallet = userWallet,
+            network = network,
+            walletManager = walletManager,
+            nativeTransactionData = nativeTransactionData,
+            transactionData = transactionData,
+            initialFee = initialFee,
+        )
+
         selectFeePaymentStrategy(
             userWallet = userWallet,
             accountStatusList = accountStatusList,
@@ -65,6 +80,7 @@ class EvmGaslessFeeResolver(
             nativeCurrencyStatus = nativeCurrencyStatus,
             network = network,
             initialFee = initialFee,
+            nativeInitialFee = nativeInitialFee,
             transactionData = transactionData,
             sentAmount = sentAmount,
         )
@@ -83,6 +99,7 @@ class EvmGaslessFeeResolver(
         transactionData: TransactionData,
         nativeCurrencyStatus: CryptoCurrencyStatus,
         tokenCurrencyStatus: CryptoCurrencyStatus,
+        nativeTransactionData: TransactionData,
         sentAmount: BigDecimal? = null,
     ): Either<GetFeeError, TransactionFeeExtended> = either {
         val walletManager = prepareWalletManager(userWallet, network)
@@ -98,6 +115,15 @@ class EvmGaslessFeeResolver(
             ?: raiseIllegalStateError(
                 error = "only Fee.Ethereum supported, but was ${initialTxFee.normal::class.qualifiedName}",
             )
+
+        val nativeInitialTxFee = calculateNativeFee(
+            userWallet = userWallet,
+            network = network,
+            walletManager = walletManager,
+            nativeTransactionData = nativeTransactionData,
+            transactionData = transactionData,
+            initialFee = initialTxFee,
+        )
 
         val isYieldActive = tokenCurrencyStatus.value.yieldSupplyStatus?.isActive == true
 
@@ -121,10 +147,29 @@ class EvmGaslessFeeResolver(
                 transactionData = transactionData,
                 isYieldActive = true,
                 sentAmount = sentAmount,
-            ).copy(nativeFee = initialTxFee)
+            ).copy(nativeFee = nativeInitialTxFee)
         } else {
-            tokenFeeExtended.copy(nativeFee = initialTxFee)
+            tokenFeeExtended.copy(nativeFee = nativeInitialTxFee)
         }
+    }
+
+    @Suppress("LongParameterList")
+    private suspend fun Raise<GetFeeError>.calculateNativeFee(
+        userWallet: UserWallet,
+        network: Network,
+        walletManager: EthereumWalletManager,
+        nativeTransactionData: TransactionData,
+        transactionData: TransactionData,
+        initialFee: TransactionFee,
+    ): TransactionFee {
+        if (nativeTransactionData === transactionData) return initialFee
+
+        return tokenFeeCalculator.calculateInitialFee(
+            userWallet = userWallet,
+            network = network,
+            walletManager = walletManager,
+            transactionData = nativeTransactionData,
+        ).bind()
     }
 
     @Suppress("NullableToStringCall")
@@ -149,10 +194,11 @@ class EvmGaslessFeeResolver(
         nativeCurrencyStatus: CryptoCurrencyStatus,
         network: Network,
         initialFee: TransactionFee,
+        nativeInitialFee: TransactionFee,
         transactionData: TransactionData,
         sentAmount: BigDecimal?,
     ): TransactionFeeExtended {
-        val feeValue = initialFee.normal.amount.value ?: raise(GetFeeError.UnknownError)
+        val feeValue = nativeInitialFee.normal.amount.value ?: raise(GetFeeError.UnknownError)
 
         val networkCurrenciesStatuses = accountStatusList
             .flattenPersonalCurrencies()
@@ -160,9 +206,9 @@ class EvmGaslessFeeResolver(
 
         val nativeBalance = nativeCurrencyStatus.value.amount ?: BigDecimal.ZERO
         val nativeCoinSelectedResult = TransactionFeeExtended(
-            transactionFee = initialFee,
+            transactionFee = nativeInitialFee,
             feeTokenId = nativeCurrencyStatus.currency.id,
-            nativeFee = initialFee,
+            nativeFee = nativeInitialFee,
         )
         return if (nativeBalance >= feeValue) {
             nativeCoinSelectedResult
@@ -175,7 +221,7 @@ class EvmGaslessFeeResolver(
                 networkCurrenciesStatuses = networkCurrenciesStatuses,
                 transactionData = transactionData,
                 sentAmount = sentAmount,
-            ).map { it.copy(nativeFee = initialFee) }.getOrElse { error ->
+            ).map { it.copy(nativeFee = nativeInitialFee) }.getOrElse { error ->
                 when (error) {
                     GaslessError.NotEnoughFunds,
                     GaslessError.YieldBalanceUnavailable,

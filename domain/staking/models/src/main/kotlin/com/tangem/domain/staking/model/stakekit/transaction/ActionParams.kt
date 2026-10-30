@@ -1,7 +1,7 @@
 package com.tangem.domain.staking.model.stakekit.transaction
 
-import com.tangem.domain.models.staking.YieldToken
-import com.tangem.domain.models.staking.action.StakingActionType
+import com.tangem.domain.staking.model.YieldToken
+import com.tangem.domain.staking.model.action.StakingActionType
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import java.math.BigDecimal
 

@@ -30,11 +30,14 @@ dependencies {
     implementation(projects.domain.mcp)
     implementation(projects.domain.mcp.models)
     implementation(projects.domain.models)
+    implementation(projects.domain.wallets)
 
     /** Core */
+    implementation(projects.core.analytics)
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
     implementation(projects.core.navigation)
+    implementation(projects.core.remote)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
 

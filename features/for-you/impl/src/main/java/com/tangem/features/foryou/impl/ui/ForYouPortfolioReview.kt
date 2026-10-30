@@ -13,13 +13,10 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH8
-import com.tangem.core.ui.ds.tabs.TangemSegmentUM
-import com.tangem.core.ui.ds.tabs.TangemSegmentedPicker
-import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.filter.TangemFilterItem
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
-import com.tangem.core.ui.ds2.shimmers.TangemShimmer
+import com.tangem.core.ui.ds2.segmentedcontrol.TangemSegmentedControl
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -28,14 +25,15 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.components.MarketChart
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
+import com.tangem.features.foryou.impl.entity.forYouPeriodPickerItems
 import com.tangem.features.foryou.impl.ui.components.ForYouPortfolioTokenList
 import com.tangem.features.foryou.impl.ui.preview.ForYouPortfolioReviewPreviewData
-import kotlinx.collections.immutable.persistentListOf
+import com.tangem.features.foryou.model.ForYouPeriod
+import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 internal fun ForYouPortfolioReview(
-    periodPickerUM: TangemSegmentedPickerUM,
-    onPeriodClick: (TangemSegmentUM) -> Unit,
+    periodPickerUM: ImmutableList<TangemSegmentedControl.Item>,
     portfolioReviewUM: PortfolioReviewUM,
     portfolioFilter: TangemFilterItemUM,
     modifier: Modifier = Modifier,
@@ -65,17 +63,13 @@ internal fun ForYouPortfolioReview(
         SpacerH(8.dp)
 
         when (portfolioReviewUM) {
-            is PortfolioReviewUM.Content -> {
-                TangemSegmentedPicker(
-                    tangemSegmentedPickerUM = periodPickerUM,
-                    onClick = onPeriodClick,
-                )
-            }
-            is PortfolioReviewUM.Loading -> TangemShimmer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(40.dp),
-                radius = 100.dp,
+            is PortfolioReviewUM.Content -> TangemSegmentedControl(
+                items = periodPickerUM,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            is PortfolioReviewUM.Loading -> TangemSegmentedControl(
+                state = TangemSegmentedControl.State.Loading,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
 
@@ -110,17 +104,7 @@ private fun ForYouPortfolioReview_Review(
                 label = stringReference("All accounts"),
                 onClick = {},
             ),
-            periodPickerUM = TangemSegmentedPickerUM(
-                items = persistentListOf(
-                    TangemSegmentUM(id = "0", title = stringReference("Day")),
-                    TangemSegmentUM(id = "1", title = stringReference("Week")),
-                    TangemSegmentUM(id = "2", title = stringReference("Month")),
-                ),
-                initialSelectedItem = TangemSegmentUM(id = "0", title = stringReference("Day")),
-                isFixed = true,
-                isAltSurface = true,
-            ),
-            onPeriodClick = {},
+            periodPickerUM = forYouPeriodPickerItems(selected = ForYouPeriod.Day, onClick = {}),
         )
     }
 }

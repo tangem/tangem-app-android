@@ -24,7 +24,7 @@ import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Ite
 internal fun SettingsButtonItem(item: Item.Button, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = TangemTheme.colors.background.secondary,
+        color = TangemTheme.colors3.bg.primary,
         onClick = item.onClick,
     ) {
         Column(
@@ -39,13 +39,13 @@ internal fun SettingsButtonItem(item: Item.Button, modifier: Modifier = Modifier
                 modifier = Modifier.fillMaxWidth(),
                 text = item.title.resolveReference(),
                 style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
             Text(
                 modifier = Modifier.fillMaxWidth(),
                 text = item.description.resolveReference(),
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
     }

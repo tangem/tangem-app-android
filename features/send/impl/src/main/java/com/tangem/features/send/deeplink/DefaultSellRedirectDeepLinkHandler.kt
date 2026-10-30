@@ -34,7 +34,8 @@ internal class DefaultSellRedirectDeepLinkHandler @AssistedInject constructor(
     init {
         val currencyId = queryParams[CURRENCY_ID_KEY]
         val transactionId = queryParams[TRANSACTION_ID_KEY]
-        val amount = queryParams[AMOUNT_KEY]
+        // Universal parser accounts for regional separators
+        val amount = queryParams[AMOUNT_KEY]?.parseBigDecimalOrNull()?.takeIf { it.signum() > 0 }
         val destinationAddress = queryParams[DESTINATION_ADDRESS_KEY]
         val memo = queryParams[MEMO_KEY]
         val requestId = queryParams[REQUEST_ID_KEY]
@@ -47,7 +48,7 @@ internal class DefaultSellRedirectDeepLinkHandler @AssistedInject constructor(
                 },
                 ifRight = { userWallet ->
                     if (currencyId.isNullOrEmpty() || transactionId.isNullOrEmpty() ||
-                        amount.isNullOrEmpty() || destinationAddress.isNullOrEmpty() ||
+                        amount == null || destinationAddress.isNullOrEmpty() ||
                         requestId.isNullOrEmpty()
                     ) {
                         // Do not log the params: they contain the deposit address and request_id.
@@ -75,15 +76,13 @@ internal class DefaultSellRedirectDeepLinkHandler @AssistedInject constructor(
                             TangemLogger.e("Error on getting cryptoCurrency for SELL deeplink")
                             return@launch
                         }
-                        // Convert using universal parser to account for regional separators
-                        val amountValue = amount.parseBigDecimalOrNull()?.parseBigDecimal(cryptoCurrency.decimals)
                         appRouter.push(
                             AppRoute.Send(
                                 currency = cryptoCurrency,
                                 userWalletId = userWallet.walletId,
                                 transactionId = transactionId,
                                 destinationAddress = destinationAddress,
-                                amount = amountValue,
+                                amount = amount.parseBigDecimal(cryptoCurrency.decimals),
                                 tag = memo,
                             ),
                         )

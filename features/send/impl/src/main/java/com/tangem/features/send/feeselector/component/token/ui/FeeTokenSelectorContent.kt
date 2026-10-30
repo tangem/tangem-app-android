@@ -76,8 +76,8 @@ private fun Title(modifier: Modifier = Modifier, onLearnMoreClick: () -> Unit) {
     val linkText = stringResourceSafe(R.string.common_learn_more)
     val fullString = stringResourceSafe(R.string.fee_selector_choose_token_description, linkText)
     val linkTextPosition = fullString.length - linkText.length
-    val defaultColor = TangemTheme.colors.text.secondary
-    val linkColor = TangemTheme.colors.text.accent
+    val defaultColor = TangemTheme.colors3.text.secondary
+    val linkColor = TangemTheme.colors3.text.accent.blue
     val annotatedString = remember(defaultColor, linkColor, onLearnMoreClick) {
         buildAnnotatedString {
             withStyle(SpanStyle(defaultColor)) {
@@ -132,7 +132,7 @@ internal fun TokenListContent(state: FeeTokenSelectorUM, modifier: Modifier = Mo
                     modifier = Modifier
                         .selectedBorder(isSelected = state.selectedToken.state.id == item.id)
                         .clip(RoundedCornerShape(14.dp))
-                        .background(color = TangemTheme.colors.background.action),
+                        .background(color = TangemTheme.colors3.bg.secondary),
                     state = item,
                     isBalanceHidden = false,
                 )
@@ -144,7 +144,7 @@ internal fun TokenListContent(state: FeeTokenSelectorUM, modifier: Modifier = Mo
                 modifier = Modifier.padding(start = 12.dp, top = 8.dp),
                 text = stringResourceSafe(R.string.common_not_available),
                 style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
 
             notAvailableTokens.fastForEach { item ->
@@ -153,7 +153,7 @@ internal fun TokenListContent(state: FeeTokenSelectorUM, modifier: Modifier = Mo
                         modifier = Modifier
                             .graphicsLayer { alpha = 0.5f }
                             .clip(RoundedCornerShape(14.dp))
-                            .background(color = TangemTheme.colors.background.action),
+                            .background(color = TangemTheme.colors3.bg.secondary),
                         state = item,
                         isBalanceHidden = false,
                     )
@@ -267,7 +267,7 @@ private fun Preview() {
             state = state,
             intents = StubFeeTokenSelectorIntents(),
             modifier = Modifier
-                .background(TangemTheme.colors.background.tertiary),
+                .background(TangemTheme.colors3.bg.primary),
         )
     }
 }

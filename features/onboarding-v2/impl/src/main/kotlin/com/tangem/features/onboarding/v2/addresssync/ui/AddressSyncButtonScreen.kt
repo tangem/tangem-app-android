@@ -36,7 +36,7 @@ internal fun AddressSyncButtonScreen(
         Icon(
             painter = painterResource(id = R.drawable.ic_sync_56),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.accent,
+            tint = TangemTheme.colors3.icon.accent.blue,
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .size(56.dp),
@@ -44,7 +44,7 @@ internal fun AddressSyncButtonScreen(
         Text(
             text = stringResourceSafe(R.string.onboarding_address_sync_title),
             style = TangemTheme.typography.h2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
@@ -82,7 +82,7 @@ private fun ColumnScope.AddressSyncDescription(currenciesCount: Int) {
             currenciesCount,
         ),
         style = TangemTheme.typography.body2,
-        color = TangemTheme.colors.text.secondary,
+        color = TangemTheme.colors3.text.secondary,
         textAlign = TextAlign.Center,
         modifier = Modifier
             .align(Alignment.CenterHorizontally)

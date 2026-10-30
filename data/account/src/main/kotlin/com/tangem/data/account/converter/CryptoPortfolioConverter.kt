@@ -38,6 +38,7 @@ internal class CryptoPortfolioConverter @AssistedInject constructor(
             WalletAccountDTO.Type.CRYPTO,
             null,
             -> convertPersonal(value)
+            WalletAccountDTO.Type.COLLECTIBLES -> error("Collectibles account ${value.id} is not a crypto portfolio")
         }
     }
 

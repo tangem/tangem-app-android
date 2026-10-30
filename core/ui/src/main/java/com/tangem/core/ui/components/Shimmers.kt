@@ -194,7 +194,7 @@ private fun ShimmersPreview() {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(TangemTheme.colors.background.primary),
+                .background(TangemTheme.colors3.bg.primary),
             verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             RectangleShimmer(

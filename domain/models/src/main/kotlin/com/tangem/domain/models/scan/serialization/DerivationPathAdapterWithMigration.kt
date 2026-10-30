@@ -23,7 +23,7 @@ internal class DerivationPathAdapterWithMigration {
 
     @Suppress("UNCHECKED_CAST")
     private fun fromLegacyScheme(jsonMap: Map<String, Any>): DerivationPath {
-        val rawPath = jsonMap["rawPath"] as String
+        val rawPath = jsonMap["rawPath"] as? String ?: error("Legacy derivation path has no rawPath")
         val nodeIndexes = (jsonMap["nodes"] as? List<Number>).guard {
             return DerivationPath(rawPath)
         }

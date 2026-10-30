@@ -7,9 +7,13 @@ import com.tangem.data.qrscanning.parser.QrContentClassifierParser
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.qrscanning.models.ClassifiedQrContent
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.mockk
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 internal class Eip681PaymentUriParserTest {
@@ -333,6 +337,67 @@ internal class Eip681PaymentUriParserTest {
 
     // endregion
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class AmountSign {
+
+        private val usdcToken = buildToken("ethereum", "USDC", USDC_CONTRACT)
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN amount of any sign WHEN parse THEN only positive amount is kept`(model: AmountSignModel) {
+            // Arrange
+            every { blockchainDataProvider.getChainId(ethereumCoin.network) } returns 1L
+
+            // Act
+            val actual = parser.parse(
+                qrCode = model.qrCode,
+                coins = listOf(ethereumCoin),
+                allCurrencies = listOf(ethereumCoin, usdcToken),
+            )
+
+            // Assert
+            assertThat(actual).isEqualTo(PaymentUriParser.ParseResult.Success(model.expected))
+        }
+
+        private fun provideTestModels() = listOf(
+            AmountSignModel(
+                qrCode = "ethereum:0xRecipient@1?value=-1",
+                expected = paymentUri(amount = null, matchingCurrencies = listOf(ethereumCoin, usdcToken)),
+            ),
+            AmountSignModel(
+                qrCode = "ethereum:0xRecipient@1?value=0",
+                expected = paymentUri(amount = null, matchingCurrencies = listOf(ethereumCoin, usdcToken)),
+            ),
+            AmountSignModel(
+                qrCode = "ethereum:0xRecipient@1?value=1500000000000000000",
+                expected = paymentUri(amount = BigDecimal("1.5"), matchingCurrencies = listOf(ethereumCoin)),
+            ),
+            AmountSignModel(
+                qrCode = "ethereum:$USDC_CONTRACT@1/transfer?address=0xRecipient&uint256=-10000000",
+                expected = paymentUri(amount = null, matchingCurrencies = listOf(usdcToken)),
+            ),
+            AmountSignModel(
+                qrCode = "ethereum:$USDC_CONTRACT@1/transfer?address=0xRecipient&uint256=0",
+                expected = paymentUri(amount = null, matchingCurrencies = listOf(usdcToken)),
+            ),
+            AmountSignModel(
+                qrCode = "ethereum:$USDC_CONTRACT@1/transfer?address=0xRecipient&uint256=1000000",
+                expected = paymentUri(amount = BigDecimal.ONE, matchingCurrencies = listOf(usdcToken)),
+            ),
+        )
+
+        private fun paymentUri(amount: BigDecimal?, matchingCurrencies: List<CryptoCurrency>) =
+            ClassifiedQrContent.PaymentUri(
+                address = "0xRecipient",
+                amount = amount,
+                memo = null,
+                matchingCurrencies = matchingCurrencies,
+            )
+    }
+
+    internal data class AmountSignModel(val qrCode: String, val expected: ClassifiedQrContent.PaymentUri)
+
     // region Helpers
 
     private fun PaymentUriParser.ParseResult.asSuccess(): ClassifiedQrContent.PaymentUri? {
@@ -396,4 +461,8 @@ internal class Eip681PaymentUriParserTest {
     }
 
     // endregion
+
+    private companion object {
+        const val USDC_CONTRACT = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+    }
 }

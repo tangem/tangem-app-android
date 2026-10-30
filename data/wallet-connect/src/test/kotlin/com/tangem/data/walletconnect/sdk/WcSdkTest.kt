@@ -136,23 +136,6 @@ internal class WcSdkTest {
         verify(exactly = 1) { WalletKit.initialize(any(), any(), any()) }
     }
 
-    @Test
-    fun `GIVEN sdk started now WHEN ensureInitialized THEN the same start-up is awaited`() = runTest {
-        // Arrange
-        val wcSdk = createSdk(this)
-
-        // Act
-        wcSdk.initializeNow()
-        val waiting = async { wcSdk.ensureInitialized() }
-        runCurrent()
-        onSuccess.captured.invoke()
-        waiting.await()
-
-        // Assert
-        verify(exactly = 1) { WalletKit.initialize(any(), any(), any()) }
-        verify(exactly = 1) { observer.onWcSdkInit() }
-    }
-
     private fun createSdk(testScope: TestScope) = WcSdk(
         application = application,
         config = WalletConnectConfig(projectId = "project-id"),

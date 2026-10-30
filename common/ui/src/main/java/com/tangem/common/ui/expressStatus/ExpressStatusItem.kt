@@ -54,7 +54,7 @@ internal fun ExpressStatusItem(
         modifier = modifier
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.primary)
+            .background(TangemTheme.colors3.bg.secondary)
             .clickable { onClick() }
             .padding(12.dp)
             .testTag(TokenDetailsScreenTestTags.EXPRESS_STATUS_ITEM),
@@ -66,7 +66,7 @@ internal fun ExpressStatusItem(
         Text(
             text = title.resolveReference(),
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier
                 .constrainAs(titleRef) {
                     start.linkTo(parent.start)
@@ -80,7 +80,7 @@ internal fun ExpressStatusItem(
         Text(
             text = subtitle.resolveReference(),
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             modifier = Modifier.constrainAs(subtitleRef) {
                 start.linkTo(parent.start)
                 top.linkTo(titleRef.bottom)
@@ -105,7 +105,7 @@ internal fun ExpressStatusItem(
         EllipsisText(
             text = fromAmount.resolveReference(),
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             ellipsis = TextEllipsis.OffsetEnd(fromSymbol.length),
             modifier = Modifier
                 .constrainAs(fromRef) {
@@ -120,7 +120,7 @@ internal fun ExpressStatusItem(
         Icon(
             painter = painterResource(id = R.drawable.ic_forward_24),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
             modifier = Modifier
                 .size(12.dp)
                 .constrainAs(swapIconRef) {
@@ -147,7 +147,7 @@ internal fun ExpressStatusItem(
         EllipsisText(
             text = toAmount.resolveReference(),
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             ellipsis = TextEllipsis.OffsetEnd(toSymbol.length),
             modifier = Modifier
                 .constrainAs(toRef) {
@@ -162,7 +162,7 @@ internal fun ExpressStatusItem(
         Icon(
             painter = painterResource(id = infoIconRes ?: R.drawable.ic_alert_triangle_20),
             contentDescription = null,
-            tint = infoIconTint ?: TangemTheme.colors.icon.informative,
+            tint = infoIconTint ?: TangemTheme.colors3.icon.secondary,
             modifier = Modifier
                 .size(20.dp)
                 .constrainAs(infoIconRef) {
@@ -179,7 +179,7 @@ internal fun ExpressStatusItem(
         Icon(
             painter = painterResource(id = R.drawable.ic_chevron_right_24),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
             modifier = Modifier
                 .size(24.dp)
                 .constrainAs(iconRef) {

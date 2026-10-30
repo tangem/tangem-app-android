@@ -4,7 +4,6 @@ import arrow.core.Either
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.data.swap.converter.ExchangeIntentConverter
-import com.tangem.domain.core.error.DataError
 import com.tangem.domain.express.ExpressErrorResolver
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.wallet.UserWalletId
@@ -40,7 +39,7 @@ internal class DefaultExchangeIntentRepository(
 
         return result.onLeft { error ->
             when (error) {
-                is DataError.UserWalletError.WrongUserWallet,
+                is ExchangeIntentError.OtherWallet,
                 is ExchangeIntentError.NotFound,
                 -> TangemLogger.i("Exchange intent $intentId is not available: ${error.message}")
                 else -> TangemLogger.e("Failed to read exchange intent $intentId", error)
@@ -50,14 +49,12 @@ internal class DefaultExchangeIntentRepository(
 
     private fun convertError(intentId: String, cause: ApiResponseError): Throwable {
         return when {
-            cause is ApiResponseError.HttpException && cause.isServerError() -> {
-                ExchangeIntentError.ServerError(intentId = intentId, httpCode = cause.code.numericCode)
+            cause is ApiResponseError.NetworkException || cause is ApiResponseError.TimeoutException -> {
+                ExchangeIntentError.Unreachable(intentId)
             }
-            else -> when (expressErrorResolver.resolve(cause)) {
-                is ExpressError.IntentOfAnotherWalletError -> {
-                    DataError.UserWalletError.WrongUserWallet("Intent $intentId belongs to another wallet")
-                }
-                is ExpressError.IntentNotFoundError -> ExchangeIntentError.NotFound(intentId)
+            else -> when (val error = expressErrorResolver.resolve(cause)) {
+                is ExpressError.IntentOfAnotherWalletError -> ExchangeIntentError.OtherWallet(intentId, error.code)
+                is ExpressError.IntentNotFoundError -> ExchangeIntentError.NotFound(intentId, error.code)
                 else -> cause
             }
         }

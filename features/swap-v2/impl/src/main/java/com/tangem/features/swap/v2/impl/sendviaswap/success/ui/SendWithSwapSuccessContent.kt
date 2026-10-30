@@ -64,7 +64,7 @@ internal fun SendWithSwapSuccessContent(sendWithSwapUM: SendWithSwapUM) {
         Box(
             modifier = Modifier
                 .weight(1f)
-                .background(TangemTheme.colors.background.tertiary)
+                .background(TangemTheme.colors3.bg.primary)
                 .testTag(TransactionSuccessScreenTestTags.CONTAINER),
         ) {
             SuccessContent(
@@ -73,7 +73,7 @@ internal fun SendWithSwapSuccessContent(sendWithSwapUM: SendWithSwapUM) {
             )
             Fade(
                 modifier = Modifier.align(Alignment.BottomCenter),
-                backgroundColor = TangemTheme.colors.background.tertiary,
+                backgroundColor = TangemTheme.colors3.bg.primary,
             )
         }
     }
@@ -112,7 +112,7 @@ private fun SuccessContent(sendWithSwapUM: SendWithSwapUM, modifier: Modifier = 
             subtitle = quoteUM.rate,
             modifier = Modifier
                 .clip(TangemTheme.shapes.roundedCornersXMedium)
-                .background(TangemTheme.colors.background.action),
+                .background(TangemTheme.colors3.bg.secondary),
         )
         DestinationBlock(
             address = destinationUM.addressTextField,
@@ -150,7 +150,7 @@ private fun AmountBlock(
     Column(
         modifier = modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .padding(12.dp)
             .testTag(TransactionSuccessScreenTestTags.AMOUNT_BLOCK),
     ) {
@@ -176,7 +176,7 @@ private fun AmountBlock(
                         )
                     }.orEmpty(),
                     style = TangemTheme.typography.subtitle2,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                 )
                 Text(
                     text = fiatAmount.value.format {
@@ -186,7 +186,7 @@ private fun AmountBlock(
                         )
                     },
                     style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                 )
             }
         }
@@ -201,14 +201,14 @@ private fun FeeBlock(feeSelectorUM: FeeSelectorUM.Content) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .padding(12.dp)
             .testTag(TransactionSuccessScreenTestTags.FEE_BLOCK),
     ) {
         Text(
             text = stringResourceSafe(R.string.common_network_fee_title),
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
 
         Box(modifier = Modifier.padding(top = 8.dp)) {
@@ -250,14 +250,14 @@ private fun DestinationBlock(
         modifier = modifier
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .padding(12.dp)
             .testTag(TransactionSuccessScreenTestTags.RECIPIENT_BLOCK),
     ) {
         Text(
             text = stringResourceSafe(R.string.send_recipient),
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -268,21 +268,21 @@ private fun DestinationBlock(
                 modifier = Modifier.weight(1f),
                 text = address.value,
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
             IdentIcon(
                 address = address.value,
                 modifier = Modifier
                     .size(36.dp)
                     .clip(RoundedCornerShape(18.dp))
-                    .background(TangemTheme.colors.background.tertiary),
+                    .background(TangemTheme.colors3.bg.primary),
             )
         }
         if (memo != null && memo.value.isNotBlank()) {
             Text(
                 text = stringResourceSafe(R.string.send_memo, memo.value),
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 modifier = Modifier.padding(top = 8.dp),
             )
         }

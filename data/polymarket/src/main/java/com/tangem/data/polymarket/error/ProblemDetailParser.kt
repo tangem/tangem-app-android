@@ -11,7 +11,10 @@ internal class ProblemDetailParser @Inject constructor(
 
     private val adapter = moshi.adapter(ProblemDetailResponse::class.java)
 
+    /** @return `null` when [errorBody] is absent or unparsable */
+    fun parse(errorBody: String?): ProblemDetailResponse? =
+        errorBody?.let { body -> runCatching { adapter.fromJson(body) }.getOrNull() }
+
     /** @return `null` when [errorBody] is absent, unparsable or carries no `detail` */
-    fun parseDetail(errorBody: String?): String? =
-        errorBody?.let { body -> runCatching { adapter.fromJson(body)?.detail }.getOrNull() }
+    fun parseDetail(errorBody: String?): String? = parse(errorBody)?.detail
 }

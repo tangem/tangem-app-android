@@ -3,6 +3,8 @@ package com.tangem.data.pay.repository
 import arrow.core.Either
 import com.tangem.data.pay.util.BankAccountConverter
 import com.tangem.data.pay.util.BankOfframpOptionsConverter
+import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.pay.id
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
@@ -25,9 +27,12 @@ internal class DefaultBankOfframpRepository @Inject constructor(
             .mapLeft { error -> error.toBankOfframpError(operation = "getBankAccounts") }
     }
 
-    override suspend fun getOptions(userWalletId: UserWalletId): Either<BankOfframpError, BankOfframpOptions> {
+    override suspend fun getOptions(
+        userWalletId: UserWalletId,
+        product: TangemPayProduct,
+    ): Either<BankOfframpError, BankOfframpOptions> {
         return requestPerformer.performRequest(userWalletId) { authHeader ->
-            tangemPayApi.getBankOfframpOptions(authHeader = authHeader)
+            tangemPayApi.getBankOfframpOptions(authHeader = authHeader, accountType = product.id)
         }
             .map { response -> response.result?.let(BankOfframpOptionsConverter::convert) ?: EMPTY_OPTIONS }
             .mapLeft { error -> error.toBankOfframpError(operation = "getOptions") }

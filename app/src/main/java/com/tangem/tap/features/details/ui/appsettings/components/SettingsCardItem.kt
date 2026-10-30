@@ -25,7 +25,7 @@ import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Ite
 internal fun SettingsCardItem(item: Item.Card, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = TangemTheme.colors.button.disabled,
+        color = TangemTheme.colors3.bg.disabled,
         shape = TangemTheme.shapes.roundedCornersLarge,
         onClick = item.onClick,
     ) {
@@ -36,7 +36,7 @@ internal fun SettingsCardItem(item: Item.Card, modifier: Modifier = Modifier) {
         ) {
             Icon(
                 painter = painterResource(id = item.iconResId),
-                tint = TangemTheme.colors.icon.attention,
+                tint = TangemTheme.colors3.icon.accent.yellow,
                 contentDescription = null,
             )
             SpacerW16()
@@ -44,13 +44,13 @@ internal fun SettingsCardItem(item: Item.Card, modifier: Modifier = Modifier) {
                 Text(
                     text = item.title.resolveReference(),
                     style = TangemTheme.typography.subtitle1,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                 )
                 SpacerH4()
                 Text(
                     text = item.description.resolveReference(),
                     style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.secondary,
+                    color = TangemTheme.colors3.text.secondary,
                 )
             }
         }

@@ -41,7 +41,7 @@ internal fun WcSendTransactionItems(
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(14.dp))
-            .background(color = TangemTheme.colors.background.action)
+            .background(color = TangemTheme.colors3.bg.secondary)
             .fillMaxWidth()
             .animateContentSize(),
     ) {

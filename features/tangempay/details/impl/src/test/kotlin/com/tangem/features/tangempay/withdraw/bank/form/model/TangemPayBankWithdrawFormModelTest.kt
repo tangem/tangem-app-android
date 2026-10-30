@@ -8,11 +8,13 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.pay.TangemPayCountry
 import com.tangem.domain.models.pay.TangemPayRegion
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
+import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.form.TangemPayBankWithdrawFormComponent
 import com.tangem.features.tangempay.withdraw.bank.form.state.TangemPayBankWithdrawFormUM.FieldUM
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
@@ -44,6 +46,8 @@ internal class TangemPayBankWithdrawFormModelTest {
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val draft = MutableStateFlow(BankWithdrawDraft(entry = BankWithdrawEntry.NewPersonal))
     private val savedAccounts = MutableStateFlow<List<BankAccount>>(emptyList())
+    private val paymentAccount = BankWithdrawSourceAccount.Payment(UserWalletId("011"))
+    private val moneyAccount = BankWithdrawSourceAccount.Money(UserWalletId("011"), productInstanceId = "instance-1")
 
     private val fields = persistentListOf(
         BankWithdrawFormField.AccountNumber,
@@ -1342,6 +1346,24 @@ internal class TangemPayBankWithdrawFormModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN money account WHEN recipient details filled and continued THEN no event is sent`() {
+        // Arrange
+        val model = createModel(sourceAccount = moneyAccount)
+        fill(model, BankWithdrawFormField.AccountNumber, "4830019271")
+        fill(model, BankWithdrawFormField.RoutingNumber, "021000021")
+        fill(model, BankWithdrawFormField.FirstName, "Basit")
+        focus(model, BankWithdrawFormField.FirstName)
+
+        // Act
+        model.uiState.value.onContinueClick()
+
+        // Assert
+        verify(exactly = 0) { analytics.send(any()) }
+        verify(exactly = 1) { onContinue(any()) }
+        model.onDestroy()
+    }
+
     private fun fill(model: TangemPayBankWithdrawFormModel, field: BankWithdrawFormField, value: String) {
         textField(model, field).onValueChange(value)
     }
@@ -1401,10 +1423,12 @@ internal class TangemPayBankWithdrawFormModelTest {
     private fun createModel(
         formFields: ImmutableList<BankWithdrawFormField> = fields,
         step: TangemPayBankWithdrawInnerRoute = TangemPayBankWithdrawInnerRoute.RecipientDetails,
+        sourceAccount: BankWithdrawSourceAccount = paymentAccount,
     ): TangemPayBankWithdrawFormModel = TangemPayBankWithdrawFormModel(
         paramsContainer = MutableParamsContainer(
             TangemPayBankWithdrawFormModel.Params(
                 form = TangemPayBankWithdrawFormComponent.Params(
+                    sourceAccount = sourceAccount,
                     draft = draft,
                     step = step,
                     fields = formFields,

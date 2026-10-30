@@ -58,8 +58,10 @@ internal fun String.checkExceedBalance(
     }
 }
 
+internal fun BigDecimal?.isNullOrNotPositive(): Boolean = this == null || signum() <= 0
+
 internal fun getKeyboardAction(isCheckFailed: Boolean, decimalCryptoValue: BigDecimal) =
-    if (!isCheckFailed && !decimalCryptoValue.isZero()) {
+    if (!isCheckFailed && decimalCryptoValue.signum() > 0) {
         ImeAction.Done
     } else {
         ImeAction.None

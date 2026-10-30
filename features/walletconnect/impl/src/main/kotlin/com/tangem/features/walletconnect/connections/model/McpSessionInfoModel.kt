@@ -1,15 +1,17 @@
 package com.tangem.features.walletconnect.connections.model
 
 import com.tangem.common.ui.account.PortfolioSelectUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.mcp.models.McpSession
+import com.tangem.domain.mcp.models.analytics.McpSessionsAnalyticsEvent
 import com.tangem.domain.mcp.repository.McpRepository
 import com.tangem.features.walletconnect.connections.components.McpSessionInfoComponent
 import com.tangem.features.walletconnect.connections.entity.McpSessionInfoUM
@@ -30,6 +32,7 @@ internal class McpSessionInfoModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val mcpRepository: McpRepository,
     private val messageSender: UiMessageSender,
+    private val analytics: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -46,7 +49,7 @@ internal class McpSessionInfoModel @Inject constructor(
     // There is no endpoint for a single session, so it is picked out of the list the repository keeps
     private fun loadSession() {
         mcpRepository.getSessions()
-            .mapNotNull { sessions -> sessions.firstOrNull { it.id == params.sessionId } }
+            .mapNotNull { sessions -> sessions.getOrNull()?.firstOrNull { it.id == params.sessionId } }
             .onEach { session -> uiState.value = session.toUM(isRevoking = uiState.value?.isRevoking == true) }
             .launchIn(modelScope)
     }
@@ -67,20 +70,26 @@ internal class McpSessionInfoModel @Inject constructor(
             onClick = {},
         ),
         isRevoking = isRevoking,
-        onRevokeClick = ::revokeSession,
+        onRevokeClick = { revokeSession(session = this) },
         onDismiss = params.onDismiss,
     )
 
-    private fun revokeSession() {
+    private fun revokeSession(session: McpSession) {
         modelScope.launch {
             uiState.update { state -> state?.copy(isRevoking = true) }
-            val isRevoked = mcpRepository.revokeSession(params.sessionId).isRight()
+            val isRevoked = mcpRepository.revokeSession(session.id).isRight()
             uiState.update { state -> state?.copy(isRevoking = false) }
 
             if (isRevoked) {
+                analytics.send(McpSessionsAnalyticsEvent.AgentDisconnected(session))
                 params.onDismiss()
             } else {
-                messageSender.send(SnackbarMessage(message = resourceReference(R.string.mcp_session_revoke_failed)))
+                messageSender.send(
+                    DialogMessage(
+                        title = resourceReference(R.string.common_something_went_wrong),
+                        message = resourceReference(R.string.common_try_again_later),
+                    ),
+                )
             }
         }
     }

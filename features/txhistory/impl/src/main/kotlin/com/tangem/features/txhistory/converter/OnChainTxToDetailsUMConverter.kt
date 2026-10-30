@@ -31,7 +31,6 @@ import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.model.ResolvedOwner
 import com.tangem.features.txhistory.model.TxHistoryLookupContext
 import com.tangem.features.txhistory.model.mayCarryStakingTarget
-import com.tangem.features.txhistory.model.reclassifyOwnOperationAsTransfer
 import com.tangem.features.txhistory.model.resolveCounterparty
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.extensions.isZero
@@ -75,15 +74,7 @@ internal class OnChainTxToDetailsUMConverter(
         targetsByAddress.mapKeys { (address, _) -> address.lowercase() }
     }
 
-    fun convert(value: TxInfo): TxHistoryDetailsUM.SingleAsset {
-        // An unrecognized contract call between the user's own portfolios reads as a Transfer, not a raw operation —
-        // mirrors the history list so the two never disagree.
-        val tx = when {
-            // A call that moved no coin is the fee it cost, never a transfer between the user's own portfolios.
-            value.isFeeOnlyOperation(currency) -> value
-            value is TxInfo.Single -> value.reclassifyOwnOperationAsTransfer(lookup, currency.network.id.rawId)
-            else -> value
-        }
+    fun convert(tx: TxInfo): TxHistoryDetailsUM.SingleAsset {
         return TxHistoryDetailsUM.SingleAsset(
             header = tx.toHeaderUM(),
             isBalanceHidden = isBalanceHidden,
@@ -191,7 +182,7 @@ internal class OnChainTxToDetailsUMConverter(
 
     private fun TxInfo.toHeaderUM(): TxHistoryDetailsUM.HeaderUM = TxHistoryDetailsUM.HeaderUM(
         icon = headerIcon(currency),
-        status = status.toUiStatus(),
+        status = displayedStatus(currency).toUiStatus(),
         title = titleConverter.convert(this, isOwnTransfer = isOwnTransfer()),
         subtitle = headerSubtitle(timestampInMillis),
         menu = menu.withCopyAddress(copyableAddress(), onCopyAddress).withExploreProvider(this),
@@ -199,7 +190,11 @@ internal class OnChainTxToDetailsUMConverter(
 
     /** A transfer whose counterparty resolves to one of the user's own accounts/wallets reads "Transfer". */
     private fun TxInfo.isOwnTransfer(): Boolean = when (resolvedCounterparty()) {
-        is ResolvedOwner.OwnAccount, is ResolvedOwner.OwnPaymentAccount, is ResolvedOwner.OwnWallet -> true
+        is ResolvedOwner.OwnAccount,
+        is ResolvedOwner.OwnPaymentAccount,
+        is ResolvedOwner.OwnMoneyAccount,
+        is ResolvedOwner.OwnWallet,
+        -> true
         is ResolvedOwner.Foreign, null -> false
     }
 
@@ -233,7 +228,7 @@ internal class OnChainTxToDetailsUMConverter(
         amount = feeAmountText(currency) ?: approveAmountText() ?: stringReference(signedAmount(currency)),
         label = amountLabel(),
         fiatAmount = fiatAmountText(),
-        isFailed = status is TxInfo.TransactionStatus.Failed,
+        isFailed = readsFailed(currency),
     )
 
     /**
@@ -460,7 +455,7 @@ private fun TxInfo.signedAmount(currency: CryptoCurrency): String {
     val outgoingSign = "${StringsSigns.MINUS_SIGN}${StringsSigns.THIN_SPACE}"
     val incomingSign = "${StringsSigns.PLUS}${StringsSigns.THIN_SPACE}"
     val prefix = when {
-        status is TxInfo.TransactionStatus.Failed -> ""
+        readsFailed(currency) -> ""
         amount.isZero() -> ""
         else -> when (type.amountSign()) {
             AmountSign.BY_DIRECTION -> if (isOutgoing) outgoingSign else incomingSign

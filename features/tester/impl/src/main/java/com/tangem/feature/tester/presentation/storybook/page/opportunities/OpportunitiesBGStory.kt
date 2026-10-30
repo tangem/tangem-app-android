@@ -88,7 +88,7 @@ internal fun OpportunitiesBGStory(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(16.dp),
         modifier = modifier
             .fillMaxSize()
-            .background(TangemTheme.colors2.surface.level1),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         variants.forEach { variant ->
             item(variant.label) {
@@ -112,7 +112,7 @@ internal fun OpportunitiesBGStory(modifier: Modifier = Modifier) {
                         Text(
                             text = variant.label,
                             style = TangemTheme.typography.subtitle1,
-                            color = TangemTheme.colors.text.primary1,
+                            color = TangemTheme.colors3.text.primary,
                         )
                     }
                 }

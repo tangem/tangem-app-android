@@ -22,7 +22,7 @@ internal class BankOfframpErrorConverterTest {
     }
 
     @Test
-    fun `GIVEN any other api error WHEN converted THEN unknown error with the cause`() {
+    fun `GIVEN any other api error WHEN converted THEN unknown error with the cause and the error code`() {
         // Act
         val actual = BankOfframpErrorConverter.convert(
             BankOfframpErrorConverter.Input(error = VisaApiError.CustomerIsBlocked, operation = "cancelOrder"),
@@ -35,6 +35,7 @@ internal class BankOfframpErrorConverterTest {
             "Bank off-ramp cancelOrder failed: ${VisaApiError.CustomerIsBlocked}",
         )
         assertThat(unknown.isOutcomeUnknown).isFalse()
+        assertThat(unknown.errorCode).isEqualTo(VisaApiError.CustomerIsBlocked.errorCode)
     }
 
     @Test

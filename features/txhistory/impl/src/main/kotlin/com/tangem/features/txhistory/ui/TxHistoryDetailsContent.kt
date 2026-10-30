@@ -1,5 +1,11 @@
 package com.tangem.features.txhistory.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.cosign.CosignRequestRow
 import com.tangem.core.ui.components.HoldToConfirmButton
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.extensions.rememberLastNonNull
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
@@ -159,12 +166,19 @@ private fun TwoAssetsContent(
                 .padding(horizontal = 16.dp),
         )
         // Provider-rating (CSAT) card — final express swaps only. The card owns the spacing it is given, so an
-        // already-rated deal, which draws nothing, costs no gap.
-        ratingContent?.invoke(
-            Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = 12.dp),
-        )
+        // already-rated deal, which draws nothing, costs no gap. The last card stays composed for the exit animation.
+        val lastRatingContent = rememberLastNonNull(ratingContent)
+        AnimatedVisibility(
+            visible = ratingContent != null,
+            enter = fadeIn(animationSpec = tween(delayMillis = 300)) + expandVertically(expandFrom = Alignment.Top),
+            exit = fadeOut() + shrinkVertically(),
+        ) {
+            lastRatingContent?.invoke(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 12.dp),
+            )
+        }
         // Network fee (and later rate) pulled from the matched on-chain leg; the block is skipped when [rows] is empty.
         TxHistoryDetailsInfoRows(
             rows = state.rows,

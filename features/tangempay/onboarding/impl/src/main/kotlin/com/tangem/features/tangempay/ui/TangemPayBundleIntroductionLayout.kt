@@ -2,7 +2,6 @@ package com.tangem.features.tangempay.ui
 
 import android.content.res.Configuration
 import androidx.compose.animation.core.EaseInOut
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -26,15 +25,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import com.tangem.common.ui.onboarding.OnboardingHeadline
+import com.tangem.core.media.VideoSurfaceState
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.haze.ProvideHaze
 import com.tangem.core.ui.components.legal.LegalCaption
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.footer.TangemFooter
@@ -45,7 +44,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_24
-import com.tangem.features.tangempay.onboarding.impl.R as OnboardingR
+import com.tangem.features.tangempay.hotwallet.TangemPayHotWalletOnboardingUM
 
 private const val FRAME_WIDTH = 402f
 private const val FADE_TOP = 412f
@@ -56,11 +55,8 @@ private const val FADE_STOPS_COUNT = 16
 /** Positions are the design's 402-wide frame, scaled with the screen width. */
 @Composable
 internal fun TangemPayBundleIntroductionLayout(
-    isGetCardLoading: Boolean,
-    onGetCardClick: () -> Unit,
-    onTermsClick: () -> Unit,
-    onTermsOfServiceClick: () -> Unit,
-    onPrivacyPolicyClick: () -> Unit,
+    state: TangemPayHotWalletOnboardingUM,
+    video: VideoSurfaceState?,
     modifier: Modifier = Modifier,
 ) {
     var footerHeight by remember { mutableIntStateOf(0) }
@@ -69,16 +65,20 @@ internal fun TangemPayBundleIntroductionLayout(
         modifier = modifier,
         containerColor = TangemTheme.colors3.bg.primary,
         topBar = {
-            TangemTopNavigation(
-                startButton = {
-                    Icon(
-                        imageVector = Icons.ic_logo_tangem_24,
-                        contentDescription = null,
-                        tint = TangemTheme.colors3.icon.primary,
-                    )
-                },
-                endButtonsGroup = { TermsButton(onClick = onTermsClick) },
-            )
+            // The blur never sees a SurfaceView, so the bar would turn from frosted to sharp on the first frame
+            ProvideHaze {
+                TangemTopNavigation(
+                    blurBackground = false,
+                    startButton = {
+                        Icon(
+                            imageVector = Icons.ic_logo_tangem_24,
+                            contentDescription = null,
+                            tint = TangemTheme.colors3.icon.primary,
+                        )
+                    },
+                    endButtonsGroup = { TermsButton(onClick = state.onTermsClick) },
+                )
+            }
         },
         overlay = {
             TangemFooter(
@@ -87,8 +87,8 @@ internal fun TangemPayBundleIntroductionLayout(
                     .onSizeChanged { size -> footerHeight = size.height },
                 extraTop = {
                     LegalCaption(
-                        onTermsOfServiceClick = onTermsOfServiceClick,
-                        onPrivacyPolicyClick = onPrivacyPolicyClick,
+                        onTermsOfServiceClick = state.onTermsOfServiceClick,
+                        onPrivacyPolicyClick = state.onPrivacyPolicyClick,
                     )
                 },
             ) {
@@ -97,29 +97,18 @@ internal fun TangemPayBundleIntroductionLayout(
                     variant = TangemButton.Variant.Primary,
                     size = TangemButton.Size.X12,
                     text = resourceReference(R.string.tangempay_onboarding_get_card_button_text),
-                    isLoading = isGetCardLoading,
-                    onClick = onGetCardClick,
+                    isLoading = state.isLoading,
+                    onClick = state.onGetCardClick,
                 )
             }
         },
     ) { contentPadding ->
-        Poster()
+        TangemPayBundleBackdrop(video = video)
         BundleContent(
             contentPadding = contentPadding,
             trailingSpace = with(LocalDensity.current) { footerHeight.toDp() },
         )
     }
-}
-
-@Composable
-private fun Poster() {
-    Image(
-        modifier = Modifier.fillMaxSize(),
-        painter = painterResource(OnboardingR.drawable.ill_tangem_pay_bundle_poster),
-        contentDescription = null,
-        contentScale = ContentScale.FillWidth,
-        alignment = Alignment.TopCenter,
-    )
 }
 
 @Composable
@@ -171,11 +160,16 @@ private fun TangemPayBundleIntroductionLayoutPreview() {
     TangemThemePreviewRedesign {
         TangemPayBundleIntroductionLayout(
             modifier = Modifier.fillMaxSize(),
-            isGetCardLoading = false,
-            onGetCardClick = {},
-            onTermsClick = {},
-            onTermsOfServiceClick = {},
-            onPrivacyPolicyClick = {},
+            state = TangemPayHotWalletOnboardingUM(
+                isPayBundleIntroductionEnabled = true,
+                isUnifiedOnboarding = false,
+                isLoading = false,
+                onGetCardClick = {},
+                onTermsClick = {},
+                onTermsOfServiceClick = {},
+                onPrivacyPolicyClick = {},
+            ),
+            video = null,
         )
     }
 }

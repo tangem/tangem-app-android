@@ -7,7 +7,6 @@ import com.tangem.features.tangempay.addfunds.TangemPayAddFundsModel
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.details.TangemPayBankTransferOnrampDetailsModel
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.onboarding.TangemPayBankTransferOnrampOnboardingModel
 import com.tangem.features.tangempay.addfunds.va.bank.TangemPayBankingDetailsErrorModel
-import com.tangem.features.tangempay.addfunds.va.deposit.TangemPayVirtualAccountDepositModel
 import com.tangem.features.tangempay.campaign.TangemPayCampaignIssueCardModel
 import com.tangem.features.tangempay.card.activation.TangemPayCardActivationModel
 import com.tangem.features.tangempay.card.closure.TangemPayCloseCardModel
@@ -84,11 +83,6 @@ internal interface TangemPayModelModule {
     @IntoMap
     @ClassKey(TangemPayAddFundsModel::class)
     fun bindTangemPayAddFundsModel(model: TangemPayAddFundsModel): Model
-
-    @Binds
-    @IntoMap
-    @ClassKey(TangemPayVirtualAccountDepositModel::class)
-    fun bindTangemPayVirtualAccountDepositModel(model: TangemPayVirtualAccountDepositModel): Model
 
     @Binds
     @IntoMap

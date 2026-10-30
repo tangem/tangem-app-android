@@ -9,15 +9,18 @@ import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
+import com.tangem.domain.polymarket.model.PolymarketClobIdentity
 import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketClobAsset
 import com.tangem.domain.polymarket.model.PolymarketExchangeDomain
 import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PredictionOrder
 import com.tangem.domain.polymarket.model.PredictionOrderSide
+import com.tangem.domain.polymarket.model.PredictionOrderSigningRoute
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderResult
 import com.tangem.domain.polymarket.model.PredictionSignedOrder
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionCredentialsProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -34,6 +37,7 @@ internal class PlacePredictionOrderUseCaseTest {
 
     private val repository: PolymarketRepository = mockk()
     private val credentialsStore: PolymarketCredentialsStore = mockk()
+    private val sessionCredentialsProvider: PolymarketSessionCredentialsProvider = mockk(relaxUnitFun = true)
     private val signedOrder = signedOrder(PredictionOrderSide.BUY)
 
     private val useCase = PlacePredictionOrderUseCase(
@@ -41,11 +45,12 @@ internal class PlacePredictionOrderUseCaseTest {
         getApiCredentials = GetPolymarketApiCredentialsUseCase(credentialsStore = credentialsStore),
         invalidateCredentials = InvalidatePolymarketCredentialsUseCase(credentialsStore = credentialsStore),
         credentialsLock = PolymarketCredentialsLock(),
+        sessionCredentialsProvider = sessionCredentialsProvider,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(repository, credentialsStore)
+        clearMocks(repository, credentialsStore, sessionCredentialsProvider)
 
         coEvery { credentialsStore.clear(any()) } returns Unit
     }
@@ -54,7 +59,7 @@ internal class PlacePredictionOrderUseCaseTest {
     fun `GIVEN credentials are stored WHEN invoke THEN places the order of the owner address`() = runTest {
         // Arrange
         coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
-        coEvery { repository.placeOrder(OWNER, CREDENTIALS, signedOrder) } returns RESULT.right()
+        coEvery { repository.placeOrder(OWNER_IDENTITY, signedOrder) } returns RESULT.right()
 
         // Act
         val actual = useCase(addresses = ADDRESSES, signedOrder = signedOrder, version = V1)
@@ -68,7 +73,7 @@ internal class PlacePredictionOrderUseCaseTest {
     fun `GIVEN the exchange answers unauthorized WHEN invoke THEN clears the credentials`() = runTest {
         // Arrange
         coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
-        coEvery { repository.placeOrder(OWNER, CREDENTIALS, signedOrder) } returns
+        coEvery { repository.placeOrder(OWNER_IDENTITY, signedOrder) } returns
             PredictionPlaceOrderError.Unauthorized(detail = "Unauthorized/Invalid api key").left()
 
         // Act
@@ -85,7 +90,7 @@ internal class PlacePredictionOrderUseCaseTest {
     fun `GIVEN the order itself is refused WHEN invoke THEN keeps the credentials`() = runTest {
         // Arrange
         coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
-        coEvery { repository.placeOrder(OWNER, CREDENTIALS, signedOrder) } returns
+        coEvery { repository.placeOrder(OWNER_IDENTITY, signedOrder) } returns
             PredictionPlaceOrderError.Rejected(detail = "invalid order").left()
 
         // Act
@@ -105,7 +110,7 @@ internal class PlacePredictionOrderUseCaseTest {
 
         // Assert
         assertThat(actual.leftOrNull()).isInstanceOf(PredictionPlaceOrderError.Unauthorized::class.java)
-        coVerify(exactly = 0) { repository.placeOrder(any(), any(), any()) }
+        coVerify(exactly = 0) { repository.placeOrder(any(), any()) }
         coVerify(exactly = 0) { credentialsStore.clear(any()) }
     }
 
@@ -113,7 +118,7 @@ internal class PlacePredictionOrderUseCaseTest {
     fun `GIVEN a BUY WHEN invoke THEN no balance is refreshed before the order`() = runTest {
         // Arrange
         coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
-        coEvery { repository.placeOrder(OWNER, CREDENTIALS, signedOrder) } returns RESULT.right()
+        coEvery { repository.placeOrder(OWNER_IDENTITY, signedOrder) } returns RESULT.right()
 
         // Act
         useCase(addresses = ADDRESSES, signedOrder = signedOrder, version = V1)
@@ -131,7 +136,7 @@ internal class PlacePredictionOrderUseCaseTest {
         val sell = signedOrder(PredictionOrderSide.SELL)
         coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
         coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS, model.expectedAsset) } returns Unit.right()
-        coEvery { repository.placeOrder(OWNER, CREDENTIALS, sell) } returns RESULT.right()
+        coEvery { repository.placeOrder(OWNER_IDENTITY, sell) } returns RESULT.right()
 
         // Act
         val actual = useCase(addresses = ADDRESSES, signedOrder = sell, version = model.version)
@@ -140,7 +145,7 @@ internal class PlacePredictionOrderUseCaseTest {
         assertThat(actual).isEqualTo(RESULT.right())
         coVerifyOrder {
             repository.syncBalanceAllowance(OWNER, CREDENTIALS, model.expectedAsset)
-            repository.placeOrder(OWNER, CREDENTIALS, sell)
+            repository.placeOrder(OWNER_IDENTITY, sell)
         }
     }
 
@@ -150,14 +155,14 @@ internal class PlacePredictionOrderUseCaseTest {
         val sell = signedOrder(PredictionOrderSide.SELL)
         coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
         coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS, any()) } returns PolymarketAuthError.Network.left()
-        coEvery { repository.placeOrder(OWNER, CREDENTIALS, sell) } returns RESULT.right()
+        coEvery { repository.placeOrder(OWNER_IDENTITY, sell) } returns RESULT.right()
 
         // Act
         val actual = useCase(addresses = ADDRESSES, signedOrder = sell, version = V1)
 
         // Assert
         assertThat(actual).isEqualTo(RESULT.right())
-        coVerify(exactly = 1) { repository.placeOrder(OWNER, CREDENTIALS, sell) }
+        coVerify(exactly = 1) { repository.placeOrder(OWNER_IDENTITY, sell) }
     }
 
     @Test
@@ -167,7 +172,7 @@ internal class PlacePredictionOrderUseCaseTest {
         coEvery { credentialsStore.get(USER_WALLET_ID) } returns CREDENTIALS
         coEvery { repository.syncBalanceAllowance(OWNER, CREDENTIALS, any()) } returns
             PolymarketAuthError.InvalidSignature.left()
-        coEvery { repository.placeOrder(OWNER, CREDENTIALS, sell) } returns RESULT.right()
+        coEvery { repository.placeOrder(OWNER_IDENTITY, sell) } returns RESULT.right()
 
         // Act
         useCase(addresses = ADDRESSES, signedOrder = sell, version = V1)
@@ -175,6 +180,52 @@ internal class PlacePredictionOrderUseCaseTest {
         // Assert
         coVerify(exactly = 0) { credentialsStore.clear(any()) }
     }
+
+    @Test
+    fun `GIVEN the session route WHEN invoke THEN places the order under the session identity`() = runTest {
+        // Arrange
+        coEvery { repository.placeOrder(SESSION_IDENTITY, signedOrder) } returns RESULT.right()
+
+        // Act
+        val actual = useCase(addresses = ADDRESSES, signedOrder = signedOrder, version = V1, route = SESSION_ROUTE)
+
+        // Assert
+        assertThat(actual).isEqualTo(RESULT.right())
+        coVerify(exactly = 1) { repository.placeOrder(SESSION_IDENTITY, signedOrder) }
+        coVerify(exactly = 0) { credentialsStore.get(any()) }
+    }
+
+    @Test
+    fun `GIVEN the session route and a SELL WHEN invoke THEN the shares refresh uses the session identity`() = runTest {
+        // Arrange
+        val sell = signedOrder(PredictionOrderSide.SELL)
+        coEvery { repository.syncBalanceAllowance(SESSION_KEY, SESSION_CREDENTIALS, any()) } returns Unit.right()
+        coEvery { repository.placeOrder(SESSION_IDENTITY, sell) } returns RESULT.right()
+
+        // Act
+        useCase(addresses = ADDRESSES, signedOrder = sell, version = V1, route = SESSION_ROUTE)
+
+        // Assert
+        coVerifyOrder {
+            repository.syncBalanceAllowance(SESSION_KEY, SESSION_CREDENTIALS, any())
+            repository.placeOrder(SESSION_IDENTITY, sell)
+        }
+    }
+
+    @Test
+    fun `GIVEN a session order answered unauthorized WHEN invoke THEN invalidates only the session credentials`() =
+        runTest {
+            // Arrange
+            coEvery { repository.placeOrder(SESSION_IDENTITY, signedOrder) } returns
+                PredictionPlaceOrderError.Unauthorized(detail = "Unauthorized").left()
+
+            // Act
+            useCase(addresses = ADDRESSES, signedOrder = signedOrder, version = V1, route = SESSION_ROUTE)
+
+            // Assert
+            coVerify(exactly = 1) { sessionCredentialsProvider.invalidate(USER_WALLET_ID, SESSION_IDENTITY) }
+            coVerify(exactly = 0) { credentialsStore.clear(any()) }
+        }
 
     private fun signedOrder(side: PredictionOrderSide) = PredictionSignedOrder(
         order = PredictionOrder(
@@ -205,7 +256,12 @@ internal class PlacePredictionOrderUseCaseTest {
             userWalletId = USER_WALLET_ID,
         )
         val CREDENTIALS = PolymarketApiCredentials(apiKey = "key", secret = "secret", passphrase = "pass")
+        val OWNER_IDENTITY = PolymarketClobIdentity.Owner(address = OWNER, credentials = CREDENTIALS)
         val V1 = PolymarketMarketVersion.V1
+        const val SESSION_KEY = "0x5e55000000000000000000000000000000000001"
+        val SESSION_CREDENTIALS = PolymarketApiCredentials(apiKey = "session", secret = "s", passphrase = "p")
+        val SESSION_IDENTITY = PolymarketClobIdentity.Session(address = SESSION_KEY, credentials = SESSION_CREDENTIALS)
+        val SESSION_ROUTE = PredictionOrderSigningRoute.Session(identity = SESSION_IDENTITY)
         val TOKEN_ID = BigInteger("123456789")
         val RESULT = PredictionPlaceOrderResult(
             isSuccess = true,

@@ -93,6 +93,10 @@ internal class SendWithSwapModel @Inject constructor(
     val isAccountModeFlow: StateFlow<Boolean>
         field = MutableStateFlow(false)
 
+    /** Cleared on token change in [resetSendWithSwapNavigation] */
+    val hiddenProviderIdsFlow: StateFlow<Set<String>>
+        field = MutableStateFlow(emptySet())
+
     init {
         initUserWallet()
         initAppCurrency()
@@ -111,12 +115,17 @@ internal class SendWithSwapModel @Inject constructor(
         uiState.value = sendWithSwapUM
     }
 
+    override fun onProviderHidden(providerId: String) {
+        hiddenProviderIdsFlow.update { it + providerId }
+    }
+
     override fun onSeparatorClick(lastAmount: String, isEnterInFiatSelected: Boolean) {
         params.callback?.onCloseSwap(lastAmount, isEnterInFiatSelected)
         router.popTo(initialRoute)
     }
 
     override fun resetSendWithSwapNavigation(resetNavigation: Boolean) {
+        hiddenProviderIdsFlow.value = emptySet()
         uiState.update { state ->
             state.copy(
                 destinationUM = DestinationUM.Empty(),
@@ -153,7 +162,7 @@ internal class SendWithSwapModel @Inject constructor(
             ifLeft = { error ->
                 TangemLogger.e(error.toString())
                 swapAlertFactory.getGenericErrorState(
-                    expressError = ExpressError.UnknownError,
+                    expressError = ExpressError.UnknownError(),
                     onFailedTxEmailClick = {
                         modelScope.launch {
                             swapAlertFactory.onFailedTxEmailClick(

@@ -34,8 +34,6 @@ import com.tangem.core.ui.ds2.button.Close
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.footer.TangemFooter
-import com.tangem.core.ui.ds2.loader.TangemLoader
-import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
@@ -299,7 +297,12 @@ private fun JoinedMemberRow(member: MemberUM.Joined, modifier: Modifier = Modifi
         },
         titleSlot = { TangemRowText(text = member.name, role = TangemRowTextRole.Title) },
         subtitleSlot = { TangemRowText(text = memberRole(member = member), role = TangemRowTextRole.Subtitle) },
-        endSlot = { MemberStatusBadge(status = member.status) },
+        endSlot = when (val status = member.status) {
+            MemberStatusUM.None -> null
+            is MemberStatusUM.Badge -> {
+                { MemberStatusBadge(status = status) }
+            }
+        },
     )
 }
 
@@ -321,7 +324,7 @@ private fun memberRole(member: MemberUM.Joined): TextReference {
 }
 
 @Composable
-private fun MemberStatusBadge(status: MemberStatusUM) {
+private fun MemberStatusBadge(status: MemberStatusUM.Badge) {
     AnimatedContent(
         targetState = status,
         transitionSpec = { fadeIn().togetherWith(fadeOut()) },
@@ -387,24 +390,23 @@ private fun SlotAction(action: SlotActionUM) {
     when (action) {
         is SlotActionUM.Invite -> SlotActionButton(
             textRes = CoreUiR.string.joint_account_invite_members_invite,
+            isLoading = action.isLoading,
             onClick = action.onClick,
         )
         is SlotActionUM.ReInvite -> SlotActionButton(
             textRes = CoreUiR.string.joint_account_invite_members_re_invite,
+            isLoading = action.isLoading,
             onClick = action.onClick,
-        )
-        is SlotActionUM.Loading -> TangemLoader(
-            size = TangemLoaderSize.X24,
-            color = TangemTheme.colors3.icon.secondary,
         )
     }
 }
 
 @Composable
-private fun SlotActionButton(textRes: Int, onClick: () -> Unit) {
+private fun SlotActionButton(textRes: Int, isLoading: Boolean, onClick: () -> Unit) {
     TangemButton(
         variant = TangemButton.Variant.Secondary,
         size = TangemButton.Size.X9,
+        isLoading = isLoading,
         text = resourceReference(textRes),
         onClick = onClick,
     )
@@ -508,6 +510,7 @@ private class JointAccountMembersPreviewProvider :
                 title = "Members",
                 joinedCount = 5,
                 slots = emptyList(),
+                memberStatus = MemberStatusUM.None,
                 completed = true,
             ),
         ),
@@ -576,10 +579,9 @@ private fun previewJoined(joinedCount: Int, ownStatus: MemberStatusUM) = List(si
         name = stringReference(if (index == 0) "Ivan Zolo" else "Member $index"),
         isYou = index == 0,
         isCreator = index == 0,
-        status = when {
-            ownStatus == MemberStatusUM.Joined -> MemberStatusUM.Joined
-            index == 0 -> ownStatus
-            else -> MemberStatusUM.NotConfirmed
+        status = when (ownStatus) {
+            MemberStatusUM.None, MemberStatusUM.Joined -> ownStatus
+            else -> if (index == 0) ownStatus else MemberStatusUM.NotConfirmed
         },
         onInfoClick = {},
     )
@@ -598,7 +600,7 @@ private fun previewSlots(slots: List<PreviewSlot>, joinedCount: Int, canInvite: 
             },
             action = when {
                 !canInvite -> null
-                slot == PreviewSlot.Loading -> SlotActionUM.Loading
+                slot == PreviewSlot.Loading -> SlotActionUM.ReInvite(onClick = {}, isLoading = true)
                 slot == PreviewSlot.NotInvited -> SlotActionUM.Invite(onClick = {})
                 else -> SlotActionUM.ReInvite(onClick = {})
             },

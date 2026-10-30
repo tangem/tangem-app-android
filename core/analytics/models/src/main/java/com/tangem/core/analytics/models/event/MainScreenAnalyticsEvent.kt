@@ -138,6 +138,29 @@ sealed class MainScreenAnalyticsEvent(
     )
     // endregion
 
+    // region App update
+    class NoticeSoftUpdate : MainScreenAnalyticsEvent(event = "Notice - Soft Update")
+
+    class NoticeCriticalUpdate : MainScreenAnalyticsEvent(event = "Notice - Critical update")
+
+    class NoticeUnsupportedDevice : MainScreenAnalyticsEvent(event = "Notice - Unsupported Device")
+
+    class NoticeOsUpdate : MainScreenAnalyticsEvent(event = "Notice - OS Update")
+
+    class ButtonLater : MainScreenAnalyticsEvent(event = "Button - Later")
+
+    data class ButtonUpdateApp(val source: UpdateSource) : MainScreenAnalyticsEvent(
+        event = "Button - Update App",
+        params = mapOf(AnalyticsParam.SOURCE to source.value),
+    ) {
+
+        enum class UpdateSource(val value: String) {
+            Soft("Soft"),
+            Critical("Critical"),
+        }
+    }
+    // endregion
+
     companion object {
         const val VISA_TYPE = "Visa"
         const val WALLET_TYPE = "Wallet"

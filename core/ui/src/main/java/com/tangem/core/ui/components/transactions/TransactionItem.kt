@@ -46,7 +46,6 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
-import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Direction
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.ContentSubtitle
 import com.tangem.core.ui.components.transactions.state.TxIcon
@@ -87,9 +86,6 @@ fun TransactionItem(state: TransactionItemUM, isBalanceHidden: Boolean, modifier
             isBalanceHidden = isBalanceHidden,
             modifier = modifier,
         )
-        is TransactionItemUM.Loading,
-        is TransactionItemUM.Locked,
-        -> Unit
     }
 }
 
@@ -361,12 +357,15 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
 }
 
 /**
- * Express counterparty subtitle: "to:/from: {tokenIcon} {SYMBOL}" and, when the leg settled in a different own
- * portfolio, the "in {owner}" tail. The whole phrasing (direction prefix, the "… in …" connector and word order) lives
- * in string resources: the owner tail (`token_details_toolbar_title_token_in_account` / `…_in_wallet`) is nested into
- * the direction template as its argument, yielding one localized string with two `%image%` markers. Both icons are
- * inline placeholders in a single ellipsizable [Text]; account / payment / contact put the icon before the name, wallet
- * the name before the device icon — as the resources already encode.
+ * Express counterparty subtitle: "to:/from: {tokenIcon} {SYMBOL}" and, when the leg named a counterparty, its tail —
+ * "in {owner}" for one of the user's own portfolios, "for {recipient}" / "from {sender}" for a foreign one, which the
+ * leg paid out to rather than settled in. The whole phrasing (direction prefix, connector and word order) lives in
+ * string resources: an own portfolio nests its owner tail (`token_details_toolbar_title_token_in_account` /
+ * `…_in_wallet`) into the direction template, a foreign counterparty takes a template carrying both the direction and
+ * the connector ([foreignTemplateResId]). Both icons are inline placeholders in a single ellipsizable [Text]; account
+ * / payment / contact put the icon before the name, wallet the name before the device icon — as the resources already
+ * encode. A raw address follows that text as its own middle-shortened [EllipsisText], which an end-cut line would
+ * leave unreadable.
  */
 @Composable
 private fun AssetSubtitle(subtitle: ContentSubtitle.Asset, status: Status, modifier: Modifier = Modifier) {
@@ -376,30 +375,9 @@ private fun AssetSubtitle(subtitle: ContentSubtitle.Asset, status: Status, modif
     val valueColor = if (status is Status.Failed) secondary else primary
 
     val owner = subtitle.owner
-    val ownerName = when (owner) {
-        is ContentSubtitle.AssetOwner.Account -> owner.name.resolveReference()
-        is ContentSubtitle.AssetOwner.PaymentAccount -> owner.name.resolveReference()
-        is ContentSubtitle.AssetOwner.Wallet -> owner.name
-        is ContentSubtitle.AssetOwner.Contact -> owner.name
-        null -> null
-    }
-    // The owner tail is nested into the direction template as its %1$s, so the whole "to:/from: … in …" phrasing and
-    // its word order live in string resources; the wallet template puts its icon after the name, the account one before.
-    val template = when (owner) {
-        null -> stringResourceSafe(subtitle.direction.templateResId(), subtitle.symbol)
-        is ContentSubtitle.AssetOwner.Wallet -> stringResourceSafe(
-            subtitle.direction.templateResId(),
-            stringResourceSafe(R.string.token_details_toolbar_title_token_in_wallet, subtitle.symbol, owner.name),
-        )
-        else -> stringResourceSafe(
-            subtitle.direction.templateResId(),
-            stringResourceSafe(
-                R.string.token_details_toolbar_title_token_in_account,
-                subtitle.symbol,
-                ownerName.orEmpty(),
-            ),
-        )
-    }
+    val ownerName = owner.resolveName()
+    val template = subtitle.resolveTemplate(ownerName)
+    val textStyle = TangemTheme.typography3.caption.medium
 
     // Icons in the order their %image% markers appear in the composed template: token first, then the owner (if any).
     val icons = buildList<@Composable () -> Unit> {
@@ -416,14 +394,73 @@ private fun AssetSubtitle(subtitle: ContentSubtitle.Asset, status: Status, modif
         if (owner != null) add { AssetOwnerIcon(owner = owner, isFailed = status is Status.Failed) }
     }
 
-    InlineImagesText(
-        template = template,
-        icons = icons,
-        color = secondary,
-        highlights = listOfNotNull(subtitle.symbol, ownerName),
-        highlightColor = valueColor,
-        textStyle = TangemTheme.typography3.caption.medium,
+    Row(
         modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        InlineImagesText(
+            template = template,
+            icons = icons,
+            color = secondary,
+            highlights = listOfNotNull(subtitle.symbol, ownerName),
+            highlightColor = valueColor,
+            textStyle = textStyle,
+        )
+        (owner as? ContentSubtitle.AssetOwner.Address)?.let { address ->
+            // The cap belongs on a wrapper — see InlineAddressSubtitle, where the same layout is spelled out.
+            Box(
+                modifier = Modifier
+                    .weight(weight = 1f, fill = false)
+                    .widthIn(max = HISTORY_ROW_ADDRESS_MAX_WIDTH),
+            ) {
+                EllipsisText(
+                    text = address.rawAddress,
+                    color = valueColor,
+                    style = textStyle,
+                    ellipsis = TextEllipsis.Middle,
+                )
+            }
+        }
+    }
+}
+
+/** The counterparty name an [ContentSubtitle.Asset] tail reads as; `null` when it is drawn as an address instead. */
+@Composable
+private fun ContentSubtitle.AssetOwner?.resolveName(): String? = when (this) {
+    is ContentSubtitle.AssetOwner.Account -> name.resolveReference()
+    is ContentSubtitle.AssetOwner.PaymentAccount -> name.resolveReference()
+    is ContentSubtitle.AssetOwner.Wallet -> name
+    is ContentSubtitle.AssetOwner.Contact -> name
+    is ContentSubtitle.AssetOwner.Address, null -> null
+}
+
+/**
+ * The composed, pre-formatted template of an [ContentSubtitle.Asset] subtitle — see [AssetSubtitle] for how the two
+ * resource shapes differ. The foreign templates carry no `%image%` markers of their own, so each argument arrives as
+ * "marker + value" and the resource keeps owning the wording and the order of the two.
+ */
+@Composable
+private fun ContentSubtitle.Asset.resolveTemplate(ownerName: String?): String = when (owner) {
+    null -> stringResourceSafe(direction.templateResId(), symbol)
+    is ContentSubtitle.AssetOwner.Wallet -> stringResourceSafe(
+        direction.templateResId(),
+        stringResourceSafe(R.string.token_details_toolbar_title_token_in_wallet, symbol, owner.name),
+    )
+    is ContentSubtitle.AssetOwner.Account, is ContentSubtitle.AssetOwner.PaymentAccount -> stringResourceSafe(
+        direction.templateResId(),
+        stringResourceSafe(R.string.token_details_toolbar_title_token_in_account, symbol, ownerName.orEmpty()),
+    )
+    is ContentSubtitle.AssetOwner.Contact -> stringResourceSafe(
+        direction.foreignTemplateResId(),
+        "$INLINE_IMAGE_PLACEHOLDER $symbol",
+        "$INLINE_IMAGE_PLACEHOLDER ${owner.name}",
+    )
+    // The address itself is drawn after the text, so its argument is the identicon marker alone.
+    is ContentSubtitle.AssetOwner.Address -> stringResourceSafe(
+        direction.foreignTemplateResId(),
+        "$INLINE_IMAGE_PLACEHOLDER $symbol",
+        INLINE_IMAGE_PLACEHOLDER,
     )
 }
 
@@ -507,6 +544,12 @@ private fun AssetOwnerIcon(owner: ContentSubtitle.AssetOwner?, isFailed: Boolean
             avatar = owner.avatar,
             shape = CircleShape,
             isFailed = isFailed,
+        )
+        is ContentSubtitle.AssetOwner.Address -> IdentIcon(
+            address = owner.rawAddress,
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(CircleShape),
         )
         null -> Unit
     }
@@ -676,6 +719,15 @@ internal fun ContentSubtitle.Direction.templateResId(): Int = when (this) {
     ContentSubtitle.Direction.FROM -> R.string.transaction_history_from_inline_address
 }
 
+/**
+ * Direction template of an asset subtitle whose counterparty is foreign — a recipient the leg paid out to, not a
+ * portfolio it settled in: "to: {asset} for {recipient}" outgoing, "from: {asset} from {sender}" incoming.
+ */
+private fun ContentSubtitle.Direction.foreignTemplateResId(): Int = when (this) {
+    ContentSubtitle.Direction.TO -> R.string.transaction_history_transaction_to_for_address
+    ContentSubtitle.Direction.FROM -> R.string.transaction_history_transaction_from_from_address
+}
+
 private fun ContentSubtitle.Direction.plainTemplateResId(): Int = when (this) {
     ContentSubtitle.Direction.TO -> R.string.transaction_history_transaction_to_address
     ContentSubtitle.Direction.FROM -> R.string.transaction_history_transaction_from_address
@@ -727,7 +779,6 @@ private fun String.stripLeadingSign(): String = when {
 private fun previewContent(
     txHash: String,
     icon: TxIcon,
-    direction: Direction,
     status: Status,
     title: String,
     subtitle: String,
@@ -737,14 +788,11 @@ private fun previewContent(
     txHash = txHash,
     amount = amount,
     currencySymbol = currencySymbol,
-    time = "",
     status = status,
-    direction = direction,
     onClick = {},
     icon = icon,
     title = stringReference(title),
     subtitle = ContentSubtitle.Plain(stringReference(subtitle)),
-    timestamp = 0L,
 )
 
 @Composable
@@ -769,7 +817,6 @@ private fun Preview_TransactionItem_Receive() {
                 previewContent(
                     txHash = "rcv-c",
                     icon = TxIcon.Vector(Icons.ic_arrow_down_20),
-                    direction = Direction.INCOMING,
                     status = Status.Confirmed,
                     title = "Received",
                     subtitle = "from: 33BdfS...ga2B",
@@ -778,7 +825,6 @@ private fun Preview_TransactionItem_Receive() {
                 previewContent(
                     txHash = "rcv-u",
                     icon = TxIcon.Vector(Icons.ic_arrow_down_20),
-                    direction = Direction.INCOMING,
                     status = Status.Unconfirmed,
                     title = "Receiving",
                     subtitle = "from: 33BdfS...ga2B",
@@ -787,7 +833,6 @@ private fun Preview_TransactionItem_Receive() {
                 previewContent(
                     txHash = "rcv-f",
                     icon = TxIcon.Vector(Icons.ic_cross_20),
-                    direction = Direction.INCOMING,
                     status = Status.Failed,
                     title = "Receiving failed",
                     subtitle = "from: 33BdfS...ga2B",
@@ -808,7 +853,6 @@ private fun Preview_TransactionItem_Send() {
                 previewContent(
                     txHash = "snd-c",
                     icon = TxIcon.Vector(Icons.ic_arrow_up_20),
-                    direction = Direction.OUTGOING,
                     status = Status.Confirmed,
                     title = "Sent",
                     subtitle = "to: 33BdfS...ga2B",
@@ -817,7 +861,6 @@ private fun Preview_TransactionItem_Send() {
                 previewContent(
                     txHash = "snd-u",
                     icon = TxIcon.Vector(Icons.ic_arrow_up_20),
-                    direction = Direction.OUTGOING,
                     status = Status.Unconfirmed,
                     title = "Sending",
                     subtitle = "to: 33BdfS...ga2B",
@@ -826,7 +869,6 @@ private fun Preview_TransactionItem_Send() {
                 previewContent(
                     txHash = "snd-f",
                     icon = TxIcon.Vector(Icons.ic_cross_20),
-                    direction = Direction.OUTGOING,
                     status = Status.Failed,
                     title = "Sending failed",
                     subtitle = "to: 33BdfS...ga2B",
@@ -849,9 +891,7 @@ private fun Preview_TransactionItem_Send_Contact() {
                     txHash = "snd-contact",
                     amount = "-350.31",
                     currencySymbol = "USDT",
-                    time = "",
                     status = Status.Confirmed,
-                    direction = Direction.OUTGOING,
                     onClick = {},
                     icon = TxIcon.Vector(Icons.ic_arrow_up_20),
                     title = stringReference("Sent"),
@@ -863,15 +903,12 @@ private fun Preview_TransactionItem_Send_Contact() {
                             color = Color(0xFF007FFF),
                         ),
                     ),
-                    timestamp = 0L,
                 ),
                 TransactionItemUM.Content(
                     txHash = "snd-contact-icon",
                     amount = "-350.31",
                     currencySymbol = "USDT",
-                    time = "",
                     status = Status.Failed,
-                    direction = Direction.OUTGOING,
                     onClick = {},
                     icon = TxIcon.Vector(Icons.ic_cross_20),
                     title = stringReference("Sending failed"),
@@ -883,7 +920,6 @@ private fun Preview_TransactionItem_Send_Contact() {
                             color = Color(0xFF32CB77),
                         ),
                     ),
-                    timestamp = 0L,
                 ),
             ),
         )
@@ -900,7 +936,6 @@ private fun Preview_TransactionItem_PendingSignature() {
                 previewContent(
                     txHash = "snd-pending",
                     icon = TxIcon.Vector(Icons.ic_arrow_up_20),
-                    direction = Direction.OUTGOING,
                     status = Status.PendingSignature,
                     title = "Send",
                     subtitle = "to: 33BdfS...ga2B",
@@ -923,9 +958,7 @@ private fun Preview_TransactionItem_YieldWithdraw() {
                     txHash = "wd-u",
                     amount = "+350.31",
                     currencySymbol = "USDT",
-                    time = "",
                     status = Status.Unconfirmed,
-                    direction = Direction.INCOMING,
                     onClick = {},
                     icon = TxIcon.Vector(Icons.ic_arrow_down_20),
                     title = stringReference("Withdrawing"),
@@ -934,15 +967,12 @@ private fun Preview_TransactionItem_YieldWithdraw() {
                         name = stringReference("Aave"),
                         iconResId = R.drawable.img_aave_22,
                     ),
-                    timestamp = 0L,
                 ),
                 TransactionItemUM.Content(
                     txHash = "wd-c",
                     amount = "+350.31",
                     currencySymbol = "USDT",
-                    time = "",
                     status = Status.Confirmed,
-                    direction = Direction.INCOMING,
                     onClick = {},
                     icon = TxIcon.Vector(Icons.ic_arrow_down_20),
                     title = stringReference("Withdrawn"),
@@ -951,7 +981,6 @@ private fun Preview_TransactionItem_YieldWithdraw() {
                         name = stringReference("Aave"),
                         iconResId = R.drawable.img_aave_22,
                     ),
-                    timestamp = 0L,
                 ),
             ),
         )
@@ -968,7 +997,6 @@ private fun Preview_TransactionItem_Swap() {
                 previewContent(
                     txHash = "swp-c",
                     icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
-                    direction = Direction.INCOMING,
                     status = Status.Confirmed,
                     title = "Swapped",
                     subtitle = "to: POL",
@@ -977,7 +1005,6 @@ private fun Preview_TransactionItem_Swap() {
                 previewContent(
                     txHash = "swp-u",
                     icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
-                    direction = Direction.INCOMING,
                     status = Status.Unconfirmed,
                     title = "Swapping",
                     subtitle = "to: POL",
@@ -986,7 +1013,6 @@ private fun Preview_TransactionItem_Swap() {
                 previewContent(
                     txHash = "swp-f",
                     icon = TxIcon.Vector(Icons.ic_cross_20),
-                    direction = Direction.INCOMING,
                     status = Status.Failed,
                     title = "Swapping failed",
                     subtitle = "to: POL",
@@ -1008,9 +1034,7 @@ private fun Preview_TransactionItem_Express() {
                     txHash = "exp-swap-u",
                     amount = "-390.00",
                     currencySymbol = "USDT",
-                    time = "",
                     status = Status.Unconfirmed,
-                    direction = Direction.OUTGOING,
                     onClick = {},
                     icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
                     title = stringReference("Swapping"),
@@ -1024,16 +1048,13 @@ private fun Preview_TransactionItem_Express() {
                             shouldShowCustomBadge = false,
                         ),
                     ),
-                    timestamp = 0L,
                     warning = stringReference("KYC verification required by provider"),
                 ),
                 TransactionItemUM.Content(
                     txHash = "exp-onramp-c",
                     amount = "+0.006339",
                     currencySymbol = "BTC",
-                    time = "",
                     status = Status.Confirmed,
-                    direction = Direction.INCOMING,
                     onClick = {},
                     icon = TxIcon.Vector(Icons.ic_card_20),
                     title = stringReference("Topped up"),
@@ -1042,15 +1063,12 @@ private fun Preview_TransactionItem_Express() {
                         symbol = "SEK",
                         icon = null,
                     ),
-                    timestamp = 0L,
                 ),
                 TransactionItemUM.Content(
                     txHash = "exp-onramp-f",
                     amount = "0.006339",
                     currencySymbol = "BTC",
-                    time = "",
                     status = Status.Failed,
-                    direction = Direction.INCOMING,
                     onClick = {},
                     icon = TxIcon.Vector(Icons.ic_card_20),
                     title = stringReference("Top up failed"),
@@ -1059,7 +1077,6 @@ private fun Preview_TransactionItem_Express() {
                         symbol = "SEK",
                         icon = null,
                     ),
-                    timestamp = 0L,
                 ),
             ),
         )
@@ -1084,9 +1101,7 @@ private fun Preview_TransactionItem_Express_Owner() {
                     txHash = "exp-swap-account",
                     amount = "-390.00",
                     currencySymbol = "USDT",
-                    time = "",
                     status = Status.Confirmed,
-                    direction = Direction.OUTGOING,
                     onClick = {},
                     icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
                     title = stringReference("Swapped"),
@@ -1102,16 +1117,13 @@ private fun Preview_TransactionItem_Express_Owner() {
                             ),
                         ),
                     ),
-                    timestamp = 0L,
                 ),
                 // Cross-wallet swap: "from: {token} ETH in My Wallet {deviceIcon}".
                 TransactionItemUM.Content(
                     txHash = "exp-swap-wallet",
                     amount = "+0.006339",
                     currencySymbol = "BTC",
-                    time = "",
                     status = Status.Confirmed,
-                    direction = Direction.INCOMING,
                     onClick = {},
                     icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
                     title = stringReference("Swapped"),
@@ -1124,7 +1136,64 @@ private fun Preview_TransactionItem_Express_Owner() {
                             deviceIconUM = DeviceIconUM.Card(mainColor = Color(0xFF1E1E1E), secondColor = null),
                         ),
                     ),
-                    timestamp = 0L,
+                ),
+            ),
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun Preview_TransactionItem_Express_Foreign_Owner() {
+    val tokenIcon = CurrencyIconState.CoinIcon(
+        url = null,
+        fallbackResId = R.drawable.ic_custom_token_44,
+        isGrayscale = false,
+        shouldShowCustomBadge = false,
+    )
+    TangemThemePreviewRedesign {
+        PreviewColumn(
+            items = listOf(
+                // Send-and-swap to a saved contact: "to: {token} POL for {avatar} Dan".
+                TransactionItemUM.Content(
+                    txHash = "exp-swap-contact",
+                    amount = "-390.00",
+                    currencySymbol = "USDT",
+                    status = Status.Confirmed,
+                    onClick = {},
+                    icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
+                    title = stringReference("Swapped"),
+                    subtitle = ContentSubtitle.Asset(
+                        direction = ContentSubtitle.Direction.TO,
+                        symbol = "POL",
+                        icon = tokenIcon,
+                        owner = ContentSubtitle.AssetOwner.Contact(
+                            name = "Dan",
+                            avatar = ContentSubtitle.PortfolioAvatar.Monogram(
+                                name = stringReference("Dan"),
+                                color = Color(0xFF0099FF),
+                            ),
+                        ),
+                    ),
+                ),
+                // Swap received from an address in no address book: "from: {token} ETH from {identicon} 33Bd…21412B".
+                TransactionItemUM.Content(
+                    txHash = "exp-swap-address",
+                    amount = "+0.006339",
+                    currencySymbol = "BTC",
+                    status = Status.Confirmed,
+                    onClick = {},
+                    icon = TxIcon.Vector(Icons.ic_arrow_swap_horizontal_20),
+                    title = stringReference("Swapped"),
+                    subtitle = ContentSubtitle.Asset(
+                        direction = ContentSubtitle.Direction.FROM,
+                        symbol = "ETH",
+                        icon = tokenIcon,
+                        owner = ContentSubtitle.AssetOwner.Address(
+                            rawAddress = "33BdzQp2p2oHyC1cEZga21412BqMkvcwEx",
+                        ),
+                    ),
                 ),
             ),
         )

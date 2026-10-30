@@ -13,6 +13,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import com.tangem.core.media.VideoSurfaceState
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.Close
@@ -31,7 +32,11 @@ import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_24
 import com.tangem.core.ui.test.TangemPayTestTags
 
 @Composable
-internal fun TangemPayOnboardingScreen(state: TangemPayOnboardingScreenState, modifier: Modifier = Modifier) {
+internal fun TangemPayOnboardingScreen(
+    state: TangemPayOnboardingScreenState,
+    video: VideoSurfaceState?,
+    modifier: Modifier = Modifier,
+) {
     when (state) {
         is TangemPayOnboardingScreenState.Loading -> TangemPayOnboardingLoading(
             onBack = state.onBack,
@@ -40,10 +45,10 @@ internal fun TangemPayOnboardingScreen(state: TangemPayOnboardingScreenState, mo
         is TangemPayOnboardingScreenState.Content -> if (state.isUnifiedOnboarding) {
             TangemPayUnifiedOnboardingLayout(
                 modifier = modifier,
+                video = video,
                 isGetStartedLoading = state.buttonConfig.isLoading,
                 onGetStartedClick = state.buttonConfig.onClick,
                 onTermsClick = state.onTermsClick,
-                onTermsAndFeesClick = state.onTermsAndFeesClick,
                 onCloseClick = state.onBack,
             )
         } else {
@@ -143,7 +148,7 @@ private fun TangemPayOnboardingScreenPreview(
     state: TangemPayOnboardingScreenState,
 ) {
     TangemThemePreviewRedesign {
-        TangemPayOnboardingScreen(state = state, modifier = Modifier.fillMaxSize())
+        TangemPayOnboardingScreen(state = state, video = null, modifier = Modifier.fillMaxSize())
     }
 }
 
@@ -154,21 +159,18 @@ private class TangemPayOnboardingScreenStateProvider :
             TangemPayOnboardingScreenState.Content(
                 onBack = {},
                 onTermsClick = {},
-                onTermsAndFeesClick = {},
                 buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(isLoading = false, onClick = {}),
                 isUnifiedOnboarding = false,
             ),
             TangemPayOnboardingScreenState.Content(
                 onBack = {},
                 onTermsClick = {},
-                onTermsAndFeesClick = {},
                 buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(isLoading = true, onClick = {}),
                 isUnifiedOnboarding = false,
             ),
             TangemPayOnboardingScreenState.Content(
                 onBack = {},
                 onTermsClick = {},
-                onTermsAndFeesClick = {},
                 buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(isLoading = false, onClick = {}),
                 isUnifiedOnboarding = true,
             ),

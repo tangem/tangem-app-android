@@ -15,12 +15,12 @@ import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderRequest
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.pay.model.bankofframp.BankOfframpRecipient
 import com.tangem.domain.pay.model.bankofframp.BankRail
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.usecase.GetTangemPayCountriesUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayRegionsUseCase
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
+import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.POLYGON_CHAIN_ID
 import com.tangem.features.tangempay.withdraw.bank.USDC_POLYGON
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawOptions
@@ -51,29 +51,28 @@ internal class TangemPayBankWithdrawModelTest {
 
     private val userWalletId = UserWalletId("011")
     private val getBankAccountsUseCase: GetBankAccountsUseCase = mockk()
-    private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk(relaxed = true)
     private val getTangemPayCountriesUseCase: GetTangemPayCountriesUseCase = mockk()
     private val getTangemPayRegionsUseCase: GetTangemPayRegionsUseCase = mockk()
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
+    private val onWithdrawSent: () -> Unit = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
     @BeforeEach
     fun resetMocks() {
         clearMocks(
             getBankAccountsUseCase,
-            paymentAccountStatusFetcher,
             getTangemPayCountriesUseCase,
             getTangemPayRegionsUseCase,
             analytics,
+            onWithdrawSent,
         )
-        coEvery { paymentAccountStatusFetcher(userWalletId) } returns Unit.right()
         coEvery { getBankAccountsUseCase(userWalletId) } returns emptyList<BankAccount>().right()
         coEvery { getTangemPayCountriesUseCase() } returns emptyList<TangemPayCountry>().right()
         coEvery { getTangemPayRegionsUseCase(any()) } returns emptyList<TangemPayRegion>().right()
     }
 
     @Test
-    fun `GIVEN signed order WHEN reported THEN payment account refreshed`() {
+    fun `GIVEN signed order WHEN reported THEN withdraw reported as sent`() {
         // Arrange
         val model = createModel(entry = BankWithdrawEntry.NewPersonal)
         model.onAmountConfirmed(
@@ -81,6 +80,7 @@ internal class TangemPayBankWithdrawModelTest {
                 amount = BigDecimal("500"),
                 source = bankWithdrawSource(),
                 destination = offrampDestination(),
+                networkFee = BigDecimal.ZERO,
             ),
         )
         model.onOrderCreated(BankOfframpOrderResult(orderId = "order-1", bankAccountId = "acc-7"))
@@ -89,7 +89,7 @@ internal class TangemPayBankWithdrawModelTest {
         model.onOrderSigned()
 
         // Assert
-        coVerify(exactly = 1) { paymentAccountStatusFetcher(userWalletId) }
+        verify(exactly = 1) { onWithdrawSent() }
         model.onDestroy()
     }
 
@@ -195,6 +195,7 @@ internal class TangemPayBankWithdrawModelTest {
                 amount = BigDecimal("500"),
                 source = bankWithdrawSource(),
                 destination = offrampDestination(),
+                networkFee = BigDecimal.ZERO,
             ),
         )
         model.onDetailsFilled(formResult(BankWithdrawFormField.AccountNumber to "4830019271"))
@@ -260,7 +261,7 @@ internal class TangemPayBankWithdrawModelTest {
     }
 
     @Test
-    fun `GIVEN draft WHEN amount confirmed THEN draft keeps amount source and destination`() {
+    fun `GIVEN draft WHEN amount confirmed THEN draft keeps amount source destination and network fee`() {
         // Arrange
         val model = createModel(BankWithdrawEntry.NewBusiness)
         val source = bankWithdrawSource()
@@ -268,7 +269,12 @@ internal class TangemPayBankWithdrawModelTest {
 
         // Act
         model.onAmountConfirmed(
-            BankWithdrawAmountResult(amount = BigDecimal("500"), source = source, destination = destination),
+            BankWithdrawAmountResult(
+                amount = BigDecimal("500"),
+                source = source,
+                destination = destination,
+                networkFee = BigDecimal("0.03"),
+            ),
         )
 
         // Assert
@@ -278,6 +284,29 @@ internal class TangemPayBankWithdrawModelTest {
                 amount = BigDecimal("500"),
                 source = source,
                 destination = destination,
+                networkFee = BigDecimal("0.03"),
+            ),
+        )
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN amount confirmed WHEN network fee changed THEN draft keeps everything else and the new fee`() {
+        // Arrange
+        val model = createModel(BankWithdrawEntry.NewPersonal)
+        model.onAmountConfirmed(achAmountResult())
+
+        // Act
+        model.onNetworkFeeChanged(BigDecimal("0.05"))
+
+        // Assert
+        assertThat(model.draft.value).isEqualTo(
+            BankWithdrawDraft(
+                entry = BankWithdrawEntry.NewPersonal,
+                amount = BigDecimal("500"),
+                source = bankWithdrawSource(),
+                destination = offrampDestination(),
+                networkFee = BigDecimal("0.05"),
             ),
         )
         model.onDestroy()
@@ -423,6 +452,28 @@ internal class TangemPayBankWithdrawModelTest {
     }
 
     @Test
+    fun `GIVEN amount confirmed WHEN destination changed THEN draft keeps amount source and the new destination`() {
+        // Arrange
+        val model = createModel(BankWithdrawEntry.NewPersonal)
+        model.onAmountConfirmed(achAmountResult())
+        val repriced = offrampDestination(fee = BigDecimal("1.50"), minDays = 2, maxDays = 4)
+
+        // Act
+        model.onDestinationChanged(repriced)
+
+        // Assert
+        assertThat(model.draft.value).isEqualTo(
+            BankWithdrawDraft(
+                entry = BankWithdrawEntry.NewPersonal,
+                amount = BigDecimal("500"),
+                source = bankWithdrawSource(),
+                destination = repriced,
+            ),
+        )
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN new personal entry WHEN model created THEN countries and us regions prefetched`() {
         // Act
         val model = createModel(BankWithdrawEntry.NewPersonal)
@@ -471,6 +522,7 @@ internal class TangemPayBankWithdrawModelTest {
                     amount = BigDecimal("500"),
                     source = bankWithdrawSource(),
                     destination = offrampDestination(rail = rail),
+                    networkFee = BigDecimal.ZERO,
                 ),
             )
         }
@@ -504,6 +556,7 @@ internal class TangemPayBankWithdrawModelTest {
         amount = BigDecimal("500"),
         source = bankWithdrawSource(),
         destination = offrampDestination(),
+        networkFee = BigDecimal.ZERO,
     )
 
     private fun wireDestination() =
@@ -512,14 +565,15 @@ internal class TangemPayBankWithdrawModelTest {
     private fun createModel(entry: BankWithdrawEntry): TangemPayBankWithdrawModel = TangemPayBankWithdrawModel(
         paramsContainer = MutableParamsContainer(
             TangemPayBankWithdrawComponent.Params(
-                userWalletId = userWalletId,
+                sourceAccount = BankWithdrawSourceAccount.Payment(userWalletId),
                 entry = entry,
                 options = MutableStateFlow(bankWithdrawOptions()),
+                onCloseFlow = {},
+                onWithdrawSent = onWithdrawSent,
             ),
         ),
         dispatchers = dispatchers,
         getBankAccountsUseCase = getBankAccountsUseCase,
-        paymentAccountStatusFetcher = paymentAccountStatusFetcher,
         getTangemPayCountriesUseCase = getTangemPayCountriesUseCase,
         getTangemPayRegionsUseCase = getTangemPayRegionsUseCase,
         analytics = analytics,

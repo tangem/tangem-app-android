@@ -12,12 +12,14 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
 import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.recipients.TangemPayBankWithdrawRecipientsComponent
 import com.tangem.features.tangempay.withdraw.bank.recipients.state.TangemPayBankWithdrawRecipientsUM.ContentUM
 import com.tangem.features.tangempay.withdraw.bank.recipients.state.TangemPayBankWithdrawRecipientsUM.RecipientUM
@@ -27,6 +29,7 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verify
+import io.mockk.verifySequence
 import kotlinx.coroutines.CompletableDeferred
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -34,6 +37,8 @@ import org.junit.jupiter.api.Test
 internal class TangemPayBankWithdrawRecipientsModelTest {
 
     private val userWalletId = UserWalletId("011")
+    private val paymentAccount = BankWithdrawSourceAccount.Payment(userWalletId)
+    private val moneyAccount = BankWithdrawSourceAccount.Money(userWalletId, productInstanceId = "instance-1")
     private val router: Router = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val getBankAccountsUseCase: GetBankAccountsUseCase = mockk()
@@ -300,10 +305,30 @@ internal class TangemPayBankWithdrawRecipientsModelTest {
         model.onDestroy()
     }
 
-    private fun createModel(): TangemPayBankWithdrawRecipientsModel = TangemPayBankWithdrawRecipientsModel(
+    @Test
+    fun `GIVEN money account WHEN recipient picked after search THEN only list opened and selected sent`() {
+        // Arrange
+        val model = createModel(sourceAccount = moneyAccount)
+
+        // Act
+        model.uiState.value.search.onActiveChange(true)
+        (model.uiState.value.content as ContentUM.Recipients).items.first().onClick()
+
+        // Assert
+        verifySequence {
+            analytics.send(MoneyAccountAnalyticsEvents.OfframpRecipientListOpened())
+            analytics.send(MoneyAccountAnalyticsEvents.OfframpRecipientSelected())
+        }
+        verify(exactly = 1) { onRecipientSelected(basit) }
+        model.onDestroy()
+    }
+
+    private fun createModel(
+        sourceAccount: BankWithdrawSourceAccount = paymentAccount,
+    ): TangemPayBankWithdrawRecipientsModel = TangemPayBankWithdrawRecipientsModel(
         paramsContainer = MutableParamsContainer(
             TangemPayBankWithdrawRecipientsComponent.Params(
-                userWalletId = userWalletId,
+                sourceAccount = sourceAccount,
                 onRecipientSelected = onRecipientSelected,
                 onCloseFlow = onCloseFlow,
             ),

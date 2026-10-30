@@ -36,7 +36,7 @@ internal fun NFTDetailsBlock(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
@@ -49,7 +49,7 @@ internal fun NFTDetailsBlock(
                 NFTLogo(
                     assetImage,
                     networkIconRes,
-                    background = TangemTheme.colors.background.action,
+                    background = TangemTheme.colors3.bg.secondary,
                 )
             }
             Column(
@@ -58,12 +58,12 @@ internal fun NFTDetailsBlock(
                 Text(
                     text = assetName.resolveReference(),
                     style = TangemTheme.typography.subtitle2,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                 )
                 Text(
                     text = collectionName.resolveReference(),
                     style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                 )
             }
             if (!isSuccessScreen) {
@@ -71,7 +71,7 @@ internal fun NFTDetailsBlock(
                 NFTLogo(
                     assetImage,
                     networkIconRes,
-                    background = TangemTheme.colors.background.action,
+                    background = TangemTheme.colors3.bg.secondary,
                 )
             }
         }

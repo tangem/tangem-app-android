@@ -52,6 +52,7 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
 import io.mockk.verify
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -1115,21 +1116,130 @@ internal class GetWalletNotificationsFactoryTest {
     )
     // endregion
 
+    // region Outdated data banner across refreshes
+    @Test
+    fun `GIVEN outdated banner shown WHEN refresh resets source to cache THEN banner is kept`() = runTest {
+        // Arrange
+        val accountLists = MutableStateFlow(accountStatusListOf(loadedBalance(StatusSource.ONLY_CACHE)))
+        stubAccountStatusListFlow(accountLists)
+
+        factory.create(coldWallet, clickIntents).test {
+            assertThat(awaitItem().hasOutdatedDataBanner()).isTrue()
+
+            // Act
+            accountLists.value = accountStatusListOf(loadedBalance(StatusSource.CACHE))
+
+            // Assert
+            assertThat(awaitItem().hasOutdatedDataBanner()).isTrue()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `GIVEN outdated banner held WHEN data becomes actual THEN banner is removed`() = runTest {
+        // Arrange
+        val accountLists = MutableStateFlow(accountStatusListOf(loadedBalance(StatusSource.ONLY_CACHE)))
+        stubAccountStatusListFlow(accountLists)
+
+        factory.create(coldWallet, clickIntents).test {
+            awaitItem()
+            accountLists.value = accountStatusListOf(loadedBalance(StatusSource.CACHE))
+            awaitItem()
+
+            // Act
+            accountLists.value = accountStatusListOf(loadedBalance(StatusSource.ACTUAL))
+
+            // Assert
+            assertThat(awaitItem().hasOutdatedDataBanner()).isFalse()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `GIVEN outdated banner shown WHEN balance fails THEN banner is removed`() = runTest {
+        // Arrange
+        val accountLists = MutableStateFlow(accountStatusListOf(loadedBalance(StatusSource.ONLY_CACHE)))
+        stubAccountStatusListFlow(accountLists)
+
+        factory.create(coldWallet, clickIntents).test {
+            awaitItem()
+
+            // Act
+            accountLists.value = accountStatusListOf(TotalFiatBalance.Failed)
+
+            // Assert
+            assertThat(awaitItem().hasOutdatedDataBanner()).isFalse()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `GIVEN outdated banner shown WHEN balance starts loading THEN banner is removed`() = runTest {
+        // Arrange
+        val accountLists = MutableStateFlow(accountStatusListOf(loadedBalance(StatusSource.ONLY_CACHE)))
+        stubAccountStatusListFlow(accountLists)
+
+        factory.create(coldWallet, clickIntents).test {
+            awaitItem()
+
+            // Act
+            accountLists.value = accountStatusListOf(TotalFiatBalance.Loading)
+
+            // Assert
+            assertThat(awaitItem().hasOutdatedDataBanner()).isFalse()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `GIVEN banner held in previous collection WHEN flow is collected again on cache THEN banner is not shown`() =
+        runTest {
+            // Arrange
+            val accountLists = MutableStateFlow(accountStatusListOf(loadedBalance(StatusSource.ONLY_CACHE)))
+            stubAccountStatusListFlow(accountLists)
+            factory.create(coldWallet, clickIntents).test {
+                awaitItem()
+                cancelAndIgnoreRemainingEvents()
+            }
+            accountLists.value = accountStatusListOf(loadedBalance(StatusSource.CACHE))
+
+            // Act
+            val actual = factory.create(coldWallet, clickIntents).first()
+
+            // Assert
+            assertThat(actual.hasOutdatedDataBanner()).isFalse()
+        }
+    // endregion
+
     private fun stubAccountStatusList(
         balance: TotalFiatBalance,
         currencies: List<CryptoCurrencyStatus> = emptyList(),
         accountStatuses: List<AccountStatus> = emptyList(),
     ) {
-        val list = mockk<AccountStatusList> {
-            every { totalFiatBalance } returns balance
-            every { flattenCurrencies() } returns currencies
-            every { flattenPersonalCurrencies() } returns currencies
-            every { this@mockk.accountStatuses } returns accountStatuses
-        }
+        stubAccountStatusListFlow(flowOf(accountStatusListOf(balance, currencies, accountStatuses)))
+    }
+
+    private fun stubAccountStatusListFlow(accountLists: Flow<AccountStatusList>) {
         every {
             singleAccountStatusListSupplier(any<SingleAccountStatusListProducer.Params>())
-        } returns flowOf(list)
+        } returns accountLists
     }
+
+    private fun accountStatusListOf(
+        balance: TotalFiatBalance,
+        currencies: List<CryptoCurrencyStatus> = emptyList(),
+        accountStatuses: List<AccountStatus> = emptyList(),
+    ): AccountStatusList = mockk {
+        every { totalFiatBalance } returns balance
+        every { flattenCurrencies() } returns currencies
+        every { flattenPersonalCurrencies() } returns currencies
+        every { this@mockk.accountStatuses } returns accountStatuses
+    }
+
+    private fun loadedBalance(source: StatusSource) = TotalFiatBalance.Loaded(BigDecimal.ONE, source)
+
+    private fun WalletNotificationsSnapshot.hasOutdatedDataBanner() =
+        notifications.any { it is WalletNotificationUM.UsedOutdatedData }
 
     private fun missedDerivationStatus(currency: CryptoCurrency) = CryptoCurrencyStatus(
         currency = currency,

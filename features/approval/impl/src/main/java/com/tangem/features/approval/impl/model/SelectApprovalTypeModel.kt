@@ -26,6 +26,7 @@ import javax.inject.Inject
 @Stable
 @ModelScoped
 internal class SelectApprovalTypeModel @Inject constructor(
+    private val tangemBlogUrlBuilder: TangemBlogUrlBuilder,
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
     private val urlOpener: UrlOpener,
@@ -48,7 +49,7 @@ internal class SelectApprovalTypeModel @Inject constructor(
 
     fun onLearnMoreClick() {
         modelScope.launch {
-            urlOpener.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.GiveRevokePermission))
+            urlOpener.openUrl(tangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.GiveRevokePermission))
         }
     }
 

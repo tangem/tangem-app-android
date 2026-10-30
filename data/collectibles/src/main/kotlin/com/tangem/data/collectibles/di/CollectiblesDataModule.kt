@@ -37,6 +37,7 @@ import dagger.multibindings.IntoSet
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import javax.inject.Singleton
+import kotlin.time.TimeSource
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -87,6 +88,10 @@ internal interface CollectiblesDataModule {
         fun provideCollectiblesMachineStore(): CollectiblesMachineStore {
             return CollectiblesMachineStore(store = RuntimeSharedStore())
         }
+
+        @Provides
+        @CollectiblesRelinkTimeSource
+        fun provideRelinkTimeSource(): TimeSource = TimeSource.Monotonic
 
         @Provides
         @Singleton

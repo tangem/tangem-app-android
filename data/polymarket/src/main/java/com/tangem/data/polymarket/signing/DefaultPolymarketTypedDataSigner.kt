@@ -23,13 +23,17 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.derivation.POLYMARKET_OWNER_DERIVATION_PATH
 import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.domain.polymarket.model.PolymarketSessionKeyError
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionOrder
 import com.tangem.domain.polymarket.model.PredictionSignedOrder
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyEnvelope
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
 import com.tangem.domain.polymarket.signing.PolymarketApprovalsPayload
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
 import com.tangem.domain.polymarket.signing.PredictionOrderPayload
 import com.tangem.domain.wallets.derivations.DerivationsRepository
+import com.tangem.utils.extensions.toHexString
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import java.math.BigInteger
 import javax.inject.Inject
@@ -42,6 +46,7 @@ internal class DefaultPolymarketTypedDataSigner @Inject constructor(
     private val hotSignerFactory: TangemHotWalletSigner.Factory,
     private val digestFactory: PolymarketDigestFactory,
     private val formatter: PolymarketSignatureFormatter,
+    private val sessionKeyStore: PolymarketSessionKeyStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PolymarketTypedDataSigner {
 
@@ -70,6 +75,41 @@ internal class DefaultPolymarketTypedDataSigner @Inject constructor(
                 ),
                 domain = payload.draft.domain,
             ).right()
+        }
+        .getOrElse { it.toPolymarketSigningError().left() }
+
+    override suspend fun signOrderWithSessionKey(
+        userWalletId: UserWalletId,
+        sessionKeyAddress: String,
+        payload: PredictionOrderPayload,
+    ): Either<PolymarketSigningError, PredictionSignedOrder> = Either
+        .catchOn(dispatchers.io) {
+            val order = payload.toOrder()
+            val digest = PolymarketErc7739SignatureBuilder.digest(
+                order = order,
+                domain = payload.draft.domain,
+                depositWalletAddress = order.maker,
+            )
+            val inner = sessionKeyStore.sign(userWalletId = userWalletId, address = sessionKeyAddress, digest = digest)
+                .getOrElse { return@catchOn PolymarketSigningError.SessionKey(it).left() }
+            val wrapped = PolymarketErc7739SignatureBuilder.wrap(
+                innerSignature = inner.toHexString(),
+                order = order,
+                domain = payload.draft.domain,
+            )
+
+            PolymarketSessionKeyEnvelope.wrap(depositWalletSignature = wrapped, sessionKeyAddress = sessionKeyAddress)
+                .map { envelope ->
+                    PredictionSignedOrder(order = order, signature = envelope, domain = payload.draft.domain)
+                }
+                .mapLeft { error ->
+                    when (error) {
+                        is PolymarketSessionKeyEnvelope.Error.InvalidAddress -> PolymarketSigningError.SessionKey(
+                            PolymarketSessionKeyError.InvalidAddress(error.address),
+                        )
+                        PolymarketSessionKeyEnvelope.Error.InvalidSignature -> PolymarketSigningError.Unknown
+                    }
+                }
         }
         .getOrElse { it.toPolymarketSigningError().left() }
 

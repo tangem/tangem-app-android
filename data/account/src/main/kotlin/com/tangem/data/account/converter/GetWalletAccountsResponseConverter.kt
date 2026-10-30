@@ -1,5 +1,6 @@
 package com.tangem.data.account.converter
 
+import com.tangem.data.common.account.toWalletAccountDTO
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.models.account.Account
@@ -33,6 +34,7 @@ internal class GetWalletAccountsResponseConverter @AssistedInject constructor(
             accounts = value.accounts.mapNotNull { account ->
                 when (account) {
                     is Account.CryptoPortfolio -> cryptoPortfolioConverter.convertBack(account)
+                    is Account.Collectibles -> account.toWalletAccountDTO()
                     else -> null
                 }
             },

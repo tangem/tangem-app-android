@@ -35,7 +35,6 @@ dependencies {
     api(projects.features.tokenRecieve.api)
     implementation(projects.features.tokendetails.api)
     api(projects.features.promoBanners.api)
-    api(projects.features.moneyAccount.details.api)
 
     /** Domain */
     api(projects.domain.balanceHiding)
@@ -45,6 +44,10 @@ dependencies {
     api(projects.domain.visa)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.feedback.models)
+    implementation(projects.domain.legacy)
+    implementation(projects.domain.moneyAccount)
+    implementation(projects.domain.transaction)
+    implementation(projects.domain.transaction.models)
     implementation(projects.domain.visa.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
@@ -52,6 +55,9 @@ dependencies {
 
     /** Spend */
     implementation(projects.spend.pushProvisioning.api)
+
+    /** Tangem SDK */
+    implementation(tangemDeps.blockchain)
 
     /** Compose */
     api(deps.compose.coil)

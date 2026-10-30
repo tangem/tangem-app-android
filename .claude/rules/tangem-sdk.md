@@ -13,7 +13,6 @@
 - `libs/tangem-sdk-api/` — wrapper around Card SDK, exposes NFC card interaction API to the app
 - `libs/crypto/` — cryptographic utilities: derivation, address handling, blockchain-specific helpers
 - `libs/auth/` — API key provider interfaces for external services (Express, StakeKit)
-- `libs/visa/` — Visa integration: smart contracts, limits, balances via Web3j
 
 ## Private third-party SDKs
 

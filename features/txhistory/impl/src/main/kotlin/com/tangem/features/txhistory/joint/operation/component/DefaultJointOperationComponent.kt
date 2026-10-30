@@ -6,6 +6,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.essenty.lifecycle.doOnPause
+import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -46,6 +48,8 @@ internal class DefaultJointOperationComponent @AssistedInject constructor(
     )
 
     init {
+        lifecycle.doOnResume { model.onResume() }
+        lifecycle.doOnPause { model.onPause() }
         model.uiState
             .filterIsInstance<JointOperationUM.Gone>()
             .onEach { dismiss() }

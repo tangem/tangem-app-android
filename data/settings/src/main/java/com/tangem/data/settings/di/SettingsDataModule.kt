@@ -6,15 +6,12 @@ import com.tangem.data.settings.DefaultAppRatingRepository
 import com.tangem.data.settings.DefaultPermissionRepository
 import com.tangem.data.settings.DefaultSettingsFeatureToggles
 import com.tangem.data.settings.DefaultSettingsRepository
-import com.tangem.data.settings.DevHotWalletRestrictionManager
 import com.tangem.data.settings.DevUsedeskTokenTtlManager
-import com.tangem.data.settings.ProdHotWalletRestrictionManager
 import com.tangem.data.settings.ProdUsedeskTokenTtlManager
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.store.datasource.preferences.StorePreferencesKeys
-import com.tangem.domain.settings.HotWalletRestrictionManager
 import com.tangem.domain.settings.SettingsFeatureToggles
 import com.tangem.domain.settings.UsedeskTokenTtlManager
 import com.tangem.domain.settings.repositories.AppRatingRepository
@@ -80,19 +77,6 @@ internal object SettingsDataModule {
             storePreferencesKeys = storePreferencesKeys,
             context = context,
         )
-    }
-
-    @Provides
-    @Singleton
-    fun provideHotWalletRestrictionManager(
-        appPreferencesStore: AppPreferencesStore,
-        dispatchers: CoroutineDispatcherProvider,
-    ): HotWalletRestrictionManager {
-        return if (BuildConfig.TESTER_MENU_ENABLED) {
-            DevHotWalletRestrictionManager(appPreferencesStore, dispatchers)
-        } else {
-            ProdHotWalletRestrictionManager()
-        }
     }
 
     @Provides

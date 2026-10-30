@@ -23,6 +23,7 @@ import com.tangem.core.ui.ds2.button.TangemButtonGroup
 import com.tangem.core.ui.ds2.button.TangemButtonStack
 import com.tangem.core.ui.ds2.checkbox.TangemCheckbox
 import com.tangem.core.ui.ds2.checkbox.TangemCheckmark
+import com.tangem.core.ui.ds2.draggable.TangemDraggable
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.filter.TangemFilterGroup
 import com.tangem.core.ui.ds2.footer.TangemFooter
@@ -52,6 +53,7 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.buttongroup.tang
 import com.tangem.feature.tester.presentation.storybook.page.ds.buttonstack.tangemButtonStackStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.checkbox.tangemCheckboxV2StoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.checkmark.tangemCheckmarkStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.draggable.tangemDraggableStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.fade.tangemFadeStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.filter.tangemFilterGroupStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.footer.tangemFooterStoryFactory
@@ -90,6 +92,7 @@ private fun buildDsStories() = listOf(
     DsStoryItem("📈 TangemTokenRowMarket", TangemTokenRowMarket.version, tangemTokenRowMarketStoryFactory),
     DsStoryItem("🗃️ TangemAccountRow", TangemAccountRow.version, tangemAccountRowStoryFactory),
     DsStoryItem("📂 TangemExpandableRow", TangemExpandableRow.version, tangemExpandableRowStoryFactory),
+    DsStoryItem("✋ TangemDraggable", TangemDraggable.version, tangemDraggableStoryFactory),
     DsStoryItem("🙂 TangemAvatar", TangemAvatar.version, tangemAvatarStoryFactory),
     DsStoryItem("🔎 TangemSearch", TangemSearch.version, tangemSearchStoryFactory),
     DsStoryItem("✨ TangemShimmer", TangemShimmer.version, tangemShimmerStoryFactory),
@@ -119,7 +122,7 @@ internal fun DsComponentsListStory(
         modifier = modifier
             .statusBarsPadding()
             .fillMaxSize()
-            .background(TangemTheme.colors.background.primary),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         items(items = stories, key = { it.title }) { item ->
             PrimaryButton(

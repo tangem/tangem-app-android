@@ -39,8 +39,6 @@ internal interface FeedV2NavModule {
     @Singleton
     fun bindFeedEntryController(impl: DefaultFeedEntryController): FeedEntryController
 
-    // unscoped on purpose: `isAvailable` is read once per surface creation, so a feature toggle
-    // flipped in the tester screen takes effect on the next feed entry instead of after a restart
     @Binds
     fun bindFeedTabSet(impl: DefaultFeedTabSet): FeedTabSet
 }

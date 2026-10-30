@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.withdraw.bank.preview.ui
 
+import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
 import com.tangem.core.ui.extensions.resourceReference
@@ -7,6 +8,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawFromUM
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderUM
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM
 import com.tangem.features.tangempay.withdraw.bank.preview.state.TangemPayBankWithdrawPreviewUM.AmountCardUM
@@ -27,6 +29,10 @@ internal object TangemPayBankWithdrawPreviewData {
 
     private val transfer = TransferUM(
         amount = AmountCardUM(
+            from = BankWithdrawFromUM(
+                title = resourceReference(R.string.tangempay_payment_account),
+                icon = AccountIconUM.Payment,
+            ),
             balance = "$2,130.88",
             amount = "$500",
             icon = CurrencyIconState.Loading,
@@ -84,6 +90,7 @@ internal object TangemPayBankWithdrawPreviewData {
         ),
         isSending = false,
         isSendEnabled = true,
+        sendText = resourceReference(R.string.common_send),
         isColdWallet = true,
         onBackClick = {},
         onCloseClick = {},
@@ -105,6 +112,20 @@ internal object TangemPayBankWithdrawPreviewData {
 
     /** A hot wallet signs without a card, so Send drops the Tangem logo. */
     val summaryHotWallet = summary.copy(isColdWallet = false)
+
+    val summaryMoneyAccount = summary.copy(
+        transfer = transfer.copy(
+            amount = transfer.amount.copy(
+                from = BankWithdrawFromUM(
+                    title = resourceReference(R.string.money_account_main_name),
+                    icon = AccountIconUM.Money,
+                ),
+            ),
+            route = transfer.route.copy(fee = "$1.03"),
+            sendingSummary = stringReference("Fees include ACH service charge and estimated network fee"),
+        ),
+        sendText = stringReference("Pay $501.03"),
+    )
 
     val sending = summary.copy(isSending = true)
 

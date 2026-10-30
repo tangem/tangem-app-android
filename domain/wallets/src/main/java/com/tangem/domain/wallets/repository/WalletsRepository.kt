@@ -43,6 +43,17 @@ interface WalletsRepository {
 
     suspend fun setNotificationsEnabled(userWalletId: UserWalletId, isEnabled: Boolean)
 
+    /**
+     * Whether the wallet's token addresses must be sent to the backend regardless of its notification status.
+     *
+     * Set once the owner authorizes an MCP agent for the wallet: the agent reads the portfolio by those addresses,
+     * so they have to be there even with transaction alerts off. Never unset — revoking the agent leaves the
+     * addresses the backend already knows.
+     */
+    suspend fun isAddressesSharingRequired(userWalletId: UserWalletId): Boolean
+
+    suspend fun setAddressesSharingRequired(userWalletId: UserWalletId)
+
     @Throws
     suspend fun setWalletName(walletId: UserWalletId, walletName: String)
 

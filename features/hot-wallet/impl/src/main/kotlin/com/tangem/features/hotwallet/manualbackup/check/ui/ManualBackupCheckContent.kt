@@ -25,18 +25,15 @@ import com.tangem.core.ui.components.fields.contextmenu.DisableContextMenu
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.security.DisableAutofillEffect
 import com.tangem.features.hotwallet.impl.R
 import com.tangem.features.hotwallet.manualbackup.check.entity.ManualBackupCheckUM
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun ManualBackupCheckContent(state: ManualBackupCheckUM, modifier: Modifier = Modifier) {
-    DisableAutofillEffect()
-
     Column(
         modifier = modifier
-            .background(TangemTheme.colors.background.primary)
+            .background(TangemTheme.colors3.bg.primary)
             .fillMaxSize()
             .imePadding(),
     ) {
@@ -48,7 +45,7 @@ internal fun ManualBackupCheckContent(state: ManualBackupCheckUM, modifier: Modi
             Text(
                 text = stringResourceSafe(R.string.onboarding_seed_user_validation_title),
                 style = TangemTheme.typography.h2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .padding(top = 48.dp, start = 36.dp, end = 36.dp, bottom = 16.dp)
@@ -57,7 +54,7 @@ internal fun ManualBackupCheckContent(state: ManualBackupCheckUM, modifier: Modi
             Text(
                 text = stringResourceSafe(R.string.onboarding_seed_user_validation_message),
                 style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .padding(horizontal = 36.dp)
@@ -95,6 +92,7 @@ private fun Fields(state: ManualBackupCheckUM, modifier: Modifier = Modifier) {
         DisableContextMenu {
             state.wordFields.fastForEachIndexed { index, field ->
                 OutlineTextField(
+                    isExcludedFromAutofill = true,
                     value = field.word,
                     onValueChange = field.onChange,
                     label = field.index.toString(),

@@ -16,4 +16,6 @@ sealed interface PolymarketSigningError : PolymarketError {
     data object CardError : PolymarketSigningError
 
     data object Unknown : PolymarketSigningError
+
+    data class SessionKey(val error: PolymarketSessionKeyError) : PolymarketSigningError
 }

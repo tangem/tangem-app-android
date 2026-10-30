@@ -66,6 +66,8 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_copy_16
+import com.tangem.core.ui.security.SensitiveContentEffect
+import com.tangem.core.ui.security.hideFromAccessibilityServices
 import com.tangem.core.ui.test.TangemPayTestTags
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.pay.TangemPayCardState
@@ -100,6 +102,9 @@ internal fun TangemPayCard(state: TangemPayCardDetailsUM, modifier: Modifier = M
 
     // Determine which side to show based on the rotation angle
     val shouldShowDetails = rotateCardY > 90f
+    val areDetailsExposed = isCardFlipped || shouldShowDetails
+
+    if (areDetailsExposed) SensitiveContentEffect()
 
     CardBgWrapper(
         rotateCardY = rotateCardY,
@@ -187,7 +192,7 @@ private fun TangemPayCardDetailsHiddenBlock(state: TangemPayCardDetailsUM, modif
                                 }
                                 .size(16.dp)
                                 .testTag(TangemPayTestTags.CARD_FROZEN_BADGE),
-                            color = TangemTheme.colors.text.constantWhite,
+                            color = TangemTheme.colors3.text.staticDark.primary,
                             strokeWidth = 1.dp,
                         )
                         TangemPayCardFrozenState.Unfrozen -> Unit
@@ -528,6 +533,7 @@ private fun TangemPayCardDetailsShownBlock(
                 onCopy = onCopyCardholderName,
                 valueTestTag = TangemPayTestTags.CARD_DETAILS_CARDHOLDER_NAME_VALUE,
                 copyTestTag = TangemPayTestTags.CARD_DETAILS_COPY_CARDHOLDER_NAME,
+                isSensitive = false,
             )
         }
         CardDetailsFieldSeparator()
@@ -601,6 +607,7 @@ private fun CardDetailsField(
     onCopy: () -> Unit,
     modifier: Modifier = Modifier,
     isCompact: Boolean = false,
+    isSensitive: Boolean = true,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     Column(
@@ -625,7 +632,8 @@ private fun CardDetailsField(
             Text(
                 modifier = Modifier
                     .then(if (isCompact) Modifier.defaultMinSize(minWidth = 56.dp) else Modifier.weight(1f))
-                    .testTag(valueTestTag),
+                    .testTag(valueTestTag)
+                    .conditional(isSensitive) { hideFromAccessibilityServices() },
                 text = value,
                 style = TangemTheme.typography3.subheading.medium,
                 color = TangemTheme.colors3.text.staticDark.primary,
@@ -666,9 +674,9 @@ private fun TangemPayCardDetailsCustomButton(
         onClick = onClick,
         colors = ButtonColors(
             containerColor = CustomCardBlockColor,
-            contentColor = TangemTheme.colors.text.constantWhite,
-            disabledContainerColor = TangemTheme.colors.text.constantWhite,
-            disabledContentColor = TangemTheme.colors.text.constantWhite,
+            contentColor = TangemTheme.colors3.text.staticDark.primary,
+            disabledContainerColor = TangemTheme.colors3.text.staticDark.primary,
+            disabledContentColor = TangemTheme.colors3.text.staticDark.primary,
         ),
         enabled = true,
         showProgress = showProgress,
@@ -686,7 +694,7 @@ private fun TangemPayCardDetailsBlockPreview(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(TangemTheme.colors.background.primary),
+                .background(TangemTheme.colors3.bg.primary),
         ) {
             TangemPayCard(
                 state = state,

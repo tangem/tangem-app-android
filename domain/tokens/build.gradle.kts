@@ -47,6 +47,7 @@ dependencies {
     api(projects.domain.transaction.models)
     api(projects.domain.yieldSupply.models)
     implementation(projects.domain.express.models)
+    implementation(projects.domain.staking.models)
     implementation(projects.domain.stories.models)
     // endregion
 

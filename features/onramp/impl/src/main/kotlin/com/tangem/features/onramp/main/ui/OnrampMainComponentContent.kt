@@ -39,7 +39,7 @@ internal fun OnrampMainScreen(
             )
         },
         contentWindowInsets = WindowInsetsZero,
-        containerColor = TangemTheme.colors.background.secondary,
+        containerColor = TangemTheme.colors3.bg.primary,
     ) { scaffoldPaddings ->
         OnrampMainComponentContent(
             state = state,
@@ -60,7 +60,7 @@ internal fun OnrampMainComponentContent(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(TangemTheme.colors.background.secondary),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         Column(
             modifier = Modifier
@@ -104,7 +104,7 @@ private fun OnrampAmountContentLoading() {
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape = RoundedCornerShape(size = 16.dp))
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .padding(vertical = 28.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {

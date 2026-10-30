@@ -21,15 +21,15 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.txhistory.fetcher.AppTxHistoryFetcher
 import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
 import com.tangem.domain.txhistory.list.HistoryTxListManager
+import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
+import com.tangem.domain.txhistory.model.explorerHash
 import com.tangem.domain.txhistory.usecase.GetCachedTokenInfoUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.features.tokendetails.deeplink.ExpressDeepLinkListener
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.txhistory.component.TxHistoryDetailsSlotConfig
-import com.tangem.features.txhistory.converter.ExpressTxToTransactionItemUMConverter
-import com.tangem.features.txhistory.converter.TxHistoryInfoToTransactionItemUMConverter
-import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionItemUMConverter
+import com.tangem.features.txhistory.converter.fields.TxHistoryInfoFieldConverter
 import com.tangem.features.txhistory.entity.TxHistoryItemsUM
 import com.tangem.features.txhistory.entity.TxHistoryUpdateListener
 import com.tangem.features.txhistory.joint.JointHistoryPoller
@@ -100,7 +100,7 @@ internal class TxHistoryModel @Inject constructor(
             currency = params.currency,
             isResumed = isResumed,
             hasLoadedMorePages = loadedPagesTracker.hasLoadedMorePages,
-            reload = historyTxListManager::reload,
+            reload = ::reloadWithJointDelta,
         )
         subscribeOnCurrencyStatusUpdates()
         deepLinkListener()
@@ -158,19 +158,11 @@ internal class TxHistoryModel @Inject constructor(
         lookup: TxHistoryLookupContext,
         networkTokens: Set<CryptoCurrency.Token>,
     ): ImmutableList<TxHistoryItemsUM.TxHistoryItemUM> {
-        val converter = TxHistoryInfoToTransactionItemUMConverter(
-            txInfoConverter = TxHistoryItemToTransactionItemUMConverter(
-                currency = params.currency,
-                txHistoryUiActions = this,
-                lookupContext = lookup,
-                networkTokens = networkTokens,
-            ),
-            expressConverter = ExpressTxToTransactionItemUMConverter(
-                currency = params.currency,
-                txHistoryUiActions = this,
-                lookup = lookup,
-            ),
-            txHistoryUiActions = this,
+        val converter = TxHistoryInfoFieldConverter(
+            currency = params.currency,
+            onRowClick = ::onTransactionClick,
+            lookup = lookup,
+            networkTokens = networkTokens,
         )
 
         val items = mutableListOf<TxHistoryItemsUM.TxHistoryItemUM>()
@@ -205,6 +197,11 @@ internal class TxHistoryModel @Inject constructor(
             currency = params.currency,
         )
         appTxHistoryFetcher.invoke(trigger)
+    }
+
+    private fun reloadWithJointDelta() {
+        historyTxListManager.reload()
+        appTxHistoryFetcher.invoke(TxHistoryFetchTrigger.JointHistoryPoll(walletId = params.userWalletId))
     }
 
     fun onResume() {
@@ -246,7 +243,7 @@ internal class TxHistoryModel @Inject constructor(
             .map { it.getCryptoCurrencyStatus(currency = params.currency) }
             .distinctUntilChanged()
 
-        val combined: Flow<Pair<Option<CryptoCurrencyStatus>, TxHistoryLookupContext?>> =
+        val combined: Flow<Pair<Option<CryptoCurrencyStatus>, TxHistoryLookupContext>> =
             combine(statusFlow, lookupDataFlow) { status, lookup -> status to lookup }
 
         combined
@@ -255,21 +252,25 @@ internal class TxHistoryModel @Inject constructor(
             .launchIn(modelScope)
     }
 
+    /**
+     * Pending transactions are shown where the history itself is unavailable, so there is no loaded row for a details
+     * sheet to open — such a row goes straight to the explorer instead.
+     */
     private fun handlePendingTxsChanges(
         maybeCurrencyStatus: Option<CryptoCurrencyStatus>,
-        lookupContext: TxHistoryLookupContext?,
+        lookupContext: TxHistoryLookupContext,
     ) {
         maybeCurrencyStatus.onSome { status ->
             val pending = status.value.pendingTransactions
             stateController.updatePendingTransactions(
                 pendingTxs = {
-                    val converter = TxHistoryItemToTransactionItemUMConverter(
+                    val converter = TxHistoryInfoFieldConverter(
                         currency = params.currency,
-                        txHistoryUiActions = this,
-                        lookupContext = lookupContext,
+                        onRowClick = { row -> row.explorerHash?.let(::openTxInExplorer) },
+                        lookup = lookupContext,
                         networkTokens = networkTokensFlow.value,
                     )
-                    pending.map(converter::convert).toPersistentList()
+                    pending.map { converter.convert(OnChainTx.BSDK(it)) }.toPersistentList()
                 },
             )
         }

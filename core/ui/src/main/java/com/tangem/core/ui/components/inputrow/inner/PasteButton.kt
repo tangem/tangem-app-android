@@ -40,9 +40,9 @@ fun PasteButton(
     isPasteButtonVisible: Boolean,
     onClick: (String) -> Unit,
     modifier: Modifier = Modifier,
-    backgroundColorEnabled: Color = TangemTheme.colors.button.primary,
-    backgroundColorDisabled: Color = TangemTheme.colors.button.secondary,
-    textColor: Color = TangemTheme.colors.text.primary2,
+    backgroundColorEnabled: Color = TangemTheme.colors3.bg.inverse,
+    backgroundColorDisabled: Color = TangemTheme.colors3.bg.tertiary,
+    textColor: Color = TangemTheme.colors3.text.inverse.primary,
 ) {
     val clipboardManager = LocalClipboardManager.current
     val hapticFeedback = LocalHapticFeedback.current
@@ -94,7 +94,7 @@ fun PasteButton(
 fun CrossIcon(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Icon(
         painter = painterResource(id = R.drawable.ic_close_24),
-        tint = TangemTheme.colors.icon.informative,
+        tint = TangemTheme.colors3.icon.secondary,
         contentDescription = stringResourceSafe(R.string.common_close),
         modifier = modifier
             .size(24.dp)

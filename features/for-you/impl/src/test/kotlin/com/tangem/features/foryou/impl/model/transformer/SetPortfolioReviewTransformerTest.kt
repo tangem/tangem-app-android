@@ -2,8 +2,6 @@ package com.tangem.features.foryou.impl.model.transformer
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
-import com.tangem.core.ui.ds.tabs.TangemSegmentUM
-import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
 import com.tangem.core.ui.ds2.filter.TangemFilterItemUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.StatusSource
@@ -14,6 +12,7 @@ import com.tangem.features.foryou.impl.entity.ForYouTokenListItemUM
 import com.tangem.features.foryou.impl.entity.ForYouUM
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
 import com.tangem.features.foryou.impl.entity.asSingleForYouGroup
+import com.tangem.features.foryou.impl.entity.forYouPeriodPickerItems
 import com.tangem.features.foryou.impl.model.ForYouNotification
 import com.tangem.features.foryou.impl.model.ForYouSelectedPortfolio
 import com.tangem.features.foryou.model.ForYouPeriod
@@ -131,46 +130,9 @@ internal class SetPortfolioReviewTransformerTest {
     inner class PeriodPicker {
 
         @Test
-        fun `GIVEN previous state is Loading WHEN transform THEN period picker is created with Day selected`() {
-            // Arrange
-            val transformer = createTransformer()
-
-            // Act
-            val result = transformer.transform(loadingState())
-
-            // Assert
-            assertThat(result.periodPickerUM.items).hasSize(3)
-            assertThat(result.periodPickerUM.initialSelectedItem).isEqualTo(result.periodPickerUM.items.first())
-        }
-
-        @Test
-        fun `GIVEN previous state is Loading WHEN transform THEN picker items map to ForYouPeriod entries`() {
-            // Pins the picker to the ForYouPeriod enum: a reorder or id/title change in the enum must
-            // surface here rather than silently drift (the old hardcoded Day/Week/Month is gone).
-            // Arrange
-            val transformer = createTransformer()
-
-            // Act
-            val result = transformer.transform(loadingState())
-
-            // Assert — ids and titles come from the enum, in declaration order
-            assertThat(result.periodPickerUM.items.map { it.id })
-                .containsExactlyElementsIn(ForYouPeriod.entries.map { it.id })
-                .inOrder()
-            assertThat(result.periodPickerUM.items.map { it.title })
-                .containsExactlyElementsIn(ForYouPeriod.entries.map { it.title })
-                .inOrder()
-            assertThat(result.periodPickerUM.initialSelectedItem?.id).isEqualTo(ForYouPeriod.Day.id)
-        }
-
-        @Test
         fun `GIVEN previous state is Content WHEN transform THEN user's picker selection is carried over`() {
             // Arrange — the user has already switched to the "Week" segment
-            val week = TangemSegmentUM(id = "1", title = stringReference("Week"))
-            val pickerWithSelection = TangemSegmentedPickerUM(
-                items = persistentListOf(TangemSegmentUM(id = "0", title = stringReference("Day")), week),
-                initialSelectedItem = week,
-            )
+            val pickerWithSelection = forYouPeriodPickerItems(selected = ForYouPeriod.Week, onClick = {})
             val prevState = loadingState().copy(
                 portfolioReviewUM = contentPortfolioReview(),
                 periodPickerUM = pickerWithSelection,
@@ -330,8 +292,7 @@ internal class SetPortfolioReviewTransformerTest {
         ),
         earnOpportunities = EarnOpportunitiesUM.Loading(tokenList = persistentListOf()),
         notifications = persistentListOf(),
-        periodPickerUM = TangemSegmentedPickerUM(persistentListOf()),
-        onPeriodClick = {},
+        periodPickerUM = persistentListOf(),
         portfolioFilter = loadingPortfolioFilter(),
     )
 }

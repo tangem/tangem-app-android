@@ -41,6 +41,7 @@ internal object DataCommonModule {
         userWalletsListRepository: UserWalletsListRepository,
         walletAccountsFetcher: WalletAccountsFetcher,
         responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
+        jointAccountFeatureToggles: JointAccountFeatureToggles,
     ): CardCryptoCurrencyFactory {
         return DefaultCardCryptoCurrencyFactory(
             demoConfig = DemoConfig,
@@ -48,6 +49,7 @@ internal object DataCommonModule {
             userWalletsListRepository = userWalletsListRepository,
             walletAccountsFetcher = walletAccountsFetcher,
             responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
+            jointAccountFeatureToggles = jointAccountFeatureToggles,
         )
     }
 

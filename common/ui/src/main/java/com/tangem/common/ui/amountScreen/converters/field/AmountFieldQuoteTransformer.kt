@@ -7,9 +7,9 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.common.ui.amountScreen.utils.getAmountValidationError
 import com.tangem.common.ui.amountScreen.utils.getKeyboardAction
+import com.tangem.common.ui.amountScreen.utils.isNullOrNotPositive
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.utils.isNullOrZero
 import com.tangem.utils.transformer.Transformer
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -46,11 +46,11 @@ class AmountFieldQuoteTransformer(
             maxCrypto != null && cryptoAmount > maxCrypto
         }
         val isLessThanMinimum = minimumTransactionAmount?.amount?.let { cryptoAmount < it } == true
-        val isZero = cryptoAmount.isNullOrZero()
+        val isNotPositive = cryptoAmount.isNullOrNotPositive()
         val isCheckFailed = isExceedBalance || isLessThanMinimum
 
         return prevState.copy(
-            isPrimaryButtonEnabled = !isZero && !isCheckFailed,
+            isPrimaryButtonEnabled = !isNotPositive && !isCheckFailed,
             reduceAmountBy = BigDecimal.ZERO,
             amountTextField = textField.copy(
                 value = cryptoString,

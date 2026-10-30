@@ -201,6 +201,34 @@ internal class SendWithSwapModelCallbackTest {
     }
 
     @Test
+    fun `GIVEN hidden provider WHEN onProviderHidden THEN provider ids are accumulated`() = runTest {
+        // Arrange
+        val model = createModel(this)
+        model.onProviderHidden("changelly")
+
+        // Act
+        model.onProviderHidden("changehero")
+
+        // Assert
+        assertThat(model.hiddenProviderIdsFlow.value).containsExactly("changelly", "changehero")
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN hidden providers WHEN reset navigation THEN hidden providers are cleared`() = runTest {
+        // Arrange
+        val model = createModel(this)
+        model.onProviderHidden("changelly")
+
+        // Act
+        model.resetSendWithSwapNavigation(resetNavigation = false)
+
+        // Assert
+        assertThat(model.hiddenProviderIdsFlow.value).isEmpty()
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN user wallet not found WHEN model created THEN shows generic error alert`() = runTest {
         // Arrange
         every { getUserWalletUseCase(any()) } returns GetUserWalletError.UserWalletNotFound.left()
@@ -211,7 +239,7 @@ internal class SendWithSwapModelCallbackTest {
         // Assert
         verify(exactly = 1) {
             swapAlertFactory.getGenericErrorState(
-                expressError = ExpressError.UnknownError,
+                expressError = ExpressError.UnknownError(),
                 onFailedTxEmailClick = any(),
                 popBack = any(),
             )
@@ -228,7 +256,7 @@ internal class SendWithSwapModelCallbackTest {
         val model = createModel(this)
         verify {
             swapAlertFactory.getGenericErrorState(
-                expressError = ExpressError.UnknownError,
+                expressError = ExpressError.UnknownError(),
                 onFailedTxEmailClick = any(),
                 popBack = capture(popBackSlot),
             )

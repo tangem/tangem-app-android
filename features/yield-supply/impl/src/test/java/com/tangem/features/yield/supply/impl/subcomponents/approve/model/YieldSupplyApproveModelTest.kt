@@ -21,8 +21,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.unmockkObject
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,6 +37,7 @@ internal class YieldSupplyApproveModelTest : YieldSupplyActionModelTestBase() {
     private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase = mockk()
     private val getContractAddressUseCase: YieldSupplyGetContractAddressUseCase = mockk()
     private val callback: YieldSupplyApproveComponent.ModelCallback = mockk(relaxed = true)
+    private val tangemBlogUrlBuilder: TangemBlogUrlBuilder = mockk()
 
     @BeforeEach
     fun setUp() {
@@ -197,27 +196,23 @@ internal class YieldSupplyApproveModelTest : YieldSupplyActionModelTestBase() {
 
     @Test
     fun `WHEN onReadMoreClick THEN opens url`() = runTest {
-        // Arrange — TangemBlogUrlBuilder.build is a real suspend object; stub it to isolate the model's intent
-        mockkObject(TangemBlogUrlBuilder)
-        try {
-            coEvery { TangemBlogUrlBuilder.build(any()) } returns BLOG_URL
-            val model = createModel()
-            advanceUntilIdle()
+        // Arrange
+        coEvery { tangemBlogUrlBuilder.build(any()) } returns BLOG_URL
+        val model = createModel()
+        advanceUntilIdle()
 
-            // Act
-            model.onReadMoreClick()
-            advanceUntilIdle()
+        // Act
+        model.onReadMoreClick()
+        advanceUntilIdle()
 
-            // Assert
-            verify { urlOpener.openUrl(BLOG_URL) }
-        } finally {
-            unmockkObject(TangemBlogUrlBuilder)
-        }
+        // Assert
+        verify { urlOpener.openUrl(BLOG_URL) }
     }
 
     private fun TestScope.createModel(
         statusFlow: StateFlow<CryptoCurrencyStatus> = cryptoCurrencyStatusFlow,
     ): YieldSupplyApproveModel = YieldSupplyApproveModel(
+        tangemBlogUrlBuilder = tangemBlogUrlBuilder,
         dispatchers = createTestingCoroutineDispatcherProvider(),
         paramsContainer = MutableParamsContainer(
             YieldSupplyApproveComponent.Params(

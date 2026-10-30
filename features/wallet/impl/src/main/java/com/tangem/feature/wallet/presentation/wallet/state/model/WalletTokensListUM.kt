@@ -1,11 +1,15 @@
 package com.tangem.feature.wallet.presentation.wallet.state.model
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.geometry.Offset
 import com.tangem.core.ui.ds.button.TangemButtonUM
-import com.tangem.core.ui.ds.row.TangemRowUM
 import com.tangem.core.ui.ds.row.header.TangemHeaderRowUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
-import com.tangem.features.jointaccount.main.JointAccountMainUM
+import com.tangem.core.ui.ds2.accountrow.TangemAccountRow
+import com.tangem.core.ui.ds2.avatar.TangemAvatar
+import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.utils.annotations.RemoveWithToggle
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -86,34 +90,64 @@ internal sealed class WalletTokensListUM {
  */
 @Immutable
 internal sealed interface TokensListItemUM2 {
-    val tokenRowUM: TangemRowUM
+    val id: String
 
     data class GroupTitle(
-        override val tokenRowUM: TangemHeaderRowUM,
-    ) : TokensListItemUM2
+        val tokenRowUM: TangemHeaderRowUM,
+    ) : TokensListItemUM2 {
+        override val id: String = tokenRowUM.id
+    }
 
     data class Token(
-        override val tokenRowUM: TangemTokenRowUM,
-    ) : TokensListItemUM2
+        val tokenRowUM: TangemTokenRowUM,
+    ) : TokensListItemUM2 {
+        override val id: String = tokenRowUM.id
+    }
 
+    @RemoveWithToggle("AND_18663_REDESIGNED_ACCOUNT_ROWS_ENABLED")
     data class Portfolio(
-        override val tokenRowUM: TangemTokenRowUM,
+        val tokenRowUM: TangemTokenRowUM,
         val onEmptyClick: () -> Unit,
         val tokenList: ImmutableList<TokensListItemUM2>,
         val isExpanded: Boolean,
         val isCollapsable: Boolean,
+    ) : TokensListItemUM2 {
+        override val id: String = tokenRowUM.id
+    }
+
+    data class AccountV2(
+        val state: TangemAccountRow.State,
+        val avatar: TangemAvatar.UiState,
+        val isExpanded: Boolean,
+        val shouldShowCompactBalance: Boolean,
+        val onEmptyClick: () -> Unit,
+        val tokenList: ImmutableList<TokensListItemUM2>,
+    ) : TokensListItemUM2 {
+        override val id: String = state.id
+    }
+
+    data class SectionV2(
+        override val id: String,
+        val title: TextReference,
     ) : TokensListItemUM2
 
+    data class TokenV2(
+        val state: TangemTokenRow.State,
+        val onLongClick: ((Offset, TangemTokenRow.State) -> Unit)?,
+        val onPromoShown: (() -> Unit)? = null,
+    ) : TokensListItemUM2 {
+        override val id: String = state.id
+    }
+
     /**
-     * A joint account that is not yet activated (collecting members / loading / blocked / temporarily
-     * unavailable). Rendered as a single non-collapsible row by the joint-account feature component,
-     * keyed by [accountId] so multiple pending joint accounts can coexist in the list. Once activated,
-     * a joint account becomes a regular [Portfolio] instead.
+     * A joint account that is not active yet (collecting members, confirming, loading, compromised or temporarily
+     * unavailable): a single non-expandable [TangemAccountRow]. Once active, a joint account is a regular portfolio
+     * row instead.
      */
     data class JointPending(
-        val accountId: String,
-        val state: JointAccountMainUM,
+        val state: TangemAccountRow.State,
+        val avatar: TangemAvatar.UiState,
     ) : TokensListItemUM2 {
-        override val tokenRowUM: TangemRowUM = TangemTokenRowUM.Empty(id = accountId)
+        override val id: String = state.id
     }
 }

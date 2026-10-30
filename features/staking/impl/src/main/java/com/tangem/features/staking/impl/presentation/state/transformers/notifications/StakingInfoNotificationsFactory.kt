@@ -8,9 +8,9 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fee
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.BalanceType
-import com.tangem.domain.models.staking.StakingBalance
-import com.tangem.domain.models.staking.action.StakingActionType
+import com.tangem.domain.staking.model.BalanceType
+import com.tangem.domain.staking.model.StakingBalance
+import com.tangem.domain.staking.model.action.StakingActionType
 import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakingBalanceData

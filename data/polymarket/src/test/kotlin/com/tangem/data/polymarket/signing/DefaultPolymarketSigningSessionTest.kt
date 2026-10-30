@@ -71,6 +71,16 @@ internal class DefaultPolymarketSigningSessionTest {
             ),
         ),
     )
+    private val revokeCall = PolymarketApprovalCall(
+        target = approvals.depositWalletAddress.lowercase(),
+        value = "0",
+        data = "0xe63f952f" + "0000000000000000000000005e55000000000000000000000000000000000001",
+    )
+    private val authorizeCall = revokeCall.copy(
+        data = "0x24017fae" +
+            "0000000000000000000000005e55000000000000000000000000000000000001" +
+            "000000000000000000000000000000000000000000000000000000006b95d880",
+    )
     private val bothPayloads = listOf(
         PolymarketTypedPayload.ClobAuth(clobAuth),
         PolymarketTypedPayload.RelayedBatch(approvals),
@@ -159,6 +169,37 @@ internal class DefaultPolymarketSigningSessionTest {
         assertThat(requests.single()[1]).isEqualTo(digestFactory.relayedBatch(approvals))
         assertThat(actual.getOrNull()?.value).isEqualTo(VALUE)
         assertThat(actual.getOrNull()?.signatures).hasSize(2)
+    }
+
+    @Test
+    fun `GIVEN ClobAuth and several relayed batches WHEN run THEN one request signs all of them in order`() = runTest {
+        // Arrange
+        val requests = mutableListOf<List<ByteArray>>()
+        stubDeriveAndSignSession { hashes ->
+            requests += hashes
+            hashes.map(::rawSignature).right()
+        }
+        val revocation = approvals.copy(nonce = "7", calls = listOf(revokeCall))
+        val authorization = approvals.copy(nonce = "8", deadline = "1735690800", calls = listOf(authorizeCall))
+        val payloads = listOf(
+            PolymarketTypedPayload.ClobAuth(clobAuth),
+            PolymarketTypedPayload.RelayedBatch(revocation),
+            PolymarketTypedPayload.RelayedBatch(authorization),
+        )
+
+        // Act
+        val actual = sut().run(userWalletId) { PolymarketSignRequest(value = VALUE, payloads = payloads) }
+
+        // Assert
+        val digestFactory = PolymarketDigestFactory()
+        val ownerAddress = PolymarketAddressFactory().createAddress(ownerKey)
+        val expected = listOf(
+            digestFactory.clobAuth(ownerAddress, clobAuth),
+            digestFactory.relayedBatch(revocation),
+            digestFactory.relayedBatch(authorization),
+        ).map { it.toList() }
+        assertThat(requests.single().map { it.toList() }).containsExactlyElementsIn(expected).inOrder()
+        assertThat(actual.getOrNull()?.signatures).hasSize(payloads.size)
     }
 
     @Test

@@ -44,6 +44,7 @@ internal class EmailSubjectResolver(private val resources: Resources) {
             FeedbackEmailType.AppUpdateProblem -> resources.getStringSafe(R.string.feedback_subject_support_tangem)
             is FeedbackEmailType.Visa.Activation -> "[Visa] [Activation] {auto-filled subject}"
             is FeedbackEmailType.Visa.DirectUserRequest -> "[Visa] {auto-filled subject}"
+            is FeedbackEmailType.Visa.MoneyAccountRequest -> "[Visa] [USD ACCOUNT]"
             is FeedbackEmailType.Visa.FailedIssueCard -> "[Visa] Failed to issue card"
             is FeedbackEmailType.Visa.Dispute -> when (type.item) {
                 is TangemPayTxHistoryItem.Collateral -> "[Visa] Deposit/withdrawal"

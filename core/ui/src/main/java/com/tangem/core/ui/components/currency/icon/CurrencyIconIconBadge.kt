@@ -21,7 +21,7 @@ internal fun CurrencyIconBottomBadge(modifier: Modifier = Modifier) {
         modifier = modifier
             .size(12.dp)
             .background(
-                color = TangemTheme.colors.background.primary,
+                color = TangemTheme.colors3.bg.secondary,
                 shape = CircleShape,
             ),
     ) {
@@ -30,7 +30,7 @@ internal fun CurrencyIconBottomBadge(modifier: Modifier = Modifier) {
                 .padding(all = 2.dp)
                 .matchParentSize()
                 .background(
-                    color = TangemTheme.colors.icon.informative,
+                    color = TangemTheme.colors3.icon.secondary,
                     shape = CircleShape,
                 ),
         )

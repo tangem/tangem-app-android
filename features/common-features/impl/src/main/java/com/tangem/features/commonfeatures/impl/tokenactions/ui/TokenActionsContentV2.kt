@@ -175,7 +175,7 @@ private fun TokenHeader(
                 Text(
                     text = fiat.text.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
                     style = TangemTheme.typography2.titleRegular44,
-                    color = TangemTheme.colors2.text.neutral.primary,
+                    color = TangemTheme.colors3.text.primary,
                 )
                 SpacerH(8.dp)
             }
@@ -187,7 +187,7 @@ private fun TokenHeader(
                 Text(
                     text = cryptoAmount.text.orMaskWithStars(isBalanceHidden),
                     style = TangemTheme.typography2.bodyMedium16,
-                    color = TangemTheme.colors2.text.neutral.secondary,
+                    color = TangemTheme.colors3.text.secondary,
                 )
                 SpacerH(8.dp)
             }
@@ -213,7 +213,7 @@ private fun WalletPortfolioRow(name: TextReference, deviceIcon: DeviceIconUM, mo
         modifier = modifier
             .heightIn(24.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(TangemTheme.colors2.markers.backgroundSolidGray)
+            .background(TangemTheme.colors3.bg.tertiary)
             .padding(start = 12.dp, end = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -221,7 +221,7 @@ private fun WalletPortfolioRow(name: TextReference, deviceIcon: DeviceIconUM, mo
         Text(
             text = name.resolveReference(),
             style = TangemTheme.typography2.captionSemibold12,
-            color = TangemTheme.colors2.markers.textGray,
+            color = TangemTheme.colors3.text.secondary,
             maxLines = 1,
         )
         TangemDeviceIcon(
@@ -255,7 +255,7 @@ private fun Preview(@PreviewParameter(TokenActionsContentPreviewProviderV2::clas
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(TangemTheme.colors2.surface.level2)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(horizontal = 16.dp),
         ) {
             TokenActionsContentV2(
@@ -285,7 +285,7 @@ private class TokenActionsContentPreviewProviderV2 : PreviewParameterProvider<To
                     fiat(
                         fiatCurrencyCode = "USD",
                         fiatCurrencySymbol = "$",
-                        spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
+                        spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.secondary) },
                     ).price()
                 },
             ),

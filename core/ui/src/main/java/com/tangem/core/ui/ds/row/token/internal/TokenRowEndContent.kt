@@ -97,9 +97,9 @@ private fun Content(
             style = textStyle.applyBladeBrush(
                 isEnabled = endContentUM.isFlickering,
                 textColor = if (endContentUM.isAvailable) {
-                    TangemTheme.colors2.text.neutral.primary
+                    TangemTheme.colors3.text.primary
                 } else {
-                    TangemTheme.colors2.text.status.disabled
+                    TangemTheme.colors3.text.tertiary
                 },
             ),
         )
@@ -145,7 +145,7 @@ private fun TokenRowEndContent_Preview(
         TokenRowEndContent(
             endContentUM = params,
             isBalanceHidden = false,
-            textColor = TangemTheme.colors2.text.neutral.primary,
+            textColor = TangemTheme.colors3.text.primary,
             textStyle = TangemTheme.typography2.captionSemibold12,
             placeholderWidth = 44.dp,
         )

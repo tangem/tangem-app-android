@@ -29,7 +29,6 @@ internal data class UiActions(
     val onSelectTokenClick: (TokenSelectionDirection) -> Unit,
     val onSuccess: () -> Unit,
     val onLinkClick: (String) -> Unit,
-    val onReceiveCardWarningClick: () -> Unit,
     val onSwapUIModeChange: (SwapUIMode) -> Unit,
     val onSwapTypeMenuOpened: () -> Unit,
     val onTronBannerShown: () -> Unit,

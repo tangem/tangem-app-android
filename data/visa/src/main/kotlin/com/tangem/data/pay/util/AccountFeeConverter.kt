@@ -13,6 +13,7 @@ internal object AccountFeeConverter : Converter<FeesResponse.Fee, AccountFee?> {
             name = value.name ?: return null,
             paymentMethodId = value.paymentMethodId?.takeIf(String::isNotBlank),
             group = AccountFeeGroupType.fromString(value.group),
+            calculationType = AccountFee.CalculationType.fromString(value.calculationType),
             amount = value.amount ?: return null,
             currency = value.currency?.takeIf(String::isNotBlank) ?: return null,
         )

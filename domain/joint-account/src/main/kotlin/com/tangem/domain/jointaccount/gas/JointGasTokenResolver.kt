@@ -10,7 +10,7 @@ import com.tangem.domain.models.network.Network
  * the list the user picks from. The creation and the co-signing paths price it from the same source, so both apply
  * the same tolerance.
  */
-fun interface JointGasTokenResolver {
+interface JointGasTokenResolver {
 
     /**
      * `null` when [address] is neither the coin nor a Smart Gas token of [network].
@@ -23,4 +23,7 @@ fun interface JointGasTokenResolver {
         address: String,
         rawCurrencyId: CryptoCurrency.RawID?,
     ): Either<Throwable, SafeGasToken?>
+
+    /** The same answer without the rate, so no quote has to be in place; `null` when [address] is not allowed */
+    suspend fun findUnpriced(network: Network, address: String): Either<Throwable, SafeGasToken?>
 }

@@ -27,7 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.security.DisableAutofillEffect
+import com.tangem.core.ui.security.excludeFromAutofill
 import com.tangem.utils.StringsSigns.PASSWORD_VISUAL_CHAR
 import kotlinx.coroutines.delay
 import kotlin.random.Random
@@ -42,8 +42,6 @@ fun PinTextField(
     modifier: Modifier = Modifier,
     focusRequester: FocusRequester = remember { FocusRequester() },
 ) {
-    DisableAutofillEffect()
-
     var fieldValueState by remember { mutableStateOf(TextFieldValue(value, TextRange(value.length))) }
     val textFieldValue = if (fieldValueState.text == value) {
         fieldValueState
@@ -61,6 +59,7 @@ fun PinTextField(
             if (accepted != value) onValueChange(accepted)
         },
         modifier = modifier
+            .excludeFromAutofill()
             .clickable {
                 focusRequester.requestFocus()
             }
@@ -72,7 +71,7 @@ fun PinTextField(
         singleLine = true,
         textStyle = TangemTheme.typography.body1,
         maxLines = 1,
-        cursorBrush = SolidColor(TangemTheme.colors.text.primary1),
+        cursorBrush = SolidColor(TangemTheme.colors3.text.primary),
         decorationBox = { innerTextField ->
             Box(modifier = Modifier.width(0.dp)) {
                 innerTextField()
@@ -136,19 +135,19 @@ private fun CellDecoration(
             val color = when (pinTextColor) {
                 PinTextColor.Primary -> {
                     if (isPasswordVisual) {
-                        TangemTheme.colors.icon.informative
+                        TangemTheme.colors3.icon.secondary
                     } else {
-                        TangemTheme.colors.text.primary1
+                        TangemTheme.colors3.text.primary
                     }
                 }
-                PinTextColor.WrongCode -> TangemTheme.colors.icon.warning
-                PinTextColor.Success -> TangemTheme.colors.icon.accent
+                PinTextColor.WrongCode -> TangemTheme.colors3.icon.accent.red
+                PinTextColor.Success -> TangemTheme.colors3.icon.accent.blue
             }
 
             Box(
                 modifier = Modifier
                     .background(
-                        color = TangemTheme.colors.field.primary,
+                        color = TangemTheme.colors3.bg.tertiary,
                         shape = RoundedCornerShape(8.dp),
                     ),
                 contentAlignment = Alignment.Center,

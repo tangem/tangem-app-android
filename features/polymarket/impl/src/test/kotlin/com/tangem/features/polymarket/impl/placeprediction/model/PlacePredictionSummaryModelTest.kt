@@ -66,7 +66,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         fun `GIVEN a quote at the display bound WHEN placed THEN signing keeps the raw quote`() = runTest {
             // Arrange
             val quote = createQuote().copy(averagePrice = BigDecimal("0.9995"))
-            coEvery { getQuoteUseCase(request = any()) } returns quote.right()
+            coEvery { getQuoteUseCase(any(), request = any()) } returns quote.right()
             val amountModel = createAmountModel(testScope = this)
             advanceUntilIdle()
             amountModel.onResume()
@@ -106,7 +106,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
 
             // Assert
-            coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+            coVerify(exactly = 1) { getQuoteUseCase(any(), request = any()) }
             assertThat(model.uiState.value.submit).isNotEqualTo(SubmitUM.Idle)
 
             model.onDestroy()
@@ -630,7 +630,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
 
             // Assert
             assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
-            coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+            coVerify(exactly = 1) { getQuoteUseCase(any(), request = any()) }
 
             model.onDestroy()
         }
@@ -653,7 +653,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
 
             // Assert
-            coVerify(exactly = 1) { getQuoteUseCase(request = any()) }
+            coVerify(exactly = 1) { getQuoteUseCase(any(), request = any()) }
 
             model.onDestroy()
         }
@@ -713,7 +713,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         @Test
         fun `GIVEN a cheap quote but too few shares WHEN place clicked THEN the shares leg decides`() = runTest {
             // Arrange
-            coEvery { getQuoteUseCase(request = any()) } returns
+            coEvery { getQuoteUseCase(any(), request = any()) } returns
                 createSellQuote(shares = BigDecimal("40")).copy(total = BigDecimal("0.5")).right()
             val amountModel = createAmountModel(testScope = this, params = SELL_PARAMS)
             advanceUntilIdle()
@@ -740,7 +740,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         fun `GIVEN the market stopped accepting orders WHEN place clicked THEN nothing is signed AND the user is told`() =
             runTest {
                 // Arrange
-                coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
+                coEvery { getQuoteUseCase(any(), request = any()) } returns createSellQuote().right()
                 val amountModel = createAmountModel(testScope = this, params = SELL_PARAMS)
                 advanceUntilIdle()
                 amountModel.onResume()
@@ -777,7 +777,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             amountModel.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             val model = createSummaryModel(testScope = this, amountModel = amountModel)
-            val slot = FakeSlotHost(model.feeSheetNavigation)
+            val slot = FakeSlotHost(model.feeSheet.navigation)
 
             val expected = PredictionFeeSheetUMConverter.convert(
                 quote = createQuote(),
@@ -790,7 +790,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
 
             // Assert
             assertThat(slot.configuration).isEqualTo(Unit)
-            assertThat(model.feeSheetState.value).isEqualTo(expected)
+            assertThat(model.feeSheet.state.value).isEqualTo(expected)
 
             model.onDestroy()
         }
@@ -804,7 +804,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             amountModel.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             val model = createSummaryModel(testScope = this, amountModel = amountModel)
-            val slot = FakeSlotHost(model.feeSheetNavigation)
+            val slot = FakeSlotHost(model.feeSheet.navigation)
             coEvery { placeOrderUseCase(any(), any(), any()) } coAnswers {
                 // Act
                 model.onFeeClick()
@@ -830,7 +830,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             amountModel.onAmountChange(value = "10")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             val model = createSummaryModel(testScope = this, amountModel = amountModel)
-            val slot = FakeSlotHost(model.feeSheetNavigation)
+            val slot = FakeSlotHost(model.feeSheet.navigation)
             model.onFeeClick()
 
             // Act
@@ -851,7 +851,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         fun `GIVEN a partial sale below the minimum order size WHEN quoted THEN it is priced AND signed`() =
             runTest {
                 // Arrange
-                coEvery { getQuoteUseCase(request = any()) } returns
+                coEvery { getQuoteUseCase(any(), request = any()) } returns
                     createSellQuote(shares = BigDecimal("3")).copy(status = PredictionQuoteStatus.BELOW_MIN_ORDER_SIZE).right()
                 val amountModel = createAmountModel(testScope = this, params = SELL_PARAMS)
                 advanceUntilIdle()
@@ -878,7 +878,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         fun `GIVEN a priced sell WHEN place clicked THEN the position is re-read and invalidated`(filledShares: String) =
             runTest {
                 // Arrange
-                coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
+                coEvery { getQuoteUseCase(any(), request = any()) } returns createSellQuote().right()
                 val amountModel = createAmountModel(testScope = this, params = SELL_PARAMS)
                 advanceUntilIdle()
                 amountModel.onResume()
@@ -910,7 +910,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         fun `GIVEN the position shrank below the quoted shares WHEN place clicked THEN nothing is signed AND the user is told`() =
             runTest {
                 // Arrange
-                coEvery { getQuoteUseCase(request = any()) } returns createSellQuote(shares = BigDecimal("12.8")).right()
+                coEvery { getQuoteUseCase(any(), request = any()) } returns createSellQuote(shares = BigDecimal("12.8")).right()
                 val amountModel = createAmountModel(testScope = this, params = SELL_PARAMS)
                 advanceUntilIdle()
                 amountModel.onResume()
@@ -940,7 +940,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         @Test
         fun `GIVEN the position is gone WHEN place clicked THEN nothing is signed AND the user is told`() = runTest {
             // Arrange
-            coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
+            coEvery { getQuoteUseCase(any(), request = any()) } returns createSellQuote().right()
             val amountModel = createAmountModel(testScope = this, params = SELL_PARAMS)
             advanceUntilIdle()
             amountModel.onResume()
@@ -965,9 +965,36 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         }
 
         @Test
+        fun `GIVEN the position is gone WHEN place clicked again THEN the position is not read again`() = runTest {
+            // Arrange
+            coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } returns createSellQuote().right()
+            val amountModel = createAmountModel(testScope = this, params = SELL_PARAMS)
+            advanceUntilIdle()
+            amountModel.onResume()
+            amountModel.onAmountChange(value = "12.80")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            val model = createSummaryModel(testScope = this, amountModel = amountModel)
+            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns null.right()
+            amountModel.onPause()
+            model.onPlaceClick()
+            advanceUntilIdle()
+            clearMocks(positionsRepository, answers = false)
+
+            // Act
+            model.onPlaceClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) { positionsRepository.getPosition(addresses = any(), id = any()) }
+            coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+
+            model.onDestroy()
+        }
+
+        @Test
         fun `GIVEN the position cannot be re-read WHEN place clicked THEN the user is told instead of nothing`() = runTest {
             // Arrange
-            coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
+            coEvery { getQuoteUseCase(any(), request = any()) } returns createSellQuote().right()
             val amountModel = createAmountModel(testScope = this, params = SELL_PARAMS)
             advanceUntilIdle()
             amountModel.onResume()
@@ -994,7 +1021,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         fun `GIVEN a priced sell WHEN the position turns out to be gone THEN the stale proceeds go with it`() =
             runTest {
                 // Arrange
-                coEvery { getQuoteUseCase(request = any()) } returns createSellQuote().right()
+                coEvery { getQuoteUseCase(any(), request = any()) } returns createSellQuote().right()
                 val amountModel = createAmountModel(testScope = this, params = SELL_PARAMS)
                 advanceUntilIdle()
                 amountModel.onResume()

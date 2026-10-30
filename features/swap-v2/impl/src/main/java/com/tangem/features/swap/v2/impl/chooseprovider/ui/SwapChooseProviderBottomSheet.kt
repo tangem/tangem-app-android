@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -93,6 +94,7 @@ internal fun SwapChooseProviderContent(
                 selectedFilter = contentUM.selectedFilter,
                 onFilterSelect = onFilterSelect,
                 modifier = Modifier
+                    .fillMaxWidth()
                     .padding(horizontal = 4.dp)
                     .padding(bottom = 12.dp),
             )
@@ -103,8 +105,8 @@ internal fun SwapChooseProviderContent(
         ) {
             Notification(
                 config = SwapNotificationUM.Error.FCAWarningList.config,
-                containerColor = TangemTheme.colors.button.disabled,
-                iconTint = TangemTheme.colors.icon.warning,
+                containerColor = TangemTheme.colors3.bg.disabled,
+                iconTint = TangemTheme.colors3.icon.accent.red,
             )
         }
         SpacerH12()
@@ -126,7 +128,7 @@ internal fun SwapChooseProviderContent(
         Icon(
             painter = painterResource(id = R.drawable.ic_lightning_16),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
             modifier = Modifier.padding(
                 top = 16.dp,
                 start = 3.dp,
@@ -136,7 +138,7 @@ internal fun SwapChooseProviderContent(
         Text(
             text = stringResourceSafe(R.string.express_more_providers_soon),
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.icon.informative,
+            color = TangemTheme.colors3.icon.secondary,
             modifier = Modifier
                 .padding(
                     top = 4.dp,

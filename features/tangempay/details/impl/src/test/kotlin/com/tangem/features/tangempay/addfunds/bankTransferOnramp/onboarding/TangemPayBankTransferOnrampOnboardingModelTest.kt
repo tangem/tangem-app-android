@@ -16,6 +16,7 @@ import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.VirtualAccountOnramp
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.AccountFee
@@ -55,6 +56,7 @@ import com.tangem.core.ui.R as CoreUiR
 internal class TangemPayBankTransferOnrampOnboardingModelTest {
 
     private val userWalletId = UserWalletId("1234567890ABCDEF")
+    private val product = TangemPayProduct.PAYMENT_ACCOUNT
 
     private val router: Router = mockk(relaxed = true)
     private val getOnrampFeesUseCase: GetOnrampFeesUseCase = mockk()
@@ -78,7 +80,7 @@ internal class TangemPayBankTransferOnrampOnboardingModelTest {
             urlOpener,
             analytics,
         )
-        coEvery { getOnrampFeesUseCase(userWalletId) } returns emptyList<AccountFee>().right()
+        coEvery { getOnrampFeesUseCase(userWalletId, product) } returns emptyList<AccountFee>().right()
         every { paymentAccountStatusSupplier(userWalletId) } returns flowOf(paymentStatus())
     }
 
@@ -100,7 +102,7 @@ internal class TangemPayBankTransferOnrampOnboardingModelTest {
     @Test
     fun `GIVEN onramp fees returned WHEN model created THEN fee rows shown`() = runTest {
         // Arrange
-        coEvery { getOnrampFeesUseCase(userWalletId) } returns listOf(onrampFee()).right()
+        coEvery { getOnrampFeesUseCase(userWalletId, product) } returns listOf(onrampFee()).right()
 
         // Act
         val model = createModel()
@@ -119,7 +121,7 @@ internal class TangemPayBankTransferOnrampOnboardingModelTest {
     @Test
     fun `GIVEN fees request fails WHEN retry succeeds THEN fee rows shown`() = runTest {
         // Arrange
-        coEvery { getOnrampFeesUseCase(userWalletId) } returnsMany listOf(
+        coEvery { getOnrampFeesUseCase(userWalletId, product) } returnsMany listOf(
             VisaApiError.Unspecified.left(),
             listOf(onrampFee()).right(),
         )
@@ -140,11 +142,11 @@ internal class TangemPayBankTransferOnrampOnboardingModelTest {
         runTest {
             // Arrange
             val pendingRetry = CompletableDeferred<Either<VisaApiError, List<AccountFee>>>()
-            coEvery { getOnrampFeesUseCase(userWalletId) } returns VisaApiError.Unspecified.left()
+            coEvery { getOnrampFeesUseCase(userWalletId, product) } returns VisaApiError.Unspecified.left()
             val model = createModel()
             advanceUntilIdle()
             val error = model.uiState.value.fees as TangemPayOnrampFeesUM.Error
-            coEvery { getOnrampFeesUseCase(userWalletId) } coAnswers { pendingRetry.await() }
+            coEvery { getOnrampFeesUseCase(userWalletId, product) } coAnswers { pendingRetry.await() }
 
             // Act
             error.onRetryClick()
@@ -153,7 +155,7 @@ internal class TangemPayBankTransferOnrampOnboardingModelTest {
 
             // Assert
             assertThat(model.uiState.value.fees).isEqualTo(TangemPayOnrampFeesUM.Loading)
-            coVerify(exactly = 2) { getOnrampFeesUseCase(userWalletId) }
+            coVerify(exactly = 2) { getOnrampFeesUseCase(userWalletId, product) }
             model.onDestroy()
         }
 

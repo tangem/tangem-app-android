@@ -15,6 +15,7 @@ internal class DefaultOnrampDeepLinkHandler @AssistedInject constructor(
     @Assisted queryParams: Map<String, String>,
     appRouter: AppRouter,
     onrampSuccessScreenTrigger: OnrampSuccessScreenTrigger,
+    conciergeWaitlistTrigger: ConciergeWaitlistTrigger,
 ) : OnrampDeepLinkHandler {
 
     init {
@@ -34,6 +35,9 @@ internal class DefaultOnrampDeepLinkHandler @AssistedInject constructor(
                 scope.launch {
                     onrampSuccessScreenTrigger.triggerOnrampSuccess(result == OnrampRedirectResult.Success)
                 }
+            }
+            queryParams[TYPE_KEY] == CONCIERGE_WAITLIST_TYPE -> {
+                scope.launch { conciergeWaitlistTrigger.triggerOpenWaitlist() }
             }
             else -> {
                 TangemLogger.e(
@@ -59,5 +63,7 @@ internal class DefaultOnrampDeepLinkHandler @AssistedInject constructor(
 
         private const val TX_ID_KEY = "tx_id"
         private const val RESULT_KEY = "result"
+        private const val TYPE_KEY = "type"
+        private const val CONCIERGE_WAITLIST_TYPE = "concierge_waitlist"
     }
 }

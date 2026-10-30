@@ -87,7 +87,7 @@ internal class JointOperationUMConverterTest {
     }
 
     @Test
-    fun `GIVEN this member declined WHEN the operation is sent THEN the button does not say signed`() {
+    fun `GIVEN this member declined WHEN the operation is sent THEN the button says declined`() {
         // Arrange
         val declinedLocally = input(state(isSending = true, ownAnswer = Answer.DECLINED), hasAnswered = true)
 
@@ -95,7 +95,27 @@ internal class JointOperationUMConverterTest {
         val actual = converter.convert(declinedLocally)
 
         // Assert
-        assertThat(actual.cosignAction?.buttonText).isEqualTo(resourceReference(CoreUiR.string.common_sign))
+        assertThat(actual.cosignAction?.buttonText).isEqualTo(resourceReference(CoreUiR.string.joint_operation_declined))
+        assertThat(actual.cosignAction?.isEnabled).isFalse()
+        assertThat(actual.cosignAction?.caption).isNull()
+    }
+
+    @Test
+    fun `GIVEN this member declined WHEN others can still sign THEN the sheet stays pending with a disabled declined button`() {
+        // Act
+        val actual = converter.convert(input(state(isSending = false, ownAnswer = Answer.DECLINED)))
+
+        // Assert
+        assertThat(actual.header.subtitle).isEqualTo(resourceReference(CoreUiR.string.transaction_history_pending))
+        assertThat(actual.header.menu.map { it.title }).doesNotContain(resourceReference(CoreUiR.string.common_decline))
+        assertThat(actual.cosignAction).isEqualTo(
+            TxHistoryDetailsUM.CosignActionUM(
+                buttonText = resourceReference(CoreUiR.string.joint_operation_declined),
+                caption = resourceReference(CoreUiR.string.joint_operation_declined_footer, wrappedList(2, 3)),
+                isEnabled = false,
+                onClick = actual.cosignAction!!.onClick,
+            ),
+        )
     }
 
     @Test

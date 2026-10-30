@@ -4,11 +4,14 @@ import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.features.jointaccount.main.JointAboutSignaturesComponent
 import com.tangem.features.jointaccount.main.entity.JointAccountMembersSheetConfig
 import com.tangem.features.jointaccount.main.model.JointAccountMembersModel
 import javax.inject.Inject
 
-internal class JointAccountMembersChildFactory @Inject constructor() {
+internal class JointAccountMembersChildFactory @Inject constructor(
+    private val aboutSignaturesComponentFactory: JointAboutSignaturesComponent.Factory,
+) {
 
     fun createChild(
         config: JointAccountMembersSheetConfig,
@@ -28,9 +31,9 @@ internal class JointAccountMembersChildFactory @Inject constructor() {
                     onDismiss = onDismiss,
                 ),
             )
-            is JointAccountMembersSheetConfig.AboutSignatures -> AboutSignaturesComponent(
-                appComponentContext = appComponentContext,
-                params = AboutSignaturesComponent.Params(
+            is JointAccountMembersSheetConfig.AboutSignatures -> aboutSignaturesComponentFactory.create(
+                context = appComponentContext,
+                params = JointAboutSignaturesComponent.Params(
                     threshold = config.threshold,
                     total = config.total,
                     onDismiss = onDismiss,

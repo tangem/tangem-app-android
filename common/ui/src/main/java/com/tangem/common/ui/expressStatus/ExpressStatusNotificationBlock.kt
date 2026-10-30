@@ -22,11 +22,11 @@ fun ExpressStatusNotificationBlock(state: NotificationUM?) {
         Notification(
             config = wrappedNotification,
             iconTint = when (state) {
-                is ExpressNotificationsUM.NeedVerification -> TangemTheme.colors.icon.attention
-                is ExpressNotificationsUM.FailedByProvider -> TangemTheme.colors.icon.warning
+                is ExpressNotificationsUM.NeedVerification -> TangemTheme.colors3.icon.accent.yellow
+                is ExpressNotificationsUM.FailedByProvider -> TangemTheme.colors3.icon.accent.red
                 else -> null
             },
-            containerColor = TangemTheme.colors.background.action,
+            containerColor = TangemTheme.colors3.bg.secondary,
         )
     }
 }

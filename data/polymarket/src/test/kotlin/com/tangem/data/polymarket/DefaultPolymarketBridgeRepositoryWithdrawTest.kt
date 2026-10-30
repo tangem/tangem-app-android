@@ -117,7 +117,7 @@ internal class DefaultPolymarketBridgeRepositoryWithdrawTest {
     fun `GIVEN no builder code WHEN creating a withdraw address THEN the bridge is not asked`() = runTest {
         // Arrange
         coEvery { polymarketRepository.getBuilderCode(WALLET_ID) } returns
-            DataError.NetworkError.NoInternetConnection.left()
+            DataError.NetworkError.NoInternetConnection().left()
 
         // Act
         val actual = repository.createWithdrawAddress(

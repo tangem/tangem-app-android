@@ -18,7 +18,7 @@ fun Moshi.Builder.addPromotionEnumFallbackAdapters(): Moshi.Builder {
 
     return apply {
         map.forEach { (enumClass, unknownValue) ->
-            add(enumClass, UnknownEnumMoshiAdapter.create(enumClass, unknownValue))
+            add(enumClass, UnknownEnumMoshiAdapter.create(enumClass, unknownValue).nullSafe())
         }
     }
 }

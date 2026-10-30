@@ -9,7 +9,7 @@ import com.tangem.common.extensions.isZero
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.PendingAction
+import com.tangem.domain.staking.model.PendingAction
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.EstimateGasUseCase
 import com.tangem.domain.staking.model.StakeKitIntegration

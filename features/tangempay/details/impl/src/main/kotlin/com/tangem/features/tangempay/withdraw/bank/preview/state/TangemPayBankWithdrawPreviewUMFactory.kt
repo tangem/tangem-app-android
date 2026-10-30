@@ -3,19 +3,23 @@ package com.tangem.features.tangempay.withdraw.bank.preview.state
 import androidx.annotation.StringRes
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.pay.model.bankofframp.BankAccountDetails
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.amount.state.formatFiat
-import com.tangem.features.tangempay.withdraw.bank.amount.state.toText
 import com.tangem.features.tangempay.withdraw.bank.amount.state.toTextReference
 import com.tangem.features.tangempay.withdraw.bank.amount.state.toTitleReference
+import com.tangem.features.tangempay.withdraw.bank.amount.state.totalFee
+import com.tangem.features.tangempay.withdraw.bank.amount.state.totalFeeText
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormField
 import com.tangem.features.tangempay.withdraw.bank.form.model.BankWithdrawFormFields
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawFromFactory
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawHeaderFactory
 import com.tangem.features.tangempay.withdraw.bank.model.isRailLocked
 import com.tangem.features.tangempay.withdraw.bank.model.recipientDetails
@@ -37,9 +41,19 @@ import java.util.Currency
 
 private val ACCOUNT_FIELDS = setOf(BankWithdrawFormField.AccountNumber, BankWithdrawFormField.RoutingNumber)
 
-internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Callbacks) {
+internal class TangemPayBankWithdrawPreviewUMFactory(
+    sourceAccount: BankWithdrawSourceAccount,
+    private val callbacks: Callbacks,
+) {
 
     private val iconConverter = CryptoCurrencyToIconStateConverter(shouldGrayscaleTestnet = false)
+
+    private val from = BankWithdrawFromFactory.create(sourceAccount)
+
+    private val isNetworkFeeCharged = when (sourceAccount) {
+        is BankWithdrawSourceAccount.Payment -> false
+        is BankWithdrawSourceAccount.Money -> true
+    }
 
     fun create(draft: BankWithdrawDraft, state: PreviewState): TangemPayBankWithdrawPreviewUM {
         val failure = state.failure
@@ -64,6 +78,7 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
             } ?: persistentListOf(),
             isSending = state.isSending,
             isSendEnabled = draft.toOrderRequest() != null,
+            sendText = createSendText(draft),
             isColdWallet = state.isColdWallet,
             onBackClick = callbacks.onBackClick,
             onCloseClick = callbacks.onCloseClick,
@@ -75,11 +90,13 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
         val amount = draft.amount ?: return null
         val source = draft.source ?: return null
         val destination = draft.destination ?: return null
+        val total = draft.totalText() ?: return null
         val currency = Currency.getInstance(destination.fee.currency)
         val railTitle = destination.toTitleReference()
-        val fee = destination.fee.toText()
+        val fee = destination.totalFeeText(draft.networkFee)
         return TransferUM(
             amount = AmountCardUM(
+                from = from,
                 balance = source.fiatBalance.formatFiat(currency).orMaskWithStars(isBalanceHidden),
                 amount = amount.formatFiat(currency),
                 icon = iconConverter.convert(source.token),
@@ -97,11 +114,30 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
                 fee = fee,
                 onClick = if (isSending || draft.isRailLocked) null else callbacks.onRailClick,
             ),
-            sendingSummary = resourceReference(
-                R.string.tangempay_withdraw_bank_sending_summary,
-                wrappedList((amount + destination.fee.amount).formatFiat(currency), railTitle, fee),
-            ),
+            sendingSummary = if (isNetworkFeeCharged) {
+                resourceReference(R.string.money_account_send_fees_footer, wrappedList(railTitle))
+            } else {
+                resourceReference(
+                    R.string.tangempay_withdraw_bank_sending_summary,
+                    wrappedList(total, railTitle, fee),
+                )
+            },
         )
+    }
+
+    private fun createSendText(draft: BankWithdrawDraft): TextReference {
+        val total = draft.totalText()
+        return if (isNetworkFeeCharged && total != null) {
+            resourceReference(R.string.money_account_send_pay_button, wrappedList(total))
+        } else {
+            resourceReference(R.string.common_send)
+        }
+    }
+
+    private fun BankWithdrawDraft.totalText(): String? {
+        val amount = amount ?: return null
+        val destination = destination ?: return null
+        return (amount + destination.totalFee(networkFee)).formatFiat(Currency.getInstance(destination.fee.currency))
     }
 
     private fun createRecipientCards(
@@ -145,13 +181,16 @@ internal class TangemPayBankWithdrawPreviewUMFactory(private val callbacks: Call
         PreviewFailure.SenderRegion -> unavailable(R.string.tangempay_withdraw_bank_error_sender_region)
         PreviewFailure.Business -> unavailable(R.string.tangempay_withdraw_bank_error_business)
         PreviewFailure.UnsupportedConfiguration -> unavailable(R.string.tangempay_withdraw_bank_error_region_title)
-        PreviewFailure.General -> TangemPayBankWithdrawPreviewUM.Failed(
-            title = resourceReference(R.string.tangempay_withdraw_bank_error_general_title),
-            icon = TangemStatusIcon.Kind.Warning,
-            onCloseClick = callbacks.onCloseClick,
-            onRetryClick = callbacks.onRetryClick,
-        )
+        PreviewFailure.General -> general(onRetryClick = callbacks.onRetryClick)
+        PreviewFailure.TransferOutcomeUnknown -> general(onRetryClick = null)
     }
+
+    private fun general(onRetryClick: (() -> Unit)?) = TangemPayBankWithdrawPreviewUM.Failed(
+        title = resourceReference(R.string.tangempay_withdraw_bank_error_general_title),
+        icon = TangemStatusIcon.Kind.Warning,
+        onCloseClick = callbacks.onCloseClick,
+        onRetryClick = onRetryClick,
+    )
 
     private fun unavailable(@StringRes titleRes: Int) = TangemPayBankWithdrawPreviewUM.Failed(
         title = resourceReference(titleRes),

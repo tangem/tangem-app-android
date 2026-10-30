@@ -49,28 +49,28 @@ import com.tangem.core.ui.res.TangemThemePreview
 fun Label(state: LabelUM, modifier: Modifier = Modifier) {
     val backgroundColor by animateColorAsState(
         targetValue = when (state.style) {
-            LabelStyle.ACCENT -> TangemTheme.colors.text.accent.copy(alpha = 0.1f)
+            LabelStyle.ACCENT -> TangemTheme.colors3.text.accent.blue.copy(alpha = 0.1f)
             LabelStyle.REGULAR -> TangemTheme.colors.control.default
-            LabelStyle.WARNING -> TangemTheme.colors.text.warning.copy(alpha = 0.1f)
-            LabelStyle.ATTENTION -> TangemTheme.colors.text.attention.copy(alpha = 0.1f)
+            LabelStyle.WARNING -> TangemTheme.colors3.text.accent.red.copy(alpha = 0.1f)
+            LabelStyle.ATTENTION -> TangemTheme.colors3.text.accent.yellow.copy(alpha = 0.1f)
         },
     )
 
     val textColor by animateColorAsState(
         targetValue = when (state.style) {
-            LabelStyle.ACCENT -> TangemTheme.colors.text.accent
-            LabelStyle.REGULAR -> TangemTheme.colors.text.secondary
-            LabelStyle.WARNING -> TangemTheme.colors.text.warning
-            LabelStyle.ATTENTION -> TangemTheme.colors.text.attention
+            LabelStyle.ACCENT -> TangemTheme.colors3.text.accent.blue
+            LabelStyle.REGULAR -> TangemTheme.colors3.text.secondary
+            LabelStyle.WARNING -> TangemTheme.colors3.text.accent.red
+            LabelStyle.ATTENTION -> TangemTheme.colors3.text.accent.yellow
         },
     )
 
     val iconColor by animateColorAsState(
         targetValue = when (state.style) {
-            LabelStyle.ACCENT -> TangemTheme.colors.icon.accent
-            LabelStyle.REGULAR -> TangemTheme.colors.icon.informative
-            LabelStyle.WARNING -> TangemTheme.colors.icon.warning
-            LabelStyle.ATTENTION -> TangemTheme.colors.icon.attention
+            LabelStyle.ACCENT -> TangemTheme.colors3.icon.accent.blue
+            LabelStyle.REGULAR -> TangemTheme.colors3.icon.secondary
+            LabelStyle.WARNING -> TangemTheme.colors3.icon.accent.red
+            LabelStyle.ATTENTION -> TangemTheme.colors3.icon.accent.yellow
         },
     )
 
@@ -126,7 +126,7 @@ fun Label(state: LabelUM, modifier: Modifier = Modifier) {
                                 Box(
                                     modifier = Modifier
                                         .background(
-                                            color = TangemTheme.colors.background.tertiary,
+                                            color = TangemTheme.colors3.bg.primary,
                                             shape = CircleShape,
                                         ),
                                 )
@@ -172,7 +172,7 @@ private fun LabelPreview() {
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
-                .background(TangemTheme.colors.background.primary)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(16.dp),
         ) {
             FlowRow(

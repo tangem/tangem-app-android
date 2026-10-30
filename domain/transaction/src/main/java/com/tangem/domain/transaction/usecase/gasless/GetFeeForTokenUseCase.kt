@@ -1,10 +1,11 @@
 package com.tangem.domain.transaction.usecase.gasless
 
 import arrow.core.Either
-import arrow.core.getOrElse
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.unwrapYieldModuleUpgrade
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCoinStatus
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
@@ -24,6 +25,7 @@ import java.math.BigDecimal
  */
 class GetFeeForTokenUseCase(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val evmGaslessFeeResolver: EvmGaslessFeeResolver,
     private val tronGaslessFeeResolver: TronGaslessFeeResolver,
@@ -52,20 +54,24 @@ class GetFeeForTokenUseCase(
                     val accountStatusList = singleAccountStatusListSupplier.getSyncOrNull(userWallet.walletId)
                         ?: raiseIllegalStateError("AccountStatusList is null for ${userWallet.walletId}")
 
-                    val nativeCurrencyStatus = accountStatusList.getCoinStatus(token.network).getOrElse {
-                        raiseIllegalStateError("Native currency not found for network ${token.network.id}")
-                    }
+                    val feeCurrencies = resolveNetworkFeeCurrencies(
+                        nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
+                        userWalletId = userWallet.walletId,
+                        network = token.network,
+                        portfolioCoinStatus = accountStatusList.getCoinStatus(token.network).getOrNull(),
+                    )
 
-                    val tokenCurrencyStatus = accountStatusList.getCryptoCurrencyStatus(currency = token).getOrElse {
-                        raiseIllegalStateError("Token currency not found for network ${token.network.id}")
-                    }
+                    val tokenCurrencyStatus = accountStatusList.getCryptoCurrencyStatus(currency = token).getOrNull()
+                        ?: feeCurrencies.nonPortfolioStatuses.firstOrNull { it.currency.id == token.id }
+                        ?: raiseIllegalStateError("Token currency not found for network ${token.network.id}")
 
                     evmGaslessFeeResolver.resolveWithSelectedFeeToken(
                         userWallet = userWallet,
                         network = token.network,
-                        transactionData = transactionData,
-                        nativeCurrencyStatus = nativeCurrencyStatus,
+                        transactionData = transactionData.unwrapYieldModuleUpgrade(),
+                        nativeCurrencyStatus = feeCurrencies.nativeCurrencyStatus,
                         tokenCurrencyStatus = tokenCurrencyStatus,
+                        nativeTransactionData = transactionData,
                         sentAmount = sentAmount,
                     ).bind()
                 },

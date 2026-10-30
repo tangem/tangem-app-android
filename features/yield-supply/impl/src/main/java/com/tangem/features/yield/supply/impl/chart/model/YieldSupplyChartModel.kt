@@ -3,9 +3,6 @@ package com.tangem.features.yield.supply.impl.chart.model
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.ds.tabs.TangemSegmentUM
-import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.yield.supply.models.YieldMarketToken
 import com.tangem.domain.yield.supply.models.incentives.YieldAprHistory
 import com.tangem.domain.yield.supply.usecase.GetYieldAprHistoryUseCase
@@ -180,7 +177,6 @@ internal class YieldSupplyChartModel @Inject constructor(
 
     private fun incentive(averageApy: BigDecimal?, period: YieldSupplyChartPeriod) = YieldSupplyChartIncentiveUM(
         period = period,
-        picker = periodPicker(period),
         averageApy = averageApy.formatApy(),
         onPeriodSelected = ::onPeriodSelected,
     )
@@ -198,18 +194,6 @@ internal class YieldSupplyChartModel @Inject constructor(
             }
             YieldSupplyChartPeriod.ThreeMonths -> monthStartLabels(points.map(YieldAprHistory.Point::date))
         }
-    }
-
-    private fun periodPicker(period: YieldSupplyChartPeriod): TangemSegmentedPickerUM {
-        val items = YieldSupplyChartPeriod.entries.map { entry ->
-            TangemSegmentUM(id = entry.name, title = resourceReference(entry.titleRes))
-        }
-
-        return TangemSegmentedPickerUM(
-            items = items.toImmutableList(),
-            initialSelectedItem = items.first { it.id == period.name },
-            isFixed = true,
-        )
     }
 
     private fun onPeriodSelected(periodName: String) {

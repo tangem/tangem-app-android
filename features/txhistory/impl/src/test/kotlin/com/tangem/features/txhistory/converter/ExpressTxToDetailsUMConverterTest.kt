@@ -2,6 +2,7 @@ package com.tangem.features.txhistory.converter
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
 import com.tangem.core.ui.components.transactions.state.TxIcon
@@ -842,6 +843,33 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(result.to?.label).isEqualTo(resourceReference(R.string.common_to))
         assertThat(result.from?.owner).isInstanceOf(TxHistoryDetailsUM.AssetOwnerUM.Account::class.java)
         assertThat(result.to?.owner).isInstanceOf(TxHistoryDetailsUM.AssetOwnerUM.Account::class.java)
+    }
+
+    @Test
+    fun `GIVEN swap from own account into the money account WHEN convert THEN to leg names the money account`() {
+        // Arrange
+        val swap = expressSwap(
+            status = ExpressExchangeStatus.Finished,
+            fromAddress = FROM_ADDRESS,
+            payoutAddress = PAYOUT_ADDRESS,
+            fromCurrency = currency,
+        )
+        val lookup = lookupOf(
+            currency.network.id.rawId to mapOf(FROM_ADDRESS to ownAccount),
+            bitcoin.network.id.rawId to mapOf(PAYOUT_ADDRESS to ownMoneyAccount),
+        )
+
+        // Act
+        val result = expressConverter(lookup = lookup).convert(swap)
+
+        // Assert
+        assertThat(result.to?.label).isEqualTo(resourceReference(R.string.common_to))
+        assertThat(result.to?.owner).isEqualTo(
+            TxHistoryDetailsUM.AssetOwnerUM.Account(
+                name = resourceReference(R.string.tangempay_unified_onboarding_money_account_header),
+                icon = AccountIconUM.Money,
+            ),
+        )
     }
 
     @Test

@@ -6,8 +6,6 @@ import arrow.core.toOption
 import com.tangem.domain.account.models.AccountCurrencyId
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.AccountStatusList
-import com.tangem.domain.account.status.contribution.BalanceContributionProvider
-import com.tangem.domain.account.status.contribution.ContributionResolver
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncStrict
@@ -26,6 +24,8 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.*
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.balance.BalanceContributionProvider
+import com.tangem.domain.models.currency.balance.ContributionResolver
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.quote.PriceChange
@@ -254,11 +254,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         val loadedAccounts = jointAccounts ?: return account.loadingJointAccountStatus
         val jointAccount = loadedAccounts[account.accountId.value] ?: return account.errorJointAccountStatus
 
-        val isVerified = jointAccountCompositionVerifier.isVerified(
-            userWalletId = account.userWalletId,
-            ownerKeyIndex = account.ownerKeyIndex,
-            jointAccount = jointAccount,
-        )
+        val isVerified = jointAccountCompositionVerifier.isVerified(account = account, jointAccount = jointAccount)
         if (!isVerified) {
             logger.e("Joint account ${account.accountId.value} does not verify, it is shown as compromised")
             return buildCompromisedJointStatus(

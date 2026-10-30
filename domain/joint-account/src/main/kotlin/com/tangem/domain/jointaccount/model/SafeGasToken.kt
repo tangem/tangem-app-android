@@ -18,6 +18,13 @@ sealed interface SafeGasToken {
         override fun gasPriceInTokenCurrency(coinGasPrice: BigInteger): BigInteger = coinGasPrice
     }
 
+    /** A Smart Gas token known without its rate: only for a check that leaves the gas price ceiling alone */
+    data class Unpriced(override val address: String) : SafeGasToken {
+
+        override fun gasPriceInTokenCurrency(coinGasPrice: BigInteger): BigInteger =
+            error("The gas token $address is not priced, the gas price ceiling cannot be computed")
+    }
+
     /**
      * @param nativeToTokenRate how many tokens one coin is worth
      */

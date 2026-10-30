@@ -5,7 +5,11 @@ import android.view.View
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.isSensitiveData
+import androidx.compose.ui.semantics.semantics
 import java.util.WeakHashMap
 
 @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
@@ -54,5 +58,20 @@ internal fun HideFromAccessibilityServicesEffect() {
             sensitivity.release(view)
             if (sensitivity.isReleased) sensitivities.remove(view)
         }
+    }
+}
+
+/**
+ * Hides a single secret value from non-tool accessibility services, independently of
+ * [HideFromAccessibilityServicesEffect].
+ *
+ * Below Android 14 services can't be told apart, so the node's semantics are cleared for every service, TalkBack
+ * included.
+ */
+fun Modifier.hideFromAccessibilityServices(): Modifier {
+    return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        clearAndSetSemantics {}
+    } else {
+        semantics { isSensitiveData = true }
     }
 }

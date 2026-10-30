@@ -61,7 +61,15 @@ interface TangemPayApi {
     @GET("v1/account/bank-offramp/options")
     suspend fun getBankOfframpOptions(
         @Header("Authorization") authHeader: String,
+        @Query("account_type") accountType: String,
     ): ApiResponse<BankOfframpOptionsResponse>
+
+    @POST("v1/account/bank-offramp/route")
+    suspend fun createBankOfframpRoute(
+        @Header("Authorization") authHeader: String,
+        @Header("X-Idempotency-Key") idempotencyKey: String,
+        @Body body: BankOfframpRouteRequest,
+    ): ApiResponse<BankOfframpRouteResponse>
 
     @GET("v1/customer/wallets/{customer_wallet_id}")
     suspend fun checkCustomerWalletId(
@@ -221,6 +229,7 @@ interface TangemPayApi {
     @GET("v1/fees")
     suspend fun getFees(
         @Header("Authorization") authHeader: String,
+        @Query("account_type") accountType: String,
         @Query("groups") groups: List<String>,
     ): ApiResponse<FeesResponse>
 

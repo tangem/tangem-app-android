@@ -197,7 +197,7 @@ internal class UpdateNotificationsTransformer(
                         tangemIconUM = walletInteractionIcon?.let { iconRes ->
                             TangemIconUM.Icon(
                                 iconRes = iconRes,
-                                tintReference = { TangemTheme.colors2.graphic.neutral.primaryInverted },
+                                tintReference = { TangemTheme.colors3.icon.inverse },
                             )
                         },
                         onClick = clickIntents::onRetryIncompleteTransactionClick,

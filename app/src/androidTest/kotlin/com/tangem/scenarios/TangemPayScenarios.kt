@@ -113,9 +113,17 @@ fun BaseTestCase.openTangemPay() {
     // The tile only renders once the customer check resolves, so it can lag behind the Main screen.
     step("Click on Tangem Pay tile") {
         awaitSuccess { onTangemPayMainScreen { mainScreenTile.assertIsDisplayed() } }
-        onTangemPayMainScreen { mainScreenTile.performClick() }
+        clickTangemPayTileUntilPaymentAccountOpens()
     }
     step("Assert payment account balance is displayed") {
+        onTangemPayMainScreen { balance.assertIsDisplayed() }
+    }
+}
+
+// A tap that lands right after the tile renders is swallowed and Main stays open, so tap again until it opens.
+fun BaseTestCase.clickTangemPayTileUntilPaymentAccountOpens() {
+    awaitAssert(WAIT_UNTIL_TIMEOUT_LONG) {
+        runCatching { onTangemPayMainScreen { mainScreenTile.performClick() } }
         onTangemPayMainScreen { balance.assertIsDisplayed() }
     }
 }
@@ -1037,7 +1045,7 @@ fun BaseTestCase.issueAdditionalCardFromMainScreen(cardsStateAfterIssue: String)
     val issueOrdersEmptyState = "Empty"
 
     step("Click on Tangem Pay tile") {
-        onTangemPayMainScreen { mainScreenTile.performClick() }
+        clickTangemPayTileUntilPaymentAccountOpens()
     }
     step("Assert payment account balance is displayed") {
         awaitSuccess { onTangemPayMainScreen { balance.assertIsDisplayed() } }
@@ -1412,7 +1420,7 @@ fun BaseTestCase.reopenTangemPayFromMain() {
         awaitSuccess { onTangemPayMainScreen { mainScreenTile.assertIsDisplayed() } }
     }
     step("Click on Tangem Pay tile") {
-        onTangemPayMainScreen { mainScreenTile.performClick() }
+        clickTangemPayTileUntilPaymentAccountOpens()
     }
     step("Assert payment account balance is displayed") {
         awaitSuccess { onTangemPayMainScreen { balance.assertIsDisplayed() } }

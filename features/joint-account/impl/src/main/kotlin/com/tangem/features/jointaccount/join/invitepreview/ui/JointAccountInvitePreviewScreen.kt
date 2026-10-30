@@ -161,6 +161,7 @@ private fun ContentScreen(state: JointAccountInvitePreviewUM.Content, modifier: 
 
             Footer(
                 modifier = Modifier.padding(bottom = contentPadding.calculateBottomPadding()),
+                isLoading = state.isContinueLoading,
                 onContinueClick = state.onContinueClick,
             )
         }
@@ -395,13 +396,14 @@ private fun ValueText(text: TextReference, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Footer(onContinueClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun Footer(isLoading: Boolean, onContinueClick: () -> Unit, modifier: Modifier = Modifier) {
     TangemButton(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 12.dp),
         variant = TangemButton.Variant.Primary,
         size = TangemButton.Size.X12,
+        isLoading = isLoading,
         text = resourceReference(R.string.common_continue),
         onClick = onContinueClick,
     )
