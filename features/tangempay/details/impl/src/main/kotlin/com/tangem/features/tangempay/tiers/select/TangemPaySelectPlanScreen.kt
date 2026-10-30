@@ -90,8 +90,9 @@ internal fun TangemPaySelectPlanScreen(state: TangemPaySelectPlanUM, modifier: M
                 label = "SelectPlanFooter",
             ) { content ->
                 when (content) {
-                    TangemPaySelectPlanUM.Content.Loading -> ProvideTangemShimmer { SelectPlanSkeletonFooter() }
-                    is TangemPaySelectPlanUM.Content.Error -> Unit
+                    TangemPaySelectPlanUM.Content.Loading,
+                    is TangemPaySelectPlanUM.Content.Error,
+                    -> Unit
                     is TangemPaySelectPlanUM.Content.Select -> SelectFooter(content = content)
                     is TangemPaySelectPlanUM.Content.Confirm -> ConfirmFooter(content = content)
                 }
