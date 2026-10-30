@@ -41,10 +41,12 @@ import com.tangem.data.balancehiding.DefaultDeviceFlipDetector
 import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.repository.CardRepository
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.settings.SetGooglePayAvailabilityUseCase
 import com.tangem.domain.settings.SetGoogleServicesAvailabilityUseCase
 import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
 import com.tangem.domain.wallets.backup.WalletCardsBackupDeliveryScheduler
+import com.tangem.domain.wallets.usecase.ReportCardLinkedWalletsBackupUseCase
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.tester.api.TesterMenuLauncher
@@ -137,6 +139,12 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     internal lateinit var walletCardsBackupDeliveryScheduler: WalletCardsBackupDeliveryScheduler
 
     @Inject
+    internal lateinit var reportCardLinkedWalletsBackupUseCase: ReportCardLinkedWalletsBackupUseCase
+
+    @Inject
+    internal lateinit var userWalletsListRepository: UserWalletsListRepository
+
+    @Inject
     internal lateinit var lockUserWalletsTimer: LockUserWalletsTimer
 
     @Inject
@@ -201,6 +209,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
         sendStakingUnsubmittedHashes()
         sendPendingWalletCardsBackups()
+        reportCardLinkedWalletsBackups()
         checkGoogleServicesAvailability()
 
         lifecycle.addObserver(WindowObscurationObserver)
@@ -460,6 +469,15 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         if (onboardingV2FeatureToggles.isCardLinkedStatusUpdateEnabled.not()) return
 
         walletCardsBackupDeliveryScheduler.schedule()
+    }
+
+    private fun reportCardLinkedWalletsBackups() {
+        if (onboardingV2FeatureToggles.isCardLinkedStatusUpdateEnabled.not()) return
+
+        userWalletsListRepository.userWallets
+            .filterNotNull()
+            .onEach { userWallets -> reportCardLinkedWalletsBackupUseCase(userWallets) }
+            .launchIn(lifecycleScope)
     }
 
     private fun checkGoogleServicesAvailability() {

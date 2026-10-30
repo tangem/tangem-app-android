@@ -84,6 +84,7 @@ internal object WalletsDataModule {
     fun provideWalletCardsBackupRepository(
         tangemTechApi: TangemTechApi,
         dataStoreFactory: AppDataStoreFactory,
+        appPreferencesStore: AppPreferencesStore,
         deliveryScheduler: WalletCardsBackupDeliveryScheduler,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletCardsBackupRepository {
@@ -96,6 +97,7 @@ internal object WalletsDataModule {
                     fileName = "pending_wallet_cards_backups",
                 ),
             ),
+            appPreferencesStore = appPreferencesStore,
             deliveryScheduler = deliveryScheduler,
             dispatchers = dispatchers,
         )
