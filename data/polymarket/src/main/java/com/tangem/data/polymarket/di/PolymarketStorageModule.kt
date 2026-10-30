@@ -17,7 +17,9 @@ import com.tangem.data.polymarket.converter.PredictionAccountStatusValueDTOConve
 import com.tangem.data.polymarket.store.DefaultPolymarketOnboardedStore
 import com.tangem.data.polymarket.store.DefaultPredictionWithdrawalStore
 import com.tangem.data.polymarket.entity.PredictionAccountStatusValueDTO
+import com.tangem.data.polymarket.entity.PolymarketSessionKeyReadinessDTO
 import com.tangem.data.polymarket.entity.PredictionWithdrawalRecordDTO
+import com.tangem.data.polymarket.store.DefaultPolymarketSessionKeyTradingStore
 import com.tangem.data.polymarket.store.PredictionAccountStatusStore
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
@@ -28,6 +30,7 @@ import com.tangem.domain.polymarket.PredictionWithdrawalStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionCredentialsProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyTradingStore
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -157,6 +160,28 @@ internal object PolymarketStorageModule {
             ),
             addressFactory = addressFactory,
             dispatchers = dispatchers,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providePolymarketSessionKeyTradingStore(
+        @ApplicationContext context: Context,
+        scope: AppCoroutineScope,
+        dataStoreFactory: AppDataStoreFactory,
+    ): PolymarketSessionKeyTradingStore {
+        return DefaultPolymarketSessionKeyTradingStore(
+            readinessDataStore = dataStoreFactory.create(
+                serializer = KotlinxDataStoreSerializer(
+                    defaultValue = emptyMap(),
+                    serializer = MapSerializer(
+                        keySerializer = String.serializer(),
+                        valueSerializer = PolymarketSessionKeyReadinessDTO.serializer(),
+                    ),
+                ),
+                produceFile = { context.dataStoreFile(fileName = "polymarket_session_key_readiness") },
+                scope = scope,
+            ),
         )
     }
 

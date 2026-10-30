@@ -26,6 +26,13 @@ sealed interface PredictionPlaceOrderError : PolymarketError {
 
     data class Unauthorized(val detail: String?) : PredictionPlaceOrderError
 
+    /**
+     * @property httpCode a `4xx` other than `401` whose message names the signature, the signer, an authorization or
+     * the API key; a bare `403`, a geoblock for one, is not a refusal
+     * @property reason the CLOB message
+     */
+    data class SessionKeyRefused(val httpCode: Int, val reason: String) : PredictionPlaceOrderError
+
     data class NotSent(val detail: String?) : PredictionPlaceOrderError
 
     data class Ambiguous(val detail: String?) : PredictionPlaceOrderError
