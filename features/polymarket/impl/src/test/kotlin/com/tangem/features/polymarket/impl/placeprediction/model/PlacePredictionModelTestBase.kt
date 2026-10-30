@@ -16,6 +16,9 @@ import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
+import com.tangem.domain.polymarket.interactor.SubmitPredictionOrderInteractor
+import com.tangem.domain.polymarket.sessionkey.PolymarketOrderSigningRouter
+import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
@@ -87,6 +90,8 @@ internal abstract class PlacePredictionModelTestBase {
     protected val signOrderInteractor: SignPredictionOrderInteractor = mockk()
     protected val placeOrderUseCase: PlacePredictionOrderUseCase = mockk()
     protected val awaitDelayedOrderUseCase: AwaitDelayedPredictionOrderUseCase = mockk()
+    protected val signingRouter: PolymarketOrderSigningRouter = mockk(relaxUnitFun = true)
+    protected val featureToggles: PolymarketFeatureToggles = mockk()
     protected val positionsRepository: PolymarketPositionsRepository = mockk()
     protected val fundingWindow: PredictionFundingWindow = mockk(relaxed = true)
     protected val positionsUpdateEmitter: PredictionPositionsUpdateEmitter = mockk(relaxed = true)
@@ -116,6 +121,8 @@ internal abstract class PlacePredictionModelTestBase {
             signOrderInteractor,
             placeOrderUseCase,
             awaitDelayedOrderUseCase,
+            signingRouter,
+            featureToggles,
             positionsRepository,
             fundingWindow,
             positionsUpdateEmitter,
@@ -140,6 +147,7 @@ internal abstract class PlacePredictionModelTestBase {
         coEvery { checkGeoblockUseCase() } returns false.right()
         coEvery { signOrderInteractor(request = any()) } returns SIGNED_ORDER.right()
         coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult().right()
+        every { featureToggles.isPolymarketSessionKeysEnabled } returns false
         coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
             createPosition().right()
     }
@@ -249,8 +257,13 @@ internal abstract class PlacePredictionModelTestBase {
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             derivePolymarketAddressesUseCase = deriveAddressesUseCase,
             getPolymarketBalanceInteractor = getBalanceInteractor,
-            signPredictionOrderInteractor = signOrderInteractor,
-            placePredictionOrderUseCase = placeOrderUseCase,
+            submitPredictionOrderInteractor = SubmitPredictionOrderInteractor(
+                signOrder = signOrderInteractor,
+                placeOrder = placeOrderUseCase,
+                router = signingRouter,
+                reconciliationScope = testScope.backgroundScope,
+            ),
+            featureToggles = featureToggles,
             awaitDelayedPredictionOrderUseCase = awaitDelayedOrderUseCase,
             positionsRepository = positionsRepository,
             predictionFundingWindow = fundingWindow,

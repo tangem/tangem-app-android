@@ -2,6 +2,10 @@ package com.tangem.features.txhistory.state
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
+import com.tangem.core.ui.components.transactions.state.TxIcon
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
 import com.tangem.features.txhistory.entity.TxHistoryItemsUM
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Test
@@ -11,6 +15,17 @@ import org.junit.jupiter.api.TestInstance
 internal class TxHistoryStateControllerTest {
 
     private val controller = TxHistoryStateController()
+
+    private fun transactionItem() = TransactionItemUM.Content(
+        txHash = "hash",
+        amount = "-1.00",
+        currencySymbol = "ETH",
+        status = TransactionItemUM.Content.Status.Confirmed,
+        onClick = {},
+        icon = TxIcon.Vector(Icons.ic_arrow_up_20),
+        title = stringReference("Sent"),
+        subtitle = TransactionItemUM.ContentSubtitle.Plain(stringReference("to: 0xabc")),
+    )
 
     @Test
     fun `GIVEN empty items snapshot WHEN setContent THEN Empty state with explorer action`() {
@@ -48,7 +63,7 @@ internal class TxHistoryStateControllerTest {
             snapshot = TxHistoryItemsSnapshot.Items(
                 persistentListOf(
                     TxHistoryItemsUM.TxHistoryItemUM.GroupTitle(title = "Today", itemKey = "0-Today"),
-                    TxHistoryItemsUM.TxHistoryItemUM.Transaction(TransactionItemUM.Loading("hash")),
+                    TxHistoryItemsUM.TxHistoryItemUM.Transaction(transactionItem()),
                 ),
             ),
             loadMore = { true },

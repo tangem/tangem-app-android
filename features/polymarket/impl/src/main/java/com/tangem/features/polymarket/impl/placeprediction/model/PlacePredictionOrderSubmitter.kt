@@ -15,16 +15,20 @@ import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.flow.PredictionPositionsUpdateEmitter
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.interactor.PredictionSignRequest
-import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
+import com.tangem.domain.polymarket.interactor.PredictionOrderSubmitStep
+import com.tangem.domain.polymarket.interactor.PredictionSubmitOrderError
+import com.tangem.domain.polymarket.interactor.SubmitPredictionOrderInteractor
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketPositionId
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionOrderFailure
+import com.tangem.domain.polymarket.model.PredictionOrderSigningPreference
+import com.tangem.domain.polymarket.model.PredictionOrderSigningRoute
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
 import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.DelayedPredictionOrderOutcome
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
-import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
+import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
@@ -61,8 +65,8 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
     private val getPolymarketBalanceInteractor: GetPolymarketBalanceInteractor,
-    private val signPredictionOrderInteractor: SignPredictionOrderInteractor,
-    private val placePredictionOrderUseCase: PlacePredictionOrderUseCase,
+    private val submitPredictionOrderInteractor: SubmitPredictionOrderInteractor,
+    private val featureToggles: PolymarketFeatureToggles,
     private val awaitDelayedPredictionOrderUseCase: AwaitDelayedPredictionOrderUseCase,
     private val positionsRepository: PolymarketPositionsRepository,
     private val predictionFundingWindow: PredictionFundingWindow,
@@ -110,8 +114,8 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
             }
         }
 
-        val signedOrder = withContext(dispatchers.default) {
-            signPredictionOrderInteractor(
+        val submitted = withContext(dispatchers.default) {
+            submitPredictionOrderInteractor(
                 request = PredictionSignRequest(
                     addresses = addresses,
                     quote = frozen.quote,
@@ -120,36 +124,47 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
                     isNegRisk = isNegRisk,
                     quoteReceivedAtMillis = frozen.receivedAtMillis,
                 ),
+                preference = signingPreference(),
+                onStep = ::onSubmitStep,
             )
-        }.getOrElse { failure ->
-            onSignFailure(failure = failure)
-            return null
-        }
-
-        uiState.update(SetSubmitTransformer(submit = SubmitUM.Posting))
-
-        return withContext(dispatchers.default) {
-            placePredictionOrderUseCase(
-                addresses = addresses,
-                signedOrder = signedOrder,
-                version = frozen.quote.version,
-            )
-        }
-            .map { result ->
-                PlaceResultUMConverter.convert(
-                    result = result,
-                    side = params.side,
-                    quotedShares = frozen.quote.shares,
-                    quotedAmount = frozen.quote.notional,
-                    placedAt = System.currentTimeMillis(),
-                )
+        }.getOrElse { error ->
+            return when (error) {
+                is PredictionSubmitOrderError.NotSigned -> {
+                    onSignFailure(failure = error.failure)
+                    null
+                }
+                is PredictionSubmitOrderError.NotPlaced -> onPlaceError(error = error.error)
             }
-            .fold(
-                ifLeft = ::onPlaceError,
-                ifRight = { outcome ->
-                    onPlaceOutcome(outcome = outcome, addresses = addresses, quotedAmount = frozen.quote.notional)
-                },
-            )
+        }
+
+        val outcome = PlaceResultUMConverter.convert(
+            result = submitted.result,
+            side = params.side,
+            quotedShares = frozen.quote.shares,
+            quotedAmount = frozen.quote.notional,
+            placedAt = System.currentTimeMillis(),
+        )
+        return onPlaceOutcome(
+            outcome = outcome,
+            addresses = addresses,
+            quotedAmount = frozen.quote.notional,
+            route = submitted.route,
+        )
+    }
+
+    private fun signingPreference(): PredictionOrderSigningPreference =
+        if (featureToggles.isPolymarketSessionKeysEnabled) {
+            PredictionOrderSigningPreference.AUTOMATIC
+        } else {
+            PredictionOrderSigningPreference.OWNER_ONLY
+        }
+
+    private fun onSubmitStep(step: PredictionOrderSubmitStep) {
+        val submit = when (step) {
+            PredictionOrderSubmitStep.SIGNING -> SubmitUM.Signing
+            PredictionOrderSubmitStep.POSTING -> SubmitUM.Posting
+        }
+        uiState.update(SetSubmitTransformer(submit = submit))
     }
 
     private suspend fun spendingPower(addresses: PolymarketAddresses, frozen: SignableQuoteUM): SpendingPower =
@@ -258,6 +273,7 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
         outcome: PlaceOutcome,
         addresses: PolymarketAddresses,
         quotedAmount: BigDecimal,
+        route: PredictionOrderSigningRoute,
     ): PlaceResultUM? = when (outcome) {
         is PlaceOutcome.Reportable -> showResult(result = outcome.result)
         is PlaceOutcome.Anomalous -> {
@@ -269,6 +285,7 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
             orderId = outcome.orderId,
             quotedAmount = quotedAmount,
             placedAt = outcome.placedAt,
+            route = route,
         )
     }
 
@@ -282,11 +299,12 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
         orderId: String,
         quotedAmount: BigDecimal,
         placedAt: Long,
+        route: PredictionOrderSigningRoute,
     ): PlaceResultUM? {
         uiState.update(SetSubmitTransformer(submit = SubmitUM.AwaitingFill))
 
         val outcome = withContext(dispatchers.default) {
-            awaitDelayedPredictionOrderUseCase(addresses = addresses, orderId = orderId)
+            awaitDelayedPredictionOrderUseCase(addresses = addresses, orderId = orderId, route = route)
         }
 
         when (outcome) {

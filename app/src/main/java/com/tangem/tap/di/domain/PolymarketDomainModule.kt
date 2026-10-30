@@ -8,6 +8,7 @@ import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketRedeemRepository
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.PolymarketLiveQuotesRepository
+import com.tangem.domain.polymarket.PolymarketSessionKeyRepository
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.PolymarketWithdrawRepository
 import com.tangem.domain.polymarket.PredictionWithdrawalStore
@@ -25,6 +26,7 @@ import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisite
 import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
 import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
 import com.tangem.domain.polymarket.interactor.SubmitPredictionClaimInteractor
+import com.tangem.domain.polymarket.interactor.SubmitPredictionOrderInteractor
 import com.tangem.domain.polymarket.interactor.SubmitPredictionWithdrawalInteractor
 import com.tangem.domain.polymarket.model.PredictionTransferCallCodec
 import com.tangem.domain.polymarket.signing.PolymarketSigningSession
@@ -52,10 +54,15 @@ import com.tangem.domain.polymarket.usecase.ObservePolymarketLiveQuotesUseCase
 import com.tangem.domain.polymarket.usecase.SearchPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
+import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
+import com.tangem.domain.polymarket.sessionkey.PolymarketOrderSigningRouter
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionCredentialsProvider
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyTradingStore
 import com.tangem.domain.polymarket.usecase.SubmitApprovalsUseCase
 import com.tangem.domain.polymarket.usecase.SyncBalanceAllowanceUseCase
 import com.tangem.domain.polymarket.usecase.ValidatePredictionOrderUseCase
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -286,6 +293,41 @@ internal object PolymarketDomainModule {
         invalidateCredentials = invalidateCredentials,
         credentialsLock = credentialsLock,
         sessionCredentialsProvider = sessionCredentialsProvider,
+    )
+
+    @Provides
+    @Singleton
+    @Suppress("LongParameterList")
+    fun providePolymarketOrderSigningRouter(
+        polymarketRepository: PolymarketRepository,
+        sessionKeyRepository: PolymarketSessionKeyRepository,
+        sessionKeyStore: PolymarketSessionKeyStore,
+        tradingStore: PolymarketSessionKeyTradingStore,
+        sessionCredentialsProvider: PolymarketSessionCredentialsProvider,
+        deviceIdProvider: PolymarketDeviceIdProvider,
+        getApiCredentials: GetPolymarketApiCredentialsUseCase,
+    ): PolymarketOrderSigningRouter = PolymarketOrderSigningRouter(
+        polymarketRepository = polymarketRepository,
+        sessionKeyRepository = sessionKeyRepository,
+        sessionKeyStore = sessionKeyStore,
+        tradingStore = tradingStore,
+        sessionCredentialsProvider = sessionCredentialsProvider,
+        deviceIdProvider = deviceIdProvider,
+        getApiCredentials = getApiCredentials,
+    )
+
+    @Provides
+    @Singleton
+    fun provideSubmitPredictionOrderInteractor(
+        signOrder: SignPredictionOrderInteractor,
+        placeOrder: PlacePredictionOrderUseCase,
+        router: PolymarketOrderSigningRouter,
+        appCoroutineScope: AppCoroutineScope,
+    ): SubmitPredictionOrderInteractor = SubmitPredictionOrderInteractor(
+        signOrder = signOrder,
+        placeOrder = placeOrder,
+        router = router,
+        reconciliationScope = appCoroutineScope,
     )
 
     @Provides

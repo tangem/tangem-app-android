@@ -104,6 +104,19 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
   repository unwrap it and refuse an envelope the placing identity's key did not make — or any envelope on the
   owner route. The order is placed and read back under the route's session identity. Choosing the route is the
   caller's.
+- `SubmitPredictionOrderInteractor` takes the route from `PolymarketOrderSigningRouter` (guide §3.3, strict: a BFF
+  record is required, unlike iOS) unless the preference is `OWNER_ONLY` — Session Keys toggle off or "Sign with
+  card". The readiness check after authorization and the last reconciliation live in
+  `PolymarketSessionKeyTradingStore`; the readiness is keyed by `validUntil`, so a renewal needs a new check. A
+  CLOB `401` on a session order counts as a refusal, and so does any other `4xx` whose `error` message names the
+  signature, the signer, an authorization or the API key (`ClobSignerRefusalParser`, data layer — the CLOB sends
+  no error code); a bare `403`, a geoblock for one, is a normal failure. A session key that cannot sign the order
+  or an order that cannot be sent (`NotSent`) counts as a refusal too, as on iOS (a signing failure is not
+  reconciled); a cancelled signing does not. On a refusal the
+  key is marked refused and its stored readiness dropped before the same order is signed with the owner key, so it
+  stays out of trading until marked ready again, restarts included; the wallet is reconciled in the app scope,
+  after the owner result is returned. Market, liquidity and balance errors are final. The owner route maps those
+  responses as before.
 - SELL: `makerAmount = shares`, `takerAmount = collateral`; BUY the reverse.
 - A claim signs only redeem calls the BFF served, and only after `PredictionRedeemCallValidator` accepted
   them against the position: one adapter `redeemPositions` call on the root collection of the condition for

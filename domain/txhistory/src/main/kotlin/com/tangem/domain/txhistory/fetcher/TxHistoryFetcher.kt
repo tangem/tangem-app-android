@@ -1,6 +1,5 @@
 package com.tangem.domain.txhistory.fetcher
 
-import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
 
 interface TxHistoryFetcher<T : TxHistoryFetchTrigger> {
@@ -12,11 +11,6 @@ interface AppTxHistoryFetcher : TxHistoryFetcher<TxHistoryFetchTrigger>
 
 interface WalletTxHistoryFetcher : TxHistoryFetcher<TxHistoryFetchTrigger> {
     val walletId: UserWalletId
-}
-
-interface AccountTxHistoryFetcher : TxHistoryFetcher<TxHistoryFetchTrigger> {
-    val accountId: AccountId
-    val walletId: UserWalletId get() = accountId.userWalletId
 }
 
 interface ExpressTxHistoryFetcher : TxHistoryFetcher<TxHistoryExpressTrigger> {

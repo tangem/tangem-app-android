@@ -21,6 +21,7 @@ class CloseCollectiblesVaultUseCase @Inject constructor(
                 hotDelegate.forget(AccountId.forCollectiblesAccount(userWalletId = userWallet.walletId))
 
                 accountRepository.clearAccount(userWallet.walletId)
+                accountRepository.unregisterAccount(userWallet.walletId)
             }
     }
 }

@@ -13,9 +13,9 @@ import com.tangem.core.ui.extensions.TextReference
 /**
  * UI model for the redesigned transaction list item ([REDACTED_TASK_KEY]).
  *
- * Mirrors the field set of the legacy [TransactionState] but splits the formatted amount string
- * into a numeric [Content.amount] (with sign) and a separate [Content.currencySymbol], so the
- * redesigned `TransactionItem` composable can render them on independent lines without parsing.
+ * The formatted amount is split into a numeric [Content.amount] (with sign) and a separate
+ * [Content.currencySymbol], so the redesigned `TransactionItem` composable can render them on
+ * independent lines without parsing.
  */
 @Immutable
 sealed interface TransactionItemUM {
@@ -34,14 +34,11 @@ sealed interface TransactionItemUM {
         override val txHash: String,
         val amount: String?,
         val currencySymbol: String,
-        val time: String,
         val status: Status,
-        val direction: Direction,
         val onClick: () -> Unit,
         val icon: TxIcon,
         val title: TextReference,
         val subtitle: ContentSubtitle,
-        val timestamp: Long,
         val warning: TextReference? = null,
     ) : TransactionItemUM {
 
@@ -51,11 +48,6 @@ sealed interface TransactionItemUM {
             data object Confirmed : Status()
             data object Unconfirmed : Status()
             data object PendingSignature : Status()
-        }
-
-        enum class Direction {
-            INCOMING,
-            OUTGOING,
         }
     }
 
@@ -238,7 +230,6 @@ sealed interface TransactionItemUM {
         val amount: TextReference?,
         val currencySymbol: String?,
         val subtitle: PillSubtitle?,
-        val timestamp: Long,
         val onClick: () -> Unit,
         val isSuccess: Boolean = false,
     ) : TransactionItemUM
@@ -271,10 +262,6 @@ sealed interface TransactionItemUM {
             @DrawableRes val iconResId: Int,
         ) : PillSubtitle
     }
-
-    data class Loading(override val txHash: String) : TransactionItemUM
-
-    data class Locked(override val txHash: String) : TransactionItemUM
 }
 
 /**

@@ -1,4 +1,4 @@
-package com.tangem.features.txhistory.converter
+package com.tangem.features.txhistory.converter.fields
 
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM
@@ -17,11 +17,11 @@ import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.JointOperationTx
 import com.tangem.domain.txhistory.model.OnChainTx
+import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.core.ui.components.transactions.state.TransactionItemUM.Content.Status
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.model.TxHistoryLookupContext
-import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.google.common.truth.Truth.assertThat
 import io.mockk.mockk
 import io.mockk.verify
@@ -33,30 +33,19 @@ import java.math.BigDecimal
 import java.math.BigInteger
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class TxHistoryInfoToTransactionItemUMConverterTest {
+internal class TxHistoryInfoFieldConverterRowTest {
 
-    private val txHistoryUiActions: TxHistoryUiActions = mockk(relaxed = true)
+    private val onRowClick: (TxHistoryInfo) -> Unit = mockk(relaxed = true)
     private val currency: CryptoCurrency = MockCryptoCurrencyFactory().ethereum
 
-    private val converter = TxHistoryInfoToTransactionItemUMConverter(
-        txInfoConverter = TxHistoryItemToTransactionItemUMConverter(
-            currency = currency,
-            txHistoryUiActions = txHistoryUiActions,
+    private val converter = TxHistoryInfoFieldConverter(
+        currency = currency,
+        onRowClick = onRowClick,
+        lookup = TxHistoryLookupContext(
+            ownAccountByNetwork = emptyMap(),
+            isAccountsModeEnabled = false,
+            walletInfoById = emptyMap(),
         ),
-        expressConverter = ExpressTxToTransactionItemUMConverter(
-            currency = currency,
-            txHistoryUiActions = txHistoryUiActions,
-        ),
-        jointConverter = JointOperationTxToTransactionItemUMConverter(
-            currency = currency,
-            txHistoryUiActions = txHistoryUiActions,
-            lookup = TxHistoryLookupContext(
-                ownAccountByNetwork = emptyMap(),
-                isAccountsModeEnabled = false,
-                walletInfoById = emptyMap(),
-            ),
-        ),
-        txHistoryUiActions = txHistoryUiActions,
     )
 
     @Test
@@ -71,7 +60,7 @@ internal class TxHistoryInfoToTransactionItemUMConverterTest {
 
         // Assert
         assertThat(result.txHash).isEqualTo(TX_HASH)
-        verify { txHistoryUiActions.onTransactionClick(item) }
+        verify(exactly = 1) { onRowClick(item) }
     }
 
     @Test
@@ -169,7 +158,7 @@ internal class TxHistoryInfoToTransactionItemUMConverterTest {
         result.onClick()
 
         // Assert
-        verify { txHistoryUiActions.onTransactionClick(item) }
+        verify(exactly = 1) { onRowClick(item) }
     }
 
     @Test
@@ -182,7 +171,7 @@ internal class TxHistoryInfoToTransactionItemUMConverterTest {
         result.onClick()
 
         // Assert
-        verify { txHistoryUiActions.onTransactionClick(item) }
+        verify(exactly = 1) { onRowClick(item) }
     }
 
     @Test
@@ -195,7 +184,7 @@ internal class TxHistoryInfoToTransactionItemUMConverterTest {
         result.onClick()
 
         // Assert
-        verify { txHistoryUiActions.onTransactionClick(item) }
+        verify(exactly = 1) { onRowClick(item) }
     }
 
     @Test
@@ -208,7 +197,7 @@ internal class TxHistoryInfoToTransactionItemUMConverterTest {
         result.onClick()
 
         // Assert
-        verify { txHistoryUiActions.onTransactionClick(item) }
+        verify(exactly = 1) { onRowClick(item) }
     }
 
     private fun txInfo(type: TransactionType): TxInfo.Single = TxInfo.Single(
