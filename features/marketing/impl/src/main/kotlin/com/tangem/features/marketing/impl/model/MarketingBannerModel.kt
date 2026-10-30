@@ -12,29 +12,33 @@ import com.tangem.domain.marketing.MarketingUidBindingRepository
 import com.tangem.domain.marketing.models.MarketingBanner
 import com.tangem.domain.marketing.models.MarketingCampaign
 import com.tangem.domain.marketing.models.MarketingScreen
+import com.tangem.domain.marketing.models.hasAmountBounds
 import com.tangem.domain.marketing.models.matchesUsdAmount
+import com.tangem.domain.quotes.GetFiatUSDRateUseCase
+import com.tangem.features.marketing.api.MarketingBannerAmount
 import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.marketing.impl.ui.state.MarketingBannerListUM
 import com.tangem.features.marketing.impl.ui.state.MarketingBannerUM
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
-@OptIn(FlowPreview::class)
 @ModelScoped
 internal class MarketingBannerModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
@@ -42,12 +46,19 @@ internal class MarketingBannerModel @Inject constructor(
     private val getMarketingBanner: GetMarketingBannerUseCase,
     private val dismissMarketingBanner: DismissMarketingBannerUseCase,
     private val deeplinkLauncher: DeeplinkLauncher,
+    private val getFiatUSDRate: GetFiatUSDRateUseCase,
     private val marketingUidBindingRepository: MarketingUidBindingRepository,
     private val appCoroutineScope: AppCoroutineScope,
 ) : Model() {
 
     private val params = paramsContainer.require<MarketingBannerComponent.Params>()
     private val dismissedIds = MutableStateFlow<Set<Int>>(emptySet())
+
+    /**
+     * One lookup per currency, run in [modelScope] so a new amount awaits it instead of restarting it. A failed
+     * lookup is dropped, so that currency is retried on its next amount change.
+     */
+    private val fiatUsdRateLookups = mutableMapOf<String, Deferred<BigDecimal?>>()
 
     val uiState: StateFlow<MarketingBannerListUM>
         field = MutableStateFlow<MarketingBannerListUM>(MarketingBannerListUM.Hidden)
@@ -80,32 +91,42 @@ internal class MarketingBannerModel @Inject constructor(
         val requestFlow: Flow<MarketingRequest?> = when (val p = params) {
             is MarketingBannerComponent.Params.Standalone ->
                 p.requestFlow.map { request ->
-                    request?.let { MarketingRequest(screen = it.screen, amountUsd = it.amountUsd) }
+                    request?.let { MarketingRequest(screen = it.screen, amount = it.amount) }
                 }
             is MarketingBannerComponent.Params.Linked ->
                 p.requestFlow.map { request ->
-                    request?.let { MarketingRequest(screen = it.screen, amountUsd = it.amountUsd) }
+                    request?.let { MarketingRequest(screen = it.screen, amount = it.amount) }
                 }
         }
 
+        // The previous screen's campaigns are cleared at once, so they're never filtered with the new amount.
         val campaigns: Flow<List<MarketingCampaign>> = requestFlow
             .map { it?.screen }
             .distinctUntilChanged()
-            .debounce(REQUEST_DEBOUNCE_MS)
-            .mapLatest { screen -> if (screen != null) fetch(screen) else emptyList() }
+            .transformLatest { screen ->
+                emit(emptyList())
+                if (screen == null) return@transformLatest
+                delay(REQUEST_DEBOUNCE_MS)
+                emit(fetch(screen).filter(::matchesUiType))
+            }
 
-        val amountUsd: Flow<BigDecimal?> = requestFlow.map { it?.amountUsd }.distinctUntilChanged()
+        val amount: Flow<MarketingBannerAmount?> = requestFlow.map { it?.amount }.distinctUntilChanged()
+
+        val amountMatchingCampaigns: Flow<List<MarketingCampaign>> = combine(campaigns, amount, ::Pair)
+            .transformLatest { (list, amount) ->
+                if (list.none(MarketingCampaign::hasAmountBounds)) {
+                    emit(list)
+                    return@transformLatest
+                }
+                if (!isUsdAvailableNow(amount)) emit(list.filterNot(MarketingCampaign::hasAmountBounds))
+                val usd = amount?.let { toUsd(it) }
+                emit(list.filter { it.matchesUsdAmount(usd) })
+            }
 
         modelScope.launch {
-            combine(
-                flow = campaigns,
-                flow2 = amountUsd,
-                flow3 = dismissedIds,
-            ) { list, usd, dismissed ->
+            combine(amountMatchingCampaigns, dismissedIds) { list, dismissed ->
                 list.asSequence()
                     .filterNot { it.id in dismissed }
-                    .filter { it.matchesUsdAmount(usd) }
-                    .filter { matchesUiType(it) }
                     .map { it.toUM() }
                     .toList()
             }.collect { banners ->
@@ -116,6 +137,30 @@ internal class MarketingBannerModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private suspend fun toUsd(amount: MarketingBannerAmount): BigDecimal? = when (amount) {
+        is MarketingBannerAmount.Usd -> amount.value
+        is MarketingBannerAmount.Fiat -> getFiatUsdRate(amount.currencyCode)?.let(amount.value::multiply)
+    }
+
+    private fun isUsdAvailableNow(amount: MarketingBannerAmount?): Boolean {
+        if (amount !is MarketingBannerAmount.Fiat) return true
+        return fiatUsdRateLookups[amount.currencyCode.uppercase()]?.isCompleted == true
+    }
+
+    /**
+     * A failed lookup evicts itself, even when nobody awaits it any more. It starts lazily, so it is already in the
+     * map when it completes.
+     */
+    private suspend fun getFiatUsdRate(currencyCode: String): BigDecimal? {
+        val code = currencyCode.uppercase()
+        val lookup = fiatUsdRateLookups.getOrPut(code) {
+            modelScope.async(start = CoroutineStart.LAZY) {
+                getFiatUSDRate(code).also { rate -> if (rate == null) fiatUsdRateLookups.remove(code) }
+            }
+        }
+        return lookup.await()
     }
 
     private suspend fun fetch(screen: MarketingScreen): List<MarketingCampaign> =
@@ -130,7 +175,7 @@ internal class MarketingBannerModel @Inject constructor(
 
     private data class MarketingRequest(
         val screen: MarketingScreen,
-        val amountUsd: BigDecimal?,
+        val amount: MarketingBannerAmount?,
     )
 
     private fun MarketingCampaign.toUM() = MarketingBannerUM(
