@@ -19,6 +19,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.util.Locale
+import java.util.function.Supplier
 
 internal class OpenTelemetryMetricsClientTest {
 
@@ -26,6 +27,9 @@ internal class OpenTelemetryMetricsClientTest {
     private val networkExporter = RecordingMetricExporter()
 
     private val componentCallbacks = slot<android.content.ComponentCallbacks>()
+
+    private var accessToken: String? = "test-token"
+    private lateinit var exporterHeaders: Supplier<Map<String, String>>
 
     private fun CoroutineScope.createClient(
         userCountry: UserCountry? = UserCountry.Other(code = "de"),
@@ -38,12 +42,15 @@ internal class OpenTelemetryMetricsClientTest {
         }
         return OpenTelemetryMetricsClient(
             application = application,
-            apiKey = "test-key",
             appVersion = "1.0.0",
             settingsRepository = settingsRepository,
+            accessTokenProvider = { accessToken },
             scope = this,
             dispatchers = dispatchers,
-            networkExporter = networkExporter,
+            networkExporterFactory = { headers ->
+                exporterHeaders = headers
+                networkExporter
+            },
             storage = InMemoryMetricStorage(),
         ).apply { start(application) }
     }
@@ -70,6 +77,38 @@ internal class OpenTelemetryMetricsClientTest {
         // Assert
         val exported = networkExporter.exportedBatches.flatten()
         assertThat(exported.map { it.name }).contains("app_test_event")
+    }
+
+    @Test
+    fun `GIVEN access token WHEN flush THEN batch is exported with bearer authorization`() = runTest {
+        // Arrange
+        val client = createClient()
+        client.getMeter().counterBuilder("app_test_event").build().add(1)
+
+        // Act
+        client.flush()
+
+        // Assert
+        assertThat(networkExporter.headersOnExport).containsExactly(mapOf("Authorization" to "Bearer test-token"))
+    }
+
+    @Test
+    fun `GIVEN no access token WHEN flush THEN batch waits in the WAL until a token is available`() = runTest {
+        // Arrange
+        accessToken = null
+        val client = createClient()
+        client.getMeter().counterBuilder("app_test_pending").build().add(1)
+        client.flush()
+
+        // Act
+        accessToken = "test-token"
+        client.getMeter().counterBuilder("app_test_next").build().add(1)
+        client.flush()
+
+        // Assert
+        assertThat(networkExporter.headersOnExport).containsExactly(mapOf("Authorization" to "Bearer test-token"))
+        val delivered = networkExporter.successfulBatches.flatten().map { it.name }
+        assertThat(delivered).containsAtLeast("app_test_pending", "app_test_next")
     }
 
     @Test
@@ -216,14 +255,16 @@ internal class OpenTelemetryMetricsClientTest {
         }
     }
 
-    private class RecordingMetricExporter : MetricExporter {
+    private inner class RecordingMetricExporter : MetricExporter {
 
         val exportedBatches = mutableListOf<List<MetricData>>()
         val successfulBatches = mutableListOf<List<MetricData>>()
+        val headersOnExport = mutableSetOf<Map<String, String>>()
         var shouldFail = false
 
         override fun export(metrics: Collection<MetricData>): CompletableResultCode {
             exportedBatches.add(metrics.toList())
+            headersOnExport.add(exporterHeaders.get())
             return if (shouldFail) {
                 CompletableResultCode.ofFailure()
             } else {
