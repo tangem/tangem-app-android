@@ -3438,7 +3438,7 @@ internal class SwapModel @Inject constructor(
             selectedFeeToken = feeStateUM.feeExtraInfo.feeCryptoCurrencyStatus,
             otherNativeFee = resolveOtherNativeFee(),
             feeBucket = feeStateUM.selectedFeeItem.toFeeBucket(),
-            isSponsored = feeStateUM.feeExtraInfo.isSponsoredFeeSelected,
+            isSponsored = feeStateUM.feeExtraInfo.sponsoredFee.isSelected,
         )
     }
 
