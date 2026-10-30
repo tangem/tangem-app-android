@@ -144,8 +144,6 @@ class EvmGaslessFeeResolver(
             initialFee = initialTxFee,
         )
 
-        val isYieldActive = tokenCurrencyStatus.value.yieldSupplyStatus?.isActive == true
-
         val tokenFeeExtended = tokenFeeCalculator.calculateTokenFee(
             walletManager = walletManager,
             tokenForPayFeeStatus = tokenCurrencyStatus,
