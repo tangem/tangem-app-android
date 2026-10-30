@@ -9,6 +9,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchainsdk.utils.toNetworkId
+import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.SolanaGaslessTransactionRepository
 import com.tangem.domain.transaction.error.SolanaGaslessError
@@ -50,6 +51,10 @@ internal class SolanaGaslessSwapResolverTest {
     private val swapFeatureToggles: SwapFeatureToggles = mockk()
     private val solanaGaslessTransactionRepository: SolanaGaslessTransactionRepository = mockk()
     private val walletManagersFacade: WalletManagersFacade = mockk()
+    private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase = mockk()
+
+    private val liFi = buildSwapProvider(providerId = "li-fi")
+    private val jupiter = buildSwapProvider(providerId = "jupiter")
 
     // Recreated per test: the resolver caches its last resolution
     private lateinit var sut: SolanaGaslessSwapResolver
@@ -57,7 +62,12 @@ internal class SolanaGaslessSwapResolverTest {
     @BeforeEach
     fun setup() {
         sut = createResolver()
-        clearMocks(swapFeatureToggles, solanaGaslessTransactionRepository, walletManagersFacade)
+        clearMocks(
+            swapFeatureToggles,
+            solanaGaslessTransactionRepository,
+            walletManagersFacade,
+            getFeePaidCryptoCurrencyStatusSyncUseCase,
+        )
         every { swapFeatureToggles.isSolanaGaslessEnabled } returns true
         coEvery {
             walletManagersFacade.simulateSolanaGaslessTransaction(
@@ -74,7 +84,7 @@ internal class SolanaGaslessSwapResolverTest {
         val swapData = buildDexSwapData(message = providerMessage(size = SIZE_FITS))
 
         // Act
-        val actual = sut.resolveFeePayer(from, swapData)
+        val actual = sut.resolveFeePayer(from, jupiter, swapData)
 
         // Assert
         assertThat(actual).isNull()
@@ -88,7 +98,7 @@ internal class SolanaGaslessSwapResolverTest {
         val swapData = buildDexSwapData(message = providerMessage(size = SIZE_FITS))
 
         // Act
-        val actual = sut.resolveFeePayer(from, swapData)
+        val actual = sut.resolveFeePayer(from, jupiter, swapData)
 
         // Assert
         assertThat(actual).isNull()
@@ -101,7 +111,7 @@ internal class SolanaGaslessSwapResolverTest {
         val swapData = buildDexSwapData(message = providerMessage(size = SIZE_FITS))
 
         // Act
-        val actual = sut.resolveFeePayer(from, swapData)
+        val actual = sut.resolveFeePayer(from, jupiter, swapData)
 
         // Assert
         assertThat(actual).isNull()
@@ -114,7 +124,7 @@ internal class SolanaGaslessSwapResolverTest {
         val swapData = buildDexSwapData(message = providerMessage(size = SIZE_TOO_BIG))
 
         // Act
-        val actual = sut.resolveFeePayer(from, swapData)
+        val actual = sut.resolveFeePayer(from, jupiter, swapData)
 
         // Assert
         assertThat(actual).isNull()
@@ -128,7 +138,7 @@ internal class SolanaGaslessSwapResolverTest {
         coEvery { solanaGaslessTransactionRepository.getFeePayer() } returns SolanaGaslessError.Unauthorized.left()
 
         // Act
-        val actual = sut.resolveFeePayer(from, swapData)
+        val actual = sut.resolveFeePayer(from, jupiter, swapData)
 
         // Assert
         assertThat(actual).isNull()
@@ -141,10 +151,10 @@ internal class SolanaGaslessSwapResolverTest {
             .copy(userWallet = mockk<UserWallet.Hot>(relaxed = true))
         val swapData = buildDexSwapData(message = providerMessage(size = SIZE_FITS))
         coEvery { solanaGaslessTransactionRepository.getFeePayer() } returns "FeePayer".right()
-        sut.resolveFeePayer(from, swapData)
+        sut.resolveFeePayer(from, jupiter, swapData)
 
         // Act
-        val actual = sut.resolveFeePayer(from, swapData)
+        val actual = sut.resolveFeePayer(from, jupiter, swapData)
 
         // Assert
         assertThat(actual).isEqualTo("FeePayer")
@@ -165,10 +175,10 @@ internal class SolanaGaslessSwapResolverTest {
             val swapData = buildDexSwapData(message = providerMessage(size = SIZE_TOO_BIG))
             mockkObject(SolanaTransactionHelper)
             try {
-                sut.resolveFeePayer(from, swapData)
+                sut.resolveFeePayer(from, jupiter, swapData)
 
                 // Act
-                val actual = sut.resolveFeePayer(from, swapData)
+                val actual = sut.resolveFeePayer(from, jupiter, swapData)
 
                 // Assert
                 assertThat(actual).isNull()
@@ -189,10 +199,10 @@ internal class SolanaGaslessSwapResolverTest {
                 SolanaGaslessError.Unauthorized.left(),
                 "FeePayer".right(),
             )
-            sut.resolveFeePayer(from, swapData)
+            sut.resolveFeePayer(from, jupiter, swapData)
 
             // Act
-            val actual = sut.resolveFeePayer(from, swapData)
+            val actual = sut.resolveFeePayer(from, jupiter, swapData)
 
             // Assert
             assertThat(actual).isEqualTo("FeePayer")
@@ -209,12 +219,26 @@ internal class SolanaGaslessSwapResolverTest {
             )
 
             // Act
-            val actual = sut.resolveFeePayer(from, swapData)
+            val actual = sut.resolveFeePayer(from, jupiter, swapData)
 
             // Assert
             assertThat(actual).isNull()
             coVerify(exactly = 0) { solanaGaslessTransactionRepository.getFeePayer() }
         }
+
+    @Test
+    fun `GIVEN LI_FI quote WHEN resolveFeePayer THEN returns null and getFeePayer is not called`() = runTest {
+        // Arrange
+        val from = buildSwapCurrencyStatus(networkRawId = solanaNetwork, isCoin = false)
+        val swapData = buildDexSwapData(message = providerMessage(size = SIZE_FITS))
+
+        // Act
+        val actual = sut.resolveFeePayer(from, liFi, swapData)
+
+        // Assert
+        assertThat(actual).isNull()
+        coVerify(exactly = 0) { solanaGaslessTransactionRepository.getFeePayer() }
+    }
 
     @Test
     fun `GIVEN everything fits WHEN resolveFeePayer THEN returns the fee payer`() = runTest {
@@ -225,7 +249,7 @@ internal class SolanaGaslessSwapResolverTest {
         coEvery { solanaGaslessTransactionRepository.getFeePayer() } returns "FeePayer".right()
 
         // Act
-        val actual = sut.resolveFeePayer(from, swapData)
+        val actual = sut.resolveFeePayer(from, jupiter, swapData)
 
         // Assert
         assertThat(actual).isEqualTo("FeePayer")
@@ -245,7 +269,7 @@ internal class SolanaGaslessSwapResolverTest {
         } returns Result.Success(SolanaGaslessSimulation.Failed(error = "InsufficientFundsForRent", logs = emptyList()))
 
         // Act
-        val actual = sut.resolveFeePayer(from, swapData)
+        val actual = sut.resolveFeePayer(from, jupiter, swapData)
 
         // Assert
         assertThat(actual).isNull()
@@ -268,7 +292,7 @@ internal class SolanaGaslessSwapResolverTest {
         } returns simulation
 
         // Act
-        val actual = sut.resolveFeePayer(from, swapData)
+        val actual = sut.resolveFeePayer(from, jupiter, swapData)
 
         // Assert
         assertThat(actual).isEqualTo("FeePayer")
@@ -286,7 +310,7 @@ internal class SolanaGaslessSwapResolverTest {
         coEvery { solanaGaslessTransactionRepository.getFeePayer() } returns "FeePayer".right()
 
         // Act
-        val actual = sut.resolveFeePayer(from, swapData)
+        val actual = sut.resolveFeePayer(from, jupiter, swapData)
 
         // Assert
         assertThat(actual).isEqualTo(if (model.isOffered) "FeePayer" else null)
@@ -301,7 +325,7 @@ internal class SolanaGaslessSwapResolverTest {
         coEvery { solanaGaslessTransactionRepository.getFeePayer() } returns "FeePayer".right()
 
         // Act
-        val actual = sut.resolveFeePayer(from, swapData)
+        val actual = sut.resolveFeePayer(from, jupiter, swapData)
 
         // Assert
         assertThat(actual).isNull()
@@ -310,17 +334,19 @@ internal class SolanaGaslessSwapResolverTest {
 
     @ParameterizedTest
     @MethodSource("provideUnsupportedProviderModels")
-    fun `GIVEN LI_FI among providers WHEN excludeUnsupportedProviders THEN dropped only where the swap is sponsorable`(
+    fun `GIVEN LI_FI among providers WHEN excludeUnsupportedProviders THEN dropped only when only a sponsor can pay`(
         model: UnsupportedProviderModel,
-    ) {
+    ) = runTest {
         // Arrange
         every { swapFeatureToggles.isSolanaGaslessEnabled } returns model.isToggleEnabled
         val from = buildSwapCurrencyStatus(networkRawId = model.fromNetwork, isCoin = model.isFromCoin)
-        val liFi = buildSwapProvider(providerId = "li-fi")
-        val jupiter = buildSwapProvider(providerId = "jupiter")
+        val solStatus = model.solBalance?.let { balance ->
+            buildSwapCurrencyStatus(networkRawId = solanaNetwork, isCoin = true, amount = balance).status
+        }
+        coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) } returns solStatus.right()
 
         // Act
-        val actual = sut.excludeUnsupportedProviders(from.currency, listOf(liFi, jupiter))
+        val actual = sut.excludeUnsupportedProviders(from.userWalletId, from.status, listOf(liFi, jupiter))
 
         // Assert
         val expected = if (model.isLiFiKept) listOf(liFi, jupiter) else listOf(jupiter)
@@ -331,6 +357,7 @@ internal class SolanaGaslessSwapResolverTest {
         val fromNetwork: String,
         val isFromCoin: Boolean,
         val isToggleEnabled: Boolean,
+        val solBalance: BigDecimal?,
         val isLiFiKept: Boolean,
     )
 
@@ -340,6 +367,7 @@ internal class SolanaGaslessSwapResolverTest {
         swapFeatureToggles = swapFeatureToggles,
         solanaGaslessTransactionRepository = solanaGaslessTransactionRepository,
         walletManagersFacade = walletManagersFacade,
+        getFeePaidCryptoCurrencyStatusSyncUseCase = getFeePaidCryptoCurrencyStatusSyncUseCase,
     )
 
     private fun provideTestModels() = listOf(
@@ -366,24 +394,42 @@ internal class SolanaGaslessSwapResolverTest {
             fromNetwork = solanaNetwork,
             isFromCoin = false,
             isToggleEnabled = true,
+            solBalance = BigDecimal.ZERO,
             isLiFiKept = false,
         ),
         UnsupportedProviderModel(
             fromNetwork = solanaNetwork,
             isFromCoin = false,
+            isToggleEnabled = true,
+            solBalance = null,
+            isLiFiKept = false,
+        ),
+        UnsupportedProviderModel(
+            fromNetwork = solanaNetwork,
+            isFromCoin = false,
+            isToggleEnabled = true,
+            solBalance = BigDecimal("0.01"),
+            isLiFiKept = true,
+        ),
+        UnsupportedProviderModel(
+            fromNetwork = solanaNetwork,
+            isFromCoin = false,
             isToggleEnabled = false,
+            solBalance = BigDecimal.ZERO,
             isLiFiKept = true,
         ),
         UnsupportedProviderModel(
             fromNetwork = solanaNetwork,
             isFromCoin = true,
             isToggleEnabled = true,
+            solBalance = BigDecimal.ZERO,
             isLiFiKept = true,
         ),
         UnsupportedProviderModel(
             fromNetwork = ethNetwork,
             isFromCoin = false,
             isToggleEnabled = true,
+            solBalance = BigDecimal.ZERO,
             isLiFiKept = true,
         ),
     )
