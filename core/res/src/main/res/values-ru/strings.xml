@@ -1748,6 +1748,7 @@
   <string name="prediction_add_funds_swap_title">Из вашего кошелька Tangem</string>
   <string name="prediction_balance_total">Общий баланс</string>
   <string name="prediction_balance_withdraw">Вывести</string>
+  <string name="prediction_cash_out">Обналичить</string>
   <string name="prediction_claim_error_failed">Запрос на получение не прошел. Средства остались на счете, вы можете попробовать снова.</string>
   <string name="prediction_claim_error_generic">Не удалось отправить запрос на получение. Пожалуйста, попробуйте снова.</string>
   <string name="prediction_claim_error_rejected">Polymarket отклонил запрос на получение. Обновите свои позиции и попробуйте снова.</string>
@@ -3647,9 +3648,9 @@
   <string name="yield_module_high_network_fees_notification_description">Комиссии сейчас выше обычного из-за высокой активности на рынке. Вы можете продолжить сейчас или вернуться позже, когда комиссии снизятся.</string>
   <string name="yield_module_high_network_fees_notification_title">Высокая сетевая комиссия</string>
   <string name="yield_module_historical_returns">Историческая доходность</string>
-  <string name="yield_module_main_promo_button">Попробовать Режим доходности</string>
+  <string name="yield_module_main_promo_button">Попробовать режим доходности</string>
   <string name="yield_module_main_promo_subtitle">Пусть свободные монеты работают. Без блокировки, вывод в любой момент.</string>
-  <string name="yield_module_main_promo_title">Зарабатывайте на крипте до %1$s%% APY</string>
+  <string name="yield_module_main_promo_title">Зарабатывайте на крипте с доходностью до %1$s%% APY</string>
   <plurals name="yield_module_main_promo_tokens_count">
     <item quantity="one">Более %d доступного токена</item>
     <item quantity="few">Более %d доступных токенов</item>

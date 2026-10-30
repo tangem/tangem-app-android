@@ -32,15 +32,17 @@ import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.sociallogin.usecase.IsSocialBackupCompletedUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.domain.wallets.usecase.GetWalletLinkStatusUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotificationUM
+import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.crypto.BlockchainUtils
-import com.tangem.utils.coroutines.combine7
+import com.tangem.utils.coroutines.combine8
 import com.tangem.utils.extensions.addIf
 import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.orZero
@@ -73,6 +75,8 @@ internal class GetWalletNotificationsFactory @Inject constructor(
     private val getUpgradeBannerClosureTimestampUseCase: GetUpgradeBannerClosureTimestampUseCase,
     private val checkHotWalletUpgradeBannerUseCase: CheckHotWalletUpgradeBannerUseCase,
     private val isSocialBackupCompletedUseCase: IsSocialBackupCompletedUseCase,
+    private val getWalletLinkStatusUseCase: GetWalletLinkStatusUseCase,
+    private val walletFeatureToggles: WalletFeatureToggles,
 ) {
     private fun assetsDiscoveryProgressFlow(userWallet: UserWallet): Flow<AssetsDiscoveryProgress> =
         if (userWallet is UserWallet.Hot) {
@@ -144,11 +148,19 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             flowOf(false to null)
         }
 
+    /** A link status that can't be read is treated as linked, so it never blocks the notifications or nags the user */
+    private fun isWalletLinkedFlow(userWallet: UserWallet): Flow<Boolean> =
+        if (walletFeatureToggles.isWalletLinkingEnabled) {
+            getWalletLinkStatusUseCase(userWallet).onEmpty { emit(true) }
+        } else {
+            flowOf(true)
+        }
+
     @Suppress("LongMethod")
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<WalletNotificationsSnapshot> {
         val cardTypesResolver = (userWallet as? UserWallet.Cold)?.scanResponse?.cardTypesResolver
 
-        return combine7(
+        return combine8(
             flow1 = accountStateFlow(userWallet),
             flow2 = isNeedToBackupUseCase(userWallet.walletId).distinctUntilChanged(),
             flow3 = isAccessCodeSkipHonouredFlow(userWallet),
@@ -156,6 +168,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             flow5 = getAppUpdateStateUseCase.getBannerStateFlow(),
             flow6 = freshWalletWithBackupFlow(userWallet),
             flow7 = upgradeBannerPrefsFlow(userWallet),
+            flow8 = isWalletLinkedFlow(userWallet),
         ) {
                 accountState,
                 isNeedToBackup,
@@ -164,6 +177,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
                 appUpdateState,
                 activationState,
                 upgradeBannerPrefs,
+                isWalletLinked,
             ->
             val (accountList, isOutdatedDataShown, isTangemPayPromoHidden) = accountState
             val (activationWallet, isWalletBackedUp) = activationState
@@ -190,6 +204,8 @@ internal class GetWalletNotificationsFactory @Inject constructor(
                 )
 
                 addCriticalNotifications(userWallet, clickIntents)
+
+                addLinkWalletNotification(userWallet, isWalletLinked, clickIntents)
 
                 if (!isAddFundsBannerShown) {
                     addFinishWalletActivationNotification(
@@ -338,6 +354,21 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             addIf(
                 element = WalletNotificationUM.LowSignatures(count = remainingSignatures),
                 condition = remainingSignatures <= MAX_REMAINING_SIGNATURES_COUNT,
+            )
+        }
+    }
+
+    private fun MutableList<WalletNotificationUM>.addLinkWalletNotification(
+        userWallet: UserWallet,
+        isWalletLinked: Boolean,
+        clickIntents: WalletClickIntents,
+    ) {
+        addIf(isWalletLinked.not()) {
+            WalletNotificationUM.LinkWalletToDevice(
+                tangemIcon = walletInterationIcon(userWallet),
+                isHotWallet = userWallet is UserWallet.Hot,
+                shouldShowProgress = false,
+                onLinkClick = { clickIntents.onLinkWalletClick(userWallet) },
             )
         }
     }

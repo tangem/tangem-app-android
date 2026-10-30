@@ -607,6 +607,7 @@
   <string name="common_retry">Tentar novamente</string>
   <string name="common_save">Salvar</string>
   <string name="common_save_changes">Salvar alterações</string>
+  <string name="common_scan_card">Ler cartão</string>
   <string name="common_search">Procurar</string>
   <string name="common_search_tokens">Pesquisar tokens</string>
   <string name="common_second_no_param">segundos</string>
@@ -1388,6 +1389,7 @@
   <string name="joint_operation_deleted_snackbar">Transação excluída</string>
   <string name="joint_operation_malicious_subtitle">Esta transação foi sinalizada como maliciosa. A assinatura está bloqueada</string>
   <string name="joint_operation_malicious_title">Transação perigosa</string>
+  <string name="joint_operation_no_response">Não respondeu</string>
   <string name="joint_operation_sending_to_network">Enviando para a rede</string>
   <string name="joint_operation_sent_footer">Assinado por %1$s de %2$s membros e enviado à rede</string>
   <string name="joint_operation_signatures_progress">Assinaturas %1$s de %2$s</string>
@@ -1651,6 +1653,7 @@
   <string name="money_account_main_status_action_required">Ação necessária</string>
   <string name="money_account_main_status_activating">Ativando...</string>
   <string name="money_account_main_status_active">Rede %1$s</string>
+  <string name="money_account_main_status_active_v2">ACH</string>
   <string name="money_account_main_status_dialog_activating_description">Estamos preparando sua conta. Isso pode levar algum tempo</string>
   <string name="money_account_main_status_dialog_activating_title">Criando sua conta bancária</string>
   <string name="money_account_main_status_dialog_country_not_supported_description">Estamos trabalhando para expandir para mais regiões. Precisa de ajuda?</string>
@@ -1759,7 +1762,7 @@
   <string name="no_account_polkadot">A conta de destino não está ativa. Enviar %s ou mais para ativar a conta.</string>
   <string name="no_account_send_to_create">Para criar uma conta, envie fundos para este endereço.</string>
   <string name="no_trustline_xlm_asset">A conta de destino não possui uma linha de confiança para o ativo que está sendo enviado.</string>
-  <string name="notification_black_friday_text">Ganhe $10 em BTC com cada carteira \n Aproveite!</string>
+  <string name="notification_black_friday_text">Ganhe US$ 10 em BTC com cada carteira\nAproveite!</string>
   <string name="notification_black_friday_title">Black Friday: até 30% DESLIGADO</string>
   <string name="notification_one_plus_one_button">Vamos lá</string>
   <string name="notification_one_plus_one_text">Tempo limitado!</string>
@@ -1984,6 +1987,7 @@
   <string name="prediction_close_result_partially_sold_title">Venda parcial</string>
   <string name="prediction_close_result_sold_title">Vendido por %s</string>
   <string name="prediction_close_result_tokens_sold">Tokens vendidos</string>
+  <string name="prediction_close_selling_of">Vendendo %1$s de %2$s cotas</string>
   <string name="prediction_close_selling_tokens">Vendendo %s tokens de previsão</string>
   <string name="prediction_close_summary_to">Para</string>
   <string name="prediction_close_title">Encerrar posição</string>
@@ -2041,6 +2045,7 @@
   <string name="prediction_main_empty_positions_title">Você não tem previsões ativas</string>
   <string name="prediction_main_events_load_error">Falha ao carregar os eventos.\nToque para recarregar</string>
   <string name="prediction_main_explore_events">Explorar eventos</string>
+  <string name="prediction_main_subtitle">Dólares americanos</string>
   <string name="prediction_main_title">Previsões</string>
   <string name="prediction_main_total_balance">Saldo Total</string>
   <string name="prediction_main_withdraw">Sacar</string>
@@ -2162,6 +2167,7 @@
   <string name="prediction_positions_pending_title">Aguardando o resultado final</string>
   <string name="prediction_positions_price_changes">Variação do preço da posição</string>
   <string name="prediction_positions_quantity">Quantidade de tokens</string>
+  <string name="prediction_positions_realized_description">Lucro ou prejuízo já garantido. Vem de cotas que você vendeu (parcial ou totalmente) e de posições resolvidas como ganhas, perdidas ou divididas. O P&amp;L realizado inclui todas as taxas.</string>
   <string name="prediction_positions_realized_pnl">L&amp;P realizado</string>
   <string name="prediction_positions_result_amount">%1$s %2$s</string>
   <string name="prediction_positions_split">Divisão</string>
@@ -2173,6 +2179,7 @@
   <string name="prediction_positions_unrealized_pnl">L&amp;P não realizado</string>
   <string name="prediction_positions_view_all_active">Ver todas as posições ativas</string>
   <string name="prediction_positions_won">Vencido</string>
+  <string name="prediction_region_restrictions_subtitle">As previsões não estão disponíveis na sua região com base no seu endereço IP. Você ainda pode visualizar os eventos.</string>
   <string name="prediction_region_restrictions_title">Restrições regionais</string>
   <string name="prediction_search_empty_subtitle">Tente digitar outra coisa</string>
   <string name="prediction_search_empty_title">Nenhum resultado encontrado</string>
@@ -2561,7 +2568,7 @@
   <string name="staking_error_unavailable_region">O staking não está disponível na sua região</string>
   <string name="staking_error_unavailable_region_description">O staking não está disponível na sua região no momento. Se você tiver com uma VPN ativada, tente desativá-la.</string>
   <string name="staking_give_permission_fee_footer">A rede cobrará uma taxa de aprovação de token para verificar se você está autorizando o uso do seu token para staking.</string>
-  <string name="staking_legal">Ao utilizar a funcionalidade de staking, você concorda com os termos do provedor. %1$s e %2$s</string>
+  <string name="staking_legal">Ao utilizar a funcionalidade de staking, você concorda com os %1$s e %2$s do provedor</string>
   <string name="staking_locked">Trancado</string>
   <string name="staking_max_amount_requirement_error">Quantidade máxima: %s</string>
   <string name="staking_migrate">Migrar</string>
@@ -2632,7 +2639,7 @@
   <string name="staking_stake_more">Aposte mais</string>
   <string name="staking_stake_more_button_unavailability_reason">Ao fazer staking de %1$s, todo o seu saldo de %2$s fica em staking. Qualquer valor adicional de %2$s que você depositar na sua carteira Tangem também será automaticamente colocado em staking.</string>
   <string name="staking_staked_amount">valor de staking</string>
-  <string name="staking_summary_description_text">Você aposta %1$s e receberá sua recompensa. %2$s</string>
+  <string name="staking_summary_description_text">Você fará staking de %1$s e receberá sua recompensa de %2$s</string>
   <string name="staking_tap_to_unlock">Toque para desbloquear</string>
   <string name="staking_tap_to_unlock_or_vote">Toque para desbloquear ou votar</string>
   <string name="staking_tap_to_withdraw">Toque para retirar</string>
@@ -3811,6 +3818,9 @@
   <string name="warning_kaspa_unfinished_token_transaction_message">Sua transação com um valor de %1$s %2$s não foi concluída. Você pode tentar novamente para concluí-la.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">Você tem uma transação pendente.</string>
   <string name="warning_last_balance_updated_time">A última atualização foi %s</string>
+  <string name="warning_link_wallet_cold_message">Leia seu cartão para vincular sua carteira a este dispositivo.</string>
+  <string name="warning_link_wallet_hot_message">Confirme para vincular sua carteira a este dispositivo.</string>
+  <string name="warning_link_wallet_title">Vincule sua carteira a este dispositivo</string>
   <string name="warning_low_signatures_message">Restam apenas %s assinaturas neste cartão. Você deve sacar todos os seus fundos.</string>
   <string name="warning_low_signatures_title">Baixa contagem de assinaturas</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Tokens em redes diferentes podem ter endereços diferentes. Verifique se o seu endereço corresponde à rede ao transferir fundos.</string>
@@ -4053,7 +4063,7 @@
   <string name="yield_module_earn_sheet_fee_description">Ao recarregar para empréstimo, será cobrada uma taxa de rede não superior a %1$s será deduzido do saldo.</string>
   <string name="yield_module_earn_sheet_high_fee_description">A taxa de rede está atualmente muito alta para efetuar empréstimos. Os fundos serão disponibilizados assim que a taxa cair para %1$s ou abaixo.</string>
   <string name="yield_module_earn_sheet_my_funds_title">Meus fundos</string>
-  <string name="yield_module_earn_sheet_provider_description">Seu %1$s já foi implantado no Aave e está gerando rendimento. Você detém tokens %2$s, que representam seu saldo e acumulam rendimento automaticamente. Ao adicionar fundos, eles são enviados para a Aave para gerar mais rendimento, após a dedução das taxas.</string>
+  <string name="yield_module_earn_sheet_provider_description">Seu %1$s já está alocado na Aave e gerando rendimentos. Você possui %2$s tokens, que representam seu saldo e acumulam rendimentos automaticamente. Ao adicionar fundos, o valor é fornecido à Aave para gerar mais rendimentos, após a dedução das taxas.</string>
   <string name="yield_module_earn_sheet_title">Modo de rendimento</string>
   <string name="yield_module_earn_sheet_total_earnings_title">Rendimento total</string>
   <string name="yield_module_earn_sheet_transfers_title">Transferências para Aave</string>
@@ -4064,7 +4074,7 @@
   <string name="yield_module_fee_policy_sheet_fee_note">Uma taxa de rede aproximada de %1$s (%2$s) será deduzido de cada recarga futura e não excederá o seu %3$s (%4$s) limite.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_note">Se as taxas de rede ultrapassarem a taxa máxima, a transação não será concluída até que elas diminuam. Você poderá alterar esse limite posteriormente.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_title">Taxa máxima</string>
-  <string name="yield_module_fee_policy_sheet_min_amount_note">O valor mínimo é calculado com base na tarifa de rede atual, garantindo que não ultrapasse 4.%% do valor da recarga, que é igual ao mínimo %1$s (%2$s).</string>
+  <string name="yield_module_fee_policy_sheet_min_amount_note">O valor mínimo é calculado com base na taxa atual da rede, garantindo que ela não ultrapasse 4%% do valor da recarga, o que corresponde ao mínimo de %1$s (%2$s).</string>
   <string name="yield_module_fee_policy_sheet_min_amount_title">Recarga mínima</string>
   <string name="yield_module_fee_policy_sheet_title">Política de taxas de recarga</string>
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem também leva 15% Taxa de serviço sobre o rendimento gerado.</string>
@@ -4080,8 +4090,8 @@
   <string name="yield_module_incentive_chart_sheet_title">Rendimento incentivado</string>
   <string name="yield_module_incentives_provider">Merkl</string>
   <string name="yield_module_main_promo_button">Experimentar o modo de rendimento</string>
-  <string name="yield_module_main_promo_subtitle">Coloque suas moedas ociosas para render. Sem bloqueios, saque a qualquer momento.</string>
-  <string name="yield_module_main_promo_title">Obtenha rendimentos com suas criptomoedas de até %1$s%% APY</string>
+  <string name="yield_module_main_promo_subtitle">Coloque suas moedas ociosas para render. Sem bloqueios de fundos, saque a qualquer momento.</string>
+  <string name="yield_module_main_promo_title">Ganhe rendimentos com suas criptomoedas de até %1$s%% APY</string>
   <plurals name="yield_module_main_promo_tokens_count">
     <item quantity="one">Mais de %d token disponível</item>
     <item quantity="other">Mais de %d tokens disponíveis</item>
@@ -4100,7 +4110,7 @@
   <string name="yield_module_promo_screen_incentivised_chip">Com incentivos %s</string>
   <string name="yield_module_promo_screen_self_custodial_subtitle">Aave é um protocolo on-chain que oferece mercados de liquidez sem custódia, permitindo que os usuários acumulem rendimentos a taxas variáveis.</string>
   <string name="yield_module_promo_screen_self_custodial_title">Descentralizado e autossustentável</string>
-  <string name="yield_module_promo_screen_terms_disclaimer">Ao utilizar este serviço, você concorda com os termos do provedor.%1$s e %2$s</string>
+  <string name="yield_module_promo_screen_terms_disclaimer">Ao utilizar este serviço, você concorda com os\n%1$s e %2$s do provedor</string>
   <string name="yield_module_promo_screen_title">Conecte-se ao Aave</string>
   <string name="yield_module_promo_screen_title_v2">Habilitar %1$s%% APY\não seu saldo</string>
   <string name="yield_module_promo_screen_variable_rate_info">Aave %1$s%% • Taxa de juros variável</string>
