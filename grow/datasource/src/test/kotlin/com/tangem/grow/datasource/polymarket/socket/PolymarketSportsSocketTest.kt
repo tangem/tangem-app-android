@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test
 internal class PolymarketSportsSocketTest {
 
     @Test
-    fun `GIVEN sports broadcasts WHEN reconnecting THEN optional metadata decodes and connection revision advances`() =
+    fun `GIVEN sports broadcasts WHEN reconnecting THEN optional metadata decodes and connection state recovers`() =
         runTest {
             // Arrange
             assumeFalse(BuildConfig.MOCK_DATA_SOURCE)
@@ -40,7 +40,6 @@ internal class PolymarketSportsSocketTest {
                 every { send(any()) } returns true
             }
             val foreground = MutableStateFlow(true)
-            val revisions = PolymarketSportsConnections()
             val socket = PolymarketSportsSocketModule.providePolymarketSportsSocket(
                 DefaultSocketChannelFactory(
                     SocketTransport { connection },
@@ -50,8 +49,9 @@ internal class PolymarketSportsSocketTest {
                     },
                     NetworkJsonFactory.create(), backgroundScope,
                 ),
-                revisions,
             )
+            val states = mutableListOf<SocketState>()
+            backgroundScope.launch { socket.state().toList(states) }
             val results = mutableListOf<SportsResultDto>()
             val collector = backgroundScope.launch { socket.results().toList(results) }
             runCurrent()
@@ -75,7 +75,8 @@ internal class PolymarketSportsSocketTest {
             advanceTimeBy(5001)
 
             // Assert
-            assertThat(revisions.revision.value).isEqualTo(2)
+            assertThat(states.count { it == SocketState.Connected }).isEqualTo(2)
+            assertThat(states).contains(SocketState.Paused(SocketState.PauseReason.Background))
             assertThat(connected).isEqualTo(SocketState.Connected)
             assertThat(socket.state().value).isEqualTo(SocketState.Idle)
             assertThat(results).containsExactly(

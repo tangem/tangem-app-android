@@ -20,6 +20,8 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -27,7 +29,7 @@ internal class ObservePolymarketSportsStateUseCaseTest {
 
     private val repository: PolymarketLiveScoresRepository = mockk()
     private val scores = MutableSharedFlow<PolymarketLiveScore>()
-    private val connections = MutableStateFlow(0L)
+    private val connections = MutableStateFlow(false)
     private val events = MutableStateFlow(listOf(createSportsEvent()))
 
     @Test
@@ -35,7 +37,7 @@ internal class ObservePolymarketSportsStateUseCaseTest {
         // Arrange
         every { repository.observeLiveScores(emptySet()) } returns emptyFlow()
         every { repository.observeLiveScores(setOf("1")) } returns scores
-        every { repository.observeConnectionRevision() } returns connections
+        every { repository.observeConnectionState() } returns connections
         val resumed = MutableStateFlow(true)
         val useCase = ObservePolymarketSportsStateUseCase(
             repository, createTestingCoroutineDispatcherProvider(), testScheduler.timeSource,
@@ -79,7 +81,7 @@ internal class ObservePolymarketSportsStateUseCaseTest {
             // Arrange
             every { repository.observeLiveScores(emptySet()) } returns emptyFlow()
             every { repository.observeLiveScores(setOf("1")) } returns scores
-            every { repository.observeConnectionRevision() } returns connections
+            every { repository.observeConnectionState() } returns connections
             val useCase = ObservePolymarketSportsStateUseCase(
                 repository, createTestingCoroutineDispatcherProvider(), testScheduler.timeSource,
             )
@@ -113,46 +115,54 @@ internal class ObservePolymarketSportsStateUseCaseTest {
             assertThat(connections.subscriptionCount.value).isEqualTo(0)
         }
 
-    @Test
-    fun `GIVEN fast reconnects WHEN intermediate revisions are conflated THEN REST resnapshot is still requested`() =
+    @ParameterizedTest
+    @ValueSource(booleans = [false, true])
+    fun `GIVEN an observer WHEN connection recovers THEN only subsequent connections request REST`(initiallyConnected: Boolean) =
         runTest {
             // Arrange
+            connections.value = initiallyConnected
             every { repository.observeLiveScores(any()) } returns emptyFlow()
-            every { repository.observeConnectionRevision() } returns connections
+            every { repository.observeConnectionState() } returns connections
             val useCase = ObservePolymarketSportsStateUseCase(repository, createTestingCoroutineDispatcherProvider())
             val received = mutableListOf<PolymarketSportsState>()
             backgroundScope.launch { useCase(events).toList(received) }
             runCurrent()
-
-            // Act
-            connections.value = 1
-            connections.value = 2
-            runCurrent()
-
-            // Assert
-            assertThat(received.last().resnapshotRevision).isEqualTo(2)
-            assertThat(received.first().resnapshotRevision).isEqualTo(0)
-        }
-
-    @Test
-    fun `GIVEN a previous connection revision WHEN a new observer joins THEN only a subsequent connection requests REST`() =
-        runTest {
-            // Arrange
-            connections.value = 5
-            every { repository.observeLiveScores(any()) } returns emptyFlow()
-            every { repository.observeConnectionRevision() } returns connections
-            val useCase = ObservePolymarketSportsStateUseCase(repository, createTestingCoroutineDispatcherProvider())
-            val received = mutableListOf<PolymarketSportsState>()
-            backgroundScope.launch { useCase(events).toList(received) }
+            connections.value = true
             runCurrent()
             val initial = received.last()
 
             // Act
-            connections.value = 6
+            connections.value = false
+            runCurrent()
+            connections.value = true
             runCurrent()
 
             // Assert
             assertThat(initial.resnapshotRevision).isEqualTo(0)
-            assertThat(received.last().resnapshotRevision).isEqualTo(6)
+            assertThat(received.last().resnapshotRevision).isEqualTo(1)
         }
+
+    @Test
+    fun `GIVEN a connected observer WHEN resumed after an unobserved reconnect THEN REST is requested`() = runTest {
+        // Arrange
+        connections.value = true
+        every { repository.observeLiveScores(any()) } returns emptyFlow()
+        every { repository.observeConnectionState() } returns connections
+        val resumed = MutableStateFlow(true)
+        val useCase = ObservePolymarketSportsStateUseCase(repository, createTestingCoroutineDispatcherProvider())
+        val received = mutableListOf<PolymarketSportsState>()
+        backgroundScope.launch { useCase(events, resumed).toList(received) }
+        runCurrent()
+
+        // Act
+        resumed.value = false
+        runCurrent()
+        connections.value = false
+        connections.value = true
+        resumed.value = true
+        runCurrent()
+
+        // Assert
+        assertThat(received.last().resnapshotRevision).isEqualTo(1)
+    }
 }

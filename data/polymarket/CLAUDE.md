@@ -38,7 +38,9 @@ fall back to REST after 60 seconds of silence; finished scores do not expire. So
 ISO-8601 and epoch seconds/milliseconds defensively: `last_update` was absent in the 19.10 live sample.
 `ObservePolymarketSportsStateUseCase` retains REST team indices with home/away sides; consumers must use
 the same mapping for score and price buttons. Its nonzero `resnapshotRevision` changes after reconnect;
-the screen owns the resulting REST fetch. Reading connection revisions alone never opens the socket.
+the screen owns the resulting REST fetch. Connection status comes from `PolymarketSportsSocket.state()`;
+observing it alone never opens the socket. Resuming an existing observer while connected also requests
+a snapshot. A fast reconnect may be conflated by the state flow; keep REST polling as the fallback.
 
 Discovery and open-position sports metadata was checked against `tangem-09.10.2026-api-docs.json` on
 09.10.2026. Sports fields are optional and nullable; `live` is required. Keep scores and periods as raw
