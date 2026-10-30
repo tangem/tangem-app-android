@@ -398,6 +398,50 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
         type = WalletNotificationType.Warning,
     )
 
+    data class LinkWalletToDevice(
+        @DrawableRes private val tangemIcon: Int?,
+        private val isHotWallet: Boolean,
+        private val shouldShowProgress: Boolean,
+        private val onLinkClick: () -> Unit,
+    ) : WalletNotificationUM(
+        messageUM = TangemMessageUM(
+            id = "LinkWalletToDeviceNotification",
+            variant = TangemMessageBanner.Variant.Light,
+            shouldShowGlowRing = true,
+            iconUM = TangemIconUM.Icon(
+                imageVector = Icons.ic_warning_20_filled,
+                tintReference = { TangemTheme.colors3.icon.status.warning },
+            ),
+            iconSize = 20.dp,
+            title = resourceReference(id = R.string.warning_link_wallet_title),
+            subtitle = resourceReference(
+                id = if (isHotWallet) {
+                    R.string.warning_link_wallet_hot_message
+                } else {
+                    R.string.warning_link_wallet_cold_message
+                },
+            ),
+            buttonsUM = persistentListOf(
+                TangemMessageButtonUM(
+                    text = resourceReference(
+                        id = if (isHotWallet) R.string.common_confirm else R.string.common_scan_card,
+                    ),
+                    tangemIconUM = tangemIcon?.let {
+                        TangemIconUM.Icon(
+                            iconRes = tangemIcon,
+                            tintReference = { TangemTheme.colors3.icon.inverse },
+                        )
+                    },
+                    onClick = onLinkClick,
+                    type = TangemButtonType.Primary,
+                    isLoading = shouldShowProgress,
+                ),
+            ),
+            messageEffect = TangemMessageEffect.Warning,
+        ),
+        type = WalletNotificationType.Warning,
+    )
+
     data object TangemPayUnreachable : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "TangemPayUnreachable",

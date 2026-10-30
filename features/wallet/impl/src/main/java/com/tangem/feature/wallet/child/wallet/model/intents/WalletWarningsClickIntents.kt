@@ -14,6 +14,8 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.review.ReviewManager
 import com.tangem.core.navigation.url.AppStoreOpener
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.assetsdiscovery.usecase.AcknowledgeAssetsDiscoveryCompletionUseCase
 import com.tangem.domain.card.SetCardWasScannedUseCase
@@ -41,11 +43,13 @@ import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.wallets.usecase.*
+import com.tangem.domain.wallets.registration.WalletLinkError
 import com.tangem.domain.yield.supply.usecase.YieldSupplySetShouldShowMainPromoUseCase
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.LinkWalletShowProgressTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
@@ -63,6 +67,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.tangem.core.res.R as CoreResR
 
 @Suppress("TooManyFunctions")
 internal interface WalletWarningsClickIntents {
@@ -108,6 +113,8 @@ internal interface WalletWarningsClickIntents {
     fun onYieldBoostBannerClick(userWalletId: UserWalletId)
 
     fun onDismissYieldBoostBanner(userWalletId: UserWalletId)
+
+    fun onLinkWalletClick(userWallet: UserWallet)
 }
 
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
@@ -143,6 +150,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val screenLifecycleProvider: ScreenLifecycleProvider,
     private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
     private val collectiblesFeatureToggles: CollectiblesFeatureToggles,
+    private val linkWalletToDeviceUseCase: LinkWalletToDeviceUseCase,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
 
     override fun onAddBackupCardClick() {
@@ -461,6 +469,25 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     override fun onDismissYieldBoostBanner(userWalletId: UserWalletId) {
         modelScope.launch {
             yieldSupplySetShouldShowMainPromoUseCase(shouldShow = false)
+        }
+    }
+
+    /** On success the banner goes away by itself: the link status flow re-emits and the banner condition is false. */
+    override fun onLinkWalletClick(userWallet: UserWallet) {
+        stateHolder.update(LinkWalletShowProgressTransformer(userWallet.walletId, shouldShowProgress = true))
+
+        modelScope.launch {
+            linkWalletToDeviceUseCase(userWallet).onLeft { error ->
+                stateHolder.update(LinkWalletShowProgressTransformer(userWallet.walletId, shouldShowProgress = false))
+                if (error !is WalletLinkError.Cancelled) {
+                    uiMessageSender.send(
+                        DialogMessage(
+                            title = resourceReference(CoreResR.string.common_something_went_wrong),
+                            message = resourceReference(CoreResR.string.common_try_again_later),
+                        ),
+                    )
+                }
+            }
         }
     }
 }

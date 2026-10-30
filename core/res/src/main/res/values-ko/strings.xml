@@ -57,6 +57,7 @@
   <string name="prediction_add_funds_swap_title">Tangem 지갑에서</string>
   <string name="prediction_balance_total">총 잔액</string>
   <string name="prediction_balance_withdraw">출금</string>
+  <string name="prediction_cash_out">현금화</string>
   <string name="prediction_claim_error_failed">클레임이 처리되지 않았습니다. 자산은 안전하며 다시 시도할 수 있습니다.</string>
   <string name="prediction_claim_error_generic">클레임을 전송할 수 없습니다. 다시 시도해 주세요.</string>
   <string name="prediction_claim_error_rejected">Polymarket에서 클레임 중계를 거부했습니다. 포지션을 새로고침하고 다시 시도하세요.</string>
