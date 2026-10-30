@@ -19,6 +19,7 @@ dependencies {
     implementation(projects.domain.marketing)
     implementation(projects.domain.marketing.models)
     implementation(projects.domain.models)
+    implementation(projects.domain.quotes)
 
     /** Core */
     implementation(projects.core.decompose)
