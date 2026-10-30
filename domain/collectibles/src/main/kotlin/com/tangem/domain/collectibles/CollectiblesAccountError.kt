@@ -20,6 +20,9 @@ sealed interface CollectiblesAccountError {
     /** The card refused; the NFC sheet has already shown it. */
     data class CardError(val code: Int, val message: String) : CollectiblesAccountError
 
+    /** The backend did not take the account record, so the account is not created on this device either. */
+    data class RegistrationFailed(val cause: Throwable) : CollectiblesAccountError
+
     /** Ours or the chain's, not shown to the user yet. */
     data class Vault(val error: UniversalError) : CollectiblesAccountError
 }
