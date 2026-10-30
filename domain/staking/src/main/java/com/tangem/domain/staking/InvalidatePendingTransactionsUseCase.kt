@@ -1,11 +1,11 @@
 package com.tangem.domain.staking
 
 import arrow.core.Either
-import com.tangem.domain.models.staking.BalanceItem
-import com.tangem.domain.models.staking.BalanceType
-import com.tangem.domain.models.staking.NetworkType
-import com.tangem.domain.models.staking.YieldToken
-import com.tangem.domain.models.staking.action.StakingActionType
+import com.tangem.domain.staking.model.BalanceItem
+import com.tangem.domain.staking.model.BalanceType
+import com.tangem.domain.staking.model.NetworkType
+import com.tangem.domain.staking.model.YieldToken
+import com.tangem.domain.staking.model.action.StakingActionType
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus

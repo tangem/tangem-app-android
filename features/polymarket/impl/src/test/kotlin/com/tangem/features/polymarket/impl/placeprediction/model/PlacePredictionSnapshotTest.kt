@@ -33,7 +33,7 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
     @Test
     fun `GIVEN a refresh in flight WHEN next is tapped THEN summary signs the snapshot from the tap`() = runTest {
         // Arrange
-        coEvery { getQuoteUseCase(any()) } returns createQuote().right() coAndThen {
+        coEvery { getQuoteUseCase(any(), any()) } returns createQuote().right() coAndThen {
             delay(1_000)
             createQuote(total = BigDecimal("99")).right()
         }
@@ -58,7 +58,7 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
         assertThat(request.captured.quote).isEqualTo((accepted.quote as QuoteUM.Content).signable.quote)
         assertThat(request.captured.quoteReceivedAtMillis)
             .isEqualTo((accepted.quote as QuoteUM.Content).signable.receivedAtMillis)
-        coVerify(exactly = 2) { getQuoteUseCase(any()) }
+        coVerify(exactly = 2) { getQuoteUseCase(any(), any()) }
     }
 
     @Test
@@ -71,8 +71,8 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
         advanceTimeBy(QUOTE_DEBOUNCE_MILLIS + 1)
         val summary = createSummaryModel(this, amount)
         val accepted = summary.uiState.value
-        val fees = summary.feeSheetState.value
-        val sheet = FakeSlotHost(summary.feeSheetNavigation)
+        val fees = summary.feeSheet.state.value
+        val sheet = FakeSlotHost(summary.feeSheet.navigation)
         summary.onFeeClick()
 
         // Act
@@ -81,9 +81,9 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
 
         // Assert
         assertThat(summary.uiState.value).isEqualTo(accepted)
-        assertThat(summary.feeSheetState.value).isEqualTo(fees)
+        assertThat(summary.feeSheet.state.value).isEqualTo(fees)
         assertThat(sheet.configuration).isEqualTo(Unit)
-        coVerify(exactly = 1) { getQuoteUseCase(any()) }
+        coVerify(exactly = 1) { getQuoteUseCase(any(), any()) }
     }
 
     @Test
@@ -98,7 +98,7 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
         every { router.push(capture(route), any()) } returns Unit
         amount.onSlippageClick()
         amount.onPause()
-        coEvery { getQuoteUseCase(any()) } coAnswers {
+        coEvery { getQuoteUseCase(any(), any()) } coAnswers {
             delay(1_000)
             createQuote().right()
         }
@@ -116,7 +116,7 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
         advanceTimeBy(1_001)
         val prepared = prepareOrder(amount)
         assertThat(prepared.state.slippage.percent).isEqualTo(BigDecimal("5"))
-        coVerify(exactly = 1) { getQuoteUseCase(match { it.slippagePercent == BigDecimal("5") }) }
+        coVerify(exactly = 1) { getQuoteUseCase(any(), match { it.slippagePercent == BigDecimal("5") }) }
     }
 
     @Test
@@ -162,6 +162,6 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
         assertThat(summary.uiState.value).isEqualTo(accepted.copy(submit = SubmitUM.Idle))
         verify(exactly = 0) { router.popTo(any<PlacePredictionRoute>(), any()) }
         coVerify(exactly = 0) { placeOrderUseCase(any(), any(), any()) }
-        coVerify(exactly = 1) { getQuoteUseCase(any()) }
+        coVerify(exactly = 1) { getQuoteUseCase(any(), any()) }
     }
 }

@@ -33,7 +33,7 @@ fun InputRowChecked(text: TextReference, checked: Boolean, modifier: Modifier = 
             modifier = Modifier.weight(1f),
             text = text.resolveReference(),
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -43,7 +43,7 @@ fun InputRowChecked(text: TextReference, checked: Boolean, modifier: Modifier = 
         ) {
             Icon(
                 painter = rememberVectorPainter(image = ImageVector.vectorResource(id = R.drawable.ic_check_24)),
-                tint = TangemTheme.colors.icon.accent,
+                tint = TangemTheme.colors3.icon.accent.blue,
                 contentDescription = null,
             )
         }
@@ -58,7 +58,7 @@ fun InputRowChecked(text: TextReference, checked: Boolean, modifier: Modifier = 
 @Composable
 private fun Preview() {
     TangemThemePreview {
-        Column(Modifier.background(TangemTheme.colors.background.primary)) {
+        Column(Modifier.background(TangemTheme.colors3.bg.secondary)) {
             InputRowChecked(
                 text = stringReference("Title Title Title Title Title Title Title Title Title"),
                 checked = false,

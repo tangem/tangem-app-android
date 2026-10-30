@@ -1,5 +1,9 @@
 package com.tangem.domain.polymarket.usecase
 
+import com.tangem.domain.polymarket.model.PolymarketApiCredentials
+import com.tangem.domain.polymarket.model.PolymarketClobIdentity
+import com.tangem.domain.polymarket.model.PredictionOrderSigningRoute
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyEnvelope
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.polymarket.model.PolymarketExchangeDomain
 import com.tangem.domain.polymarket.model.PolymarketMarketVersion
@@ -37,6 +41,18 @@ internal class ValidatePredictionOrderUseCaseTest {
             signedDomain = PolymarketExchangeDomain.EXCHANGE_V3,
             marketVersion = PolymarketMarketVersion.V2,
         )
+
+        // Act
+        val actual = validate(input)
+
+        // Assert
+        assertThat(actual.isRight()).isTrue()
+    }
+
+    @Test
+    fun `GIVEN an order the session key enveloped WHEN validated on its session route THEN it passes`() {
+        // Arrange
+        val input = Input(signature = envelope(WRAPPED_SIGNATURE), route = SESSION_ROUTE)
 
         // Act
         val actual = validate(input)
@@ -218,6 +234,7 @@ internal class ValidatePredictionOrderUseCaseTest {
         isNegRisk = input.isNegRisk,
         quoteReceivedAtMillis = input.quoteReceivedAtMillis,
         nowMillis = input.nowMillis,
+        route = input.route,
     )
 
     private fun truncatedSharesInput(collateral: BigInteger = QUANTIZED_COLLATERAL): Input = Input(
@@ -273,6 +290,7 @@ internal class ValidatePredictionOrderUseCaseTest {
         val isNegRisk: Boolean = false,
         val quoteReceivedAtMillis: Long = NOW_MILLIS - 5_000,
         val nowMillis: Long = NOW_MILLIS,
+        val route: PredictionOrderSigningRoute = PredictionOrderSigningRoute.Owner,
     )
 
     @Suppress("LongMethod")
@@ -400,6 +418,25 @@ internal class ValidatePredictionOrderUseCaseTest {
             expected = PredictionOrderValidationError.SignatureNotWrapped(length = BARE_SIGNATURE.length - 2),
         ),
         ValidationModel(
+            input = Input(signature = envelope(BARE_SIGNATURE), route = SESSION_ROUTE),
+            expected = PredictionOrderValidationError.SignatureNotWrapped(length = BARE_SIGNATURE.length - 2),
+        ),
+        ValidationModel(
+            input = Input(signature = envelope(WRAPPED_SIGNATURE)),
+            expected = PredictionOrderValidationError.SessionKeyMismatch(expected = null, found = SESSION_KEY),
+        ),
+        ValidationModel(
+            input = Input(route = SESSION_ROUTE),
+            expected = PredictionOrderValidationError.SessionKeyMismatch(expected = SESSION_KEY, found = null),
+        ),
+        ValidationModel(
+            input = Input(signature = envelope(WRAPPED_SIGNATURE, sessionKey = SOMEONE_ELSE), route = SESSION_ROUTE),
+            expected = PredictionOrderValidationError.SessionKeyMismatch(
+                expected = SESSION_KEY,
+                found = SOMEONE_ELSE,
+            ),
+        ),
+        ValidationModel(
             input = Input(quoteReceivedAtMillis = NOW_MILLIS - 60_001),
             expected = PredictionOrderValidationError.StaleQuote(ageMillis = 60_001),
         ),
@@ -427,6 +464,17 @@ internal class ValidatePredictionOrderUseCaseTest {
 
         val BARE_SIGNATURE = "0x" + "11".repeat(n = 65)
         val WRAPPED_SIGNATURE = "11".repeat(n = 317)
+        const val SESSION_KEY = "0x5e55000000000000000000000000000000000001"
+        val SESSION_ROUTE = PredictionOrderSigningRoute.Session(
+            identity = PolymarketClobIdentity.Session(
+                address = SESSION_KEY,
+                credentials = PolymarketApiCredentials(apiKey = "session", secret = "s", passphrase = "p"),
+            ),
+        )
+
+        fun envelope(signature: String, sessionKey: String = SESSION_KEY): String = PolymarketSessionKeyEnvelope
+            .wrap(depositWalletSignature = signature, sessionKeyAddress = sessionKey)
+            .getOrNull()!!
 
         fun draft(
             side: PredictionOrderSide = PredictionOrderSide.BUY,

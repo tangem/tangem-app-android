@@ -20,7 +20,6 @@ import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.bankofframp.BankAccount
-import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.eligibility.TangemPayCountrySelectorComponent
 import com.tangem.features.tangempay.withdraw.bank.amount.TangemPayBankWithdrawAmountComponent
 import com.tangem.features.tangempay.withdraw.bank.choice.TangemPayBankWithdrawChoiceComponent
@@ -80,12 +79,12 @@ internal class TangemPayBankWithdrawComponent(
         TangemPayBankWithdrawInnerRoute.Recipients -> TangemPayBankWithdrawRecipientsComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayBankWithdrawRecipientsComponent.Params(
-                userWalletId = params.userWalletId,
+                sourceAccount = params.sourceAccount,
                 onRecipientSelected = { account ->
                     model.onRecipientSelected(account)
                     pushNext(from = config)
                 },
-                onCloseFlow = ::closeFlow,
+                onCloseFlow = params.onCloseFlow,
             ),
         )
         TangemPayBankWithdrawInnerRoute.Amount -> amountChild(
@@ -122,17 +121,21 @@ internal class TangemPayBankWithdrawComponent(
         TangemPayBankWithdrawInnerRoute.Preview -> TangemPayBankWithdrawPreviewComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayBankWithdrawPreviewComponent.Params(
-                userWalletId = params.userWalletId,
+                sourceAccount = params.sourceAccount,
                 draft = model.draft,
                 onOrderCreated = model::onOrderCreated,
-                onOrderSigned = ::onOrderSigned,
+                onDestinationChanged = model::onDestinationChanged,
+                onNetworkFeeChanged = model::onNetworkFeeChanged,
+                onCompleted = ::onOrderSigned,
+                onTransferOutcomeUnknown = params.onWithdrawSent,
+                onCloseFlow = params.onCloseFlow,
             ),
         )
         TangemPayBankWithdrawInnerRoute.Success -> TangemPayBankWithdrawSuccessComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = TangemPayBankWithdrawSuccessComponent.Params(
                 draft = model.draft,
-                onDoneClick = ::closeFlow,
+                onDoneClick = params.onCloseFlow,
             ),
         )
         is TangemPayBankWithdrawInnerRoute.Edit -> editChild(step = config, componentContext = componentContext)
@@ -168,6 +171,7 @@ internal class TangemPayBankWithdrawComponent(
     ): ComposableContentComponent = TangemPayBankWithdrawAmountComponent(
         appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
         params = TangemPayBankWithdrawAmountComponent.Params(
+            sourceAccount = params.sourceAccount,
             draft = model.draft,
             options = params.options,
             step = step,
@@ -175,7 +179,7 @@ internal class TangemPayBankWithdrawComponent(
                 model.onAmountConfirmed(result)
                 onStepConfirmed(step = step, returnToPreview = returnToPreview)
             },
-            onCloseFlow = ::closeFlow,
+            onCloseFlow = params.onCloseFlow,
         ),
     )
 
@@ -187,6 +191,7 @@ internal class TangemPayBankWithdrawComponent(
     ): ComposableContentComponent = TangemPayBankWithdrawChoiceComponent(
         appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
         params = TangemPayBankWithdrawChoiceComponent.Params(
+            sourceAccount = params.sourceAccount,
             draft = model.draft,
             step = step,
             config = choice,
@@ -194,7 +199,7 @@ internal class TangemPayBankWithdrawComponent(
                 onSelected(selectedId)
                 pushNext(from = step)
             },
-            onCloseFlow = ::closeFlow,
+            onCloseFlow = params.onCloseFlow,
         ),
     )
 
@@ -206,6 +211,7 @@ internal class TangemPayBankWithdrawComponent(
     ): ComposableContentComponent = TangemPayBankWithdrawFormComponent(
         appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
         params = TangemPayBankWithdrawFormComponent.Params(
+            sourceAccount = params.sourceAccount,
             draft = model.draft,
             step = step,
             fields = fields,
@@ -216,7 +222,7 @@ internal class TangemPayBankWithdrawComponent(
                 onStepConfirmed(step = step, returnToPreview = returnToPreview)
             },
             onSavedRecipientSelected = ::onSavedRecipientSelected,
-            onCloseFlow = ::closeFlow,
+            onCloseFlow = params.onCloseFlow,
         ),
         countrySelectorFactory = countrySelectorFactory,
     )
@@ -233,10 +239,6 @@ internal class TangemPayBankWithdrawComponent(
     private fun onOrderSigned() {
         model.onOrderSigned()
         stackNavigation.pushNew(TangemPayBankWithdrawInnerRoute.Success)
-    }
-
-    private fun closeFlow() {
-        router.popTo(TangemPayAccountDetailsInnerRoute.AccountDetails)
     }
 
     private fun onStepConfirmed(step: TangemPayBankWithdrawInnerRoute, returnToPreview: Boolean) {
@@ -261,8 +263,12 @@ internal class TangemPayBankWithdrawComponent(
     }
 
     data class Params(
-        val userWalletId: UserWalletId,
+        val sourceAccount: BankWithdrawSourceAccount,
         val entry: BankWithdrawEntry,
         val options: StateFlow<BankWithdrawOptions>,
-    )
+        val onCloseFlow: () -> Unit,
+        val onWithdrawSent: () -> Unit,
+    ) {
+        val userWalletId: UserWalletId get() = sourceAccount.userWalletId
+    }
 }

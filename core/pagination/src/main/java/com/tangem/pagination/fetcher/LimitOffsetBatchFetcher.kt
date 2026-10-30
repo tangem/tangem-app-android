@@ -2,6 +2,7 @@ package com.tangem.pagination.fetcher
 
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.exception.EndOfPaginationException
+import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,7 +46,7 @@ class LimitOffsetBatchFetcher<TRequestParams : Any, TData>(
             params = requestParams,
         )
 
-        val res = runCatching {
+        val res = runSuspendCatching {
             subFetcher.fetch(request = req, lastResult = null, isFirstBatchFetching = true)
         }.getOrElse { throwable ->
             currentCoroutineContext().ensureActive()
@@ -77,7 +78,7 @@ class LimitOffsetBatchFetcher<TRequestParams : Any, TData>(
             last
         }
 
-        val res = runCatching {
+        val res = runSuspendCatching {
             subFetcher.fetch(request = req, lastResult = lastResult, isFirstBatchFetching = false)
         }.getOrElse { throwable ->
             currentCoroutineContext().ensureActive()

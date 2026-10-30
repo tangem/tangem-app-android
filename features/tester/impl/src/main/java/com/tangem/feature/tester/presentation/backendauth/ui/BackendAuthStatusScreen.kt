@@ -51,7 +51,7 @@ internal fun BackendAuthStatusScreen(state: BackendAuthStatusUM) {
                 modifier = Modifier.statusBarsPadding(),
             )
         },
-        containerColor = TangemTheme.colors.background.secondary,
+        containerColor = TangemTheme.colors3.bg.primary,
     ) { paddingValues ->
         SelectionContainer {
             LazyColumn(
@@ -107,7 +107,7 @@ private fun StatusRow(row: BackendAuthStatusUM.StatusRow, runningAction: String?
         Text(
             text = row.label,
             style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -122,7 +122,7 @@ private fun StatusRow(row: BackendAuthStatusUM.StatusRow, runningAction: String?
                 Text(
                     text = value,
                     style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                 )
             }
             RowTrailingIcons(row = row, runningAction = runningAction, onCopyClick = onCopyClick)
@@ -131,7 +131,7 @@ private fun StatusRow(row: BackendAuthStatusUM.StatusRow, runningAction: String?
             Text(
                 text = row.subtitle,
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
     }
@@ -151,7 +151,7 @@ private fun RowTrailingIcons(row: BackendAuthStatusUM.StatusRow, runningAction: 
                 Icon(
                     imageVector = ImageVector.vectorResource(CoreUiR.drawable.ic_copy_24),
                     contentDescription = "Copy ${row.label}",
-                    tint = TangemTheme.colors.icon.primary1,
+                    tint = TangemTheme.colors3.icon.primary,
                 )
             }
         }
@@ -162,7 +162,7 @@ private fun RowTrailingIcons(row: BackendAuthStatusUM.StatusRow, runningAction: 
                         .size(32.dp)
                         .padding(6.dp),
                     strokeWidth = 2.dp,
-                    color = TangemTheme.colors.icon.primary1,
+                    color = TangemTheme.colors3.icon.primary,
                 )
             } else {
                 IconButton(
@@ -173,7 +173,7 @@ private fun RowTrailingIcons(row: BackendAuthStatusUM.StatusRow, runningAction: 
                     Icon(
                         imageVector = ImageVector.vectorResource(iconAction.iconRes),
                         contentDescription = iconAction.label,
-                        tint = TangemTheme.colors.icon.primary1,
+                        tint = TangemTheme.colors3.icon.primary,
                     )
                 }
             }

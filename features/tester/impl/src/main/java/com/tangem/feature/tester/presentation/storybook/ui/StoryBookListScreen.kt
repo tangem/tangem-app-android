@@ -31,7 +31,6 @@ import com.tangem.feature.tester.presentation.storybook.page.progress.progressIn
 import com.tangem.feature.tester.presentation.storybook.page.searchfield.tangemSearchFieldStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.storiesv2.storiesV2StoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.tab.tangemTabStoryFactory
-import com.tangem.feature.tester.presentation.storybook.page.tabs.tangemSegmentedPickerStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.tokenrow.tangemTokenRowStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.topbar.tangemTopBarStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.typography.typographyStoryFactory
@@ -46,7 +45,6 @@ private fun buildStories() = listOf(
     StoryItem(title = "✨ Opportunities BG", factory = opportunitiesBGStoryFactory),
     StoryItem(title = "🌌 Northern Lights Background", factory = northernLightsStoryFactory),
     StoryItem(title = "💬 Message", factory = tangemMessageStoryFactory),
-    StoryItem(title = "🗂️ Segmented Picker", factory = tangemSegmentedPickerStoryFactory),
     StoryItem(title = "☑️ Checkbox", factory = tangemCheckboxStoryFactory),
     StoryItem(title = "🪙 Token Row", factory = tangemTokenRowStoryFactory),
     StoryItem(title = "📑 Header Row", factory = tangemHeaderRowStoryFactory),
@@ -68,13 +66,13 @@ internal fun StoryBookListScreen(state: StoryBookUM, modifier: Modifier = Modifi
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(TangemTheme.colors.background.primary),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         stickyHeader {
             AppBarWithBackButton(
                 onBackClick = state.onBackClick,
                 text = "Storybook",
-                containerColor = TangemTheme.colors.background.primary,
+                containerColor = TangemTheme.colors3.bg.primary,
             )
         }
 

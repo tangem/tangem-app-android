@@ -39,9 +39,17 @@ data class DerivationIndex private constructor(
     companion object {
 
         private const val MAIN_ACCOUNT_DERIVATION_INDEX = 0
+        private const val COLLECTIBLES_ACCOUNT_DERIVATION_INDEX = 999799
 
         /** Predefined instance of [DerivationIndex] for the main account */
         val Main: DerivationIndex = DerivationIndex(value = MAIN_ACCOUNT_DERIVATION_INDEX)
+
+        /**
+         * Predefined instance of [DerivationIndex] for the collectibles account. One of the app's reserved key nodes
+         * (`999999'` Visa, `999998'` money account, `999899'` Polymarket owner, `888888'` joint account owners) rather
+         * than a chain account; the backend accounts document accepts only `999700..999799` for it.
+         */
+        val Collectibles: DerivationIndex = DerivationIndex(value = COLLECTIBLES_ACCOUNT_DERIVATION_INDEX)
 
         /**
          * Factory method to create a [DerivationIndex] instance

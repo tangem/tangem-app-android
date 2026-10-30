@@ -3,6 +3,7 @@ package com.tangem.data.walletconnect.pair
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
+import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
@@ -36,16 +37,16 @@ class DefaultWcPairService @Inject constructor(
         return !isExistSession
     }
 
-    private suspend fun existSessionTopic(uri: String) = runCatching {
+    private suspend fun existSessionTopic(uri: String) = runSuspendCatching {
         val deeplinkRegex = Regex(WC_PARAM_REGEX)
         val matched = deeplinkRegex.findAll(uri)
         val sessionTopic = matched
             .firstOrNull { it.value.contains(WC_TOPIC_QUERY_NAME) }
             ?.groupValues
             ?.lastOrNull()
-            ?: return@runCatching false
+            ?: return@runSuspendCatching false
         val isExistSession = sessionsManager.findSessionByTopic(sessionTopic) != null
-        return@runCatching isExistSession
+        return@runSuspendCatching isExistSession
     }
 
     private companion object {

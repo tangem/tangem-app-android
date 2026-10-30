@@ -658,7 +658,7 @@ private fun PreviewTokenRow() {
 private fun PreviewContainer(content: @Composable (avatar: TangemAvatar.UiState) -> Unit) {
     val avatar = TangemAvatar.UiState.Account(
         iconRes = R.drawable.ic_airplane_mode_24,
-        color = TangemAvatar.FillColor.DarkBlue,
+        color = TangemAvatar.FillColor.AzureBlue,
     )
     TangemThemePreviewRedesign {
         Column(

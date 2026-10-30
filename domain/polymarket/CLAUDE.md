@@ -14,7 +14,12 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
   `maker`/`signer` of every order.
 - **`walletId`** = `UserWalletId.stringValue` (64 hex, no `0x`). A BFF correlation key only — never a
   derivation input, never sent to the bridge (the bridge gets addresses plus the builder code that
-  `GET /configuration` returns for the wallet id).
+  `GET /configuration` returns for the wallet id). Every BFF call carries it as the `wallet-id` header,
+  discovery included (the wallet of the screen), and `GET /wallet` is read by `walletId`: only that lookup
+  returns `sessionKeys`. Onboarding falls back to one `ownerAddress` read only when the `walletId` read answers
+  `NOT_CREATED` or fails (`404` included) — any other status, `DEPLOYMENT_FAILED` and `UNKNOWN` too, is kept —
+  and then answers with the owner read, its error included: a deposit wallet deployed before the BFF bound it to
+  a wallet id is found only so.
 
 ## Invariants — expensive to break
 
@@ -57,6 +62,9 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
    `PolymarketOnboardedStore`, so the gate offers Reconnect, not a full onboarding. Reading, clearing and
    re-deriving one wallet's credentials share one non-reentrant `PolymarketCredentialsLock`, so a late `401`
    cannot wipe a set a Reconnect has just stored.
+   A session key's credentials (`PolymarketClobIdentity.Session`) are never stored and take no part in that
+   lock: `PolymarketSessionCredentialsProvider` derives them in memory from a ClobAuth the key signs itself, and a
+   `401` on them is answered with `invalidate`, which leaves the owner's credentials alone.
 9. **A withdrawal is persisted before it is submitted.** The relayer keys submissions on
    `(deposit wallet, nonce)`, so resending the same batch returns the same receipt. The record is cleared
    on a terminal receipt or on a rejection of the submit itself (`RelayerRejected`, `InvalidRequest` — the
@@ -80,8 +88,10 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
 
 ## Signing and orders
 
-- Relayer batches (approvals, withdrawal, claim) carry `deadline = now + 600 s`. Known gap: the tracker's
-  `resend` of a persisted withdrawal skips the expiry check that `confirm` does.
+- Relayer batches (approvals, withdrawal, claim) carry `deadline = now + 600 s`. Session key batches signed
+  together take 600 s for the first one and 1200 s for each follow-up, which waits for the first one to
+  settle. Known gap: the tracker's `resend` of a persisted withdrawal skips the expiry check that `confirm`
+  does.
 - Orders use `signatureType = 3` (deposit wallet) wrapped in ERC-7739. The exchange and its domain version
   come from the quote, but only as `PolymarketExchangeDomain.of(quote.version, isNegRisk)` allows: V1 →
   CTF or neg-risk CTF exchange, domain `"2"`; V2 → ExchangeV3, domain `"3"`; unknown → never signed. Any
@@ -89,6 +99,11 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
   and the draft carries the table's constants, never the quoted strings. The signed order is re-validated
   against the draft, the domain, the deposit wallet, the market and the quote age (60 s) before it is sent,
   and the repository checks the signature tail against the domain once more.
+- An order on `PredictionOrderSigningRoute.Session` keeps `maker = signer = deposit wallet`: the session key signs
+  the same ERC-7739 digest, and the wrapped signature goes into `PolymarketSessionKeyEnvelope`. Validation and the
+  repository unwrap it and refuse an envelope the placing identity's key did not make — or any envelope on the
+  owner route. The order is placed and read back under the route's session identity. Choosing the route is the
+  caller's.
 - SELL: `makerAmount = shares`, `takerAmount = collateral`; BUY the reverse.
 - A claim signs only redeem calls the BFF served, and only after `PredictionRedeemCallValidator` accepted
   them against the position: one adapter `redeemPositions` call on the root collection of the condition for

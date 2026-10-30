@@ -134,9 +134,9 @@ fun TangemSearchField(
         singleLine = true,
         maxLines = 1,
         textStyle = TangemTheme.typography2.bodySemibold16.copy(
-            color = TangemTheme.colors2.text.neutral.primary,
+            color = TangemTheme.colors3.text.primary,
         ),
-        cursorBrush = SolidColor(TangemTheme.colors2.graphic.neutral.primary),
+        cursorBrush = SolidColor(TangemTheme.colors3.icon.primary),
         decorationBox = @Composable { innerTextField ->
             DecorationBox(
                 state = state,
@@ -144,7 +144,7 @@ fun TangemSearchField(
                 innerTextField = innerTextField,
                 focusManager = focusManager,
                 interactionSource = interactionSource,
-                color = TangemTheme.colors2.button.backgroundSecondary,
+                color = TangemTheme.colors3.bg.transparent.secondary,
                 keyboardController = keyboardController,
             )
         },
@@ -194,7 +194,7 @@ private fun DecorationBox(
                         .size(20.dp)
                         .testTag(SearchBarTestTags.ICON),
                     painter = painterResource(id = R.drawable.ic_search_default_24),
-                    tint = TangemTheme.colors2.graphic.neutral.tertiaryConstant,
+                    tint = TangemTheme.colors3.icon.secondary,
                     contentDescription = null,
                 )
                 Field(
@@ -229,7 +229,7 @@ private fun Field(state: SearchBarUM, modifier: Modifier = Modifier, innerTextFi
         if (state.query.isEmpty()) {
             Text(
                 text = state.placeholderText.resolveReference(),
-                color = TangemTheme.colors2.text.neutral.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 style = TangemTheme.typography2.bodySemibold16,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -244,7 +244,7 @@ private fun ClearButton(state: SearchBarUM) {
     if (state.query.isNotEmpty()) {
         Icon(
             imageVector = ImageVector.vectorResource(R.drawable.ic_close_new_20),
-            tint = TangemTheme.colors2.graphic.neutral.tertiary,
+            tint = TangemTheme.colors3.icon.secondary,
             contentDescription = null,
             modifier = Modifier
                 .size(20.dp)
@@ -304,7 +304,7 @@ private fun TangemSearchField_Preview(@PreviewParameter(TangemSearchFieldPreview
         Column(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier
-                .background(TangemTheme.colors2.surface.level1)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(16.dp),
         ) {
             TangemFieldShape.entries.fastForEach { shape ->

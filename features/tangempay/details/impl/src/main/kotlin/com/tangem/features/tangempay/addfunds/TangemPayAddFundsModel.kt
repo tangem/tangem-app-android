@@ -13,7 +13,6 @@ import com.tangem.domain.models.account.isOrderRequired
 import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,22 +28,15 @@ internal class TangemPayAddFundsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val analytics: AnalyticsEventHandler,
     private val router: Router,
-    tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val getBankCredentialsUseCase: GetBankCredentialsUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayAddFundsComponent.Params>()
 
-    private val isVisaOnrampV2Enabled = tangemPayFeatureToggles.isVisaOnrampV2Enabled
-
-    private val listener = object : AddFundsListener by params.listener {
-        override fun onClickBankTransfer() = onBankTransferClick()
-    }
-
     private val converter = TangemPayAddFundsUMConverter(
-        listener = listener,
+        listener = params.listener,
+        onBankTransferClick = ::onBankTransferClick,
         virtualAccountOnramp = params.virtualAccountOnramp,
-        isVisaOnrampV2Enabled = isVisaOnrampV2Enabled,
     )
 
     private val topUpData = TangemPayTopUpData(
@@ -73,7 +65,6 @@ internal class TangemPayAddFundsModel @Inject constructor(
     private fun onBankTransferClick() {
         val onramp = params.virtualAccountOnramp
         when {
-            !isVisaOnrampV2Enabled -> params.listener.onClickBankTransfer()
             onramp is VirtualAccountOnramp.Available -> loadBankingDetails(onramp)
             onramp.isOrderRequired -> openOnboarding()
         }

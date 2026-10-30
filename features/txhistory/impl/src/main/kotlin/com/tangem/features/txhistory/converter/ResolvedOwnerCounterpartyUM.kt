@@ -1,6 +1,7 @@
 package com.tangem.features.txhistory.converter
 
 import androidx.annotation.StringRes
+import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.extensions.TextReference
@@ -14,7 +15,10 @@ import com.tangem.features.txhistory.model.ResolvedOwner
 @get:StringRes
 internal val ResolvedOwner.incomingLabelRes: Int
     get() = when (this) {
-        is ResolvedOwner.OwnAccount, is ResolvedOwner.OwnPaymentAccount -> R.string.common_from_account
+        is ResolvedOwner.OwnAccount,
+        is ResolvedOwner.OwnPaymentAccount,
+        is ResolvedOwner.OwnMoneyAccount,
+        -> R.string.common_from_account
         is ResolvedOwner.OwnWallet -> R.string.common_from_wallet
         is ResolvedOwner.SavedContact, is ResolvedOwner.External -> R.string.common_from_address
     }
@@ -30,6 +34,7 @@ internal fun ResolvedOwner.toCounterpartyUM(label: TextReference, onCopyClick: (
             is ResolvedOwner.OwnAccount -> TxHistoryDetailsUM.CounterpartyTitle.Name(account.accountName.toUM().value)
             is ResolvedOwner.OwnPaymentAccount ->
                 TxHistoryDetailsUM.CounterpartyTitle.Name(account.accountName.toUM().value)
+            is ResolvedOwner.OwnMoneyAccount -> TxHistoryDetailsUM.CounterpartyTitle.Name(moneyAccountOwnerName)
             is ResolvedOwner.OwnWallet -> TxHistoryDetailsUM.CounterpartyTitle.Name(stringReference(walletInfo.name))
             is ResolvedOwner.SavedContact ->
                 TxHistoryDetailsUM.CounterpartyTitle.Name(stringReference(contact.name.value))
@@ -41,6 +46,10 @@ internal fun ResolvedOwner.toCounterpartyUM(label: TextReference, onCopyClick: (
                 icon = CryptoPortfolioIconConverter.convert(account.icon),
             )
             is ResolvedOwner.OwnPaymentAccount -> TxHistoryDetailsUM.CounterpartyAvatar.PaymentAccount
+            is ResolvedOwner.OwnMoneyAccount -> TxHistoryDetailsUM.CounterpartyAvatar.Account(
+                name = moneyAccountOwnerName,
+                icon = AccountIconUM.Money,
+            )
             is ResolvedOwner.OwnWallet -> TxHistoryDetailsUM.CounterpartyAvatar.Wallet(
                 deviceIconUM = walletInfo.deviceIconUM,
             )

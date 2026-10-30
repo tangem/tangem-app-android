@@ -43,12 +43,10 @@ fun TangemTooltip(
         enabled = enabled,
         tooltipContent = {
             Text(
-                modifier = Modifier
-                    .background(TangemTheme.colors.icon.secondary)
-                    .padding(horizontal = 6.dp, vertical = 8.dp),
+                modifier = Modifier.padding(horizontal = 6.dp, vertical = 8.dp),
                 text = text.resolveAnnotatedReference(),
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.primary2,
+                color = TangemTheme.colors3.text.inverse.primary,
             )
         },
         content = content,
@@ -81,8 +79,8 @@ private fun InternalTangemTooltip(
                 shape = RoundedCornerShape(14.dp),
                 caretShape = TooltipDefaults.caretShape(),
                 maxWidth = windowSize - 24.dp,
-                contentColor = TangemTheme.colors.text.primary2,
-                containerColor = TangemTheme.colors.icon.secondary,
+                contentColor = TangemTheme.colors3.text.inverse.primary,
+                containerColor = TangemTheme.colors3.bg.inverse,
                 content = { tooltipContent() },
             )
         },
@@ -108,7 +106,7 @@ private fun TangemTooltip_Preview() {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(TangemTheme.colors.background.tertiary),
+                .background(TangemTheme.colors3.bg.primary),
         ) {
             TangemTooltip(
                 modifier = Modifier,
@@ -117,7 +115,7 @@ private fun TangemTooltip_Preview() {
                     Icon(
                         modifier = contentModifier,
                         painter = painterResource(R.drawable.ic_token_info_24),
-                        tint = TangemTheme.colors.icon.informative,
+                        tint = TangemTheme.colors3.icon.secondary,
                         contentDescription = null,
                     )
                 },

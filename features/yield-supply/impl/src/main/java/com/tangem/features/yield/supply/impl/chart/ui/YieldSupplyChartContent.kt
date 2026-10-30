@@ -106,7 +106,7 @@ internal fun YieldSupplyChartContent(state: YieldSupplyChartUM, modifier: Modifi
                 Text(
                     text = stringResourceSafe(R.string.markets_loading_error_title),
                     style = TangemTheme.typography.caption1,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                 )
                 SpacerH12()
                 SecondarySmallButton(
@@ -169,25 +169,25 @@ private fun YieldSupplyChartData(state: YieldSupplyChartUM.Data, modifier: Modif
         val model = rememberChartModel(state.chartData)
 
         val columnsLayer = rememberColumnsLayer(
-            accentColor = TangemTheme.colors.text.accent,
+            accentColor = TangemTheme.colors3.text.accent.blue,
             isStacked = state.chartData.rewardCaps.isNotEmpty(),
             columnSpacing = columnSpacing(plotWidth = maxWidth, columnCount = state.chartData.y.size),
         )
 
         val startAxis: VerticalAxis<AxisPosition.Vertical.Start> = rememberStartAxis(
-            labelColor = TangemTheme.colors.text.tertiary,
-            guidelineColor = TangemTheme.colors.stroke.primary,
+            labelColor = TangemTheme.colors3.text.secondary,
+            guidelineColor = TangemTheme.colors3.border.secondary,
             percentFormat = state.chartData.percentFormat,
         )
 
         val bottomAxis: HorizontalAxis<AxisPosition.Horizontal.Bottom> = rememberBottomAxis(
-            labelColor = TangemTheme.colors.text.tertiary,
+            labelColor = TangemTheme.colors3.text.secondary,
         )
 
         val referenceLineThickness = 2.dp
         val referenceLine = rememberReferenceLine(
             average = state.chartData.avr,
-            color = TangemTheme.colors.icon.primary1,
+            color = TangemTheme.colors3.icon.primary,
             thickness = referenceLineThickness,
         )
 
@@ -377,7 +377,7 @@ private fun ColumnLabelsRow(labels: ImmutableList<String>, modifier: Modifier = 
                 Text(
                     text = label.value,
                     style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                 )
             }
         },
@@ -403,14 +403,14 @@ private fun ColumnLabelsRow(labels: ImmutableList<String>, modifier: Modifier = 
 private fun AverageLabel(avr: TextReference, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.background(
-            color = TangemTheme.colors.button.secondary,
+            color = TangemTheme.colors3.bg.tertiary,
             shape = TangemTheme.shapes.roundedCornersSmall2,
         ),
     ) {
         Text(
             text = stringResourceSafe(R.string.yield_module_rate_info_sheet_chart_average, avr.resolveReference()),
             style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
         )
     }

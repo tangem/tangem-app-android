@@ -296,10 +296,12 @@ private fun TransactionDetailsBlock(state: TangemPayTxHistoryDetailsUM, modifier
                 title = resourceReference(R.string.tangempay_cashback_title),
                 value = cashback.value,
                 subvalue = cashback.subvalue,
+                modifier = Modifier.testTag(TangemPayTestTags.TRANSACTION_DETAILS_CASHBACK_ROW),
             )
             is CashbackDetailUM.Error -> DetailRowError(
                 title = resourceReference(R.string.tangempay_cashback_title),
                 onRefreshClick = cashback.onRefreshClick,
+                modifier = Modifier.testTag(TangemPayTestTags.TRANSACTION_DETAILS_CASHBACK_ROW),
             )
         }
         TangemRow(

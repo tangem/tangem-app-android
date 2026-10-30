@@ -265,6 +265,7 @@ internal class MoneyAccountCurrenciesProviderTest {
             cryptoCurrency = TOKEN,
             balance = balance,
             customerId = CUSTOMER_ID,
+            productInstanceId = "instance",
         )
 
     private companion object {

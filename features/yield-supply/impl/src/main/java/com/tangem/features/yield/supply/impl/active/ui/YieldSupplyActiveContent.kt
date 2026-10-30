@@ -74,7 +74,7 @@ internal fun YieldSupplyActiveContent(
         Column(
             modifier = Modifier
                 .clip(RoundedCornerShape(16.dp))
-                .background(TangemTheme.colors.background.action)
+                .background(TangemTheme.colors3.bg.secondary)
                 .fillMaxWidth(),
         ) {
             Column(
@@ -92,7 +92,7 @@ internal fun YieldSupplyActiveContent(
                 Column {
                     HorizontalDivider(
                         thickness = 0.5.dp,
-                        color = TangemTheme.colors.stroke.primary,
+                        color = TangemTheme.colors3.border.secondary,
                     )
                     state.boostText?.let { boostText ->
                         BoostRow(text = boostText, onClick = state.onBoostClick)
@@ -115,9 +115,9 @@ internal fun YieldSupplyActiveContent(
                 notifications.forEach { notificationUM ->
                     Notification(
                         config = notificationUM.config,
-                        containerColor = TangemTheme.colors.background.action,
+                        containerColor = TangemTheme.colors3.bg.secondary,
                         iconTint = if (notificationUM is NotificationUM.Info) {
-                            TangemTheme.colors.icon.accent
+                            TangemTheme.colors3.icon.accent.blue
                         } else {
                             null
                         },
@@ -141,7 +141,7 @@ internal fun YieldSupplyActiveContent(
                 modifier = Modifier.padding(horizontal = 12.dp),
                 text = state.feeDescription?.resolveReference().orEmpty(),
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
 
@@ -150,7 +150,7 @@ internal fun YieldSupplyActiveContent(
                 modifier = Modifier.padding(horizontal = 12.dp),
                 text = state.minFeeDescription?.resolveReference().orEmpty(),
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
 
@@ -173,7 +173,7 @@ private fun CurrentApy(
             Text(
                 text = stringResourceSafe(R.string.yield_module_earn_sheet_current_apy_title),
                 style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
             if (hasBreakdown) {
                 Box(
@@ -182,7 +182,7 @@ private fun CurrentApy(
                 ) {
                     Icon(
                         painter = painterResource(com.tangem.core.ui.R.drawable.ic_information_24),
-                        tint = TangemTheme.colors.icon.informative,
+                        tint = TangemTheme.colors3.icon.secondary,
                         contentDescription = stringResourceSafe(
                             com.tangem.core.res.R.string.yield_module_about_apy_sheet_title,
                         ),
@@ -210,7 +210,7 @@ private fun CurrentApy(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         painter = painterResource(R.drawable.ic_arrow_up_8),
-                        tint = TangemTheme.colors.text.accent,
+                        tint = TangemTheme.colors3.text.accent.blue,
                         contentDescription = null,
                         modifier = Modifier
                             .padding(end = 6.dp)
@@ -220,7 +220,7 @@ private fun CurrentApy(
                         modifier = Modifier,
                         text = apyText,
                         style = TangemTheme.typography.h2,
-                        color = TangemTheme.colors.text.accent,
+                        color = TangemTheme.colors3.text.accent.blue,
                     )
                 }
             }
@@ -238,7 +238,7 @@ private fun YieldSupplyActiveMyFunds(
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .fillMaxWidth()
             .padding(
                 top = 12.dp,
@@ -249,7 +249,7 @@ private fun YieldSupplyActiveMyFunds(
         Text(
             text = stringResourceSafe(R.string.yield_module_earn_sheet_my_funds_title),
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
         SpacerH4()
         Row(
@@ -264,7 +264,7 @@ private fun YieldSupplyActiveMyFunds(
             Text(
                 text = state.providerTitle.resolveReference(),
                 style = TangemTheme.typography.h2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
         }
         SpacerH8()
@@ -272,7 +272,7 @@ private fun YieldSupplyActiveMyFunds(
         SpacerH8()
         HorizontalDivider(
             thickness = 0.5.dp,
-            color = TangemTheme.colors.stroke.primary,
+            color = TangemTheme.colors3.border.secondary,
         )
         InfoRow(
             title = resourceReference(R.string.yield_module_earn_sheet_available_title),
@@ -287,7 +287,7 @@ private fun YieldSupplyActiveTopUp(state: YieldSupplyActiveContentUM) {
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .fillMaxWidth()
             .padding(horizontal = 12.dp),
     ) {
@@ -298,7 +298,7 @@ private fun YieldSupplyActiveTopUp(state: YieldSupplyActiveContentUM) {
         )
         HorizontalDivider(
             thickness = 0.5.dp,
-            color = TangemTheme.colors.stroke.primary,
+            color = TangemTheme.colors3.border.secondary,
         )
         InfoRow(
             title = resourceReference(R.string.yield_module_fee_policy_sheet_min_amount_title),
@@ -307,7 +307,7 @@ private fun YieldSupplyActiveTopUp(state: YieldSupplyActiveContentUM) {
         )
         HorizontalDivider(
             thickness = 0.5.dp,
-            color = TangemTheme.colors.stroke.primary,
+            color = TangemTheme.colors3.border.secondary,
         )
         HighComissionInfoRow(
             title = resourceReference(R.string.common_estimated_fee),
@@ -330,7 +330,7 @@ private fun DescriptionText(state: YieldSupplyActiveContentUM, onReadMoreClick: 
             {
                 appendColored(
                     text = state.subtitleLink.resolveReference(),
-                    color = TangemTheme.colors.icon.accent,
+                    color = TangemTheme.colors3.icon.accent.blue,
                 )
             },
         )
@@ -338,7 +338,7 @@ private fun DescriptionText(state: YieldSupplyActiveContentUM, onReadMoreClick: 
     Text(
         text = subtitle.resolveAnnotatedReference(),
         style = TangemTheme.typography.caption2,
-        color = TangemTheme.colors.text.tertiary,
+        color = TangemTheme.colors3.text.secondary,
     )
 }
 
@@ -351,7 +351,7 @@ private fun InfoRow(title: TextReference, isBalanceHidden: Boolean, info: TextRe
         Text(
             text = title.resolveReference(),
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         SpacerWMax()
 
@@ -360,7 +360,7 @@ private fun InfoRow(title: TextReference, isBalanceHidden: Boolean, info: TextRe
                 Text(
                     text = currentInfo.orMaskWithStars(isBalanceHidden).resolveReference(),
                     style = TangemTheme.typography.body1,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                     textAlign = TextAlign.End,
                 )
             } else {
@@ -382,7 +382,7 @@ private fun HighComissionInfoRow(title: TextReference, info: TextReference?, isH
         Text(
             text = title.resolveReference(),
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         SpacerWMax()
 
@@ -397,12 +397,12 @@ private fun HighComissionInfoRow(title: TextReference, info: TextReference?, isH
                             painter = painterResource(R.drawable.ic_token_info_24),
                             contentDescription = null,
                             modifier = Modifier.size(20.dp),
-                            tint = TangemTheme.colors.text.warning,
+                            tint = TangemTheme.colors3.text.accent.red,
                         )
                         Text(
                             text = currentInfo.resolveReference(),
                             style = TangemTheme.typography.body1,
-                            color = TangemTheme.colors.text.warning,
+                            color = TangemTheme.colors3.text.accent.red,
                             textAlign = TextAlign.End,
                         )
                     }
@@ -410,7 +410,7 @@ private fun HighComissionInfoRow(title: TextReference, info: TextReference?, isH
                     Text(
                         text = currentInfo.resolveReference(),
                         style = TangemTheme.typography.body1,
-                        color = TangemTheme.colors.text.tertiary,
+                        color = TangemTheme.colors3.text.secondary,
                         textAlign = TextAlign.End,
                     )
                 }
@@ -436,12 +436,12 @@ private fun BoostRow(text: TextReference, onClick: () -> Unit, modifier: Modifie
         Icon(
             imageVector = ImageVector.vectorResource(R.drawable.ic_gift_promo_24),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.accent,
+            tint = TangemTheme.colors3.icon.accent.blue,
         )
         Text(
             text = text.resolveReference(),
             style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             modifier = Modifier
                 .weight(1f)
                 .padding(start = 12.dp),
@@ -449,7 +449,7 @@ private fun BoostRow(text: TextReference, onClick: () -> Unit, modifier: Modifie
         Icon(
             imageVector = ImageVector.vectorResource(R.drawable.ic_chevron_right_24),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors3.icon.secondary,
             modifier = Modifier.size(20.dp),
         )
     }

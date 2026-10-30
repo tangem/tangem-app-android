@@ -2,6 +2,7 @@ package com.tangem.data.nft.store
 
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchain.nft.models.NFTCollection
+import com.tangem.blockchain.nft.models.SolanaNFTTokenStandard
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.serialization.SerializedBigInteger
 import kotlinx.serialization.KSerializer
@@ -100,7 +101,7 @@ internal object NFTAssetIdentifierSerializer : LabeledSerializer<NFTAsset.Identi
         TON_LABEL -> NFTAsset.Identifier.TON(tokenAddress = json.requireString("tokenAddress"))
         SOLANA_LABEL -> NFTAsset.Identifier.Solana(
             tokenAddress = json.requireString("tokenAddress"),
-            tokenStandard = json.optString("tokenStandard")?.toInt(),
+            tokenStandard = normalizeLegacySolanaTokenStandard(json.optString("tokenStandard")),
         )
         else -> NFTAsset.Identifier.Unknown
     }
@@ -118,6 +119,16 @@ internal object NFTAssetIdentifierSerializer : LabeledSerializer<NFTAsset.Identi
         }
         NFTAsset.Identifier.Unknown -> throw SerializationException("Unknown NFT asset can't be stored")
     }
+}
+
+/**
+ * Caches written before the wallet NFTs endpoint stored the Metaplex enum index instead of the name. Shared by
+ * both cache serializers (kotlinx here, Moshi via [SolanaIdentifierJsonAdapterFactory]) so a numeric-looking value
+ * maps to its name on either path; anything else (already a name, or unrecognized) is kept as is.
+ */
+internal fun normalizeLegacySolanaTokenStandard(rawValue: String?): String? {
+    val metaplexIndex = rawValue?.toIntOrNull() ?: return rawValue
+    return SolanaNFTTokenStandard.fromMetaplexIndex(metaplexIndex)
 }
 
 /** Writes a JSON object whose first field is the `"bc"` label, the layout of Moshi's polymorphic adapter. */

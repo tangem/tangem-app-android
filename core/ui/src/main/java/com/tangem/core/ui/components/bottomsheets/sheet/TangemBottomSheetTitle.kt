@@ -41,8 +41,8 @@ fun TangemBottomSheetTitle(
         modifier = modifier,
         title = title,
         endButton = endButton,
-        textColor = TangemTheme.colors.text.primary1,
-        iconTint = TangemTheme.colors.icon.informative,
+        textColor = TangemTheme.colors3.text.primary,
+        iconTint = TangemTheme.colors3.icon.secondary,
         titleAlignment = Alignment.CenterHorizontally,
         containerColor = containerColor,
         height = TangemTopAppBarHeight.BOTTOM_SHEET,
@@ -61,7 +61,7 @@ private fun Preview_TangemBottomSheetTitle() {
                 iconRes = R.drawable.ic_information_24,
                 onClicked = {},
             ),
-            containerColor = TangemTheme.colors.background.secondary,
+            containerColor = TangemTheme.colors3.bg.primary,
         )
     }
 }

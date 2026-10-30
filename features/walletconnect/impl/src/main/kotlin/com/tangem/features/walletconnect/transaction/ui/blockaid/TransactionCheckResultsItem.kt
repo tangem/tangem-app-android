@@ -65,8 +65,8 @@ internal fun TransactionCheckResultsItem(
 private fun ApproveDescription(modifier: Modifier = Modifier, onLearnMoreClick: () -> Unit) {
     val linkText = stringResourceSafe(R.string.common_learn_more)
     val fullString = stringResourceSafe(R.string.wc_approve_description)
-    val defaultColor = TangemTheme.colors.text.tertiary
-    val linkColor = TangemTheme.colors.text.accent
+    val defaultColor = TangemTheme.colors3.text.secondary
+    val linkColor = TangemTheme.colors3.text.accent.blue
     Text(
         modifier = modifier,
         style = TangemTheme.typography.caption2,
@@ -93,7 +93,7 @@ private fun TransactionCheckResultsItemPreview(
     TangemThemePreview {
         Box(
             modifier = Modifier
-                .background(TangemTheme.colors.background.tertiary),
+                .background(TangemTheme.colors3.bg.primary),
         ) {
             TransactionCheckResultsItem(item = item, {})
         }

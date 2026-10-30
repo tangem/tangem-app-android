@@ -33,7 +33,7 @@ fun Chip(text: TextReference, @DrawableRes iconResId: Int, onClick: () -> Unit, 
             )
             .clip(RoundedCornerShape(size = 100.dp))
             .clickable(onClick = onClick)
-            .background(color = TangemTheme.colors.background.tertiary)
+            .background(color = TangemTheme.colors3.bg.primary)
             .padding(
                 horizontal = 12.dp,
                 vertical = 6.dp,
@@ -45,13 +45,13 @@ fun Chip(text: TextReference, @DrawableRes iconResId: Int, onClick: () -> Unit, 
             painter = painterResource(id = iconResId),
             contentDescription = null,
             modifier = Modifier.size(size = 16.dp),
-            tint = TangemTheme.colors.icon.secondary,
+            tint = TangemTheme.colors3.icon.secondary,
         )
 
         Text(
             text = text.resolveReference(),
             style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -63,7 +63,7 @@ fun Chip(text: TextReference, @DrawableRes iconResId: Int, onClick: () -> Unit, 
 @Composable
 private fun Preview() {
     TangemThemePreview {
-        Box(Modifier.background(TangemTheme.colors.background.action)) {
+        Box(Modifier.background(TangemTheme.colors3.bg.secondary)) {
             Chip(
                 text = stringReference("Chip Chip Chip"),
                 iconResId = R.drawable.ic_arrow_down_24,

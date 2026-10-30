@@ -1,7 +1,7 @@
 package com.tangem.common
 
-import com.tangem.domain.models.staking.BalanceType
-import com.tangem.domain.models.staking.StakingBalance
+import com.tangem.domain.staking.model.BalanceType
+import com.tangem.domain.staking.model.StakingBalance
 import com.tangem.lib.crypto.BlockchainUtils
 import java.math.BigDecimal
 

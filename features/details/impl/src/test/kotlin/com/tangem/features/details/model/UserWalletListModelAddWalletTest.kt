@@ -9,11 +9,11 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.settings.HotWalletRestrictionManager
 import com.tangem.domain.wallets.usecase.ApplyUserWalletListSortingUseCase
 import com.tangem.domain.wallets.usecase.UnlockWalletUseCase
 import com.tangem.features.details.entity.AddWalletBS
 import com.tangem.features.details.utils.UserWalletSaver
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -40,7 +40,7 @@ internal class UserWalletListModelAddWalletTest {
     private val router: Router = mockk(relaxUnitFun = true)
     private val messageSender: UiMessageSender = mockk(relaxUnitFun = true)
     private val userWalletSaver: UserWalletSaver = mockk(relaxUnitFun = true)
-    private val hotWalletRestrictionManager: HotWalletRestrictionManager = mockk()
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles = mockk()
     private val unlockWalletUseCase: UnlockWalletUseCase = mockk()
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
     private val applyUserWalletListSortingUseCase: ApplyUserWalletListSortingUseCase = mockk()
@@ -54,7 +54,7 @@ internal class UserWalletListModelAddWalletTest {
             router,
             messageSender,
             userWalletSaver,
-            hotWalletRestrictionManager,
+            hotWalletFeatureToggles,
             unlockWalletUseCase,
             analyticsEventHandler,
             applyUserWalletListSortingUseCase,
@@ -176,7 +176,7 @@ internal class UserWalletListModelAddWalletTest {
     internal data class WalletsParamModel(val userWallets: List<UserWallet>, val expected: String)
 
     private fun setCreationRestriction(isEnabled: Boolean) {
-        every { hotWalletRestrictionManager.isCreationEnabled() } returns MutableStateFlow(isEnabled)
+        every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns !isEnabled
     }
 
     private fun sentEvents(): List<AnalyticsEvent> {
@@ -207,7 +207,7 @@ internal class UserWalletListModelAddWalletTest {
                 single = testDispatcher,
             ),
             userWalletSaver = userWalletSaver,
-            hotWalletRestrictionManager = hotWalletRestrictionManager,
+            hotWalletFeatureToggles = hotWalletFeatureToggles,
             unlockWalletUseCase = unlockWalletUseCase,
             analyticsEventHandler = analyticsEventHandler,
             applyUserWalletListSortingUseCase = applyUserWalletListSortingUseCase,

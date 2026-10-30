@@ -33,7 +33,7 @@ import kotlinx.collections.immutable.persistentListOf
 internal fun WalletHardwareBackupContent(state: WalletHardwareBackupUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(TangemTheme.colors.background.secondary)
+            .background(TangemTheme.colors3.bg.primary)
             .fillMaxSize()
             .systemBarsPadding(),
     ) {
@@ -41,13 +41,13 @@ internal fun WalletHardwareBackupContent(state: WalletHardwareBackupUM, modifier
             modifier = Modifier
                 .statusBarsPadding(),
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = TangemTheme.colors.background.secondary,
+                containerColor = TangemTheme.colors3.bg.primary,
             ),
             navigationIcon = {
                 IconButton(onClick = state.onBackClick) {
                     Icon(
                         painter = painterResource(R.drawable.ic_back_24),
-                        tint = TangemTheme.colors.icon.primary1,
+                        tint = TangemTheme.colors3.icon.primary,
                         contentDescription = null,
                     )
                 }
@@ -56,7 +56,7 @@ internal fun WalletHardwareBackupContent(state: WalletHardwareBackupUM, modifier
                 Text(
                     text = stringResourceSafe(R.string.hw_backup_hardware_title),
                     style = TangemTheme.typography.subtitle1,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -83,7 +83,7 @@ internal fun WalletHardwareBackupContent(state: WalletHardwareBackupUM, modifier
                         { Label(it) }
                     },
                     enabled = true,
-                    backgroundColor = TangemTheme.colors.background.primary,
+                    backgroundColor = TangemTheme.colors3.bg.secondary,
                     onClick = block.onClick,
                 )
             }
@@ -99,7 +99,7 @@ private fun Banner(onBuyClick: () -> Unit, modifier: Modifier = Modifier) {
         Column(
             modifier = modifier
                 .background(
-                    color = TangemTheme.colors.background.primary,
+                    color = TangemTheme.colors3.bg.secondary,
                     shape = RoundedCornerShape(16.dp),
                 ),
         ) {
@@ -116,7 +116,7 @@ private fun Banner(onBuyClick: () -> Unit, modifier: Modifier = Modifier) {
                         .fillMaxWidth(),
                     text = stringResourceSafe(R.string.common_tangem_wallet),
                     style = TangemTheme.typography.h3,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                     textAlign = TextAlign.Center,
                 )
 
@@ -128,7 +128,7 @@ private fun Banner(onBuyClick: () -> Unit, modifier: Modifier = Modifier) {
                         ),
                     text = stringResourceSafe(R.string.hw_backup_banner_description),
                     style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                     textAlign = TextAlign.Center,
                 )
 
@@ -194,13 +194,13 @@ private fun FeatureItem(@DrawableRes iconResId: Int, text: TextReference) {
         Icon(
             modifier = Modifier.size(16.dp),
             painter = painterResource(iconResId),
-            tint = TangemTheme.colors.icon.accent,
+            tint = TangemTheme.colors3.icon.accent.blue,
             contentDescription = null,
         )
         Text(
             text = text.resolveReference(),
             style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
         )
     }
 }

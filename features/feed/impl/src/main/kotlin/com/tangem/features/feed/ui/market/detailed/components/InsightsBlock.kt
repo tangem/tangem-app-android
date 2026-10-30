@@ -12,10 +12,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerW
+import com.tangem.core.ui.ds2.segmentedcontrol.TangemSegmentedControl
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.components.block.information.GridItems
-import com.tangem.core.ui.ds.tabs.TangemSegmentUM
-import com.tangem.core.ui.ds.tabs.TangemSegmentedPicker
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -31,24 +30,24 @@ import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 internal fun InsightsBlock(state: InsightsUM, modifier: Modifier = Modifier) {
-    val segmentItems = remember {
-        persistentListOf(
-            TangemSegmentUM(
-                id = PriceChangeInterval.H24.name,
-                title = resourceReference(R.string.markets_token_details_insight_day_timeline),
-            ),
-            TangemSegmentUM(
-                id = PriceChangeInterval.WEEK.name,
-                title = resourceReference(R.string.markets_token_details_insight_week_timeline),
-            ),
-            TangemSegmentUM(
-                id = PriceChangeInterval.MONTH.name,
-                title = resourceReference(R.string.markets_token_details_insight_month_timeline),
-            ),
-        )
+    var currentInterval by remember { mutableStateOf(PriceChangeInterval.H24) }
+    val segmentItems = remember(currentInterval, state.onIntervalChanged) {
+        listOf(
+            PriceChangeInterval.H24 to R.string.markets_token_details_insight_day_timeline,
+            PriceChangeInterval.WEEK to R.string.markets_token_details_insight_week_timeline,
+            PriceChangeInterval.MONTH to R.string.markets_token_details_insight_month_timeline,
+        ).map { (interval, labelRes) ->
+            TangemSegmentedControl.Item(
+                id = interval.name,
+                label = resourceReference(labelRes),
+                isSelected = interval == currentInterval,
+                onClick = {
+                    currentInterval = interval
+                    state.onIntervalChanged(interval)
+                },
+            )
+        }.toImmutableList()
     }
-
-    var currentInterval by remember { mutableStateOf(segmentItems.first()) }
 
     TokenMarketInformationBlock(
         modifier = modifier,
@@ -63,24 +62,13 @@ internal fun InsightsBlock(state: InsightsUM, modifier: Modifier = Modifier) {
                     style = TangemTheme.typography3.heading.small,
                     color = TangemTheme.colors3.text.primary,
                 )
-                TangemSegmentedPicker(
-                    items = segmentItems,
-                    initialSelectedItem = segmentItems.first(),
-                    isFixed = false,
-                    isAltSurface = true,
-                    minSegmentWidth = 48.dp,
-                    onClick = { segment ->
-                        currentInterval = segment
-                        state.onIntervalChanged(PriceChangeInterval.valueOf(segment.id))
-                    },
-                )
+                TangemSegmentedControl(items = segmentItems)
             }
         },
         content = {
-            val infoPoints = when (currentInterval.id) {
-                PriceChangeInterval.H24.name -> state.h24Info
-                PriceChangeInterval.WEEK.name -> state.weekInfo
-                PriceChangeInterval.MONTH.name -> state.monthInfo
+            val infoPoints = when (currentInterval) {
+                PriceChangeInterval.WEEK -> state.weekInfo
+                PriceChangeInterval.MONTH -> state.monthInfo
                 else -> state.h24Info
             }
 

@@ -6,6 +6,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStoreFile
@@ -73,6 +74,11 @@ internal object AppPreferencesStoreModule {
             CleanupKeyMigration(key = stringSetPreferencesKey(name = "tangemPayEligibility")),
             CleanupKeyMigration(key = stringSetPreferencesKey(name = "tangemPayEligibilityList")),
             CleanupKeyMigration(key = stringSetPreferencesKey(name = "tangemPayEligibilityListV2")),
+            CleanupKeyMigration(
+                key = booleanPreferencesKey(
+                    name = "shouldShowInitialPushPermissionScreen_android.permission.POST_NOTIFICATIONS",
+                ),
+            ),
         )
     }
 }

@@ -5,7 +5,6 @@ import androidx.annotation.OptIn
 import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.database.StandaloneDatabaseProvider
-import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.cache.CacheDataSource
@@ -13,6 +12,7 @@ import androidx.media3.datasource.cache.CacheWriter
 import androidx.media3.datasource.cache.ContentMetadata
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
+import com.tangem.core.media.RemoteClipCache
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.job
@@ -21,13 +21,13 @@ import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/** Downloads reveal media in full into a shared media3 cache, so playback never buffers. */
+/** Reveal media, downloaded in full into a media3 cache of its own. */
 @OptIn(UnstableApi::class)
 @Singleton
 internal class PackRevealAssetCache @Inject constructor(
     @ApplicationContext context: Context,
     private val dispatchers: CoroutineDispatcherProvider,
-) {
+) : RemoteClipCache {
 
     private val appContext = context.applicationContext
     private val cache = SimpleCache(
@@ -36,13 +36,11 @@ internal class PackRevealAssetCache @Inject constructor(
         StandaloneDatabaseProvider(appContext),
     )
 
-    val dataSourceFactory: DataSource.Factory
-        field = CacheDataSource.Factory()
-            .setCache(cache)
-            .setUpstreamDataSourceFactory(DefaultDataSource.Factory(appContext))
+    override val dataSourceFactory: CacheDataSource.Factory = CacheDataSource.Factory()
+        .setCache(cache)
+        .setUpstreamDataSourceFactory(DefaultDataSource.Factory(appContext))
 
-    /** Caches [url] in full; cancelled with the caller, throws on any network or storage failure. */
-    suspend fun download(url: String) {
+    override suspend fun download(url: String) {
         val writer = CacheWriter(
             dataSourceFactory.createDataSourceForDownloading(),
             DataSpec.Builder().setUri(url).build(),
@@ -60,7 +58,7 @@ internal class PackRevealAssetCache @Inject constructor(
         }
     }
 
-    fun isFullyCached(url: String): Boolean {
+    override fun isFullyCached(url: String): Boolean {
         val length = ContentMetadata.getContentLength(cache.getContentMetadata(url))
         if (length == C.LENGTH_UNSET.toLong()) return false
 

@@ -105,7 +105,7 @@ fun WalletArtworks(
             }
         }
 
-        val circleColor = TangemTheme.colors.button.secondary
+        val circleColor = TangemTheme.colors3.bg.transparent.secondary
 
         Canvas(
             modifier = Modifier
@@ -441,7 +441,7 @@ private fun Preview() {
     TangemThemePreview {
         Box(
             modifier = Modifier
-                .background(TangemTheme.colors.background.primary)
+                .background(TangemTheme.colors3.bg.primary)
                 .fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {

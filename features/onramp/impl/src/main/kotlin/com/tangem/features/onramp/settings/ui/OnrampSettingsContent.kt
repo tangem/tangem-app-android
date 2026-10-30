@@ -33,7 +33,7 @@ internal fun OnrampSettingsContent(state: OnrampSettingsUM, modifier: Modifier =
     Scaffold(
         modifier = modifier,
         contentWindowInsets = WindowInsetsZero,
-        containerColor = TangemTheme.colors.background.secondary,
+        containerColor = TangemTheme.colors3.bg.primary,
         topBar = {
             AppBarWithBackButton(
                 modifier = Modifier.statusBarsPadding(),
@@ -76,7 +76,7 @@ private fun ResidenceSection(state: OnrampSettingsItemUM.Residence, modifier: Mo
         Row(
             modifier = Modifier
                 .clip(RoundedCornerShape(16.dp))
-                .background(TangemTheme.colors.background.primary)
+                .background(TangemTheme.colors3.bg.secondary)
                 .clickable(onClick = state.onClick)
                 .padding(12.dp)
                 .fillMaxWidth(),
@@ -85,7 +85,7 @@ private fun ResidenceSection(state: OnrampSettingsItemUM.Residence, modifier: Mo
         ) {
             Text(
                 text = stringResourceSafe(id = R.string.onramp_settings_residence),
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 style = TangemTheme.typography.subtitle2,
             )
             SpacerWMax()
@@ -96,19 +96,19 @@ private fun ResidenceSection(state: OnrampSettingsItemUM.Residence, modifier: Mo
             )
             Text(
                 text = state.countryName,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 style = TangemTheme.typography.body2,
                 modifier = Modifier.testTag(ResidenceSettingsScreenTestTags.COUNTRY_NAME),
             )
             Icon(
                 painter = painterResource(id = R.drawable.ic_chevron_right_24),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.informative,
+                tint = TangemTheme.colors3.icon.secondary,
             )
         }
         Text(
             text = stringResourceSafe(id = R.string.onramp_settings_residence_description),
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography.caption2,
         )
     }

@@ -61,6 +61,10 @@ internal class WcRouter(
         return route !is WcInnerRoute && fallBackRouter.contains(route)
     }
 
+    override fun defaultCompletionHandler(isSuccess: Boolean, errorMessage: String) {
+        fallBackRouter.defaultCompletionHandler(isSuccess, errorMessage)
+    }
+
     private fun isWcRoute(routeClass: KClass<out Route>): Boolean {
         return WcInnerRoute::class.java.isAssignableFrom(routeClass.java)
     }

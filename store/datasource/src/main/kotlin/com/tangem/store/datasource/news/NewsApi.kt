@@ -4,7 +4,6 @@ import com.tangem.core.remote.response.ApiResponse
 import com.tangem.store.datasource.news.models.response.NewsCategoriesResponse
 import com.tangem.store.datasource.news.models.response.NewsDetailsResponse
 import com.tangem.store.datasource.news.models.response.NewsListResponse
-import com.tangem.store.datasource.news.models.response.NewsTrendingResponse
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -26,12 +25,6 @@ interface NewsApi {
         @Path("newsId") newsId: Int,
         @Query("lang") language: String? = null,
     ): ApiResponse<NewsDetailsResponse>
-
-    @GET("$NEWS_PATH/trending")
-    suspend fun getTrendingNews(
-        @Query("limit") limit: Int? = null,
-        @Query("lang") language: String? = null,
-    ): ApiResponse<NewsTrendingResponse>
 
     @GET("$NEWS_PATH/categories")
     suspend fun getCategories(): ApiResponse<NewsCategoriesResponse>
