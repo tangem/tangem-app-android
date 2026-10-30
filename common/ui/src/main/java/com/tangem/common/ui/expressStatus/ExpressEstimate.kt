@@ -33,7 +33,7 @@ fun ExpressEstimate(
     Column(
         modifier = modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action),
+            .background(TangemTheme.colors3.bg.secondary),
     ) {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -50,12 +50,12 @@ fun ExpressEstimate(
             Text(
                 text = stringResourceSafe(id = R.string.express_estimated_amount),
                 style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
             Text(
                 text = timestamp.resolveReference(),
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
         InputRowApprox(

@@ -31,9 +31,7 @@ dependencies {
 
     // region Other libraries
     implementation(deps.androidx.datastore)
-    implementation(deps.androidx.paging.runtime)
     implementation(deps.arrow.core)
-    implementation(deps.arrow.fx)
     implementation(deps.jodatime)
     implementation(deps.okio)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
@@ -87,17 +85,16 @@ dependencies {
 
     // region Project - Domain models
     api(projects.domain.visa.models)
-    implementation(projects.domain.appCurrency.models)
     // endregion
 
     // region Project - Features
     api(projects.features.swap.domain)
+    implementation(projects.features.moneyAccount.details.api)
     // endregion
 
     // region Project - Libs
     api(projects.libs.blockchainSdk)
     api(projects.libs.tangemSdkApi)
-    implementation(projects.libs.visa)
     // endregion
 
     // region Test

@@ -3,10 +3,14 @@ package com.tangem.features.send.mcp.model
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.extensions.networkIconResId
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.mcp.models.McpAgent
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.transaction.models.SendIntent
+import com.tangem.features.send.impl.R
 import com.tangem.features.send.mcp.createCoin
 import com.tangem.features.send.mcp.createSendIntent
 import com.tangem.features.send.mcp.createToken
@@ -25,7 +29,7 @@ import java.util.Locale
 @ResourceLock(Resources.LOCALE)
 internal class SendIntentOfferConverterTest {
 
-    private val converter = SendIntentOfferConverter()
+    private val converter = SendIntentOfferConverter(SendIntentAmountTextConverter())
 
     private val usdt = createToken()
     private val eth = createCoin()
@@ -52,14 +56,17 @@ internal class SendIntentOfferConverterTest {
     fun `GIVEN token intent WHEN convert THEN offer shows token amount with network badge`() {
         // Arrange
         val onProceed: () -> Unit = {}
-        val expected = SendIntentUM(
+        val expected = SendIntentUM.Offer(
             token = TangemTokenIcon.UiState.Token(
                 TangemTokenIcon.State(url = usdt.iconUrl, topIcon = usdt.networkIconResId),
             ),
-            title = stringReference("mcp.claude.com Agent wants to send 42.00 USDT"),
+            title = resourceReference(
+                R.string.mcp_send_intent_offer_title,
+                wrappedList(stringReference("mcp.claude.com"), "42.00\u00a0USDT"),
+            ),
             agent = SendIntentAgentUM.Verified(iconUrl = claude.iconUrl, label = stringReference("mcp.claude.com")),
-            description = stringReference(DEFAULT_DESCRIPTION),
-            primaryButton = SendIntentButtonUM(text = stringReference("Proceed"), onClick = onProceed),
+            description = resourceReference(R.string.mcp_send_intent_offer_description),
+            primaryButton = SendIntentButtonUM(text = resourceReference(R.string.mcp_intent_proceed), onClick = onProceed),
         )
 
         // Act
@@ -73,12 +80,15 @@ internal class SendIntentOfferConverterTest {
     fun `GIVEN coin intent WHEN convert THEN offer shows coin amount without network badge`() {
         // Arrange
         val onProceed: () -> Unit = {}
-        val expected = SendIntentUM(
+        val expected = SendIntentUM.Offer(
             token = TangemTokenIcon.UiState.Token(TangemTokenIcon.State(url = eth.iconUrl, topIcon = null)),
-            title = stringReference("mcp.claude.com Agent wants to send 1.50 ETH"),
+            title = resourceReference(
+                R.string.mcp_send_intent_offer_title,
+                wrappedList(stringReference("mcp.claude.com"), "1.50\u00a0ETH"),
+            ),
             agent = SendIntentAgentUM.Verified(iconUrl = claude.iconUrl, label = stringReference("mcp.claude.com")),
-            description = stringReference(DEFAULT_DESCRIPTION),
-            primaryButton = SendIntentButtonUM(text = stringReference("Proceed"), onClick = onProceed),
+            description = resourceReference(R.string.mcp_send_intent_offer_description),
+            primaryButton = SendIntentButtonUM(text = resourceReference(R.string.mcp_intent_proceed), onClick = onProceed),
         )
 
         // Act
@@ -102,7 +112,10 @@ internal class SendIntentOfferConverterTest {
             model: AgentModel,
         ) {
             // Arrange
-            val expectedTitle = stringReference("${model.expectedIdentity} Agent wants to send 42.00 USDT")
+            val expectedTitle = resourceReference(
+                R.string.mcp_send_intent_offer_title,
+                wrappedList(model.expectedIdentity, "42.00\u00a0USDT"),
+            )
 
             // Act
             val actual = convert(agent = model.agent)
@@ -115,31 +128,36 @@ internal class SendIntentOfferConverterTest {
         private fun provideTestModels() = listOf(
             AgentModel(
                 agent = claude,
-                expectedIdentity = "mcp.claude.com",
+                expectedIdentity = stringReference("mcp.claude.com"),
                 expectedAgent = SendIntentAgentUM.Verified(claude.iconUrl, stringReference("mcp.claude.com")),
             ),
             AgentModel(
                 agent = claude.copy(name = null, iconUrl = null),
-                expectedIdentity = "mcp.claude.com",
+                expectedIdentity = stringReference("mcp.claude.com"),
                 expectedAgent = SendIntentAgentUM.Verified(null, stringReference("mcp.claude.com")),
             ),
             AgentModel(
                 agent = claude.copy(origin = null),
-                expectedIdentity = "Claude",
-                expectedAgent = SendIntentAgentUM.Unknown(claude.iconUrl, stringReference("Unknown")),
+                expectedIdentity = stringReference("Claude"),
+                expectedAgent = SendIntentAgentUM.Unknown(claude.iconUrl, resourceReference(R.string.mcp_intent_host)),
             ),
             AgentModel(
                 agent = claude.copy(origin = null, name = null),
-                expectedIdentity = "Unknown",
-                expectedAgent = SendIntentAgentUM.Unknown(claude.iconUrl, stringReference("Unknown")),
+                expectedIdentity = resourceReference(R.string.mcp_intent_unknown_agent_name),
+                expectedAgent = SendIntentAgentUM.Unknown(claude.iconUrl, resourceReference(R.string.mcp_intent_host)),
             ),
             AgentModel(
                 agent = McpAgent.unknown(clientId = "client"),
-                expectedIdentity = "Unknown",
+                expectedIdentity = resourceReference(R.string.mcp_intent_unknown_agent_name),
                 expectedAgent = SendIntentAgentUM.Unknown(
                     iconUrl = McpAgent.unknown(clientId = "client").iconUrl,
-                    label = stringReference("Unknown"),
+                    label = resourceReference(R.string.mcp_intent_host),
                 ),
+            ),
+            AgentModel(
+                agent = claude.copy(origin = null, name = "AI"),
+                expectedIdentity = stringReference("AI"),
+                expectedAgent = SendIntentAgentUM.Unknown(claude.iconUrl, resourceReference(R.string.mcp_intent_host)),
             ),
         )
     }
@@ -150,38 +168,7 @@ internal class SendIntentOfferConverterTest {
         val actual = convert(intent = createSendIntent(comment = "Paying for lunch"))
 
         // Assert
-        assertThat(actual?.description).isEqualTo(stringReference(DEFAULT_DESCRIPTION))
-    }
-
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class AmountFormatting {
-
-        @ParameterizedTest
-        @ProvideTestModels
-        fun `GIVEN excess precision or dust amount WHEN convert THEN title rounds up or shows lower bound`(
-            model: AmountFormatModel,
-        ) {
-            // Arrange
-            Locale.setDefault(model.locale)
-            val intent = createSendIntent(amount = BigDecimal(model.amount))
-
-            // Act
-            val actual = convert(intent = intent, currency = model.currency)
-
-            // Assert
-            assertThat(actual?.title).isEqualTo(stringReference("mcp.claude.com Agent wants to send ${model.expected}"))
-        }
-
-        private fun provideTestModels() = listOf(
-            AmountFormatModel(Locale.US, usdt, "1.0000001", "1.000001 USDT"),
-            AmountFormatModel(Locale.US, usdt, "0.0000001", "<0.000001 USDT"),
-            AmountFormatModel(Locale.US, eth, "0.000000011", "0.00000002 ETH"),
-            AmountFormatModel(Locale.US, eth, "0.00000001", "0.00000001 ETH"),
-            AmountFormatModel(Locale.US, eth, "0.000000001", "<0.00000001 ETH"),
-            AmountFormatModel(Locale.GERMANY, eth, "0.000000011", "0,00000002 ETH"),
-            AmountFormatModel(Locale.GERMANY, usdt, "42", "42,00 USDT"),
-        )
+        assertThat(actual?.description).isEqualTo(resourceReference(R.string.mcp_send_intent_offer_description))
     }
 
     @Nested
@@ -219,25 +206,13 @@ internal class SendIntentOfferConverterTest {
         currency: CryptoCurrency = usdt,
         agent: McpAgent = claude,
         onProceed: () -> Unit = {},
-    ): SendIntentUM? = converter.convert(
+    ): SendIntentUM.Offer? = converter.convert(
         SendIntentOfferConverter.Input(intent = intent, currency = currency, agent = agent, onProceed = onProceed),
     )
 
     data class AgentModel(
         val agent: McpAgent,
-        val expectedIdentity: String,
+        val expectedIdentity: TextReference,
         val expectedAgent: SendIntentAgentUM,
     )
-
-    data class AmountFormatModel(
-        val locale: Locale,
-        val currency: CryptoCurrency,
-        val amount: String,
-        val expected: String,
-    )
-
-    private companion object {
-        const val DEFAULT_DESCRIPTION =
-            "The agent is asking to send from your account. You’ll review the details next."
-    }
 }

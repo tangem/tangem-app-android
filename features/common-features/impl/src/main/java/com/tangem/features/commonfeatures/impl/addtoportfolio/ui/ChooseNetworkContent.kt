@@ -59,7 +59,7 @@ internal fun ChooseNetworkContentV1(state: ChooseNetworkUM, modifier: Modifier =
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(TangemTheme.colors.background.action),
+            .background(TangemTheme.colors3.bg.secondary),
     ) {
         state.networks.fastForEach { model ->
             key(model.id) {
@@ -94,7 +94,7 @@ internal fun ChooseNetworkContentV2(state: ChooseNetworkUM, modifier: Modifier =
         modifier = modifier
             .fillMaxWidth()
             .background(
-                color = TangemTheme.colors2.surface.level3,
+                color = TangemTheme.colors3.bg.secondary,
                 shape = RoundedCornerShape(34.dp),
             )
             .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -103,7 +103,7 @@ internal fun ChooseNetworkContentV2(state: ChooseNetworkUM, modifier: Modifier =
             modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
             text = stringResourceSafe(R.string.common_choose_network),
             style = TangemTheme.typography2.subheadlineMedium14,
-            color = TangemTheme.colors2.text.neutral.tertiary,
+            color = TangemTheme.colors3.text.secondary,
         )
 
         state.networks.fastForEach { model ->
@@ -156,12 +156,12 @@ private fun NetworkIcon(model: BlockchainRowUM, modifier: Modifier = Modifier) {
         Icon(
             modifier = modifier
                 .background(
-                    color = TangemTheme.colors2.button.backgroundSecondary,
+                    color = TangemTheme.colors3.bg.transparent.secondary,
                     shape = CircleShape,
                 )
                 .size(40.dp),
             painter = painterResource(id = model.iconResId),
-            tint = TangemTheme.colors2.graphic.neutral.tertiary,
+            tint = TangemTheme.colors3.icon.secondary,
             contentDescription = null,
         )
     }
@@ -179,9 +179,9 @@ private fun NetworkText(model: BlockchainRowUM, modifier: Modifier = Modifier) {
             text = model.name,
             style = TangemTheme.typography2.bodyMedium16,
             color = when {
-                model.isEnabled && model.isMainNetwork -> TangemTheme.colors2.text.neutral.primary
-                model.isEnabled -> TangemTheme.colors2.text.neutral.secondary
-                else -> TangemTheme.colors2.text.status.disabled
+                model.isEnabled && model.isMainNetwork -> TangemTheme.colors3.text.primary
+                model.isEnabled -> TangemTheme.colors3.text.secondary
+                else -> TangemTheme.colors3.text.tertiary
             },
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -192,9 +192,9 @@ private fun NetworkText(model: BlockchainRowUM, modifier: Modifier = Modifier) {
             text = model.type,
             style = TangemTheme.typography2.captionMedium12,
             color = if (model.isEnabled) {
-                TangemTheme.colors2.text.neutral.tertiary
+                TangemTheme.colors3.text.secondary
             } else {
-                TangemTheme.colors2.text.status.disabled
+                TangemTheme.colors3.text.tertiary
             },
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

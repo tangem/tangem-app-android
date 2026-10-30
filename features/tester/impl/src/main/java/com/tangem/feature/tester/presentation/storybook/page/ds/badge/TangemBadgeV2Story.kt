@@ -52,7 +52,7 @@ internal fun TangemBadgeV2Story(state: TangemBadgeV2Story, modifier: Modifier = 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(TangemTheme.colors.background.primary)
+            .background(TangemTheme.colors3.bg.primary)
             .padding(vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -237,11 +237,11 @@ private fun TextScaleSlider(value: Float, onChange: (Float) -> Unit) {
             valueRange = 0.5f..2f,
             steps = 14,
             colors = SliderDefaults.colors(
-                thumbColor = TangemTheme.colors.text.accent,
-                activeTrackColor = TangemTheme.colors.text.accent,
-                activeTickColor = TangemTheme.colors2.surface.level3,
-                inactiveTrackColor = TangemTheme.colors2.surface.level3,
-                inactiveTickColor = TangemTheme.colors.text.accent,
+                thumbColor = TangemTheme.colors3.text.accent.blue,
+                activeTrackColor = TangemTheme.colors3.text.accent.blue,
+                activeTickColor = TangemTheme.colors3.bg.secondary,
+                inactiveTrackColor = TangemTheme.colors3.bg.secondary,
+                inactiveTickColor = TangemTheme.colors3.text.accent.blue,
             ),
         )
     }
@@ -269,7 +269,7 @@ private fun Section(label: String, content: @Composable () -> Unit) {
             modifier = Modifier.padding(horizontal = 16.dp),
             text = label,
             style = TangemTheme.typography.subtitle1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         content()
     }
@@ -283,10 +283,10 @@ private fun <T> ChipGrid(items: List<T>, label: (T) -> String, isSelected: (T) -
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .clip(shape)
-            .background(TangemTheme.colors2.surface.level2)
+            .background(TangemTheme.colors3.bg.primary)
             .border(
                 width = 1.dp,
-                color = TangemTheme.colors2.border.neutral.secondary,
+                color = TangemTheme.colors3.border.tertiary,
                 shape = shape,
             )
             .padding(4.dp),
@@ -311,7 +311,7 @@ private fun Chip(label: String, selected: Boolean, onClick: () -> Unit, modifier
         modifier = modifier
             .clip(chipShape)
             .background(
-                if (selected) TangemTheme.colors2.surface.level3 else TangemTheme.colors2.surface.level2,
+                if (selected) TangemTheme.colors3.bg.secondary else TangemTheme.colors3.bg.primary,
             )
             .clickable(onClick = onClick)
             .padding(vertical = 8.dp, horizontal = 4.dp),
@@ -319,7 +319,7 @@ private fun Chip(label: String, selected: Boolean, onClick: () -> Unit, modifier
         Text(
             text = label,
             style = TangemTheme.typography.caption2,
-            color = if (selected) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.secondary,
+            color = if (selected) TangemTheme.colors3.text.primary else TangemTheme.colors3.text.secondary,
         )
     }
 }
@@ -330,7 +330,7 @@ private fun ToggleRow(label: String, checked: Boolean, onToggle: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(TangemTheme.colors2.surface.level2)
+            .background(TangemTheme.colors3.bg.primary)
             .clickable(onClick = onToggle)
             .padding(horizontal = 12.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -339,12 +339,12 @@ private fun ToggleRow(label: String, checked: Boolean, onToggle: () -> Unit) {
         Text(
             text = label,
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         Text(
             text = if (checked) "ON" else "OFF",
             style = TangemTheme.typography.caption2,
-            color = if (checked) TangemTheme.colors.text.accent else TangemTheme.colors.text.secondary,
+            color = if (checked) TangemTheme.colors3.text.accent.blue else TangemTheme.colors3.text.secondary,
         )
     }
 }

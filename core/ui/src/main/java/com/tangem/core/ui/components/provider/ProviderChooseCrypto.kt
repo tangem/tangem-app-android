@@ -163,16 +163,16 @@ private fun TitleContent(providerChooseUM: ProviderChooseUM, modifier: Modifier 
             text = providerChooseUM.title.resolveReference(),
             style = TangemTheme.typography.subtitle2,
             color = if (providerChooseUM.hasError()) {
-                TangemTheme.colors.text.secondary
+                TangemTheme.colors3.text.secondary
             } else {
-                TangemTheme.colors.text.primary1
+                TangemTheme.colors3.text.primary
             },
             maxLines = 1,
         )
         Text(
             text = providerChooseUM.subtitle.resolveReference(),
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             maxLines = 1,
         )
     }
@@ -183,7 +183,7 @@ private fun InfoContent(text: TextReference, modifier: Modifier = Modifier) {
     Text(
         text = text.resolveReference(),
         style = TangemTheme.typography.body2,
-        color = TangemTheme.colors.text.primary1,
+        color = TangemTheme.colors3.text.primary,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         modifier = modifier,
@@ -200,11 +200,11 @@ private fun ExtraContent(providerChooseUM: ProviderChooseUM, modifier: Modifier 
             is ProviderChooseUM.ExtraUM.Action -> Text(
                 text = extraUM.text.resolveReference(),
                 style = TangemTheme.typography.caption1,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 modifier = Modifier
                     .padding(top = 4.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(TangemTheme.colors.button.secondary)
+                    .background(TangemTheme.colors3.bg.transparent.secondary)
                     .padding(horizontal = 6.dp, vertical = 1.dp),
             )
             is ProviderChooseUM.ExtraUM.Badges -> extraUM.badgeList.fastForEach { badge ->
@@ -217,7 +217,7 @@ private fun ExtraContent(providerChooseUM: ProviderChooseUM, modifier: Modifier 
             is ProviderChooseUM.ExtraUM.Error -> Text(
                 text = extraUM.text.resolveReference(),
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 modifier = Modifier.padding(top = 6.dp),
             )
             else -> Unit
@@ -235,7 +235,7 @@ private fun LabelContent(labelUM: ProviderChooseUM.LabelUM?, modifier: Modifier 
             is ProviderChooseUM.LabelUM.Text -> Text(
                 text = labelUM.text.resolveReference(),
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.warning,
+                color = TangemTheme.colors3.text.accent.red,
             )
             null -> Unit
         }

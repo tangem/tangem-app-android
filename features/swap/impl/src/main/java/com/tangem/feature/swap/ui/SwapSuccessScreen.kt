@@ -42,7 +42,7 @@ fun SwapSuccessScreen(state: SwapSuccessStateHolder, feeSelectorUM: FeeSelectorU
     Column(
         modifier = Modifier
             .systemBarsPadding()
-            .background(TangemTheme.colors.background.secondary),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         Box(
             modifier = Modifier.weight(1f),
@@ -55,7 +55,7 @@ fun SwapSuccessScreen(state: SwapSuccessStateHolder, feeSelectorUM: FeeSelectorU
             )
             Fade(
                 modifier = Modifier.align(Alignment.BottomCenter),
-                backgroundColor = TangemTheme.colors.background.secondary,
+                backgroundColor = TangemTheme.colors3.bg.primary,
             )
             AppBarWithBackButton(
                 onBackClick = onBack,
@@ -117,7 +117,7 @@ private fun SwapSuccessScreenContent(
                 subtitle = state.rate,
                 modifier = Modifier
                     .clip(TangemTheme.shapes.roundedCornersXMedium)
-                    .background(TangemTheme.colors.background.action),
+                    .background(TangemTheme.colors3.bg.secondary),
             )
             SpacerH16()
         }
@@ -132,7 +132,7 @@ private fun SwapSuccessScreenContent(
                 text = state.fee,
                 modifier = Modifier
                     .clip(TangemTheme.shapes.roundedCornersXMedium)
-                    .background(TangemTheme.colors.background.action)
+                    .background(TangemTheme.colors3.bg.secondary)
                     .testTag(TransactionSuccessScreenTestTags.FEE_BLOCK),
             )
         }
@@ -151,7 +151,7 @@ private fun SwapAmountBlock(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action)
+            .background(TangemTheme.colors3.bg.secondary)
             .fillMaxWidth()
             .padding(12.dp)
             .testTag(TransactionSuccessScreenTestTags.AMOUNT_BLOCK),
@@ -171,12 +171,12 @@ private fun SwapAmountBlock(
                 Text(
                     text = subtitle.resolveReference(),
                     style = TangemTheme.typography.subtitle2,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                 )
                 Text(
                     text = caption.resolveReference(),
                     style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                 )
             }
         }

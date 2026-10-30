@@ -10,4 +10,5 @@ internal data class NFTDetailsUM(
     val onSeeAllTraitsClick: () -> Unit,
     val onExploreClick: () -> Unit,
     val onSendClick: () -> Unit,
+    val isSendAvailable: Boolean,
 )

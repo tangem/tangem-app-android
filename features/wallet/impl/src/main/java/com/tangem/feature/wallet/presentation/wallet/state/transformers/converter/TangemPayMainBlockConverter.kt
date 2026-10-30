@@ -113,7 +113,7 @@ internal class TangemPayMainBlockConverter(
             fiat(
                 fiatCurrencyCode = currency.currencyCode,
                 fiatCurrencySymbol = currency.symbol,
-                spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
+                spanStyleReference = { SpanStyle(color = TangemTheme.colors3.text.secondary) },
             )
         }
     }

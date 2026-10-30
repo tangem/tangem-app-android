@@ -67,14 +67,14 @@ private fun WalletNFTItemEmpty(onClick: () -> Unit, modifier: Modifier = Modifie
             Text(
                 text = stringResourceSafe(R.string.nft_wallet_title),
                 style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
                 text = stringResourceSafe(R.string.nft_wallet_receive_nft),
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -100,7 +100,7 @@ private fun WalletNFTItemContent(state: WalletNFTItemUM.Content, onClick: () -> 
                 text = stringResourceSafe(R.string.nft_wallet_title),
                 style = TangemTheme.typography.subtitle2.applyBladeBrush(
                     isEnabled = state.isFlickering,
-                    textColor = TangemTheme.colors.text.primary1,
+                    textColor = TangemTheme.colors3.text.primary,
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -113,7 +113,7 @@ private fun WalletNFTItemContent(state: WalletNFTItemUM.Content, onClick: () -> 
                 ),
                 style = TangemTheme.typography.caption2.applyBladeBrush(
                     isEnabled = state.isFlickering,
-                    textColor = TangemTheme.colors.text.tertiary,
+                    textColor = TangemTheme.colors3.text.secondary,
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -135,13 +135,13 @@ private fun WalletNFTItemFailed(modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .size(36.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(TangemTheme.colors.field.primary),
+                    .background(TangemTheme.colors3.bg.tertiary),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     modifier = Modifier.size(20.dp),
                     painter = painterResource(R.drawable.ic_error_sync_24),
-                    tint = TangemTheme.colors.icon.informative,
+                    tint = TangemTheme.colors3.icon.secondary,
                     contentDescription = null,
                 )
             }
@@ -150,14 +150,14 @@ private fun WalletNFTItemFailed(modifier: Modifier = Modifier) {
             Text(
                 text = stringResourceSafe(R.string.nft_wallet_title),
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
                 text = stringResourceSafe(R.string.nft_wallet_unable_to_load),
                 style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -175,7 +175,7 @@ private fun WalletNFTItemLoading(modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .size(36.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(TangemTheme.colors.field.primary),
+                    .background(TangemTheme.colors3.bg.tertiary),
             )
         },
         text = {
@@ -221,7 +221,7 @@ private fun BoxScope.CollectionsPreviews(previews: ImmutableList<CollectionPrevi
                         },
                         error = {
                             Box(
-                                modifier = Modifier.background(TangemTheme.colors.field.primary),
+                                modifier = Modifier.background(TangemTheme.colors3.bg.tertiary),
                             )
                         },
                         contentDescription = null,
@@ -230,7 +230,7 @@ private fun BoxScope.CollectionsPreviews(previews: ImmutableList<CollectionPrevi
                 is CollectionPreview.More -> {
                     Image(
                         modifier = previewModifier
-                            .background(TangemTheme.colors.stroke.primary),
+                            .background(TangemTheme.colors3.border.secondary),
                         painter = painterResource(R.drawable.ic_nft_preview_more_16),
                         contentDescription = null,
                     )
@@ -259,7 +259,7 @@ private fun BoxScope.previews2Modifiers(): List<Modifier> = listOf(
     Modifier
         .zIndex(1f)
         .clip(RoundedCornerShape(6.dp))
-        .background(TangemTheme.colors.background.primary)
+        .background(TangemTheme.colors3.bg.secondary)
         .padding(
             top = 2.dp,
             start = 2.dp,
@@ -285,7 +285,7 @@ private fun BoxScope.previews3Modifiers(): List<Modifier> = listOf(
             top = 4.dp,
         )
         .clip(RoundedCornerShape(6.dp))
-        .background(TangemTheme.colors.background.primary)
+        .background(TangemTheme.colors3.bg.secondary)
         .padding(
             start = 2.dp,
             top = 2.dp,
@@ -331,7 +331,7 @@ private fun ChevronArrow(modifier: Modifier = Modifier) {
         modifier = modifier,
         painter = painterResource(R.drawable.ic_chevron_right_24),
         contentDescription = null,
-        tint = TangemTheme.colors.icon.informative,
+        tint = TangemTheme.colors3.icon.secondary,
     )
 }
 
@@ -348,10 +348,10 @@ private fun RowContentContainer(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = TangemTheme.colors.background.primary,
-            contentColor = TangemTheme.colors.text.primary1,
-            disabledContainerColor = TangemTheme.colors.background.primary,
-            disabledContentColor = TangemTheme.colors.text.primary1,
+            containerColor = TangemTheme.colors3.bg.secondary,
+            contentColor = TangemTheme.colors3.text.primary,
+            disabledContainerColor = TangemTheme.colors3.bg.secondary,
+            disabledContentColor = TangemTheme.colors3.text.primary,
         ),
         onClick = onClick,
         enabled = enabled,

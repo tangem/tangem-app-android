@@ -12,9 +12,13 @@ object VisaActivationStatusConverterWithState :
 
     override fun convert(value: CardActivationRemoteStateResponse): VisaActivationRemoteState {
         val result = value.result
+        fun activationOrderInfo() = requireNotNull(result.activationOrder) {
+            "Activation order is missing for status ${result.status}"
+        }.convert()
+
         if (result.status == Status.PinCodeRequired.stringValue && result.stepError == PIN_CODE_VALIDATION_ERROR) {
             return VisaActivationRemoteState.AwaitingPinCode(
-                activationOrderInfo = result.activationOrder!!.convert(),
+                activationOrderInfo = activationOrderInfo(),
                 status = VisaActivationRemoteState.AwaitingPinCode.Status.WasError,
             )
         }
@@ -29,15 +33,15 @@ object VisaActivationStatusConverterWithState :
             Status.BlockedForActivation -> VisaActivationRemoteState.BlockedForActivation
             Status.CardWalletSignatureRequired ->
                 VisaActivationRemoteState.CardWalletSignatureRequired(
-                    activationOrderInfo = result.activationOrder!!.convert(),
+                    activationOrderInfo = activationOrderInfo(),
                 )
             Status.CustomerWalletSignatureRequired ->
                 VisaActivationRemoteState.CustomerWalletSignatureRequired(
-                    activationOrderInfo = result.activationOrder!!.convert(),
+                    activationOrderInfo = activationOrderInfo(),
                 )
             Status.PaymentAccountDeploying -> VisaActivationRemoteState.PaymentAccountDeploying
             Status.PinCodeRequired -> VisaActivationRemoteState.AwaitingPinCode(
-                activationOrderInfo = result.activationOrder!!.convert(),
+                activationOrderInfo = activationOrderInfo(),
                 status = VisaActivationRemoteState.AwaitingPinCode.Status.WaitingForPinCode,
             )
             Status.WaitingForActivation -> VisaActivationRemoteState.WaitingForActivationFinishing

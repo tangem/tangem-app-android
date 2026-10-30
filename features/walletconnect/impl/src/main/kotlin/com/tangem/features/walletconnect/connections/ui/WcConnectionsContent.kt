@@ -1,10 +1,10 @@
 package com.tangem.features.walletconnect.connections.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -32,10 +33,12 @@ import com.tangem.common.ui.account.AccountTitle
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownItem
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenu
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.avatar.TangemAvatar
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.button.GroupEntry
 import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.row.*
+import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
@@ -47,7 +50,10 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
 import com.tangem.core.ui.res.generated.icons.ic_dots_horizontal_20
+import com.tangem.core.ui.res.generated.icons.ic_error_20
+import com.tangem.core.ui.res.generated.icons.ic_grid_plus_28
 import com.tangem.core.ui.test.WalletConnectScreenTestTags
 import com.tangem.features.walletconnect.connections.entity.*
 import com.tangem.features.walletconnect.connections.ui.preview.WcConnectionsPreviewData
@@ -55,6 +61,7 @@ import com.tangem.features.walletconnect.impl.R
 import kotlinx.collections.immutable.toImmutableList
 
 private val CardShape = RoundedCornerShape(24.dp)
+private const val AGENTS_SKELETON_ITEMS = 3
 
 @Composable
 internal fun WcConnectionsContent(state: WcConnectionsState, modifier: Modifier = Modifier) {
@@ -67,26 +74,21 @@ internal fun WcConnectionsContent(state: WcConnectionsState, modifier: Modifier 
         topBar = {
             ConnectionsTopBar(
                 config = state.topAppBarConfig,
-                showEndButton = connections is WcConnections.Content,
+                showEndButton = connections !is WcConnections.Empty,
             )
         },
         overlay = {
-            if (connections is WcConnections.Content) {
-                NewConnectionFooter(
-                    onClick = state.onNewConnectionClick,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .onSizeChanged { size -> footerHeight = size.height },
-                )
-            }
+            NewConnectionFooter(
+                onClick = state.onNewConnectionClick,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .onSizeChanged { size -> footerHeight = size.height },
+            )
         },
         content = { contentPadding ->
             when (connections) {
-                is WcConnections.Loading -> Unit
-                is WcConnections.Empty -> EmptyConnections(
-                    onNewConnectionClick = state.onNewConnectionClick,
-                    modifier = Modifier.padding(contentPadding),
-                )
+                is WcConnections.Loading -> ConnectionsSkeleton(modifier = Modifier.padding(contentPadding))
+                is WcConnections.Empty -> EmptyConnections(modifier = Modifier.padding(contentPadding))
                 is WcConnections.Content -> Connections(
                     connections = connections,
                     contentPadding = contentPadding,
@@ -133,17 +135,26 @@ private fun ConnectionsList(wallet: WcWalletConnectionsUM, bottomPadding: Dp) {
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = bottomPadding + 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        if (wallet.agents.isNotEmpty()) {
-            item(key = "agents_title") { SectionTitle(stringResourceSafe(R.string.wc_connections_agents_title)) }
-            items(items = wallet.agents, key = { it.id }) { agent ->
-                Card { AgentItem(agent = agent) }
-            }
-        }
+        agentsSection(agents = wallet.agents)
         if (wallet.dAppGroups.isNotEmpty()) {
             item(key = "dapps_title") { SectionTitle(stringResourceSafe(R.string.wc_connections_dapps_title)) }
             items(items = wallet.dAppGroups, key = { it.id }) { group ->
                 Card { DAppGroup(group = group) }
             }
+        }
+    }
+}
+
+private fun LazyListScope.agentsSection(agents: WcAgentsUM) {
+    if (agents is WcAgentsUM.Content && agents.agents.isEmpty()) return
+
+    item(key = "agents_title") { SectionTitle(stringResourceSafe(R.string.wc_connections_agents_title)) }
+
+    when (agents) {
+        is WcAgentsUM.Loading -> item(key = "agents_skeleton") { Card { AgentsSkeleton() } }
+        is WcAgentsUM.Error -> item(key = "agents_error") { Card { AgentsErrorItem(state = agents) } }
+        is WcAgentsUM.Content -> items(items = agents.agents, key = { it.id }) { agent ->
+            Card { AgentItem(agent = agent) }
         }
     }
 }
@@ -245,8 +256,96 @@ private fun Card(modifier: Modifier = Modifier, content: @Composable ColumnScope
     }
 }
 
+/**
+ * Stands in for the whole list while the first read is running: the screen has no wallet to put in the
+ * tab row yet, so a single section is all it can promise.
+ */
 @Composable
-private fun EmptyConnections(onNewConnectionClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun ConnectionsSkeleton(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        TangemShimmer(
+            style = TangemTheme.typography3.caption.medium,
+            modifier = Modifier.padding(start = 8.dp, top = 8.dp, bottom = 4.dp),
+        )
+        Card { AgentsSkeleton() }
+    }
+}
+
+@Composable
+private fun AgentsSkeleton() {
+    repeat(times = AGENTS_SKELETON_ITEMS) { index ->
+        key(index) {
+            TangemRow(
+                contentLead = TangemRowContentLead.Start,
+                verticalAlignment = TangemRowVerticalAlignment.Center,
+                startSlot = {
+                    TangemAvatar(state = TangemAvatar.UiState.Shimmer(), size = TangemAvatar.Size.X40)
+                },
+                titleSlot = {
+                    TangemShimmer(style = TangemTheme.typography3.body.medium, modifier = Modifier.weight(1f))
+                },
+                subtitleSlot = {
+                    TangemShimmer(style = TangemTheme.typography3.caption.medium, modifier = Modifier.weight(1f))
+                },
+            )
+        }
+    }
+}
+
+/**
+ * The row reads bottom-up — "AI agents unavailable" is the message and "Tap to reload" the call to
+ * action above it — so the caption takes the row's title slot and the message its subtitle slot.
+ */
+@Composable
+private fun AgentsErrorItem(state: WcAgentsUM.Error) {
+    TangemRow(
+        contentLead = TangemRowContentLead.Start,
+        verticalAlignment = TangemRowVerticalAlignment.Center,
+        onClick = state.onReloadClick,
+        startSlot = {
+            TangemAvatar(
+                state = TangemAvatar.UiState.Icon(
+                    imageVector = Icons.ic_error_20,
+                    appearance = TangemAvatar.Appearance.Error,
+                ),
+                size = TangemAvatar.Size.X40,
+            )
+        },
+        titleSlot = {
+            TangemRowText(
+                modifier = Modifier.weight(1f),
+                text = stringResourceSafe(R.string.feed_promo_load_error_action),
+                role = TangemRowTextRole.Subtitle,
+            )
+        },
+        subtitleSlot = {
+            Text(
+                modifier = Modifier.weight(1f),
+                text = stringResourceSafe(R.string.wc_connections_agents_error_title),
+                color = TangemTheme.colors3.text.secondary,
+                style = TangemTheme.typography3.body.medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        },
+        endSlot = {
+            TangemButton(
+                variant = TangemButton.Variant.Secondary,
+                size = TangemButton.Size.X8,
+                isLoading = state.isReloading,
+                iconStart = TangemIconUM.Icon(Icons.ic_arrow_refresh_20),
+                contentDescription = stringResourceSafe(R.string.feed_promo_load_error_action),
+                onClick = state.onReloadClick,
+            )
+        },
+    )
+}
+
+@Composable
+private fun EmptyConnections(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -254,32 +353,27 @@ private fun EmptyConnections(onNewConnectionClick: () -> Unit, modifier: Modifie
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Image(
-            painter = painterResource(R.drawable.img_wallet_connect_76),
-            contentDescription = null,
-            modifier = Modifier
-                .size(76.dp)
-                .testTag(WalletConnectScreenTestTags.WALLET_CONNECT_IMAGE),
+        TangemAvatar(
+            state = TangemAvatar.UiState.Icon(
+                imageVector = Icons.ic_grid_plus_28,
+                appearance = TangemAvatar.Appearance.Info,
+            ),
+            size = TangemAvatar.Size.X72,
+            modifier = Modifier.testTag(WalletConnectScreenTestTags.WALLET_CONNECT_IMAGE),
         )
         Text(
-            modifier = Modifier.padding(top = 24.dp),
-            text = stringResourceSafe(R.string.wc_no_sessions_title),
+            modifier = Modifier.padding(top = 16.dp),
+            text = stringResourceSafe(R.string.wc_connections_empty_title),
             color = TangemTheme.colors3.text.primary,
             style = TangemTheme.typography3.heading.small,
-        )
-        Text(
-            modifier = Modifier.padding(top = 8.dp),
-            text = stringResourceSafe(R.string.wc_no_sessions_desc),
-            color = TangemTheme.colors3.text.secondary,
-            style = TangemTheme.typography3.body.medium,
             textAlign = TextAlign.Center,
         )
-        TangemButton(
-            modifier = Modifier.padding(top = 48.dp),
-            variant = TangemButton.Variant.Primary,
-            size = TangemButton.Size.X12,
-            text = resourceReference(R.string.wc_new_connection),
-            onClick = onNewConnectionClick,
+        Text(
+            modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp),
+            text = stringResourceSafe(R.string.wc_connections_empty_desc),
+            color = TangemTheme.colors3.text.secondary,
+            style = TangemTheme.typography3.subheading.medium,
+            textAlign = TextAlign.Center,
         )
     }
 }
@@ -342,8 +436,12 @@ private fun WcConnectionsContentPreview(
 
 private class WcConnectionsStateProvider : CollectionPreviewParameterProvider<WcConnectionsState>(
     listOf(
+        WcConnectionsPreviewData.loadingState,
         WcConnectionsPreviewData.emptyState,
         WcConnectionsPreviewData.singleWalletState,
         WcConnectionsPreviewData.multiWalletState,
+        WcConnectionsPreviewData.loadingAgentsState,
+        WcConnectionsPreviewData.failedAgentsState,
+        WcConnectionsPreviewData.reloadingAgentsState,
     ),
 )

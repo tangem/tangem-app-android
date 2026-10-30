@@ -109,13 +109,13 @@ private fun ScanCardContent(onScanCardClick: () -> Unit) {
     ) {
         Text(
             text = stringResourceSafe(id = R.string.scan_card_settings_title),
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             style = TangemTheme.typography.h3,
         )
         Spacer(modifier = Modifier.size(20.dp))
         Text(
             text = stringResourceSafe(id = R.string.scan_card_settings_message),
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography.body1,
         )
         Spacer(modifier = Modifier.size(32.dp))
@@ -169,14 +169,14 @@ private fun CardSettings(state: CardSettingsScreenState) {
                     ),
             ) {
                 val titleColor = if (cardInfo.isClickable) {
-                    TangemTheme.colors.text.primary1
+                    TangemTheme.colors3.text.primary
                 } else {
-                    TangemTheme.colors.text.tertiary
+                    TangemTheme.colors3.text.secondary
                 }
                 val subtitleColor = if (cardInfo.isClickable) {
-                    TangemTheme.colors.text.secondary
+                    TangemTheme.colors3.text.secondary
                 } else {
-                    TangemTheme.colors.text.tertiary
+                    TangemTheme.colors3.text.tertiary
                 }
                 Text(
                     text = cardInfo.titleRes.resolveReference(),

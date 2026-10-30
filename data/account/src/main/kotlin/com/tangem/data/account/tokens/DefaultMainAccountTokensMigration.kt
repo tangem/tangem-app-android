@@ -11,7 +11,7 @@ import com.tangem.data.account.converter.AccountNameConverter
 import com.tangem.data.account.converter.toDerivationIndex
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.utils.assignTokens
-import com.tangem.data.account.utils.isJoint
+import com.tangem.data.account.utils.isPersonal
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
@@ -55,7 +55,7 @@ internal class DefaultMainAccountTokensMigration(
         }
         val mainAccount = findAccount(response = response, derivationIndex = DerivationIndex.Main)
         val customAccounts = response.accounts
-            .filterNot { accountDTO -> accountDTO.isJoint || accountDTO.derivationIndex.toDerivationIndex().isMain }
+            .filter { accountDTO -> accountDTO.isPersonal && !accountDTO.derivationIndex.toDerivationIndex().isMain }
 
         if (customAccounts.isEmpty()) {
             TangemLogger.i("There is only the Main account. Nothing to migrate")
@@ -156,7 +156,7 @@ internal class DefaultMainAccountTokensMigration(
         derivationIndex: DerivationIndex,
     ): WalletAccountDTO {
         val account = response.accounts.firstOrNull { accountDTO ->
-            !accountDTO.isJoint && accountDTO.derivationIndex == derivationIndex.value
+            accountDTO.isPersonal && accountDTO.derivationIndex == derivationIndex.value
         }
 
         return ensureNotNull(account) {

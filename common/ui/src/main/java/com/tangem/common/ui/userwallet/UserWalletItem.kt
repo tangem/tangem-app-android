@@ -96,21 +96,21 @@ fun UserWalletItemRow(state: UserWalletItemUM, modifier: Modifier = Modifier) {
             UserWalletItemUM.EndIcon.Arrow -> {
                 Icon(
                     imageVector = ImageVector.vectorResource(R.drawable.ic_chevron_right_24),
-                    tint = TangemTheme.colors.icon.informative,
+                    tint = TangemTheme.colors3.icon.secondary,
                     contentDescription = null,
                 )
             }
             UserWalletItemUM.EndIcon.Checkmark -> {
                 Icon(
                     imageVector = ImageVector.vectorResource(R.drawable.ic_check_24),
-                    tint = TangemTheme.colors.icon.accent,
+                    tint = TangemTheme.colors3.icon.accent.blue,
                     contentDescription = null,
                 )
             }
             UserWalletItemUM.EndIcon.Warning -> {
                 Icon(
                     imageVector = ImageVector.vectorResource(R.drawable.ic_alert_circle_24),
-                    tint = TangemTheme.colors.icon.warning,
+                    tint = TangemTheme.colors3.icon.accent.red,
                     contentDescription = null,
                 )
             }
@@ -139,7 +139,7 @@ private fun NameAndInfo(
                 modifier = Modifier.weight(weight = 1f, fill = false),
                 text = name.resolveReference(),
                 style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -174,7 +174,7 @@ private fun NameAndInfo(
                     Text(
                         text = informationValue,
                         style = TangemTheme.typography.caption2,
-                        color = TangemTheme.colors.text.tertiary,
+                        color = TangemTheme.colors3.text.secondary,
                         maxLines = 1,
                     )
                 }
@@ -199,7 +199,7 @@ private fun BalanceContent(balance: UserWalletItemUM.Balance, modifier: Modifier
                         .padding(start = 4.dp, bottom = 2.dp, top = 2.dp)
                         .size(12.dp),
                     imageVector = ImageVector.vectorResource(R.drawable.ic_lock_24),
-                    tint = TangemTheme.colors.icon.informative,
+                    tint = TangemTheme.colors3.icon.secondary,
                     contentDescription = null,
                 )
             }
@@ -211,7 +211,7 @@ private fun BalanceContent(balance: UserWalletItemUM.Balance, modifier: Modifier
                     Text(
                         text = " $DOT ",
                         style = TangemTheme.typography.caption2,
-                        color = TangemTheme.colors.text.tertiary,
+                        color = TangemTheme.colors3.text.secondary,
                         maxLines = 1,
                     )
 
@@ -227,7 +227,7 @@ private fun BalanceContent(balance: UserWalletItemUM.Balance, modifier: Modifier
                             text = balanceValue,
                             style = TangemTheme.typography.caption2.applyBladeBrush(
                                 isEnabled = isFlickering,
-                                textColor = TangemTheme.colors.text.tertiary,
+                                textColor = TangemTheme.colors3.text.secondary,
                             ),
                             maxLines = 1,
                         )
@@ -258,7 +258,7 @@ fun CardImage(imageState: UserWalletItemUM.ImageState, modifier: Modifier = Modi
                 modifier = Modifier
                     .size(36.dp)
                     .background(
-                        color = TangemTheme.colors.field.focused,
+                        color = TangemTheme.colors3.bg.transparent.secondary,
                         shape = RoundedCornerShape(10.dp),
                     )
                     .padding(6.dp),

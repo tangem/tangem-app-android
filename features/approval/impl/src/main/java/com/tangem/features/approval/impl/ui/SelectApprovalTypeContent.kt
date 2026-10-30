@@ -46,7 +46,7 @@ internal fun SelectApprovalTypeContent(
     ) {
         Text(
             text = uiState.subtitle.resolveAnnotatedReference(),
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography.body2,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(
@@ -119,7 +119,7 @@ private class SelectApprovalTypeContentPreviewProvider : PreviewParameterProvide
                             id = R.string.common_learn_more,
                             spanStyleReference = {
                                 TangemTheme.typography.caption2
-                                    .copy(color = TangemTheme.colors.text.accent)
+                                    .copy(color = TangemTheme.colors3.text.accent.blue)
                                     .toSpanStyle()
                             },
                             onClick = { },
@@ -142,7 +142,7 @@ private class SelectApprovalTypeContentPreviewProvider : PreviewParameterProvide
                             id = com.tangem.common.ui.R.string.common_learn_more,
                             spanStyleReference = {
                                 TangemTheme.typography.caption2
-                                    .copy(color = TangemTheme.colors.text.accent)
+                                    .copy(color = TangemTheme.colors3.text.accent.blue)
                                     .toSpanStyle()
                             },
                             onClick = {},

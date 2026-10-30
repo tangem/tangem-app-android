@@ -1,15 +1,17 @@
 package com.tangem.features.details.utils
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.features.mcp.api.McpFeatureToggles
 import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.settings.HotWalletRestrictionManager
+import com.tangem.domain.wallets.analytics.Settings
 import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.impl.R
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -17,13 +19,13 @@ import kotlinx.collections.immutable.toPersistentList
 import javax.inject.Inject
 
 private const val TANGEM_PAY_ITEM_ID = "get_tangem_pay"
-private const val MONEY_ACCOUNT_ITEM_ID = "get_money_account"
 
 @ModelScoped
 internal class ItemsBuilder @Inject constructor(
     private val router: Router,
-    private val hotWalletRestrictionManager: HotWalletRestrictionManager,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val mcpFeatureToggles: McpFeatureToggles,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) {
 
     @Suppress("LongParameterList")
@@ -37,7 +39,7 @@ internal class ItemsBuilder @Inject constructor(
         buildWalletActionBlock(isWalletConnectAvailable, userWalletId)
         add(buildUserWalletListBlock())
 
-        if (hotWalletRestrictionManager.isCreationEnabledSync() && hasAnyMobileWallet) {
+        if (!hotWalletFeatureToggles.isMultipleHotWalletsEnabled && hasAnyMobileWallet) {
             add(
                 DetailsItemUM.UnderSectionText(
                     id = "only_one_mobile_wallet_explanation",
@@ -79,30 +81,6 @@ internal class ItemsBuilder @Inject constructor(
         }.toImmutableList()
     }
 
-    fun addMoneyAccountItem(items: ImmutableList<DetailsItemUM>, onClick: () -> Unit): ImmutableList<DetailsItemUM> {
-        return removeMoneyAccountItem(items).map { block ->
-            if (block.id == "shop" && block is DetailsItemUM.Basic) {
-                val newItems = block
-                    .items
-                    .toMutableList()
-                    .apply { add(getMoneyAccountItem(onClick = onClick)) }
-                block.copy(items = newItems.toImmutableList())
-            } else {
-                block
-            }
-        }.toImmutableList()
-    }
-
-    fun removeMoneyAccountItem(items: ImmutableList<DetailsItemUM>): ImmutableList<DetailsItemUM> {
-        return items.map { block ->
-            if (block is DetailsItemUM.Basic && block.items.any { it.id == MONEY_ACCOUNT_ITEM_ID }) {
-                block.copy(items = block.items.filter { it.id != MONEY_ACCOUNT_ITEM_ID }.toImmutableList())
-            } else {
-                block
-            }
-        }.toImmutableList()
-    }
-
     private fun MutableList<DetailsItemUM>.buildWalletActionBlock(
         isWalletConnectAvailable: Boolean,
         userWalletId: UserWalletId,
@@ -119,9 +97,14 @@ internal class ItemsBuilder @Inject constructor(
     private fun buildWalletConnectButton(
         userWalletId: UserWalletId,
     ): DetailsItemUM.WalletActionBlock.Item.WalletConnect {
+        val isMcpEnabled = mcpFeatureToggles.isMcpEnabled
         return DetailsItemUM.WalletActionBlock.Item.WalletConnect(
-            onClick = { router.push(AppRoute.WalletConnectSessions(userWalletId)) },
-            isMcpEnabled = mcpFeatureToggles.isMcpEnabled,
+            onClick = {
+                // Only the Connections row is tracked: the Wallet Connect one never had an event on Android.
+                if (isMcpEnabled) analyticsEventHandler.send(Settings.ButtonConnections())
+                router.push(AppRoute.WalletConnectSessions(userWalletId))
+            },
+            isMcpEnabled = isMcpEnabled,
         )
     }
 
@@ -194,15 +177,6 @@ internal class ItemsBuilder @Inject constructor(
         id = TANGEM_PAY_ITEM_ID,
         block = BlockUM(
             text = resourceReference(R.string.tangempay_get_tangem_pay),
-            iconRes = R.drawable.ic_tangem_pay_24,
-            onClick = onClick,
-        ),
-    )
-
-    private fun getMoneyAccountItem(onClick: () -> Unit): DetailsItemUM.Basic.Item = DetailsItemUM.Basic.Item(
-        id = MONEY_ACCOUNT_ITEM_ID,
-        block = BlockUM(
-            text = resourceReference(R.string.virtual_account_title),
             iconRes = R.drawable.ic_tangem_pay_24,
             onClick = onClick,
         ),

@@ -76,7 +76,7 @@ private fun TextsBlock(title: TextReference, subtitle: CurrencyNotificationConfi
     Column(verticalArrangement = Arrangement.spacedBy(space = 2.dp)) {
         Text(
             text = title.resolveReference(),
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             style = TangemTheme.typography.button,
         )
 

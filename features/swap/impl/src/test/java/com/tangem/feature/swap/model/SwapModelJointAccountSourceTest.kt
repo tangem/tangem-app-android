@@ -43,7 +43,7 @@ internal class SwapModelJointAccountSourceTest : SwapModelTestBase() {
         } returns Either.Right(null)
         coEvery {
             swapInteractor.getPair(fromSwapCurrencyStatus = any(), toSwapCurrencyStatus = any(), filterProviderTypes = any())
-        } returns Either.Left(ExpressError.UnknownError)
+        } returns Either.Left(ExpressError.UnknownError())
     }
 
     @Test
@@ -97,6 +97,7 @@ internal class SwapModelJointAccountSourceTest : SwapModelTestBase() {
                 source = StatusSource.ACTUAL,
                 totalMembers = 2,
                 safeAddress = "0x5afe000000000000000000000000000000000002",
+                threshold = 2,
             ),
             tokenList = TokenList.Ungrouped(
                 totalFiatBalance = TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = StatusSource.ACTUAL),

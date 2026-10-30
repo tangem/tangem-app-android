@@ -52,7 +52,7 @@ fun AddTokenContentV2(state: AddTokenUM, modifier: Modifier = Modifier) {
             if (state.portfolio.isMultiChoice) {
                 PortfolioSelectRowV2(
                     modifier = Modifier.background(
-                        color = TangemTheme.colors2.surface.level3,
+                        color = TangemTheme.colors3.bg.secondary,
                         shape = RoundedCornerShape(20.dp),
                     ),
                     state = state.portfolio,
@@ -98,7 +98,7 @@ private fun TokenHeader(
                 Text(
                     text = tokenName.text.resolveReference(),
                     style = TangemTheme.typography2.headingSemibold28,
-                    color = TangemTheme.colors2.text.neutral.primary,
+                    color = TangemTheme.colors3.text.primary,
                     textAlign = TextAlign.Center,
                 )
             }
@@ -111,7 +111,7 @@ private fun TokenHeader(
             TokenItemState.TitleState.Locked -> {
                 Box(
                     modifier = Modifier.background(
-                        color = TangemTheme.colors2.surface.level4,
+                        color = TangemTheme.colors3.bg.tertiary,
                         shape = RoundedCornerShape(100.dp),
                     ),
                 )
@@ -126,7 +126,7 @@ private fun NetworkRow(state: AddTokenUM.Network, modifier: Modifier = Modifier)
         modifier
             .clickable(enabled = state.isEditable, onClick = state.onClick)
             .background(
-                color = TangemTheme.colors2.surface.level3,
+                color = TangemTheme.colors3.bg.secondary,
                 shape = RoundedCornerShape(20.dp),
             ),
     ) {
@@ -143,7 +143,7 @@ private fun NetworkRow(state: AddTokenUM.Network, modifier: Modifier = Modifier)
             modifier = Modifier.layoutId(TangemRowLayoutId.START_TOP),
             text = stringResourceSafe(R.string.wc_common_network),
             style = TangemTheme.typography2.captionMedium12,
-            color = TangemTheme.colors2.text.neutral.secondary,
+            color = TangemTheme.colors3.text.secondary,
         )
         Text(
             modifier = Modifier.layoutId(TangemRowLayoutId.START_BOTTOM),
@@ -151,7 +151,7 @@ private fun NetworkRow(state: AddTokenUM.Network, modifier: Modifier = Modifier)
             overflow = TextOverflow.Ellipsis,
             text = state.name.resolveReference(),
             style = TangemTheme.typography2.bodyMedium16,
-            color = TangemTheme.colors2.text.neutral.primary,
+            color = TangemTheme.colors3.text.primary,
         )
         if (state.isEditable) {
             Icon(
@@ -160,7 +160,7 @@ private fun NetworkRow(state: AddTokenUM.Network, modifier: Modifier = Modifier)
                     .size(20.dp),
                 painter = painterResource(id = com.tangem.common.ui.R.drawable.ic_select_choice_20),
                 contentDescription = null,
-                tint = TangemTheme.colors2.graphic.neutral.secondary,
+                tint = TangemTheme.colors3.icon.secondary,
             )
         }
     }
@@ -178,9 +178,9 @@ private fun AddButton(state: AddTokenUM.Button, modifier: Modifier = Modifier) {
                 iconRes = R.drawable.ic_tangem_24,
                 tintReference = {
                     if (state.isEnabled) {
-                        TangemTheme.colors2.graphic.neutral.primaryInverted
+                        TangemTheme.colors3.icon.inverse
                     } else {
-                        TangemTheme.colors2.graphic.neutral.quaternary
+                        TangemTheme.colors3.icon.tertiary
                     }
                 },
             )
@@ -203,7 +203,7 @@ private fun Preview(@PreviewParameter(PreviewProvider::class) state: AddTokenUM)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(TangemTheme.colors2.surface.level2)
+                .background(TangemTheme.colors3.bg.primary)
                 .padding(horizontal = 16.dp),
         ) {
             AddTokenContentV2(state = state)

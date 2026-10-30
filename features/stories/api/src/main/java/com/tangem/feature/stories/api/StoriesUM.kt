@@ -14,7 +14,6 @@ sealed class StoriesUM {
         override val stories: ImmutableList<Config>,
         override val onClose: (Int) -> Unit,
     ) : StoriesUM(), StoriesContentConfig<Content.Config> {
-        override val isRestartable: Boolean = false
 
         data class Config(
             val imageUrl: String,

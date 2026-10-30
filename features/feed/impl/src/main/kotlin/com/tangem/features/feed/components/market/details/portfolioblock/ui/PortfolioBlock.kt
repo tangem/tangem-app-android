@@ -106,7 +106,7 @@ private fun ContentBlock(state: PortfolioBlockUM.Content, modifier: Modifier = M
                 text = state.totalBalance.orMaskWithStars(state.isBalanceHidden).resolveAnnotatedReference(),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                color = TangemTheme.colors2.text.neutral.primary,
+                color = TangemTheme.colors3.text.primary,
                 style = TangemTheme.typography2.bodyMedium16,
             )
 
@@ -114,7 +114,7 @@ private fun ContentBlock(state: PortfolioBlockUM.Content, modifier: Modifier = M
                 modifier = Modifier.layoutId(TangemRowLayoutId.START_BOTTOM),
                 text = stringResourceSafe(R.string.markets_portfolio_block_subtitle),
                 style = TangemTheme.typography2.captionMedium12,
-                color = TangemTheme.colors2.text.neutral.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -126,7 +126,7 @@ private fun ContentBlock(state: PortfolioBlockUM.Content, modifier: Modifier = M
                     type = TangemButtonType.Secondary,
                     tangemIconUM = TangemIconUM.Icon(
                         iconRes = R.drawable.ic_arrow_down_20,
-                        tintReference = { TangemTheme.colors2.graphic.neutral.primary },
+                        tintReference = { TangemTheme.colors3.icon.primary },
                     ),
                     iconPosition = TangemButtonIconPosition.Start,
                     shape = TangemButtonShape.Rounded,
@@ -146,7 +146,7 @@ private fun ContentBlock(state: PortfolioBlockUM.Content, modifier: Modifier = M
                     type = TangemButtonType.Secondary,
                     tangemIconUM = TangemIconUM.Icon(
                         iconRes = R.drawable.ic_arrow_expand_24,
-                        tintReference = { TangemTheme.colors2.graphic.neutral.primary },
+                        tintReference = { TangemTheme.colors3.icon.primary },
                     ),
                     shape = TangemButtonShape.Rounded,
                     size = TangemButtonSize.X9,
@@ -183,10 +183,10 @@ private fun AddTokenBlock(state: PortfolioBlockUM.AddToken, modifier: Modifier =
             Text(
                 text = formatAnnotatedWithBoldColor(
                     rawString = stringResourceSafe(R.string.markets_portfolio_block_add_token_title),
-                    boldColor = TangemTheme.colors2.text.neutral.primary,
+                    boldColor = TangemTheme.colors3.text.primary,
                 ),
                 style = TangemTheme.typography2.captionMedium12,
-                color = TangemTheme.colors2.text.neutral.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 modifier = Modifier.weight(1f),
                 maxLines = 2,
             )
@@ -231,10 +231,10 @@ private fun UnsupportedTokenBlock(icon: CurrencyIconState, modifier: Modifier = 
             Text(
                 text = formatAnnotatedWithBoldColor(
                     rawString = stringResourceSafe(R.string.markets_portfolio_block_token_unsupported),
-                    boldColor = TangemTheme.colors2.text.neutral.primary,
+                    boldColor = TangemTheme.colors3.text.primary,
                 ),
                 style = TangemTheme.typography2.captionMedium12,
-                color = TangemTheme.colors2.text.neutral.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 modifier = Modifier.weight(1f),
                 maxLines = 2,
             )
@@ -257,7 +257,7 @@ private fun FloatingCard(modifier: Modifier = Modifier, content: @Composable () 
             )
             .clip(RoundedCornerShape(size = 20.dp))
             .background(
-                color = TangemTheme.colors2.surface.level3,
+                color = TangemTheme.colors3.bg.secondary,
                 shape = RoundedCornerShape(size = 20.dp),
             ),
     ) {

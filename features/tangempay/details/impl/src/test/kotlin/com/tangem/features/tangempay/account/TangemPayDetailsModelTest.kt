@@ -53,7 +53,6 @@ import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.pay.usecase.bankofframp.FindActiveBankOfframpOrderUseCase
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.account.cashback.TangemPayCashbackController
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.customerTariffPlan
@@ -102,7 +101,6 @@ internal class TangemPayDetailsModelTest {
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val router: Router = mockk(relaxed = true)
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk(relaxed = true)
     private val getCashbackSummaryUseCase: GetCashbackSummaryUseCase = mockk(relaxed = true)
     private val observeCashbackSummaryUseCase: ObserveCashbackSummaryUseCase = mockk()
     private val getCashbackDeactivationDismissedUseCase: GetCashbackDeactivationDismissedUseCase = mockk()
@@ -139,7 +137,6 @@ internal class TangemPayDetailsModelTest {
         clearMocks(
             analytics,
             router,
-            tangemPayFeatureToggles,
             getCashbackSummaryUseCase,
             observeCashbackSummaryUseCase,
             getCashbackDeactivationDismissedUseCase,
@@ -389,22 +386,6 @@ internal class TangemPayDetailsModelTest {
     }
 
     @Test
-    fun `GIVEN virtual account is processing WHEN bank transfer clicked THEN preparation popup event sent`() =
-        runTest {
-            // GIVEN
-            val model = createModel(testScope = this, virtualAccount = VirtualAccountOnramp.Processing)
-            advanceUntilIdle()
-
-            // WHEN
-            model.onClickBankTransfer()
-
-            // THEN
-            verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.VaPreparationPopupShowed>()) }
-            verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.VaTopupButtonClicked>()) }
-            model.onDestroy()
-        }
-
-    @Test
     fun `GIVEN banking details error sheet WHEN retry loads credentials THEN product instance credentials returned`() =
         runTest {
             // Arrange
@@ -537,9 +518,8 @@ internal class TangemPayDetailsModelTest {
     }
 
     @Test
-    fun `GIVEN v2 failed banking details banner WHEN dismissed THEN failure dismissed for the wallet`() = runTest {
+    fun `GIVEN failed banking details banner WHEN dismissed THEN failure dismissed for the wallet`() = runTest {
         // Arrange
-        every { tangemPayFeatureToggles.isVisaOnrampV2Enabled } returns true
         val model = createModel(testScope = this, virtualAccount = VirtualAccountOnramp.Failed)
         advanceUntilIdle()
 
@@ -1049,7 +1029,6 @@ internal class TangemPayDetailsModelTest {
             txHistoryUpdateListener = mockk(relaxed = true),
             tangemPayWithdrawRepository = tangemPayWithdrawRepository,
             sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
-            tangemPayFeatureToggles = tangemPayFeatureToggles,
             paymentAccountStatusFetcher = mockk(relaxed = true),
             produceTangemPayInitialDataUseCase = mockk(relaxed = true),
             onboardingRepository = mockk(relaxed = true),
@@ -1242,7 +1221,6 @@ internal class TangemPayDetailsModelTest {
         )
 
         const val PRODUCT_INSTANCE_ID = "pi_account"
-        const val DEPOSIT_ADDRESS = "address"
 
         val DEEPLINK_PLAN_STATE: TangemPayTariffPlanState = tariffPlanState()
 
@@ -1254,6 +1232,7 @@ internal class TangemPayDetailsModelTest {
             beneficiaryBankAddress = "Bank address",
             accountNumber = "123456",
             routingNumber = "654321",
+            rail = "ACH",
             transferMessage = null,
             depositFee = null,
             depositLimit = null,
@@ -1332,104 +1311,12 @@ internal class TangemPayDetailsModelTest {
             payModel.onDestroy()
         }
 
-        @Test
-        fun `GIVEN va onramp deeplink route WHEN status loaded THEN deposit sheet opens without a click event`() =
-            runTest {
-                // Arrange
-                val payModel = createModel(
-                    testScope = this,
-                    initialRoute = TangemPayDetailsInitialRoute.VA_ONRAMP,
-                    virtualAccount = VirtualAccountOnramp.Eligible,
-                )
-                val openedSheets = payModel.bottomSheetNavigation.trackSlot()
-
-                // Act
-                advanceUntilIdle()
-
-                // Assert
-                assertThat(openedSheets.filterIsInstance<TangemPayDetailsNavigation.VirtualAccountDeposit>())
-                    .containsExactly(expectedDepositSheet())
-                verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.VaTopupButtonClicked>()) }
-                payModel.onDestroy()
-            }
-
-        @Test
-        fun `GIVEN va onramp details deeplink route WHEN credentials load THEN requisites sheet opens`() = runTest {
-            // Arrange
-            coEvery { getBankCredentialsUseCase(any(), any()) } returns BANK_CREDENTIALS.right()
-            val payModel = createModel(
-                testScope = this,
-                initialRoute = TangemPayDetailsInitialRoute.VA_ONRAMP_DETAILS,
-                virtualAccount = VirtualAccountOnramp.Available(productInstanceId = PRODUCT_INSTANCE_ID),
-            )
-            val openedSheets = payModel.bottomSheetNavigation.trackSlot()
-
-            // Act
-            advanceUntilIdle()
-
-            // Assert
-            assertThat(openedSheets.filterIsInstance<TangemPayDetailsNavigation.VirtualAccountRequisites>())
-                .containsExactly(
-                    TangemPayDetailsNavigation.VirtualAccountRequisites(
-                        userWalletId = userWalletId,
-                        bankCredentials = BANK_CREDENTIALS,
-                    ),
-                )
-            coVerify(exactly = 1) { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) }
-            payModel.onDestroy()
-        }
-
-        @Test
-        fun `GIVEN va onramp details deeplink route WHEN credentials fail THEN the details error sheet opens`() =
-            runTest {
-                // Arrange
-                coEvery { getBankCredentialsUseCase(any(), any()) } returns mockk<VisaApiError>(relaxed = true).left()
-                val payModel = createModel(
-                    testScope = this,
-                    initialRoute = TangemPayDetailsInitialRoute.VA_ONRAMP_DETAILS,
-                    virtualAccount = VirtualAccountOnramp.Available(productInstanceId = PRODUCT_INSTANCE_ID),
-                )
-                val openedSheets = payModel.bottomSheetNavigation.trackSlot()
-
-                // Act
-                advanceUntilIdle()
-
-                // Assert
-                assertThat(openedSheets.filterIsInstance<TangemPayDetailsNavigation.VaBankingDetailsError>())
-                    .containsExactly(
-                        TangemPayDetailsNavigation.VaBankingDetailsError(productInstanceId = PRODUCT_INSTANCE_ID),
-                    )
-                payModel.onDestroy()
-            }
-
-        @Test
-        fun `GIVEN va onramp details deeplink route WHEN account is not eligible yet THEN deposit sheet opens`() =
-            runTest {
-                // Arrange
-                val payModel = createModel(
-                    testScope = this,
-                    initialRoute = TangemPayDetailsInitialRoute.VA_ONRAMP_DETAILS,
-                    virtualAccount = VirtualAccountOnramp.Eligible,
-                )
-                val openedSheets = payModel.bottomSheetNavigation.trackSlot()
-
-                // Act
-                advanceUntilIdle()
-
-                // Assert
-                assertThat(openedSheets.filterIsInstance<TangemPayDetailsNavigation.VirtualAccountDeposit>())
-                    .containsExactly(expectedDepositSheet())
-                coVerify(exactly = 0) { getBankCredentialsUseCase(any(), any()) }
-                payModel.onDestroy()
-            }
-
         @ParameterizedTest
         @EnumSource(value = TangemPayDetailsInitialRoute::class, names = ["VA_ONRAMP", "VA_ONRAMP_DETAILS"])
-        fun `GIVEN v2 enabled and banking details WHEN va onramp deeplink handled THEN account details screen opens`(
+        fun `GIVEN banking details WHEN va onramp deeplink handled THEN account details screen opens`(
             initialRoute: TangemPayDetailsInitialRoute,
         ) = runTest {
             // Arrange
-            every { tangemPayFeatureToggles.isVisaOnrampV2Enabled } returns true
             coEvery { getBankCredentialsUseCase(any(), any()) } returns BANK_CREDENTIALS.right()
             val payModel = createModel(
                 testScope = this,
@@ -1454,10 +1341,9 @@ internal class TangemPayDetailsModelTest {
         }
 
         @Test
-        fun `GIVEN v2 enabled and banking details fail WHEN va onramp deeplink handled THEN details error sheet opens`() =
+        fun `GIVEN banking details fail WHEN va onramp deeplink handled THEN details error sheet opens`() =
             runTest {
                 // Arrange
-                every { tangemPayFeatureToggles.isVisaOnrampV2Enabled } returns true
                 coEvery { getBankCredentialsUseCase(any(), any()) } returns mockk<VisaApiError>(relaxed = true).left()
                 val payModel = createModel(
                     testScope = this,
@@ -1479,9 +1365,8 @@ internal class TangemPayDetailsModelTest {
             }
 
         @Test
-        fun `GIVEN v2 enabled WHEN banking details resolved on retry THEN account details screen opens`() = runTest {
+        fun `GIVEN loaded status WHEN banking details resolved on retry THEN account details screen opens`() = runTest {
             // Arrange
-            every { tangemPayFeatureToggles.isVisaOnrampV2Enabled } returns true
             val payModel = createModel(testScope = this)
             advanceUntilIdle()
 
@@ -1500,11 +1385,10 @@ internal class TangemPayDetailsModelTest {
 
         @ParameterizedTest
         @MethodSource("provideOnboardingDeepLinks")
-        fun `GIVEN v2 enabled and no banking details yet WHEN va onramp deeplink handled THEN onboarding opens`(
+        fun `GIVEN no banking details yet WHEN va onramp deeplink handled THEN onboarding opens`(
             model: OnboardingDeepLinkModel,
         ) = runTest {
             // Arrange
-            every { tangemPayFeatureToggles.isVisaOnrampV2Enabled } returns true
             val payModel = createModel(
                 testScope = this,
                 initialRoute = model.initialRoute,
@@ -1554,11 +1438,10 @@ internal class TangemPayDetailsModelTest {
 
         @ParameterizedTest
         @EnumSource(value = TangemPayDetailsInitialRoute::class, names = ["VA_ONRAMP", "VA_ONRAMP_DETAILS"])
-        fun `GIVEN v2 enabled and details being created WHEN va onramp deeplink handled THEN nothing opens`(
+        fun `GIVEN details being created WHEN va onramp deeplink handled THEN nothing opens`(
             initialRoute: TangemPayDetailsInitialRoute,
         ) = runTest {
             // Arrange
-            every { tangemPayFeatureToggles.isVisaOnrampV2Enabled } returns true
             val payModel = createModel(
                 testScope = this,
                 initialRoute = initialRoute,
@@ -1571,17 +1454,10 @@ internal class TangemPayDetailsModelTest {
 
             // Assert
             verify(exactly = 0) { router.push(route = any(), onComplete = any()) }
-            verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.VaPreparationPopupShowed>()) }
             verify(exactly = 0) { uiMessageSender.send(any()) }
             assertThat(openedSheets.filterNotNull()).isEmpty()
             payModel.onDestroy()
         }
-
-        private fun expectedDepositSheet() = TangemPayDetailsNavigation.VirtualAccountDeposit(
-            virtualAccountOnramp = VirtualAccountOnramp.Eligible,
-            userWalletId = userWalletId,
-            paymentAccountAddress = DEPOSIT_ADDRESS,
-        )
 
         private fun provideTestModels() = listOf(
             DeepLinkRouteModel(

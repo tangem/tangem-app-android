@@ -116,7 +116,6 @@ class TangemPayCardRequisitesTest : BaseTestCase() {
             step("Click on 'Close' button in the guide") {
                 onTangemPayAddToWalletGuideScreen { closeButton.performClick() }
             }
-            // Android keeps the card-page reveal alive on return (30s timer) — no iOS auto-hide-on-return.
             step("Assert card page is displayed again") {
                 flakySafely { onTangemPayCardPageScreen { moreButton.assertIsDisplayed() } }
             }

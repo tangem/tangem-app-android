@@ -193,7 +193,7 @@ internal class WalletWarningsClickIntentsTest {
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
             multiStakingBalanceFetcher = multiStakingBalanceFetcher,
             stakingIdFactory = stakingIdFactory,
-            appRouter = mockk(relaxed = true),
+            navigationRouter = mockk(relaxed = true),
             userWalletsListRepository = mockk(relaxed = true),
             setShouldShowNotificationUseCase = mockk(relaxed = true),
             notificationsRepository = mockk(relaxed = true),

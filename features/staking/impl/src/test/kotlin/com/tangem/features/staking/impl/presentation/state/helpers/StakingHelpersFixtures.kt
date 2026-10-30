@@ -10,8 +10,8 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
-import com.tangem.domain.models.staking.BalanceType
-import com.tangem.domain.models.staking.PendingAction
+import com.tangem.domain.staking.model.BalanceType
+import com.tangem.domain.staking.model.PendingAction
 import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolUnsignedTx
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType

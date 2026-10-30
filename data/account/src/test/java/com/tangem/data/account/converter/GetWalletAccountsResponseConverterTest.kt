@@ -1,6 +1,7 @@
 package com.tangem.data.account.converter
 
 import com.google.common.truth.Truth
+import com.tangem.data.common.account.toWalletAccountDTO
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.domain.account.models.AccountList
@@ -58,6 +59,24 @@ class GetWalletAccountsResponseConverterTest {
             val expected = exception
             Truth.assertThat(actual).isInstanceOf(expected::class.java)
             Truth.assertThat(actual.message).isEqualTo(expected.message)
+        }
+
+        /** A local rewrite of the document must not drop the row the collectibles account is read from */
+        @Test
+        fun `GIVEN a collectibles account WHEN convert THEN its row is in the document`() {
+            // Arrange
+            val collectibles = Account.Collectibles(userWalletId = userWallet.walletId)
+            val accountList = createAccountList(userWalletId = userWallet.walletId).let { list ->
+                list.withAccounts(list.accounts + collectibles).getOrNull()!!
+            }
+            every { cryptoPortfolioConverter.convertBack(any()) } returns
+                createGetWalletAccountsResponse(userWallet.walletId).accounts.single()
+
+            // Act
+            val actual = converter.convert(accountList)
+
+            // Assert
+            Truth.assertThat(actual.accounts).contains(collectibles.toWalletAccountDTO())
         }
 
         @ParameterizedTest

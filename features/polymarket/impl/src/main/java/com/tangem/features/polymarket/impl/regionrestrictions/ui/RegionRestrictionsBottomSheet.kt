@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -27,6 +28,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_error_28
 import com.tangem.core.ui.R as CoreR
+import com.tangem.core.ui.test.PredictionTestTags
 
 /**
  * Tells the user that predictions are unavailable in their region.
@@ -50,7 +52,9 @@ internal fun RegionRestrictionsBottomSheet(isShown: Boolean, onDismiss: () -> Un
         },
         content = {
             Column(
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                modifier = Modifier
+                    .testTag(PredictionTestTags.REGION_RESTRICTIONS_SHEET)
+                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(24.dp),
             ) {

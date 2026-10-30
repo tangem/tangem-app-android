@@ -28,13 +28,13 @@ internal fun WcAddressItem(address: String, modifier: Modifier = Modifier) {
             modifier = Modifier.size(24.dp),
             painter = painterResource(R.drawable.ic_user_square_24),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.accent,
+            tint = TangemTheme.colors3.icon.accent.blue,
         )
         Text(
             modifier = Modifier.padding(start = 8.dp),
             text = stringResourceSafe(R.string.common_address),
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             maxLines = 1,
         )
         SpacerWMax()
@@ -49,7 +49,7 @@ internal fun WcAddressItem(address: String, modifier: Modifier = Modifier) {
                     text = address,
                     textAlign = TextAlign.End,
                     style = TangemTheme.typography.body1,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                     ellipsis = TextEllipsis.Middle,
                 )
             },

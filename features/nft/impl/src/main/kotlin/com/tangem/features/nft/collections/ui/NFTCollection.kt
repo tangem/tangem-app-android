@@ -52,7 +52,7 @@ internal fun NFTCollection(state: NFTCollectionUM, modifier: Modifier = Modifier
             NFTLogo(
                 imageUrl = state.logoUrl,
                 networkIconId = state.networkIconId,
-                background = TangemTheme.colors.background.primary,
+                background = TangemTheme.colors3.bg.secondary,
             )
 
             Text(state)
@@ -72,9 +72,9 @@ internal fun NFTCollection(state: NFTCollectionUM, modifier: Modifier = Modifier
                     .size(24.dp),
                 painter = painterResource(id = R.drawable.ic_chevron_24),
                 tint = if (isExpanded) {
-                    TangemTheme.colors.icon.primary1
+                    TangemTheme.colors3.icon.primary
                 } else {
-                    TangemTheme.colors.icon.inactive
+                    TangemTheme.colors3.icon.tertiary
                 },
                 contentDescription = null,
             )
@@ -95,7 +95,7 @@ private fun RowScope.Text(state: NFTCollectionUM) {
             modifier = Modifier,
             text = state.name,
             style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -104,7 +104,7 @@ private fun RowScope.Text(state: NFTCollectionUM) {
                 .padding(top = 2.dp),
             text = state.description.resolveReference(),
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )

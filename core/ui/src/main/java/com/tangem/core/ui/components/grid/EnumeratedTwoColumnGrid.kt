@@ -42,24 +42,24 @@ fun EnumeratedTwoColumnGrid(items: ImmutableList<EnumeratedTwoColumnGridItem>, m
                     modifier = Modifier.width(40.dp),
                     text = "${item.index}.",
                     style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.secondary,
+                    color = TangemTheme.colors3.text.secondary,
                 )
                 Text(
                     text = item.mnemonic,
                     style = TangemTheme.typography.button,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                 )
             } else {
                 Text(
                     text = item.mnemonic,
                     style = TangemTheme.typography.button,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                 )
                 Text(
                     modifier = Modifier.width(40.dp),
                     text = "${item.index}.",
                     style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.secondary,
+                    color = TangemTheme.colors3.text.secondary,
                 )
             }
         }

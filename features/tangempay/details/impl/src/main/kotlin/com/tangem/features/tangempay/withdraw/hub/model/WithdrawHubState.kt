@@ -15,6 +15,8 @@ internal sealed interface OptionsState {
 
     data object Loading : OptionsState
 
+    data object NotOffered : OptionsState
+
     /** The off-ramp is out of reach: the request failed, no rail is offered, or no held token is accepted. */
     data object Unavailable : OptionsState
 

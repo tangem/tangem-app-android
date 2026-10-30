@@ -5,8 +5,6 @@ import com.tangem.data.news.store.details.DefaultNewsDetailsStore
 import com.tangem.data.news.store.details.NewsDetailsStore
 import com.tangem.data.news.store.liked.DefaultNewsLikedStore
 import com.tangem.data.news.store.liked.NewsLikedStore
-import com.tangem.data.news.store.trending.DefaultTrendingNewsStore
-import com.tangem.data.news.store.trending.TrendingNewsStore
 import com.tangem.data.news.store.viewed.DefaultNewsViewedStore
 import com.tangem.data.news.store.viewed.NewsViewedStore
 import dagger.Module
@@ -23,12 +21,6 @@ internal object NewsStoreModule {
     @Singleton
     fun provideNewsDetailsStore(): NewsDetailsStore {
         return DefaultNewsDetailsStore(store = RuntimeSharedStore())
-    }
-
-    @Provides
-    @Singleton
-    fun provideTrendingNewsStore(): TrendingNewsStore {
-        return DefaultTrendingNewsStore(store = RuntimeSharedStore())
     }
 
     @Provides

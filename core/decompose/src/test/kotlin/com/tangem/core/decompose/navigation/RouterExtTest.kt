@@ -29,7 +29,7 @@ internal class RouterExtTest {
         val navigationProvider: AppNavigationProvider = mockk {
             every { getOrCreate() } returns navigation
         }
-        val router = DefaultRouter(navigationProvider, TestingCoroutineDispatcherProvider())
+        val router = DefaultRouter(navigationProvider, TestingCoroutineDispatcherProvider(), NavigationFailureHandler.None)
 
         // Act
         router.popToOrReplaceCurrent(TokenDetails)
@@ -54,7 +54,7 @@ internal class RouterExtTest {
         val navigationProvider: AppNavigationProvider = mockk {
             every { getOrCreate() } returns navigation
         }
-        val router = DefaultRouter(navigationProvider, TestingCoroutineDispatcherProvider())
+        val router = DefaultRouter(navigationProvider, TestingCoroutineDispatcherProvider(), NavigationFailureHandler.None)
 
         // Act
         router.popToOrReplaceCurrent(Details(id = 1)) { it.id == 1 }

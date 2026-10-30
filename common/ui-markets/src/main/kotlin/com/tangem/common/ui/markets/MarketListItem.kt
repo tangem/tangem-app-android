@@ -126,7 +126,7 @@ private fun TokenTitle(name: String, currencySymbol: String, modifier: Modifier 
                 .weight(1f, fill = false)
                 .alignByBaseline(),
             text = name,
-            color = TangemTheme.colors2.text.neutral.primary,
+            color = TangemTheme.colors3.text.primary,
             style = TangemTheme.typography2.bodyMedium16,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -135,7 +135,7 @@ private fun TokenTitle(name: String, currencySymbol: String, modifier: Modifier 
         Text(
             modifier = Modifier.alignByBaseline(),
             text = currencySymbol,
-            color = TangemTheme.colors2.text.neutral.secondary,
+            color = TangemTheme.colors3.text.secondary,
             style = TangemTheme.typography2.captionMedium12,
             maxLines = 1,
             overflow = TextOverflow.Visible,
@@ -262,7 +262,7 @@ private fun mapRatingToColor(rating: String?): Color {
         "1" -> if (isDarkTheme) Color(GOLD_PLACE_COLOR_NIGHT) else Color(GOLD_PLACE_COLOR_LIGHT)
         "2" -> if (isDarkTheme) Color(SILVER_PLACE_COLOR_NIGHT) else Color(SILVER_PLACE_COLOR_LIGHT)
         "3" -> if (isDarkTheme) Color(BRONZE_PLACE_COLOR_NIGHT) else Color(BRONZE_PLACE_COLOR_LIGHT)
-        else -> TangemTheme.colors2.text.neutral.secondary
+        else -> TangemTheme.colors3.text.secondary
     }
 }
 
@@ -289,7 +289,7 @@ private fun Preview(@PreviewParameter(MarketChartListItemPreviewDataProvider::cl
             )
         }
 
-        Column(modifier = Modifier.background(TangemTheme.colors.background.primary)) {
+        Column(modifier = Modifier.background(TangemTheme.colors3.bg.secondary)) {
             MarketsListItem(
                 modifier = Modifier,
                 model = state1,

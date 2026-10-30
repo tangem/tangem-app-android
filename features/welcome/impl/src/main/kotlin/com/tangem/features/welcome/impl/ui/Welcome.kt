@@ -22,7 +22,7 @@ internal fun Welcome(state: WelcomeUM, modifier: Modifier = Modifier) {
     Box(
         modifier
             .fillMaxSize()
-            .background(TangemTheme.colors.background.secondary),
+            .background(TangemTheme.colors3.bg.primary),
     ) {
         AnimatedContent(
             targetState = state,

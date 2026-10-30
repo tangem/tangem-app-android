@@ -72,7 +72,7 @@ fun ChildArrow(childHeight: Dp, isLastChild: Boolean) {
     val isLtr = LocalLayoutDirection.current == LayoutDirection.Ltr
     val figureWidth = 40.dp
 
-    val strokeColor = TangemTheme.colors.stroke.secondary
+    val strokeColor = TangemTheme.colors3.border.tertiary
     val arrowStrokeWidthDp = 1.dp
 
     val arrowHeadRadiusDp = 1.dp

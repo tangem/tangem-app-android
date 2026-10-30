@@ -1,12 +1,6 @@
 package com.tangem.scenarios
 
 import com.tangem.common.BaseTestCase
-import com.tangem.screens.AlreadyUsedWalletDialogPageObject
-import com.tangem.screens.AlreadyUsedWalletDialogPageObject.cancelButton
-import com.tangem.screens.AlreadyUsedWalletDialogPageObject.message
-import com.tangem.screens.AlreadyUsedWalletDialogPageObject.requestSupportButton
-import com.tangem.screens.AlreadyUsedWalletDialogPageObject.thisIsMyWalletButton
-import com.tangem.screens.AlreadyUsedWalletDialogPageObject.title
 import com.tangem.screens.onActionIsUnavailableDialog
 import com.tangem.screens.onDataNotLoadedDialog
 import com.tangem.screens.onFailedTransactionDialog
@@ -46,24 +40,6 @@ fun BaseTestCase.checkScanWarningDialog() {
     }
     step("Assert 'Request support' button is displayed") {
         onScanWarningDialog { requestSupportButton.assertIsDisplayed() }
-    }
-}
-
-fun checkAlreadyUsedWalletDialog() {
-    step("Assert 'Already used Wallet' dialog title is displayed") {
-        AlreadyUsedWalletDialogPageObject { title.isDisplayed() }
-    }
-    step("Assert dialog message is displayed") {
-        AlreadyUsedWalletDialogPageObject { message.isDisplayed() }
-    }
-    step("Assert 'This is my wallet' button is displayed") {
-        AlreadyUsedWalletDialogPageObject { thisIsMyWalletButton.isDisplayed() }
-    }
-    step("Assert 'Cancel' button is displayed") {
-        AlreadyUsedWalletDialogPageObject { cancelButton.isDisplayed() }
-    }
-    step("Assert 'Request support' button is displayed") {
-        AlreadyUsedWalletDialogPageObject { requestSupportButton.isDisplayed() }
     }
 }
 

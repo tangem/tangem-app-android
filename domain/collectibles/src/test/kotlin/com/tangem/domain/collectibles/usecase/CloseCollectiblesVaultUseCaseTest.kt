@@ -42,7 +42,7 @@ internal class CloseCollectiblesVaultUseCaseTest {
     }
 
     @Test
-    fun `GIVEN the chain closes the vault WHEN invoked THEN the delegate goes before the record`() = runTest {
+    fun `GIVEN the chain closes the vault WHEN invoked THEN the delegate, the record and the backend row go`() = runTest {
         // Arrange
         coEvery { gachaVaultRepository.closeVault(userWallet) } returns Unit.right()
 
@@ -54,6 +54,7 @@ internal class CloseCollectiblesVaultUseCaseTest {
         coVerifyOrder {
             hotDelegate.forget(AccountId.forCollectiblesAccount(userWalletId = WALLET_ID))
             accountRepository.clearAccount(WALLET_ID)
+            accountRepository.unregisterAccount(WALLET_ID)
         }
     }
 
@@ -70,6 +71,7 @@ internal class CloseCollectiblesVaultUseCaseTest {
         coVerify(exactly = 0) {
             hotDelegate.forget(any())
             accountRepository.clearAccount(any())
+            accountRepository.unregisterAccount(any())
         }
     }
 

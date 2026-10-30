@@ -1,18 +1,26 @@
 package com.tangem.features.tangempay.withdraw.bank.amount.model
 
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BASE_CHAIN_ID
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawEntry
+import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.USDC_BASE
 import com.tangem.features.tangempay.withdraw.bank.amount.TangemPayBankWithdrawAmountComponent
+import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM
 import com.tangem.features.tangempay.withdraw.bank.amount.state.TangemPayBankWithdrawAmountUM.SheetUM
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawOptions
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawSource
@@ -27,10 +35,14 @@ import com.tangem.features.tangempay.withdraw.hub.bankAccount
 import com.tangem.utils.StringsSigns.THREE_STARS
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
+import io.mockk.verifySequence
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import org.junit.jupiter.api.BeforeEach
@@ -43,7 +55,11 @@ internal class TangemPayBankWithdrawAmountModelTest {
     private val router: Router = mockk(relaxed = true)
     private val onCloseFlow: () -> Unit = mockk(relaxed = true)
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
+    private val networkFeeLoader: BankWithdrawNetworkFeeLoader = mockk()
     private val dispatchers = TestingCoroutineDispatcherProvider()
+
+    private val paymentAccount = BankWithdrawSourceAccount.Payment(UserWalletId("011"))
+    private val moneyAccount = BankWithdrawSourceAccount.Money(UserWalletId("011"), productInstanceId = "instance-1")
 
     private val usdcPolygon = paymentToken()
     private val usdcBase = paymentToken(networkId = "base", networkName = "Base", contractAddress = USDC_BASE)
@@ -60,8 +76,129 @@ internal class TangemPayBankWithdrawAmountModelTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(router, onCloseFlow, analytics)
+        clearMocks(router, onCloseFlow, analytics, networkFeeLoader)
         confirmed.clear()
+        coEvery { networkFeeLoader.load(any(), any()) } returns BigDecimal.ZERO.right()
+    }
+
+    @Test
+    fun `GIVEN money account WHEN network fee loaded THEN max subtracts bank and network fees`() {
+        // Arrange
+        coEvery { networkFeeLoader.load(moneyAccount, any()) } returns NETWORK_FEE.right()
+        val model = createModel(sourceAccount = moneyAccount, options = bankWithdrawOptions())
+
+        // Act
+        model.content().source.onMaxClick()
+
+        // Assert
+        assertThat(model.content().amount.value).isEqualTo("2324.51")
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN money account WHEN continue clicked THEN result carries the network fee`() {
+        // Arrange
+        coEvery { networkFeeLoader.load(moneyAccount, any()) } returns NETWORK_FEE.right()
+        val options = bankWithdrawOptions()
+        val model = createModel(sourceAccount = moneyAccount, options = options)
+        model.content().amount.onValueChange("500")
+
+        // Act
+        model.content().onContinueClick()
+
+        // Assert
+        assertThat(confirmed).containsExactly(
+            BankWithdrawAmountResult(
+                amount = BigDecimal("500"),
+                source = options.sources.first(),
+                destination = options.destinations.first(),
+                networkFee = NETWORK_FEE,
+            ),
+        )
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN money account WHEN amount covers only the bank fee THEN not enough funds`() {
+        // Arrange
+        coEvery { networkFeeLoader.load(moneyAccount, any()) } returns NETWORK_FEE.right()
+        val model = createModel(sourceAccount = moneyAccount, options = bankWithdrawOptions())
+
+        // Act
+        model.content().amount.onValueChange("2324.55")
+
+        // Assert
+        val state = model.content()
+        assertThat(state.amount.error)
+            .isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_amount_not_enough_funds))
+        assertThat(state.isContinueEnabled).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN network fee in flight WHEN it arrives THEN loading state replaced by the form`() {
+        // Arrange
+        val fee = CompletableDeferred<Either<GetFeeError, BigDecimal>>()
+        coEvery { networkFeeLoader.load(moneyAccount, any()) } coAnswers { fee.await() }
+        val model = createModel(sourceAccount = moneyAccount)
+        val beforeFee = model.uiState.value
+
+        // Act
+        fee.complete(NETWORK_FEE.right())
+
+        // Assert
+        assertThat(beforeFee).isInstanceOf(TangemPayBankWithdrawAmountUM.Loading::class.java)
+        assertThat(model.uiState.value).isInstanceOf(TangemPayBankWithdrawAmountUM.Content::class.java)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN network fee failed WHEN retried THEN fee reloaded and the form shown`() {
+        // Arrange
+        coEvery { networkFeeLoader.load(moneyAccount, any()) } returnsMany listOf(
+            GetFeeError.UnknownError.left(),
+            NETWORK_FEE.right(),
+        )
+        val model = createModel(sourceAccount = moneyAccount)
+        val unreachable = model.uiState.value as TangemPayBankWithdrawAmountUM.FeeUnreachable
+
+        // Act
+        unreachable.onRetryClick()
+
+        // Assert
+        assertThat(model.uiState.value).isInstanceOf(TangemPayBankWithdrawAmountUM.Content::class.java)
+        coVerify(exactly = 2) { networkFeeLoader.load(moneyAccount, any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN balance not covering the network fee WHEN model created THEN form shown instead of fee unreachable`() {
+        // Arrange
+        coEvery { networkFeeLoader.load(moneyAccount, any()) } returns GetFeeError.GaslessError.NotEnoughFunds.left()
+
+        // Act
+        val model = createModel(sourceAccount = moneyAccount, options = bankWithdrawOptions())
+
+        // Assert
+        assertThat(model.uiState.value).isInstanceOf(TangemPayBankWithdrawAmountUM.Content::class.java)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN balance not covering the network fee WHEN amount within balance entered THEN not enough funds`() {
+        // Arrange
+        coEvery { networkFeeLoader.load(moneyAccount, any()) } returns GetFeeError.GaslessError.NotEnoughFunds.left()
+        val model = createModel(sourceAccount = moneyAccount, options = bankWithdrawOptions())
+
+        // Act
+        model.content().amount.onValueChange("500")
+
+        // Assert
+        val state = model.content()
+        assertThat(state.amount.error)
+            .isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_amount_not_enough_funds))
+        assertThat(state.isContinueEnabled).isFalse()
+        model.onDestroy()
     }
 
     @Test
@@ -70,7 +207,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel()
 
         // Assert
-        val state = model.uiState.value
+        val state = model.content()
         assertThat(state.source.symbol).isEqualTo("USDC")
         assertThat(state.source.subtitle).isEqualTo(
             resourceReference(R.string.tangempay_withdraw_bank_source_subtitle, wrappedList("Polygon", "$2,325.55")),
@@ -92,7 +229,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel(options = bankWithdrawOptions(destinations = listOf(offrampDestination())))
 
         // Assert
-        assertThat(model.uiState.value.route.onClick).isNull()
+        assertThat(model.content().route.onClick).isNull()
         model.onDestroy()
     }
 
@@ -102,7 +239,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel(draft = BankWithdrawDraft(entry = BankWithdrawEntry.Saved("acc-1")))
 
         // Assert
-        assertThat(model.uiState.value.route.onClick).isNull()
+        assertThat(model.content().route.onClick).isNull()
         model.onDestroy()
     }
 
@@ -115,7 +252,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel(draft = draft)
 
         // Assert
-        val route = model.uiState.value.route
+        val route = model.content().route
         assertThat(route.rail).isEqualTo(BankRail.WIRE)
         assertThat(route.onClick).isNull()
         model.onDestroy()
@@ -125,14 +262,14 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN wire picked WHEN saved recipient on ach selected THEN ach shown and route row not clickable`() {
         // Arrange
         val model = createModel()
-        model.uiState.value.route.onClick?.invoke()
-        (model.uiState.value.sheet as SheetUM.Routes).items.last().onClick()
+        model.content().route.onClick?.invoke()
+        (model.content().sheet as SheetUM.Routes).items.last().onClick()
 
         // Act
         draftFlow.value = draftFlow.value.copy(recipient = bankAccount(rail = BankRail.ACH))
 
         // Assert
-        val route = model.uiState.value.route
+        val route = model.content().route
         assertThat(route.rail).isEqualTo(BankRail.ACH)
         assertThat(route.onClick).isNull()
         model.onDestroy()
@@ -144,10 +281,10 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel()
 
         // Act
-        model.uiState.value.amount.onValueChange("0.5")
+        model.content().amount.onValueChange("0.5")
 
         // Assert
-        val state = model.uiState.value
+        val state = model.content()
         assertThat(state.amount.error).isEqualTo(
             resourceReference(R.string.tangempay_withdraw_bank_amount_error_range, wrappedList("$1", "$10,000")),
         )
@@ -161,10 +298,10 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel()
 
         // Act
-        model.uiState.value.amount.onValueChange("10001")
+        model.content().amount.onValueChange("10001")
 
         // Assert
-        val state = model.uiState.value
+        val state = model.content()
         assertThat(state.amount.error).isEqualTo(
             resourceReference(R.string.tangempay_withdraw_bank_amount_error_range, wrappedList("$1", "$10,000")),
         )
@@ -178,10 +315,10 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel()
 
         // Act
-        model.uiState.value.amount.onValueChange("2325")
+        model.content().amount.onValueChange("2325")
 
         // Assert
-        val state = model.uiState.value
+        val state = model.content()
         assertThat(state.amount.error)
             .isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_amount_not_enough_funds))
         assertThat(state.isContinueEnabled).isFalse()
@@ -194,10 +331,10 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel()
 
         // Act
-        model.uiState.value.amount.onValueChange("abc")
+        model.content().amount.onValueChange("abc")
 
         // Assert
-        assertThat(model.uiState.value.amount.value).isEmpty()
+        assertThat(model.content().amount.value).isEmpty()
         model.onDestroy()
     }
 
@@ -210,10 +347,10 @@ internal class TangemPayBankWithdrawAmountModelTest {
             val model = createModel()
 
             // Act
-            model.uiState.value.amount.onValueChange("1,5")
+            model.content().amount.onValueChange("1,5")
 
             // Assert
-            val state = model.uiState.value
+            val state = model.content()
             assertThat(state.amount.value).isEqualTo("1,5")
             assertThat(state.amount.error).isNull()
             assertThat(state.isContinueEnabled).isTrue()
@@ -229,10 +366,10 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel()
 
         // Act
-        model.uiState.value.source.onMaxClick()
+        model.content().source.onMaxClick()
 
         // Assert
-        val state = model.uiState.value
+        val state = model.content()
         assertThat(state.amount.value).isEqualTo("2324.55")
         assertThat(state.amount.error).isNull()
         assertThat(state.isContinueEnabled).isTrue()
@@ -246,10 +383,10 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel(options = options)
 
         // Act
-        model.uiState.value.source.onMaxClick()
+        model.content().source.onMaxClick()
 
         // Assert
-        val state = model.uiState.value
+        val state = model.content()
         assertThat(state.amount.value).isEqualTo("10000")
         assertThat(state.amount.error).isNull()
         assertThat(state.isContinueEnabled).isTrue()
@@ -263,10 +400,10 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel(options = options)
 
         // Act
-        model.uiState.value.source.onMaxClick()
+        model.content().source.onMaxClick()
 
         // Assert
-        val state = model.uiState.value
+        val state = model.content()
         assertThat(state.amount.value).isEqualTo("0.65")
         assertThat(state.amount.error).isEqualTo(
             resourceReference(R.string.tangempay_withdraw_bank_amount_error_range, wrappedList("$1", "$10,000")),
@@ -279,10 +416,10 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN valid amount WHEN continue clicked THEN result passed to container`() {
         // Arrange
         val model = createModel()
-        model.uiState.value.amount.onValueChange("500")
+        model.content().amount.onValueChange("500")
 
         // Act
-        model.uiState.value.onContinueClick()
+        model.content().onContinueClick()
 
         // Assert
         val result = confirmed.single()
@@ -298,7 +435,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel()
 
         // Act
-        model.uiState.value.onContinueClick()
+        model.content().onContinueClick()
 
         // Assert
         assertThat(confirmed).isEmpty()
@@ -309,8 +446,8 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN source row clicked WHEN token selected THEN source changes and sheet closes`() {
         // Arrange
         val model = createModel()
-        model.uiState.value.source.onClick()
-        val sheet = model.uiState.value.sheet as SheetUM.Tokens
+        model.content().source.onClick?.invoke()
+        val sheet = model.content().sheet as SheetUM.Tokens
         assertThat(sheet.items.map { it.symbol to it.isSelected }).containsExactly(
             "USDC" to true,
             "USDC" to false,
@@ -320,7 +457,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         sheet.items.last().onClick()
 
         // Assert
-        val state = model.uiState.value
+        val state = model.content()
         assertThat(state.sheet).isEqualTo(SheetUM.Hidden)
         assertThat(state.source.subtitle).isEqualTo(
             resourceReference(R.string.tangempay_withdraw_bank_source_subtitle, wrappedList("Base", "$12,325.55")),
@@ -332,8 +469,8 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN route row clicked WHEN wire selected THEN route row updates and sheet closes`() {
         // Arrange
         val model = createModel()
-        model.uiState.value.route.onClick?.invoke()
-        val sheet = model.uiState.value.sheet as SheetUM.Routes
+        model.content().route.onClick?.invoke()
+        val sheet = model.content().sheet as SheetUM.Routes
         assertThat(sheet.items.map { it.rail to it.isSelected }).containsExactly(
             BankRail.ACH to true,
             BankRail.WIRE to false,
@@ -343,7 +480,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         sheet.items.last().onClick()
 
         // Assert
-        val state = model.uiState.value
+        val state = model.content()
         assertThat(state.sheet).isEqualTo(SheetUM.Hidden)
         assertThat(state.route.rail).isEqualTo(BankRail.WIRE)
         assertThat(state.route.fee).isEqualTo("$11")
@@ -355,13 +492,13 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN sheet opened WHEN dismissed THEN sheet closes`() {
         // Arrange
         val model = createModel()
-        model.uiState.value.source.onClick()
+        model.content().source.onClick?.invoke()
 
         // Act
-        model.uiState.value.sheet.onDismiss()
+        model.content().sheet.onDismiss()
 
         // Assert
-        assertThat(model.uiState.value.sheet).isEqualTo(SheetUM.Hidden)
+        assertThat(model.content().sheet).isEqualTo(SheetUM.Hidden)
         model.onDestroy()
     }
 
@@ -372,10 +509,10 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel(options = options)
 
         // Act
-        model.uiState.value.source.onClick()
+        model.content().source.onClick?.invoke()
 
         // Assert
-        val sheet = model.uiState.value.sheet as SheetUM.Tokens
+        val sheet = model.content().sheet as SheetUM.Tokens
         assertThat(sheet.items.map { Triple(it.subtitle, it.isAvailable, it.isSelected) }).containsExactly(
             Triple(
                 resourceReference(R.string.tangempay_withdraw_bank_source_subtitle, wrappedList("Polygon", "$2,325.55")),
@@ -400,7 +537,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel(isBalanceHidden = true)
 
         // Assert
-        assertThat(model.uiState.value.source.subtitle).isEqualTo(
+        assertThat(model.content().source.subtitle).isEqualTo(
             resourceReference(R.string.tangempay_withdraw_bank_source_subtitle, wrappedList("Polygon", THREE_STARS)),
         )
         model.onDestroy()
@@ -413,10 +550,10 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel(options = options, isBalanceHidden = true)
 
         // Act
-        model.uiState.value.source.onClick()
+        model.content().source.onClick?.invoke()
 
         // Assert
-        val sheet = model.uiState.value.sheet as SheetUM.Tokens
+        val sheet = model.content().sheet as SheetUM.Tokens
         assertThat(sheet.items.map { it.subtitle }).containsExactly(
             resourceReference(R.string.tangempay_withdraw_bank_source_subtitle, wrappedList("Polygon", THREE_STARS)),
             resourceReference(
@@ -436,7 +573,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel(options = options)
 
         // Assert
-        assertThat(model.uiState.value.source.subtitle).isEqualTo(
+        assertThat(model.content().source.subtitle).isEqualTo(
             resourceReference(R.string.tangempay_withdraw_bank_source_subtitle, wrappedList("Polygon", "$2,325.55")),
         )
         model.onDestroy()
@@ -452,7 +589,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel(draft = draft, options = options)
 
         // Assert
-        assertThat(model.uiState.value.source.subtitle).isEqualTo(
+        assertThat(model.content().source.subtitle).isEqualTo(
             resourceReference(R.string.tangempay_withdraw_bank_source_subtitle, wrappedList("Polygon", "$2,325.55")),
         )
         model.onDestroy()
@@ -471,7 +608,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel(draft = draft)
 
         // Assert
-        val state = model.uiState.value
+        val state = model.content()
         assertThat(state.source.subtitle).isEqualTo(
             resourceReference(R.string.tangempay_withdraw_bank_source_subtitle, wrappedList("Base", "$12,325.55")),
         )
@@ -488,7 +625,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel(draft = draft, options = bankWithdrawOptions())
 
         // Assert
-        assertThat(model.uiState.value.source.subtitle).isEqualTo(
+        assertThat(model.content().source.subtitle).isEqualTo(
             resourceReference(R.string.tangempay_withdraw_bank_source_subtitle, wrappedList("Polygon", "$2,325.55")),
         )
         model.onDestroy()
@@ -511,7 +648,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         )
 
         // Assert
-        val state = model.uiState.value
+        val state = model.content()
         assertThat(state.amount.value).isEqualTo("500")
         assertThat(state.isContinueEnabled).isTrue()
         model.onDestroy()
@@ -532,10 +669,10 @@ internal class TangemPayBankWithdrawAmountModelTest {
         )
 
         // Act
-        model.uiState.value.amount.onValueChange("")
+        model.content().amount.onValueChange("")
 
         // Assert
-        assertThat(model.uiState.value.amount.value).isEmpty()
+        assertThat(model.content().amount.value).isEmpty()
         model.onDestroy()
     }
 
@@ -545,7 +682,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel()
 
         // Act
-        model.uiState.value.onBackClick()
+        model.content().onBackClick()
 
         // Assert
         verify(exactly = 1) { router.pop() }
@@ -558,7 +695,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel(step = TangemPayBankWithdrawInnerRoute.Edit(BankWithdrawEditTarget.Amount))
 
         // Assert
-        assertThat(model.uiState.value.header.subtitle)
+        assertThat(model.content().header.subtitle)
             .isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_step_counter, wrappedList(1, 5)))
         model.onDestroy()
     }
@@ -569,7 +706,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel()
 
         // Act
-        model.uiState.value.header.onCloseClick()
+        model.content().header.onCloseClick()
 
         // Assert
         verify(exactly = 1) { onCloseFlow() }
@@ -580,15 +717,15 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN continue committed WHEN draft amount changes afterwards THEN new amount shown and reported`() {
         // Arrange
         val model = createModel()
-        model.uiState.value.amount.onValueChange("500")
-        model.uiState.value.onContinueClick()
+        model.content().amount.onValueChange("500")
+        model.content().onContinueClick()
 
         // Act
         draftFlow.value = draftFlow.value.copy(amount = BigDecimal("700"))
 
         // Assert
-        assertThat(model.uiState.value.amount.value).isEqualTo("700")
-        model.uiState.value.onContinueClick()
+        assertThat(model.content().amount.value).isEqualTo("700")
+        model.content().onContinueClick()
         assertThat(confirmed.last().amount).isEqualTo(BigDecimal("700"))
         model.onDestroy()
     }
@@ -597,8 +734,8 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN balance drops while the step is open WHEN options update THEN the amount is revalidated`() {
         // Arrange
         val model = createModel()
-        model.uiState.value.amount.onValueChange("2000")
-        assertThat(model.uiState.value.isContinueEnabled).isTrue()
+        model.content().amount.onValueChange("2000")
+        assertThat(model.content().isContinueEnabled).isTrue()
 
         // Act
         optionsFlow.value = bankWithdrawOptions(
@@ -606,7 +743,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         )
 
         // Assert
-        val state = model.uiState.value
+        val state = model.content()
         assertThat(state.amount.error)
             .isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_amount_not_enough_funds))
         assertThat(state.isContinueEnabled).isFalse()
@@ -619,7 +756,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel()
 
         // Act
-        model.uiState.value.amount.onValueChange("10")
+        model.content().amount.onValueChange("10")
 
         // Assert
         verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.AmountEntered()) }
@@ -630,10 +767,10 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN amount already entered WHEN amount changed again THEN AmountEntered is sent once`() {
         // Arrange
         val model = createModel()
-        model.uiState.value.amount.onValueChange("10")
+        model.content().amount.onValueChange("10")
 
         // Act
-        model.uiState.value.amount.onValueChange("20")
+        model.content().amount.onValueChange("20")
 
         // Assert
         verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.AmountEntered()) }
@@ -646,7 +783,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel()
 
         // Act
-        model.uiState.value.amount.onValueChange("0")
+        model.content().amount.onValueChange("0")
 
         // Assert
         verify(exactly = 0) { analytics.send(any()) }
@@ -665,7 +802,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel(draft = draft)
 
         // Act
-        model.uiState.value.amount.onValueChange("20")
+        model.content().amount.onValueChange("20")
 
         // Assert
         verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Offramp.AmountEntered>()) }
@@ -678,7 +815,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel()
 
         // Act
-        model.uiState.value.source.onMaxClick()
+        model.content().source.onMaxClick()
 
         // Assert
         verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.AmountEntered()) }
@@ -691,7 +828,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel()
 
         // Act
-        model.uiState.value.source.onClick()
+        model.content().source.onClick?.invoke()
 
         // Assert
         verifyOrder {
@@ -707,8 +844,8 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN source sheet opened WHEN the selected source picked again THEN CoinInSelectionSheetClicked not sent`() {
         // Arrange
         val model = createModel()
-        model.uiState.value.source.onClick()
-        val sheet = model.uiState.value.sheet as SheetUM.Tokens
+        model.content().source.onClick?.invoke()
+        val sheet = model.content().sheet as SheetUM.Tokens
 
         // Act
         sheet.items.first().onClick()
@@ -722,8 +859,8 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN source sheet opened WHEN another source picked THEN CoinInSelectionSheetClicked is sent`() {
         // Arrange
         val model = createModel()
-        model.uiState.value.source.onClick()
-        val sheet = model.uiState.value.sheet as SheetUM.Tokens
+        model.content().source.onClick?.invoke()
+        val sheet = model.content().sheet as SheetUM.Tokens
 
         // Act
         sheet.items.last().onClick()
@@ -739,7 +876,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel()
 
         // Act
-        model.uiState.value.route.onClick?.invoke()
+        model.content().route.onClick?.invoke()
 
         // Assert
         verifyOrder {
@@ -755,8 +892,8 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN route sheet opened WHEN the selected rail picked again THEN RailInSelectionSheetClicked is not sent`() {
         // Arrange
         val model = createModel()
-        model.uiState.value.route.onClick?.invoke()
-        val sheet = model.uiState.value.sheet as SheetUM.Routes
+        model.content().route.onClick?.invoke()
+        val sheet = model.content().sheet as SheetUM.Routes
 
         // Act
         sheet.items.first().onClick()
@@ -770,8 +907,8 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN route sheet opened WHEN another rail picked THEN RailInSelectionSheetClicked is sent`() {
         // Arrange
         val model = createModel()
-        model.uiState.value.route.onClick?.invoke()
-        val sheet = model.uiState.value.sheet as SheetUM.Routes
+        model.content().route.onClick?.invoke()
+        val sheet = model.content().sheet as SheetUM.Routes
 
         // Act
         sheet.items.last().onClick()
@@ -785,10 +922,10 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN valid amount WHEN continue clicked THEN AmountContinueClicked is sent`() {
         // Arrange
         val model = createModel()
-        model.uiState.value.amount.onValueChange("500")
+        model.content().amount.onValueChange("500")
 
         // Act
-        model.uiState.value.onContinueClick()
+        model.content().onContinueClick()
 
         // Assert
         verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.AmountContinueClicked()) }
@@ -801,7 +938,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel()
 
         // Act
-        model.uiState.value.onContinueClick()
+        model.content().onContinueClick()
 
         // Assert
         verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Offramp.AmountContinueClicked>()) }
@@ -814,7 +951,7 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel()
 
         // Act
-        model.uiState.value.amount.onValueChange("2325")
+        model.content().amount.onValueChange("2325")
 
         // Assert
         verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.InsufficientFundsStateShowed()) }
@@ -825,10 +962,10 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN amount above balance WHEN typing continues THEN InsufficientFundsStateShowed is sent once`() {
         // Arrange
         val model = createModel()
-        model.uiState.value.amount.onValueChange("2325")
+        model.content().amount.onValueChange("2325")
 
         // Act
-        model.uiState.value.amount.onValueChange("23255")
+        model.content().amount.onValueChange("23255")
 
         // Assert
         verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.InsufficientFundsStateShowed()) }
@@ -839,11 +976,11 @@ internal class TangemPayBankWithdrawAmountModelTest {
     fun `GIVEN shortage cleared WHEN balance exceeded again THEN InsufficientFundsStateShowed is sent twice`() {
         // Arrange
         val model = createModel()
-        model.uiState.value.amount.onValueChange("2325")
-        model.uiState.value.amount.onValueChange("500")
+        model.content().amount.onValueChange("2325")
+        model.content().amount.onValueChange("500")
 
         // Act
-        model.uiState.value.amount.onValueChange("2325")
+        model.content().amount.onValueChange("2325")
 
         // Assert
         verify(exactly = 2) { analytics.send(TangemPayAnalyticsEvents.Offramp.InsufficientFundsStateShowed()) }
@@ -874,10 +1011,28 @@ internal class TangemPayBankWithdrawAmountModelTest {
         val model = createModel()
 
         // Act
-        model.uiState.value.amount.onValueChange("0.5")
+        model.content().amount.onValueChange("0.5")
 
         // Assert
         verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Offramp.InsufficientFundsStateShowed>()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN money account WHEN amount and rail picked and continued THEN only amount screen opened sent`() {
+        // Arrange
+        val model = createModel(sourceAccount = moneyAccount, options = bankWithdrawOptions())
+
+        // Act
+        model.content().amount.onValueChange("2325")
+        model.content().amount.onValueChange("500")
+        model.content().route.onClick?.invoke()
+        (model.content().sheet as SheetUM.Routes).items.last().onClick()
+        model.content().onContinueClick()
+
+        // Assert
+        verifySequence { analytics.send(MoneyAccountAnalyticsEvents.OfframpAmountScreenOpened()) }
+        assertThat(confirmed).hasSize(1)
         model.onDestroy()
     }
 
@@ -886,12 +1041,14 @@ internal class TangemPayBankWithdrawAmountModelTest {
         step: TangemPayBankWithdrawInnerRoute = TangemPayBankWithdrawInnerRoute.Amount,
         options: BankWithdrawOptions = twoSourceOptions,
         isBalanceHidden: Boolean = false,
+        sourceAccount: BankWithdrawSourceAccount = paymentAccount,
     ): TangemPayBankWithdrawAmountModel {
         draftFlow = MutableStateFlow(draft)
         optionsFlow = MutableStateFlow(options)
         return TangemPayBankWithdrawAmountModel(
             paramsContainer = MutableParamsContainer(
                 TangemPayBankWithdrawAmountComponent.Params(
+                    sourceAccount = sourceAccount,
                     draft = draftFlow,
                     options = optionsFlow,
                     step = step,
@@ -903,6 +1060,14 @@ internal class TangemPayBankWithdrawAmountModelTest {
             router = router,
             analytics = analytics,
             getBalanceHidingSettingsUseCase = mockk { every { isBalanceHidden() } returns flowOf(isBalanceHidden) },
+            networkFeeLoader = networkFeeLoader,
         )
+    }
+
+    private fun TangemPayBankWithdrawAmountModel.content(): TangemPayBankWithdrawAmountUM.Content =
+        uiState.value as TangemPayBankWithdrawAmountUM.Content
+
+    private companion object {
+        val NETWORK_FEE = BigDecimal("0.04")
     }
 }

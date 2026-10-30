@@ -12,7 +12,6 @@ internal sealed class TangemPayOnboardingScreenState {
     data class Content(
         override val onBack: () -> Unit,
         val onTermsClick: () -> Unit,
-        val onTermsAndFeesClick: () -> Unit,
         val buttonConfig: ButtonConfig,
         val isUnifiedOnboarding: Boolean,
     ) : TangemPayOnboardingScreenState() {

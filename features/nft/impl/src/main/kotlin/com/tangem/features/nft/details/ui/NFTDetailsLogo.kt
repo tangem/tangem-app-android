@@ -61,14 +61,14 @@ private fun Placeholder(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.field.focused),
+            .background(TangemTheme.colors3.bg.transparent.secondary),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             modifier = Modifier.size(120.dp),
             painter = painterResource(R.drawable.ic_nft_placeholder_120),
             contentDescription = null,
-            tint = TangemTheme.colors.icon.primary1,
+            tint = TangemTheme.colors3.icon.primary,
         )
     }
 }

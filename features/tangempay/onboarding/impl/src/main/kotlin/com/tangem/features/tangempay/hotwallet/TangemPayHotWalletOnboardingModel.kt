@@ -5,11 +5,15 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.media.LoopingVideoController
+import com.tangem.core.media.LoopingVideoState
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.model.TangemPayOnboardingStarter
+import com.tangem.features.tangempay.model.createPayBundleVideo
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,6 +23,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @ModelScoped
+@Suppress("LongParameterList")
 internal class TangemPayHotWalletOnboardingModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
@@ -26,12 +31,25 @@ internal class TangemPayHotWalletOnboardingModel @Inject constructor(
     private val onboardingStarter: TangemPayOnboardingStarter,
     private val analytics: AnalyticsEventHandler,
     tangemPayFeatureToggles: TangemPayFeatureToggles,
+    moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
+    videoFactory: LoopingVideoController.Factory,
 ) : Model() {
+
+    private val isPayBundleIntroductionEnabled = tangemPayFeatureToggles.isPayBundleIntroductionEnabled
+
+    private val video = if (isPayBundleIntroductionEnabled) {
+        videoFactory.createPayBundleVideo(scope = modelScope)
+    } else {
+        null
+    }
+
+    val videoState: StateFlow<LoopingVideoState>? = video?.state
 
     val uiState: StateFlow<TangemPayHotWalletOnboardingUM>
         field = MutableStateFlow(
             TangemPayHotWalletOnboardingUM(
-                isPayBundleIntroductionEnabled = tangemPayFeatureToggles.isPayBundleIntroductionEnabled,
+                isPayBundleIntroductionEnabled = isPayBundleIntroductionEnabled,
+                isUnifiedOnboarding = moneyAccountFeatureToggles.isMoneyAccountsEnabled,
                 isLoading = false,
                 onGetCardClick = ::onGetCardClick,
                 onTermsClick = ::onTermsClick,
@@ -42,6 +60,15 @@ internal class TangemPayHotWalletOnboardingModel @Inject constructor(
 
     init {
         analytics.send(TangemPayAnalyticsEvents.ShortForHwActivationScreenOpened())
+    }
+
+    fun setVideoRunning(isRunning: Boolean) {
+        video?.setRunning(isRunning = isRunning)
+    }
+
+    override fun onDestroy() {
+        video?.release()
+        super.onDestroy()
     }
 
     private fun onTermsClick() {
