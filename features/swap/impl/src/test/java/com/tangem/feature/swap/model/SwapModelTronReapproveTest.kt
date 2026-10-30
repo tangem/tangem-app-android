@@ -61,6 +61,18 @@ internal class SwapModelTronReapproveTest : SwapModelTestBase() {
         verify(exactly = 0) { swapInteractor.requireTronReapproval(any(), any(), any()) }
     }
 
+    @Test
+    fun `GIVEN swap screen WHEN model destroyed THEN tron reapprovals cleared`() = runTest {
+        // Arrange
+        val model = createModel()
+
+        // Act
+        model.onDestroy()
+
+        // Assert
+        verify(exactly = 1) { swapInteractor.clearTronReapprovals() }
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun SwapModel.lastAmount(): String {
         val field = SwapModel::class.java.getDeclaredField("lastAmount").apply { isAccessible = true }

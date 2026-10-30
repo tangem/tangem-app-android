@@ -153,7 +153,7 @@ internal class SwapInteractorImpl @Inject constructor(
     )
 
     /** Allowance ceilings set by [requireTronReapproval]; an entry goes once the allowance is at or below it. */
-    private val tronReapprovalCeilings = ConcurrentHashMap<IntegratedApprovalFallbackKey, BigDecimal>()
+    private val tronReapprovalCeilings = ConcurrentHashMap<IntegratedApprovalFallbackKey, TronReapprovalCeiling>()
 
     private val yieldSwapAllowedRouters = newSetFromMap(ConcurrentHashMap<String, Boolean>())
 
@@ -1843,7 +1843,18 @@ internal class SwapInteractorImpl @Inject constructor(
         spenderAddress: String,
         maxAllowance: BigDecimal,
     ) {
-        tronReapprovalCeilings[IntegratedApprovalFallbackKey.of(fromSwapCurrencyStatus, spenderAddress)] = maxAllowance
+        tronReapprovalCeilings[IntegratedApprovalFallbackKey.of(fromSwapCurrencyStatus, spenderAddress)] =
+            TronReapprovalCeiling(
+                tokenAddress = getTokenAddress(fromSwapCurrencyStatus.currency),
+                maxAllowance = maxAllowance,
+            )
+    }
+
+    override fun clearTronReapprovals() {
+        // A sent approval keeps its ceiling: until it lands, the old allowance still covers the amount.
+        tronReapprovalCeilings.values.removeAll { ceiling ->
+            !allowPermissionsHandler.isAddressAllowanceInProgress(ceiling.tokenAddress)
+        }
     }
 
     private fun isTronReapprovalPending(
@@ -1853,7 +1864,7 @@ internal class SwapInteractorImpl @Inject constructor(
         allowanceInfo: AllowanceInfo,
     ): Boolean {
         val key = IntegratedApprovalFallbackKey.of(fromSwapCurrencyStatus, spenderAddress)
-        val ceiling = tronReapprovalCeilings[key] ?: return false
+        val ceiling = tronReapprovalCeilings[key]?.maxAllowance ?: return false
         val allowance = when (allowanceInfo) {
             is AllowanceInfo.Enough -> allowanceInfo.allowance
             is AllowanceInfo.NotEnough -> allowanceInfo.allowance
@@ -3071,6 +3082,8 @@ internal class SwapInteractorImpl @Inject constructor(
  * failure is structural (the approval simply does not exist yet) and changing the amount cannot fix
  * it — so we must not retry the simulation on every amount change either.
  */
+private data class TronReapprovalCeiling(val tokenAddress: String, val maxAllowance: BigDecimal)
+
 private data class IntegratedApprovalFallbackKey(
     val userWalletId: UserWalletId,
     val fromCurrencyId: CryptoCurrency.ID,
