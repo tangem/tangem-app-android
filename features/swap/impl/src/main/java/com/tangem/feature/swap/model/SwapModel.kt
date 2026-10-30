@@ -1826,6 +1826,7 @@ internal class SwapModel @Inject constructor(
                             feeType = AnalyticsParam.FeeType.fromString(swapFee.feeBucket.toAnalyticsName()),
                             feeCryptoCurrency = dataState.feePaidCryptoCurrency,
                             isTransfer = false,
+                            isFeeSponsored = swapFee.isSponsored,
                         )
                         val url = getExplorerTransactionUrlUseCase(
                             txHash = swapTransactionState.txHash,
@@ -2990,11 +2991,12 @@ internal class SwapModel @Inject constructor(
         feeType: AnalyticsParam.FeeType,
         feeCryptoCurrency: CryptoCurrencyStatus?,
         isTransfer: Boolean,
+        isFeeSponsored: Boolean = false,
     ) {
-        val feeAssetType = if (feeCryptoCurrency?.currency is CryptoCurrency.Coin) {
-            AnalyticsParam.FeeAssetType.Coin
-        } else {
-            AnalyticsParam.FeeAssetType.Token
+        val feeAssetType = when {
+            isFeeSponsored -> AnalyticsParam.FeeAssetType.Sponsored
+            feeCryptoCurrency?.currency is CryptoCurrency.Coin -> AnalyticsParam.FeeAssetType.Coin
+            else -> AnalyticsParam.FeeAssetType.Token
         }
         val blockchain = fromToken.network.name
         val feeToken = getFeeToken().symbol

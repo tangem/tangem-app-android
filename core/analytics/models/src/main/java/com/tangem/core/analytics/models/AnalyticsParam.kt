@@ -210,6 +210,7 @@ sealed class AnalyticsParam {
     sealed class FeeAssetType(val value: String) {
         data object Coin : FeeAssetType("Coin")
         data object Token : FeeAssetType("Token")
+        data object Sponsored : FeeAssetType("Sponsored")
     }
 
     sealed class AccountType(val value: String) {
