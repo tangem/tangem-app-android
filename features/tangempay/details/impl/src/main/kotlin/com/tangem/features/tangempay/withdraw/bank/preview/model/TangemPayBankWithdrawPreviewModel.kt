@@ -14,6 +14,7 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.tangempay.common.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawAnalytics
+import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.navigation.BankWithdrawEditTarget
 import com.tangem.features.tangempay.withdraw.bank.navigation.TangemPayBankWithdrawInnerRoute
 import com.tangem.features.tangempay.withdraw.bank.preview.TangemPayBankWithdrawPreviewComponent
@@ -102,7 +103,7 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
 
     private fun onSendClick() {
         if (isSending) return
-        withdrawAnalytics.onSendClicked(params.draft.value)
+        withdrawAnalytics.onSendClicked()
         complete()
     }
 
@@ -114,25 +115,29 @@ internal class TangemPayBankWithdrawPreviewModel @Inject constructor(
     private fun complete() {
         val draft = params.draft.value
         modelScope.launch {
-            completion.complete(draft = draft, onState = ::onCompletionState)
+            completion.complete(draft = draft) { completionState -> onCompletionState(completionState, draft) }
         }.saveIn(sendJobHolder)
     }
 
-    private fun onCompletionState(completionState: CompletionState) {
+    private fun onCompletionState(completionState: CompletionState, draft: BankWithdrawDraft) {
         state.update { it.copy(completion = completionState) }
         when (completionState) {
-            CompletionState.Completed -> params.onCompleted()
+            CompletionState.Completed -> {
+                withdrawAnalytics.onSendAttempted(draft)
+                params.onCompleted()
+            }
             CompletionState.WithdrawalInProgress -> uiMessageSender.send(
                 TangemPayMessagesFactory.createErrorMessage(errorType = TangemPayDetailsErrorType.WithdrawInProgress),
             )
-            is CompletionState.Failed -> onCompletionFailed(completionState)
+            is CompletionState.Failed -> onCompletionFailed(failed = completionState, draft = draft)
             CompletionState.Idle,
             CompletionState.Sending,
             -> Unit
         }
     }
 
-    private fun onCompletionFailed(failed: CompletionState.Failed) {
+    private fun onCompletionFailed(failed: CompletionState.Failed, draft: BankWithdrawDraft) {
+        withdrawAnalytics.onSendAttempted(draft)
         withdrawAnalytics.onSendFailed(errorCode = failed.errorCode)
         if (failed.failure == PreviewFailure.TransferOutcomeUnknown) params.onTransferOutcomeUnknown()
     }

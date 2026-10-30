@@ -14,16 +14,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
@@ -43,6 +44,7 @@ import com.patrykandpatrick.vico.compose.common.shape.dashed
 import com.patrykandpatrick.vico.core.cartesian.HorizontalLayout
 import com.patrykandpatrick.vico.core.cartesian.Zoom
 import com.patrykandpatrick.vico.core.cartesian.axis.AxisPosition
+import com.patrykandpatrick.vico.core.cartesian.axis.BaseAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
@@ -67,8 +69,8 @@ import com.tangem.features.yield.supply.impl.common.formatter.formatApy
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartUM
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyMarketChartDataUM
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 import java.util.Locale
+import kotlin.math.roundToInt
 
 /** Height the chart host is laid out at; the average label and the column gap both measure against it. */
 private val CHART_HEIGHT = 105.dp
@@ -81,6 +83,12 @@ private val COLUMN_THICKNESS = 4.dp
 
 /** Floor for [columnSpacing]: past it the bars would touch, and a dense period has to stay readable. */
 private val MIN_COLUMN_SPACING = 1.dp
+
+/**
+ * Column spacing and the labels row are both offset by this. The axis may only grow past it, for a label like
+ * `0.05%` that a fixed width would truncate.
+ */
+private val START_AXIS_WIDTH = 38.dp
 
 @Composable
 internal fun YieldSupplyChartContent(state: YieldSupplyChartUM, modifier: Modifier = Modifier) {
@@ -193,11 +201,7 @@ private fun YieldSupplyChartData(state: YieldSupplyChartUM.Data, modifier: Modif
 
         val averageLabelTopPadding = rememberAverageLabelTopPadding(state.chartData)
 
-        if (state.chartData.xLabels.isEmpty()) {
-            MonthLabelsRow(labels = state.monthLables, modifier = Modifier.align(Alignment.BottomEnd))
-        } else {
-            ColumnLabelsRow(labels = state.chartData.xLabels, modifier = Modifier.align(Alignment.BottomEnd))
-        }
+        ColumnLabelsRow(labels = state.chartData.xLabels, modifier = Modifier.align(Alignment.BottomEnd))
         CartesianChartHost(
             modifier = Modifier.padding(bottom = 4.dp),
             chart = chart,
@@ -217,13 +221,12 @@ private fun YieldSupplyChartData(state: YieldSupplyChartUM.Data, modifier: Modif
 /**
  * Vico multiplies the column thickness by the zoom factor it needs to fit every point, so seven days of history
  * would be drawn as blobs the width of a finger. Spacing the columns out so that they fill the plot exactly holds
- * that factor at 1, and the bars stay [COLUMN_THICKNESS] wide whatever the period. The 38.dp taken off
- * the width is the room the vertical axis labels occupy.
+ * that factor at 1, and the bars stay [COLUMN_THICKNESS] wide whatever the period.
  */
 private fun columnSpacing(plotWidth: Dp, columnCount: Int): Dp {
     if (columnCount <= 0) return MIN_COLUMN_SPACING
 
-    val perColumn = (plotWidth - 38.dp).coerceAtLeast(0.dp) / columnCount
+    val perColumn = (plotWidth - START_AXIS_WIDTH).coerceAtLeast(0.dp) / columnCount
 
     return (perColumn - COLUMN_THICKNESS).coerceAtLeast(MIN_COLUMN_SPACING)
 }
@@ -303,6 +306,7 @@ private fun rememberStartAxis(
         guideline = rememberLineComponent(color = guidelineColor, thickness = 1.dp),
         tick = null,
         line = null,
+        sizeConstraint = remember { BaseAxis.SizeConstraint.Auto(minSizeDp = START_AXIS_WIDTH.value) },
     )
 }
 
@@ -362,49 +366,35 @@ private fun rememberAverageLabelTopPadding(data: YieldSupplyMarketChartDataUM): 
     }
 }
 
-/** One cell per column so a label sits under the bar it belongs to; blank entries keep their slot. */
+/** Fractional column centres: weighted cells round to whole pixels and the error accumulates over many columns. */
 @Composable
 private fun ColumnLabelsRow(labels: ImmutableList<String>, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier
-            .padding(start = 38.dp, top = 4.dp)
-            .fillMaxWidth(),
-    ) {
-        labels.forEach { label ->
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .heightIn(min = 16.dp),
-                contentAlignment = Alignment.Center,
-            ) {
+    val labelled = remember(labels) { labels.withIndex().filter { it.value.isNotBlank() } }
+
+    Layout(
+        content = {
+            labelled.forEach { label ->
                 Text(
-                    text = label,
-                    modifier = Modifier.wrapContentWidth(unbounded = true),
+                    text = label.value,
                     style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors3.text.secondary,
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun MonthLabelsRow(labels: kotlinx.collections.immutable.ImmutableList<String>, modifier: Modifier = Modifier) {
-    Row(
+        },
         modifier = modifier
-            .padding(start = 38.dp, top = 4.dp)
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        repeat(labels.size) { index ->
-            Text(
-                text = labels[index],
-                modifier = Modifier
-                    .weight(1f)
-                    .height(16.dp),
-                style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors3.text.secondary,
-            )
+            .padding(start = START_AXIS_WIDTH, top = 4.dp)
+            .fillMaxWidth()
+            .heightIn(min = 16.dp),
+    ) { measurables, constraints ->
+        val columnWidth = constraints.maxWidth.toFloat() / labels.size.coerceAtLeast(1)
+        val placeables = measurables.map { it.measure(Constraints()) }
+        val height = maxOf(constraints.minHeight, placeables.maxOfOrNull { it.height } ?: 0)
+
+        layout(width = constraints.maxWidth, height = height) {
+            placeables.forEachIndexed { position, placeable ->
+                val columnCenter = columnWidth * labelled[position].index + columnWidth / 2
+                placeable.placeRelative(x = (columnCenter - placeable.width / 2f).roundToInt(), y = 0)
+            }
         }
     }
 }
@@ -445,11 +435,9 @@ private class YieldSupplyChartPreviewProvider : PreviewParameterProvider<YieldSu
             YieldSupplyChartUM.Error(onRetry = {}),
             YieldSupplyChartUM.Data(
                 chartData = YieldSupplyMarketChartDataUM.mock(),
-                monthLables = persistentListOf("Jul", "Sep", "Nov", "Feb", "May"),
             ),
             YieldSupplyChartUM.Data(
                 chartData = YieldSupplyMarketChartDataUM.mockIncentivised(),
-                monthLables = persistentListOf("Jul", "Sep", "Nov", "Feb", "May"),
             ),
         )
 }
