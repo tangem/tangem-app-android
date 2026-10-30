@@ -467,6 +467,18 @@ internal object WalletsDomainModule {
 
     @Provides
     @Singleton
+    fun provideReportCardLinkedWalletsBackupUseCase(
+        walletCardsBackupRepository: WalletCardsBackupRepository,
+        reportWalletCardsBackupUseCase: ReportWalletCardsBackupUseCase,
+    ): ReportCardLinkedWalletsBackupUseCase {
+        return ReportCardLinkedWalletsBackupUseCase(
+            walletCardsBackupRepository = walletCardsBackupRepository,
+            reportWalletCardsBackupUseCase = reportWalletCardsBackupUseCase,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideSendPendingWalletCardsBackupUseCase(
         walletCardsBackupRepository: WalletCardsBackupRepository,
     ): SendPendingWalletCardsBackupUseCase {
