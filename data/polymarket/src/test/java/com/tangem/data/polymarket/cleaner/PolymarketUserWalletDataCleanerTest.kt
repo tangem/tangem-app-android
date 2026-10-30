@@ -20,6 +20,7 @@ import com.tangem.domain.polymarket.PredictionDepositRequisitesStore
 import com.tangem.domain.polymarket.PredictionWithdrawalStore
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyError
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyTradingStore
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PredictionWithdrawalRecord
 import arrow.core.left
@@ -50,6 +51,7 @@ internal class PolymarketUserWalletDataCleanerTest {
     private val requisitesStore: PredictionDepositRequisitesStore = mockk(relaxUnitFun = true)
     private val withdrawalStore: PredictionWithdrawalStore = mockk(relaxUnitFun = true)
     private val sessionKeyStore: PolymarketSessionKeyStore = mockk()
+    private val sessionKeyTradingStore: PolymarketSessionKeyTradingStore = mockk(relaxUnitFun = true)
 
     private val cleaner = PolymarketUserWalletDataCleaner(
         credentialsStore = credentialsStore,
@@ -59,6 +61,7 @@ internal class PolymarketUserWalletDataCleanerTest {
         requisitesStore = requisitesStore,
         withdrawalStore = withdrawalStore,
         sessionKeyStore = sessionKeyStore,
+        sessionKeyTradingStore = sessionKeyTradingStore,
     )
 
     @BeforeEach
@@ -71,6 +74,7 @@ internal class PolymarketUserWalletDataCleanerTest {
             requisitesStore,
             withdrawalStore,
             sessionKeyStore,
+            sessionKeyTradingStore,
         )
         coEvery { sessionKeyStore.delete(any()) } returns Unit.right()
     }
@@ -89,6 +93,8 @@ internal class PolymarketUserWalletDataCleanerTest {
         coVerify(exactly = 1) { positionsValueStore.clear(WALLET_B) }
         coVerify(exactly = 1) { onboardedStore.clear(WALLET_A) }
         coVerify(exactly = 1) { onboardedStore.clear(WALLET_B) }
+        coVerify(exactly = 1) { sessionKeyTradingStore.clear(WALLET_A) }
+        coVerify(exactly = 1) { sessionKeyTradingStore.clear(WALLET_B) }
     }
 
     @Test
@@ -166,6 +172,7 @@ internal class PolymarketUserWalletDataCleanerTest {
             requisitesStore = requisitesStore,
             withdrawalStore = withdrawalStore,
             sessionKeyStore = sessionKeyStore,
+            sessionKeyTradingStore = sessionKeyTradingStore,
         ).clear(listOf(WALLET_A))
 
         // Assert
@@ -187,6 +194,7 @@ internal class PolymarketUserWalletDataCleanerTest {
             requisitesStore = requisitesStore,
             withdrawalStore = withdrawalStore,
             sessionKeyStore = sessionKeyStore,
+            sessionKeyTradingStore = sessionKeyTradingStore,
         ).clear(listOf(WALLET_A))
 
         // Assert
@@ -242,6 +250,7 @@ internal class PolymarketUserWalletDataCleanerTest {
                 requisitesStore = requisitesStore,
                 withdrawalStore = store,
                 sessionKeyStore = sessionKeyStore,
+                sessionKeyTradingStore = sessionKeyTradingStore,
             ).clear(listOf(WALLET_A))
 
             // Assert
@@ -307,6 +316,7 @@ internal class PolymarketUserWalletDataCleanerTest {
             requisitesStore = requisitesStore,
             withdrawalStore = withdrawalStore,
             sessionKeyStore = keyStore,
+            sessionKeyTradingStore = sessionKeyTradingStore,
         ).clear(listOf(WALLET_A))
 
         // Assert
