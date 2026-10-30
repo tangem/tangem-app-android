@@ -6,6 +6,7 @@ import com.tangem.core.remote.json.NetworkJsonFactory
 import com.tangem.core.socket.DefaultSocketChannelFactory
 import com.tangem.core.socket.SocketChannelFactory
 import com.tangem.core.socket.SocketEnvironment
+import com.tangem.core.socket.SocketState
 import com.tangem.core.socket.transport.SocketConnection
 import com.tangem.core.socket.transport.SocketTransport
 import com.tangem.core.socket.transport.TransportEvent
@@ -148,6 +149,36 @@ internal class PolymarketMarketSubscriptionsTest {
         verify(exactly = 0) { connection.close(any(), any()) }
         second.cancel()
     }
+
+    @Test
+    fun `GIVEN quote and state consumers WHEN refreshing THEN the shared channel resubscribes and still closes on idle`() =
+        runTest {
+            // Arrange
+            val subscriptions = createSubscriptions()
+            val states = mutableListOf<SocketState>()
+            val quotes = backgroundScope.launch { subscriptions.observe(setOf("a")).collect {} }
+            val status = backgroundScope.launch { subscriptions.observeState(setOf("a")).toList(states) }
+            openConnection()
+
+            // Act
+            subscriptions.resubscribe(setOf("a", "unknown"))
+            runCurrent()
+            quotes.cancel()
+            status.cancel()
+            runCurrent()
+            advanceTimeBy(5001.milliseconds)
+
+            // Assert
+            assertFrames(
+                """{"assets_ids":["a"],"type":"market","custom_feature_enabled":true}""",
+                """{"assets_ids":["a"],"operation":"unsubscribe"}""",
+                """{"assets_ids":["a"],"operation":"subscribe","custom_feature_enabled":true}""",
+                """{"assets_ids":["a"],"operation":"unsubscribe"}""",
+            )
+            assertThat(states.last()).isEqualTo(SocketState.Connected)
+            verify(exactly = 1) { transport.open(any()) }
+            verify(exactly = 1) { connection.close(any(), any()) }
+        }
 
     @Test
     fun `GIVEN a released consumer WHEN the idle timeout expires THEN the socket closes`() = runTest {

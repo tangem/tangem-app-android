@@ -44,6 +44,17 @@ class KeyedSubscriptions<Key : Any, Service : Any>(
     private val lock = Any()
     private val shards = mutableListOf<Shard>()
 
+    /** Requests fresh snapshots for observed keys without changing their reference counts. */
+    fun resubscribe(keys: Set<Key>) = synchronized(lock) {
+        shards.forEach { shard ->
+            val active = keys.filterTo(mutableSetOf()) { shard.refCounts[it] ?: 0 > 0 }
+            if (active.isNotEmpty() && shard.service.unsubscribe(active)) {
+                shard.subscribed -= active
+                if (shard.service.subscribe(active)) shard.subscribed += active else scheduleFlush(shard)
+            }
+        }
+    }
+
     /** @param keysOf the keys an event belongs to; it is delivered when any of them is observed */
     fun <E> observe(keys: Set<Key>, events: Service.() -> Flow<E>, keysOf: (E) -> Collection<Key>): Flow<E> = flow {
         val services = acquire(keys)
