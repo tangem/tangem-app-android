@@ -15,18 +15,26 @@ import com.tangem.grow.datasource.polymarket.models.PolymarketActivityDto
 import com.tangem.grow.datasource.polymarket.models.PolymarketActivityPageResponse
 import com.tangem.grow.datasource.polymarket.models.PolymarketActivityRedeemDto
 import com.tangem.grow.datasource.polymarket.models.PolymarketDepositReconcileResponse
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.NullSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultPolymarketActivityRepositoryTest {
 
     private val api: PolymarketApi = mockk()
@@ -34,6 +42,11 @@ internal class DefaultPolymarketActivityRepositoryTest {
     private val addresses: PolymarketAddresses = mockk {
         every { userWalletId } returns UserWalletId("011")
         every { depositWalletAddress } returns "0xdeposit"
+    }
+
+    @BeforeEach
+    fun resetMocks() {
+        clearMocks(api)
     }
 
     @Test
@@ -70,19 +83,52 @@ internal class DefaultPolymarketActivityRepositoryTest {
         coVerify(exactly = 1) { api.getActivity("011", "0xdeposit", "REDEEM", "SPLIT", 30, "previous+/==") }
     }
 
-    @Test
-    fun `GIVEN an invalid operation WHEN loading THEN returns an error instead of an incomplete history`() = runTest {
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN an invalid row between valid rows WHEN loading THEN skips only that row`(
+        invalid: PolymarketActivityDto,
+    ) = runTest {
         // Arrange
         coEvery { api.getActivity(any(), any(), any(), any(), any(), any()) } returns ApiResponse.Success(
-            PolymarketActivityPageResponse(listOf(activity().copy(occurredAt = "invalid"))),
+            PolymarketActivityPageResponse(
+                items = listOf(activity(), invalid.copy(id = "invalid"), activity().copy(id = "operation-2")),
+                nextCursor = "next+/==",
+            ),
+        )
+        val expected = PolymarketActivity(
+            id = "operation-1",
+            type = PolymarketActivity.Type.DEPOSIT,
+            occurredAt = Instant.parse("2026-09-28T10:00:00Z"),
+            amount = BigDecimal("10.00"),
         )
 
         // Act
         val actual = repository.getActivity(PolymarketActivityListConfig(addresses, PolymarketActivityFilter()), null, 30)
 
         // Assert
-        assertThat(actual.leftOrNull()).isInstanceOf(PolymarketActivityError.Unknown::class.java)
+        assertThat(actual).isEqualTo(
+            Either.Right(PolymarketActivityPage(listOf(expected, expected.copy(id = "operation-2")), "next+/==")),
+        )
     }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = ["next+/=="])
+    fun `GIVEN only invalid rows WHEN loading THEN returns an empty page with the server cursor`(cursor: String?) =
+        runTest {
+            // Arrange
+            coEvery { api.getActivity(any(), any(), any(), any(), any(), any()) } returns ApiResponse.Success(
+                PolymarketActivityPageResponse(provideTestModels(), cursor),
+            )
+
+            // Act
+            val actual = repository.getActivity(
+                PolymarketActivityListConfig(addresses, PolymarketActivityFilter()), null, 30,
+            )
+
+            // Assert
+            assertThat(actual).isEqualTo(Either.Right(PolymarketActivityPage(emptyList(), cursor)))
+        }
 
     @Test
     fun `GIVEN a cancelled request WHEN loading THEN cancellation reaches the caller`() = runTest {
@@ -126,6 +172,13 @@ internal class DefaultPolymarketActivityRepositoryTest {
         // Assert
         assertThat(actual.leftOrNull()).isInstanceOf(PolymarketActivityError.Unknown::class.java)
     }
+
+    private fun provideTestModels() = listOf(
+        activity().copy(type = "TRANSFER"),
+        activity().copy(occurredAt = "garbage"),
+        activity().copy(amount = "abc"),
+        activity().copy(type = "REDEEM", redeem = PolymarketActivityRedeemDto("VOID")),
+    )
 
     private fun activity() = PolymarketActivityDto(
         id = "operation-1", type = "DEPOSIT", occurredAt = "2026-09-28T13:00:00+03:00", amount = "10.00",

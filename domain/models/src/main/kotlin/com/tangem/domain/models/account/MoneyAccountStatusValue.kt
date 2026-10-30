@@ -5,11 +5,9 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.kyc.KycStatus
-import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import java.math.BigDecimal
 
 @Serializable
 sealed class MoneyAccountStatusValue {
@@ -94,23 +92,49 @@ sealed class MoneyAccountStatusValue {
     sealed class Account : MoneyAccountStatusValue() {
 
         abstract val customerId: String
-        abstract val productInstanceId: String
+        abstract val cryptoCurrency: CryptoCurrency.Token
         abstract val balance: Balance?
+
+        val cryptoCurrencyStatus: CryptoCurrencyStatus?
+            get() = balance?.let { accountBalance ->
+                statusOf(
+                    currency = cryptoCurrency,
+                    amount = accountBalance.cryptoAmount,
+                    fiatRate = accountBalance.fiatRate,
+                )
+            }
+
+        fun statusOf(
+            currency: CryptoCurrency,
+            amount: SerializedBigDecimal,
+            fiatRate: SerializedBigDecimal?,
+        ): CryptoCurrencyStatus? {
+            val accountBalance = balance ?: return null
+            return CryptoCurrencyStatus(
+                currency = currency,
+                value = depositCryptoCurrencyStatusValue(
+                    amount = amount,
+                    fiatRate = fiatRate,
+                    depositAddress = accountBalance.depositAddress,
+                    source = source,
+                ),
+            )
+        }
 
         @Serializable
         data class Active(
             @SerialName("source") override val source: StatusSource,
+            @SerialName("crypto_currency") override val cryptoCurrency: CryptoCurrency.Token,
             @SerialName("balance") override val balance: Balance?,
             @SerialName("customer_id") override val customerId: String,
-            @SerialName("product_instance_id") override val productInstanceId: String,
         ) : Account()
 
         @Serializable
         data class Deactivated(
             @SerialName("source") override val source: StatusSource,
+            @SerialName("crypto_currency") override val cryptoCurrency: CryptoCurrency.Token,
             @SerialName("balance") override val balance: Balance?,
             @SerialName("customer_id") override val customerId: String,
-            @SerialName("product_instance_id") override val productInstanceId: String,
         ) : Account()
     }
 
@@ -144,53 +168,8 @@ sealed class MoneyAccountStatusValue {
     @Serializable
     data class Balance(
         @SerialName("crypto_amount") val cryptoAmount: SerializedBigDecimal,
-        @SerialName("crypto_currency") val cryptoCurrency: CryptoCurrency.Token,
         @SerialName("deposit_address") val depositAddress: String,
         @SerialName("currency_code") val currencyCode: String,
         @SerialName("fiat_rate") val fiatRate: SerializedBigDecimal?,
-    ) {
-        val cryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
-            currency = cryptoCurrency,
-            value = buildCryptoCurrencyStatusValue(
-                amount = cryptoAmount,
-                fiatRate = fiatRate,
-                depositAddress = depositAddress,
-            ),
-        )
-    }
-}
-
-private fun buildCryptoCurrencyStatusValue(
-    amount: SerializedBigDecimal,
-    fiatRate: SerializedBigDecimal?,
-    depositAddress: String,
-): CryptoCurrencyStatus.Value {
-    val networkAddress = NetworkAddress.Single(
-        defaultAddress = NetworkAddress.Address(
-            type = NetworkAddress.Address.Type.Primary,
-            value = depositAddress,
-        ),
     )
-    return if (fiatRate != null) {
-        CryptoCurrencyStatus.Loaded(
-            amount = amount,
-            fiatAmount = amount.multiply(fiatRate),
-            fiatRate = fiatRate,
-            priceChange = BigDecimal.ZERO,
-            networkAddress = networkAddress,
-            sources = CryptoCurrencyStatus.Sources(),
-            pendingTransactions = emptySet(),
-            yieldSupplyStatus = null,
-            hasCurrentNetworkTransactions = false,
-        )
-    } else {
-        CryptoCurrencyStatus.NoQuote(
-            amount = amount,
-            networkAddress = networkAddress,
-            yieldSupplyStatus = null,
-            hasCurrentNetworkTransactions = false,
-            pendingTransactions = emptySet(),
-            sources = CryptoCurrencyStatus.Sources(),
-        )
-    }
 }

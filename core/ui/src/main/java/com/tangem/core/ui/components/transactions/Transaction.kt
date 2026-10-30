@@ -63,10 +63,10 @@ fun Transaction(state: TransactionState, isBalanceHidden: Boolean, modifier: Mod
                 onClick = (state as? TransactionState.Content)?.onClick ?: {},
             )
             .fillMaxWidth()
-            .heightIn(min = TangemTheme.dimens.size56)
+            .heightIn(min = 56.dp)
             .padding(
-                vertical = TangemTheme.dimens.spacing8,
-                horizontal = TangemTheme.dimens.spacing12,
+                vertical = 8.dp,
+                horizontal = 12.dp,
             ),
         color = TangemTheme.colors.background.primary,
     ) {
@@ -81,7 +81,7 @@ fun Transaction(state: TransactionState, isBalanceHidden: Boolean, modifier: Mod
             Icon(
                 state = state,
                 modifier = Modifier
-                    .size(TangemTheme.dimens.size40)
+                    .size(40.dp)
                     .constrainAs(iconItem) {
                         start.linkTo(parent.start)
                         centerVerticallyTo(parent)
@@ -92,8 +92,8 @@ fun Transaction(state: TransactionState, isBalanceHidden: Boolean, modifier: Mod
                 state = state,
                 modifier = Modifier
                     .padding(
-                        start = TangemTheme.dimens.spacing12,
-                        end = TangemTheme.dimens.spacing4,
+                        start = 12.dp,
+                        end = 4.dp,
                     )
                     .constrainAs(titleItem) {
                         top.linkTo(parent.top)
@@ -108,8 +108,8 @@ fun Transaction(state: TransactionState, isBalanceHidden: Boolean, modifier: Mod
                 state = state,
                 modifier = Modifier
                     .padding(
-                        start = TangemTheme.dimens.spacing12,
-                        end = TangemTheme.dimens.spacing4,
+                        start = 12.dp,
+                        end = 4.dp,
                     )
                     .constrainAs(subtitleItem) {
                         visibility = state.isGoneIf { subtitle.isNullOrEmpty() }
@@ -152,7 +152,7 @@ private fun Icon(state: TransactionState, modifier: Modifier = Modifier) {
         is TransactionState.Content -> {
             Box(
                 modifier = modifier
-                    .size(TangemTheme.dimens.size40)
+                    .size(40.dp)
                     .background(
                         color = when (state.status) {
                             is Status.Unconfirmed -> TangemTheme.colors.icon.attention.copy(alpha = 0.1f)
@@ -166,7 +166,7 @@ private fun Icon(state: TransactionState, modifier: Modifier = Modifier) {
                     painter = painterResource(id = state.iconRes),
                     contentDescription = null,
                     modifier = Modifier
-                        .size(TangemTheme.dimens.size20)
+                        .size(20.dp)
                         .align(Alignment.Center),
                     tint = when (state.status) {
                         Status.Confirmed -> TangemTheme.colors.icon.informative
@@ -177,10 +177,10 @@ private fun Icon(state: TransactionState, modifier: Modifier = Modifier) {
             }
         }
         is TransactionState.Loading -> {
-            CircleShimmer(modifier = modifier.size(TangemTheme.dimens.size40))
+            CircleShimmer(modifier = modifier.size(40.dp))
         }
         is TransactionState.Locked -> {
-            Box(modifier = modifier.size(TangemTheme.dimens.size40)) {
+            Box(modifier = modifier.size(40.dp)) {
                 Box(
                     modifier = Modifier
                         .matchParentSize()
@@ -200,7 +200,7 @@ private fun Title(state: TransactionState, modifier: Modifier = Modifier) {
         is TransactionState.Content -> {
             Row(
                 modifier = modifier,
-                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing6),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Text(
                     text = state.title.resolveReference(),
@@ -221,12 +221,12 @@ private fun Title(state: TransactionState, modifier: Modifier = Modifier) {
         }
         is TransactionState.Loading -> {
             RectangleShimmer(
-                modifier = modifier.size(width = TangemTheme.dimens.size70, height = TangemTheme.dimens.size12),
+                modifier = modifier.size(width = 70.dp, height = 12.dp),
             )
         }
         is TransactionState.Locked -> {
             LockedContent(
-                modifier = modifier.size(width = TangemTheme.dimens.size70, height = TangemTheme.dimens.size12),
+                modifier = modifier.size(width = 70.dp, height = 12.dp),
             )
         }
     }
@@ -251,12 +251,12 @@ private fun Subtitle(state: TransactionState, modifier: Modifier = Modifier) {
         }
         is TransactionState.Loading -> {
             RectangleShimmer(
-                modifier = modifier.size(width = TangemTheme.dimens.size52, height = TangemTheme.dimens.size12),
+                modifier = modifier.size(width = 52.dp, height = 12.dp),
             )
         }
         is TransactionState.Locked -> {
             LockedContent(
-                modifier = modifier.size(width = TangemTheme.dimens.size52, height = TangemTheme.dimens.size12),
+                modifier = modifier.size(width = 52.dp, height = 12.dp),
             )
         }
     }
@@ -284,12 +284,12 @@ private fun Amount(state: TransactionState, isBalanceHidden: Boolean, modifier: 
         }
         is TransactionState.Loading -> {
             RectangleShimmer(
-                modifier = modifier.size(width = TangemTheme.dimens.size40, height = TangemTheme.dimens.size12),
+                modifier = modifier.size(width = 40.dp, height = 12.dp),
             )
         }
         is TransactionState.Locked -> {
             LockedContent(
-                modifier = modifier.size(width = TangemTheme.dimens.size40, height = TangemTheme.dimens.size12),
+                modifier = modifier.size(width = 40.dp, height = 12.dp),
             )
         }
     }
@@ -309,12 +309,12 @@ private fun Timestamp(state: TransactionState, modifier: Modifier = Modifier) {
         }
         is TransactionState.Loading -> {
             RectangleShimmer(
-                modifier = modifier.size(width = TangemTheme.dimens.size40, height = TangemTheme.dimens.size12),
+                modifier = modifier.size(width = 40.dp, height = 12.dp),
             )
         }
         is TransactionState.Locked -> {
             LockedContent(
-                modifier = modifier.size(width = TangemTheme.dimens.size40, height = TangemTheme.dimens.size12),
+                modifier = modifier.size(width = 40.dp, height = 12.dp),
             )
         }
     }
@@ -325,7 +325,7 @@ private fun LockedContent(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.background(
             color = TangemTheme.colors.field.primary,
-            shape = RoundedCornerShape(TangemTheme.dimens.radius6),
+            shape = RoundedCornerShape(6.dp),
         ),
     )
 }
@@ -340,7 +340,7 @@ private fun TransactionState.isGoneIf(goneCondition: TransactionState.Content.()
 @Composable
 private fun Preview_TransactionItem(@PreviewParameter(TransactionItemStateProvider::class) state: TransactionState) {
     TangemThemePreview {
-        Transaction(state = state, isBalanceHidden = false, modifier = Modifier.padding(TangemTheme.dimens.spacing20))
+        Transaction(state = state, isBalanceHidden = false, modifier = Modifier.padding(20.dp))
     }
 }
 

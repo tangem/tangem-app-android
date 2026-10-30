@@ -2,7 +2,6 @@ package com.tangem.tap.domain.sdk.impl
 
 import android.content.res.Resources
 import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
@@ -16,8 +15,8 @@ import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.services.secure.AccessCodeRepository
 import com.tangem.common.services.secure.CardAccessTokensRepository
 import com.tangem.common.services.secure.SecureStorage
-import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -25,6 +24,8 @@ import com.tangem.core.res.getStringSafe
 import com.tangem.crypto.bip39.DefaultMnemonic
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
+import com.tangem.domain.card.common.TwinCardNumber
+import com.tangem.domain.card.common.TwinsHelper
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
@@ -36,7 +37,6 @@ import com.tangem.domain.visa.model.*
 import com.tangem.domain.wallets.derivations.DerivationsHelper
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.hot.sdk.android.PassphraseValidator
-import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.operations.ScanTask
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
@@ -73,13 +73,14 @@ internal class DefaultTangemSdkManager(
     private val tangemPayChallengeTask: TangemPayGenerateAddressAndSignChallengeTask,
     private val tangemPayMoneyAccountTask: TangemPayGenerateMoneyAccountAddressTask,
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsErrorHandler: AnalyticsErrorHandler,
+    private val cardContextInterceptorFactory: CardContextInterceptor.Factory,
     private val cardRepository: CardRepository,
     private val derivationsHelper: DerivationsHelper,
     // Lazy breaks a DI cycle: the launcher -> hot wallet accessor -> LegacySettingsRepository ->
     // TangemSdkManager. It's only needed when a scan actually runs.
     private val walletRegistrationLauncher: Lazy<WalletRegistrationLauncher>,
-    private val authFeatureToggles: AuthFeatureToggles,
 ) : TangemSdkManager {
 
     private val tangemSdk: TangemSdk
@@ -260,16 +261,16 @@ internal class DefaultTangemSdkManager(
                 // We don't use the standard analytics event enrichment mechanism with card context params here,
                 // because we've just scanned a new card that may not yet be selected as the current one
                 val analyticsEvent = Basic.CardWasScanned(source)
-                val interceptor = CardContextInterceptor(scanResponse)
+                val interceptor = cardContextInterceptorFactory.create(scanResponse)
                 val params = analyticsEvent.params.toMutableMap()
                 interceptor.intercept(params)
 
-                Analytics.send(event = analyticsEvent.withParams(params.toMap()))
+                analyticsEventHandler.send(event = analyticsEvent.withParams(params.toMap()))
             }
             .doOnFailure { tangemError ->
                 TangemLogger.e("scanProduct failed: code=${tangemError.code}, message=${tangemError.customMessage}")
                 (tangemError as? TangemSdkError)?.let { error ->
-                    Analytics.sendErrorEvent(TangemSdkErrorEvent(error))
+                    analyticsErrorHandler.sendErrorEvent(TangemSdkErrorEvent(error))
                 }
             }
     }
@@ -460,8 +461,7 @@ internal class DefaultTangemSdkManager(
      * Wraps [runnable] so that the card is bound to the device via cold wallet registration on the
      * same NFC tap — after [runnable] succeeds, or mid-scan before the card attestation (see
      * [ColdWalletRegistrationHost]). Applied only when the call site opts in via
-     * `registerColdWallet = true` (and the backend-auth toggle is on) — currently scan / wallet
-     * creation / key derivation; signing opts in separately in `TangemSigner`, and the primary
+     * `registerColdWallet = true` — currently scan / wallet creation / key derivation; signing opts in separately in `TangemSigner`, and the primary
      * card's backup finalization calls this directly. Twin / Visa /
      * walletless cards are skipped inside [WalletRegistrationLauncher]. The registration is launched
      * on the card session's own scope (see [RegisterColdWalletRunnable]), so it can't outlive the tap.
@@ -470,8 +470,6 @@ internal class DefaultTangemSdkManager(
         runnable: CardSessionRunnable<T>,
         shouldForceRegistration: Boolean,
     ): CardSessionRunnable<T> {
-        if (!authFeatureToggles.isBackendAuthenticationEnabled) return runnable
-
         return RegisterColdWalletRunnable(
             inner = runnable,
             launcher = walletRegistrationLauncher.get(),
@@ -479,20 +477,12 @@ internal class DefaultTangemSdkManager(
         )
     }
 
-    @Suppress("MagicNumber")
     override fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse?) {
         tangemSdk.config.cardIdDisplayFormat = when {
             scanResponse == null -> CardIdDisplayFormat.Full
-            scanResponse.cardTypesResolver.isTangemTwins() -> CardIdDisplayFormat.LastLuhn(4)
+            scanResponse.cardTypesResolver.isTangemTwins() -> TWIN_CARD_ID_DISPLAY_FORMAT
             else -> CardIdDisplayFormat.Full
         }
-    }
-
-    @Deprecated("TangemSdkManager shouldn't returns a string from resources")
-    override fun getString(@StringRes stringResId: Int, vararg formatArgs: Any?): String {
-        val args = formatArgs.toSet().filterNotNull().toTypedArray()
-
-        return resources.getStringSafe(stringResId, *args)
     }
 
     override fun setUserCodeRequestPolicy(policy: UserCodeRequestPolicy) {
@@ -501,40 +491,62 @@ internal class DefaultTangemSdkManager(
 
     // region Twin-specific
 
-    override suspend fun createFirstTwinWallet(
-        cardId: String,
-        initialMessage: Message,
-    ): CompletionResult<CreateWalletResponse> {
-        return runTaskAsync(
-            runnable = CreateFirstTwinWalletTask(cardId),
-            preflightReadFilter = null,
-            cardId = cardId,
-            initialMessage = initialMessage,
-            registerColdWallet = false,
-        )
+    override suspend fun createFirstTwinWallet(cardId: String): CompletionResult<CreateWalletResponse> {
+        val twinCardNumber = getTwinCardNumber(cardId)
+
+        return withTwinCardIdDisplayFormat {
+            runTaskAsync(
+                runnable = CreateFirstTwinWalletTask(
+                    firstCardId = cardId,
+                    wrongTwinCardMessage = getWrongTwinCardMessage(twinCardNumber),
+                ),
+                preflightReadFilter = null,
+                cardId = cardId,
+                initialMessage = createTwinTapMessage(twinCardNumber),
+                registerColdWallet = false,
+            )
+        }
     }
 
     override suspend fun createSecondTwinWallet(
         firstPublicKey: String,
         firstCardId: String,
         issuerKeys: KeyPair,
-        preparingMessage: Message,
-        creatingWalletMessage: Message,
-        initialMessage: Message,
     ): CompletionResult<CreateWalletResponse> {
+        val secondCardNumber = getTwinCardNumber(firstCardId).pairNumber()
         val task = CreateSecondTwinWalletTask(
             firstPublicKey = firstPublicKey,
             firstCardId = firstCardId,
             issuerKeys = issuerKeys,
-            preparingMessage = preparingMessage,
-            creatingWalletMessage = creatingWalletMessage,
+            messages = CreateSecondTwinWalletTask.Messages(
+                preparing = Message(resources.getStringSafe(R.string.twins_recreate_title_preparing)),
+                creatingWallet = Message(resources.getStringSafe(R.string.twins_recreate_title_creating_wallet)),
+                wrongTwinCard = getWrongTwinCardMessage(secondCardNumber),
+                incompatibleTwinCard = resources.getStringSafe(R.string.twin_error_wrong_twin),
+            ),
         )
-        return runTaskAsync(
-            runnable = task,
-            preflightReadFilter = null,
-            initialMessage = initialMessage,
-            registerColdWallet = false,
-        )
+        return withTwinCardIdDisplayFormat {
+            runTaskAsync(
+                runnable = task,
+                preflightReadFilter = null,
+                initialMessage = createTwinTapMessage(secondCardNumber),
+                registerColdWallet = false,
+            )
+        }
+    }
+
+    /**
+     * The format is global and follows the selected wallet, which may be another one in the middle of a Twin flow
+     * (e.g. after the old Twin wallet is deleted on recreation).
+     */
+    private suspend fun <T> withTwinCardIdDisplayFormat(block: suspend () -> T): T {
+        val previousFormat = tangemSdk.config.cardIdDisplayFormat
+        tangemSdk.config.cardIdDisplayFormat = TWIN_CARD_ID_DISPLAY_FORMAT
+        return try {
+            block()
+        } finally {
+            tangemSdk.config.cardIdDisplayFormat = previousFormat
+        }
     }
 
     override fun changeProductType(isRing: Boolean) {
@@ -551,9 +563,8 @@ internal class DefaultTangemSdkManager(
         secondCardPublicKey: ByteArray,
         issuerKeyPair: KeyPair,
         cardId: String,
-        initialMessage: Message,
-    ): CompletionResult<ScanResponse> {
-        return runTaskAsync(
+    ): CompletionResult<ScanResponse> = withTwinCardIdDisplayFormat {
+        runTaskAsync(
             runnable = FinalizeTwinTask(
                 twinPublicKey = secondCardPublicKey,
                 issuerKeys = issuerKeyPair,
@@ -561,9 +572,21 @@ internal class DefaultTangemSdkManager(
             ),
             preflightReadFilter = null,
             cardId = cardId,
-            initialMessage = initialMessage,
+            initialMessage = createTwinTapMessage(getTwinCardNumber(cardId)),
             registerColdWallet = false,
         )
+    }
+
+    private fun getTwinCardNumber(cardId: String): TwinCardNumber {
+        return requireNotNull(TwinsHelper.getTwinCardNumber(cardId)) { "Card is not a twin" }
+    }
+
+    private fun createTwinTapMessage(twinCardNumber: TwinCardNumber): Message {
+        return Message(resources.getStringSafe(R.string.twins_recreate_title_format, twinCardNumber.number))
+    }
+
+    private fun getWrongTwinCardMessage(requiredTwinCardNumber: TwinCardNumber): String {
+        return resources.getStringSafe(R.string.twin_error_same_card, requiredTwinCardNumber.number)
     }
 
     // endregion
@@ -606,9 +629,9 @@ internal class DefaultTangemSdkManager(
         )
     }
 
-    override suspend fun tangemPayProduceInitialCredentials(
+    override suspend fun tangemPayProduceInitialData(
         preflightReadFilter: PreflightReadFilter,
-    ): Either<Throwable, TangemPayInitialCredentials> {
+    ): Either<Throwable, TangemPayInitialData> {
         val result = runTaskAsyncReturnOnMain(
             runnable = tangemPayChallengeTask,
             cardId = null,
@@ -619,7 +642,7 @@ internal class DefaultTangemSdkManager(
 
         return when (result) {
             is CompletionResult.Failure<*> -> result.error.left()
-            is CompletionResult.Success<TangemPayInitialCredentials> -> result.data.right()
+            is CompletionResult.Success<TangemPayInitialData> -> result.data.right()
         }
     }
 
@@ -669,4 +692,8 @@ internal class DefaultTangemSdkManager(
     }
 
     // endregion
+
+    private companion object {
+        val TWIN_CARD_ID_DISPLAY_FORMAT = CardIdDisplayFormat.LastLuhn(numbers = 4)
+    }
 }

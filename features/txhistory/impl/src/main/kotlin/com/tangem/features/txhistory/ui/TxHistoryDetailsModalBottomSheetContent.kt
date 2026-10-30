@@ -71,9 +71,7 @@ internal fun TxHistoryDetailsModalBottomSheetContent(
             onDismissRequest = onDismiss,
             content = state ?: TangemBottomSheetConfigContent.Empty,
         ),
-        title = {
-            state?.let { um -> TxHistoryDetailsTopNavigation(header = um.header, onCloseClick = onDismiss) }
-        },
+        title = { um -> TxHistoryDetailsTopNavigation(header = um.header, onCloseClick = onDismiss) },
         content = { um -> TxHistoryDetailsContent(state = um, ratingContent = ratingContent) },
     )
 }

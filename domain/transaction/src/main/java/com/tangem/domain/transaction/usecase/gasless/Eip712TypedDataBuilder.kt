@@ -24,11 +24,6 @@ import org.json.JSONObject
  */
 object Eip712TypedDataBuilder {
 
-    private const val DOMAIN_NAME = "Tangem7702GaslessExecutor"
-    private const val DOMAIN_VERSION = "1"
-    private const val PRIMARY_TYPE = "GaslessTransaction"
-    private const val PRIMARY_TYPE_BATCH = "GaslessBatchTransaction"
-
     /**
      * Builds EIP-712 typed data JSON for gasless transaction.
      *
@@ -45,7 +40,7 @@ object Eip712TypedDataBuilder {
     ): String {
         val typedData = JSONObject().apply {
             put("types", buildTypes(includeGasLimit))
-            put("primaryType", PRIMARY_TYPE)
+            put("primaryType", GaslessTypedDataSchema.PRIMARY_TYPE)
             put("domain", buildDomain(chainId, verifyingContract))
             put("message", buildMessage(gaslessTransaction, includeGasLimit))
         }
@@ -71,7 +66,7 @@ object Eip712TypedDataBuilder {
         ) { "GaslessBatchTransaction must contain at least one transaction" }
         val typedData = JSONObject().apply {
             put("types", buildBatchTypes(includeGasLimit))
-            put("primaryType", PRIMARY_TYPE_BATCH)
+            put("primaryType", GaslessTypedDataSchema.PRIMARY_TYPE_BATCH)
             put("domain", buildDomain(chainId, verifyingContract))
             put("message", buildBatchMessage(gaslessBatch, includeGasLimit))
         }
@@ -155,8 +150,8 @@ object Eip712TypedDataBuilder {
      */
     private fun buildDomain(chainId: Int, verifyingContract: String): JSONObject {
         return JSONObject().apply {
-            put("name", DOMAIN_NAME)
-            put("version", DOMAIN_VERSION)
+            put("name", GaslessTypedDataSchema.DOMAIN_NAME)
+            put("version", GaslessTypedDataSchema.DOMAIN_VERSION)
             put("chainId", chainId)
             put("verifyingContract", verifyingContract)
         }

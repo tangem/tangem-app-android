@@ -8,7 +8,7 @@ internal data class HotAccessCodeRequestUM(
     val accessCode: String = "",
     val accessCodeColor: PinTextColor = PinTextColor.Primary,
     val wrongAccessCodeText: TextReference? = null,
-    val useBiometricVisible: Boolean = true,
+    val isUseBiometricVisible: Boolean = true,
     val useBiometricClick: () -> Unit = {},
     val onAccessCodeChange: (String) -> Unit = {},
     val onDismiss: () -> Unit = {},

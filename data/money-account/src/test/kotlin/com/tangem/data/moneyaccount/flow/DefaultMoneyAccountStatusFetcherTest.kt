@@ -8,9 +8,11 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.MoneyAccountStatusValue
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayCardFrozenState
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.repository.MoneyAccountOrderRepository
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBalanceUseCase
@@ -41,6 +43,8 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     private val onboardingRepository: OnboardingRepository = mockk()
     private val deviceSecurity: DeviceSecurityInfoProvider = mockk(relaxed = true)
     private val getMoneyAccountBalanceUseCase: GetMoneyAccountBalanceUseCase = mockk()
+    private val moneyAccountCurrencyFactory: MoneyAccountCurrencyFactory = mockk()
+    private val cryptoCurrency: CryptoCurrency.Token = mockk()
 
     private val fetcher = DefaultMoneyAccountStatusFetcher(
         moneyAccountStatusesStore = moneyAccountStatusesStore,
@@ -49,12 +53,20 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         dispatchers = TestingCoroutineDispatcherProvider(),
         getMoneyAccountBalanceUseCase = getMoneyAccountBalanceUseCase,
         deviceSecurity = deviceSecurity,
+        moneyAccountCurrencyFactory = moneyAccountCurrencyFactory,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(moneyAccountStatusesStore, orderRepository, onboardingRepository, getMoneyAccountBalanceUseCase)
-        coEvery { getMoneyAccountBalanceUseCase(USER_WALLET_ID) } returns IllegalStateException().left()
+        clearMocks(
+            moneyAccountStatusesStore,
+            orderRepository,
+            onboardingRepository,
+            getMoneyAccountBalanceUseCase,
+            moneyAccountCurrencyFactory,
+        )
+        every { moneyAccountCurrencyFactory.create(USER_WALLET_ID) } returns cryptoCurrency
+        coEvery { getMoneyAccountBalanceUseCase(USER_WALLET_ID, cryptoCurrency) } returns IllegalStateException().left()
         coEvery { moneyAccountStatusesStore.getSyncOrNull(USER_WALLET_ID) } returns null
         every { orderRepository.getOrder(USER_WALLET_ID) } returns null.right()
         coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo().right()
@@ -141,7 +153,6 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         // Arrange
         val balance = MoneyAccountStatusValue.Balance(
             cryptoAmount = BigDecimal.TEN,
-            cryptoCurrency = mockk(),
             depositAddress = "0xdeposit",
             currencyCode = "USD",
             fiatRate = BigDecimal.ONE,
@@ -149,7 +160,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns createCustomerInfo(
             accountStatus = CustomerInfo.ProductInstance.Status.ACTIVE,
         ).right()
-        coEvery { getMoneyAccountBalanceUseCase(USER_WALLET_ID) } returns balance.right()
+        coEvery { getMoneyAccountBalanceUseCase(USER_WALLET_ID, cryptoCurrency) } returns balance.right()
 
         // Act
         fetcher.invoke(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
@@ -158,9 +169,9 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         verifyStored(
             MoneyAccountStatusValue.Account.Active(
                 source = StatusSource.ACTUAL,
+                cryptoCurrency = cryptoCurrency,
                 balance = balance,
                 customerId = CUSTOMER_ID,
-                productInstanceId = PRODUCT_INSTANCE_ID,
             ),
         )
     }
@@ -180,9 +191,9 @@ internal class DefaultMoneyAccountStatusFetcherTest {
             verifyStored(
                 MoneyAccountStatusValue.Account.Active(
                     source = StatusSource.ACTUAL,
+                    cryptoCurrency = cryptoCurrency,
                     balance = null,
                     customerId = CUSTOMER_ID,
-                    productInstanceId = PRODUCT_INSTANCE_ID,
                 ),
             )
         }
@@ -201,9 +212,9 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         verifyStored(
             MoneyAccountStatusValue.Account.Deactivated(
                 source = StatusSource.ACTUAL,
+                cryptoCurrency = cryptoCurrency,
                 balance = null,
                 customerId = CUSTOMER_ID,
-                productInstanceId = PRODUCT_INSTANCE_ID,
             ),
         )
     }

@@ -1967,7 +1967,7 @@
   <string name="settings_upgrade_banner_title">Холодний гаманець Tangem</string>
   <string name="settings_wallet_name_title">Ім\'я</string>
   <string name="social_agreement_action_create">Створити гаманець</string>
-  <string name="social_login_consent_acknowledge">Я розумію, що якщо я не збережу свою фразу відновлення, втрата доступу до мого акаунта %s може назавжди позбавити мене доступу до цього гаманця.</string>
+  <string name="social_login_consent_acknowledge">Я розумію, що якщо я не збережу свою фразу відновлення, то втрата доступу до мого акаунта %s може назавжди позбавити мене доступу до цього гаманця.</string>
   <string name="social_login_consent_description">Ключі вашого гаманця зашифровано, а їхня резервна копія зберігається у вашому хмарному акаунті. Tangem не може отримати до них доступ. Увійдіть через %1$s, щоб відновити гаманець, або скористайтеся фразою відновлення, якщо втратите доступ до свого акаунта %1$s.</string>
   <string name="social_login_consent_email_sharing">Отримувати новини про продукт та ексклюзивні пропозиції електронною поштою</string>
   <string name="social_login_consent_learn_more">Дізнатися більше</string>
@@ -1988,7 +1988,7 @@
   <string name="social_login_toast_wallet_added">Гаманець додано</string>
   <string name="social_login_toast_wallet_created">Гаманець створено</string>
   <string name="social_wallet_delete_anyway">Усе одно видалити</string>
-  <string name="social_wallet_delete_attention_acknowledge">Я розумію, що якщо резервну копію моєї фрази відновлення не збережено, я назавжди втрачу доступ до цього гаманця.</string>
+  <string name="social_wallet_delete_attention_acknowledge">Я розумію, що якщо резервну копію моєї фрази відновлення не збережено, то я назавжди втрачу доступ до цього гаманця.</string>
   <string name="social_wallet_delete_attention_description">Гаманець буде видалено з цього пристрою та відв’язано від вашого акаунта %1$s, а ваші зашифровані ключі буде видалено з хмари. Вхід через %1$s більше не дасть змоги відновити його.</string>
   <string name="social_wallet_delete_confirmation_title">Видалити цей гаманець і відв’язати його від вашого акаунта %1$s?</string>
   <string name="social_wallet_delete_description">Гаманець буде видалено з цього пристрою та відв’язано від вашого акаунта %1$s, а ваші зашифровані ключі буде видалено з хмари. Вхід через %1$s більше не дасть змоги відновити його. Спочатку збережіть резервну копію своєї фрази відновлення. Без неї ви назавжди втратите доступ до криптовалюти в цьому гаманці.</string>

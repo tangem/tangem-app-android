@@ -2,6 +2,7 @@ package com.tangem.features.jointaccount.common.displayname.state.transformers
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.R
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.jointaccount.common.displayname.ui.state.JointAccountDisplayNameUM
 import com.tangem.test.core.ProvideTestModels
@@ -15,40 +16,40 @@ internal class UpdateButtonIconTransformerTest {
     @ProvideTestModels
     fun transform(model: TransformModel) {
         // Arrange
-        val prevState = createState(buttonIconRes = model.prevIconRes)
+        val prevState = createState(buttonIcon = model.prevIcon)
 
         // Act
-        val actual = UpdateButtonIconTransformer(iconRes = model.iconRes).transform(prevState)
+        val actual = UpdateButtonIconTransformer(icon = model.icon).transform(prevState)
 
         // Assert
-        assertThat(actual).isEqualTo(createState(buttonIconRes = model.expectedIconRes))
+        assertThat(actual).isEqualTo(createState(buttonIcon = model.expectedIcon))
     }
 
     private fun provideTestModels() = listOf(
         // a cold wallet contributes its NFC icon to the button
-        TransformModel(prevIconRes = null, iconRes = TANGEM_ICON, expectedIconRes = TANGEM_ICON),
+        TransformModel(prevIcon = null, icon = TANGEM_ICON, expectedIcon = TANGEM_ICON),
         // a hot wallet has no wallet-interaction icon, so the previous one is cleared
-        TransformModel(prevIconRes = TANGEM_ICON, iconRes = null, expectedIconRes = null),
+        TransformModel(prevIcon = TANGEM_ICON, icon = null, expectedIcon = null),
         // re-emitting the same icon leaves the state as is
-        TransformModel(prevIconRes = TANGEM_ICON, iconRes = TANGEM_ICON, expectedIconRes = TANGEM_ICON),
+        TransformModel(prevIcon = TANGEM_ICON, icon = TANGEM_ICON, expectedIcon = TANGEM_ICON),
         // an already empty icon stays empty
-        TransformModel(prevIconRes = null, iconRes = null, expectedIconRes = null),
+        TransformModel(prevIcon = null, icon = null, expectedIcon = null),
         // another wallet kind replaces the icon
-        TransformModel(prevIconRes = TANGEM_ICON, iconRes = WALLET_ICON, expectedIconRes = WALLET_ICON),
+        TransformModel(prevIcon = TANGEM_ICON, icon = WALLET_ICON, expectedIcon = WALLET_ICON),
     )
 
     internal data class TransformModel(
-        val prevIconRes: Int?,
-        val iconRes: Int?,
-        val expectedIconRes: Int?,
+        val prevIcon: TangemIconUM?,
+        val icon: TangemIconUM?,
+        val expectedIcon: TangemIconUM?,
     )
 
     /** The rest of the state is filled with non-default values to pin that the transformer touches only the icon */
-    private fun createState(buttonIconRes: Int?): JointAccountDisplayNameUM {
+    private fun createState(buttonIcon: TangemIconUM?): JointAccountDisplayNameUM {
         return JointAccountDisplayNameUM(
             name = "Ivan Zolo",
             buttonText = buttonText,
-            buttonIconRes = buttonIconRes,
+            buttonIcon = buttonIcon,
             isButtonEnabled = true,
             isButtonLoading = true,
             onNameChange = onNameChange,
@@ -58,8 +59,8 @@ internal class UpdateButtonIconTransformerTest {
     }
 
     private companion object {
-        val TANGEM_ICON = R.drawable.ic_tangem_24
-        val WALLET_ICON = R.drawable.ic_wallet_24
+        val TANGEM_ICON = TangemIconUM.Icon(iconRes = R.drawable.ic_tangem_24)
+        val WALLET_ICON = TangemIconUM.Icon(iconRes = R.drawable.ic_wallet_24)
 
         // Shared instances so states built before and after a transform compare equal
         val buttonText = stringReference(value = "Create account")

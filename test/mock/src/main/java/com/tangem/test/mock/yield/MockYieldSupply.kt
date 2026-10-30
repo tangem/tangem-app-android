@@ -1,11 +1,17 @@
 package com.tangem.test.mock.yield
 
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.network.NetworkAddress
+import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.yield.supply.models.YieldMarketToken
+import com.tangem.domain.yield.supply.models.incentives.YieldClaimCalldata
 import com.tangem.domain.yield.supply.models.incentives.YieldIncentiveCampaign
 import com.tangem.domain.yield.supply.models.incentives.YieldReward
 import com.tangem.domain.yield.supply.models.incentives.YieldRewardDestination
+import com.tangem.domain.yield.supply.models.incentives.YieldRewardsSummary
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -21,6 +27,7 @@ object MockYieldSupply {
     const val CHAIN_ID = 1
     const val TOKEN_ADDRESS = "0xTokenAbC"
     const val USER_ADDRESS = "0xUser"
+    const val MODULE_ADDRESS = "0xModule"
     const val REWARD_TOKEN = "0xWETH"
 
     fun market(
@@ -45,11 +52,11 @@ object MockYieldSupply {
 
     fun campaign(
         hasActiveCampaign: Boolean = true,
-        rewardsApr: BigDecimal = BigDecimal("1.5"),
+        rewardsApy: BigDecimal = BigDecimal("1.5"),
         totalApyEst: BigDecimal = BigDecimal("5.5"),
     ) = YieldIncentiveCampaign(
         hasActiveCampaign = hasActiveCampaign,
-        rewardsApr = rewardsApr,
+        rewardsApy = rewardsApy,
         totalApyEst = totalApyEst,
     )
 
@@ -63,7 +70,7 @@ object MockYieldSupply {
         usdValue: BigDecimal = BigDecimal("10.00"),
         estimatedNetValueUsd: BigDecimal = BigDecimal("8.50"),
         estimatedServiceFeeUsd: BigDecimal = BigDecimal("1.50"),
-        serviceFeeRateBps: Int = 1_500,
+        serviceFeeRate: BigDecimal = BigDecimal("0.15"),
         finalDestination: YieldRewardDestination = YieldRewardDestination.Owner,
     ) = YieldReward(
         rewardToken = rewardToken,
@@ -74,15 +81,77 @@ object MockYieldSupply {
         usdValue = usdValue,
         estimatedNetValueUsd = estimatedNetValueUsd,
         estimatedServiceFeeUsd = estimatedServiceFeeUsd,
-        serviceFeeRateBps = serviceFeeRateBps,
+        serviceFeeRate = serviceFeeRate,
         finalDestination = finalDestination,
     )
 
-    fun network(id: String = NETWORK_ID, name: String = "Ethereum", currencySymbol: String = "ETH") = Network(
-        id = Network.ID(value = id, derivationPath = Network.DerivationPath.None),
+    @Suppress("LongParameterList")
+    fun calldata(
+        chainId: Int = CHAIN_ID,
+        userAddress: String = USER_ADDRESS,
+        moduleAddress: String? = MODULE_ADDRESS,
+        hasClaimable: Boolean = true,
+        to: String? = MODULE_ADDRESS,
+        data: String? = "0xdeadbeef",
+        rewardTokens: List<String> = listOf(REWARD_TOKEN),
+        cumulativeAmounts: List<String> = listOf("1000000000000000000"),
+        totalEstimatedServiceFeeUsd: BigDecimal = BigDecimal("1.50"),
+        isClaimRecommended: Boolean = true,
+    ) = YieldClaimCalldata(
+        chainId = chainId,
+        userAddress = userAddress,
+        moduleAddress = moduleAddress,
+        hasClaimable = hasClaimable,
+        to = to,
+        data = data,
+        rewardTokens = rewardTokens,
+        cumulativeAmounts = cumulativeAmounts,
+        totalEstimatedServiceFeeUsd = totalEstimatedServiceFeeUsd,
+        isClaimRecommended = isClaimRecommended,
+    )
+
+    fun claimableSummary(
+        moduleAddress: String = MODULE_ADDRESS,
+        claimable: List<YieldReward> = listOf(reward()),
+        pending: List<YieldReward> = emptyList(),
+        unsupported: List<YieldReward> = emptyList(),
+        supportedRewardTokens: Set<String> = setOf(REWARD_TOKEN.lowercase()),
+        totalNetUsd: BigDecimal = BigDecimal("8.50"),
+    ) = YieldRewardsSummary.Claimable(
+        moduleAddress = moduleAddress,
+        claimable = claimable,
+        pending = pending,
+        unsupported = unsupported,
+        supportedRewardTokens = supportedRewardTokens,
+        totalNetUsd = totalNetUsd,
+    )
+
+    fun deferredSummary(
+        moduleAddress: String = MODULE_ADDRESS,
+        claimable: List<YieldReward> = listOf(reward()),
+        pending: List<YieldReward> = emptyList(),
+        unsupported: List<YieldReward> = emptyList(),
+        supportedRewardTokens: Set<String> = setOf(REWARD_TOKEN.lowercase()),
+        totalNetUsd: BigDecimal = BigDecimal("8.50"),
+    ) = YieldRewardsSummary.Deferred(
+        moduleAddress = moduleAddress,
+        claimable = claimable,
+        pending = pending,
+        unsupported = unsupported,
+        supportedRewardTokens = supportedRewardTokens,
+        totalNetUsd = totalNetUsd,
+    )
+
+    fun network(
+        id: String = NETWORK_ID,
+        name: String = "Ethereum",
+        currencySymbol: String = "ETH",
+        derivationPath: Network.DerivationPath = Network.DerivationPath.None,
+    ) = Network(
+        id = Network.ID(value = id, derivationPath = derivationPath),
         name = name,
         currencySymbol = currencySymbol,
-        derivationPath = Network.DerivationPath.None,
+        derivationPath = derivationPath,
         isTestnet = false,
         standardType = Network.StandardType.Unspecified("UNSPECIFIED"),
         hasFiatFeeRate = true,
@@ -124,5 +193,39 @@ object MockYieldSupply {
         decimals = 18,
         iconUrl = null,
         isCustom = false,
+    )
+
+    fun loadedStatus(
+        currency: CryptoCurrency = token(),
+        amount: BigDecimal = BigDecimal.ONE,
+        fiatAmount: BigDecimal = BigDecimal.ONE,
+        yieldSupplyStatus: YieldSupplyStatus? = null,
+        networkSource: StatusSource = StatusSource.ACTUAL,
+        quoteSource: StatusSource = StatusSource.ACTUAL,
+    ) = CryptoCurrencyStatus(
+        currency = currency,
+        value = CryptoCurrencyStatus.Loaded(
+            amount = amount,
+            fiatAmount = fiatAmount,
+            fiatRate = BigDecimal.ONE,
+            priceChange = BigDecimal.ZERO,
+            yieldSupplyStatus = yieldSupplyStatus,
+            hasCurrentNetworkTransactions = false,
+            pendingTransactions = emptySet(),
+            networkAddress = NetworkAddress.Single(
+                defaultAddress = NetworkAddress.Address(
+                    value = USER_ADDRESS,
+                    type = NetworkAddress.Address.Type.Primary,
+                ),
+            ),
+            sources = CryptoCurrencyStatus.Sources(networkSource = networkSource, quoteSource = quoteSource),
+        ),
+    )
+
+    fun activeYieldSupplyStatus() = YieldSupplyStatus(
+        isActive = true,
+        isInitialized = true,
+        isAllowedToSpend = true,
+        effectiveProtocolBalance = null,
     )
 }

@@ -100,7 +100,7 @@ internal class SignJointOperationUseCaseTest {
         coEvery { compositionChecker.ensureMatches(any(), any(), any(), any(), any()) } returns
             SafeDeployment.DEPLOYED.right()
         coEvery { ownerAddressResolver.resolve(any(), any()) } returns ALICE.right()
-        coEvery { blockaidGate.verify(any(), any(), any(), any(), any()) } returns
+        coEvery { blockaidGate.verify(any(), any(), any(), any(), any(), any()) } returns
             JointOperationBlockaidGate.Verdict.SAFE
         coEvery { signer.signOperation(any(), any(), any(), any(), any()) } returns SIGNATURE.right()
         coEvery { repository.signOperation(any(), any(), any(), any()) } returns signedOperation.right()
@@ -146,6 +146,7 @@ internal class SignJointOperationUseCaseTest {
                 chainId = CHAIN_ID,
                 safeAddress = SAFE_ADDRESS,
                 ownerAddress = ALICE,
+                deployment = SafeDeployment.DEPLOYED,
             )
             signer.signOperation(
                 userWalletId = MockAccounts.userWalletId,
@@ -233,7 +234,7 @@ internal class SignJointOperationUseCaseTest {
     @Test
     fun `GIVEN blockaid says malicious WHEN invoke THEN the signer is never reached`() = runTest {
         // Arrange
-        coEvery { blockaidGate.verify(any(), any(), any(), any(), any()) } returns
+        coEvery { blockaidGate.verify(any(), any(), any(), any(), any(), any()) } returns
             JointOperationBlockaidGate.Verdict.MALICIOUS
 
         // Act
@@ -282,19 +283,34 @@ internal class SignJointOperationUseCaseTest {
         }
 
     @Test
-    fun `GIVEN no verdict for a safe not deployed yet WHEN invoke THEN the operation is still signed`() = runTest {
+    fun `GIVEN no verdict for a safe not deployed yet WHEN invoke THEN nothing is signed`() = runTest {
         // Arrange
         coEvery { compositionChecker.ensureMatches(any(), any(), any(), any(), any()) } returns
             SafeDeployment.NOT_DEPLOYED.right()
-        coEvery { blockaidGate.verify(any(), any(), any(), any(), any()) } returns
+        coEvery { blockaidGate.verify(any(), any(), any(), any(), any(), any()) } returns
             JointOperationBlockaidGate.Verdict.UNKNOWN
 
         // Act
         val actual = useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
 
         // Assert
-        assertThat(actual).isEqualTo(signedOperation.right())
-        coVerify(exactly = 1) { signer.signOperation(any(), any(), any(), any(), any()) }
+        assertThat(actual.leftOrNull()).isInstanceOf(JointOperationSignError.Failed::class.java)
+        coVerify(exactly = 0) { signer.signOperation(any(), any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN a safe not deployed yet WHEN invoke THEN blockaid is asked about the first operation`() = runTest {
+        // Arrange
+        coEvery { compositionChecker.ensureMatches(any(), any(), any(), any(), any()) } returns
+            SafeDeployment.NOT_DEPLOYED.right()
+
+        // Act
+        useCase(account = account, network = network, operationId = OPERATION_ID, displayed = displayed)
+
+        // Assert
+        coVerify(exactly = 1) {
+            blockaidGate.verify(any(), any(), any(), any(), any(), deployment = SafeDeployment.NOT_DEPLOYED)
+        }
     }
 
     @Test
@@ -302,7 +318,7 @@ internal class SignJointOperationUseCaseTest {
         // Arrange
         coEvery { compositionChecker.ensureMatches(any(), any(), any(), any(), any()) } returns
             SafeDeployment.NOT_DEPLOYED.right()
-        coEvery { blockaidGate.verify(any(), any(), any(), any(), any()) } returns
+        coEvery { blockaidGate.verify(any(), any(), any(), any(), any(), any()) } returns
             JointOperationBlockaidGate.Verdict.UNAVAILABLE
 
         // Act
@@ -316,7 +332,7 @@ internal class SignJointOperationUseCaseTest {
     @Test
     fun `GIVEN no verdict for a deployed safe WHEN invoke THEN nothing is signed`() = runTest {
         // Arrange
-        coEvery { blockaidGate.verify(any(), any(), any(), any(), any()) } returns
+        coEvery { blockaidGate.verify(any(), any(), any(), any(), any(), any()) } returns
             JointOperationBlockaidGate.Verdict.UNKNOWN
 
         // Act

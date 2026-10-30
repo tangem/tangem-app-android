@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.inputrow.InputRowChecked
@@ -31,9 +32,9 @@ private fun Content(content: SelectContactSupportTypeBS) {
     Column(
         modifier = Modifier
             .padding(
-                start = TangemTheme.dimens.spacing16,
-                end = TangemTheme.dimens.spacing16,
-                bottom = TangemTheme.dimens.spacing16,
+                start = 16.dp,
+                end = 16.dp,
+                bottom = 16.dp,
             ),
     ) {
         SelectContactSupportTypeBS.Option.entries.forEachIndexed { index, type ->

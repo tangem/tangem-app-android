@@ -3,12 +3,10 @@ package com.tangem.data.onramp.di
 import com.squareup.moshi.Moshi
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.txhistory.ExpressHistoryRepository
 import com.tangem.data.onramp.DefaultHotCryptoRepository
 import com.tangem.data.onramp.DefaultOnrampErrorResolver
-import com.tangem.data.onramp.DefaultOnrampFeatureToggles
 import com.tangem.data.onramp.DefaultOnrampRepository
 import com.tangem.data.onramp.DefaultOnrampTransactionRepository
 import com.tangem.data.onramp.converters.error.OnrampErrorConverter
@@ -35,7 +33,6 @@ import com.tangem.store.datasource.txhistory.db.dao.ExpressHistoryDao
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.onramp.repositories.*
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -67,8 +64,6 @@ internal object OnrampDataModule {
         onrampCurrentCountryByIPStore: OnrampCurrentCountryByIPStore,
         expressHistoryDao: ExpressHistoryDao,
         expressHistoryRepository: ExpressHistoryRepository,
-        txHistoryFeatureToggles: TxHistoryFeatureToggles,
-        onrampFeatureToggles: OnrampFeatureToggles,
         @NetworkMoshi moshi: Moshi,
     ): OnrampRepository {
         return DefaultOnrampRepository(
@@ -88,16 +83,8 @@ internal object OnrampDataModule {
             dataSignatureVerifier = dataSignatureVerifier,
             expressHistoryDao = expressHistoryDao,
             expressHistoryRepository = expressHistoryRepository,
-            txHistoryFeatureToggles = txHistoryFeatureToggles,
-            onrampFeatureToggles = onrampFeatureToggles,
             moshi = moshi,
         )
-    }
-
-    @Provides
-    @Singleton
-    fun provideOnrampFeatureToggles(featureTogglesManager: FeatureTogglesManager): OnrampFeatureToggles {
-        return DefaultOnrampFeatureToggles(featureTogglesManager)
     }
 
     @Provides

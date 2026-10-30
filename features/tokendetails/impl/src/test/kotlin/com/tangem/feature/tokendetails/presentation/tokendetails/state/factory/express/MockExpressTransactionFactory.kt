@@ -35,7 +35,7 @@ internal object MockExpressTransactionFactory {
         activeStatus = activeStatus,
         statuses = persistentListOf(),
         notification = null,
-        showProviderLink = false,
+        shouldShowProviderLink = false,
         fromUserWalletId = fromUserWalletId,
         fromCryptoCurrency = cryptoCurrency,
         toCryptoCurrency = cryptoCurrency,

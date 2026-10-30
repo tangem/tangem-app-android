@@ -19,8 +19,10 @@ import com.tangem.google.auth.GoogleAuthError
 import com.tangem.google.drive.DriveFile
 import com.tangem.google.drive.DriveFileListResponse
 import com.tangem.google.drive.DriveFileMetadata
+import com.tangem.google.drive.GoogleDriveAccount
 import com.tangem.google.drive.GoogleDriveApi
 import com.tangem.google.drive.GoogleDriveTokenProvider
+import com.tangem.google.drive.store.DriveAccountStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -28,6 +30,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import okhttp3.MediaType.Companion.toMediaType
@@ -46,11 +49,13 @@ internal class DefaultSocialBackupRepositoryTest {
     private val api: GoogleDriveApi = mockk()
     private val tokenProvider: GoogleDriveTokenProvider = mockk(relaxUnitFun = true)
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
+    private val accountStore = FakeDriveAccountStore()
     private val cipher = SocialBackupCipher()
 
     private val repository = DefaultSocialBackupRepository(
         api = api,
         tokenProvider = tokenProvider,
+        accountStore = accountStore,
         userWalletsListRepository = { userWalletsListRepository },
         cipher = cipher,
         dispatchers = TestingCoroutineDispatcherProvider(),
@@ -61,6 +66,8 @@ internal class DefaultSocialBackupRepositoryTest {
     @BeforeEach
     fun setup() {
         clearMocks(api, tokenProvider, userWalletsListRepository)
+        accountStore.accounts.clear()
+        coEvery { tokenProvider.currentAccountName() } returns null
         val wallets = listOf(MARKED_WALLET, UNMARKED_WALLET, COLD_WALLET)
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(wallets)
         coEvery { userWalletsListRepository.userWalletsSync() } returns wallets
@@ -248,6 +255,109 @@ internal class DefaultSocialBackupRepositoryTest {
     }
 
     @Test
+    fun `GIVEN a pinned account WHEN writeBackup succeeds THEN the account of the wallet is remembered`() = runTest {
+        // Arrange
+        coEvery { tokenProvider.currentAccountName() } returns ACCOUNT_NAME
+        stubList()
+        coEvery { api.createFile(any(), any(), any()) } returns Response.success(DriveFile(id = NEW_FILE_ID))
+        coEvery {
+            api.uploadFileContent(any(), NEW_FILE_ID, any(), any(), any())
+        } returns Response.success(DriveFile(id = NEW_FILE_ID))
+
+        // Act
+        repository.writeBackup(
+            walletId = UserWalletId(stringValue = WALLET_ID),
+            createdAtMillis = CREATED_AT_MILLIS,
+            secret = secret(),
+            recoveryKey = recoveryKey,
+        )
+
+        // Assert
+        assertThat(accountStore.accounts).containsExactly(WALLET_ID, ACCOUNT_NAME)
+    }
+
+    @Test
+    fun `GIVEN a pinned account AND the upload fails WHEN deleteBackup THEN it goes to the account written to`() =
+        runTest {
+            // Arrange — the upload may have landed with only its response lost
+            coEvery { tokenProvider.currentAccountName() } returns ACCOUNT_NAME
+            stubList()
+            coEvery { api.createFile(any(), any(), any()) } returns Response.success(DriveFile(id = NEW_FILE_ID))
+            coEvery { api.uploadFileContent(any(), any(), any(), any(), any()) } returns errorResponse(code = 500)
+            repository.writeBackup(
+                walletId = UserWalletId(stringValue = WALLET_ID),
+                createdAtMillis = CREATED_AT_MILLIS,
+                secret = secret(),
+                recoveryKey = recoveryKey,
+            )
+
+            val requestedAccounts = recordRequestedAccounts()
+
+            // Act
+            repository.deleteBackup(UserWalletId(stringValue = WALLET_ID))
+
+            // Assert
+            assertThat(requestedAccounts.map { it?.name }).containsExactly(ACCOUNT_NAME)
+        }
+
+    @Test
+    fun `GIVEN a pinned account WHEN readBackup succeeds THEN the account of the file's wallet is remembered`() =
+        runTest {
+            // Arrange
+            coEvery { tokenProvider.currentAccountName() } returns ACCOUNT_NAME
+            stubList(driveFile(id = NEW_FILE_ID))
+            stubDownload(fileId = NEW_FILE_ID, content = backupJson())
+
+            // Act
+            repository.readBackup(recoveryKey)
+
+            // Assert
+            assertThat(accountStore.accounts).containsExactly(WALLET_ID, ACCOUNT_NAME)
+        }
+
+    @Test
+    fun `GIVEN a remembered account WHEN deleteBackup THEN the folder is listed in it`() = runTest {
+        // Arrange — after a restart Google would otherwise authorize whichever account it picks itself
+        accountStore.accounts[WALLET_ID] = ACCOUNT_NAME
+        stubList(driveFile(id = NEW_FILE_ID))
+        stubDownload(fileId = NEW_FILE_ID, content = backupJson())
+        val requestedAccounts = recordRequestedAccounts()
+
+        // Act
+        val result = repository.deleteBackup(UserWalletId(stringValue = WALLET_ID))
+
+        // Assert
+        assertThat(result).isEqualTo(true.right())
+        assertThat(requestedAccounts.map { it?.name }).containsExactly(ACCOUNT_NAME)
+        coVerify(exactly = 0) { tokenProvider.switchAccount(any()) }
+        assertThat(accountStore.accounts).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN no remembered account WHEN deleteBackup THEN the account is left to Google`() = runTest {
+        // Arrange — the account a sign-in pinned would be searched instead
+        stubList()
+        val requestedAccounts = recordRequestedAccounts()
+
+        // Act
+        repository.deleteBackup(UserWalletId(stringValue = WALLET_ID))
+
+        // Assert
+        assertThat(requestedAccounts).hasSize(1)
+        assertThat(requestedAccounts.single()).isNotNull()
+        assertThat(requestedAccounts.single()?.name).isNull()
+    }
+
+    private fun recordRequestedAccounts(): List<GoogleDriveAccount?> {
+        val accounts = mutableListOf<GoogleDriveAccount?>()
+        coEvery { tokenProvider.getAccessToken(any()) } coAnswers {
+            accounts += currentCoroutineContext()[GoogleDriveAccount]
+            Either.Right(ACCESS_TOKEN)
+        }
+        return accounts
+    }
+
+    @Test
     fun `GIVEN the folder holds another wallet's backup WHEN deleteBackup THEN nothing is deleted`() = runTest {
         // Arrange
         stubList(driveFile(id = NEW_FILE_ID))
@@ -257,7 +367,7 @@ internal class DefaultSocialBackupRepositoryTest {
         val result = repository.deleteBackup(UserWalletId(stringValue = WALLET_ID))
 
         // Assert
-        assertThat(result.isRight()).isTrue()
+        assertThat(result).isEqualTo(false.right())
         coVerify(exactly = 0) { api.deleteFile(any(), any()) }
     }
 
@@ -272,7 +382,7 @@ internal class DefaultSocialBackupRepositoryTest {
         val result = repository.deleteBackup(UserWalletId(stringValue = WALLET_ID))
 
         // Assert
-        assertThat(result.isRight()).isTrue()
+        assertThat(result).isEqualTo(true.right())
         coVerify(exactly = 1) { api.deleteFile(any(), NEW_FILE_ID) }
         coVerify(exactly = 1) { api.deleteFile(any(), OLD_FILE_ID) }
     }
@@ -288,9 +398,23 @@ internal class DefaultSocialBackupRepositoryTest {
         val result = repository.deleteBackup(UserWalletId(stringValue = WALLET_ID))
 
         // Assert
-        assertThat(result.isRight()).isTrue()
+        assertThat(result).isEqualTo(true.right())
         coVerify(exactly = 1) { api.deleteFile(any(), OLD_FILE_ID) }
         coVerify(exactly = 0) { api.deleteFile(any(), NEW_FILE_ID) }
+    }
+
+    @Test
+    fun `GIVEN the owned file is already gone WHEN deleteBackup THEN nothing is reported as deleted`() = runTest {
+        // Arrange
+        stubList(driveFile(id = NEW_FILE_ID))
+        stubDownload(fileId = NEW_FILE_ID, content = backupJson())
+        coEvery { api.deleteFile(any(), NEW_FILE_ID) } returns errorResponse(code = 404)
+
+        // Act
+        val result = repository.deleteBackup(UserWalletId(stringValue = WALLET_ID))
+
+        // Assert
+        assertThat(result).isEqualTo(false.right())
     }
 
     @Test
@@ -303,7 +427,7 @@ internal class DefaultSocialBackupRepositoryTest {
         val result = repository.deleteBackup(UserWalletId(stringValue = WALLET_ID))
 
         // Assert
-        assertThat(result.isRight()).isTrue()
+        assertThat(result).isEqualTo(true.right())
         coVerify(exactly = 1) { api.deleteFile(any(), NEW_FILE_ID) }
     }
 
@@ -322,7 +446,7 @@ internal class DefaultSocialBackupRepositoryTest {
         }
 
     @Test
-    fun `GIVEN the token expired WHEN getBackupInfo THEN it is invalidated and the call is retried silently`() =
+    fun `GIVEN the token expired WHEN getBackupInfo THEN only the token is invalidated and the call is retried silently`() =
         runTest {
             // Arrange
             coEvery { api.listFiles(any(), any(), any(), any()) } returnsMany listOf(
@@ -336,7 +460,8 @@ internal class DefaultSocialBackupRepositoryTest {
 
             // Assert
             assertThat(result.getOrNull()?.walletId).isEqualTo(UserWalletId(stringValue = WALLET_ID))
-            coVerify(exactly = 1) { tokenProvider.invalidate() }
+            coVerify(exactly = 1) { tokenProvider.invalidateToken() }
+            coVerify(exactly = 0) { tokenProvider.invalidate() }
             coVerify(exactly = 1) { tokenProvider.getAccessToken(interactive = false) }
         }
 
@@ -493,11 +618,12 @@ internal class DefaultSocialBackupRepositoryTest {
             walletId = UserWalletId(stringValue = id),
             hotWalletId = mockk(),
             wallets = null,
-            backedUp = false,
+            isBackedUp = false,
             isSocialBackupCompleted = isSocialBackupCompleted,
         )
 
         const val ACCESS_TOKEN = "token"
+        const val ACCOUNT_NAME = "user@gmail.com"
         const val BACKUP_FILE_NAME = "social-backup.json"
         const val MIME_TYPE_JSON = "application/json"
         const val NEW_FILE_ID = "new-file"
@@ -508,5 +634,16 @@ internal class DefaultSocialBackupRepositoryTest {
         const val CREATED_AT = "2026-08-10T10:15:30Z"
         const val CREATED_AT_MILLIS = 1_786_875_330_000L
         const val UNSUPPORTED_VERSION = 2
+    }
+}
+
+private class FakeDriveAccountStore : DriveAccountStore {
+
+    val accounts = mutableMapOf<String, String>()
+
+    override suspend fun getAccountName(walletId: String): String? = accounts[walletId]
+
+    override suspend fun setAccountName(walletId: String, accountName: String?) {
+        if (accountName == null) accounts.remove(walletId) else accounts[walletId] = accountName
     }
 }

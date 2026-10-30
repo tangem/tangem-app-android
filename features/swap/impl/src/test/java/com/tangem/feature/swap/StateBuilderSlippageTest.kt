@@ -30,9 +30,7 @@ internal class StateBuilderSlippageTest {
         isBalanceHiddenProvider = Provider { false },
         appCurrencyProvider = Provider { AppCurrency.Default },
         isAccountsModeProvider = Provider { false },
-        isGaslessFeeSupportedForNetwork = mockk(),
-        appRouter = mockk(),
-        isChooseTokenPulseEnabled = false,
+        isEvmGaslessFeeSupportedForNetwork = mockk(),
         isCustomSlippageEnabled = true,
     )
 

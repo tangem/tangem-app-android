@@ -6,9 +6,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 /**
- * Transaction history state for Token Details ([REDACTED_TASK_KEY]).
- *
- * Parallel to [TxHistoryUM] but uses [TransactionItemUM] for transaction items so the
+ * Transaction history state for Token Details. Uses [TransactionItemUM] for transaction items so the
  * `TransactionItem` composable can render structured fields without parsing.
  */
 @Immutable

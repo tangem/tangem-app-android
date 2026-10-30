@@ -6,7 +6,6 @@ import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionType
-import com.tangem.domain.txhistory.TxHistoryFeatureToggles
 import com.tangem.domain.txhistory.usecase.GetCachedTokenInfoUseCase
 import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.utils.converter.Converter
@@ -25,7 +24,6 @@ internal class SdkTransactionHistoryItemConverter(
     networkTokens: Set<CryptoCurrency.Token>,
     getCachedTokenInfoUseCase: GetCachedTokenInfoUseCase,
     currencyAddresses: Collection<Address>,
-    private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
 ) : Converter<SdkTransactionHistoryItem, TxInfo> {
 
     private val ownAddress: String? = currencyAddresses.firstOrNull { it.type == AddressType.Default }?.value
@@ -54,12 +52,10 @@ internal class SdkTransactionHistoryItemConverter(
         .mapTo(mutableSetOf()) { it.value.lowercase() }
 
     override fun convertList(input: Collection<SdkTransactionHistoryItem>): List<TxInfo> {
-        val items = input
+        return input
             .filterNot(safeExecutionDecoder::isOwnSafeZeroCall)
             .map(safeExecutionDecoder::withRefundStatus)
-        if (!txHistoryFeatureToggles.isNewTxHistoryEnabled) return items.map(::convert)
-
-        return items.groupBy(SdkTransactionHistoryItem::txHash)
+            .groupBy(SdkTransactionHistoryItem::txHash)
             .flatMap { (_, items) ->
                 val transfers = items.map(::convert)
 

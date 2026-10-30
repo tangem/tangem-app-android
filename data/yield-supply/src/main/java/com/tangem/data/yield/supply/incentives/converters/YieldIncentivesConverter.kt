@@ -11,9 +11,12 @@ import com.tangem.grow.datasource.yield.models.incentives.YieldIncentivesRespons
 import com.tangem.grow.datasource.yield.models.incentives.YieldRewardDto
 import com.tangem.utils.extensions.orZero
 import kotlinx.datetime.Instant
+import java.math.BigDecimal
 import java.math.BigInteger
 
 internal object YieldIncentivesConverter {
+
+    private const val BPS_SCALE = 4
 
     fun convert(response: YieldIncentivesResponse): Either<YieldIncentivesError, YieldIncentives> = either {
         YieldIncentives(
@@ -41,10 +44,15 @@ internal object YieldIncentivesConverter {
             usdValue = dto.usdValue.orZero(),
             estimatedNetValueUsd = dto.estimatedNetValueUsd.orZero(),
             estimatedServiceFeeUsd = dto.estimatedServiceFeeUsd.orZero(),
-            serviceFeeRateBps = dto.serviceFeeRateBps ?: 0,
+            serviceFeeRate = dto.serviceFeeRateBps.bpsToFraction(),
             finalDestination = dto.finalDestination.toDestination(),
         )
     }
+
+    private fun Int?.bpsToFraction(): BigDecimal = BigDecimal.valueOf(
+        (this ?: 0).toLong(),
+        BPS_SCALE,
+    ).stripTrailingZeros()
 
     private fun String?.toBaseUnits(): BigInteger = this?.toBigIntegerOrNull() ?: BigInteger.ZERO
 

@@ -18,7 +18,6 @@ dependencies {
     // endregion
 
     // region AndroidX
-    api(deps.androidx.activity)
     api(deps.androidx.annotation)
     // endregion
 
@@ -29,9 +28,6 @@ dependencies {
 
     // region Tangem
     api(tangemDeps.card.core)
-    implementation(tangemDeps.card.android) {
-        exclude(module = "joda-time")
-    }
     // endregion
 
     // region Core modules

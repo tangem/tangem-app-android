@@ -8,6 +8,15 @@ plugins {
 
 android {
     namespace = "com.tangem.core.abtests"
+
+    // `src/prodDi/` holds the production binding of the manager; `mocked` supplies its own from `src/mocked/`
+    buildTypes.configureEach {
+        if (name != "mocked") {
+            sourceSets.named(name) {
+                java.srcDir("src/prodDi/kotlin")
+            }
+        }
+    }
 }
 
 dependencies {

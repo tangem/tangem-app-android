@@ -221,7 +221,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
                 stackNavigation.navigate { listOf(nextStep) }
             }
             Finalize -> {
-                artworksState.value = WalletArtworksState.Stack(threeCards = model.state.value.isThreeCards)
+                artworksState.value = WalletArtworksState.Stack(hasThreeCards = model.state.value.isThreeCards)
                 stackNavigation.navigate { listOf(nextStep) }
             }
             SeedPhrase -> {
@@ -256,14 +256,14 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
         when (event) {
             MultiWalletFinalizeComponent.Event.OneBackupCardAdded -> {
                 artworksState.value = WalletArtworksState.Leapfrog(
-                    threeCards = model.state.value.isThreeCards,
+                    hasThreeCards = model.state.value.isThreeCards,
                     step = WalletArtworksState.Leapfrog.Step.Second,
                 )
             }
             MultiWalletFinalizeComponent.Event.TwoBackupCardsAdded -> {
                 if (model.state.value.isThreeCards) {
                     artworksState.value = WalletArtworksState.Leapfrog(
-                        threeCards = model.state.value.isThreeCards,
+                        hasThreeCards = model.state.value.isThreeCards,
                         step = WalletArtworksState.Leapfrog.Step.Third,
                     )
                 } else {

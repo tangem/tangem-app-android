@@ -31,6 +31,7 @@ sealed class PaymentAccountStatusValue {
             }
             is Error,
             is IssuingCard,
+            is Verified,
             is AwaitingPlanSelection,
             is Inactive,
             is Empty,
@@ -52,6 +53,7 @@ sealed class PaymentAccountStatusValue {
         return when (this) {
             is Error.CardIssueFailed -> copy(source = source)
             is IssuingCard -> copy(source = source)
+            is Verified -> copy(source = source)
             is Loaded -> copy(source = source, error = error ?: this.error)
             is KycRequired -> copy(source = source)
             is UnderReview -> copy(source = source)
@@ -119,6 +121,14 @@ sealed class PaymentAccountStatusValue {
      */
     @Serializable
     data class IssuingCard(override val source: StatusSource) : PaymentAccountStatusValue()
+
+    /**
+     * Represents a state where KYC is approved and the customer has not chosen a product yet.
+     *
+     * @property source The source of the status information.
+     */
+    @Serializable
+    data class Verified(@SerialName("source") override val source: StatusSource) : PaymentAccountStatusValue()
 
     /**
      * Represents a state where KYC is approved but no tariff plan has been selected yet
@@ -321,6 +331,7 @@ val PaymentAccountStatusValue.tariffPlan: TangemPayCustomerTariffPlan?
         is PaymentAccountStatusValue.Error.CardIssueFailed -> value.tariffPlan?.tariff
         is PaymentAccountStatusValue.Error,
         is PaymentAccountStatusValue.IssuingCard,
+        is PaymentAccountStatusValue.Verified,
         is PaymentAccountStatusValue.Empty,
         is PaymentAccountStatusValue.NotCreated,
         is PaymentAccountStatusValue.KycRequired,
@@ -350,6 +361,7 @@ val PaymentAccountStatusValue.isCreated: Boolean
         -> false
         is PaymentAccountStatusValue.Error,
         is PaymentAccountStatusValue.IssuingCard,
+        is PaymentAccountStatusValue.Verified,
         is PaymentAccountStatusValue.AwaitingPlanSelection,
         is PaymentAccountStatusValue.Inactive,
         is PaymentAccountStatusValue.Loaded,

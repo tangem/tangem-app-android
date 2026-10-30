@@ -44,7 +44,7 @@ internal fun WcEstimatedWalletChangesLoadingItem(modifier: Modifier = Modifier) 
                 modifier = Modifier.size(24.dp),
             )
             Text(
-                modifier = modifier
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 8.dp),
                 text = stringResourceSafe(R.string.wc_common_loading),

@@ -1,7 +1,6 @@
 package com.tangem.features.feed.rwa.components
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -16,6 +15,7 @@ import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.features.feed.nav.FeedTabComponent
 import com.tangem.features.feed.rwa.model.search.RwaFeedSearchTabModel
 import com.tangem.features.feed.rwa.ui.RwaSearchContent
+import com.tangem.features.feed.ui.FeedSearchListState
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -36,7 +36,7 @@ internal class RwaFeedSearchTabComponent @AssistedInject constructor(
     private val model: RwaFeedSearchTabModel = getOrCreateModel(params)
 
     // owned by the component: the page stays CREATED while unselected, so scroll survives switches
-    private val listState = LazyListState()
+    private val listState = FeedSearchListState()
 
     @Composable
     override fun Content(bottomSheetState: State<BottomSheetState>, contentPadding: PaddingValues, modifier: Modifier) {

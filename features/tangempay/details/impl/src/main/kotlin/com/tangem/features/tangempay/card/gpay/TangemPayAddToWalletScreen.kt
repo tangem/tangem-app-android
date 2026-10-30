@@ -168,7 +168,7 @@ private fun AddToWalletBottomBar(state: TangemPayAddToWalletUM, modifier: Modifi
             onClick = state.onBackClick,
         )
 
-        if (state.showAddToWalletButton) {
+        if (state.shouldShowAddToWalletButton) {
             TangemButton(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -211,7 +211,7 @@ private fun PreviewTangemPayAddToWalletScreen() {
                         text = resourceReference(R.string.tangempay_card_details_open_wallet_step_5),
                     ),
                 ),
-                showAddToWalletButton = true,
+                shouldShowAddToWalletButton = true,
                 onBackClick = {},
                 onClickOpenWallet = {},
             ),

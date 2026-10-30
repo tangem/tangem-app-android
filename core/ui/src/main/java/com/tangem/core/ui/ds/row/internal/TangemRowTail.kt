@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.res.TangemTheme
@@ -29,10 +30,10 @@ fun TangemRowTail(
     AnimatedContent(
         targetState = tangemRowTailUM,
         label = "Update non content fiat block",
-        modifier = modifier.height(TangemTheme.dimens2.x4),
+        modifier = modifier.height(16.dp),
         contentKey = { it::class.java },
     ) { animatedState ->
-        val innerModifier = Modifier.padding(start = TangemTheme.dimens2.x2)
+        val innerModifier = Modifier.padding(start = 8.dp)
         when (animatedState) {
             TangemRowTailUM.Empty -> Unit
             is TangemRowTailUM.Draggable -> DraggableImage(
@@ -55,7 +56,7 @@ fun TangemRowTail(
 private fun DraggableImage(@DrawableRes iconRes: Int, dragHandleModifier: Modifier, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .size(size = TangemTheme.dimens2.x6)
+            .size(size = 24.dp)
             .then(dragHandleModifier)
             .testTag(OrganizeTokensScreenTestTags.DRAGGABLE_IMAGE),
         contentAlignment = Alignment.Center,

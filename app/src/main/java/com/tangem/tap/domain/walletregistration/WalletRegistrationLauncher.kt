@@ -15,7 +15,6 @@ import com.tangem.domain.wallets.hot.HotWalletAccessor
 import com.tangem.hot.sdk.exception.RecentBiometryUnavailableException
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.HotWalletId
-import com.tangem.lib.auth.AuthFeatureToggles
 import com.tangem.lib.auth.session.WalletNonce
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.lib.auth.session.WalletRegistrationError
@@ -30,9 +29,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 
 /**
- * Single entry point that registers wallets with the Tangem Auth Service. Gated by the backend-auth
- * feature toggle; failures are logged and reported to analytics, never shown to the user (registration
- * is retried on the next launch / card scan). MOBILE wallets register without UI; COLD wallets attest
+ * Single entry point that registers wallets with the Tangem Auth Service. Failures are logged and
+ * reported to analytics, never shown to the user (registration is retried on the next launch / card scan). MOBILE wallets register without UI; COLD wallets attest
  * inside a live card session (no extra tap) and POST after the session closes.
  */
 @Suppress("LongParameterList")
@@ -40,7 +38,6 @@ class WalletRegistrationLauncher @Inject internal constructor(
     private val walletRegistrar: WalletRegistrar,
     private val mobileSigner: MobileWalletRegistrationSigner,
     private val coldSigner: ColdWalletRegistrationSigner,
-    private val authFeatureToggles: AuthFeatureToggles,
     private val hotWalletAccessor: HotWalletAccessor,
     private val appCoroutineScope: AppCoroutineScope,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -52,8 +49,6 @@ class WalletRegistrationLauncher @Inject internal constructor(
      * so callers relying on the fire-and-forget contract stay safe.
      */
     suspend fun registerMobile(userWallet: UserWallet.Hot) {
-        if (!authFeatureToggles.isBackendAuthenticationEnabled) return
-
         runSuspendCatching {
             walletRegistrar.register(
                 walletId = userWallet.walletId.toBase64(),
@@ -81,7 +76,6 @@ class WalletRegistrationLauncher @Inject internal constructor(
      * established elsewhere is reused and left untouched.
      */
     suspend fun registerUnlockedMobileWallet(userWallet: UserWallet.Hot, accessCode: HotAuth.Password? = null) {
-        if (!authFeatureToggles.isBackendAuthenticationEnabled) return
         if (walletRegistrar.isRegistered(userWallet.walletId.toBase64())) return
         if (!walletRegistrar.hasActiveSession()) {
             TangemLogger.i("No active session — deferring mobile registration to the next unlock")
@@ -133,8 +127,6 @@ class WalletRegistrationLauncher @Inject internal constructor(
      * every failure to a `Left`), so this consumes the `Either` directly rather than wrapping it.
      */
     suspend fun prefetchColdNonce(): WalletNonce? {
-        if (!authFeatureToggles.isBackendAuthenticationEnabled) return null
-
         val result = withTimeoutOrNull(NONCE_PREFETCH_BUDGET_MS) { walletRegistrar.requestNonce() }
         if (result == null) {
             TangemLogger.e("Cold wallet nonce prefetch timed out after $NONCE_PREFETCH_BUDGET_MS ms")
@@ -168,7 +160,6 @@ class WalletRegistrationLauncher @Inject internal constructor(
         nonce: WalletNonce?,
         shouldForce: Boolean = false,
     ) {
-        if (!authFeatureToggles.isBackendAuthenticationEnabled) return
         val cardDto = CardDTO(card)
         if (cardDto.isTangemTwins || VisaUtilities.isVisaCard(cardDto)) return
         val walletId = UserWalletIdBuilder.card(cardDto).build()?.toBase64() ?: return
@@ -224,8 +215,6 @@ class WalletRegistrationLauncher @Inject internal constructor(
      * (e.g. on creation, or the next time the user unlocks them).
      */
     suspend fun retryMobileRegistrations(userWallets: List<UserWallet>) {
-        if (!authFeatureToggles.isBackendAuthenticationEnabled) return
-
         userWallets.asSequence()
             .filterIsInstance<UserWallet.Hot>()
             .filter { it.hotWalletId.authType == HotWalletId.AuthType.NoPassword }
@@ -238,14 +227,11 @@ class WalletRegistrationLauncher @Inject internal constructor(
      * wrapper, because the registrar never throws (it routes every failure to a `Left`).
      */
     suspend fun unregister(userWalletId: UserWalletId) {
-        if (!authFeatureToggles.isBackendAuthenticationEnabled) return
-
         walletRegistrar.unregister(userWalletId.toBase64())
             .onLeft { TangemLogger.e("Wallet unregister deferred: $it") }
     }
 
     private fun sendRegistrationFailed(walletType: WalletType, stage: Stage, error: WalletRegistrationError) {
-        if (error is WalletRegistrationError.Disabled) return
         sendRegistrationFailed(walletType, stage, error.toString())
     }
 

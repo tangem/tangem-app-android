@@ -76,8 +76,8 @@ private fun IconItem(icon: CryptoPortfolioIcon.Icon, isSelected: Boolean, onClic
 
     val circleColor: Color = when {
         isLetter -> TangemTheme.colors3.bg.status.infoSubtle
-        isSelected -> TangemTheme.colors3.bg.opaque.secondary
-        else -> TangemTheme.colors3.bg.opaque.primary
+        isSelected -> TangemTheme.colors3.bg.transparent.secondary
+        else -> TangemTheme.colors3.bg.transparent.primary
     }
     val iconTint: Color = if (isLetter) {
         TangemTheme.colors3.icon.brand

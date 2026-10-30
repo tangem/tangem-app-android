@@ -84,7 +84,7 @@ private fun WalletNFTItemEmpty(onClick: () -> Unit, modifier: Modifier = Modifie
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.START_TOP)
-                .padding(start = TangemTheme.dimens2.x2),
+                .padding(start = 8.dp),
         )
         Text(
             text = stringResourceSafe(R.string.nft_wallet_receive_nft),
@@ -94,7 +94,7 @@ private fun WalletNFTItemEmpty(onClick: () -> Unit, modifier: Modifier = Modifie
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.START_BOTTOM)
-                .padding(start = TangemTheme.dimens2.x2),
+                .padding(start = 8.dp),
         )
         Icon(
             imageVector = ImageVector.vectorResource(R.drawable.ic_chevron_small_right_24),
@@ -127,7 +127,7 @@ private fun WalletNFTItemContent(state: WalletNFTItemUM.Content, onClick: () -> 
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.START_TOP)
-                .padding(horizontal = TangemTheme.dimens2.x2),
+                .padding(horizontal = 8.dp),
         )
         Text(
             text = stringResourceSafe(
@@ -143,7 +143,7 @@ private fun WalletNFTItemContent(state: WalletNFTItemUM.Content, onClick: () -> 
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.START_BOTTOM)
-                .padding(horizontal = TangemTheme.dimens2.x2),
+                .padding(horizontal = 8.dp),
         )
         Icon(
             imageVector = ImageVector.vectorResource(R.drawable.ic_chevron_small_right_24),
@@ -162,13 +162,13 @@ private fun WalletNFTItemFailed(modifier: Modifier = Modifier) {
         Box(
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.HEAD)
-                .size(TangemTheme.dimens2.x10)
-                .clip(RoundedCornerShape(TangemTheme.dimens2.x3))
+                .size(40.dp)
+                .clip(RoundedCornerShape(12.dp))
                 .background(TangemTheme.colors2.skeleton.backgroundPrimary),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                modifier = Modifier.size(TangemTheme.dimens2.x5),
+                modifier = Modifier.size(20.dp),
                 painter = painterResource(R.drawable.ic_error_sync_24),
                 tint = TangemTheme.colors.icon.informative,
                 contentDescription = null,
@@ -182,7 +182,7 @@ private fun WalletNFTItemFailed(modifier: Modifier = Modifier) {
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.START_TOP)
-                .padding(start = TangemTheme.dimens2.x2),
+                .padding(start = 8.dp),
         )
         Text(
             text = stringResourceSafe(R.string.nft_wallet_unable_to_load),
@@ -192,7 +192,7 @@ private fun WalletNFTItemFailed(modifier: Modifier = Modifier) {
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.START_BOTTOM)
-                .padding(start = TangemTheme.dimens2.x2),
+                .padding(start = 8.dp),
         )
     }
 }
@@ -204,27 +204,27 @@ private fun WalletNFTItemLoading(modifier: Modifier = Modifier) {
     ) {
         Box(
             modifier = Modifier
-                .size(TangemTheme.dimens2.x10)
-                .clip(RoundedCornerShape(TangemTheme.dimens2.x3))
+                .size(40.dp)
+                .clip(RoundedCornerShape(12.dp))
                 .background(TangemTheme.colors2.skeleton.backgroundPrimary)
                 .layoutId(TangemRowLayoutId.HEAD),
         )
         TextShimmer(
             style = TangemTheme.typography3.body.medium,
-            radius = TangemTheme.dimens2.x25,
+            radius = 100.dp,
 
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.START_TOP)
-                .padding(start = TangemTheme.dimens2.x2)
-                .width(TangemTheme.dimens.size110),
+                .padding(start = 8.dp)
+                .width(110.dp),
         )
         TextShimmer(
             style = TangemTheme.typography3.caption.medium,
-            radius = TangemTheme.dimens2.x25,
+            radius = 100.dp,
             modifier = Modifier
                 .layoutId(TangemRowLayoutId.START_BOTTOM)
-                .padding(start = TangemTheme.dimens2.x2)
-                .width(TangemTheme.dimens.size80),
+                .padding(start = 8.dp)
+                .width(80.dp),
         )
     }
 }
@@ -240,7 +240,7 @@ private fun BoxScope.CollectionsPreviews(previews: ImmutableList<CollectionPrevi
     }
     Box(
         modifier = modifier
-            .size(TangemTheme.dimens2.x10),
+            .size(40.dp),
     ) {
         previews.take(modifiers.size).forEachIndexed { index, s ->
             val previewModifier = modifiers[index]
@@ -276,25 +276,25 @@ private fun BoxScope.CollectionsPreviews(previews: ImmutableList<CollectionPrevi
 @Composable
 private fun previews1Modifiers(): List<Modifier> = listOf(
     Modifier
-        .size(TangemTheme.dimens2.x10)
-        .clip(RoundedCornerShape(TangemTheme.dimens2.x3)),
+        .size(40.dp)
+        .clip(RoundedCornerShape(12.dp)),
 )
 
 @Composable
 private fun BoxScope.previews2Modifiers(): List<Modifier> = listOf(
     Modifier
-        .padding(start = TangemTheme.dimens2.x0_5, top = TangemTheme.dimens2.x0_5)
-        .size(TangemTheme.dimens2.x6)
-        .clip(RoundedCornerShape(TangemTheme.dimens2.x2))
+        .padding(start = 2.dp, top = 2.dp)
+        .size(24.dp)
+        .clip(RoundedCornerShape(8.dp))
         .align(Alignment.TopStart),
     Modifier
         .zIndex(1f)
-        .padding(TangemTheme.dimens2.x0_5)
+        .padding(2.dp)
         .clip(RoundedCornerShape(topStart = 10.dp))
         .background(TangemTheme.colors3.bg.secondary)
-        .padding(start = TangemTheme.dimens2.x0_5, top = TangemTheme.dimens2.x0_5)
-        .size(TangemTheme.dimens2.x6)
-        .clip(RoundedCornerShape(TangemTheme.dimens2.x2))
+        .padding(start = 2.dp, top = 2.dp)
+        .size(24.dp)
+        .clip(RoundedCornerShape(8.dp))
         .align(Alignment.BottomEnd),
 )
 
@@ -310,7 +310,7 @@ private fun BoxScope.previews3Modifiers(): List<Modifier> = listOf(
         .padding(top = 10.dp, end = 1.dp)
         .clip(RoundedCornerShape(8.dp))
         .background(TangemTheme.colors3.bg.secondary)
-        .padding(TangemTheme.dimens2.x0_5)
+        .padding(2.dp)
         .size(18.dp)
         .clip(RoundedCornerShape(6.dp))
         .align(Alignment.TopEnd),

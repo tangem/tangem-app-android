@@ -12,6 +12,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -28,7 +29,7 @@ fun RatingBlock(state: RatingUM, modifier: Modifier = Modifier) {
             .testTag(RatingTestTags.BLOCK)
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
-            .padding(TangemTheme.dimens.spacing16),
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         when (val ratingState = state.state) {
@@ -48,7 +49,7 @@ private fun RatingLoadingState() {
     RectangleShimmer(
         modifier = Modifier
             .fillMaxWidth()
-            .height(TangemTheme.dimens.size48),
+            .height(48.dp),
     )
 }
 
@@ -60,7 +61,7 @@ private fun UnratedState(state: RatingUM.RatingState.Unrated, onRatingSelect: (I
         color = TangemTheme.colors.text.primary1,
         textAlign = TextAlign.Center,
     )
-    Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing8))
+    Spacer(modifier = Modifier.height(8.dp))
     StarRow(
         selectedRating = state.selectedRating,
         isEnabled = true,
@@ -76,7 +77,7 @@ private fun AlreadyRatedState(rating: Int) {
         color = TangemTheme.colors.text.primary1,
         textAlign = TextAlign.Center,
     )
-    Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing8))
+    Spacer(modifier = Modifier.height(8.dp))
     StarRow(
         selectedRating = rating,
         isEnabled = false,
@@ -86,7 +87,7 @@ private fun AlreadyRatedState(rating: Int) {
 
 @Composable
 private fun StarRow(selectedRating: Int?, isEnabled: Boolean, onRatingSelect: (Int) -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing6)) {
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         for (star in 1..STARS_COUNT) {
             val isFilled = selectedRating != null && star <= selectedRating
             IconButton(
@@ -102,7 +103,7 @@ private fun StarRow(selectedRating: Int?, isEnabled: Boolean, onRatingSelect: (I
                     } else {
                         TangemTheme.colors.icon.inactive
                     },
-                    modifier = Modifier.size(TangemTheme.dimens.size32),
+                    modifier = Modifier.size(32.dp),
                 )
             }
         }

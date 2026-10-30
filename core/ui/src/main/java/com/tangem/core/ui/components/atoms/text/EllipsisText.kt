@@ -84,7 +84,6 @@ fun EllipsisText(
                 softWrap = softWrap,
                 maxLines = 1,
                 onTextLayout = { textLayoutResultState.value = it },
-                modifier = modifier,
             )
         }.first().measure(Constraints())
         // to allow smart cast

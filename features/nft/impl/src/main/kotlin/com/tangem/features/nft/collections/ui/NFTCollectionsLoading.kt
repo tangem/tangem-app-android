@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.fields.SearchBar
@@ -33,7 +34,7 @@ internal fun NFTCollectionsLoading(state: NFTCollectionsUM.Loading, modifier: Mo
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(TangemTheme.dimens.spacing16),
+            .padding(16.dp),
     ) {
         Column {
             SearchBar(
@@ -42,12 +43,12 @@ internal fun NFTCollectionsLoading(state: NFTCollectionsUM.Loading, modifier: Mo
                 enabled = false,
             )
             Card(
-                modifier = modifier
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(
-                        top = TangemTheme.dimens.spacing16,
+                        top = 16.dp,
                     ),
-                shape = RoundedCornerShape(TangemTheme.dimens.radius16),
+                shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = TangemTheme.colors.background.primary,
                     contentColor = TangemTheme.colors.text.primary1,
@@ -77,8 +78,8 @@ private fun CollectionPlaceholder(modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .padding(
-                horizontal = TangemTheme.dimens.spacing12,
-                vertical = TangemTheme.dimens.spacing16,
+                horizontal = 12.dp,
+                vertical = 16.dp,
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -91,28 +92,28 @@ private fun CollectionPlaceholder(modifier: Modifier = Modifier) {
             ) {
                 Box(
                     modifier = Modifier
-                        .size(TangemTheme.dimens.size36)
-                        .clip(RoundedCornerShape(TangemTheme.dimens.radius8))
+                        .size(36.dp)
+                        .clip(RoundedCornerShape(8.dp))
                         .background(TangemTheme.colors.field.primary),
                 )
             }
             Column(
                 modifier = Modifier
                     .padding(
-                        horizontal = TangemTheme.dimens.spacing12,
+                        horizontal = 12.dp,
                     )
                     .weight(1f),
                 horizontalAlignment = Alignment.Start,
             ) {
                 TextShimmer(
-                    modifier = Modifier.width(TangemTheme.dimens.size110),
+                    modifier = Modifier.width(110.dp),
                     style = TangemTheme.typography.caption2,
                     textSizeHeight = true,
                 )
                 TextShimmer(
                     modifier = Modifier
-                        .width(TangemTheme.dimens.size80)
-                        .padding(top = TangemTheme.dimens.spacing4),
+                        .width(80.dp)
+                        .padding(top = 4.dp),
                     style = TangemTheme.typography.caption2,
                     textSizeHeight = true,
                 )

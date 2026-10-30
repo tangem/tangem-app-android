@@ -7,6 +7,7 @@ internal class QrSentUriParser {
 
     data class Result(
         val address: String,
+        val functionName: String?,
         val amount: BigDecimal?,
         val memo: Pair<String, String>?,
         val remainingParams: Map<String, String>,
@@ -33,8 +34,14 @@ internal class QrSentUriParser {
             addAll(MemoParam.keys)
         }
 
+        val functionName = withoutScheme
+            .substringBefore(PARAM_DELIMITER)
+            .substringAfter(FUNCTION_DELIMITER, missingDelimiterValue = "")
+            .ifBlank { null }
+
         return Result(
             address = address,
+            functionName = functionName,
             amount = amount,
             memo = memo,
             remainingParams = params - consumedKeys,
@@ -74,6 +81,7 @@ internal class QrSentUriParser {
         const val PARAM_ADDRESS = "address"
         const val PARAM_VALUE = "value"
         const val PARAM_UINT256 = "uint256"
+        const val FUNCTION_TRANSFER = "transfer"
         const val CHARSET_UTF8 = "UTF-8"
     }
 }

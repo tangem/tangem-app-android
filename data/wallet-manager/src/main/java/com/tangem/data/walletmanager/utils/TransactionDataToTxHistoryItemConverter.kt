@@ -8,6 +8,7 @@ import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldS
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyExitCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyInitTokenCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyReactivateTokenCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.MerklClaimCallData
 import com.tangem.blockchainsdk.models.UpdateWalletManagerResult.Address
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
@@ -124,6 +125,7 @@ internal class TransactionDataToTxHistoryItemConverter(
                     is EthereumYieldSupplyExitCallData -> TxInfo.TransactionType.YieldSupply.Exit(
                         callData.tokenContractAddress,
                     )
+                    is MerklClaimCallData -> TxInfo.TransactionType.IncentiveClaim
                     // An unlimited approval carries no allowance in the call data; the tx amount still names the token.
                     is ApprovalERC20TokenCallData -> TxInfo.TransactionType.Approve(
                         amount = callData.amount?.toDomain() ?: transactionData.amount.toDomain().copy(value = null),

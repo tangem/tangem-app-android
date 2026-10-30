@@ -41,15 +41,15 @@ internal class PreviewFeeSelectorBlockComponent : FeeSelectorBlockComponent {
                 tint = TangemTheme.colors.icon.accent,
             )
             Text(
-                modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
+                modifier = Modifier.padding(start = 4.dp),
                 text = stringResourceSafe(R.string.common_network_fee_title),
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.primary1,
             )
             Icon(
                 modifier = Modifier
-                    .padding(start = TangemTheme.dimens.spacing6)
-                    .size(TangemTheme.dimens.size16),
+                    .padding(start = 6.dp)
+                    .size(16.dp),
                 painter = painterResource(id = R.drawable.ic_token_info_24),
                 contentDescription = null,
                 tint = TangemTheme.colors.icon.informative,

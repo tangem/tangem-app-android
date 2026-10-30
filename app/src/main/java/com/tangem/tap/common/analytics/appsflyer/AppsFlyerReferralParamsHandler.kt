@@ -4,7 +4,7 @@ import com.appsflyer.deeplink.DeepLink
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.appsflyer.AppsFlyerDeeplinkTarget
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
-import com.tangem.features.tangempay.TangemPayFeatureToggles
+import com.tangem.domain.wallets.models.ReferralParamValidator
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.extensions.uriValidate
 import com.tangem.utils.logging.TangemLogger
@@ -12,14 +12,11 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.contract
 
 @Singleton
 class AppsFlyerReferralParamsHandler @Inject constructor(
     private val appsFlyerRepository: AppsFlyerRepository,
     private val coroutineScope: AppCoroutineScope,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) {
 
     private val isDeferredDeepLinkHandled = AtomicBoolean(false)
@@ -89,14 +86,17 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
     }
 
     private fun storeTarget(value: String?, isDeferredDelivery: Boolean): Boolean {
-        if (!isValidParam(value)) return false
+        val validValue = ReferralParamValidator.sanitize(value) ?: return false
 
-        return when (val target = AppsFlyerDeeplinkTarget.from(value)) {
+        return when (val target = AppsFlyerDeeplinkTarget.from(validValue)) {
             is AppsFlyerDeeplinkTarget.Known -> {
                 storeNavigationDeeplink(target.deeplink.deepLinkValue)
                 true
             }
-            is AppsFlyerDeeplinkTarget.TangemPayCampaign -> storeCampaignDeeplink(target.key)
+            is AppsFlyerDeeplinkTarget.TangemPayCampaign -> {
+                storeNavigationDeeplink(target.key)
+                true
+            }
             is AppsFlyerDeeplinkTarget.Direct -> storeDirectDeeplink(target.uri, isDeferredDelivery)
             null -> false
         }
@@ -125,33 +125,13 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
     private fun isFirstLaunch(params: Map<String?, Any?>): Boolean = params[IS_FIRST_LAUNCH]?.toString() == "true"
 
     private fun storeReferralParams(refcode: String?, campaign: String?) {
-        if (!isValidParam(refcode)) return
-
-        val validCampaign = campaign?.takeIf { isValidParam(it) }
+        val validRefcode = ReferralParamValidator.sanitize(refcode) ?: return
+        val validCampaign = ReferralParamValidator.sanitize(campaign)
 
         @Suppress("NullableToStringCall")
-        TangemLogger.i("Storing referral params: refcode=$refcode, campaign=$validCampaign")
+        TangemLogger.i("Storing referral params: refcode=$validRefcode, campaign=$validCampaign")
 
-        storeConversionData(refcode = refcode, campaign = validCampaign)
-    }
-
-    @OptIn(ExperimentalContracts::class)
-    private fun isValidParam(value: String?): Boolean {
-        contract {
-            returns(true) implies (value != null)
-        }
-
-        return !value.isNullOrBlank() && !value.equals("null", ignoreCase = true)
-    }
-
-    private fun storeCampaignDeeplink(campaignKey: String): Boolean {
-        if (!tangemPayFeatureToggles.isCustomCardsCobrandEnabled) {
-            TangemLogger.i("Custom cards co-brand is disabled, ignoring campaign deep link: $campaignKey")
-            return false
-        }
-
-        storeNavigationDeeplink(campaignKey)
-        return true
+        storeConversionData(refcode = validRefcode, campaign = validCampaign)
     }
 
     private fun storeNavigationDeeplink(deepLinkValue: String) {
