@@ -2,7 +2,6 @@ package com.tangem.feature.swap.model
 
 import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
-import com.google.firebase.perf.FirebasePerformance
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.swap.buildSwapCurrencyStatus
@@ -16,15 +15,12 @@ import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -39,8 +35,6 @@ internal class SwapModelSolanaGaslessSuppressionTest : SwapModelTestBase() {
     @BeforeEach
     fun setUp() {
         setUpBase()
-        mockkStatic(FirebasePerformance::class)
-        every { FirebasePerformance.getInstance() } returns mockk(relaxed = true)
         coEvery {
             getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId = any(), cryptoCurrencyStatus = any())
         } returns Either.Right(null)
@@ -49,11 +43,6 @@ internal class SwapModelSolanaGaslessSuppressionTest : SwapModelTestBase() {
         coEvery {
             swapInteractor.findBestQuote(any(), any(), any(), any(), any(), any(), any())
         } answers { thirdArg<List<SwapProvider>>().associateWith { provider -> quotesLoadedState(provider) } }
-    }
-
-    @AfterEach
-    fun tearDown() {
-        unmockkStatic(FirebasePerformance::class)
     }
 
     @Test
