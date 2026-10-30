@@ -123,7 +123,7 @@ internal class SwapModelSolanaGaslessSuppressionTest : SwapModelTestBase() {
         )
         model.feeSelectorRepository.state.value = mockk<FeeSelectorUM.Content>(relaxed = true) {
             every { selectedFeeItem } returns FeeItem.Market(fee = mockk(relaxed = true))
-            every { feeExtraInfo.isSponsoredFeeSelected } returns isSponsoredSend
+            every { feeExtraInfo.sponsoredFee.isSelected } returns isSponsoredSend
         }
         return model
     }
