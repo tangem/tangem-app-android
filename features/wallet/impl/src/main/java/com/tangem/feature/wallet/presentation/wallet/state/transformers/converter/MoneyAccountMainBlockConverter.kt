@@ -39,7 +39,7 @@ internal class MoneyAccountMainBlockConverter(
 
     private fun MoneyAccountStatusValue.Account.toUM(userWalletId: UserWalletId): MoneyAccountMainUM {
         return MoneyAccountMainUM.Content(
-            subtitle = resourceReference(R.string.money_account_main_status_active),
+            subtitle = resourceReference(R.string.money_account_main_status_active_v2),
             balance = balance?.toUM(source),
             onClick = { moneyAccountIntents.onMoneyAccountClicked(userWalletId) },
         )
