@@ -118,7 +118,7 @@ private fun SwapAmountBlockSeparator(onClick: () -> Unit, modifier: Modifier = M
         modifier = modifier
             .heightIn(max = 28.dp)
             .clip(RoundedCornerShape(32.dp))
-            .background(TangemTheme.colors3.bg.transparent.secondary)
+            .background(TangemTheme.colors3.bg.tertiary)
             .clickable(onClick = onClick)
             .padding(vertical = 6.dp, horizontal = 12.dp),
     ) {

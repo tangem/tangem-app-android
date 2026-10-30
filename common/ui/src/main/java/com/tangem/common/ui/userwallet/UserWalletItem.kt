@@ -83,14 +83,7 @@ fun UserWalletItemRow(state: UserWalletItemUM, modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CardImage(state.imageState)
-        NameAndInfo(
-            modifier = Modifier.weight(1f),
-            name = state.name,
-            isDimmed = state.isDimmed,
-            titleBadge = state.titleBadge,
-            information = state.information,
-            balance = state.balance,
-        )
+        NameAndInfo(state = state, modifier = Modifier.weight(1f))
 
         when (state.endIcon) {
             UserWalletItemUM.EndIcon.None -> Unit
@@ -120,14 +113,7 @@ fun UserWalletItemRow(state: UserWalletItemUM, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun NameAndInfo(
-    name: TextReference,
-    isDimmed: Boolean,
-    titleBadge: TangemBadgeUM?,
-    information: UserWalletItemUM.Information,
-    balance: UserWalletItemUM.Balance,
-    modifier: Modifier = Modifier,
-) {
+private fun NameAndInfo(state: UserWalletItemUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.heightIn(min = 40.dp),
         horizontalAlignment = Alignment.Start,
@@ -139,13 +125,14 @@ private fun NameAndInfo(
         ) {
             Text(
                 modifier = Modifier.weight(weight = 1f, fill = false),
-                text = name.resolveReference(),
+                text = state.name.resolveReference(),
                 style = TangemTheme.typography.subtitle1,
-                color = if (isDimmed) TangemTheme.colors3.text.secondary else TangemTheme.colors3.text.primary,
+                color = if (state.isDimmed) TangemTheme.colors3.text.secondary else TangemTheme.colors3.text.primary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            titleBadge?.let { badge ->
+            if (state.isSocialLogin) SocialLoginWalletIcon()
+            state.titleBadge?.let { badge ->
                 TangemBadge(
                     text = badge.text,
                     variant = badge.variant,
@@ -162,7 +149,7 @@ private fun NameAndInfo(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             AnimatedContent(
-                targetState = information,
+                targetState = state.information,
                 label = "Information content",
             ) { information ->
                 val informationValue = getInformationValue(information)
@@ -182,7 +169,7 @@ private fun NameAndInfo(
                 }
             }
 
-            BalanceContent(balance)
+            BalanceContent(state.balance)
         }
     }
 }
@@ -495,6 +482,17 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                     name = stringReference("Family savings"),
                     icon = AccountIconPreviewData.randomAccountIcon(),
                 ),
+                isEnabled = true,
+                endIcon = UserWalletItemUM.EndIcon.Arrow,
+                onClick = {},
+            ),
+            UserWalletItemUM(
+                id = "user_wallet_7",
+                name = stringReference("Google wallet"),
+                isSocialLogin = true,
+                information = UserWalletItemUM.Information.Loaded(resourceReference(R.string.hw_mobile_wallet)),
+                balance = UserWalletItemUM.Balance.Loaded(value = "$16.99", isFlickering = false),
+                imageState = UserWalletItemUM.ImageState.MobileWallet,
                 isEnabled = true,
                 endIcon = UserWalletItemUM.EndIcon.Arrow,
                 onClick = {},

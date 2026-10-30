@@ -1,10 +1,13 @@
 package com.tangem.features.polymarket.impl.placeprediction.model
 
+import com.tangem.features.polymarket.impl.placeprediction.entity.AmountFractionUM
 import java.math.BigDecimal
 
 internal interface PlacePredictionAmountIntents {
 
     fun onAmountChange(value: String)
+
+    fun onFractionClick(fraction: AmountFractionUM)
 
     fun onSlippageClick()
 

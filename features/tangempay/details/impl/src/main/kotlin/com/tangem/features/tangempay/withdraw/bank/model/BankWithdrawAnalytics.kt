@@ -31,17 +31,17 @@ internal class BankWithdrawAnalytics(
         moneyAccountEvent = MoneyAccountAnalyticsEvents.OfframpConfirmationScreenOpened(),
     )
 
-    fun onSendClicked(draft: BankWithdrawDraft) {
-        send(
-            paymentAccountEvent = TangemPayAnalyticsEvents.Offramp.SendOnConfirmationClicked(),
-            moneyAccountEvent = MoneyAccountAnalyticsEvents.OfframpRecipientTransferConfirmed(),
-        )
-        send(paymentAccountEvent = null, moneyAccountEvent = draft.toSendConfirmed())
-    }
+    fun onSendClicked() = send(
+        paymentAccountEvent = TangemPayAnalyticsEvents.Offramp.SendOnConfirmationClicked(),
+        moneyAccountEvent = MoneyAccountAnalyticsEvents.OfframpRecipientTransferConfirmed(),
+    )
 
-    fun onSendFailed() = send(
+    fun onSendAttempted(draft: BankWithdrawDraft) =
+        send(paymentAccountEvent = null, moneyAccountEvent = draft.toSendConfirmed())
+
+    fun onSendFailed(errorCode: Int?) = send(
         paymentAccountEvent = TangemPayAnalyticsEvents.Offramp.SendErrorScreenOpened(),
-        moneyAccountEvent = MoneyAccountAnalyticsEvents.SendFailed(),
+        moneyAccountEvent = MoneyAccountAnalyticsEvents.SendFailed(errorCode = errorCode),
     )
 
     fun onSendSucceeded(rail: BankRail?) = send(

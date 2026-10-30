@@ -7,6 +7,7 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.MARKETS_MAIN_NETWORK_SUFFIX
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.MarketsTestTags
+import com.tangem.core.ui.test.PredictionTestTags
 import com.tangem.core.ui.test.TopAppBarTestTags
 import com.tangem.features.onramp.impl.R
 import io.github.kakaocup.compose.node.element.ComposeScreen
@@ -28,6 +29,10 @@ class MarketsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         hasClickAction()
         hasAnyDescendant(withText(getResourceString(CoreResR.string.account_form_title_create)))
         useUnmergedTree = true
+    }
+
+    val predictionsBanner: KNode = child {
+        hasTestTag(PredictionTestTags.FEED_BANNER)
     }
 
     val tangemPayBanner: KNode = child {

@@ -45,9 +45,12 @@ interface SwapInteractor {
     ): SwapCurrencyStatus?
 
     /**
+     * @param quoteDefaultSlippages per-pair default slippage keyed by provider id, bounds [customSlippage]; see
+     *   [com.tangem.feature.swap.domain.models.domain.pairDefaultSlippage]
      * @param intentId the MCP exchange intent being fulfilled. Sent with every exchange-data request made for
      *   these quotes, so Express links the transactions it creates to the intent.
      */
+    @Suppress("LongParameterList")
     @Throws(IllegalStateException::class)
     suspend fun findBestQuote(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
@@ -56,6 +59,7 @@ interface SwapInteractor {
         amountToSwap: String,
         reduceBalanceBy: BigDecimal,
         customSlippage: BigDecimal? = null,
+        quoteDefaultSlippages: Map<String, BigDecimal> = emptyMap(),
         intentId: String? = null,
     ): Map<SwapProvider, SwapState>
 
@@ -69,6 +73,7 @@ interface SwapInteractor {
      *
      * @param fee the user-selected fee for the transaction. Required for DEX (non-Solana) and CEX;
      *   may be `null` for Solana DEX and the Tangem Pay withdrawal short-circuit.
+     * @param quoteDefaultSlippages per-pair default slippage keyed by provider id, bounds [customSlippage]
      * @param intentId the MCP exchange intent being fulfilled. Only a CEX swap requests its exchange data here, so
      *   a DEX swap carries the intent through [findBestQuote], which prefetches that data.
      */
@@ -86,6 +91,7 @@ interface SwapInteractor {
         isTangemPayWithdrawal: Boolean,
         integratedApproval: IntegratedApprovalData? = null,
         customSlippage: BigDecimal? = null,
+        quoteDefaultSlippages: Map<String, BigDecimal> = emptyMap(),
         intentId: String? = null,
     ): SwapTransactionState
 

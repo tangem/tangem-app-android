@@ -70,6 +70,12 @@ class CreateOrReactivateCollectiblesAccountUseCase @Inject constructor(
 
         if (accountStatus.isAccountCreated) accountRepository.markRelinkSent(userWallet.walletId)
 
+        if (accountStatus !is CollectiblesAccountStatusValue.UpdateRequired) {
+            accountRepository.registerAccount(userWallet.walletId)
+                .onLeft { TangemLogger.d("create account: the backend did not take the account record: $it") }
+                .bind()
+        }
+
         accountRepository.saveAccount(
             userWalletId = userWallet.walletId,
             status = CollectiblesAccountStatusValue.Onboarded(
