@@ -561,6 +561,7 @@ internal class SwapModel @Inject constructor(
 
     override fun onDestroy() {
         singleTaskScheduler.cancelTask()
+        swapInteractor.clearTronReapprovals()
         performanceTracker.onDestroy()
         super.onDestroy()
     }

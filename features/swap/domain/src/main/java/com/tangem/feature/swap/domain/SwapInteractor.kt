@@ -178,6 +178,9 @@ interface SwapInteractor {
         maxAllowance: BigDecimal,
     )
 
+    /** Drops the [requireTronReapproval] ceilings whose approval was not sent, so they do not outlive the swap. */
+    fun clearTronReapprovals()
+
     /**
      * Builds the on-chain ERC-20 approval transaction for [fromStatus] / [spenderAddress]
      * with an amount derived from [approveType] (null for `UNLIMITED`, the swap amount for
