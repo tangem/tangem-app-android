@@ -34,6 +34,7 @@ dependencies {
     api(projects.core.analytics.models)
     implementation(projects.core.configToggles)
     implementation(projects.core.local)
+    implementation(projects.core.utils)
     // endregion
 
     // region Domain models

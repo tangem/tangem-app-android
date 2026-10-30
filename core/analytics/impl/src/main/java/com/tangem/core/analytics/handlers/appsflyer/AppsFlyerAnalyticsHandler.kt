@@ -7,7 +7,7 @@ import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 import com.tangem.core.analytics.models.AppsFlyerOnlyEvent
 import com.tangem.utils.logging.TangemLogger
 
-class AppsFlyerAnalyticsHandler(
+internal class AppsFlyerAnalyticsHandler(
     private val client: AppsFlyerAnalyticsClient,
 ) : AnalyticsHandler, AnalyticsUserIdHandler {
 
