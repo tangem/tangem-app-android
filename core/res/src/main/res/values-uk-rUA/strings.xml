@@ -1441,6 +1441,7 @@
   <string name="money_account_onboarding_transfers_card_caption">Поповнення. Виведення.</string>
   <string name="money_account_onboarding_transfers_card_subtitle">з окремим рахунком і банківськими реквізитами</string>
   <string name="money_account_onboarding_transfers_card_title">Надсилайте й отримуйте фіатні платежі</string>
+  <string name="money_account_send_bank_transfer_unavailable">Недоступно</string>
   <string name="money_account_send_fees_footer">Комісії включають плату за сервіс %s і розрахункову комісію мережі</string>
   <string name="money_account_send_network_fee_note">Комісії включають розрахункову комісію мережі %s, яка може змінюватися залежно від навантаження на мережу</string>
   <string name="money_account_send_pay_button">Сплатити %s</string>
@@ -2749,7 +2750,7 @@
   <string name="tangempay_unified_onboarding_plan_subtitle">Basic — безкоштовно.</string>
   <string name="tangempay_unified_onboarding_plan_title">%1$s Plus включає обидва продукти й набагато більше</string>
   <string name="tangempay_unified_onboarding_terms_button">Умови та комісії</string>
-  <string name="tangempay_usdc_on_polygon_network">USDC у Polygon</string>
+  <string name="tangempay_usdc_on_polygon_network">USDC у мережі Polygon</string>
   <string name="tangempay_va_account_details">Реквізити рахунку</string>
   <string name="tangempay_va_available_to_deposit_day">Ліміт на день:</string>
   <string name="tangempay_va_banking_details_error_description">Спробуйте ще раз або зверніться до служби підтримки, якщо проблема повториться</string>
@@ -3410,6 +3411,15 @@
   <string name="yield_module_high_network_fees_notification_description">Комісії наразі вищі чим зазвичай із-за високої активності на ринку. Ви можете продовжити зараз чи повернутися пізніше, коли комісія знизиться.</string>
   <string name="yield_module_high_network_fees_notification_title">Висока мережева комісія</string>
   <string name="yield_module_historical_returns">Історична прибутковість</string>
+  <string name="yield_module_main_promo_button">Спробувати Режим дохідності</string>
+  <string name="yield_module_main_promo_subtitle">Нехай вільні монети працюють. Без блокування, виведення в будь-який час.</string>
+  <string name="yield_module_main_promo_title">Заробляйте на крипті до %1$s%% APY</string>
+  <plurals name="yield_module_main_promo_tokens_count">
+    <item quantity="one">Понад %d доступний токен</item>
+    <item quantity="few">Понад %d доступні токени</item>
+    <item quantity="many">Понад %d доступних токенів</item>
+    <item quantity="other">Понад %d доступного токена</item>
+  </plurals>
   <string name="yield_module_main_screen_promo_banner_message">Отримуй до %1$s APY на свій баланс</string>
   <string name="yield_module_main_view_approve_notification_description">Дозвіл для вашого токена в режимі Yield було відкликано. Відкрийте токен, щоб надати дозвіл знову.</string>
   <string name="yield_module_main_view_approve_notification_title">Потрібний дозвіл для токену</string>
