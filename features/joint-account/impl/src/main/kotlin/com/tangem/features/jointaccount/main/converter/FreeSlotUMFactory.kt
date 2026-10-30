@@ -39,10 +39,7 @@ internal class FreeSlotUMFactory(
 
         JointAccountMembersUM.MemberUM.FreeSlot(
             id = "slot_$slot",
-            title = resourceReference(
-                id = CoreUiR.string.joint_account_invite_members_member_number,
-                formatArgs = wrappedList(slot),
-            ),
+            title = resourceReference(CoreUiR.string.joint_account_invite_members_member),
             status = status,
             action = slotAction(slot = slot, status = status, input = input),
         )
