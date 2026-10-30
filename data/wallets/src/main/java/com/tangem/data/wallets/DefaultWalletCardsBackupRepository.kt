@@ -1,5 +1,6 @@
 package com.tangem.data.wallets
 
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
@@ -14,6 +15,8 @@ import com.tangem.data.wallets.store.PendingWalletCardsBackupStore
 import com.tangem.datasource.api.common.response.fold
 import com.tangem.datasource.api.common.response.isNetworkError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.backup.WalletCardsBackupDeliveryScheduler
 import com.tangem.domain.wallets.models.backup.WalletCardBackup
@@ -30,6 +33,7 @@ import java.util.UUID
 internal class DefaultWalletCardsBackupRepository(
     private val tangemTechApi: TangemTechApi,
     private val pendingStore: PendingWalletCardsBackupStore,
+    private val appPreferencesStore: AppPreferencesStore,
     private val deliveryScheduler: WalletCardsBackupDeliveryScheduler,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : WalletCardsBackupRepository {
@@ -82,6 +86,18 @@ internal class DefaultWalletCardsBackupRepository(
                 }
             },
         )
+    }
+
+    override suspend fun isCardLinkedReported(userWalletId: UserWalletId): Boolean {
+        val reportedWalletIds = appPreferencesStore.getSyncOrDefault(CARD_LINKED_REPORTED_WALLET_IDS_KEY, emptySet())
+        return userWalletId.stringValue in reportedWalletIds
+    }
+
+    override suspend fun setCardLinkedReported(userWalletId: UserWalletId) {
+        appPreferencesStore.editData { preferences ->
+            preferences[CARD_LINKED_REPORTED_WALLET_IDS_KEY] =
+                preferences.getOrDefault(CARD_LINKED_REPORTED_WALLET_IDS_KEY, emptySet()) + userWalletId.stringValue
+        }
     }
 
     /**
@@ -173,5 +189,12 @@ internal class DefaultWalletCardsBackupRepository(
 
         /** The backend refused the report itself: the entry is dropped so it cannot wedge the queue */
         data class Rejected(val error: WalletCardsBackupError) : SendResult
+    }
+
+    private companion object {
+
+        val CARD_LINKED_REPORTED_WALLET_IDS_KEY by lazy {
+            stringSetPreferencesKey(name = "cardLinkedReportedWalletIds")
+        }
     }
 }
