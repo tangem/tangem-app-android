@@ -70,7 +70,7 @@ internal class TangemPayAddToWalletModel @Inject constructor(
                     text = resourceReference(R.string.tangempay_card_details_open_wallet_step_5),
                 ),
             ),
-            showAddToWalletButton = googleWalletUtil.isWalletAvailable(),
+            shouldShowAddToWalletButton = googleWalletUtil.isWalletAvailable(),
             onBackClick = router::pop,
             onClickOpenWallet = googleWalletUtil::openWallet,
         )

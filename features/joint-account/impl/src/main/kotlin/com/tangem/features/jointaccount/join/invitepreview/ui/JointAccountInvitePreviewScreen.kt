@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -18,8 +19,8 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -40,6 +41,7 @@ import com.tangem.core.ui.ds2.scaffold.TangemTopBarScaffold
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.pluralReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -231,17 +233,20 @@ private fun InviteInfo(state: JointAccountInvitePreviewUM.Content, modifier: Mod
 @Composable
 private fun titleText(accountName: String): AnnotatedString {
     val text = stringResourceSafe(R.string.joint_account_join_title, accountName)
+    val highlightColor = TangemTheme.colors3.text.primary
 
-    return buildAnnotatedString {
-        append(text)
+    return remember(text, accountName, highlightColor) {
+        buildAnnotatedString {
+            append(text)
 
-        val start = text.indexOf(accountName)
-        if (start >= 0 && accountName.isNotEmpty()) {
-            addStyle(
-                style = SpanStyle(color = TangemTheme.colors3.text.primary),
-                start = start,
-                end = start + accountName.length,
-            )
+            val start = text.indexOf(accountName)
+            if (start >= 0 && accountName.isNotEmpty()) {
+                addStyle(
+                    style = SpanStyle(color = highlightColor),
+                    start = start,
+                    end = start + accountName.length,
+                )
+            }
         }
     }
 }
@@ -254,20 +259,20 @@ private fun explanationText(state: JointAccountInvitePreviewUM.Content): Annotat
         state.totalMembers.toString(),
     )
     val text = stringResourceSafe(R.string.joint_account_join_subtitle, highlightedPart)
+    val highlightColor = TangemTheme.colors3.text.primary
 
-    return buildAnnotatedString {
-        append(text)
+    return remember(text, highlightedPart, highlightColor) {
+        buildAnnotatedString {
+            append(text)
 
-        val start = text.indexOf(highlightedPart)
-        if (start >= 0 && highlightedPart.isNotEmpty()) {
-            addStyle(
-                style = SpanStyle(
-                    color = TangemTheme.colors3.text.primary,
-                    fontWeight = FontWeight.SemiBold,
-                ),
-                start = start,
-                end = start + highlightedPart.length,
-            )
+            val start = text.indexOf(highlightedPart)
+            if (start >= 0 && highlightedPart.isNotEmpty()) {
+                addStyle(
+                    style = SpanStyle(color = highlightColor),
+                    start = start,
+                    end = start + highlightedPart.length,
+                )
+            }
         }
     }
 }
@@ -290,14 +295,14 @@ private fun Rows(state: JointAccountInvitePreviewUM.Content, modifier: Modifier 
         )
 
         InfoRow(
-            title = resourceReference(R.string.joint_account_join_to_approve),
-            value = pluralReference(
-                id = R.plurals.joint_account_join_signatures_count,
-                count = state.requiredToSign,
-                formatArgs = wrappedList(state.requiredToSign),
+            title = resourceReference(R.string.joint_account_invite_members_required_approvals),
+            value = resourceReference(
+                id = R.string.joint_account_invite_members_approvals_value,
+                formatArgs = wrappedList(state.requiredToSign, state.totalMembers),
             ),
             hasDivider = true,
             hasInfoIcon = true,
+            onClick = state.onRequiredApprovalsClick,
         )
 
         InfoRow(
@@ -329,11 +334,7 @@ private fun InfoRow(
         },
         valueSlot = {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                TangemRowText(
-                    modifier = Modifier.weight(weight = 1f, fill = false),
-                    text = value,
-                    role = TangemRowTextRole.Value,
-                )
+                ValueText(text = value, modifier = Modifier.weight(weight = 1f, fill = false))
 
                 if (hasInfoIcon) {
                     Icon(
@@ -365,7 +366,7 @@ private fun WalletRow(wallet: JointAccountInvitePreviewUM.Content.WalletUM) {
                     contentDescription = null,
                 )
 
-                TangemRowText(text = stringReference(value = wallet.name), role = TangemRowTextRole.Value)
+                ValueText(text = stringReference(value = wallet.name))
             }
         },
         endSlot = {
@@ -376,6 +377,20 @@ private fun WalletRow(wallet: JointAccountInvitePreviewUM.Content.WalletUM) {
                 tint = TangemTheme.colors3.icon.secondary,
             )
         },
+    )
+}
+
+/** The values of this screen are secondary by design, unlike the primary default of a row value */
+@Composable
+private fun ValueText(text: TextReference, modifier: Modifier = Modifier) {
+    Text(
+        modifier = modifier,
+        text = text.resolveReference(),
+        style = TangemTheme.typography3.body.medium,
+        color = TangemTheme.colors3.text.secondary,
+        textAlign = TextAlign.End,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
     )
 }
 
@@ -444,7 +459,7 @@ private fun createPreviewState(wallet: JointAccountInvitePreviewUM.Content.Walle
         creatorName = "Igor Sinyak",
         creatorAddress = "0xBef7B368aac4e6752A9cE0xBef7B36A9cE",
         wallet = wallet,
-        confirmation = null,
+        onRequiredApprovalsClick = {},
         onCreatorInfoClick = {},
         onContinueClick = {},
         onCloseClick = {},

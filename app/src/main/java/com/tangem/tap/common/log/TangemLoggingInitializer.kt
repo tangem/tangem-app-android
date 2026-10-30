@@ -54,12 +54,6 @@ class TangemLoggingInitializer(
      * Configure logging for the underlying SDKs:
      *  - register [tangemSdkLogger] with the Card SDK static [Log] facade,
      *  - install OkHttp interceptors for the Blockchain SDK and Tangem API.
-     *
-     * Must be called from `TangemApplication.init()` AFTER `entryPoint.getWalletsRepository()`
-     * has triggered Hilt singletons construction — in particular `DefaultCardSdkProvider`,
-     * whose init block registers `AddHeadersInterceptor` in [TangemApiServiceSettings].
-     * Calling this method earlier would invert the OkHttp interceptor chain order and
-     * cause logging interceptors to see requests *without* auth headers.
      */
     fun initSdkLogging(application: Application) {
         Log.addLogger(logger = tangemSdkLogger)

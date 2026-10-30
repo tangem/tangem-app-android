@@ -69,7 +69,8 @@ internal class DefaultMultiStakingBalanceProducerTest {
     }
 
     @Test
-    fun `test that flow is mapped for user wallet id from params`() = runTest {
+    fun `GIVEN stakeKit balances WHEN produce THEN emits them for params wallet`() = runTest {
+        // Arrange
         val balances = setOf(
             MockYieldBalanceWrapperDTOFactory.createWithBalance(tonId).toDomain(),
             MockYieldBalanceWrapperDTOFactory.createWithBalance(solanaId).toDomain(),
@@ -80,32 +81,34 @@ internal class DefaultMultiStakingBalanceProducerTest {
         every { stakeKitBalancesStore.get(params.userWalletId) } returns networksStatusesFlow
         every { p2PEthPoolBalancesStore.get(params.userWalletId) } returns flowOf(emptySet())
 
+        // Act
         val actual = producer.produce()
+        val values = getEmittedValues(flow = actual)
 
-        // check after producer.produce()
+        // Assert
         verify { stakeKitBalancesStore.get(params.userWalletId) }
         verify { p2PEthPoolBalancesStore.get(params.userWalletId) }
-
-        val values = getEmittedValues(flow = actual)
 
         Truth.assertThat(values.size).isEqualTo(1)
         Truth.assertThat(values.first()).isEqualTo(balances)
     }
 
     @Test
-    fun `test that flow is updated if balances are updated`() = runTest {
+    fun `GIVEN stakeKit balances updated WHEN produce THEN emits each update`() = runTest {
+        // Arrange
         val networksStatusesFlow = MutableSharedFlow<Set<StakingBalance>>(replay = 2)
 
         every { stakeKitBalancesStore.get(params.userWalletId) } returns networksStatusesFlow
         every { p2PEthPoolBalancesStore.get(params.userWalletId) } returns flowOf(emptySet())
 
+        // Act
         val actual = producer.produce()
 
-        // check after producer.produce()
+        // Assert
         verify { stakeKitBalancesStore.get(params.userWalletId) }
         verify { p2PEthPoolBalancesStore.get(params.userWalletId) }
 
-        // first emit
+        // Act & Assert
         val balances = setOf(
             MockYieldBalanceWrapperDTOFactory.createWithEmptyBalance(tonId).toDomain(),
             MockYieldBalanceWrapperDTOFactory.createWithEmptyBalance(solanaId).toDomain(),
@@ -118,7 +121,7 @@ internal class DefaultMultiStakingBalanceProducerTest {
         Truth.assertThat(values1.size).isEqualTo(1)
         Truth.assertThat(values1.first()).isEqualTo(balances)
 
-        // second emit
+        // Act & Assert
         val updatedWrappers = setOf(
             MockYieldBalanceWrapperDTOFactory.createWithBalance(tonId).toDomain(),
             MockYieldBalanceWrapperDTOFactory.createWithBalance(solanaId).toDomain(),
@@ -134,14 +137,17 @@ internal class DefaultMultiStakingBalanceProducerTest {
     }
 
     @Test
-    fun `test that flow is filtered the same balance`() = runTest {
+    fun `GIVEN same balances emitted twice WHEN produceWithFallback THEN second emission filtered`() = runTest {
+        // Arrange
         val networksStatusesFlow = MutableSharedFlow<Set<StakingBalance>>(replay = 2)
 
         every { stakeKitBalancesStore.get(params.userWalletId) } returns networksStatusesFlow
         every { p2PEthPoolBalancesStore.get(params.userWalletId) } returns flowOf(emptySet())
 
+        // Act
         val actual = createProducer().produceWithFallback()
 
+        // Assert
         verify { stakeKitBalancesStore.get(params.userWalletId) }
         verify { p2PEthPoolBalancesStore.get(params.userWalletId) }
 
@@ -163,7 +169,8 @@ internal class DefaultMultiStakingBalanceProducerTest {
     }
 
     @Test
-    fun `test if flow throws exception`() = runTest {
+    fun `GIVEN upstream throws WHEN produceWithFallback THEN emits empty fallback and recovers after retry`() = runTest {
+        // Arrange
         val exception = IllegalStateException()
         val balances = setOf(
             MockYieldBalanceWrapperDTOFactory.createWithBalance(tonId).toDomain(),
@@ -183,8 +190,10 @@ internal class DefaultMultiStakingBalanceProducerTest {
         every { stakeKitBalancesStore.get(params.userWalletId) } returns networksStatusesFlow
         every { p2PEthPoolBalancesStore.get(params.userWalletId) } returns flowOf(emptySet())
 
+        // Act
         val actual = createProducer().produceWithFallback()
 
+        // Assert
         verify { stakeKitBalancesStore.get(params.userWalletId) }
         verify { p2PEthPoolBalancesStore.get(params.userWalletId) }
 
@@ -204,57 +213,61 @@ internal class DefaultMultiStakingBalanceProducerTest {
     }
 
     @Test
-    fun `test that flow is empty`() = runTest {
+    fun `GIVEN both stores emit nothing WHEN produce THEN emits empty set`() = runTest {
+        // Arrange
         every { stakeKitBalancesStore.get(params.userWalletId) } returns emptyFlow()
         every { p2PEthPoolBalancesStore.get(params.userWalletId) } returns emptyFlow()
 
+        // Act
         val actual = producer.produce()
+        val values = getEmittedValues(flow = actual)
 
-        // check after producer.produce()
+        // Assert
         verify { stakeKitBalancesStore.get(params.userWalletId) }
         verify { p2PEthPoolBalancesStore.get(params.userWalletId) }
-
-        val values = getEmittedValues(flow = actual)
 
         Truth.assertThat(values.size).isEqualTo(1)
         Truth.assertThat(values).isEqualTo(listOf(emptySet<StakingBalance>()))
     }
 
     @Test
-    fun `test that StakeKit and P2P balances are combined`() = runTest {
+    fun `GIVEN stakeKit and p2p balances WHEN produce THEN emits their union`() = runTest {
+        // Arrange
         val stakeKitBalances = createStakeKitBalances()
         val p2pEthPoolBalances = createP2PEthPoolBalances()
 
         every { stakeKitBalancesStore.get(params.userWalletId) } returns flowOf(stakeKitBalances)
         every { p2PEthPoolBalancesStore.get(params.userWalletId) } returns flowOf(p2pEthPoolBalances)
 
+        // Act
         val actual = producer.produce()
+        val values = getEmittedValues(flow = actual)
 
-        // check after producer.produce()
+        // Assert
         verify { stakeKitBalancesStore.get(params.userWalletId) }
         verify { p2PEthPoolBalancesStore.get(params.userWalletId) }
-
-        val values = getEmittedValues(flow = actual)
 
         Truth.assertThat(values.size).isEqualTo(1)
         Truth.assertThat(values.first()).isEqualTo(stakeKitBalances + p2pEthPoolBalances)
     }
 
     @Test
-    fun `test that P2P balances are updated independently from StakeKit`() = runTest {
+    fun `GIVEN p2p flow updates WHEN produce THEN combined set re-emitted`() = runTest {
+        // Arrange
         val stakeKitBalances = createStakeKitBalancesWithTonOnly()
         val p2pEthPoolFlow = MutableSharedFlow<Set<StakingBalance>>(replay = 2)
 
         every { stakeKitBalancesStore.get(params.userWalletId) } returns flowOf(stakeKitBalances)
         every { p2PEthPoolBalancesStore.get(params.userWalletId) } returns p2pEthPoolFlow
 
+        // Act
         val actual = producer.produce()
 
-        // check after producer.produce()
+        // Assert
         verify { stakeKitBalancesStore.get(params.userWalletId) }
         verify { p2PEthPoolBalancesStore.get(params.userWalletId) }
 
-        // first emit - empty P2PEthPool
+        // Act & Assert
         p2pEthPoolFlow.emit(emptySet())
 
         val values1 = getEmittedValues(flow = actual)
@@ -262,7 +275,7 @@ internal class DefaultMultiStakingBalanceProducerTest {
         Truth.assertThat(values1.size).isEqualTo(1)
         Truth.assertThat(values1.first()).isEqualTo(stakeKitBalances)
 
-        // second emit - with P2PEthPool balance
+        // Act & Assert
         val p2pEthPoolBalances = createP2PEthPoolBalances()
         p2pEthPoolFlow.emit(p2pEthPoolBalances)
 

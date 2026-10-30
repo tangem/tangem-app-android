@@ -15,14 +15,19 @@ import com.tangem.domain.transaction.error.GaslessServiceException
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
 import com.tangem.domain.transaction.error.TronActivationRefusal
+import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.domain.transaction.models.tron.TronGaslessApproveEstimateParams
 import com.tangem.domain.transaction.models.tron.TronGaslessEstimateParams
-import com.tangem.domain.transaction.raiseIllegalStateError
+import com.tangem.domain.transaction.models.tron.TronGaslessQuote
+import com.tangem.domain.transaction.models.tron.TronGaslessSwap
+import com.tangem.domain.transaction.models.tron.TronGaslessSwapEstimateParams
 
 /**
- * Fetches the Tron gasless compensation quote (eager estimate) for an original token transfer and
- * exposes it as a [TransactionFeeExtended] whose displayed fee is the compensation amount in the fee
- * token. The carried [TransactionFeeExtended.tronGaslessQuote] routes the send step to the Tron flow.
+ * Fetches the Tron gasless compensation quote (eager estimate) for an original token transfer or an
+ * exact token approval and exposes it as a [TransactionFeeExtended] whose displayed fee is the
+ * compensation amount in the fee token. The carried
+ * [com.tangem.domain.transaction.models.GaslessProtocolData.Tron] routes the send step to the Tron flow.
  *
  * Tron does not use the EVM gasless machinery — this is a parallel, thin path. The fee is returned
  * regardless of balance: insufficiency is surfaced as a send notification (see
@@ -43,42 +48,83 @@ class GetTronGaslessFeeUseCase(
     ): Either<GetFeeError, TransactionFeeExtended> = either {
         catch(
             block = {
-                val uncompiled = transactionData.requireUncompiled()
-                val amountBaseUnits = uncompiled.amount.toTronGaslessBaseUnits()
-                    ?: raiseIllegalStateError("Tron gasless: transaction amount is null")
+                val approve = transactionData.tronGaslessApproveOrNull()
+                val quote = if (approve != null) {
+                    tronGaslessTransactionRepository.estimateApprove(
+                        TronGaslessApproveEstimateParams(
+                            userWalletId = userWalletId,
+                            approve = approve,
+                            feeTokenContract = feeToken.contractAddress,
+                        ),
+                    )
+                } else {
+                    estimateTransfer(userWalletId, transactionData, feeToken)
+                }
+                quote.toTransactionFee(feeToken)
+            },
+            catch = { raise(it.toGaslessError(feeToken)) },
+        )
+    }
 
-                val quote = tronGaslessTransactionRepository.estimate(
-                    TronGaslessEstimateParams(
+    private suspend fun estimateTransfer(
+        userWalletId: UserWalletId,
+        transactionData: TransactionData,
+        feeToken: CryptoCurrency.Token,
+    ): TronGaslessQuote {
+        val uncompiled = transactionData.requireUncompiled()
+        val amountBaseUnits = uncompiled.amount.toTronGaslessBaseUnits()
+            ?: error("Tron gasless: transaction amount is null")
+
+        return tronGaslessTransactionRepository.estimate(
+            TronGaslessEstimateParams(
+                userWalletId = userWalletId,
+                fromAddress = uncompiled.sourceAddress,
+                toAddress = uncompiled.destinationAddress,
+                tokenContract = uncompiled.contractAddress ?: feeToken.contractAddress,
+                amount = amountBaseUnits,
+                feeTokenContract = feeToken.contractAddress,
+            ),
+        )
+    }
+
+    suspend fun forSwap(
+        userWalletId: UserWalletId,
+        swap: TronGaslessSwap,
+        feeToken: CryptoCurrency.Token,
+    ): Either<GetFeeError, TransactionFeeExtended> = either {
+        catch(
+            block = {
+                val quote = tronGaslessTransactionRepository.estimateSwap(
+                    TronGaslessSwapEstimateParams(
                         userWalletId = userWalletId,
-                        fromAddress = uncompiled.sourceAddress,
-                        toAddress = uncompiled.destinationAddress,
-                        tokenContract = uncompiled.contractAddress ?: feeToken.contractAddress,
-                        amount = amountBaseUnits,
+                        swap = swap,
                         feeTokenContract = feeToken.contractAddress,
                     ),
                 )
-
-                // Derived from the raw base-unit amount (the compensation transfer uses the same
-                // value), so the displayed and charged fee are always identical.
-                val compensationValue = quote.compensationAmountRaw.toBigDecimal()
-                    .movePointLeft(feeToken.decimals)
-
-                val feeAmount = Amount(
-                    token = Token(
-                        symbol = feeToken.symbol,
-                        contractAddress = feeToken.contractAddress,
-                        decimals = feeToken.decimals,
-                    ),
-                    value = compensationValue,
-                )
-
-                TransactionFeeExtended(
-                    transactionFee = TransactionFee.Single(normal = Fee.Common(amount = feeAmount)),
-                    feeTokenId = feeToken.id,
-                    tronGaslessQuote = quote,
-                )
+                quote.toTransactionFee(feeToken)
             },
             catch = { raise(it.toGaslessError(feeToken)) },
+        )
+    }
+
+    private fun TronGaslessQuote.toTransactionFee(feeToken: CryptoCurrency.Token): TransactionFeeExtended {
+        // Derived from the raw base-unit amount (the compensation transfer uses the same
+        // value), so the displayed and charged fee are always identical.
+        val compensationValue = compensationAmountRaw.toBigDecimal().movePointLeft(feeToken.decimals)
+
+        val feeAmount = Amount(
+            token = Token(
+                symbol = feeToken.symbol,
+                contractAddress = feeToken.contractAddress,
+                decimals = feeToken.decimals,
+            ),
+            value = compensationValue,
+        )
+
+        return TransactionFeeExtended(
+            transactionFee = TransactionFee.Single(normal = Fee.Common(amount = feeAmount)),
+            feeTokenId = feeToken.id,
+            gaslessProtocolData = GaslessProtocolData.Tron(quote = this),
         )
     }
 

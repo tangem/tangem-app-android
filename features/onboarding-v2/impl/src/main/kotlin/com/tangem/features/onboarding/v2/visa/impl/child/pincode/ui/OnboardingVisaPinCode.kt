@@ -90,8 +90,8 @@ internal fun OnboardingVisaPinCode(state: OnboardingVisaPinCodeUM, modifier: Mod
             primaryButton = NavigationButton(
                 textReference = resourceReference(R.string.common_submit),
                 onClick = state.onSubmitClick,
-                shouldShowProgress = state.submitButtonLoading,
-                isEnabled = state.submitButtonEnabled,
+                shouldShowProgress = state.isSubmitButtonLoading,
+                isEnabled = state.isSubmitButtonEnabled,
             ),
         )
     }
@@ -100,9 +100,8 @@ internal fun OnboardingVisaPinCode(state: OnboardingVisaPinCodeUM, modifier: Mod
 @Composable
 private fun PinCodeSection(state: OnboardingVisaPinCodeUM, modifier: Modifier = Modifier) {
     val focusRequester = remember { FocusRequester() }
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         PinCode(
-            modifier = modifier,
             value = state.pinCode,
             onValueChange = state.onPinCodeChange,
             focusRequester = focusRequester,
@@ -197,7 +196,7 @@ private fun PinCode(
                 ) {
                     Text(
                         modifier = Modifier.widthIn(min = measureTextWidth("0", TangemTheme.typography.h1)),
-                        text = value.getOrNull(index)?.toString() ?: "",
+                        text = value.getOrNull(index)?.toString().orEmpty(),
                         style = TangemTheme.typography.h1,
                         color = TangemTheme.colors.text.primary1,
                     )

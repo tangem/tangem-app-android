@@ -1,11 +1,10 @@
 package com.tangem.features.onramp.redirect.model
 
 import arrow.core.getOrElse
-import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
@@ -44,7 +43,7 @@ internal class OnrampRedirectModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val onrampSuccessScreenListener: OnrampSuccessScreenListener,
     private val getAppThemeModeUseCase: GetAppThemeModeUseCase,
-    private val appRouter: AppRouter,
+    private val router: Router,
     paramsContainer: ParamsContainer,
     getWalletsUseCase: GetWalletsUseCase,
 ) : Model() {
@@ -61,7 +60,7 @@ internal class OnrampRedirectModel @Inject constructor(
                 stringReference(" ${params.cryptoCurrency.name}"),
             ),
             startButtonUM = TopAppBarButtonUM.Back(
-                onBackClicked = appRouter::pop,
+                onBackClicked = router::pop,
                 enabled = true,
             ),
         ),
@@ -116,13 +115,8 @@ internal class OnrampRedirectModel @Inject constructor(
             .onEach { result ->
                 val latestTxId = latestOnrampTransaction?.txId
                 if (latestTxId != null && result) {
-                    // Finish current onramp flow and show onramp success screen
-                    val replaceOnrampScreens = appRouter.stack
-                        .filterNot { it is AppRoute.Onramp }
-                        .toMutableList()
                     latestOnrampTransaction = null
-                    replaceOnrampScreens.add(AppRoute.OnrampSuccess(latestTxId))
-                    appRouter.replaceAll(*replaceOnrampScreens.toTypedArray())
+                    params.onSuccess(latestTxId)
                 } else {
                     // Close redirect screen and show last onramp state
                     latestOnrampTransaction = null

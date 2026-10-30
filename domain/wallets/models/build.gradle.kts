@@ -10,4 +10,6 @@ dependencies {
     api(projects.domain.models)
     api(tangemDeps.card.core)
     // endregion
+
+    testImplementation(projects.test.core)
 }

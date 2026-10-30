@@ -55,7 +55,7 @@ class ReceiveAddressesFactory(
             shouldShowWarning = cryptoCurrency.name !in getViewedTokenReceiveWarningUseCase(),
             cryptoCurrency = cryptoCurrency,
             userWalletId = userWalletId,
-            showMemoDisclaimer = cryptoCurrency.network.transactionExtrasType != Network
+            shouldShowMemoDisclaimer = cryptoCurrency.network.transactionExtrasType != Network
                 .TransactionExtrasType.NONE,
             receiveAddress = receiveAddresses,
             tokenReceiveNotification = notifications,
@@ -161,7 +161,7 @@ class ReceiveAddressesFactory(
             shouldShowWarning = Asset.NFT.name !in getViewedTokenReceiveWarningUseCase(),
             cryptoCurrency = cryptoCurrency,
             userWalletId = userWalletId,
-            showMemoDisclaimer = false,
+            shouldShowMemoDisclaimer = false,
             receiveAddress = receiveAddresses,
             tokenReceiveNotification = notifications,
             asset = Asset.NFT,

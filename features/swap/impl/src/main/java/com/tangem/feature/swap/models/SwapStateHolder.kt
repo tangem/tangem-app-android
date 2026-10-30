@@ -87,7 +87,6 @@ sealed class SwapCardState {
         override val type: TransactionCardType,
         val amountEquivalent: TextReference,
         val amountField: AmountFieldModel? = null,
-        val isPulseAnimationEnabled: Boolean = false,
         override val isSelectionLocked: Boolean = false,
     ) : SwapCardState()
 

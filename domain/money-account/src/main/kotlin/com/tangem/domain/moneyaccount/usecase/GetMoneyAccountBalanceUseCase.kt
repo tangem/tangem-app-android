@@ -18,38 +18,36 @@ import kotlinx.coroutines.coroutineScope
 import java.math.BigDecimal
 
 class GetMoneyAccountBalanceUseCase(
-    private val tangemPayCurrencyFactory: TangemPayCurrencyFactory,
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
 ) {
 
-    suspend operator fun invoke(userWalletId: UserWalletId): Either<Throwable, MoneyAccountStatusValue.Balance> =
-        Either.catch {
-            val token = tangemPayCurrencyFactory.createMoneyAccountToken(userWalletId)
+    suspend operator fun invoke(
+        userWalletId: UserWalletId,
+        token: CryptoCurrency.Token,
+    ): Either<Throwable, MoneyAccountStatusValue.Balance> = Either.catch {
+        coroutineScope {
+            val networkStatus = async { fetchNetworkStatus(userWalletId, token) }
+            val fiatRate = async { fetchFiatRate() }
 
-            coroutineScope {
-                val networkStatus = async { fetchNetworkStatus(userWalletId, token) }
-                val fiatRate = async { fetchFiatRate() }
-
-                val verified = requireNotNull(networkStatus.await()) {
-                    "Money account network status is unavailable for $userWalletId"
-                }
-
-                val amount = requireNotNull(verified.amounts[token.id] as? NetworkStatus.Amount.Loaded) {
-                    "Money account balance is unavailable for $userWalletId"
-                }
-
-                MoneyAccountStatusValue.Balance(
-                    cryptoAmount = amount.value,
-                    cryptoCurrency = token,
-                    depositAddress = verified.address.defaultAddress.value,
-                    currencyCode = ACCOUNT_CURRENCY_CODE,
-                    fiatRate = fiatRate.await(),
-                )
+            val verified = requireNotNull(networkStatus.await()) {
+                "Money account network status is unavailable for $userWalletId"
             }
+
+            val amount = requireNotNull(verified.amounts[token.id] as? NetworkStatus.Amount.Loaded) {
+                "Money account balance is unavailable for $userWalletId"
+            }
+
+            MoneyAccountStatusValue.Balance(
+                cryptoAmount = amount.value,
+                depositAddress = verified.address.defaultAddress.value,
+                currencyCode = ACCOUNT_CURRENCY_CODE,
+                fiatRate = fiatRate.await(),
+            )
         }
+    }
 
     private suspend fun fetchNetworkStatus(
         userWalletId: UserWalletId,

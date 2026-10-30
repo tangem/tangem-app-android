@@ -14,12 +14,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.cosign.CosignRequestRow
 import com.tangem.core.ui.components.HoldToConfirmButton
-import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_chevron_right_20
 import com.tangem.features.txhistory.entity.TxHistoryDetailsUM
 
 @Composable
@@ -147,7 +144,7 @@ private fun TwoAssetsContent(
                 isBalanceHidden = state.isBalanceHidden,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp),
+                    .padding(start = 16.dp, end = 16.dp, top = 16.dp),
             )
         } else {
             // Safety fallback for a future express variant that yields no asset legs — render the header-only card.
@@ -184,7 +181,6 @@ private fun TwoAssetsContent(
                     .padding(start = 16.dp, end = 16.dp, top = 16.dp),
                 variant = TangemButton.Variant.Primary,
                 text = providerButton.text,
-                iconEnd = TangemIconUM.Icon(Icons.ic_chevron_right_20),
                 onClick = providerButton.onClick,
             )
         }

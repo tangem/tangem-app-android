@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
 
@@ -25,8 +26,8 @@ fun Hand(modifier: Modifier = Modifier) {
     ) {
         Box(
             modifier = Modifier
-                .width(TangemTheme.dimens.size32)
-                .height(TangemTheme.dimens.size4)
+                .width(32.dp)
+                .height(4.dp)
                 .background(
                     color = TangemTheme.colors.icon.inactive,
                     shape = TangemTheme.shapes.roundedCornersSmall,
@@ -38,7 +39,7 @@ fun Hand(modifier: Modifier = Modifier) {
 val handComposableComponentHeight: Dp
     @Composable
     @ReadOnlyComposable
-    get() = TangemTheme.dimens.size4 + TangemTheme.dimens.spacing16
+    get() = 4.dp + 16.dp
 
 // region Preview
 @Composable
@@ -46,7 +47,7 @@ private fun HandSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(TangemTheme.colors.background.primary)
-            .padding(TangemTheme.dimens.spacing12),
+            .padding(12.dp),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
         Hand()

@@ -1,0 +1,47 @@
+@file:Suppress("all")
+
+package com.tangem.core.ui.res.generated.icons
+
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.addPathNodes
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+
+/**
+ * Auto-generated from design tokens. Do not edit manually.
+ */
+
+private var _ic_clothing_28: ImageVector? = null
+
+val Icons.ic_clothing_28: ImageVector
+    get() {
+        if (_ic_clothing_28 != null) return _ic_clothing_28!!
+        _ic_clothing_28 = ImageVector.Builder(
+            name = "ic_clothing_28",
+            defaultWidth = 28.dp,
+            defaultHeight = 28.dp,
+            viewportWidth = 28f,
+            viewportHeight = 28f,
+        ).apply {
+            addPath(
+                fill = SolidColor(Color.Black),
+                pathFillType = PathFillType.NonZero,
+                pathData = addPathNodes("M17.0216 3.5C17.1803 3.5 17.3388 3.5089 17.4962 3.52344C17.5178 3.52487 17.5393 3.52678 17.5606 3.5293C18.1377 3.58993 18.7019 3.7466 19.2286 3.99609L20.881 4.7793C22.2726 5.43867 23.2961 6.68613 23.67 8.17969L24.9337 13.2256C25.0783 13.8032 24.9849 14.4146 24.6749 14.9229C24.3649 15.4309 23.8642 15.7934 23.2853 15.9297L21.0997 16.4434L21.1007 20.8438L21.0919 21.1123C20.9943 22.4433 20.0672 23.5832 18.7618 23.9395C18.748 23.9432 18.7337 23.9469 18.7198 23.9502C15.6162 24.6834 12.384 24.6833 9.28037 23.9502C9.26643 23.9469 9.2522 23.9432 9.23838 23.9395C7.85032 23.5606 6.89061 22.2961 6.90049 20.8574L6.89951 16.4434C6.68742 16.3935 6.48524 16.3463 6.2833 16.2988C5.80549 16.1864 5.32725 16.0737 4.71494 15.9297C4.13608 15.7934 3.6353 15.4309 3.32529 14.9229C3.0153 14.4146 2.92191 13.8032 3.0665 13.2256L4.33017 8.17969C4.70408 6.68615 5.72763 5.43868 7.11924 4.7793L8.77158 3.99609C9.29798 3.74673 9.86182 3.59002 10.4386 3.5293C10.4599 3.52676 10.4814 3.52488 10.503 3.52344C10.6607 3.50883 10.8196 3.5 10.9786 3.5H17.0216ZM18.3497 6.34668C18.1426 6.85023 17.8372 7.31381 17.4444 7.70605C16.665 8.48421 15.6084 8.9209 14.5069 8.9209H13.4933C12.3917 8.9209 11.3343 8.48446 10.5548 7.70605C10.1619 7.31374 9.85659 6.85033 9.64951 6.34668L8.18955 7.03809C7.47313 7.37753 6.94703 8.01917 6.75498 8.78613L5.55869 13.5596C6.04565 13.6741 6.45055 13.77 6.85556 13.8652C6.87006 13.8686 6.88501 13.8716 6.89951 13.875L6.90049 12.5391C6.90067 11.8489 7.46024 11.2891 8.15049 11.2891C8.84054 11.2893 9.40031 11.849 9.40049 12.5391L9.39951 20.8721C9.39638 21.1728 9.59498 21.4388 9.88584 21.5234C12.5917 22.1576 15.4075 22.1576 18.1134 21.5234C18.4049 21.4391 18.604 21.1723 18.6007 20.8711L18.5997 15.624C18.5844 15.5117 18.5853 15.4003 18.5997 15.292V12.5391C18.5999 11.849 19.1597 11.2893 19.8497 11.2891C20.54 11.2891 21.0995 11.8489 21.0997 12.5391V13.875L22.4405 13.5596L21.2452 8.78613C21.0531 8.01916 20.5271 7.37752 19.8106 7.03809L18.3497 6.34668ZM12.3917 6C12.6941 6.2694 13.0852 6.4209 13.4933 6.4209H14.5069C14.915 6.4209 15.3061 6.26942 15.6085 6H12.3917Z"),
+            )
+        }.build()
+        return _ic_clothing_28!!
+    }
+
+@Composable
+@Preview(showBackground = true)
+private fun IcClothing28Preview() {
+    Icon(
+        imageVector = Icons.ic_clothing_28,
+        contentDescription = null,
+    )
+}

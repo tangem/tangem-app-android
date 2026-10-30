@@ -35,7 +35,7 @@ internal fun NewsArticleDto.toDomainShortArticle(): ShortArticle {
         isTrending = isTrending,
         title = title,
         newsUrl = newsUrl,
-        viewed = false,
+        isViewed = false,
     )
 }
 

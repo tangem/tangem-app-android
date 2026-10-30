@@ -22,9 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.accountrow.BalanceError
 import com.tangem.core.ui.ds2.accountrow.EmptyBody
+import com.tangem.core.ui.ds2.accountrow.NotActive
 import com.tangem.core.ui.ds2.accountrow.Section
 import com.tangem.core.ui.ds2.accountrow.Shimmer
 import com.tangem.core.ui.ds2.accountrow.TangemAccountRow
@@ -36,10 +36,13 @@ import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.core.ui.ds2.util.TangemPriceChange
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.assets.il_account_airplane
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_info_16
 import com.tangem.feature.tester.presentation.storybook.entity.TangemAccountRowStory
 
 private const val SAMPLE_ICON_URL = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/bitcoin.png"
-private const val SHORT_TITLE = "Main account"
+private const val SHORT_TITLE = "Title"
 private const val LONG_TITLE = "Very long account title that is not going to fit on one line"
 private const val MAX_TOKEN_COUNT = 4
 
@@ -82,12 +85,12 @@ private fun ComponentPreview(state: TangemAccountRowStory) {
 @Composable
 private fun AccountRowPreview(state: TangemAccountRowStory) {
     val avatar = TangemAvatar.UiState.Account(
-        iconRes = R.drawable.ic_airplane_mode_24,
+        imageVector = Icons.il_account_airplane,
         color = TangemAvatar.FillColor.DarkBlue,
     )
     val title = stringReference(if (state.longTitle) LONG_TITLE else SHORT_TITLE)
-    val tokensAmount = stringReference("${state.tokenCount} tokens")
-    val membersAmount = if (state.hasMembersAmount) stringReference("2 members") else null
+    val label = stringReference("Subtitle")
+    val description = if (state.hasDescription) stringReference("Description") else null
     val isEmpty = state.variant == TangemAccountRowStory.Variant.Empty
     Column(
         modifier = Modifier
@@ -99,8 +102,8 @@ private fun AccountRowPreview(state: TangemAccountRowStory) {
             TangemAccountRowStory.Variant.Empty,
             -> TangemAccountRow(
                 title = title,
-                tokensAmount = if (isEmpty) stringReference("0 tokens") else tokensAmount,
-                membersAmount = membersAmount,
+                label = label,
+                description = description,
                 balance = if (isEmpty) stringReference("$0.00") else stringReference("$12,000.00"),
                 priceChange = TangemPriceChange.State(
                     value = stringReference(if (isEmpty) "0%" else "2.08%"),
@@ -124,8 +127,8 @@ private fun AccountRowPreview(state: TangemAccountRowStory) {
             TangemAccountRowStory.Variant.Unreachable -> TangemAccountRow.Unreachable(
                 title = title,
                 badge = stringReference("Unreachable"),
-                tokensAmount = tokensAmount,
-                membersAmount = membersAmount,
+                label = label,
+                description = description,
                 isExpandable = true,
                 isExpanded = state.isExpanded,
                 shape = RectangleShape,
@@ -135,8 +138,8 @@ private fun AccountRowPreview(state: TangemAccountRowStory) {
             )
             TangemAccountRowStory.Variant.BalanceError -> TangemAccountRow.BalanceError(
                 title = title,
-                tokensAmount = tokensAmount,
-                membersAmount = membersAmount,
+                label = label,
+                description = description,
                 isExpandable = true,
                 isExpanded = state.isExpanded,
                 shape = RectangleShape,
@@ -144,10 +147,34 @@ private fun AccountRowPreview(state: TangemAccountRowStory) {
                 onClick = state.onExpandedToggle,
                 avatar = avatar,
             )
+            TangemAccountRowStory.Variant.NotActive -> TangemAccountRow.NotActive(
+                title = title,
+                label = label,
+                description = description,
+                balance = stringReference("$0.00"),
+                priceChange = TangemPriceChange.State(
+                    value = stringReference("0%"),
+                    direction = TangemPriceChange.Direction.Neutral,
+                ),
+                isBalanceHidden = state.isBalanceHidden,
+                actionMessage = if (state.hasActionMessage) {
+                    TangemAccountRow.ActionMessage(
+                        text = stringReference("Activate the account to start using it"),
+                        icon = Icons.ic_info_16,
+                        onClick = {},
+                    )
+                } else {
+                    null
+                },
+                shape = RectangleShape,
+                onClick = {},
+                avatar = avatar,
+            )
             TangemAccountRowStory.Variant.Shimmer -> TangemAccountRow.Shimmer()
         }
 
-        Column(modifier = Modifier.expandableRowReveal(state.isExpanded)) {
+        val isExpandable = state.variant != TangemAccountRowStory.Variant.NotActive
+        Column(modifier = Modifier.expandableRowReveal(state.isExpanded && isExpandable)) {
             BodyItems(state = state, isEmpty = isEmpty)
         }
     }
@@ -238,7 +265,12 @@ private fun Toggles(state: TangemAccountRowStory) {
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             ToggleRow(label = "expanded", checked = state.isExpanded, onToggle = state.onExpandedToggle)
-            ToggleRow(label = "membersAmount", checked = state.hasMembersAmount, onToggle = state.onMembersAmountToggle)
+            ToggleRow(label = "description", checked = state.hasDescription, onToggle = state.onDescriptionToggle)
+            ToggleRow(
+                label = "actionMessage",
+                checked = state.hasActionMessage,
+                onToggle = state.onActionMessageToggle,
+            )
             ToggleRow(label = "updateWarning", checked = state.hasUpdateWarning, onToggle = state.onUpdateWarningToggle)
             ToggleRow(label = "section", checked = state.hasSection, onToggle = state.onSectionToggle)
             ToggleRow(label = "longTitle", checked = state.longTitle, onToggle = state.onLongTitleToggle)

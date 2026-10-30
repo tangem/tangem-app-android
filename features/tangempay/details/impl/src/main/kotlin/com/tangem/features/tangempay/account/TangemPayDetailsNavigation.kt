@@ -5,7 +5,6 @@ import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.serialization.SerializedBigDecimal
-import com.tangem.domain.models.serialization.SerializedCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import kotlinx.serialization.Serializable
@@ -57,10 +56,7 @@ internal sealed class TangemPayDetailsNavigation {
     ) : TangemPayDetailsNavigation()
 
     @Serializable
-    data class VaBankingDetailsError(
-        val userWalletId: UserWalletId,
-        val productInstanceId: String,
-    ) : TangemPayDetailsNavigation()
+    data class VaBankingDetailsError(val productInstanceId: String) : TangemPayDetailsNavigation()
 
     @Serializable
     data class TransactionDetails(
@@ -68,13 +64,5 @@ internal sealed class TangemPayDetailsNavigation {
         val isBalanceHidden: Boolean,
         val userWalletId: UserWalletId,
         val customerId: String,
-    ) : TangemPayDetailsNavigation()
-
-    @Serializable
-    data class IssueAdditionalCard(
-        val walletId: UserWalletId,
-        val feeAmount: SerializedBigDecimal,
-        val feeCurrency: SerializedCurrency,
-        val fiatBalance: SerializedBigDecimal,
     ) : TangemPayDetailsNavigation()
 }

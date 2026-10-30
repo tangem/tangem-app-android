@@ -5,7 +5,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 internal sealed class OnboardingEntryEvent(
     category: String,
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category, event, params) {
 
     data class Biometric(

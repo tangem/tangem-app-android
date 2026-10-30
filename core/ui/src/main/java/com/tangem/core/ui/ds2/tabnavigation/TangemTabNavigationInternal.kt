@@ -79,7 +79,7 @@ internal fun SelectionPill(
             },
         color = when (variant) {
             TangemTabItem.Variant.Material -> Color.Transparent
-            TangemTabItem.Variant.Transparent -> TangemTheme.colors3.bg.opaque.secondary
+            TangemTabItem.Variant.Transparent -> TangemTheme.colors3.bg.transparent.secondary
         },
         isMaterial = variant == TangemTabItem.Variant.Material,
         shape = CircleShape,

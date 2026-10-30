@@ -183,6 +183,52 @@ internal class DefaultPolymarketBridgeRepositoryTest {
     }
 
     @Test
+    fun `GIVEN catalogue already fetched WHEN refreshed THEN the api is called again`() = runTest {
+        // Arrange
+        coEvery { bridgeApi.getSupportedAssets() } returns responseWithOneAsset()
+        repository.getSupportedAssets()
+
+        // Act
+        val actual = repository.refreshSupportedAssets()
+
+        // Assert
+        assertThat(actual.getOrNull()).hasSize(1)
+        coVerify(exactly = 2) { bridgeApi.getSupportedAssets() }
+    }
+
+    @Test
+    fun `GIVEN a refreshed catalogue WHEN asked again THEN the refreshed one is served from the store`() = runTest {
+        // Arrange
+        coEvery { bridgeApi.getSupportedAssets() } returnsMany listOf(
+            ApiResponse.Success(PolymarketSupportedAssetsResponse(supportedAssets = emptyList())),
+            responseWithOneAsset(),
+        )
+        repository.getSupportedAssets()
+        repository.refreshSupportedAssets()
+
+        // Act
+        val actual = repository.getSupportedAssets()
+
+        // Assert
+        assertThat(actual.getOrNull()).hasSize(1)
+        coVerify(exactly = 2) { bridgeApi.getSupportedAssets() }
+    }
+
+    @Test
+    fun `GIVEN the bridge is unreachable WHEN refreshed THEN Network is reported instead of the stored catalogue`() =
+        runTest {
+            // Arrange
+            coEvery { bridgeApi.getSupportedAssets() } returnsMany listOf(responseWithOneAsset(), networkError())
+            repository.getSupportedAssets()
+
+            // Act
+            val actual = repository.refreshSupportedAssets()
+
+            // Assert
+            assertThat(actual).isEqualTo(Either.Left(PolymarketBridgeError.Network))
+        }
+
+    @Test
     fun `GIVEN an asset without a minimum WHEN listed THEN the minimum is absent`() = runTest {
         // Arrange
         coEvery { bridgeApi.getSupportedAssets() } returns ApiResponse.Success(

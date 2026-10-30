@@ -2,13 +2,9 @@ package com.tangem.domain.polymarket.usecase
 
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.polymarket.model.PolymarketAuthError
-import com.tangem.domain.polymarket.model.PolymarketDerivationError
 import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PolymarketWalletError
-
-internal fun PolymarketDerivationError.toOnboardingError(): PolymarketOnboardingError =
-    PolymarketOnboardingError.Derivation(cause = this)
 
 internal fun PolymarketWalletError.toOnboardingError(): PolymarketOnboardingError = when (this) {
     PolymarketWalletError.Network -> PolymarketOnboardingError.Network
@@ -39,12 +35,7 @@ internal fun PolymarketOnboardingError.isRetryable(): Boolean = when (this) {
     is PolymarketOnboardingError.Signing -> when (cause) {
         PolymarketSigningError.NotDerived,
         PolymarketSigningError.MissingWallet,
-        -> false
-        else -> true
-    }
-    is PolymarketOnboardingError.Derivation -> when (cause) {
-        PolymarketDerivationError.MissingWallet,
-        PolymarketDerivationError.DerivationUnsupported,
+        PolymarketSigningError.DerivationUnsupported,
         -> false
         else -> true
     }

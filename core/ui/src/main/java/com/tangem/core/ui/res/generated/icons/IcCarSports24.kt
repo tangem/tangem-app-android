@@ -1,0 +1,57 @@
+@file:Suppress("all")
+
+package com.tangem.core.ui.res.generated.icons
+
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.addPathNodes
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+
+/**
+ * Auto-generated from design tokens. Do not edit manually.
+ */
+
+private var _ic_car_sports_24: ImageVector? = null
+
+val Icons.ic_car_sports_24: ImageVector
+    get() {
+        if (_ic_car_sports_24 != null) return _ic_car_sports_24!!
+        _ic_car_sports_24 = ImageVector.Builder(
+            name = "ic_car_sports_24",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f,
+        ).apply {
+            addPath(
+                fill = SolidColor(Color.Black),
+                pathFillType = PathFillType.NonZero,
+                pathData = addPathNodes("M6.99561 11.8892C7.54758 11.8895 7.99561 12.3371 7.99561 12.8892C7.99549 13.4411 7.54751 13.8888 6.99561 13.8892H5.87061C5.31839 13.8892 4.87072 13.4413 4.87061 12.8892C4.87061 12.3369 5.31832 11.8892 5.87061 11.8892H6.99561Z"),
+            )
+            addPath(
+                fill = SolidColor(Color.Black),
+                pathFillType = PathFillType.NonZero,
+                pathData = addPathNodes("M18.1401 11.8892C18.6921 11.8895 19.1401 12.3371 19.1401 12.8892C19.14 13.4411 18.692 13.8888 18.1401 13.8892H17.0151C16.4629 13.8892 16.0152 13.4413 16.0151 12.8892C16.0151 12.3369 16.4629 11.8892 17.0151 11.8892H18.1401Z"),
+            )
+            addPath(
+                fill = SolidColor(Color.Black),
+                pathFillType = PathFillType.NonZero,
+                pathData = addPathNodes("M14.8315 4.23877C16.4572 4.23878 17.9565 5.0979 18.7837 6.48975H20.1021C20.654 6.49013 21.102 6.93771 21.1021 7.48975C21.1019 8.003 20.7144 8.42487 20.2163 8.48193C21.2599 8.8889 22.0004 9.90177 22.0005 11.0894V14.2397C22.0005 14.3214 21.9947 14.4021 21.9878 14.4819C21.9953 14.5312 22.0005 14.5819 22.0005 14.6333V17.8618C22.0001 18.7933 21.3065 19.7612 20.2036 19.7612H17.812C16.7092 19.7611 16.0155 18.7933 16.0151 17.8618V17.0396H7.99561V17.8599C7.99561 18.7942 7.29787 19.7603 6.1958 19.7603H3.79834C2.69648 19.76 1.99951 18.7941 1.99951 17.8599V14.6802C1.99952 14.6249 2.00456 14.5709 2.01318 14.5181C2.00413 14.4265 1.99953 14.3337 1.99951 14.2397V11.0894C1.99963 9.90207 2.73955 8.8891 3.78271 8.48193C3.28519 8.42443 2.89905 8.00266 2.89893 7.48975C2.89894 6.93747 3.34665 6.48975 3.89893 6.48975H5.21631C6.04344 5.09806 7.54195 4.23889 9.16748 4.23877H14.8315ZM20.0005 16.9214C19.7469 16.9969 19.4788 17.0395 19.2007 17.0396H18.0151V17.7612H20.0005V16.9214ZM3.99951 17.7603H5.99561V17.0396H4.79932C4.52122 17.0395 4.25307 16.9969 3.99951 16.9214V17.7603ZM4.79932 10.2896C4.35766 10.2897 3.99967 10.6477 3.99951 11.0894V14.2397C3.99978 14.6813 4.35773 15.0394 4.79932 15.0396H8.51514C8.79093 13.3643 10.2452 12.0867 11.9985 12.0864C13.7521 12.0864 15.2072 13.3641 15.4829 15.0396H19.2007C19.6422 15.0393 20.0002 14.6813 20.0005 14.2397V11.0894C20.0003 10.6477 19.6423 10.2898 19.2007 10.2896H18.522C18.4566 10.2896 18.3911 10.2971 18.3276 10.313L17.522 10.5151C15.7294 10.9632 13.8882 11.1899 12.0405 11.1899H11.9595C10.1116 11.1899 8.26975 10.9633 6.47705 10.5151L5.67236 10.313C5.6089 10.2971 5.54344 10.2896 5.47803 10.2896H4.79932ZM11.9985 14.0864C11.3575 14.0866 10.8097 14.4806 10.5815 15.0396H13.4165C13.1884 14.4803 12.6398 14.0864 11.9985 14.0864ZM9.16748 6.23877C8.22331 6.23889 7.35356 6.75129 6.89502 7.57666L6.68311 7.95654C6.67893 7.96441 6.67478 7.97224 6.67041 7.97998L6.41553 8.43799L6.9624 8.57471C8.59646 8.98321 10.2751 9.18994 11.9595 9.18994H12.0405C13.7249 9.18994 15.4035 8.98321 17.0376 8.57471L17.5825 8.43799L17.3257 7.97412C17.3228 7.9689 17.3197 7.96377 17.3169 7.9585L17.105 7.57666C16.6464 6.7512 15.7758 6.23877 14.8315 6.23877H9.16748Z"),
+            )
+        }.build()
+        return _ic_car_sports_24!!
+    }
+
+@Composable
+@Preview(showBackground = true)
+private fun IcCarSports24Preview() {
+    Icon(
+        imageVector = Icons.ic_car_sports_24,
+        contentDescription = null,
+    )
+}

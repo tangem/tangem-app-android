@@ -38,7 +38,6 @@ dependencies {
     // endregion
 
     // region Core
-    api(projects.core.configToggles)
     implementation(projects.store.datasource)
     implementation(projects.grow.datasource)
     api(projects.core.utils)
@@ -78,5 +77,6 @@ dependencies {
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     testImplementation(projects.common.test)
+    testImplementation(projects.test.core)
     // endregion
 }

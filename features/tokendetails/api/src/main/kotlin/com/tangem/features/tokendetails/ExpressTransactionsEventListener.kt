@@ -12,5 +12,4 @@ interface ExpressTransactionsEventListener {
 sealed interface ExpressTransactionsEvent {
     data object Update : ExpressTransactionsEvent
     data object Clear : ExpressTransactionsEvent
-    data class OpenTx(val txId: String) : ExpressTransactionsEvent
 }

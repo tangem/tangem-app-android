@@ -1,8 +1,8 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.wallets.hot.TangemHotWalletSigner
+import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.card.repository.CardSdkConfigRepository
@@ -22,6 +22,7 @@ import com.tangem.domain.transaction.*
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.transaction.usecase.gasless.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.tap.domain.transaction.DefaultTransactionFeatureToggles
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Module
 import dagger.Provides
@@ -342,24 +343,58 @@ internal object TransactionDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetFeeForGaslessUseCase(
+    fun provideEvmGaslessFeeResolver(
         walletManagersFacade: WalletManagersFacade,
         gaslessTransactionRepository: GaslessTransactionRepository,
         gaslessYieldRepository: GaslessYieldRepository,
-        getFeeUseCase: GetFeeUseCase,
-        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
-        currencyChecksRepository: CurrencyChecksRepository,
         resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
-    ): GetFeeForGaslessUseCase {
-        return GetFeeForGaslessUseCase(
+    ): EvmGaslessFeeResolver {
+        return EvmGaslessFeeResolver(
             walletManagersFacade = walletManagersFacade,
             demoConfig = DemoConfig,
             gaslessTransactionRepository = gaslessTransactionRepository,
             gaslessYieldRepository = gaslessYieldRepository,
-            singleAccountStatusListSupplier = singleAccountStatusListSupplier,
-            getFeeUseCase = getFeeUseCase,
-            currencyChecksRepository = currencyChecksRepository,
             resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideTransactionFeatureToggles(featureTogglesManager: FeatureTogglesManager): TransactionFeatureToggles {
+        return DefaultTransactionFeatureToggles(featureTogglesManager)
+    }
+
+    @Provides
+    @Singleton
+    fun provideTronGaslessFeeResolver(
+        getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase,
+        isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
+        transactionFeatureToggles: TransactionFeatureToggles,
+    ): TronGaslessFeeResolver {
+        return TronGaslessFeeResolver(
+            getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
+            isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
+            transactionFeatureToggles = transactionFeatureToggles,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetFeeForGaslessUseCase(
+        getFeeUseCase: GetFeeUseCase,
+        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+        nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
+        currencyChecksRepository: CurrencyChecksRepository,
+        evmGaslessFeeResolver: EvmGaslessFeeResolver,
+        tronGaslessFeeResolver: TronGaslessFeeResolver,
+    ): GetFeeForGaslessUseCase {
+        return GetFeeForGaslessUseCase(
+            singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+            nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
+            currencyChecksRepository = currencyChecksRepository,
+            getFeeUseCase = getFeeUseCase,
+            evmGaslessFeeResolver = evmGaslessFeeResolver,
+            tronGaslessFeeResolver = tronGaslessFeeResolver,
         )
     }
 
@@ -367,18 +402,8 @@ internal object TransactionDomainModule {
     @Singleton
     fun provideIsTronGaslessSupportedUseCase(
         tronGaslessTransactionRepository: TronGaslessTransactionRepository,
-        walletManagersFacade: WalletManagersFacade,
-        featureTogglesManager: FeatureTogglesManager,
     ): IsTronGaslessSupportedUseCase {
-        return IsTronGaslessSupportedUseCase(
-            repository = tronGaslessTransactionRepository,
-            walletManagersFacade = walletManagersFacade,
-            isAccountActivationSponsored = {
-                featureTogglesManager.isFeatureEnabled(
-                    toggle = FeatureToggles.TWI_1783_TRON_GASLESS_ACCOUNT_ACTIVATION_ENABLED,
-                )
-            },
-        )
+        return IsTronGaslessSupportedUseCase(repository = tronGaslessTransactionRepository)
     }
 
     @Provides
@@ -395,62 +420,79 @@ internal object TransactionDomainModule {
         transactionRepository: TransactionRepository,
         walletManagersFacade: WalletManagersFacade,
         tronGaslessTransactionRepository: TronGaslessTransactionRepository,
-        cardSdkConfigRepository: CardSdkConfigRepository,
-        tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
+        singleAccountListSupplier: SingleAccountListSupplier,
+        gaslessSignerProvider: GaslessSignerProvider,
     ): CreateAndSendTronGaslessTransactionUseCase {
         return CreateAndSendTronGaslessTransactionUseCase(
             transactionRepository = transactionRepository,
             walletManagersFacade = walletManagersFacade,
             tronGaslessTransactionRepository = tronGaslessTransactionRepository,
-            cardSdkConfigRepository = cardSdkConfigRepository,
-            getHotWalletSigner = tangemHotWalletSignerFactory::create,
+            singleAccountListSupplier = singleAccountListSupplier,
+            gaslessSignerProvider = gaslessSignerProvider,
         )
     }
 
     @Provides
     @Singleton
     fun provideGetFeeForTokenUseCase(
-        walletManagersFacade: WalletManagersFacade,
-        gaslessTransactionRepository: GaslessTransactionRepository,
-        gaslessYieldRepository: GaslessYieldRepository,
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         currencyChecksRepository: CurrencyChecksRepository,
-        resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
+        evmGaslessFeeResolver: EvmGaslessFeeResolver,
+        tronGaslessFeeResolver: TronGaslessFeeResolver,
     ): GetFeeForTokenUseCase {
         return GetFeeForTokenUseCase(
-            gaslessTransactionRepository = gaslessTransactionRepository,
-            gaslessYieldRepository = gaslessYieldRepository,
-            walletManagersFacade = walletManagersFacade,
-            demoConfig = DemoConfig,
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             currencyChecksRepository = currencyChecksRepository,
-            resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
+            evmGaslessFeeResolver = evmGaslessFeeResolver,
+            tronGaslessFeeResolver = tronGaslessFeeResolver,
         )
     }
 
     @Provides
     @Singleton
-    fun provideIsGaslessFeeSupportedForNetwork(
+    fun provideIsEvmGaslessFeeSupportedForNetwork(
         currencyChecksRepository: CurrencyChecksRepository,
-    ): IsGaslessFeeSupportedForNetwork {
-        return IsGaslessFeeSupportedForNetwork(currencyChecksRepository)
+    ): IsEvmGaslessFeeSupportedForNetwork {
+        return IsEvmGaslessFeeSupportedForNetwork(currencyChecksRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGaslessSignerProvider(
+        cardSdkConfigRepository: CardSdkConfigRepository,
+        tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
+    ): GaslessSignerProvider {
+        return GaslessSignerProvider(
+            cardSdkConfigRepository = cardSdkConfigRepository,
+            getHotWalletSigner = tangemHotWalletSignerFactory::create,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideCreateAndSendEvmGaslessTransactionUseCase(
+        walletManagersFacade: WalletManagersFacade,
+        gaslessTransactionRepository: GaslessTransactionRepository,
+        singleAccountListSupplier: SingleAccountListSupplier,
+        gaslessSignerProvider: GaslessSignerProvider,
+    ): CreateAndSendEvmGaslessTransactionUseCase {
+        return CreateAndSendEvmGaslessTransactionUseCase(
+            walletManagersFacade = walletManagersFacade,
+            singleAccountListSupplier = singleAccountListSupplier,
+            gaslessTransactionRepository = gaslessTransactionRepository,
+            gaslessSignerProvider = gaslessSignerProvider,
+        )
     }
 
     @Provides
     @Singleton
     fun provideCreateAndSendGaslessTransactionUseCase(
-        walletManagersFacade: WalletManagersFacade,
-        gaslessTransactionRepository: GaslessTransactionRepository,
-        singleAccountListSupplier: SingleAccountListSupplier,
-        cardSdkConfigRepository: CardSdkConfigRepository,
-        tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
+        createAndSendEvmGaslessTransactionUseCase: CreateAndSendEvmGaslessTransactionUseCase,
+        createAndSendTronGaslessTransactionUseCase: CreateAndSendTronGaslessTransactionUseCase,
     ): CreateAndSendGaslessTransactionUseCase {
         return CreateAndSendGaslessTransactionUseCase(
-            walletManagersFacade = walletManagersFacade,
-            singleAccountListSupplier = singleAccountListSupplier,
-            gaslessTransactionRepository = gaslessTransactionRepository,
-            cardSdkConfigRepository = cardSdkConfigRepository,
-            getHotWalletSigner = tangemHotWalletSignerFactory::create,
+            createAndSendEvmGaslessTransactionUseCase = createAndSendEvmGaslessTransactionUseCase,
+            createAndSendTronGaslessTransactionUseCase = createAndSendTronGaslessTransactionUseCase,
         )
     }
 
@@ -510,5 +552,23 @@ internal object TransactionDomainModule {
             cardSdkConfigRepository = cardSdkConfigRepository,
             getHotWalletSigner = tangemHotWalletSignerFactory::create,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetSendIntentUseCase(sendIntentRepository: SendIntentRepository): GetSendIntentUseCase {
+        return GetSendIntentUseCase(sendIntentRepository = sendIntentRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCompleteSendIntentUseCase(sendIntentRepository: SendIntentRepository): CompleteSendIntentUseCase {
+        return CompleteSendIntentUseCase(sendIntentRepository = sendIntentRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideReportSendIntentHashUseCase(sendIntentRepository: SendIntentRepository): ReportSendIntentHashUseCase {
+        return ReportSendIntentHashUseCase(sendIntentRepository = sendIntentRepository)
     }
 }

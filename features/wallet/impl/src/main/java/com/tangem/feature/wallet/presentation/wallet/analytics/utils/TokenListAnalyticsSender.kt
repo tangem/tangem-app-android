@@ -135,10 +135,10 @@ internal class TokenListAnalyticsSender @Inject constructor(
     }
 
     private suspend fun sendTokenBalancesIfNeeded(currenciesStatuses: List<CryptoCurrencyStatus>) {
-        currenciesStatuses.forEach {
-            val status = it.value
+        currenciesStatuses.forEach { entry ->
+            val status = entry.value
             if (status is CryptoCurrencyStatus.Loaded) {
-                sendTokenBalancesForSpecificBlockchains(it, status)
+                sendTokenBalancesForSpecificBlockchains(entry, status)
             }
         }
     }

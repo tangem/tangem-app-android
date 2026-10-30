@@ -39,19 +39,11 @@ abstract class FlowCachingSupplier<Producer : FlowProducer<Data>, Params : Any, 
 
         return runCatching(flowProducer::produceWithFallback)
             .onSuccess { flow ->
-                flowsStore.update {
-                    it.toMutableMap().apply {
-                        put(key = key, value = flow)
-                    }
-                }
+                flowsStore.update { flows -> flows + (key to flow) }
             }
             .getOrThrow()
             .catch { cause ->
-                flowsStore.update {
-                    it.toMutableMap().apply {
-                        remove(key)
-                    }
-                }
+                flowsStore.update { flows -> flows - key }
 
                 throw cause
             }

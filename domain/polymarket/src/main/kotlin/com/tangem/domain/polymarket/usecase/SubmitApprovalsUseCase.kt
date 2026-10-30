@@ -9,8 +9,8 @@ import com.tangem.domain.polymarket.model.PolymarketSignedOnboarding
 import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 
 /**
- * Relays the signed approvals batch. Every signed field is copied from [PolymarketSignedOnboarding] as-is:
- * the signature covers exactly these values, so recomputing any of them makes the relayer reject the batch.
+ * Relays the signed approvals batch. Every signed field is copied from [PolymarketSignedOnboarding.SignedApprovals]
+ * as-is: the signature covers exactly these values, so recomputing any of them makes the relayer reject the batch.
  */
 class SubmitApprovalsUseCase(
     private val polymarketRepository: PolymarketRepository,
@@ -18,16 +18,16 @@ class SubmitApprovalsUseCase(
 
     suspend operator fun invoke(
         addresses: PolymarketAddresses,
-        signed: PolymarketSignedOnboarding,
+        approvals: PolymarketSignedOnboarding.SignedApprovals,
     ): Either<PolymarketOnboardingError, PolymarketWalletStatus> = polymarketRepository
         .submitApprovals(
             batch = PolymarketApprovalsBatch(
                 ownerAddress = addresses.ownerAddress,
-                depositWalletAddress = signed.approvals.depositWalletAddress,
-                nonce = signed.approvals.nonce,
-                deadline = signed.approvals.deadline,
-                calls = signed.approvals.calls,
-                signature = signed.batchSignature,
+                depositWalletAddress = approvals.payload.depositWalletAddress,
+                nonce = approvals.payload.nonce,
+                deadline = approvals.payload.deadline,
+                calls = approvals.payload.calls,
+                signature = approvals.signature,
             ),
         )
         .mapLeft { it.toOnboardingError() }

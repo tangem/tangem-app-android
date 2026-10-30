@@ -16,7 +16,10 @@ internal class DefaultStakingTransactionRecognizerTest {
 
     @Test
     fun `GIVEN tron staking tx WHEN recognize THEN delegates to true`() {
+        // Arrange
         val json = """{"raw_data_hex":"$TRON_FREEZE_BALANCE_V2_RAW_DATA_HEX"}"""
+
+        // Act & Assert
         assertThat(recognizer.isRecognizedStakingTransaction(NetworkType.TRON, json)).isTrue()
     }
 
@@ -32,27 +35,39 @@ internal class DefaultStakingTransactionRecognizerTest {
 
     @Test
     fun `GIVEN solana staking tx WHEN recognize THEN delegates to true`() {
+        // Arrange
         val signatureAndHeader = "01" + "00".repeat(SOLANA_SIGNATURE_BYTES) + "010001"
         val accountKeys = "11".repeat(SOLANA_ACCOUNT_KEY_BYTES) + SOLANA_STAKE_PROGRAM_KEY
         val hex = signatureAndHeader + "02" + accountKeys
+
+        // Act & Assert
         assertThat(recognizer.isRecognizedStakingTransaction(NetworkType.SOLANA, hex)).isTrue()
     }
 
     @Test
     fun `GIVEN polygon staking tx WHEN recognize THEN delegates to true`() {
+        // Arrange
         val json = """{"to":"0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908","data":"0xe4457a8a"}"""
+
+        // Act & Assert
         assertThat(recognizer.isRecognizedStakingTransaction(NetworkType.POLYGON, json)).isTrue()
     }
 
     @Test
     fun `GIVEN bsc staking tx WHEN recognize THEN delegates to true`() {
+        // Arrange
         val json = """{"to":"0x0000000000000000000000000000000000002002"}"""
+
+        // Act & Assert
         assertThat(recognizer.isRecognizedStakingTransaction(NetworkType.BINANCE, json)).isTrue()
     }
 
     @Test
     fun `GIVEN supported network non-staking tx WHEN recognize THEN delegates to false`() {
+        // Arrange
         val json = """{"raw_data_hex":"$TRON_TRIGGER_SMART_CONTRACT_RAW_DATA_HEX"}"""
+
+        // Act & Assert
         assertThat(recognizer.isRecognizedStakingTransaction(NetworkType.TRON, json)).isFalse()
     }
 

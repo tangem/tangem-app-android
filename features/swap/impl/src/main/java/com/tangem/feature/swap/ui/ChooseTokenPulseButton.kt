@@ -54,13 +54,13 @@ private const val PULSE_PEAK_ALPHA = 0.3f
  * The "Choose token" pill on the swap screen. While no token is selected, its background gently
  * "breathes" to draw attention to the pending token choice.
  *
- * The pulse runs only when [isPulseEnabled] AND the device has not disabled animations
- * (`ANIMATOR_DURATION_SCALE != 0`); otherwise a plain [SecondarySmallButton] is rendered. At rest
+ * The pulse runs only when the device has not disabled animations (`ANIMATOR_DURATION_SCALE != 0`);
+ * otherwise a plain [SecondarySmallButton] is rendered. At rest
  * the pulsing pill is pixel-identical to that fallback, so toggling the animation never shifts the
  * layout or color.
  */
 @Composable
-internal fun ChooseTokenPulseButton(isPulseEnabled: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun ChooseTokenPulseButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val animatorScale = remember(context) {
         Settings.Global.getFloat(
@@ -69,9 +69,8 @@ internal fun ChooseTokenPulseButton(isPulseEnabled: Boolean, onClick: () -> Unit
             1f,
         )
     }
-    val shouldPulse = isPulseEnabled && animatorScale != 0f
 
-    if (shouldPulse) {
+    if (animatorScale != 0f) {
         PulsingChooseTokenPill(onClick = onClick, modifier = modifier)
     } else {
         SecondarySmallButton(
@@ -162,10 +161,8 @@ private fun ChooseTokenPulseButton_Preview() {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // Pulsing (animation is static in a preview — shows the pill at a single frame)
-            ChooseTokenPulseButton(isPulseEnabled = true, onClick = {})
-            // Non-pulsing fallback
-            ChooseTokenPulseButton(isPulseEnabled = false, onClick = {})
+            // Animation is static in a preview — shows the pill at a single frame
+            ChooseTokenPulseButton(onClick = {})
         }
     }
 }

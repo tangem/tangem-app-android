@@ -31,7 +31,7 @@ internal fun OpportunitiesCard(item: EarnOpportunitiesItemUM, onClick: () -> Uni
         modifier = modifier
             .width(178.dp)
             .clip(RoundedCornerShape(24.dp))
-            .background(TangemTheme.colors3.bg.opaque.primary)
+            .background(TangemTheme.colors3.bg.transparent.primary)
             .clickable(onClick = onClick)
             .padding(12.dp),
     ) {
@@ -40,7 +40,7 @@ internal fun OpportunitiesCard(item: EarnOpportunitiesItemUM, onClick: () -> Uni
             shouldDisplayNetwork = true,
             networkBadgeSize = 16.dp,
             iconSize = 40.dp,
-            networkBadgeBackground = TangemTheme.colors3.bg.opaque.primary,
+            networkBadgeBackground = TangemTheme.colors3.bg.transparent.primary,
         )
 
         SpacerH(22.dp)

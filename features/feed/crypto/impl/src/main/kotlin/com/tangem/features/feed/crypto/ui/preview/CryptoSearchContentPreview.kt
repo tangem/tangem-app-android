@@ -4,8 +4,8 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -29,6 +29,7 @@ import com.tangem.features.feed.crypto.ui.state.CryptoSearchUM
 import com.tangem.features.feed.crypto.ui.state.MarketPulseItemUM
 import com.tangem.features.feed.crypto.ui.state.MarketSearchUM
 import com.tangem.features.feed.crypto.ui.state.PortfolioSearchUM
+import com.tangem.features.feed.ui.FeedSearchListState
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
@@ -177,7 +178,7 @@ private object CryptoSearchPreviewFixtures {
 private fun CryptoSearchPreviewHost(state: CryptoSearchUM) {
     CryptoSearchContent(
         state = state,
-        listState = rememberLazyListState(),
+        listState = remember { FeedSearchListState() },
         contentPadding = PaddingValues(top = 8.dp),
         modifier = Modifier
             .fillMaxSize()

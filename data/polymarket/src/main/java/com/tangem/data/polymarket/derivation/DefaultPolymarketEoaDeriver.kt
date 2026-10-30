@@ -5,11 +5,11 @@ import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.tangem.common.card.FirmwareVersion
-import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.data.polymarket.secp256k1SeedKey
+import com.tangem.data.polymarket.signing.toPolymarketSigningError
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.common.wallets.getSyncStrict
@@ -18,7 +18,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.derivation.POLYMARKET_OWNER_DERIVATION_PATH
 import com.tangem.domain.polymarket.derivation.PolymarketEoaDeriver
-import com.tangem.domain.polymarket.model.PolymarketDerivationError
+import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import javax.inject.Inject
@@ -30,25 +30,25 @@ internal class DefaultPolymarketEoaDeriver @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PolymarketEoaDeriver {
 
-    override suspend fun deriveOwnerEoa(userWalletId: UserWalletId): Either<PolymarketDerivationError, String> = Either
+    override suspend fun deriveOwnerEoa(userWalletId: UserWalletId): Either<PolymarketSigningError, String> = Either
         .catchOn(dispatchers.io) {
             val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
 
             if (userWallet is UserWallet.Cold &&
                 userWallet.scanResponse.card.firmwareVersion < FirmwareVersion.HDWalletAvailable
             ) {
-                return@catchOn PolymarketDerivationError.DerivationUnsupported.left()
+                return@catchOn PolymarketSigningError.DerivationUnsupported.left()
             }
 
             val seedKey = userWallet.secp256k1SeedKey()
-                ?: return@catchOn PolymarketDerivationError.MissingWallet.left()
+                ?: return@catchOn PolymarketSigningError.MissingWallet.left()
 
             val extendedPublicKey = extendedPublicKey(userWalletId, ByteArrayKey(seedKey))
-                ?: return@catchOn PolymarketDerivationError.Unknown.left()
+                ?: return@catchOn PolymarketSigningError.Unknown.left()
 
             addressFactory.createAddress(extendedPublicKey).right()
         }
-        .getOrElse { it.toDerivationError().left() }
+        .getOrElse { it.toPolymarketSigningError().left() }
 
     override suspend fun storedOwnerEoa(userWalletId: UserWalletId): String? = Either
         .catchOn(dispatchers.io) {
@@ -77,12 +77,5 @@ internal class DefaultPolymarketEoaDeriver @Inject constructor(
         val path = DerivationPath(POLYMARKET_OWNER_DERIVATION_PATH)
 
         return derivationsRepository.getExistingDerivedKeys(userWalletId, seedKey)[path]
-    }
-
-    private fun Throwable.toDerivationError(): PolymarketDerivationError = when (this) {
-        is TangemSdkError.UserCancelled -> PolymarketDerivationError.UserCancelled
-        is TangemSdkError.WalletNotFound -> PolymarketDerivationError.MissingWallet
-        is TangemSdkError -> PolymarketDerivationError.CardError
-        else -> PolymarketDerivationError.Unknown
     }
 }

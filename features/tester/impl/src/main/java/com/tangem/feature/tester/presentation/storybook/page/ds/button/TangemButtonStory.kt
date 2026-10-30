@@ -166,6 +166,7 @@ private fun ComponentPreview(state: TangemButtonStory) {
                         null
                     },
                     text = if (state.hasText) stringReference("Button") else null,
+                    loadingText = if (state.hasLoadingText) stringReference("Loading") else null,
                     onClick = {},
                 )
             }
@@ -241,6 +242,7 @@ private fun Toggles(state: TangemButtonStory) {
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             ToggleRow(label = "isLoading", checked = state.isLoading, onToggle = state.onLoadingToggle)
+            ToggleRow(label = "loadingText", checked = state.hasLoadingText, onToggle = state.onLoadingTextToggle)
             ToggleRow(label = "isEnabled", checked = state.isEnabled, onToggle = state.onEnabledToggle)
             ToggleRow(label = "iconStart", checked = state.hasIconStart, onToggle = state.onIconStartToggle)
             ToggleRow(label = "iconEnd", checked = state.hasIconEnd, onToggle = state.onIconEndToggle)

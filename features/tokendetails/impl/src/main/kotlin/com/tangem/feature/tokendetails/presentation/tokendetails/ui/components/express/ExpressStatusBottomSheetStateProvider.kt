@@ -20,6 +20,34 @@ import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 
 class ExpressStatusBottomSheetStateProvider : PreviewParameterProvider<ExpressStatusBottomSheetConfig> {
+    private val network = Network(
+        id = Network.ID(value = "network1", derivationPath = Network.DerivationPath.None),
+        name = "Network One",
+        isTestnet = false,
+        standardType = Network.StandardType.ERC20,
+        currencySymbol = "ETH",
+        derivationPath = Network.DerivationPath.None,
+        hasFiatFeeRate = true,
+        canHandleTokens = true,
+        transactionExtrasType = Network.TransactionExtrasType.NONE,
+        nameResolvingType = Network.NameResolvingType.NONE,
+    )
+
+    private val token
+        get() = CryptoCurrency.Coin(
+            id = ID(
+                ID.Prefix.COIN_PREFIX,
+                ID.Body.NetworkId(network.rawId),
+                ID.Suffix.RawID("token1"),
+            ),
+            network = network,
+            name = "Token 1",
+            symbol = "T1",
+            decimals = 8,
+            iconUrl = null,
+            isCustom = false,
+        )
+
     override val values: Sequence<ExpressStatusBottomSheetConfig>
         get() = sequenceOf(
             ExpressStatusBottomSheetConfig(
@@ -92,39 +120,11 @@ class ExpressStatusBottomSheetStateProvider : PreviewParameterProvider<ExpressSt
                         onGoToProviderClick = {},
                         providerName = "Unlimit",
                     ),
-                    showProviderLink = false,
+                    shouldShowProviderLink = false,
                     fromCryptoCurrency = token,
                     toCryptoCurrency = token,
                     hasLongTime = true,
                 ),
             ),
         )
-
-    private val token
-        get() = CryptoCurrency.Coin(
-            id = ID(
-                ID.Prefix.COIN_PREFIX,
-                ID.Body.NetworkId(network.rawId),
-                ID.Suffix.RawID("token1"),
-            ),
-            network = network,
-            name = "Token 1",
-            symbol = "T1",
-            decimals = 8,
-            iconUrl = null,
-            isCustom = false,
-        )
-
-    private val network = Network(
-        id = Network.ID(value = "network1", derivationPath = Network.DerivationPath.None),
-        name = "Network One",
-        isTestnet = false,
-        standardType = Network.StandardType.ERC20,
-        currencySymbol = "ETH",
-        derivationPath = Network.DerivationPath.None,
-        hasFiatFeeRate = true,
-        canHandleTokens = true,
-        transactionExtrasType = Network.TransactionExtrasType.NONE,
-        nameResolvingType = Network.NameResolvingType.NONE,
-    )
 }

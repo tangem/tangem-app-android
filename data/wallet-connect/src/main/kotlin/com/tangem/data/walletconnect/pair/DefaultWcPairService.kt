@@ -32,7 +32,7 @@ class DefaultWcPairService @Inject constructor(
             WcPairRequest.Source.DEEPLINK -> Unit
         }
 
-        val isExistSession = existSessionTopic(request.uri).getOrNull() ?: false
+        val isExistSession = existSessionTopic(request.uri).getOrNull() == true
         return !isExistSession
     }
 
