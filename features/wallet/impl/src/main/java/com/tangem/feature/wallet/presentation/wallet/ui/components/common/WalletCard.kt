@@ -18,6 +18,7 @@ import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -35,6 +36,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.*
+import com.tangem.common.ui.userwallet.SocialLoginWalletIcon
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.extensions.TextReference
@@ -146,10 +148,16 @@ private fun CardContainer(state: WalletCardState, isBalanceHidden: Boolean, item
                 .weight(1f)
                 .padding(vertical = 12.dp),
         ) {
-            TitleText(
-                text = state.title,
-                modifier = Modifier,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                TitleText(
+                    text = state.title,
+                    modifier = Modifier.weight(weight = 1f, fill = false),
+                )
+                if (state.additionalInfo?.isSocialLogin == true) SocialLoginWalletIcon()
+            }
             Balance(
                 state = state,
                 isBalanceHidden = isBalanceHidden,
@@ -423,6 +431,14 @@ private class WalletCardStateProvider : CollectionPreviewParameterProvider<Walle
         ),
         WalletPreviewDataLegacy.walletCardContentState.copy(
             isBalanceFlickering = true,
+        ),
+        WalletPreviewDataLegacy.walletCardContentState.copy(
+            title = "Google wallet",
+            additionalInfo = WalletAdditionalInfo(
+                isHideable = false,
+                content = WalletAdditionalInfo.Content.Text(TextReference.Str("Mobile wallet")),
+                isSocialLogin = true,
+            ),
         ),
         WalletPreviewDataLegacy.walletCardLoadingState,
         WalletPreviewDataLegacy.walletCardErrorState,
