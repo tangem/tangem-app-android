@@ -56,7 +56,7 @@ internal fun ApiResponseError.toGaslessServiceException(
     )
 }
 
-private fun ApiResponseError.HttpException.parseError(adapter: JsonAdapter<GaslessErrorResponse>): GaslessErrorDto? {
+internal fun ApiResponseError.HttpException.parseError(adapter: JsonAdapter<GaslessErrorResponse>): GaslessErrorDto? {
     val body = errorBody?.takeIf(String::isNotBlank) ?: return null
     // A proxy may answer with an HTML page instead of the service's JSON — that is simply "no error code".
     return runCatching { adapter.fromJson(body)?.error }.getOrNull()
