@@ -15,6 +15,7 @@ import com.tangem.features.yield.supply.impl.chart.DefaultYieldSupplyChartCompon
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartIncentiveUM
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartPeriod
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartUM
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.yield.MockYieldSupply
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -31,14 +32,19 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
+import java.util.Locale
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class YieldSupplyChartModelTest {
 
     private val getChartUseCase: YieldSupplyGetChartUseCase = mockk()
@@ -46,10 +52,19 @@ internal class YieldSupplyChartModelTest {
     private val getAprHistoryUseCase: GetYieldAprHistoryUseCase = mockk()
     private val callback: DefaultYieldSupplyChartComponent.ModelCallback = mockk(relaxed = true)
 
+    private lateinit var originalLocale: Locale
+
     @BeforeEach
     fun setUp() {
+        originalLocale = Locale.getDefault()
+        Locale.setDefault(Locale.US)
         clearMocks(getChartUseCase, getTokenStatusUseCase, getAprHistoryUseCase, callback)
         coEvery { getTokenStatusUseCase(any()) } returns market(hasCampaign = false).right()
+    }
+
+    @AfterEach
+    fun tearDown() {
+        Locale.setDefault(originalLocale)
     }
 
     @Test
@@ -66,7 +81,6 @@ internal class YieldSupplyChartModelTest {
             assertThat(state).isInstanceOf(YieldSupplyChartUM.Data::class.java)
             val data = state as YieldSupplyChartUM.Data
             assertThat(data.chartData.percentFormat).isEqualTo("%.0f")
-            assertThat(data.monthLables).hasSize(MONTH_LABELS_COUNT)
             verify(exactly = 1) { callback.onStartLoading() }
             verify(exactly = 1) { callback.onSuccessLoad() }
             verify(exactly = 0) { callback.onLoadFail() }
@@ -268,6 +282,40 @@ internal class YieldSupplyChartModelTest {
         // Assert
         val data = model.uiState.value as YieldSupplyChartUM.Data
         assertThat(data.chartData.y).containsExactly(2.5, 3.5, 4.5).inOrder()
+    }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN dated buckets WHEN plain chart loaded THEN the first bar of each month carries its name`(
+        model: MonthLabelsModel,
+    ) = runTest {
+        // Arrange
+        val bucketStarts = List(model.expected.size) { index ->
+            model.firstBucketStart.plus(index * BUCKET_DAYS, DAY)
+        }
+        coEvery { getChartUseCase(any()) } returns chartData(
+            y = List(bucketStarts.size) { 3.0 },
+            bucketStarts = bucketStarts,
+        ).right()
+
+        // Act
+        val chartModel = createModel(isPlainRate = true)
+
+        // Assert
+        val labels = (chartModel.uiState.value as YieldSupplyChartUM.Data).chartData.xLabels
+        assertThat(labels).containsExactlyElementsIn(model.expected).inOrder()
+    }
+
+    @Test
+    fun `GIVEN plain chart without bucket dates WHEN model created THEN no axis labels`() = runTest {
+        // Arrange
+        coEvery { getChartUseCase(any()) } returns chartData(y = listOf(2.0, 5.0, 10.0)).right()
+
+        // Act
+        val model = createModel(isPlainRate = true)
+
+        // Assert
+        assertThat((model.uiState.value as YieldSupplyChartUM.Data).chartData.xLabels).isEmpty()
     }
 
     @Test
@@ -609,13 +657,38 @@ internal class YieldSupplyChartModelTest {
         getYieldAprHistoryUseCase = getAprHistoryUseCase,
     )
 
-    private fun chartData(y: List<Double>): YieldSupplyMarketChartData =
-        YieldSupplyMarketChartData(y = y, x = y.indices.map { it.toDouble() }, avr = 1.0)
+    private fun chartData(
+        y: List<Double>,
+        bucketStarts: List<LocalDate> = emptyList(),
+    ): YieldSupplyMarketChartData =
+        YieldSupplyMarketChartData(y = y, x = y.indices.map { it.toDouble() }, avr = 1.0, bucketStarts = bucketStarts)
 
     private fun createToken() = MockYieldSupply.token(contractAddress = TOKEN_ADDRESS)
 
+    private fun provideTestModels() = listOf(
+        MonthLabelsModel(
+            name = "a year of buckets thinned to five months",
+            firstBucketStart = LocalDate(year = 2025, monthNumber = 10, dayOfMonth = 30),
+            expected = labels(size = 31, 0 to "Oct", 6 to "Jan", 13 to "Apr", 21 to "Jul", 28 to "Oct"),
+        ),
+        MonthLabelsModel(
+            name = "five months of buckets all named",
+            firstBucketStart = LocalDate(year = 2026, monthNumber = 7, dayOfMonth = 20),
+            expected = labels(size = 10, 0 to "Jul", 1 to "Aug", 4 to "Sep", 7 to "Oct", 9 to "Nov"),
+        ),
+    )
+
+    private fun labels(size: Int, vararg named: Pair<Int, String>): List<String> {
+        val byIndex = named.toMap()
+        return List(size) { byIndex[it].orEmpty() }
+    }
+
+    data class MonthLabelsModel(val name: String, val firstBucketStart: LocalDate, val expected: List<String>) {
+        override fun toString(): String = name
+    }
+
     private companion object {
-        const val MONTH_LABELS_COUNT = 5
+        const val BUCKET_DAYS = 12
         const val CHAIN_ID = 1
         const val TOKEN_ADDRESS = "0xToken"
         val REWARDS_APY: BigDecimal = BigDecimal("1.5")
