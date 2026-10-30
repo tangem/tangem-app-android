@@ -21,7 +21,7 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.staking.StakingBalance
+import com.tangem.domain.staking.model.StakingBalance
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.foryou.impl.R
 import com.tangem.features.foryou.impl.components.isRingClosed

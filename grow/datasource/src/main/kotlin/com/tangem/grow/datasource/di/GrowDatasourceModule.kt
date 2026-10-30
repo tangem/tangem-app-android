@@ -27,6 +27,7 @@ import com.tangem.grow.datasource.express.ExpressAuthProvider
 import com.tangem.grow.datasource.express.TangemExpressApi
 import com.tangem.grow.datasource.gasless.GaslessTxServiceApi
 import com.tangem.grow.datasource.gasless.GaslessTxServiceApiV2
+import com.tangem.grow.datasource.gasless.SolanaGaslessApi
 import com.tangem.grow.datasource.gasless.TronGaslessApi
 import com.tangem.grow.datasource.moonpay.MoonPayApi
 import com.tangem.grow.datasource.onramp.OnrampApi
@@ -137,6 +138,18 @@ internal object GrowDatasourceModule {
             writeTimeoutSeconds = TIMEOUT_60_SECONDS,
         ),
     )
+
+    @Provides
+    @Singleton
+    fun provideSolanaGaslessApi(factory: RetrofitFactory): SolanaGaslessApi {
+        return factory.build(
+            RetrofitApiSpec(
+                apiConfigId = GaslessTxService.ID,
+                shouldApplyTimeoutAnnotations = true,
+                shouldUseSessionAuth = false,
+            ),
+        )
+    }
 
     private fun tronGaslessApiSpec() = RetrofitApiSpec(
         apiConfigId = GaslessTxService.ID,

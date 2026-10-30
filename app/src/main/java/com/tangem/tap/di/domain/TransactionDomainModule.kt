@@ -1,5 +1,6 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.wallets.hot.TangemHotWalletSigner
 import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
@@ -13,6 +14,7 @@ import com.tangem.domain.transaction.GaslessYieldRepository
 import com.tangem.domain.transaction.usecase.gasless.ResolveGaslessFeePlanUseCase
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
+import com.tangem.domain.nft.NFTFeatureToggles
 import com.tangem.domain.notifications.repository.PushNotificationsRepository
 import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
@@ -21,6 +23,7 @@ import com.tangem.domain.transaction.*
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.transaction.usecase.gasless.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.tap.domain.transaction.DefaultTransactionFeatureToggles
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Module
 import dagger.Provides
@@ -288,6 +291,7 @@ internal object TransactionDomainModule {
         getDynamicReceiveAddressUseCase: GetDynamicReceiveAddressUseCase,
         dynamicAddressesRepository: DynamicAddressesRepository,
         userWalletsListRepository: UserWalletsListRepository,
+        nftFeatureToggles: NFTFeatureToggles,
     ): ReceiveAddressesFactory {
         return ReceiveAddressesFactory(
             getEnsNameUseCase = getEnsNameUseCase,
@@ -295,6 +299,7 @@ internal object TransactionDomainModule {
             getDynamicReceiveAddressUseCase = getDynamicReceiveAddressUseCase,
             dynamicAddressesRepository = dynamicAddressesRepository,
             userWalletsListRepository = userWalletsListRepository,
+            nftFeatureToggles = nftFeatureToggles,
         )
     }
 
@@ -360,13 +365,21 @@ internal object TransactionDomainModule {
 
     @Provides
     @Singleton
+    fun provideTransactionFeatureToggles(featureTogglesManager: FeatureTogglesManager): TransactionFeatureToggles {
+        return DefaultTransactionFeatureToggles(featureTogglesManager)
+    }
+
+    @Provides
+    @Singleton
     fun provideTronGaslessFeeResolver(
         getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase,
         isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
+        transactionFeatureToggles: TransactionFeatureToggles,
     ): TronGaslessFeeResolver {
         return TronGaslessFeeResolver(
             getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
             isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
+            transactionFeatureToggles = transactionFeatureToggles,
         )
     }
 

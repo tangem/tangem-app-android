@@ -29,6 +29,7 @@ dependencies {
     api(projects.core.ui)
     api(projects.core.utils)
     implementation(projects.core.error)
+    implementation(projects.core.remote)
     api(projects.common.routing)
     api(projects.common.ui)
 
@@ -104,10 +105,6 @@ dependencies {
     api(deps.kotlin.immutable.collections)
     implementation(deps.jodatime)
     implementation(deps.kotlin.serialization)
-    implementation(deps.firebase.perf) {
-        exclude(group = "com.google.firebase", module = "protolite-well-known-types")
-        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
-    }
 
     /** Tangem libs */
     api(tangemDeps.blockchain)

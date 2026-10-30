@@ -2,12 +2,16 @@ package com.tangem.features.send.mcp.model
 
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.mcp.models.McpAgent
+import com.tangem.domain.mcp.models.analytics.McpIntentAnalyticsEvent
+import com.tangem.domain.mcp.models.analytics.McpIntentAnalyticsEvent.IntentType
+import com.tangem.domain.mcp.models.analytics.McpIntentAnalyticsEvent.Reason
 import com.tangem.domain.mcp.repository.McpRepository
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
@@ -48,6 +52,7 @@ internal class SendIntentModel @Inject constructor(
     private val processedConverter: SendIntentProcessedConverter,
     private val cantReachConverter: SendIntentCantReachConverter,
     private val sendRouteConverter: SendIntentSendRouteConverter,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -94,32 +99,65 @@ internal class SendIntentModel @Inject constructor(
 
         val source = sourceResolver.resolve(userWalletId = walletId, intent = intent)
         if (source !is SendIntentSource.Found) {
-            return showCantReach(reason = "the wallet does not send from it: $source")
+            return showCantReach(
+                reason = "the wallet does not send from it: $source",
+                failure = SendIntentLoadFailure(
+                    reason = when (source) {
+                        SendIntentSource.TokenMissing -> Reason.TokenMissing
+                        SendIntentSource.OtherSender -> Reason.WrongWallet
+                        else -> Reason.Unknown
+                    },
+                ),
+            )
         }
 
         val route = sendRouteConverter.convert(
             SendIntentSendRouteConverter.Input(intent = intent, userWalletId = walletId, currency = source.currency),
-        ).getOrElse { error -> return showCantReach(reason = "the amount of the intent is invalid", error = error) }
+        ).getOrElse { error ->
+            return showCantReach(
+                reason = "the amount of the intent is invalid",
+                failure = SendIntentLoadFailure(Reason.InvalidAmount),
+                error = error,
+            )
+        }
 
+        val agent = getAgent(intent)
         val offer = offerConverter.convert(
             SendIntentOfferConverter.Input(
                 intent = intent,
                 currency = source.currency,
-                agent = getAgent(intent),
+                agent = agent,
                 onProceed = ::onProceed,
             ),
-        ) ?: return showCantReach(reason = "the amount of the intent is malformed")
+        ) ?: return showCantReach(
+            reason = "the amount of the intent is malformed",
+            failure = SendIntentLoadFailure(Reason.InvalidAmount),
+        )
 
         currentCoroutineContext().ensureActive()
         loadedRoute = route
         sheet.value = offer
+        analyticsEventHandler.send(
+            McpIntentAnalyticsEvent.IntentScreenOpened(
+                intentId = params.intentId,
+                type = IntentType.Send,
+                agent = agent,
+                blockchain = source.currency.network.name,
+                token = source.currency.symbol,
+            ),
+        )
     }
 
     private fun showReadFailure(error: Throwable) {
         when (error) {
-            is SendIntentError.AlreadyCompleted -> showProcessed(intent = null, currency = null)
+            is SendIntentError.AlreadyCompleted -> showProcessed(
+                intent = null,
+                currency = null,
+                failure = SendIntentLoadFailure.ofReadError(error),
+            )
             else -> showCantReach(
                 reason = "the intent cannot be read",
+                failure = SendIntentLoadFailure.ofReadError(error),
                 error = error,
                 canRetry = error is SendIntentError.Unreachable,
             )
@@ -129,15 +167,20 @@ internal class SendIntentModel @Inject constructor(
     private suspend fun showProcessed(walletId: UserWalletId, intent: SendIntent) {
         val source = sourceResolver.resolve(userWalletId = walletId, intent = intent) as? SendIntentSource.Found
 
-        showProcessed(intent = intent, currency = source?.currency)
+        showProcessed(
+            intent = intent,
+            currency = source?.currency,
+            failure = SendIntentLoadFailure(Reason.AlreadyProcessed),
+        )
     }
 
-    private fun showProcessed(intent: SendIntent?, currency: CryptoCurrency?) {
+    private fun showProcessed(intent: SendIntent?, currency: CryptoCurrency?, failure: SendIntentLoadFailure) {
         if (isFinished) return
         TangemLogger.i("Send intent ${params.intentId} has already been carried out")
         sheet.value = processedConverter.convert(
             SendIntentProcessedConverter.Input(intent = intent, currency = currency, onClose = ::onClose),
         )
+        sendLoadFailed(failure)
     }
 
     /** Not knowing the agent must not hold the offer back, so a slow or failed lookup gives the unknown agent. */
@@ -148,11 +191,28 @@ internal class SendIntentModel @Inject constructor(
             ?: McpAgent.unknown(clientId)
     }
 
-    private fun showCantReach(reason: String, error: Throwable? = null, canRetry: Boolean = false) {
+    private fun showCantReach(
+        reason: String,
+        failure: SendIntentLoadFailure,
+        error: Throwable? = null,
+        canRetry: Boolean = false,
+    ) {
         if (isFinished) return
         TangemLogger.e("Send intent ${params.intentId} is not offered: $reason", error)
         sheet.value = cantReachConverter.convert(
             SendIntentCantReachConverter.Input(onRetry = if (canRetry) ::onRetry else null, onClose = ::onClose),
+        )
+        sendLoadFailed(failure)
+    }
+
+    private fun sendLoadFailed(failure: SendIntentLoadFailure) {
+        analyticsEventHandler.send(
+            McpIntentAnalyticsEvent.IntentLoadFailed(
+                intentId = params.intentId,
+                type = IntentType.Send,
+                reason = failure.reason,
+                errorCode = failure.errorCode,
+            ),
         )
     }
 
@@ -182,8 +242,14 @@ internal class SendIntentModel @Inject constructor(
             },
             onComplete = { isSuccess ->
                 when {
-                    !isSuccess -> showCantReach(reason = "the send could not be opened")
-                    isCoveredByOtherScreen -> showCantReach(reason = "the send is already open behind another screen")
+                    !isSuccess -> showCantReach(
+                        reason = "the send could not be opened",
+                        failure = SendIntentLoadFailure(Reason.SendNotOpened),
+                    )
+                    isCoveredByOtherScreen -> showCantReach(
+                        reason = "the send is already open behind another screen",
+                        failure = SendIntentLoadFailure(Reason.SendNotOpened),
+                    )
                     else -> onSendOpened()
                 }
             },
@@ -192,6 +258,9 @@ internal class SendIntentModel @Inject constructor(
 
     private fun onSendOpened() {
         if (!finish()) return
+        analyticsEventHandler.send(
+            McpIntentAnalyticsEvent.ButtonContinue(intentId = params.intentId, type = IntentType.Send),
+        )
         router.pop()
     }
 }

@@ -2,7 +2,7 @@ package com.tangem.domain.staking.multi
 
 import com.tangem.domain.core.flow.FlowCachingSupplier
 import com.tangem.domain.core.flow.FlowProducer
-import com.tangem.domain.models.staking.StakingBalance
+import com.tangem.domain.staking.model.StakingBalance
 
 /**
  * Supplier of all staking balances for selected wallet [MultiStakingBalanceProducer.Params]
