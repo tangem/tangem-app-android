@@ -4,6 +4,7 @@ import com.tangem.data.pay.repository.DefaultCustomerOrderRepository
 import com.tangem.data.pay.repository.MockAwareBankOfframpOrderRepository
 import com.tangem.data.pay.repository.MockAwareCashbackRepository
 import com.tangem.data.pay.repository.MockAwareCustomerOffersRepository
+import com.tangem.data.pay.repository.MockAwareCustomerSummaryRepository
 import com.tangem.data.pay.repository.MockAwareOnboardingRepository
 import com.tangem.data.pay.repository.MockAwareTangemPayCampaignRepository
 import com.tangem.data.pay.repository.MockAwareTangemPayCardDetailsRepository
@@ -12,6 +13,7 @@ import com.tangem.domain.pay.repository.BankOfframpOrderRepository
 import com.tangem.domain.pay.repository.CashbackRepository
 import com.tangem.domain.pay.repository.CustomerOffersRepository
 import com.tangem.domain.pay.repository.CustomerOrderRepository
+import com.tangem.domain.pay.repository.CustomerSummaryRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.repository.TangemPayCampaignRepository
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
@@ -61,4 +63,8 @@ internal interface TangemPayDataMockedModule {
     fun bindBankOfframpOrderRepository(
         repository: MockAwareBankOfframpOrderRepository,
     ): BankOfframpOrderRepository
+
+    @Binds
+    @Singleton
+    fun bindCustomerSummaryRepository(repository: MockAwareCustomerSummaryRepository): CustomerSummaryRepository
 }
