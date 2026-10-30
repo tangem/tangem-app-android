@@ -112,17 +112,14 @@ internal class TangemPayBankWithdrawAmountUMFactoryTest {
 
     @ParameterizedTest
     @MethodSource("provideRailFeeModels")
-    fun `GIVEN network fee WHEN create with the route sheet THEN rail fees include it and the note follows the account`(
+    fun `GIVEN network fee WHEN create with the route sheet THEN rail fees include it and the note follows the quote`(
         model: RailFeeModel,
     ) {
         // Arrange
         val factory = createFactory(model.account)
 
         // Act
-        val actual = factory.createWith(
-            networkFee = NetworkFeeState.Loaded(model.networkFee),
-            sheet = AmountSheet.ROUTES,
-        ) as Content
+        val actual = factory.createWith(networkFee = model.networkFee, sheet = AmountSheet.ROUTES) as Content
 
         // Assert
         val sheet = actual.sheet as SheetUM.Routes
@@ -134,21 +131,27 @@ internal class TangemPayBankWithdrawAmountUMFactoryTest {
     private fun provideRailFeeModels() = listOf(
         RailFeeModel(
             account = BankWithdrawSourceAccount.Payment(userWalletId),
-            networkFee = BigDecimal.ZERO,
+            networkFee = NetworkFeeState.Loaded(BigDecimal.ZERO),
             expectedFees = listOf("$1", "$11"),
             expectedNote = null,
         ),
         RailFeeModel(
             account = moneyAccount,
-            networkFee = BigDecimal("0.03"),
+            networkFee = NetworkFeeState.Loaded(BigDecimal("0.03")),
             expectedFees = listOf("$1.03", "$11.03"),
             expectedNote = resourceReference(R.string.money_account_send_network_fee_note, wrappedList("$0.03")),
+        ),
+        RailFeeModel(
+            account = moneyAccount,
+            networkFee = NetworkFeeState.NotEnoughFunds,
+            expectedFees = listOf("$1", "$11"),
+            expectedNote = null,
         ),
     )
 
     internal data class RailFeeModel(
         val account: BankWithdrawSourceAccount,
-        val networkFee: BigDecimal,
+        val networkFee: NetworkFeeState,
         val expectedFees: List<String>,
         val expectedNote: TextReference?,
     )

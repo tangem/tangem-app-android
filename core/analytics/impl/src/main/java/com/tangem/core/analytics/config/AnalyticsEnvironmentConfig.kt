@@ -9,5 +9,4 @@ data class AnalyticsEnvironmentConfig(
     val amplitudeApiKeyDev: String?,
     val appsFlyerApiKey: String,
     val customerIoCdpApiKey: String?,
-    val otlpApiKey: String?,
 )

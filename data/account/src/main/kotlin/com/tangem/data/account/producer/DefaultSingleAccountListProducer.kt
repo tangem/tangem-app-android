@@ -8,15 +8,12 @@ import com.tangem.domain.account.producer.SingleAccountListProducer
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.core.flow.FlowProducerTools
-import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
 import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.isAccountCreated
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isTangemPayCompatible
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.isPredictionAccountSupported
-import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -29,7 +26,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
 
 /**
  * Default implementation of [SingleAccountListProducer].
@@ -50,8 +46,6 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
     private val moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
     private val polymarketFeatureToggles: PolymarketFeatureToggles,
     private val polymarketOnboardedStore: PolymarketOnboardedStore,
-    private val collectiblesFeatureToggles: CollectiblesFeatureToggles,
-    private val collectiblesAccountRepository: CollectiblesAccountRepository,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SingleAccountListProducer {
 
@@ -66,8 +60,7 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
         return combine(
             walletAccountListFlowFactory.create(walletId),
             predictionOnboardedFlow(walletId),
-            collectiblesAccountCreatedFlow(walletId),
-        ) { accountList, isPredictionOnboarded, isCollectiblesAccountCreated ->
+        ) { accountList, isPredictionOnboarded ->
             val userWallet = userWalletsListRepository.getSyncStrict(id = walletId)
             accountList
                 .addAccountIf(userWallet.isTangemPayCompatible) { Account.Payment(walletId) }
@@ -75,7 +68,6 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
                 .addAccountIf(userWallet.isPredictionSupported(isPredictionOnboarded)) {
                     Account.Prediction(walletId)
                 }
-                .addAccountIf(isCollectiblesAccountCreated) { Account.Collectibles(walletId) }
         }
             .flowOn(dispatchers.default)
     }
@@ -84,12 +76,6 @@ internal class DefaultSingleAccountListProducer @AssistedInject constructor(
         if (!polymarketFeatureToggles.isPolymarketEnabled) return flowOf(false)
 
         return polymarketOnboardedStore.isOnboarded(walletId)
-    }
-
-    private fun collectiblesAccountCreatedFlow(walletId: UserWalletId): Flow<Boolean> {
-        if (!collectiblesFeatureToggles.isCollectiblesEnabled) return flowOf(false)
-
-        return collectiblesAccountRepository.getStatus(walletId).map { status -> status.isAccountCreated }
     }
 
     private fun UserWallet.isMoneyAccountSupported(): Boolean {

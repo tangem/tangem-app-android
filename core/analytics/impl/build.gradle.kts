@@ -24,6 +24,8 @@ dependencies {
     // region Analytics SDKs
     implementation(deps.amplitude)
     implementation(deps.appsflyer)
+    implementation(deps.appsflyer.oaid)
+    runtimeOnly(deps.installreferrer)
     implementation(deps.customerio.analytics)
     implementation(deps.customerio.messaging)
     implementation(platform(deps.firebase.bom))
@@ -52,14 +54,15 @@ dependencies {
 
     // region Core modules
     api(projects.core.analytics)
-    // Core shouldn't depend on core, but with utils and logging it's necessary.
+    // Core shouldn't depend on core, but with utils, logging and preferences storage it's necessary.
+    implementation(projects.core.local)
     implementation(projects.core.utils)
     // endregion
 
     // region Domain
-    implementation(projects.domain.analytics)
     implementation(projects.domain.appsflyer)
     implementation(projects.domain.settings)
+    implementation(projects.domain.wallets.models)
     // endregion
 
     // region Tests

@@ -1,13 +1,23 @@
 package com.tangem.grow.datasource.polymarket.socket
 
 import com.tangem.core.socket.KeyedSubscriptions
+import com.tangem.core.socket.SocketState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
 class PolymarketMarketSubscriptions internal constructor(
     private val subscriptions: KeyedSubscriptions<String, PolymarketMarketSocket>,
 ) {
+
+    fun observeState(assetIds: Set<String>): Flow<SocketState> {
+        val keys = assetIds.filterTo(mutableSetOf(), String::isNotBlank)
+        if (keys.isEmpty()) return emptyFlow()
+        return subscriptions.observe(keys, PolymarketMarketSocket::state) { keys }.distinctUntilChanged()
+    }
+
+    fun resubscribe(assetIds: Set<String>) = subscriptions.resubscribe(assetIds)
 
     fun observe(assetIds: Set<String>): Flow<PolymarketMarketEventDto> {
         val keys = assetIds.filterTo(mutableSetOf(), String::isNotBlank)

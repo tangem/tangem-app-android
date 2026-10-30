@@ -8,10 +8,10 @@ import com.tangem.features.mcp.api.McpFeatureToggles
 import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.settings.HotWalletRestrictionManager
 import com.tangem.domain.wallets.analytics.Settings
 import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.impl.R
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -23,7 +23,7 @@ private const val TANGEM_PAY_ITEM_ID = "get_tangem_pay"
 @ModelScoped
 internal class ItemsBuilder @Inject constructor(
     private val router: Router,
-    private val hotWalletRestrictionManager: HotWalletRestrictionManager,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val mcpFeatureToggles: McpFeatureToggles,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) {
@@ -39,7 +39,7 @@ internal class ItemsBuilder @Inject constructor(
         buildWalletActionBlock(isWalletConnectAvailable, userWalletId)
         add(buildUserWalletListBlock())
 
-        if (hotWalletRestrictionManager.isCreationEnabledSync() && hasAnyMobileWallet) {
+        if (!hotWalletFeatureToggles.isMultipleHotWalletsEnabled && hasAnyMobileWallet) {
             add(
                 DetailsItemUM.UnderSectionText(
                     id = "only_one_mobile_wallet_explanation",
