@@ -371,7 +371,7 @@ internal class FeeSelectorLogicTest {
             // Assert
             val state = sut.uiState.value
             if (model.expectsNativeFee) {
-                assertThat(state).isInstanceOf(FeeSelectorUM.Content::class.java)
+                assertThat((state as FeeSelectorUM.Content).feeExtraInfo.feeCryptoCurrencyStatus).isEqualTo(trxStatus)
                 assertThat(sut.shouldShowOnlySpeedOption.value).isTrue()
             } else {
                 assertThat(state).isEqualTo(FeeSelectorUM.Error(allowanceRefusal))
@@ -401,6 +401,89 @@ internal class FeeSelectorLogicTest {
             ),
         )
     }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class NativeFallbackLabel {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN gasless fee fails WHEN load fee THEN native fallback is labelled with a known coin`(
+            model: NativeFallbackLabelModel,
+        ) = runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            val accountStatusList: AccountStatusList = mockk()
+            coEvery { onLoadFeeExtended(any()) } returns GetFeeError.GaslessError.YieldBalanceUnavailable.left()
+            coEvery { onLoadFee() } returns singleFee().right()
+            coEvery { singleAccountStatusListSupplier.getSyncOrNull(any<UserWalletId>()) } returns accountStatusList
+            mockkObject(CryptoCurrencyStatusOperations)
+            every {
+                with(CryptoCurrencyStatusOperations) { accountStatusList.getCoinStatus(any<Network>()) }
+            } returns model.networkCoinStatus.toOption()
+
+            // Act
+            val sut = buildModel(gaslessEnabled = true, nativeFeeCurrency = model.isFeeCurrencyCoin)
+            advanceUntilIdle()
+
+            // Assert
+            val state = sut.uiState.value as FeeSelectorUM.Content
+            assertThat(state.feeExtraInfo.feeCryptoCurrencyStatus).isEqualTo(model.expected)
+        }
+
+        @Test
+        fun `GIVEN token fee currency and gasless fee fails WHEN done clicked THEN selected fee reports the coin`() =
+            runTest(UnconfinedTestDispatcher()) {
+                // Arrange
+                val accountStatusList: AccountStatusList = mockk()
+                val trxStatus = loadedStatus(
+                    mockk<CryptoCurrency.Coin>(relaxed = true) { every { symbol } returns "TRX" },
+                )
+                coEvery { onLoadFeeExtended(any()) } returns GetFeeError.GaslessError.YieldBalanceUnavailable.left()
+                coEvery { onLoadFee() } returns singleFee().right()
+                coEvery { singleAccountStatusListSupplier.getSyncOrNull(any<UserWalletId>()) } returns accountStatusList
+                mockkObject(CryptoCurrencyStatusOperations)
+                every {
+                    with(CryptoCurrencyStatusOperations) { accountStatusList.getCoinStatus(any<Network>()) }
+                } returns trxStatus.toOption()
+                val sut = buildModel(gaslessEnabled = true)
+                advanceUntilIdle()
+
+                // Act
+                sut.onDoneClick()
+
+                // Assert
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        match { it is CommonSendFeeAnalyticEvents.SelectedFee && it.params["Fee Token"] == "TRX" },
+                    )
+                }
+            }
+
+        @AfterEach
+        fun unmockStatusOperations() {
+            unmockkObject(CryptoCurrencyStatusOperations)
+        }
+
+        private fun provideTestModels() = listOf(
+            NativeFallbackLabelModel(
+                isFeeCurrencyCoin = true,
+                networkCoinStatus = trxCoinStatus,
+                expected = coinStatus,
+            ),
+            NativeFallbackLabelModel(
+                isFeeCurrencyCoin = false,
+                networkCoinStatus = trxCoinStatus,
+                expected = trxCoinStatus,
+            ),
+            NativeFallbackLabelModel(isFeeCurrencyCoin = false, networkCoinStatus = null, expected = tokenStatus),
+        )
+    }
+
+    data class NativeFallbackLabelModel(
+        val isFeeCurrencyCoin: Boolean,
+        val networkCoinStatus: CryptoCurrencyStatus?,
+        val expected: CryptoCurrencyStatus,
+    )
 
     private val allowanceRefusal = GetFeeError.GaslessError.TronAllowanceTooHigh(
         balance = BigDecimal(50),
