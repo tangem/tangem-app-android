@@ -21,8 +21,10 @@ class FeeSelectorTokenSelectedTransformer(
                     feeCryptoCurrencyStatus = selectedToken,
                     isNotEnoughFunds = false,
                     isFeeTokenSelectedByUser = true,
-                    isSponsoredFeeSelected = isSponsoredFee,
-                    isSponsoredFeePickedByUser = isSponsoredFee,
+                    sponsoredFee = prevState.feeExtraInfo.sponsoredFee.copy(
+                        isSelected = isSponsoredFee,
+                        isSmartGasPickedByUser = isSponsoredFee,
+                    ),
                 ),
             )
         } else {
