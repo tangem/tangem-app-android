@@ -1,7 +1,9 @@
 package com.tangem.tap.di.data
 
 import com.tangem.core.analytics.config.AnalyticsEnvironmentConfig
+import com.tangem.core.analytics.handlers.opentelemetry.OtelAccessTokenProvider
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
+import com.tangem.lib.auth.session.SessionTokenRefresher
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,7 +22,12 @@ internal object AnalyticsConfigModule {
             amplitudeApiKeyDev = environmentConfig.amplitudeApiKeyDev,
             appsFlyerApiKey = environmentConfig.appsFlyerApiKey,
             customerIoCdpApiKey = environmentConfig.customerIoCdpApiKey,
-            otlpApiKey = environmentConfig.otlpApiKey,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideOtelAccessTokenProvider(sessionTokenRefresher: SessionTokenRefresher): OtelAccessTokenProvider {
+        return OtelAccessTokenProvider { sessionTokenRefresher.ensureSession().getOrNull()?.accessToken }
     }
 }

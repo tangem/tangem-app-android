@@ -2,10 +2,8 @@ package com.tangem.core.analytics.handlers.opentelemetry
 
 import android.app.Application
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.analytics.config.AnalyticsEnvironmentConfig
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.settings.usercountry.models.UserCountry
-import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -13,11 +11,8 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.io.TempDir
-import org.junit.jupiter.params.ParameterizedTest
 import java.io.File
 
 internal class OpenTelemetryMetricsHolderTest {
@@ -32,7 +27,6 @@ internal class OpenTelemetryMetricsHolderTest {
     }
 
     private fun createHolder(
-        apiKey: String?,
         appScope: AppCoroutineScope,
         application: Application = createApplication(),
     ): OpenTelemetryMetricsHolder {
@@ -41,13 +35,7 @@ internal class OpenTelemetryMetricsHolderTest {
         }
         return OpenTelemetryMetricsHolder(
             application = application,
-            config = AnalyticsEnvironmentConfig(
-                amplitudeApiKey = "",
-                amplitudeApiKeyDev = null,
-                appsFlyerApiKey = "",
-                customerIoCdpApiKey = null,
-                otlpApiKey = apiKey,
-            ),
+            accessTokenProvider = { null },
             appInfoProvider = mockk { every { appVersion } returns "1.0.0" },
             settingsRepository = settingsRepository,
             dispatchers = dispatchers,
@@ -55,42 +43,10 @@ internal class OpenTelemetryMetricsHolderTest {
         )
     }
 
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class InitializeSkipped {
-
-        @ParameterizedTest
-        @ProvideTestModels
-        fun `GIVEN key missing WHEN initialize THEN meter stays null`(model: SkipModel) = runTest {
-            // Arrange
-            val holder = createHolder(
-                apiKey = model.apiKey,
-                appScope = TestAppCoroutineScope(testScope = this),
-            )
-
-            // Act
-            holder.initialize()
-            advanceUntilIdle()
-
-            // Assert
-            assertThat(holder.getMeter()).isNull()
-        }
-
-        private fun provideTestModels() = listOf(
-            SkipModel(apiKey = null),
-            SkipModel(apiKey = ""),
-        )
-    }
-
-    data class SkipModel(val apiKey: String?)
-
     @Test
-    fun `GIVEN key present WHEN initialize THEN meter is available and flush succeeds`() = runTest {
+    fun `GIVEN holder WHEN initialize THEN meter is available and flush succeeds`() = runTest {
         // Arrange
-        val holder = createHolder(
-            apiKey = "dev-key",
-            appScope = TestAppCoroutineScope(testScope = this),
-        )
+        val holder = createHolder(appScope = TestAppCoroutineScope(testScope = this))
 
         // Act
         holder.initialize()
@@ -108,7 +64,6 @@ internal class OpenTelemetryMetricsHolderTest {
             every { cacheDir } throws IllegalStateException("no cache dir")
         }
         val holder = createHolder(
-            apiKey = "dev-key",
             appScope = TestAppCoroutineScope(testScope = this),
             application = application,
         )
