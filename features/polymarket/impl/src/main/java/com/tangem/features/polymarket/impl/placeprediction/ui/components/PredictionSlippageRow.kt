@@ -13,6 +13,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.row.TangemRow
+import com.tangem.core.ui.ds2.row.TangemRowText
+import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.resolveReference
@@ -42,10 +44,9 @@ internal fun PredictionSlippageRow(
         divider = divider,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         titleSlot = {
-            Text(
+            TangemRowText(
                 text = stringResourceSafe(R.string.prediction_place_slippage),
-                style = TangemTheme.typography3.body.medium,
-                color = TangemTheme.colors3.text.primary,
+                role = TangemRowTextRole.Title,
             )
         },
         valueSlot = {
