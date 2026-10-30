@@ -12,6 +12,7 @@ import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.features.polymarket.impl.common.PolymarketOutcomeAccent
 import com.tangem.features.polymarket.impl.common.formatSlippagePercent
+import com.tangem.utils.StringsSigns.ARROW_RIGHT
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -142,13 +143,9 @@ internal data class MarketHeaderUM(
             outcomePrice != null -> outcomePrice
             else -> return null
         }
-        val entryPricePrefix = entryPrice?.let { "$it $PRICE_ARROW " }.orEmpty()
+        val entryPricePrefix = entryPrice?.let { "$it $ARROW_RIGHT " }.orEmpty()
 
         return "$entryPricePrefix$livePrice"
-    }
-
-    private companion object {
-        const val PRICE_ARROW = "→"
     }
 }
 
