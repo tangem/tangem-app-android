@@ -321,7 +321,13 @@ internal class SwapInteractorImpl @Inject constructor(
                         network = pair.to.currency.network.rawId,
                     ),
                     providers = solanaGaslessSwapResolver.excludeUnsupportedProviders(
-                        fromCurrency = pair.from.currency,
+                        // The pair list holds both directions, and the two tokens may sit in different wallets
+                        userWalletId = if (pair.from.currency.id == toSwapCurrencyStatus.currency.id) {
+                            toSwapCurrencyStatus.userWalletId
+                        } else {
+                            fromSwapCurrencyStatus.userWalletId
+                        },
+                        fromStatus = pair.from,
                         providers = pair.providers.map { provider -> provider.toSwapProvider() },
                     ),
                 )
@@ -2125,7 +2131,11 @@ internal class SwapInteractorImpl @Inject constructor(
             val feePayer = if (isSolanaGaslessSuppressed) {
                 null
             } else {
-                solanaGaslessSwapResolver.resolveFeePayer(fromSwapCurrencyStatus, state.swapDataModel)
+                solanaGaslessSwapResolver.resolveFeePayer(
+                    fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                    provider = state.swapProvider,
+                    swapData = state.swapDataModel,
+                )
             }
             // Without a sponsor there is no fee to send with
             feePayer?.let(SwapBalanceStatus::SponsoredFee) ?: SwapBalanceStatus.Pending
@@ -2164,7 +2174,7 @@ internal class SwapInteractorImpl @Inject constructor(
         lastReducedBalanceBy: BigDecimal,
     ): SponsoredFeeAvailability {
         val fromSwapCurrencyStatus = state.fromTokenInfo.swapCurrencyStatus
-        solanaGaslessSwapResolver.resolveFeePayer(fromSwapCurrencyStatus, state.swapDataModel)
+        solanaGaslessSwapResolver.resolveFeePayer(fromSwapCurrencyStatus, state.swapProvider, state.swapDataModel)
             ?: return SponsoredFeeAvailability.Unavailable
         val userPaidStatus = computeBalanceStatus(
             fromSwapCurrencyStatus = fromSwapCurrencyStatus,
