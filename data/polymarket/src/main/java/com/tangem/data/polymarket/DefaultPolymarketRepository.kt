@@ -267,7 +267,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
                         }
                     }
             },
-            onError = { placeOrderErrorResolver.resolve(it).left() },
+            onError = { placeOrderErrorResolver.resolve(error = it, identity = identity).left() },
         )
     }
 

@@ -8,12 +8,12 @@ sealed interface TxHistoryFetchTrigger {
     data class TokenDetailsOpen(
         val walletId: UserWalletId,
         val currency: CryptoCurrency,
-    ) : TxHistoryFetchTrigger, TxHistoryExpressTrigger, TxHistoryGatewayTrigger, TxHistoryJointOperationTrigger
+    ) : TxHistoryFetchTrigger, TxHistoryExpressTrigger, TxHistoryJointOperationTrigger
 
     data class TokenDetailsPTR(
         val walletId: UserWalletId,
         val currency: CryptoCurrency,
-    ) : TxHistoryFetchTrigger, TxHistoryExpressTrigger, TxHistoryGatewayTrigger, TxHistoryJointOperationTrigger
+    ) : TxHistoryFetchTrigger, TxHistoryExpressTrigger, TxHistoryJointOperationTrigger
 
     data class WalletSelected(
         val walletId: UserWalletId,
@@ -26,5 +26,4 @@ sealed interface TxHistoryFetchTrigger {
 }
 
 sealed interface TxHistoryExpressTrigger : TxHistoryFetchTrigger
-sealed interface TxHistoryGatewayTrigger : TxHistoryFetchTrigger
 sealed interface TxHistoryJointOperationTrigger : TxHistoryFetchTrigger
