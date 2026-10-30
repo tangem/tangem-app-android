@@ -86,7 +86,7 @@ internal class FinishedJointOperationSigners @Inject constructor(
                 value = JointOperationSignersUMConverter.Input(
                     membersCount = jointAccount.membersCount,
                     signers = signers,
-                    isFinished = true,
+                    isVotingClosed = true,
                 ),
             ),
         )
