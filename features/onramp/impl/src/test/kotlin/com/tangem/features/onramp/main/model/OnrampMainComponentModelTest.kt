@@ -7,14 +7,22 @@ import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.domain.marketing.models.MarketingScreen
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.onramp.GetOnrampCountryUseCase
 import com.tangem.domain.onramp.GetOnrampQuotesUseCase
+import com.tangem.domain.onramp.OnrampFetchPairsUseCase
 import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
+import com.tangem.domain.onramp.model.OnrampCountry
+import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.features.marketing.api.LinkedBannerRequest
+import com.tangem.features.marketing.api.MarketingBannerAmount
+import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.marketing.api.concierge.ConciergeDemandSurveyComponent
 import com.tangem.features.onramp.deeplink.DefaultConciergeWaitlistTrigger
 import com.tangem.features.onramp.main.OnrampMainComponent
@@ -30,10 +38,11 @@ import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.TestCoroutineScheduler
+import kotlinx.coroutines.test.TestScope
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -69,6 +78,8 @@ internal class OnrampMainComponentModelTest {
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val getOnrampQuotesUseCase: GetOnrampQuotesUseCase = mockk()
     private val getWalletsUseCase: GetWalletsUseCase = mockk()
+    private val getOnrampCountryUseCase: GetOnrampCountryUseCase = mockk()
+    private val fetchPairsUseCase: OnrampFetchPairsUseCase = mockk()
 
     private val cryptoCurrency = MockCryptoCurrencyFactory().ethereum
     private val userWallet: UserWallet = mockk(relaxed = true) {
@@ -80,8 +91,16 @@ internal class OnrampMainComponentModelTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(analyticsEventHandler, getOnrampQuotesUseCase, getWalletsUseCase)
+        clearMocks(
+            analyticsEventHandler,
+            getOnrampQuotesUseCase,
+            getWalletsUseCase,
+            getOnrampCountryUseCase,
+            fetchPairsUseCase,
+        )
         every { getWalletsUseCase.invokeSync() } returns listOf(userWallet)
+        every { getOnrampCountryUseCase.invoke() } returns emptyFlow()
+        coEvery { fetchPairsUseCase.invoke(any(), any()) } returns Unit.right()
         sentEvents.clear()
         every { analyticsEventHandler.send(capture(sentEvents)) } just Runs
     }
@@ -365,6 +384,90 @@ internal class OnrampMainComponentModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN amount above every provider limit WHEN amount typed THEN marketing requests carry fiat amount`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val quotes = listOf(createAmountErrorQuote(OnrampError.AmountError.TooBigError(BigDecimal("1000"))))
+        val model = createModel(scheduler = scheduler, quotes = quotes, fiatCode = "USD")
+        val requests = collectAll(scheduler, model.marketingRequest)
+        val linkedRequests = collectAll(scheduler, model.linkedMarketingRequest)
+        scheduler.runCurrent()
+
+        // Act
+        model.onAmountValueChanged("50000")
+        scheduler.runCurrent()
+
+        // Assert
+        val expectedScreen = onrampScreen(fiatCode = "USD")
+        val expectedAmount = MarketingBannerAmount.Fiat(value = BigDecimal("50000"), currencyCode = "USD")
+        assertThat(requests.last()).isEqualTo(MarketingBannerRequest(screen = expectedScreen, amount = expectedAmount))
+        assertThat(linkedRequests.last())
+            .isEqualTo(LinkedBannerRequest(screen = expectedScreen, amount = expectedAmount))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN eur selected WHEN amount typed THEN request carries eur amount`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val model = createModel(scheduler = scheduler, quotes = emptyList(), fiatCode = "EUR")
+        val requests = collectAll(scheduler, model.marketingRequest)
+        scheduler.runCurrent()
+
+        // Act
+        model.onAmountValueChanged("100")
+        scheduler.runCurrent()
+
+        // Assert
+        val expectedAmount = MarketingBannerAmount.Fiat(value = BigDecimal("100"), currencyCode = "EUR")
+        assertThat(requests.last())
+            .isEqualTo(MarketingBannerRequest(screen = onrampScreen("EUR"), amount = expectedAmount))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN typed zero WHEN amount typed THEN request carries zero amount`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val model = createModel(scheduler = scheduler, quotes = emptyList(), fiatCode = "USD")
+        val requests = collectAll(scheduler, model.marketingRequest)
+        scheduler.runCurrent()
+
+        // Act
+        model.onAmountValueChanged("0")
+        scheduler.runCurrent()
+
+        // Assert
+        val expectedAmount = MarketingBannerAmount.Fiat(value = BigDecimal("0"), currencyCode = "USD")
+        assertThat(requests.last())
+            .isEqualTo(MarketingBannerRequest(screen = onrampScreen("USD"), amount = expectedAmount))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN typed amount WHEN field cleared THEN request has no amount`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val model = createModel(scheduler = scheduler, quotes = emptyList(), fiatCode = "USD")
+        val requests = collectAll(scheduler, model.marketingRequest)
+        scheduler.runCurrent()
+        model.onAmountValueChanged("100")
+        scheduler.runCurrent()
+        val requestBeforeClearing = requests.last()
+
+        // Act
+        model.onAmountValueChanged("")
+        scheduler.runCurrent()
+
+        // Assert
+        val typedAmount = MarketingBannerAmount.Fiat(value = BigDecimal("100"), currencyCode = "USD")
+        assertThat(requestBeforeClearing)
+            .isEqualTo(MarketingBannerRequest(screen = onrampScreen("USD"), amount = typedAmount))
+        assertThat(requests.last()).isEqualTo(MarketingBannerRequest(screen = onrampScreen("USD"), amount = null))
+        model.onDestroy()
+    }
+
     private class FakeBottomSheetSlot(var config: OnrampMainBottomSheetConfig?)
 
     private fun OnrampMainComponentModel.attachBottomSheetSlot(
@@ -390,6 +493,12 @@ internal class OnrampMainComponentModelTest {
         scheduler.runCurrent()
     }
 
+    private fun <T> collectAll(scheduler: TestCoroutineScheduler, flow: Flow<T>): List<T> {
+        val values = mutableListOf<T>()
+        TestScope(scheduler).launch { flow.collect(values::add) }
+        return values
+    }
+
     /** `replay = 1` so an emission made before the model's collector starts is still delivered. */
     private fun quotesFlow() = MutableSharedFlow<Either<OnrampError, List<OnrampQuote>>>(
         replay = 1,
@@ -412,9 +521,34 @@ internal class OnrampMainComponentModelTest {
         every { error } returns OnrampError.DataError(code = "500", description = "boom")
     }
 
-    private fun createAmountErrorQuote() = mockk<OnrampQuote.AmountError>(relaxed = true) {
-        every { error } returns OnrampError.AmountError.TooSmallError(requiredAmount = BigDecimal.TEN)
+    private fun createAmountErrorQuote(
+        amountError: OnrampError.AmountError = OnrampError.AmountError.TooSmallError(requiredAmount = BigDecimal.TEN),
+    ) = mockk<OnrampQuote.AmountError>(relaxed = true) {
+        every { error } returns amountError
     }
+
+    private fun onrampScreen(fiatCode: String) = MarketingScreen.Onramp(
+        fromFiat = fiatCode,
+        toNetwork = cryptoCurrency.network.rawId,
+        toContractAddress = "",
+    )
+
+    private fun onrampCountry(fiatCode: String) = OnrampCountry(
+        id = "1",
+        name = "Country",
+        code = "CC",
+        image = "",
+        alpha3 = "CCC",
+        continent = "Europe",
+        defaultCurrency = OnrampCurrency(
+            name = fiatCode,
+            code = fiatCode,
+            image = null,
+            precision = 2,
+            unit = fiatCode,
+        ),
+        isOnrampAvailable = true,
+    )
 
     private fun geoRestrictionEvents() = sentEvents.filterIsInstance<OnrampAnalyticsEvent.NoticeGeoRestriction>()
 
@@ -425,6 +559,15 @@ internal class OnrampMainComponentModelTest {
 
     private fun createModel(scheduler: TestCoroutineScheduler, quotes: List<OnrampQuote>) =
         createModel(scheduler = scheduler, quotesFlow = flowOf(quotes.right()))
+
+    private fun createModel(
+        scheduler: TestCoroutineScheduler,
+        quotes: List<OnrampQuote>,
+        fiatCode: String,
+    ): OnrampMainComponentModel {
+        every { getOnrampCountryUseCase.invoke() } returns flowOf(onrampCountry(fiatCode).right())
+        return createModel(scheduler = scheduler, quotesFlow = flowOf(quotes.right()))
+    }
 
     private fun createModel(
         scheduler: TestCoroutineScheduler,
@@ -445,17 +588,16 @@ internal class OnrampMainComponentModelTest {
             checkOnrampAvailabilityUseCase = mockk(relaxed = true) {
                 coEvery { this@mockk.invoke(any()) } returns mockk(relaxed = true)
             },
-            getOnrampCountryUseCase = mockk(relaxed = true),
+            getOnrampCountryUseCase = getOnrampCountryUseCase,
             clearOnrampCacheUseCase = mockk(relaxed = true),
             fetchQuotesUseCase = mockk(relaxed = true),
             getOnrampQuotesUseCase = getOnrampQuotesUseCase,
-            fetchPairsUseCase = mockk(relaxed = true),
+            fetchPairsUseCase = fetchPairsUseCase,
             rampStateManager = mockk(relaxed = true),
             amountInputManager = mockk(relaxed = true),
             getOnrampOffersUseCase = mockk(relaxed = true),
             isDemoCardUseCase = mockk(relaxed = true),
             messageSender = mockk(relaxed = true),
-            getCurrencyUSDQuoteUseCase = mockk(relaxed = true),
             conciergeWaitlistListener = conciergeWaitlistTrigger,
             paramsContainer = MutableParamsContainer(value = params),
             getWalletsUseCase = getWalletsUseCase,

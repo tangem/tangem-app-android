@@ -31,7 +31,7 @@ internal sealed interface ExchangeStatusNotification {
     data class NeedVerification(val onGoToProviderClick: () -> Unit) : CommonNotification(
         messageUM = TangemMessageUM(
             id = "express_need_verification",
-            variant = TangemMessageBanner.Variant.Default,
+            variant = TangemMessageBanner.Variant.Light,
             shouldShowGlowRing = true,
             title = resourceReference(R.string.express_exchange_notification_verification_title),
             subtitle = resourceReference(R.string.express_exchange_notification_verification_text),
@@ -79,7 +79,7 @@ internal sealed interface ExchangeStatusNotification {
     ) : CommonNotification(
         messageUM = TangemMessageUM(
             id = "express_long_time_exchange",
-            variant = TangemMessageBanner.Variant.Default,
+            variant = TangemMessageBanner.Variant.Light,
             shouldShowGlowRing = true,
             title = resourceReference(R.string.express_exchange_notification_long_transaction_time_title),
             subtitle = resourceReference(R.string.express_exchange_notification_long_transaction_time_text),

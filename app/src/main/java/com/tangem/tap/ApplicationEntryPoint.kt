@@ -3,6 +3,7 @@ package com.tangem.tap
 import androidx.hilt.work.HiltWorkerFactory
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.handlers.opentelemetry.OpenTelemetryMetricsHolder
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import com.tangem.lib.auth.devicekey.DeviceKeyManager
@@ -54,6 +55,8 @@ internal interface ApplicationEntryPoint {
     fun getOpenTelemetryMetricsHolder(): OpenTelemetryMetricsHolder
 
     fun getAnalyticsEventHandler(): AnalyticsEventHandler
+
+    fun getAnalyticsExceptionHandler(): AnalyticsExceptionHandler
 
     fun getAnalyticsHandlersInitializer(): AnalyticsHandlersInitializer
 

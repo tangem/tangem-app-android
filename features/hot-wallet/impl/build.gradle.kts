@@ -24,6 +24,7 @@ dependencies {
     api(projects.core.ui)
     api(projects.core.utils)
     implementation(projects.core.analytics.models)
+    implementation(projects.core.configToggles)
     implementation(projects.core.res)
 
     /** Domain */
@@ -77,7 +78,6 @@ dependencies {
     api(deps.kotlin.immutable.collections)
     implementation(deps.arrow.core)
     implementation(deps.kotlin.serialization)
-    implementation(deps.firebase.crashlytics)
 
     /** DI */
     implementation(deps.hilt.android)
