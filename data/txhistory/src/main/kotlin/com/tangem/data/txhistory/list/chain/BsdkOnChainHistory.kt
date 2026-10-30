@@ -2,6 +2,7 @@
 
 package com.tangem.data.txhistory.list.chain
 
+import com.tangem.data.txhistory.list.FinishedJointTransfers
 import com.tangem.data.txhistory.list.chain.BsdkOnChainHistory.Companion.AUTO_LOAD_MORE_TARGET_COUNT
 import com.tangem.data.txhistory.list.mergeTxHistoryInfos
 import com.tangem.domain.models.network.TxInfo
@@ -28,10 +29,14 @@ import java.math.BigDecimal
 
 private typealias HistoryTxBatchAction = BatchAction<Int, TxHistoryListConfig, Nothing>
 
-/** On-chain backbone backed by the blockchain SDK history, with the express overlay windowed to the loaded page. */
+/**
+ * On-chain backbone backed by the blockchain SDK history, with the express history and the finished joint transfers
+ * windowed to the loaded page.
+ */
 internal class BsdkOnChainHistory @AssistedInject constructor(
     private val repository: TxHistoryRepositoryV2,
     private val currencyUSDQuote: GetCurrencyUSDQuoteUseCase,
+    private val finishedJointTransfers: FinishedJointTransfers,
     @Assisted private val env: HistoryEnvironment,
 ) : OnChainHistory {
     private val userWalletId get() = env.userWalletId
@@ -113,14 +118,22 @@ internal class BsdkOnChainHistory @AssistedInject constructor(
     }
 
     private fun buildState(batchState: BatchListState<Int, PaginationWrapper<TxInfo>>): Flow<HistoryState> {
-        val mergedFlow: Flow<List<TxHistoryInfo>> = repository.getExpressHistory(
-            userWalletId = userWalletId,
-            currency = currency,
-            fromOnChainTimestampMillis = oldestLoadedTimestamp(batchState),
-        ).map { express ->
+        val oldestLoadedTimestamp = oldestLoadedTimestamp(batchState)
+        val mergedFlow: Flow<List<TxHistoryInfo>> = combine(
+            flow = repository.getExpressHistory(
+                userWalletId = userWalletId,
+                currency = currency,
+                fromOnChainTimestampMillis = oldestLoadedTimestamp,
+            ),
+            flow2 = finishedJointTransfers.observe(
+                userWalletId = userWalletId,
+                currency = currency,
+                fromFinishedAtMillis = oldestLoadedTimestamp,
+            ),
+        ) { express, joint ->
             val onChain = batchState.data
                 .flatMap { it.data.items }
-            mergeTxHistoryInfos(onChain = onChain, express = express, currency = currency)
+            mergeTxHistoryInfos(onChain = onChain, express = express, currency = currency, joint = joint)
         }
 
         return when (batchState.status) {

@@ -61,7 +61,7 @@ internal fun ProviderItemBlockSimple(state: ProviderState, modifier: Modifier = 
     ) {
         Icon(
             painter = painterResource(id = R.drawable.ic_stack_new_24),
-            tint = TangemTheme.colors.icon.accent,
+            tint = TangemTheme.colors3.icon.accent.blue,
             contentDescription = null,
             modifier = Modifier.size(24.dp),
         )
@@ -69,7 +69,7 @@ internal fun ProviderItemBlockSimple(state: ProviderState, modifier: Modifier = 
         Text(
             text = stringResourceSafe(R.string.express_provider),
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         SpacerWMax()
         SimpleProviderTrailing(state = state)
@@ -107,12 +107,12 @@ private fun SimpleProviderTrailing(state: ProviderState) {
             Text(
                 text = state.name,
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.tertiary,
+                color = TangemTheme.colors3.text.secondary,
                 modifier = Modifier.padding(start = 6.dp),
             )
             Icon(
                 painter = painterResource(id = R.drawable.ic_chevron_24),
-                tint = TangemTheme.colors.icon.secondary,
+                tint = TangemTheme.colors3.icon.secondary,
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
             )
@@ -128,7 +128,7 @@ private fun SimpleProviderTrailing(state: ProviderState) {
             Text(
                 text = state.alertText.resolveReference(),
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.warning,
+                color = TangemTheme.colors3.text.accent.red,
             )
         }
         is ProviderState.Empty -> Unit
@@ -139,13 +139,13 @@ private fun SimpleProviderTrailing(state: ProviderState) {
 private fun SimpleBestRateBadge(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .background(TangemTheme.colors.stroke.transparency, RoundedCornerShape(120.dp))
+            .background(TangemTheme.colors3.bg.secondary, RoundedCornerShape(120.dp))
             .padding(1.5.dp)
-            .background(TangemTheme.colors.icon.accent, RoundedCornerShape(120.dp)),
+            .background(TangemTheme.colors3.bg.accent.blue, RoundedCornerShape(120.dp)),
     ) {
         Icon(
             painter = painterResource(id = R.drawable.ic_rounded_star_24),
-            tint = TangemTheme.colors.icon.constant,
+            tint = TangemTheme.colors3.icon.staticDark,
             contentDescription = null,
             modifier = Modifier
                 .padding(horizontal = 2.dp, vertical = 2.dp)

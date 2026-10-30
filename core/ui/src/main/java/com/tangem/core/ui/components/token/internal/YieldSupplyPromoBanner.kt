@@ -56,7 +56,7 @@ internal fun YieldSupplyPromoBanner(state: PromoBannerState.Content, modifier: M
             Icon(
                 imageVector = ImageVector.vectorResource(id = R.drawable.ic_analytics_up_24),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.accent,
+                tint = TangemTheme.colors3.icon.accent.blue,
                 modifier = Modifier
                     .padding(end = 8.dp)
                     .size(16.dp),
@@ -64,7 +64,7 @@ internal fun YieldSupplyPromoBanner(state: PromoBannerState.Content, modifier: M
             Text(
                 text = state.title.resolveReference(),
                 style = TangemTheme.typography.caption1,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
                 modifier = Modifier
                     .weight(1f)
                     .padding(end = 8.dp),
@@ -72,7 +72,7 @@ internal fun YieldSupplyPromoBanner(state: PromoBannerState.Content, modifier: M
             Icon(
                 painter = painterResource(id = R.drawable.ic_close_24),
                 contentDescription = null,
-                tint = TangemTheme.colors.text.secondary,
+                tint = TangemTheme.colors3.text.secondary,
                 modifier = Modifier
                     .size(16.dp)
                     .clickable(

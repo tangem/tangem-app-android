@@ -13,7 +13,7 @@ class ExpressErrorConverter(
     @Suppress("MagicNumber", "CyclomaticComplexMethod")
     override fun convert(value: String): ExpressError {
         try {
-            val error: ExpressErrorDTO = jsonAdapter.fromJson(value)?.error ?: return ExpressError.UnknownError
+            val error: ExpressErrorDTO = jsonAdapter.fromJson(value)?.error ?: return ExpressError.UnknownError()
 
             return when (error.code) {
                 2010 -> ExpressError.BadRequest(code = error.code)
@@ -28,6 +28,7 @@ class ExpressErrorConverter(
                 2250 -> error.toTooSmallAmountError()
                 2251 -> error.toTooBigAmountError()
                 2260 -> error.toNotEnoughAllowanceError()
+                2264 -> ExpressError.ExchangeProviderAddressBannedByAmlError(code = error.code)
                 2270 -> ExpressError.NotEnoughBalanceError(code = error.code)
                 2280 -> ExpressError.InvalidAddressError(code = error.code)
                 2290 -> error.toInvalidFromDecimalsError()
@@ -39,7 +40,7 @@ class ExpressErrorConverter(
                 else -> ExpressError.DataError(error.code, error.description)
             }
         } catch (e: Exception) {
-            return ExpressError.UnknownError
+            return ExpressError.UnknownError()
         }
     }
 

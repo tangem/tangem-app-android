@@ -34,6 +34,19 @@ internal class StakeKitEnumFallbackAdaptersTest {
     private fun decode(moshi: Moshi, enumClass: Class<out Enum<*>>, json: String): Enum<*>? =
         moshi.adapter<Enum<*>>(enumClass as Type).fromJson(json)
 
+    private fun allEnumModels() = listOf(
+        UnknownModel(BalanceTypeDTO::class.java, BalanceTypeDTO.UNKNOWN),
+        UnknownModel(NetworkTypeDTO::class.java, NetworkTypeDTO.UNKNOWN),
+        UnknownModel(RewardClaimingDTO::class.java, RewardClaimingDTO.UNKNOWN),
+        UnknownModel(RewardScheduleDTO::class.java, RewardScheduleDTO.UNKNOWN),
+        UnknownModel(RewardTypeDTO::class.java, RewardTypeDTO.UNKNOWN),
+        UnknownModel(StakingActionStatusDTO::class.java, StakingActionStatusDTO.UNKNOWN),
+        UnknownModel(StakingActionTypeDTO::class.java, StakingActionTypeDTO.UNKNOWN),
+        UnknownModel(StakingTransactionStatusDTO::class.java, StakingTransactionStatusDTO.UNKNOWN),
+        UnknownModel(StakingTransactionTypeDTO::class.java, StakingTransactionTypeDTO.UNKNOWN),
+        UnknownModel(ValidatorStatusDTO::class.java, ValidatorStatusDTO.UNKNOWN),
+    )
+
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class KnownValues {
@@ -90,18 +103,24 @@ internal class StakeKitEnumFallbackAdaptersTest {
             assertThat(actual).isEqualTo(model.unknown)
         }
 
-        private fun provideTestModels() = listOf(
-            UnknownModel(BalanceTypeDTO::class.java, BalanceTypeDTO.UNKNOWN),
-            UnknownModel(NetworkTypeDTO::class.java, NetworkTypeDTO.UNKNOWN),
-            UnknownModel(RewardClaimingDTO::class.java, RewardClaimingDTO.UNKNOWN),
-            UnknownModel(RewardScheduleDTO::class.java, RewardScheduleDTO.UNKNOWN),
-            UnknownModel(RewardTypeDTO::class.java, RewardTypeDTO.UNKNOWN),
-            UnknownModel(StakingActionStatusDTO::class.java, StakingActionStatusDTO.UNKNOWN),
-            UnknownModel(StakingActionTypeDTO::class.java, StakingActionTypeDTO.UNKNOWN),
-            UnknownModel(StakingTransactionStatusDTO::class.java, StakingTransactionStatusDTO.UNKNOWN),
-            UnknownModel(StakingTransactionTypeDTO::class.java, StakingTransactionTypeDTO.UNKNOWN),
-            UnknownModel(ValidatorStatusDTO::class.java, ValidatorStatusDTO.UNKNOWN),
-        )
+        private fun provideTestModels() = allEnumModels()
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class NullValues {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN explicit json null WHEN decoded with fallback adapters THEN returns null`(model: UnknownModel) {
+            // Act
+            val actual = decode(moshi, model.enumClass, "null")
+
+            // Assert
+            assertThat(actual).isNull()
+        }
+
+        private fun provideTestModels() = allEnumModels()
     }
 
     @Nested
@@ -134,6 +153,30 @@ internal class StakeKitEnumFallbackAdaptersTest {
             val expected = YieldDTO.ValidatorDTO(
                 address = "v1",
                 status = ValidatorStatusDTO.UNKNOWN,
+                name = "Node",
+                image = null,
+                website = null,
+                apr = null,
+                commission = null,
+                stakedBalance = null,
+                votingPower = null,
+                preferred = true,
+            )
+            assertThat(actual).isEqualTo(expected)
+        }
+
+        @Test
+        fun `GIVEN validator with null status WHEN decoded THEN status is null and rest kept`() {
+            // Arrange
+            val json = """{"address":"v1","status":null,"name":"Node","preferred":true}"""
+
+            // Act
+            val actual = dtoMoshi.adapter(YieldDTO.ValidatorDTO::class.java).fromJson(json)
+
+            // Assert
+            val expected = YieldDTO.ValidatorDTO(
+                address = "v1",
+                status = null,
                 name = "Node",
                 image = null,
                 website = null,

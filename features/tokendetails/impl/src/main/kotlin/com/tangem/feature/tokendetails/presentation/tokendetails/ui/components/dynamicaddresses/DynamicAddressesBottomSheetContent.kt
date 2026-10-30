@@ -59,7 +59,7 @@ internal fun DynamicAddressesEnableContent(content: DynamicAddressesBottomSheetC
             painter = painterResource(id = CoreR.drawable.ic_dynamic_addresses_bottomsheet_enable_top),
             contentDescription = null,
             modifier = Modifier.size(44.dp),
-            tint = TangemTheme.colors.icon.accent,
+            tint = TangemTheme.colors3.icon.accent.blue,
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -67,7 +67,7 @@ internal fun DynamicAddressesEnableContent(content: DynamicAddressesBottomSheetC
         Text(
             text = stringResourceSafe(id = R.string.dynamic_addresses),
             style = TangemTheme.typography.h3,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
         )
 
@@ -76,7 +76,7 @@ internal fun DynamicAddressesEnableContent(content: DynamicAddressesBottomSheetC
         Text(
             text = stringResourceSafe(id = R.string.dynamic_addresses_enter_subtitle),
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
         )
 
@@ -214,7 +214,7 @@ private fun DisableHeader() {
         painter = painterResource(id = CoreR.drawable.ic_dynamic_addresses_bottomsheet_enable_unavailable),
         contentDescription = null,
         modifier = Modifier.size(44.dp),
-        tint = TangemTheme.colors.icon.attention,
+        tint = TangemTheme.colors3.icon.accent.yellow,
     )
 
     Spacer(modifier = Modifier.height(12.dp))
@@ -222,7 +222,7 @@ private fun DisableHeader() {
     Text(
         text = stringResourceSafe(id = R.string.dynamic_addresses_disable_title),
         style = TangemTheme.typography.h3,
-        color = TangemTheme.colors.text.primary1,
+        color = TangemTheme.colors3.text.primary,
         textAlign = TextAlign.Center,
     )
 
@@ -231,7 +231,7 @@ private fun DisableHeader() {
     Text(
         text = stringResourceSafe(id = R.string.dynamic_addresses_disable_description),
         style = TangemTheme.typography.body2,
-        color = TangemTheme.colors.text.secondary,
+        color = TangemTheme.colors3.text.secondary,
         textAlign = TextAlign.Center,
     )
 }
@@ -243,7 +243,7 @@ private fun DisableFeeBlock(feeState: DisableFeeState, onReadMoreClick: () -> Un
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    color = TangemTheme.colors.background.action,
+                    color = TangemTheme.colors3.bg.secondary,
                     shape = TangemTheme.shapes.roundedCornersXMedium,
                 )
                 .padding(12.dp),
@@ -253,7 +253,7 @@ private fun DisableFeeBlock(feeState: DisableFeeState, onReadMoreClick: () -> Un
             Text(
                 text = stringResourceSafe(id = R.string.common_network_fee_title),
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
             when (feeState) {
                 is DisableFeeState.Loading -> TextShimmer(
@@ -275,14 +275,14 @@ private fun DisableFeeBlock(feeState: DisableFeeState, onReadMoreClick: () -> Un
                     Text(
                         text = feeState.fiatFormatted,
                         style = TangemTheme.typography.body2,
-                        color = TangemTheme.colors.text.tertiary,
+                        color = TangemTheme.colors3.text.secondary,
                         modifier = Modifier.padding(start = 4.dp),
                     )
                 }
                 is DisableFeeState.Error -> Text(
                     text = "\u2014",
                     style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.primary1,
+                    color = TangemTheme.colors3.text.primary,
                 )
             }
         }
@@ -298,7 +298,7 @@ private fun DisableFeeDescription(onReadMoreClick: () -> Unit) {
     val fullText = stringResourceSafe(id = R.string.dynamic_addresses_disable_fee_description)
 
     val annotatedString = buildAnnotatedString {
-        withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
+        withStyle(SpanStyle(color = TangemTheme.colors3.text.secondary)) {
             append(fullText)
             append(" ")
         }
@@ -308,7 +308,7 @@ private fun DisableFeeDescription(onReadMoreClick: () -> Unit) {
                 linkInteractionListener = { onReadMoreClick() },
             ),
         ) {
-            withStyle(SpanStyle(color = TangemTheme.colors.text.accent)) {
+            withStyle(SpanStyle(color = TangemTheme.colors3.text.accent.blue)) {
                 append(readMoreText)
             }
         }
@@ -354,7 +354,7 @@ private fun ErrorContent(titleRes: Int, descriptionRes: Int, buttonTextRes: Int,
             painter = painterResource(id = CoreR.drawable.ic_dynamic_addresses_bottomsheet_enable_unavailable),
             contentDescription = null,
             modifier = Modifier.size(44.dp),
-            tint = TangemTheme.colors.icon.attention,
+            tint = TangemTheme.colors3.icon.accent.yellow,
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -362,7 +362,7 @@ private fun ErrorContent(titleRes: Int, descriptionRes: Int, buttonTextRes: Int,
         Text(
             text = stringResourceSafe(id = titleRes),
             style = TangemTheme.typography.h3,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             textAlign = TextAlign.Center,
         )
 
@@ -371,7 +371,7 @@ private fun ErrorContent(titleRes: Int, descriptionRes: Int, buttonTextRes: Int,
         Text(
             text = stringResourceSafe(id = descriptionRes),
             style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
         )
 
@@ -397,19 +397,19 @@ private fun FeatureItem(iconRes: Int, title: String, description: String) {
             painter = painterResource(id = iconRes),
             contentDescription = null,
             modifier = Modifier.size(24.dp),
-            tint = TangemTheme.colors.icon.accent,
+            tint = TangemTheme.colors3.icon.accent.blue,
         )
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
                 style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = description,
                 style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.secondary,
+                color = TangemTheme.colors3.text.secondary,
             )
         }
     }

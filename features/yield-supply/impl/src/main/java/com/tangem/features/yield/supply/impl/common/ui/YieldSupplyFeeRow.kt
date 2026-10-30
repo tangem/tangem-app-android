@@ -34,7 +34,7 @@ internal fun YieldSupplyFeeRow(
         Text(
             text = title.resolveReference(),
             style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
         )
         SpacerWMax()
         badge?.let { Label(state = LabelUM(text = it)) }
@@ -45,7 +45,7 @@ internal fun YieldSupplyFeeRow(
                 Text(
                     text = targetValue.resolveReference(),
                     style = TangemTheme.typography.body1,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = TangemTheme.colors3.text.secondary,
                     textAlign = TextAlign.End,
                 )
             } else {

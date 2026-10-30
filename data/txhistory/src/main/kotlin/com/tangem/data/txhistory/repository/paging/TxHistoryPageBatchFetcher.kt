@@ -6,6 +6,7 @@ import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.exception.EndOfPaginationException
 import com.tangem.pagination.fetcher.BatchFetcher
+import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +30,7 @@ internal class TxHistoryPageBatchFetcher<TRequestParams : Any, TData : Paginatio
             params = requestParams,
         )
 
-        val res = runCatching {
+        val res = runSuspendCatching {
             subFetcher.fetch(request = req, lastResult = null)
         }.getOrElse { throwable ->
             currentCoroutineContext().ensureActive()
@@ -60,7 +61,7 @@ internal class TxHistoryPageBatchFetcher<TRequestParams : Any, TData : Paginatio
             last
         }
 
-        val res = runCatching {
+        val res = runSuspendCatching {
             subFetcher.fetch(request = req, lastResult = lastResult)
         }.getOrElse { throwable ->
             currentCoroutineContext().ensureActive()

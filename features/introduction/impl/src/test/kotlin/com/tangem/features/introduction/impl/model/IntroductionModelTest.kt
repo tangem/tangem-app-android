@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.api.OneTimeEventStore
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
@@ -19,7 +20,6 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.media.LoopingVideoController
 import com.tangem.core.media.VideoFrameSize
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.domain.analytics.repository.AnalyticsRepository
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.core.analytics.models.Basic
@@ -96,8 +96,8 @@ internal class IntroductionModelTest {
     private val cardScanner: IntroductionCardScanner = mockk(relaxed = true)
     private val mobileWalletCreator: IntroductionMobileWalletCreator = mockk(relaxed = true)
     private val appsFlyerRepository: AppsFlyerRepository = mockk()
-    private val analyticsRepository: AnalyticsRepository = mockk(relaxed = true)
-    private var entryReasonTracker = IntroductionEntryReasonTracker(analyticsRepository, analyticsEventHandler)
+    private val oneTimeEventStore: OneTimeEventStore = mockk()
+    private var entryReasonTracker = IntroductionEntryReasonTracker(oneTimeEventStore, analyticsEventHandler)
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
 
@@ -119,13 +119,13 @@ internal class IntroductionModelTest {
             cardScanner,
             mobileWalletCreator,
             appsFlyerRepository,
-            analyticsRepository,
+            oneTimeEventStore,
             generateBuyTangemCardLinkUseCase,
             uiMessageSender,
         )
         coEvery { appsFlyerRepository.getConversionData() } returns null
-        coEvery { analyticsRepository.checkIsEventSent(any()) } returns true
-        entryReasonTracker = IntroductionEntryReasonTracker(analyticsRepository, analyticsEventHandler)
+        coEvery { oneTimeEventStore.markSent(any()) } returns true
+        entryReasonTracker = IntroductionEntryReasonTracker(oneTimeEventStore, analyticsEventHandler)
         every { isHotWalletCreationSupported() } returns true
         every { socialLoginHandler.provider } returns SocialLoginProvider.Google
         every { socialLoginHandler.createWalletOption(any(), any(), any()) } answers {
@@ -210,7 +210,7 @@ internal class IntroductionModelTest {
         @Test
         fun `GIVEN the welcome was never shown WHEN model created THEN the opening reports the first launch`() {
             // Arrange
-            coEvery { analyticsRepository.checkIsEventSent("introduction_welcome_opened") } returns false
+            coEvery { oneTimeEventStore.markSent("introduction_welcome_opened") } returns false
 
             // Act
             createModel()
@@ -219,7 +219,7 @@ internal class IntroductionModelTest {
             assertThat(sentEvents).containsExactly(
                 IntroductionProcess.ScreenOpened(IntroductionProcess.ScreenOpened.EntryReason.FirstLaunch),
             )
-            coVerify(exactly = 1) { analyticsRepository.setIsEventSent("introduction_welcome_opened") }
+            coVerify(exactly = 1) { oneTimeEventStore.markSent("introduction_welcome_opened") }
         }
 
         @Test
@@ -229,7 +229,6 @@ internal class IntroductionModelTest {
 
             // Assert
             assertThat(sentEvents).containsExactly(SCREEN_OPENED)
-            coVerify(exactly = 0) { analyticsRepository.setIsEventSent(any()) }
         }
 
         @Test
@@ -262,7 +261,7 @@ internal class IntroductionModelTest {
         @Test
         fun `GIVEN the last wallet was forgotten WHEN model created THEN the opening reports it regardless of history`() {
             // Arrange
-            coEvery { analyticsRepository.checkIsEventSent(any()) } returns false
+            coEvery { oneTimeEventStore.markSent(any()) } returns false
 
             // Act
             createModel(entryReason = AppRoute.Home.EntryReason.LastWalletForgotten)

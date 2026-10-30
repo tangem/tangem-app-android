@@ -61,6 +61,7 @@ internal open class TxDetailsConverterTestBase {
     protected val secondAccount: Account.CryptoPortfolio =
         MockAccounts.createAccount(derivationIndex = 2, name = "Savings")
     protected val ownPaymentAccount: Account.Payment = Account.Payment(MockAccounts.userWalletId)
+    protected val ownMoneyAccount: Account.Money = Account.Money(MockAccounts.userWalletId)
     protected val copiedAddresses = mutableListOf<String>()
     protected val openedUrls = mutableListOf<String>()
 

@@ -80,7 +80,6 @@ internal class SetTokenSentimentTransformerTest {
         aiInsight = mockk(),
         tokenSentiment = TokenSentimentUM.Loading,
         bottomButton = BottomButtonUM.Loading,
-        onPeriodClick = {},
         onInfoClick = {},
         onCloseClick = {},
     )

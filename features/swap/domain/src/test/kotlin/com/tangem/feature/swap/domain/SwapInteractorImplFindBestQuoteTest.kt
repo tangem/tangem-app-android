@@ -1345,6 +1345,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 yieldModuleAddressProvider.getOrFetch(any(), any())
             } returns yieldProxyAddress
             coEvery { walletManagersFacade.isSwapSpenderAllowed(any(), any(), any()) } returns true
+            coEvery { walletManagersFacade.isSwapTargetAllowed(any(), any(), any()) } returns true
         }
 
         @Test
@@ -1360,7 +1361,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 yieldSupplyAllowedToSpend = true,
             )
             val toStatus = buildSwapCurrencyStatus(networkRawId = btcNetwork)
-            val quoteModel = buildQuoteModel()
+            val quoteModel = buildQuoteModel(allowanceContract = "0xDexRouterFromQuote")
             val swapData = buildSwapDataModelDex()
 
             coEvery {
@@ -1600,6 +1601,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
         @BeforeEach
         fun enableYieldSwap() {
             coEvery { yieldModuleAddressProvider.getOrFetch(any(), any()) } returns yieldProxyAddress
+            coEvery { walletManagersFacade.isSwapTargetAllowed(any(), any(), any()) } returns true
         }
 
         private fun yieldTokenStatus(yieldActive: Boolean = true) = buildSwapCurrencyStatus(
@@ -1639,6 +1641,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
             // Given — yield active, router NOT in the SwapExecutionRegistry (MoonPay/swaps.xyz)
             val dexProvider = buildSwapProvider(ExchangeProviderType.DEX)
             stubDexQuote(dexProvider.providerId, notAllowedRouter)
+            stubExchangeData(dexProvider.providerId)
             coEvery { walletManagersFacade.isSwapSpenderAllowed(any(), any(), notAllowedRouter) } returns false
 
             // When
@@ -1685,6 +1688,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
             stubDexQuote(allowedProvider.providerId, allowedRouter)
             stubDexQuote(blockedProvider.providerId, notAllowedRouter)
             stubExchangeData(allowedProvider.providerId)
+            stubExchangeData(blockedProvider.providerId)
             coEvery { walletManagersFacade.isSwapSpenderAllowed(any(), any(), allowedRouter) } returns true
             coEvery { walletManagersFacade.isSwapSpenderAllowed(any(), any(), notAllowedRouter) } returns false
 

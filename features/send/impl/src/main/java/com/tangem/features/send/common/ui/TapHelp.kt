@@ -38,17 +38,17 @@ internal fun LazyListScope.tapHelp(isDisplay: Boolean, modifier: Modifier = Modi
                     .animateItem()
                     .padding(top = 20.dp),
             ) {
-                val background = TangemTheme.colors.button.secondary
+                val background = TangemTheme.colors3.bg.transparent.secondary
                 Icon(
                     painter = painterResource(id = R.drawable.ic_send_hint_shape_12),
-                    tint = TangemTheme.colors.button.secondary,
+                    tint = TangemTheme.colors3.bg.transparent.secondary,
                     contentDescription = null,
                     modifier = Modifier,
                 )
                 Text(
                     text = stringResourceSafe(id = R.string.send_summary_tap_hint),
                     style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.secondary,
+                    color = TangemTheme.colors3.text.secondary,
                     modifier = Modifier
                         .clip(TangemTheme.shapes.roundedCornersXMedium)
                         .background(background)

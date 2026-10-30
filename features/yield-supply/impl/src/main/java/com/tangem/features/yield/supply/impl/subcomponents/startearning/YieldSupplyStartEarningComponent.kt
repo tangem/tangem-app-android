@@ -96,7 +96,7 @@ internal class YieldSupplyStartEarningComponent(
                     imageVector = ImageVector.vectorResource(R.drawable.ic_aave_36),
                     contentDescription = null,
                     modifier = Modifier
-                        .background(TangemTheme.colors.background.tertiary, RoundedCornerShape(51.dp))
+                        .background(TangemTheme.colors3.bg.primary, RoundedCornerShape(51.dp))
                         .padding(3.dp)
                         .size(48.dp)
                         .align(Alignment.CenterEnd),

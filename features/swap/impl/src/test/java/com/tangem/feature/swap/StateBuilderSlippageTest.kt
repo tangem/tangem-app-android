@@ -31,7 +31,6 @@ internal class StateBuilderSlippageTest {
         appCurrencyProvider = Provider { AppCurrency.Default },
         isAccountsModeProvider = Provider { false },
         isEvmGaslessFeeSupportedForNetwork = mockk(),
-        isCustomSlippageEnabled = true,
     )
 
     @ParameterizedTest

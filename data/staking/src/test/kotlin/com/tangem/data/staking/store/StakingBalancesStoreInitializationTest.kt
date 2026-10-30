@@ -7,7 +7,7 @@ import com.tangem.common.test.data.staking.MockYieldBalanceWrapperDTOFactory
 import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.data.staking.toDomain
 import com.tangem.core.local.datastore.RuntimeSharedStore
-import com.tangem.domain.models.staking.StakingBalance
+import com.tangem.domain.staking.model.StakingBalance
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.every
 import io.mockk.mockk

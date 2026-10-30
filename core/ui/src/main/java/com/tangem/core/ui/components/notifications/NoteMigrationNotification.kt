@@ -74,8 +74,8 @@ fun NoteMigrationNotification(config: NotificationConfig, modifier: Modifier = M
                 colors = ButtonColors(
                     containerColor = Light2,
                     contentColor = Dark6,
-                    disabledContainerColor = TangemTheme.colors.button.disabled,
-                    disabledContentColor = TangemTheme.colors.text.disabled,
+                    disabledContainerColor = TangemTheme.colors3.bg.disabled,
+                    disabledContentColor = TangemTheme.colors3.text.tertiary,
                 ),
                 enabled = true,
                 textStyle = TangemTheme.typography.subtitle1,

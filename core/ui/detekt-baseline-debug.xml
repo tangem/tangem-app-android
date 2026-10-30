@@ -1,8 +1,0 @@
-<?xml version="1.0" ?>
-<SmellBaseline>
-  <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>CastNullableToNonNullableType:DialogFullScreen.kt$as</ID>
-    <ID>CastNullableToNonNullableType:FullScreen.kt$FullScreenLayout$as</ID>
-  </CurrentIssues>
-</SmellBaseline>

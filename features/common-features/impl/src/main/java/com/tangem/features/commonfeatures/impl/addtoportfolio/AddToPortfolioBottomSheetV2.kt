@@ -55,7 +55,7 @@ internal fun AddToPortfolioBottomSheetV2(
             content = TangemBottomSheetConfigContent.Empty,
         ),
         type = type,
-        containerColor = TangemTheme.colors2.surface.level2,
+        containerColor = TangemTheme.colors3.bg.primary,
         title = {
             AddToPortfolioBottomSheetTitle(
                 stack = stack,
@@ -128,11 +128,11 @@ private fun AddToPortfolioBottomSheetTitle(
             Icon(
                 imageVector = ImageVector.vectorResource(id = R.drawable.ic_close_24),
                 contentDescription = null,
-                tint = TangemTheme.colors2.graphic.neutral.primary,
+                tint = TangemTheme.colors3.icon.primary,
                 modifier = Modifier
                     .size(44.dp)
                     .background(
-                        color = TangemTheme.colors2.button.backgroundSecondary,
+                        color = TangemTheme.colors3.bg.transparent.secondary,
                         shape = CircleShape,
                     )
                     .clickableSingle(onClick = onCloseClick)

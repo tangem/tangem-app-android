@@ -39,6 +39,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_info_20
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.accounts.AccountDetailsScreenTestTags
 import com.tangem.features.account.details.entity.AccountDetailsUM
@@ -70,16 +72,7 @@ internal fun AccountDetailsContent(state: AccountDetailsUM, modifier: Modifier =
                     end = 16.dp,
                 ),
         ) {
-            AccountRow(state)
-            if (state.isPendingActivation) {
-                SpacerH(16.dp)
-                Text(
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                    text = stringResourceSafe(R.string.account_details_joint_pending_description),
-                    style = TangemTheme.typography3.caption.medium,
-                    color = TangemTheme.colors3.text.tertiary,
-                )
-            }
+            AccountBlock(state)
             if (state.members != null || state.isManageTokensAvailable) {
                 SpacerH(16.dp)
                 AccountActionsBlock(state)
@@ -190,12 +183,19 @@ private fun MembersRow(state: AccountDetailsUM.MembersRowUM) {
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        Text(
-            text = state.membersCount.resolveReference(),
-            color = TangemTheme.colors3.text.secondary,
-            style = TangemTheme.typography3.body.medium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+        state.progress?.let { progress ->
+            Text(
+                text = progress.resolveReference(),
+                color = TangemTheme.colors3.text.secondary,
+                style = TangemTheme.typography3.body.medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Icon(
+            imageVector = ImageVector.vectorResource(id = R.drawable.ic_chevron_right_24),
+            tint = TangemTheme.colors3.icon.tertiary,
+            contentDescription = null,
         )
     }
 }
@@ -254,13 +254,63 @@ private fun NetworksInfoText(state: AccountDetailsUM.NetworksInfoUM) {
 }
 
 @Composable
+private fun AccountBlock(state: AccountDetailsUM) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(TangemTheme.colors3.bg.secondary),
+    ) {
+        val requiredApprovals = state.requiredApprovals
+        DividerContainer(showDivider = requiredApprovals != null) {
+            AccountRow(state)
+        }
+        if (requiredApprovals != null) {
+            RequiredApprovalsRow(requiredApprovals)
+        }
+    }
+}
+
+@Composable
+private fun RequiredApprovalsRow(state: AccountDetailsUM.RequiredApprovalsUM) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = state.onInfoClick)
+            .padding(all = 12.dp)
+            .testTag(AccountDetailsScreenTestTags.REQUIRED_APPROVALS_ROW),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            modifier = Modifier.weight(1f),
+            text = stringResourceSafe(R.string.joint_account_invite_members_required_approvals),
+            color = TangemTheme.colors3.text.primary,
+            style = TangemTheme.typography3.body.medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = state.value.resolveReference(),
+            color = TangemTheme.colors3.text.secondary,
+            style = TangemTheme.typography3.body.medium,
+            maxLines = 1,
+        )
+        Icon(
+            modifier = Modifier.size(20.dp),
+            imageVector = Icons.ic_info_20,
+            tint = TangemTheme.colors3.icon.tertiary,
+            contentDescription = null,
+        )
+    }
+}
+
+@Composable
 private fun AccountRow(state: AccountDetailsUM) {
     val onEditClick = state.onAccountEditClick
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(TangemTheme.colors3.bg.secondary)
             .then(if (onEditClick != null) Modifier.clickable(onClick = onEditClick) else Modifier)
             .padding(all = 12.dp)
             .testTag(AccountDetailsScreenTestTags.EDIT_ACCOUNT_BUTTON),
@@ -269,7 +319,7 @@ private fun AccountRow(state: AccountDetailsUM) {
     ) {
         AccountRowLegacy(
             title = state.accountName,
-            subtitle = resourceReference(R.string.account_form_name),
+            subtitle = state.accountSubtitle,
             icon = state.accountIcon,
             modifier = Modifier.weight(1f),
             isReverse = true,
@@ -312,6 +362,7 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountD
             onManageTokensClick = {},
             archiveMode = archiveModeAvailable,
             accountName = stringReference(accountName),
+            accountSubtitle = stringReference("Account name"),
             accountIcon = portfolioIcon,
             isManageTokensAvailable = true,
         )
@@ -323,9 +374,14 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountD
             first.copy(
                 title = resourceReference(R.string.common_joint_account),
                 onAccountEditClick = null,
+                accountSubtitle = stringReference("5 members"),
+                requiredApprovals = AccountDetailsUM.RequiredApprovalsUM(
+                    value = stringReference("Any 2 of 5"),
+                    onInfoClick = {},
+                ),
                 members = AccountDetailsUM.MembersRowUM(
                     title = stringReference("Members"),
-                    membersCount = stringReference("5 people"),
+                    progress = null,
                     onClick = {},
                 ),
                 networksInfo = AccountDetailsUM.NetworksInfoUM(
@@ -337,9 +393,19 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountD
         )
         add(
             first.copy(
+                title = resourceReference(R.string.common_joint_account),
                 onAccountEditClick = null,
                 isManageTokensAvailable = false,
-                isPendingActivation = true,
+                accountSubtitle = stringReference("5 members"),
+                requiredApprovals = AccountDetailsUM.RequiredApprovalsUM(
+                    value = stringReference("Any 2 of 5"),
+                    onInfoClick = {},
+                ),
+                members = AccountDetailsUM.MembersRowUM(
+                    title = stringReference("Members"),
+                    progress = stringReference("1 of 5 joined"),
+                    onClick = {},
+                ),
             ),
         )
     },

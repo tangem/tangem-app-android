@@ -249,8 +249,8 @@ private fun BottomSheetVector(vector: MessageBottomSheetUM.Vector, modifier: Mod
 @Composable
 private fun BottomSheetChip(chip: MessageBottomSheetUM.Chip, modifier: Modifier = Modifier) {
     val color = when (chip.type) {
-        MessageBottomSheetUM.Chip.Type.Unspecified -> TangemTheme.colors.text.primary1
-        MessageBottomSheetUM.Chip.Type.Warning -> TangemTheme.colors.text.warning
+        MessageBottomSheetUM.Chip.Type.Unspecified -> TangemTheme.colors3.text.primary
+        MessageBottomSheetUM.Chip.Type.Warning -> TangemTheme.colors3.text.accent.red
     }
 
     Text(

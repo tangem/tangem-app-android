@@ -25,9 +25,6 @@ RWA-specific bindings are listed here.
   tab participates in search; see the contract KDoc in `FeedTabContributor`.
 - `app/build.gradle.kts` carries the Hilt aggregation line (`projects.features.feed.rwa.impl`).
 
-**The tab is behind a toggle.** `isRwaAndCategoriesEnabled` (TWI-1477) makes the contributor available.
-It is `"version": "undefined"` in `feature_toggles_config.json` — dev builds only.
-
 ```bash
 ./gradlew :features:feed:rwa:impl:compileDebugKotlin
 ./gradlew :features:feed:rwa:impl:testDebugUnitTest

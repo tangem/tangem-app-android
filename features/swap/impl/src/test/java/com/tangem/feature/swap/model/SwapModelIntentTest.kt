@@ -129,7 +129,7 @@ internal class SwapModelIntentTest : SwapModelTestBase() {
     }
 
     private fun stubResolvedPair(
-        pairs: Either<ExpressError, List<SwapPairLeast>> = Either.Left(ExpressError.UnknownError),
+        pairs: Either<ExpressError, List<SwapPairLeast>> = Either.Left(ExpressError.UnknownError()),
     ) {
         val wallet: UserWallet = mockk(relaxed = true) { every { walletId } returns userWalletId }
         coEvery {

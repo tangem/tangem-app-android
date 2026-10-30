@@ -38,7 +38,7 @@ import com.tangem.features.hotwallet.createmobilewallet.entity.CreateMobileWalle
 internal fun CreateMobileWalletContent(state: CreateMobileWalletUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(TangemTheme.colors.background.primary)
+            .background(TangemTheme.colors3.bg.primary)
             .fillMaxSize()
             .systemBarsPadding(),
     ) {
@@ -63,7 +63,7 @@ internal fun CreateMobileWalletContent(state: CreateMobileWalletUM, modifier: Mo
                     .fillMaxWidth(),
                 painter = painterResource(R.drawable.ic_create_mobile_wallet_56),
                 contentDescription = null,
-                tint = TangemTheme.colors.icon.informative,
+                tint = TangemTheme.colors3.icon.secondary,
             )
             Text(
                 modifier = Modifier
@@ -75,7 +75,7 @@ internal fun CreateMobileWalletContent(state: CreateMobileWalletUM, modifier: Mo
                     ),
                 text = stringResourceSafe(R.string.hw_create_title),
                 style = TangemTheme.typography.h2,
-                color = TangemTheme.colors.text.primary1,
+                color = TangemTheme.colors3.text.primary,
                 textAlign = TextAlign.Center,
             )
             FeatureBlock(
@@ -102,7 +102,7 @@ internal fun CreateMobileWalletContent(state: CreateMobileWalletUM, modifier: Mo
         }
         val termsTemplate = stringResourceSafe(R.string.onboarding_create_wallet_term_of_conditions_text)
         val termsLinkText = stringResourceSafe(R.string.disclaimer_title)
-        val termsLinkColor = TangemTheme.colors.text.accent
+        val termsLinkColor = TangemTheme.colors3.text.accent.blue
         Text(
             text = buildAnnotatedString {
                 appendWithStyledPlaceholder(template = termsTemplate) {
@@ -124,7 +124,7 @@ internal fun CreateMobileWalletContent(state: CreateMobileWalletUM, modifier: Mo
                     end = 16.dp,
                 ),
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
         )
         SecondaryButton(

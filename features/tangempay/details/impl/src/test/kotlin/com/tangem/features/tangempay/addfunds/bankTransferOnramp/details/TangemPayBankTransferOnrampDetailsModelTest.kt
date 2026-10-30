@@ -12,6 +12,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.account.BankCredentials
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.usecase.GetOnrampFeesUseCase
@@ -20,6 +21,7 @@ import com.tangem.features.tangempay.addfunds.bankTransferOnramp.details.TangemP
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesUM
 import com.tangem.features.tangempay.bankCredentials
 import com.tangem.features.tangempay.components.TangemPayBankTransferOnrampDetailsComponent
+import com.tangem.features.tangempay.components.TangemPayBankTransferOnrampDetailsComponent.FeeSource
 import com.tangem.features.tangempay.components.TangemPayBankTransferOnrampDetailsComponent.RequisiteField
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.onrampFee
@@ -30,6 +32,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.TestScope
@@ -40,6 +43,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.util.Locale
 
@@ -47,6 +52,7 @@ import java.util.Locale
 internal class TangemPayBankTransferOnrampDetailsModelTest {
 
     private val userWalletId = UserWalletId("1234567890ABCDEF")
+    private val product = TangemPayProduct.PAYMENT_ACCOUNT
 
     private val router: Router = mockk(relaxed = true)
     private val getOnrampFeesUseCase: GetOnrampFeesUseCase = mockk()
@@ -61,7 +67,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
         Locale.setDefault(Locale.US)
         clearMocks(router, getOnrampFeesUseCase, clipboardManager, shareManager)
         clearMocks(analytics)
-        coEvery { getOnrampFeesUseCase(userWalletId) } returns emptyList<AccountFee>().right()
+        coEvery { getOnrampFeesUseCase(userWalletId, product) } returns emptyList<AccountFee>().right()
     }
 
     @AfterEach
@@ -141,28 +147,73 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
     }
 
     @Test
-    fun `GIVEN onramp fees returned WHEN model created THEN fee rows shown`() = runTest {
+    fun `GIVEN onramp fees returned WHEN model created THEN fixed fee shown as amount and percentage as percent`() =
+        runTest {
+            // Arrange
+            coEvery { getOnrampFeesUseCase(userWalletId, product) } returns listOf(
+                onrampFee(amount = BigDecimal("1.00")),
+                onrampFee(
+                    type = "SPEI_ONRAMP",
+                    name = "SPEI",
+                    calculationType = AccountFee.CalculationType.PERCENTAGE,
+                    amount = BigDecimal("1"),
+                    currency = "MXN",
+                ),
+            ).right()
+
+            // Act
+            val model = createModel()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.fees).isEqualTo(
+                TangemPayOnrampFeesUM.Content(
+                    rows = persistentListOf(
+                        TangemPayOnrampFeesUM.FeeRow(type = "ACH_ONRAMP", title = stringReference("ACH"), value = "$1"),
+                        TangemPayOnrampFeesUM.FeeRow(type = "SPEI_ONRAMP", title = stringReference("SPEI"), value = "1%"),
+                    ),
+                ),
+            )
+        }
+
+    @ParameterizedTest
+    @EnumSource(TangemPayProduct::class)
+    fun `GIVEN catalogue fee source of a product WHEN model created THEN fees requested for that product`(
+        catalogueProduct: TangemPayProduct,
+    ) = runTest {
         // Arrange
-        coEvery { getOnrampFeesUseCase(userWalletId) } returns listOf(onrampFee(amount = BigDecimal("1.00"))).right()
+        coEvery { getOnrampFeesUseCase(userWalletId, catalogueProduct) } returns emptyList<AccountFee>().right()
 
         // Act
-        val model = createModel()
+        val model = createModel(feeSource = FeeSource.Catalogue(catalogueProduct))
         advanceUntilIdle()
 
         // Assert
-        assertThat(model.uiState.value.fees).isEqualTo(
-            TangemPayOnrampFeesUM.Content(
-                rows = persistentListOf(
-                    TangemPayOnrampFeesUM.FeeRow(type = "ACH_ONRAMP", title = stringReference("ACH"), value = "$1"),
-                ),
-            ),
+        coVerify(exactly = 1) { getOnrampFeesUseCase(userWalletId, catalogueProduct) }
+        model.onDestroy()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideRouteFeeModels")
+    fun `GIVEN route fee source WHEN model created THEN route fee shown and catalogue not requested`(
+        model: RouteFeeModel,
+    ) = runTest {
+        // Act
+        val detailsModel = createModel(
+            bankCredentials = bankCredentials(rail = model.rail, depositFee = model.depositFee),
+            feeSource = FeeSource.Route,
         )
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(detailsModel.uiState.value.fees).isEqualTo(TangemPayOnrampFeesUM.Content(rows = model.expectedRows))
+        coVerify(exactly = 0) { getOnrampFeesUseCase(any(), any()) }
     }
 
     @Test
     fun `GIVEN fees request fails WHEN retry succeeds THEN fee rows shown`() = runTest {
         // Arrange
-        coEvery { getOnrampFeesUseCase(userWalletId) } returnsMany listOf(
+        coEvery { getOnrampFeesUseCase(userWalletId, product) } returnsMany listOf(
             VisaApiError.Unspecified.left(),
             listOf(onrampFee(amount = BigDecimal("1.00"))).right(),
         )
@@ -176,7 +227,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
 
         // Assert
         assertThat(model.uiState.value.fees).isInstanceOf(TangemPayOnrampFeesUM.Content::class.java)
-        coVerify(exactly = 2) { getOnrampFeesUseCase(userWalletId) }
+        coVerify(exactly = 2) { getOnrampFeesUseCase(userWalletId, product) }
     }
 
     @Test
@@ -185,7 +236,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
             // Arrange
             val pending = CompletableDeferred<Either<VisaApiError, List<AccountFee>>>()
             var calls = 0
-            coEvery { getOnrampFeesUseCase(userWalletId) } coAnswers {
+            coEvery { getOnrampFeesUseCase(userWalletId, product) } coAnswers {
                 calls++
                 if (calls == 1) VisaApiError.Unspecified.left() else pending.await()
             }
@@ -200,7 +251,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
 
             // Assert
             assertThat(model.uiState.value.fees).isEqualTo(TangemPayOnrampFeesUM.Loading)
-            coVerify(exactly = 2) { getOnrampFeesUseCase(userWalletId) }
+            coVerify(exactly = 2) { getOnrampFeesUseCase(userWalletId, product) }
             pending.complete(emptyList<AccountFee>().right())
             advanceUntilIdle()
             model.onDestroy()
@@ -256,21 +307,46 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
         verify(exactly = 1) { router.pop(any()) }
     }
 
-    private fun TestScope.createModel(bankCredentials: BankCredentials = bankCredentials()) =
-        TangemPayBankTransferOnrampDetailsModel(
-            paramsContainer = MutableParamsContainer(
-                TangemPayBankTransferOnrampDetailsComponent.Params(
-                    userWalletId = userWalletId,
-                    bankCredentials = bankCredentials,
-                    analytics = analytics,
-                ),
+    private fun TestScope.createModel(
+        bankCredentials: BankCredentials = bankCredentials(),
+        feeSource: FeeSource = FeeSource.Catalogue(product),
+    ) = TangemPayBankTransferOnrampDetailsModel(
+        paramsContainer = MutableParamsContainer(
+            TangemPayBankTransferOnrampDetailsComponent.Params(
+                userWalletId = userWalletId,
+                bankCredentials = bankCredentials,
+                feeSource = feeSource,
+                analytics = analytics,
             ),
-            dispatchers = createTestingCoroutineDispatcherProvider(),
-            router = router,
-            getOnrampFeesUseCase = getOnrampFeesUseCase,
-            clipboardManager = clipboardManager,
-            shareManager = shareManager,
+        ),
+        dispatchers = createTestingCoroutineDispatcherProvider(),
+        router = router,
+        getOnrampFeesUseCase = getOnrampFeesUseCase,
+        clipboardManager = clipboardManager,
+        shareManager = shareManager,
+    )
+
+    private fun provideRouteFeeModels(): List<RouteFeeModel> {
+        val achRow = { value: String ->
+            TangemPayOnrampFeesUM.FeeRow(type = "ACH", title = stringReference("ACH"), value = value)
+        }
+        val flatFee = BankCredentials.DepositFee(BigDecimal("1.00"), BankCredentials.DepositFee.Type.FLAT)
+        return listOf(
+            RouteFeeModel(rail = "ACH", depositFee = flatFee, expectedRows = persistentListOf(achRow("$1"))),
+            RouteFeeModel(
+                rail = "ACH",
+                depositFee = BankCredentials.DepositFee(BigDecimal("1"), BankCredentials.DepositFee.Type.PERCENTAGE),
+                expectedRows = persistentListOf(achRow("1%")),
+            ),
+            RouteFeeModel(
+                rail = "ACH",
+                depositFee = BankCredentials.DepositFee(BigDecimal("1.00"), BankCredentials.DepositFee.Type.UNKNOWN),
+                expectedRows = persistentListOf(),
+            ),
+            RouteFeeModel(rail = "ACH", depositFee = null, expectedRows = persistentListOf()),
+            RouteFeeModel(rail = null, depositFee = flatFee, expectedRows = persistentListOf()),
         )
+    }
 
     private fun provideTestModels() = listOf(
         HiddenLimitModel(depositLimit = null),
@@ -283,4 +359,10 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
     )
 
     data class HiddenLimitModel(val depositLimit: BankCredentials.DepositLimit?)
+
+    data class RouteFeeModel(
+        val rail: String?,
+        val depositFee: BankCredentials.DepositFee?,
+        val expectedRows: ImmutableList<TangemPayOnrampFeesUM.FeeRow>,
+    )
 }

@@ -14,7 +14,7 @@ internal class DefaultExpressErrorResolver(
             is ApiResponseError.HttpException -> {
                 expressErrorConverter.convert(throwable.errorBody.orEmpty())
             }
-            else -> ExpressError.UnknownError
+            else -> ExpressError.UnknownError()
         }
     }
 }

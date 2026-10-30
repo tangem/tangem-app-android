@@ -43,12 +43,15 @@ sealed class JointAccountStatusValue {
      *
      * @property joinedMembers members that have taken a slot, the creator included
      * @property totalMembers  slots of the account, fixed at creation
+
      */
     @Serializable
     data class Pending(
         override val source: StatusSource,
         val joinedMembers: Int,
         val totalMembers: Int,
+        val threshold: Int,
+        val isOwnCreator: Boolean = false,
     ) : JointAccountStatusValue()
 
     /**
@@ -62,6 +65,7 @@ sealed class JointAccountStatusValue {
     data class Confirming(
         override val source: StatusSource,
         val totalMembers: Int,
+        val threshold: Int,
         val verifiedMembers: Int = 0,
         val isOwnVerified: Boolean = false,
     ) : JointAccountStatusValue()
@@ -77,6 +81,7 @@ sealed class JointAccountStatusValue {
     data class Active(
         override val source: StatusSource,
         val totalMembers: Int,
+        val threshold: Int,
         val safeAddress: String,
     ) : JointAccountStatusValue()
 

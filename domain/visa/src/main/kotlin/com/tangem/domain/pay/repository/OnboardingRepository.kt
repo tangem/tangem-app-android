@@ -5,12 +5,12 @@ import com.tangem.core.error.UniversalError
 import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.pay.TangemPayCustomerResidency
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.AccountFeeGroupType
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.CustomerOrderRequest
-import com.tangem.domain.pay.model.CustomerSummary
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayInitialCredentials
 import kotlinx.coroutines.flow.Flow
@@ -28,8 +28,6 @@ interface OnboardingRepository {
 
     suspend fun getCustomerInfo(userWalletId: UserWalletId): Either<VisaApiError, CustomerInfo>
 
-    suspend fun getCustomerSummary(userWalletId: UserWalletId): Either<VisaApiError, CustomerSummary>
-
     /** Fiat bank requisites for the wallet's Virtual Account on-ramp instance (VA MVP0, TWI-1638). */
     suspend fun getBankCredentials(
         userWalletId: UserWalletId,
@@ -38,6 +36,7 @@ interface OnboardingRepository {
 
     suspend fun getFees(
         userWalletId: UserWalletId,
+        product: TangemPayProduct,
         types: Set<AccountFeeGroupType>,
     ): Either<VisaApiError, List<AccountFee>>
 

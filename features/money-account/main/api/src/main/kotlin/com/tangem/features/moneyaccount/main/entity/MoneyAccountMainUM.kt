@@ -8,14 +8,10 @@ sealed interface MoneyAccountMainUM {
 
     data object Empty : MoneyAccountMainUM
 
-    data object Loading : MoneyAccountMainUM
-
     data class Onboarding(
         val subtitle: TextReference,
         val onClick: () -> Unit,
     ) : MoneyAccountMainUM
-
-    data class ActionRequired(val onClick: () -> Unit) : MoneyAccountMainUM
 
     data class Content(
         val subtitle: TextReference,

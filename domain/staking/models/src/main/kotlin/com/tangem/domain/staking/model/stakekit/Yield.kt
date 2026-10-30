@@ -1,7 +1,7 @@
 package com.tangem.domain.staking.model.stakekit
 
 import com.tangem.domain.models.serialization.SerializedBigDecimal
-import com.tangem.domain.models.staking.YieldToken
+import com.tangem.domain.staking.model.YieldToken
 import com.tangem.domain.staking.model.common.RewardInfo
 import com.tangem.domain.staking.model.common.RewardType
 import kotlinx.serialization.SerialName

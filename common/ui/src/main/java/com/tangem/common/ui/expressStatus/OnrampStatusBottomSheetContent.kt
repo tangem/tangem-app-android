@@ -28,14 +28,14 @@ fun OnrampStatusBottomSheetContent(state: ExpressTransactionStateUM.OnrampUM, is
         Text(
             text = stringResourceSafe(id = R.string.common_transaction_status),
             style = TangemTheme.typography.subtitle1,
-            color = TangemTheme.colors.text.primary1,
+            color = TangemTheme.colors3.text.primary,
             modifier = Modifier.align(CenterHorizontally),
         )
         SpacerH10()
         Text(
             text = stringResourceSafe(id = R.string.express_exchange_status_subtitle),
             style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.secondary,
+            color = TangemTheme.colors3.text.secondary,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .align(CenterHorizontally),

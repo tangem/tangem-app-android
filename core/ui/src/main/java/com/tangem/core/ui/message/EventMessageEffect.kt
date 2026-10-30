@@ -113,7 +113,7 @@ private fun LoadingDialog() {
             SpacerHMax()
             CircularProgressIndicator(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
-                color = TangemTheme.colors.icon.primary1,
+                color = TangemTheme.colors3.icon.primary,
             )
             SpacerHMax()
         }

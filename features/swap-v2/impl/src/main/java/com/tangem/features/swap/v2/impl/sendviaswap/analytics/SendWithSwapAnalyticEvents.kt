@@ -4,6 +4,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_FROM
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_TO
+import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_CODE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_DESCRIPTION
 import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TYPE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.PROVIDER
@@ -12,6 +13,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_TOKEN
+import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 import com.tangem.core.analytics.models.OtelIncludedEvent
 import com.tangem.core.analytics.models.OtelMetric
@@ -176,6 +178,20 @@ internal sealed class SendWithSwapAnalyticEvents(
         ),
     )
 
+    /** [errorCode] is `-1` when the request got no response */
+    data class SwapProviderHidden(
+        val providerName: String,
+        val errorCode: Int,
+        val source: CommonSendAnalyticEvents.CommonSendSource,
+    ) : SendWithSwapAnalyticEvents(
+        event = "Provider Hidden",
+        params = mapOf(
+            PROVIDER to providerName,
+            ERROR_CODE to if (errorCode == NO_RESPONSE_ERROR_CODE) "Unknown" else errorCode.toString(),
+            SOURCE to source.analyticsName,
+        ),
+    )
+
     data class ErrorExpressQuote(
         val fromToken: CryptoCurrency,
         val toToken: CryptoCurrency,
@@ -253,3 +269,5 @@ internal sealed class SendWithSwapAnalyticEvents(
         ExpressRateType.Fixed -> RateType.Fixed
     }
 }
+
+private const val NO_RESPONSE_ERROR_CODE = -1

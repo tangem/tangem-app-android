@@ -244,6 +244,21 @@ internal fun lightColors3() =
                 step10 = Color(0x0098D7FF),
             ),
         ),
+        account = TangemColors3.Account(
+            vitalGreen = Color(0xFF6DBB14),
+            ufoGreen = Color(0xFF20C47A),
+            caribbeanBlue = Color(0xFF07A3E0),
+            azureBlue = Color(0xFF0F7AFE),
+            palatinateBlue = Color(0xFF1553FE),
+            candyGrapeFizz = Color(0xFF5B15F3),
+            dullLavender = Color(0xFF9030FE),
+            fuchsiaNebula = Color(0xFFBA49F7),
+            sweetDesire = Color(0xFFC420D0),
+            mexicanPink = Color(0xFFEB4A9F),
+            pelati = Color(0xFFF44946),
+            pattypan = Color(0xFFFF8E23),
+            visa = Color(0xFF593BF3),
+        ),
         material = TangemColors3.Material(
             tint = TangemColors3.Material.Tint(
                 glass = Color(0x00000000),
@@ -290,6 +305,23 @@ internal fun lightColors3() =
                 solid = TangemColorPalette.Neutral.`5`,
             ),
             border = TangemColors3.MaterialModal.Border(
+                start = Color(0xCCFFFFFF),
+                mid = Color(0x00FFFFFF),
+                end = Color(0x99FFFFFF),
+            ),
+        ),
+        materialMenu = TangemColors3.MaterialMenu(
+            tint = TangemColors3.MaterialMenu.Tint(
+                glass = Color(0x80FFFFFF),
+                blur = Color(0x00000000),
+                solid = Color(0x1AFFFFFF),
+            ),
+            fill = TangemColors3.MaterialMenu.Fill(
+                glass = Color(0x00000000),
+                blur = Color(0x99F4F4F4),
+                solid = Color(0xF2F4F4F4),
+            ),
+            border = TangemColors3.MaterialMenu.Border(
                 start = Color(0xCCFFFFFF),
                 mid = Color(0x00FFFFFF),
                 end = Color(0x99FFFFFF),
