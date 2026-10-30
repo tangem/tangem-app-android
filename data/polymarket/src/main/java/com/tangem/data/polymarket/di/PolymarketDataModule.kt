@@ -63,6 +63,7 @@ import kotlin.time.TimeSource
 
 @Module
 @InstallIn(SingletonComponent::class)
+@Suppress("TooManyFunctions")
 internal interface PolymarketDataModule {
 
     @Binds
