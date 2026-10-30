@@ -7,13 +7,13 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.media.LoopingVideoController
 import com.tangem.core.media.LoopingVideoState
-import com.tangem.core.media.VideoFrameSize
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.model.TangemPayOnboardingStarter
-import com.tangem.features.tangempay.onboarding.impl.R
+import com.tangem.features.tangempay.model.createPayBundleVideo
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,18 +31,14 @@ internal class TangemPayHotWalletOnboardingModel @Inject constructor(
     private val onboardingStarter: TangemPayOnboardingStarter,
     private val analytics: AnalyticsEventHandler,
     tangemPayFeatureToggles: TangemPayFeatureToggles,
+    moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
     videoFactory: LoopingVideoController.Factory,
 ) : Model() {
 
     private val isPayBundleIntroductionEnabled = tangemPayFeatureToggles.isPayBundleIntroductionEnabled
 
     private val video = if (isPayBundleIntroductionEnabled) {
-        videoFactory.create(
-            scope = modelScope,
-            videoRes = R.raw.tangem_pay_bundle_background,
-            frameSize = BACKGROUND_VIDEO_SIZE,
-            diagnosticsSubject = "Pay bundle video",
-        )
+        videoFactory.createPayBundleVideo(scope = modelScope)
     } else {
         null
     }
@@ -53,6 +49,7 @@ internal class TangemPayHotWalletOnboardingModel @Inject constructor(
         field = MutableStateFlow(
             TangemPayHotWalletOnboardingUM(
                 isPayBundleIntroductionEnabled = isPayBundleIntroductionEnabled,
+                isUnifiedOnboarding = moneyAccountFeatureToggles.isMoneyAccountsEnabled,
                 isLoading = false,
                 onGetCardClick = ::onGetCardClick,
                 onTermsClick = ::onTermsClick,
@@ -111,8 +108,5 @@ internal class TangemPayHotWalletOnboardingModel @Inject constructor(
     private companion object {
         const val TERMS_OF_SERVICE_URL = "https://www.paera.com/tangempay"
         const val PRIVACY_POLICY_URL = "https://tangem.com/docs/en/pay-privacy-policy.pdf"
-
-        /** Must match `R.raw.tangem_pay_bundle_background`: a file of another size is only logged. */
-        val BACKGROUND_VIDEO_SIZE = VideoFrameSize(width = 1080, height = 1920)
     }
 }

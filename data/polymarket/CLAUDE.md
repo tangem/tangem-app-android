@@ -26,6 +26,12 @@ in the same PR as the code.
 Activity history (`/activity`, `/activity/deposits/reconcile`) was checked against an OpenAPI export on
 28.09.2026.
 
+Live quote rules were checked against [Live data on Predictions feed](https://app.notion.com/p/3fb5d34eb67881a9b682d77162585dfd)
+on 19.10.2026 (page edited 16.10.2026). The repository overlays prices only; callers keep BFF polling
+for metadata and for quotes whose status is not LIVE. After 60 seconds without a book update it requests
+a fresh subscription snapshot, allowing 5 seconds for a response before marking the quote STALE.
+The grace period is a client policy; the spec only fixes the 60-second watchdog threshold.
+
 Discovery and open-position sports metadata was checked against `tangem-09.10.2026-api-docs.json` on
 09.10.2026. Sports fields are optional and nullable; `live` is required. Keep scores and periods as raw
 provider strings and teams in provider order. `dataFetchedAt` dates the backend's snapshot, not game end.
@@ -48,7 +54,8 @@ provider strings and teams in provider order. `dataFetchedAt` dates the backend'
 - **`chainId` in bridge `/supported-assets` is a string**; `minCheckoutUsd` arrives as either string or number.
 - **L2 HMAC** signs `timestamp + method + requestPath [+ body]` with the base64url-decoded secret
   (mirrors `py-clob-client`). `requestPath` is verbatim — leading slash, no query string. The passphrase
-  travels in the clear and is not part of the HMAC. `GET price` is public: send no auth headers.
+  travels in the clear and is not part of the HMAC. `POLY_ADDRESS` is the address the API key belongs to — for
+  session credentials the session key's, lower-case as iOS sends it. `GET price` is public: send no auth headers.
 - **`ClobAuth` EIP-712 domain has no `verifyingContract`; the `DepositWallet` batch domain does.** The CTF
   and neg-risk exchanges share name and version `"2"` and differ only in `verifyingContract`; ExchangeV3 (V2
   markets) keeps the name with version `"3"`. Its separator is what the contract answers to `domainSeparator()`.

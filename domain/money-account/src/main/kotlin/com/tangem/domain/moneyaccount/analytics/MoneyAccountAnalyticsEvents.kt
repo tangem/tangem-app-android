@@ -95,9 +95,10 @@ sealed class MoneyAccountAnalyticsEvents(
         ),
     )
 
-    class SendFailed : MoneyAccountAnalyticsEvents(
+    data class SendFailed(val errorCode: Int?) : MoneyAccountAnalyticsEvents(
         categoryName = TRANSFER_CATEGORY,
         event = "VA Send failed",
+        params = buildMap { if (errorCode != null) put("error_code", errorCode.toString()) },
     )
 
     class SendSucceeded : MoneyAccountAnalyticsEvents(

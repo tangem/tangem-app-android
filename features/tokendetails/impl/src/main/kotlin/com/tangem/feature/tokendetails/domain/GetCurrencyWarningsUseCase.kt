@@ -73,6 +73,7 @@ internal class GetCurrencyWarningsUseCase @Inject constructor(
                 getNetworkNoAccountWarning(currencyStatus),
                 getBeaconChainShutdownWarning(rawId = currency.network.id.rawId),
                 getAssetRequirementsWarning(userWalletId = userWalletId, currency = currency),
+                currencyChecksRepository.getIncompleteBalanceWarning(userWalletId, currency.network),
                 getMigrationFromMaticToPolWarning(currency),
                 getCloreMigrationWarning(currency),
                 DynamicAddressesWarnings.FundsFound.takeIf { hasExtraFunds },

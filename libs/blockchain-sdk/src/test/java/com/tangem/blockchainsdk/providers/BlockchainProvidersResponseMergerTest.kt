@@ -1,14 +1,9 @@
 package com.tangem.blockchainsdk.providers
 
 import com.google.common.truth.Truth
-import com.google.firebase.crashlytics.FirebaseCrashlytics
-import com.google.firebase.crashlytics.recordException
 import com.tangem.blockchainsdk.BlockchainProvidersResponse
-import com.tangem.core.analytics.api.AnalyticsExceptionHandler
-import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.blockchainsdk.providers.models.ProviderModel
 import io.mockk.*
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 /**
@@ -17,20 +12,8 @@ import org.junit.jupiter.api.Test
 internal class BlockchainProvidersResponseMergerTest {
 
     private val blockchainProvidersResponseMerger = BlockchainProvidersResponseMerger(
-        object : AnalyticsExceptionHandler {
-            override fun sendException(event: ExceptionAnalyticsEvent) {
-                FirebaseCrashlytics.getInstance().recordException(event.exception)
-            }
-        },
+        analyticsExceptionHandler = mockk(relaxed = true),
     )
-
-    @BeforeEach
-    fun setup() {
-        mockkStatic(FirebaseCrashlytics::class)
-        val firebaseCrashlytics = mockk<FirebaseCrashlytics>()
-        every { FirebaseCrashlytics.getInstance() } returns firebaseCrashlytics
-        every { firebaseCrashlytics.recordException(any()) } just Runs
-    }
 
     @Test
     fun test_if_both_configs_are_empty() {

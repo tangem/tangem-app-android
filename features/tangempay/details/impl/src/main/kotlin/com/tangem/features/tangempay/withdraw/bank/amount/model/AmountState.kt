@@ -21,6 +21,8 @@ internal sealed interface NetworkFeeState {
 
     data object Unreachable : NetworkFeeState
 
+    data object NotEnoughFunds : NetworkFeeState
+
     data class Loaded(val fee: BigDecimal) : NetworkFeeState
 }
 
@@ -57,6 +59,7 @@ internal data class AmountState(
             source = source,
             destination = destination,
             networkFee = networkFee,
+            isNetworkFeeQuoted = this.networkFee is NetworkFeeState.Loaded,
             displayValue = displayValue,
             amount = amount,
             validation = BankWithdrawAmountValidator.validate(
@@ -65,9 +68,16 @@ internal data class AmountState(
                 maxAmount = options.maxAmount,
                 balance = source.fiatBalance,
                 fee = fees,
-            ),
+            ).withNetworkFeeCoverage(),
         )
     }
+
+    private fun BankWithdrawAmountValidator.Result.withNetworkFeeCoverage(): BankWithdrawAmountValidator.Result =
+        if (this == BankWithdrawAmountValidator.Result.Valid && networkFee == NetworkFeeState.NotEnoughFunds) {
+            BankWithdrawAmountValidator.Result.NotEnoughFunds
+        } else {
+            this
+        }
 
     /**
      * The user's own typing on this screen — even once cleared back to blank — or, before they have typed
@@ -88,6 +98,7 @@ internal data class AmountSelection(
     val source: BankWithdrawSource,
     val destination: OfframpDestination,
     val networkFee: BigDecimal,
+    val isNetworkFeeQuoted: Boolean,
     val displayValue: String,
     val amount: BigDecimal?,
     val validation: BankWithdrawAmountValidator.Result,

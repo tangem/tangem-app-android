@@ -3,6 +3,7 @@ package com.tangem.data.txhistory.fetcher
 import com.google.common.truth.Truth.assertThat
 import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
@@ -10,6 +11,7 @@ import com.tangem.domain.txhistory.fetcher.TxHistoryFetchTrigger
 import com.tangem.test.mock.MockAccounts
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.job
 import kotlinx.coroutines.test.*
 import org.junit.jupiter.api.BeforeEach
@@ -21,11 +23,12 @@ import org.junit.jupiter.api.TestInstance
 internal class DefaultWalletTxHistoryFetcherTest {
 
     private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
-    private val accountFetcherFactory: DefaultAccountTxHistoryFetcher.Factory = mockk()
     private val expressFetcherFactory: DefaultExpressTxHistoryFetcher.Factory = mockk()
     private val expressFetcher: DefaultExpressTxHistoryFetcher = mockk(relaxed = true)
     private val jointOperationFetcherFactory: DefaultJointOperationTxHistoryFetcher.Factory = mockk()
     private val jointOperationFetcher: DefaultJointOperationTxHistoryFetcher = mockk(relaxed = true)
+
+    private val accountListFlow = MutableStateFlow(WITH_JOINT_ACCOUNT)
 
     private val currency: CryptoCurrency = MockCryptoCurrencyFactory().ethereum
 
@@ -33,12 +36,13 @@ internal class DefaultWalletTxHistoryFetcherTest {
     fun setup() {
         clearMocks(
             singleAccountListSupplier,
-            accountFetcherFactory,
             expressFetcherFactory,
             expressFetcher,
             jointOperationFetcherFactory,
             jointOperationFetcher,
         )
+        accountListFlow.value = WITH_JOINT_ACCOUNT
+        every { singleAccountListSupplier(WALLET_ID) } returns accountListFlow
         every { expressFetcherFactory.create(WALLET_ID) } returns expressFetcher
         every { jointOperationFetcherFactory.create(WALLET_ID) } returns jointOperationFetcher
     }
@@ -97,6 +101,78 @@ internal class DefaultWalletTxHistoryFetcherTest {
     }
 
     @Test
+    fun `GIVEN joint account WHEN created THEN joint operation fetcher created once`() = runTest {
+        // Act
+        val fetcher = createFetcher(createUtils())
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(fetcher.jointOperationFetcher).isEqualTo(jointOperationFetcher)
+        verify(exactly = 1) { jointOperationFetcherFactory.create(WALLET_ID) }
+    }
+
+    @Test
+    fun `GIVEN no joint accounts WHEN created THEN joint operation fetcher not created`() = runTest {
+        // Arrange
+        accountListFlow.value = WITHOUT_JOINT_ACCOUNT
+
+        // Act
+        val fetcher = createFetcher(createUtils())
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(fetcher.jointOperationFetcher).isNull()
+        verify(exactly = 0) { jointOperationFetcherFactory.create(any()) }
+    }
+
+    @Test
+    fun `GIVEN no joint accounts WHEN joint account added THEN joint operation fetcher created`() = runTest {
+        // Arrange
+        accountListFlow.value = WITHOUT_JOINT_ACCOUNT
+        val fetcher = createFetcher(createUtils())
+        advanceUntilIdle()
+
+        // Act
+        accountListFlow.value = WITH_JOINT_ACCOUNT
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(fetcher.jointOperationFetcher).isEqualTo(jointOperationFetcher)
+        verify(exactly = 1) { jointOperationFetcherFactory.create(WALLET_ID) }
+    }
+
+    @Test
+    fun `GIVEN joint account WHEN it is removed THEN joint operation fetcher closed and cleared`() = runTest {
+        // Arrange
+        val fetcher = createFetcher(createUtils())
+        advanceUntilIdle()
+
+        // Act
+        accountListFlow.value = WITHOUT_JOINT_ACCOUNT
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(fetcher.jointOperationFetcher).isNull()
+        verify(exactly = 1) { jointOperationFetcher.close() }
+    }
+
+    @Test
+    fun `GIVEN no joint accounts WHEN joint history poll THEN nothing is routed`() = runTest {
+        // Arrange
+        accountListFlow.value = WITHOUT_JOINT_ACCOUNT
+        val fetcher = createFetcher(createUtils())
+        advanceUntilIdle()
+
+        // Act
+        fetcher.invoke(TxHistoryFetchTrigger.JointHistoryPoll(walletId = WALLET_ID))
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { jointOperationFetcher.invoke(any()) }
+        verify(exactly = 0) { expressFetcher.invoke(any()) }
+    }
+
+    @Test
     fun `GIVEN token details trigger WHEN invoke THEN routed to the joint operation fetcher too`() = runTest {
         // Arrange
         val fetcher = createFetcher(createUtils())
@@ -151,12 +227,16 @@ internal class DefaultWalletTxHistoryFetcherTest {
         walletId = WALLET_ID,
         utils = utils,
         singleAccountListSupplier = singleAccountListSupplier,
-        accountTxHistoryFetcher = accountFetcherFactory,
         expressTxHistoryFetcher = expressFetcherFactory,
         jointOperationTxHistoryFetcher = jointOperationFetcherFactory,
     )
 
     private companion object {
         val WALLET_ID: UserWalletId = MockAccounts.userWalletId
+        val WITHOUT_JOINT_ACCOUNT: AccountList = MockAccounts.createAccountList(activeAccounts = 1)
+        val WITH_JOINT_ACCOUNT: AccountList = MockAccounts.createAccountList(
+            activeAccounts = 1,
+            jointAccounts = 1,
+        )
     }
 }

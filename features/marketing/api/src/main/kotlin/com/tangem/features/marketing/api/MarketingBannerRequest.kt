@@ -6,7 +6,7 @@ import java.math.BigDecimal
 /** Context for a STANDALONE banner request on any of the 6 surfaces. */
 data class MarketingBannerRequest(
     val screen: MarketingScreen,
-    val amountUsd: BigDecimal? = null,
+    val amount: MarketingBannerAmount? = null,
 )
 
 /**
@@ -15,5 +15,16 @@ data class MarketingBannerRequest(
  */
 data class LinkedBannerRequest(
     val screen: MarketingScreen.Onramp,
-    val amountUsd: BigDecimal?,
+    val amount: MarketingBannerAmount?,
 )
+
+/**
+ * Amount entered on the screen, matched against the campaigns' USD min/max bounds. A [Fiat] amount is converted
+ * to USD by the banner itself, and only when a fetched campaign has amount bounds.
+ */
+sealed interface MarketingBannerAmount {
+
+    data class Usd(val value: BigDecimal) : MarketingBannerAmount
+
+    data class Fiat(val value: BigDecimal, val currencyCode: String) : MarketingBannerAmount
+}

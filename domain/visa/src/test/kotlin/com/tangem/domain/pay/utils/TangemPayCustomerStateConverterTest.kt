@@ -30,9 +30,17 @@ internal class TangemPayCustomerStateConverterTest {
     @Suppress("LongMethod")
     private fun provideTestModels() = listOf(
         ConvertModel(
-            name = "hidden wins over any phase",
-            summary = summary(isHidden = true, kycStatus = KycStatus.APPROVED, payment = payment(COMPLETED)),
-            expected = TangemPayCustomerState.Hidden,
+            name = "hidden flag is ignored",
+            summary = summary(
+                isHidden = true,
+                kycStatus = KycStatus.APPROVED,
+                payment = payment(COMPLETED),
+                banking = banking(MoneyAccount.Activation.Status.DEACTIVATED),
+            ),
+            expected = accounts(
+                payment = PaymentAccountActivationState.Completed(CARDS),
+                money = MoneyAccountActivationState.Deactivated,
+            ),
         ),
         ConvertModel(
             name = "blocked customer",

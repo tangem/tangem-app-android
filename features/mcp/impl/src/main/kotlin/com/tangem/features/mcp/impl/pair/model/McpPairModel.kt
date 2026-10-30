@@ -5,6 +5,7 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.tangem.common.ui.account.PortfolioSelectUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -16,6 +17,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.mcp.models.McpDeviceVerification
+import com.tangem.domain.mcp.models.analytics.McpAuthorizationAnalyticsEvent
 import com.tangem.domain.mcp.repository.McpRepository
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -43,6 +45,7 @@ internal class McpPairModel @Inject constructor(
     private val mcpRepository: McpRepository,
     private val enableAddressesSharingUseCase: EnableAddressesSharingUseCase,
     private val messageSender: UiMessageSender,
+    private val analytics: AnalyticsEventHandler,
     val selectorController: PortfolioSelectorController,
     portfolioFetcherFactory: PortfolioFetcher.Factory,
     paramsContainer: ParamsContainer,
@@ -73,6 +76,7 @@ internal class McpPairModel @Inject constructor(
         field = MutableStateFlow<McpPairUM>(McpPairUM.Loading)
 
     init {
+        analytics.send(McpAuthorizationAnalyticsEvent.ConnectionReceived())
         modelScope.launch {
             if (selectInitialWallet()) observeSelectedWallet()
         }
@@ -83,8 +87,11 @@ internal class McpPairModel @Inject constructor(
         modelScope.launch {
             mcpRepository.getDeviceVerification(userCode = params.request.userCode)
                 .fold(
-                    ifLeft = { onPairFailed() },
-                    ifRight = { verification.value = it },
+                    ifLeft = { error -> onPairFailed(McpAuthorizationErrorCode.of(error)) },
+                    ifRight = { loaded ->
+                        verification.value = loaded
+                        analytics.send(McpAuthorizationAnalyticsEvent.AgentConnectionRequested(loaded))
+                    },
                 )
         }
     }
@@ -106,6 +113,7 @@ internal class McpPairModel @Inject constructor(
                 ?.let { pair(it) }
         } else {
             connectState.value = ConnectState(isConnecting = false, isPushDenied = true)
+            analytics.send(McpAuthorizationAnalyticsEvent.NoticePushPermissionRequired())
         }
     }
 
@@ -127,6 +135,7 @@ internal class McpPairModel @Inject constructor(
         if (connectState.value.isConnected) return
         val verification = verification.value ?: return
 
+        analytics.send(McpAuthorizationAnalyticsEvent.ButtonDecline(verification))
         appScope.launch { mcpRepository.rejectDeviceVerification(verification) }
     }
 
@@ -135,6 +144,7 @@ internal class McpPairModel @Inject constructor(
      */
     private fun onConnect(wallet: UserWallet) {
         connectState.update { it.copy(isConnecting = true) }
+        verification.value?.let { analytics.send(McpAuthorizationAnalyticsEvent.ButtonApprove(it)) }
         if (systemNotificationsStateProvider.areNotificationsEnabled()) {
             pair(wallet.walletId)
         } else {
@@ -146,20 +156,27 @@ internal class McpPairModel @Inject constructor(
     private fun pair(walletId: UserWalletId) {
         val verification = verification.value
         if (verification == null) {
-            onPairFailed()
+            onPairFailed(McpAuthorizationErrorCode.UNKNOWN)
             return
         }
 
         modelScope.launch {
             mcpRepository.approveDeviceVerification(verification = verification, walletId = walletId)
                 .fold(
-                    ifLeft = { onPairFailed() },
-                    ifRight = { if (it.isSuccess) onPaired(walletId) else onPairFailed() },
+                    ifLeft = { error -> onPairFailed(McpAuthorizationErrorCode.of(error)) },
+                    ifRight = { result ->
+                        if (result.isSuccess) {
+                            onPaired(verification, walletId)
+                        } else {
+                            onPairFailed(McpAuthorizationErrorCode.REFUSED)
+                        }
+                    },
                 )
         }
     }
 
-    private fun onPaired(walletId: UserWalletId) {
+    private fun onPaired(verification: McpDeviceVerification, walletId: UserWalletId) {
+        analytics.send(McpAuthorizationAnalyticsEvent.AgentConnected(verification))
         shareAddresses(walletId)
         connectState.update { it.copy(isConnecting = false, isConnected = true) }
         // Replaces instead of pushing: there is nothing to go back to once the agent is connected.
@@ -182,7 +199,8 @@ internal class McpPairModel @Inject constructor(
      * server answers an unknown, expired and already used code alike, and neither end of the pairing
      * can be resumed in place. The sheet goes away and the alert carries the reason.
      */
-    private fun onPairFailed() {
+    private fun onPairFailed(errorCode: String) {
+        analytics.send(McpAuthorizationAnalyticsEvent.AuthorizationFailed(errorCode))
         connectState.update { it.copy(isConnecting = false) }
         messageSender.send(
             DialogMessage(

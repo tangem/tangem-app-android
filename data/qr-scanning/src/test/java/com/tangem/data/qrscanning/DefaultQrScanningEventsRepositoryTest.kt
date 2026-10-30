@@ -354,6 +354,73 @@ internal class DefaultQrScanningEventsRepositoryTest {
         )
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ParseQrCodeAmountSign {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN QR amount of any sign WHEN parseQrCode THEN only positive amount is kept`(
+            model: ParseAmountSignModel,
+        ) {
+            // Arrange
+            every { network.id } returns Network.ID(value = "ethereum", derivationPath = Network.DerivationPath.None)
+            every { network.rawId } returns "ethereum"
+            val currency = if (model.isToken) tokenCryptoCurrency else cryptoCurrency
+
+            // Act
+            val actual = repository.parseQrCode(model.qrCode, currency)
+
+            // Assert
+            Truth.assertThat(actual).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            ParseAmountSignModel(
+                qrCode = "$EVM_RECIPIENT?amount=-0.5",
+                expected = QrResult(address = EVM_RECIPIENT),
+            ),
+            ParseAmountSignModel(
+                qrCode = "$EVM_RECIPIENT?amount=0",
+                expected = QrResult(address = EVM_RECIPIENT),
+            ),
+            ParseAmountSignModel(
+                qrCode = "$EVM_RECIPIENT?amount=0.5",
+                expected = QrResult(address = EVM_RECIPIENT, amount = BigDecimal("0.5")),
+            ),
+            ParseAmountSignModel(
+                qrCode = "ethereum:$EVM_RECIPIENT?value=-1",
+                expected = QrResult(address = EVM_RECIPIENT),
+            ),
+            ParseAmountSignModel(
+                qrCode = "ethereum:$EVM_RECIPIENT?value=0",
+                expected = QrResult(address = EVM_RECIPIENT),
+            ),
+            ParseAmountSignModel(
+                qrCode = "ethereum:$EVM_RECIPIENT?value=1000000000000000000",
+                expected = QrResult(address = EVM_RECIPIENT, amount = BigDecimal.ONE),
+            ),
+            ParseAmountSignModel(
+                qrCode = "ethereum:${tokenCryptoCurrency.contractAddress}/transfer" +
+                    "?address=$EVM_RECIPIENT&uint256=-10000000",
+                expected = QrResult(address = EVM_RECIPIENT),
+                isToken = true,
+            ),
+            ParseAmountSignModel(
+                qrCode = "ethereum:${tokenCryptoCurrency.contractAddress}/transfer" +
+                    "?address=$EVM_RECIPIENT&uint256=10000000",
+                expected = QrResult(address = EVM_RECIPIENT, amount = BigDecimal.ONE),
+                isToken = true,
+            ),
+        )
+    }
+
+    internal data class ParseAmountSignModel(
+        val qrCode: String,
+        val expected: QrResult,
+        val isToken: Boolean = false,
+    )
+
     internal data class ExtractRecipientModel(val qrCode: String, val expected: String)
 
     private companion object {
