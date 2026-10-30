@@ -8,7 +8,7 @@ internal class InProgressStateConverter : TwoWayConverter<OrganizeTokensState, O
     override fun convert(value: OrganizeTokensState): OrganizeTokensState {
         return value.copy(
             actions = value.actions.copy(
-                showApplyProgress = true,
+                shouldShowApplyProgress = true,
             ),
             header = value.header.copy(
                 isEnabled = false,
@@ -19,7 +19,7 @@ internal class InProgressStateConverter : TwoWayConverter<OrganizeTokensState, O
     override fun convertBack(value: OrganizeTokensState): OrganizeTokensState {
         return value.copy(
             actions = value.actions.copy(
-                showApplyProgress = false,
+                shouldShowApplyProgress = false,
             ),
             header = value.header.copy(
                 isEnabled = true,

@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.account.AccountTitle
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.core.ui.components.SpacerWMax
@@ -25,7 +26,7 @@ internal fun WcPortfolioItem(portfolioName: AccountTitleUM, modifier: Modifier =
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         var isTooltipEnabled by remember { mutableStateOf(false) }
         Icon(
-            modifier = Modifier.size(TangemTheme.dimens.size24),
+            modifier = Modifier.size(24.dp),
             painter = painterResource(R.drawable.ic_wallet_new_24),
             contentDescription = null,
             tint = TangemTheme.colors.icon.accent,
@@ -35,7 +36,7 @@ internal fun WcPortfolioItem(portfolioName: AccountTitleUM, modifier: Modifier =
             is AccountTitleUM.Text -> stringResourceSafe(R.string.wc_common_wallet)
         }
         Text(
-            modifier = Modifier.padding(start = TangemTheme.dimens.spacing8),
+            modifier = Modifier.padding(start = 8.dp),
             text = leftText,
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.primary1,
@@ -44,14 +45,14 @@ internal fun WcPortfolioItem(portfolioName: AccountTitleUM, modifier: Modifier =
         SpacerWMax()
         when (portfolioName) {
             is AccountTitleUM.Account -> AccountTitle(
-                modifier = Modifier.padding(start = TangemTheme.dimens.spacing16),
+                modifier = Modifier.padding(start = 16.dp),
                 accountTitleUM = portfolioName,
                 textStyle = TangemTheme.typography.body1,
                 textColor = TangemTheme.colors.text.tertiary,
                 iconSize = AccountIconSize.Small,
             )
             is AccountTitleUM.Text -> TangemTooltip(
-                modifier = Modifier.padding(start = TangemTheme.dimens.spacing16),
+                modifier = Modifier.padding(start = 16.dp),
                 text = portfolioName.title,
                 enabled = isTooltipEnabled,
                 content = { contentModifier ->

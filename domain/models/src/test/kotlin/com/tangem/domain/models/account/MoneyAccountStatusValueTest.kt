@@ -6,6 +6,7 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.kyc.KycStatus
+import com.tangem.domain.models.network.NetworkAddress
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -17,7 +18,6 @@ internal class MoneyAccountStatusValueTest {
     private fun balanceOf(fiatRate: BigDecimal?, cryptoAmount: BigDecimal = BigDecimal("100")) =
         MoneyAccountStatusValue.Balance(
             cryptoAmount = cryptoAmount,
-            cryptoCurrency = cryptoCurrency,
             depositAddress = "0xabc",
             currencyCode = "USD",
             fiatRate = fiatRate,
@@ -25,9 +25,9 @@ internal class MoneyAccountStatusValueTest {
 
     private fun activeWith(balance: MoneyAccountStatusValue.Balance?) = MoneyAccountStatusValue.Account.Active(
         source = StatusSource.ACTUAL,
+        cryptoCurrency = cryptoCurrency,
         balance = balance,
         customerId = "customer",
-        productInstanceId = "pi-1",
     )
 
     @Test
@@ -78,32 +78,74 @@ internal class MoneyAccountStatusValueTest {
     }
 
     @Test
+    fun `GIVEN balance with rate WHEN cryptoCurrencyStatus THEN loaded status at the deposit address`() {
+        // Arrange
+        val account = activeWith(balanceOf(fiatRate = BigDecimal("0.99"))).copy(source = StatusSource.CACHE)
+
+        // Act
+        val actual = account.cryptoCurrencyStatus
+
+        // Assert
+        val expected = CryptoCurrencyStatus(
+            currency = cryptoCurrency,
+            value = CryptoCurrencyStatus.Loaded(
+                amount = BigDecimal("100"),
+                fiatAmount = BigDecimal("100").multiply(BigDecimal("0.99")),
+                fiatRate = BigDecimal("0.99"),
+                priceChange = BigDecimal.ZERO,
+                yieldSupplyStatus = null,
+                hasCurrentNetworkTransactions = false,
+                pendingTransactions = emptySet(),
+                networkAddress = DEPOSIT_NETWORK_ADDRESS,
+                sources = CACHE_SOURCES,
+            ),
+        )
+        Truth.assertThat(actual).isEqualTo(expected)
+    }
+
+    @Test
+    fun `GIVEN balance without rate WHEN cryptoCurrencyStatus THEN no quote status at the deposit address`() {
+        // Arrange
+        val account = activeWith(balanceOf(fiatRate = null)).copy(source = StatusSource.CACHE)
+
+        // Act
+        val actual = account.cryptoCurrencyStatus
+
+        // Assert
+        val expected = CryptoCurrencyStatus(
+            currency = cryptoCurrency,
+            value = CryptoCurrencyStatus.NoQuote(
+                amount = BigDecimal("100"),
+                yieldSupplyStatus = null,
+                hasCurrentNetworkTransactions = false,
+                pendingTransactions = emptySet(),
+                networkAddress = DEPOSIT_NETWORK_ADDRESS,
+                sources = CACHE_SOURCES,
+            ),
+        )
+        Truth.assertThat(actual).isEqualTo(expected)
+    }
+
+    @Test
+    fun `GIVEN account without balance WHEN cryptoCurrencyStatus THEN null`() {
+        // Act & Assert
+        Truth.assertThat(activeWith(balance = null).cryptoCurrencyStatus).isNull()
+    }
+
+    @Test
     fun `GIVEN Loading WHEN totalFiatBalance THEN Loading`() {
         // Act & Assert
         Truth.assertThat(MoneyAccountStatusValue.Loading.totalFiatBalance).isEqualTo(TotalFiatBalance.Loading)
     }
 
-    @Test
-    fun `GIVEN balance without rate WHEN cryptoCurrencyStatus THEN NoQuote`() {
-        // Arrange
-        val balance = balanceOf(fiatRate = null)
-
-        // Act & Assert
-        Truth.assertThat(balance.cryptoCurrencyStatus.value)
-            .isInstanceOf(CryptoCurrencyStatus.NoQuote::class.java)
-    }
-
-    @Test
-    fun `GIVEN balance with rate WHEN cryptoCurrencyStatus THEN Loaded with the rate`() {
-        // Arrange
-        val rate = BigDecimal("0.9")
-        val balance = balanceOf(fiatRate = rate)
-
-        // Act
-        val value = balance.cryptoCurrencyStatus.value
-
-        // Assert
-        Truth.assertThat(value).isInstanceOf(CryptoCurrencyStatus.Loaded::class.java)
-        Truth.assertThat((value as CryptoCurrencyStatus.Loaded).fiatRate).isEqualTo(rate)
+    private companion object {
+        val DEPOSIT_NETWORK_ADDRESS = NetworkAddress.Single(
+            defaultAddress = NetworkAddress.Address(type = NetworkAddress.Address.Type.Primary, value = "0xabc"),
+        )
+        val CACHE_SOURCES = CryptoCurrencyStatus.Sources(
+            networkSource = StatusSource.CACHE,
+            quoteSource = StatusSource.CACHE,
+            stakingBalanceSource = StatusSource.CACHE,
+        )
     }
 }

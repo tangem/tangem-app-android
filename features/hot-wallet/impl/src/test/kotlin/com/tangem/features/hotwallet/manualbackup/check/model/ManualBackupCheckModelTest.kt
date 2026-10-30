@@ -83,7 +83,7 @@ internal class ManualBackupCheckModelTest {
 
         // Assert
         assertThat(model.uiState.value.words).isEmpty()
-        assertThat(model.uiState.value.completeButtonEnabled).isFalse()
+        assertThat(model.uiState.value.isCompleteButtonEnabled).isFalse()
         model.onDestroy()
     }
 

@@ -89,7 +89,7 @@ fun LazyListScope.notifications(
         key = { _, item -> item.id },
         contentType = { _, item -> item::class.java },
         itemContent = { i, item ->
-            val topPadding = if (i == 0 && hasPaddingAbove) TangemTheme.dimens2.x0 else TangemTheme.dimens2.x2
+            val topPadding = if (i == 0 && hasPaddingAbove) 0.dp else 8.dp
             MessageBanner(
                 messageUM = item,
                 modifier = modifier
@@ -210,9 +210,9 @@ fun LazyListScope.notificationsCarousel(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = TangemTheme.dimens2.x2),
+                    .padding(top = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 HorizontalPager(
                     state = notificationsPagerState,

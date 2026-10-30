@@ -47,7 +47,7 @@ internal class TokenReceiveAssetsContentProvider : PreviewParameterProvider<Rece
             address,
             address.copy(type = ReceiveAddress.Type.Ens, value = "papasha.eth"),
         ),
-        showMemoDisclaimer = false,
+        shouldShowMemoDisclaimer = false,
         onCopyClick = {},
         onOpenQrCodeClick = {},
         isEnsResultLoading = true,

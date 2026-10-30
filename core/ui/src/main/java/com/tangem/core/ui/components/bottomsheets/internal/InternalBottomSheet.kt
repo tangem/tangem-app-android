@@ -20,7 +20,6 @@ import com.tangem.core.ui.components.snackbar.TangemTopSnackbarHost
 import com.tangem.core.ui.components.bottomsheets.copy.internal.ModalBottomSheetProperties
 import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.LocalTopSnackbarHostState
-import com.tangem.core.ui.res.TangemTheme
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -74,8 +73,8 @@ fun InternalBottomSheet(
                     TangemTopSnackbarHost(
                         modifier = Modifier
                             .align(Alignment.TopCenter)
-                            .padding(horizontal = TangemTheme.dimens2.x4)
-                            .padding(top = TangemTheme.dimens2.x6),
+                            .padding(horizontal = 16.dp)
+                            .padding(top = 24.dp),
                         hostState = topSnackbarHostState,
                     )
                 }

@@ -177,7 +177,7 @@ internal class GetWalletNotificationsFactoryTest {
         val hotWalletId = mockk<HotWalletId> { every { authType } returns HotWalletId.AuthType.Password }
         every { hotWallet.walletId } returns WALLET_ID
         every { hotWallet.hotWalletId } returns hotWalletId
-        every { hotWallet.backedUp } returns true
+        every { hotWallet.isBackedUp } returns true
     }
 
     @AfterEach
@@ -618,7 +618,7 @@ internal class GetWalletNotificationsFactoryTest {
         // Arrange
         val hotWalletId = mockk<HotWalletId> { every { authType } returns model.authType }
         every { hotWallet.hotWalletId } returns hotWalletId
-        every { hotWallet.backedUp } returns model.backedUp
+        every { hotWallet.isBackedUp } returns model.backedUp
         every { isWalletBackedUpUseCase.flow(hotWallet) } returns flowOf(model.backedUp)
         every { getAccessCodeSkippedUseCase(WALLET_ID) } returns flowOf(model.accessCodeSkipped)
         every { isSocialBackupCompletedUseCase.flow(WALLET_ID) } returns flowOf(model.hasSocialBackup)
@@ -770,7 +770,7 @@ internal class GetWalletNotificationsFactoryTest {
     @Test
     fun `GIVEN cloud backup only WHEN create THEN finish-activation banner is hidden`() = runTest {
         // Arrange
-        every { hotWallet.backedUp } returns false
+        every { hotWallet.isBackedUp } returns false
         every { isWalletBackedUpUseCase.flow(hotWallet) } returns flowOf(true)
         every { getAccessCodeSkippedUseCase(WALLET_ID) } returns flowOf(false)
 
@@ -792,7 +792,7 @@ internal class GetWalletNotificationsFactoryTest {
         val freshHotWallet = mockk<UserWallet.Hot>(relaxed = true) {
             every { walletId } returns WALLET_ID
             every { hotWalletId } returns freshHotWalletId
-            every { backedUp } returns false
+            every { isBackedUp } returns false
         }
         every { getUserWalletUseCase.invokeFlow(WALLET_ID) } returns flowOf(freshHotWallet.right())
         every { isWalletBackedUpUseCase.flow(freshHotWallet) } returns flowOf(true)

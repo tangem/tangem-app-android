@@ -15,7 +15,7 @@ internal class JointAccountStatusValueConverterTest {
     @ProvideTestModels
     fun `GIVEN a joint account WHEN convert THEN the lifecycle state the screen consumes`(model: TestModel) {
         // Act
-        val actual = JointAccountStatusValueConverter.convert(model.account)
+        val actual = JointAccountStatusValueConverter(ownAddress = model.ownAddress).convert(model.account)
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)
@@ -29,6 +29,26 @@ internal class JointAccountStatusValueConverterTest {
         TestModel(
             account = account(status = JointAccount.Status.CONFIRMING, safeAddress = SAFE),
             expected = JointAccountStatusValue.Confirming(source = StatusSource.CACHE, totalMembers = 3),
+        ),
+        TestModel(
+            account = account(status = JointAccount.Status.CONFIRMING, safeAddress = SAFE, isBobVerified = true),
+            ownAddress = "0X2",
+            expected = JointAccountStatusValue.Confirming(
+                source = StatusSource.CACHE,
+                totalMembers = 3,
+                verifiedMembers = 1,
+                isOwnVerified = true,
+            ),
+        ),
+        TestModel(
+            account = account(status = JointAccount.Status.CONFIRMING, safeAddress = SAFE, isBobVerified = true),
+            ownAddress = "0x1",
+            expected = JointAccountStatusValue.Confirming(
+                source = StatusSource.CACHE,
+                totalMembers = 3,
+                verifiedMembers = 1,
+                isOwnVerified = false,
+            ),
         ),
         TestModel(
             account = account(status = JointAccount.Status.ACTIVE, safeAddress = SAFE),
@@ -48,9 +68,17 @@ internal class JointAccountStatusValueConverterTest {
         ),
     )
 
-    data class TestModel(val account: JointAccount, val expected: JointAccountStatusValue)
+    data class TestModel(
+        val account: JointAccount,
+        val expected: JointAccountStatusValue,
+        val ownAddress: String? = null,
+    )
 
-    private fun account(status: JointAccount.Status, safeAddress: String? = null) = JointAccount(
+    private fun account(
+        status: JointAccount.Status,
+        safeAddress: String? = null,
+        isBobVerified: Boolean = false,
+    ) = JointAccount(
         cryptoAccountId = "A0",
         membersCount = 3,
         threshold = 2,
@@ -58,7 +86,7 @@ internal class JointAccountStatusValueConverterTest {
         status = status,
         members = listOf(
             JointAccount.Member(name = "Alice", address = "0x1", role = JointAccount.Role.CREATOR),
-            JointAccount.Member(name = "Bob", address = "0x2", role = JointAccount.Role.MEMBER),
+            JointAccount.Member(name = "Bob", address = "0x2", role = JointAccount.Role.MEMBER, isVerified = isBobVerified),
         ),
         source = StatusSource.CACHE,
     )

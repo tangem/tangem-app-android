@@ -1,7 +1,9 @@
 package com.tangem.data.collectibles.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.remote.json.NetworkJsonFactory
 import com.tangem.domain.collectibles.models.CollectibleTxStatus
+import com.tangem.grow.datasource.collectibles.models.response.CollectibleTxResponse
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -9,11 +11,16 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class CollectibleTxStatusConverterTest {
 
+    private val json = NetworkJsonFactory.create()
+
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN a wire status WHEN convert THEN it maps to the lifecycle state`(model: StatusModel) {
+    fun `GIVEN a wire status WHEN decoded and converted THEN it maps to the lifecycle state`(model: StatusModel) {
+        // Arrange
+        val response = json.decodeFromString<CollectibleTxResponse>("""{"txId":"tx-id","status":"${model.wire}"}""")
+
         // Act
-        val actual = CollectibleTxStatusConverter.convert(model.wire)
+        val actual = CollectibleTxStatusConverter.convert(response.status)
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)

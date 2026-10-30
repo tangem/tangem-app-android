@@ -17,7 +17,6 @@ import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
 import com.tangem.domain.cloudbackup.usecase.GetBackupPasswordUseCase
 import com.tangem.domain.cloudbackup.usecase.RestoreCloudBackupUseCase
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImportError
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImporter
@@ -56,7 +55,6 @@ internal class RestoreCloudBackupModel @Inject constructor(
     private val hotWalletImporter: HotWalletImporter,
     private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val getBackupPasswordUseCase: GetBackupPasswordUseCase,
 ) : Model() {
 
@@ -147,8 +145,6 @@ internal class RestoreCloudBackupModel @Inject constructor(
     }
 
     private fun requestStoredPassword() {
-        if (!hotWalletFeatureToggles.isPasswordManagerEnabled) return
-
         modelScope.launch {
             val stored = getBackupPasswordUseCase() ?: return@launch
 

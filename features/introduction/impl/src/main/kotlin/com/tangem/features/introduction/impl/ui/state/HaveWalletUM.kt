@@ -14,10 +14,14 @@ internal data class HaveWalletUM(
     val onCloseClick: () -> Unit,
 ) : TangemBottomSheetConfigContent {
 
+    /** The close button stays in place for it, inactive, so the bar does not shift under the spinning row */
+    val isSigningInSocially: Boolean
+        get() = (step as? Step.Options)?.socialLogin?.isLoading == true
+
     /** Dismissing the sheet does not cancel what the tapped row started, so it stays locked until then */
     val isBusy: Boolean
         get() = when (val step = step) {
-            is Step.Options -> step.socialLogin?.isLoading == true
+            is Step.Options -> isSigningInSocially
             is Step.Import -> step.isCloudLoading
             is Step.Error -> false
         }

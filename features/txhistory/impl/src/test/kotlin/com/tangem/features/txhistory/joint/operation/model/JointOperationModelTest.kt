@@ -27,6 +27,7 @@ import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.Err
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
 import com.tangem.features.txhistory.joint.operation.JointOperationComponent
 import com.tangem.features.txhistory.joint.operation.ui.state.JointOperationUM
+import com.tangem.features.txhistory.model.ResolvedOwner
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.MockAccounts
 import io.mockk.clearMocks
@@ -68,8 +69,9 @@ internal class JointOperationModelTest {
         every { delegate.isColdWallet(userWalletId = any()) } returns false
         every { delegate.observe(userWalletId = any(), currency = any(), operationId = any()) } returns
             flowOf(createState())
-        every { delegate.canCreateContact(userWalletId = any(), recipient = any(), network = any()) } returns
-            flowOf(false)
+        every { delegate.recipient(userWalletId = any(), recipient = any(), network = any()) } answers {
+            flowOf(JointOperationRecipient(owner = ResolvedOwner.External(secondArg()), canCreateContact = false))
+        }
         every { delegate.fiat(userWalletId = any(), currency = any()) } returns
             flowOf(JointOperationFiat(rate = null, appCurrency = AppCurrency.Default))
         every { getBalanceHidingSettingsUseCase() } returns flowOf(

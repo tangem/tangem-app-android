@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.rows.ChainRow
 import com.tangem.core.ui.components.rows.model.ChainRowUM
@@ -39,11 +40,11 @@ internal fun NFTReceiveNetworksContent(state: NFTReceiveUM.Networks.Content, mod
         modifier = modifier
             .fillMaxSize()
             .padding(
-                vertical = TangemTheme.dimens.spacing8,
+                vertical = 8.dp,
             ),
         state = listState,
         contentPadding = PaddingValues(
-            horizontal = TangemTheme.dimens.spacing16,
+            horizontal = 16.dp,
         ),
     ) {
         if (state.availableItems.isNotEmpty()) {
@@ -76,12 +77,12 @@ private fun LazyListScope.networks(items: List<NFTNetworkUM>) {
                 .composed {
                     if (isLastItem) {
                         padding(
-                            bottom = TangemTheme.dimens.spacing8,
+                            bottom = 8.dp,
                         )
                             .clip(
                                 RoundedCornerShape(
-                                    bottomStart = TangemTheme.dimens.radius16,
-                                    bottomEnd = TangemTheme.dimens.radius16,
+                                    bottomStart = 16.dp,
+                                    bottomEnd = 16.dp,
                                 ),
                             )
                     } else {
@@ -101,20 +102,20 @@ private fun Title(text: TextReference, modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .padding(
-                top = TangemTheme.dimens.spacing8,
+                top = 8.dp,
             )
             .background(
                 color = TangemTheme.colors.background.primary,
                 shape = RoundedCornerShape(
-                    topStart = TangemTheme.dimens.radius16,
-                    topEnd = TangemTheme.dimens.radius16,
+                    topStart = 16.dp,
+                    topEnd = 16.dp,
                 ),
             )
             .padding(
-                start = TangemTheme.dimens.spacing12,
-                top = TangemTheme.dimens.spacing12,
-                end = TangemTheme.dimens.spacing12,
-                bottom = TangemTheme.dimens.spacing4,
+                start = 12.dp,
+                top = 12.dp,
+                end = 12.dp,
+                bottom = 4.dp,
             ),
         text = text.resolveReference(),
         style = TangemTheme.typography.subtitle2,

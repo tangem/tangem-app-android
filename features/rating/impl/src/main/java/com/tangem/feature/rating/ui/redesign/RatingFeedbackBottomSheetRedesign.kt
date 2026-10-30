@@ -116,7 +116,7 @@ private fun FeedbackTextField(value: String, onValueChange: (String) -> Unit) {
             .testTag(RatingTestTags.FEEDBACK_INPUT)
             .heightIn(min = 104.dp)
             .clip(RoundedCornerShape(24.dp))
-            .background(TangemTheme.colors3.bg.opaque.primary)
+            .background(TangemTheme.colors3.bg.transparent.primary)
             .focusRequester(focusRequester),
         textStyle = TangemTheme.typography3.body.medium.copy(color = TangemTheme.colors3.text.primary),
         cursorBrush = SolidColor(TangemTheme.colors3.text.primary),

@@ -20,6 +20,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.res.TangemTheme
@@ -52,10 +53,10 @@ fun RoundableCornersRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(TangemTheme.dimens.size48)
+                .heightIn(48.dp)
                 .padding(
-                    horizontal = TangemTheme.dimens.spacing16,
-                    vertical = TangemTheme.dimens.spacing12,
+                    horizontal = 16.dp,
+                    vertical = 12.dp,
                 )
                 .testTag(StakingDetailsScreenTestTags.PARAMETER_BLOCK),
             horizontalArrangement = Arrangement.Start,
@@ -71,11 +72,11 @@ fun RoundableCornersRow(
             if (iconResId != null && iconClick != null) {
                 Icon(
                     modifier = Modifier
-                        .padding(TangemTheme.dimens.spacing4)
-                        .size(TangemTheme.dimens.size16)
+                        .padding(4.dp)
+                        .size(16.dp)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
-                            indication = ripple(bounded = false, radius = TangemTheme.dimens.radius10),
+                            indication = ripple(bounded = false, radius = 10.dp),
                             onClick = iconClick,
                         ),
                     painter = painterResource(id = R.drawable.ic_alert_24),

@@ -26,11 +26,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * @param radius Corner radius of the placeholder. Default is 25 dp.
  */
 @Composable
-fun Placeholder(
-    modifier: Modifier = Modifier,
-    size: DpSize = DpSize(TangemTheme.dimens2.x10, TangemTheme.dimens2.x2),
-    radius: Dp = TangemTheme.dimens2.x25,
-) {
+fun Placeholder(modifier: Modifier = Modifier, size: DpSize = DpSize(40.dp, 8.dp), radius: Dp = 100.dp) {
     Box(
         modifier = modifier
             .size(size)
@@ -50,12 +46,7 @@ fun Placeholder(
  * @param radius Corner radius of the placeholder. Default is 25 dp.
  */
 @Composable
-fun TextPlaceholder(
-    textStyle: TextStyle,
-    modifier: Modifier = Modifier,
-    width: Dp = 200.dp,
-    radius: Dp = TangemTheme.dimens2.x25,
-) {
+fun TextPlaceholder(textStyle: TextStyle, modifier: Modifier = Modifier, width: Dp = 200.dp, radius: Dp = 100.dp) {
     val lineHeight = with(LocalDensity.current) { textStyle.lineHeight.toDp() }
     Box(
         modifier = modifier
@@ -74,7 +65,7 @@ fun TextPlaceholder(
 private fun Placeholder_Preview() {
     TangemThemePreviewRedesign {
         Column(
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Placeholder()
             TextPlaceholder(

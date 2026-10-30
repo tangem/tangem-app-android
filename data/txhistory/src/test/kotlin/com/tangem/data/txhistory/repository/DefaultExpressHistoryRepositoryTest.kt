@@ -19,10 +19,10 @@ import com.tangem.grow.datasource.onramp.models.response.OnrampItemResponse
 import com.tangem.datasource.local.converter.toEntity
 import com.tangem.store.datasource.txhistory.db.TxHistoryDatabase
 import com.tangem.store.datasource.txhistory.db.dao.ExpressHistoryDao
-import com.tangem.store.datasource.txhistory.db.dao.ExpressSyncStateDao
+import com.tangem.store.datasource.txhistory.db.dao.HistorySyncStateDao
 import com.tangem.store.datasource.txhistory.db.dao.HistoryIndexDao
 import com.tangem.store.datasource.txhistory.db.entity.HistoryIndexEntity
-import com.tangem.store.datasource.txhistory.db.entity.express.ExpressSyncStateEntity
+import com.tangem.store.datasource.txhistory.db.entity.sync.HistorySyncStateEntity
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.repository.TokenInfoRepository
@@ -47,7 +47,7 @@ internal class DefaultExpressHistoryRepositoryTest {
     private val onrampApi: OnrampApi = mockk()
     private val expressHistoryDao: ExpressHistoryDao = mockk(relaxUnitFun = true)
     private val historyIndexDao: HistoryIndexDao = mockk(relaxUnitFun = true)
-    private val expressSyncStateDao: ExpressSyncStateDao = mockk(relaxUnitFun = true)
+    private val historySyncStateDao: HistorySyncStateDao = mockk(relaxUnitFun = true)
     private val tokenInfoRepository: TokenInfoRepository = mockk(relaxUnitFun = true)
 
     private val database: TxHistoryDatabase = mockk()
@@ -57,14 +57,14 @@ internal class DefaultExpressHistoryRepositoryTest {
         onrampApi = onrampApi,
         expressHistoryDao = expressHistoryDao,
         historyIndexDao = historyIndexDao,
-        expressSyncStateDao = expressSyncStateDao,
+        historySyncStateDao = historySyncStateDao,
         tokenInfoRepository = tokenInfoRepository,
         database = database,
     )
 
     @BeforeEach
     fun setup() {
-        clearMocks(exchangeApi, onrampApi, expressHistoryDao, historyIndexDao, expressSyncStateDao, tokenInfoRepository)
+        clearMocks(exchangeApi, onrampApi, expressHistoryDao, historyIndexDao, historySyncStateDao, tokenInfoRepository)
         // Run the withTransaction block inline so the DAO writes inside it actually happen and can be verified.
         mockkStatic("androidx.room.RoomDatabaseKt")
         val block = slot<suspend () -> Any?>()
@@ -83,7 +83,7 @@ internal class DefaultExpressHistoryRepositoryTest {
         // GIVEN
         val item = createExchangeItem()
         val response = ExchangeHistoryResponse(items = listOf(item), pagination = pagination())
-        stubSyncState(ExpressSyncStateEntity.Type.EXCHANGE, syncState(afterCursor = AFTER_CURSOR))
+        stubSyncState(HistorySyncStateEntity.Type.EXCHANGE, syncState(afterCursor = AFTER_CURSOR))
         coEvery {
             exchangeApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, cursor = AFTER_CURSOR, limit = any())
         } returns ApiResponse.Success(response)
@@ -103,7 +103,7 @@ internal class DefaultExpressHistoryRepositoryTest {
     fun `GIVEN no sync state WHEN fetchExchangeHistory THEN passes null cursor`() = runTest {
         // GIVEN
         val response = ExchangeHistoryResponse(items = emptyList(), pagination = pagination())
-        stubSyncState(ExpressSyncStateEntity.Type.EXCHANGE, state = null)
+        stubSyncState(HistorySyncStateEntity.Type.EXCHANGE, state = null)
         coEvery {
             exchangeApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, cursor = null, limit = any())
         } returns ApiResponse.Success(response)
@@ -120,7 +120,7 @@ internal class DefaultExpressHistoryRepositoryTest {
     @Test
     fun `GIVEN api error WHEN fetchExchangeHistory THEN throws and does not persist`() = runTest {
         // GIVEN
-        stubSyncState(ExpressSyncStateEntity.Type.EXCHANGE, syncState(afterCursor = AFTER_CURSOR))
+        stubSyncState(HistorySyncStateEntity.Type.EXCHANGE, syncState(afterCursor = AFTER_CURSOR))
         val error = httpError()
         coEvery {
             exchangeApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, cursor = AFTER_CURSOR, limit = any())
@@ -139,7 +139,7 @@ internal class DefaultExpressHistoryRepositoryTest {
         // GIVEN
         val item = createExchangeItem()
         val response = ExchangeHistoryDeltaResponse(items = listOf(item), pagination = paginationDelta())
-        stubSyncState(ExpressSyncStateEntity.Type.EXCHANGE, syncState(deltaCursor = DELTA_CURSOR))
+        stubSyncState(HistorySyncStateEntity.Type.EXCHANGE, syncState(deltaCursor = DELTA_CURSOR))
         coEvery {
             exchangeApi.getHistoryDelta(userWalletId = USER_WALLET_ID_VALUE, cursor = DELTA_CURSOR, limit = any())
         } returns ApiResponse.Success(response)
@@ -164,7 +164,7 @@ internal class DefaultExpressHistoryRepositoryTest {
         // GIVEN
         val item = createOnrampItem()
         val response = OnrampHistoryResponse(items = listOf(item), pagination = pagination())
-        stubSyncState(ExpressSyncStateEntity.Type.ONRAMP, syncState(afterCursor = AFTER_CURSOR))
+        stubSyncState(HistorySyncStateEntity.Type.ONRAMP, syncState(afterCursor = AFTER_CURSOR))
         coEvery {
             onrampApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, afterCursor = AFTER_CURSOR, limit = any())
         } returns ApiResponse.Success(response)
@@ -185,7 +185,7 @@ internal class DefaultExpressHistoryRepositoryTest {
         // GIVEN
         val item = createOnrampItem()
         val response = OnrampHistoryDeltaResponse(items = listOf(item), pagination = paginationDelta())
-        stubSyncState(ExpressSyncStateEntity.Type.ONRAMP, syncState(deltaCursor = DELTA_CURSOR))
+        stubSyncState(HistorySyncStateEntity.Type.ONRAMP, syncState(deltaCursor = DELTA_CURSOR))
         coEvery {
             onrampApi.getHistoryDelta(userWalletId = USER_WALLET_ID_VALUE, cursor = DELTA_CURSOR, limit = any())
         } returns ApiResponse.Success(response)
@@ -204,7 +204,7 @@ internal class DefaultExpressHistoryRepositoryTest {
     @Test
     fun `GIVEN api error WHEN fetchOnrampHistory THEN throws and does not persist`() = runTest {
         // GIVEN
-        stubSyncState(ExpressSyncStateEntity.Type.ONRAMP, syncState(afterCursor = AFTER_CURSOR))
+        stubSyncState(HistorySyncStateEntity.Type.ONRAMP, syncState(afterCursor = AFTER_CURSOR))
         val error = httpError()
         coEvery {
             onrampApi.getHistory(userWalletId = USER_WALLET_ID_VALUE, afterCursor = AFTER_CURSOR, limit = any())
@@ -288,14 +288,14 @@ internal class DefaultExpressHistoryRepositoryTest {
 
     // endregion
 
-    private fun stubSyncState(type: ExpressSyncStateEntity.Type, state: ExpressSyncStateEntity?) {
+    private fun stubSyncState(type: HistorySyncStateEntity.Type, state: HistorySyncStateEntity?) {
         coEvery {
-            expressSyncStateDao.observe(type = type.name, userWalletId = USER_WALLET_ID_VALUE)
+            historySyncStateDao.observe(type = type.name, userWalletId = USER_WALLET_ID_VALUE)
         } returns flowOf(state)
     }
 
-    private fun syncState(afterCursor: String? = null, deltaCursor: String? = null) = ExpressSyncStateEntity(
-        type = ExpressSyncStateEntity.Type.EXCHANGE.name,
+    private fun syncState(afterCursor: String? = null, deltaCursor: String? = null) = HistorySyncStateEntity(
+        type = HistorySyncStateEntity.Type.EXCHANGE.name,
         userWalletId = USER_WALLET_ID_VALUE,
         isInitialCompleted = true,
         afterCursor = afterCursor,

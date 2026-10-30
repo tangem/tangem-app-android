@@ -63,10 +63,10 @@ internal fun SelectApprovalTypeContent(
             approveType = uiState.approveType,
             approveItems = uiState.approveItems,
             onChangeApproveType = onChangeApproveType,
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+            modifier = Modifier.padding(horizontal = 16.dp),
         )
 
-        SpacerH(height = TangemTheme.dimens.spacing20)
+        SpacerH(height = 20.dp)
 
         PrimaryButton(
             text = stringResourceSafe(id = R.string.common_continue),
@@ -74,7 +74,7 @@ internal fun SelectApprovalTypeContent(
             enabled = true,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = TangemTheme.dimens.spacing16),
+                .padding(horizontal = 16.dp),
         )
 
         SpacerH16()

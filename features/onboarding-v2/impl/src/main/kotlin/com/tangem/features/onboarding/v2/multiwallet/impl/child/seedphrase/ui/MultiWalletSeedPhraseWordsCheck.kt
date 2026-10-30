@@ -48,7 +48,7 @@ internal fun MultiWalletSeedPhraseWordsCheck(
             ),
             dismissButton = DialogButtonUM(
                 title = state.dialog.dismissButtonText.resolveReference(),
-                isWarning = state.dialog.dismissWarningColor,
+                isWarning = state.dialog.isDismissWarningColor,
                 onClick = state.dialog.onDismissButtonClick,
             ),
             onDismissDialog = state.dialog.onDismiss,
@@ -98,8 +98,8 @@ internal fun MultiWalletSeedPhraseWordsCheck(
                 .fillMaxWidth(),
             text = stringResourceSafe(id = R.string.onboarding_create_wallet_button_create_wallet),
             iconResId = R.drawable.ic_tangem_24,
-            enabled = state.createWalletButtonEnabled,
-            showProgress = state.createWalletButtonProgress,
+            enabled = state.isCreateWalletButtonEnabled,
+            showProgress = state.isCreateWalletButtonInProgress,
             onClick = state.onCreateWalletButtonClick,
         )
     }
@@ -119,7 +119,7 @@ private fun Fields(state: MultiWalletSeedPhraseUM.GeneratedWordsCheck, modifier:
                     value = field.word,
                     onValueChange = field.onChange,
                     label = field.index.toString(),
-                    isError = field.error,
+                    isError = field.isError,
                     keyboardOptions = KeyboardOptions(
                         autoCorrectEnabled = false,
                         keyboardType = KeyboardType.Password,
@@ -146,19 +146,19 @@ private fun Preview() {
                         index = 2,
                         word = TextFieldValue(text = "word"),
                         onChange = {},
-                        error = false,
+                        isError = false,
                     ),
                     MultiWalletSeedPhraseUM.GeneratedWordsCheck.WordField(
                         index = 7,
                         word = TextFieldValue(text = "wor"),
                         onChange = {},
-                        error = true,
+                        isError = true,
                     ),
                     MultiWalletSeedPhraseUM.GeneratedWordsCheck.WordField(
                         index = 11,
                         word = TextFieldValue(text = "word"),
                         onChange = {},
-                        error = false,
+                        isError = false,
                     ),
                 ),
             ),

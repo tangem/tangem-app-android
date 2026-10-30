@@ -46,11 +46,11 @@ class MultiWalletAccessCodeComponent(
     @Composable
     override fun BottomSheet() {
         val state by model.uiState.collectAsStateWithLifecycle()
-        val showBs by showBs.collectAsStateWithLifecycle()
+        val shouldShowBs by showBs.collectAsStateWithLifecycle()
 
-        val bsConfig = remember(this, showBs) {
+        val bsConfig = remember(this, shouldShowBs) {
             TangemBottomSheetConfig(
-                isShown = showBs,
+                isShown = shouldShowBs,
                 onDismissRequest = { dismiss() },
                 content = TangemBottomSheetConfigContent.Empty,
             )

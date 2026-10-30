@@ -15,6 +15,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.TangemSwitch
 import com.tangem.core.ui.components.rows.model.BlockchainRowUM
@@ -31,15 +32,15 @@ fun BlockchainRow(
     model: BlockchainRowUM,
     modifier: Modifier = Modifier,
     itemPadding: PaddingValues = PaddingValues(
-        top = TangemTheme.dimens.spacing8,
-        bottom = TangemTheme.dimens.spacing8,
-        start = TangemTheme.dimens.spacing8,
+        top = 8.dp,
+        bottom = 8.dp,
+        start = 8.dp,
     ),
     action: @Composable BoxScope.() -> Unit,
 ) {
     RowContentContainer(
         modifier = modifier
-            .heightIn(min = TangemTheme.dimens.size52)
+            .heightIn(min = 52.dp)
             .padding(itemPadding),
         icon = {
             RowIcon(
@@ -70,12 +71,12 @@ fun RowIcon(
     modifier: Modifier = Modifier,
     isEnabled: Boolean = true,
 ) {
-    Box(modifier = modifier.size(TangemTheme.dimens.size24)) {
+    Box(modifier = modifier.size(24.dp)) {
         if (isColored) {
             Image(
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .size(TangemTheme.dimens.size22),
+                    .size(22.dp),
                 painter = painterResource(id = resId),
                 contentDescription = null,
             )
@@ -88,7 +89,7 @@ fun RowIcon(
                         shape = CircleShape,
                     )
                     .alpha(if (isEnabled) 1f else DISABLED_ICON_ALPHA)
-                    .size(TangemTheme.dimens.size22),
+                    .size(22.dp),
                 painter = painterResource(id = resId),
                 tint = TangemTheme.colors.icon.informative,
                 contentDescription = null,
@@ -105,7 +106,7 @@ fun RowIcon(
 private fun Badge(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .size(TangemTheme.dimens.size8)
+            .size(8.dp)
             .background(
                 color = TangemTheme.colors.background.primary,
                 shape = CircleShape,
@@ -114,7 +115,7 @@ private fun Badge(modifier: Modifier = Modifier) {
     ) {
         Box(
             modifier = Modifier
-                .size(TangemTheme.dimens.size5)
+                .size(5.dp)
                 .background(
                     color = TangemTheme.colors.icon.accent,
                     shape = CircleShape,

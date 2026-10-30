@@ -55,7 +55,7 @@ internal fun CryptoFeedTabContent(
         state = listState,
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(
-            top = contentPadding.calculateTopPadding(),
+            top = contentPadding.calculateTopPadding().coerceAtLeast(0.dp),
             bottom = bottomPadding,
         ),
     ) {

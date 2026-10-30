@@ -49,7 +49,7 @@ internal class TangemPayChangePinModel @Inject constructor(
         uiState.update(transformer = PinCodeChangeTransformer(newPin = pin))
         val state = uiState.value
         // There is no submit button: a valid full PIN is submitted automatically.
-        if (state.submitButtonEnabled && !state.submitButtonLoading) {
+        if (state.isSubmitButtonEnabled && !state.isSubmitButtonLoading) {
             onClickSubmit()
         }
     }
@@ -57,7 +57,7 @@ internal class TangemPayChangePinModel @Inject constructor(
     private fun onClickSubmit() {
         analytics.send(TangemPayAnalyticsEvents.ChangePinSubmitClicked())
         modelScope.launch {
-            uiState.update { it.copy(submitButtonLoading = true) }
+            uiState.update { it.copy(isSubmitButtonLoading = true) }
             val result = try {
                 cardDetailsRepository.setPin(
                     userWalletId = params.userWalletId,
@@ -66,13 +66,13 @@ internal class TangemPayChangePinModel @Inject constructor(
                 ).getOrNull()
             } catch (e: Exception) {
                 TangemLogger.e("Error", e)
-                uiState.update { it.copy(submitButtonLoading = false) }
+                uiState.update { it.copy(isSubmitButtonLoading = false) }
                 uiMessageSender.send(message = ToastMessage(resourceReference(R.string.common_unknown_error)))
                 return@launch
             }
             when (result) {
                 SetPinResult.PIN_TOO_WEAK -> {
-                    uiState.update { it.copy(submitButtonLoading = false) }
+                    uiState.update { it.copy(isSubmitButtonLoading = false) }
                     uiMessageSender.send(
                         message = ToastMessage(resourceReference(R.string.tangempay_pin_validation_error_message)),
                     )
@@ -86,7 +86,7 @@ internal class TangemPayChangePinModel @Inject constructor(
                 SetPinResult.UNKNOWN_ERROR,
                 null,
                 -> {
-                    uiState.update { it.copy(submitButtonLoading = false) }
+                    uiState.update { it.copy(isSubmitButtonLoading = false) }
                     uiMessageSender.send(message = ToastMessage(resourceReference(R.string.common_unknown_error)))
                 }
             }
@@ -98,8 +98,8 @@ internal class TangemPayChangePinModel @Inject constructor(
             pinCode = "",
             onPinCodeChange = ::onPinCodeChange,
             onSubmitClick = ::onClickSubmit,
-            submitButtonEnabled = false,
-            submitButtonLoading = false,
+            isSubmitButtonEnabled = false,
+            isSubmitButtonLoading = false,
             error = null,
         )
     }

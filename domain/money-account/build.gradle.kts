@@ -19,6 +19,7 @@ dependencies {
     // endregion
 
     // region Core modules
+    api(projects.core.analytics.models)
     api(projects.core.security)
     api(projects.core.utils)
     // endregion
@@ -43,8 +44,10 @@ dependencies {
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
+    testImplementation(tangemDeps.card.core)
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
     testImplementation(projects.domain.card)
     // endregion
 }

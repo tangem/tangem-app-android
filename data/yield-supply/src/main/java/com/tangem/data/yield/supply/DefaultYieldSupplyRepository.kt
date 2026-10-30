@@ -20,6 +20,7 @@ import com.tangem.grow.datasource.yield.models.YieldSupplyMarketTokenDto
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
 import com.tangem.datasource.local.preferences.utils.get
+import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.grow.datasource.yield.local.YieldMarketsStore
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -58,37 +59,57 @@ internal class DefaultYieldSupplyRepository(
         domain.enrichNetworkIds()
     }
 
+    /**
+     * The plain markets are the base of the list and the incentives are an overlay on top of them. The incentives
+     * service answers only for the chains and tokens it knows, and [YieldMarketsStore.store] replaces its contents
+     * wholesale, so a short payload driving the list would drop Yield Mode from everything it left out.
+     */
     override suspend fun updateMarkets(): List<YieldMarketToken> = withContext(dispatchers.io) {
+        // The service validates the whole list and answers 400 when one chain is off it, so a testnet the SDK still
+        // reports as supported would cost every other chain its markets.
         val chains = Blockchain.yieldSupplySupportedBlockchains()
+            .filterNot { it.isTestnet() }
             .filter(::isBlockchainEnabled)
-            .map { it.getChainId() }
+            .mapNotNull { it.getChainId() }
             .joinToString(",")
-        val marketDtos = getIncentivisedMarkets(chains)
-            ?: yieldSupplyApi.getYieldMarkets(chainId = chains).getOrThrow().marketDtos
+
+        val plain = yieldSupplyApi.getYieldMarkets(chainId = chains).getOrThrow().marketDtos
+        val marketDtos = plain.overlaidWith(getIncentivisedMarkets(chains))
+
         store.store(marketDtos)
-        marketDtos.map(YieldMarketTokenConverter::convert)
+        marketDtos.map(YieldMarketTokenConverter::convert).enrichNetworkIds()
     }
 
     /**
-     * The incentivised markets payload is a strict superset of the plain one, so the whole incentive overlay is a URL
-     * switch. Null → fall back to the plain markets.
-     *
-     * An empty payload is treated as an absence too: the incentives service may not know a chain the plain markets
-     * still serve, and overwriting the cache with it would hide Yield Mode entirely.
+     * Where both lists describe the same token the incentivised row wins, since it is the same row plus the campaign
+     * fields. Tokens the incentives service does not know keep their plain row, and the plain ordering is preserved.
+     * A token only the incentives service knows is appended after the plain rows.
      */
-    private suspend fun getIncentivisedMarkets(chains: String): List<YieldSupplyMarketTokenDto>? {
-        if (!isMerklIncentivesEnabled) return null
+    private fun List<YieldSupplyMarketTokenDto>.overlaidWith(
+        incentivised: List<YieldSupplyMarketTokenDto>,
+    ): List<YieldSupplyMarketTokenDto> {
+        if (incentivised.isEmpty()) return this
+
+        val merged = linkedMapOf<Pair<Int?, String?>, YieldSupplyMarketTokenDto>()
+        (this + incentivised).forEach { dto ->
+            merged[dto.chainId to dto.tokenAddress?.lowercase()] = dto
+        }
+
+        return merged.values.toList()
+    }
+
+    private suspend fun getIncentivisedMarkets(chains: String): List<YieldSupplyMarketTokenDto> {
+        if (!isMerklIncentivesEnabled) return emptyList()
 
         return when (val response = yieldIncentivesApi.getIncentiveMarkets(chainId = chains)) {
-            is ApiResponse.Success ->
-                response.data.marketDtos.takeIf(List<YieldSupplyMarketTokenDto>::isNotEmpty)
+            is ApiResponse.Success -> response.data.marketDtos
             is ApiResponse.Error -> {
                 // A 400 means the chain is not configured for incentives yet — an expected answer, not a failure.
                 val code = (response.cause as? ApiResponseError.HttpException)?.code
                 if (code != ApiResponseError.HttpException.Code.BAD_REQUEST) {
                     TangemLogger.e("Incentivised yield markets unavailable, using the plain markets", response.cause)
                 }
-                null
+                emptyList()
             }
         }
     }
@@ -130,7 +151,7 @@ internal class DefaultYieldSupplyRepository(
                 return@withContext false
             }
 
-            (walletManager as? YieldSupplyProvider)?.isSupported() ?: false
+            (walletManager as? YieldSupplyProvider)?.isSupported() == true
         }
 
     override suspend fun activateProtocol(
@@ -226,6 +247,14 @@ internal class DefaultYieldSupplyRepository(
 
     override suspend fun setShouldShowYieldPromoBanner(shouldShow: Boolean) {
         appPreferencesStore.store(growPreferencesKeys.yieldSupplyShouldShowMainPromoKey, shouldShow)
+    }
+
+    override suspend fun isYieldModePromoBottomSheetShown(): Boolean {
+        return appPreferencesStore.getSyncOrDefault(growPreferencesKeys.yieldModePromoBottomSheetShownKey, false)
+    }
+
+    override suspend fun setYieldModePromoBottomSheetShown() {
+        appPreferencesStore.store(growPreferencesKeys.yieldModePromoBottomSheetShownKey, true)
     }
 
     private fun getTokenProtocolStatusKey(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): String =

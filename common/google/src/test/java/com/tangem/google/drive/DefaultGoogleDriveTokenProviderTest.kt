@@ -23,6 +23,7 @@ import io.mockk.mockkObject
 import io.mockk.unmockkObject
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -33,7 +34,6 @@ import org.junit.jupiter.params.ParameterizedTest
 internal class DefaultGoogleDriveTokenProviderTest {
 
     private val authorizer: GoogleAuthorizer = mockk()
-    private val api: GoogleDriveApi = mockk(relaxed = true)
     private val context: Context = mockk()
     private val networkConnectionManager: NetworkConnectionManager = mockk()
 
@@ -41,13 +41,13 @@ internal class DefaultGoogleDriveTokenProviderTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(authorizer, api, networkConnectionManager)
+        clearMocks(authorizer, networkConnectionManager)
         mockkObject(GoogleServicesHelper)
         every { GoogleServicesHelper.checkGoogleServicesAvailability(any()) } returns true
-        every { networkConnectionManager.isOnline } returns true
+        every { networkConnectionManager.isOnlineSync } returns true
+        every { authorizer.selectedAccountName } returns null
         provider = DefaultGoogleDriveTokenProvider(
             authorizer = authorizer,
-            api = api,
             context = context,
             networkConnectionManager = networkConnectionManager,
         )
@@ -74,7 +74,7 @@ internal class DefaultGoogleDriveTokenProviderTest {
     @Test
     fun `GIVEN device offline WHEN getAccessToken THEN NetworkError and no authorize`() = runTest {
         // Arrange
-        every { networkConnectionManager.isOnline } returns false
+        every { networkConnectionManager.isOnlineSync } returns false
 
         // Act
         val actual = provider.getAccessToken()
@@ -107,7 +107,6 @@ internal class DefaultGoogleDriveTokenProviderTest {
         coEvery { authorizer.authorize(any(), any()) } returns GoogleAuthResult(TOKEN).right()
         val appDataProvider = DefaultGoogleDriveTokenProvider(
             authorizer = authorizer,
-            api = api,
             context = context,
             networkConnectionManager = networkConnectionManager,
             scopes = listOf(DefaultGoogleDriveTokenProvider.DRIVE_APP_DATA_SCOPE),
@@ -128,9 +127,9 @@ internal class DefaultGoogleDriveTokenProviderTest {
     @Test
     fun `GIVEN cached token AND device offline WHEN getAccessToken THEN cached token returned`() = runTest {
         // Arrange
-        coEvery { authorizer.authorize(any(), any()) } returns GoogleAuthResult(TOKEN).right()
+        stubAuthorizePinningAccount()
         provider.getAccessToken()
-        every { networkConnectionManager.isOnline } returns false
+        every { networkConnectionManager.isOnlineSync } returns false
 
         // Act
         val actual = provider.getAccessToken()
@@ -142,7 +141,7 @@ internal class DefaultGoogleDriveTokenProviderTest {
     @Test
     fun `GIVEN authorized WHEN getAccessToken twice THEN authorized once AND second call returns cached`() = runTest {
         // Arrange
-        coEvery { authorizer.authorize(any(), any()) } returns GoogleAuthResult(TOKEN).right()
+        stubAuthorizePinningAccount()
 
         // Act
         val first = provider.getAccessToken()
@@ -214,12 +213,44 @@ internal class DefaultGoogleDriveTokenProviderTest {
     }
 
     @Test
-    fun `GIVEN cached token WHEN switchAccount THEN token dropped before the account is pinned`() = runTest {
-        // Arrange — a token cached for the previous account must not survive the switch
+    fun `GIVEN cached token WHEN invalidateToken THEN token dropped AND account stays pinned`() = runTest {
+        // Arrange
         coEvery { authorizer.authorize(any(), any()) } returns GoogleAuthResult(TOKEN).right()
         coEvery { authorizer.clearToken(TOKEN) } just Runs
+        provider.getAccessToken()
+
+        // Act
+        provider.invalidateToken()
+        provider.getAccessToken()
+
+        // Assert
+        coVerify(exactly = 1) { authorizer.clearToken(TOKEN) }
+        verify(exactly = 0) { authorizer.clearAuthorization() }
+        coVerify(exactly = 2) { authorizer.authorize(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN an account pinned WHEN switchAccount to another THEN the authorization moves to it`() = runTest {
+        // Arrange
+        every { authorizer.selectedAccountName } returns OTHER_ACCOUNT_NAME
         every { authorizer.clearAuthorization() } just Runs
         every { authorizer.selectAccount(ACCOUNT_NAME) } just Runs
+
+        // Act
+        provider.switchAccount(ACCOUNT_NAME)
+
+        // Assert
+        coVerifyOrder {
+            authorizer.clearAuthorization()
+            authorizer.selectAccount(ACCOUNT_NAME)
+        }
+    }
+
+    @Test
+    fun `GIVEN the account is pinned already WHEN switchAccount to it THEN the cached token stays`() = runTest {
+        // Arrange
+        coEvery { authorizer.authorize(any(), any()) } returns GoogleAuthResult(TOKEN).right()
+        every { authorizer.selectedAccountName } returns ACCOUNT_NAME
         provider.getAccessToken()
 
         // Act
@@ -227,42 +258,126 @@ internal class DefaultGoogleDriveTokenProviderTest {
         provider.getAccessToken()
 
         // Assert
-        coVerifyOrder {
-            authorizer.clearToken(TOKEN)
-            authorizer.clearAuthorization()
-            authorizer.selectAccount(ACCOUNT_NAME)
-        }
-        coVerify(exactly = 2) { authorizer.authorize(any(), any()) }
+        coVerify(exactly = 1) { authorizer.authorize(any(), any()) }
+        verify(exactly = 0) { authorizer.clearAuthorization() }
     }
 
     @Test
-    fun `GIVEN cached token WHEN signOut THEN token revoked AND dropped AND state cleared`() = runTest {
+    fun `GIVEN a pinned account WHEN switchAccount to null THEN the pin is dropped`() = runTest {
         // Arrange
-        coEvery { authorizer.authorize(any(), any()) } returns GoogleAuthResult(TOKEN).right()
-        coEvery { authorizer.clearToken(TOKEN) } just Runs
         every { authorizer.clearAuthorization() } just Runs
+        every { authorizer.selectedAccountName } returns ACCOUNT_NAME
+
+        // Act
+        provider.switchAccount(accountName = null)
+
+        // Assert
+        verify(exactly = 1) { authorizer.clearAuthorization() }
+        verify(exactly = 0) { authorizer.selectAccount(any()) }
+    }
+
+    @Test
+    fun `GIVEN a token cached for the pinned account WHEN getAccessToken for another account THEN it is authorized in it`() =
+        runTest {
+            // Arrange
+            every { authorizer.selectedAccountName } returns OTHER_ACCOUNT_NAME
+            coEvery { authorizer.authorize(any(), any()) } returns GoogleAuthResult(OTHER_TOKEN).right()
+            coEvery { authorizer.authorizeAccount(ACCOUNT_NAME, any(), any()) } returns GoogleAuthResult(TOKEN).right()
+            provider.getAccessToken()
+
+            // Act
+            val actual = withContext(GoogleDriveAccount(ACCOUNT_NAME)) { provider.getAccessToken(interactive = false) }
+
+            // Assert
+            assertThat(actual).isEqualTo(TOKEN.right())
+            coVerify(exactly = 1) {
+                authorizer.authorizeAccount(ACCOUNT_NAME, listOf(DRIVE_FILE_SCOPE), interactive = false)
+            }
+        }
+
+    @Test
+    fun `GIVEN a token cached for an account WHEN the pinned account changes THEN the account keeps its token`() =
+        runTest {
+            // Arrange — a screen re-pinning the account must not move an operation of a wallet in the middle of it
+            coEvery { authorizer.authorizeAccount(ACCOUNT_NAME, any(), any()) } returns GoogleAuthResult(TOKEN).right()
+            every { authorizer.clearAuthorization() } just Runs
+            every { authorizer.selectAccount(OTHER_ACCOUNT_NAME) } just Runs
+            withContext(GoogleDriveAccount(ACCOUNT_NAME)) { provider.getAccessToken() }
+
+            // Act
+            provider.switchAccount(OTHER_ACCOUNT_NAME)
+            val actual = withContext(GoogleDriveAccount(ACCOUNT_NAME)) { provider.getAccessToken() }
+
+            // Assert
+            assertThat(actual).isEqualTo(TOKEN.right())
+            coVerify(exactly = 1) { authorizer.authorizeAccount(any(), any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN tokens of two accounts WHEN invalidateToken for one THEN only its token is dropped`() = runTest {
+        // Arrange
+        every { authorizer.selectedAccountName } returns OTHER_ACCOUNT_NAME
+        coEvery { authorizer.authorize(any(), any()) } returns GoogleAuthResult(OTHER_TOKEN).right()
+        coEvery { authorizer.authorizeAccount(ACCOUNT_NAME, any(), any()) } returns GoogleAuthResult(TOKEN).right()
+        coEvery { authorizer.clearToken(TOKEN) } just Runs
+        provider.getAccessToken()
+        withContext(GoogleDriveAccount(ACCOUNT_NAME)) { provider.getAccessToken() }
+
+        // Act
+        withContext(GoogleDriveAccount(ACCOUNT_NAME)) { provider.invalidateToken() }
         provider.getAccessToken()
 
-        // Act
-        provider.signOut()
-
         // Assert
-        coVerify(exactly = 1) { api.revokeToken(TOKEN) }
         coVerify(exactly = 1) { authorizer.clearToken(TOKEN) }
-        verify(exactly = 1) { authorizer.clearAuthorization() }
+        coVerify(exactly = 0) { authorizer.clearToken(OTHER_TOKEN) }
+        coVerify(exactly = 1) { authorizer.authorize(any(), any()) }
     }
 
     @Test
-    fun `GIVEN no cached token WHEN signOut THEN nothing revoked AND state cleared`() = runTest {
+    fun `GIVEN an account picked WHEN currentAccountName THEN it is the authorizer's account`() = runTest {
         // Arrange
-        every { authorizer.clearAuthorization() } just Runs
+        every { authorizer.selectedAccountName } returns ACCOUNT_NAME
 
         // Act
-        provider.signOut()
+        val actual = provider.currentAccountName()
 
         // Assert
-        coVerify(exactly = 0) { api.revokeToken(any()) }
-        verify(exactly = 1) { authorizer.clearAuthorization() }
+        assertThat(actual).isEqualTo(ACCOUNT_NAME)
+    }
+
+    @Test
+    fun `GIVEN an account picked WHEN currentAccountName for the account Google picks THEN null`() = runTest {
+        // Arrange
+        every { authorizer.selectedAccountName } returns ACCOUNT_NAME
+
+        // Act
+        val actual = withContext(GoogleDriveAccount(name = null)) { provider.currentAccountName() }
+
+        // Assert
+        assertThat(actual).isNull()
+    }
+
+    @Test
+    fun `GIVEN a token got silently in the account Google picks WHEN interactive getAccessToken without a pin THEN authorized again`() =
+        runTest {
+            // Arrange
+            coEvery { authorizer.authorizeAccount(null, any(), any()) } returns GoogleAuthResult(OTHER_TOKEN).right()
+            coEvery { authorizer.authorize(any(), any()) } returns GoogleAuthResult(TOKEN).right()
+            withContext(GoogleDriveAccount(name = null)) { provider.getAccessToken(interactive = false) }
+
+            // Act
+            val actual = provider.getAccessToken(interactive = true)
+
+            // Assert
+            assertThat(actual).isEqualTo(TOKEN.right())
+            coVerify(exactly = 1) { authorizer.authorize(listOf(DRIVE_FILE_SCOPE), interactive = true) }
+        }
+
+    private fun stubAuthorizePinningAccount() {
+        coEvery { authorizer.authorize(any(), any()) } answers {
+            every { authorizer.selectedAccountName } returns ACCOUNT_NAME
+            GoogleAuthResult(TOKEN).right()
+        }
     }
 
     private fun provideTestModels() = listOf(
@@ -276,7 +391,9 @@ internal class DefaultGoogleDriveTokenProviderTest {
 
     private companion object {
         const val TOKEN = "ya29.access-token"
+        const val OTHER_TOKEN = "ya29.other-access-token"
         const val ACCOUNT_NAME = "user@gmail.com"
+        const val OTHER_ACCOUNT_NAME = "other@gmail.com"
         val DRIVE_FILE_SCOPE = GoogleAuthScope("https://www.googleapis.com/auth/drive.file")
     }
 }

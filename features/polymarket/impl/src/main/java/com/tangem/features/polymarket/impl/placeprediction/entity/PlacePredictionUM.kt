@@ -247,8 +247,9 @@ internal sealed interface QuoteUM {
 
 internal enum class QuoteErrorUM { Network, Unknown }
 
+/** @property assetId the token the quote prices and the order must name — the market's current one, never a legacy id */
 @Immutable
-internal data class SignableQuoteUM(val quote: PredictionOrderQuote, val receivedAtMillis: Long)
+internal data class SignableQuoteUM(val quote: PredictionOrderQuote, val receivedAtMillis: Long, val assetId: String)
 
 internal fun QuoteUM.payout(): BigDecimal? = (this as? QuoteUM.Content)?.expected
 

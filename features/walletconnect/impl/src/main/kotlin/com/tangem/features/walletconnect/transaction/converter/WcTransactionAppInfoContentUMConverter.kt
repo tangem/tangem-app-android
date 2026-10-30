@@ -12,7 +12,8 @@ internal class WcTransactionAppInfoContentUMConverter @Inject constructor() :
 
     override fun convert(value: Input) = WcTransactionAppInfoContentUM(
         appName = value.session.sdkModel.appMetaData.name,
-        appIcon = value.session.sdkModel.appMetaData.icons.firstOrNull().orEmpty(),
+        appIcon = value.session.sdkModel.appMetaData.icons
+            .firstOrNull().orEmpty(),
         verifiedState = WcDAppVerifiedStateConverter(onVerifiedClick = value.onShowVerifiedAlert).convert(
             value.session.securityStatus to value.session.sdkModel.appMetaData.name,
         ),

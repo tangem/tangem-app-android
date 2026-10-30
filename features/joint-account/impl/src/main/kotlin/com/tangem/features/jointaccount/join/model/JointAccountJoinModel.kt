@@ -61,7 +61,7 @@ internal class JointAccountJoinModel @Inject constructor(
             config = config,
             memberName = memberName,
         ).fold(
-            ifLeft = ::handleErrorAction,
+            ifLeft = ::onJoinError,
             ifRight = { account ->
                 analyticsEventHandler.send(
                     JointAccountAnalyticsEvent.AccountJoined(
@@ -77,34 +77,11 @@ internal class JointAccountJoinModel @Inject constructor(
 
     private suspend fun isJointLimitReached(walletId: UserWalletId): Boolean {
         val accountList = singleAccountListSupplier.getSyncOrNull(userWalletId = walletId) ?: return false
+
         return !accountList.canAddMoreJointAccounts
     }
 
-    private fun showJointLimitReached() {
-        uiMessageSender.send(
-            DialogMessage(
-                title = resourceReference(CoreUiR.string.account_add_limit_dialog_title),
-                message = resourceReference(
-                    id = CoreUiR.string.account_add_limit_dialog_description,
-                    formatArgs = wrappedList(AccountList.MAX_JOINT_ACCOUNTS_COUNT.toString()),
-                ),
-                firstActionBuilder = { okAction() },
-            ),
-        )
-    }
-
-    /** The join confirmation, shown over the members screen the flow opens */
-    private fun showAccountAdded() {
-        uiMessageSender.send(
-            SnackbarMessage(
-                message = resourceReference(CoreUiR.string.joint_account_join_success_message),
-                startIconId = CoreUiR.drawable.ic_success_20,
-                isIconTinted = false,
-            ),
-        )
-    }
-
-    private fun handleErrorAction(error: JointAccountJoinError): JoinResultAction = when (error) {
+    private fun onJoinError(error: JointAccountJoinError): JoinResultAction = when (error) {
         JointAccountFlowError.UserCancelled -> JoinResultAction.None
         is JointAccountJoinError.InvalidInvite -> {
             showInvalidInvite(cause = error.cause)
@@ -120,6 +97,30 @@ internal class JointAccountJoinModel @Inject constructor(
             showGenericError(JointAccountError(source = ErrorSource.Join, cause = error.cause))
             JoinResultAction.None
         }
+    }
+
+    private fun showJointLimitReached() {
+        uiMessageSender.send(
+            DialogMessage(
+                title = resourceReference(CoreUiR.string.account_add_limit_dialog_title),
+                message = resourceReference(
+                    id = CoreUiR.string.account_add_limit_dialog_description,
+                    formatArgs = wrappedList(AccountList.MAX_JOINT_ACCOUNTS_COUNT.toString()),
+                ),
+                firstActionBuilder = { okAction() },
+            ),
+        )
+    }
+
+    /** Shown over the members screen the flow opens next */
+    private fun showAccountAdded() {
+        uiMessageSender.send(
+            SnackbarMessage(
+                message = resourceReference(CoreUiR.string.joint_account_join_success_message),
+                startIconId = CoreUiR.drawable.ic_success_20,
+                isIconTinted = false,
+            ),
+        )
     }
 
     private fun showInvalidInvite(cause: Throwable) {

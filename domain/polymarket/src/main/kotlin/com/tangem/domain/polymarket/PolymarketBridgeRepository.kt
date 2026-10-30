@@ -9,6 +9,8 @@ interface PolymarketBridgeRepository {
 
     suspend fun getSupportedAssets(): Either<PolymarketBridgeError, List<PolymarketBridgeAsset>>
 
+    suspend fun refreshSupportedAssets(): Either<PolymarketBridgeError, List<PolymarketBridgeAsset>>
+
     /** @param depositWalletAddress the wallet funds are credited to, never the owner address. */
     suspend fun createDepositAddresses(
         walletId: String,

@@ -17,7 +17,7 @@ import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.tangempay.addfunds.TangemPayAddFundsComponent
-import com.tangem.features.tangempay.addfunds.va.bank.TangemPayVaBankingDetailsErrorComponent
+import com.tangem.features.tangempay.addfunds.va.bank.DefaultTangemPayBankingDetailsErrorComponent
 import com.tangem.features.tangempay.addfunds.va.bank.VA_DAILY_DEPOSIT_LIMIT_PLACEHOLDER
 import com.tangem.features.tangempay.addfunds.va.bank.toRequisitesRows
 import com.tangem.features.tangempay.addfunds.va.deposit.TangemPayVirtualAccountDepositComponent
@@ -25,6 +25,7 @@ import com.tangem.features.tangempay.card.closure.TangemPayCloseCardComponent
 import com.tangem.features.tangempay.card.pin.TangemPayViewPinComponent
 import com.tangem.features.tangempay.card.reissue.TangemPayReissueCardComponent
 import com.tangem.features.tangempay.common.userWalletId
+import com.tangem.features.tangempay.components.TangemPayBankingDetailsErrorComponent
 import com.tangem.features.tangempay.orderCard.impl.TangemPayReissuePlasticCardComponent
 import com.tangem.features.tangempay.multichain.choosenetwork.PaymentChooseNetworkComponent
 import com.tangem.features.tangempay.multichain.othernetworks.PaymentOtherNetworksComponent
@@ -159,11 +160,10 @@ internal class TangemPayCardPageScreenComponent(
                     onFieldCopied = model::onVaFieldCopied,
                 ),
             )
-            is TangemPayCardNavigation.VaBankingDetailsError -> TangemPayVaBankingDetailsErrorComponent(
+            is TangemPayCardNavigation.VaBankingDetailsError -> DefaultTangemPayBankingDetailsErrorComponent(
                 appComponentContext = context,
-                params = TangemPayVaBankingDetailsErrorComponent.Params(
-                    userWalletId = navigation.userWalletId,
-                    productInstanceId = navigation.productInstanceId,
+                params = TangemPayBankingDetailsErrorComponent.Params(
+                    retry = { model.loadBankCredentials(navigation.productInstanceId) },
                     onDismiss = model.bottomSheetNavigation::dismiss,
                     onContactSupport = model::onContactSupportClicked,
                     onResolved = model::onVaBankingDetailsResolved,

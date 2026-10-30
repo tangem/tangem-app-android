@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.domain.blockaid.models.transaction.ValidationResult
 import com.tangem.core.ui.components.HoldToConfirmButton
 import com.tangem.core.ui.components.PrimaryButton
@@ -15,7 +16,6 @@ import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.walletconnect.impl.R
 
 @Suppress("LongParameterList")
@@ -107,7 +107,7 @@ internal fun WcCommonButtons(
     modifier: Modifier = Modifier,
     primaryButton: @Composable RowScope.() -> Unit,
 ) {
-    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8)) {
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         SecondaryButton(
             modifier = Modifier
                 .fillMaxWidth()

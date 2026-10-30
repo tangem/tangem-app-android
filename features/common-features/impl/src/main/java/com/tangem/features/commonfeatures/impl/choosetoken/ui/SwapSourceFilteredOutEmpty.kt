@@ -48,7 +48,7 @@ internal fun SwapSourceFilteredOutEmpty(onSeeAllClick: () -> Unit, modifier: Mod
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(TangemTheme.colors3.bg.opaque.secondary),
+                    .background(TangemTheme.colors3.bg.transparent.secondary),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(

@@ -60,6 +60,16 @@ class DefaultHotWalletAccessor @Inject constructor(
         tangemHotSdk.derivePublicKey(unlockHotWallet = unlock, request = request)
     }
 
+    override suspend fun derivePublicKeysWithUnlock(
+        unlockHotWallet: UnlockHotWallet,
+        request: DeriveWalletRequest,
+    ): DerivedPublicKeyResponse = tangemHotSdk.derivePublicKey(unlockHotWallet = unlockHotWallet, request = request)
+
+    override suspend fun signHashesWithUnlock(
+        unlockHotWallet: UnlockHotWallet,
+        dataToSign: List<DataToSign>,
+    ): List<SignedData> = tangemHotSdk.signHashes(unlockHotWallet = unlockHotWallet, dataToSign = dataToSign)
+
     override suspend fun exportSeedPhrase(hotWalletId: HotWalletId): SeedPhrasePrivateInfo {
         val unlockHotWallet = contextualUnlockHotWallet[hotWalletId] ?: hotSdkRequest(hotWalletId) { it }
         return tangemHotSdk.exportMnemonic(unlockHotWallet = unlockHotWallet)
@@ -246,7 +256,7 @@ class DefaultHotWalletAccessor @Inject constructor(
     private suspend fun requestPassword(hotWalletId: HotWalletId, hasBiometry: Boolean): RequestedAuth {
         val attemptRequest = HotWalletPasswordRequester.AttemptRequest(
             hotWalletId = hotWalletId,
-            authMode = false,
+            isAuthMode = false,
             hasBiometry = hasBiometry,
         )
 

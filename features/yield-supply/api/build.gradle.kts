@@ -1,6 +1,7 @@
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.serialization)
     id("configuration")
 }
 
@@ -13,6 +14,9 @@ dependencies {
     api(projects.core.decompose)
     api(projects.core.ui)
     api(projects.core.analytics.models)
+
+    /** Serialization */
+    api(deps.kotlin.serialization.core)
 
     /** Domain */
     api(projects.domain.models)

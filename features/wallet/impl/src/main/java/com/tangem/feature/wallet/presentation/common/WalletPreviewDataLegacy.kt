@@ -19,7 +19,7 @@ internal object WalletPreviewDataLegacy {
             title = "Wallet1Wallet1Wallet1Wallet1Wallet1Wallet1Wallet1Wallet1",
             balance = "8923,05312312312312312312331231231233432423423424234 $",
             additionalInfo = WalletAdditionalInfo(
-                hideable = false,
+                isHideable = false,
                 content = WalletAdditionalInfo.Content.Text(
                     TextReference.Str("3 cards • Seed phrase3 cards • Seed phrasephrasephrasephrase"),
                 ),

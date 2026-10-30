@@ -26,7 +26,7 @@ sealed interface PredictionOrderValidationError : PolymarketError {
 
     data class MakerIsNotDepositWallet(val maker: String, val expected: String) : PredictionOrderValidationError
 
-    data class MarketMismatch(val expectedTokenId: String, val isNegRiskExpected: Boolean) :
+    data class MarketMismatch(val expectedTokenId: String, val expectedDomain: PolymarketExchangeDomain?) :
         PredictionOrderValidationError
 
     data class SignerIsNotMaker(val signer: String, val maker: String) : PredictionOrderValidationError

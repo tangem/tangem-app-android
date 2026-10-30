@@ -73,6 +73,8 @@ dependencies {
     implementation(projects.core.analytics.models)
     implementation(projects.domain.core)
     implementation(projects.domain.visa)
+    implementation(projects.domain.mcp)
+    implementation(projects.domain.mcp.models)
 
 
     /** Compose libraries */
@@ -80,6 +82,7 @@ dependencies {
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.material3)
+    implementation(deps.compose.coil)
     implementation(deps.decompose.ext.compose)
     implementation(deps.androidx.activity.compose)
 
@@ -99,10 +102,12 @@ dependencies {
     kapt(deps.hilt.kapt)
     
     testImplementation(projects.common.test)
+    testImplementation(projects.core.remote)
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
     testImplementation(deps.arrow.core)
     testImplementation(deps.kotlin.coroutines)
     api(deps.kotlin.coroutines)
+    api(projects.domain.common)
     api(projects.domain.quotes)
 }

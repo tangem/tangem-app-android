@@ -1,7 +1,9 @@
 package com.tangem.domain.polymarket.session
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.polymarket.error.PolymarketPositionsReadException
 import com.tangem.domain.polymarket.model.PolymarketPosition
+import com.tangem.domain.polymarket.model.PolymarketPositionsError
 import com.tangem.domain.polymarket.model.PolymarketPositionsListConfig
 import com.tangem.domain.polymarket.model.PolymarketPositionsState
 import com.tangem.domain.polymarket.model.PolymarketPositionsTab
@@ -29,10 +31,10 @@ internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBa
         val repeated = position(assetId = "one")
         val second = position(assetId = "two")
         val third = position(assetId = "one", conditionId = "another")
-        fetch = { offset ->
-            when (offset) {
+        fetch = { index ->
+            when (index) {
                 0 -> page(listOf(first), last = false)
-                30 -> page(listOf(repeated, second), last = false)
+                1 -> page(listOf(repeated, second), last = false)
                 else -> page(listOf(third))
             }
         }
@@ -49,7 +51,7 @@ internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBa
         assertThat(session.state.value).isEqualTo(
             PolymarketPositionsState(listOf(first, second, third), PaginationStatus.EndOfPagination),
         )
-        assertThat(requests.map { it.second }).containsExactly(0, 30, 60).inOrder()
+        assertThat(requests.map { it.second }).containsExactly(0, 1, 2).inOrder()
     }
 
     @Test
@@ -120,7 +122,7 @@ internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBa
         runTest {
             // Arrange
             val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
-            fetch = { offset -> page(listOf(position(assetId = "at$offset")), last = offset == 30) }
+            fetch = { index -> page(listOf(position(assetId = "at$index")), last = index == 1) }
             session.resume(backgroundScope)
             runCurrent()
             session.loadMore()
@@ -138,7 +140,7 @@ internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBa
             // Assert
             assertThat(session.state.value)
                 .isEqualTo(PolymarketPositionsState(listOf(reloaded), PaginationStatus.EndOfPagination))
-            assertThat(requests.map { it.second }).containsExactly(0, 30, 0).inOrder()
+            assertThat(requests.map { it.second }).containsExactly(0, 1, 0).inOrder()
         }
 
     @Test
@@ -159,14 +161,14 @@ internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBa
     }
 
     @Test
-    fun `GIVEN failed next page WHEN manually retried THEN retains positions and retries the same offset`() = runTest {
+    fun `GIVEN failed next page WHEN manually retried THEN retains positions and retries the same page`() = runTest {
         // Arrange
         val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
         val first = position()
         val second = position(assetId = "second")
         val response = CompletableDeferred<BatchFetchResult<List<PolymarketPosition>>>()
         val error = BatchFetchResult.Error(IllegalStateException("Offline"))
-        fetch = { offset -> if (offset == 0) page(listOf(first), last = false) else response.await() }
+        fetch = { index -> if (index == 0) page(listOf(first), last = false) else response.await() }
         session.resume(backgroundScope)
         runCurrent()
 
@@ -184,7 +186,7 @@ internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBa
         // Assert
         assertThat(loading).isEqualTo(PolymarketPositionsState(listOf(first), PaginationStatus.NextBatchLoading))
         assertThat(failed).isEqualTo(PolymarketPositionsState(listOf(first), PaginationStatus.Paginating(error)))
-        assertThat(requests.map { it.second }).containsExactly(0, 30).inOrder()
+        assertThat(requests.map { it.second }).containsExactly(0, 1).inOrder()
 
         // Act
         fetch = { page(listOf(second)) }
@@ -198,8 +200,70 @@ internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBa
         assertThat(session.state.value).isEqualTo(
             PolymarketPositionsState(listOf(first, second), PaginationStatus.EndOfPagination),
         )
-        assertThat(requests.map { it.second }).containsExactly(0, 30, 30).inOrder()
+        assertThat(requests.map { it.second }).containsExactly(0, 1, 1).inOrder()
     }
+
+    @Test
+    fun `GIVEN the list refuses a cursor WHEN loading more THEN reloads from the first page behind the rows`() = runTest {
+        // Arrange
+        val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
+        val first = position(assetId = "first")
+        val fresh = position(assetId = "fresh")
+        var isReloaded = false
+        fetch = { index ->
+            when {
+                index != 0 -> staleCursor()
+                isReloaded -> page(listOf(fresh), last = false)
+                else -> page(listOf(first), last = false)
+            }
+        }
+        session.resume(backgroundScope)
+        runCurrent()
+        isReloaded = true
+
+        // Act
+        session.loadMore()
+        runCurrent()
+
+        // Assert
+        assertThat(session.state.value).isEqualTo(
+            PolymarketPositionsState(listOf(fresh), PaginationStatus.Paginating(page(listOf(fresh), last = false))),
+        )
+        assertThat(requests.map { it.second }).containsExactly(0, 1, 0).inOrder()
+    }
+
+    @Test
+    fun `GIVEN a cursor refused twice in a row WHEN loading more THEN the second refusal is shown as a page error`() =
+        runTest {
+            // Arrange
+            val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
+            val first = position()
+            fetch = { index -> if (index == 0) page(listOf(first), last = false) else staleCursor() }
+            session.resume(backgroundScope)
+            runCurrent()
+
+            // Act
+            session.loadMore()
+            runCurrent()
+            session.loadMore()
+            runCurrent()
+
+            // Assert
+            val shown = session.state.value
+            val pageError = (shown.status as PaginationStatus.Paginating).lastResult as BatchFetchResult.Error
+            assertThat(shown.positions).containsExactly(first)
+            assertThat((pageError.throwable as PolymarketPositionsReadException).error)
+                .isEqualTo(PolymarketPositionsError.StaleCursor)
+            assertThat(requests.map { it.second }).containsExactly(0, 1, 0, 1).inOrder()
+
+            // Act
+            session.retry()
+            runCurrent()
+
+            // Assert
+            assertThat(requests.map { it.second }).containsExactly(0, 1, 0, 1, 1, 0).inOrder()
+            assertThat(session.state.value.status).isEqualTo(PaginationStatus.Paginating(page(listOf(first), last = false)))
+        }
 
     @Test
     fun `GIVEN initial request failed WHEN retried THEN starts at the first page`() = runTest {
@@ -234,7 +298,7 @@ internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBa
             val session = createFactory()(wallet, PolymarketPositionsTab.ACTIVE)
             val first = position(assetId = "first")
             val sold = position(assetId = "sold")
-            fetch = { offset -> page(listOf(if (offset == 0) first else sold), last = false) }
+            fetch = { index -> page(listOf(if (index == 0) first else sold), last = false) }
             session.resume(backgroundScope)
             runCurrent()
             session.loadMore()
@@ -243,10 +307,10 @@ internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBa
             val refreshedFirst = position(assetId = "first")
             val third = position(assetId = "third")
             val fourth = position(assetId = "fourth")
-            fetch = { offset ->
-                when (offset) {
+            fetch = { index ->
+                when (index) {
                     0 -> page(listOf(refreshedFirst), last = false)
-                    30 -> page(listOf(third), last = false)
+                    1 -> page(listOf(third), last = false)
                     else -> page(listOf(fourth))
                 }
             }
@@ -258,7 +322,7 @@ internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBa
 
             // Assert
             assertThat(session.state.value).isEqualTo(loaded.copy(positions = listOf(refreshedFirst, third)))
-            assertThat(requests.map { it.second }).containsExactly(0, 30, 0, 30).inOrder()
+            assertThat(requests.map { it.second }).containsExactly(0, 1, 0, 1).inOrder()
 
             // Act
             session.loadMore()
@@ -268,7 +332,7 @@ internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBa
             assertThat(session.state.value).isEqualTo(
                 PolymarketPositionsState(listOf(refreshedFirst, third, fourth), PaginationStatus.EndOfPagination),
             )
-            assertThat(requests.map { it.second }).containsExactly(0, 30, 0, 30, 60).inOrder()
+            assertThat(requests.map { it.second }).containsExactly(0, 1, 0, 1, 2).inOrder()
         }
 
     @Test
@@ -290,7 +354,7 @@ internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBa
 
         // Assert
         assertThat(session.state.value).isSameInstanceAs(loaded)
-        assertThat(requests.map { it.second }).containsExactly(0, 30, 0).inOrder()
+        assertThat(requests.map { it.second }).containsExactly(0, 1, 0).inOrder()
     }
 
     @Test
@@ -313,7 +377,7 @@ internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBa
 
         // Assert
         assertThat(session.state.value).isSameInstanceAs(loaded)
-        assertThat(requests.map { it.second }).containsExactly(0, 30).inOrder()
+        assertThat(requests.map { it.second }).containsExactly(0, 1).inOrder()
     }
 
     @Test
@@ -341,8 +405,8 @@ internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBa
         val previous = factory(wallet, PolymarketPositionsTab.ACTIVE)
         val response = CompletableDeferred<Unit>()
         val first = position()
-        fetch = { offset ->
-            if (hasLoadedPage && offset == 0) page(listOf(first), last = false)
+        fetch = { index ->
+            if (hasLoadedPage && index == 0) page(listOf(first), last = false)
             else withContext(NonCancellable) { response.await(); page() }
         }
         previous.resume(backgroundScope)
@@ -376,11 +440,13 @@ internal class PolymarketPositionsSessionTest : PolymarketPositionsSessionTestBa
             PolymarketPositionsState(listOf(expected), PaginationStatus.EndOfPagination),
         )
         assertThat(requests.map { it.second })
-            .containsExactlyElementsIn(if (hasLoadedPage) listOf(0, 30, 0) else listOf(0, 0)).inOrder()
+            .containsExactlyElementsIn(if (hasLoadedPage) listOf(0, 1, 0) else listOf(0, 0)).inOrder()
     }
 
     private companion object {
         @JvmStatic
         fun provideTestModels() = listOf(false, true)
     }
+
+    private fun staleCursor() = BatchFetchResult.Error(PolymarketPositionsReadException(PolymarketPositionsError.StaleCursor))
 }

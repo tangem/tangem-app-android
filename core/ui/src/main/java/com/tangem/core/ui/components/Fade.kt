@@ -70,7 +70,7 @@ fun BottomFade(gradientBrush: Brush, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(TangemTheme.dimens.size100 + bottomBarHeight)
+            .height(100.dp + bottomBarHeight)
             .background(gradientBrush),
     )
 }
@@ -96,7 +96,7 @@ fun BottomFadeWithBlur(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(TangemTheme.dimens.size100 + bottomBarHeight)
+            .height(100.dp + bottomBarHeight)
             .hazeEffectTangem(
                 state = hazeState,
             ) {

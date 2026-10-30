@@ -6,7 +6,6 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.CATEGORY_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.SECTION_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.domain.models.earn.PreselectedEarnType
-import com.tangem.features.feed.FeedFeatureToggles
 import com.tangem.features.feed.v2.FeedEntryController
 import com.tangem.features.feed.v2.FeedEntryRequest
 import com.tangem.features.feed.v2.FeedSection
@@ -23,15 +22,13 @@ internal class DefaultDiscoverDeepLinkHandlerTest {
 
     private val appRouter: AppRouter = mockk()
     private val feedEntryController: FeedEntryController = mockk()
-    private val feedFeatureToggles: FeedFeatureToggles = mockk()
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(appRouter, feedEntryController, feedFeatureToggles)
+        clearMocks(appRouter, feedEntryController)
         every { appRouter.popTo(any<AppRoute>(), any()) } just Runs
         every { appRouter.stack } returns listOf(AppRoute.Wallet, AppRoute.AppSettings)
         every { feedEntryController.request(any()) } just Runs
-        every { feedFeatureToggles.isNewShtorkaEnabled } returns true
     }
 
     @Test
@@ -140,23 +137,9 @@ internal class DefaultDiscoverDeepLinkHandlerTest {
         verify(exactly = 0) { appRouter.popTo(any<AppRoute>(), any()) }
     }
 
-    @Test
-    fun `GIVEN the hub is disabled WHEN handled THEN nothing is requested and the wallet opens`() {
-        // Arrange
-        every { feedFeatureToggles.isNewShtorkaEnabled } returns false
-
-        // Act
-        createHandler(queryParams = mapOf(SECTION_KEY to "earn"))
-
-        // Assert
-        verify(exactly = 0) { feedEntryController.request(any()) }
-        verify(exactly = 1) { appRouter.popTo(AppRoute.Wallet, any()) }
-    }
-
     private fun createHandler(queryParams: Map<String, String>) = DefaultDiscoverDeepLinkHandler(
         queryParams = queryParams,
         feedEntryController = feedEntryController,
-        feedFeatureToggles = feedFeatureToggles,
         appRouter = appRouter,
     )
 }

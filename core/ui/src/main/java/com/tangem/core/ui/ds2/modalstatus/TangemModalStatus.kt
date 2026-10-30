@@ -3,6 +3,7 @@
 package com.tangem.core.ui.ds2.modalstatus
 
 import android.content.res.Configuration
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -12,21 +13,29 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.badge.TangemBadge
+import com.tangem.core.ui.ds2.badge.TangemBadgeUM
 import com.tangem.core.ui.ds2.loader.TangemLoader
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
-import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus.Avatar
+import com.tangem.core.ui.ds2.modal.TangemModalContentUM
+import com.tangem.core.ui.ds2.modal.tangemModalStatusUM
 import com.tangem.core.ui.ds2.row.TangemRow
+import com.tangem.core.ui.ds2.row.TangemRowText
+import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -35,12 +44,15 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.*
 import com.tangem.core.ui.test.ModalStatusTestTags
+import kotlinx.collections.immutable.ImmutableList
 
 /**
  * Design-system v2 modal status block: a round status asset, a centered title with an optional
  * description and badge, and optional detail rows — the body of a status modal. The modal sibling of
  * [com.tangem.core.ui.ds2.statusscreen.TangemStatusScreen]; place it in a
  * [com.tangem.core.ui.ds2.modal.TangemModal] with the actions in a footer.
+ *
+ * Version: 1.0.1
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=10884-41257)
  *
@@ -86,7 +98,9 @@ fun TangemModalStatus(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
@@ -97,6 +111,80 @@ fun TangemModalStatus(
         if (details != null) {
             Column(modifier = Modifier.fillMaxWidth(), content = details)
         }
+    }
+}
+
+/**
+ * [TangemModalStatus] rendered from a [TangemModalContentUM.Status] — for a status kept in UI state or built with
+ * the [tangemModalStatusUM] DSL. The badge fills the extra-bottom slot and the details render as Title—Value
+ * [TangemRow]s with a divider between them.
+ *
+ * @param state Status content. See [TangemModalContentUM.Status].
+ * @param modifier Modifier for the root container.
+ */
+@Composable
+fun TangemModalStatus(state: TangemModalContentUM.Status, modifier: Modifier = Modifier) {
+    TangemModalStatus(
+        variant = state.variant,
+        title = state.title,
+        modifier = modifier,
+        description = state.description,
+        titleStyle = state.titleStyle,
+        asset = { StatusAsset(asset = state.asset, variant = state.variant) },
+        extraBottom = state.badge?.let { badge -> { StatusBadge(badge = badge) } },
+        details = if (state.details.isNotEmpty()) {
+            { StatusDetails(details = state.details) }
+        } else {
+            null
+        },
+    )
+}
+
+@Composable
+private fun StatusAsset(asset: TangemModalContentUM.Status.Asset, variant: TangemModalStatus.Variant) {
+    when (asset) {
+        TangemModalContentUM.Status.Asset.Default -> TangemModalStatus.Avatar(variant = variant)
+        is TangemModalContentUM.Status.Asset.Glyph -> TangemModalStatus.Avatar(
+            variant = variant,
+            imageVector = asset.imageVector,
+            tint = if (asset.isTinted) variant.tint() else Color.Unspecified,
+        )
+        is TangemModalContentUM.Status.Asset.GlyphRes -> TangemModalStatus.Avatar(
+            variant = variant,
+            imageVector = ImageVector.vectorResource(id = asset.res),
+            tint = if (asset.isTinted) variant.tint() else Color.Unspecified,
+        )
+        is TangemModalContentUM.Status.Asset.Image -> Image(
+            modifier = Modifier
+                .size(72.dp)
+                .clip(CircleShape),
+            painter = painterResource(id = asset.res),
+            contentDescription = null,
+        )
+    }
+}
+
+@Composable
+private fun StatusBadge(badge: TangemBadgeUM) {
+    TangemBadge(
+        text = badge.text,
+        variant = badge.variant,
+        status = badge.status,
+        size = badge.size,
+        iconStart = badge.iconStart,
+        iconEnd = badge.iconEnd,
+        contentDescription = badge.contentDescription,
+    )
+}
+
+@Composable
+private fun StatusDetails(details: ImmutableList<TangemModalContentUM.Status.Detail>) {
+    details.fastForEachIndexed { index, detail ->
+        TangemRow(
+            divider = index < details.lastIndex,
+            titleSlot = { TangemRowText(text = detail.title, role = TangemRowTextRole.Title) },
+            valueSlot = { TangemRowText(text = detail.value, role = TangemRowTextRole.Value) },
+        )
     }
 }
 
@@ -123,7 +211,7 @@ private fun StatusTitle(title: TextReference, description: TextReference?, style
                     .fillMaxWidth()
                     .testTag(ModalStatusTestTags.DESCRIPTION),
                 text = description.resolveAnnotatedReference(),
-                style = style.descriptionTextStyle(),
+                style = TangemTheme.typography3.subheading.medium,
                 color = TangemTheme.colors3.text.secondary,
                 textAlign = TextAlign.Center,
             )
@@ -134,7 +222,7 @@ private fun StatusTitle(title: TextReference, description: TextReference?, style
 object TangemModalStatus {
 
     /** Public API surface of [TangemModalStatus]. */
-    val version = DsVersion(major = 1, minor = 0, patch = 0)
+    val version = DsVersion(major = 1, minor = 0, patch = 1)
 
     /** Status mood of the block — drives the default asset's colors and glyph. */
     enum class Variant {
@@ -149,7 +237,7 @@ object TangemModalStatus {
         @ReadOnlyComposable
         @Composable
         internal fun backgroundColor(): Color = when (this) {
-            Neutral -> TangemTheme.colors3.bg.opaque.primary
+            Neutral -> TangemTheme.colors3.bg.transparent.primary
             Success -> TangemTheme.colors3.bg.status.successSubtle
             Error -> TangemTheme.colors3.bg.status.errorSubtle
             Warning -> TangemTheme.colors3.bg.status.warningSubtle
@@ -191,13 +279,6 @@ object TangemModalStatus {
         internal fun titleTextStyle(): TextStyle = when (this) {
             Status -> TangemTheme.typography3.heading.small
             Amount -> TangemTheme.typography3.display.medium
-        }
-
-        @ReadOnlyComposable
-        @Composable
-        internal fun descriptionTextStyle(): TextStyle = when (this) {
-            Status -> TangemTheme.typography3.caption.medium
-            Amount -> TangemTheme.typography3.subheading.medium
         }
     }
 
@@ -323,6 +404,26 @@ private fun TangemModalStatusAmountPreview() {
                         },
                     )
                 }
+            },
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 386)
+@Preview(showBackground = true, widthDp = 386, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun TangemModalStatusStatePreview() {
+    TangemThemePreviewRedesign {
+        TangemModalStatus(
+            modifier = Modifier.background(TangemTheme.colors3.bg.primary),
+            state = tangemModalStatusUM {
+                variant = TangemModalStatus.Variant.Warning
+                title = stringReference(value = "Backup your wallet")
+                description = stringReference(value = "Without a backup you may lose access to your funds")
+                glyph(Icons.ic_warning_28)
+                badge(text = stringReference(value = "Recommended"), status = TangemBadge.Status.Warning)
+                detail(title = stringReference(value = "Network fee"), value = stringReference(value = "$5.00"))
+                detail(title = stringReference(value = "Total"), value = stringReference(value = "$171.84"))
             },
         )
     }

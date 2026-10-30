@@ -12,10 +12,12 @@ import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.features.txhistory.converter.TxHistoryStatusPillConverter.Input
 import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -373,6 +375,43 @@ internal class TxHistoryStatusPillConverterTest {
         assertThat(result.txHash).isEqualTo(TX_HASH)
         assertThat(result.timestamp).isEqualTo(TIMESTAMP)
     }
+
+    // endregion
+
+    // region IncentiveClaim
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN incentive claim WHEN convert THEN status label, success only once settled`(model: IncentiveClaimPillModel) {
+        // Arrange
+        val tx = txInfo(type = TransactionType.IncentiveClaim, amount = BigDecimal.ZERO)
+
+        // Act
+        val result = converter.convert(Input(tx, model.status, IncentiveClaimSpec))
+
+        // Assert
+        val expected = TransactionItemUM.Pill(
+            txHash = TX_HASH,
+            kind = TransactionItemUM.PillKind.INCENTIVE_CLAIM,
+            status = model.status,
+            label = resRef(model.label),
+            amount = null,
+            currencySymbol = null,
+            subtitle = null,
+            timestamp = TIMESTAMP,
+            onClick = result.onClick,
+            isSuccess = model.isSuccess,
+        )
+        assertThat(result).isEqualTo(expected)
+    }
+
+    private fun provideTestModels() = listOf(
+        IncentiveClaimPillModel(Status.Confirmed, R.string.transaction_history_incentive_rewards_claimed, true),
+        IncentiveClaimPillModel(Status.Unconfirmed, R.string.transaction_history_claiming_incentive_rewards, false),
+        IncentiveClaimPillModel(Status.Failed, R.string.transaction_history_status_incentive_rewards_claim_failed, false),
+    )
+
+    internal data class IncentiveClaimPillModel(val status: Status, val label: Int, val isSuccess: Boolean)
 
     // endregion
 

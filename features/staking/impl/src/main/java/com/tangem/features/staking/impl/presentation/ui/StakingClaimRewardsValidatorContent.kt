@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.inputrow.InputRowImageInfo
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.*
@@ -34,7 +35,7 @@ internal fun StakingClaimRewardsValidatorContent(
     Column(
         modifier = modifier // This function shouldn't itself apply fillMaxSize(); callers should avoid passing it here
             .background(TangemTheme.colors.background.secondary)
-            .padding(horizontal = TangemTheme.dimens.spacing12)
+            .padding(horizontal = 12.dp)
             .verticalScroll(rememberScrollState()),
     ) {
         state.rewards.forEachIndexed { index, item ->

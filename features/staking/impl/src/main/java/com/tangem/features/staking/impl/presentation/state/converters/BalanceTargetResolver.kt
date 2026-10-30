@@ -26,7 +26,7 @@ private fun StakingIntegration.createUnlistedTarget(address: String, name: Strin
         address = address,
         status = Yield.Validator.ValidatorStatus.UNKNOWN,
         name = name ?: address.toBriefAddressFormat(),
-        preferred = false,
+        isPreferred = false,
         isStrategicPartner = false,
     ).toStakingTarget()
 }

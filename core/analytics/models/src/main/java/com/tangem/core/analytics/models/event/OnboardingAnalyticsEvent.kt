@@ -5,12 +5,12 @@ import com.tangem.core.analytics.models.*
 sealed class OnboardingAnalyticsEvent(
     category: String,
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category, event, params) {
 
     sealed class Onboarding(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, String> = emptyMap(),
     ) : OnboardingAnalyticsEvent(category = "Onboarding", event = event, params = params) {
 
         /**
@@ -49,7 +49,7 @@ sealed class OnboardingAnalyticsEvent(
 
     sealed class CreateWallet(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, String> = emptyMap(),
     ) : OnboardingAnalyticsEvent(category = "Onboarding / Create Wallet", event = event, params = params) {
 
         /**
@@ -96,7 +96,7 @@ sealed class OnboardingAnalyticsEvent(
 
     sealed class SeedPhrase(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, String> = emptyMap(),
     ) : OnboardingAnalyticsEvent(category = "Onboarding / Seed Phrase", event = event, params = params) {
 
         class CreateMobileScreenOpened(
@@ -169,7 +169,7 @@ sealed class OnboardingAnalyticsEvent(
 
     sealed class Error(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, String> = emptyMap(),
     ) : OnboardingAnalyticsEvent(category = "Error", event = event, params = params) {
 
         data class OfflineAttestationFailed(

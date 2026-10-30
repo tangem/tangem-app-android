@@ -10,6 +10,7 @@ internal data class WalletOptionUM(
     val description: TextReference,
     val isEnabled: Boolean = true,
     val isLoading: Boolean = false,
+    val isLoaderSpaceReserved: Boolean = false,
     val onClick: () -> Unit,
 ) {
 

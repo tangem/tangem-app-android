@@ -72,7 +72,7 @@ class SendTransactionUseCase(
             }
         }
 
-        val linkedTerminal = cardSdkConfigRepository.isLinkedTerminal()
+        val isLinkedTerminal = cardSdkConfigRepository.isLinkedTerminal()
         if (userWallet is UserWallet.Cold && userWallet.scanResponse.card.isStart2Coin) {
             cardSdkConfigRepository.setLinkedTerminal(false)
         }
@@ -101,11 +101,11 @@ class SendTransactionUseCase(
         } catch (e: CancellationException) {
             throw e
         } catch (ex: Exception) {
-            cardSdkConfigRepository.setLinkedTerminal(linkedTerminal)
+            cardSdkConfigRepository.setLinkedTerminal(isLinkedTerminal)
             SendTransactionError.DataError(ex.message).left()
         }
 
-        cardSdkConfigRepository.setLinkedTerminal(linkedTerminal)
+        cardSdkConfigRepository.setLinkedTerminal(isLinkedTerminal)
 
         return sendResult
             .onRight {
@@ -134,8 +134,12 @@ class SendTransactionUseCase(
         userWallet: UserWallet,
         network: Network,
     ): Either<SendTransactionError, String> {
-        return invoke(listOf(txData), userWallet, network, TransactionSender.MultipleTransactionSendMode.DEFAULT)
-            .map { it.first() }
+        return invoke(
+            txsData = listOf(txData),
+            userWallet = userWallet,
+            network = network,
+            sendMode = TransactionSender.MultipleTransactionSendMode.DEFAULT,
+        ).map { it.first() }
     }
 
     private fun processSentTransactionsHashes(

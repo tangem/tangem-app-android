@@ -4,6 +4,7 @@ import com.tangem.domain.pay.model.CashbackDisplayMode
 import com.tangem.domain.pay.model.CashbackSummary
 import com.tangem.domain.pay.model.TangemPayCashback
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.utils.extensions.isZero
 
 internal data class CashbackRefreshState(val isFailed: Boolean = false, val isInProgress: Boolean = false)
 
@@ -34,7 +35,11 @@ internal fun resolveCashbackContent(
     }
     is CashbackSummary.Enabled -> when (summary.displayMode) {
         CashbackDisplayMode.FULL -> CashbackContent.Widget(summary.cashback)
-        CashbackDisplayMode.ALT_BLOCK -> CashbackContent.MenuEntry(summary.cashback)
+        CashbackDisplayMode.ALT_BLOCK -> if (summary.cashback.confirmedAmount.isZero()) {
+            CashbackContent.MenuEntry(summary.cashback)
+        } else {
+            CashbackContent.Widget(summary.cashback)
+        }
     }
     CashbackSummary.Deactivated -> if (isDeactivationDismissed) {
         CashbackContent.Hidden

@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
@@ -42,9 +43,9 @@ internal fun NFTInfoBottomSheetContent(text: TextReference, modifier: Modifier =
             color = TangemTheme.colors.text.primary1,
             style = TangemTheme.typography.body2,
             modifier = Modifier.padding(
-                start = TangemTheme.dimens.spacing16,
-                end = TangemTheme.dimens.spacing16,
-                bottom = TangemTheme.dimens.spacing16,
+                start = 16.dp,
+                end = 16.dp,
+                bottom = 16.dp,
             ),
         )
     }

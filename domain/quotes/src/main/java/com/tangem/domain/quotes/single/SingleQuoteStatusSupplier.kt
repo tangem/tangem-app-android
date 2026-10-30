@@ -11,7 +11,7 @@ import com.tangem.domain.models.quote.QuoteStatus
  *
 [REDACTED_AUTHOR]
  */
-abstract class SingleQuoteStatusSupplier(
+open class SingleQuoteStatusSupplier(
     override val factory: SingleQuoteStatusProducer.Factory,
     override val keyCreator: (SingleQuoteStatusProducer.Params) -> String,
 ) : FlowCachingSupplier<SingleQuoteStatusProducer, SingleQuoteStatusProducer.Params, QuoteStatus>()

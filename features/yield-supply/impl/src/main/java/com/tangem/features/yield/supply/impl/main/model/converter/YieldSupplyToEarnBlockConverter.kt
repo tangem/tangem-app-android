@@ -5,6 +5,8 @@ import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.features.yield.supply.impl.common.formatter.formatApy
+import com.tangem.features.yield.supply.impl.common.formatter.formatApyValue
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
@@ -50,7 +52,7 @@ internal class YieldSupplyToEarnBlockConverter : Converter<YieldSupplyUM, EarnBl
             titleUM = EarnBlockUM.TitleUM(
                 text = resourceReference(
                     id = CoreResR.string.yield_module_token_details_earn_notification_subtitle,
-                    formatArgs = wrappedList(value.apy),
+                    formatArgs = wrappedList(value.apy.formatApyValue()),
                 ),
                 style = EarnBlockUM.TitleUM.Style.Large,
                 tone = EarnBlockUM.TitleUM.Tone.Primary,
@@ -83,7 +85,7 @@ internal class YieldSupplyToEarnBlockConverter : Converter<YieldSupplyUM, EarnBl
                 text = combinedReference(
                     resourceReference(CoreResR.string.yield_module_earn_sheet_current_apy_title),
                     stringReference(StringsSigns.WHITE_SPACE),
-                    stringReference(value.apy + StringsSigns.PERCENT),
+                    value.apy.formatApy(),
                 ),
                 style = EarnBlockUM.SubtitleUM.Style.Small,
                 tone = EarnBlockUM.SubtitleUM.Tone.Accent,
