@@ -161,9 +161,9 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         balancePollJobHolder.cancel()
     }
 
-    fun onAmountChange(value: String) {
-        uiState.update(SetAmountTransformer(value = value))
-        restartQuoteLoop(withDebounce = true)
+    fun onAmountChange(value: String, isPicked: Boolean = false) {
+        uiState.update(SetAmountTransformer(value = value, isAmountFromFraction = isPicked))
+        restartQuoteLoop(withDebounce = !isPicked)
     }
 
     fun onFractionClick(fraction: AmountFractionUM) {
