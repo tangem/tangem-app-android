@@ -127,7 +127,7 @@ class EvmGaslessFeeResolver(
             network = network,
             walletManager = walletManager,
             transactionData = transactionData,
-            allowanceSpenderAddress = approval?.spenderAddress
+            allowanceSpenderAddress = approval?.spenderAddress,
         ).bind()
 
         val initialFee = initialTxFee.normal as? Fee.Ethereum
@@ -151,7 +151,7 @@ class EvmGaslessFeeResolver(
             initialFee = initialFee,
             isYieldActive = isYieldActive,
             userWallet = userWallet,
-            approval = approval
+            approval = approval,
         ).bind()
 
         // Only the yield path needs a plan: without an active position the fee token is spent straight
