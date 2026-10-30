@@ -48,6 +48,7 @@ internal fun RootContent(
     modifier: Modifier = Modifier,
     wcContent: @Composable (modifier: Modifier) -> Unit,
     promoContent: @Composable (modifier: Modifier) -> Unit,
+    walletLinkContent: @Composable (modifier: Modifier) -> Unit,
     hotAccessCodeContent: @Composable (modifier: Modifier) -> Unit,
     startupGateContent: @Composable (modifier: Modifier) -> Unit,
     scanFailsContent: @Composable (modifier: Modifier) -> Unit,
@@ -90,6 +91,8 @@ internal fun RootContent(
                         wcContent(Modifier.fillMaxSize())
 
                         promoContent(Modifier.fillMaxSize())
+
+                        walletLinkContent(Modifier.fillMaxSize())
 
                         hotAccessCodeContent(Modifier.fillMaxSize())
 
