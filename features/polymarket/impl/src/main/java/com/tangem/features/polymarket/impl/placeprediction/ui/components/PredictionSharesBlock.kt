@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,6 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -49,11 +51,19 @@ internal fun PredictionSharesBlock(
     onAmountChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     isEnabled: Boolean = true,
+    isCalculatorDivided: Boolean = false,
 ) {
     TangemSurface(modifier = modifier, color = TangemTheme.colors3.bg.secondary, shape = PolymarketCardShape) {
         Column {
             ProceedsSection(selected = selected, position = position, proceeds = proceeds)
+            if (isCalculatorDivided) {
+                HorizontalDivider(
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp),
+                    color = TangemTheme.colors3.border.secondary,
+                )
+            }
             CalculatorRow(
+                topPadding = if (isCalculatorDivided) 12.dp else 24.dp,
                 selected = selected,
                 position = position,
                 isEnabled = isEnabled,
@@ -135,6 +145,7 @@ private fun ProceedsFigure(proceeds: SharesProceedsUM) {
 
 @Composable
 private fun CalculatorRow(
+    topPadding: Dp,
     selected: BigDecimal,
     position: SellPositionUM,
     isEnabled: Boolean,
@@ -147,7 +158,7 @@ private fun CalculatorRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .padding(top = 24.dp, bottom = 16.dp),
+            .padding(top = topPadding, bottom = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(BUTTON_GAP),
         verticalArrangement = Arrangement.spacedBy(BUTTON_GAP),
         itemVerticalAlignment = Alignment.CenterVertically,
