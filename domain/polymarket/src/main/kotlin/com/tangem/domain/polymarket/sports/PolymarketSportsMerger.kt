@@ -8,11 +8,12 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 
-internal class PolymarketSportsMerger(private val time: TimeSource, private val initialConnection: Long = 0) {
+internal class PolymarketSportsMerger(private val time: TimeSource) {
 
     private var events = emptyMap<String, PolymarketEvent>()
     private val scores = mutableMapOf<String, Entry>()
     private var resnapshotRevision = 0L
+    private var hasConnected = false
 
     fun setEvents(value: List<PolymarketEvent>): Set<String> {
         events = value.filter { it.gameId?.toLongOrNull() != null }.associate { incoming ->
@@ -65,8 +66,9 @@ internal class PolymarketSportsMerger(private val time: TimeSource, private val 
     private fun hasState(score: PolymarketLiveScore): Boolean =
         score.score != null || score.period != null || score.isLive != null || score.isEnded != null
 
-    fun connected(revision: Long) {
-        if (revision > maxOf(initialConnection, 1)) resnapshotRevision = maxOf(resnapshotRevision, revision)
+    fun connected() {
+        if (hasConnected) resnapshotRevision++
+        hasConnected = true
     }
 
     fun snapshot(): PolymarketSportsState = PolymarketSportsState(
