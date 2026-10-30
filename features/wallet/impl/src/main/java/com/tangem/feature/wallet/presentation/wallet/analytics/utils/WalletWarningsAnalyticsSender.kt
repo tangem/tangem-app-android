@@ -150,6 +150,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotificationUM.UsedOutdatedData,
             is WalletNotificationUM.CloreMigration,
             is WalletNotificationUM.TangemPayRefreshNeeded,
+            is WalletNotificationUM.LinkWalletToDevice,
             WalletNotificationUM.TangemPayUnreachable,
             is WalletNotificationUM.YieldBoostPromo,
             is WalletNotificationUM.AssetsDiscoveryCompleted,
