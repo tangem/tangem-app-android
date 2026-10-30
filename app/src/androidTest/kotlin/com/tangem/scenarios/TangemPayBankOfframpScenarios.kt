@@ -110,8 +110,8 @@ fun BaseTestCase.openTangemPayRecentRecipient(recipient: TangemPayBankRecipient)
     step("Click on recent recipient '${recipient.shortName}'") {
         onTangemPayWithdrawHubScreen { recentRecipientWithName(recipient.shortName).performClick() }
     }
-    step("Assert 'Amount' screen for '${recipient.displayName}' is displayed") {
-        awaitSuccess { onTangemPayBankWithdrawAmountScreen { headerTitle(recipient.displayName).assertIsDisplayed() } }
+    step("Assert 'Amount' screen for '${recipient.fullName}' is displayed") {
+        awaitSuccess { onTangemPayBankWithdrawAmountScreen { headerTitle(recipient.fullName).assertIsDisplayed() } }
     }
 }
 
