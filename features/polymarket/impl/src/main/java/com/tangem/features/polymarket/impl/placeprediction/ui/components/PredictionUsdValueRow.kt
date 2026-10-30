@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.row.TangemRow
+import com.tangem.core.ui.ds2.row.TangemRowText
+import com.tangem.core.ui.ds2.row.TangemRowTextRole
 import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.surface.TangemSurface
@@ -77,11 +79,7 @@ private fun ValueTitle(@StringRes titleRes: Int, showInfo: Boolean) {
         horizontalArrangement = Arrangement.spacedBy(space = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = stringResourceSafe(titleRes),
-            style = TangemTheme.typography3.body.medium,
-            color = TangemTheme.colors3.text.primary,
-        )
+        TangemRowText(text = stringResourceSafe(titleRes), role = TangemRowTextRole.Title)
         if (showInfo) {
             Icon(
                 imageVector = Icons.ic_info_16,

@@ -3,15 +3,16 @@ package com.tangem.features.polymarket.impl.placeprediction.ui.components
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.common.ui.onboarding.OnboardingFooter
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -23,17 +24,22 @@ import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PreviewBuy
 
 @Composable
 internal fun PredictionPlaceFooter(
-    contentPadding: PaddingValues,
     onPolymarketTermsClick: () -> Unit,
     onTangemTermsClick: () -> Unit,
     modifier: Modifier = Modifier,
+    windowInsets: WindowInsets = WindowInsets.navigationBars,
     button: @Composable () -> Unit,
 ) {
-    OnboardingFooter(contentPadding = contentPadding, modifier = modifier) {
-        PolymarketLegalLine(
-            onPolymarketTermsClick = onPolymarketTermsClick,
-            onTangemTermsClick = onTangemTermsClick,
-        )
+    TangemFooter(
+        modifier = modifier,
+        windowInsets = windowInsets,
+        extraTop = {
+            PolymarketLegalLine(
+                onPolymarketTermsClick = onPolymarketTermsClick,
+                onTangemTermsClick = onTangemTermsClick,
+            )
+        },
+    ) {
         button()
     }
 }
@@ -70,7 +76,7 @@ private fun PredictionPlaceFooterPreview() {
     TangemThemePreviewRedesign {
         Box(modifier = Modifier.background(TangemTheme.colors3.bg.primary)) {
             PredictionPlaceFooter(
-                contentPadding = PaddingValues(),
+                windowInsets = WindowInsets(0),
                 onPolymarketTermsClick = {},
                 onTangemTermsClick = {},
             ) {
