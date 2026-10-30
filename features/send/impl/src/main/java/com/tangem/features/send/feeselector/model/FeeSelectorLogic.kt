@@ -121,7 +121,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
                         uiState.update(
                             FeeSelectorLoadedTransformer(
                                 cryptoCurrencyStatus = params.cryptoCurrencyStatus,
-                                feeCryptoCurrencyStatus = fee.selectedTokenOrNull ?: params.feeCryptoCurrencyStatus,
+                                feeCryptoCurrencyStatus = fee.feeCurrencyStatusOrNull ?: params.feeCryptoCurrencyStatus,
                                 appCurrency = appCurrency,
                                 fees = fee,
                                 feeStateConfiguration = params.feeStateConfiguration,
@@ -286,7 +286,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
                     error is GetFeeError.GaslessError.TronAllowanceTooHigh && selectedTokenOrNull == null -> {
                         val nativeFee = loadPayableNativeFeeOrNull() ?: return error.left()
                         shouldShowOnlySpeedOption.value = true
-                        LoadedFeeResult.Basic(nativeFee).right()
+                        nativeFee.right()
                     }
                     error is GetFeeError.GaslessError.TronAllowanceTooHigh -> error.left()
                     // Only the automatic choice may fall back to the basic fee. Overriding a token the
@@ -295,7 +295,9 @@ internal class FeeSelectorLogic @AssistedInject constructor(
                     error is GetFeeError.GaslessError && selectedTokenOrNull == null -> {
                         TangemLogger.i("Gasless fee unavailable ($error), falling back to the native fee")
                         shouldShowOnlySpeedOption.value = true
-                        params.onLoadFee().map { LoadedFeeResult.Basic(it) }
+                        params.onLoadFee().map { fee ->
+                            LoadedFeeResult.Basic(fee = fee, feeCurrencyStatus = resolveNativeFeeCurrencyStatus())
+                        }
                     }
                     else -> error.left()
                 }
@@ -307,16 +309,31 @@ internal class FeeSelectorLogic @AssistedInject constructor(
         )
     }
 
-    private suspend fun loadPayableNativeFeeOrNull(): TransactionFee? {
+    private suspend fun loadPayableNativeFeeOrNull(): LoadedFeeResult.Basic? {
         val nativeFee = params.onLoadFee().getOrNull() ?: return null
         val feeValue = nativeFee.normal.amount.value ?: return null
-        val nativeBalance = singleAccountStatusListSupplier.getSyncOrNull(params.userWalletId)
+        val coinStatus = getNativeCoinStatusOrNull() ?: return null
+        val nativeBalance = coinStatus.value.amount ?: return null
+        if (nativeBalance < feeValue) return null
+        return LoadedFeeResult.Basic(fee = nativeFee, feeCurrencyStatus = resolveNativeFeeCurrencyStatus(coinStatus))
+    }
+
+    private suspend fun getNativeCoinStatusOrNull(): CryptoCurrencyStatus? {
+        return singleAccountStatusListSupplier.getSyncOrNull(params.userWalletId)
             ?.getCoinStatus(params.cryptoCurrencyStatus.currency.network)
             ?.getOrNull()
-            ?.value
-            ?.amount
-            ?: return null
-        return nativeFee.takeIf { nativeBalance >= feeValue }
+    }
+
+    /**
+     * The swap screen hands over the token a previous gasless fee was paid in, so a native fallback
+     * would be labelled and balance-checked as that token.
+     */
+    private suspend fun resolveNativeFeeCurrencyStatus(
+        coinStatus: CryptoCurrencyStatus? = null,
+    ): CryptoCurrencyStatus? {
+        return params.feeCryptoCurrencyStatus.takeIf { it.currency is CryptoCurrency.Coin }
+            ?: coinStatus
+            ?: getNativeCoinStatusOrNull()
     }
 
     private suspend fun populateExtendedFee(
@@ -375,12 +392,15 @@ internal class FeeSelectorLogic @AssistedInject constructor(
             val availableTokens: AvailableFeeTokens,
         ) : LoadedFeeResult()
 
-        data class Basic(val fee: TransactionFee) : LoadedFeeResult()
+        data class Basic(
+            val fee: TransactionFee,
+            val feeCurrencyStatus: CryptoCurrencyStatus? = null,
+        ) : LoadedFeeResult()
 
-        val selectedTokenOrNull: CryptoCurrencyStatus?
+        val feeCurrencyStatusOrNull: CryptoCurrencyStatus?
             get() = when (this) {
                 is Extended -> selectedToken
-                is Basic -> null
+                is Basic -> feeCurrencyStatus
             }
 
         val transactionFee: TransactionFee
