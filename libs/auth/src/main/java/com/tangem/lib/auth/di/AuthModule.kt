@@ -1,8 +1,9 @@
 package com.tangem.lib.auth.di
 
 import android.content.Context
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.squareup.moshi.Moshi
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.lib.auth.api.AuthApi
@@ -94,13 +95,16 @@ internal object AuthModule {
 
     @Provides
     @Singleton
-    fun provideDeviceKeyManager(dispatchers: CoroutineDispatcherProvider): DeviceKeyManager {
+    fun provideDeviceKeyManager(
+        dispatchers: CoroutineDispatcherProvider,
+        analyticsExceptionHandler: AnalyticsExceptionHandler,
+    ): DeviceKeyManager {
         return runCatching {
             val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
             DefaultDeviceKeyManager(keyStore, dispatchers)
         }.getOrElse { e ->
             TangemLogger.e("Failed to init AndroidKeyStore, falling back to disabled DeviceKeyManager", e)
-            FirebaseCrashlytics.getInstance().recordException(e)
+            analyticsExceptionHandler.sendException(ExceptionAnalyticsEvent(exception = e))
             DisabledDeviceKeyManager
         }
     }
@@ -110,6 +114,7 @@ internal object AuthModule {
     fun provideAuthNonceDecryptor(
         authServiceConfig: AuthServiceConfig,
         dispatchers: CoroutineDispatcherProvider,
+        analyticsExceptionHandler: AnalyticsExceptionHandler,
     ): AuthNonceDecryptor {
         val authServiceKey = authServiceConfig.authServiceKey
         if (authServiceKey.isNullOrEmpty()) return DisabledAuthNonceDecryptor
@@ -117,7 +122,7 @@ internal object AuthModule {
         return runCatching { DefaultAuthNonceDecryptor(authServiceKey, dispatchers) }
             .getOrElse { e ->
                 TangemLogger.e("Failed to create AuthNonceDecryptor", e)
-                FirebaseCrashlytics.getInstance().recordException(e)
+                analyticsExceptionHandler.sendException(ExceptionAnalyticsEvent(exception = e))
                 DisabledAuthNonceDecryptor
             }
     }
@@ -128,6 +133,7 @@ internal object AuthModule {
         @ApplicationContext context: Context,
         @NetworkMoshi moshi: Moshi,
         dispatchers: CoroutineDispatcherProvider,
+        analyticsExceptionHandler: AnalyticsExceptionHandler,
     ): SessionTokensStore {
         return runCatching {
             val storage: SecureStorage = AndroidSecureStorageV2(
@@ -138,7 +144,7 @@ internal object AuthModule {
             DefaultSessionTokensStore(storage, moshi, dispatchers)
         }.getOrElse { e ->
             TangemLogger.e("Failed to init DefaultSessionTokensStore, falling back to disabled store", e)
-            FirebaseCrashlytics.getInstance().recordException(e)
+            analyticsExceptionHandler.sendException(ExceptionAnalyticsEvent(exception = e))
             DisabledSessionTokensStore
         }
     }
