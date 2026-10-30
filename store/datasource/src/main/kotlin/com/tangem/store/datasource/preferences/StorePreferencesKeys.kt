@@ -55,8 +55,6 @@ class StorePreferencesKeys @Inject constructor() {
 
     val walletsScrollPreviewKey: Preferences.Key<Boolean> = booleanPreferencesKey(name = "walletsScrollPreview")
 
-    val sentOneTimeEventsKey: Preferences.Key<String> = stringPreferencesKey(name = "sentOneTimeEvents")
-
     val walletsBalancesStatesKey: Preferences.Key<String> = stringPreferencesKey(name = "walletsBalancesStates")
 
     val wasTwinsOnboardingShownKey: Preferences.Key<Boolean> = booleanPreferencesKey(name = "twinsOnboardingShown")

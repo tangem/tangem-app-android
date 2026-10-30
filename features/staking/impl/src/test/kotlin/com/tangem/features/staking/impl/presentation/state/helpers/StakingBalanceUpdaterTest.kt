@@ -7,12 +7,12 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.NetworkType
+import com.tangem.domain.staking.model.NetworkType
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.FetchActionsUseCase
 import com.tangem.domain.staking.FetchStakingYieldBalanceUseCase
 import com.tangem.domain.staking.GetActionsUseCase
-import com.tangem.domain.models.staking.action.StakingActionType
+import com.tangem.domain.staking.model.action.StakingActionType
 import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.model.stakekit.StakingError

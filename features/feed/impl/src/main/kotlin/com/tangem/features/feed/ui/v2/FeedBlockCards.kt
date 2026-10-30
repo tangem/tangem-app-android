@@ -43,7 +43,7 @@ internal fun FeedShortcutCard(
 ) {
     TangemSurface(
         modifier = modifier,
-        color = TangemTheme.colors3.bg.transparent.primary,
+        color = TangemTheme.colors3.bg.secondary,
         shape = FeedBlockShape,
         onClick = onClick,
     ) {

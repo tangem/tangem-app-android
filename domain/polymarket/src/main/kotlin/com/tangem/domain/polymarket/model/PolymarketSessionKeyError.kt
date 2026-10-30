@@ -8,6 +8,12 @@ sealed interface PolymarketSessionKeyError : PolymarketError {
 
     data class Failure(val cause: Throwable) : PolymarketSessionKeyError
 
+    data class InvalidAddress(val address: String) : PolymarketSessionKeyError
+
+    data class PreparationFailed(val cause: PolymarketOnboardingError) : PolymarketSessionKeyError
+
+    data class SigningFailed(val cause: PolymarketSigningError) : PolymarketSessionKeyError
+
     data object InvalidWalletId : PolymarketSessionKeyError
 
     data object MalformedRequest : PolymarketSessionKeyError

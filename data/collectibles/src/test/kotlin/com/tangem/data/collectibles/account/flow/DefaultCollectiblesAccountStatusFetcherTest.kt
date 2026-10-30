@@ -301,8 +301,12 @@ internal class DefaultCollectiblesAccountStatusFetcherTest {
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
-    private fun createAccountRepository(store: CollectiblesAccountStore) =
-        DefaultCollectiblesAccountRepository(collectiblesAccountStore = store, timeSource = TestTimeSource())
+    private fun createAccountRepository(store: CollectiblesAccountStore) = DefaultCollectiblesAccountRepository(
+        collectiblesAccountStore = store,
+        walletAccountsFetcher = mockk(),
+        walletAccountsSaver = mockk(),
+        timeSource = TestTimeSource(),
+    )
 
     private companion object {
         const val OWNER = "8kXHqmvJ3sYVsBLnr5aXqjy6r2ZxHhCTvJH1DPDcnUXG"

@@ -12,6 +12,7 @@ import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.button.TangemButtonGroup
 import com.tangem.core.ui.ds2.button.TangemButtonStack
+import com.tangem.core.ui.ds2.draggable.TangemDraggable
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.filter.TangemFilterItem
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
@@ -122,6 +123,11 @@ internal data object DsComponentsListStory : StoryBookPage
 internal data class TangemLoaderStory(
     val selectedSize: TangemLoaderSize,
     val onSizeChange: (TangemLoaderSize) -> Unit,
+) : DsStoryBookPage
+
+internal data class TangemDraggableStory(
+    val visualState: TangemDraggable.State,
+    val onVisualStateChange: (TangemDraggable.State) -> Unit,
 ) : DsStoryBookPage
 
 @Immutable

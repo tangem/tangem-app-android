@@ -91,7 +91,7 @@ internal class DefaultSendIntentRepositoryTest {
         val actual = repository.getSendIntent(INTENT_ID)
 
         // Assert
-        assertThat(actual).isEqualTo(Either.Left(SendIntentError.NotFound(INTENT_ID)))
+        assertThat(actual).isEqualTo(Either.Left(SendIntentError.NotFound(INTENT_ID, code = "INTENT_NOT_FOUND")))
     }
 
     @Test
@@ -182,7 +182,8 @@ internal class DefaultSendIntentRepositoryTest {
         val actual = repository.completeSendIntent(INTENT_ID, TX_HASH)
 
         // Assert
-        assertThat(actual).isEqualTo(Either.Left(SendIntentError.AlreadyCompleted(INTENT_ID)))
+        val expected = SendIntentError.AlreadyCompleted(INTENT_ID, code = "INTENT_ALREADY_COMPLETED")
+        assertThat(actual).isEqualTo(Either.Left(expected))
     }
 
     @Test
@@ -199,7 +200,7 @@ internal class DefaultSendIntentRepositoryTest {
         val actual = repository.completeSendIntent(INTENT_ID, TX_HASH)
 
         // Assert
-        assertThat(actual).isEqualTo(Either.Left(SendIntentError.NotFound(INTENT_ID)))
+        assertThat(actual).isEqualTo(Either.Left(SendIntentError.NotFound(INTENT_ID, code = "INTENT_NOT_FOUND")))
     }
 
     @Test
@@ -332,7 +333,8 @@ internal class DefaultSendIntentRepositoryTest {
             val actual = repository.reportSendIntentHash(INTENT_ID, TX_HASH)
 
             // Assert
-            assertThat(actual).isEqualTo(Either.Left(SendIntentError.AlreadyCompleted(INTENT_ID)))
+            val expected = SendIntentError.AlreadyCompleted(INTENT_ID, code = "INTENT_ALREADY_COMPLETED")
+            assertThat(actual).isEqualTo(Either.Left(expected))
             coVerify(exactly = 1) { transactionIntentApi.confirmIntentTransaction(INTENT_ID, any()) }
         }
 

@@ -77,12 +77,17 @@ internal class BankWithdrawAnalyticsTest {
             ),
             PaymentAccountModel(
                 step = "send clicked",
-                report = { onSendClicked(savedRecipientDraft()) },
+                report = { onSendClicked() },
                 expectedEvents = listOf(TangemPayAnalyticsEvents.Offramp.SendOnConfirmationClicked()),
             ),
             PaymentAccountModel(
+                step = "send attempted",
+                report = { onSendAttempted(savedRecipientDraft()) },
+                expectedEvents = emptyList(),
+            ),
+            PaymentAccountModel(
                 step = "send failed",
-                report = { onSendFailed() },
+                report = { onSendFailed(errorCode = FORBIDDEN_ERROR_CODE) },
                 expectedEvents = listOf(TangemPayAnalyticsEvents.Offramp.SendErrorScreenOpened()),
             ),
             PaymentAccountModel(
@@ -144,10 +149,14 @@ internal class BankWithdrawAnalyticsTest {
                 expectedEvents = listOf(transferEvent("VA Offramp Confirmation Screen Opened")),
             ),
             MoneyAccountModel(
-                step = "send clicked over ACH",
-                report = { onSendClicked(savedRecipientDraft()) },
+                step = "send clicked",
+                report = { onSendClicked() },
+                expectedEvents = listOf(transferEvent("VA Offramp Recipient Transfer Confirmed")),
+            ),
+            MoneyAccountModel(
+                step = "send attempted over ACH",
+                report = { onSendAttempted(savedRecipientDraft()) },
                 expectedEvents = listOf(
-                    transferEvent("VA Offramp Recipient Transfer Confirmed"),
                     transferEvent(
                         event = "VA Send Confirmed",
                         params = mapOf("amount_usdc" to "500", "method" to "bank_transfer_ach"),
@@ -155,9 +164,9 @@ internal class BankWithdrawAnalyticsTest {
                 ),
             ),
             MoneyAccountModel(
-                step = "send clicked over Wire",
+                step = "send attempted over Wire",
                 report = {
-                    onSendClicked(
+                    onSendAttempted(
                         savedRecipientDraft().copy(
                             amount = BigDecimal("12.5"),
                             destination = offrampDestination(rail = BankRail.WIRE),
@@ -165,7 +174,6 @@ internal class BankWithdrawAnalyticsTest {
                     )
                 },
                 expectedEvents = listOf(
-                    transferEvent("VA Offramp Recipient Transfer Confirmed"),
                     transferEvent(
                         event = "VA Send Confirmed",
                         params = mapOf("amount_usdc" to "12.5", "method" to "bank_transfer_wire"),
@@ -173,13 +181,20 @@ internal class BankWithdrawAnalyticsTest {
                 ),
             ),
             MoneyAccountModel(
-                step = "send clicked without an amount",
-                report = { onSendClicked(savedRecipientDraft().copy(amount = null)) },
-                expectedEvents = listOf(transferEvent("VA Offramp Recipient Transfer Confirmed")),
+                step = "send attempted without an amount",
+                report = { onSendAttempted(savedRecipientDraft().copy(amount = null)) },
+                expectedEvents = emptyList(),
             ),
             MoneyAccountModel(
-                step = "send failed",
-                report = { onSendFailed() },
+                step = "send failed with an error code",
+                report = { onSendFailed(errorCode = FORBIDDEN_ERROR_CODE) },
+                expectedEvents = listOf(
+                    transferEvent(event = "VA Send failed", params = mapOf("error_code" to "104120100")),
+                ),
+            ),
+            MoneyAccountModel(
+                step = "send failed without an error code",
+                report = { onSendFailed(errorCode = null) },
                 expectedEvents = listOf(transferEvent("VA Send failed")),
             ),
             MoneyAccountModel(
@@ -214,5 +229,6 @@ internal class BankWithdrawAnalyticsTest {
 
     private companion object {
         val USER_WALLET_ID = UserWalletId("011")
+        const val FORBIDDEN_ERROR_CODE = 104_120_100
     }
 }

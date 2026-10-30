@@ -15,6 +15,15 @@ interface PolymarketTypedDataSigner {
     ): Either<PolymarketSigningError, PredictionSignedOrder>
 
     /**
+     * @param sessionKeyAddress the key the placing identity speaks for; a different held key is refused
+     */
+    suspend fun signOrderWithSessionKey(
+        userWalletId: UserWalletId,
+        sessionKeyAddress: String,
+        payload: PredictionOrderPayload,
+    ): Either<PolymarketSigningError, PredictionSignedOrder>
+
+    /**
      * Signs a single `Batch` envelope — the same structure `POST /wallet/approvals` uses, with one call
      * instead of seventeen.
      *

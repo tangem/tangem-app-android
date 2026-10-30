@@ -1,5 +1,6 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.common.TangemSiteUrlBuilder
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
@@ -125,8 +126,9 @@ internal object WalletsDomainModule {
     @Singleton
     fun providesOpenBuyTangemCardUseCase(
         walletsPromoRepository: WalletsPromoRepository,
+        tangemSiteUrlBuilder: TangemSiteUrlBuilder,
     ): GenerateBuyTangemCardLinkUseCase {
-        return GenerateBuyTangemCardLinkUseCase(walletsPromoRepository)
+        return GenerateBuyTangemCardLinkUseCase(walletsPromoRepository, tangemSiteUrlBuilder)
     }
 
     @Provides
@@ -479,20 +481,6 @@ internal object WalletsDomainModule {
     ): GetWalletBackupIntegrityUseCase {
         return GetWalletBackupIntegrityUseCase(
             walletCardsBackupRepository = walletCardsBackupRepository,
-            isWalletBackupProblematicUseCase = isWalletBackupProblematicUseCase,
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideReportMissingWalletCardsBackupUseCase(
-        walletCardsBackupRepository: WalletCardsBackupRepository,
-        reportWalletCardsBackupUseCase: ReportWalletCardsBackupUseCase,
-        isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
-    ): ReportMissingWalletCardsBackupUseCase {
-        return ReportMissingWalletCardsBackupUseCase(
-            walletCardsBackupRepository = walletCardsBackupRepository,
-            reportWalletCardsBackupUseCase = reportWalletCardsBackupUseCase,
             isWalletBackupProblematicUseCase = isWalletBackupProblematicUseCase,
         )
     }

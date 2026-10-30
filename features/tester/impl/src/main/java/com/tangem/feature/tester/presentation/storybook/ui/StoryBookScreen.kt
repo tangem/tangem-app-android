@@ -40,6 +40,7 @@ import com.tangem.feature.tester.presentation.storybook.page.contextmenu.TangemC
 import com.tangem.feature.tester.presentation.storybook.page.deviceicon.DeviceIconStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.avatar.TangemAvatarStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.accountrow.TangemAccountRowStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.draggable.TangemDraggableStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.expandablerow.TangemExpandableRowStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.DsComponentsListStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.badge.TangemBadgeV2Story
@@ -142,6 +143,7 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
                 is TangemStatusScreenStory -> TangemStatusScreenStory(state = storyState)
                 is TangemAccountRowStory -> TangemAccountRowStory(state = storyState)
                 is TangemExpandableRowStory -> TangemExpandableRowStory(state = storyState)
+                is TangemDraggableStory -> TangemDraggableStory(state = storyState)
                 is TangemAvatarStory -> TangemAvatarStory(state = storyState)
                 is TangemTokenRowV2Story -> TangemTokenRowV2Story(state = storyState)
                 is TangemTokenRowMarketStory -> TangemTokenRowMarketStory(state = storyState)
