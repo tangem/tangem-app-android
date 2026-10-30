@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
@@ -38,6 +39,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_government_20
 import com.tangem.core.ui.res.generated.icons.ic_grid_20
+import com.tangem.core.ui.test.MoneyAccountTestTags
 import com.tangem.features.moneyaccount.details.impl.R
 import kotlinx.collections.immutable.persistentListOf
 
@@ -96,7 +98,9 @@ private fun OptionRow(item: MoneyAccountAddFundsOptionUM) {
     )
 }
 
-private val loaderSlot: @Composable BoxScope.() -> Unit = { TangemLoader() }
+private val loaderSlot: @Composable BoxScope.() -> Unit = {
+    TangemLoader(modifier = Modifier.testTag(MoneyAccountTestTags.ADD_FUNDS_OPTION_LOADER))
+}
 
 @Preview(showBackground = true)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
