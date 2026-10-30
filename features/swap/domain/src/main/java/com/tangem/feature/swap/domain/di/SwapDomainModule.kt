@@ -86,7 +86,7 @@ internal class SwapDomainModule {
         wrapYieldSwapCallDataWithUpgradeUseCase: WrapYieldSwapCallDataWithUpgradeUseCase,
         getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase,
         isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
-        createApprovalTransactionUseCase: CreateApprovalTransactionUseCase
+        createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
     ): DexSwapFeeCalculator = DexSwapFeeCalculator(
         getFeeUseCase = getFeeUseCase,
         getFeeForGaslessUseCase = getFeeForGaslessUseCase,
@@ -98,7 +98,7 @@ internal class SwapDomainModule {
         wrapYieldSwapCallDataWithUpgradeUseCase = wrapYieldSwapCallDataWithUpgradeUseCase,
         getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
         isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
-        createApprovalTransactionUseCase = createApprovalTransactionUseCase
+        createApprovalTransactionUseCase = createApprovalTransactionUseCase,
     )
 
     @Provides

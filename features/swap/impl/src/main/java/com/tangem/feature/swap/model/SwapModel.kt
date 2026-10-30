@@ -3541,8 +3541,6 @@ internal class SwapModel @Inject constructor(
                     ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
                         if (quoteState.txType == ExpressTxType.SEND) {
                             null
-                        } else if (isTronGaslessDexSwap(fromSwapCurrencyStatus)) {
-                            quoteState.swapDataModel ?: return Either.Left(GetFeeError.UnknownError)
                         } else if (isGaslessDexSwap(fromSwapCurrencyStatus)) {
                             quoteState.swapDataModel ?: return Either.Left(GetFeeError.UnknownError)
                         } else {
@@ -3574,21 +3572,33 @@ internal class SwapModel @Inject constructor(
                         )
                     }
                 }.flatMap { feeExtended ->
-                    val permissionSettings = quoteState.permissionState as? PermissionDataState.PermissionSettings
-                    if (permissionSettings == null || feeExtended.isGasless) {
-                        // A gasless fee already carries the approve inside its batch.
-                        feeExtended.right()
-                    } else {
-                        loadAndStoreIntegratedApproval(
-                            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-                            quoteState = quoteState,
-                            permissionSettings = permissionSettings,
-                            approvalAmount = amount,
-                            swapTxFee = feeExtended.transactionFee,
-                        ).map { combinedFee -> feeExtended.copy(transactionFee = combinedFee, nativeFee = combinedFee) }
-                    }
+                    addIntegratedApprovalFee(
+                        feeExtended = feeExtended,
+                        fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                        quoteState = quoteState,
+                        approvalAmount = amount,
+                    )
                 }
             }
+        }
+
+        private suspend fun addIntegratedApprovalFee(
+            feeExtended: TransactionFeeExtended,
+            fromSwapCurrencyStatus: SwapCurrencyStatus,
+            quoteState: SwapState.QuotesLoadedState,
+            approvalAmount: BigDecimal,
+        ): Either<GetFeeError, TransactionFeeExtended> {
+            val permissionSettings = quoteState.permissionState as? PermissionDataState.PermissionSettings
+            // A gasless fee already carries the approve inside its batch.
+            if (permissionSettings == null || feeExtended.isGasless) return feeExtended.right()
+
+            return loadAndStoreIntegratedApproval(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                quoteState = quoteState,
+                permissionSettings = permissionSettings,
+                approvalAmount = approvalAmount,
+                swapTxFee = feeExtended.transactionFee,
+            ).map { combinedFee -> feeExtended.copy(transactionFee = combinedFee, nativeFee = combinedFee) }
         }
 
         override fun onResult(newState: FeeSelectorUM) {
@@ -3729,10 +3739,13 @@ internal class SwapModel @Inject constructor(
         }
     }
 
+    private fun isGaslessDexSwap(fromSwapCurrencyStatus: SwapCurrencyStatus): Boolean =
+        isTronGaslessDexSwap(fromSwapCurrencyStatus) || isEvmGaslessDexSwap(fromSwapCurrencyStatus)
+
     private fun isTronGaslessDexSwap(fromSwapCurrencyStatus: SwapCurrencyStatus): Boolean =
         swapFeatureToggles.isTronGaslessDexSwapEnabled && isTron(fromSwapCurrencyStatus.currency.network.rawId)
 
-    private fun isGaslessDexSwap(fromSwapCurrencyStatus: SwapCurrencyStatus): Boolean =
+    private fun isEvmGaslessDexSwap(fromSwapCurrencyStatus: SwapCurrencyStatus): Boolean =
         swapFeatureToggles.isEvmGaslessDexSwapEnabled &&
             isEvmGaslessFeeSupportedForNetwork(fromSwapCurrencyStatus.currency.network)
 

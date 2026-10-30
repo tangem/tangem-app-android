@@ -1,5 +1,6 @@
 package com.tangem.domain.transaction.usecase.gasless
 
+import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.BlockchainSdkError
@@ -20,6 +21,8 @@ import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.GaslessYieldRepository
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.GaslessApproval
+import com.tangem.domain.transaction.models.GaslessFeePlan
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -120,6 +123,49 @@ class TokenFeeCalculatorTest {
         result.onLeft { error ->
             assertTrue(error is GetFeeError.GaslessError)
         }
+    }
+
+    @Test
+    fun `GIVEN allowance spender WHEN calculateInitialFee THEN estimates with simulated allowance override`() = runTest {
+        // Arrange
+        val expectedFee = createMockTransactionFee()
+        coEvery {
+            mockWalletManager.estimateFeeWithOverride(mockTransactionData, "0xSpender", isSimulate = true)
+        } returns Result.Success(expectedFee)
+
+        // Act
+        val result = tokenFeeCalculator.calculateInitialFee(
+            userWallet = mockUserWallet,
+            network = mockNetwork,
+            walletManager = mockWalletManager,
+            transactionData = mockTransactionData,
+            allowanceSpenderAddress = "0xSpender",
+        )
+
+        // Assert
+        assertEquals(expectedFee, result.getOrNull())
+        coVerify(exactly = 0) { mockWalletManager.getFee(any<TransactionData>()) }
+    }
+
+    @Test
+    fun `GIVEN allowance override fails WHEN calculateInitialFee THEN returns DataError`() = runTest {
+        // Arrange
+        val sdkError = BlockchainSdkError.Ethereum.Api(1, "execution reverted")
+        coEvery {
+            mockWalletManager.estimateFeeWithOverride(mockTransactionData, "0xSpender", isSimulate = true)
+        } returns Result.Failure(sdkError)
+
+        // Act
+        val result = tokenFeeCalculator.calculateInitialFee(
+            userWallet = mockUserWallet,
+            network = mockNetwork,
+            walletManager = mockWalletManager,
+            transactionData = mockTransactionData,
+            allowanceSpenderAddress = "0xSpender",
+        )
+
+        // Assert
+        assertEquals(GetFeeError.GaslessError.DataError(sdkError), result.leftOrNull())
     }
 
     // ===== estimateInitialFee Tests =====
@@ -852,7 +898,127 @@ class TokenFeeCalculatorTest {
         coVerify(exactly = 0) { gaslessYieldRepository.createPartialWithdrawCallData(any(), any(), any()) }
     }
 
+    // ===== calculateTokenFee with integrated approve =====
+
+    @Test
+    fun `GIVEN approval WHEN calculateTokenFee THEN adds padded approve gas and attaches approve plan`() = runTest {
+        // Arrange
+        val tokenStatus = createMockTokenStatus(balance = BigDecimal("1000"), fiatRate = BigDecimal("1"))
+        val nativeStatus = createMockNativeCurrencyStatus(fiatRate = BigDecimal("2000"))
+        val approval = createApproval()
+        stubFeeTransfer()
+        coEvery { mockWalletManager.getGasLimit(any(), APPROVE_TOKEN_CONTRACT, any()) } returns
+            Result.Success(BigInteger("46000"))
+
+        // Act
+        val result = tokenFeeCalculator.calculateTokenFee(
+            walletManager = mockWalletManager,
+            tokenForPayFeeStatus = tokenStatus,
+            nativeCurrencyStatus = nativeStatus,
+            initialFee = createMockEIP1559Fee(),
+            approval = approval,
+        )
+
+        // Assert
+        val feeExtended = result.getOrNull()!!
+        val fee = feeExtended.transactionFee.normal as Fee.Ethereum.TokenCurrency
+        // 140_000 main + 66_000 fee transfer + 21_000 base + 64_400 approve (46_000 * 1.40)
+        assertEquals(BigInteger("291400"), fee.gasLimit)
+        assertEquals(
+            GaslessFeePlan.TokenPayWithApproval(
+                feeToken = tokenStatus.currency as CryptoCurrency.Token,
+                fee = fee,
+                approval = approval,
+                approveGasLimit = BigInteger("64400"),
+            ),
+            feeExtended.gaslessFeePlan,
+        )
+    }
+
+    @Test
+    fun `GIVEN no approval WHEN calculateTokenFee THEN leaves fee plan unset`() = runTest {
+        // Arrange
+        stubFeeTransfer()
+
+        // Act
+        val result = tokenFeeCalculator.calculateTokenFee(
+            walletManager = mockWalletManager,
+            tokenForPayFeeStatus = createMockTokenStatus(),
+            nativeCurrencyStatus = createMockNativeCurrencyStatus(),
+            initialFee = createMockEIP1559Fee(),
+        )
+
+        // Assert
+        assertNull(result.getOrNull()!!.gaslessFeePlan)
+    }
+
+    @Test
+    fun `GIVEN approve gas estimation fails WHEN calculateTokenFee THEN returns DataError`() = runTest {
+        // Arrange
+        val sdkError = BlockchainSdkError.NPError("approve estimation failed")
+        stubFeeTransfer()
+        coEvery { mockWalletManager.getGasLimit(any(), APPROVE_TOKEN_CONTRACT, any()) } returns
+            Result.Failure(sdkError)
+
+        // Act
+        val result = tokenFeeCalculator.calculateTokenFee(
+            walletManager = mockWalletManager,
+            tokenForPayFeeStatus = createMockTokenStatus(),
+            nativeCurrencyStatus = createMockNativeCurrencyStatus(),
+            initialFee = createMockEIP1559Fee(),
+            approval = createApproval(),
+        )
+
+        // Assert
+        assertEquals(GetFeeError.GaslessError.DataError(sdkError), result.leftOrNull())
+    }
+
+    @Test
+    fun `GIVEN approval without call data WHEN calculateTokenFee THEN returns error`() = runTest {
+        // Arrange
+        stubFeeTransfer()
+
+        // Act
+        val result = tokenFeeCalculator.calculateTokenFee(
+            walletManager = mockWalletManager,
+            tokenForPayFeeStatus = createMockTokenStatus(),
+            nativeCurrencyStatus = createMockNativeCurrencyStatus(),
+            initialFee = createMockEIP1559Fee(),
+            approval = createApproval(extras = null),
+        )
+
+        // Assert
+        assertTrue(result.isLeft())
+        coVerify(exactly = 0) { mockWalletManager.getGasLimit(any(), APPROVE_TOKEN_CONTRACT, any()) }
+    }
+
     // ===== Helper Methods =====
+
+    private fun stubFeeTransfer() {
+        coEvery { mockWalletManager.getGasLimit(any(), "0xFeeReceiver", any()) } returns
+            Result.Success(BigInteger("60000"))
+        coEvery { gaslessTransactionRepository.getTokenFeeReceiverAddress() } returns "0xFeeReceiver"
+        every { gaslessTransactionRepository.getBaseGasForTransaction() } returns BigInteger("21000")
+    }
+
+    private fun createApproval(
+        extras: EthereumTransactionExtras? = EthereumTransactionExtras(
+            callData = object : SmartContractCallData {
+                override val methodId = "0x095ea7b3"
+                override val data = byteArrayOf(0x09, 0x5e)
+                override fun validate(blockchain: com.tangem.blockchain.common.Blockchain) = true
+            },
+        ),
+    ) = GaslessApproval(
+        spenderAddress = "0xSpender",
+        approvalTransaction = TransactionData.Uncompiled(
+            amount = mockk(relaxed = true),
+            fee = null,
+            sourceAddress = "0xSource",
+            destinationAddress = APPROVE_TOKEN_CONTRACT,
+            extras = extras,
+        ),
+    )
 
     private fun createMockTransactionFee(): TransactionFee {
         val fee = Fee.Ethereum.EIP1559(
@@ -924,5 +1090,9 @@ class TokenFeeCalculatorTest {
         every { status.value.yieldSupplyStatus } returns null
 
         return status
+    }
+
+    private companion object {
+        const val APPROVE_TOKEN_CONTRACT = "0xApproveToken"
     }
 }

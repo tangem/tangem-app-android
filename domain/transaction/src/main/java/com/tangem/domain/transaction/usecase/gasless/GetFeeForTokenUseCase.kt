@@ -75,7 +75,7 @@ class GetFeeForTokenUseCase(
                         tokenCurrencyStatus = tokenCurrencyStatus,
                         nativeTransactionData = transactionData,
                         sentAmount = sentAmount,
-                        approval = approval
+                        approval = approval,
                     ).bind()
                 },
                 catch = {
