@@ -144,7 +144,7 @@ internal class TokenFeeCalculator(
         }
     }
 
-    @Suppress("LongMethod", "CyclomaticComplexity")
+    @Suppress("LongMethod")
     suspend fun calculateTokenFee(
         walletManager: EthereumWalletManager,
         tokenForPayFeeStatus: CryptoCurrencyStatus,
@@ -188,17 +188,15 @@ internal class TokenFeeCalculator(
                 BigInteger.ZERO
             }
 
-            val approveGasLimit = approval
-                ?.let { estimateApproveGasLimit(walletManager, it) }
-                ?.increaseByPercent(PERCENT_TO_INCREASE_SUB_CALL_GASLIMIT)
-                ?: BigInteger.ZERO
+            val approveGasLimit = estimateApproveGasLimit(walletManager, approval)
 
             // Safety margin over the raw estimation
             val mainTransactionGasLimit = initialFee.gasLimit
                 .increaseByPercent(PERCENT_TO_INCREASE_SUB_CALL_GASLIMIT)
             val withdrawGasLimit = withdrawGas.increaseByPercent(PERCENT_TO_INCREASE_SUB_CALL_GASLIMIT)
 
-            val maxTokenFeeGas = mainTransactionGasLimit + feeTransferGasLimit + baseGas + withdrawGasLimit + approveGasLimit
+            val maxTokenFeeGas = mainTransactionGasLimit + feeTransferGasLimit +
+                baseGas + withdrawGasLimit + approveGasLimit
 
             val maxFeePerGas = when (initialFee) {
                 is Fee.Ethereum.EIP1559 -> initialFee.maxFeePerGas
@@ -255,11 +253,11 @@ internal class TokenFeeCalculator(
                 // sub-call gas, present only on the yield path where a batch is built.
                 mainTransactionGasLimit = mainTransactionGasLimit,
                 withdrawGasLimit = withdrawGasLimit.takeIf { isYieldActive },
-                gaslessFeePlan = approval?.let {
+                gaslessFeePlan = approval?.let { approval ->
                     GaslessFeePlan.TokenPayWithApproval(
                         feeToken = tokenForPayFee,
                         fee = fee,
-                        approval = it,
+                        approval = approval,
                         approveGasLimit = approveGasLimit,
                     )
                 },
@@ -347,12 +345,14 @@ internal class TokenFeeCalculator(
 
     private suspend fun Raise<GetFeeError>.estimateApproveGasLimit(
         walletManager: EthereumWalletManager,
-        approval: GaslessApproval,
+        approval: GaslessApproval?,
     ): BigInteger {
+        if (approval == null) return BigInteger.ZERO
+
         val approvalTransaction = approval.approvalTransaction
         val callData = (approvalTransaction.extras as? EthereumTransactionExtras)?.callData
             ?: raiseIllegalStateError("Approve call data is required")
-        return when (
+        val gasLimit = when (
             val result = walletManager.getGasLimit(
                 amount = approvalTransaction.amount,
                 destination = approvalTransaction.destinationAddress,
@@ -362,6 +362,7 @@ internal class TokenFeeCalculator(
             is Result.Success -> result.data
             is Result.Failure -> raise(GaslessError.DataError(result.error))
         }
+        return gasLimit.increaseByPercent(PERCENT_TO_INCREASE_SUB_CALL_GASLIMIT)
     }
 
     private fun BlockchainError.isContractExecutionError(): Boolean {

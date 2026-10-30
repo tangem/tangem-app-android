@@ -451,7 +451,7 @@ class CreateAndSendEvmGaslessTransactionUseCase(
                     ),
                     fee = feeObj,
                     nonce = nonce,
-                )
+                ),
             )
         }
 
