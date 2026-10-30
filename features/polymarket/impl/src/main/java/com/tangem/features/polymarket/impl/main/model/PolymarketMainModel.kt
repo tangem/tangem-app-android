@@ -22,6 +22,8 @@ import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
+import com.tangem.domain.polymarket.model.PolymarketSportsState
+import com.tangem.domain.polymarket.usecase.ObservePolymarketLiveQuotesUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketSportsStateUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
@@ -58,6 +60,9 @@ import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
@@ -97,6 +102,7 @@ internal class PolymarketMainModel @Inject constructor(
     private val observePolymarketCredentialsPresenceUseCase: ObservePolymarketCredentialsPresenceUseCase,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     observePolymarketSportsStateUseCase: ObservePolymarketSportsStateUseCase,
+    observePolymarketLiveQuotesUseCase: ObservePolymarketLiveQuotesUseCase,
     polymarketFeatureToggles: PolymarketFeatureToggles,
 ) : Model(), PolymarketAddFundsComponent.ModelCallback {
 
@@ -211,6 +217,11 @@ internal class PolymarketMainModel @Inject constructor(
         isEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled,
     )
 
+    private val feedQuotes = PolymarketFeedQuotes(
+        observeQuotes = observePolymarketLiveQuotesUseCase,
+        isEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled,
+    )
+
     private val categoriesJob = JobHolder()
 
     private val balancePollJobHolder = JobHolder()
@@ -264,7 +275,9 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     fun onVisibleEventsChange(eventIds: Set<String>) {
-        activeFeed.value?.poller?.setVisibleEventIds(eventIds)
+        val feed = activeFeed.value ?: return
+        feed.visibleEventIds.value = eventIds
+        feed.poller.setVisibleEventIds(eventIds)
     }
 
     fun onScrollIdle(index: Int, offset: Int) {
@@ -380,14 +393,26 @@ internal class PolymarketMainModel @Inject constructor(
         activeFeed
             .filterNotNull()
             .flatMapLatest { feed ->
-                combine(feed.batchFlow.state, feedSports.observe(feed, isScreenResumed)) { batchState, sports ->
-                    PolymarketFeedContentTransformer(
-                        batchListState = batchState,
-                        eventUMConverter = eventUMConverter,
-                        onReloadClick = ::reload,
-                        onNextPageRetryClick = ::onLoadMore,
-                        sports = sports,
+                channelFlow {
+                    val sports = feedSports.observe(feed, isScreenResumed).stateIn(
+                        scope = this,
+                        started = SharingStarted.WhileSubscribed(),
+                        initialValue = PolymarketSportsState(emptyMap()),
                     )
+                    combine(
+                        feed.batchFlow.state,
+                        sports,
+                        feedQuotes.observe(feed, sports, isScreenResumed),
+                    ) { batchState, games, quotes ->
+                        PolymarketFeedContentTransformer(
+                            batchListState = batchState,
+                            eventUMConverter = eventUMConverter,
+                            onReloadClick = ::reload,
+                            onNextPageRetryClick = ::onLoadMore,
+                            sports = games,
+                            quotes = quotes,
+                        )
+                    }.collect { send(it) }
                 }
             }
             .onEach { transformer -> uiState.update(transformer::transform) }
