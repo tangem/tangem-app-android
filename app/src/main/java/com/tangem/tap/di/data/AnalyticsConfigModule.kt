@@ -4,7 +4,6 @@ import com.tangem.core.analytics.config.AnalyticsEnvironmentConfig
 import com.tangem.core.analytics.handlers.opentelemetry.OtelAccessTokenProvider
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.lib.auth.session.SessionTokenRefresher
-import dagger.Lazy
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -26,11 +25,9 @@ internal object AnalyticsConfigModule {
         )
     }
 
-    // Lazy keeps the auth graph (AuthApi, Retrofit) out of the metrics holder creation at app start;
-    // the token is first needed on the background drain
     @Provides
     @Singleton
-    fun provideOtelAccessTokenProvider(sessionTokenRefresher: Lazy<SessionTokenRefresher>): OtelAccessTokenProvider {
-        return OtelAccessTokenProvider { sessionTokenRefresher.get().ensureSession().getOrNull()?.accessToken }
+    fun provideOtelAccessTokenProvider(sessionTokenRefresher: SessionTokenRefresher): OtelAccessTokenProvider {
+        return OtelAccessTokenProvider { sessionTokenRefresher.ensureSession().getOrNull()?.accessToken }
     }
 }
