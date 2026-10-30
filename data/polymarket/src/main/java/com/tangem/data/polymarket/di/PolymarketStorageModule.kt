@@ -10,13 +10,16 @@ import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.polymarket.cleaner.PolymarketUserWalletDataCleaner
 import com.tangem.data.polymarket.derivation.PolymarketAddressFactory
 import com.tangem.data.polymarket.sessionkey.DefaultPolymarketDeviceIdProvider
+import com.tangem.data.polymarket.sessionkey.DefaultPolymarketSessionCredentialsProvider
 import com.tangem.data.polymarket.sessionkey.DefaultPolymarketSessionKeyStore
 import com.tangem.data.polymarket.store.DefaultPolymarketCredentialsStore
 import com.tangem.data.polymarket.converter.PredictionAccountStatusValueDTOConverter
 import com.tangem.data.polymarket.store.DefaultPolymarketOnboardedStore
 import com.tangem.data.polymarket.store.DefaultPredictionWithdrawalStore
 import com.tangem.data.polymarket.entity.PredictionAccountStatusValueDTO
+import com.tangem.data.polymarket.entity.PolymarketSessionKeyReadinessDTO
 import com.tangem.data.polymarket.entity.PredictionWithdrawalRecordDTO
+import com.tangem.data.polymarket.store.DefaultPolymarketSessionKeyTradingStore
 import com.tangem.data.polymarket.store.PredictionAccountStatusStore
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
@@ -25,7 +28,9 @@ import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.PredictionWithdrawalStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionCredentialsProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyTradingStore
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -158,6 +163,28 @@ internal object PolymarketStorageModule {
         )
     }
 
+    @Provides
+    @Singleton
+    fun providePolymarketSessionKeyTradingStore(
+        @ApplicationContext context: Context,
+        scope: AppCoroutineScope,
+        dataStoreFactory: AppDataStoreFactory,
+    ): PolymarketSessionKeyTradingStore {
+        return DefaultPolymarketSessionKeyTradingStore(
+            readinessDataStore = dataStoreFactory.create(
+                serializer = KotlinxDataStoreSerializer(
+                    defaultValue = emptyMap(),
+                    serializer = MapSerializer(
+                        keySerializer = String.serializer(),
+                        valueSerializer = PolymarketSessionKeyReadinessDTO.serializer(),
+                    ),
+                ),
+                produceFile = { context.dataStoreFile(fileName = "polymarket_session_key_readiness") },
+                scope = scope,
+            ),
+        )
+    }
+
     @SuppressLint("HardwareIds")
     @Provides
     @Singleton
@@ -177,6 +204,12 @@ internal object PolymarketStorageModule {
             dispatchers = dispatchers,
         )
     }
+
+    @Provides
+    @Singleton
+    fun providePolymarketSessionCredentialsProvider(
+        impl: DefaultPolymarketSessionCredentialsProvider,
+    ): PolymarketSessionCredentialsProvider = impl
 
     @Provides
     @IntoSet

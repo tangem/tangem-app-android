@@ -10,6 +10,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.polymarket.impl.placeprediction.SubmittingStep
 import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPrediction
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSummaryModel
 import com.tangem.features.polymarket.impl.placeprediction.ui.PlacePredictionSummaryContent
@@ -17,21 +18,24 @@ import com.tangem.features.polymarket.impl.placeprediction.ui.PlacePredictionSum
 internal class PlacePredictionSummaryComponent(
     appComponentContext: AppComponentContext,
     params: PreparedPrediction,
-) : ComposableContentComponent, AppComponentContext by appComponentContext {
+) : ComposableContentComponent, SubmittingStep, AppComponentContext by appComponentContext {
 
     private val model: PlacePredictionSummaryModel = getOrCreateModel(params = params)
 
     private val feeSheetSlot = childSlot(
-        source = model.feeSheetNavigation,
+        source = model.feeSheet.navigation,
         serializer = null,
         key = "feeSheet",
         handleBackButton = false,
         childFactory = { _, componentContext ->
-            PredictionFeeSheetComponent(appComponentContext = childByContext(componentContext), model = model)
+            PredictionFeeSheetComponent(
+                appComponentContext = childByContext(componentContext),
+                feeSheet = model.feeSheet,
+            )
         },
     )
 
-    fun isSubmitting(): Boolean = model.isSubmitting()
+    override fun isSubmitting(): Boolean = model.isSubmitting()
 
     @Composable
     override fun Content(modifier: Modifier) {

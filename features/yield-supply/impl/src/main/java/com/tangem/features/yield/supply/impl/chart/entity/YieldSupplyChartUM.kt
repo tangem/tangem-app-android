@@ -2,7 +2,6 @@ package com.tangem.features.yield.supply.impl.chart.entity
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.ds.tabs.TangemSegmentedPickerUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -20,7 +19,6 @@ internal sealed class YieldSupplyChartUM {
     @Immutable
     data class Data(
         val chartData: YieldSupplyMarketChartDataUM,
-        val monthLables: ImmutableList<String>,
         val incentive: YieldSupplyChartIncentiveUM? = null,
     ) : YieldSupplyChartUM()
 }
@@ -32,7 +30,6 @@ internal sealed class YieldSupplyChartUM {
 @Immutable
 internal data class YieldSupplyChartIncentiveUM(
     val period: YieldSupplyChartPeriod,
-    val picker: TangemSegmentedPickerUM,
     val averageApy: TextReference,
     val onPeriodSelected: (String) -> Unit,
 )
@@ -60,7 +57,9 @@ internal data class YieldSupplyMarketChartDataUM(
                 4.2, 6.7, 3.5, 2.5, 4.5, 3.4,
             ).toImmutableList()
             val x = List(y.size) { 1.0 }.toImmutableList()
-            return YieldSupplyMarketChartDataUM(y = y, x = x, avr = 5.15, percentFormat = "%.1f")
+            val labels = mapOf(6 to "Jan", 13 to "Apr", 21 to "Jul", 28 to "Oct")
+            val xLabels = List(y.size) { labels[it].orEmpty() }.toImmutableList()
+            return YieldSupplyMarketChartDataUM(y = y, x = x, avr = 5.15, percentFormat = "%.1f", xLabels = xLabels)
         }
 
         @Suppress("MagicNumber")

@@ -1,7 +1,7 @@
 package com.tangem.datasource.local.token.converter
 
 import com.tangem.grow.datasource.stakekit.models.response.model.NetworkTypeDTO
-import com.tangem.domain.models.staking.NetworkType
+import com.tangem.domain.staking.model.NetworkType
 import com.tangem.utils.converter.TwoWayConverter
 
 @Suppress("CyclomaticComplexMethod", "LongMethod")

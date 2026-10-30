@@ -129,6 +129,7 @@ internal class InitializeWalletsTransformer(
                 name = name,
                 deviceIcon = getWalletIconUseCase.invoke(userWallet = this)
                     .let { WalletIconUMConverter().convert(it) },
+                additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = this),
             ),
             buttons = createWalletActions(userWallet = this),
             type = when (this) {

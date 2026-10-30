@@ -212,12 +212,16 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
         router.pop()
     }
 
-    private fun onWithinPortfolioClick() = openWithdrawSwap()
+    private fun onWithinPortfolioClick() {
+        sendMoneyAccountOnChainOptionSelected()
+        openWithdrawSwap()
+    }
 
     private fun onRecentTokenClick(currencyId: String) {
         val loaded = state.value.tokenRecents as? TokenRecentsState.Loaded ?: return
         val transfer = loaded.transfers.firstOrNull { it.currency.id.value == currencyId } ?: return
 
+        sendMoneyAccountOnChainOptionSelected()
         openWithdrawSwap(toCryptoCurrency = transfer.currency)
     }
 
@@ -267,6 +271,15 @@ internal class TangemPayWithdrawHubModel @Inject constructor(
             },
         )
         openBankWithdraw(entry = entry)
+    }
+
+    private fun sendMoneyAccountOnChainOptionSelected() {
+        if (params.sourceAccount !is BankWithdrawSourceAccount.Money) return
+        analytics.send(
+            MoneyAccountAnalyticsEvents.WithdrawOptionSelected(
+                method = MoneyAccountAnalyticsEvents.WithdrawMethod.ON_CHAIN,
+            ),
+        )
     }
 
     /**

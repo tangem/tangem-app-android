@@ -222,6 +222,7 @@ internal class TangemPayCardPageModel @Inject constructor(
     }
 
     fun onStop() {
+        cardDetailsEventListener.send(CardDetailsEvent.HideAll)
         googleWalletController.onStop()
     }
 

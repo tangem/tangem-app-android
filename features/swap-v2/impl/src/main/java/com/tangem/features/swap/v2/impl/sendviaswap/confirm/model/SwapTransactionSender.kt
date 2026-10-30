@@ -4,6 +4,7 @@ import arrow.core.getOrElse
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySendCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.unwrapYieldModuleUpgrade
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.express.models.ExpressProvider
@@ -184,7 +185,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
             return
         }
 
-        val ethereumCallData = (txData.extras as? EthereumTransactionExtras)?.callData
+        val ethereumCallData = (txData.extras as? EthereumTransactionExtras)?.callData?.unwrapYieldModuleUpgrade()
         val payInAddress = if (ethereumCallData is EthereumYieldSupplySendCallData) {
             ethereumCallData.destinationAddress
         } else {

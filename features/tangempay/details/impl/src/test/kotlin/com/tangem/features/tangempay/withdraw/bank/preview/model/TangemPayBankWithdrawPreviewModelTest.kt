@@ -4,12 +4,14 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.pay.model.bankofframp.BankAccountType
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.pay.model.bankofframp.OfframpDestination
@@ -66,6 +68,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val onOrderCreated: (BankOfframpOrderResult) -> Unit = {}
     private val onDestinationChanged: (OfframpDestination) -> Unit = {}
+    private val onNetworkFeeChanged: (BigDecimal) -> Unit = {}
     private val onCloseFlow: () -> Unit = mockk(relaxed = true)
     private var completedCount = 0
     private var outcomeUnknownCount = 0
@@ -76,7 +79,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
         completedCount = 0
         outcomeUnknownCount = 0
         every { getUserWalletUseCase(userWalletId) } returns mockk<UserWallet.Cold>().right()
-        every { completionFactory.create(any(), any(), any(), any()) } returns completion
+        every { completionFactory.create(any(), any(), any(), any(), any()) } returns completion
         completionInFlight()
     }
 
@@ -111,7 +114,9 @@ internal class TangemPayBankWithdrawPreviewModelTest {
         val model = createModel()
 
         // Assert
-        verify(exactly = 1) { completionFactory.create(sourceAccount, any(), onOrderCreated, onDestinationChanged) }
+        verify(exactly = 1) {
+            completionFactory.create(sourceAccount, any(), onOrderCreated, onDestinationChanged, onNetworkFeeChanged)
+        }
         model.onDestroy()
     }
 
@@ -494,6 +499,31 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     }
 
     @Test
+    fun `GIVEN money account failure with an error code WHEN send THEN VA Send failed carries the code`() {
+        // Arrange
+        completionReports(
+            CompletionState.Sending,
+            CompletionState.Failed(
+                failure = PreviewFailure.UnsupportedConfiguration,
+                errorCode = FORBIDDEN_ERROR_CODE,
+            ),
+        )
+        val model = createModel(
+            sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, productInstanceId = "instance-1"),
+        )
+
+        // Act
+        summary(model).onSendClick()
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(MoneyAccountAnalyticsEvents.SendFailed(errorCode = FORBIDDEN_ERROR_CODE))
+        }
+        verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents>()) }
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN failed send WHEN retry fails too THEN only the first tap reported and the error screen twice`() {
         // Arrange
         completionReports(CompletionState.Sending, CompletionState.Failed(PreviewFailure.General))
@@ -506,6 +536,47 @@ internal class TangemPayBankWithdrawPreviewModelTest {
         // Assert
         verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Offramp.SendOnConfirmationClicked()) }
         verify(exactly = 2) { analytics.send(TangemPayAnalyticsEvents.Offramp.SendErrorScreenOpened()) }
+        model.onDestroy()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideMoneyAccountSendModels")
+    fun `GIVEN money account WHEN send attempts finish THEN send confirmed once per completed or failed attempt`(
+        testModel: MoneyAccountSendModel,
+    ) {
+        // Arrange
+        completionReportsInTurn(*testModel.attempts.toTypedArray())
+        val sentEvents = mutableListOf<AnalyticsEvent>()
+        every { analytics.send(capture(sentEvents)) } returns Unit
+        val model = createModel(sourceAccount = MONEY_ACCOUNT)
+
+        // Act
+        testModel.actions.forEach { action -> action.perform(model) }
+
+        // Assert
+        val actual = sentEvents.filter { it.event in MONEY_ACCOUNT_SEND_EVENTS }.map { it.event }
+        assertThat(actual).containsExactlyElementsIn(testModel.expectedEvents).inOrder()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN money account WHEN send completes THEN send confirmed carries the draft amount and rail`() {
+        // Arrange
+        completionReports(CompletionState.Sending, CompletionState.Completed)
+        val model = createModel(sourceAccount = MONEY_ACCOUNT)
+
+        // Act
+        summary(model).onSendClick()
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(
+                MoneyAccountAnalyticsEvents.SendConfirmed(
+                    amountUsdc = BigDecimal("500"),
+                    method = MoneyAccountAnalyticsEvents.SendMethod.BANK_TRANSFER_ACH,
+                ),
+            )
+        }
         model.onDestroy()
     }
 
@@ -587,6 +658,63 @@ internal class TangemPayBankWithdrawPreviewModelTest {
         }
     }
 
+    private fun completionReportsInTurn(vararg attempts: List<CompletionState>) {
+        val remaining = ArrayDeque(attempts.toList())
+        coEvery { completion.complete(any(), any()) } coAnswers {
+            remaining.removeFirst().forEach(secondArg<(CompletionState) -> Unit>())
+        }
+    }
+
+    private fun provideMoneyAccountSendModels() = listOf(
+        MoneyAccountSendModel(
+            name = "network fee requoted, then sent",
+            attempts = listOf(
+                listOf(CompletionState.Sending, CompletionState.Idle),
+                listOf(CompletionState.Sending, CompletionState.Completed),
+            ),
+            actions = listOf(SendAction.PAY, SendAction.PAY),
+            expectedEvents = listOf(TRANSFER_CONFIRMED, TRANSFER_CONFIRMED, SEND_CONFIRMED),
+        ),
+        MoneyAccountSendModel(
+            name = "requoted twice, never sent",
+            attempts = listOf(
+                listOf(CompletionState.Sending, CompletionState.Idle),
+                listOf(CompletionState.Sending, CompletionState.Idle),
+            ),
+            actions = listOf(SendAction.PAY, SendAction.PAY),
+            expectedEvents = listOf(TRANSFER_CONFIRMED, TRANSFER_CONFIRMED),
+        ),
+        MoneyAccountSendModel(
+            name = "failed, then retried and sent",
+            attempts = listOf(
+                listOf(CompletionState.Sending, CompletionState.Failed(PreviewFailure.General)),
+                listOf(CompletionState.Sending, CompletionState.Completed),
+            ),
+            actions = listOf(SendAction.PAY, SendAction.RETRY),
+            expectedEvents = listOf(TRANSFER_CONFIRMED, SEND_CONFIRMED, SEND_FAILED, SEND_CONFIRMED),
+        ),
+    )
+
+    data class MoneyAccountSendModel(
+        val name: String,
+        val attempts: List<List<CompletionState>>,
+        val actions: List<SendAction>,
+        val expectedEvents: List<String>,
+    ) {
+        override fun toString(): String = name
+    }
+
+    enum class SendAction {
+        PAY,
+        RETRY,
+        ;
+
+        fun perform(model: TangemPayBankWithdrawPreviewModel) = when (this) {
+            PAY -> (model.uiState.value as Summary).onSendClick()
+            RETRY -> requireNotNull((model.uiState.value as Failed).onRetryClick).invoke()
+        }
+    }
+
     private fun completionReports(vararg states: CompletionState) {
         coEvery { completion.complete(any(), any()) } coAnswers {
             states.forEach(secondArg<(CompletionState) -> Unit>())
@@ -611,6 +739,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
     private fun createModel(
         draft: BankWithdrawDraft = savedRecipientDraft(),
         isBalanceHidden: Boolean = false,
+        sourceAccount: BankWithdrawSourceAccount = this.sourceAccount,
     ): TangemPayBankWithdrawPreviewModel =
         TangemPayBankWithdrawPreviewModel(
             paramsContainer = MutableParamsContainer(
@@ -619,6 +748,7 @@ internal class TangemPayBankWithdrawPreviewModelTest {
                     draft = MutableStateFlow(draft),
                     onOrderCreated = onOrderCreated,
                     onDestinationChanged = onDestinationChanged,
+                    onNetworkFeeChanged = onNetworkFeeChanged,
                     onCompleted = { completedCount++ },
                     onTransferOutcomeUnknown = { outcomeUnknownCount++ },
                     onCloseFlow = onCloseFlow,
@@ -632,4 +762,14 @@ internal class TangemPayBankWithdrawPreviewModelTest {
             analytics = analytics,
             getBalanceHidingSettingsUseCase = mockk { every { isBalanceHidden() } returns flowOf(isBalanceHidden) },
         )
+
+    private companion object {
+        const val FORBIDDEN_ERROR_CODE = 104_120_100
+        const val TRANSFER_CONFIRMED = "VA Offramp Recipient Transfer Confirmed"
+        const val SEND_CONFIRMED = "VA Send Confirmed"
+        const val SEND_FAILED = "VA Send failed"
+
+        val MONEY_ACCOUNT = BankWithdrawSourceAccount.Money(UserWalletId("011"), productInstanceId = "instance-1")
+        val MONEY_ACCOUNT_SEND_EVENTS = setOf(TRANSFER_CONFIRMED, SEND_CONFIRMED, SEND_FAILED)
+    }
 }

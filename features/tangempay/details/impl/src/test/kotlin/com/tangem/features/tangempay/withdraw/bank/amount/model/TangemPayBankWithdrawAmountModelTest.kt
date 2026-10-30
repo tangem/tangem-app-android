@@ -10,6 +10,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.transaction.error.GetFeeError
@@ -40,6 +41,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
+import io.mockk.verifySequence
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -94,6 +96,29 @@ internal class TangemPayBankWithdrawAmountModelTest {
     }
 
     @Test
+    fun `GIVEN money account WHEN continue clicked THEN result carries the network fee`() {
+        // Arrange
+        coEvery { networkFeeLoader.load(moneyAccount, any()) } returns NETWORK_FEE.right()
+        val options = bankWithdrawOptions()
+        val model = createModel(sourceAccount = moneyAccount, options = options)
+        model.content().amount.onValueChange("500")
+
+        // Act
+        model.content().onContinueClick()
+
+        // Assert
+        assertThat(confirmed).containsExactly(
+            BankWithdrawAmountResult(
+                amount = BigDecimal("500"),
+                source = options.sources.first(),
+                destination = options.destinations.first(),
+                networkFee = NETWORK_FEE,
+            ),
+        )
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN money account WHEN amount covers only the bank fee THEN not enough funds`() {
         // Arrange
         coEvery { networkFeeLoader.load(moneyAccount, any()) } returns NETWORK_FEE.right()
@@ -143,6 +168,36 @@ internal class TangemPayBankWithdrawAmountModelTest {
         // Assert
         assertThat(model.uiState.value).isInstanceOf(TangemPayBankWithdrawAmountUM.Content::class.java)
         coVerify(exactly = 2) { networkFeeLoader.load(moneyAccount, any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN balance not covering the network fee WHEN model created THEN form shown instead of fee unreachable`() {
+        // Arrange
+        coEvery { networkFeeLoader.load(moneyAccount, any()) } returns GetFeeError.GaslessError.NotEnoughFunds.left()
+
+        // Act
+        val model = createModel(sourceAccount = moneyAccount, options = bankWithdrawOptions())
+
+        // Assert
+        assertThat(model.uiState.value).isInstanceOf(TangemPayBankWithdrawAmountUM.Content::class.java)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN balance not covering the network fee WHEN amount within balance entered THEN not enough funds`() {
+        // Arrange
+        coEvery { networkFeeLoader.load(moneyAccount, any()) } returns GetFeeError.GaslessError.NotEnoughFunds.left()
+        val model = createModel(sourceAccount = moneyAccount, options = bankWithdrawOptions())
+
+        // Act
+        model.content().amount.onValueChange("500")
+
+        // Assert
+        val state = model.content()
+        assertThat(state.amount.error)
+            .isEqualTo(resourceReference(R.string.tangempay_withdraw_bank_amount_not_enough_funds))
+        assertThat(state.isContinueEnabled).isFalse()
         model.onDestroy()
     }
 
@@ -960,6 +1015,24 @@ internal class TangemPayBankWithdrawAmountModelTest {
 
         // Assert
         verify(exactly = 0) { analytics.send(ofType<TangemPayAnalyticsEvents.Offramp.InsufficientFundsStateShowed>()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN money account WHEN amount and rail picked and continued THEN only amount screen opened sent`() {
+        // Arrange
+        val model = createModel(sourceAccount = moneyAccount, options = bankWithdrawOptions())
+
+        // Act
+        model.content().amount.onValueChange("2325")
+        model.content().amount.onValueChange("500")
+        model.content().route.onClick?.invoke()
+        (model.content().sheet as SheetUM.Routes).items.last().onClick()
+        model.content().onContinueClick()
+
+        // Assert
+        verifySequence { analytics.send(MoneyAccountAnalyticsEvents.OfframpAmountScreenOpened()) }
+        assertThat(confirmed).hasSize(1)
         model.onDestroy()
     }
 

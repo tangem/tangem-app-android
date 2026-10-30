@@ -1,5 +1,6 @@
 package com.tangem.domain.polymarket.usecase
 
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketSearchBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketSearchBatchingContext
@@ -14,10 +15,15 @@ class SearchPolymarketEventsUseCase(
 ) {
 
     operator fun invoke(
+        userWalletId: UserWalletId,
         context: PolymarketSearchBatchingContext,
         batchSize: Int = DEFAULT_BATCH_SIZE,
     ): PolymarketSearchBatchFlow {
-        return polymarketRepository.searchEventsBatchFlow(context = context, batchSize = batchSize)
+        return polymarketRepository.searchEventsBatchFlow(
+            userWalletId = userWalletId,
+            context = context,
+            batchSize = batchSize,
+        )
     }
 
     private companion object {

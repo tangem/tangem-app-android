@@ -3,6 +3,7 @@ package com.tangem.features.tangempay.withdraw.bank.preview.state
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -355,6 +356,58 @@ internal class TangemPayBankWithdrawPreviewUMFactoryTest {
     )
 
     internal data class FromModel(val account: BankWithdrawSourceAccount, val expected: BankWithdrawFromUM)
+
+    @ParameterizedTest
+    @MethodSource("provideFooterModels")
+    fun `GIVEN source account and network fee WHEN create THEN rail fee footer and button follow the account`(
+        model: FooterModel,
+    ) {
+        // Arrange
+        val accountFactory = TangemPayBankWithdrawPreviewUMFactory(sourceAccount = model.account, callbacks = callbacks)
+
+        // Act
+        val actual = accountFactory.create(
+            draft = savedDraft().copy(networkFee = model.networkFee),
+            state = PreviewState(),
+        ) as Summary
+
+        // Assert
+        val transfer = requireNotNull(actual.transfer)
+        assertThat(transfer.route.fee).isEqualTo(model.expectedRailFee)
+        assertThat(transfer.sendingSummary).isEqualTo(model.expectedSummary)
+        assertThat(actual.sendText).isEqualTo(model.expectedSendText)
+    }
+
+    private fun provideFooterModels() = listOf(
+        FooterModel(
+            account = BankWithdrawSourceAccount.Payment(userWalletId),
+            networkFee = BigDecimal.ZERO,
+            expectedRailFee = "$1",
+            expectedSummary = resourceReference(
+                R.string.tangempay_withdraw_bank_sending_summary,
+                wrappedList("$501", resourceReference(R.string.tangempay_bank_transfer_fee_ach), "$1"),
+            ),
+            expectedSendText = resourceReference(R.string.common_send),
+        ),
+        FooterModel(
+            account = BankWithdrawSourceAccount.Money(userWalletId, productInstanceId = "instance-1"),
+            networkFee = BigDecimal("0.03"),
+            expectedRailFee = "$1.03",
+            expectedSummary = resourceReference(
+                R.string.money_account_send_fees_footer,
+                wrappedList(resourceReference(R.string.tangempay_bank_transfer_fee_ach)),
+            ),
+            expectedSendText = resourceReference(R.string.money_account_send_pay_button, wrappedList("$501.03")),
+        ),
+    )
+
+    internal data class FooterModel(
+        val account: BankWithdrawSourceAccount,
+        val networkFee: BigDecimal,
+        val expectedRailFee: String,
+        val expectedSummary: TextReference,
+        val expectedSendText: TextReference,
+    )
 
     @Test
     fun `GIVEN new recipient WHEN create THEN amount and every recipient card is tappable`() {

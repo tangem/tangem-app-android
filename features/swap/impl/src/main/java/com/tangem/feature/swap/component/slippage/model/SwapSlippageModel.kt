@@ -37,7 +37,7 @@ internal class SwapSlippageModel @Inject constructor(
     fun onValueChange(value: String) {
         uiState.update { state ->
             val valueState = state.valueState as? SwapSlippageBottomSheetConfig.Value.Edit ?: return@update state
-            val percent = SwapSlippage.parseValid(value, params.provider)
+            val percent = SwapSlippage.parseValid(value, params.provider, params.defaultPercent)
             val isValid = percent != null
             state.copy(
                 valueState = valueState.copy(value = value, isConfirmEnabled = isValid),
@@ -50,7 +50,11 @@ internal class SwapSlippageModel @Inject constructor(
     fun onConfirmClick() {
         when (val valueState = uiState.value.valueState) {
             is SwapSlippageBottomSheetConfig.Value.Edit -> {
-                val percent = SwapSlippage.parseValid(valueState.value, params.provider) ?: return
+                val percent = SwapSlippage.parseValid(
+                    value = valueState.value,
+                    provider = params.provider,
+                    defaultPercent = params.defaultPercent,
+                ) ?: return
                 val isDefault = percent.compareTo(params.defaultPercent) == 0
                 params.onConfirm(percent.takeUnless { isDefault })
             }
@@ -69,7 +73,9 @@ internal class SwapSlippageModel @Inject constructor(
         return SwapSlippageBottomSheetConfig(
             valueState = valueState,
             error = null,
-            warning = lowSlippageWarning(params.provider.acceptedSlippageOrNull(params.customSlippage)),
+            warning = lowSlippageWarning(
+                params.provider.acceptedSlippageOrNull(params.customSlippage, params.defaultPercent),
+            ),
             onConfirmClick = ::onConfirmClick,
         )
     }
@@ -81,7 +87,8 @@ internal class SwapSlippageModel @Inject constructor(
 
     private fun createEditState(): SwapSlippageBottomSheetConfig.Value.Edit {
         val defaultPercent = params.defaultPercent
-        val currentPercent = params.provider.acceptedSlippageOrNull(params.customSlippage) ?: defaultPercent
+        val currentPercent = params.provider.acceptedSlippageOrNull(params.customSlippage, defaultPercent)
+            ?: defaultPercent
         val presets = SwapSlippage.presets(defaultPercent).map { percent ->
             val value = percent.toPlainString()
             SwapSlippagePresetUM(
