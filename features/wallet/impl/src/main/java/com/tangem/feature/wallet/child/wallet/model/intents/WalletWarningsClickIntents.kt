@@ -17,6 +17,7 @@ import com.tangem.core.navigation.url.AppStoreOpener
 import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.assetsdiscovery.usecase.AcknowledgeAssetsDiscoveryCompletionUseCase
 import com.tangem.domain.card.SetCardWasScannedUseCase
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -47,6 +48,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
+import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.hotwallet.HardwareUpgradeLauncher
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -139,6 +141,8 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val yieldSupplySetShouldShowMainPromoUseCase: YieldSupplySetShouldShowMainPromoUseCase,
     private val hardwareUpgradeLauncher: HardwareUpgradeLauncher,
     private val screenLifecycleProvider: ScreenLifecycleProvider,
+    private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
+    private val collectiblesFeatureToggles: CollectiblesFeatureToggles,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
 
     override fun onAddBackupCardClick() {
@@ -195,7 +199,14 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                         DerivationOutcome.NOTHING_DERIVED -> uiMessageSender.send(Dialogs.wrongWalletTapped())
                         DerivationOutcome.DERIVED,
                         DerivationOutcome.NOTHING_MISSING,
-                        -> fetchCryptoCurrencies(userWalletId = userWalletId, currencies = missedAddressCurrencies)
+                        -> coroutineScope {
+                            launch {
+                                fetchCryptoCurrencies(userWalletId = userWalletId, currencies = missedAddressCurrencies)
+                            }
+                            launch {
+                                refreshCollectiblesAccount(userWalletId = userWalletId)
+                            }
+                        }
                     }
                 },
             )
@@ -339,6 +350,14 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             key = NotificationId.EnablePushesReminderNotification.key,
             value = false,
         )
+    }
+
+    /** The sync may have derived the collectibles owner key, which is what the account was waiting for */
+    private suspend fun refreshCollectiblesAccount(userWalletId: UserWalletId) {
+        if (!collectiblesFeatureToggles.isCollectiblesEnabled) return
+
+        collectiblesAccountStatusFetcher(CollectiblesAccountStatusFetcher.Params(userWalletId = userWalletId))
+            .onLeft { TangemLogger.e("Unable to refresh the collectibles account: $it") }
     }
 
     private suspend fun fetchCryptoCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
