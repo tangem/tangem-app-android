@@ -1,21 +1,21 @@
 package com.tangem.data.polymarket
 
+import com.tangem.core.socket.SocketState
 import com.tangem.data.polymarket.converter.PolymarketLiveScoreConverter
 import com.tangem.domain.polymarket.PolymarketLiveScoresRepository
 import com.tangem.domain.polymarket.model.PolymarketLiveScore
 import com.tangem.grow.datasource.polymarket.socket.PolymarketSportsSocket
-import com.tangem.grow.datasource.polymarket.socket.PolymarketSportsConnections
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import javax.inject.Inject
+import kotlinx.coroutines.flow.map
 
 internal class DefaultPolymarketLiveScoresRepository @Inject constructor(
     private val sportsSocket: PolymarketSportsSocket,
-    private val connections: PolymarketSportsConnections,
     private val clock: PolymarketSportsClock,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PolymarketLiveScoresRepository {
@@ -39,5 +39,7 @@ internal class DefaultPolymarketLiveScoresRepository @Inject constructor(
         }.flowOn(dispatchers.default)
     }
 
-    override fun observeConnectionRevision(): StateFlow<Long> = connections.revision
+    override fun observeConnectionState(): Flow<Boolean> = sportsSocket.state()
+        .map { it == SocketState.Connected }
+        .distinctUntilChanged()
 }

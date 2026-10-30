@@ -15,8 +15,6 @@ import kotlin.time.Duration.Companion.seconds
  * longer than 5 s fails the attempt
  * @property isSplitArrayFrames delivers every element of a JSON array frame as a separate message
  * @property idleTimeout how long the connection outlives its last collector
- * @property onConnected records a successful handshake after [onOpen], before incoming messages. Must not block;
- * use a monotonic revision here when a consumer needs to detect reconnects missed by the conflated state flow
  */
 data class SocketSpec(
     val url: String,
@@ -30,7 +28,6 @@ data class SocketSpec(
     val onOpen: suspend SocketSession.() -> Unit = {},
     val isSplitArrayFrames: Boolean = false,
     val idleTimeout: Duration = 5.seconds,
-    val onConnected: () -> Unit = {},
 ) {
 
     init {

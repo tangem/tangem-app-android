@@ -1,9 +1,9 @@
 package com.tangem.data.polymarket
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.socket.SocketState
 import com.tangem.domain.polymarket.model.PolymarketLiveScore
 import com.tangem.grow.datasource.polymarket.socket.FakePolymarketSportsSocket
-import com.tangem.grow.datasource.polymarket.socket.PolymarketSportsConnections
 import com.tangem.grow.datasource.polymarket.socket.models.SportsResultDto
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
@@ -26,7 +26,7 @@ internal class DefaultPolymarketLiveScoresRepositoryTest {
         every { now() } returns Instant.EPOCH
     }
     private val repository = DefaultPolymarketLiveScoresRepository(
-        socket, PolymarketSportsConnections(), clock, TestingCoroutineDispatcherProvider(),
+        socket, clock, TestingCoroutineDispatcherProvider(),
     )
 
     @Test
@@ -167,6 +167,29 @@ internal class DefaultPolymarketLiveScoresRepositoryTest {
         assertThat(received).isEmpty()
         assertThat(socket.results.subscriptionCount.value).isEqualTo(0)
     }
+
+    @Test
+    fun `GIVEN connection changes WHEN observing status THEN reconnects are reported without subscribing to scores`() =
+        runTest {
+            // Arrange
+            val received = mutableListOf<Boolean>()
+            val job = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+                repository.observeConnectionState().toList(received)
+            }
+
+            // Act
+            socket.state.value = SocketState.Connecting(0)
+            socket.state.value = SocketState.Connected
+            socket.state.value = SocketState.Paused(SocketState.PauseReason.Background)
+            socket.state.value = SocketState.Connecting(0)
+            socket.state.value = SocketState.Connected
+            job.cancel()
+
+            // Assert
+            assertThat(received).containsExactly(false, true, false, true).inOrder()
+            assertThat(socket.results.subscriptionCount.value).isEqualTo(0)
+            assertThat(socket.state.subscriptionCount.value).isEqualTo(0)
+        }
 
     private fun result(gameId: Long, score: String, isLive: Boolean = true, isEnded: Boolean = false) =
         SportsResultDto(
