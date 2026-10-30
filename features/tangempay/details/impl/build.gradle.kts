@@ -19,6 +19,7 @@ dependencies {
     api(projects.core.navigation)
     api(projects.core.ui)
     api(projects.core.utils)
+    implementation(projects.core.abTests)
     implementation(projects.core.analytics.models)
     implementation(projects.core.biometricAuth.api)
     implementation(projects.core.error)
