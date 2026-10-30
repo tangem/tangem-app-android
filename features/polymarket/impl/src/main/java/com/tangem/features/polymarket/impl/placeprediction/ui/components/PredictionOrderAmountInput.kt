@@ -11,6 +11,8 @@ internal fun PredictionOrderAmountInput(
     onAmountChange: (String) -> Unit,
     onAddFundsClick: () -> Unit,
     isEnabled: Boolean = true,
+    presets: (@Composable () -> Unit)? = null,
+    isCalculatorDivided: Boolean = false,
 ) {
     when (val order = state.order) {
         is OrderSideUM.Buy -> PredictionAmountBlock(
@@ -22,12 +24,14 @@ internal fun PredictionOrderAmountInput(
             isEnabled = isEnabled,
             onAmountChange = onAmountChange,
             onAddFundsClick = onAddFundsClick,
+            footer = presets,
         )
         is OrderSideUM.Sell -> PredictionSharesBlock(
             selected = state.amountValue.toBigDecimalOrNull() ?: BigDecimal.ZERO,
             position = order.position,
             proceeds = order.proceeds,
             isEnabled = isEnabled,
+            isCalculatorDivided = isCalculatorDivided,
             onAmountChange = onAmountChange,
         )
     }
