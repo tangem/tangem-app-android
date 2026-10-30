@@ -30,6 +30,18 @@ interface JointOperationDao {
     @Query("DELETE FROM joint_operation_vote WHERE user_wallet_id = :userWalletId AND operation_id IN (:operationIds)")
     suspend fun deleteVotes(userWalletId: String, operationIds: List<String>)
 
+    @Transaction
+    suspend fun delete(userWalletIds: List<String>) {
+        deleteOperations(userWalletIds)
+        deleteVotes(userWalletIds)
+    }
+
+    @Query("DELETE FROM joint_operation WHERE user_wallet_id IN (:userWalletIds)")
+    suspend fun deleteOperations(userWalletIds: List<String>)
+
+    @Query("DELETE FROM joint_operation_vote WHERE user_wallet_id IN (:userWalletIds)")
+    suspend fun deleteVotes(userWalletIds: List<String>)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertVotes(items: List<JointOperationVoteEntity>)
 

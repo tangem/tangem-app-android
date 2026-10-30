@@ -1,7 +1,7 @@
 package com.tangem.datasource.local.token.converter
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.models.staking.NetworkType
+import com.tangem.domain.staking.model.NetworkType
 import com.tangem.grow.datasource.stakekit.models.response.model.NetworkTypeDTO
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test

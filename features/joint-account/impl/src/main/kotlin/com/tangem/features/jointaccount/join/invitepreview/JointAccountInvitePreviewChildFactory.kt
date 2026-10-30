@@ -7,12 +7,13 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.jointaccount.join.invitepreview.entity.JointAccountInvitePreviewSheetConfig
 import com.tangem.features.jointaccount.join.invitepreview.model.JointAccountInvitePreviewModel
-import com.tangem.features.jointaccount.main.component.AboutSignaturesComponent
+import com.tangem.features.jointaccount.main.JointAboutSignaturesComponent
 import com.tangem.features.jointaccount.main.component.MemberCardComponent
 import javax.inject.Inject
 
 internal class JointAccountInvitePreviewChildFactory @Inject constructor(
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
+    private val aboutSignaturesComponentFactory: JointAboutSignaturesComponent.Factory,
 ) {
 
     fun createChild(
@@ -42,9 +43,9 @@ internal class JointAccountInvitePreviewChildFactory @Inject constructor(
                     onDismiss = onDismiss,
                 ),
             )
-            is JointAccountInvitePreviewSheetConfig.AboutSignatures -> AboutSignaturesComponent(
-                appComponentContext = appComponentContext,
-                params = AboutSignaturesComponent.Params(
+            is JointAccountInvitePreviewSheetConfig.AboutSignatures -> aboutSignaturesComponentFactory.create(
+                context = appComponentContext,
+                params = JointAboutSignaturesComponent.Params(
                     threshold = config.threshold,
                     total = config.total,
                     onDismiss = onDismiss,

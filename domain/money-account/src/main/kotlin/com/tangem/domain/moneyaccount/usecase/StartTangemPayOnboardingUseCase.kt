@@ -8,10 +8,14 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.model.MoneyAccountActivationError
 import com.tangem.domain.moneyaccount.model.StartTangemPayOnboardingError
 import com.tangem.domain.pay.usecase.CreateOnboardingOrderUseCase
+import com.tangem.utils.coroutines.AppCoroutineScope
+import kotlinx.coroutines.launch
 
 class StartTangemPayOnboardingUseCase(
     private val activateMoneyAccountUseCase: ActivateMoneyAccountUseCase,
     private val createOnboardingOrderUseCase: CreateOnboardingOrderUseCase,
+    private val pollTangemPayAccountStatusesUseCase: PollTangemPayAccountStatusesUseCase,
+    private val appCoroutineScope: AppCoroutineScope,
 ) {
     suspend operator fun invoke(
         userWalletId: UserWalletId,
@@ -38,5 +42,7 @@ class StartTangemPayOnboardingUseCase(
         )
             .mapLeft { StartTangemPayOnboardingError.Failed }
             .bind()
+
+        appCoroutineScope.launch { pollTangemPayAccountStatusesUseCase(userWalletId) }
     }
 }

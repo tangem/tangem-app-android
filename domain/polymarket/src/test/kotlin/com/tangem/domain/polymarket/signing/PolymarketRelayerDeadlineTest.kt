@@ -18,6 +18,21 @@ class PolymarketRelayerDeadlineTest {
     }
 
     @Test
+    fun `GIVEN a follow-up window WHEN fromNow THEN deadline is twenty minutes later in whole seconds`() {
+        // Arrange
+        val nowMillis = 1_735_689_600_999L
+
+        // Act
+        val deadline = PolymarketRelayerDeadline.fromNow(
+            nowMillis = nowMillis,
+            windowSeconds = PolymarketRelayerDeadline.FOLLOW_UP_WINDOW_SECONDS,
+        )
+
+        // Assert
+        assertThat(deadline).isEqualTo("1735690800")
+    }
+
+    @Test
     fun `GIVEN a deadline one second ahead WHEN checked THEN it is not expired`() {
         // Arrange
         val nowMillis = 1_787_346_200_000L

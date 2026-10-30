@@ -31,7 +31,8 @@ interface YieldSupplyTransactionRepository : GaslessYieldRepository {
      * Builds the owner-signed transaction that claims Merkl rewards.
      *
      * [callData] is built by the backend and carries the cumulative proof, so it is passed through untouched; the
-     * transaction moves no tokens of its own and its amount is always zero.
+     * transaction moves no tokens of its own and its amount is always zero. An outdated module has no claim function,
+     * so with the yield module V3 toggle on the claim is sent inside the module upgrade.
      */
     suspend fun createClaimRewardsTransaction(
         userWalletId: UserWalletId,

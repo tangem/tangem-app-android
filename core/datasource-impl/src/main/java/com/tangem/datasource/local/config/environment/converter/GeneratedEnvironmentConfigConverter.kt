@@ -56,8 +56,6 @@ internal object GeneratedEnvironmentConfigConverter {
             customerIoCdpApiKey = GeneratedEnvironmentConfig.CustomerIO.androidApiKey,
             surveySparrowToken = GeneratedEnvironmentConfig.SurveySparrow.apiKey,
             surveySparrowSwapRating = createSurveySparrowSwapRating(),
-            // the JSON key was created with a typo ("otpl"), kept as is to match the deployed configs
-            otlpApiKey = GeneratedEnvironmentConfig.otplApiKey,
         )
     }
 
@@ -113,6 +111,10 @@ internal object GeneratedEnvironmentConfigConverter {
             quickNodeArcCredentials = QuickNodeCredentials(
                 apiKey = GeneratedEnvironmentConfig.quiknodeArcApiKey,
                 subdomain = GeneratedEnvironmentConfig.quiknodeArcSubdomain,
+            ),
+            quickNodeSuiCredentials = QuickNodeCredentials(
+                apiKey = GeneratedEnvironmentConfig.quiknodeSuiApiKey,
+                subdomain = GeneratedEnvironmentConfig.quiknodeSuiSubdomain,
             ),
             infuraProjectId = GeneratedEnvironmentConfig.infuraProjectId,
             tronGridApiKey = GeneratedEnvironmentConfig.tronGridApiKey,
@@ -191,7 +193,10 @@ internal object GeneratedEnvironmentConfigConverter {
             optimism = GetBlockAccessToken(jsonRpc = GetBlockAccessTokens.Optimism.jsonRpc),
             polkadot = GetBlockAccessToken(jsonRpc = GetBlockAccessTokens.Polkadot.jsonRpc),
             shibarium = GetBlockAccessToken(jsonRpc = GetBlockAccessTokens.Shibarium.jsonRpc),
-            sui = GetBlockAccessToken(jsonRpc = GetBlockAccessTokens.Sui.jsonRpc),
+            sui = GetBlockAccessToken(
+                jsonRpc = GetBlockAccessTokens.Sui.jsonRpc,
+                grpc = GetBlockAccessTokens.Sui.gRPC,
+            ),
             telos = GetBlockAccessToken(jsonRpc = GetBlockAccessTokens.Telos.jsonRpc),
             tezos = GetBlockAccessToken(rest = GetBlockAccessTokens.Tezos.rest),
             monad = GetBlockAccessToken(rest = GetBlockAccessTokens.Monad.rest),

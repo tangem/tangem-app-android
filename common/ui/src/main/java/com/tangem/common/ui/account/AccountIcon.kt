@@ -2,6 +2,7 @@ package com.tangem.common.ui.account
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color as ComposeColor
 import com.tangem.common.ui.R
 import com.tangem.core.ui.components.account.AccountCharIcon
 import com.tangem.core.ui.components.account.AccountIconSize
@@ -11,6 +12,8 @@ import com.tangem.core.ui.components.account.AccountResIcon
 import com.tangem.core.ui.components.account.PaymentAccountIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.generated.assets.il_account_safe
+import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.CryptoPortfolioIcon.Color
 
@@ -37,9 +40,9 @@ fun AccountIcon(
     icon: AccountIconUM.CryptoPortfolio,
     size: AccountIconSize,
     modifier: Modifier = Modifier,
+    iconColor: ComposeColor = icon.color.getUiColor(),
 ) {
     val letter = name.resolveReference().firstOrNull()
-    val iconColor = icon.color.getUiColor()
     when {
         icon.value == CryptoPortfolioIcon.Icon.Letter && letter == null -> {
             AccountResIcon(
@@ -69,8 +72,8 @@ fun AccountIcon(name: TextReference, icon: AccountIconUM, size: AccountIconSize,
     when (icon) {
         is AccountIconUM.Payment -> PaymentAccountIcon(size = size, modifier = modifier)
         is AccountIconUM.Money -> AccountResIcon(
-            resId = icon.icon.getResId(),
-            color = icon.color.getUiColor(),
+            imageVector = Icons.il_account_safe,
+            color = Color.VitalGreen.getUiColor(),
             size = size,
             modifier = modifier,
         )

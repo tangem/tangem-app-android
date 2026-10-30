@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees
 
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.usecase.GetOnrampFeesUseCase
 import kotlinx.coroutines.CoroutineScope
@@ -10,6 +11,7 @@ import kotlinx.coroutines.launch
 internal class TangemPayOnrampFeesLoader(
     private val getOnrampFeesUseCase: GetOnrampFeesUseCase,
     private val userWalletId: UserWalletId,
+    private val product: TangemPayProduct,
     private val scope: CoroutineScope,
 ) {
 
@@ -20,7 +22,7 @@ internal class TangemPayOnrampFeesLoader(
 
     fun load() {
         scope.launch {
-            fees.value = converter.convert(getOnrampFeesUseCase(userWalletId = userWalletId))
+            fees.value = converter.convert(getOnrampFeesUseCase(userWalletId = userWalletId, product = product))
         }
     }
 

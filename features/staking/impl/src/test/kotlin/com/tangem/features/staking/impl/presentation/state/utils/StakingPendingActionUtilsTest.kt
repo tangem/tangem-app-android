@@ -3,9 +3,9 @@ package com.tangem.features.staking.impl.presentation.state.utils
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
-import com.tangem.domain.models.staking.BalanceType
-import com.tangem.domain.models.staking.PendingAction
-import com.tangem.domain.models.staking.action.StakingActionType
+import com.tangem.domain.staking.model.BalanceType
+import com.tangem.domain.staking.model.PendingAction
+import com.tangem.domain.staking.model.action.StakingActionType
 import com.tangem.features.staking.impl.presentation.state.balanceState
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.staking.MockStaking
@@ -102,6 +102,42 @@ internal class StakingPendingActionUtilsTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class WithStubUnstakeActionPassedList {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN no stub unstake needed WHEN withStubUnstakeAction THEN passed actions returned`(
+            model: PassedListModel,
+        ) {
+            // Arrange
+            val activeStake = balanceState(
+                type = model.balanceType,
+                pendingActions = actions(StakingActionType.CLAIM_REWARDS, StakingActionType.RESTAKE),
+            )
+
+            // Act
+            val actual = withStubUnstakeAction(
+                networkId = model.blockchain.toNetworkId(),
+                pendingActions = actions(StakingActionType.CLAIM_REWARDS),
+                activeStake = activeStake,
+            )
+
+            // Assert
+            assertThat(actual).containsExactly(actions(StakingActionType.CLAIM_REWARDS).single())
+        }
+
+        private fun provideTestModels() = listOf(
+            PassedListModel(Blockchain.Cosmos, BalanceType.REWARDS),
+            PassedListModel(Blockchain.Cardano, BalanceType.REWARDS),
+            PassedListModel(Blockchain.BSC, BalanceType.REWARDS),
+            PassedListModel(Blockchain.Solana, BalanceType.STAKED),
+            PassedListModel(Blockchain.Polygon, BalanceType.STAKED),
+            PassedListModel(Blockchain.Polygon, BalanceType.REWARDS),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class IsTronStakedBalance {
 
         @ParameterizedTest
@@ -157,6 +193,8 @@ internal class StakingPendingActionUtilsTest {
         val types: List<StakingActionType>,
         val expected: Boolean,
     )
+
+    internal data class PassedListModel(val blockchain: Blockchain, val balanceType: BalanceType)
 
     internal data class TronStakedModel(val blockchain: Blockchain, val type: StakingActionType?, val expected: Boolean)
 
