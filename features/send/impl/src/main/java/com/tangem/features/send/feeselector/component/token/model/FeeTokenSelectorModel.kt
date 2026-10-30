@@ -75,7 +75,7 @@ internal class FeeTokenSelectorModel @Inject constructor(
             convertToken(status, notEnoughForFee)
         } ?: listOf(selectedTokenUM)
 
-        if (!feeExtraInfo.isSponsoredFeeAvailable) {
+        if (!feeExtraInfo.sponsoredFee.isAvailable) {
             return FeeTokenSelectorUM(
                 parent = parentState,
                 selectedToken = selectedTokenUM,
@@ -86,7 +86,7 @@ internal class FeeTokenSelectorModel @Inject constructor(
         val sponsoredFeeUM = convertSponsoredFee(selectedCurrencyStatus)
         return FeeTokenSelectorUM(
             parent = parentState,
-            selectedToken = if (feeExtraInfo.isSponsoredFeeSelected) sponsoredFeeUM else selectedTokenUM,
+            selectedToken = if (feeExtraInfo.sponsoredFee.isSelected) sponsoredFeeUM else selectedTokenUM,
             tokens = (tokens + sponsoredFeeUM).toImmutableList(),
         )
     }
