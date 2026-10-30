@@ -57,6 +57,7 @@ import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.startup.AppStartupGateComponent
 import com.tangem.tap.routing.utils.ChildFactory
 import com.tangem.tap.routing.utils.DeepLinkFactory
+import com.tangem.tap.routing.utils.PromoPageRouter
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.R
 import dagger.assisted.Assisted
@@ -84,6 +85,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val cardRepository: CardRepository,
     private val onboardingRepository: OnboardingRepository,
     private val appsFlyerDeeplinkRouter: AppsFlyerDeeplinkRouter,
+    private val promoPageRouter: PromoPageRouter,
     private val trackingContextProxy: TrackingContextProxy,
     private val scanFailsComponentFactory: ScanFailsComponent.Factory,
     private val scanFailsRequesterProxy: ScanFailsRequesterProxy,
@@ -172,6 +174,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         configureProxies()
         initializeInitialNavigation()
         appsFlyerDeeplinkRouter.observe(scope = componentScope, currentRoute = currentRoute)
+        promoPageRouter.observe(scope = componentScope, currentRoute = currentRoute)
     }
 
     private fun initializeInitialNavigation() {
