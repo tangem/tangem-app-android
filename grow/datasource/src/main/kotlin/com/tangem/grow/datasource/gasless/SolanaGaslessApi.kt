@@ -12,8 +12,6 @@ import retrofit2.http.Header
 import retrofit2.http.POST
 import java.util.concurrent.TimeUnit
 
-private const val USER_WALLET_ID_HEADER = "userWalletId"
-
 interface SolanaGaslessApi {
 
     @GET("api/v1/solana/config/fee-payer")
@@ -23,7 +21,7 @@ interface SolanaGaslessApi {
     @ReadTimeout(duration = 40, unit = TimeUnit.SECONDS)
     @POST("api/v1/solana/transaction/submit")
     suspend fun submit(
-        @Header(USER_WALLET_ID_HEADER) userWalletId: String,
+        @Header("userWalletId") userWalletId: String,
         @Body body: SolanaSubmitRequestBody,
     ): ApiResponse<GaslessServiceResponse<SolanaSubmitResponse>>
 }
