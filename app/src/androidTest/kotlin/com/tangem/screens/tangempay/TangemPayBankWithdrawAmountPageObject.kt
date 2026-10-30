@@ -101,6 +101,11 @@ class TangemPayBankWithdrawAmountPageObject(semanticsProvider: SemanticsNodeInte
         useUnmergedTree = true
     }
 
+    fun sourceRowWithBalance(symbol: String, network: String, balance: String): KNode = sourceRowWith(
+        symbol = symbol,
+        network = getResourceString(CoreResR.string.tangempay_withdraw_bank_source_subtitle, network, balance),
+    )
+
     fun tokenRow(symbol: String, subtitlePart: String): KNode = child {
         hasTestTag(TangemPayTestTags.BANK_WITHDRAW_TOKEN_ROW)
         hasAnyDescendant(withText(symbol))
