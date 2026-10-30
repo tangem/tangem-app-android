@@ -84,7 +84,7 @@ private fun PlacePredictionUM.isWholePosition(amount: BigDecimal): Boolean {
     return amount.signum() > 0 && amount.compareTo(position.available) == 0
 }
 
-private val MIN_QUOTABLE_AMOUNT: BigDecimal = BigDecimal("0.01")
+internal val MIN_QUOTABLE_AMOUNT: BigDecimal = BigDecimal("0.01")
 
 internal fun PlacePredictionUM.canQuote(): Boolean = when (val order = order) {
     is OrderSideUM.Buy -> true
