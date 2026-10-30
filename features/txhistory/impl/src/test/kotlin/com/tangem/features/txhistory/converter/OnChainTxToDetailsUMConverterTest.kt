@@ -1100,11 +1100,11 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
     // endregion
 
-    // region Operation / UnknownOperation reclassified as own transfer
+    // region Operation / UnknownOperation with an own counterparty
 
     @Test
-    fun `GIVEN incoming Operation from own address WHEN convert THEN transferred header and own account counterparty`() {
-        // Arrange — an unrecognized call whose sender resolves to the user's own account reads as a transfer.
+    fun `GIVEN incoming Operation from own address WHEN convert THEN operation header and own account counterparty`() {
+        // Arrange — the call is not decoded, so the header stays an operation; only its counterparty is named.
         val ownConverter = onChainConverter(
             lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
         )
@@ -1114,8 +1114,8 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         val result = ownConverter.convert(tx)
 
         // Assert
-        assertThat(result.header.title).isEqualTo(resourceReference(R.string.common_transferred))
-        assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_arrow_down_20))
+        assertThat(result.header.title).isEqualTo(stringReference("Mint NFT"))
+        assertThat(result.header.icon).isEqualTo(TxIcon.Vector(Icons.ic_document_20))
         assertThat(result.counterparty?.label).isEqualTo(resourceReference(R.string.common_from_account))
         assertThat(result.counterparty?.title).isEqualTo(TxHistoryDetailsUM.CounterpartyTitle.Name(stringReference("Family")))
         assertThat(result.counterparty?.avatar).isEqualTo(
@@ -1128,7 +1128,7 @@ internal class OnChainTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
 
     @Test
     fun `GIVEN outgoing Operation whose recipient is external WHEN convert THEN stays Operation`() {
-        // The trap: for an outgoing tx the counterparty is the recipient; an own sender must not trigger reclassification.
+        // The trap: for an outgoing tx the counterparty is the recipient, not the own sender.
         val ownConverter = onChainConverter(
             lookup = lookupOf(currency.network.id.rawId to mapOf(USER_ADDRESS to ownAccount)),
         )
