@@ -1,5 +1,6 @@
 package com.tangem.screens.moneyaccount
 
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import androidx.compose.ui.test.swipeDown
@@ -44,6 +45,16 @@ class MoneyAccountPageObject(private val semanticsProvider: SemanticsNodeInterac
     val addFundsButton: KNode = child {
         hasClickAction()
         hasAnyAncestor(withTestTag(MoneyAccountTestTags.ADD_FUNDS_BUTTON))
+    }
+
+    val sendButton: KNode = child {
+        hasClickAction()
+        hasAnyAncestor(withTestTag(MoneyAccountTestTags.SEND_BUTTON))
+    }
+
+    // A real tap lands on the Markets sheet once the row sits under it at the bottom of Main.
+    fun clickMainRow() {
+        mainRow { performSemanticsAction(SemanticsActions.OnClick) }
     }
 
     fun mainRowWithText(text: String): KNode = child {
