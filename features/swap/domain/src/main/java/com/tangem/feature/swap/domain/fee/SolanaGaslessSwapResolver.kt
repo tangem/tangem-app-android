@@ -87,7 +87,6 @@ internal class SolanaGaslessSwapResolver @Inject constructor(
         }
     }
 
-    /** Fails open: an unreachable node must not hide gasless, the backend simulates the tx again on submit. */
     // Swapping from SOL itself means wrapping it into a rent-paying wSOL account the user cannot fund
     private fun isSponsorable(fromCurrency: CryptoCurrency): Boolean = swapFeatureToggles.isSolanaGaslessEnabled &&
         fromCurrency is CryptoCurrency.Token &&
@@ -98,6 +97,7 @@ internal class SolanaGaslessSwapResolver @Inject constructor(
         return coinStatus?.value?.amount?.signum() == 1
     }
 
+    /** Fails open: an unreachable node must not hide gasless, the backend simulates the tx again on submit. */
     private suspend fun simulates(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         txData: String,
