@@ -56,26 +56,6 @@ internal fun ColumnScope.SelectPlanSkeletonContent() {
 }
 
 @Composable
-internal fun SelectPlanSkeletonFooter(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-            .navigationBarsPadding(),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        repeat(times = 2) {
-            TangemShimmer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                radius = 24.dp,
-            )
-        }
-    }
-}
-
-@Composable
 private fun PointSkeleton(widthFraction: Float) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -109,8 +89,7 @@ private fun SelectPlanSkeletonPreview() {
                 .fillMaxSize()
                 .background(TangemTheme.colors3.bg.primary),
         ) {
-            Column(modifier = Modifier.weight(1f)) { SelectPlanSkeletonContent() }
-            SelectPlanSkeletonFooter()
+            SelectPlanSkeletonContent()
         }
     }
 }
