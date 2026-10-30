@@ -117,7 +117,8 @@ internal class ReconcilePolymarketSessionKeysInteractorTest {
         interactor(USER_WALLET_ID)
 
         // Assert
-        coVerify(exactly = 1) { tradingStore.markReadyOnExchange(USER_WALLET_ID, KEY, VALID_UNTIL) }
+        coVerify(exactly = 1) { tradingStore.restoreReadyOnExchange(USER_WALLET_ID, KEY, VALID_UNTIL) }
+        coVerify(exactly = 0) { tradingStore.markReadyOnExchange(any(), any(), any()) }
     }
 
     @Test
@@ -131,7 +132,7 @@ internal class ReconcilePolymarketSessionKeysInteractorTest {
         interactor(USER_WALLET_ID)
 
         // Assert
-        coVerify(exactly = 0) { tradingStore.markReadyOnExchange(any(), any(), any()) }
+        coVerify(exactly = 0) { tradingStore.restoreReadyOnExchange(any(), any(), any()) }
     }
 
     @Test
@@ -145,7 +146,8 @@ internal class ReconcilePolymarketSessionKeysInteractorTest {
         interactor(USER_WALLET_ID)
 
         // Assert
-        coVerify(exactly = 1) { tradingStore.markReadyOnExchange(USER_WALLET_ID, KEY, VALID_UNTIL) }
+        coVerify(exactly = 1) { tradingStore.restoreReadyOnExchange(USER_WALLET_ID, KEY, VALID_UNTIL) }
+        coVerify(exactly = 0) { tradingStore.markReadyOnExchange(any(), any(), any()) }
     }
 
     @Test
@@ -160,7 +162,7 @@ internal class ReconcilePolymarketSessionKeysInteractorTest {
             interactor(USER_WALLET_ID)
 
             // Assert
-            coVerify(exactly = 0) { tradingStore.markReadyOnExchange(any(), any(), any()) }
+            coVerify(exactly = 0) { tradingStore.restoreReadyOnExchange(any(), any(), any()) }
         }
 
     @Test
