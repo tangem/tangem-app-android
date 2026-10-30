@@ -8,6 +8,7 @@ import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountFractionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.AmountPresetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.CollateralUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
@@ -114,6 +115,29 @@ internal object PlacePredictionPreviewIntents :
     override fun onViewPositionClick() = Unit
 }
 
+internal val PreviewMarketHeader = MarketHeaderUM(
+    title = "Will Uzbekistan win the 2026 FIFA World Cup?",
+    imageUrl = null,
+    outcomeTitle = "No",
+    outcomePrice = "85¢",
+    resolutionDateMillis = RESOLUTION_AT,
+)
+
+internal val PreviewSlippage = SlippageUM(percent = DEFAULT_SLIPPAGE_PERCENT, isDefault = true)
+
+internal val PreviewBuyOrder: OrderSideUM = OrderSideUM.Buy(
+    balance = BigDecimal("30000"),
+    hasSufficientBalance = true,
+    isAddFundsEnabled = true,
+)
+
+internal val PreviewAmountPresets = persistentListOf(
+    AmountPresetUM(label = "\$100", amount = "100"),
+    AmountPresetUM(label = "\$500", amount = "500"),
+    AmountPresetUM(label = "\$1000", amount = "1000"),
+    AmountPresetUM(label = "\$5000", amount = "5000"),
+)
+
 private fun previewState(
     amountValue: String = "",
     quote: QuoteUM = QuoteUM.Empty,
@@ -126,17 +150,11 @@ private fun previewState(
         isAddFundsEnabled = tradingPermission != TradingPermissionUM.Restricted,
     ),
 ): PlacePredictionUM = PlacePredictionUM(
-    market = MarketHeaderUM(
-        title = "Will Uzbekistan win the 2026 FIFA World Cup?",
-        imageUrl = null,
-        outcomeTitle = "No",
-        outcomePrice = "85¢",
-        resolutionDateMillis = RESOLUTION_AT,
-    ),
+    market = PreviewMarketHeader,
     collateral = CollateralUM(tokenSymbol = "pUSD"),
     order = order,
     amountValue = amountValue,
-    slippage = SlippageUM(percent = DEFAULT_SLIPPAGE_PERCENT, isDefault = true),
+    slippage = PreviewSlippage,
     quote = quote,
     isMarketAcceptingOrders = true,
     tradingPermission = tradingPermission,
