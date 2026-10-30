@@ -4,15 +4,20 @@ import arrow.core.Either
 import com.tangem.domain.marketing.models.MarketingCampaign
 import com.tangem.domain.marketing.models.MarketingCampaignTarget
 import com.tangem.domain.marketing.models.MarketingScreen
+import com.tangem.domain.marketing.models.isActiveAt
 import com.tangem.domain.marketing.models.matchesUsdAmount
+import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
+import java.time.Clock
+import java.time.Instant
 
 class GetMarketingBannerUseCase(
     private val repository: MarketingRepository,
+    private val clock: Clock = Clock.systemUTC(),
 ) {
 
     /**
-     * Returns campaigns for [screen], filtered (dismissed, target match, USD amount range) and sorted by priority.
+     * Returns campaigns for [screen], filtered (dismissed, display window, target match, USD amount range) and sorted by priority.
      *
      * @param amountUsd USD equivalent of the entered amount (swap/onramp only). When null, the amount filter is skipped.
      */
@@ -22,8 +27,12 @@ class GetMarketingBannerUseCase(
     ): Either<Throwable, List<MarketingCampaign>> {
         return repository.getCampaigns(screen).map { campaigns ->
             val dismissed = repository.getDismissedBannerIds()
+            val now = Instant.now(clock)
             campaigns.asSequence()
                 .filterNot { it.id in dismissed }
+                .filter { campaign ->
+                    campaign.isActiveAt(now) { TangemLogger.e("Campaign ${campaign.id}: invalid date '$it' ignored") }
+                }
                 .filter { matchesTarget(it, screen) }
                 // Amount gating runs reactively in the consumer (with the live amount). Skip it here when
                 // no amount is provided, so bounded swap/onramp campaigns aren't dropped on the pre-fetch.
