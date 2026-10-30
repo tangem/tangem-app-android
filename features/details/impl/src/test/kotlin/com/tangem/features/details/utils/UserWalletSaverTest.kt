@@ -16,20 +16,14 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
-import com.tangem.domain.wallets.usecase.ReportMissingWalletCardsBackupUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.details.impl.R
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
-import com.tangem.test.core.TestAppCoroutineScope
 import io.mockk.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 internal class UserWalletSaverTest {
 
     private val scanCardProcessor: ScanCardProcessor = mockk()
@@ -38,7 +32,6 @@ internal class UserWalletSaverTest {
     private val messageSender: UiMessageSender = mockk(relaxUnitFun = true)
     private val router: Router = mockk(relaxUnitFun = true)
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles = mockk()
-    private val reportMissingWalletCardsBackupUseCase: ReportMissingWalletCardsBackupUseCase = mockk()
 
     private val scanResponse: ScanResponse = mockk()
     private val userWalletId: UserWalletId = UserWalletId("011")
@@ -48,9 +41,7 @@ internal class UserWalletSaverTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(reportMissingWalletCardsBackupUseCase)
         every { onboardingV2FeatureToggles.isAddressSyncEnabled } returns false
-        every { onboardingV2FeatureToggles.isCardLinkedStatusUpdateEnabled } returns false
     }
 
     @Test
@@ -169,59 +160,6 @@ internal class UserWalletSaverTest {
         }
 
     @Test
-    fun `GIVEN cardLinkedStatusUpdate enabled AND save success WHEN scanAndSaveUserWallet THEN cards are reported`() =
-        runTest {
-            // Arrange
-            every { onboardingV2FeatureToggles.isCardLinkedStatusUpdateEnabled } returns true
-            coEvery { reportMissingWalletCardsBackupUseCase.invoke(userWallet) } returns Either.Right(Unit)
-            mockScanSuccess(scanResponse)
-            mockBuilderReturns(userWallet)
-            coEvery { saveWalletUseCase.invoke(userWallet, false, any()) } returns Either.Right(Unit)
-
-            // Act
-            createSaver().scanAndSaveUserWallet(this)
-            advanceUntilIdle()
-
-            // Assert
-            coVerify(exactly = 1) { reportMissingWalletCardsBackupUseCase.invoke(userWallet) }
-        }
-
-    @Test
-    fun `GIVEN cardLinkedStatusUpdate disabled WHEN scanAndSaveUserWallet THEN cards are not reported`() = runTest {
-        // Arrange
-        every { onboardingV2FeatureToggles.isCardLinkedStatusUpdateEnabled } returns false
-        mockScanSuccess(scanResponse)
-        mockBuilderReturns(userWallet)
-        coEvery { saveWalletUseCase.invoke(userWallet, false, any()) } returns Either.Right(Unit)
-
-        // Act
-        createSaver().scanAndSaveUserWallet(this)
-        advanceUntilIdle()
-
-        // Assert
-        coVerify(exactly = 0) { reportMissingWalletCardsBackupUseCase.invoke(any()) }
-    }
-
-    @Test
-    fun `GIVEN cardLinkedStatusUpdate enabled AND save failed WHEN scanAndSaveUserWallet THEN nothing is reported`() =
-        runTest {
-            // Arrange
-            every { onboardingV2FeatureToggles.isCardLinkedStatusUpdateEnabled } returns true
-            mockScanSuccess(scanResponse)
-            mockBuilderReturns(userWallet)
-            coEvery { saveWalletUseCase.invoke(userWallet, false, any()) } returns Either.Left(
-                SaveWalletError.DataError(messageId = R.string.common_unknown_error),
-            )
-
-            // Act
-            createSaver().scanAndSaveUserWallet(this)
-            advanceUntilIdle()
-
-            // Assert
-            coVerify(exactly = 0) { reportMissingWalletCardsBackupUseCase.invoke(any()) }
-        }
-
-    @Test
     fun `GIVEN onSuccess AND createUserWallet returns null WHEN scanAndSaveUserWallet THEN unknown error message`() =
         runTest {
             mockScanSuccess(scanResponse)
@@ -331,7 +269,7 @@ internal class UserWalletSaverTest {
         every { coldUserWalletBuilderFactory.create(scanResponse = any()) } returns builder
     }
 
-    private fun TestScope.createSaver(): UserWalletSaver {
+    private fun createSaver(): UserWalletSaver {
         return UserWalletSaver(
             scanCardProcessor = scanCardProcessor,
             saveWalletUseCase = saveWalletUseCase,
@@ -339,8 +277,6 @@ internal class UserWalletSaverTest {
             messageSender = messageSender,
             router = router,
             onboardingV2FeatureToggles = onboardingV2FeatureToggles,
-            reportMissingWalletCardsBackupUseCase = reportMissingWalletCardsBackupUseCase,
-            appScope = TestAppCoroutineScope(testScope = this),
         )
     }
 
