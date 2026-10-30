@@ -136,7 +136,6 @@ internal class PollTangemPayAccountStatusesUseCaseTest {
     }
 
     private fun provideTestModels() = listOf(
-        StateModel("hidden", summary(isHidden = true), isTerminal = true),
         StateModel("blocked", summary(customerStatus = CustomerStatus.BLOCKED), isTerminal = true),
         StateModel(
             name = "former with issuing accounts",
@@ -215,7 +214,6 @@ internal class PollTangemPayAccountStatusesUseCaseTest {
     private fun terminalSummary() = summary(kycStatus = KycStatus.DECLINED)
 
     private fun summary(
-        isHidden: Boolean = false,
         customerStatus: CustomerStatus = CustomerStatus.NEW,
         kycStatus: KycStatus = KycStatus.REQUIRED,
         paymentStatus: PaymentStatus = PaymentStatus.NOT_STARTED,
@@ -224,7 +222,7 @@ internal class PollTangemPayAccountStatusesUseCaseTest {
     ) = CustomerSummary(
         customerId = "customer",
         customerStatus = customerStatus,
-        isHidden = isHidden,
+        isHidden = false,
         kycStatus = kycStatus,
         paymentAccount = PaymentAccount(
             id = null,
