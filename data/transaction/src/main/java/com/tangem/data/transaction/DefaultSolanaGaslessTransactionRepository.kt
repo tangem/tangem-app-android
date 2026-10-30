@@ -158,8 +158,12 @@ internal class DefaultSolanaGaslessTransactionRepository(
     private companion object {
         const val HTTP_SERVER_ERROR = 500
         val HTTP_CLIENT_ERRORS = 400 until HTTP_SERVER_ERROR
+        // Each asks to retry later or to rebuild (a bare 410), so they do not refuse the tx
         val RETRIABLE_CLIENT_ERRORS = setOf(
             ApiResponseError.HttpException.Code.REQUEST_TIMEOUT,
+            ApiResponseError.HttpException.Code.GONE,
+            ApiResponseError.HttpException.Code.LOCKED,
+            ApiResponseError.HttpException.Code.TOO_EARLY,
             ApiResponseError.HttpException.Code.TOO_MANY_REQUESTS,
         )
         const val FEE_PAYER_CACHE_MILLIS = 600_000L
