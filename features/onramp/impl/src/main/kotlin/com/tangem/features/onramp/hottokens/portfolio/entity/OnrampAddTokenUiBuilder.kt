@@ -31,7 +31,7 @@ internal class OnrampAddTokenUiBuilder @Inject constructor(
         return AddTokenUM.Network(
             icon = tokenToAdd.cryptoCurrency.network.iconResId,
             name = stringReference(tokenToAdd.cryptoCurrency.network.name),
-            editable = false,
+            isEditable = false,
             onClick = {},
         )
     }
@@ -72,7 +72,7 @@ internal class OnrampAddTokenUiBuilder @Inject constructor(
         tokenToAdd: AddHotCryptoData,
     ): AddTokenUM {
         val button = AddTokenUM.Button(
-            showProgress = false,
+            shouldShowProgress = false,
             isTangemIconVisible = isTangemIconVisible,
             text = resourceReference(R.string.common_add),
             onConfirmClick = onConfirmClick,
@@ -102,7 +102,7 @@ internal class OnrampAddTokenUiBuilder @Inject constructor(
     companion object {
 
         fun AddTokenUM.toggleProgress(showProgress: Boolean) = this.copy(
-            button = this.button.copy(showProgress = showProgress),
+            button = this.button.copy(shouldShowProgress = showProgress),
         )
     }
 }

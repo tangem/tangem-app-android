@@ -2,6 +2,7 @@ package com.tangem.data.polymarket.pagination
 
 import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
+import com.tangem.domain.polymarket.model.PolymarketActivity
 import com.tangem.domain.polymarket.model.PolymarketActivityError
 import com.tangem.domain.polymarket.model.PolymarketActivityListConfig
 import com.tangem.domain.polymarket.model.PolymarketActivityPage
@@ -14,14 +15,16 @@ import org.junit.jupiter.api.Test
 internal class PolymarketActivityBatchFetcherTest {
 
     private val config: PolymarketActivityListConfig = mockk()
+    private val activity: PolymarketActivity = mockk()
 
     @Test
-    fun `GIVEN a failed next page WHEN retrying THEN reuses the cursor and does not refetch the first page`() = runTest {
+    fun `GIVEN a failed page after an empty page WHEN retrying THEN reuses the failed page cursor`() = runTest {
         // Arrange
         val cursors = mutableListOf<String?>()
         val responses = ArrayDeque(
             listOf(
-                Either.Right(PolymarketActivityPage(emptyList(), "cursor-1")),
+                Either.Right(PolymarketActivityPage(listOf(activity), "cursor-1")),
+                Either.Right(PolymarketActivityPage(emptyList(), "cursor-2")),
                 Either.Left(PolymarketActivityError.Network),
                 Either.Right(PolymarketActivityPage(emptyList(), null)),
             ),
@@ -38,16 +41,16 @@ internal class PolymarketActivityBatchFetcherTest {
         fetcher.fetchNext(null, retried)
 
         // Assert
-        assertThat(cursors).containsExactly(null, "cursor-1", "cursor-1").inOrder()
+        assertThat(cursors).containsExactly(null, "cursor-1", "cursor-2", "cursor-2").inOrder()
         assertThat(failed).isInstanceOf(BatchFetchResult.Error::class.java)
-        assertThat(retried).isEqualTo(BatchFetchResult.Success(emptyList<Any>(), empty = true, last = true))
+        assertThat(retried).isEqualTo(BatchFetchResult.Success(emptyList<Any>(), isEmpty = true, isLast = true))
     }
 
     @Test
     fun `GIVEN a repeated cursor WHEN loading the next page THEN stops the pagination loop`() = runTest {
         // Arrange
         val fetcher = PolymarketActivityBatchFetcher(30) { _, _, _ ->
-            Either.Right(PolymarketActivityPage(emptyList(), "cursor-1"))
+            Either.Right(PolymarketActivityPage(listOf(activity), "cursor-1"))
         }
 
         // Act
@@ -55,7 +58,7 @@ internal class PolymarketActivityBatchFetcherTest {
         val next = fetcher.fetchNext(null, first)
 
         // Assert
-        assertThat(first).isEqualTo(BatchFetchResult.Success(emptyList<Any>(), empty = true, last = false))
+        assertThat(first).isEqualTo(BatchFetchResult.Success(listOf(activity), isEmpty = false, isLast = false))
         assertThat(next).isInstanceOf(BatchFetchResult.Error::class.java)
     }
 
@@ -66,7 +69,7 @@ internal class PolymarketActivityBatchFetcherTest {
         val requests = mutableListOf<Pair<PolymarketActivityListConfig, String?>>()
         val fetcher = PolymarketActivityBatchFetcher(30) { value, cursor, _ ->
             requests += value to cursor
-            Either.Right(PolymarketActivityPage(emptyList(), "cursor-1"))
+            Either.Right(PolymarketActivityPage(listOf(activity), "cursor-1"))
         }
 
         // Act
@@ -88,5 +91,59 @@ internal class PolymarketActivityBatchFetcherTest {
 
         // Assert
         assertThat(error).isInstanceOf(CancellationException::class.java)
+    }
+
+    @Test
+    fun `GIVEN empty pages with cursors WHEN fetching THEN continues until valid rows are found`() = runTest {
+        // Arrange
+        val cursors = mutableListOf<String?>()
+        val pages = ArrayDeque(
+            listOf(
+                PolymarketActivityPage(emptyList(), "cursor-1"),
+                PolymarketActivityPage(emptyList(), "cursor-2"),
+                PolymarketActivityPage(listOf(activity), null),
+            ),
+        )
+        val fetcher = PolymarketActivityBatchFetcher(30) { _, cursor, _ ->
+            cursors += cursor
+            Either.Right(pages.removeFirst())
+        }
+
+        // Act
+        val actual = fetcher.fetchFirst(config)
+
+        // Assert
+        assertThat(cursors).containsExactly(null, "cursor-1", "cursor-2").inOrder()
+        assertThat(actual).isEqualTo(BatchFetchResult.Success(listOf(activity), isEmpty = false, isLast = true))
+    }
+
+    @Test
+    fun `GIVEN only empty pages WHEN fetching THEN reaches the end of pagination`() = runTest {
+        // Arrange
+        val pages = ArrayDeque(
+            listOf(PolymarketActivityPage(emptyList(), "cursor-1"), PolymarketActivityPage(emptyList(), null)),
+        )
+        val fetcher = PolymarketActivityBatchFetcher(30) { _, _, _ -> Either.Right(pages.removeFirst()) }
+
+        // Act
+        val actual = fetcher.fetchFirst(config)
+
+        // Assert
+        assertThat(pages).isEmpty()
+        assertThat(actual).isEqualTo(BatchFetchResult.Success(emptyList<Any>(), isEmpty = true, isLast = true))
+    }
+
+    @Test
+    fun `GIVEN a cursor cycle in empty pages WHEN fetching THEN stops the pagination loop`() = runTest {
+        // Arrange
+        val fetcher = PolymarketActivityBatchFetcher(30) { _, _, _ ->
+            Either.Right(PolymarketActivityPage(emptyList(), "cursor-1"))
+        }
+
+        // Act
+        val actual = fetcher.fetchFirst(config)
+
+        // Assert
+        assertThat(actual).isInstanceOf(BatchFetchResult.Error::class.java)
     }
 }

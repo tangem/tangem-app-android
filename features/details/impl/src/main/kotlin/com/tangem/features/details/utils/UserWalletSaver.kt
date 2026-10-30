@@ -5,6 +5,7 @@ import arrow.core.raise.Raise
 import arrow.core.raise.ensureNotNull
 import arrow.core.raise.fold
 import arrow.core.raise.recover
+import com.tangem.common.core.TangemError
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
@@ -18,16 +19,15 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.card.ScanCardProcessor
+import com.tangem.domain.card.models.ScanConfig
 import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
-import com.tangem.domain.wallets.usecase.ReportMissingWalletCardsBackupUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.details.impl.R
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
-import com.tangem.utils.coroutines.AppCoroutineScope
-import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -43,15 +43,13 @@ internal class UserWalletSaver @Inject constructor(
     private val messageSender: UiMessageSender,
     private val router: Router,
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
-    private val reportMissingWalletCardsBackupUseCase: ReportMissingWalletCardsBackupUseCase,
-    private val appScope: AppCoroutineScope,
 ) {
 
     suspend fun scanAndSaveUserWallet(scope: CoroutineScope) {
         val response = scanCard(scope)
         response.fold(
-            ifLeft = {
-                val message = it.message
+            ifLeft = { error ->
+                val message = error.message
 
                 if (!message.isNullOrEmpty()) {
                     messageSender.send(SnackbarMessage(message))
@@ -64,8 +62,8 @@ internal class UserWalletSaver @Inject constructor(
                         val userWallet = createUserWallet(scanResponse)
                         saveWallet(userWallet, scanResponse)
                     },
-                    recover = {
-                        val message = it.message
+                    recover = { throwable ->
+                        val message = throwable.message
 
                         if (!message.isNullOrEmpty()) {
                             messageSender.send(SnackbarMessage(message))
@@ -99,8 +97,6 @@ internal class UserWalletSaver @Inject constructor(
                 }
             },
             transform = {
-                reportMissingCardsBackup(userWallet)
-
                 if (onboardingV2FeatureToggles.isAddressSyncEnabled) {
                     router.push(
                         AppRoute.Onboarding(
@@ -116,18 +112,6 @@ internal class UserWalletSaver @Inject constructor(
                 }
             },
         )
-    }
-
-    private fun reportMissingCardsBackup(userWallet: UserWallet) {
-        if (onboardingV2FeatureToggles.isCardLinkedStatusUpdateEnabled.not()) return
-
-        // deliberately not the caller's scope: saving the wallet navigates away right after this, which would
-        // cancel the request mid-flight and leave the backend believing nothing about a wallet already known to
-        // be broken — exactly the state this reporting exists to make visible
-        appScope.launch {
-            reportMissingWalletCardsBackupUseCase(userWallet)
-                .onLeft { error -> TangemLogger.e("Unable to report cards backup state: $error") }
-        }
     }
 
     private fun selectUserWallet() {
@@ -147,30 +131,40 @@ internal class UserWalletSaver @Inject constructor(
     private suspend fun scanCard(scope: CoroutineScope) = suspendCancellableCoroutine { continuation ->
         scope.launch {
             scanCardProcessor.scan(
-                analyticsSource = AnalyticsParam.ScreensSources.Settings,
-                shouldCheckIsAlreadyActivated = true,
-                onWalletNotCreated = {
-                    continuation.resume(Either.Right(null))
-                },
-                onSuccess = {
-                    continuation.resume(Either.Right(it))
-                },
-                onCancel = {
-                    continuation.resume(Either.Right(null))
-                },
-                onFailure = { tangemError ->
-                    val error = if (!tangemError.silent) {
-                        val message = tangemError.messageResId
-                            ?.let(::resourceReference)
-                            ?: stringReference(tangemError.customMessage)
-
-                        Error.Message(message)
-                    } else {
-                        Error.Silent
-                    }
-                    continuation.resume(Either.Left(error))
-                },
+                config = ScanConfig(
+                    analyticsSource = AnalyticsParam.ScreensSources.Settings,
+                    callback = createScanCallback(continuation),
+                ),
             )
+        }
+    }
+
+    private fun createScanCallback(
+        continuation: CancellableContinuation<Either<Error, ScanResponse?>>,
+    ): ScanConfig.Callback = object : ScanConfig.Callback {
+        override suspend fun onOnboardingRequired() {
+            continuation.resume(Either.Right(null))
+        }
+
+        override suspend fun onCardVerificationFailed() {
+            continuation.resume(Either.Right(null))
+        }
+
+        override suspend fun onFailure(error: TangemError) {
+            val saverError = if (!error.silent) {
+                val message = error.messageResId
+                    ?.let(::resourceReference)
+                    ?: stringReference(error.customMessage)
+
+                Error.Message(message)
+            } else {
+                Error.Silent
+            }
+            continuation.resume(Either.Left(saverError))
+        }
+
+        override suspend fun onSuccess(scanResponse: ScanResponse) {
+            continuation.resume(Either.Right(scanResponse))
         }
     }
 

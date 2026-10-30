@@ -79,4 +79,5 @@ dependencies {
     /* Tests */
     testImplementation(deps.test.junit5)
     testImplementation(deps.test.truth)
+    testImplementation(projects.test.core)
 }

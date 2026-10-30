@@ -56,8 +56,8 @@ internal class SetConfirmationStateInitTransformer(
                 transactionDoneState = TransactionDoneState.Empty,
                 isApprovalNeeded = stakingApproval is StakingApproval.Needed,
                 allowance = stakingAllowance,
-                isAmountEditable = actionType is StakingActionCommonType.Enter && !actionType.skipEnterAmount ||
-                    actionType is StakingActionCommonType.Exit && !actionType.partiallyUnstakeDisabled,
+                isAmountEditable = actionType is StakingActionCommonType.Enter && !actionType.shouldSkipEnterAmount ||
+                    actionType is StakingActionCommonType.Exit && !actionType.isPartiallyUnstakeDisabled,
                 reduceAmountBy = null,
                 pendingAction = pendingAction,
                 pendingActions = pendingActions.takeIf { isComposePendingActions },

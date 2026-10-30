@@ -1,5 +1,6 @@
 package com.tangem.domain.onramp.model
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -11,5 +12,5 @@ data class OnrampCountry(
     val alpha3: String,
     val continent: String,
     val defaultCurrency: OnrampCurrency,
-    val onrampAvailable: Boolean,
+    @SerialName("onrampAvailable") val isOnrampAvailable: Boolean,
 )

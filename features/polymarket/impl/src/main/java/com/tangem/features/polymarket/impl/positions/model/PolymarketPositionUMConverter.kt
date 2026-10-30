@@ -10,6 +10,7 @@ import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.common.formatSlippagePercent
 import com.tangem.features.polymarket.impl.common.outcomeAccent
 import com.tangem.features.polymarket.impl.common.toBubbleVariant
+import com.tangem.features.polymarket.impl.common.toPolymarketPnlDirection
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionUM
 import com.tangem.utils.converter.Converter
 
@@ -35,11 +36,7 @@ internal class PolymarketPositionUMConverter(
             value = stringReference(
                 "${value.cashPnl.abs().formatPolymarketMoney()} (${value.percentPnl.abs().formatSlippagePercent()})",
             ),
-            direction = when (value.cashPnl.signum()) {
-                -1 -> TangemPriceChange.Direction.Down
-                1 -> TangemPriceChange.Direction.Up
-                else -> TangemPriceChange.Direction.Neutral
-            },
+            direction = value.cashPnl.toPolymarketPnlDirection(),
         ),
         currentValue = stringReference(value.currentValue.formatPolymarketMoney()),
         result = badgeConverter.convert(value),

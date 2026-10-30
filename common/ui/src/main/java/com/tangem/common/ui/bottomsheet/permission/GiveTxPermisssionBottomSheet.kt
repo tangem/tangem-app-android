@@ -23,6 +23,7 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import com.tangem.common.ui.R
 import com.tangem.common.ui.bottomsheet.permission.state.*
@@ -79,14 +80,14 @@ private fun GiveTxPermissionBottomSheetContent(content: GiveTxPermissionBottomSh
             color = TangemTheme.colors.text.secondary,
             style = TangemTheme.typography.body2,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing24),
+            modifier = Modifier.padding(horizontal = 24.dp),
         )
 
         SpacerH16()
 
         ApprovalBottomSheetInfo(data)
 
-        SpacerH(height = TangemTheme.dimens.spacing20)
+        SpacerH(height = 20.dp)
 
         PrimaryButtonIconEnd(
             text = stringResourceSafe(id = R.string.common_approve),
@@ -94,7 +95,7 @@ private fun GiveTxPermissionBottomSheetContent(content: GiveTxPermissionBottomSh
             showProgress = data.approveButton.isLoading,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = TangemTheme.dimens.spacing16),
+                .padding(horizontal = 16.dp),
             onClick = data.approveButton.onClick,
             enabled = data.approveButton.isEnabled,
         )
@@ -105,9 +106,9 @@ private fun GiveTxPermissionBottomSheetContent(content: GiveTxPermissionBottomSh
             text = stringResourceSafe(id = R.string.common_cancel),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = TangemTheme.dimens.spacing16),
+                .padding(horizontal = 16.dp),
             onClick = content.onCancel,
-            enabled = data.cancelButton.enabled,
+            enabled = data.cancelButton.isEnabled,
         )
 
         SpacerH16()
@@ -133,7 +134,7 @@ private fun ApprovalBottomSheetInfo(data: GiveTxPermissionState.ReadyForRequest)
                 },
             )
         },
-        modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+        modifier = Modifier.padding(horizontal = 16.dp),
     ) {
         AmountItem(
             currency = data.currency,
@@ -145,7 +146,7 @@ private fun ApprovalBottomSheetInfo(data: GiveTxPermissionState.ReadyForRequest)
     SpacerH16()
     FooterContainer(
         footer = data.footerText,
-        modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+        modifier = Modifier.padding(horizontal = 16.dp),
     ) {
         FeeItem(fee = data.fee)
     }
@@ -188,10 +189,10 @@ private fun AmountItem(
                 .fillMaxWidth()
                 .onSizeChanged { amountSize = it }
                 .padding(
-                    top = TangemTheme.dimens.spacing16,
-                    bottom = TangemTheme.dimens.spacing16,
-                    start = TangemTheme.dimens.spacing12,
-                    end = TangemTheme.dimens.spacing12,
+                    top = 16.dp,
+                    bottom = 16.dp,
+                    start = 12.dp,
+                    end = 12.dp,
                 ),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
@@ -214,7 +215,7 @@ private fun AmountItem(
                     painter = rememberVectorPainter(ImageVector.vectorResource(id = R.drawable.ic_chevron_24)),
                     contentDescription = null,
                     tint = TangemTheme.colors.icon.informative,
-                    modifier = Modifier.padding(start = TangemTheme.dimens.spacing2),
+                    modifier = Modifier.padding(start = 2.dp),
                 )
             }
         }
@@ -251,7 +252,7 @@ private fun DropdownSelector(
     // Workaround to set color and shape of dropdown menu
     MaterialTheme(
         colorScheme = MaterialTheme.colorScheme.copy(surface = TangemTheme.colors.background.action),
-        shapes = MaterialTheme.shapes.copy(extraSmall = RoundedCornerShape(TangemTheme.dimens.radius16)),
+        shapes = MaterialTheme.shapes.copy(extraSmall = RoundedCornerShape(16.dp)),
     ) {
         DropdownMenu(
             expanded = isExpanded,
@@ -290,7 +291,7 @@ private fun DropdownSelector(
                                 ),
                                 tint = color,
                                 contentDescription = null,
-                                modifier = Modifier.padding(start = TangemTheme.dimens.size20),
+                                modifier = Modifier.padding(start = 20.dp),
                             )
                         }
                     },

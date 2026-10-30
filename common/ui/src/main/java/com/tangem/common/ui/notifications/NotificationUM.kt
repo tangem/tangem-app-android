@@ -134,7 +134,7 @@ sealed class NotificationUM(val config: NotificationConfig) {
             val feeName: String,
             val feeSymbol: String,
             val networkName: String,
-            val mergeFeeNetworkName: Boolean = false,
+            val shouldMergeFeeNetworkName: Boolean = false,
             val onClick: (() -> Unit)? = null,
         ) : Error(
             title = resourceReference(
@@ -151,7 +151,7 @@ sealed class NotificationUM(val config: NotificationConfig) {
                     text = resourceReference(
                         R.string.common_buy_currency,
                         wrappedList(
-                            if (mergeFeeNetworkName) {
+                            if (shouldMergeFeeNetworkName) {
                                 "$currencyName ($feeSymbol)"
                             } else {
                                 feeName

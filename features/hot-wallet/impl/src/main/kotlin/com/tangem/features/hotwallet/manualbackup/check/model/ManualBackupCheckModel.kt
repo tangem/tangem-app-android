@@ -49,8 +49,8 @@ internal class ManualBackupCheckModel @Inject constructor(
             exportSeedPhraseUseCase.invoke(userWallet.hotWalletId).fold(
                 ifLeft = { TangemLogger.e("Error on exporting the seed phrase for a manual backup check", it) },
                 ifRight = { seedPhrasePrivateInfo ->
-                    uiState.update {
-                        it.copy(
+                    uiState.update { state ->
+                        state.copy(
                             words = seedPhrasePrivateInfo.mnemonic.mnemonicComponents.filterIndexed { index, _ ->
                                 WORD_FIELD_INDICES.contains(index + 1)
                             }.toImmutableList(),
@@ -69,7 +69,7 @@ internal class ManualBackupCheckModel @Inject constructor(
             ManualBackupCheckUM.WordField(
                 index = shownIndex,
                 word = TextFieldValue(""),
-                error = false,
+                isError = false,
                 onChange = { textFieldValue ->
                     updateWordField(shownIndex, textFieldValue)
                 },
@@ -78,11 +78,11 @@ internal class ManualBackupCheckModel @Inject constructor(
 
         return ManualBackupCheckUM(
             wordFields = wordFields,
-            completeButtonEnabled = false,
-            completeButtonProgress = false,
+            isCompleteButtonEnabled = false,
+            isCompleteButtonInProgress = false,
             onCompleteButtonClick = {
                 val currentUIState = uiState.value
-                if (currentUIState.completeButtonEnabled) {
+                if (currentUIState.isCompleteButtonEnabled) {
                     backupWallet()
                 }
             },
@@ -92,7 +92,7 @@ internal class ManualBackupCheckModel @Inject constructor(
     private fun backupWallet() {
         modelScope.launch {
             uiState.update {
-                it.copy(completeButtonProgress = true)
+                it.copy(isCompleteButtonInProgress = true)
             }
 
             runCatching {
@@ -100,18 +100,18 @@ internal class ManualBackupCheckModel @Inject constructor(
                     .getOrElse { error("User wallet with id ${params.userWalletId} not found") }
                 if (userWallet is UserWallet.Hot) {
                     updateWalletUseCase(userWallet.walletId) {
-                        userWallet.copy(backedUp = true)
+                        userWallet.copy(isBackedUp = true)
                     }
                     callbacks.onCompleteClick()
                 }
                 uiState.update {
-                    it.copy(completeButtonProgress = false)
+                    it.copy(isCompleteButtonInProgress = false)
                 }
             }.onFailure { throwable ->
                 TangemLogger.e("Error", throwable)
 
                 uiState.update {
-                    it.copy(completeButtonProgress = false)
+                    it.copy(isCompleteButtonInProgress = false)
                 }
             }
         }
@@ -124,7 +124,7 @@ internal class ManualBackupCheckModel @Inject constructor(
                     val isCorrect = checkWordField(newText.text, shownIndex)
                     wordField.copy(
                         word = newText,
-                        error = !isCorrect,
+                        isError = !isCorrect,
                     )
                 } else {
                     wordField
@@ -137,7 +137,7 @@ internal class ManualBackupCheckModel @Inject constructor(
 
             currentState.copy(
                 wordFields = updatedFields,
-                completeButtonEnabled = allFieldsCorrect,
+                isCompleteButtonEnabled = allFieldsCorrect,
             )
         }
     }

@@ -74,7 +74,7 @@ fun MessageBottomSheetV2(state: MessageBottomSheetUM, onDismissRequest: () -> Un
         },
         content = { content: MessageBottomSheetUM ->
             MessageBottomSheetContent(
-                modifier = Modifier.padding(vertical = TangemTheme.dimens2.x4),
+                modifier = Modifier.padding(vertical = 16.dp),
                 state = content,
             )
         },
@@ -89,9 +89,9 @@ fun MessageBottomSheetContentV2(state: MessageBottomSheetUM, modifier: Modifier 
                 is MessageBottomSheetUM.InfoBlock -> {
                     ContentContainer(
                         modifier = Modifier
-                            .heightIn(min = TangemTheme.dimens.size180)
+                            .heightIn(min = 180.dp)
                             .fillMaxWidth()
-                            .padding(horizontal = TangemTheme.dimens.spacing16)
+                            .padding(horizontal = 16.dp)
                             .padding(bottom = 32.dp),
                         state = element,
                     )
@@ -116,7 +116,7 @@ private fun ContentContainer(state: MessageBottomSheetUM.InfoBlock, modifier: Mo
             Text(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = TangemTheme.dimens2.x8)
+                    .padding(top = 32.dp)
                     .testTag(WarningBottomSheetTestTags.TITLE),
                 text = title.resolveReference(),
                 style = TangemTheme.typography3.heading.small,
@@ -128,7 +128,7 @@ private fun ContentContainer(state: MessageBottomSheetUM.InfoBlock, modifier: Mo
             Text(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = TangemTheme.dimens2.x2)
+                    .padding(top = 8.dp)
                     .testTag(WarningBottomSheetTestTags.MESSAGE),
                 text = body.resolveAnnotatedReference(),
                 style = TangemTheme.typography3.subheading.medium,
@@ -138,7 +138,7 @@ private fun ContentContainer(state: MessageBottomSheetUM.InfoBlock, modifier: Mo
         }
         state.chip?.let { chip ->
             BottomSheetChip(
-                modifier = Modifier.padding(top = TangemTheme.dimens2.x4),
+                modifier = Modifier.padding(top = 16.dp),
                 chip = chip,
             )
         }
@@ -157,7 +157,7 @@ private fun BottomSheetIconContainer(
     } else if (iconImage != null) {
         Image(
             modifier = modifier
-                .size(TangemTheme.dimens2.x20)
+                .size(80.dp)
                 .clip(CircleShape),
             painter = painterResource(id = iconImage.res),
             contentDescription = null,
@@ -191,7 +191,7 @@ private fun BottomSheetIcon(icon: MessageBottomSheetUM.Icon, modifier: Modifier 
 
     Box(
         modifier = modifier
-            .size(TangemTheme.dimens2.x20)
+            .size(80.dp)
             .clip(CircleShape)
             .background(backgroundColor)
             .testTag(WarningBottomSheetTestTags.ICON),
@@ -230,7 +230,7 @@ private fun BottomSheetVector(vector: MessageBottomSheetUM.Vector, modifier: Mod
 
     Box(
         modifier = modifier
-            .size(TangemTheme.dimens2.x20)
+            .size(80.dp)
             .clip(CircleShape)
             .background(backgroundColor)
             .testTag(WarningBottomSheetTestTags.ICON),
@@ -256,10 +256,10 @@ private fun BottomSheetChip(chip: MessageBottomSheetUM.Chip, modifier: Modifier 
     Text(
         modifier = modifier
             .background(
-                shape = RoundedCornerShape(TangemTheme.dimens.radius16),
+                shape = RoundedCornerShape(16.dp),
                 color = color.copy(alpha = 0.1F),
             )
-            .padding(vertical = TangemTheme.dimens.spacing4, horizontal = TangemTheme.dimens.spacing12),
+            .padding(vertical = 4.dp, horizontal = 12.dp),
         text = chip.text.resolveReference(),
         style = TangemTheme.typography.caption1,
         color = color,
@@ -274,8 +274,8 @@ private fun ButtonsContainer(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.padding(all = TangemTheme.dimens2.x4),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+        modifier = modifier.padding(all = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         buttons.fastForEach { button ->
             TangemButton(

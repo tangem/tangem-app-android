@@ -2,6 +2,7 @@ package com.tangem.features.jointaccount.main.di
 
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
+import com.tangem.features.jointaccount.confirmaddress.model.JointAccountConfirmAddressModel
 import com.tangem.features.jointaccount.main.model.JointAccountMembersModel
 import dagger.Binds
 import dagger.Module
@@ -17,4 +18,9 @@ internal interface JointAccountMainModelsModule {
     @IntoMap
     @ClassKey(JointAccountMembersModel::class)
     fun bindJointAccountMembersModel(model: JointAccountMembersModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(JointAccountConfirmAddressModel::class)
+    fun bindJointAccountConfirmAddressModel(model: JointAccountConfirmAddressModel): Model
 }

@@ -26,6 +26,7 @@ import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
 import com.tangem.domain.polymarket.interactor.SubmitPredictionClaimInteractor
 import com.tangem.domain.polymarket.interactor.SubmitPredictionWithdrawalInteractor
 import com.tangem.domain.polymarket.model.PredictionTransferCallCodec
+import com.tangem.domain.polymarket.signing.PolymarketSigningSession
 import com.tangem.domain.polymarket.signing.PolymarketTypedDataSigner
 import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.BuildPredictionOrderDraftUseCase
@@ -35,6 +36,7 @@ import com.tangem.domain.polymarket.usecase.CreatePolymarketActivitySessionUseCa
 import com.tangem.domain.polymarket.usecase.DeployDepositWalletUseCase
 import com.tangem.domain.polymarket.usecase.DeriveApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
+import com.tangem.domain.polymarket.usecase.GetAllPolymarketActivityUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCollateralCurrencyUseCase
@@ -42,14 +44,12 @@ import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketRelayerNonceUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawDestinationsUseCase
-import com.tangem.domain.polymarket.usecase.GetPredictionTopUpMinimumUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawalStateUseCase
 import com.tangem.domain.polymarket.usecase.InvalidatePolymarketCredentialsUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketCredentialsPresenceUseCase
 import com.tangem.domain.polymarket.usecase.SearchPolymarketEventsUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketWalletStatusUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
-import com.tangem.domain.polymarket.usecase.SignOnboardingDigestsUseCase
 import com.tangem.domain.polymarket.usecase.SubmitApprovalsUseCase
 import com.tangem.domain.polymarket.usecase.SyncBalanceAllowanceUseCase
 import com.tangem.domain.polymarket.usecase.ValidatePredictionOrderUseCase
@@ -62,7 +62,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 internal object PolymarketDomainModule {
 
     @Provides
@@ -75,6 +75,16 @@ internal object PolymarketDomainModule {
         repository = repository,
         deriveAddresses = deriveAddresses,
         dispatchers = dispatchers,
+    )
+
+    @Provides
+    @Singleton
+    fun provideGetAllPolymarketActivityUseCase(
+        repository: PolymarketActivityRepository,
+        deriveAddresses: DerivePolymarketAddressesUseCase,
+    ): GetAllPolymarketActivityUseCase = GetAllPolymarketActivityUseCase(
+        repository = repository,
+        deriveAddresses = deriveAddresses,
     )
 
     @Provides
@@ -176,11 +186,6 @@ internal object PolymarketDomainModule {
     ): GetPolymarketWalletStatusUseCase = GetPolymarketWalletStatusUseCase(
         polymarketRepository = polymarketRepository,
     )
-
-    @Provides
-    @Singleton
-    fun provideSignOnboardingDigestsUseCase(signer: PolymarketTypedDataSigner): SignOnboardingDigestsUseCase =
-        SignOnboardingDigestsUseCase(signer = signer)
 
     @Provides
     @Singleton
@@ -301,10 +306,10 @@ internal object PolymarketDomainModule {
     @Singleton
     @Suppress("LongParameterList")
     fun provideRunPolymarketOnboardingInteractor(
+        signingSession: PolymarketSigningSession,
         deriveAddresses: DerivePolymarketAddressesUseCase,
         getWalletStatus: GetPolymarketWalletStatusUseCase,
         getRelayerNonce: GetPolymarketRelayerNonceUseCase,
-        signOnboardingDigests: SignOnboardingDigestsUseCase,
         deployDepositWallet: DeployDepositWalletUseCase,
         getApiCredentials: GetPolymarketApiCredentialsUseCase,
         deriveApiCredentials: DeriveApiCredentialsUseCase,
@@ -313,10 +318,10 @@ internal object PolymarketDomainModule {
         polymarketOnboardedStore: PolymarketOnboardedStore,
         predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
     ): RunPolymarketOnboardingInteractor = RunPolymarketOnboardingInteractor(
+        signingSession = signingSession,
         deriveAddresses = deriveAddresses,
         getWalletStatus = getWalletStatus,
         getRelayerNonce = getRelayerNonce,
-        signOnboardingDigests = signOnboardingDigests,
         deployDepositWallet = deployDepositWallet,
         getApiCredentials = getApiCredentials,
         deriveApiCredentials = deriveApiCredentials,
@@ -360,12 +365,6 @@ internal object PolymarketDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetPredictionTopUpMinimumUseCase(
-        requisitesStore: PredictionDepositRequisitesStore,
-    ): GetPredictionTopUpMinimumUseCase = GetPredictionTopUpMinimumUseCase(requisitesStore = requisitesStore)
-
-    @Provides
-    @Singleton
     fun provideSubmitPredictionWithdrawalInteractor(
         bridgeRepository: PolymarketBridgeRepository,
         withdrawRepository: PolymarketWithdrawRepository,
@@ -387,10 +386,12 @@ internal object PolymarketDomainModule {
     fun provideSubmitPredictionClaimInteractor(
         redeemRepository: PolymarketRedeemRepository,
         polymarketRepository: PolymarketRepository,
+        positionsRepository: PolymarketPositionsRepository,
         signer: PolymarketTypedDataSigner,
     ): SubmitPredictionClaimInteractor = SubmitPredictionClaimInteractor(
         redeemRepository = redeemRepository,
         polymarketRepository = polymarketRepository,
+        positionsRepository = positionsRepository,
         signer = signer,
     )
 }

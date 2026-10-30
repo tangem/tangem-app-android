@@ -17,6 +17,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.badge.*
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -74,35 +75,35 @@ internal fun TokenRowPromoBanner(promoBannerUM: TangemTokenRowUM.PromoBannerUM.C
             painter = painterResource(id = R.drawable.shape_triangular),
             contentDescription = null,
             tint = bgColor,
-            modifier = Modifier.padding(start = TangemTheme.dimens2.x5),
+            modifier = Modifier.padding(start = 20.dp),
         )
         Row(
             modifier = Modifier
-                .background(color = bgColor, shape = RoundedCornerShape(TangemTheme.dimens2.x4))
+                .background(color = bgColor, shape = RoundedCornerShape(16.dp))
                 .clickable(onClick = promoBannerUM.onPromoBannerClick)
                 .padding(
-                    start = TangemTheme.dimens2.x2_5,
-                    end = TangemTheme.dimens2.x0_5,
-                    top = TangemTheme.dimens2.x0_5,
-                    bottom = TangemTheme.dimens2.x0_5,
+                    start = 10.dp,
+                    end = 2.dp,
+                    top = 2.dp,
+                    bottom = 2.dp,
                 ),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Icon(
                 imageVector = ImageVector.vectorResource(id = promoBannerUM.iconRes),
                 contentDescription = null,
                 tint = contentColor,
                 modifier = Modifier
-                    .padding(vertical = TangemTheme.dimens2.x0_5)
-                    .size(TangemTheme.dimens2.x3),
+                    .padding(vertical = 2.dp)
+                    .size(12.dp),
             )
             Text(
                 text = promoBannerUM.title.resolveReference(),
                 style = TangemTheme.typography2.captionSemibold11,
                 color = contentColor,
                 modifier = Modifier
-                    .padding(vertical = TangemTheme.dimens2.x0_5),
+                    .padding(vertical = 2.dp),
             )
             TangemBadge(
                 size = TangemBadgeSize.X4,

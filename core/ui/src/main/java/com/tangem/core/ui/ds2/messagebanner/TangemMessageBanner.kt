@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,7 +50,7 @@ import com.tangem.core.ui.test.NotificationTestTags
  * Design-system v2 (DS3) **Message Banner** — low-level slot API: a [content] block above an
  * optional action-button row. For the common title/description layout, prefer the `title` overload.
  *
- * Version: 1.2.0
+ * Version: 1.3.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=5475-7680&m=dev)
  *
@@ -114,7 +115,7 @@ fun TangemMessageBanner(
  * Design-system v2 (DS3) **Message Banner** — title/description header with optional slots and an
  * action-button row.
  *
- * Version: 1.2.0
+ * Version: 1.3.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=5475-7680&m=dev)
  *
@@ -331,12 +332,22 @@ private fun MessageBannerButtons(
 /** Public API surface of [TangemMessageBanner]. */
 object TangemMessageBanner {
 
-    val version = DsVersion(major = 1, minor = 2, patch = 0)
+    val version = DsVersion(major = 1, minor = 3, patch = 0)
 
     /** Visual appearance — background color + glow ring color. */
     enum class Variant {
-        /** Neutral opaque background with a multi-color "magic" glow ring. */
+        /**
+         * Neutral translucent background with a multi-color "magic" glow ring. Inside a surface that needs
+         * another neutral background (a semi-open `TangemModal`, a `TangemShtorka`) it renders as that
+         * surface's variant — [OnMaterial] or [Light].
+         */
         Default,
+
+        /** Neutral `bg.secondary` background with a multi-color "magic" glow ring. */
+        Light,
+
+        /** Neutral `bg.transparent.on-material` background with a multi-color "magic" glow ring, for glass surfaces. */
+        OnMaterial,
 
         /** Neutral tertiary (filled) background with a multi-color "magic" glow ring. */
         Solid,
@@ -448,6 +459,13 @@ private fun messageBannerRipple(): RippleConfiguration = RippleConfiguration(
     ),
 )
 
+/**
+ * What [TangemMessageBanner.Variant.Default] renders as. Provided by surfaces whose background the default
+ * translucent fill doesn't suit (see [TangemMessageBanner.Variant.Default]); explicit variants are never remapped.
+ * Screens built for the shtorka but also shown full-screen provide [TangemMessageBanner.Variant.Light] themselves.
+ */
+val LocalMessageBannerDefaultVariant = compositionLocalOf { TangemMessageBanner.Variant.Default }
+
 /** Resolved appearance tokens for a [TangemMessageBanner.Variant]. */
 private data class MessageBannerTokens(val background: Color, val glowRing: TangemGlowRing.Variant)
 
@@ -455,9 +473,18 @@ private data class MessageBannerTokens(val background: Color, val glowRing: Tang
 @ReadOnlyComposable
 private fun TangemMessageBanner.Variant.tokens(): MessageBannerTokens {
     val colors = TangemTheme.colors3
-    return when (this) {
+    val variant = if (this == TangemMessageBanner.Variant.Default) LocalMessageBannerDefaultVariant.current else this
+    return when (variant) {
         TangemMessageBanner.Variant.Default -> MessageBannerTokens(
-            background = colors.bg.opaque.primary,
+            background = colors.bg.transparent.primary,
+            glowRing = TangemGlowRing.Variant.Magic,
+        )
+        TangemMessageBanner.Variant.Light -> MessageBannerTokens(
+            background = colors.bg.secondary,
+            glowRing = TangemGlowRing.Variant.Magic,
+        )
+        TangemMessageBanner.Variant.OnMaterial -> MessageBannerTokens(
+            background = colors.bg.transparent.onMaterial.primary,
             glowRing = TangemGlowRing.Variant.Magic,
         )
         TangemMessageBanner.Variant.Solid -> MessageBannerTokens(

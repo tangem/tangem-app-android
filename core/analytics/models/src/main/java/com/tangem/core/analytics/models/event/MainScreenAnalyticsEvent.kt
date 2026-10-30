@@ -14,7 +14,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
  */
 sealed class MainScreenAnalyticsEvent(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = "Main Screen", event = event, params = params) {
 
     class EnableBiometrics(state: AnalyticsParam.OnOffState) : MainScreenAnalyticsEvent(

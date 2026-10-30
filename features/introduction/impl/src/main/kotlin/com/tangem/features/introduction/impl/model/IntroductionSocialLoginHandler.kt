@@ -36,10 +36,14 @@ import com.tangem.features.introduction.impl.analytics.SocialLoginAnalyticsEvent
 import com.tangem.features.introduction.impl.ui.state.SocialLoginConsentUM
 import com.tangem.features.introduction.impl.ui.state.SocialLoginProgressUM
 import com.tangem.features.introduction.impl.ui.state.WalletOptionUM
-import com.tangem.utils.SupportedLanguages
+import com.tangem.utils.TangemHelpCenterUrlBuilder
 import com.tangem.utils.logging.TangemLogger
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -83,6 +87,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
             description = resourceReference(CoreResR.string.introduction_create_wallet_social_description),
             isEnabled = isEnabled,
             isLoading = isLoading,
+            isLoaderSpaceReserved = true,
             onClick = { onPicked(provider) },
         )
     }
@@ -93,43 +98,55 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
      * Safe to interrupt: the flow resumes a partly finished creation on the next attempt rather than
      * creating a second wallet.
      */
-    fun start(
-        scope: CoroutineScope,
-        provider: SocialLoginProvider,
-        source: AnalyticsParam.ScreensSources,
-        host: Host,
-    ) {
-        scope.launch { signIn(provider, source, host) }
+    fun start(scope: CoroutineScope, provider: SocialLoginProvider, host: Host) {
+        scope.launch { signIn(provider, host) }
     }
 
-    suspend fun signIn(provider: SocialLoginProvider, source: AnalyticsParam.ScreensSources, host: Host) {
+    suspend fun signIn(provider: SocialLoginProvider, host: Host) = coroutineScope {
         val attemptId = UUID.randomUUID().toString()
         TangemLogger.i("Social login attempt $attemptId started")
 
         var marketingConsent: MarketingConsent? = null
-        val result = socialLoginUseCase.signIn(
-            provider = provider,
-            onStageChanged = { stage -> host.onProgress(stage.toProgressUM()) },
-            requestBackupRetry = ::askBackupRetry,
-            requestConsent = {
-                host.onProgress(null)
-                consentPrompt(
-                    provider = provider,
-                    onConsent = host::onConsent,
-                    onConfirmed = { marketingConsent = it },
-                ).await()
-            },
-        )
+        var minStageDisplay: Job? = null
 
-        // Only after the result is processed: a failure signs the provider out, and a tap accepted
-        // before that finishes lets the next attempt read the account it is still clearing. The
-        // progress stays up until then too, or the screen would sit locked with nothing on it.
+        // Released only after the result is processed: a failure signs the provider out, and a tap accepted
+        // before that finishes lets the next attempt read the account it is still clearing. The progress
+        // stays up until then too, or the screen would sit locked with nothing on it. The sign-in itself is
+        // inside the try, so a throw out of it cannot leave the screen locked either.
         try {
+            val result = socialLoginUseCase.signIn(
+                provider = provider,
+                onStageChanged = { stage ->
+                    val progress = stage.toProgressUM()
+                    // a Creating / Restoring screen that only flashes reads as a glitch
+                    if (progress is SocialLoginProgressUM.Stage && minStageDisplay == null) {
+                        minStageDisplay = launch { delay(STAGE_MIN_DISPLAY) }
+                    }
+                    host.onProgress(progress)
+                },
+                requestBackupRetry = ::askBackupRetry,
+                requestConsent = {
+                    host.onProgress(null)
+                    consentPrompt(
+                        provider = provider,
+                        onConsent = host::onConsent,
+                        onConfirmed = { marketingConsent = it },
+                    ).await()
+                },
+            )
+
             result.fold(
                 ifLeft = { error -> onFailure(provider, error, attemptId) },
-                ifRight = { outcome -> onSuccess(outcome, source, marketingConsent) },
+                ifRight = { outcome ->
+                    onSuccess(
+                        outcome = outcome,
+                        marketingConsent = marketingConsent,
+                        minStageDisplay = minStageDisplay,
+                    )
+                },
             )
         } finally {
+            minStageDisplay?.cancel()
             host.onProgress(null)
             host.onFinished()
         }
@@ -167,8 +184,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
     )
 
     private fun openHelpArticle() {
-        val language = SupportedLanguages.getCurrentSupportedLanguageCode()
-        urlOpener.openUrl("https://tangem.com/$language/$HELP_ARTICLE_PATH")
+        urlOpener.openUrl(TangemHelpCenterUrlBuilder.helpCenterUrl(HELP_ARTICLE_PATH, HELP_ARTICLE_ANCHOR))
     }
 
     /**
@@ -189,15 +205,15 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
 
     private suspend fun onSuccess(
         outcome: SocialLoginOutcome,
-        source: AnalyticsParam.ScreensSources,
         marketingConsent: MarketingConsent?,
+        minStageDisplay: Job?,
     ) {
         // Before the selection: the wallet is saved either way, and a retry would come back as a restore.
         val creationType = when (outcome) {
-            is SocialLoginOutcome.WalletCreated -> AnalyticsParam.WalletCreationType.NewSocialLogin
-            is SocialLoginOutcome.WalletRestored -> AnalyticsParam.WalletCreationType.SocialLoginImport
+            is SocialLoginOutcome.WalletCreated -> AnalyticsParam.WalletCreationType.NewSeed
+            is SocialLoginOutcome.WalletRestored -> AnalyticsParam.WalletCreationType.SeedImport
         }
-        sendWalletCreated(source, creationType)
+        sendWalletCreated(creationType)
 
         // Leaving the previous wallet selected would open its portfolio, as if the sign-in went elsewhere.
         val userWallet = userWalletsListRepository.select(outcome.userWalletId).getOrElse { error ->
@@ -210,6 +226,8 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
             sendMarketingConsent(userWallet, marketingConsent)
         }
 
+        // failures skip the wait: their message replaces the screen anyway
+        minStageDisplay?.join()
         uiMessageSender.send(
             SnackbarMessage(
                 message = when (outcome) {
@@ -225,14 +243,10 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         router.replaceAll(AppRoute.Wallet)
     }
 
-    private suspend fun sendWalletCreated(
-        source: AnalyticsParam.ScreensSources,
-        creationType: AnalyticsParam.WalletCreationType,
-    ) {
-        analyticsEventHandler.send(OnboardingAnalyticsEvent.Onboarding.Finished(source = source))
+    private suspend fun sendWalletCreated(creationType: AnalyticsParam.WalletCreationType) {
         analyticsEventHandler.send(
             OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
-                source = source,
+                source = AnalyticsParam.ScreensSources.SocialLogin,
                 creationType = creationType,
                 seedPhraseLength = SEED_PHRASE_LENGTH,
                 passPhraseState = AnalyticsParam.EmptyFull.Empty,
@@ -248,7 +262,6 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
             SocialLoginAnalyticsEvents.MarketingEmailsConsent(
                 isGiven = consent.isGiven,
                 consentText = consent.consentText,
-                userWalletId = userWallet.walletId,
             ),
         )
     }
@@ -314,7 +327,7 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
             SocialLoginError.WalletAlreadySaved -> uiMessageSender.send(
                 DialogMessage(message = resourceReference(CoreResR.string.user_wallet_list_error_wallet_already_saved)),
             )
-            else -> uiMessageSender.send(SnackbarMessage(error.toMessage(provider)))
+            else -> uiMessageSender.send(SnackbarMessage(error.toMessage()))
         }
     }
 
@@ -344,34 +357,11 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         )
     }
 
-    private fun SocialLoginStage.toProgressUM(): SocialLoginProgressUM? = when (this) {
-        // the provider shows its own UI here, which an app-side progress state would only cover up
-        SocialLoginStage.SigningIn -> null
-        SocialLoginStage.VerifyingAccount,
-        SocialLoginStage.PreparingWallet,
-        -> SocialLoginProgressUM.Loader
-        SocialLoginStage.CreatingWallet -> SocialLoginProgressUM.Stage(
-            title = resourceReference(CoreResR.string.social_login_creating_wallet),
-            description = resourceReference(CoreResR.string.social_login_creating_wallet_description),
-        )
-        SocialLoginStage.RestoringWallet -> SocialLoginProgressUM.Stage(
-            title = resourceReference(CoreResR.string.social_login_restoring_wallet),
-            description = resourceReference(CoreResR.string.social_login_restoring_wallet_description),
-        )
-    }
-
-    private fun SocialLoginError.toMessage(provider: SocialLoginProvider): TextReference = when (this) {
+    // the spec (alternative flows of scenario 1) gives a linked account, a missing account and an unavailable
+    // provider no wording of their own: they read as any other failed sign-in
+    private fun SocialLoginError.toMessage(): TextReference = when (this) {
         SocialLoginError.NetworkError -> resourceReference(CoreResR.string.hw_cloud_backup_error_network)
         is SocialLoginError.BackupWriteFailed -> resourceReference(CoreResR.string.social_login_error_backup_not_saved)
-        SocialLoginError.BindingConflict -> providerReference(
-            CoreResR.string.social_login_error_account_linked,
-            provider,
-        )
-        SocialLoginError.NoProviderAccount -> providerReference(CoreResR.string.social_login_error_no_account, provider)
-        SocialLoginError.ProviderUnavailable -> providerReference(
-            CoreResR.string.social_login_error_unavailable,
-            provider,
-        )
         else -> resourceReference(CoreResR.string.social_login_error_generic)
     }
 
@@ -388,9 +378,6 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
         SocialLoginError.CloudUnavailable -> "No access to the cloud storage"
         SocialLoginError.NetworkError -> "No internet connection"
         is SocialLoginError.BackupWriteFailed -> "Couldn't save backup"
-        SocialLoginError.BindingConflict -> "Account is already linked to another wallet"
-        SocialLoginError.NoProviderAccount -> "No account on the device"
-        SocialLoginError.ProviderUnavailable -> "Sign-in is not available on this device"
         SocialLoginError.WalletAlreadySaved -> "This wallet has already been saved"
         else -> "Something went wrong"
     }
@@ -399,7 +386,25 @@ internal class IntroductionSocialLoginHandler @Inject constructor(
 
     private companion object {
         const val SEED_PHRASE_LENGTH = 12
-        const val HELP_ARTICLE_PATH = "help-center/getting-started-with-mobile-wallet/" +
-            "how-to-create-a-mobile-wallet/#create-a-wallet-with-google-or-apple"
+        const val HELP_ARTICLE_PATH = "getting-started-with-mobile-wallet/how-to-create-a-mobile-wallet"
+        const val HELP_ARTICLE_ANCHOR = "create-a-wallet-with-google-or-apple"
     }
+}
+
+private val STAGE_MIN_DISPLAY = 3.seconds
+
+private fun SocialLoginStage.toProgressUM(): SocialLoginProgressUM? = when (this) {
+    // the provider shows its own UI here, which an app-side progress state would only cover up
+    SocialLoginStage.SigningIn -> null
+    SocialLoginStage.VerifyingAccount,
+    SocialLoginStage.PreparingWallet,
+    -> SocialLoginProgressUM.Loader
+    SocialLoginStage.CreatingWallet -> SocialLoginProgressUM.Stage(
+        title = resourceReference(CoreResR.string.social_login_creating_wallet),
+        description = resourceReference(CoreResR.string.social_login_creating_wallet_description),
+    )
+    SocialLoginStage.RestoringWallet -> SocialLoginProgressUM.Stage(
+        title = resourceReference(CoreResR.string.social_login_restoring_wallet),
+        description = resourceReference(CoreResR.string.social_login_restoring_wallet_description),
+    )
 }

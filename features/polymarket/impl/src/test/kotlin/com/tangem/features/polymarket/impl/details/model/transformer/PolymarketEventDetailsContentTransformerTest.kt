@@ -7,6 +7,9 @@ import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
 import com.tangem.domain.polymarket.model.PolymarketOutcome
 import com.tangem.domain.polymarket.model.PolymarketStatus
+import com.tangem.features.polymarket.impl.createPolymarketEvent
+import com.tangem.features.polymarket.impl.createPolymarketMarket
+import com.tangem.features.polymarket.impl.createPolymarketOutcome
 import com.tangem.features.polymarket.impl.details.ui.state.PolymarketEventDetailsUM
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.StringsSigns.DASH_SIGN
@@ -70,6 +73,26 @@ internal class PolymarketEventDetailsContentTransformerTest {
             // Assert
             Truth.assertThat(actual.activeMarkets.map { it.id }).containsExactly("active", "unknown").inOrder()
             Truth.assertThat(actual.closedMarkets.map { it.id }).containsExactly("closed")
+            Truth.assertThat(actual.isClosedMarketsExpanded).isFalse()
+        }
+
+        @Test
+        fun `GIVEN only closed markets WHEN transform THEN they are shown immediately in market order`() {
+            // Arrange
+            val event = createEvent(
+                markets = listOf(
+                    createMarket(id = "second", status = PolymarketStatus.CLOSED, orderIndex = 1),
+                    createMarket(id = "first", status = PolymarketStatus.CLOSED, orderIndex = 0),
+                ),
+            )
+
+            // Act
+            val actual = transform(event)
+
+            // Assert
+            Truth.assertThat(actual.activeMarkets).isEmpty()
+            Truth.assertThat(actual.closedMarkets.map { it.id }).containsExactly("first", "second").inOrder()
+            Truth.assertThat(actual.isClosedMarketsExpanded).isTrue()
         }
 
         @Test
@@ -358,23 +381,15 @@ internal class PolymarketEventDetailsContentTransformerTest {
         volume24h: BigDecimal? = null,
         displayMode: PolymarketDisplayMode = PolymarketDisplayMode.GROUPED_OUTCOMES,
         markets: List<PolymarketMarket> = listOf(createMarket()),
-    ): PolymarketEvent = PolymarketEvent(
-        id = "event-1",
+    ): PolymarketEvent = createPolymarketEvent(
         slug = slug,
-        title = "Event title",
         description = description,
-        rulesUrl = "https://polymarket.com/rules",
         iconUrl = iconUrl,
-        imageUrl = null,
-        status = PolymarketStatus.ACTIVE,
         startDate = startDate,
         endDate = endDate,
         volume = volume,
         volume24h = volume24h,
-        liquidity = null,
-        totalMarketsCount = markets.size,
         isNegRisk = displayMode == PolymarketDisplayMode.GROUPED_OUTCOMES,
-        isLive = false,
         displayMode = displayMode,
         markets = markets,
     )
@@ -387,26 +402,12 @@ internal class PolymarketEventDetailsContentTransformerTest {
         status: PolymarketStatus = PolymarketStatus.ACTIVE,
         orderIndex: Int = 0,
         outcomes: List<PolymarketOutcome> = listOf(createOutcome()),
-    ): PolymarketMarket = PolymarketMarket(
+    ): PolymarketMarket = createPolymarketMarket(
         id = id,
-        conditionId = null,
-        eventId = "event-1",
         title = title,
-        slug = "market-slug",
-        description = "Market description",
         groupItemTitle = groupItemTitle,
         iconUrl = iconUrl,
-        imageUrl = null,
         status = status,
-        isNegRisk = false,
-        isAcceptingOrders = true,
-        startDate = null,
-        endDate = null,
-        startDateIso = null,
-        endDateIso = null,
-        volume = null,
-        volume24h = null,
-        liquidity = null,
         orderIndex = orderIndex,
         outcomes = outcomes,
     )
@@ -415,7 +416,7 @@ internal class PolymarketEventDetailsContentTransformerTest {
         assetId: String = "asset-1",
         title: String = "Yes",
         probability: BigDecimal? = null,
-    ): PolymarketOutcome = PolymarketOutcome(
+    ): PolymarketOutcome = createPolymarketOutcome(
         assetId = assetId,
         title = title,
         probability = probability,

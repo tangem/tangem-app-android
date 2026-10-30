@@ -56,7 +56,7 @@ inline fun <reified T> SegmentedButtons(
         val index = if (initialSelectedItem == null) 0 else config.indexOf(initialSelectedItem)
         mutableIntStateOf(index)
     }
-    val shape = RoundedCornerShape(TangemTheme.dimens.radius26)
+    val shape = RoundedCornerShape(26.dp)
 
     Row(
         modifier = modifier
@@ -64,11 +64,11 @@ inline fun <reified T> SegmentedButtons(
             .background(dividerColor)
             .border(BorderStroke(1.dp, dividerColor), shape = shape)
             .height(IntrinsicSize.Max),
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing1),
+        horizontalArrangement = Arrangement.spacedBy(1.dp),
     ) {
         repeat(config.size) { index ->
-            val leftRadius = if (index == 0) TangemTheme.dimens.radius26 else TangemTheme.dimens.radius0
-            val rightRadius = if (index == config.lastIndex) TangemTheme.dimens.radius26 else TangemTheme.dimens.radius0
+            val leftRadius = if (index == 0) 26.dp else 0.dp
+            val rightRadius = if (index == config.lastIndex) 26.dp else 0.dp
 
             val animateColor by animateColorAsState(
                 targetValue = if (index == selectedIndex) selectedColor else color,
@@ -115,7 +115,7 @@ private fun SegmentedButtonsPreview(
         ) { configPreview ->
             Text(
                 text = configPreview.text,
-                modifier = Modifier.padding(TangemTheme.dimens.spacing16),
+                modifier = Modifier.padding(16.dp),
             )
         }
     }

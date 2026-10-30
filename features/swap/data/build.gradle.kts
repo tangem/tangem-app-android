@@ -22,7 +22,6 @@ dependencies {
     implementation(projects.core.local)
     implementation(projects.grow.datasource)
     api(projects.core.utils)
-    api(projects.features.swap.api)
     api(projects.features.swap.domain)
     implementation(projects.domain.express.models)
     implementation(projects.store.datasource)
@@ -37,7 +36,6 @@ dependencies {
     /** Domain */
     api(projects.domain.account)
     api(projects.domain.models)
-    api(projects.domain.txhistory)
     runtimeOnly(projects.domain.account.status)
     runtimeOnly(projects.domain.wallets)
 

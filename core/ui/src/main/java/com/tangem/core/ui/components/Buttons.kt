@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.buttons.common.*
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -338,7 +339,7 @@ fun HoldToConfirmButton(
 private fun PrimaryButtonSample() {
     Column(
         modifier = Modifier.background(TangemTheme.colors.background.primary),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         PrimaryButton(modifier = Modifier.fillMaxWidth(), text = "Manage tokens", onClick = { })
         PrimaryButton(
@@ -402,7 +403,7 @@ private fun PrimaryButtonPreview() {
 private fun SecondaryButtonSample() {
     Column(
         modifier = Modifier.background(TangemTheme.colors.background.primary),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         SecondaryButton(modifier = Modifier.fillMaxWidth(), text = "Manage tokens", onClick = { })
         SecondaryButton(
@@ -459,7 +460,7 @@ private fun SecondaryButtonPreview() {
 private fun TextButtonSample() {
     Column(
         modifier = Modifier.background(TangemTheme.colors.background.primary),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         TextButton(text = "Enabled", onClick = { })
         TextButtonIconStart(text = "Enabled", iconResId = R.drawable.ic_plus_24, onClick = { })

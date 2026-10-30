@@ -1,7 +1,6 @@
 package com.tangem.features.feed.earn.components
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -22,6 +21,7 @@ import com.tangem.features.commonfeatures.api.addtoportfolio.AddToPortfolioCompo
 import com.tangem.features.feed.earn.model.search.EarnFeedSearchTabModel
 import com.tangem.features.feed.earn.ui.EarnSearchContent
 import com.tangem.features.feed.nav.FeedTabComponent
+import com.tangem.features.feed.ui.FeedSearchListState
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -37,7 +37,7 @@ internal class EarnFeedSearchTabComponent @AssistedInject constructor(
     private val model: EarnFeedSearchTabModel = getOrCreateModel(params)
 
     // owned by the component: the page stays CREATED while unselected, so scroll survives switches
-    private val listState = LazyListState()
+    private val listState = FeedSearchListState()
 
     private val bottomSheetSlot = childSlot(
         source = model.bottomSheetNavigation,

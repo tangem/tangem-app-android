@@ -72,14 +72,14 @@ internal class VisaTxHistoryPagingSource(
     private suspend fun fetchItems(offset: Int, pageSize: Int) = withContext(dispatchers.io) {
         val response = requestTxHistory(offset, pageSize)
 
-        fetchedItems.update {
-            it.toMutableMap().apply {
+        fetchedItems.update { items ->
+            items.toMutableMap().apply {
                 this[cardPublicKey] = this[cardPublicKey].orEmpty() + response.transactions
             }
         }
 
-        pagedItems.update {
-            it.toMutableMap().apply {
+        pagedItems.update { items ->
+            items.toMutableMap().apply {
                 this[offset] = response.transactions.map(VisaTxHistoryItemConverter::convert)
             }
         }

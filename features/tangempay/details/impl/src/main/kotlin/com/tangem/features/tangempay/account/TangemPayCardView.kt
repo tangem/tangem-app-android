@@ -60,8 +60,8 @@ internal fun TangemPayCardView(
     CardBackground(
         modifier = modifier
             .size(
-                height = TangemTheme.dimens2.x10,
-                width = TangemTheme.dimens2.x14,
+                height = 40.dp,
+                width = 56.dp,
             )
             .testTag(TangemPayTestTags.PAYMENT_ACCOUNT_CARD_BUTTON),
         isIssueInProgress = isIssueInProgress,
@@ -72,9 +72,9 @@ internal fun TangemPayCardView(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = TangemTheme.dimens2.x1)
-                .padding(top = TangemTheme.dimens2.x1)
-                .height(TangemTheme.dimens2.x3),
+                .padding(horizontal = 4.dp)
+                .padding(top = 4.dp)
+                .height(12.dp),
         ) {
             val statusIcon = when {
                 isFrozen -> Icons.ic_snowflake_16
@@ -91,7 +91,7 @@ internal fun TangemPayCardView(
                 Icon(
                     modifier = Modifier
                         .align(Alignment.CenterStart)
-                        .size(TangemTheme.dimens2.x3)
+                        .size(12.dp)
                         .then(frozenIconTag),
                     imageVector = icon,
                     tint = TangemTheme.colors3.icon.staticDark,
@@ -101,7 +101,7 @@ internal fun TangemPayCardView(
             Icon(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
-                    .size(height = TangemTheme.dimens2.x2, width = 22.dp),
+                    .size(height = 8.dp, width = 22.dp),
                 imageVector = ImageVector.vectorResource(R.drawable.ic_visa_logo),
                 tint = TangemTheme.colors3.icon.staticDark,
                 contentDescription = null,
@@ -111,7 +111,7 @@ internal fun TangemPayCardView(
         Text(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = TangemTheme.dimens2.x1, bottom = TangemTheme.dimens2.x1),
+                .padding(end = 4.dp, bottom = 4.dp),
             text = lastDigits,
             style = TangemTheme.typography3.caption.medium.copy(fontSize = 10.sp),
             color = TangemTheme.colors3.text.staticDark.primary,
@@ -126,11 +126,11 @@ internal fun TangemPayAddCardView(onClick: () -> Unit, isEnabled: Boolean, modif
             .testTag(TangemPayTestTags.PAYMENT_ACCOUNT_ADD_CARD_BUTTON)
             .alpha(if (isEnabled) 1f else DISABLED_ALPHA)
             .size(
-                height = TangemTheme.dimens2.x10,
-                width = TangemTheme.dimens2.x14,
+                height = 40.dp,
+                width = 56.dp,
             )
             .clip(RoundedCornerShape(6.dp))
-            .background(TangemTheme.colors3.bg.opaque.primary)
+            .background(TangemTheme.colors3.bg.transparent.primary)
             .clickableSingle(onClick = onClick, enabled = isEnabled),
         contentAlignment = Alignment.Center,
     ) {
@@ -218,8 +218,8 @@ private fun CardBackgroundPreview() {
         Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Center) {
             CardBackground(
                 modifier = Modifier.size(
-                    height = TangemTheme.dimens2.x10,
-                    width = TangemTheme.dimens2.x14,
+                    height = 40.dp,
+                    width = 56.dp,
                 ),
                 isIssueInProgress = false,
                 onClick = {},
@@ -227,11 +227,11 @@ private fun CardBackgroundPreview() {
                 isEnabled = true,
                 imageUrl = null,
             )
-            SpacerH(TangemTheme.dimens2.x4)
+            SpacerH(16.dp)
             CardBackground(
                 modifier = Modifier.size(
-                    height = TangemTheme.dimens2.x10,
-                    width = TangemTheme.dimens2.x14,
+                    height = 40.dp,
+                    width = 56.dp,
                 ),
                 isIssueInProgress = true,
                 imageUrl = null,
@@ -239,7 +239,7 @@ private fun CardBackgroundPreview() {
                 content = {},
                 isEnabled = true,
             )
-            SpacerH(TangemTheme.dimens2.x4)
+            SpacerH(16.dp)
             TangemPayAddCardView(onClick = {}, isEnabled = true)
         }
     }
@@ -251,11 +251,11 @@ private fun TangemPayCardViewPreview() {
     TangemThemePreviewRedesign {
         Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Center) {
             PreviewCardView(cardType = TangemPayCardType.VIRTUAL, lastDigits = "1234")
-            SpacerH(TangemTheme.dimens2.x4)
+            SpacerH(16.dp)
             PreviewCardView(cardType = TangemPayCardType.PHYSICAL, lastDigits = "5678")
-            SpacerH(TangemTheme.dimens2.x4)
+            SpacerH(16.dp)
             PreviewCardView(cardType = TangemPayCardType.VIRTUAL, lastDigits = "", isIssueInProgress = true)
-            SpacerH(TangemTheme.dimens2.x4)
+            SpacerH(16.dp)
             PreviewCardView(cardType = TangemPayCardType.VIRTUAL, lastDigits = "1234", isFrozen = true)
         }
     }

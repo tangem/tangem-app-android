@@ -3,6 +3,7 @@ package com.tangem.data.mcp.api
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.lib.auth.api.RequiresSessionAuth
 import com.tangem.data.mcp.api.models.request.McpDeviceVerificationConsent
+import com.tangem.data.mcp.api.models.response.McpClientResponse
 import com.tangem.data.mcp.api.models.response.McpDeviceVerificationResponse
 import com.tangem.data.mcp.api.models.response.McpDeviceVerificationResult
 import com.tangem.data.mcp.api.models.response.McpSessionResponse
@@ -73,4 +74,15 @@ internal interface McpApi {
     @DELETE("api/authentication/v1/mcp/sessions/{id}")
     @RequiresSessionAuth
     suspend fun revokeSession(@Path("id") sessionId: String): ApiResponse<Unit>
+
+    /**
+     * Returns the metadata of the MCP client behind [clientId].
+     *
+     * Answers `404` for a client the registry does not know or whose metadata document is unreachable, and `429`
+     * when asked about too many clients; the first answer for a self-described client is slower, as the server reads
+     * its metadata document.
+     */
+    @GET("api/authentication/v1/mcp/client")
+    @RequiresSessionAuth
+    suspend fun getClient(@Query("client_id") clientId: String): ApiResponse<McpClientResponse>
 }

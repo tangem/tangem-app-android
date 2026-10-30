@@ -4,6 +4,7 @@ import com.tangem.domain.visa.model.VisaActivationInput
 import com.tangem.domain.visa.model.VisaActivationOrderInfo
 import com.tangem.domain.visa.model.VisaCardWalletDataToSignRequest
 import com.tangem.features.onboarding.v2.visa.impl.common.PreparationDataForApprove
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -30,7 +31,7 @@ internal sealed class OnboardingVisaRoute {
     data class TangemWalletApproveOption(
         val preparationDataForApprove: PreparationDataForApprove,
         val foundWalletCardId: String?,
-        val allowNavigateBack: Boolean,
+        @SerialName("allowNavigateBack") val canNavigateBack: Boolean,
     ) : OnboardingVisaRoute()
 
     @Serializable
@@ -50,6 +51,6 @@ internal sealed class OnboardingVisaRoute {
     @Serializable
     data class PinCode(
         val activationOrderInfo: VisaActivationOrderInfo,
-        val pinCodeValidationError: Boolean,
+        @SerialName("pinCodeValidationError") val hasPinCodeValidationError: Boolean,
     ) : OnboardingVisaRoute()
 }

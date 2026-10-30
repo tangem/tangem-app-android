@@ -1,7 +1,6 @@
 package com.tangem.features.hotwallet.di
 
 import android.content.Context
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.features.hotwallet.DefaultHotWalletFeatureToggles
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import dagger.Module
@@ -17,10 +16,7 @@ internal object HotWalletFeatureTogglesModule {
 
     @Provides
     @Singleton
-    fun provideHotWalletFeatureToggles(
-        featureTogglesManager: FeatureTogglesManager,
-        @ApplicationContext context: Context,
-    ): HotWalletFeatureToggles {
-        return DefaultHotWalletFeatureToggles(featureTogglesManager, context)
+    fun provideHotWalletFeatureToggles(@ApplicationContext context: Context): HotWalletFeatureToggles {
+        return DefaultHotWalletFeatureToggles(context)
     }
 }

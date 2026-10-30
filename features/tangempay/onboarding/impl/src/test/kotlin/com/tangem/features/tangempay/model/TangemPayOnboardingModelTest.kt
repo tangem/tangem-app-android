@@ -21,6 +21,7 @@ import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.ui.TangemPayOnboardingNavigation
@@ -52,6 +53,7 @@ internal class TangemPayOnboardingModelTest {
     private val produceInitialDataUseCase: ProduceTangemPayInitialDataUseCase = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk()
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
 
@@ -70,6 +72,7 @@ internal class TangemPayOnboardingModelTest {
             uiMessageSender,
         )
         every { tangemPayFeatureToggles.isResidencyStepEnabled } returns false
+        every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns false
         coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(mockk<UserWallet>())
         coEvery {
             eligibilityManager.getCompatibleWalletsIds(shouldExcludePaeraCustomers = true)
@@ -424,6 +427,7 @@ internal class TangemPayOnboardingModelTest {
             urlOpener = urlOpener,
             eligibilityManager = eligibilityManager,
             featureToggles = tangemPayFeatureToggles,
+            moneyAccountFeatureToggles = moneyAccountFeatureToggles,
             onboardingStarter = TangemPayOnboardingStarter(
                 router = router,
                 uiMessageSender = mockk(relaxed = true),

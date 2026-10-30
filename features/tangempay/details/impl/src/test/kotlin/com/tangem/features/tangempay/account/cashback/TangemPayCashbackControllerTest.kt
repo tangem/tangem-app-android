@@ -129,18 +129,34 @@ internal class TangemPayCashbackControllerTest {
         }
 
         @Test
-        fun `GIVEN cached alt_block summary WHEN created THEN menu item shown instead of the block`() = runTest {
-            // Arrange
-            cachedSummary.value = enabledSummary(CashbackDisplayMode.ALT_BLOCK)
+        fun `GIVEN cached alt_block summary with zero amount WHEN created THEN menu item shown instead of the block`() =
+            runTest {
+                // Arrange
+                cachedSummary.value = enabledSummary(CashbackDisplayMode.ALT_BLOCK, confirmedAmount = BigDecimal.ZERO)
 
-            // Act
-            val controller = createController(scope = backgroundScope)
-            runCurrent()
+                // Act
+                val controller = createController(scope = backgroundScope)
+                runCurrent()
 
-            // Assert
-            assertThat(controller.state.value.block).isNull()
-            assertThat(controller.state.value.menuItem).isNotNull()
-        }
+                // Assert
+                assertThat(controller.state.value.block).isNull()
+                assertThat(controller.state.value.menuItem).isNotNull()
+            }
+
+        @Test
+        fun `GIVEN cached alt_block summary with non-zero amount WHEN created THEN widget shown without menu item`() =
+            runTest {
+                // Arrange
+                cachedSummary.value = enabledSummary(CashbackDisplayMode.ALT_BLOCK)
+
+                // Act
+                val controller = createController(scope = backgroundScope)
+                runCurrent()
+
+                // Assert
+                assertThat(controller.state.value.block).isInstanceOf(CashbackBlockUM.Widget::class.java)
+                assertThat(controller.state.value.menuItem).isNull()
+            }
 
         @Test
         fun `GIVEN cached widget WHEN status re-emits THEN widget survives and no refresh is sent`() = runTest {
@@ -438,6 +454,40 @@ internal class TangemPayCashbackControllerTest {
         }
 
         @Test
+        fun `GIVEN alt_block menu item shown WHEN amount turns non-zero THEN banner impression sent`() = runTest {
+            // Arrange
+            cachedSummary.value = enabledSummary(CashbackDisplayMode.ALT_BLOCK, confirmedAmount = BigDecimal.ZERO)
+            createController(scope = backgroundScope)
+            runCurrent()
+
+            // Act
+            cachedSummary.value = enabledSummary(CashbackDisplayMode.ALT_BLOCK)
+            runCurrent()
+
+            // Assert
+            verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Cashback.ButtonInSettingsShowed>()) }
+            verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Cashback.BannerShowed>()) }
+            verify(exactly = 2) { analytics.send(any()) }
+        }
+
+        @Test
+        fun `GIVEN alt_block widget shown WHEN amount drops to zero THEN settings button impression sent`() = runTest {
+            // Arrange
+            cachedSummary.value = enabledSummary(CashbackDisplayMode.ALT_BLOCK)
+            createController(scope = backgroundScope)
+            runCurrent()
+
+            // Act
+            cachedSummary.value = enabledSummary(CashbackDisplayMode.ALT_BLOCK, confirmedAmount = BigDecimal.ZERO)
+            runCurrent()
+
+            // Assert
+            verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Cashback.BannerShowed>()) }
+            verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.Cashback.ButtonInSettingsShowed>()) }
+            verify(exactly = 2) { analytics.send(any()) }
+        }
+
+        @Test
         fun `GIVEN failed refresh without cache WHEN status re-emits THEN error impression sent once`() = runTest {
             // Arrange
             givenRefreshReturns(refreshFailure())
@@ -579,8 +629,12 @@ internal class TangemPayCashbackControllerTest {
                 expectedEvent = TangemPayAnalyticsEvents.Cashback.BannerShowed::class,
             ),
             ImpressionModel(
-                summary = enabledSummary(CashbackDisplayMode.ALT_BLOCK),
+                summary = enabledSummary(CashbackDisplayMode.ALT_BLOCK, confirmedAmount = BigDecimal.ZERO),
                 expectedEvent = TangemPayAnalyticsEvents.Cashback.ButtonInSettingsShowed::class,
+            ),
+            ImpressionModel(
+                summary = enabledSummary(CashbackDisplayMode.ALT_BLOCK),
+                expectedEvent = TangemPayAnalyticsEvents.Cashback.BannerShowed::class,
             ),
             ImpressionModel(
                 summary = CashbackSummary.Deactivated,
@@ -614,7 +668,7 @@ internal class TangemPayCashbackControllerTest {
         fun `GIVEN menu item WHEN clicked THEN button in settings clicked sent and cashback screen opened`() =
             runTest {
                 // Arrange
-                cachedSummary.value = enabledSummary(CashbackDisplayMode.ALT_BLOCK)
+                cachedSummary.value = enabledSummary(CashbackDisplayMode.ALT_BLOCK, confirmedAmount = BigDecimal.ZERO)
                 val controller = createController(scope = backgroundScope)
                 runCurrent()
                 val menuItem = requireNotNull(controller.state.value.menuItem)

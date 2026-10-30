@@ -57,6 +57,21 @@ internal class WalletCardBackupConvertersTest {
             assertThat(actual.errorMessage).isNull()
         }
 
+        @Test
+        fun `GIVEN error longer than the backend accepts WHEN convert THEN it is truncated to the limits`() {
+            // Arrange
+            val card = domainCard(CardBackupStatus.NO_BACKUP).copy(
+                error = CardBackupError(code = "1".repeat(300), message = "m".repeat(2000)),
+            )
+
+            // Act
+            val actual = WalletCardDTOConverter.convert(card)
+
+            // Assert
+            assertThat(actual.errorCode).isEqualTo("1".repeat(256))
+            assertThat(actual.errorMessage).isEqualTo("m".repeat(1024))
+        }
+
         @ParameterizedTest(name = "{0}")
         @ProvideTestModels
         fun `GIVEN domain backup status WHEN convert THEN dto status is mapped`(model: StatusModel) {

@@ -64,7 +64,7 @@ internal class CreateMobileWalletModel @Inject constructor(
                 onBackClick = { router.pop() },
                 onImportClick = ::onImportClick,
                 onCreateClick = ::onCreateClick,
-                createButtonLoading = false,
+                isCreateButtonLoading = false,
                 onTermsClick = { router.push(AppRoute.Disclaimer(isTosAccepted = true)) },
             ),
         )
@@ -120,7 +120,7 @@ internal class CreateMobileWalletModel @Inject constructor(
 
         modelScope.launch {
             uiState.update {
-                it.copy(createButtonLoading = true)
+                it.copy(isCreateButtonLoading = true)
             }
 
             runSuspendCatching {
@@ -151,7 +151,7 @@ internal class CreateMobileWalletModel @Inject constructor(
             }.onFailure { throwable ->
                 TangemLogger.e("Error", throwable)
 
-                uiState.update { it.copy(createButtonLoading = false) }
+                uiState.update { it.copy(isCreateButtonLoading = false) }
             }
         }
     }

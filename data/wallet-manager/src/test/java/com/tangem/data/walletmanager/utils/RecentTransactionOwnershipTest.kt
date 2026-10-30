@@ -8,6 +8,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionExtras
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.MerklClaimCallData
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.test.core.ProvideTestModels
@@ -49,6 +50,10 @@ internal class RecentTransactionOwnershipTest {
         OwnershipModel(transaction = approval(), currency = coin, expected = true),
         OwnershipModel(transaction = approval(), currency = usdc, expected = false),
         OwnershipModel(transaction = approval(), currency = usdt, expected = false),
+        // A claim is built in the yield token but is the coin's own call; the reward reaches the token's history
+        // from the explorer.
+        OwnershipModel(transaction = merklClaim(), currency = coin, expected = true),
+        OwnershipModel(transaction = merklClaim(), currency = usdc, expected = false),
         // Plain transfers keep being matched by their own amount.
         OwnershipModel(transaction = coinTransfer(), currency = coin, expected = true),
         OwnershipModel(transaction = coinTransfer(), currency = usdc, expected = false),
@@ -70,6 +75,12 @@ internal class RecentTransactionOwnershipTest {
         extras = EthereumTransactionExtras(
             callData = ApprovalERC20TokenCallData(spenderAddress = SPENDER_ADDRESS, amount = null),
         ),
+    )
+
+    private fun merklClaim(): TransactionData.Uncompiled = transaction(
+        amount = Amount(token = sdkUsdc, value = BigDecimal.ZERO),
+        destinationAddress = YIELD_MODULE_ADDRESS,
+        extras = EthereumTransactionExtras(callData = MerklClaimCallData.fromHex(MERKL_CLAIM_CALL_DATA)),
     )
 
     private fun coinTransfer(): TransactionData.Uncompiled = transaction(
@@ -102,5 +113,7 @@ internal class RecentTransactionOwnershipTest {
         const val SPENDER_ADDRESS = "0x1111111254EEB25477B68fb85Ed929f73A960582"
         const val RECIPIENT_ADDRESS = "0x2222222222222222222222222222222222222222"
         const val OWN_ADDRESS = "0x3333333333333333333333333333333333333333"
+        const val YIELD_MODULE_ADDRESS = "0x4444444444444444444444444444444444444444"
+        const val MERKL_CLAIM_CALL_DATA = "0xb4701e3e0001"
     }
 }

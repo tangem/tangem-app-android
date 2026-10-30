@@ -10,7 +10,7 @@ import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.accesscode.ui.state.MultiWalletAccessCodeUM
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState
-import com.tangem.sdk.api.BackupServiceHolder
+import com.tangem.sdk.api.BackupServiceProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +26,7 @@ private const val MINIMUM_ACCESS_CODE_LENGTH = 4
 internal class MultiWalletAccessCodeModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val backupServiceHolder: BackupServiceHolder,
+    private val backupServiceProvider: BackupServiceProvider,
     private val analyticsHandler: AnalyticsEventHandler,
 ) : Model() {
 
@@ -50,8 +50,8 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
                 modelScope.launch { onDismiss.emit(Unit) }
             }
             MultiWalletAccessCodeUM.Step.AccessCode -> {
-                _uiState.update {
-                    it.copy(
+                _uiState.update { state ->
+                    state.copy(
                         step = MultiWalletAccessCodeUM.Step.Intro,
                         accessCodeFirst = TextFieldValue(""),
                         accessCodeSecond = TextFieldValue(""),
@@ -59,8 +59,8 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
                 }
             }
             MultiWalletAccessCodeUM.Step.ConfirmAccessCode -> {
-                _uiState.update {
-                    it.copy(
+                _uiState.update { state ->
+                    state.copy(
                         step = MultiWalletAccessCodeUM.Step.AccessCode,
                         accessCodeSecond = TextFieldValue(""),
                     )
@@ -76,19 +76,19 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
     )
 
     private fun onAccessCodeFirstChange(textFieldValue: TextFieldValue) {
-        _uiState.update {
-            it.copy(
+        _uiState.update { state ->
+            state.copy(
                 accessCodeFirst = textFieldValue,
-                atLeast4CharError = false,
+                hasAtLeast4CharError = false,
             )
         }
     }
 
     private fun onAccessCodeSecondChange(textFieldValue: TextFieldValue) {
-        _uiState.update {
-            it.copy(
+        _uiState.update { state ->
+            state.copy(
                 accessCodeSecond = textFieldValue,
-                codesNotMatchError = false,
+                hasCodesNotMatchError = false,
             )
         }
     }
@@ -100,15 +100,15 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
             }
             MultiWalletAccessCodeUM.Step.AccessCode -> {
                 if (_uiState.value.accessCodeFirst.text.length >= MINIMUM_ACCESS_CODE_LENGTH) {
-                    _uiState.update {
-                        it.copy(
+                    _uiState.update { state ->
+                        state.copy(
                             step = MultiWalletAccessCodeUM.Step.ConfirmAccessCode,
-                            atLeast4CharError = false,
+                            hasAtLeast4CharError = false,
                         )
                     }
                 } else {
                     _uiState.update {
-                        it.copy(atLeast4CharError = true)
+                        it.copy(hasAtLeast4CharError = true)
                     }
                 }
 
@@ -116,7 +116,7 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
             }
             MultiWalletAccessCodeUM.Step.ConfirmAccessCode -> {
                 if (checkAccessCode()) {
-                    backupServiceHolder.backupService.get()?.setAccessCode(_uiState.value.accessCodeFirst.text)
+                    backupServiceProvider.backupService.setAccessCode(_uiState.value.accessCodeFirst.text)
 
                     // make on done
                     params.multiWalletState.update {
@@ -135,7 +135,7 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
             return true
         } else {
             _uiState.update {
-                it.copy(codesNotMatchError = true)
+                it.copy(hasCodesNotMatchError = true)
             }
             return false
         }

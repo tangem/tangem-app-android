@@ -5,8 +5,6 @@ import arrow.core.getOrElse
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.utils.popAndPush
 import com.tangem.common.ui.R
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addDustWarningNotification
@@ -27,6 +25,8 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.navigation.popToOrReplaceCurrent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyByAddressUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -69,7 +69,7 @@ import javax.inject.Inject
 internal class NotificationsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val appRouter: AppRouter,
+    private val router: Router,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
     private val getCurrencyCheckUseCase: GetCurrencyCheckUseCase,
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
@@ -193,7 +193,7 @@ internal class NotificationsModel @Inject constructor(
     }
 
     private fun showTokenDetails(currency: CryptoCurrency) {
-        appRouter.popAndPush(
+        router.popToOrReplaceCurrent(
             AppRoute.CurrencyDetails(
                 userWalletId = userWalletId,
                 currency = currency,

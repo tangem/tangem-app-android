@@ -203,7 +203,7 @@ private fun FeaturedAssetCard(asset: RwaFeaturedAssetUM, modifier: Modifier = Mo
         modifier = modifier
             .width(178.dp)
             .clip(RoundedCornerShape(24.dp))
-            .background(color = TangemTheme.colors3.bg.opaque.primary)
+            .background(color = TangemTheme.colors3.bg.transparent.primary)
             .clickable(onClick = asset.onClick)
             .padding(all = 12.dp),
     ) {
@@ -259,7 +259,7 @@ private fun FeaturedAssetCardPlaceholder(modifier: Modifier = Modifier) {
         modifier = modifier
             .width(178.dp)
             .height(130.dp)
-            .background(color = TangemTheme.colors3.bg.opaque.primary, shape = RoundedCornerShape(24.dp))
+            .background(color = TangemTheme.colors3.bg.transparent.primary, shape = RoundedCornerShape(24.dp))
             .padding(all = 12.dp),
     ) {
         TangemShimmer(modifier = Modifier.size(40.dp), radius = 999.dp)

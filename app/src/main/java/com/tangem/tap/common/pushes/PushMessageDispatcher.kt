@@ -3,10 +3,11 @@ package com.tangem.tap.common.pushes
 import android.content.Context
 import androidx.core.net.toUri
 import com.google.firebase.messaging.RemoteMessage
-import com.tangem.core.analytics.api.AnalyticsExceptionHandler
-import com.tangem.tap.common.pushes.PushMessageDispatcher.Companion.DATA_BODY_KEY
-import com.tangem.tap.common.pushes.PushMessageDispatcher.Companion.DATA_IMAGE_KEY
-import com.tangem.tap.common.pushes.PushMessageDispatcher.Companion.DATA_TITLE_KEY
+import com.tangem.common.routing.deeplink.DeeplinkConst
+import com.tangem.domain.notifications.models.NotificationType
+import com.tangem.feature.usedesk.api.SupportChatVisibilityProvider
+import com.tangem.feature.usedesk.api.UseDeskFeatureToggles
+import com.tangem.utils.logging.TangemLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.customer.messagingpush.CustomerIOFirebaseMessagingService
 import javax.inject.Inject
@@ -15,12 +16,11 @@ import javax.inject.Singleton
 @Singleton
 internal class PushMessageDispatcher @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val pushMessageHandler: PushMessageHandler,
+    private val pushNotificationDelegate: PushNotificationDelegate,
+    private val supportChatVisibilityProvider: SupportChatVisibilityProvider,
+    private val useDeskFeatureToggles: UseDeskFeatureToggles,
 ) {
-    private val pushNotificationDelegate: PushNotificationDelegate by lazy {
-        PushNotificationDelegate(context, analyticsExceptionHandler)
-    }
 
     fun dispatch(message: RemoteMessage) {
         CustomerIOFirebaseMessagingService.onMessageReceived(
@@ -30,6 +30,11 @@ internal class PushMessageDispatcher @Inject constructor(
         )
 
         pushMessageHandler.onMessageReceived(message.data)
+
+        if (shouldBeMuted(message)) {
+            TangemLogger.i("Push muted: type - ${message.data[DeeplinkConst.TYPE_KEY]}")
+            return
+        }
 
         val notification = message.notification
         if (notification != null) {
@@ -45,6 +50,12 @@ internal class PushMessageDispatcher @Inject constructor(
         } else {
             showNotificationFromDataPush(message)
         }
+    }
+
+    private fun shouldBeMuted(message: RemoteMessage): Boolean {
+        val type = NotificationType.getType(message.data[DeeplinkConst.TYPE_KEY])
+        return useDeskFeatureToggles.isSupportChatDeepLinkEnabled &&
+            type == NotificationType.SupportMessage && supportChatVisibilityProvider.isChatVisible
     }
 
     /**

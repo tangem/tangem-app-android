@@ -131,7 +131,11 @@ private fun SignatureAvatar(isCollected: Boolean, hasCutout: Boolean, modifier: 
             }
             .clip(CircleShape)
             .background(
-                if (isCollected) TangemTheme.colors3.bg.status.warning else TangemTheme.colors3.bg.opaque.secondary,
+                if (isCollected) {
+                    TangemTheme.colors3.bg.status.warning
+                } else {
+                    TangemTheme.colors3.bg.transparent.secondary
+                },
             ),
         contentAlignment = Alignment.Center,
     ) {

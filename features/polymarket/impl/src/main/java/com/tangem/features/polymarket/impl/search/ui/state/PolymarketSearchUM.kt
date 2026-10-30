@@ -2,6 +2,7 @@ package com.tangem.features.polymarket.impl.search.ui.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventUM
+import com.tangem.features.polymarket.impl.main.ui.state.PolymarketFeedFooterUM
 import kotlinx.collections.immutable.ImmutableList
 
 /**
@@ -31,11 +32,11 @@ internal data class PolymarketSearchUM(
 
         /**
          * @property events events matched so far, accumulated over the loaded pages
-         * @property isLoadingNextPage whether the next page is on its way, shown as a footer loader
+         * @property footer loading or retry state of the next page, shown below the loaded events
          */
         data class Results(
             val events: ImmutableList<PolymarketEventUM>,
-            val isLoadingNextPage: Boolean,
+            val footer: PolymarketFeedFooterUM,
         ) : ContentUM
 
         /** The query matched nothing. */

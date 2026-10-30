@@ -17,6 +17,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.*
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
+import com.tangem.domain.pay.model.OrderData
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
@@ -28,7 +29,6 @@ import com.tangem.utils.extensions.addHexPrefix
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -36,17 +36,22 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.util.Currency
 import java.util.Locale
-import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 private const val TAG = "TangemPaySwapRepository"
-private const val MAX_POLLING_ATTEMPTS = 6
+private val POLLING_WINDOW = 5.minutes
+private val FAST_POLLING_PHASE = 30.seconds
+private val FAST_POLLING_INTERVAL = 3.seconds
+private val SLOW_POLLING_INTERVAL = 5.seconds
 
 private data class PollingKey(val userWalletId: String, val orderId: String)
 
 @Suppress("LongParameterList")
-internal class DefaultTangemPayWithdrawRepository @Inject constructor(
+internal class DefaultTangemPayWithdrawRepository(
     private val tangemPayApi: TangemPayApi,
     private val requestHelper: TangemPayRequestPerformer,
     private val authDataSource: TangemPayAuthDataSource,
@@ -56,6 +61,7 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
     private val orderRepository: CustomerOrderRepository,
     private val withdrawSourceResolver: WithdrawSourceResolver,
     private val withdrawPollingScope: AppCoroutineScope,
+    private val currentTimeMillis: () -> Long = System::currentTimeMillis,
 ) : TangemPayWithdrawRepository {
 
     private val pollingJobs = mutableMapOf<PollingKey, Job>()
@@ -127,11 +133,6 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
             tangemPayStorage.storeActiveWithdrawOrderId(userWalletId = userWallet.walletId, orderId = orderId)
             val order = orderRepository.getOrderData(userWalletId = userWallet.walletId, orderId = orderId).getOrNull()
             val withdrawTxHash = order?.withdrawTxHash
-            val storeData = TangemPayWithdrawState(
-                orderId = orderId,
-                exchangeData = exchangeData,
-                txHash = withdrawTxHash,
-            )
             if (order != null && !withdrawTxHash.isNullOrEmpty()) {
                 finalizeWithdraw(
                     userWallet = userWallet,
@@ -140,8 +141,19 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
                     orderId = orderId,
                 )
             } else {
+                val createdAtMillis = currentTimeMillis()
+                val storeData = TangemPayWithdrawState(
+                    orderId = orderId,
+                    exchangeData = exchangeData,
+                    createdAtMillis = createdAtMillis,
+                )
                 tangemPayStorage.storeWithdrawOrder(userWalletId = userWallet.walletId, data = storeData)
-                startPollingForOrder(userWallet, orderId, exchangeData)
+                startPollingForOrder(
+                    userWallet = userWallet,
+                    orderId = orderId,
+                    exchangeData = exchangeData,
+                    createdAtMillis = createdAtMillis,
+                )
             }
         }
     }
@@ -150,58 +162,51 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
         userWallet: UserWallet,
         orderId: String,
         exchangeData: TangemPayWithdrawExchangeState,
-    ) {
-        withdrawPollingScope.launch {
-            startWithdrawOrderPolling(userWallet, orderId, exchangeData)
-        }
-    }
-
-    private suspend fun startWithdrawOrderPolling(
-        userWallet: UserWallet,
-        orderId: String,
-        exchangeData: TangemPayWithdrawExchangeState,
+        createdAtMillis: Long,
     ) {
         val key = PollingKey(userWallet.walletId.stringValue, orderId)
+        val deadlineMillis = createdAtMillis + POLLING_WINDOW.inWholeMilliseconds
 
-        pollingMutex.withLock {
-            if (pollingJobs.containsKey(key)) return@withLock
+        withdrawPollingScope.launch {
+            pollingMutex.withLock {
+                if (pollingJobs.containsKey(key)) return@withLock
 
-            val pollingJob = withdrawPollingScope.launch {
-                try {
-                    var attemptCount = 0
-                    while (isActive && attemptCount < MAX_POLLING_ATTEMPTS) {
-                        delay(duration = 3.seconds)
-                        attemptCount++
-                        val result = orderRepository.getOrderData(
-                            userWalletId = userWallet.walletId,
-                            orderId = orderId,
-                        )
-                        val txHash = result.getOrNull()?.withdrawTxHash?.ifEmpty { null }
-                        if (!txHash.isNullOrEmpty()) {
-                            finalizeWithdraw(
-                                userWallet = userWallet,
-                                txHash = txHash,
-                                exchangeData = exchangeData,
+                pollingJobs[key] = withdrawPollingScope.launch {
+                    try {
+                        var lastOrderResult: Either<VisaApiError, OrderData>
+                        do {
+                            delay(getPollingDelay(createdAtMillis, deadlineMillis, currentTimeMillis()))
+                            lastOrderResult = orderRepository.getOrderData(
+                                userWalletId = userWallet.walletId,
                                 orderId = orderId,
                             )
-                            pollingMutex.withLock { pollingJobs.remove(key) }
-                            return@launch
-                        }
-                    }
-                    if (attemptCount >= MAX_POLLING_ATTEMPTS) {
-                        TangemLogger.withTag(TAG).e("Polling stopped after $attemptCount unsuccessful attempts")
+                            val txHash = lastOrderResult.getOrNull()?.withdrawTxHash
+                            if (!txHash.isNullOrEmpty()) {
+                                finalizeWithdraw(
+                                    userWallet = userWallet,
+                                    txHash = txHash,
+                                    exchangeData = exchangeData,
+                                    orderId = orderId,
+                                )
+                                pollingMutex.withLock { pollingJobs.remove(key) }
+                                return@launch
+                            }
+                        } while (currentTimeMillis() < deadlineMillis)
+
+                        TangemLogger.withTag(TAG).e(
+                            "Polling stopped: no tx hash within $POLLING_WINDOW, " +
+                                "last order request: ${lastOrderResult.map(OrderData::status)}",
+                        )
                         tangemPayStorage.deleteWithdrawOrder(userWalletId = userWallet.walletId, orderId = orderId)
                         pollingMutex.withLock { pollingJobs.remove(key) }
+                    } catch (exception: CancellationException) {
+                        throw exception
+                    } catch (exception: Exception) {
+                        TangemLogger.withTag(TAG).e("Polling failed, the order is kept for the next attempt", exception)
+                        pollingMutex.withLock { pollingJobs.remove(key) }
                     }
-                } catch (exception: CancellationException) {
-                    throw exception
-                } catch (exception: Exception) {
-                    TangemLogger.withTag(TAG).e("Error", exception)
-                    tangemPayStorage.deleteWithdrawOrder(userWalletId = userWallet.walletId, orderId = orderId)
-                    pollingMutex.withLock { pollingJobs.remove(key) }
                 }
             }
-            pollingJobs[key] = pollingJob
         }
     }
 
@@ -312,24 +317,20 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
     private suspend fun pollWithdrawOrderIfNeeds(userWallet: UserWallet, data: TangemPayWithdrawState) {
         val exchangeData = data.exchangeData ?: return
         val storedHash = data.txHash
-        val orderId = data.orderId
-        val txHash = if (storedHash.isNullOrEmpty()) {
-            val order = orderRepository.getOrderData(userWalletId = userWallet.walletId, orderId = orderId).getOrNull()
-                ?: return
-            order.withdrawTxHash.also { fetchedHash ->
-                tangemPayStorage.storeWithdrawOrder(
-                    userWalletId = userWallet.walletId,
-                    data = data.copy(txHash = fetchedHash),
-                )
-            }
+        if (!storedHash.isNullOrEmpty()) {
+            finalizeWithdraw(
+                userWallet = userWallet,
+                txHash = storedHash,
+                exchangeData = exchangeData,
+                orderId = data.orderId,
+            )
         } else {
-            storedHash
-        }
-
-        if (!txHash.isNullOrEmpty()) {
-            finalizeWithdraw(userWallet = userWallet, txHash = txHash, exchangeData = exchangeData, orderId = orderId)
-        } else {
-            startPollingForOrder(userWallet, orderId, exchangeData)
+            startPollingForOrder(
+                userWallet = userWallet,
+                orderId = data.orderId,
+                exchangeData = exchangeData,
+                createdAtMillis = data.createdAtMillis,
+            )
         }
     }
 
@@ -354,6 +355,12 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
 
         return quotes?.quotes[cryptoCurrencyId.value]?.price
     }
+}
+
+private fun getPollingDelay(createdAtMillis: Long, deadlineMillis: Long, nowMillis: Long): Duration {
+    val isFastPhase = nowMillis - createdAtMillis < FAST_POLLING_PHASE.inWholeMilliseconds
+    val interval = if (isFastPhase) FAST_POLLING_INTERVAL else SLOW_POLLING_INTERVAL
+    return interval.coerceAtMost((deadlineMillis - nowMillis).coerceAtLeast(0L).milliseconds)
 }
 
 private fun WithdrawDataResponse.Result.verifyMatches(
