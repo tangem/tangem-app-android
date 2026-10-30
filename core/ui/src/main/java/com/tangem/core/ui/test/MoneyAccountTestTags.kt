@@ -1,0 +1,8 @@
+package com.tangem.core.ui.test
+
+object MoneyAccountTestTags {
+    const val MAIN_ROW = "MONEY_ACCOUNT_MAIN_ROW"
+    const val DETAILS_BALANCE = "MONEY_ACCOUNT_DETAILS_BALANCE"
+    const val ADD_FUNDS_BUTTON = "MONEY_ACCOUNT_ADD_FUNDS_BUTTON"
+    const val ADD_FUNDS_OPTION_LOADER = "MONEY_ACCOUNT_ADD_FUNDS_OPTION_LOADER"
+}
