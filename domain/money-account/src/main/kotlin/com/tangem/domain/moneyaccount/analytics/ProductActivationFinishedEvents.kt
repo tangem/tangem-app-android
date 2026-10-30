@@ -37,7 +37,6 @@ internal object ProductActivationFinishedEvents {
         val (paymentAccount, moneyAccount) = when (this) {
             is TangemPayCustomerState.Accounts -> paymentAccount to moneyAccount
             is TangemPayCustomerState.Former -> paymentAccount to moneyAccount
-            TangemPayCustomerState.Hidden,
             TangemPayCustomerState.Blocked,
             TangemPayCustomerState.KycRequired,
             TangemPayCustomerState.KycInProgress,

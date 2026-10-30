@@ -69,7 +69,7 @@ internal class StartTangemPayOnboardingUseCaseTest {
         clearMocks(activateMoneyAccountUseCase, createOnboardingOrderUseCase, pollTangemPayAccountStatusesUseCase)
         clearMocks(userWalletsListRepository, analytics)
         sentEvents.clear()
-        coEvery { pollTangemPayAccountStatusesUseCase(any()) } returns TangemPayCustomerState.Hidden
+        coEvery { pollTangemPayAccountStatusesUseCase(any()) } returns TangemPayCustomerState.KycApproved
         coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(wallet<UserWallet.Cold>())
         every { analytics.send(capture(sentEvents)) } just Runs
     }
