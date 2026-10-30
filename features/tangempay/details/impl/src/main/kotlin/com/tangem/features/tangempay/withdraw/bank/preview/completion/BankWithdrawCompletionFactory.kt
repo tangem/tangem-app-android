@@ -6,6 +6,7 @@ import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.model.BankWithdrawDraft
 import com.tangem.features.tangempay.withdraw.bank.preview.model.PreviewFailure
 import kotlinx.coroutines.CoroutineScope
+import java.math.BigDecimal
 import javax.inject.Inject
 
 internal class BankWithdrawCompletionFactory @Inject constructor(
@@ -18,6 +19,7 @@ internal class BankWithdrawCompletionFactory @Inject constructor(
         scope: CoroutineScope,
         onOrderCreated: (BankOfframpOrderResult) -> Unit,
         onDestinationChanged: (OfframpDestination) -> Unit,
+        onNetworkFeeChanged: (BigDecimal) -> Unit,
     ): BankWithdrawCompletion = when (sourceAccount) {
         is BankWithdrawSourceAccount.Payment -> orderCompletionFactory.create(
             userWalletId = sourceAccount.userWalletId,
@@ -29,6 +31,7 @@ internal class BankWithdrawCompletionFactory @Inject constructor(
                 userWalletId = sourceAccount.userWalletId,
                 productInstanceId = productInstanceId,
                 onDestinationChanged = onDestinationChanged,
+                onNetworkFeeChanged = onNetworkFeeChanged,
             )
         } ?: UnavailableBankWithdrawCompletion
     }

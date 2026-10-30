@@ -11,6 +11,7 @@ import com.tangem.data.pay.store.TangemPayStorage
 import com.tangem.domain.models.account.BankCredentials
 import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.pay.TangemPayCustomerResidency
+import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.AccountFeeGroupType
@@ -102,8 +103,9 @@ internal class MockAwareOnboardingRepository @Inject constructor(
 
     override suspend fun getFees(
         userWalletId: UserWalletId,
+        product: TangemPayProduct,
         types: Set<AccountFeeGroupType>,
-    ): Either<VisaApiError, List<AccountFee>> = real.getFees(userWalletId, types)
+    ): Either<VisaApiError, List<AccountFee>> = real.getFees(userWalletId, product, types)
 
     override suspend fun createOrder(
         userWalletId: UserWalletId,

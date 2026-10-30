@@ -2061,6 +2061,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                 amountToSwap = "1.0",
                 reduceBalanceBy = BigDecimal.ZERO,
                 customSlippage = BigDecimal("0.5"),
+                quoteDefaultSlippages = model.pairDefault?.let { mapOf(cexProvider.providerId to it) }.orEmpty(),
             )
 
             // Assert
@@ -2079,7 +2080,9 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
                     customSlippage = model.expectedSentSlippage,
                 )
             }
-            assertThat((result[cexProvider] as SwapState.QuotesLoadedState).slippage).isEqualTo(appliedSlippage)
+            val quote = result[cexProvider] as SwapState.QuotesLoadedState
+            assertThat(quote.slippage to quote.requestedCustomSlippage)
+                .isEqualTo(appliedSlippage to model.expectedSentSlippage)
         }
 
         private fun provideTestModels() = listOf(
@@ -2091,6 +2094,18 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
             CustomSlippageModel(isSupported = false, providerDefault = BigDecimal("0.3"), expectedSentSlippage = null),
             CustomSlippageModel(isSupported = true, providerDefault = BigDecimal("0.2"), expectedSentSlippage = null),
             CustomSlippageModel(isSupported = true, providerDefault = null, expectedSentSlippage = null),
+            CustomSlippageModel(
+                isSupported = true,
+                providerDefault = BigDecimal("2"),
+                pairDefault = BigDecimal("0.2"),
+                expectedSentSlippage = null,
+            ),
+            CustomSlippageModel(
+                isSupported = true,
+                providerDefault = BigDecimal("0.2"),
+                pairDefault = BigDecimal("0.3"),
+                expectedSentSlippage = BigDecimal("0.5"),
+            ),
         )
     }
 
@@ -2099,6 +2114,7 @@ internal class SwapInteractorImplFindBestQuoteTest : SwapInteractorImplTestBase(
         val isSupported: Boolean,
         val providerDefault: BigDecimal?,
         val expectedSentSlippage: BigDecimal?,
+        val pairDefault: BigDecimal? = null,
     )
 }
 

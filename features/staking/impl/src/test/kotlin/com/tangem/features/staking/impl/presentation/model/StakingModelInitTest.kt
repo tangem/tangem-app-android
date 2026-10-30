@@ -9,8 +9,8 @@ import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.StakingBalance
-import com.tangem.domain.models.staking.YieldBalanceItem
+import com.tangem.domain.staking.model.StakingBalance
+import com.tangem.domain.staking.model.YieldBalanceItem
 import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
 import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingIntegrationID

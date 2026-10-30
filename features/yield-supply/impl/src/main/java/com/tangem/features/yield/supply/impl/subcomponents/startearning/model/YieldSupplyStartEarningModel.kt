@@ -4,6 +4,7 @@ import arrow.core.getOrElse
 import com.tangem.blockchain.common.TransactionSender
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.unwrapYieldModuleUpgrade
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -324,8 +325,10 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     }
 
     private fun enterTransactionHash(yieldSupplyFeeUM: YieldSupplyFeeUM.Content, txHashes: List<String>): String? {
-        val index = yieldSupplyFeeUM.transactionDataList.indexOfFirst {
-            (it.extras as? EthereumTransactionExtras)?.callData is EthereumYieldSupplyEnterCallData
+        val index = yieldSupplyFeeUM.transactionDataList.indexOfFirst { transactionData ->
+            val callData = (transactionData.extras as? EthereumTransactionExtras)?.callData
+                ?.unwrapYieldModuleUpgrade()
+            callData is EthereumYieldSupplyEnterCallData
         }
 
         return txHashes.getOrNull(index)

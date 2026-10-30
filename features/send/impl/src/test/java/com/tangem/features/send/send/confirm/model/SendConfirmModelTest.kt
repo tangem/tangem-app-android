@@ -14,10 +14,13 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
+import com.tangem.domain.transaction.error.SendIntentError
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.ErrorSource
 import com.tangem.features.jointaccount.analytics.JointAccountAnalyticsEvent.JointAccountError
 import com.tangem.domain.models.account.Account
@@ -37,6 +40,7 @@ import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelector
 import com.tangem.features.send.common.ui.state.ConfirmUM
 import com.tangem.features.send.common.ui.state.SendSignaturesUM
 import com.tangem.features.send.send.SendModelTestBase
+import com.tangem.features.send.send.confirm.SendConfirmComponent
 import com.tangem.features.send.send.ui.state.SendUM
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.*
@@ -48,8 +52,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
+import org.junit.jupiter.params.provider.MethodSource
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class SendConfirmModelTest : SendModelTestBase() {
@@ -325,6 +331,11 @@ internal class SendConfirmModelTest : SendModelTestBase() {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class ReportSendIntent {
 
+        @BeforeEach
+        fun forgetSentAnalytics() {
+            clearMocks(analyticsEventHandler, answers = false)
+        }
+
         @ParameterizedTest
         @ProvideTestModels
         fun `GIVEN send opened for an intent WHEN send succeeds THEN its hash is reported for the intent`(
@@ -336,7 +347,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             coEvery { sendTransactionUseCase(any(), any(), any()) } returns REGULAR_TX_HASH.right()
             coEvery { createAndSendGaslessTransactionUseCase(any(), any(), any()) } returns GASLESS_TX_HASH.right()
             val state = if (model.isGaslessFee) gaslessFeeState() else normalFeeState()
-            createSendConfirmModel(this, intentConfirmParams(state, intentId = INTENT_ID))
+            createSendConfirmModel(this, intentConfirmParams(state, intent = unchangedIntent()))
             advanceUntilIdle()
 
             // Act
@@ -354,7 +365,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             // Arrange
             val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
             every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
-            createSendConfirmModel(this, intentConfirmParams(normalFeeState(), intentId = null))
+            createSendConfirmModel(this, intentConfirmParams(normalFeeState(), intent = null))
             advanceUntilIdle()
 
             // Act
@@ -372,7 +383,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
             coEvery { sendTransactionUseCase(any(), any(), any()) } returns
                 mockk<SendTransactionError>(relaxed = true).left()
-            createSendConfirmModel(this, intentConfirmParams(normalFeeState(), intentId = INTENT_ID))
+            createSendConfirmModel(this, intentConfirmParams(normalFeeState(), intent = unchangedIntent()))
             advanceUntilIdle()
 
             // Act
@@ -394,7 +405,7 @@ internal class SendConfirmModelTest : SendModelTestBase() {
                 state = normalFeeState(),
                 cryptoCurrencyStatus = loadedFeeStatus,
                 feeCryptoCurrencyStatus = loadedFeeStatus,
-            ).copy(intentId = INTENT_ID, onSendTransaction = onSendTransaction)
+            ).copy(intent = unchangedIntent(), onSendTransaction = onSendTransaction)
             createSendConfirmModel(this, MutableParamsContainer(params))
             advanceUntilIdle()
 
@@ -406,12 +417,172 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             verify(exactly = 1) { onSendTransaction.invoke() }
         }
 
-        private fun intentConfirmParams(state: SendUM, intentId: String?) = MutableParamsContainer(
+        @ParameterizedTest
+        @MethodSource("provideModifiedModels")
+        fun `GIVEN send opened for an intent WHEN its hash is reported THEN completed tells whether it was changed`(
+            model: IntentModifiedModel,
+        ) = runTest {
+            // Arrange
+            val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+            every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
+            coEvery { sendTransactionUseCase(any(), any(), any()) } returns REGULAR_TX_HASH.right()
+            stubBuiltTransaction(amount = model.builtAmount, destination = model.builtDestination)
+            createSendConfirmModel(
+                this,
+                intentConfirmParams(normalFeeState(), intent = unchangedIntent().copy(amount = model.intentAmount)),
+            )
+            advanceUntilIdle()
+
+            // Act
+            resultFlow.tryEmit(true)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sentIntentEvents()).containsExactly(
+                "[MCP Intent] Intent Completed" to mapOf(
+                    "Intent Type" to "send",
+                    "Blockchain" to testCryptoCurrency.network.name,
+                    "Token" to testCryptoCurrency.symbol,
+                    "Intent Modified" to model.expectedModified,
+                    "Intent Id" to INTENT_ID,
+                ),
+            )
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideReportFailedModels")
+        fun `GIVEN the hash is not taken WHEN send succeeds THEN only report failed is sent with the error code`(
+            model: ReportFailedModel,
+        ) = runTest {
+            // Arrange
+            val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+            every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
+            coEvery { sendTransactionUseCase(any(), any(), any()) } returns REGULAR_TX_HASH.right()
+            coEvery { reportSendIntentHashUseCase(any(), any()) } returns model.error.left()
+            createSendConfirmModel(this, intentConfirmParams(normalFeeState(), intent = unchangedIntent()))
+            advanceUntilIdle()
+
+            // Act
+            resultFlow.tryEmit(true)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sentIntentEvents()).containsExactly(reportFailed(model.expectedErrorCode))
+        }
+
+        @Test
+        fun `GIVEN send returns no hash WHEN send succeeds THEN report failed is sent and nothing is reported`() =
+            runTest {
+                // Arrange
+                val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+                every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
+                coEvery { sendTransactionUseCase(any(), any(), any()) } returns "".right()
+                createSendConfirmModel(this, intentConfirmParams(normalFeeState(), intent = unchangedIntent()))
+                advanceUntilIdle()
+
+                // Act
+                resultFlow.tryEmit(true)
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(sentIntentEvents()).containsExactly(reportFailed(errorCode = "no_hash"))
+                coVerify(exactly = 0) { reportSendIntentHashUseCase(any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN send opened for an intent WHEN send fails THEN no intent analytics is sent`() = runTest {
+            // Arrange
+            val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+            every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
+            coEvery { sendTransactionUseCase(any(), any(), any()) } returns
+                mockk<SendTransactionError>(relaxed = true).left()
+            createSendConfirmModel(this, intentConfirmParams(normalFeeState(), intent = unchangedIntent()))
+            advanceUntilIdle()
+
+            // Act
+            resultFlow.tryEmit(true)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sentIntentEvents()).isEmpty()
+        }
+
+        @Test
+        fun `GIVEN send opened without an intent WHEN send succeeds THEN no intent analytics is sent`() = runTest {
+            // Arrange
+            val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+            every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
+            coEvery { sendTransactionUseCase(any(), any(), any()) } returns REGULAR_TX_HASH.right()
+            createSendConfirmModel(this, intentConfirmParams(normalFeeState(), intent = null))
+            advanceUntilIdle()
+
+            // Act
+            resultFlow.tryEmit(true)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sentIntentEvents()).isEmpty()
+        }
+
+        private fun sentIntentEvents(): List<Pair<String, Map<String, String>>> {
+            val events = mutableListOf<AnalyticsEvent>()
+            verify(atLeast = 0) { analyticsEventHandler.send(capture(events)) }
+            return events.filter { it.category == "MCP Intent" }.map { it.id to it.params }
+        }
+
+        private fun reportFailed(errorCode: String) = "[MCP Intent] Intent Report Failed" to mapOf(
+            "Intent Type" to "send",
+            "Error Code" to errorCode,
+            "Intent Id" to INTENT_ID,
+        )
+
+        private fun provideReportFailedModels() = listOf(
+            ReportFailedModel(SendIntentError.NotFound(INTENT_ID, code = "INTENT_NOT_FOUND"), "INTENT_NOT_FOUND"),
+            ReportFailedModel(
+                SendIntentError.AlreadyCompleted(INTENT_ID, code = "INTENT_ALREADY_COMPLETED"),
+                "INTENT_ALREADY_COMPLETED",
+            ),
+            ReportFailedModel(
+                ApiResponseError.HttpException(
+                    code = ApiResponseError.HttpException.Code.BAD_GATEWAY,
+                    message = null,
+                    errorBody = null,
+                ),
+                "502",
+            ),
+            ReportFailedModel(ApiResponseError.NetworkException(), "network"),
+            ReportFailedModel(ApiResponseError.TimeoutException(), "timeout"),
+            ReportFailedModel(IllegalStateException("boom"), "unknown"),
+        )
+
+        private fun intentConfirmParams(state: SendUM, intent: SendConfirmComponent.Intent?) = MutableParamsContainer(
             defaultSendConfirmParams(
                 state = state,
                 cryptoCurrencyStatus = loadedFeeStatus,
                 feeCryptoCurrencyStatus = loadedFeeStatus,
-            ).copy(intentId = intentId),
+            ).copy(intent = intent),
+        )
+
+        private fun stubBuiltTransaction(amount: BigDecimal, destination: String) {
+            val transaction = mockk<TransactionData.Uncompiled>(relaxed = true) {
+                every { this@mockk.amount } returns Amount(currencySymbol = "USDT", value = amount, decimals = 6)
+                every { destinationAddress } returns destination
+            }
+            coEvery {
+                createTransferTransactionUseCase(any(), any<Fee>(), any(), any(), any(), any(), any())
+            } returns transaction.right()
+        }
+
+        private fun provideModifiedModels() = listOf(
+            IntentModifiedModel(description = "sent as asked", intentAmount = "1", expectedModified = "No"),
+            IntentModifiedModel(description = "amount changed", intentAmount = "1.5", expectedModified = "Yes"),
+            IntentModifiedModel(
+                description = "sent as asked through the yield module",
+                intentAmount = "1",
+                builtAmount = BigDecimal.ZERO,
+                builtDestination = YIELD_MODULE_ADDRESS,
+                expectedModified = "No",
+            ),
         )
 
         private fun provideTestModels() = listOf(
@@ -1153,10 +1324,33 @@ internal class SendConfirmModelTest : SendModelTestBase() {
 
     data class ReportIntentModel(val isGaslessFee: Boolean, val expectedTxHash: String)
 
+    data class ReportFailedModel(val error: Throwable, val expectedErrorCode: String) {
+        override fun toString() = expectedErrorCode
+    }
+
+    data class IntentModifiedModel(
+        val description: String,
+        val intentAmount: String,
+        val expectedModified: String,
+        val builtAmount: BigDecimal = BigDecimal.ONE,
+        val builtDestination: String = DESTINATION_ADDRESS,
+    ) {
+        override fun toString() = description
+    }
+
+    /** The intent that prefilled exactly what [contentState] sends. */
+    private fun unchangedIntent() = SendConfirmComponent.Intent(
+        id = INTENT_ID,
+        amount = "1",
+        destinationAddress = DESTINATION_ADDRESS,
+        memo = null,
+    )
+
     private companion object {
         val TRON_BALANCE: BigDecimal = BigDecimal("24.929183")
         val TRON_GASLESS_FEE: BigDecimal = BigDecimal("2.51")
         const val DESTINATION_ADDRESS = "destinationAddr"
+        const val YIELD_MODULE_ADDRESS = "yieldModuleAddr"
         const val INTENT_ID = "intent-1"
         const val REGULAR_TX_HASH = "0xregular"
         const val GASLESS_TX_HASH = "0xgasless"

@@ -4,7 +4,7 @@ import com.tangem.grow.datasource.stakekit.models.response.model.AddressArgument
 import com.tangem.grow.datasource.stakekit.models.response.model.NetworkTypeDTO
 import com.tangem.grow.datasource.stakekit.models.response.model.TokenDTO
 import com.tangem.grow.datasource.stakekit.models.response.model.YieldDTO
-import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.staking.model.StakingID
 import java.math.BigDecimal
 
 /**

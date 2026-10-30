@@ -17,6 +17,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.wallets.usecase.CreateHotWalletUseCase
 import com.tangem.features.tangempay.TangemPayConstants
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tangempay.model.TangemPayOnboardingStarter
 import com.tangem.features.tangempay.onboarding.impl.R
@@ -47,6 +48,7 @@ internal class TangemPayHotWalletOnboardingModelTest {
     private val urlOpener: UrlOpener = mockk(relaxed = true)
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val tangemPayFeatureToggles: TangemPayFeatureToggles = mockk(relaxed = true)
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk(relaxed = true)
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val video: LoopingVideoController = mockk(relaxed = true)
     private val videoFactory: LoopingVideoController.Factory = mockk {
@@ -321,6 +323,25 @@ internal class TangemPayHotWalletOnboardingModelTest {
         }
     }
 
+    @Nested
+    inner class UnifiedOnboarding {
+
+        @ParameterizedTest
+        @ValueSource(booleans = [true, false])
+        fun `GIVEN money accounts toggle WHEN model created THEN unified onboarding follows it`(isEnabled: Boolean) =
+            runTest {
+                // Arrange
+                every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns isEnabled
+
+                // Act
+                val model = createModel(testScope = this)
+
+                // Assert
+                assertThat(model.uiState.value.isUnifiedOnboarding).isEqualTo(isEnabled)
+                model.onDestroy()
+            }
+    }
+
     private fun createModel(testScope: TestScope): TangemPayHotWalletOnboardingModel {
         return TangemPayHotWalletOnboardingModel(
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
@@ -337,6 +358,7 @@ internal class TangemPayHotWalletOnboardingModelTest {
             ),
             analytics = analytics,
             tangemPayFeatureToggles = tangemPayFeatureToggles,
+            moneyAccountFeatureToggles = moneyAccountFeatureToggles,
             videoFactory = videoFactory,
         )
     }

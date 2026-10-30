@@ -10,6 +10,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteErrorUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
+import com.tangem.features.polymarket.impl.placeprediction.model.BuyAmountCalculator
 import com.tangem.features.polymarket.impl.placeprediction.model.recomputeGate
 import com.tangem.utils.transformer.Transformer
 
@@ -25,12 +26,13 @@ internal class SetQuoteResultTransformer(
         val quote = result.fold(ifLeft = ::toError, ifRight = ::toQuote)
         val updatedState = prevState.copy(
             quote = quote,
-            market = if (quote is QuoteUM.Error && prevState.order is OrderSideUM.Sell) {
+            market = if (quote.hasNoLiquidity() || quote is QuoteUM.Error && prevState.order is OrderSideUM.Sell) {
                 prevState.market.copy(isPriceUnavailable = true)
             } else {
                 prevState.market
             },
             minAmount = result.fold(ifLeft = { prevState.minAmount }, ifRight = { it.minAmount }),
+            lastFeeRate = result.getOrNull()?.let(BuyAmountCalculator::feeRate) ?: prevState.lastFeeRate,
         )
         val pricedQuote = result.getOrNull()?.takeIf { it.isPlaceable }
 
@@ -40,6 +42,9 @@ internal class SetQuoteResultTransformer(
             updatedState.recomputeGate()
         }
     }
+
+    private fun QuoteUM.hasNoLiquidity(): Boolean =
+        this is QuoteUM.Unavailable && status == PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY
 
     private fun toError(error: PredictionOrderQuoteError): QuoteUM.Error = QuoteUM.Error(
         reason = when (error) {

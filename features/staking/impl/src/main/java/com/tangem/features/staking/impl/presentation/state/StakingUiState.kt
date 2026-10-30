@@ -8,7 +8,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
-import com.tangem.domain.models.staking.PendingAction
+import com.tangem.domain.staking.model.PendingAction
 import com.tangem.domain.staking.StakingTransactionVerdict
 import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType

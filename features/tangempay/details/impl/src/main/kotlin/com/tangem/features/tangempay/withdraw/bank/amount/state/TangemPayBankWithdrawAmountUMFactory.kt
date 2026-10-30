@@ -42,6 +42,11 @@ internal class TangemPayBankWithdrawAmountUMFactory(
         is BankWithdrawSourceAccount.Money -> false
     }
 
+    private val isNetworkFeeCharged = when (sourceAccount) {
+        is BankWithdrawSourceAccount.Payment -> false
+        is BankWithdrawSourceAccount.Money -> true
+    }
+
     fun create(
         draft: BankWithdrawDraft,
         selection: AmountSelection,
@@ -62,7 +67,9 @@ internal class TangemPayBankWithdrawAmountUMFactory(
                 onRetryClick = callbacks.onRetryFeeClick,
                 onBackClick = callbacks.onBackClick,
             )
-            is NetworkFeeState.Loaded -> TangemPayBankWithdrawAmountUM.Content(
+            NetworkFeeState.NotEnoughFunds,
+            is NetworkFeeState.Loaded,
+            -> TangemPayBankWithdrawAmountUM.Content(
                 header = header,
                 from = from,
                 amount = createAmountField(selection = selection),
@@ -135,7 +142,7 @@ internal class TangemPayBankWithdrawAmountUMFactory(
         rail = selection.destination.rail,
         title = selection.destination.toTitleReference(),
         eta = selection.destination.eta.toTextReference(),
-        fee = selection.destination.fee.toText(),
+        fee = selection.destination.totalFeeText(selection.networkFee),
         onClick = callbacks.onRouteClick.takeIf { selection.destinations.size > 1 && !isRailLocked },
     )
 
@@ -166,13 +173,24 @@ internal class TangemPayBankWithdrawAmountUMFactory(
                         rail = destination.rail,
                         title = destination.toTitleReference(),
                         eta = destination.eta.toTextReference(),
-                        fee = destination.fee.toText(),
+                        fee = destination.totalFeeText(selection.networkFee),
                         isSelected = destination.rail == selection.destination.rail,
                         onClick = { callbacks.onRouteSelected(destination.rail) },
                     )
                 }.toImmutableList(),
+                networkFeeNote = createNetworkFeeNote(selection),
                 onDismiss = callbacks.onSheetDismiss,
             )
+        }
+
+    private fun createNetworkFeeNote(selection: AmountSelection): TextReference? =
+        if (isNetworkFeeCharged && selection.isNetworkFeeQuoted) {
+            resourceReference(
+                R.string.money_account_send_network_fee_note,
+                wrappedList(selection.networkFee.formatFiat(selection.currency)),
+            )
+        } else {
+            null
         }
 
     data class Callbacks(

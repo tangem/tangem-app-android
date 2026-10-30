@@ -7,9 +7,13 @@ import com.tangem.data.qrscanning.parser.TronPaymentUriParser
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.qrscanning.models.ClassifiedQrContent
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.mockk
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 
 internal class TronPaymentUriParserTest {
@@ -228,6 +232,58 @@ internal class TronPaymentUriParserTest {
 
     // endregion
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class AmountSign {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN amount of any sign WHEN parse THEN only positive amount is kept`(model: AmountSignModel) {
+            // Act
+            val actual = parser.parse(
+                qrCode = model.qrCode,
+                coins = listOf(tronCoin),
+                allCurrencies = listOf(tronCoin, usdtToken),
+            )
+
+            // Assert
+            assertThat(actual).isEqualTo(PaymentUriParser.ParseResult.Success(model.expected))
+        }
+
+        private fun provideTestModels() = listOf(
+            AmountSignModel(
+                qrCode = "tron:TAddress?amount=-10&token=$USDT_CONTRACT",
+                expected = paymentUri(amount = null, matchingCurrencies = listOf(usdtToken)),
+            ),
+            AmountSignModel(
+                qrCode = "tron:TAddress?amount=0&token=$USDT_CONTRACT",
+                expected = paymentUri(amount = null, matchingCurrencies = listOf(usdtToken)),
+            ),
+            AmountSignModel(
+                qrCode = "tron:TAddress?amount=10&token=$USDT_CONTRACT",
+                expected = paymentUri(amount = BigDecimal("10"), matchingCurrencies = listOf(usdtToken)),
+            ),
+            AmountSignModel(
+                qrCode = "tron:TAddress?amount=-10",
+                expected = paymentUri(amount = null, matchingCurrencies = listOf(tronCoin, usdtToken)),
+            ),
+            AmountSignModel(
+                qrCode = "tron:TAddress?amount=-100000000",
+                expected = paymentUri(amount = null, matchingCurrencies = listOf(tronCoin, usdtToken)),
+            ),
+        )
+
+        private fun paymentUri(amount: BigDecimal?, matchingCurrencies: List<CryptoCurrency>) =
+            ClassifiedQrContent.PaymentUri(
+                address = "TAddress",
+                amount = amount,
+                memo = null,
+                matchingCurrencies = matchingCurrencies,
+            )
+    }
+
+    internal data class AmountSignModel(val qrCode: String, val expected: ClassifiedQrContent.PaymentUri)
+
     // region Helpers
 
     private fun PaymentUriParser.ParseResult.asSuccess(): ClassifiedQrContent.PaymentUri? {
@@ -285,4 +341,8 @@ internal class TronPaymentUriParserTest {
     }
 
     // endregion
+
+    private companion object {
+        const val USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
+    }
 }

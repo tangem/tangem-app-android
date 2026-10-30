@@ -87,6 +87,7 @@ fun UserWalletItemRow(state: UserWalletItemUM, modifier: Modifier = Modifier) {
             modifier = Modifier.weight(1f),
             name = state.name,
             titleBadge = state.titleBadge,
+            isSocialLogin = state.isSocialLogin,
             information = state.information,
             balance = state.balance,
         )
@@ -122,6 +123,7 @@ fun UserWalletItemRow(state: UserWalletItemUM, modifier: Modifier = Modifier) {
 private fun NameAndInfo(
     name: TextReference,
     titleBadge: TangemBadgeUM?,
+    isSocialLogin: Boolean,
     information: UserWalletItemUM.Information,
     balance: UserWalletItemUM.Balance,
     modifier: Modifier = Modifier,
@@ -143,6 +145,7 @@ private fun NameAndInfo(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+            if (isSocialLogin) SocialLoginWalletIcon()
             titleBadge?.let { badge ->
                 TangemBadge(
                     text = badge.text,
@@ -493,6 +496,17 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                     name = stringReference("Family savings"),
                     icon = AccountIconPreviewData.randomAccountIcon(),
                 ),
+                isEnabled = true,
+                endIcon = UserWalletItemUM.EndIcon.Arrow,
+                onClick = {},
+            ),
+            UserWalletItemUM(
+                id = "user_wallet_7",
+                name = stringReference("Google wallet"),
+                isSocialLogin = true,
+                information = UserWalletItemUM.Information.Loaded(resourceReference(R.string.hw_mobile_wallet)),
+                balance = UserWalletItemUM.Balance.Loaded(value = "$16.99", isFlickering = false),
+                imageState = UserWalletItemUM.ImageState.MobileWallet,
                 isEnabled = true,
                 endIcon = UserWalletItemUM.EndIcon.Arrow,
                 onClick = {},

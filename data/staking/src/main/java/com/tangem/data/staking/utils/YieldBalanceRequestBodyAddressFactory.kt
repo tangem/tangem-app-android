@@ -1,7 +1,7 @@
 package com.tangem.data.staking.utils
 
 import com.tangem.grow.datasource.stakekit.models.request.Address
-import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.staking.model.StakingID
 
 /**
  * Factory for creating [Address]

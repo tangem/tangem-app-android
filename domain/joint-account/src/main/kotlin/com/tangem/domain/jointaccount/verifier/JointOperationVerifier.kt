@@ -39,12 +39,13 @@ class JointOperationVerifier(
      * What the refund fields are allowed to say, read from the same sources the creation path used.
      *
      * @param refundReceiver the fee recipient `SafeTxGasBuilder` puts into an operation it creates
-     * @param networkGasPrice the current gas price of the network in the coin, the reference the ceiling is taken from
+     * @param networkGasPrice the current gas price of the network in the coin, the reference the ceiling is taken
+     * from; `null` leaves the ceiling unchecked
      * @param gasToken the operation's gas token as the creation path prices it
      */
     data class RefundBounds(
         val refundReceiver: String,
-        val networkGasPrice: BigInteger,
+        val networkGasPrice: BigInteger?,
         val gasToken: SafeGasToken,
     )
 
@@ -129,9 +130,10 @@ class JointOperationVerifier(
         ensure(refundReceiver == normalized(bounds.refundReceiver)) { refundMismatch }
         ensure(safeTx.baseGas in ALLOWED_BASE_GAS) { refundMismatch }
         ensure(safeTx.gasPrice.signum() >= 0) { refundMismatch }
+        val networkGasPrice = bounds.networkGasPrice ?: return
         // Scaled before the conversion: rounding a sub-unit token price up first would multiply the rounding too
         val gasPriceCeiling = bounds.gasToken.gasPriceInTokenCurrency(
-            coinGasPrice = bounds.networkGasPrice * GAS_PRICE_CEILING_MULTIPLIER,
+            coinGasPrice = networkGasPrice * GAS_PRICE_CEILING_MULTIPLIER,
         )
         ensure(safeTx.gasPrice <= gasPriceCeiling) { refundMismatch }
     }
