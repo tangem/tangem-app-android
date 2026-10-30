@@ -259,16 +259,18 @@ class EvmGaslessFeeResolver(
         ).bind()
 
         // calculateTokenFee already set the approve plan; the attachment would replace it with a plain TokenPay
-        if (approval != null) return@either tokenFeeExtended
-
-        attachGaslessFeePlan(
-            resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
-            userWallet = userWallet,
-            tokenStatus = tokenForPayFeeStatus,
-            tokenFeeExtended = tokenFeeExtended,
-            transactionData = transactionData,
-            isYieldActive = isYieldActive,
-            sentAmount = sentAmount,
-        )
+        if (approval != null) {
+            tokenFeeExtended
+        } else {
+            attachGaslessFeePlan(
+                resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
+                userWallet = userWallet,
+                tokenStatus = tokenForPayFeeStatus,
+                tokenFeeExtended = tokenFeeExtended,
+                transactionData = transactionData,
+                isYieldActive = isYieldActive,
+                sentAmount = sentAmount,
+            )
+        }
     }
 }
