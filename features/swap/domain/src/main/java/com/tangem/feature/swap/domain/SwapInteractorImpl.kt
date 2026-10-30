@@ -384,6 +384,7 @@ internal class SwapInteractorImpl @Inject constructor(
         return requirements?.takeUnless { rampStateManager.checkAssetRequirements(it) }
     }
 
+    @Suppress("LongParameterList")
     override suspend fun findBestQuote(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
@@ -391,6 +392,7 @@ internal class SwapInteractorImpl @Inject constructor(
         amountToSwap: String,
         reduceBalanceBy: BigDecimal,
         customSlippage: BigDecimal?,
+        quoteDefaultSlippages: Map<String, BigDecimal>,
         intentId: String?,
     ): Map<SwapProvider, SwapState> {
         TangemLogger.i(
@@ -407,6 +409,7 @@ internal class SwapInteractorImpl @Inject constructor(
                |- providers: $providers
                |- amountToSwap: $amountToSwap
                |- customSlippage: $customSlippage
+               |- quoteDefaultSlippages: $quoteDefaultSlippages
             """.trimIndent(),
             shouldSanitize = false,
         )
@@ -420,7 +423,10 @@ internal class SwapInteractorImpl @Inject constructor(
         return supervisorScope {
             providers.map { provider ->
                 async {
-                    val customSlippagePercent = provider.acceptedSlippageOrNull(customSlippage)
+                    val customSlippagePercent = provider.acceptedSlippageOrNull(
+                        percent = customSlippage,
+                        defaultPercent = provider.pairDefaultSlippage(quoteDefaultSlippages),
+                    )
                     when (provider.type) {
                         ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
                             if (isSolana(fromSwapCurrencyStatus.currency.network.rawId)) {
@@ -454,10 +460,17 @@ internal class SwapInteractorImpl @Inject constructor(
                                 customSlippage = customSlippagePercent,
                             )
                         }
-                    }
+                    }?.withRequestedCustomSlippage(customSlippagePercent)
                 }
             }.awaitAll().filterNotNull().toMap()
         }
+    }
+
+    private fun Pair<SwapProvider, SwapState>.withRequestedCustomSlippage(
+        customSlippage: BigDecimal?,
+    ): Pair<SwapProvider, SwapState> {
+        val quote = second as? SwapState.QuotesLoadedState ?: return this
+        return first to quote.copy(requestedCustomSlippage = customSlippage)
     }
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -844,6 +857,7 @@ internal class SwapInteractorImpl @Inject constructor(
         isTangemPayWithdrawal: Boolean,
         integratedApproval: IntegratedApprovalData?,
         customSlippage: BigDecimal?,
+        quoteDefaultSlippages: Map<String, BigDecimal>,
         intentId: String?,
     ): SwapTransactionState {
         TangemLogger.i(
@@ -886,7 +900,10 @@ internal class SwapInteractorImpl @Inject constructor(
                 swapProvider = swapProvider,
                 expressOperationType = expressOperationType,
                 isTangemPayWithdrawal = isTangemPayWithdrawal,
-                customSlippage = swapProvider.acceptedSlippageOrNull(customSlippage),
+                customSlippage = swapProvider.acceptedSlippageOrNull(
+                    percent = customSlippage,
+                    defaultPercent = swapProvider.pairDefaultSlippage(quoteDefaultSlippages),
+                ),
                 intentId = intentId,
             )
             ResolvedFlow.DexLike -> onSwapDexLike(
@@ -1345,7 +1362,8 @@ internal class SwapInteractorImpl @Inject constructor(
             )
         } else {
             // A TRX transfer the balance cannot cover is rejected by the node without burning anything.
-            if (fromSwapCurrencyStatus.currency is CryptoCurrency.Token &&
+            if (isTronNativeFeeAutoPicked() &&
+                fromSwapCurrencyStatus.currency is CryptoCurrency.Token &&
                 isTron(fromSwapCurrencyStatus.currency.network.rawId)
             ) {
                 checkTronNativeFeeAtDeposit(fromSwapCurrencyStatus = fromSwapCurrencyStatus, txData = txData)
@@ -1819,6 +1837,9 @@ internal class SwapInteractorImpl @Inject constructor(
             ),
         )
     }
+
+    private fun isTronNativeFeeAutoPicked(): Boolean =
+        swapFeatureToggles.isTronClientEnergyEnabled || swapFeatureToggles.isTronLowerFeeTypeEnabled
 
     /**
      * The shown fee was quoted earlier against a placeholder address; by now the account's energy or TRX may have

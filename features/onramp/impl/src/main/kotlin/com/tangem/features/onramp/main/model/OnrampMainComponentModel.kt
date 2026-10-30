@@ -25,10 +25,10 @@ import com.tangem.domain.onramp.model.OnrampProviderWithQuote
 import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.onramp.model.isRestricted
-import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.marketing.api.LinkedBannerRequest
+import com.tangem.features.marketing.api.MarketingBannerAmount
 import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.marketing.api.concierge.ConciergeDemandSurveyComponent
 import com.tangem.features.onramp.deeplink.ConciergeWaitlistListener
@@ -52,7 +52,6 @@ import com.tangem.utils.isNullOrZero
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.math.BigDecimal
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass")
@@ -71,7 +70,6 @@ internal class OnrampMainComponentModel @Inject constructor(
     private val getOnrampOffersUseCase: GetOnrampOffersUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val messageSender: UiMessageSender,
-    private val getCurrencyUSDQuoteUseCase: GetCurrencyUSDQuoteUseCase,
     private val conciergeWaitlistListener: ConciergeWaitlistListener,
     paramsContainer: ParamsContainer,
     getWalletsUseCase: GetWalletsUseCase,
@@ -103,45 +101,22 @@ internal class OnrampMainComponentModel @Inject constructor(
         )
 
     /**
-     * Expected received crypto amount, taken from the first [OnrampQuote.Data] quote's [OnrampQuote.Data.toAmount].
-     * Used to derive [amountUsd][MarketingBannerRequest.amountUsd] for the marketing banner request flows below,
-     * since the campaign min/max amount gating is expressed in USD while the user only enters a fiat amount here.
-     *
-     * Seeded with an initial `null` via [onStart] so the downstream [combine] can emit immediately on cold start
-     * (before any quote is available, e.g. when the user has not entered an amount yet). Without this seed the
-     * underlying quotes flow stays silent until a quote is stored, which would keep the banner requests from
-     * emitting at all.
-     */
-    private val expectedCryptoAmount: Flow<BigDecimal?> = getOnrampQuotesUseCase.invoke()
-        .map { either ->
-            either.getOrNull()
-                ?.filterIsInstance<OnrampQuote.Data>()
-                ?.firstOrNull()
-                ?.toAmount?.value
-        }
-        .distinctUntilChanged()
-        .onStart { emit(null) }
-
-    /**
      * Request flow for the standalone marketing banner.
      * [fromFiat] is the fiat currency code the user is paying in (only available once the screen is in Content state).
      * [toNetwork] is the backend network id of the target crypto currency.
      * [toContractAddress] is the contract address of the target token (empty string for coins).
-     * [amountUsd] is derived from the expected received crypto amount (see [expectedCryptoAmount]) converted to USD.
-     * On cold start (no quote yet, e.g. the user has not entered an amount) it is null, so the request emits
-     * immediately with `amountUsd = null` and the domain shows the banner ungated; once a quote arrives the request
-     * re-emits with the real USD amount so the min/max filter applies. It is also null if the target currency has no
-     * USD rate, again skipping the amount filter.
+     * [amount] is the typed fiat amount (see [toMarketingAmount]); the banner converts it to USD for the campaigns'
+     * min/max bounds, so the bounds also apply when the amount is outside every provider's limits.
      */
-    val marketingRequest: Flow<MarketingBannerRequest?> = combine(state, expectedCryptoAmount) { s, crypto ->
-        val contentState = s as? OnrampMainComponentUM.Content ?: return@combine null
+    val marketingRequest: Flow<MarketingBannerRequest?> = state.map { s ->
+        val contentState = s as? OnrampMainComponentUM.Content ?: return@map null
         MarketingBannerRequest(
             screen = MarketingScreen.Onramp(
                 fromFiat = contentState.amountBlockState.currencyUM.code,
                 toNetwork = params.cryptoCurrency.network.rawId,
                 toContractAddress = (params.cryptoCurrency as? CryptoCurrency.Token)?.contractAddress.orEmpty(),
             ),
-            amountUsd = computeAmountUsd(crypto),
+            amount = contentState.amountBlockState.toMarketingAmount(),
         )
     }
 
@@ -149,18 +124,17 @@ internal class OnrampMainComponentModel @Inject constructor(
      * Request flow for the LINKED_TO_PROVIDER marketing banner shown inline next to onramp provider offers.
      * Carries no provider id: provider matching is done per offer at render time (each offer row asks for its
      * banner via [MarketingBannerComponent.LinkedContent]), mirroring iOS.
-     * [amountUsd] follows the same rules as in [marketingRequest]: null on cold start (banner shown ungated) or when
-     * the target currency has no USD rate, and the real USD amount once a quote is available.
+     * [amount] follows the same rules as in [marketingRequest].
      */
-    val linkedMarketingRequest: Flow<LinkedBannerRequest?> = combine(state, expectedCryptoAmount) { s, crypto ->
-        val contentState = s as? OnrampMainComponentUM.Content ?: return@combine null
+    val linkedMarketingRequest: Flow<LinkedBannerRequest?> = state.map { s ->
+        val contentState = s as? OnrampMainComponentUM.Content ?: return@map null
         LinkedBannerRequest(
             screen = MarketingScreen.Onramp(
                 fromFiat = contentState.amountBlockState.currencyUM.code,
                 toNetwork = params.cryptoCurrency.network.rawId,
                 toContractAddress = (params.cryptoCurrency as? CryptoCurrency.Token)?.contractAddress.orEmpty(),
             ),
-            amountUsd = computeAmountUsd(crypto),
+            amount = contentState.amountBlockState.toMarketingAmount(),
         )
     }
 
@@ -545,12 +519,11 @@ internal class OnrampMainComponentModel @Inject constructor(
         }
     }
 
-    /** Converts the expected received [crypto] amount into its USD value using the target currency's USD rate. */
-    private suspend fun computeAmountUsd(crypto: BigDecimal?): BigDecimal? {
-        val amount = crypto ?: return null
-        val rawCurrencyId = params.cryptoCurrency.id.rawCurrencyId ?: return null
-        val rate = getCurrencyUSDQuoteUseCase(rawCurrencyId) ?: return null
-        return amount * rate
+    /** Null while the field is empty; a typed `0` is still an amount. */
+    private fun OnrampAmountBlockUM.toMarketingAmount(): MarketingBannerAmount.Fiat? {
+        if (amountFieldModel.fiatValue.isEmpty()) return null
+        val value = amountFieldModel.fiatAmount.value ?: return null
+        return MarketingBannerAmount.Fiat(value = value, currencyCode = currencyUM.code)
     }
 
     /** Reports every newly restricted provider once; an empty [quotes] re-arms the guard. */

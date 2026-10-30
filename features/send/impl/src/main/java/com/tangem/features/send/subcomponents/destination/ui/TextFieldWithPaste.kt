@@ -102,7 +102,7 @@ internal fun TextFieldWithPaste(
                 PasteButton(
                     isPasteButtonVisible = value.isBlank(),
                     onClick = onPasteClick,
-                    backgroundColorEnabled = TangemTheme.colors3.bg.transparent.secondary,
+                    backgroundColorEnabled = TangemTheme.colors3.bg.tertiary,
                     textColor = TangemTheme.colors3.text.primary,
                     modifier = Modifier
                         .padding(start = 8.dp)
