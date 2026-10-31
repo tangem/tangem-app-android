@@ -54,6 +54,7 @@ dependencies {
     // region Tangem
     implementation(tangemDeps.blockchain)
     implementation(tangemDeps.card.core)
+    implementation(projects.libs.tangemSdkApi)
     // endregion
 
     // region Core modules

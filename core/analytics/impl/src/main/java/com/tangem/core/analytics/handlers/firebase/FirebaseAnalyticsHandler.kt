@@ -8,7 +8,7 @@ import com.tangem.core.analytics.converters.AnalyticsErrorConverter
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 
-class FirebaseAnalyticsHandler(
+internal class FirebaseAnalyticsHandler(
     private val client: FirebaseAnalyticsClient,
 ) : AnalyticsHandler, AnalyticsErrorHandler, AnalyticsExceptionHandler, AnalyticsUserIdHandler {
 
