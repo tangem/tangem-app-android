@@ -54,6 +54,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketClobIdentity
 import com.tangem.domain.polymarket.model.PolymarketCategory
+import com.tangem.domain.polymarket.model.PolymarketCategoryFilter
 import com.tangem.domain.polymarket.model.PolymarketCategoryIcon
 import com.tangem.domain.polymarket.model.PolymarketEventError
 import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
@@ -98,6 +99,7 @@ import kotlinx.coroutines.test.runTest
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.provider.ValueSource
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
@@ -293,13 +295,15 @@ internal class DefaultPolymarketRepositoryTest {
         assertThat(result).isEqualTo(PolymarketEventError.Network.left())
     }
 
-    @Test
-    fun `GIVEN pages WHEN batch flow reloaded and scrolled THEN the body cursor drives the next page`() = runTest {
+    @ParameterizedTest
+    @ValueSource(strings = ["", "games", "props"])
+    fun `GIVEN pages WHEN batch flow reloaded and scrolled THEN the body cursor drives the next page`(filterValue: String) = runTest {
         // Arrange
-        coEvery { api.getEvents(walletId = WALLET_ID, category = 5, limit = 20, cursor = null) } returns ApiResponse.Success(
+        val filter = filterValue.takeIf { it.isNotEmpty() }
+        coEvery { api.getEvents(walletId = WALLET_ID, category = 5, filter = filter, limit = 20, cursor = null) } returns ApiResponse.Success(
             PolymarketEventsResponse(events = listOf(EVENT_DTO), cursor = "cursor-1", hasNext = true),
         )
-        coEvery { api.getEvents(walletId = WALLET_ID, category = 5, limit = 20, cursor = "cursor-1") } returns ApiResponse.Success(
+        coEvery { api.getEvents(walletId = WALLET_ID, category = 5, filter = filter, limit = 20, cursor = "cursor-1") } returns ApiResponse.Success(
             PolymarketEventsResponse(events = listOf(EVENT_DTO), cursor = null, hasNext = false),
         )
         val actions = MutableSharedFlow<BatchAction<Int, PolymarketEventsListConfig, Nothing>>(replay = 1)
@@ -311,7 +315,7 @@ internal class DefaultPolymarketRepositoryTest {
         )
 
         // Act
-        actions.emit(BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = 5)))
+        actions.emit(BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = 5, filter = filter?.let(PolymarketCategoryFilter::fromValue))))
         advanceUntilIdle()
         actions.emit(BatchAction.LoadMore())
         advanceUntilIdle()
@@ -319,7 +323,7 @@ internal class DefaultPolymarketRepositoryTest {
         // Assert
         val events = batchFlow.state.value.data.flatMap { batch -> batch.data.events }
         assertThat(events.map { it.id }).containsExactly("event-id", "event-id")
-        coVerify(exactly = 1) { api.getEvents(walletId = WALLET_ID, category = 5, limit = 20, cursor = "cursor-1") }
+        coVerify(exactly = 1) { api.getEvents(walletId = WALLET_ID, category = 5, filter = filter, limit = 20, cursor = "cursor-1") }
         sourceScope.cancel()
     }
 
