@@ -12,7 +12,6 @@ import com.tangem.blockchain.extensions.toFixedSizeBytes
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.domain.jointaccount.safe.SafeAddressCalculator
-import com.tangem.domain.jointaccount.safe.SafeSingleton
 import java.math.BigInteger
 import javax.inject.Inject
 
@@ -33,15 +32,19 @@ import javax.inject.Inject
  */
 internal class DefaultSafeAddressCalculator @Inject constructor() : SafeAddressCalculator {
 
-    override fun compute(
+    override fun compute(owners: List<String>, threshold: Int): Either<SafeAddressCalculator.Error, String> =
+        compute(owners = owners, threshold = threshold, singleton = SAFE_SINGLETON)
+
+    /** The same formula under another singleton: tests compute the SafeL2 address that the checks must refuse */
+    internal fun compute(
         owners: List<String>,
         threshold: Int,
-        singleton: SafeSingleton,
+        singleton: String,
     ): Either<SafeAddressCalculator.Error, String> = either {
         validate(owners = owners, threshold = threshold)
 
         val salt = (initializer(owners, threshold).toKeccak() + word(SALT_NONCE)).toKeccak()
-        val deploymentData = PROXY_CREATION_CODE.hexToBytes() + singleton.address.addressWord()
+        val deploymentData = PROXY_CREATION_CODE.hexToBytes() + singleton.addressWord()
 
         val proxy = (
             byteArrayOf(CREATE2_PREFIX.toByte()) + PROXY_FACTORY.hexToBytes() + salt + deploymentData.toKeccak()
@@ -117,6 +120,7 @@ internal class DefaultSafeAddressCalculator @Inject constructor() : SafeAddressC
     internal companion object {
 
         const val PROXY_FACTORY = "0x14F2982D601c9458F93bd70B218933A6f8165e7b"
+        const val SAFE_SINGLETON = "0xFf51A5898e281Db6DfC7855790607438dF2ca44b"
         const val FALLBACK_HANDLER = "0x3EfCBb83A4A7AfcB4F68D501E2c2203a38be77f4"
 
         /**
