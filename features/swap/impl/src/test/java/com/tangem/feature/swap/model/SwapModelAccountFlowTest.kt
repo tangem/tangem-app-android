@@ -2446,6 +2446,7 @@ internal class SwapModelAccountFlowTest : SwapModelTestBase() {
             ),
             customerId = "customer",
             productInstanceId = "instance",
+            error = null,
         )
 
     private fun stubResolvedAccountPair(
