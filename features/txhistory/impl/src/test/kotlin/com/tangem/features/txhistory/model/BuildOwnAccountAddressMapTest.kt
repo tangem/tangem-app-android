@@ -170,15 +170,6 @@ internal class BuildOwnAccountAddressMapTest {
         val registered = mapOf(moneyToken.network.id.rawId to mapOf(MONEY_ADDRESS to moneyAccount))
         return listOf(
             MoneyModel(value = activeMoneyAccount(balance = moneyBalance), expected = registered),
-            MoneyModel(
-                value = MoneyAccountStatusValue.Account.Deactivated(
-                    source = StatusSource.ACTUAL,
-                    cryptoCurrency = moneyToken,
-                    balance = moneyBalance,
-                    customerId = "cust_1",
-                ),
-                expected = registered,
-            ),
             MoneyModel(value = activeMoneyAccount(balance = null), expected = emptyMap()),
             MoneyModel(value = MoneyAccountStatusValue.Empty, expected = emptyMap()),
         )
@@ -190,6 +181,7 @@ internal class BuildOwnAccountAddressMapTest {
         balance = balance,
         customerId = "cust_1",
         productInstanceId = "pi_money",
+        error = null,
     )
 
     private fun accountStatusList(

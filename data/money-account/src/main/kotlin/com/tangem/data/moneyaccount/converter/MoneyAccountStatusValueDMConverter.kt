@@ -17,7 +17,6 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
     override fun convert(value: MoneyAccountStatusValue): MoneyAccountStatusValueDM? {
         return when (value) {
             is MoneyAccountStatusValue.Empty -> MoneyAccountStatusValueDM.Empty
-            is MoneyAccountStatusValue.NotCreated -> MoneyAccountStatusValueDM.NotCreated
             is MoneyAccountStatusValue.Onboarding.Activating -> MoneyAccountStatusValueDM.Activating(
                 customerId = value.customerId,
             )
@@ -26,12 +25,9 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
                 productInstanceId = value.productInstanceId,
                 balance = value.balance?.toDM(),
             )
-            is MoneyAccountStatusValue.Account.Deactivated -> MoneyAccountStatusValueDM.Deactivated(
-                customerId = value.customerId,
-                balance = value.balance?.toDM(),
-            )
             is MoneyAccountStatusValue.Error.ExposedDevice,
             is MoneyAccountStatusValue.Error.Unavailable,
+            is MoneyAccountStatusValue.Error.NotSynced,
             -> null
         }
     }
@@ -39,7 +35,6 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
     fun convertBack(userWalletId: UserWalletId, value: MoneyAccountStatusValueDM?): MoneyAccountStatusValue {
         return when (value) {
             is MoneyAccountStatusValueDM.Empty -> MoneyAccountStatusValue.Empty
-            is MoneyAccountStatusValueDM.NotCreated -> MoneyAccountStatusValue.NotCreated
             is MoneyAccountStatusValueDM.Activating -> MoneyAccountStatusValue.Onboarding.Activating(
                 source = StatusSource.CACHE,
                 customerId = value.customerId,
@@ -51,14 +46,9 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
                     balance = value.balance?.toDomain(),
                     customerId = value.customerId,
                     productInstanceId = productInstanceId,
+                    error = null,
                 )
             } ?: MoneyAccountStatusValue.Error.Unavailable
-            is MoneyAccountStatusValueDM.Deactivated -> MoneyAccountStatusValue.Account.Deactivated(
-                source = StatusSource.CACHE,
-                cryptoCurrency = moneyAccountCurrencyFactory.create(userWalletId),
-                balance = value.balance?.toDomain(),
-                customerId = value.customerId,
-            )
             null -> MoneyAccountStatusValue.Error.Unavailable
         }
     }
