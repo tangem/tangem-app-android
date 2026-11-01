@@ -32,6 +32,67 @@ internal class MarketingCampaignWindowTest {
         assertThat(invalid).containsExactly("garbage", "2026-13-99").inOrder()
     }
 
+    @Test
+    fun `GIVEN campaign with future start and end WHEN nextWindowTransition THEN returns start`() {
+        // Arrange
+        val campaign = campaign(startAt = "2026-08-01T12:05:00Z", endAt = "2026-08-01T12:15:00Z")
+
+        // Act
+        val next = campaign.nextWindowTransition(NOW)
+
+        // Assert
+        assertThat(next).isEqualTo(Instant.parse("2026-08-01T12:05:00Z"))
+    }
+
+    @Test
+    fun `GIVEN active campaign with future end WHEN nextWindowTransition THEN returns end plus 1ms`() {
+        // Arrange
+        val campaign = campaign(startAt = "2026-08-01T11:00:00Z", endAt = "2026-08-01T12:05:00Z")
+
+        // Act
+        val next = campaign.nextWindowTransition(NOW)
+
+        // Assert
+        assertThat(next).isEqualTo(Instant.parse("2026-08-01T12:05:00.001Z"))
+    }
+
+    @Test
+    fun `GIVEN expired campaign WHEN nextWindowTransition THEN returns null`() {
+        // Arrange
+        val campaign = campaign(startAt = "2026-08-01T10:00:00Z", endAt = "2026-08-01T11:59:59Z")
+
+        // Act
+        val next = campaign.nextWindowTransition(NOW)
+
+        // Assert
+        assertThat(next).isNull()
+    }
+
+    @Test
+    fun `GIVEN campaigns list WHEN nextWindowTransition THEN returns earliest future transition`() {
+        // Arrange
+        val c1 = campaign(startAt = "2026-08-01T12:10:00Z", endAt = "2026-08-01T12:20:00Z")
+        val c2 = campaign(startAt = "2026-08-01T11:00:00Z", endAt = "2026-08-01T12:05:00Z")
+
+        // Act
+        val next = listOf(c1, c2).nextWindowTransition(NOW)
+
+        // Assert — c2's end is at 12:05:00.001Z which is earlier than c1's start at 12:10:00Z
+        assertThat(next).isEqualTo(Instant.parse("2026-08-01T12:05:00.001Z"))
+    }
+
+    @Test
+    fun `GIVEN invalid dates WHEN validateDates THEN reported`() {
+        // Arrange
+        val invalid = mutableListOf<String>()
+
+        // Act
+        campaign("not-a-date", "bad-end").validateDates { invalid += it }
+
+        // Assert
+        assertThat(invalid).containsExactly("not-a-date", "bad-end").inOrder()
+    }
+
     data class Model(val startAt: String?, val endAt: String?, val expected: Boolean)
 
     private fun provideTestModels() = listOf(

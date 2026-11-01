@@ -17,16 +17,12 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneOffset
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class GetMarketingBannerUseCaseTest {
 
     private val repository: MarketingRepository = mockk()
-    private val clock: Clock = Clock.fixed(Instant.parse("2026-08-01T12:00:00Z"), ZoneOffset.UTC)
-    private val useCase = GetMarketingBannerUseCase(repository, clock)
+    private val useCase = GetMarketingBannerUseCase(repository)
 
     @BeforeEach
     fun reset() {
@@ -280,7 +276,7 @@ internal class GetMarketingBannerUseCaseTest {
     }
 
     @Test
-    fun `GIVEN campaigns outside and inside window WHEN invoke THEN only active ones returned`() = runTest {
+    fun `GIVEN campaigns with various window bounds WHEN invoke THEN all candidates returned`() = runTest {
         // Arrange
         coEvery { repository.getCampaigns(swapScreen) } returns listOf(
             campaign(id = 1, type = MarketingScreenType.SWAP, priority = 1, startAt = "2026-08-02T00:00:00Z"),
@@ -293,6 +289,6 @@ internal class GetMarketingBannerUseCaseTest {
         val result = useCase(swapScreen)
 
         // Assert
-        assertThat(result.getOrNull()?.map { it.id }).containsExactly(3, 4).inOrder()
+        assertThat(result.getOrNull()?.map { it.id }).containsExactly(1, 2, 3, 4).inOrder()
     }
 }
