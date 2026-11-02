@@ -1,6 +1,8 @@
 package com.tangem.domain.pay.model.bankofframp
 
 import com.tangem.domain.pay.model.OrderStep
+import org.joda.time.DateTime
+import java.math.BigDecimal
 
 data class BankOfframpOrderRequest(
     val amountInCents: Long,
@@ -27,6 +29,27 @@ data class BankOfframpRoute(
     val fee: OfframpFee,
     val eta: OfframpEta,
     val bankAccountId: String,
+)
+
+data class BankOfframpQuote(
+    val quoteId: String,
+    val bankAccountId: String,
+    val feeAmount: BigDecimal?,
+    val sourceAmount: BigDecimal,
+    val destinationAmount: BigDecimal,
+    val destinationCurrency: String,
+    val exchangeRate: BigDecimal,
+    val fee: OfframpFee,
+    val eta: OfframpEta,
+    val expiresAt: DateTime,
+)
+
+data class BankOfframpTransfer(
+    val transferId: String,
+    val depositAddress: String,
+    val sourceAmount: BigDecimal,
+    val destinationAmount: BigDecimal,
+    val expiresAt: DateTime,
 )
 
 sealed interface BankOfframpOrderState {
