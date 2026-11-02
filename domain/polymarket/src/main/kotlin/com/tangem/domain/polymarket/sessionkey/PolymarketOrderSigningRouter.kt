@@ -1,6 +1,7 @@
 package com.tangem.domain.polymarket.sessionkey
 
 import arrow.core.getOrElse
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketClobIdentity
@@ -22,12 +23,7 @@ class PolymarketOrderSigningRouter(
         val userWalletId = addresses.userWalletId
         val sessionKeyAddress = sessionKeyStore.heldAddress(userWalletId) ?: return PredictionOrderSigningRoute.Owner
 
-        val tradability = tradingStore.tradability(
-            userWalletId = userWalletId,
-            sessionKeyAddress = sessionKeyAddress,
-            clock = clock,
-            readWallet = { polymarketRepository.getWalletStatusByWalletId(walletId = userWalletId.stringValue) },
-        )
+        val tradability = tradability(userWalletId = userWalletId, sessionKeyAddress = sessionKeyAddress)
         if (tradability is PolymarketSessionKeyTradability.Untradable) return owner(reason = tradability.reason)
 
         val identity = sessionCredentialsProvider.get(userWalletId)
@@ -37,6 +33,12 @@ class PolymarketOrderSigningRouter(
         }
 
         return PredictionOrderSigningRoute.Session(identity = identity)
+    }
+
+    suspend fun canSignWithSessionKey(userWalletId: UserWalletId): Boolean {
+        val sessionKeyAddress = sessionKeyStore.heldAddress(userWalletId) ?: return false
+        val tradability = tradability(userWalletId = userWalletId, sessionKeyAddress = sessionKeyAddress)
+        return tradability is PolymarketSessionKeyTradability.Tradable
     }
 
     suspend fun reportRefused(
@@ -61,6 +63,13 @@ class PolymarketOrderSigningRouter(
         )
         tradingStore.markRefused(addresses.userWalletId, identity.address)
     }
+
+    private suspend fun tradability(userWalletId: UserWalletId, sessionKeyAddress: String) = tradingStore.tradability(
+        userWalletId = userWalletId,
+        sessionKeyAddress = sessionKeyAddress,
+        clock = clock,
+        readWallet = { polymarketRepository.getWalletStatusByWalletId(walletId = userWalletId.stringValue) },
+    )
 
     private fun owner(reason: String): PredictionOrderSigningRoute {
         TangemLogger.i("Polymarket order signed with the owner key: $reason")

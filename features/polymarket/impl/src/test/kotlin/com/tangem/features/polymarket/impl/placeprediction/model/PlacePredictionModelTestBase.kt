@@ -44,6 +44,7 @@ import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.domain.polymarket.model.PredictionSignedOrder
 import com.tangem.domain.polymarket.sessionkey.PolymarketOrderSigningRouter
 import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
+import com.tangem.domain.polymarket.usecase.CanSignPredictionOrderWithSessionKeyUseCase
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCollateralCurrencyUseCase
@@ -153,6 +154,7 @@ internal abstract class PlacePredictionModelTestBase {
         coEvery { signOrderInteractor(request = any()) } returns SIGNED_ORDER.right()
         coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult().right()
         every { featureToggles.isPolymarketSessionKeysEnabled } returns false
+        coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns false
         coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
             createPosition().right()
     }
@@ -291,6 +293,10 @@ internal abstract class PlacePredictionModelTestBase {
         quoteEngineFactory = createQuoteEngineFactory(dispatchers = dispatchers, router = router),
         orderSubmitterFactory = orderSubmitterFactory,
         getUserWalletUseCase = getUserWalletUseCase,
+        featureToggles = featureToggles,
+        canSignPredictionOrderWithSessionKeyUseCase = CanSignPredictionOrderWithSessionKeyUseCase(
+            router = signingRouter,
+        ),
     ).also(models::add)
 
     protected fun createStatusModel(

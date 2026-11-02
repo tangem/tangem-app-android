@@ -26,6 +26,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -251,6 +252,62 @@ internal class PolymarketOrderSigningRouterTest {
     }
 
     @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CanSignWithSessionKey {
+
+        @BeforeEach
+        fun arrangeTradableKey() {
+            coEvery { sessionKeyStore.heldAddress(USER_WALLET_ID) } returns SESSION_KEY
+            every { tradingStore.isRefused(USER_WALLET_ID, SESSION_KEY) } returns false
+            every { tradingStore.isMissingOnExchange(USER_WALLET_ID, SESSION_KEY) } returns false
+            coEvery { repository.getWalletStatusByWalletId(WALLET_ID) } returns walletState().right()
+            coEvery { tradingStore.isReadyOnExchange(USER_WALLET_ID, SESSION_KEY, VALID_UNTIL) } returns true
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a session key condition WHEN canSignWithSessionKey THEN answers as route without side effects`(
+            model: PeekModel,
+        ) = runTest {
+            // Arrange
+            model.arrange()
+
+            // Act
+            val actual = router.canSignWithSessionKey(userWalletId = USER_WALLET_ID)
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+            coVerify(exactly = 0) { sessionCredentialsProvider.get(any()) }
+            coVerify(exactly = 0) { tradingStore.markRefused(any(), any()) }
+            verify(exactly = 0) { tradingStore.setReconciliation(any(), any()) }
+        }
+
+        private fun provideTestModels() = listOf(
+            PeekModel(case = "every condition holds", expected = true),
+            PeekModel(case = "no session key on the device", expected = false) {
+                coEvery { sessionKeyStore.heldAddress(USER_WALLET_ID) } returns null
+            },
+            PeekModel(case = "the exchange refused the key", expected = false) {
+                every { tradingStore.isRefused(USER_WALLET_ID, SESSION_KEY) } returns true
+            },
+            PeekModel(case = "the key is gone from Polymarket", expected = false) {
+                every { tradingStore.isMissingOnExchange(USER_WALLET_ID, SESSION_KEY) } returns true
+            },
+            PeekModel(case = "the wallet cannot be read", expected = false) {
+                coEvery { repository.getWalletStatusByWalletId(WALLET_ID) } returns
+                    PolymarketWalletError.Network.left()
+            },
+            PeekModel(case = "the BFF does not let the key trade", expected = false) {
+                coEvery { repository.getWalletStatusByWalletId(WALLET_ID) } returns
+                    walletState(keys = listOf(sessionKey(status = PolymarketSessionKeyStatus.REVOKED))).right()
+            },
+            PeekModel(case = "Polymarket has not listed the key", expected = false) {
+                coEvery { tradingStore.isReadyOnExchange(USER_WALLET_ID, SESSION_KEY, VALID_UNTIL) } returns false
+            },
+        )
+    }
+
+    @Nested
     inner class ReportRefused {
 
         @Test
@@ -284,6 +341,14 @@ internal class PolymarketOrderSigningRouterTest {
         val state: PolymarketWalletState,
         val expected: PredictionOrderSigningRoute,
     )
+
+    class PeekModel(
+        private val case: String,
+        val expected: Boolean,
+        val arrange: suspend () -> Unit = {},
+    ) {
+        override fun toString(): String = case
+    }
 
     private companion object {
         const val WALLET_ID = "011"
