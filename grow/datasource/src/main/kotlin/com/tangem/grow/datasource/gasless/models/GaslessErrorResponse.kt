@@ -27,4 +27,8 @@ data class GaslessErrorDetailsDto(
     @Json(name = "scope") val scope: String? = null,
     @Json(name = "signature") val signature: String? = null,
     @Json(name = "status") val status: String? = null,
+    @Json(name = "balance") val balance: String? = null,
+    @Json(name = "required") val required: String? = null,
+    @Json(name = "allowance") val allowance: String? = null,
+    @Json(name = "allowances") val allowances: Map<String, String>? = null,
 )
