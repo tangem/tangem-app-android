@@ -1302,6 +1302,8 @@
   <string name="joint_account_join_to_account_btn_text">Entrar na conta</string>
   <string name="joint_account_join_to_approve">Para aprovação</string>
   <string name="joint_account_main_cant_verify">Não foi possível verificar</string>
+  <string name="joint_account_main_paused_for_safety">Pausada por segurança</string>
+  <string name="joint_account_main_unavailable">Indisponível</string>
   <plurals name="joint_account_main_waiting_confirmations">
     <item quantity="one">Aguardando %d confirmação</item>
     <item quantity="other">Aguardando %d confirmações</item>
@@ -1654,6 +1656,8 @@
   <string name="money_account_main_status_dialog_country_not_supported_description">Estamos trabalhando para expandir para mais regiões. Precisa de ajuda?</string>
   <string name="money_account_main_status_dialog_country_not_supported_description_template">Estamos trabalhando para expandir para mais regiões. Precisa de ajuda? %s</string>
   <string name="money_account_main_status_dialog_country_not_supported_title">Ainda não disponível na sua região</string>
+  <string name="money_account_main_status_dialog_failed_description">Ocorreu um erro durante a ativação</string>
+  <string name="money_account_main_status_dialog_failed_title">Não foi possível ativar sua conta</string>
   <string name="money_account_main_status_dialog_hide_account">Ocultar conta da tela inicial</string>
   <string name="money_account_main_status_dialog_join_waitlist">Entrar na lista de espera</string>
   <string name="money_account_main_status_dialog_verification_declined_description">Desculpe, não foi possível verificar sua identidade com base nas informações fornecidas</string>
@@ -1661,6 +1665,7 @@
   <string name="money_account_main_status_dialog_verification_description">Isso normalmente leva alguns minutos. Você pode verificar o status abaixo</string>
   <string name="money_account_main_status_dialog_verification_title">Verificando sua identidade</string>
   <string name="money_account_main_status_dialog_view_status">Ver status</string>
+  <string name="money_account_main_status_failed">Falha na ativação</string>
   <string name="money_account_main_status_verification">Verificação em andamento...</string>
   <string name="money_account_onboarding_currency_card_caption">Moeda da conta</string>
   <string name="money_account_onboarding_description">Funciona como uma conta bancária comum. Mas é baseada em cripto e está totalmente sob seu controle.</string>
@@ -1979,7 +1984,6 @@
   <string name="prediction_close_result_partially_sold_title">Venda parcial</string>
   <string name="prediction_close_result_sold_title">Vendido por %s</string>
   <string name="prediction_close_result_tokens_sold">Tokens vendidos</string>
-  <string name="prediction_close_selling_of">Vendendo %1$s de %2$s tokens de previsão</string>
   <string name="prediction_close_selling_tokens">Vendendo %s tokens de previsão</string>
   <string name="prediction_close_summary_to">Para</string>
   <string name="prediction_close_title">Encerrar posição</string>
@@ -2686,18 +2690,27 @@
   <string name="survey_demand_funds_owner_own_only">Somente os meus</string>
   <string name="survey_demand_funds_owner_question">De quem são os fundos envolvidos?</string>
   <string name="survey_demand_funds_owner_third_party">De terceiros também</string>
+  <string name="survey_demand_goal_buy">Comprar criptomoedas</string>
+  <string name="survey_demand_goal_buy_sell">Comprar e vender</string>
+  <string name="survey_demand_goal_question">Como podemos ajudar você?</string>
+  <string name="survey_demand_goal_sell">Vender criptomoedas</string>
+  <string name="survey_demand_navigation_title">Lista de espera</string>
   <string name="survey_demand_needed_currency_eur">Euro</string>
   <string name="survey_demand_needed_currency_hint">Selecione a principal</string>
   <string name="survey_demand_needed_currency_local">Moeda do meu país</string>
   <string name="survey_demand_needed_currency_other">Outra moeda</string>
   <string name="survey_demand_needed_currency_question">Qual moeda você gostaria de usar?</string>
   <string name="survey_demand_needed_currency_usd">Dólar americano</string>
+  <string name="survey_demand_optional">Opcional</string>
+  <string name="survey_demand_subtitle">O Concierge ainda não está disponível para você. Responda a algumas perguntas rápidas para nos ajudar a decidir em quais regiões disponibilizar o serviço em seguida.</string>
   <string name="survey_demand_success_description">Estamos lançando o Concierge país por país. Enviaremos uma mensagem pelo aplicativo assim que estiver disponível na sua região.</string>
   <string name="survey_demand_success_title">Tudo pronto</string>
+  <string name="survey_demand_title">Entre na lista de espera</string>
   <string name="survey_demand_transaction_size_1m_plus">US$ 1 milhão+</string>
   <string name="survey_demand_transaction_size_30k_500k">US$ 30 mil–500 mil</string>
   <string name="survey_demand_transaction_size_500k_1m">US$ 500 mil–1 milhão</string>
   <string name="survey_demand_transaction_size_hint">Valor aproximado em dólares americanos</string>
+  <string name="survey_demand_transaction_size_question">Qual é o valor típico por transação?</string>
   <string name="swap_approve_description">Ao aprovar, você permite que o contrato inteligente utilize seus tokens em transações futuras.</string>
   <string name="swap_custom_slippage_info">O slippage não pode ser personalizado com este provedor e, em casos raros, pode chegar a %s</string>
   <string name="swap_detailed_mode">Modo detalhado</string>
@@ -4069,6 +4082,10 @@
   <string name="yield_module_main_promo_button">Experimentar o modo de rendimento</string>
   <string name="yield_module_main_promo_subtitle">Coloque suas moedas ociosas para render. Sem bloqueios, saque a qualquer momento.</string>
   <string name="yield_module_main_promo_title">Obtenha rendimentos com suas criptomoedas de até %1$s%% APY</string>
+  <plurals name="yield_module_main_promo_tokens_count">
+    <item quantity="one">Mais de %d token disponível</item>
+    <item quantity="other">Mais de %d tokens disponíveis</item>
+  </plurals>
   <string name="yield_module_main_screen_promo_banner_message">Habilitar %1$s%% APY sobre o seu saldo</string>
   <string name="yield_module_main_view_approve_notification_description">A aprovação do seu token no Modo Yield foi revogada. Abra o token para conceder permissão novamente.</string>
   <string name="yield_module_main_view_approve_notification_title">É necessária a aprovação do token.</string>
