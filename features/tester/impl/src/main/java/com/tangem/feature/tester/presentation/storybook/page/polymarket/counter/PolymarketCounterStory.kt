@@ -120,7 +120,7 @@ private fun CounterPreview(state: PolymarketCounterStory) {
         }
         Text(
             text = "Swipe the values, tap a number or use the arrows. " +
-                "Selection changes with a light tick after snapping to the center.",
+                "Feel a tick as each value crosses the center. Selection changes after snapping.",
             style = TangemTheme.typography3.subheading.medium,
             color = TangemTheme.colors3.text.secondary,
         )
