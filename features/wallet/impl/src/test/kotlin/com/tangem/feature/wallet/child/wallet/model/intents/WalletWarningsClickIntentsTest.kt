@@ -8,6 +8,7 @@ import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.dialog.Dialogs
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
@@ -18,12 +19,14 @@ import com.tangem.domain.wallets.usecase.DerivationOutcome
 import com.tangem.domain.wallets.usecase.DeriveCurrencyAndOwnerKeysUseCase
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
+import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.hotwallet.HardwareUpgradeLauncher
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
@@ -54,6 +57,8 @@ internal class WalletWarningsClickIntentsTest {
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
     private val hardwareUpgradeLauncher: HardwareUpgradeLauncher = mockk()
     private val screenLifecycleProvider = ScreenLifecycleProvider()
+    private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher = mockk()
+    private val collectiblesFeatureToggles: CollectiblesFeatureToggles = mockk()
 
     private val userWalletId = UserWalletId(stringValue = "0123456789ABCDEF")
     private val currencies = listOf<CryptoCurrency>(mockk(relaxed = true))
@@ -69,8 +74,11 @@ internal class WalletWarningsClickIntentsTest {
             uiMessageSender,
             analyticsEventHandler,
             hardwareUpgradeLauncher,
+            collectiblesAccountStatusFetcher,
         )
         screenLifecycleProvider.onResume()
+        every { collectiblesFeatureToggles.isCollectiblesEnabled } returns true
+        coEvery { collectiblesAccountStatusFetcher(params = any()) } returns Either.Right(Unit)
         coEvery { hardwareUpgradeLauncher.launch(any(), any()) } just runs
         coEvery { multiNetworkStatusFetcher(params = any()) } returns Either.Right(Unit)
         coEvery { multiQuoteStatusFetcher(params = any()) } returns Either.Right(Unit)
@@ -95,6 +103,23 @@ internal class WalletWarningsClickIntentsTest {
         coVerify(exactly = 0) { multiNetworkStatusFetcher(params = any()) }
         coVerify(exactly = 0) { multiQuoteStatusFetcher(params = any()) }
         coVerify(exactly = 0) { multiStakingBalanceFetcher(params = any()) }
+        coVerify(exactly = 0) { collectiblesAccountStatusFetcher(params = any()) }
+    }
+
+    @Test
+    fun `GIVEN collectibles are off WHEN keys are derived THEN the collectibles account is not refreshed`() = runTest {
+        // Arrange
+        every { collectiblesFeatureToggles.isCollectiblesEnabled } returns false
+        coEvery { deriveCurrencyAndOwnerKeysUseCase(userWalletId, currencies) } returns
+            Either.Right(DerivationOutcome.DERIVED)
+
+        // Act
+        createImplementor(scope = this).onGenerateMissedAddressesClick(userWalletId, currencies)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { multiNetworkStatusFetcher(params = any()) }
+        coVerify(exactly = 0) { collectiblesAccountStatusFetcher(params = any()) }
     }
 
     @ParameterizedTest
@@ -113,6 +138,9 @@ internal class WalletWarningsClickIntentsTest {
         coVerify(exactly = 1) { multiNetworkStatusFetcher(params = any()) }
         coVerify(exactly = 1) { multiQuoteStatusFetcher(params = any()) }
         coVerify(exactly = 1) { multiStakingBalanceFetcher(params = any()) }
+        coVerify(exactly = 1) {
+            collectiblesAccountStatusFetcher(CollectiblesAccountStatusFetcher.Params(userWalletId = userWalletId))
+        }
         verify(exactly = 0) { uiMessageSender.send(any()) }
     }
 
@@ -204,6 +232,8 @@ internal class WalletWarningsClickIntentsTest {
             yieldSupplySetShouldShowMainPromoUseCase = mockk(relaxed = true),
             hardwareUpgradeLauncher = hardwareUpgradeLauncher,
             screenLifecycleProvider = screenLifecycleProvider,
+            collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
+            collectiblesFeatureToggles = collectiblesFeatureToggles,
         )
         implementor.initialize(router = mockk(relaxed = true), coroutineScope = scope)
 
