@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.menu.TangemMenu
-import com.tangem.core.ui.ds2.menu.tangemMenuUM
+import com.tangem.core.ui.ds2.menu.tangemMenuUi
 import com.tangem.core.ui.ds2.row.TangemRow
 import com.tangem.core.ui.ds2.row.TangemRowText
 import com.tangem.core.ui.ds2.row.TangemRowTextRole
@@ -155,7 +155,7 @@ private fun buildMenuState(state: TangemMenuStory): TangemMenu.UiState {
     val icons = listOf(Icons.ic_copy_20, Icons.ic_share_android_20, Icons.ic_edit_20)
     val descriptions = listOf("0x71C7…976F", "Send to a contact", "Visible only to you")
 
-    return tangemMenuUM(variant = state.variant, isSelectable = state.isSelectable) {
+    return tangemMenuUi(variant = state.variant, isSelectable = state.isSelectable) {
         labels.forEachIndexed { index, label ->
             item(
                 label = stringReference(label),
