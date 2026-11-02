@@ -6,6 +6,8 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.common.extensions.toHexString
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.data.pay.TEST_CLABE
+import com.tangem.data.pay.speiBankAccountDetails
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.OrderStep
@@ -15,8 +17,10 @@ import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderRequest
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderState
+import com.tangem.domain.pay.model.bankofframp.BankOfframpQuote
 import com.tangem.domain.pay.model.bankofframp.BankOfframpRecipient
 import com.tangem.domain.pay.model.bankofframp.BankOfframpRoute
+import com.tangem.domain.pay.model.bankofframp.BankOfframpTransfer
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
 import com.tangem.domain.pay.model.bankofframp.OfframpEta
@@ -25,10 +29,14 @@ import com.tangem.domain.pay.model.bankofframp.PostalAddress
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.spend.datasource.pay.TangemPayApi
 import com.tangem.spend.datasource.pay.models.request.BankOfframpPlaceOrderRequest
+import com.tangem.spend.datasource.pay.models.request.BankOfframpQuoteRequest
 import com.tangem.spend.datasource.pay.models.request.BankOfframpRouteRequest
 import com.tangem.spend.datasource.pay.models.request.BankOfframpSignatureRequest
+import com.tangem.spend.datasource.pay.models.request.BankOfframpTransferRequest
 import com.tangem.spend.datasource.pay.models.response.BankOfframpOptionsResponse
+import com.tangem.spend.datasource.pay.models.response.BankOfframpQuoteResponse
 import com.tangem.spend.datasource.pay.models.response.BankOfframpRouteResponse
+import com.tangem.spend.datasource.pay.models.response.BankOfframpTransferResponse
 import com.tangem.spend.datasource.pay.models.response.OrderResponse
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -36,6 +44,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
+import org.joda.time.DateTime
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -372,44 +381,7 @@ internal class DefaultBankOfframpOrderRepositoryTest {
             idempotencyKey = KEY,
         )
 
-        private fun withoutCause(error: BankOfframpError): BankOfframpError {
-            return if (error is BankOfframpError.Unknown) error.copy(cause = null) else error
-        }
-
-        private fun provideApiErrorModels() = listOf(
-            ApiErrorModel(
-                apiError = VisaApiError.BankOfframpUnsupportedConfiguration,
-                expected = BankOfframpError.UnsupportedConfiguration,
-            ),
-            ApiErrorModel(
-                apiError = VisaApiError.Unknown(errorCode = 104_120_100),
-                expected = BankOfframpError.Unavailable(errorCode = 104_120_100),
-            ),
-            ApiErrorModel(
-                apiError = VisaApiError.NotFound,
-                expected = BankOfframpError.Unavailable(errorCode = VisaApiError.NotFound.errorCode),
-            ),
-            ApiErrorModel(
-                apiError = VisaApiError.Unknown(errorCode = 104_130_100),
-                expected = BankOfframpError.Unknown(cause = null, isOutcomeUnknown = false, errorCode = 104_130_100),
-            ),
-            ApiErrorModel(
-                apiError = VisaApiError.ServerUnavailable,
-                expected = BankOfframpError.Unknown(
-                    cause = null,
-                    isOutcomeUnknown = true,
-                    errorCode = VisaApiError.ServerUnavailable.errorCode,
-                ),
-            ),
-            ApiErrorModel(
-                apiError = VisaApiError.UnknownWithoutCode,
-                expected = BankOfframpError.Unknown(
-                    cause = null,
-                    isOutcomeUnknown = true,
-                    errorCode = VisaApiError.UnknownWithoutCode.errorCode,
-                ),
-            ),
-        )
+        private fun provideApiErrorModels() = accountOfframpApiErrorModels()
 
         private fun provideUnusableResponses() = listOf(
             BankOfframpRouteResponse(result = null),
@@ -440,7 +412,345 @@ internal class DefaultBankOfframpOrderRepositoryTest {
         private fun routeEta() = BankOfframpOptionsResponse.Eta(minDays = 1, maxDays = 3)
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CreateQuote {
+
+        @Test
+        fun `GIVEN saved recipient WHEN createQuote THEN amount, id and key sent and the quote returned`() = runTest {
+            // Arrange
+            val body = slot<BankOfframpQuoteRequest>()
+            coEvery { tangemPayApi.createBankOfframpQuote(AUTH_HEADER, KEY, capture(body)) } returns
+                ApiResponse.Success(BankOfframpQuoteResponse(result = quoteResult()))
+
+            // Act
+            val actual = createSavedRecipientQuote()
+
+            // Assert
+            assertThat(actual).isEqualTo(expectedQuote().right())
+            assertThat(body.captured).isEqualTo(
+                BankOfframpQuoteRequest(
+                    productInstanceId = PRODUCT_INSTANCE_ID,
+                    amount = BigDecimal("100.00"),
+                    bankAccountId = BANK_ACCOUNT_ID,
+                ),
+            )
+        }
+
+        @Test
+        fun `GIVEN quote without a fee amount WHEN createQuote THEN the quote returned with a null fee amount`() =
+            runTest {
+                // Arrange
+                coEvery { tangemPayApi.createBankOfframpQuote(AUTH_HEADER, KEY, any()) } returns
+                    ApiResponse.Success(BankOfframpQuoteResponse(result = quoteResult().copy(feeAmount = null)))
+
+                // Act
+                val actual = createSavedRecipientQuote()
+
+                // Assert
+                assertThat(actual).isEqualTo(expectedQuote().copy(feeAmount = null).right())
+            }
+
+        @Test
+        fun `GIVEN new SPEI recipient WHEN createQuote THEN the SPEI details sent`() = runTest {
+            // Arrange
+            val body = slot<BankOfframpQuoteRequest>()
+            coEvery { tangemPayApi.createBankOfframpQuote(AUTH_HEADER, KEY, capture(body)) } returns
+                ApiResponse.Success(BankOfframpQuoteResponse(result = quoteResult()))
+
+            // Act
+            repository.createQuote(
+                userWalletId = WALLET_ID,
+                productInstanceId = PRODUCT_INSTANCE_ID,
+                amount = BigDecimal("100"),
+                recipient = BankOfframpRecipient.New(speiBankAccountDetails()),
+                idempotencyKey = KEY,
+            )
+
+            // Assert
+            assertThat(body.captured).isEqualTo(
+                BankOfframpQuoteRequest(
+                    productInstanceId = PRODUCT_INSTANCE_ID,
+                    amount = BigDecimal("100.00"),
+                    bankAccount = BankOfframpPlaceOrderRequest.BankAccount(
+                        details = BankOfframpPlaceOrderRequest.Details(
+                            currency = "MXN",
+                            rail = "SPEI",
+                            isThirdParty = false,
+                            beneficiary = BankOfframpPlaceOrderRequest.Beneficiary(
+                                type = "INDIVIDUAL",
+                                firstName = "Maria",
+                                lastName = "Lopez",
+                            ),
+                            accountNumber = TEST_CLABE,
+                        ),
+                    ),
+                ),
+            )
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideInvalidRequests")
+        fun `GIVEN invalid amount or CLABE WHEN createQuote THEN validation error and nothing sent`(
+            model: InvalidQuoteModel,
+        ) = runTest {
+            // Act
+            val actual = repository.createQuote(
+                userWalletId = WALLET_ID,
+                productInstanceId = PRODUCT_INSTANCE_ID,
+                amount = model.amount,
+                recipient = model.recipient,
+                idempotencyKey = KEY,
+            )
+
+            // Assert
+            assertThat(actual).isEqualTo(BankOfframpError.Validation.left())
+            coVerify(exactly = 0) { tangemPayApi.createBankOfframpQuote(any(), any(), any()) }
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideApiErrorModels")
+        fun `GIVEN api error WHEN createQuote THEN the bank off-ramp error returned`(model: ApiErrorModel) = runTest {
+            // Arrange
+            coEvery {
+                requestPerformer.performRequest<Any>(userWalletId = any(), requestBlock = any())
+            } returns model.apiError.left()
+
+            // Act
+            val actual = createSavedRecipientQuote()
+
+            // Assert
+            assertThat(actual.mapLeft(::withoutCause)).isEqualTo(model.expected.left())
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideUnusableResponses")
+        fun `GIVEN response without a usable quote WHEN createQuote THEN unknown error`(
+            response: BankOfframpQuoteResponse,
+        ) = runTest {
+            // Arrange
+            coEvery { tangemPayApi.createBankOfframpQuote(AUTH_HEADER, KEY, any()) } returns
+                ApiResponse.Success(response)
+
+            // Act
+            val actual = createSavedRecipientQuote()
+
+            // Assert
+            assertThat(actual.mapLeft(::withoutCause))
+                .isEqualTo(BankOfframpError.Unknown(cause = null, isOutcomeUnknown = false).left())
+        }
+
+        private suspend fun createSavedRecipientQuote() = repository.createQuote(
+            userWalletId = WALLET_ID,
+            productInstanceId = PRODUCT_INSTANCE_ID,
+            amount = BigDecimal("100"),
+            recipient = BankOfframpRecipient.Saved(bankAccountId = BANK_ACCOUNT_ID),
+            idempotencyKey = KEY,
+        )
+
+        private fun provideInvalidRequests() = listOf(
+            InvalidQuoteModel(amount = BigDecimal.ZERO),
+            InvalidQuoteModel(amount = BigDecimal("-1")),
+            InvalidQuoteModel(amount = BigDecimal("10.005")),
+            InvalidQuoteModel(
+                amount = BigDecimal("100"),
+                recipient = BankOfframpRecipient.New(
+                    speiBankAccountDetails().copy(accountNumber = "00201007777777777"),
+                ),
+            ),
+        )
+
+        private fun provideApiErrorModels() = accountOfframpApiErrorModels()
+
+        private fun provideUnusableResponses() = listOf(
+            BankOfframpQuoteResponse(result = null),
+            BankOfframpQuoteResponse(result = quoteResult().copy(quoteId = " ")),
+            BankOfframpQuoteResponse(result = quoteResult().copy(bankAccountId = null)),
+            BankOfframpQuoteResponse(result = quoteResult().copy(sourceAmount = null)),
+            BankOfframpQuoteResponse(result = quoteResult().copy(destinationAmount = null)),
+            BankOfframpQuoteResponse(result = quoteResult().copy(destinationCurrency = null)),
+            BankOfframpQuoteResponse(result = quoteResult().copy(exchangeRate = null)),
+            BankOfframpQuoteResponse(result = quoteResult().copy(expiresAt = "in fifteen minutes")),
+            BankOfframpQuoteResponse(result = quoteResult().copy(fee = null)),
+            BankOfframpQuoteResponse(result = quoteResult().copy(eta = null)),
+        )
+
+        private fun expectedQuote() = BankOfframpQuote(
+            quoteId = QUOTE_ID,
+            bankAccountId = BANK_ACCOUNT_ID,
+            feeAmount = BigDecimal("1.00"),
+            sourceAmount = BigDecimal("101.00"),
+            destinationAmount = BigDecimal("1725.00"),
+            destinationCurrency = "MXN",
+            exchangeRate = BigDecimal("17.25"),
+            fee = OfframpFee(
+                name = "SPEI",
+                calculationType = AccountFee.CalculationType.PERCENTAGE,
+                amount = BigDecimal("1"),
+                currency = "USD",
+                description = "SPEI offramp fee",
+            ),
+            eta = OfframpEta(minDays = 0, maxDays = 0),
+            expiresAt = DateTime.parse(EXPIRES_AT),
+        )
+
+        private fun quoteResult() = BankOfframpQuoteResponse.Result(
+            quoteId = QUOTE_ID,
+            bankAccountId = BANK_ACCOUNT_ID,
+            feeAmount = BigDecimal("1.00"),
+            sourceAmount = BigDecimal("101.00"),
+            destinationCurrency = "MXN",
+            destinationAmount = BigDecimal("1725.00"),
+            exchangeRate = BigDecimal("17.25"),
+            expiresAt = EXPIRES_AT,
+            fee = BankOfframpOptionsResponse.Fee(
+                name = "SPEI",
+                calculationType = "PERCENTAGE",
+                amount = BigDecimal("1"),
+                currency = "USD",
+                description = "SPEI offramp fee",
+            ),
+            eta = BankOfframpOptionsResponse.Eta(minDays = 0, maxDays = 0),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CreateTransfer {
+
+        @Test
+        fun `GIVEN quote id WHEN createTransfer THEN the quote id sent and the transfer returned`() = runTest {
+            // Arrange
+            coEvery {
+                tangemPayApi.createBankOfframpTransfer(AUTH_HEADER, BankOfframpTransferRequest(quoteId = QUOTE_ID))
+            } returns ApiResponse.Success(BankOfframpTransferResponse(result = transferResult()))
+
+            // Act
+            val actual = repository.createTransfer(userWalletId = WALLET_ID, quoteId = QUOTE_ID)
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                BankOfframpTransfer(
+                    transferId = TRANSFER_ID,
+                    depositAddress = DEPOSIT_ADDRESS,
+                    sourceAmount = BigDecimal("101.00"),
+                    destinationAmount = BigDecimal("1725.00"),
+                    expiresAt = DateTime.parse(EXPIRES_AT),
+                ).right(),
+            )
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideApiErrorModels")
+        fun `GIVEN api error WHEN createTransfer THEN the bank off-ramp error returned`(model: ApiErrorModel) =
+            runTest {
+                // Arrange
+                coEvery {
+                    requestPerformer.performRequest<Any>(userWalletId = any(), requestBlock = any())
+                } returns model.apiError.left()
+
+                // Act
+                val actual = repository.createTransfer(userWalletId = WALLET_ID, quoteId = QUOTE_ID)
+
+                // Assert
+                assertThat(actual.mapLeft(::withoutCause)).isEqualTo(model.expected.left())
+            }
+
+        @ParameterizedTest
+        @MethodSource("provideUnusableResponses")
+        fun `GIVEN response without a usable transfer WHEN createTransfer THEN unknown error`(
+            response: BankOfframpTransferResponse,
+        ) = runTest {
+            // Arrange
+            coEvery { tangemPayApi.createBankOfframpTransfer(AUTH_HEADER, any()) } returns
+                ApiResponse.Success(response)
+
+            // Act
+            val actual = repository.createTransfer(userWalletId = WALLET_ID, quoteId = QUOTE_ID)
+
+            // Assert
+            assertThat(actual.mapLeft(::withoutCause))
+                .isEqualTo(BankOfframpError.Unknown(cause = null, isOutcomeUnknown = false).left())
+        }
+
+        private fun provideApiErrorModels() = accountOfframpApiErrorModels().map { model ->
+            if (model.apiError == VisaApiError.NotFound) {
+                model.copy(
+                    expected = BankOfframpError.Unknown(
+                        cause = null,
+                        isOutcomeUnknown = false,
+                        errorCode = VisaApiError.NotFound.errorCode,
+                    ),
+                )
+            } else {
+                model
+            }
+        }
+
+        private fun provideUnusableResponses() = listOf(
+            BankOfframpTransferResponse(result = null),
+            BankOfframpTransferResponse(result = transferResult().copy(transferId = null)),
+            BankOfframpTransferResponse(result = transferResult().copy(depositAddress = " ")),
+            BankOfframpTransferResponse(result = transferResult().copy(sourceAmount = null)),
+            BankOfframpTransferResponse(result = transferResult().copy(destinationAmount = null)),
+            BankOfframpTransferResponse(result = transferResult().copy(expiresAt = null)),
+            BankOfframpTransferResponse(result = transferResult().copy(expiresAt = "tomorrow")),
+        )
+
+        private fun transferResult() = BankOfframpTransferResponse.Result(
+            transferId = TRANSFER_ID,
+            depositAddress = DEPOSIT_ADDRESS,
+            sourceAmount = BigDecimal("101.00"),
+            destinationAmount = BigDecimal("1725.00"),
+            expiresAt = EXPIRES_AT,
+        )
+    }
+
     data class ApiErrorModel(val apiError: VisaApiError, val expected: BankOfframpError)
+
+    data class InvalidQuoteModel(
+        val amount: BigDecimal,
+        val recipient: BankOfframpRecipient = BankOfframpRecipient.Saved(bankAccountId = "acc-1"),
+    )
+
+    private fun withoutCause(error: BankOfframpError): BankOfframpError {
+        return if (error is BankOfframpError.Unknown) error.copy(cause = null) else error
+    }
+
+    private fun accountOfframpApiErrorModels() = listOf(
+        ApiErrorModel(
+            apiError = VisaApiError.BankOfframpUnsupportedConfiguration,
+            expected = BankOfframpError.UnsupportedConfiguration,
+        ),
+        ApiErrorModel(
+            apiError = VisaApiError.Unknown(errorCode = 104_120_100),
+            expected = BankOfframpError.Unavailable(errorCode = 104_120_100),
+        ),
+        ApiErrorModel(
+            apiError = VisaApiError.NotFound,
+            expected = BankOfframpError.Unavailable(errorCode = VisaApiError.NotFound.errorCode),
+        ),
+        ApiErrorModel(
+            apiError = VisaApiError.Unknown(errorCode = 104_130_100),
+            expected = BankOfframpError.Unknown(cause = null, isOutcomeUnknown = false, errorCode = 104_130_100),
+        ),
+        ApiErrorModel(
+            apiError = VisaApiError.ServerUnavailable,
+            expected = BankOfframpError.Unknown(
+                cause = null,
+                isOutcomeUnknown = true,
+                errorCode = VisaApiError.ServerUnavailable.errorCode,
+            ),
+        ),
+        ApiErrorModel(
+            apiError = VisaApiError.UnknownWithoutCode,
+            expected = BankOfframpError.Unknown(
+                cause = null,
+                isOutcomeUnknown = true,
+                errorCode = VisaApiError.UnknownWithoutCode.errorCode,
+            ),
+        ),
+    )
 
     private fun consistentHash(): String = "0x" + StructuredDataEncoder(STRUCTURED_DATA)
         .hashStructuredData()
@@ -558,6 +868,9 @@ internal class DefaultBankOfframpOrderRepositoryTest {
         const val PRODUCT_INSTANCE_ID = "123e4567-e89b-12d3-a456-426614174000"
         const val BANK_ACCOUNT_ID = "7b0f7d70-ec8f-4d4d-b3f1-41f52b6f4d10"
         const val DEPOSIT_ADDRESS = "0x1234567890abcdef1234567890abcdef12345678"
+        const val QUOTE_ID = "0d1f3b5a-7c9e-4b2d-8f6a-1e3c5b7d9f0a"
+        const val TRANSFER_ID = "9e8d7c6b-5a4f-4e3d-2c1b-0a9f8e7d6c5b"
+        const val EXPIRES_AT = "2026-11-02T12:15:00Z"
 
         val STRUCTURED_DATA = """
             {
