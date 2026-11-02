@@ -47,9 +47,11 @@ internal class ConfirmResidencyModelTest : OnrampModelTestBase() {
 
         // Act
         model.state.value.primaryButtonConfig.onClick()
+        advanceUntilIdle()
 
         // Assert
         verify { router.pop() }
+        coVerify(exactly = 0) { saveCountry(any()) }
         assertThat(model.state.value.isCountrySupported).isFalse()
         model.onDestroy()
     }

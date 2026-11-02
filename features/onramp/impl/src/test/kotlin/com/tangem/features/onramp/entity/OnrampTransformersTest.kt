@@ -32,7 +32,7 @@ internal class OnrampTransformersTest {
     )
 
     @Test
-    fun `GIVEN matching countries WHEN transformed THEN available country is selected and unavailable country is marked`() {
+    fun `GIVEN supported and unsupported countries WHEN transformed THEN availability and selection are preserved`() {
         // Arrange
         val selected = country(id = "se", name = "Sweden", available = true)
         val unavailable = country(id = "no", name = "Norway", available = false)
@@ -42,16 +42,19 @@ internal class OnrampTransformersTest {
         val result = UpdateCountryItemsTransformer(
             maybeCountries = listOf(selected, unavailable).right(),
             defaultCountry = selected,
-            query = "swe",
+            query = "",
             onRetry = {},
             onCountryClick = {},
         ).transform(state)
 
         // Assert
         val content = result as CountryListUM.Content
-        assertThat(content.items).hasSize(1)
-        assertThat(content.items.single()).isInstanceOf(CountryItemState.WithContent.Content::class.java)
-        assertThat((content.items.single() as CountryItemState.WithContent.Content).isSelected).isTrue()
+        assertThat(content.searchBarUM).isEqualTo(searchBar)
+        val selectedItem = content.items.first() as CountryItemState.WithContent.Content
+        assertThat(content.items).containsExactly(
+            CountryItemState.WithContent.Content("se", "", "Sweden", true, selectedItem.onClick),
+            CountryItemState.WithContent.Unavailable("no", "", "Norway"),
+        ).inOrder()
     }
 
     @Test
@@ -104,10 +107,9 @@ internal class OnrampTransformersTest {
         val active = UpdateSearchBarActiveStateTransformer(false, TextReference.EMPTY).transform(queried)
 
         // Assert
-        assertThat(queried.query).isEqualTo("new")
-        assertThat(cleared.query).isEmpty()
-        assertThat(cleared.isActive).isFalse()
-        assertThat(active.isActive).isFalse()
+        assertThat(queried).isEqualTo(searchBar.copy(query = "new"))
+        assertThat(cleared).isEqualTo(searchBar.copy(query = "", isActive = false))
+        assertThat(active).isEqualTo(searchBar.copy(query = "new", isActive = false))
     }
 
     private fun country(id: String, name: String, available: Boolean) = OnrampCountry(

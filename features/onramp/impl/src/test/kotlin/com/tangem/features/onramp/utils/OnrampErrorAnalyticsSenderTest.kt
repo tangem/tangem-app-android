@@ -3,13 +3,18 @@ package com.tangem.features.onramp.utils
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.error.OnrampError
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.Called
 import io.mockk.clearMocks
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import java.math.BigDecimal
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class OnrampErrorAnalyticsSenderTest {
 
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
@@ -64,15 +69,39 @@ internal class OnrampErrorAnalyticsSenderTest {
         }
     }
 
-    @Test
-    fun `GIVEN non analytics error WHEN send THEN nothing is sent`() {
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN non analytics error WHEN send THEN nothing is sent`(error: OnrampError) {
         // Act
         analyticsEventHandler.sendOnrampErrorEvent(
-            error = OnrampError.PairsNotFound,
+            error = error,
             tokenSymbol = "BTC",
         )
 
         // Assert
         verify { analyticsEventHandler wasNot Called }
+    }
+
+    private fun provideTestModels() = listOf(
+        OnrampError.PairsNotFound,
+        OnrampError.AlreadyHandledTransaction,
+        OnrampError.RedirectError.VerificationFailed,
+        OnrampError.RedirectError.WrongRequestId,
+        OnrampError.AmountError.TooBigError(BigDecimal.TEN),
+        OnrampError.AmountError.TooSmallError(BigDecimal.ONE),
+    )
+
+    @Test
+    fun `GIVEN null domain description WHEN send THEN app error uses empty description`() {
+        // Arrange
+        val error = OnrampError.DomainError(null)
+
+        // Act
+        analyticsEventHandler.sendOnrampErrorEvent(error, "BTC")
+
+        // Assert
+        verify(exactly = 1) {
+            analyticsEventHandler.send(OnrampAnalyticsEvent.AppErrors("BTC", ""))
+        }
     }
 }
