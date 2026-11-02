@@ -36,13 +36,11 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -234,15 +232,14 @@ internal class StartTangemPayOnboardingUseCaseTest {
         }
 
     @Test
-    fun `GIVEN card still activating after 15 minutes WHEN polling stops THEN active account keeps its result`() =
+    fun `GIVEN account active after 40 minutes WHEN polling ends THEN late result kept and card polling stopped`() =
         runTest {
             // Arrange
             coEvery { activateMoneyAccountUseCase(USER_WALLET_ID) } returns CREDENTIALS.right()
             coEvery { createOnboardingOrderUseCase(any(), any(), any()) } returns Unit.right()
             every { pollTangemPayAccountStatusesUseCase.states(USER_WALLET_ID) } returns flow {
-                delay(2.minutes)
+                delay(40.minutes)
                 emit(accounts(paymentAccount = CARD_ISSUING, moneyAccount = MoneyAccountActivationState.Completed))
-                awaitCancellation()
             }
             val useCase = createUseCase()
 
@@ -261,19 +258,18 @@ internal class StartTangemPayOnboardingUseCaseTest {
                         product = TangemPayAnalyticsEvents.Product.ACCOUNT,
                         result = ActivationResult.ACTIVE,
                         failureReason = null,
-                        sinceOrder = 2.minutes,
+                        sinceOrder = 40.minutes,
                         plan = null,
                     ),
                     TangemPayAnalyticsEvents.ProductActivationFinished(
                         product = TangemPayAnalyticsEvents.Product.CARD,
                         result = ActivationResult.POLLING_STOPPED,
                         failureReason = null,
-                        sinceOrder = 15.minutes,
+                        sinceOrder = 40.minutes,
                         plan = null,
                     ),
                 )
                 .inOrder()
-            assertThat(currentTime).isEqualTo(15.minutes.inWholeMilliseconds)
         }
 
     @Test

@@ -17,8 +17,6 @@ import com.tangem.domain.tangempay.TangemPayAnalyticsEvents.SignatureResult
 import com.tangem.domain.visa.model.MoneyAccountDepositCredentials
 import com.tangem.utils.coroutines.AppCoroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.TimeSource
 
 class StartTangemPayOnboardingUseCase(
@@ -74,10 +72,8 @@ class StartTangemPayOnboardingUseCase(
     }
 
     private suspend fun trackActivation(userWalletId: UserWalletId, tracker: ProductActivationTracker) {
-        withTimeoutOrNull(ACTIVATION_POLLING_TIMEOUT) {
-            pollTangemPayAccountStatusesUseCase.states(userWalletId).collect { state ->
-                tracker.onState(state).forEach(analytics::send)
-            }
+        pollTangemPayAccountStatusesUseCase.states(userWalletId).collect { state ->
+            tracker.onState(state).forEach(analytics::send)
         }
         tracker.onPollingStopped().forEach(analytics::send)
     }
@@ -118,9 +114,5 @@ class StartTangemPayOnboardingUseCase(
 
     private fun sendSignatureFinished(result: SignatureResult, walletType: TangemPayAnalyticsEvents.WalletType) {
         analytics.send(TangemPayAnalyticsEvents.WalletSignatureFinished(result = result, walletType = walletType))
-    }
-
-    private companion object {
-        val ACTIVATION_POLLING_TIMEOUT = 15.minutes
     }
 }
