@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -45,8 +46,9 @@ import kotlinx.coroutines.launch
  *
  * [Figma](https://www.figma.com/design/dNvLAk1K7ZQ35oWN2aoAAY/Polymarket?node-id=11204-151391)
  *
- * Swipe, item taps and arrows all settle a value in the center before notifying the caller
- * and providing a light haptic tick. External updates and reselecting the same value are silent.
+ * Each change of the value nearest the center during scrolling provides a light haptic tick.
+ * Swipe, item taps and arrows notify the caller only after settling a value in the center.
+ * External updates and reselecting the same value are silent.
  * The caller owns the committed selection, item order and labels. External selection changes
  * reposition the row without notifying the caller. Missing selections are non-interactive until
  * the caller supplies a valid ID; an empty list never invents a value.
@@ -95,7 +97,6 @@ private fun CounterContent(
     val selection = remember { CounterSelection() }
     val currentInput by rememberUpdatedState(input)
     val onSelection by rememberUpdatedState(onSelectionChange)
-    val haptic by rememberUpdatedState(LocalHapticManager.current)
     val scope = rememberCoroutineScope()
     var scrollJob by remember { mutableStateOf<Job?>(null) }
 
@@ -115,12 +116,10 @@ private fun CounterContent(
             )
             if (selection.isSynchronized(currentInput) && isSettled) currentInput to pager.settledPage else null
         }.filterNotNull().collect { (settledInput, index) ->
-            selection.selection(settledInput, index)?.let { id ->
-                haptic.perform(TangemHapticEffect.View.SegmentTick)
-                onSelection(id)
-            }
+            selection.selection(settledInput, index)?.let(onSelection)
         }
     }
+    CounterHapticFeedback(pager = pager, isEnabled = selection.isSynchronized(input) && input.selectedIndex >= 0)
 
     val onSelect: (Int) -> Unit = { index ->
         if (index in items.indices && input.selectedIndex >= 0) {
@@ -155,6 +154,22 @@ private fun CounterContent(
             isEnabled = input.selectedIndex >= 0 && pager.targetPage < items.lastIndex,
             onClick = { onSelect(pager.targetPage + 1) },
         )
+    }
+}
+
+@Composable
+private fun CounterHapticFeedback(pager: PagerState, isEnabled: Boolean) {
+    val isHapticEnabled by rememberUpdatedState(isEnabled)
+    val haptic by rememberUpdatedState(LocalHapticManager.current)
+    LaunchedEffect(pager) {
+        var previousPage = pager.currentPage
+        snapshotFlow { pager.currentPage to (isHapticEnabled && pager.isScrollInProgress) }
+            .collect { (page, isScrolling) ->
+                if (isScrolling && page != previousPage) {
+                    haptic.perform(TangemHapticEffect.View.SegmentTick)
+                }
+                previousPage = page
+            }
     }
 }
 
