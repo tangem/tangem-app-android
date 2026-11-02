@@ -1030,7 +1030,7 @@ internal class TangemPayDetailsModelTest {
             tangemPayWithdrawRepository = tangemPayWithdrawRepository,
             sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
             paymentAccountStatusFetcher = mockk(relaxed = true),
-            produceTangemPayInitialDataUseCase = mockk(relaxed = true),
+            renewTangemPaySessionUseCase = mockk(relaxed = true),
             onboardingRepository = mockk(relaxed = true),
             getCustomerOffers = getCustomerOffers,
             getBankCredentialsUseCase = getBankCredentialsUseCase,

@@ -28,7 +28,7 @@ import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBankCredentialsUseCase
-import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
+import com.tangem.domain.moneyaccount.usecase.RenewTangemPaySessionUseCase
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.features.moneyaccount.details.addfunds.options.MoneyAccountAddFundsOptionsListener
@@ -56,7 +56,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     private val getMoneyAccountBankCredentialsUseCase: GetMoneyAccountBankCredentialsUseCase,
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
-    private val produceTangemPayInitialDataUseCase: ProduceTangemPayInitialDataUseCase,
+    private val renewTangemPaySessionUseCase: RenewTangemPaySessionUseCase,
     private val uiMessageSender: UiMessageSender,
 ) : Model(), MoneyAccountAddFundsOptionsListener {
 
@@ -113,7 +113,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     private fun onRenewSession() {
         updateRenewSessionProgress(isLoading = true)
         modelScope.launch {
-            produceTangemPayInitialDataUseCase(params.userWalletId)
+            renewTangemPaySessionUseCase(params.userWalletId)
                 .onRight { moneyAccountStatusFetcher(params.userWalletId) }
                 .onLeft { uiMessageSender.send(SnackbarMessage(resourceReference(R.string.common_error))) }
             updateRenewSessionProgress(isLoading = false)
