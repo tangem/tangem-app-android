@@ -86,6 +86,7 @@ class GetFeeForGaslessUseCase(
                             tokenCurrencyStatus = nonPortfolioFeeToken,
                             nativeTransactionData = transactionData,
                             sentAmount = sentAmount,
+                            approval = approval,
                         ).bind()
                         else -> evmGaslessFeeResolver.resolveWithAutoFeeToken(
                             userWallet = userWallet,

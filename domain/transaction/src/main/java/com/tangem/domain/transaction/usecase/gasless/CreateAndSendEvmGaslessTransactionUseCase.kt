@@ -128,6 +128,7 @@ class CreateAndSendEvmGaslessTransactionUseCase(
             nonce = gaslessContractNonce,
             plan = fee.gaslessFeePlan,
             withdrawGasLimit = fee.withdrawGasLimit,
+            approveGasLimit = fee.approveGasLimit,
         )
 
         val chainId = gaslessTransactionRepository.getChainIdForNetwork(currency.network)
@@ -408,12 +409,14 @@ class CreateAndSendEvmGaslessTransactionUseCase(
          * - [GaslessFeePlan.NativePay] → error: native-pay fees must never reach this use case
          *   (they are handled by the standard send path).
          */
+        @Suppress("LongParameterList")
         internal fun assembleGaslessPayload(
             mainTx: GaslessTransactionData.Transaction,
             feeObj: GaslessTransactionData.Fee,
             nonce: BigInteger,
             plan: GaslessFeePlan?,
             withdrawGasLimit: BigInteger?,
+            approveGasLimit: BigInteger?,
         ): GaslessPayload = when (plan) {
             is GaslessFeePlan.TokenPayWithYieldWithdraw -> GaslessPayload.Batch(
                 GaslessBatchTransactionData(
@@ -442,7 +445,8 @@ class CreateAndSendEvmGaslessTransactionUseCase(
                         GaslessTransactionData.Transaction(
                             to = plan.approval.approvalTransaction.destinationAddress,
                             value = BigInteger.ZERO,
-                            gasLimit = plan.approveGasLimit,
+                            gasLimit = approveGasLimit
+                                ?: error("Approve gas limit is required for an approve batch"),
                             data = (plan.approval.approvalTransaction.extras as? EthereumTransactionExtras)
                                 ?.callData?.data
                                 ?: error("Approve call data is required"),

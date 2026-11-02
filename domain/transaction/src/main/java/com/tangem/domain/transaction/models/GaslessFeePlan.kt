@@ -25,7 +25,6 @@ sealed interface GaslessFeePlan {
         val feeToken: CryptoCurrency.Token,
         val fee: Fee.Ethereum.TokenCurrency,
         val approval: GaslessApproval,
-        val approveGasLimit: BigInteger,
     ) : GaslessFeePlan
 
     /**

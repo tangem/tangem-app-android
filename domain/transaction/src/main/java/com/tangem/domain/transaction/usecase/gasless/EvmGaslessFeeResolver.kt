@@ -154,17 +154,18 @@ class EvmGaslessFeeResolver(
             approval = approval,
         ).bind()
 
-        // Only the yield path needs a plan: without an active position the fee token is spent straight
-        // from the wallet balance, and there is nothing to withdraw first.
-        if (isYieldActive) {
+        // Only the yield and the approve paths need a plan: otherwise the fee token is spent straight
+        // from the wallet balance, and nothing has to run before the main transaction.
+        if (isYieldActive || approval != null) {
             attachGaslessFeePlan(
                 resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
                 userWallet = userWallet,
                 tokenStatus = tokenCurrencyStatus,
                 tokenFeeExtended = tokenFeeExtended,
                 transactionData = transactionData,
-                isYieldActive = true,
+                isYieldActive = isYieldActive,
                 sentAmount = sentAmount,
+                approval = approval,
             ).copy(nativeFee = nativeInitialTxFee)
         } else {
             tokenFeeExtended.copy(nativeFee = nativeInitialTxFee)
@@ -303,19 +304,15 @@ class EvmGaslessFeeResolver(
             approval = approval,
         ).bind()
 
-        // calculateTokenFee already set the approve plan; the attachment would replace it with a plain TokenPay
-        if (approval != null) {
-            tokenFeeExtended
-        } else {
-            attachGaslessFeePlan(
-                resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
-                userWallet = userWallet,
-                tokenStatus = tokenForPayFeeStatus,
-                tokenFeeExtended = tokenFeeExtended,
-                transactionData = transactionData,
-                isYieldActive = isYieldActive,
-                sentAmount = sentAmount,
-            )
-        }
+        attachGaslessFeePlan(
+            resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
+            userWallet = userWallet,
+            tokenStatus = tokenForPayFeeStatus,
+            tokenFeeExtended = tokenFeeExtended,
+            transactionData = transactionData,
+            isYieldActive = isYieldActive,
+            sentAmount = sentAmount,
+            approval = approval,
+        )
     }
 }
