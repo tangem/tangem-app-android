@@ -53,8 +53,8 @@ fun BaseTestCase.setTangemPayBankOfframpTransferScenarios() {
     }
 }
 
-fun BaseTestCase.openTangemPayWithdrawHub() {
-    openTangemPay()
+fun BaseTestCase.openTangemPayWithdrawHub(accessCode: String = "") {
+    openTangemPay(accessCode)
     openWithdrawHubFromPaymentAccount()
 }
 
