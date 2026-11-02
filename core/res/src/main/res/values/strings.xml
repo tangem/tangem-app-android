@@ -291,6 +291,9 @@
   <string name="collectibles_account_collection_row_subtitle">My collection</string>
   <string name="collectibles_account_reconnect_subtitle">Reconnect required</string>
   <string name="collectibles_account_withdraw">Withdrawal</string>
+  <string name="collectibles_auto_buyback_message">Your common card was bought back instantly. %s is in your balance</string>
+  <string name="collectibles_auto_buyback_open_again_button">Open again for %s</string>
+  <string name="collectibles_auto_buyback_title">Buyback complete</string>
   <string name="collectibles_confirm_order_approve_button">Approve</string>
   <string name="collectibles_confirm_order_confirming_transaction_button">Confirming transaction...</string>
   <string name="collectibles_confirm_order_generating_pack_button">Generating pack...</string>
