@@ -109,6 +109,7 @@ import com.tangem.domain.tangempay.TangemPayWithdrawWithSwapUseCase
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
+import com.tangem.domain.transaction.combineTransactionFees
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.models.TransactionFeeExtended
@@ -3796,43 +3797,6 @@ internal class SwapModel @Inject constructor(
                 },
             )
             combineTransactionFees(integratedApprovalData.approvalFee, swapTxFee)
-        }
-    }
-
-    /**
-     * Per-bucket sum of two EVM [TransactionFee]s — used to present the integrated
-     * approve+swap total to the user. Mirrors `GiveApprovalModel.estimateFeeForResetApproval`'s
-     * sum strategy (same gas-price, summed gas-limit). Non-EVM fees fall back to the swap fee
-     * alone since the integrated path is currently EVM-only (DEX, non-Solana).
-     */
-    private fun combineTransactionFees(approvalFee: TransactionFee, swapFee: TransactionFee): TransactionFee {
-        return when {
-            approvalFee is TransactionFee.Choosable && swapFee is TransactionFee.Choosable ->
-                TransactionFee.Choosable(
-                    minimum = sumEvmFees(approvalFee.minimum, swapFee.minimum),
-                    normal = sumEvmFees(approvalFee.normal, swapFee.normal),
-                    priority = sumEvmFees(approvalFee.priority, swapFee.priority),
-                )
-            else -> TransactionFee.Single(normal = sumEvmFees(approvalFee.normal, swapFee.normal))
-        }
-    }
-
-    /**
-     * Sums two [Fee.Ethereum] fees as approval + swap. Adds gas limits (same gas price) and
-     * recomputes the on-chain amount. For non-Ethereum fees returns [right] unchanged — the
-     * integrated approve+swap path is EVM-only today.
-     */
-    private fun sumEvmFees(left: Fee, right: Fee): Fee {
-        if (left !is Fee.Ethereum || right !is Fee.Ethereum) return right
-        val leftValue = left.amount.value ?: return right
-        val rightValue = right.amount.value ?: return right
-        val combinedValue = leftValue + rightValue
-        val combinedGasLimit = left.gasLimit + right.gasLimit
-        val combinedAmount = right.amount.copy(value = combinedValue)
-        return when (right) {
-            is Fee.Ethereum.EIP1559 -> right.copy(amount = combinedAmount, gasLimit = combinedGasLimit)
-            is Fee.Ethereum.Legacy -> right.copy(amount = combinedAmount, gasLimit = combinedGasLimit)
-            is Fee.Ethereum.TokenCurrency -> right
         }
     }
 
