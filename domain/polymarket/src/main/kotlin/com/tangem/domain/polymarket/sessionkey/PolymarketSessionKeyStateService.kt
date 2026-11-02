@@ -19,7 +19,6 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.flow.shareIn
@@ -48,23 +47,37 @@ class PolymarketSessionKeyStateService(
         wallets.computeIfAbsent(userWalletId) { WalletState(userWalletId) }.overview
 
     fun refresh(userWalletId: UserWalletId) {
-        wallets[userWalletId]?.refreshes?.tryEmit(Unit)
+        val refreshes = wallets[userWalletId]?.refreshes
+        if (refreshes != null && refreshes.subscriptionCount.value > 0) {
+            refreshes.tryEmit(Unit)
+            return
+        }
+        scope.launch {
+            reconcile(userWalletId).onLeft { error ->
+                TangemLogger.e("Polymarket session keys of an unobserved wallet could not be reconciled: $error")
+            }
+        }
     }
 
     private inner class WalletState(userWalletId: UserWalletId) {
 
         val refreshes = MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
-        val overview: SharedFlow<SessionKeyOverviewResult> = flow {
+        val overview: SharedFlow<SessionKeyOverviewResult> = channelFlow {
             val cycle = ReconcileCycle()
-            emitAll(
-                reconcileLoop(userWalletId, refreshes, cycle).retryWhen { cause, attempt ->
+            val requested = Channel<Unit>(Channel.CONFLATED)
+            launch(start = CoroutineStart.UNDISPATCHED) {
+                refreshes.collect { requested.send(Unit) }
+            }
+            reconcileLoop(userWalletId, requested, cycle)
+                .retryWhen { cause, _ ->
                     if (cause is CancellationException && !currentCoroutineContext().isActive) throw cause
-                    if (attempt == 0L) TangemLogger.e("Polymarket session key state loop failed, restarting it", cause)
-                    delay(backoffDelay(attempt))
+                    val restart = cycle.takeRestart()
+                    if (restart == 0) TangemLogger.e("Polymarket session key state loop failed, restarting it", cause)
+                    delay(backoffDelay(restart))
                     true
-                },
-            )
+                }
+                .collect { send(it) }
         }
             .distinctUntilChanged()
             .shareIn(
@@ -79,19 +92,15 @@ class PolymarketSessionKeyStateService(
 
     private fun reconcileLoop(
         userWalletId: UserWalletId,
-        refreshes: Flow<Unit>,
+        requested: Channel<Unit>,
         cycle: ReconcileCycle,
-    ): Flow<SessionKeyOverviewResult> = channelFlow {
-        val requested = Channel<Unit>(Channel.CONFLATED)
-        launch(start = CoroutineStart.UNDISPATCHED) {
-            refreshes.collect { requested.send(Unit) }
-        }
+    ): Flow<SessionKeyOverviewResult> = flow {
         while (true) {
             val overview = reconcile(userWalletId)
-            if (cycle.accept(overview, now = clock.instant())) send(overview)
+            if (cycle.accept(overview, now = clock.instant())) emit(overview)
             val isPolling = cycle.startWait()
             val isRefreshed = awaitRefresh(requested, timeout = idleTimeout(cycle, isPolling))
-            cycle.endWait(isPolling = isPolling, isRefreshed = isRefreshed)
+            cycle.endWait(isRefreshed = isRefreshed)
         }
     }
 
@@ -106,7 +115,7 @@ class PolymarketSessionKeyStateService(
     private fun idleTimeout(cycle: ReconcileCycle, isPolling: Boolean): Duration? {
         if (isPolling) return PolymarketSessionKeyRelay.POLL_INTERVAL
         val retry = cycle.takeElapsedChangeRetry() ?: return timeUntil(cycle.nextChangeAt)
-        return backoffDelay(retry.toLong())
+        return backoffDelay(retry)
     }
 
     private fun timeUntil(moment: Instant?): Duration? {
@@ -115,8 +124,8 @@ class PolymarketSessionKeyStateService(
         return (moment.toEpochMilli() - now.toEpochMilli()).milliseconds.coerceAtLeast(Duration.ZERO)
     }
 
-    private fun backoffDelay(attempt: Long): Duration {
-        val doublings = attempt.coerceAtMost(MAX_DOUBLINGS.toLong()).toInt()
+    private fun backoffDelay(attempt: Int): Duration {
+        val doublings = attempt.coerceAtMost(MAX_DOUBLINGS)
         return (PolymarketSessionKeyRelay.POLL_INTERVAL * (1 shl doublings)).coerceAtMost(MAX_BACKOFF)
     }
 
@@ -127,24 +136,28 @@ class PolymarketSessionKeyStateService(
 
         private var hasLoaded = false
         private var isSettling = false
-        private var isSettlePoll = false
         private var isElapsedChangeFailure = false
+        private var isFailureLogged = false
         private var polls = 0
         private var elapsedChangeRetries = 0
+        private var restarts = 0
 
         fun accept(overview: SessionKeyOverviewResult, now: Instant): Boolean = overview.fold(
             ifLeft = { error ->
                 if (nextChangeAt?.let { it <= now } == true) isElapsedChangeFailure = true
                 nextChangeAt = nextChangeAt?.takeIf { it > now }
-                if (hasLoaded && !isSettlePoll && elapsedChangeRetries == 0) {
+                if (hasLoaded && !isFailureLogged) {
                     TangemLogger.e("Polymarket session keys could not be refreshed, keeping the last state: $error")
+                    isFailureLogged = true
                 }
                 !hasLoaded
             },
             ifRight = { loaded ->
                 hasLoaded = true
                 isElapsedChangeFailure = false
+                isFailureLogged = false
                 elapsedChangeRetries = 0
+                restarts = 0
                 isSettling = loaded.wallet.sessionKeys.any { key -> key.status.isSettling() }
                 nextChangeAt = loaded.assessment.nextChangeAt
                 true
@@ -165,9 +178,10 @@ class PolymarketSessionKeyStateService(
             return elapsedChangeRetries++
         }
 
-        fun endWait(isPolling: Boolean, isRefreshed: Boolean) {
+        fun takeRestart(): Int = restarts++
+
+        fun endWait(isRefreshed: Boolean) {
             polls = if (isRefreshed) 0 else polls + 1
-            isSettlePoll = isPolling && !isRefreshed
         }
     }
 

@@ -260,7 +260,6 @@ internal abstract class PlacePredictionModelTestBase {
                 placeOrder = placeOrderUseCase,
                 router = signingRouter,
                 stateService = mockk(relaxed = true),
-                reconciliationScope = testScope.backgroundScope,
             ),
             featureToggles = featureToggles,
             awaitDelayedPredictionOrderUseCase = awaitDelayedOrderUseCase,

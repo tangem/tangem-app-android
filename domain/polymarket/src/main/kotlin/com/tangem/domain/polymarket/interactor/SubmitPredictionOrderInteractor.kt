@@ -13,15 +13,12 @@ import com.tangem.domain.polymarket.model.PredictionPlaceOrderResult
 import com.tangem.domain.polymarket.sessionkey.PolymarketOrderSigningRouter
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStateService
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
 class SubmitPredictionOrderInteractor(
     private val signOrder: SignPredictionOrderInteractor,
     private val placeOrder: PlacePredictionOrderUseCase,
     private val router: PolymarketOrderSigningRouter,
     private val stateService: PolymarketSessionKeyStateService,
-    private val reconciliationScope: CoroutineScope,
 ) {
 
     /**
@@ -73,7 +70,6 @@ class SubmitPredictionOrderInteractor(
 
             router.reportRefused(addresses = request.addresses, identity = route.identity, error = error)
             stateService.refresh(request.addresses.userWalletId)
-            reconciliationScope.launch { router.reconcile(addresses = request.addresses) }
             return submit(request = request, route = PredictionOrderSigningRoute.Owner, onStep = onStep)
         }
 
