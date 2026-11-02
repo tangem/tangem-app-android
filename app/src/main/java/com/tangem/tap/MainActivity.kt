@@ -65,6 +65,7 @@ import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.utils.DeepLinkFactory
 import com.tangem.tap.routing.utils.DeepLinkFeatureToggles
 import com.tangem.tap.routing.utils.DeeplinkSource
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
 import dagger.Lazy
@@ -140,6 +141,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     internal lateinit var reportCardLinkedWalletsBackupUseCase: ReportCardLinkedWalletsBackupUseCase
+
+    @Inject
+    internal lateinit var appCoroutineScope: AppCoroutineScope
 
     @Inject
     internal lateinit var userWalletsListRepository: UserWalletsListRepository
@@ -476,7 +480,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
         userWalletsListRepository.userWallets
             .filterNotNull()
-            .onEach { userWallets -> reportCardLinkedWalletsBackupUseCase(userWallets) }
+            .onEach { userWallets -> appCoroutineScope.launch { reportCardLinkedWalletsBackupUseCase(userWallets) } }
             .launchIn(lifecycleScope)
     }
 
