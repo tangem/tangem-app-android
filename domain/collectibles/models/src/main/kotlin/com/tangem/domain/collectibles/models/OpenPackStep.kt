@@ -1,5 +1,7 @@
 package com.tangem.domain.collectibles.models
 
+import java.math.BigDecimal
+
 sealed interface OpenPackStep {
 
     data object NotStarted : OpenPackStep
@@ -11,6 +13,8 @@ sealed interface OpenPackStep {
     data object Opening : OpenPackStep
 
     data class Opened(val pack: OpenedCollectiblePack) : OpenPackStep
+
+    data class AutoBuybacked(val amount: BigDecimal) : OpenPackStep
 
     sealed interface Failed : OpenPackStep {
 

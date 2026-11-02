@@ -13,7 +13,6 @@ import com.tangem.domain.collectibles.models.CollectibleTxStatus
 import com.tangem.domain.collectibles.models.GeneratePurchaseTxParams
 import com.tangem.domain.collectibles.models.OpenPackRequest
 import com.tangem.domain.collectibles.models.OpenPackStep
-import com.tangem.domain.collectibles.models.OpenedCollectiblePack
 import com.tangem.domain.collectibles.repository.CollectiblesRepository
 import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
 import com.tangem.domain.models.StatusSource
@@ -70,10 +69,9 @@ class OpenCollectiblePackUseCase @Inject constructor(
             openPack(userWallet, txId)
         }
 
-        // Any outcome may have moved money; refreshed alongside, so the reveal does not wait for it
         coroutineScope {
             launch { accountStatusFetcher(CollectiblesAccountStatusFetcher.Params(userWallet.walletId)) }
-            emit(result.fold(ifLeft = { it }, ifRight = { OpenPackStep.Opened(it) }))
+            emit(result.getOrElse { it })
         }
     }
 
@@ -171,27 +169,29 @@ class OpenCollectiblePackUseCase @Inject constructor(
         }
     }
 
-    /** The opening answers with the card, so it is shown at once. */
-    private suspend fun Raise<OpenPackStep.Failed>.openPack(
-        userWallet: UserWallet,
-        txId: String,
-    ): OpenedCollectiblePack {
+    private suspend fun Raise<OpenPackStep.Failed>.openPack(userWallet: UserWallet, txId: String): OpenPackStep {
         val state = runSuspendCatching { collectiblesRepository.openPack(userWallet.walletId, txId) }
             .getOrElse { fail(OpenPackStep.Failed.PackUnopened(txId), cause = it) }
 
-        return state.pack ?: run {
+        if (state.status == CollectibleTxStatus.AUTO_BUYBACKED) {
+            val amount = state.autoBuybackAmount
+                ?: fail(OpenPackStep.Failed.Unexpected, cause = "auto-buybacked without a payout")
+            return OpenPackStep.AutoBuybacked(amount)
+        }
+
+        val pack = state.pack ?: run {
             failIfClosed(txId, state.status)
             fail(OpenPackStep.Failed.PackUnopened(txId), cause = "no nftWon in ${state.status}")
         }
+
+        return OpenPackStep.Opened(pack)
     }
 
-    /** A status that leaves no pack to open ends the flow; any other one goes on. */
     private fun Raise<OpenPackStep.Failed>.failIfClosed(txId: String, status: CollectibleTxStatus) {
         when (status) {
             CollectibleTxStatus.EXPIRED -> fail(OpenPackStep.Failed.Expired, cause = status)
             CollectibleTxStatus.REFUNDED -> fail(OpenPackStep.Failed.Refunded, cause = status)
             CollectibleTxStatus.PAUSED -> fail(OpenPackStep.Failed.PackUnopened(txId), cause = status)
-            // TODO turbo mode: an auto-sold pack is a result of its own, not a failure
             CollectibleTxStatus.AUTO_BUYBACKED,
             CollectibleTxStatus.MANUALLY_BUYBACKED,
             -> fail(OpenPackStep.Failed.Unexpected, cause = status)
