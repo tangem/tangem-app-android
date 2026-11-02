@@ -11,9 +11,6 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 
 internal class DefaultPredictionPositionsValueProducer @AssistedInject constructor(
@@ -27,11 +24,7 @@ internal class DefaultPredictionPositionsValueProducer @AssistedInject construct
         get() = PredictionPositionsValue.Unknown.some()
 
     override fun produce(): Flow<PredictionPositionsValue> {
-        return flow {
-            emit(store.getSyncOrNull(userWalletId = params.userWalletId) ?: PredictionPositionsValue.Unknown)
-            emitAll(store.get(userWalletId = params.userWalletId))
-        }
-            .distinctUntilChanged()
+        return store.get(userWalletId = params.userWalletId)
             .flowOn(dispatchers.default)
     }
 

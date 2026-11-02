@@ -19,6 +19,7 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
+import com.tangem.domain.polymarket.flow.PredictionPositionsValueFetcher
 import com.tangem.domain.polymarket.model.PredictionCollateral
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
@@ -70,6 +71,7 @@ class WalletBalanceFetcher internal constructor(
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
     private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
+    private val predictionPositionsValueFetcher: PredictionPositionsValueFetcher,
     private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
     private val moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
     private val polymarketFeatureToggles: PolymarketFeatureToggles,
@@ -95,6 +97,7 @@ class WalletBalanceFetcher internal constructor(
         paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
         moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
         predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
+        predictionPositionsValueFetcher: PredictionPositionsValueFetcher,
         collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
         moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
         polymarketFeatureToggles: PolymarketFeatureToggles,
@@ -117,6 +120,7 @@ class WalletBalanceFetcher internal constructor(
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
         moneyAccountStatusFetcher = moneyAccountStatusFetcher,
         predictionAccountStatusFetcher = predictionAccountStatusFetcher,
+        predictionPositionsValueFetcher = predictionPositionsValueFetcher,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
         moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
         polymarketFeatureToggles = polymarketFeatureToggles,
@@ -142,6 +146,7 @@ class WalletBalanceFetcher internal constructor(
         paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
         moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
         predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
+        predictionPositionsValueFetcher: PredictionPositionsValueFetcher,
         collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
         moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
         polymarketFeatureToggles: PolymarketFeatureToggles,
@@ -171,6 +176,7 @@ class WalletBalanceFetcher internal constructor(
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
         moneyAccountStatusFetcher = moneyAccountStatusFetcher,
         predictionAccountStatusFetcher = predictionAccountStatusFetcher,
+        predictionPositionsValueFetcher = predictionPositionsValueFetcher,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
         moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
         polymarketFeatureToggles = polymarketFeatureToggles,
@@ -240,6 +246,11 @@ class WalletBalanceFetcher internal constructor(
                 launch {
                     predictionAccountStatusFetcher.invoke(
                         PredictionAccountStatusFetcher.Params(userWalletId = userWalletId),
+                    )
+                }
+                launch {
+                    predictionPositionsValueFetcher.invoke(
+                        PredictionPositionsValueFetcher.Params(userWalletId = userWalletId),
                     )
                 }
             }
