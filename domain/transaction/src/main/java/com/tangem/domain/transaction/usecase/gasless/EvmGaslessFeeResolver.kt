@@ -16,6 +16,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.GaslessYieldRepository
+import com.tangem.domain.transaction.combineTransactionFees
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
 import com.tangem.domain.transaction.models.GaslessApproval
@@ -135,6 +136,14 @@ class EvmGaslessFeeResolver(
                 error = "only Fee.Ethereum supported, but was ${initialTxFee.normal::class.qualifiedName}",
             )
 
+        val approvalNativeFee = approval?.let { approval ->
+            tokenFeeCalculator.calculateInitialFee(
+                userWallet = userWallet,
+                network = network,
+                walletManager = walletManager,
+                transactionData = approval.approvalTransaction,
+            ).bind()
+        }
         val nativeInitialTxFee = calculateNativeFee(
             userWallet = userWallet,
             network = network,
@@ -142,7 +151,7 @@ class EvmGaslessFeeResolver(
             nativeTransactionData = nativeTransactionData,
             transactionData = transactionData,
             initialFee = initialTxFee,
-        )
+        ).withApprovalFee(approvalNativeFee)
 
         val tokenFeeExtended = tokenFeeCalculator.calculateTokenFee(
             walletManager = walletManager,
@@ -245,7 +254,7 @@ class EvmGaslessFeeResolver(
                 transactionData = transactionData,
                 sentAmount = sentAmount,
                 approval = approval,
-            ).map { it.copy(nativeFee = nativeInitialFee) }.getOrElse { error ->
+            ).map { it.copy(nativeFee = nativeInitialFee.withApprovalFee(approvalNativeFee)) }.getOrElse { error ->
                 when (error) {
                     GaslessError.NotEnoughFunds,
                     GaslessError.YieldBalanceUnavailable,
@@ -314,5 +323,10 @@ class EvmGaslessFeeResolver(
             sentAmount = sentAmount,
             approval = approval,
         )
+    }
+
+    /** Paid in the native coin, the approve is a separate transaction the native balance has to cover too. */
+    private fun TransactionFee.withApprovalFee(approvalFee: TransactionFee?): TransactionFee {
+        return approvalFee?.let { combineTransactionFees(approvalFee = it, swapFee = this) } ?: this
     }
 }
