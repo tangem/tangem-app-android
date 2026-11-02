@@ -13,6 +13,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBankCredentialsUseCase
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.moneyaccount.details.impl.R
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -20,6 +21,7 @@ import com.tangem.test.mock.pay.MockBankCredentials
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
@@ -42,10 +44,12 @@ internal class MoneyAccountAddFundsOptionsModelTest {
     private val listener: MoneyAccountAddFundsOptionsListener = mockk(relaxed = true)
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val getMoneyAccountBankCredentialsUseCase: GetMoneyAccountBankCredentialsUseCase = mockk()
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(listener, analytics, getMoneyAccountBankCredentialsUseCase)
+        clearMocks(listener, analytics, getMoneyAccountBankCredentialsUseCase, moneyAccountFeatureToggles)
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns false
     }
 
     @Test
@@ -62,7 +66,7 @@ internal class MoneyAccountAddFundsOptionsModelTest {
     @MethodSource("provideMethodModels")
     fun `GIVEN option WHEN clicked THEN its add funds method reported`(model: MethodModel) = runTest {
         // Arrange
-        coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId) } returns CREDENTIALS.right()
+        coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId, false) } returns listOf(CREDENTIALS).right()
         val optionsModel = createModel(depositAddress = DEPOSIT_ADDRESS)
 
         // Act
@@ -118,7 +122,7 @@ internal class MoneyAccountAddFundsOptionsModelTest {
     @Test
     fun `GIVEN credentials load WHEN bank option clicked THEN listener receives them`() = runTest {
         // Arrange
-        coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId) } returns CREDENTIALS.right()
+        coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId, false) } returns listOf(CREDENTIALS).right()
         val model = createModel(depositAddress = DEPOSIT_ADDRESS)
 
         // Act
@@ -126,15 +130,33 @@ internal class MoneyAccountAddFundsOptionsModelTest {
         advanceUntilIdle()
 
         // Assert
-        verify(exactly = 1) { listener.onBankDetailsLoaded(CREDENTIALS) }
+        verify(exactly = 1) { listener.onBankDetailsLoaded(listOf(CREDENTIALS)) }
         verify(exactly = 0) { listener.onBankingDetailsLoadFailed() }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN MXN toggle WHEN bank option clicked THEN credentials of all rails requested`() = runTest {
+        // Arrange
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns true
+        coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId, true) } returns listOf(CREDENTIALS).right()
+        val model = createModel(depositAddress = DEPOSIT_ADDRESS)
+
+        // Act
+        model.bankOption().onClick?.invoke()
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { getMoneyAccountBankCredentialsUseCase(userWalletId, true) }
+        verify(exactly = 1) { listener.onBankDetailsLoaded(listOf(CREDENTIALS)) }
         model.onDestroy()
     }
 
     @Test
     fun `GIVEN credentials fail WHEN bank option clicked THEN listener notified and loading reset`() = runTest {
         // Arrange
-        coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId) } returns VisaApiError.ServerUnavailable.left()
+        coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId, false) } returns
+            VisaApiError.ServerUnavailable.left()
         val model = createModel(depositAddress = DEPOSIT_ADDRESS)
 
         // Act
@@ -153,8 +175,8 @@ internal class MoneyAccountAddFundsOptionsModelTest {
     fun `GIVEN credentials in flight WHEN bank option tapped twice THEN one request and one method event sent`() =
         runTest {
             // Arrange
-            val pending = CompletableDeferred<Either<VisaApiError, BankCredentials>>()
-            coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId) } coAnswers { pending.await() }
+            val pending = CompletableDeferred<Either<VisaApiError, List<BankCredentials>>>()
+            coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId, false) } coAnswers { pending.await() }
             val model = createModel(depositAddress = DEPOSIT_ADDRESS)
             val onBankClick = requireNotNull(model.bankOption().onClick)
 
@@ -166,7 +188,7 @@ internal class MoneyAccountAddFundsOptionsModelTest {
             // Assert
             assertThat(model.bankOption().isLoading).isTrue()
             assertThat(model.bankOption().onClick).isNull()
-            coVerify(exactly = 1) { getMoneyAccountBankCredentialsUseCase(userWalletId) }
+            coVerify(exactly = 1) { getMoneyAccountBankCredentialsUseCase(userWalletId, false) }
             verify(exactly = 1) {
                 analytics.send(
                     MoneyAccountAnalyticsEvents.AddFundsMethodSelected(
@@ -174,7 +196,7 @@ internal class MoneyAccountAddFundsOptionsModelTest {
                     ),
                 )
             }
-            pending.complete(CREDENTIALS.right())
+            pending.complete(listOf(CREDENTIALS).right())
             advanceUntilIdle()
             model.onDestroy()
         }
@@ -249,6 +271,7 @@ internal class MoneyAccountAddFundsOptionsModelTest {
         dispatchers = createTestingCoroutineDispatcherProvider(),
         analytics = analytics,
         getMoneyAccountBankCredentialsUseCase = getMoneyAccountBankCredentialsUseCase,
+        moneyAccountFeatureToggles = moneyAccountFeatureToggles,
     )
 
     private companion object {

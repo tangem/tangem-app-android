@@ -43,6 +43,7 @@ import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
 import com.tangem.features.moneyaccount.details.impl.R
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
@@ -71,6 +72,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -89,6 +91,7 @@ internal class MoneyAccountDetailsModelTest {
     private val getExploreUrlUseCase: GetExploreUrlUseCase = mockk(relaxed = true)
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val getMoneyAccountBankCredentialsUseCase: GetMoneyAccountBankCredentialsUseCase = mockk()
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher = mockk()
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter = mockk(relaxed = true)
     private val renewTangemPaySessionUseCase: RenewTangemPaySessionUseCase = mockk()
@@ -101,6 +104,8 @@ internal class MoneyAccountDetailsModelTest {
         clearMocks(moneyAccountStatusSupplier, router, sendFeedbackEmailUseCase, urlOpener, analytics)
         clearMocks(getMoneyAccountBankCredentialsUseCase, moneyAccountStatusFetcher, txHistoryContentUpdateEmitter)
         clearMocks(renewTangemPaySessionUseCase, uiMessageSender, getBalanceHidingSettingsUseCase)
+        clearMocks(moneyAccountFeatureToggles)
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns false
         isBalanceHiddenFlow.value = false
         every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns isBalanceHiddenFlow
     }
@@ -234,28 +239,33 @@ internal class MoneyAccountDetailsModelTest {
             model.onDestroy()
         }
 
-    @Test
-    fun `GIVEN error sheet WHEN retried THEN credentials requested again, details pushed and retry event sent`() =
-        runTest {
-            // Arrange
-            coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId) } returns CREDENTIALS.right()
-            val model = createModel(activeAccount(balance = balance()))
-            advanceUntilIdle()
+    @ParameterizedTest
+    @ValueSource(booleans = [false, true])
+    fun `GIVEN error sheet WHEN retried THEN credentials requested again, details pushed and retry event sent`(
+        isMxnEnabled: Boolean,
+    ) = runTest {
+        // Arrange
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns isMxnEnabled
+        coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId, isMxnEnabled) } returns
+            listOf(CREDENTIALS).right()
+        val model = createModel(activeAccount(balance = balance()))
+        advanceUntilIdle()
 
-            // Act
-            val actual = model.retryBankCredentials()
+        // Act
+        val actual = model.retryBankCredentials()
 
-            // Assert
-            assertThat(actual).isEqualTo(Unit.right())
-            verify(exactly = 1) { router.push(MoneyAccountDetailsRoute.BankDetails(CREDENTIALS), any()) }
-            verify(exactly = 1) { analytics.send(ofType<MoneyAccountAnalyticsEvents.DetailsRetryTapped>()) }
-            model.onDestroy()
-        }
+        // Assert
+        assertThat(actual).isEqualTo(Unit.right())
+        verify(exactly = 1) { router.push(MoneyAccountDetailsRoute.BankDetails(listOf(CREDENTIALS)), any()) }
+        verify(exactly = 1) { analytics.send(ofType<MoneyAccountAnalyticsEvents.DetailsRetryTapped>()) }
+        model.onDestroy()
+    }
 
     @Test
     fun `GIVEN credentials fail WHEN error sheet retried THEN error returned and the error sheet kept`() = runTest {
         // Arrange
-        coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId) } returns VisaApiError.ServerUnavailable.left()
+        coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId, false) } returns
+            VisaApiError.ServerUnavailable.left()
         val model = createModel(activeAccount(balance = balance()))
         val openedSheets = model.bottomSheetNavigation.trackSlot()
         advanceUntilIdle()
@@ -281,11 +291,11 @@ internal class MoneyAccountDetailsModelTest {
             model.onBankingDetailsLoadFailed()
 
             // Act
-            model.onBankDetailsLoaded(CREDENTIALS)
+            model.onBankDetailsLoaded(listOf(CREDENTIALS))
 
             // Assert
             assertThat(openedSheets.last()).isNull()
-            verify(exactly = 1) { router.push(MoneyAccountDetailsRoute.BankDetails(CREDENTIALS), any()) }
+            verify(exactly = 1) { router.push(MoneyAccountDetailsRoute.BankDetails(listOf(CREDENTIALS)), any()) }
             verify(exactly = 1) { analytics.send(MoneyAccountAnalyticsEvents.AddFundsBankDetailsShown()) }
             model.onDestroy()
         }
@@ -719,6 +729,7 @@ internal class MoneyAccountDetailsModelTest {
             getExploreUrlUseCase = getExploreUrlUseCase,
             analytics = analytics,
             getMoneyAccountBankCredentialsUseCase = getMoneyAccountBankCredentialsUseCase,
+            moneyAccountFeatureToggles = moneyAccountFeatureToggles,
             moneyAccountStatusFetcher = moneyAccountStatusFetcher,
             txHistoryContentUpdateEmitter = txHistoryContentUpdateEmitter,
             renewTangemPaySessionUseCase = renewTangemPaySessionUseCase,

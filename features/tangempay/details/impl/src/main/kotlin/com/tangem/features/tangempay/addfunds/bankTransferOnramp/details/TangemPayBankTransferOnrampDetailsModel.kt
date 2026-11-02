@@ -39,14 +39,15 @@ internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
     private val requisitesConverter = TangemPayBankTransferOnrampRequisitesUMConverter(onCopyClick = ::onCopyClick)
     private val dailyDepositLimitConverter = TangemPayDailyDepositLimitUMConverter()
 
-    private val requisites = requisitesConverter.convert(params.bankCredentials)
+    private val bankCredentials = params.bankCredentials.first()
+    private val requisites = requisitesConverter.convert(bankCredentials)
 
     val uiState: StateFlow<TangemPayBankTransferOnrampDetailsScreenUM>
         field = MutableStateFlow(
             TangemPayBankTransferOnrampDetailsScreenUM(
                 requisites = requisites,
                 fees = TangemPayOnrampFeesUM.Loading,
-                dailyDepositLimit = params.bankCredentials.depositLimit?.let(dailyDepositLimitConverter::convert),
+                dailyDepositLimit = bankCredentials.depositLimit?.let(dailyDepositLimitConverter::convert),
                 onShareClick = ::onShareClick,
                 onCloseClick = ::onCloseClick,
             ),
@@ -57,7 +58,7 @@ internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
         when (val feeSource = params.feeSource) {
             is FeeSource.Catalogue -> loadCatalogueFees(feeSource.product)
             FeeSource.Route -> uiState.update { state ->
-                state.copy(fees = TangemPayRouteFeeUMConverter.convert(params.bankCredentials))
+                state.copy(fees = TangemPayRouteFeeUMConverter.convert(bankCredentials))
             }
         }
     }
