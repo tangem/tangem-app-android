@@ -22,28 +22,17 @@ object VisaError : UniversalError {
 enum class VisaCardScanError(
     override val errorCode: Int,
 ) : UniversalError {
-    FailedToCreateDerivationPath(104002001),
-    FailedToFindWallet(104002002),
-    FailedToFindDerivedWalletKey(104002003),
     FailedToSignChallenge(104002004),
 }
 
 enum class VisaActivationError(
     override val errorCode: Int,
 ) : UniversalError {
-    BlockedForActivation(104003001),
-    InvalidActivationState(104003002),
-    WrongCard(104003003),
-    WrongRemoteState(104003004),
     MissingWallet(104003005),
-    MissingRootOTP(104003006),
     FailedToCreateAddress(104003007),
     AddressNotMatched(104003008),
-    InconsistentRemoteState(104003009),
     FailedRemoteState(104003010),
     VisaCardForApproval(104003011),
-    CardIdNotMatched(104003011),
-    FailedToSetPinCode(104003012),
     PublicKeyIsEmpty(104003013),
 }
 

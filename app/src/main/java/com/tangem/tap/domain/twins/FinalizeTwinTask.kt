@@ -30,10 +30,7 @@ class FinalizeTwinTask(
                             is CompletionResult.Success ->
                                 ScanProductTask(
                                     card = readResult.data,
-                                    visaCardScanHandler = null,
-                                    sessionCoroutineScope = null,
                                     shouldCheckIsAlreadyActivated = false,
-                                    onboardingV2FeatureToggles = null,
                                     cardRepository = cardRepository,
                                 ).run(session, callback)
                             is CompletionResult.Failure ->

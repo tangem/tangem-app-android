@@ -9,10 +9,12 @@ sealed class CollectiblesWalletBlockUM {
 
     data object Hidden : CollectiblesWalletBlockUM()
 
-    /** @property onClick `null` while the vault cannot be addressed, which leaves the row inert. */
+    /** The owner key is not derived on this device yet: the row stays inert until the wallet's addresses are synced. */
+    data object SyncNeeded : CollectiblesWalletBlockUM()
+
     data class Content(
         val balance: Balance,
-        val onClick: (() -> Unit)?,
+        val onClick: () -> Unit,
     ) : CollectiblesWalletBlockUM()
 
     @Immutable
