@@ -83,14 +83,7 @@ fun UserWalletItemRow(state: UserWalletItemUM, modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CardImage(state.imageState)
-        NameAndInfo(
-            modifier = Modifier.weight(1f),
-            name = state.name,
-            titleBadge = state.titleBadge,
-            isSocialLogin = state.isSocialLogin,
-            information = state.information,
-            balance = state.balance,
-        )
+        NameAndInfo(state = state, modifier = Modifier.weight(1f))
 
         when (state.endIcon) {
             UserWalletItemUM.EndIcon.None -> Unit
@@ -120,14 +113,7 @@ fun UserWalletItemRow(state: UserWalletItemUM, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun NameAndInfo(
-    name: TextReference,
-    titleBadge: TangemBadgeUM?,
-    isSocialLogin: Boolean,
-    information: UserWalletItemUM.Information,
-    balance: UserWalletItemUM.Balance,
-    modifier: Modifier = Modifier,
-) {
+private fun NameAndInfo(state: UserWalletItemUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.heightIn(min = 40.dp),
         horizontalAlignment = Alignment.Start,
@@ -139,14 +125,14 @@ private fun NameAndInfo(
         ) {
             Text(
                 modifier = Modifier.weight(weight = 1f, fill = false),
-                text = name.resolveReference(),
+                text = state.name.resolveReference(),
                 style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors3.text.primary,
+                color = if (state.isDimmed) TangemTheme.colors3.text.secondary else TangemTheme.colors3.text.primary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            if (isSocialLogin) SocialLoginWalletIcon()
-            titleBadge?.let { badge ->
+            if (state.isSocialLogin) SocialLoginWalletIcon()
+            state.titleBadge?.let { badge ->
                 TangemBadge(
                     text = badge.text,
                     variant = badge.variant,
@@ -163,7 +149,7 @@ private fun NameAndInfo(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             AnimatedContent(
-                targetState = information,
+                targetState = state.information,
                 label = "Information content",
             ) { information ->
                 val informationValue = getInformationValue(information)
@@ -183,7 +169,7 @@ private fun NameAndInfo(
                 }
             }
 
-            BalanceContent(balance)
+            BalanceContent(state.balance)
         }
     }
 }
