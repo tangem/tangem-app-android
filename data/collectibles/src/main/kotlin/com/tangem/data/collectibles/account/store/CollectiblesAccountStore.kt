@@ -82,11 +82,14 @@ internal class CollectiblesAccountStore(
      * Records that the wallet has an account, in the state [value] describes. A [value] that means anything else
      * is refused: a loading or failed read may not be recorded as the account itself.
      *
+     * [CollectiblesAccountStatusValue.NotOnboarded] is the exception, kept in memory only: the backend lists an
+     * account whose vault is not on chain, which every refresh reads again.
+     *
      * A [value] carrying no balance keeps the one already cached — the record and the amount are read separately,
      * and re-reading the record must not blank an amount that is still valid.
      */
     suspend fun store(userWalletId: UserWalletId, value: CollectiblesAccountStatusValue) {
-        if (converter.convert(value) == null) {
+        if (value !is CollectiblesAccountStatusValue.NotOnboarded && converter.convert(value) == null) {
             logger.e("Refusing to record $value as a collectibles account of $userWalletId")
             return
         }

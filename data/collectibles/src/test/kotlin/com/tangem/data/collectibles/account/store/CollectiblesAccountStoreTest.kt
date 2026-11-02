@@ -149,6 +149,33 @@ internal class CollectiblesAccountStoreTest {
     }
 
     @Test
+    fun `GIVEN no vault on chain WHEN NotOnboarded is stored THEN it is kept in memory only`() = runTest {
+        // Arrange
+        val persisted = MockStateDataStore<WalletIdWithCollectiblesAccountDTO>(default = emptyMap())
+        val store = createStore(testScope = this, persistenceDataStore = persisted)
+
+        // Act
+        store.store(userWalletId = WALLET_A, value = CollectiblesAccountStatusValue.NotOnboarded)
+
+        // Assert
+        assertThat(store.getSyncOrNull(WALLET_A)).isEqualTo(CollectiblesAccountStatusValue.NotOnboarded)
+        assertThat(persisted.data.first()).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN NotOnboarded in memory WHEN the account is stored THEN the record replaces it`() = runTest {
+        // Arrange
+        val store = createStore(testScope = this)
+        store.store(userWalletId = WALLET_A, value = CollectiblesAccountStatusValue.NotOnboarded)
+
+        // Act
+        store.store(userWalletId = WALLET_A, value = ONBOARDED)
+
+        // Assert
+        assertThat(store.getSyncOrNull(WALLET_A)).isEqualTo(ONBOARDED)
+    }
+
+    @Test
     fun `GIVEN nothing recorded WHEN markUnrefreshed THEN nothing is stored`() = runTest {
         // Arrange
         val store = createStore(testScope = this)
