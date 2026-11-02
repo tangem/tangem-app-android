@@ -28,7 +28,6 @@ import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.button.TangemButtonGroup
 import com.tangem.core.ui.ds2.checkbox.TangemCheckmark
@@ -36,6 +35,7 @@ import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.ds2.search.TangemSearch
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
+import com.tangem.core.ui.ds2.togglebadge.TangemToggleBadge
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -137,11 +137,10 @@ private fun FeaturedRail(items: ImmutableList<FeaturedCategoryUM>, modifier: Mod
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         items.fastForEach { item ->
-            TangemBadge(
+            TangemToggleBadge(
                 text = item.label,
-                variant = if (item.isSelected) TangemBadge.Variant.Inverse else TangemBadge.Variant.Solid,
-                size = TangemBadge.Size.X9,
-                onClick = item.onItemClick,
+                isSelected = item.isSelected,
+                onSelectedChange = { item.onItemClick() },
             )
         }
     }
