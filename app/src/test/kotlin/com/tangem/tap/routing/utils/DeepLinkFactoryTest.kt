@@ -1,7 +1,6 @@
 package com.tangem.tap.routing.utils
 
 import android.net.Uri
-import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.deeplink.DeepLinkHandler
 import com.tangem.common.routing.deeplink.DeepLinkRequest
@@ -9,182 +8,1465 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.domain.marketing.MarketingFeatureToggles
 import com.tangem.domain.marketing.MarketingUidBindingRepository
+import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
+import com.tangem.feature.usedesk.api.UseDeskFeatureToggles
+import com.tangem.feature.usedesk.api.deeplink.SupportDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.DiscoverDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.EarnDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.MarketsDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.MarketsTokenDetailDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.MarketsTokenExchangesDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.NewsDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.YieldDeepLinkHandler
+import com.tangem.features.jointaccount.deeplink.JointAccountDeepLinkHandler
+import com.tangem.features.jointaccount.deeplink.JointAccountInviteDeepLinkHandler
+import com.tangem.features.mcp.api.McpFeatureToggles
+import com.tangem.features.mcp.api.deeplink.McpDeepLinkHandler
+import com.tangem.features.mcp.api.deeplink.McpIntentDeepLinkHandler
+import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
+import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
+import com.tangem.features.onramp.deeplink.SellDeepLinkHandler
+import com.tangem.features.promobanners.api.deeplink.CampaignsDeepLinkHandler
+import com.tangem.features.send.api.deeplink.SellRedirectDeepLinkHandler
+import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
+import com.tangem.features.survey.deeplink.SurveyDeepLinkHandler
+import com.tangem.features.swap.deeplink.SwapDeepLinkHandler
+import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
+import com.tangem.features.tangempay.deeplink.TangemPayAccountDeepLinkHandler
+import com.tangem.features.tangempay.deeplink.TangemPayMainDeepLinkHandler
+import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
+import com.tangem.features.wallet.deeplink.PromoDeeplinkHandler
+import com.tangem.features.wallet.deeplink.WalletDeepLinkHandler
+import com.tangem.features.walletconnect.components.deeplink.WalletConnectDeepLinkHandler
 import com.tangem.test.core.TestAppCoroutineScope
-import io.mockk.any
-import io.mockk.capture
 import io.mockk.clearMocks
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestDispatcher
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.test.*
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class DeepLinkFactoryTest {
 
+    private val onrampDeepLinkFactory = mockk<OnrampDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any(), any()) } returns mockk()
+    }
+    private val sellRedirectDeepLinkFactory = mockk<SellRedirectDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any(), any()) } returns mockk()
+    }
+    private val referralDeepLinkFactory = mockk<ReferralDeepLinkHandler.Factory>(relaxed = true) {
+        every { create() } returns mockk()
+    }
+    private val walletConnectDeepLinkFactory = mockk<WalletConnectDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any()) } returns mockk()
+    }
+    private val walletDeepLinkFactory = mockk<WalletDeepLinkHandler.Factory>(relaxed = true) {
+        every { create() } returns mockk()
+    }
+    private val tokenDetailsDeepLinkFactory = mockk<TokenDetailsDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any(), any(), any()) } returns mockk()
+    }
+    private val stakingDeepLinkFactory = mockk<StakingDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any(), any()) } returns mockk()
+    }
+    private val marketsDeepLinkFactory = mockk<MarketsDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any()) } returns mockk()
+    }
+    private val marketsTokenDetailDeepLinkFactory = mockk<MarketsTokenDetailDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any(), any()) } returns mockk()
+    }
+    private val sellDeepLinkFactory = mockk<SellDeepLinkHandler.Factory>(relaxed = true) {
+        every { create() } returns mockk()
+    }
+    private val buyDeepLinkFactory = mockk<BuyDeepLinkHandler.Factory>(relaxed = true) {
+        every { create() } returns mockk()
+    }
+    private val swapDeepLinkFactory = mockk<SwapDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any(), any()) } returns mockk()
+    }
+
+    private val promoDeepLinkFactory = mockk<PromoDeeplinkHandler.Factory>(relaxed = true) {
+        every { create(any(), any()) } returns mockk()
+    }
+
+    private val onboardVisaDeepLink = mockk<OnboardVisaDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any()) } returns mockk()
+    }
+
+    private val tangemPayMainDeepLink = mockk<TangemPayMainDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any(), any()) } returns mockk()
+    }
+
+    private val tangemPayAccountDeepLink = mockk<TangemPayAccountDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any(), any()) } returns mockk()
+    }
+
     private val cardSdkProvider = mockk<CardSdkProvider>(relaxed = true) {
         every { sdk.uiVisibility() } returns MutableStateFlow(false)
     }
-    private val urlOpener = mockk<UrlOpener>(relaxed = true)
-    private val marketingFeatureToggles = mockk<MarketingFeatureToggles> {
-        every { isUidBindingEnabled } returns false
+
+    private val newsDeeplink = mockk<NewsDetailsDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any(), any()) } returns mockk()
     }
+
+    private val newsDeepLinkFactory = mockk<NewsDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any()) } returns mockk()
+    }
+
+    private val surveyDeepLinkFactory = mockk<SurveyDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any()) } returns mockk()
+    }
+
+    private val supportDeepLinkFactory = mockk<SupportDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any()) } returns mockk()
+    }
+
+    private val useDeskFeatureToggles = mockk<UseDeskFeatureToggles> {
+        every { isSupportChatDeepLinkEnabled } returns true
+    }
+
+    private val earnDeepLinkFactory = mockk<EarnDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any()) } returns mockk()
+    }
+
+    private val yieldDeepLinkFactory = mockk<YieldDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any(), any()) } returns mockk()
+    }
+
+    private val discoverDeepLinkFactory = mockk<DiscoverDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any()) } returns mockk()
+    }
+
+    private val campaignsDeepLinkHandlerFactory = mockk<CampaignsDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any()) } returns mockk()
+    }
+
+    private val marketsTokenExchangesDeepLinkFactory =
+        mockk<MarketsTokenExchangesDeepLinkHandler.Factory>(relaxed = true) {
+            every { create(any(), any()) } returns mockk()
+        }
+
+    private val jointAccountDeepLinkFactory = mockk<JointAccountDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any(), any(), any()) } returns mockk()
+    }
+
+    private val jointAccountInviteDeepLinkFactory = mockk<JointAccountInviteDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any(), any()) } returns mockk()
+    }
+
+    private val mcpDeepLinkFactory = mockk<McpDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any()) } returns mockk()
+    }
+
+    private val mcpIntentDeepLinkFactory = mockk<McpIntentDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any()) } returns mockk()
+    }
+
+    private val mcpFeatureToggles = mockk<McpFeatureToggles> {
+        every { isMcpEnabled } returns true
+    }
+
+    private val urlOpener = mockk<UrlOpener>(relaxed = true)
+
+    private val deepLinkFeatureToggles = mockk<DeepLinkFeatureToggles> {
+        every { isHandlerRegistryEnabled } returns false
+    }
+    private val marketingFeatureToggles = mockk<MarketingFeatureToggles>()
     private val marketingUidBindingRepository = mockk<MarketingUidBindingRepository>(relaxed = true)
-    private val registeredHandler = mockk<DeepLinkHandler>(relaxed = true) {
+    private val registeredWalletHandler = mockk<DeepLinkHandler>(relaxed = true) {
         every { isEnabled } returns true
         every { isOpenableFromPush } returns true
     }
-    private val deepLinkFactory = DeepLinkFactory(
-        cardSdkProvider = cardSdkProvider,
-        urlOpener = urlOpener,
-        marketingFeatureToggles = marketingFeatureToggles,
-        marketingUidBindingRepository = marketingUidBindingRepository,
-        appCoroutineScope = TestAppCoroutineScope(),
-        deepLinkHandlers = mapOf("tangem://main" to registeredHandler),
-    )
+    private val registeredJointAccountInviteHandler = mockk<DeepLinkHandler>(relaxed = true) {
+        every { isEnabled } returns true
+        every { isOpenableFromPush } returns true
+    }
+    private val registeredWalletConnectHandler = mockk<DeepLinkHandler>(relaxed = true) {
+        every { isEnabled } returns true
+        every { isOpenableFromPush } returns true
+    }
+    private val registeredTangemPayMainHandler = mockk<DeepLinkHandler>(relaxed = true) {
+        every { isEnabled } returns true
+        every { isOpenableFromPush } returns true
+    }
+
+    private val mockedUri = mockk<Uri>(relaxed = true)
+    private val isFromOnNewIntent: Boolean = false
 
     private lateinit var testDispatcher: TestDispatcher
     private lateinit var testScope: TestScope
 
+    private val deepLinkFactory = DeepLinkFactory(
+        cardSdkProvider = cardSdkProvider,
+        onrampDeepLink = onrampDeepLinkFactory,
+        sellRedirectDeepLink = sellRedirectDeepLinkFactory,
+        referralDeepLink = referralDeepLinkFactory,
+        walletConnectDeepLink = walletConnectDeepLinkFactory,
+        walletDeepLink = walletDeepLinkFactory,
+        tokenDetailsDeepLink = tokenDetailsDeepLinkFactory,
+        stakingDeepLink = stakingDeepLinkFactory,
+        marketsDeepLink = marketsDeepLinkFactory,
+        marketsTokenDetailDeepLink = marketsTokenDetailDeepLinkFactory,
+        marketsTokenExchangesDeepLink = marketsTokenExchangesDeepLinkFactory,
+        buyDeepLink = buyDeepLinkFactory,
+        sellDeepLink = sellDeepLinkFactory,
+        swapDeepLink = swapDeepLinkFactory,
+        promoDeepLink = promoDeepLinkFactory,
+        onboardVisaDeepLink = onboardVisaDeepLink,
+        tangemPayMainDeepLink = tangemPayMainDeepLink,
+        tangemPayAccountDeepLink = tangemPayAccountDeepLink,
+        newsDetailsDeepLink = newsDeeplink,
+        newsDeepLink = newsDeepLinkFactory,
+        earnDeepLink = earnDeepLinkFactory,
+        yieldDeepLink = yieldDeepLinkFactory,
+        discoverDeepLink = discoverDeepLinkFactory,
+        surveyDeepLink = surveyDeepLinkFactory,
+        supportDeepLink = supportDeepLinkFactory,
+        useDeskFeatureToggles = useDeskFeatureToggles,
+        promoCampaignsDeepLink = campaignsDeepLinkHandlerFactory,
+        mcpDeepLink = mcpDeepLinkFactory,
+        mcpIntentDeepLink = mcpIntentDeepLinkFactory,
+        mcpFeatureToggles = mcpFeatureToggles,
+        jointAccountDeepLink = jointAccountDeepLinkFactory,
+        jointAccountInviteDeepLink = jointAccountInviteDeepLinkFactory,
+        urlOpener = urlOpener,
+        deepLinkFeatureToggles = deepLinkFeatureToggles,
+        marketingFeatureToggles = marketingFeatureToggles,
+        marketingUidBindingRepository = marketingUidBindingRepository,
+        appCoroutineScope = TestAppCoroutineScope(),
+        deepLinkHandlers = mapOf(
+            "tangem://main" to registeredWalletHandler,
+            "https://tangem.com/joint-account/join" to registeredJointAccountInviteHandler,
+            "wc:" to registeredWalletConnectHandler,
+            "tangem://pay-app-main" to registeredTangemPayMainHandler,
+            "https://tangem.com/pay-app-main" to registeredTangemPayMainHandler,
+        ),
+    )
+
+    @OptIn(ExperimentalCoroutinesApi::class)
     @BeforeEach
     fun setUp() {
         testDispatcher = StandardTestDispatcher()
         testScope = TestScope(testDispatcher)
+
         Dispatchers.setMain(testDispatcher)
-        clearMocks(registeredHandler, urlOpener)
+
+        every { mockedUri.path } returns "/path"
+        every { mockedUri.toString() } returns "https://example.com/path?query=param"
+        every { mockedUri.authority } returns "example.com"
+        every { mockedUri.port } returns 443 // Default HTTPS port
+        every { mockedUri.fragment } returns null // No fragment in this URI
+        every { mockedUri.userInfo } returns null
+
+        clearMocks(marketingUidBindingRepository)
+        every { marketingFeatureToggles.isUidBindingEnabled } returns true
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @AfterEach
     fun tearDown() {
+        // Reset the main dispatcher
         Dispatchers.resetMain()
+        // Clean up test coroutines
         testScope.cancel()
     }
 
     @Test
-    fun `GIVEN registered deep link WHEN app is ready THEN handler receives validated request`() = runTest {
-        // Arrange
-        val uri = uri(
-            value = "tangem://main?param=value",
-            scheme = "tangem",
-            host = "main",
-            queryParameters = mapOf("param" to "value"),
-        )
-        val request = slot<DeepLinkRequest>()
+    fun `handleDeeplink stores uri and launches when permitted`() = runTest {
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "onramp"
+        every { mockedUri.query } returns "param=value"
+        every { mockedUri.queryParameterNames } returns setOf("param")
+        every { mockedUri.getQueryParameter("param") } returns "value"
 
-        // Act
-        deepLinkFactory.handleDeeplink(uri, testScope, isFromOnNewIntent = true)
+        // Set permittedAppRoute to true
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
         deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+
         advanceUntilIdle()
 
-        // Assert
-        verify { registeredHandler.handle(capture(request)) }
-        assertThat(request.captured.uri).isEqualTo(uri)
-        assertThat(request.captured.queryParams).isEqualTo(mapOf("param" to "value"))
-        assertThat(request.captured.scope).isEqualTo(testScope)
-        assertThat(request.captured.isFromOnNewIntent).isTrue()
-    }
-
-    @Test
-    fun `GIVEN app is not ready WHEN deep link arrives THEN handler is not called`() = runTest {
-        // Arrange
-        val uri = uri(value = "tangem://main", scheme = "tangem", host = "main")
-
-        // Act
-        deepLinkFactory.handleDeeplink(uri, testScope, isFromOnNewIntent = false)
-        deepLinkFactory.checkRoutingReadiness(AppRoute.Initial)
-        advanceUntilIdle()
-
-        // Assert
-        verify(inverse = true) { registeredHandler.handle(any()) }
-    }
-
-    @Test
-    fun `GIVEN push deep link handler is not openable WHEN deep link arrives THEN request is consumed`() = runTest {
-        // Arrange
-        every { registeredHandler.isOpenableFromPush } returns false
-        val uri = uri(value = "tangem://main", scheme = "tangem", host = "main")
-
-        // Act
-        deepLinkFactory.handleDeeplink(uri, testScope, isFromOnNewIntent = false, source = DeeplinkSource.Push)
-        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
-        advanceUntilIdle()
-
-        // Assert
-        verify(inverse = true) { registeredHandler.handle(any()) }
-        verify(inverse = true) { urlOpener.openUrl(any()) }
-    }
-
-    @Test
-    fun `GIVEN push deep link has no registered handler WHEN app is ready THEN trusted web link opens`() = runTest {
-        // Arrange
-        val uri = uri(
-            value = "https://tangem.com/unknown",
-            scheme = "https",
-            host = "tangem.com",
-            pathSegments = listOf("unknown"),
-        )
-
-        // Act
-        deepLinkFactory.handleDeeplink(uri, testScope, isFromOnNewIntent = false, source = DeeplinkSource.Push)
-        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
-        advanceUntilIdle()
-
-        // Assert
-        verify { urlOpener.openUrl("https://tangem.com/unknown") }
-    }
-
-    @Test
-    fun `GIVEN external Tangem Pay main link WHEN deep link arrives THEN request is ignored`() = runTest {
-        // Arrange
-        val uri = uri(
-            value = "https://tangem.com/pay-app-main",
-            scheme = "https",
-            host = "tangem.com",
-            path = "/pay-app-main",
-            pathSegments = listOf("pay-app-main"),
-        )
-
-        // Act
-        deepLinkFactory.handleDeeplink(uri, testScope, isFromOnNewIntent = false)
-        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
-        advanceUntilIdle()
-
-        // Assert
-        verify(inverse = true) { urlOpener.openUrl(any()) }
-        verify(inverse = true) { registeredHandler.handle(any()) }
-    }
-
-    private fun uri(
-        value: String,
-        scheme: String,
-        host: String?,
-        path: String? = null,
-        pathSegments: List<String> = emptyList(),
-        queryParameters: Map<String, String> = emptyMap(),
-    ): Uri = mockk(relaxed = true) {
-        every { this@mockk.scheme } returns scheme
-        every { this@mockk.host } returns host
-        every { this@mockk.path } returns path
-        every { this@mockk.pathSegments } returns pathSegments
-        every { this@mockk.isOpaque } returns false
-        every { this@mockk.queryParameterNames } returns queryParameters.keys
-        queryParameters.forEach { (name, parameter) ->
-            every { getQueryParameter(name) } returns parameter
+        // Verify onramp handler was called
+        verify {
+            onrampDeepLinkFactory.create(eq(testScope), eq(mapOf("param" to "value")))
         }
-        every { this@mockk.userInfo } returns null
-        every { toString() } returns value
+    }
+
+    @Test
+    fun `handleDeeplink does not launch when not permitted`() = runTest {
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "onramp"
+        every { mockedUri.query } returns "param=value"
+        every { mockedUri.queryParameterNames } returns setOf("param")
+        every { mockedUri.getQueryParameter("param") } returns "value"
+
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Initial)
+
+        advanceUntilIdle()
+
+        // Verify no handler was called
+        verify(inverse = true) { onrampDeepLinkFactory.create(any(), any()) }
+    }
+
+    @Test
+    fun `handleDeeplink does not launch when card scan visible`() = runTest {
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "onramp"
+        every { mockedUri.query } returns "param=value"
+        every { mockedUri.queryParameterNames } returns setOf("param")
+        every { mockedUri.getQueryParameter("param") } returns "value"
+        every { cardSdkProvider.sdk.uiVisibility() } returns MutableStateFlow(true)
+
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+
+        advanceUntilIdle()
+
+        // Verify no handler was called
+        verify(inverse = true) { onrampDeepLinkFactory.create(any(), any()) }
+    }
+
+    @Test
+    fun `launchDeepLink handles tangem scheme correctly`() = runTest {
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "onramp"
+        every { mockedUri.query } returns "param=value"
+        every { mockedUri.queryParameterNames } returns setOf("param")
+        every { mockedUri.getQueryParameter("param") } returns "value"
+
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+
+        advanceUntilIdle()
+
+        verify {
+            onrampDeepLinkFactory.create(eq(testScope), eq(mapOf("param" to "value")))
+        }
+    }
+
+    @Test
+    fun `launchDeepLink handles wc scheme correctly`() = runTest {
+        every { mockedUri.scheme } returns "wc"
+        every { mockedUri.host } returns ""
+
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+
+        advanceUntilIdle()
+
+        verify {
+            walletConnectDeepLinkFactory.create(eq(mockedUri))
+        }
+    }
+
+    @Test
+    fun `launchDeepLink ignores unknown scheme`() = runTest {
+        every { mockedUri.scheme } returns "https"
+        every { mockedUri.host } returns "example.com"
+
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+
+        advanceUntilIdle()
+
+        verify(inverse = true) {
+            onrampDeepLinkFactory.create(any(), any())
+            sellRedirectDeepLinkFactory.create(any(), any())
+            referralDeepLinkFactory.create()
+            walletConnectDeepLinkFactory.create(any())
+            walletDeepLinkFactory.create()
+            tokenDetailsDeepLinkFactory.create(any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `handleTangemDeepLinks routes to correct handler`() = runTest {
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.query } returns "param=value"
+        every { mockedUri.queryParameterNames } returns setOf("param")
+        every { mockedUri.getQueryParameter("param") } returns "value"
+
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+
+        // Test Onramp
+        every { mockedUri.host } returns "onramp"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { onrampDeepLinkFactory.create(eq(testScope), eq(mapOf("param" to "value"))) }
+
+        // Test Sell Redirect
+        every { mockedUri.host } returns "redirect_sell"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { sellRedirectDeepLinkFactory.create(eq(testScope), eq(mapOf("param" to "value"))) }
+
+        // Test Token Details
+        every { mockedUri.host } returns "token"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify {
+            tokenDetailsDeepLinkFactory.create(
+                eq(testScope),
+                eq(mapOf("param" to "value")),
+                eq(isFromOnNewIntent),
+            )
+        }
+
+        // Test Staking
+        every { mockedUri.host } returns "staking"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { stakingDeepLinkFactory.create(eq(testScope), eq(mapOf("param" to "value"))) }
+
+        // Test Market Token Detail
+        every { mockedUri.host } returns "token_chart"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { marketsTokenDetailDeepLinkFactory.create(eq(testScope), eq(mapOf("param" to "value"))) }
+
+        // Reset params
+        every { mockedUri.queryParameterNames } returns emptySet()
+        every { mockedUri.getQueryParameter(any()) } returns ""
+
+        // Test Referral
+        every { mockedUri.host } returns "referral"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { referralDeepLinkFactory.create() }
+
+        // Test Support
+        every { mockedUri.host } returns "support"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { supportDeepLinkFactory.create(eq(testScope)) }
+
+        // Test Wallet
+        every { mockedUri.host } returns "main"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { walletDeepLinkFactory.create() }
+
+        // Test Markets
+        every { mockedUri.host } returns "markets"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { marketsDeepLinkFactory.create(any()) }
+
+        // Test Sell
+        every { mockedUri.host } returns "sell"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { sellDeepLinkFactory.create() }
+
+        // Test Swap
+        every { mockedUri.host } returns "swap"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { swapDeepLinkFactory.create(eq(testScope), eq(emptyMap())) }
+
+        // Test Buy
+        every { mockedUri.host } returns "buy"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { buyDeepLinkFactory.create() }
+
+        // Test Promo
+        every { mockedUri.host } returns "promo"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { promoDeepLinkFactory.create(eq(testScope), eq(emptyMap())) }
+
+        // Test TangemPay
+        every { mockedUri.host } returns "pay-app-main"
+        every { mockedUri.queryParameterNames } returns setOf("param")
+        every { mockedUri.getQueryParameter("param") } returns "value"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent, DeeplinkSource.Push)
+        advanceUntilIdle()
+        verify { tangemPayMainDeepLink.create(eq(testScope), any()) }
+
+        // Test MCP authorization
+        every { mockedUri.host } returns "mcp.authorization"
+        every { mockedUri.queryParameterNames } returns setOf("user_code")
+        every { mockedUri.getQueryParameter("user_code") } returns "ABCD-1234"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { mcpDeepLinkFactory.create(eq(mapOf("user_code" to "ABCD-1234"))) }
+
+        // Test MCP intent
+        every { mockedUri.host } returns "intent"
+        every { mockedUri.queryParameterNames } returns setOf("id", "source", "type")
+        every { mockedUri.getQueryParameter("id") } returns "my_intent_id123"
+        every { mockedUri.getQueryParameter("source") } returns "express"
+        every { mockedUri.getQueryParameter("type") } returns "exchange"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify {
+            mcpIntentDeepLinkFactory.create(
+                eq(mapOf("id" to "my_intent_id123", "source" to "express", "type" to "exchange")),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN pay-account host WHEN handleDeeplink THEN screen param reaches the account handler`() = runTest {
+        // Arrange
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "pay-account"
+        every { mockedUri.queryParameterNames } returns setOf("screen")
+        every { mockedUri.getQueryParameter("screen") } returns "cashback"
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { tangemPayAccountDeepLink.create(eq(testScope), eq(mapOf("screen" to "cashback"))) }
+    }
+
+    @Test
+    fun `GIVEN joint_account deeplink WHEN handle THEN joint account handler created with params`() = runTest {
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "joint_account"
+        every { mockedUri.query } returns "entry=overview&user_wallet_id=011&account_id=aaa"
+        every { mockedUri.queryParameterNames } returns setOf("entry", "user_wallet_id", "account_id")
+        every { mockedUri.getQueryParameter("entry") } returns "overview"
+        every { mockedUri.getQueryParameter("user_wallet_id") } returns "011"
+        every { mockedUri.getQueryParameter("account_id") } returns "aaa"
+
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+
+        verify {
+            jointAccountDeepLinkFactory.create(
+                eq(testScope),
+                eq(mapOf("entry" to "overview", "user_wallet_id" to "011", "account_id" to "aaa")),
+                eq(isFromOnNewIntent),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN mcp disabled WHEN intent deeplink handled THEN intent handler is not created`() = runTest {
+        // Arrange
+        every { mcpFeatureToggles.isMcpEnabled } returns false
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "intent"
+        every { mockedUri.query } returns "id=my_intent_id123&source=express&type=exchange"
+        every { mockedUri.queryParameterNames } returns setOf("id", "source", "type")
+        every { mockedUri.getQueryParameter("id") } returns "my_intent_id123"
+        every { mockedUri.getQueryParameter("source") } returns "express"
+        every { mockedUri.getQueryParameter("type") } returns "exchange"
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { mcpIntentDeepLinkFactory.create(any()) }
+    }
+
+    @Test
+    fun `GIVEN support chat deeplink disabled WHEN support deeplink handled THEN handler is not created`() = runTest {
+        // Arrange
+        every { useDeskFeatureToggles.isSupportChatDeepLinkEnabled } returns false
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "support"
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 0) { supportDeepLinkFactory.create(any()) }
+    }
+
+    @Test
+    fun `handleTangemDeepLinks incorrect host`() = runTest {
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "unknown"
+
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+
+        advanceUntilIdle()
+
+        verify(inverse = true) {
+            onrampDeepLinkFactory.create(any(), any())
+            sellRedirectDeepLinkFactory.create(any(), any())
+            referralDeepLinkFactory.create()
+            walletConnectDeepLinkFactory.create(any())
+            walletDeepLinkFactory.create()
+            tokenDetailsDeepLinkFactory.create(any(), any(), any())
+            buyDeepLinkFactory.create()
+            sellDeepLinkFactory.create()
+            swapDeepLinkFactory.create(any(), any())
+            promoDeepLinkFactory.create(any(), any())
+            tangemPayMainDeepLink.create(any(), any())
+            tangemPayAccountDeepLink.create(any(), any())
+        }
+    }
+
+    @Test
+    fun `getParams filters malicious parameters`() = runTest {
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "onramp"
+        every { mockedUri.query } returns "safe=ok&malicious=%3Cscript%3E"
+        every { mockedUri.queryParameterNames } returns setOf("safe", "malicious")
+        every { mockedUri.getQueryParameter("safe") } returns "ok"
+        every { mockedUri.getQueryParameter("malicious") } returns "<script>"
+
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+
+        verify { onrampDeepLinkFactory.create(eq(testScope), eq(mapOf("safe" to "ok"))) }
+    }
+
+    @Test
+    fun `validate detects malicious characters`() = runTest {
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "onramp"
+
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+
+        every { mockedUri.query } returns "safe=ok"
+        every { mockedUri.queryParameterNames } returns setOf("safe")
+        every { mockedUri.getQueryParameter("safe") } returns "ok"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { onrampDeepLinkFactory.create(eq(testScope), eq(mapOf("safe" to "ok"))) }
+
+        every { mockedUri.query } returns "param123=ok"
+        every { mockedUri.queryParameterNames } returns setOf("param123")
+        every { mockedUri.getQueryParameter("param123") } returns "ok"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { onrampDeepLinkFactory.create(eq(testScope), eq(mapOf("param123" to "ok"))) }
+
+        every { mockedUri.query } returns "unsafe=<script>"
+        every { mockedUri.queryParameterNames } returns setOf("unsafe")
+        every { mockedUri.getQueryParameter("unsafe") } returns "<script>"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { onrampDeepLinkFactory.create(eq(testScope), eq(emptyMap())) }
+
+        every { mockedUri.query } returns "unsafe=test;"
+        every { mockedUri.queryParameterNames } returns setOf("unsafe")
+        every { mockedUri.getQueryParameter("unsafe") } returns "test;"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { onrampDeepLinkFactory.create(eq(testScope), eq(emptyMap())) }
+
+        every { mockedUri.query } returns "unsafe=test+attack"
+        every { mockedUri.queryParameterNames } returns setOf("unsafe")
+        every { mockedUri.getQueryParameter("unsafe") } returns "test+attack"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { onrampDeepLinkFactory.create(eq(testScope), eq(emptyMap())) }
+
+        every { mockedUri.query } returns "unsafe=test\\path"
+        every { mockedUri.queryParameterNames } returns setOf("unsafe")
+        every { mockedUri.getQueryParameter("unsafe") } returns "test\\path"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { onrampDeepLinkFactory.create(eq(testScope), eq(emptyMap())) }
+    }
+
+    @Test
+    fun `handleTangemDeepLinks routes news, earn and yield hosts to dedicated handlers`() = runTest {
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.query } returns null
+        every { mockedUri.queryParameterNames } returns emptySet()
+        every { mockedUri.getQueryParameter(any()) } returns null
+
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+
+        every { mockedUri.host } returns "news"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { newsDeepLinkFactory.create(eq(emptyMap())) }
+
+        every { mockedUri.host } returns "earn"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { earnDeepLinkFactory.create(eq(emptyMap())) }
+
+        every { mockedUri.host } returns "yield"
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+        verify { yieldDeepLinkFactory.create(eq(testScope), eq(emptyMap())) }
+    }
+
+    @Test
+    fun `GIVEN a discover deeplink WHEN handled THEN the discover handler gets its params`() = runTest {
+        // Arrange
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "discover"
+        every { mockedUri.query } returns "section=earn&type=staking"
+        every { mockedUri.queryParameterNames } returns setOf("section", "type")
+        every { mockedUri.getQueryParameter("section") } returns "earn"
+        every { mockedUri.getQueryParameter("type") } returns "staking"
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+
+        // Act
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+
+        // Assert
+        verify { discoverDeepLinkFactory.create(eq(mapOf("section" to "earn", "type" to "staking"))) }
+    }
+
+    @Test
+    fun `GIVEN tangem swap deeplink WHEN handle THEN swap handler created with params`() = runTest {
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "swap"
+        every { mockedUri.query } returns "from_token_id=ethereum&from_network_id=ethereum"
+        every { mockedUri.queryParameterNames } returns setOf("from_token_id", "from_network_id")
+        every { mockedUri.getQueryParameter("from_token_id") } returns "ethereum"
+        every { mockedUri.getQueryParameter("from_network_id") } returns "ethereum"
+
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+
+        verify {
+            swapDeepLinkFactory.create(
+                eq(testScope),
+                eq(mapOf("from_token_id" to "ethereum", "from_network_id" to "ethereum")),
+            )
+        }
+    }
+
+    @Test
+    fun `handleTangemDeepLinks routes to promo handler`() = runTest {
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "promo"
+        every { mockedUri.query } returns "promo_code=PROMO123"
+        every { mockedUri.queryParameterNames } returns setOf("promo_code")
+        every { mockedUri.getQueryParameter("promo_code") } returns "PROMO123"
+
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+
+        advanceUntilIdle()
+
+        verify {
+            promoDeepLinkFactory.create(eq(testScope), eq(mapOf("promo_code" to "PROMO123")))
+        }
+    }
+
+    @Test
+    fun `GIVEN registry enabled and host registered WHEN handle THEN registered handler gets request`() = runTest {
+        // Arrange
+        every { deepLinkFeatureToggles.isHandlerRegistryEnabled } returns true
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "main"
+        every { mockedUri.queryParameterNames } returns setOf("param")
+        every { mockedUri.getQueryParameter("param") } returns "value"
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+
+        // Assert
+        verify {
+            registeredWalletHandler.handle(
+                DeepLinkRequest(
+                    uri = mockedUri,
+                    queryParams = mapOf("param" to "value"),
+                    scope = testScope,
+                    isFromOnNewIntent = isFromOnNewIntent,
+                ),
+            )
+        }
+        verify(inverse = true) { walletDeepLinkFactory.create() }
+    }
+
+    @Test
+    fun `GIVEN registry enabled and https path registered WHEN handle THEN registered handler is used`() = runTest {
+        // Arrange
+        every { deepLinkFeatureToggles.isHandlerRegistryEnabled } returns true
+        every { mockedUri.scheme } returns "https"
+        every { mockedUri.host } returns "tangem.com"
+        every { mockedUri.path } returns "/joint-account/join"
+        every { mockedUri.pathSegments } returns listOf("joint-account", "join")
+        every { mockedUri.queryParameterNames } returns emptySet()
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+
+        // Assert
+        verify { registeredJointAccountInviteHandler.handle(any()) }
+        verify(inverse = true) { jointAccountInviteDeepLinkFactory.create(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN registry enabled and opaque uri WHEN handle THEN scheme handler gets empty query`() = runTest {
+        // Arrange
+        every { deepLinkFeatureToggles.isHandlerRegistryEnabled } returns true
+        every { mockedUri.isOpaque } returns true
+        every { mockedUri.scheme } returns "wc"
+        every { mockedUri.host } returns null
+        every { mockedUri.path } returns null
+        every { mockedUri.queryParameterNames } throws UnsupportedOperationException("This isn't a hierarchical URI.")
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+
+        // Assert
+        verify {
+            registeredWalletConnectHandler.handle(
+                DeepLinkRequest(
+                    uri = mockedUri,
+                    queryParams = emptyMap(),
+                    scope = testScope,
+                    isFromOnNewIntent = isFromOnNewIntent,
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN registry enabled and handler not openable from push WHEN push link THEN consumed without handling`() =
+        runTest {
+            // Arrange
+            every { deepLinkFeatureToggles.isHandlerRegistryEnabled } returns true
+            every { registeredWalletConnectHandler.isOpenableFromPush } returns false
+            every { mockedUri.isOpaque } returns true
+            every { mockedUri.scheme } returns "wc"
+            every { mockedUri.host } returns null
+            every { mockedUri.toString() } returns "wc:abc@2?relay-protocol=irn"
+
+            // Act
+            deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+            deepLinkFactory.handleDeeplink(
+                deeplinkUri = mockedUri,
+                coroutineScope = testScope,
+                isFromOnNewIntent = isFromOnNewIntent,
+                source = DeeplinkSource.Push,
+            )
+            advanceUntilIdle()
+
+            // Assert
+            verify(inverse = true) {
+                registeredWalletConnectHandler.handle(any())
+                urlOpener.openUrl(any())
+            }
+        }
+
+    @Test
+    fun `GIVEN registry enabled and handler not openable from push WHEN external link THEN handled`() = runTest {
+        // Arrange
+        every { deepLinkFeatureToggles.isHandlerRegistryEnabled } returns true
+        every { registeredWalletConnectHandler.isOpenableFromPush } returns false
+        every { mockedUri.isOpaque } returns true
+        every { mockedUri.scheme } returns "wc"
+        every { mockedUri.host } returns null
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(
+            deeplinkUri = mockedUri,
+            coroutineScope = testScope,
+            isFromOnNewIntent = isFromOnNewIntent,
+            source = DeeplinkSource.External,
+        )
+        advanceUntilIdle()
+
+        // Assert
+        verify { registeredWalletConnectHandler.handle(any()) }
+    }
+
+    @Test
+    fun `GIVEN registry enabled and handler openable from push WHEN push link THEN handled`() = runTest {
+        // Arrange
+        every { deepLinkFeatureToggles.isHandlerRegistryEnabled } returns true
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "main"
+        every { mockedUri.queryParameterNames } returns emptySet()
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(
+            deeplinkUri = mockedUri,
+            coroutineScope = testScope,
+            isFromOnNewIntent = isFromOnNewIntent,
+            source = DeeplinkSource.Push,
+        )
+        advanceUntilIdle()
+
+        // Assert
+        verify { registeredWalletHandler.handle(any()) }
+    }
+
+    @Test
+    fun `GIVEN registry enabled and handler disabled WHEN push https link THEN opened in browser`() = runTest {
+        // Arrange
+        every { deepLinkFeatureToggles.isHandlerRegistryEnabled } returns true
+        every { registeredJointAccountInviteHandler.isEnabled } returns false
+        every { mockedUri.scheme } returns "https"
+        every { mockedUri.host } returns "tangem.com"
+        every { mockedUri.path } returns "/joint-account/join/invite-id"
+        every { mockedUri.pathSegments } returns listOf("joint-account", "join", "invite-id")
+        every { mockedUri.queryParameterNames } returns emptySet()
+        every { mockedUri.toString() } returns "https://tangem.com/joint-account/join/invite-id"
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(
+            deeplinkUri = mockedUri,
+            coroutineScope = testScope,
+            isFromOnNewIntent = isFromOnNewIntent,
+            source = DeeplinkSource.Push,
+        )
+        advanceUntilIdle()
+
+        // Assert
+        verify(inverse = true) { registeredJointAccountInviteHandler.handle(any()) }
+        verify { urlOpener.openUrl("https://tangem.com/joint-account/join/invite-id") }
+    }
+
+    @Test
+    fun `GIVEN registry enabled and host not registered WHEN handle THEN deep link is not routed`() = runTest {
+        // Arrange
+        every { deepLinkFeatureToggles.isHandlerRegistryEnabled } returns true
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "onramp"
+        every { mockedUri.queryParameterNames } returns setOf("param")
+        every { mockedUri.getQueryParameter("param") } returns "value"
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+
+        // Assert
+        verify(inverse = true) {
+            onrampDeepLinkFactory.create(any(), any())
+            registeredWalletHandler.handle(any())
+            registeredJointAccountInviteHandler.handle(any())
+        }
+    }
+
+    @Test
+    fun `GIVEN registry disabled and host registered WHEN handle THEN legacy routing is used`() = runTest {
+        // Arrange
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "main"
+        every { mockedUri.queryParameterNames } returns emptySet()
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent)
+        advanceUntilIdle()
+
+        // Assert
+        verify { walletDeepLinkFactory.create() }
+        verify(inverse = true) { registeredWalletHandler.handle(any()) }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideWebFallbackModels")
+    fun `GIVEN push link that matches no route WHEN handleDeeplink THEN opens it only when the host is trusted`(
+        model: WebFallbackModel,
+    ) = runTest {
+        // Arrange
+        every { mockedUri.scheme } returns model.scheme
+        every { mockedUri.host } returns model.host
+        every { mockedUri.userInfo } returns model.userInfo
+        every { mockedUri.path } returns model.path
+        every { mockedUri.queryParameterNames } returns emptySet()
+        every { mockedUri.toString() } returns model.url
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent, model.source)
+        advanceUntilIdle()
+
+        // Assert
+        if (model.isOpenedInBrowser) {
+            verify { urlOpener.openUrl(model.url) }
+        } else {
+            verify(inverse = true) { urlOpener.openUrl(any()) }
+        }
+    }
+
+    @Test
+    fun `GIVEN news article link from push WHEN handleDeeplink THEN routes it and opens no browser`() = runTest {
+        // Arrange — pins the `true` of the news branch: getting it wrong opens a browser tab over the article
+        every { mockedUri.scheme } returns "https"
+        every { mockedUri.host } returns "tangem.com"
+        every { mockedUri.path } returns "/news/markets/42-some-slug"
+        every { mockedUri.toString() } returns "https://tangem.com/news/markets/42-some-slug"
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent, DeeplinkSource.Push)
+        advanceUntilIdle()
+
+        // Assert
+        verify { newsDeeplink.create(eq(testScope), eq(mockedUri)) }
+        verify(inverse = true) { urlOpener.openUrl(any()) }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideNewsPathsWithoutArticleId")
+    fun `GIVEN news link without article id WHEN handleDeeplink THEN shows news list and opens no browser`(
+        path: String,
+    ) = runTest {
+        // Arrange — the details handler cannot route these, and the browser fallback would only bounce off
+        // the app's own verified App Link claim on `/news*`, so the news list is the one live destination
+        every { mockedUri.scheme } returns "https"
+        every { mockedUri.host } returns "tangem.com"
+        every { mockedUri.path } returns path
+        every { mockedUri.queryParameterNames } returns emptySet()
+        every { mockedUri.toString() } returns "https://tangem.com$path"
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent, DeeplinkSource.Push)
+        advanceUntilIdle()
+
+        // Assert
+        verify { newsDeepLinkFactory.create(eq(emptyMap())) }
+        verify(inverse = true) { newsDeeplink.create(any(), any()) }
+        verify(inverse = true) { urlOpener.openUrl(any()) }
+    }
+
+    @Test
+    fun `GIVEN pay-app link from push WHEN handleDeeplink THEN routes it and opens no browser`() = runTest {
+        // Arrange
+        every { mockedUri.scheme } returns "https"
+        every { mockedUri.host } returns "tangem.com"
+        every { mockedUri.path } returns "/pay-app"
+        every { mockedUri.toString() } returns "https://tangem.com/pay-app"
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent, DeeplinkSource.Push)
+        advanceUntilIdle()
+
+        // Assert
+        verify { onboardVisaDeepLink.create(eq(mockedUri)) }
+        verify(inverse = true) { urlOpener.openUrl(any()) }
+    }
+
+    @Test
+    fun `GIVEN path that only shares a prefix with a route WHEN handleDeeplink THEN opens it in a browser`() =
+        runTest {
+            // Arrange — `/newsletter` is not the news route; claiming it as routed would swallow the fallback
+            every { mockedUri.scheme } returns "https"
+            every { mockedUri.host } returns "tangem.com"
+            every { mockedUri.path } returns "/newsletter/subscribe"
+            every { mockedUri.toString() } returns "https://tangem.com/newsletter/subscribe"
+
+            // Act
+            deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+            deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent, DeeplinkSource.Push)
+            advanceUntilIdle()
+
+            // Assert
+            verify(inverse = true) { newsDeeplink.create(any(), any()) }
+            verify { urlOpener.openUrl("https://tangem.com/newsletter/subscribe") }
+        }
+
+    @Test
+    fun `GIVEN routable deeplink from push WHEN handleDeeplink THEN routes it and opens no browser`() = runTest {
+        // Arrange
+        every { mockedUri.scheme } returns "tangem"
+        every { mockedUri.host } returns "main"
+        every { mockedUri.query } returns null
+        every { mockedUri.queryParameterNames } returns emptySet()
+        every { mockedUri.toString() } returns "tangem://main"
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent, DeeplinkSource.Push)
+        advanceUntilIdle()
+
+        // Assert
+        verify { walletDeepLinkFactory.create() }
+        verify(inverse = true) { urlOpener.openUrl(any()) }
+    }
+
+    @ParameterizedTest
+    @MethodSource("providePayAppMainModels")
+    fun `GIVEN pay-app-main link WHEN handleDeeplink THEN Tangem Pay handler is created only from push`(
+        model: PayAppMainModel,
+    ) = runTest {
+        // Arrange
+        every { mockedUri.scheme } returns model.scheme
+        every { mockedUri.host } returns model.host
+        every { mockedUri.path } returns model.path
+        every { mockedUri.pathSegments } returns model.pathSegments
+        every { mockedUri.queryParameterNames } returns emptySet()
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent, model.source)
+        advanceUntilIdle()
+
+        // Assert
+        if (model.isHandled) {
+            verify { tangemPayMainDeepLink.create(eq(testScope), eq(emptyMap())) }
+        } else {
+            verify(inverse = true) { tangemPayMainDeepLink.create(any(), any()) }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideRegisteredPayAppMainModels")
+    fun `GIVEN registry enabled and pay-app-main link WHEN handleDeeplink THEN handled only from push`(
+        model: RegisteredPayAppMainModel,
+    ) = runTest {
+        // Arrange
+        every { deepLinkFeatureToggles.isHandlerRegistryEnabled } returns true
+        every { mockedUri.scheme } returns model.scheme
+        every { mockedUri.host } returns model.host
+        every { mockedUri.path } returns model.path
+        every { mockedUri.pathSegments } returns model.pathSegments
+        every { mockedUri.queryParameterNames } returns emptySet()
+
+        // Act
+        deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+        deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent, model.source)
+        advanceUntilIdle()
+
+        // Assert
+        if (model.isHandled) {
+            verify { registeredTangemPayMainHandler.handle(any()) }
+        } else {
+            verify(inverse = true) { registeredTangemPayMainHandler.handle(any()) }
+        }
+    }
+
+    @Test
+    fun `GIVEN parked push deep link WHEN external pay-app-main link arrives THEN parked one is still routed`() =
+        runTest {
+            // Arrange
+            val pushUri = mockk<Uri>(relaxed = true) {
+                every { scheme } returns "tangem"
+                every { host } returns "main"
+                every { queryParameterNames } returns emptySet()
+            }
+            every { mockedUri.scheme } returns "tangem"
+            every { mockedUri.host } returns "pay-app-main"
+            deepLinkFactory.handleDeeplink(pushUri, testScope, isFromOnNewIntent, DeeplinkSource.Push)
+
+            // Act
+            deepLinkFactory.handleDeeplink(mockedUri, testScope, isFromOnNewIntent, DeeplinkSource.External)
+            deepLinkFactory.checkRoutingReadiness(AppRoute.Wallet)
+            advanceUntilIdle()
+
+            // Assert
+            verify { walletDeepLinkFactory.create() }
+            verify(inverse = true) { tangemPayMainDeepLink.create(any(), any()) }
+        }
+
+    data class PayAppMainModel(
+        val scheme: String,
+        val host: String,
+        val path: String,
+        val source: DeeplinkSource,
+        val isHandled: Boolean,
+        val pathSegments: List<String> = emptyList(),
+    )
+
+    data class RegisteredPayAppMainModel(
+        val scheme: String,
+        val host: String,
+        val path: String,
+        val pathSegments: List<String>,
+        val source: DeeplinkSource,
+        val isHandled: Boolean,
+    )
+
+    @Test
+    fun `GIVEN link to a known target WHEN bindMarketingUid THEN the first non-empty uid is bound`() {
+        // Arrange
+        val uri = marketingUidUri(host = "main", uids = listOf("", "spring-campaign", "other"))
+
+        // Act
+        deepLinkFactory.bindMarketingUid(uri)
+
+        // Assert
+        coVerify(exactly = 1) { marketingUidBindingRepository.bind("spring-campaign") }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideNotBoundMarketingUidModels")
+    fun `GIVEN link without a bindable uid WHEN bindMarketingUid THEN nothing is bound`(
+        model: NotBoundMarketingUidModel,
+    ) {
+        // Arrange
+        every { marketingFeatureToggles.isUidBindingEnabled } returns model.isToggleOn
+        val uri = marketingUidUri(scheme = model.scheme, host = model.host, uids = model.uids)
+
+        // Act
+        deepLinkFactory.bindMarketingUid(uri)
+
+        // Assert
+        coVerify(exactly = 0) { marketingUidBindingRepository.bind(any()) }
+    }
+
+    private fun marketingUidUri(scheme: String = "tangem", host: String?, uids: List<String>): Uri {
+        val isOpaque = host == null
+        return mockk(relaxed = true) {
+            every { this@mockk.scheme } returns scheme
+            every { this@mockk.host } returns host
+            every { pathSegments } returns emptyList()
+            every { this@mockk.isOpaque } returns isOpaque
+            if (isOpaque) {
+                every { getQueryParameters(any()) } throws UnsupportedOperationException()
+            } else {
+                every { getQueryParameters("uid") } returns uids
+            }
+        }
+    }
+
+    data class NotBoundMarketingUidModel(
+        val name: String,
+        val scheme: String = "tangem",
+        val host: String? = "main",
+        val uids: List<String> = listOf("spring-campaign"),
+        val isToggleOn: Boolean = true,
+    ) {
+        override fun toString(): String = name
+    }
+
+    data class WebFallbackModel(
+        val scheme: String,
+        val host: String,
+        val path: String,
+        val url: String,
+        val source: DeeplinkSource,
+        val isOpenedInBrowser: Boolean,
+        val userInfo: String? = null,
+    )
+
+    private companion object {
+
+        @JvmStatic
+        fun providePayAppMainModels(): List<PayAppMainModel> = listOf(
+            PayAppMainModel(
+                scheme = "tangem",
+                host = "pay-app-main",
+                path = "",
+                source = DeeplinkSource.Push,
+                isHandled = true,
+            ),
+            PayAppMainModel(
+                scheme = "tangem",
+                host = "pay-app-main",
+                path = "",
+                source = DeeplinkSource.External,
+                isHandled = false,
+            ),
+            PayAppMainModel(
+                scheme = "https",
+                host = "tangem.com",
+                path = "/pay-app-main",
+                source = DeeplinkSource.Push,
+                isHandled = true,
+            ),
+            PayAppMainModel(
+                scheme = "https",
+                host = "tangem.com",
+                path = "/pay-app-main",
+                source = DeeplinkSource.External,
+                isHandled = false,
+            ),
+            PayAppMainModel(
+                scheme = "https",
+                host = "tangem.com",
+                path = "/pay-app-main/details",
+                source = DeeplinkSource.External,
+                isHandled = false,
+            ),
+            PayAppMainModel(
+                scheme = "https",
+                host = "tangem.com",
+                path = "/pay-app-main/x",
+                pathSegments = listOf("pay-app-main/x"),
+                source = DeeplinkSource.Push,
+                isHandled = true,
+            ),
+            PayAppMainModel(
+                scheme = "https",
+                host = "tangem.com",
+                path = "/pay-app-main/x",
+                pathSegments = listOf("pay-app-main/x"),
+                source = DeeplinkSource.External,
+                isHandled = false,
+            ),
+        )
+
+        @JvmStatic
+        fun provideRegisteredPayAppMainModels(): List<RegisteredPayAppMainModel> = listOf(
+            RegisteredPayAppMainModel(
+                scheme = "tangem",
+                host = "pay-app-main",
+                path = "",
+                pathSegments = emptyList(),
+                source = DeeplinkSource.Push,
+                isHandled = true,
+            ),
+            RegisteredPayAppMainModel(
+                scheme = "tangem",
+                host = "pay-app-main",
+                path = "",
+                pathSegments = emptyList(),
+                source = DeeplinkSource.External,
+                isHandled = false,
+            ),
+            RegisteredPayAppMainModel(
+                scheme = "https",
+                host = "tangem.com",
+                path = "//pay-app-main",
+                pathSegments = listOf("pay-app-main"),
+                source = DeeplinkSource.Push,
+                isHandled = true,
+            ),
+            RegisteredPayAppMainModel(
+                scheme = "https",
+                host = "tangem.com",
+                path = "//pay-app-main",
+                pathSegments = listOf("pay-app-main"),
+                source = DeeplinkSource.External,
+                isHandled = false,
+            ),
+        )
+
+        @JvmStatic
+        fun provideNotBoundMarketingUidModels(): List<NotBoundMarketingUidModel> = listOf(
+            NotBoundMarketingUidModel(name = "toggle off", isToggleOn = false),
+            NotBoundMarketingUidModel(name = "no uid", uids = emptyList()),
+            NotBoundMarketingUidModel(name = "empty uid", uids = listOf("")),
+            NotBoundMarketingUidModel(name = "unknown target", host = "not_a_route"),
+            NotBoundMarketingUidModel(name = "opaque wc link", scheme = "wc", host = null),
+        )
+
+        @JvmStatic
+        fun provideNewsPathsWithoutArticleId(): List<String> = listOf(
+            "/news",
+            "/news/",
+            "/news/markets",
+            "/news/markets/not-a-number",
+        )
+
+        @JvmStatic
+        fun provideWebFallbackModels(): List<WebFallbackModel> = listOf(
+            // The [REDACTED_TASK_KEY] marketing shape: a trusted host on a path no handler claims
+            WebFallbackModel(
+                scheme = "https",
+                host = "tangem.com",
+                path = "/pricing/",
+                url = "https://tangem.com/pricing/?utm_campaign=pizzaday",
+                source = DeeplinkSource.Push,
+                isOpenedInBrowser = true,
+            ),
+            // `+` in a query is an encoded space — CIO/AppsFlyer campaign builders produce it routinely,
+            // and the fallback must not reject an already-trusted, already-parsed URL over it
+            WebFallbackModel(
+                scheme = "https",
+                host = "tangem.com",
+                path = "/pricing/",
+                url = "https://tangem.com/pricing/?utm_content=summer+sale",
+                source = DeeplinkSource.Push,
+                isOpenedInBrowser = true,
+            ),
+            // Hostnames are case-insensitive per RFC 3986
+            WebFallbackModel(
+                scheme = "https",
+                host = "TANGEM.COM",
+                path = "/pricing/",
+                url = "https://TANGEM.COM/pricing/",
+                source = DeeplinkSource.Push,
+                isOpenedInBrowser = true,
+            ),
+            // AppsFlyer OneLink: must leave the app so the SDK can resolve attribution on the way back in
+            WebFallbackModel(
+                scheme = "https",
+                host = "join.tangem.com",
+                path = "/abc",
+                url = "https://join.tangem.com/abc",
+                source = DeeplinkSource.Push,
+                isOpenedInBrowser = true,
+            ),
+            // The OneLink carve-out is host-based, so it must not let a non-https scheme through
+            WebFallbackModel(
+                scheme = "tangem",
+                host = "join.tangem.com",
+                path = "/abc",
+                url = "tangem://join.tangem.com/abc",
+                source = DeeplinkSource.Push,
+                isOpenedInBrowser = false,
+            ),
+            WebFallbackModel(
+                scheme = "https",
+                host = "evil.com",
+                path = "/phishing",
+                url = "https://evil.com/phishing",
+                source = DeeplinkSource.Push,
+                isOpenedInBrowser = false,
+            ),
+            // An unpatched android.net.Uri reads the host as tangem.com, a browser as evil.com
+            WebFallbackModel(
+                scheme = "https",
+                host = "tangem.com",
+                path = "/pricing/",
+                url = "https://evil.com\\@tangem.com/pricing/",
+                source = DeeplinkSource.Push,
+                isOpenedInBrowser = false,
+                userInfo = "evil.com\\",
+            ),
+            WebFallbackModel(
+                scheme = "https",
+                host = "join.tangem.com",
+                path = "/abc",
+                url = "https://[REDACTED_EMAIL]/abc",
+                source = DeeplinkSource.Push,
+                isOpenedInBrowser = false,
+                userInfo = "user",
+            ),
+            // A custom scheme handed to ACTION_VIEW would bounce back in as an ungated intent.data.
+            // The host must be one no handler claims, otherwise the fallback is never reached.
+            WebFallbackModel(
+                scheme = "tangem",
+                host = "not_a_route",
+                path = "/",
+                url = "tangem://not_a_route",
+                source = DeeplinkSource.Push,
+                isOpenedInBrowser = false,
+            ),
+            // External: the system already routed this to us, so re-opening it would bounce endlessly
+            WebFallbackModel(
+                scheme = "https",
+                host = "tangem.com",
+                path = "/pricing/",
+                url = "https://tangem.com/pricing/",
+                source = DeeplinkSource.External,
+                isOpenedInBrowser = false,
+            ),
+        )
     }
 }
