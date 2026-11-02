@@ -1451,6 +1451,7 @@
   <string name="money_account_onboarding_transfers_card_caption">Entra. Sale.</string>
   <string name="money_account_onboarding_transfers_card_subtitle">con una cuenta propia con datos bancarios</string>
   <string name="money_account_onboarding_transfers_card_title">Envíe y reciba pagos en moneda fiduciaria</string>
+  <string name="money_account_send_bank_transfer_unavailable">No disponible</string>
   <string name="money_account_send_fees_footer">Las comisiones incluyen el servicio %s y la comisión de red estimada</string>
   <string name="money_account_send_network_fee_note">Las comisiones incluyen una comisión de red estimada de %s, que puede variar según la actividad de la red</string>
   <string name="money_account_send_pay_button">Pagar %s</string>
@@ -1729,10 +1730,10 @@
   <string name="prediction_add_funds_max_receive_amount_title">El importe a recibir no debe superar %s</string>
   <string name="prediction_add_funds_notification_limits_description">El importe del depósito debe ser de al menos %1$s. No se recomiendan depósitos superiores a $50,000; divide un importe mayor en varios depósitos más pequeños.</string>
   <string name="prediction_add_funds_notification_limits_title">Límites de depósito</string>
-  <string name="prediction_add_funds_receive_body" formatted="false">Envía %1s desde otra billetera, mínimo %2s</string>
+  <string name="prediction_add_funds_receive_body">Envía %1$s desde otra billetera, mínimo %2$s</string>
   <string name="prediction_add_funds_receive_subtitle">Envía USDC en la red Polygon a tu cuenta de Polymarket</string>
   <string name="prediction_add_funds_receive_title">Desde otra billetera o exchange</string>
-  <string name="prediction_add_funds_subtitle" formatted="false">%1s en %2s</string>
+  <string name="prediction_add_funds_subtitle">%1$s en %2$s</string>
   <string name="prediction_add_funds_swap_body">Intercambia un token que ya tengas</string>
   <string name="prediction_add_funds_swap_subtitle">Usa cripto de tu billetera Tangem para recargar tu cuenta de Polymarket</string>
   <string name="prediction_add_funds_swap_title">Desde tu billetera Tangem</string>
@@ -1749,7 +1750,7 @@
   <string name="prediction_close_result_partially_sold_title">Vendido parcialmente</string>
   <string name="prediction_close_result_sold_title">Vendido %s</string>
   <string name="prediction_close_result_tokens_sold">Acciones vendidas</string>
-  <string name="prediction_close_selling_of" formatted="false">Vendiendo %1s de %2s acciones</string>
+  <string name="prediction_close_selling_of">Vendiendo %1$s de %2$s acciones</string>
   <string name="prediction_close_selling_tokens">Vendiendo %s acciones</string>
   <string name="prediction_close_summary_to">A</string>
   <string name="prediction_close_title">Cerrar posición</string>
@@ -1762,17 +1763,17 @@
   <string name="prediction_details_resolution_source">Fuente de resolución</string>
   <string name="prediction_details_total_volume">Volumen total</string>
   <string name="prediction_event_live">En directo</string>
-  <plurals name="prediction_event_more_outcomes" formatted="false">
-    <item quantity="one">one: +%d resultado | other: +%d resultados</item>
-    <item quantity="other"></item>
+  <plurals name="prediction_event_more_outcomes">
+    <item quantity="one">+%d resultado</item>
+    <item quantity="other">+%d resultados</item>
   </plurals>
   <string name="prediction_event_probability">Probabilidad</string>
   <string name="prediction_event_total_volume">Volumen total:</string>
   <string name="prediction_fee_sheet_builder_fee">Comisión de Tangem</string>
-  <string name="prediction_fee_sheet_buy_description" formatted="false">Comprando %1s acciones a %2s¢ cada una. El número final de acciones (y el importe correspondiente de %3s ejecutado) puede variar dentro de tu límite de deslizamiento de %4s, según lo que este mercado pueda emparejar.</string>
+  <string name="prediction_fee_sheet_buy_description">Comprando %1$s acciones a %2$s¢ cada una. El número final de acciones (y el importe correspondiente de %3$s ejecutado) puede variar dentro de tu límite de deslizamiento de %4$s, según lo que este mercado pueda emparejar.</string>
   <string name="prediction_fee_sheet_order">Orden de predicción</string>
   <string name="prediction_fee_sheet_polymarket_fee">Comisión de Polymarket</string>
-  <string name="prediction_fee_sheet_sell_description" formatted="false">Vendiendo %1s acciones a %2s¢ cada una. El número final de acciones (y el importe correspondiente de %3s ejecutado) puede variar dentro de tu límite de deslizamiento de %4s, según lo que este mercado pueda emparejar.</string>
+  <string name="prediction_fee_sheet_sell_description">Vendiendo %1$s acciones a %2$s¢ cada una. El número final de acciones (y el importe correspondiente de %3$s ejecutado) puede variar dentro de tu límite de deslizamiento de %4$s, según lo que este mercado pueda emparejar.</string>
   <string name="prediction_fee_sheet_total">Total</string>
   <string name="prediction_history_bought">Comprado</string>
   <string name="prediction_history_csv_average_price">Precio medio</string>
@@ -1825,7 +1826,7 @@
   <string name="prediction_onboarding_faq_risks_question">¿Cuáles son los riesgos?</string>
   <string name="prediction_onboarding_faq_tap_answer">Tu tarjeta firma una vez para crear una cuenta de depósito de autocustodia en Polymarket. A partir de ahí, recargas, operas y retiras directamente desde Tangem, y solo tu tarjeta puede mover los fondos.</string>
   <string name="prediction_onboarding_faq_tap_question">¿Qué ocurre cuando acerco mi tarjeta?</string>
-  <string name="prediction_onboarding_legal" formatted="false">Al usar la función de Predicciones, aceptas los %1s y los %2s</string>
+  <string name="prediction_onboarding_legal">Al usar la función de Predicciones, aceptas los %1$s y los %2$s</string>
   <string name="prediction_onboarding_legal_polymarket_terms">Términos y condiciones de Polymarket</string>
   <string name="prediction_onboarding_legal_tangem_terms">Términos y condiciones de Tangem</string>
   <string name="prediction_onboarding_reconnect_benefit_safe_subtitle">Misma cuenta de depósito, mismos fondos. Volver a vincular nunca mueve tus fondos</string>
@@ -1835,7 +1836,7 @@
   <string name="prediction_onboarding_reconnect_button">Seguir prediciendo</string>
   <string name="prediction_onboarding_reconnect_faq_answer">Las claves de acceso se guardan solo en tu dispositivo. Se borran al reinstalar la app, cambiar de teléfono o cuando caduca la sesión. Tu cuenta reside en Polymarket y no se ve afectada.</string>
   <string name="prediction_onboarding_reconnect_faq_question">¿Por qué veo esto?</string>
-  <string name="prediction_onboarding_reconnect_legal" formatted="false">No hay nuevos términos que aceptar: tu acuerdo con %1s y %2s sigue vigente</string>
+  <string name="prediction_onboarding_reconnect_legal">No hay nuevos términos que aceptar: tu acuerdo con %1$s y %2$s sigue vigente</string>
   <string name="prediction_onboarding_reconnect_subtitle">Tu cuenta de depósito, saldo y posiciones abiertas están a salvo. Solo hay que volver a vincular este dispositivo: acerca tu tarjeta una vez para restaurar el acceso.</string>
   <string name="prediction_onboarding_reconnect_title">Reconecta tu cuenta de Polymarket</string>
   <string name="prediction_onboarding_start_button">Empezar a predecir</string>
@@ -1874,7 +1875,7 @@
   <string name="prediction_place_result_no_fill_banner_description">No hay acciones disponibles en Polymarket; tu orden no se pudo ejecutar.</string>
   <string name="prediction_place_result_no_fill_banner_title">Sin ejecución</string>
   <string name="prediction_place_result_no_fill_title">Liquidez insuficiente</string>
-  <string name="prediction_place_result_partial_amount" formatted="false">%1s de %2s</string>
+  <string name="prediction_place_result_partial_amount">%1$s de %2$s</string>
   <string name="prediction_place_result_partial_banner_description">Tu orden se completó parcialmente debido a una liquidez insuficiente en Polymarket dentro de tu tolerancia de deslizamiento.</string>
   <string name="prediction_place_result_partial_banner_title">Completada parcialmente</string>
   <string name="prediction_place_result_partial_title">Colocada parcialmente</string>
@@ -1931,7 +1932,7 @@
   <string name="prediction_positions_quantity">Acciones</string>
   <string name="prediction_positions_realized_description">Ganancia o pérdida ya consolidada. Proviene de las acciones que has vendido (parcial o totalmente) y de las posiciones resueltas como ganadas, perdidas o divididas. El P&amp;L realizado incluye todas las comisiones.</string>
   <string name="prediction_positions_realized_pnl">P&amp;L realizado</string>
-  <string name="prediction_positions_result_amount" formatted="false">%1s %2s</string>
+  <string name="prediction_positions_result_amount">%1$s %2$s</string>
   <string name="prediction_positions_split">Dividida</string>
   <string name="prediction_positions_status">Estado</string>
   <string name="prediction_positions_title">Mis posiciones</string>
@@ -1958,7 +1959,7 @@
   <string name="prediction_withdraw_error_generic">No se pudo enviar el retiro. Comprueba tu conexión e inténtalo de nuevo</string>
   <string name="prediction_withdraw_error_rejected">Polymarket rechazó el retiro. Inténtalo de nuevo</string>
   <string name="prediction_withdraw_in_progress_message">Tu retiro anterior aún se está procesando. Espera a que termine antes de iniciar uno nuevo.</string>
-  <string name="prediction_withdraw_min_amount">El retiro mínimo es de %s. Añade fondos para alcanzarlo.</string>
+  <string name="prediction_withdraw_min_amount">El retiro mínimo es de %@. Añade fondos para alcanzarlo.</string>
   <string name="prediction_withdraw_status_failed_description">Algo salió mal al procesar tu retiro. Inténtalo de nuevo o contacta con soporte.</string>
   <string name="prediction_withdraw_status_failed_notice">Error en el retiro. No se retiraron fondos.</string>
   <string name="prediction_withdraw_status_failed_title">Error en el retiro</string>
@@ -2955,7 +2956,7 @@
   <string name="tangempay_topup_receive_body_multichain">Envíe USDC o USDT a la dirección de su cuenta</string>
   <string name="tangempay_topup_receive_title">Desde otra billetera o exchange</string>
   <string name="tangempay_topup_swap_body">Recargue su cuenta con cualquier token de su billetera</string>
-  <string name="tangempay_topup_swap_title">Desde tu Tangem Wallet</string>
+  <string name="tangempay_topup_swap_title">Desde su Tangem Wallet</string>
   <string name="tangempay_unified_onboarding_cashback_caption">Cashback</string>
   <string name="tangempay_unified_onboarding_cashback_subtitle">Pagado en USDC</string>
   <string name="tangempay_unified_onboarding_cashback_title">Hasta un 2%%. %1$s</string>
@@ -3675,6 +3676,13 @@
   <string name="yield_module_high_network_fees_notification_description">Las comisiones son más altas de lo habitual debido a la alta actividad del mercado. Puede continuar ahora o volver a consultar más tarde cuando las comisiones sean más bajas.</string>
   <string name="yield_module_high_network_fees_notification_title">Tarifas de red elevadas</string>
   <string name="yield_module_historical_returns">Rendimientos históricos</string>
+  <string name="yield_module_main_promo_button">Prueba el Modo Rendimiento</string>
+  <string name="yield_module_main_promo_subtitle">Pon a trabajar tus monedas inactivas. Sin bloqueos, retira en cualquier momento.</string>
+  <string name="yield_module_main_promo_title">Gana con tu cripto hasta un %1$s%% APY</string>
+  <plurals name="yield_module_main_promo_tokens_count">
+    <item quantity="one">Más de %d token disponible</item>
+    <item quantity="other">Más de %d tokens disponibles</item>
+  </plurals>
   <string name="yield_module_main_screen_promo_banner_message">Consiga un %1$s%% APY sobre su saldo</string>
   <string name="yield_module_main_view_approve_notification_description">Se ha revocado la autorización para su token en el Modo Rendimiento. Abra el token para volver a conceder el permiso.</string>
   <string name="yield_module_main_view_approve_notification_title">Se necesita la aprobación de Token</string>

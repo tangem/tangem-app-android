@@ -16,6 +16,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
@@ -27,7 +28,7 @@ import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBankCredentialsUseCase
-import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
+import com.tangem.domain.moneyaccount.usecase.RenewTangemPaySessionUseCase
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.features.moneyaccount.details.addfunds.options.MoneyAccountAddFundsOptionsListener
@@ -45,6 +46,7 @@ import javax.inject.Inject
 internal class MoneyAccountDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     moneyAccountStatusSupplier: MoneyAccountStatusSupplier,
+    getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
@@ -54,7 +56,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     private val getMoneyAccountBankCredentialsUseCase: GetMoneyAccountBankCredentialsUseCase,
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
-    private val produceTangemPayInitialDataUseCase: ProduceTangemPayInitialDataUseCase,
+    private val renewTangemPaySessionUseCase: RenewTangemPaySessionUseCase,
     private val uiMessageSender: UiMessageSender,
 ) : Model(), MoneyAccountAddFundsOptionsListener {
 
@@ -88,6 +90,10 @@ internal class MoneyAccountDetailsModel @Inject constructor(
                 }
             }
             .launchIn(modelScope)
+
+        getBalanceHidingSettingsUseCase.isBalanceHidden()
+            .onEach { isHidden -> uiState.update { it.copy(isBalanceHidden = isHidden) } }
+            .launchIn(modelScope)
     }
 
     private fun onBackClick() {
@@ -107,7 +113,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     private fun onRenewSession() {
         updateRenewSessionProgress(isLoading = true)
         modelScope.launch {
-            produceTangemPayInitialDataUseCase(params.userWalletId)
+            renewTangemPaySessionUseCase(params.userWalletId)
                 .onRight { moneyAccountStatusFetcher(params.userWalletId) }
                 .onLeft { uiMessageSender.send(SnackbarMessage(resourceReference(R.string.common_error))) }
             updateRenewSessionProgress(isLoading = false)

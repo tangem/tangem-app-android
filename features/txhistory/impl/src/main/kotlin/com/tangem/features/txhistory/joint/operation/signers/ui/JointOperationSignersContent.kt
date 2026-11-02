@@ -169,7 +169,7 @@ private fun JointOperationSignersContentPreview() {
                         signerPreview(name = "Kingston", status = CoreUiR.string.joint_operation_signed_at),
                         signerPreview(name = "Daniel", status = CoreUiR.string.joint_operation_declined_at),
                         signerPreview(name = "Olivia", status = CoreUiR.string.joint_operation_waiting_to_sign),
-                        signerPreview(name = "Yasmin", status = CoreUiR.string.joint_operation_waiting_to_sign),
+                        signerPreview(name = "Yasmin", status = CoreUiR.string.joint_operation_no_response),
                     ),
                 ),
             )

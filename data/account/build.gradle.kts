@@ -61,9 +61,7 @@ dependencies {
 
     // region Project - Features
     api(projects.features.moneyAccount.details.api) // AND_15325_MONEY_ACCOUNTS_ENABLED
-    implementation(projects.features.collectibles.api) // TWI_1640_COLLECTIBLES_PHASE_ONE_ENABLED
     implementation(projects.features.polymarket.api) // POLYMARKET_ENABLED
-    implementation(projects.features.jointAccount.api) // JOINT_ACCOUNT_ENABLED
     // endregion
 
     // region Project - Common
@@ -77,6 +75,8 @@ dependencies {
 
     // region Test
     testImplementation(deps.kotlin.serialization)
+    testImplementation(projects.features.collectibles.api)
+    testImplementation(projects.features.jointAccount.api)
     testImplementation(deps.test.turbine)
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)

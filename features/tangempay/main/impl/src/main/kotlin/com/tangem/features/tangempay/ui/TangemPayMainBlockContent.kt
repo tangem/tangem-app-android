@@ -249,7 +249,7 @@ private fun TangemPayMainLoading(modifier: Modifier = Modifier) {
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = {
             TangemAvatar(
-                state = TangemAvatar.UiState.Shimmer(shape = TangemAvatar.UiState.Shimmer.Shape.RoundedSquare),
+                state = TangemAvatar.UiState.Shimmer(shape = TangemAvatar.Shape.RoundedSquare),
                 size = TangemAvatar.Size.X40,
             )
         },

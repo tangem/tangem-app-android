@@ -5,13 +5,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import com.arkivanov.decompose.router.slot.childSlot
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.polymarket.impl.placeprediction.SubmittingStep
 import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPrediction
+import com.tangem.features.polymarket.impl.placeprediction.feesheet.predictionFeeSheetSlot
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSummaryModel
 import com.tangem.features.polymarket.impl.placeprediction.ui.PlacePredictionSummaryContent
 
@@ -22,18 +21,7 @@ internal class PlacePredictionSummaryComponent(
 
     private val model: PlacePredictionSummaryModel = getOrCreateModel(params = params)
 
-    private val feeSheetSlot = childSlot(
-        source = model.feeSheet.navigation,
-        serializer = null,
-        key = "feeSheet",
-        handleBackButton = false,
-        childFactory = { _, componentContext ->
-            PredictionFeeSheetComponent(
-                appComponentContext = childByContext(componentContext),
-                feeSheet = model.feeSheet,
-            )
-        },
-    )
+    private val feeSheetSlot = predictionFeeSheetSlot(feeSheet = model.feeSheet)
 
     override fun isSubmitting(): Boolean = model.isSubmitting()
 
