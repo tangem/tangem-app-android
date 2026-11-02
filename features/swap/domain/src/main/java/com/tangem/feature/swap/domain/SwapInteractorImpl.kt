@@ -21,6 +21,7 @@ import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -1167,7 +1168,7 @@ internal class SwapInteractorImpl @Inject constructor(
         swapFee: SwapFee,
         evmGaslessFee: TransactionFeeExtended,
     ): SwapTransactionState {
-        val amountDecimal = requireNotNull(toBigDecimalOrNull(amountToSwap)) { "wrong amount format" }
+        val amountDecimal = amountToSwap.parseBigDecimalOrNull() ?: return SwapTransactionState.Error.UnknownError
         val dexTransaction = swapData.transaction as ExpressTransactionModel.DEX
 
         val swapTxData = createPlainDexTransaction(
