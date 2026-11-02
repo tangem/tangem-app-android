@@ -37,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -69,6 +70,9 @@ import kotlinx.coroutines.launch
 private val LocalTangemMenuSelectable = staticCompositionLocalOf { false }
 
 private val LocalTangemMenuVariant = staticCompositionLocalOf { TangemMenu.Variant.Button }
+
+/** Whether the enclosing menu is animating out; its items then take no more clicks from any input method. */
+internal val LocalTangemMenuClosing = compositionLocalOf { false }
 
 private val IconSize = 20.dp
 
@@ -147,7 +151,7 @@ internal fun TangemMenuItemLayout(
             .clickable(
                 interactionSource = resolvedInteractionSource,
                 indication = null,
-                enabled = isEnabled,
+                enabled = isEnabled && !LocalTangemMenuClosing.current,
                 role = Role.Button,
                 onClick = onClick,
             )
