@@ -78,6 +78,8 @@ internal class PlacePredictionOrderModel @Inject constructor(
 
     private var isCardWallet = false
 
+    private var sessionKeyStyle: PlaceButtonStyleUM? = null
+
     val feeSheet = PlacePredictionFeeSheet(
         uiState = uiState,
         scope = modelScope,
@@ -105,7 +107,6 @@ internal class PlacePredictionOrderModel @Inject constructor(
 
             isCardWallet = true
             uiState.update { it.copy(placeButtonStyle = PlaceButtonStyleUM.CARD) }
-            checkSessionKey()
         }
     }
 
@@ -117,15 +118,14 @@ internal class PlacePredictionOrderModel @Inject constructor(
             val canSign = withContext(dispatchers.io) {
                 canSignPredictionOrderWithSessionKeyUseCase(userWalletId = params.userWalletId)
             }
-            val style = if (canSign) PlaceButtonStyleUM.PLAIN else PlaceButtonStyleUM.CARD
-            uiState.update { state ->
-                if (state.submit is SubmitUM.Idle) {
-                    state.copy(placeButtonStyle = style)
-                } else {
-                    state
-                }
-            }
+            sessionKeyStyle = if (canSign) PlaceButtonStyleUM.PLAIN else PlaceButtonStyleUM.CARD
+            applySessionKeyStyleIfIdle()
         }
+    }
+
+    private fun applySessionKeyStyleIfIdle() {
+        val style = sessionKeyStyle ?: return
+        uiState.update { state -> if (state.isIdle()) state.copy(placeButtonStyle = style) else state }
     }
 
     fun onResume() {
@@ -210,10 +210,10 @@ internal class PlacePredictionOrderModel @Inject constructor(
 
     override fun onPlaceClick() {
         when (uiState.value.placeAction) {
-            PlaceActionUM.Ready -> quoteEngine.prepare()?.let(::place) ?: resetHoldIfIdle()
+            PlaceActionUM.Ready -> quoteEngine.prepare()?.let(::place) ?: settleButtonIfIdle()
             PlaceActionUM.ReadyOnceQuoted -> placeOnceQuoted()
             PlaceActionUM.AwaitingQuote -> resetHold()
-            PlaceActionUM.Unavailable -> resetHoldIfIdle()
+            PlaceActionUM.Unavailable -> settleButtonIfIdle()
         }
     }
 
@@ -239,7 +239,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
         pendingPlacement = null
         wait.cancel()
         releaseTap()
-        resetHoldIfIdle()
+        settleButtonIfIdle()
     }
 
     private fun releaseTap() {
@@ -248,9 +248,14 @@ internal class PlacePredictionOrderModel @Inject constructor(
         }
     }
 
-    private fun resetHoldIfIdle() {
-        if (uiState.value.submit is SubmitUM.Idle) resetHold()
+    private fun settleButtonIfIdle() {
+        if (!uiState.value.isIdle()) return
+
+        resetHold()
+        applySessionKeyStyleIfIdle()
     }
+
+    private fun PlacePredictionUM.isIdle(): Boolean = submit is SubmitUM.Idle
 
     private fun resetHold() {
         uiState.update { it.copy(holdResetKey = it.holdResetKey + 1) }
@@ -261,7 +266,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
             quoteEngine.holdDuring {
                 val result = orderSubmitter.submit(prepared = prepared)
                 if (result == null) {
-                    resetHoldIfIdle()
+                    settleButtonIfIdle()
                     return@holdDuring
                 }
                 router.replaceAll(prepared.toStatusRoute(result = result))
