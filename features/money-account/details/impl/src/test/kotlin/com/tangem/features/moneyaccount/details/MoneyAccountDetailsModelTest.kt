@@ -30,7 +30,7 @@ import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBankCredentialsUseCase
-import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
+import com.tangem.domain.moneyaccount.usecase.RenewTangemPaySessionUseCase
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
 import com.tangem.features.moneyaccount.details.impl.R
@@ -79,14 +79,14 @@ internal class MoneyAccountDetailsModelTest {
     private val getMoneyAccountBankCredentialsUseCase: GetMoneyAccountBankCredentialsUseCase = mockk()
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher = mockk()
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter = mockk(relaxed = true)
-    private val produceTangemPayInitialDataUseCase: ProduceTangemPayInitialDataUseCase = mockk()
+    private val renewTangemPaySessionUseCase: RenewTangemPaySessionUseCase = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
 
     @BeforeEach
     fun resetMocks() {
         clearMocks(moneyAccountStatusSupplier, router, sendFeedbackEmailUseCase, urlOpener, analytics)
         clearMocks(getMoneyAccountBankCredentialsUseCase, moneyAccountStatusFetcher, txHistoryContentUpdateEmitter)
-        clearMocks(produceTangemPayInitialDataUseCase, uiMessageSender)
+        clearMocks(renewTangemPaySessionUseCase, uiMessageSender)
     }
 
     @ParameterizedTest
@@ -470,7 +470,7 @@ internal class MoneyAccountDetailsModelTest {
     @Test
     fun `GIVEN not synced banner WHEN renew session succeeds THEN status fetched and progress hidden`() = runTest {
         // Arrange
-        coEvery { produceTangemPayInitialDataUseCase(userWalletId) } returns Unit.right()
+        coEvery { renewTangemPaySessionUseCase(userWalletId) } returns Unit.right()
         coEvery { moneyAccountStatusFetcher(userWalletId) } returns Unit.right()
         val model = createModel(activeAccount(balance = balance(), error = MoneyAccountStatusValue.Error.NotSynced))
         advanceUntilIdle()
@@ -489,7 +489,7 @@ internal class MoneyAccountDetailsModelTest {
     @Test
     fun `GIVEN not synced banner WHEN renew session fails THEN error shown and status not fetched`() = runTest {
         // Arrange
-        coEvery { produceTangemPayInitialDataUseCase(userWalletId) } returns IllegalStateException().left()
+        coEvery { renewTangemPaySessionUseCase(userWalletId) } returns IllegalStateException().left()
         val model = createModel(activeAccount(balance = balance(), error = MoneyAccountStatusValue.Error.NotSynced))
         advanceUntilIdle()
 
@@ -530,7 +530,7 @@ internal class MoneyAccountDetailsModelTest {
             getMoneyAccountBankCredentialsUseCase = getMoneyAccountBankCredentialsUseCase,
             moneyAccountStatusFetcher = moneyAccountStatusFetcher,
             txHistoryContentUpdateEmitter = txHistoryContentUpdateEmitter,
-            produceTangemPayInitialDataUseCase = produceTangemPayInitialDataUseCase,
+            renewTangemPaySessionUseCase = renewTangemPaySessionUseCase,
             uiMessageSender = uiMessageSender,
         )
     }
@@ -568,11 +568,6 @@ internal class MoneyAccountDetailsModelTest {
         val error: MoneyAccountStatusValue.Error?,
         val expectedTitle: TextReference?,
         val hasRenewButton: Boolean,
-    )
-
-    private fun provideTestModels() = listOf(
-        AddFundsModel(balance = balance(), expectedDepositAddress = DEPOSIT_ADDRESS),
-        AddFundsModel(balance = null, expectedDepositAddress = null),
     )
 
     data class AddFundsModel(val balance: MoneyAccountStatusValue.Balance?, val expectedDepositAddress: String?)
