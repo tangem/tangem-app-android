@@ -45,7 +45,7 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
 - **Available vs Total** (tap the header label): Available is the CLOB collateral (default); Total adds the
   positions value and is offered only once that value has been read — until then the toggle is disabled but
   the chosen mode is kept and returns with the value. The wallet-screen row and the wallet total count
-  Total, as on iOS ([REDACTED_TASK_KEY]); the main screen's wallet refresh reads the positions value too.
+  Total, as on iOS ([REDACTED_TASK_KEY]).
 - **Add funds** needs a confirmed deposit address; without one, report an unknown error rather than offer
   an address that may be wrong. The buy amount step offers the same sheet, shut until the region check
   answers, and shows the account-status balance only once `ACTUAL`.
@@ -53,7 +53,7 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
   dimmed and answering with Add funds' error when they failed. Unlike Add funds it ignores the region.
 - Failed requisites are re-requested when that error is dismissed (Main and the amount step) and on resume.
 - **Awaiting-funds banner** opens on a completed top-up swap or a sent order, never on Receive.
-- Pull-to-refresh refreshes region, positions preview, account status and positions value, then the
+- Pull-to-refresh refreshes region, positions preview and account status (with the positions value), then the
   requisites. Feed pages are not re-requested — they are kept per visited category and refreshed by
   `PolymarketFeedPoller`.
 - A position row always opens something: `PositionResult` when resolved with a known outcome,
