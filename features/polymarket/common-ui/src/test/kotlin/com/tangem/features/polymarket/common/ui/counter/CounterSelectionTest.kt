@@ -1,4 +1,4 @@
-package com.tangem.core.ui.ds2.counter
+package com.tangem.features.polymarket.common.ui.counter
 
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Test
