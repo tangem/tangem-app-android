@@ -77,6 +77,7 @@ internal class PlacePredictionOrderPreviewProvider : PreviewParameterProvider<Pl
     override val values: Sequence<PlacePredictionUM>
         get() = sequenceOf(
             previewState(amountValue = "4000", quote = previewQuote()),
+            previewState(amountValue = "4000", quote = previewQuote(), balance = BigDecimal("10")),
             previewState(amountValue = "51.23", quote = previewSellQuote(), order = previewSell()),
             previewState(amountValue = "4000", quote = QuoteUM.Loading),
         )
