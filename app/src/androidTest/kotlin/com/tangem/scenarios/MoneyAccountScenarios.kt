@@ -34,7 +34,7 @@ fun BaseTestCase.clickMoneyAccountRowUntilDetailsOpen() {
     var detailsBalance: SemanticsMatcher? = null
     onMoneyAccountScreen { detailsBalance = balanceMatcher }
     composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-        runCatching { onMoneyAccountScreen { mainRow.performClick() } }
+        runCatching { onMoneyAccountScreen { clickMainRowViaOnClickAction() } }
         runCatching {
             composeTestRule.waitUntilAtLeastOneExists(checkNotNull(detailsBalance), DETAILS_OPEN_TIMEOUT_MILLIS)
         }.isSuccess
