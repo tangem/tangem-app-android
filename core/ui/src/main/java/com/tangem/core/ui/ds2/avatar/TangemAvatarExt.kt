@@ -18,11 +18,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.unit.sp
 import arrow.core.Either
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.TangemTheme
 
+@Immutable
+internal sealed interface AvatarAccountGlyph {
+    data class Icon(val icon: Either<Int, ImageVector>) : AvatarAccountGlyph
+    data class Letter(val text: TextReference) : AvatarAccountGlyph
+}
+
+@Immutable
+internal sealed interface AvatarAssetSource {
+    data class Url(val url: String) : AvatarAssetSource
+    data class Local(val icon: Either<Int, ImageVector>) : AvatarAssetSource
+}
+
 /**
- * Type style the [TangemAvatar.UiState.User] initial is set in. Figma gives each size its own style
- * rather than one style at three sizes, so the weight and letter spacing differ too.
+ * Type style the [TangemAvatar.UiState.User] initial and the [TangemAvatar.UiState.Account] letter are set
+ * in. Figma gives each size its own style rather than one style at three sizes, so the weight and letter
+ * spacing differ too.
  */
 internal enum class AvatarInitialStyle { HeadingSmall, Body, Caption }
 
@@ -52,10 +66,10 @@ internal fun TangemAvatar.Size.tokens(): AvatarTokens = when (this) {
         size = 72.dp,
         cornerRadius = 20.dp,
         accountGlyphSize = 36.dp,
-        iconGlyphSize = 32.dp,
+        iconGlyphSize = 28.dp,
         initialFontSize = 20.sp,
         initialStyle = AvatarInitialStyle.HeadingSmall,
-        indicatorSize = 0.dp,
+        indicatorSize = 12.dp,
     )
     TangemAvatar.Size.X44 -> AvatarTokens(
         size = 44.dp,
@@ -64,7 +78,7 @@ internal fun TangemAvatar.Size.tokens(): AvatarTokens = when (this) {
         iconGlyphSize = 20.dp,
         initialFontSize = 16.sp,
         initialStyle = AvatarInitialStyle.Body,
-        indicatorSize = 16.dp,
+        indicatorSize = 12.dp,
     )
     TangemAvatar.Size.X40 -> AvatarTokens(
         size = 40.dp,
@@ -73,7 +87,7 @@ internal fun TangemAvatar.Size.tokens(): AvatarTokens = when (this) {
         iconGlyphSize = 20.dp,
         initialFontSize = 16.sp,
         initialStyle = AvatarInitialStyle.Body,
-        indicatorSize = 16.dp,
+        indicatorSize = 12.dp,
     )
     TangemAvatar.Size.X16 -> AvatarTokens(
         size = 16.dp,
@@ -89,7 +103,7 @@ internal fun TangemAvatar.Size.tokens(): AvatarTokens = when (this) {
 /**
  * Interpolates between two size presets so a host can morph an avatar continuously — the account row
  * shrinks its 40dp avatar to 16dp while expanding. The indicator is dropped as soon as either end lacks
- * one, because Figma only draws it at [TangemAvatar.Size.X40] and [TangemAvatar.Size.X44].
+ * one, because Figma draws none at [TangemAvatar.Size.X16].
  */
 internal fun lerpAvatarTokens(start: AvatarTokens, stop: AvatarTokens, fraction: Float) = AvatarTokens(
     size = lerp(start = start.size, stop = stop.size, fraction = fraction),
@@ -136,15 +150,12 @@ internal fun TangemAvatar.Appearance.tokens(): AvatarAppearanceTokens {
     }
 }
 
-/**
- * Avatar fill palette. The account fills are `colors3.account` tokens; the Figma fills of the remaining
- * built-in kinds carry no variable bindings, so those stay raw brand hexes.
- */
 @Suppress("CyclomaticComplexMethod")
 @Composable
 @ReadOnlyComposable
 internal fun TangemAvatar.FillColor.toColor(): Color {
     val account = TangemTheme.colors3.account
+    val accent = TangemTheme.colors3.bg.accent
     return when (this) {
         TangemAvatar.FillColor.AzureBlue -> account.azureBlue
         TangemAvatar.FillColor.CaribbeanBlue -> account.caribbeanBlue
@@ -158,25 +169,24 @@ internal fun TangemAvatar.FillColor.toColor(): Color {
         TangemAvatar.FillColor.Pattypan -> account.pattypan
         TangemAvatar.FillColor.UfoGreen -> account.ufoGreen
         TangemAvatar.FillColor.VitalGreen -> account.vitalGreen
-        TangemAvatar.FillColor.Predictions -> Color(color = 0xFFA967FD)
-        TangemAvatar.FillColor.Gacha -> Color(color = 0xFFE68A03)
+        TangemAvatar.FillColor.Predictions -> accent.violet
+        TangemAvatar.FillColor.Gacha -> accent.yellow
         TangemAvatar.FillColor.PayVisa -> account.visa
-        TangemAvatar.FillColor.Money -> Color(color = 0xFF2DA30D)
+        TangemAvatar.FillColor.Money -> accent.green
     }
 }
 
-/** Figma maps the three transaction states onto three of the [TangemAvatar.Appearance] colour schemes. */
+/** Figma maps the transaction states onto four of the [TangemAvatar.Appearance] colour schemes. */
 internal fun TangemAvatar.Status.toAppearance(): TangemAvatar.Appearance = when (this) {
     TangemAvatar.Status.Progress -> TangemAvatar.Appearance.Info
     TangemAvatar.Status.Finished -> TangemAvatar.Appearance.Neutral
     TangemAvatar.Status.Failed -> TangemAvatar.Appearance.Error
+    TangemAvatar.Status.Pending -> TangemAvatar.Appearance.Warning
 }
 
-internal fun TangemAvatar.UiState.shape(cornerRadius: Dp): Shape = when {
-    this is TangemAvatar.UiState.Account -> RoundedCornerShape(cornerRadius)
-    this is TangemAvatar.UiState.Shimmer &&
-        shape == TangemAvatar.UiState.Shimmer.Shape.RoundedSquare -> RoundedCornerShape(cornerRadius)
-    else -> CircleShape
+internal fun TangemAvatar.Shape.toComposeShape(cornerRadius: Dp): Shape = when (this) {
+    TangemAvatar.Shape.Circle -> CircleShape
+    TangemAvatar.Shape.RoundedSquare -> RoundedCornerShape(cornerRadius)
 }
 
 @Composable
