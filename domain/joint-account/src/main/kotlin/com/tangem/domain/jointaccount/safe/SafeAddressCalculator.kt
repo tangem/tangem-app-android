@@ -14,7 +14,7 @@ import arrow.core.Either
  */
 interface SafeAddressCalculator {
 
-    fun compute(owners: List<String>, threshold: Int, singleton: SafeSingleton): Either<Error, String>
+    fun compute(owners: List<String>, threshold: Int): Either<Error, String>
 
     /** Errors of a composition that cannot belong to any deployable Safe. */
     sealed interface Error {

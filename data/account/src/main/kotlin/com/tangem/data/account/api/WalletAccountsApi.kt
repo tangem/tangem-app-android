@@ -1,6 +1,7 @@
 package com.tangem.data.account.api
 
 import com.tangem.core.remote.response.ApiResponse
+import com.tangem.data.common.account.SupportedAccountTypes
 import com.tangem.datasource.api.common.response.map
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
@@ -8,8 +9,7 @@ import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsV2Re
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletArchivedAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsV1Request
-import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
-import com.tangem.features.jointaccount.JointAccountFeatureToggles
+import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import javax.inject.Inject
 
 /**
@@ -22,12 +22,11 @@ import javax.inject.Inject
  */
 internal class WalletAccountsApi @Inject constructor(
     private val tangemTechApi: TangemTechApi,
-    private val jointAccountFeatureToggles: JointAccountFeatureToggles,
-    private val collectiblesFeatureToggles: CollectiblesFeatureToggles,
+    private val supportedAccountTypes: SupportedAccountTypes,
 ) {
 
     val isV2Enabled: Boolean
-        get() = jointAccountFeatureToggles.isJointAccountEnabled || collectiblesFeatureToggles.isCollectiblesEnabled
+        get() = supportedAccountTypes.types.any { it != WalletAccountDTO.Type.CRYPTO }
 
     suspend fun getAccounts(walletId: String, eTag: String?): ApiResponse<GetWalletAccountsResponse> {
         return if (isV2Enabled) {

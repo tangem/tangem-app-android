@@ -549,6 +549,7 @@ internal class SendModel @Inject constructor(
         return resolved ?: cryptoCurrencyStatus
     }
 
+    /** Only the first resolved route opens: later balance updates must not pull the user back over the result. */
     private fun subscribeOnStatusForInitialNavigation() {
         combine(
             cryptoCurrencyStatusFlow,
@@ -556,11 +557,14 @@ internal class SendModel @Inject constructor(
         ) { cryptoCurrencyStatus, _ ->
             if (!isAvailableForSend) {
                 if (isUnavailableForSend) showAlertError()
-                return@combine
+                return@combine null
             }
-            val route = resolveInitialRoute(cryptoCurrencyStatus) ?: return@combine
-            router.replaceAll(route)
-        }.launchIn(modelScope)
+            resolveInitialRoute(cryptoCurrencyStatus)
+        }
+            .filterNotNull()
+            .take(1)
+            .onEach { route -> router.replaceAll(route) }
+            .launchIn(modelScope)
     }
 
     private fun resolveInitialRoute(cryptoCurrencyStatus: CryptoCurrencyStatus): CommonSendRoute? {

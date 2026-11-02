@@ -3,6 +3,7 @@ package com.tangem.lib.auth.di
 import android.content.Context
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.analytics.api.PerformanceTracer
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.squareup.moshi.Moshi
 import com.tangem.common.services.secure.SecureStorage
@@ -31,7 +32,7 @@ import com.tangem.lib.auth.nonce.internal.DisabledAuthNonceDecryptor
 import com.tangem.lib.auth.session.DeviceRegistrar
 import com.tangem.lib.auth.session.SessionTokenRefresher
 import com.tangem.lib.auth.session.SessionTokensStore
-import com.tangem.lib.auth.performance.FirebaseNonceRequestPerformanceTracker
+import com.tangem.lib.auth.performance.TracingNonceRequestTracker
 import com.tangem.lib.auth.performance.NonceRequestTracker
 import com.tangem.lib.auth.performance.TimeoutReportingNonceRequestTracker
 import com.tangem.lib.auth.session.WalletRegistrar
@@ -259,12 +260,16 @@ internal object AuthModule {
 
     @Provides
     @Singleton
-    fun provideNonceRequestTracker(analyticsEventHandler: AnalyticsEventHandler): NonceRequestTracker =
-        TimeoutReportingNonceRequestTracker(
-            delegate = FirebaseNonceRequestPerformanceTracker(),
+    fun provideNonceRequestTracker(
+        analyticsEventHandler: AnalyticsEventHandler,
+        performanceTracer: PerformanceTracer,
+    ): NonceRequestTracker {
+        return TimeoutReportingNonceRequestTracker(
+            delegate = TracingNonceRequestTracker(performanceTracer),
             analyticsEventHandler = analyticsEventHandler,
             timeout = NONCE_REQUEST_TIMEOUT,
         )
+    }
 
     @Provides
     @Singleton
