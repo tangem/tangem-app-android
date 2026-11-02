@@ -6,7 +6,7 @@ import com.tangem.feature.tester.presentation.storybook.entity.PolymarketCounter
 import com.tangem.feature.tester.presentation.storybook.entity.PolymarketCounterStory.Sample
 import com.tangem.feature.tester.presentation.storybook.viewmodel.StateUpdater
 import com.tangem.feature.tester.presentation.storybook.viewmodel.storyPageFactory
-import com.tangem.features.polymarket.common.ui.counter.PolymarketCounter
+import com.tangem.features.polymarket.impl.common.ui.counter.PolymarketCounter
 import kotlinx.collections.immutable.toImmutableList
 
 internal val polymarketCounterStoryFactory

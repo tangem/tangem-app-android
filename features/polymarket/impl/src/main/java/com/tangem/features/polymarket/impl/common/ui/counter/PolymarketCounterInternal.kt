@@ -1,6 +1,6 @@
 @file:Suppress("MagicNumber")
 
-package com.tangem.features.polymarket.common.ui.counter
+package com.tangem.features.polymarket.impl.common.ui.counter
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
