@@ -5,7 +5,7 @@ import arrow.core.some
 import com.tangem.data.polymarket.store.PredictionPositionsValueStore
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.polymarket.flow.PredictionPositionsValueProducer
-import com.tangem.domain.polymarket.model.PredictionPositionsValue
+import com.tangem.domain.models.account.PredictionPositionsValue
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
