@@ -441,13 +441,7 @@ dependencies {
 
     /** Firebase libraries */
     implementation(platform(deps.firebase.bom))
-    implementation(deps.firebase.crashlytics)
-    runtimeOnly(deps.firebase.crashlytics.ndk)
     implementation(deps.firebase.messaging)
-    implementation(deps.firebase.perf) {
-        exclude(group = "com.google.firebase", module = "protolite-well-known-types")
-        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
-    }
     /** Tangem libraries */
     implementation(tangemDeps.blockchain) {
         exclude(module = "joda-time")

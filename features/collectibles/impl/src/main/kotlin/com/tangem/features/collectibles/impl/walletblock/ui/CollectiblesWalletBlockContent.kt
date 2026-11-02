@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -28,6 +29,7 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockUM
@@ -41,15 +43,10 @@ internal fun CollectiblesWalletBlockContent(
 ) {
     when (state) {
         is CollectiblesWalletBlockUM.Hidden -> Unit
+        is CollectiblesWalletBlockUM.SyncNeeded -> CollectiblesSyncNeeded(modifier)
         is CollectiblesWalletBlockUM.Content -> {
             TangemRow(
-                modifier = modifier.roundedShapeItemDecoration(
-                    radius = 24.dp,
-                    currentIndex = 0,
-                    addDefaultPadding = false,
-                    lastIndex = 0,
-                    backgroundColor = TangemTheme.colors3.bg.secondary,
-                ),
+                modifier = modifier.collectiblesCard(),
                 contentLead = TangemRowContentLead.Start,
                 verticalAlignment = TangemRowVerticalAlignment.Center,
                 titleSlot = {
@@ -70,6 +67,51 @@ internal fun CollectiblesWalletBlockContent(
         }
     }
 }
+
+@Composable
+private fun CollectiblesSyncNeeded(modifier: Modifier = Modifier) {
+    TangemRow(
+        modifier = modifier.collectiblesCard(),
+        contentLead = TangemRowContentLead.Start,
+        verticalAlignment = TangemRowVerticalAlignment.Center,
+        titleSlot = {
+            Text(
+                text = stringResourceSafe(R.string.collectibles_main_title),
+                color = TangemTheme.colors3.text.tertiary,
+                style = TangemTheme.typography3.body.medium,
+            )
+        },
+        subtitleSlot = {
+            Text(
+                text = stringResourceSafe(R.string.collectibles_account_reconnect_subtitle),
+                color = TangemTheme.colors3.text.tertiary,
+                style = TangemTheme.typography3.caption.medium,
+            )
+        },
+        valueSlot = {
+            Text(
+                text = DASH_SIGN,
+                color = TangemTheme.colors3.text.tertiary,
+                style = TangemTheme.typography3.body.medium,
+            )
+        },
+        startSlot = {
+            TangemIcon(
+                tangemIconUM = collectiblesIconUM(),
+                modifier = Modifier.size(AccountIconSize.Default.toBoxSize()),
+            )
+        },
+    )
+}
+
+@Composable
+private fun Modifier.collectiblesCard(): Modifier = roundedShapeItemDecoration(
+    radius = 24.dp,
+    currentIndex = 0,
+    addDefaultPadding = false,
+    lastIndex = 0,
+    backgroundColor = TangemTheme.colors3.bg.secondary,
+)
 
 @Composable
 private fun BalanceValue(balance: CollectiblesWalletBlockUM.Balance, isBalanceHidden: Boolean) {
@@ -125,6 +167,7 @@ private fun CollectiblesWalletBlockContent_Preview(
 private class CollectiblesWalletBlockPreviewProvider :
     CollectionPreviewParameterProvider<CollectiblesWalletBlockUM>(
         collection = listOf(
+            CollectiblesWalletBlockUM.SyncNeeded,
             previewContent(balance = CollectiblesWalletBlockUM.Balance.Unknown),
             previewContent(balance = CollectiblesWalletBlockUM.Balance.Loading),
             previewContent(balance = CollectiblesWalletBlockUM.Balance.Amount(stringReference("$12.00"))),
