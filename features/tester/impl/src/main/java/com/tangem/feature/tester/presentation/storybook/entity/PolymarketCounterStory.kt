@@ -1,6 +1,6 @@
 package com.tangem.feature.tester.presentation.storybook.entity
 
-import com.tangem.features.polymarket.common.ui.counter.PolymarketCounter
+import com.tangem.features.polymarket.impl.common.ui.counter.PolymarketCounter
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class PolymarketCounterStory(

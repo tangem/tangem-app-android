@@ -28,7 +28,7 @@ import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemeRedesign
 import com.tangem.feature.tester.presentation.storybook.entity.PolymarketCounterStory
-import com.tangem.features.polymarket.common.ui.counter.PolymarketCounter
+import com.tangem.features.polymarket.impl.common.ui.counter.PolymarketCounter
 
 @Composable
 internal fun PolymarketCounterStory(state: PolymarketCounterStory, modifier: Modifier = Modifier) {
