@@ -1,6 +1,6 @@
 @file:Suppress("MagicNumber")
 
-package com.tangem.core.ui.ds2.counter
+package com.tangem.features.polymarket.common.ui.counter
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
@@ -26,8 +26,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.button.TangemButton
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -40,13 +41,12 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 
 /**
- * Design-system v2 counter with a stationary center selection and a scrolling row of values.
- *
- * Version: 0.1.0 (initial Android implementation; the Figma Counter has no published version).
+ * Polymarket counter with a stationary center selection and a scrolling row of values.
  *
  * [Figma](https://www.figma.com/design/dNvLAk1K7ZQ35oWN2aoAAY/Polymarket?node-id=11204-151391)
  *
- * Swipe, item taps and arrows all settle a value in the center before notifying the caller.
+ * Swipe, item taps and arrows all settle a value in the center before notifying the caller
+ * and providing a light haptic tick. External updates and reselecting the same value are silent.
  * The caller owns the committed selection, item order and labels. External selection changes
  * reposition the row without notifying the caller. Missing selections are non-interactive until
  * the caller supplies a valid ID; an empty list never invents a value.
@@ -59,8 +59,8 @@ import kotlinx.coroutines.launch
  * @param modifier Layout modifier. The counter uses the available width, including 16dp side padding.
  */
 @Composable
-fun TangemCounter(
-    items: ImmutableList<TangemCounter.Item>,
+fun PolymarketCounter(
+    items: ImmutableList<PolymarketCounter.Item>,
     selectedId: String?,
     onSelectionChange: (String) -> Unit,
     previousContentDescription: String,
@@ -83,7 +83,7 @@ fun TangemCounter(
 
 @Composable
 private fun CounterContent(
-    items: ImmutableList<TangemCounter.Item>,
+    items: ImmutableList<PolymarketCounter.Item>,
     selectedId: String?,
     onSelectionChange: (String) -> Unit,
     previousContentDescription: String,
@@ -95,6 +95,7 @@ private fun CounterContent(
     val selection = remember { CounterSelection() }
     val currentInput by rememberUpdatedState(input)
     val onSelection by rememberUpdatedState(onSelectionChange)
+    val haptic by rememberUpdatedState(LocalHapticManager.current)
     val scope = rememberCoroutineScope()
     var scrollJob by remember { mutableStateOf<Job?>(null) }
 
@@ -114,7 +115,10 @@ private fun CounterContent(
             )
             if (selection.isSynchronized(currentInput) && isSettled) currentInput to pager.settledPage else null
         }.filterNotNull().collect { (settledInput, index) ->
-            selection.selection(settledInput, index)?.let(onSelection)
+            selection.selection(settledInput, index)?.let { id ->
+                haptic.perform(TangemHapticEffect.View.SegmentTick)
+                onSelection(id)
+            }
         }
     }
 
@@ -154,10 +158,8 @@ private fun CounterContent(
     }
 }
 
-/** Public contract of [TangemCounter]; selection has no numeric or market-specific meaning. */
-object TangemCounter {
-    val version = DsVersion(major = 0, minor = 1, patch = 0)
-
+/** Public contract of [PolymarketCounter]; selection has no numeric or market-specific meaning. */
+object PolymarketCounter {
     /** A stable identity and the caller's ready-to-display label. */
     @Immutable
     data class Item(val id: String, val label: String)
@@ -166,7 +168,7 @@ object TangemCounter {
 @Preview(showBackground = true)
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun TangemCounterPreview() {
+private fun PolymarketCounterPreview() {
     TangemThemePreviewRedesign {
         Column(
             modifier = Modifier.background(TangemTheme.colors3.bg.primary).padding(vertical = 16.dp),
@@ -174,9 +176,9 @@ private fun TangemCounterPreview() {
         ) {
             for (count in listOf(9, 4, 3, 2, 1, 0)) {
                 val items = remember(count) {
-                    List(count) { TangemCounter.Item(id = "$it", label = "$it.5") }.toImmutableList()
+                    List(count) { PolymarketCounter.Item(id = "$it", label = "$it.5") }.toImmutableList()
                 }
-                TangemCounter(
+                PolymarketCounter(
                     items = items,
                     selectedId = items.getOrNull(count / 2)?.id,
                     onSelectionChange = {},
