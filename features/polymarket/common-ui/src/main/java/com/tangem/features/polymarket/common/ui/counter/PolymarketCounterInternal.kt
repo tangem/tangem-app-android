@@ -1,6 +1,6 @@
 @file:Suppress("MagicNumber")
 
-package com.tangem.core.ui.ds2.counter
+package com.tangem.features.polymarket.common.ui.counter
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -25,7 +25,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -36,7 +35,7 @@ import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 internal fun CounterValues(
-    items: ImmutableList<TangemCounter.Item>,
+    items: ImmutableList<PolymarketCounter.Item>,
     selectedId: String?,
     pager: PagerState,
     onSelect: (Int) -> Unit,
@@ -98,7 +97,7 @@ internal fun CounterValues(
 
 @Composable
 private fun CounterValue(
-    item: TangemCounter.Item,
+    item: PolymarketCounter.Item,
     isSelected: Boolean,
     isCentered: Boolean,
     isEnabled: Boolean,
@@ -107,9 +106,10 @@ private fun CounterValue(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .clip(RoundedCornerShape(6.dp))
             .selectable(
                 selected = isSelected,
+                interactionSource = null,
+                indication = null,
                 enabled = isEnabled,
                 role = Role.RadioButton,
                 onClick = onClick,

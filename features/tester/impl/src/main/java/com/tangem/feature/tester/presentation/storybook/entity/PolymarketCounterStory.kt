@@ -1,11 +1,11 @@
 package com.tangem.feature.tester.presentation.storybook.entity
 
-import com.tangem.core.ui.ds2.counter.TangemCounter
+import com.tangem.features.polymarket.common.ui.counter.PolymarketCounter
 import kotlinx.collections.immutable.ImmutableList
 
-internal data class TangemCounterStory(
+internal data class PolymarketCounterStory(
     val sample: Sample,
-    val items: ImmutableList<TangemCounter.Item>,
+    val items: ImmutableList<PolymarketCounter.Item>,
     val selectedId: String?,
     val selectionCount: Int,
     val isDark: Boolean,
@@ -19,9 +19,9 @@ internal data class TangemCounterStory(
     val onExternalSelection: () -> Unit,
     val onReverse: () -> Unit,
     val onRemoveSelected: () -> Unit,
-) : DsStoryBookPage {
+) : StoryBookPage {
     enum class Sample(val label: String) {
         Many("9"), Four("4"), Three("3"), Two("2"), One("1"), Empty("0"),
-        Negative("−1.5"), Long("−125.5"), Duplicate("Одинаковые"),
+        Negative("−1.5"), Long("−125.5"), Duplicate("Duplicates"),
     }
 }

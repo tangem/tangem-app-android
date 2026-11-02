@@ -444,6 +444,7 @@ include(":features:yield-supply:api")
 include(":features:yield-supply:impl")
 
 include(":features:polymarket:api")
+include(":features:polymarket:common-ui")
 include(":features:polymarket:impl")
 
 include(":features:approval:api")
