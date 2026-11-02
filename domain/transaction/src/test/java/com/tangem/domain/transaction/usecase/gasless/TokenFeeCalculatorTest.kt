@@ -22,7 +22,6 @@ import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.GaslessYieldRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.GaslessApproval
-import com.tangem.domain.transaction.models.GaslessFeePlan
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -167,6 +166,41 @@ class TokenFeeCalculatorTest {
         // Assert
         assertEquals(GetFeeError.GaslessError.DataError(sdkError), result.leftOrNull())
     }
+
+    @Test
+    fun `GIVEN RPC rejects the allowance override WHEN calculateInitialFee THEN returns EstimateOverrideError`() =
+        runTest {
+            // Arrange
+            val sdkError = BlockchainSdkError.Ethereum.EstimateOverrideError(
+                blockchain = "ethereum",
+                tokenSymbol = "USDT",
+                rpcProvider = "infura",
+                underlyingError = "state override not supported",
+            )
+            coEvery {
+                mockWalletManager.estimateFeeWithOverride(mockTransactionData, "0xSpender", isSimulate = true)
+            } returns Result.Failure(sdkError)
+
+            // Act
+            val result = tokenFeeCalculator.calculateInitialFee(
+                userWallet = mockUserWallet,
+                network = mockNetwork,
+                walletManager = mockWalletManager,
+                transactionData = mockTransactionData,
+                allowanceSpenderAddress = "0xSpender",
+            )
+
+            // Assert
+            assertEquals(
+                GetFeeError.EstimateOverrideError(
+                    blockchain = "ethereum",
+                    tokenSymbol = "USDT",
+                    rpcProvider = "infura",
+                    error = "state override not supported",
+                ),
+                result.leftOrNull(),
+            )
+        }
 
     // ===== estimateInitialFee Tests =====
 
@@ -901,7 +935,7 @@ class TokenFeeCalculatorTest {
     // ===== calculateTokenFee with integrated approve =====
 
     @Test
-    fun `GIVEN approval WHEN calculateTokenFee THEN adds padded approve gas and attaches approve plan`() = runTest {
+    fun `GIVEN approval WHEN calculateTokenFee THEN adds padded approve gas and exposes its limit`() = runTest {
         // Arrange
         val tokenStatus = createMockTokenStatus(balance = BigDecimal("1000"), fiatRate = BigDecimal("1"))
         val nativeStatus = createMockNativeCurrencyStatus(fiatRate = BigDecimal("2000"))
@@ -924,19 +958,11 @@ class TokenFeeCalculatorTest {
         val fee = feeExtended.transactionFee.normal as Fee.Ethereum.TokenCurrency
         // 140_000 main + 66_000 fee transfer + 21_000 base + 64_400 approve (46_000 * 1.40)
         assertEquals(BigInteger("291400"), fee.gasLimit)
-        assertEquals(
-            GaslessFeePlan.TokenPayWithApproval(
-                feeToken = tokenStatus.currency as CryptoCurrency.Token,
-                fee = fee,
-                approval = approval,
-                approveGasLimit = BigInteger("64400"),
-            ),
-            feeExtended.gaslessFeePlan,
-        )
+        assertEquals(BigInteger("64400"), feeExtended.approveGasLimit)
     }
 
     @Test
-    fun `GIVEN no approval WHEN calculateTokenFee THEN leaves fee plan unset`() = runTest {
+    fun `GIVEN no approval WHEN calculateTokenFee THEN leaves approve gas limit unset`() = runTest {
         // Arrange
         stubFeeTransfer()
 
@@ -949,7 +975,7 @@ class TokenFeeCalculatorTest {
         )
 
         // Assert
-        assertNull(result.getOrNull()!!.gaslessFeePlan)
+        assertNull(result.getOrNull()!!.approveGasLimit)
     }
 
     @Test
