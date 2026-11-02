@@ -58,9 +58,8 @@ class SubmitPredictionOrderInteractor(
             if (!failure.isLocalSigningFailure()) return PredictionSubmitOrderError.NotSigned(failure).left()
 
             router.reportSigningFailed(addresses = request.addresses, identity = route.identity, failure = failure)
-            return submit(request = request, route = PredictionOrderSigningRoute.Owner, onStep = onStep).also {
-                reconciliationScope.launch { stateService.refresh(request.addresses.userWalletId) }
-            }
+            stateService.refresh(request.addresses.userWalletId)
+            return submit(request = request, route = PredictionOrderSigningRoute.Owner, onStep = onStep)
         }
 
         onStep(PredictionOrderSubmitStep.POSTING)
