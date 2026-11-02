@@ -14,6 +14,7 @@ import com.tangem.domain.card.common.visa.VisaUtilities
 import com.tangem.domain.visa.datasource.TangemPayRemoteDataSource
 import com.tangem.domain.visa.error.VisaActivationError
 import com.tangem.domain.visa.model.MoneyAccountActivationData
+import com.tangem.domain.visa.model.TangemPayAuthTokens
 import com.tangem.domain.visa.model.TangemPayInitialCredentials
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
@@ -74,36 +75,18 @@ class TangemPayGenerateMoneyAccountAddressTask @Inject constructor(
         }
 
         val customerWalletAddress = VisaUtilities.generateAddressFromExtendedKey(extendedPublicKey = customerWalletKey)
-        val challenge = withContext(dispatchersProvider.io) {
-            tangemPayRemoteDataSource.getCustomerWalletAuthChallenge(
-                customerWalletAddress = customerWalletAddress,
-                customerWalletId = UserWalletIdBuilder.walletPublicKey(publicKey).stringValue,
-            )
-        }.getOrElse { return CompletionResult.Failure(it.tangemError) }
-
-        val signatures = when (
-            val result = signPersonalMessages(
+        val authorization = when (
+            val result = authorizeAndSignDepositAddress(
                 session = session,
                 walletPublicKey = publicKey,
-                contents = listOf(
-                    VisaUtilities.signWithNonceMessage(challenge.challenge),
-                    VisaUtilities.moneyAccountDepositAddressMessage(depositAddress = address),
-                ),
+                customerWalletAddress = customerWalletAddress,
                 customerWalletKey = customerWalletKey,
+                depositAddress = address,
             )
         ) {
             is CompletionResult.Failure<*> -> return CompletionResult.Failure(result.error)
-            is CompletionResult.Success<List<String>> -> result.data
+            is CompletionResult.Success<Authorization> -> result.data
         }
-        val (authSignature, depositAddressSignature) = signatures
-
-        val authTokens = withContext(dispatchersProvider.io) {
-            tangemPayRemoteDataSource.getTokenWithCustomerWallet(
-                sessionId = challenge.session.sessionId,
-                signature = authSignature,
-                nonce = challenge.challenge,
-            )
-        }.getOrNull() ?: return CompletionResult.Failure(VisaActivationError.FailedRemoteState.tangemError)
 
         val derivedKeys = mapOf(
             publicKey.toMapKey() to ExtendedPublicKeysMap(
@@ -114,11 +97,11 @@ class TangemPayGenerateMoneyAccountAddressTask @Inject constructor(
         return CompletionResult.Success(
             data = MoneyAccountActivationData(
                 address = address,
-                signature = depositAddressSignature,
+                signature = authorization.depositAddressSignature,
                 derivedKeys = derivedKeys,
                 initialCredentials = TangemPayInitialCredentials(
                     customerWalletAddress = customerWalletAddress,
-                    authTokens = authTokens,
+                    authTokens = authorization.authTokens,
                 ),
             ),
         )
@@ -137,6 +120,49 @@ class TangemPayGenerateMoneyAccountAddressTask @Inject constructor(
 
         derivationTask.run(session = session, callback = deferred::complete)
         return deferred.await()
+    }
+
+    private suspend fun authorizeAndSignDepositAddress(
+        session: CardSession,
+        walletPublicKey: ByteArray,
+        customerWalletAddress: String,
+        customerWalletKey: ExtendedPublicKey,
+        depositAddress: String,
+    ): CompletionResult<Authorization> {
+        val challenge = withContext(dispatchersProvider.io) {
+            tangemPayRemoteDataSource.getCustomerWalletAuthChallenge(
+                customerWalletAddress = customerWalletAddress,
+                customerWalletId = UserWalletIdBuilder.walletPublicKey(walletPublicKey).stringValue,
+            )
+        }.getOrElse { return CompletionResult.Failure(it.tangemError) }
+
+        val signatures = when (
+            val result = signPersonalMessages(
+                session = session,
+                walletPublicKey = walletPublicKey,
+                contents = listOf(
+                    VisaUtilities.signWithNonceMessage(challenge.challenge),
+                    VisaUtilities.moneyAccountDepositAddressMessage(depositAddress = depositAddress),
+                ),
+                customerWalletKey = customerWalletKey,
+            )
+        ) {
+            is CompletionResult.Failure<*> -> return CompletionResult.Failure(result.error)
+            is CompletionResult.Success<List<String>> -> result.data
+        }
+        val (authSignature, depositAddressSignature) = signatures
+
+        val authTokens = withContext(dispatchersProvider.io) {
+            tangemPayRemoteDataSource.getTokenWithCustomerWallet(
+                sessionId = challenge.session.sessionId,
+                signature = authSignature,
+                nonce = challenge.challenge,
+            )
+        }.getOrNull() ?: return CompletionResult.Failure(VisaActivationError.FailedRemoteState.tangemError)
+
+        return CompletionResult.Success(
+            Authorization(authTokens = authTokens, depositAddressSignature = depositAddressSignature),
+        )
     }
 
     private suspend fun signPersonalMessages(
@@ -169,4 +195,9 @@ class TangemPayGenerateMoneyAccountAddressTask @Inject constructor(
             )
         }
     }
+
+    private class Authorization(
+        val authTokens: TangemPayAuthTokens,
+        val depositAddressSignature: String,
+    )
 }
