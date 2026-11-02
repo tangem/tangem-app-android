@@ -229,7 +229,7 @@ private fun AgentInfoSkeleton(modifier: Modifier = Modifier) {
                 verticalAlignment = TangemRowVerticalAlignment.Center,
                 startSlot = {
                     TangemAvatar(
-                        state = TangemAvatar.UiState.Shimmer(TangemAvatar.UiState.Shimmer.Shape.RoundedSquare),
+                        state = TangemAvatar.UiState.Shimmer(TangemAvatar.Shape.RoundedSquare),
                         size = TangemAvatar.Size.X40,
                     )
                 },

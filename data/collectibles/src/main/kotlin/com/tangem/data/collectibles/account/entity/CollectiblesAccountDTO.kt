@@ -27,8 +27,8 @@ internal data class CollectiblesAccountDTO(
  * domain type.
  *
  * Three things are deliberately absent: the status source, the fiat rates, which belong to the app's selected
- * currency, and the loading, not-onboarded and error states, so a momentary failure cannot be persisted and then
- * read back as the account's real state.
+ * currency, and the loading, not-onboarded, missed-derivation and error states, so a momentary failure cannot be
+ * persisted and then read back as the account's real state.
  */
 @Serializable
 internal sealed interface CollectiblesAccountStatusValueDTO {
@@ -41,13 +41,6 @@ internal sealed interface CollectiblesAccountStatusValueDTO {
     data class Onboarded(
         @SerialName("balance") override val balance: CollectiblesVaultBalanceDTO? = null,
     ) : CollectiblesAccountStatusValueDTO
-
-    /** The vault exists but this device has not derived its owner key yet, so it has no address to read. */
-    @Serializable
-    @SerialName("missed_derivation")
-    data object MissedDerivation : CollectiblesAccountStatusValueDTO {
-        override val balance: CollectiblesVaultBalanceDTO? = null
-    }
 
     /** The vault exists but answers to another key, so it has to be re-pointed before it can sign. */
     @Serializable

@@ -60,7 +60,7 @@ internal fun TangemPayMainBlockContent(
             onClick = state.onClick,
         )
         is TangemPayMainUM.IssuingCard -> TangemPayRow(
-            subtitle = resourceReference(R.string.tangempay_issuing_your_card),
+            subtitle = resourceReference(R.string.money_account_main_status_activating),
             modifier = modifier,
             onClick = state.onClick,
         )
@@ -249,7 +249,7 @@ private fun TangemPayMainLoading(modifier: Modifier = Modifier) {
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = {
             TangemAvatar(
-                state = TangemAvatar.UiState.Shimmer(shape = TangemAvatar.UiState.Shimmer.Shape.RoundedSquare),
+                state = TangemAvatar.UiState.Shimmer(shape = TangemAvatar.Shape.RoundedSquare),
                 size = TangemAvatar.Size.X40,
             )
         },

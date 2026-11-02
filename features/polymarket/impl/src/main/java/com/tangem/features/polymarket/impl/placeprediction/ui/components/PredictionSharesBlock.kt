@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,22 +19,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
 import com.tangem.core.ui.ds2.surface.TangemSurface
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
-import com.tangem.features.polymarket.impl.common.formatPolymarketPercent
 import com.tangem.features.polymarket.impl.common.formatPolymarketShares
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
+import com.tangem.features.polymarket.impl.placeprediction.entity.AmountFractionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.availableOrZero
@@ -51,11 +50,25 @@ internal fun PredictionSharesBlock(
     proceeds: SharesProceedsUM,
     onAmountChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    isEnabled: Boolean = true,
+    isCalculatorDivided: Boolean = false,
 ) {
     TangemSurface(modifier = modifier, color = TangemTheme.colors3.bg.secondary, shape = PolymarketCardShape) {
         Column {
             ProceedsSection(selected = selected, position = position, proceeds = proceeds)
-            CalculatorRow(selected = selected, position = position, onAmountChange = onAmountChange)
+            if (isCalculatorDivided) {
+                HorizontalDivider(
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp),
+                    color = TangemTheme.colors3.border.secondary,
+                )
+            }
+            CalculatorRow(
+                topPadding = if (isCalculatorDivided) 12.dp else 24.dp,
+                selected = selected,
+                position = position,
+                isEnabled = isEnabled,
+                onAmountChange = onAmountChange,
+            )
         }
     }
 }
@@ -131,20 +144,26 @@ private fun ProceedsFigure(proceeds: SharesProceedsUM) {
 }
 
 @Composable
-private fun CalculatorRow(selected: BigDecimal, position: SellPositionUM, onAmountChange: (String) -> Unit) {
+private fun CalculatorRow(
+    topPadding: Dp,
+    selected: BigDecimal,
+    position: SellPositionUM,
+    isEnabled: Boolean,
+    onAmountChange: (String) -> Unit,
+) {
     val available = position.availableOrZero
-    val isSteppable = position is SellPositionUM.Held && SharesCalculator.isSteppable(available)
+    val isSteppable = isEnabled && position is SellPositionUM.Held && SharesCalculator.isSteppable(available)
 
     FlowRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .padding(top = 24.dp, bottom = 16.dp),
+            .padding(top = topPadding, bottom = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(BUTTON_GAP),
         verticalArrangement = Arrangement.spacedBy(BUTTON_GAP),
         itemVerticalAlignment = Alignment.CenterVertically,
     ) {
-        SharesFraction.entries.forEach { fraction ->
+        AmountFractionUM.entries.forEach { fraction ->
             TangemButton(
                 variant = TangemButton.Variant.Secondary,
                 size = TangemButton.Size.X8,
@@ -170,18 +189,6 @@ private fun CalculatorRow(selected: BigDecimal, position: SellPositionUM, onAmou
             onClick = { onAmountChange(SharesCalculator.increased(selected, available).toPlainString()) },
         )
     }
-}
-
-private enum class SharesFraction(val percent: Int) {
-    Quarter(percent = 25),
-    Half(percent = 50),
-    ThreeQuarters(percent = 75),
-    All(percent = 100),
-}
-
-private fun SharesFraction.label(): TextReference = when (this) {
-    SharesFraction.All -> resourceReference(R.string.send_max_amount)
-    else -> stringReference(percent.formatPolymarketPercent())
 }
 
 private val CAPTION_GAP = 12.dp

@@ -30,6 +30,7 @@ import java.io.File
 import java.time.Duration
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import java.util.function.Supplier
 
 /**
  * OpenTelemetry metrics pipeline for mirroring business metrics to the Tangem OTLP gateway.
@@ -37,19 +38,27 @@ import java.util.concurrent.TimeUnit
  * Metrics are recorded with delta temporality and flushed to disk every [EXPORT_INTERVAL_SECONDS]
  * (so batches survive offline periods and process death), then drained to the OTLP endpoint right
  * after each flush. A batch that fails to upload is written back and retried on the next drain.
+ * Uploads are authorized with the device access token; without one the batches wait on disk.
  * The resource carries only the app coordinates, the coarse user country and the app language — no
  * user, device or session identifiers, per the app privacy policy.
  */
 internal class OpenTelemetryMetricsClient(
     application: Application,
-    apiKey: String,
     appVersion: String,
     settingsRepository: SettingsRepository,
+    private val accessTokenProvider: OtelAccessTokenProvider,
     private val scope: CoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val networkExporter: MetricExporter = createOtlpExporter(apiKey),
+    networkExporterFactory: (headers: Supplier<Map<String, String>>) -> MetricExporter = ::createOtlpExporter,
     private val storage: SignalStorage.Metric = FileMetricStorage.create(File(application.cacheDir, STORAGE_DIR_NAME)),
 ) {
+
+    @Volatile
+    private var accessToken: String? = null
+
+    private val networkExporter: MetricExporter = networkExporterFactory {
+        mapOf(AUTHORIZATION_HEADER to "$BEARER_SCHEME $accessToken")
+    }
 
     private val meterProvider: SdkMeterProvider = SdkMeterProvider.builder()
         .setResource(
@@ -98,6 +107,7 @@ internal class OpenTelemetryMetricsClient(
 
     private suspend fun drainStorage() {
         drainMutex.withLock {
+            accessToken = accessTokenProvider.getAccessToken() ?: return
             // batches are deleted from disk as they are iterated (deleteItemsOnIteration default)
             for (batch in storage) {
                 if (batch.isEmpty()) continue
@@ -138,8 +148,9 @@ internal class OpenTelemetryMetricsClient(
 
     companion object {
 
-        private const val ENDPOINT = "https://otlp.services.tangem.org/v1/metrics"
-        private const val API_KEY_HEADER = "x-api-key"
+        private const val ENDPOINT = "https://otel.services.tangem.org/v1/metrics"
+        private const val AUTHORIZATION_HEADER = "Authorization"
+        private const val BEARER_SCHEME = "Bearer"
         private const val EXPORT_INTERVAL_SECONDS = 300L
         private const val EXPORT_TIMEOUT_SECONDS = 30L
         private const val STORAGE_DIR_NAME = "otel-metrics"
@@ -153,10 +164,10 @@ internal class OpenTelemetryMetricsClient(
         private val COUNTRY_CODE_KEY = AttributeKey.stringKey("country_code")
         private val LANGUAGE_KEY = AttributeKey.stringKey("language")
 
-        private fun createOtlpExporter(apiKey: String): MetricExporter {
+        private fun createOtlpExporter(headers: Supplier<Map<String, String>>): MetricExporter {
             return OtlpHttpMetricExporter.builder()
                 .setEndpoint(ENDPOINT)
-                .addHeader(API_KEY_HEADER, apiKey)
+                .setHeaders(headers)
                 .setAggregationTemporalitySelector(AggregationTemporalitySelector.deltaPreferred())
                 .build()
         }

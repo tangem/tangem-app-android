@@ -65,7 +65,6 @@ class PollTangemPayAccountStatusesUseCase(
                 TangemPayCustomerState.KycInProgress -> false
                 is TangemPayCustomerState.Accounts -> paymentAccount.isTerminal && moneyAccount.isTerminal
 
-                TangemPayCustomerState.Hidden,
                 TangemPayCustomerState.Blocked,
                 TangemPayCustomerState.KycRequired,
                 TangemPayCustomerState.KycDeclined,

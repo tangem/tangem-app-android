@@ -3,10 +3,13 @@ package com.tangem.features.polymarket.impl.placeprediction.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -19,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
@@ -31,20 +35,21 @@ import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.PredictionTestTags
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionAmountIntents
-import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionAmountBlock
+import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionAmountFractionsRow
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionMarketBlock
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionNotificationsBlock
-import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionSharesBlock
+import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionOrderAmountInput
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionSlippageRow
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlacePredictionPreviewIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PlacePredictionPreviewProvider
-import java.math.BigDecimal
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.flowTitle
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun PlacePredictionAmountContent(
     state: PlacePredictionUM,
@@ -54,7 +59,7 @@ internal fun PlacePredictionAmountContent(
     var footerHeight by remember { mutableIntStateOf(0) }
 
     TangemTopBarScaffold(
-        modifier = modifier,
+        modifier = modifier.testTag(PredictionTestTags.PLACE_PREDICTION_SCREEN),
         topBar = {
             TangemTopNavigation(
                 title = resourceReference(state.order.flowTitle()),
@@ -83,6 +88,9 @@ internal fun PlacePredictionAmountContent(
                     isEnabled = state.isPrimaryButtonEnabled,
                     onClick = intents::onNextClick,
                 )
+                if (WindowInsets.isImeVisible && state.hasFractionsToOffer()) {
+                    PredictionAmountFractionsRow(onFractionClick = intents::onFractionClick)
+                }
             }
         },
     ) { contentPadding ->
@@ -95,7 +103,11 @@ internal fun PlacePredictionAmountContent(
             verticalArrangement = Arrangement.spacedBy(space = 12.dp),
         ) {
             PredictionMarketBlock(state = state.market)
-            AmountBlock(state = state, intents = intents)
+            PredictionOrderAmountInput(
+                state = state,
+                onAmountChange = intents::onAmountChange,
+                onAddFundsClick = intents::onAddFundsClick,
+            )
             PredictionNotificationsBlock(
                 notifications = state.notifications,
                 onRetryClick = intents::onQuoteRetryClick,
@@ -108,25 +120,8 @@ internal fun PlacePredictionAmountContent(
     }
 }
 
-@Composable
-private fun AmountBlock(state: PlacePredictionUM, intents: PlacePredictionAmountIntents) {
-    when (val order = state.order) {
-        is OrderSideUM.Buy -> PredictionAmountBlock(
-            amountValue = state.amountValue,
-            amountCaption = state.amountCaption,
-            balance = order.balance,
-            isAddFundsEnabled = order.isAddFundsEnabled,
-            onAmountChange = intents::onAmountChange,
-            onAddFundsClick = intents::onAddFundsClick,
-        )
-        is OrderSideUM.Sell -> PredictionSharesBlock(
-            selected = state.amountValue.toBigDecimalOrNull() ?: BigDecimal.ZERO,
-            position = order.position,
-            proceeds = order.proceeds,
-            onAmountChange = intents::onAmountChange,
-        )
-    }
-}
+private fun PlacePredictionUM.hasFractionsToOffer(): Boolean =
+    (order as? OrderSideUM.Buy)?.balance?.let { it.signum() > 0 } == true
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 800)
 @Preview(showBackground = true, widthDp = 360, heightDp = 800, uiMode = Configuration.UI_MODE_NIGHT_YES)

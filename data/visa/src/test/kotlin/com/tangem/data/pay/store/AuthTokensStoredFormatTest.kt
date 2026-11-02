@@ -3,10 +3,7 @@ package com.tangem.data.pay.store
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.json.NetworkJsonFactory
 import com.tangem.domain.visa.model.TangemPayAuthTokens
-import com.tangem.domain.visa.model.VisaAuthTokens
 import com.tangem.test.core.ProvideTestModels
-import kotlinx.serialization.json.Json
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 
@@ -23,26 +20,6 @@ internal class AuthTokensStoredFormatTest {
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)
-    }
-
-    @Test
-    fun `GIVEN Visa card tokens stored by the previous app version WHEN decoded THEN they are read back`() {
-        // Arrange
-        val stored = """{"accessToken":"access","refreshToken":{"value":"refresh","authType":"CardWallet"}}"""
-
-        // Act
-        val actual = Json { ignoreUnknownKeys = true }.decodeFromString(VisaAuthTokens.serializer(), stored)
-
-        // Assert
-        assertThat(actual).isEqualTo(
-            VisaAuthTokens(
-                accessToken = "access",
-                refreshToken = VisaAuthTokens.RefreshToken(
-                    value = "refresh",
-                    authType = VisaAuthTokens.RefreshToken.Type.CardWallet,
-                ),
-            ),
-        )
     }
 
     private fun provideTestModels() = listOf(

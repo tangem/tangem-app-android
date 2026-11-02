@@ -867,7 +867,7 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
         assertThat(result.to?.owner).isEqualTo(
             TxHistoryDetailsUM.AssetOwnerUM.Account(
                 name = resourceReference(R.string.tangempay_unified_onboarding_money_account_header),
-                icon = AccountIconUM.CryptoPortfolio(value = AccountIconUM.Money.icon, color = AccountIconUM.Money.color),
+                icon = AccountIconUM.Money,
             ),
         )
     }

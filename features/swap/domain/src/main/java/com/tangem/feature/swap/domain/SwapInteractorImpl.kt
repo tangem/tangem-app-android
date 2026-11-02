@@ -152,6 +152,9 @@ internal class SwapInteractorImpl @Inject constructor(
         ConcurrentHashMap<IntegratedApprovalFallbackKey, Boolean>(),
     )
 
+    /** Allowance ceilings set by [requireTronReapproval]; an entry goes once the allowance is at or below it. */
+    private val tronReapprovalCeilings = ConcurrentHashMap<IntegratedApprovalFallbackKey, TronReapprovalCeiling>()
+
     private val yieldSwapAllowedRouters = newSetFromMap(ConcurrentHashMap<String, Boolean>())
 
     private val yieldSwapAllowedTargets = newSetFromMap(ConcurrentHashMap<String, Boolean>())
@@ -384,6 +387,7 @@ internal class SwapInteractorImpl @Inject constructor(
         return requirements?.takeUnless { rampStateManager.checkAssetRequirements(it) }
     }
 
+    @Suppress("LongParameterList")
     override suspend fun findBestQuote(
         fromSwapCurrencyStatus: SwapCurrencyStatus,
         toSwapCurrencyStatus: SwapCurrencyStatus,
@@ -391,6 +395,7 @@ internal class SwapInteractorImpl @Inject constructor(
         amountToSwap: String,
         reduceBalanceBy: BigDecimal,
         customSlippage: BigDecimal?,
+        quoteDefaultSlippages: Map<String, BigDecimal>,
         intentId: String?,
     ): Map<SwapProvider, SwapState> {
         TangemLogger.i(
@@ -407,6 +412,7 @@ internal class SwapInteractorImpl @Inject constructor(
                |- providers: $providers
                |- amountToSwap: $amountToSwap
                |- customSlippage: $customSlippage
+               |- quoteDefaultSlippages: $quoteDefaultSlippages
             """.trimIndent(),
             shouldSanitize = false,
         )
@@ -420,7 +426,10 @@ internal class SwapInteractorImpl @Inject constructor(
         return supervisorScope {
             providers.map { provider ->
                 async {
-                    val customSlippagePercent = provider.acceptedSlippageOrNull(customSlippage)
+                    val customSlippagePercent = provider.acceptedSlippageOrNull(
+                        percent = customSlippage,
+                        defaultPercent = provider.pairDefaultSlippage(quoteDefaultSlippages),
+                    )
                     when (provider.type) {
                         ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
                             if (isSolana(fromSwapCurrencyStatus.currency.network.rawId)) {
@@ -454,10 +463,17 @@ internal class SwapInteractorImpl @Inject constructor(
                                 customSlippage = customSlippagePercent,
                             )
                         }
-                    }
+                    }?.withRequestedCustomSlippage(customSlippagePercent)
                 }
             }.awaitAll().filterNotNull().toMap()
         }
+    }
+
+    private fun Pair<SwapProvider, SwapState>.withRequestedCustomSlippage(
+        customSlippage: BigDecimal?,
+    ): Pair<SwapProvider, SwapState> {
+        val quote = second as? SwapState.QuotesLoadedState ?: return this
+        return first to quote.copy(requestedCustomSlippage = customSlippage)
     }
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -527,8 +543,15 @@ internal class SwapInteractorImpl @Inject constructor(
             ).getOrNull()
         } ?: AllowanceInfo.Enough(allowance = BigDecimal.ZERO)
 
+        val isTronReapprovalPending = isTronReapprovalPending(
+            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+            spenderAddress = spenderAddress,
+            amount = amount.value,
+            allowanceInfo = allowanceInfo,
+        )
         if (allowPermissionsHandler.isAddressAllowanceInProgress(fromTokenAddress) &&
-            isApproveSettled(allowanceInfo, fromTokenAddress)
+            isApproveSettled(allowanceInfo, fromTokenAddress) &&
+            !isTronReapprovalPending
         ) {
             allowPermissionsHandler.removeAddressFromProgress(fromTokenAddress)
             cryptoCurrencyBalanceFetcher(
@@ -543,7 +566,7 @@ internal class SwapInteractorImpl @Inject constructor(
         val isAllowanceSatisfied = if (isIntegratedApproveActive) {
             allowanceInfo !is AllowanceInfo.ResetNeeded
         } else {
-            allowanceInfo is AllowanceInfo.Enough
+            allowanceInfo is AllowanceInfo.Enough && !isTronReapprovalPending
         }
         // For yield swaps the on-chain allowance is not sufficient on its own: spending also
         // requires the yield-module proxy approval (yieldSupplyStatus.isAllowedToSpend).
@@ -844,6 +867,7 @@ internal class SwapInteractorImpl @Inject constructor(
         isTangemPayWithdrawal: Boolean,
         integratedApproval: IntegratedApprovalData?,
         customSlippage: BigDecimal?,
+        quoteDefaultSlippages: Map<String, BigDecimal>,
         intentId: String?,
     ): SwapTransactionState {
         TangemLogger.i(
@@ -886,7 +910,10 @@ internal class SwapInteractorImpl @Inject constructor(
                 swapProvider = swapProvider,
                 expressOperationType = expressOperationType,
                 isTangemPayWithdrawal = isTangemPayWithdrawal,
-                customSlippage = swapProvider.acceptedSlippageOrNull(customSlippage),
+                customSlippage = swapProvider.acceptedSlippageOrNull(
+                    percent = customSlippage,
+                    defaultPercent = swapProvider.pairDefaultSlippage(quoteDefaultSlippages),
+                ),
                 intentId = intentId,
             )
             ResolvedFlow.DexLike -> onSwapDexLike(
@@ -1345,7 +1372,8 @@ internal class SwapInteractorImpl @Inject constructor(
             )
         } else {
             // A TRX transfer the balance cannot cover is rejected by the node without burning anything.
-            if (fromSwapCurrencyStatus.currency is CryptoCurrency.Token &&
+            if (isTronNativeFeeAutoPicked() &&
+                fromSwapCurrencyStatus.currency is CryptoCurrency.Token &&
                 isTron(fromSwapCurrencyStatus.currency.network.rawId)
             ) {
                 checkTronNativeFeeAtDeposit(fromSwapCurrencyStatus = fromSwapCurrencyStatus, txData = txData)
@@ -1810,6 +1838,46 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
+    override fun requireTronReapproval(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        spenderAddress: String,
+        maxAllowance: BigDecimal,
+    ) {
+        tronReapprovalCeilings[IntegratedApprovalFallbackKey.of(fromSwapCurrencyStatus, spenderAddress)] =
+            TronReapprovalCeiling(
+                tokenAddress = getTokenAddress(fromSwapCurrencyStatus.currency),
+                maxAllowance = maxAllowance,
+            )
+    }
+
+    override fun clearTronReapprovals() {
+        // A sent approval keeps its ceiling: until it lands, the old allowance still covers the amount.
+        tronReapprovalCeilings.values.removeAll { ceiling ->
+            !allowPermissionsHandler.isAddressAllowanceInProgress(ceiling.tokenAddress)
+        }
+    }
+
+    private fun isTronReapprovalPending(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        spenderAddress: String?,
+        amount: BigDecimal,
+        allowanceInfo: AllowanceInfo,
+    ): Boolean {
+        val key = IntegratedApprovalFallbackKey.of(fromSwapCurrencyStatus, spenderAddress)
+        val ceiling = tronReapprovalCeilings[key]?.maxAllowance ?: return false
+        val allowance = when (allowanceInfo) {
+            is AllowanceInfo.Enough -> allowanceInfo.allowance
+            is AllowanceInfo.NotEnough -> allowanceInfo.allowance
+            is AllowanceInfo.ResetNeeded -> allowanceInfo.allowance
+        }
+        // An amount raised past the ceiling is approved as entered; the service judges that allowance anew.
+        if (allowance <= ceiling || amount > ceiling) {
+            tronReapprovalCeilings.remove(key)
+            return false
+        }
+        return true
+    }
+
     override fun integratedApprovalFallback(fromSwapCurrencyStatus: SwapCurrencyStatus, spenderAddress: String) {
         integratedApprovalFallbackContexts.add(
             element = IntegratedApprovalFallbackKey(
@@ -1819,6 +1887,9 @@ internal class SwapInteractorImpl @Inject constructor(
             ),
         )
     }
+
+    private fun isTronNativeFeeAutoPicked(): Boolean =
+        swapFeatureToggles.isTronClientEnergyEnabled || swapFeatureToggles.isTronLowerFeeTypeEnabled
 
     /**
      * The shown fee was quoted earlier against a placeholder address; by now the account's energy or TRX may have
@@ -3011,6 +3082,8 @@ internal class SwapInteractorImpl @Inject constructor(
  * failure is structural (the approval simply does not exist yet) and changing the amount cannot fix
  * it — so we must not retry the simulation on every amount change either.
  */
+private data class TronReapprovalCeiling(val tokenAddress: String, val maxAllowance: BigDecimal)
+
 private data class IntegratedApprovalFallbackKey(
     val userWalletId: UserWalletId,
     val fromCurrencyId: CryptoCurrency.ID,

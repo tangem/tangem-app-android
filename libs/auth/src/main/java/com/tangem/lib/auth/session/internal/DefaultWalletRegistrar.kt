@@ -12,6 +12,7 @@ import com.tangem.lib.auth.api.models.response.TokenApiResponse
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.lib.auth.session.AuthPreferenceKeys
+import com.tangem.datasource.local.preferences.utils.get
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.lib.auth.attestation.AttestationProvider
 import com.tangem.lib.auth.attestation.getAttestationTokenOrNull
@@ -29,6 +30,9 @@ import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
@@ -67,7 +71,7 @@ internal class DefaultWalletRegistrar(
         }
 
     override suspend fun isRegistered(walletId: String): Boolean = withContext(dispatchers.io) {
-        runSuspendCatching { walletId in registeredWalletIds() }
+        runSuspendCatching { walletId in registeredWalletIdsSync() }
             .getOrElse { e ->
                 // Best-effort gate: on a read error assume not-registered — the prepare-time
                 // idempotency check still guards against a duplicate registration.
@@ -75,6 +79,12 @@ internal class DefaultWalletRegistrar(
                 false
             }
     }
+
+    override fun registeredWalletIds(): Flow<Set<String>> = appPreferencesStore
+        .get(key = AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY, default = emptySet())
+        .distinctUntilChanged()
+        // An empty set would read as "no wallet is linked" and surface linking prompts for every wallet
+        .catch { e -> TangemLogger.e("Failed to observe registered wallet ids", e) }
 
     override suspend fun hasActiveSession(): Boolean = withContext(dispatchers.io) {
         runSuspendCatching { store.get().getOrNull() != null }
@@ -206,7 +216,7 @@ internal class DefaultWalletRegistrar(
 
     private suspend fun Raise<WalletRegistrationError>.isAlreadyRegistered(walletId: String): Boolean {
         val isRegistered = try {
-            walletId in registeredWalletIds()
+            walletId in registeredWalletIdsSync()
         } catch (e: Exception) {
             TangemLogger.e("Failed to read registered wallet ids", e)
             raise(WalletRegistrationError.PersistenceFailed(e))
@@ -344,7 +354,7 @@ internal class DefaultWalletRegistrar(
         }
     }
 
-    private suspend fun registeredWalletIds(): Set<String> = appPreferencesStore.getSyncOrDefault(
+    private suspend fun registeredWalletIdsSync(): Set<String> = appPreferencesStore.getSyncOrDefault(
         key = AuthPreferenceKeys.REGISTERED_WALLET_IDS_KEY,
         default = emptySet(),
     )

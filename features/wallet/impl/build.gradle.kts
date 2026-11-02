@@ -44,10 +44,6 @@ dependencies {
     implementation(tangemDeps.hot.core)
     api(tangemDeps.card.core)
     implementation(tangemDeps.blockchain)
-    implementation(deps.firebase.perf) {
-        exclude(group = "com.google.firebase", module = "protolite-well-known-types")
-        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
-    }
     implementation(deps.haze) {
         exclude(module = "activity-compose")
         exclude(module = "activity")
@@ -141,6 +137,7 @@ dependencies {
     api(projects.features.feed.api)
     implementation(projects.features.hotWallet.api)
     api(projects.features.jointAccount.api)
+    implementation(projects.domain.collectibles)
     implementation(projects.domain.jointAccount)
     api(projects.features.mcp.api)
     api(projects.features.polymarket.api)

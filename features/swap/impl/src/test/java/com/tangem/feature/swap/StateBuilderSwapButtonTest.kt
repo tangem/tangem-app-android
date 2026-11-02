@@ -107,6 +107,7 @@ internal class StateBuilderSwapButtonTest {
                 feeError = null,
                 isHighNetworkFee = false,
                 isFeeCurrencyInStack = false,
+                defaultSlippage = null,
             )
 
             assertThat(result.swapButton.isEnabled).isTrue()
@@ -134,6 +135,7 @@ internal class StateBuilderSwapButtonTest {
                 feeError = null,
                 isHighNetworkFee = false,
                 isFeeCurrencyInStack = false,
+                defaultSlippage = null,
             )
 
             assertThat(result.swapButton.isEnabled).isFalse()
@@ -161,6 +163,7 @@ internal class StateBuilderSwapButtonTest {
                 feeError = null,
                 isHighNetworkFee = false,
                 isFeeCurrencyInStack = false,
+                defaultSlippage = null,
             )
 
             // Assert
@@ -193,6 +196,7 @@ internal class StateBuilderSwapButtonTest {
                 feeError = null,
                 isHighNetworkFee = false,
                 isFeeCurrencyInStack = false,
+                defaultSlippage = null,
             )
 
             assertThat(result.swapButton.isEnabled).isFalse()
@@ -219,6 +223,7 @@ internal class StateBuilderSwapButtonTest {
                 feeError = null,
                 isHighNetworkFee = false,
                 isFeeCurrencyInStack = false,
+                defaultSlippage = null,
             )
 
             assertThat(result.swapButton.isEnabled).isTrue()
@@ -249,6 +254,7 @@ internal class StateBuilderSwapButtonTest {
                 feeError = null,
                 isHighNetworkFee = false,
                 isFeeCurrencyInStack = false,
+                defaultSlippage = null,
             )
 
             assertThat(result.swapButton.isEnabled).isFalse()
@@ -284,6 +290,7 @@ internal class StateBuilderSwapButtonTest {
                 feeError = null,
                 isHighNetworkFee = false,
                 isFeeCurrencyInStack = false,
+                defaultSlippage = null,
             )
 
             assertThat(result.swapButton.isEnabled).isFalse()
@@ -309,6 +316,7 @@ internal class StateBuilderSwapButtonTest {
                 feeError = null,
                 isHighNetworkFee = false,
                 isFeeCurrencyInStack = false,
+                defaultSlippage = null,
             )
 
             assertThat(result.swapButton.isEnabled).isTrue()
@@ -377,6 +385,7 @@ internal class StateBuilderSwapButtonTest {
             feeError = null,
             isHighNetworkFee = false,
             isFeeCurrencyInStack = false,
+            defaultSlippage = null,
         )
     }
 
