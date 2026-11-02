@@ -101,6 +101,7 @@ internal fun activeMoneyAccount(
     customerId = "cust_1",
     productInstanceId = "instance-1",
     isBankOfframpAvailable = isBankOfframpAvailable,
+    error = null,
 )
 
 internal fun moneyAccountBalance(

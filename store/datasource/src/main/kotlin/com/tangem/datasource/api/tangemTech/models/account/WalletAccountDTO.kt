@@ -35,5 +35,9 @@ data class WalletAccountDTO(
         @SerialName("joint")
         @Json(name = "joint")
         JOINT,
+
+        @SerialName("collectibles")
+        @Json(name = "collectibles")
+        COLLECTIBLES,
     }
 }

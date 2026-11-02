@@ -2,12 +2,16 @@ package com.tangem.feature.swap.mcp.model
 
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.mcp.models.McpAgent
+import com.tangem.domain.mcp.models.analytics.McpIntentAnalyticsEvent
+import com.tangem.domain.mcp.models.analytics.McpIntentAnalyticsEvent.IntentType
+import com.tangem.domain.mcp.models.analytics.McpIntentAnalyticsEvent.Reason
 import com.tangem.domain.mcp.repository.McpRepository
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.swap.models.ExchangeIntent
@@ -48,6 +52,7 @@ internal class ExchangeIntentModel @Inject constructor(
     private val processedConverter: ExchangeIntentProcessedConverter,
     private val cantReachConverter: ExchangeIntentCantReachConverter,
     private val swapRouteConverter: ExchangeIntentSwapRouteConverter,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -92,6 +97,7 @@ internal class ExchangeIntentModel @Inject constructor(
             .getOrElse { error ->
                 return showCantReach(
                     reason = "the intent cannot be read",
+                    failure = ExchangeIntentLoadFailure.ofReadError(error),
                     error = error,
                     canRetry = error is ExchangeIntentError.Unreachable,
                 )
@@ -102,22 +108,36 @@ internal class ExchangeIntentModel @Inject constructor(
         if (holdings !is ExchangeIntentHoldings.Both) {
             return showCantReach(
                 reason = "the wallet lacks a token: $holdings",
+                failure = ExchangeIntentLoadFailure(if (holdings == null) Reason.Unknown else Reason.TokenMissing),
             )
         }
 
+        val agent = getAgent(intent)
         val offer = offerConverter.convert(
             ExchangeIntentOfferConverter.Input(
                 intent = intent,
                 from = holdings.from,
                 to = holdings.to,
-                agent = getAgent(intent),
+                agent = agent,
                 onProceed = ::onProceed,
             ),
-        ) ?: return showCantReach(reason = "the amount of the intent is malformed")
+        ) ?: return showCantReach(
+            reason = "the amount of the intent is malformed",
+            failure = ExchangeIntentLoadFailure(Reason.InvalidAmount),
+        )
 
         currentCoroutineContext().ensureActive()
         loaded = LoadedExchange(walletId = walletId, intent = intent, holdings = holdings)
         sheet.value = offer
+        analyticsEventHandler.send(
+            McpIntentAnalyticsEvent.IntentScreenOpened(
+                intentId = params.intentId,
+                type = IntentType.Exchange,
+                agent = agent,
+                blockchain = holdings.from.network.name,
+                token = holdings.from.symbol,
+            ),
+        )
     }
 
     private suspend fun showProcessed(walletId: UserWalletId, intent: ExchangeIntent) {
@@ -137,6 +157,7 @@ internal class ExchangeIntentModel @Inject constructor(
 
         currentCoroutineContext().ensureActive()
         sheet.value = status
+        sendLoadFailed(ExchangeIntentLoadFailure(Reason.AlreadyProcessed))
     }
 
     /** Not knowing the agent must not hold the offer back, so a slow or failed lookup gives the unknown agent. */
@@ -147,7 +168,12 @@ internal class ExchangeIntentModel @Inject constructor(
             ?: McpAgent.unknown(clientId)
     }
 
-    private suspend fun showCantReach(reason: String, error: Throwable? = null, canRetry: Boolean = false) {
+    private suspend fun showCantReach(
+        reason: String,
+        failure: ExchangeIntentLoadFailure,
+        error: Throwable? = null,
+        canRetry: Boolean = false,
+    ) {
         TangemLogger.e("Exchange intent ${params.intentId} is not offered: $reason", error)
         val status = cantReachConverter.convert(
             ExchangeIntentCantReachConverter.Input(onRetry = if (canRetry) ::onRetry else null, onClose = ::onClose),
@@ -155,6 +181,18 @@ internal class ExchangeIntentModel @Inject constructor(
 
         currentCoroutineContext().ensureActive()
         sheet.value = status
+        sendLoadFailed(failure)
+    }
+
+    private fun sendLoadFailed(failure: ExchangeIntentLoadFailure) {
+        analyticsEventHandler.send(
+            McpIntentAnalyticsEvent.IntentLoadFailed(
+                intentId = params.intentId,
+                type = IntentType.Exchange,
+                reason = failure.reason,
+                errorCode = failure.errorCode,
+            ),
+        )
     }
 
     private fun closeWithoutSheet(reason: String) {
@@ -197,6 +235,19 @@ internal class ExchangeIntentModel @Inject constructor(
                     route in stack -> stack.take(stack.lastIndexOf(route) + 1)
                     currentRoute is AppRoute.Swap -> stack.dropLast(1) + route
                     else -> stack + route
+                }
+            },
+            onComplete = { isSuccess ->
+                if (isSuccess) {
+                    analyticsEventHandler.send(
+                        McpIntentAnalyticsEvent.ButtonContinue(intentId = params.intentId, type = IntentType.Exchange),
+                    )
+                } else {
+                    // A custom completion replaces the router's own, which reports the failure to the user
+                    router.defaultCompletionHandler(
+                        isSuccess = false,
+                        errorMessage = "Unable to open Swap for exchange intent ${params.intentId}",
+                    )
                 }
             },
         )

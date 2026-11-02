@@ -36,6 +36,7 @@ internal class MoneyAccountStatusValueDMConverterTest {
             customerId = "customer-1",
             productInstanceId = "instance-1",
             isBankOfframpAvailable = true,
+            error = null,
         )
 
         // Act
@@ -72,6 +73,25 @@ internal class MoneyAccountStatusValueDMConverterTest {
         // Assert
         assertThat(cached).isEqualTo(MoneyAccountStatusValueDM.Failed(customerId = "customer-1"))
         assertThat(restored).isEqualTo(failed.copy(source = StatusSource.CACHE))
+    }
+
+    @Test
+    fun `GIVEN active account with refresh error WHEN cached and restored THEN error dropped`() {
+        // Arrange
+        val active = MoneyAccountStatusValue.Account.Active(
+            source = StatusSource.ONLY_CACHE,
+            cryptoCurrency = cryptoCurrency,
+            balance = null,
+            customerId = "customer-1",
+            productInstanceId = "instance-1",
+            error = MoneyAccountStatusValue.Error.NotSynced,
+        )
+
+        // Act
+        val restored = converter.convertBack(userWalletId = USER_WALLET_ID, value = converter.convert(active))
+
+        // Assert
+        assertThat(restored).isEqualTo(active.copy(source = StatusSource.CACHE, error = null))
     }
 
     private companion object {

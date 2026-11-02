@@ -29,6 +29,7 @@ internal class MoneyAccountStatusValueTest {
         balance = balance,
         customerId = "customer",
         productInstanceId = "instance",
+        error = null,
     )
 
     @Test

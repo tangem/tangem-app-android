@@ -20,13 +20,13 @@ internal class CollectiblesWalletBlockConverter(
 ) : Converter<AccountStatus.Collectibles, CollectiblesWalletBlockUM> {
 
     override fun convert(value: AccountStatus.Collectibles): CollectiblesWalletBlockUM {
+        if (value.value is CollectiblesAccountStatusValue.NotOnboarded) return CollectiblesWalletBlockUM.Hidden
+
+        if (value.value is CollectiblesAccountStatusValue.MissedDerivation) return CollectiblesWalletBlockUM.SyncNeeded
+
         return CollectiblesWalletBlockUM.Content(
             balance = value.value.toBalance(),
-            onClick = if (value.value is CollectiblesAccountStatusValue.MissedDerivation) {
-                null
-            } else {
-                { clickIntents.onCollectiblesAccountClick(value.account.accountId.userWalletId) }
-            },
+            onClick = { clickIntents.onCollectiblesAccountClick(value.account.accountId.userWalletId) },
         )
     }
 

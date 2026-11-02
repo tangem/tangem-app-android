@@ -47,6 +47,7 @@ import kotlinx.coroutines.launch
 
 @Suppress("LongParameterList", "LargeClass")
 internal class DynamicAddressesDelegate @AssistedInject constructor(
+    private val tangemBlogUrlBuilder: TangemBlogUrlBuilder,
     private val enableDynamicAddressesUseCase: EnableDynamicAddressesUseCase,
     private val isConsolidationRequiredUseCase: IsDynamicAddressesConsolidationRequiredUseCase,
     private val createConsolidationTransactionUseCase: CreateConsolidationTransactionUseCase,
@@ -319,7 +320,7 @@ internal class DynamicAddressesDelegate @AssistedInject constructor(
 
     private fun onReadMoreClick() {
         coroutineScope.launch(dispatchers.main) {
-            urlOpener.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.WhatIsTransactionFee))
+            urlOpener.openUrl(tangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.WhatIsTransactionFee))
         }
     }
 

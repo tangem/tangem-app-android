@@ -45,22 +45,29 @@ internal class CollectiblesWalletBlockConverterTest {
         val actual = converter.convert(value = onboarded().toAccountStatus()) as CollectiblesWalletBlockUM.Content
 
         // Act
-        actual.onClick?.invoke()
+        actual.onClick()
 
         // Assert
         verify(exactly = 1) { clickIntents.onCollectiblesAccountClick(userWalletId) }
     }
 
+    /** The backend lists the account but no vault stands behind it: the wallet is offered onboarding instead */
     @Test
-    fun `GIVEN a missed derivation WHEN convert THEN the row shows a dash and does not open`() {
+    fun `GIVEN a wallet not onboarded WHEN convert THEN the row is hidden`() {
         // Act
-        val actual = converter.convert(
-            value = CollectiblesAccountStatusValue.MissedDerivation.toAccountStatus(),
-        ) as CollectiblesWalletBlockUM.Content
+        val actual = converter.convert(value = CollectiblesAccountStatusValue.NotOnboarded.toAccountStatus())
 
         // Assert
-        assertThat(actual.balance).isEqualTo(CollectiblesWalletBlockUM.Balance.Unknown)
-        assertThat(actual.onClick).isNull()
+        assertThat(actual).isEqualTo(CollectiblesWalletBlockUM.Hidden)
+    }
+
+    @Test
+    fun `GIVEN a missed derivation WHEN convert THEN the row waits for the sync`() {
+        // Act
+        val actual = converter.convert(value = CollectiblesAccountStatusValue.MissedDerivation.toAccountStatus())
+
+        // Assert
+        assertThat(actual).isEqualTo(CollectiblesWalletBlockUM.SyncNeeded)
     }
 
     private fun CollectiblesAccountStatusValue.toAccountStatus() = AccountStatus.Collectibles(
@@ -76,9 +83,7 @@ internal class CollectiblesWalletBlockConverterTest {
     private fun provideTestModels() = listOf(
         // loading shimmers like the wallet's own account rows; everything else unknown is a dash
         BalanceModel(status = CollectiblesAccountStatusValue.Loading, expected = loading),
-        BalanceModel(status = CollectiblesAccountStatusValue.NotOnboarded, expected = unknown),
         BalanceModel(status = CollectiblesAccountStatusValue.Error.Unavailable, expected = unknown),
-        BalanceModel(status = CollectiblesAccountStatusValue.MissedDerivation, expected = unknown),
         // the vault exists but has not been read on this device, so there is no amount to show
         BalanceModel(status = onboarded(vaultBalance = null), expected = unknown),
         // something is in the vault and nothing can price it, so there is still no amount to show

@@ -7,6 +7,8 @@ import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
+import com.tangem.features.polymarket.impl.placeprediction.entity.AmountFractionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.AmountPresetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.CollateralUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
@@ -23,6 +25,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionAmountIntents
+import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionOrderIntents
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionStatusIntents
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSummaryIntents
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSlippageIntents
@@ -69,6 +72,16 @@ internal class PlacePredictionPreviewProvider : PreviewParameterProvider<PlacePr
         )
 }
 
+internal class PlacePredictionOrderPreviewProvider : PreviewParameterProvider<PlacePredictionUM> {
+
+    override val values: Sequence<PlacePredictionUM>
+        get() = sequenceOf(
+            previewState(amountValue = "4000", quote = previewQuote()),
+            previewState(amountValue = "51.23", quote = previewSellQuote(), order = previewSell()),
+            previewState(amountValue = "4000", quote = QuoteUM.Loading),
+        )
+}
+
 internal class PlaceResultPreviewProvider : PreviewParameterProvider<PlaceResultUM> {
 
     override val values: Sequence<PlaceResultUM>
@@ -92,9 +105,13 @@ internal class PlaceResultPreviewProvider : PreviewParameterProvider<PlaceResult
 internal object PlacePredictionPreviewIntents :
     PlacePredictionAmountIntents,
     PlacePredictionSummaryIntents,
+    PlacePredictionOrderIntents,
     PlacePredictionStatusIntents,
     PlacePredictionSlippageIntents {
     override fun onAmountChange(value: String) = Unit
+    override fun onFractionClick(fraction: AmountFractionUM) = Unit
+    override fun onPresetClick(preset: AmountPresetUM) = Unit
+    override fun onMaxClick() = Unit
     override fun onSlippageClick() = Unit
     override fun onSlippageValueChange(value: String) = Unit
     override fun onSlippagePresetClick(percent: BigDecimal) = Unit
@@ -112,6 +129,29 @@ internal object PlacePredictionPreviewIntents :
     override fun onViewPositionClick() = Unit
 }
 
+internal val PreviewMarketHeader = MarketHeaderUM(
+    title = "Will Uzbekistan win the 2026 FIFA World Cup?",
+    imageUrl = null,
+    outcomeTitle = "No",
+    outcomePrice = "85¢",
+    resolutionDateMillis = RESOLUTION_AT,
+)
+
+internal val PreviewSlippage = SlippageUM(percent = DEFAULT_SLIPPAGE_PERCENT, isDefault = true)
+
+internal val PreviewBuyOrder: OrderSideUM = OrderSideUM.Buy(
+    balance = BigDecimal("30000"),
+    hasSufficientBalance = true,
+    isAddFundsEnabled = true,
+)
+
+internal val PreviewAmountPresets = persistentListOf(
+    AmountPresetUM(label = "\$100", amount = "100"),
+    AmountPresetUM(label = "\$500", amount = "500"),
+    AmountPresetUM(label = "\$1000", amount = "1000"),
+    AmountPresetUM(label = "\$5000", amount = "5000"),
+)
+
 private fun previewState(
     amountValue: String = "",
     quote: QuoteUM = QuoteUM.Empty,
@@ -124,17 +164,11 @@ private fun previewState(
         isAddFundsEnabled = tradingPermission != TradingPermissionUM.Restricted,
     ),
 ): PlacePredictionUM = PlacePredictionUM(
-    market = MarketHeaderUM(
-        title = "Will Uzbekistan win the 2026 FIFA World Cup?",
-        imageUrl = null,
-        outcomeTitle = "No",
-        outcomePrice = "85¢",
-        resolutionDateMillis = RESOLUTION_AT,
-    ),
+    market = PreviewMarketHeader,
     collateral = CollateralUM(tokenSymbol = "pUSD"),
     order = order,
     amountValue = amountValue,
-    slippage = SlippageUM(percent = DEFAULT_SLIPPAGE_PERCENT, isDefault = true),
+    slippage = PreviewSlippage,
     quote = quote,
     isMarketAcceptingOrders = true,
     tradingPermission = tradingPermission,
@@ -169,9 +203,19 @@ private fun previewSellQuote(status: PredictionQuoteStatus = PredictionQuoteStat
         status = status,
         expected = BigDecimal("43.54"),
         feeTotal = BigDecimal("0.45"),
-        total = BigDecimal("42.66"),
+        total = BigDecimal("43.09"),
         signable = SignableQuoteUM(
-            quote = previewSignableQuote(status = status, side = PredictionOrderSide.SELL),
+            quote = previewSignableQuote(status = status, side = PredictionOrderSide.SELL).copy(
+                shares = BigDecimal("51.23"),
+                notional = BigDecimal("43.54"),
+                expectedExecutionAmount = BigDecimal("43.54"),
+                fees = PredictionOrderFees(
+                    market = BigDecimal.ZERO,
+                    builder = BigDecimal("0.45"),
+                    total = BigDecimal("0.45"),
+                ),
+                total = BigDecimal("43.09"),
+            ),
             receivedAtMillis = PLACED_AT,
             assetId = PREVIEW_ASSET_ID,
         ),

@@ -5,6 +5,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketBridgeRepository
+import com.tangem.domain.polymarket.PolymarketDepositWalletLock
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.PolymarketWithdrawRepository
 import com.tangem.domain.polymarket.PredictionWithdrawalStore
@@ -47,6 +48,7 @@ internal class SubmitPredictionWithdrawalInteractorTest {
         signer = signer,
         store = store,
         codec = codec,
+        depositWalletLock = PolymarketDepositWalletLock(),
     )
 
     @BeforeEach

@@ -59,12 +59,14 @@ fun EmptyTransactionBlockLegacy(state: EmptyTransactionsBlockState, modifier: Mo
             color = TangemTheme.colors3.text.secondary,
         )
 
-        Buttons(
-            modifier = Modifier
-                .padding(horizontal = 18.dp)
-                .testTag(EmptyTransactionBlockTestTags.EXPLORE_BUTTON),
-            state = state.buttonsState,
-        )
+        state.buttonsState?.let { buttonsState ->
+            Buttons(
+                modifier = Modifier
+                    .padding(horizontal = 18.dp)
+                    .testTag(EmptyTransactionBlockTestTags.EXPLORE_BUTTON),
+                state = buttonsState,
+            )
+        }
     }
 }
 

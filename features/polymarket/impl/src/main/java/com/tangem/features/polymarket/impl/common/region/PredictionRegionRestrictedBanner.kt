@@ -3,12 +3,14 @@ package com.tangem.features.polymarket.impl.common.region
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import com.tangem.core.res.R
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_info_24
+import com.tangem.core.ui.test.PredictionTestTags
 
 @Composable
 internal fun PredictionRegionRestrictedBanner(modifier: Modifier = Modifier) {
@@ -23,6 +25,6 @@ internal fun PredictionRegionRestrictedBanner(modifier: Modifier = Modifier) {
                 tint = TangemTheme.colors3.icon.primary,
             )
         },
-        modifier = modifier,
+        modifier = modifier.testTag(PredictionTestTags.REGION_RESTRICTED_BANNER),
     )
 }

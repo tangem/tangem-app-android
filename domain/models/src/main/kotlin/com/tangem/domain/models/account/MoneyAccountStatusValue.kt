@@ -31,11 +31,6 @@ sealed class MoneyAccountStatusValue {
     }
 
     @Serializable
-    data object NotCreated : MoneyAccountStatusValue() {
-        override val source: StatusSource = StatusSource.ACTUAL
-    }
-
-    @Serializable
     sealed class Onboarding : MoneyAccountStatusValue() {
 
         abstract val customerId: String
@@ -59,6 +54,7 @@ sealed class MoneyAccountStatusValue {
         abstract val customerId: String
         abstract val cryptoCurrency: CryptoCurrency.Token
         abstract val balance: Balance?
+        abstract val error: Error?
 
         val cryptoCurrencyStatus: CryptoCurrencyStatus?
             get() = balance?.let { accountBalance ->
@@ -68,6 +64,10 @@ sealed class MoneyAccountStatusValue {
                     fiatRate = accountBalance.fiatRate,
                 )
             }
+
+        fun copySealed(source: StatusSource, error: Error?): Account = when (this) {
+            is Active -> copy(source = source, error = error)
+        }
 
         fun statusOf(
             currency: CryptoCurrency,
@@ -93,15 +93,8 @@ sealed class MoneyAccountStatusValue {
             @SerialName("balance") override val balance: Balance?,
             @SerialName("customer_id") override val customerId: String,
             @SerialName("product_instance_id") val productInstanceId: String,
+            @SerialName("error") override val error: Error?,
             @SerialName("is_bank_offramp_available") val isBankOfframpAvailable: Boolean? = null,
-        ) : Account()
-
-        @Serializable
-        data class Deactivated(
-            @SerialName("source") override val source: StatusSource,
-            @SerialName("crypto_currency") override val cryptoCurrency: CryptoCurrency.Token,
-            @SerialName("balance") override val balance: Balance?,
-            @SerialName("customer_id") override val customerId: String,
         ) : Account()
     }
 
@@ -115,6 +108,11 @@ sealed class MoneyAccountStatusValue {
 
         @Serializable
         data object Unavailable : Error() {
+            override val source: StatusSource = StatusSource.ACTUAL
+        }
+
+        @Serializable
+        data object NotSynced : Error() {
             override val source: StatusSource = StatusSource.ACTUAL
         }
     }
