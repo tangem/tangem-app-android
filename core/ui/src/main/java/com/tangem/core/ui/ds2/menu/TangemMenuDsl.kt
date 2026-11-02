@@ -8,7 +8,7 @@ import kotlinx.collections.immutable.toPersistentList
  * Builds a [TangemMenu.UiState].
  *
  * ```
- * tangemMenuUM {
+ * tangemMenuUi {
  *     item(label = resourceReference(R.string.rename), iconStart = Icons.ic_edit_20) { rename() }
  *     divider(title = resourceReference(R.string.danger_zone))
  *     item(label = resourceReference(R.string.delete), variant = TangemMenu.ItemVariant.Error) { delete() }
@@ -18,7 +18,7 @@ import kotlinx.collections.immutable.toPersistentList
  * @param variant Kind of anchor the menu opens from. See [TangemMenu.Variant].
  * @param isSelectable Figma `Has Selection`. See [TangemMenu.UiState.isSelectable].
  */
-fun tangemMenuUM(
+fun tangemMenuUi(
     variant: TangemMenu.Variant = TangemMenu.Variant.Button,
     isSelectable: Boolean = false,
     init: TangemMenuBuilder.() -> Unit,

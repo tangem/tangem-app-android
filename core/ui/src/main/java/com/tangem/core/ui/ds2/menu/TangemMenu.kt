@@ -95,7 +95,7 @@ fun TangemMenu(
 
 /**
  * [TangemMenu] rendered from a [TangemMenu.UiState] — for menu content kept in UI state or built with the
- * [tangemMenuUM] DSL.
+ * [tangemMenuUi] DSL.
  *
  * Tapping an item whose [TangemMenu.UiState.Item.isDismissOnClick] is `true` calls [onDismissRequest] before the
  * item's click action.
@@ -166,7 +166,7 @@ object TangemMenu {
     }
 
     /**
-     * Content of [TangemMenu]. Build it with [tangemMenuUM].
+     * Content of [TangemMenu]. Build it with [tangemMenuUi].
      *
      * @param entries Items and dividers, top to bottom.
      * @param variant Kind of anchor the menu opens from. See [Variant].
@@ -300,7 +300,7 @@ private fun TangemMenuPreview() {
     TangemThemePreviewRedesign {
         PreviewMenus(
             states = listOf(
-                tangemMenuUM {
+                tangemMenuUi {
                     item(label = stringReference("Copy address"), iconStart = Icons.ic_copy_20) {}
                     item(label = stringReference("Share"), iconStart = Icons.ic_share_android_20) {}
                     item(
@@ -318,7 +318,7 @@ private fun TangemMenuPreview() {
                         variant = TangemMenu.ItemVariant.Error,
                     ) {}
                 },
-                tangemMenuUM(isSelectable = true) {
+                tangemMenuUi(isSelectable = true) {
                     item(label = stringReference("By balance"), isSelected = true) {}
                     item(label = stringReference("Manually")) {}
                     divider(title = stringReference("Group"))
