@@ -1,6 +1,7 @@
 package com.tangem.data.pay.di
 
 import com.tangem.data.pay.repository.DefaultBankOfframpOrderRepository
+import com.tangem.data.pay.repository.DefaultBankOfframpRepository
 import com.tangem.data.pay.repository.DefaultCashbackRepository
 import com.tangem.data.pay.repository.DefaultCustomerOffersRepository
 import com.tangem.data.pay.repository.DefaultCustomerSummaryRepository
@@ -10,6 +11,7 @@ import com.tangem.data.pay.repository.DefaultTangemPayCampaignRepository
 import com.tangem.data.pay.repository.DefaultTangemPayCardDetailsRepository
 import com.tangem.data.pay.repository.DefaultTangemPayTxHistoryRepository
 import com.tangem.domain.pay.repository.BankOfframpOrderRepository
+import com.tangem.domain.pay.repository.BankOfframpRepository
 import com.tangem.domain.pay.repository.CashbackRepository
 import com.tangem.domain.pay.repository.CustomerOffersRepository
 import com.tangem.domain.pay.repository.CustomerOrderRepository
@@ -59,6 +61,10 @@ internal interface TangemPayDataProductionModule {
     @Binds
     @Singleton
     fun bindBankOfframpOrderRepository(repository: DefaultBankOfframpOrderRepository): BankOfframpOrderRepository
+
+    @Binds
+    @Singleton
+    fun bindBankOfframpRepository(repository: DefaultBankOfframpRepository): BankOfframpRepository
 
     @Binds
     @Singleton
