@@ -9,7 +9,9 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.domain.models.wallet.isHotWallet
+import com.tangem.domain.polymarket.usecase.CanSignPredictionOrderWithSessionKeyUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
 import com.tangem.features.polymarket.impl.common.formatPolymarketEnteredAmount
@@ -22,6 +24,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.AmountPresetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.MIN_QUOTABLE_AMOUNT
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceActionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceButtonStyleUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPrediction
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
@@ -39,6 +42,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -55,6 +59,8 @@ internal class PlacePredictionOrderModel @Inject constructor(
     quoteEngineFactory: PlacePredictionQuoteEngine.Factory,
     orderSubmitterFactory: PlacePredictionOrderSubmitter.Factory,
     private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val featureToggles: PolymarketFeatureToggles,
+    private val canSignPredictionOrderWithSessionKeyUseCase: CanSignPredictionOrderWithSessionKeyUseCase,
 ) : Model(), PlacePredictionOrderIntents, PolymarketAddFundsComponent.ModelCallback {
 
     private val params = paramsContainer.require<PlacePredictionComponent.Params>()
@@ -88,7 +94,23 @@ internal class PlacePredictionOrderModel @Inject constructor(
 
     private fun resolveWalletType() {
         getUserWalletUseCase(params.userWalletId).onRight { userWallet ->
-            uiState.update { it.copy(isHoldToConfirm = userWallet.isHotWallet) }
+            if (userWallet.isHotWallet) {
+                uiState.update { it.copy(placeButtonStyle = PlaceButtonStyleUM.HOLD) }
+                return@onRight
+            }
+
+            uiState.update { it.copy(placeButtonStyle = PlaceButtonStyleUM.CARD) }
+            modelScope.launch {
+                if (canSignWithSessionKey()) uiState.update { it.copy(placeButtonStyle = PlaceButtonStyleUM.PLAIN) }
+            }
+        }
+    }
+
+    private suspend fun canSignWithSessionKey(): Boolean {
+        if (!featureToggles.isPolymarketSessionKeysEnabled) return false
+
+        return withContext(dispatchers.io) {
+            canSignPredictionOrderWithSessionKeyUseCase(userWalletId = params.userWalletId)
         }
     }
 
