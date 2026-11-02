@@ -44,7 +44,7 @@ internal class DefaultMoneyAccountActivationRepository @Inject constructor(
                     userWalletId = userWalletId,
                     derivedKeys = activationData.derivedKeys,
                 )
-            }.getOrElse { raise(it.toActivationError()) }
+            }.getOrElse { raise(MoneyAccountActivationError.PersistenceFailed) }
 
             MoneyAccountDepositCredentials(
                 address = activationData.address,
