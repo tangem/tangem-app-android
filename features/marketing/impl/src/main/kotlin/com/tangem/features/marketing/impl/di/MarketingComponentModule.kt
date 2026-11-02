@@ -7,10 +7,12 @@ import com.tangem.features.marketing.impl.DefaultMarketingBannerComponent
 import com.tangem.features.marketing.impl.model.MarketingBannerModel
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.ClassKey
 import dagger.multibindings.IntoMap
+import java.time.Clock
 import javax.inject.Singleton
 
 @Module
@@ -32,4 +34,12 @@ internal interface MarketingModelModule {
     @IntoMap
     @ClassKey(MarketingBannerModel::class)
     fun bindMarketingBannerModel(model: MarketingBannerModel): Model
+}
+
+@Module
+@InstallIn(SingletonComponent::class)
+internal object MarketingClockModule {
+
+    @Provides
+    fun provideClock(): Clock = Clock.systemUTC()
 }
