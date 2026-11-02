@@ -13,6 +13,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -37,6 +38,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.*
+import com.tangem.core.ui.test.MoneyAccountTestTags
 import com.tangem.features.moneyaccount.common.ui.TangemBalanceHeader
 import com.tangem.features.moneyaccount.common.ui.TangemBalanceHeaderState
 import com.tangem.features.moneyaccount.common.ui.TangemCircleActionButton
@@ -175,6 +177,7 @@ private fun BalanceBlock(
         },
         label = resourceReference(R.string.token_details_balance_total),
         modifier = modifier,
+        balanceModifier = Modifier.testTag(MoneyAccountTestTags.DETAILS_BALANCE),
     )
 }
 
@@ -186,7 +189,9 @@ private fun LazyItemScope.ActionBlock(state: MoneyAccountDetailsUM, modifier: Mo
         horizontalArrangement = Arrangement.Center,
     ) {
         TangemCircleActionButton(
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .testTag(MoneyAccountTestTags.ADD_FUNDS_BUTTON),
             title = resourceReference(R.string.common_add_funds),
             icon = TangemIconUM.Icon(
                 imageVector = Icons.ic_arrow_down_24,
