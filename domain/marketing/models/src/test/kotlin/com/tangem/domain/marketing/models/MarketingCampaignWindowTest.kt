@@ -21,18 +21,6 @@ internal class MarketingCampaignWindowTest {
     }
 
     @Test
-    fun `GIVEN unparseable bounds WHEN isActiveAt THEN invalid values reported`() {
-        // Arrange
-        val invalid = mutableListOf<String>()
-
-        // Act
-        campaign("garbage", "2026-13-99").isActiveAt(NOW) { invalid += it }
-
-        // Assert
-        assertThat(invalid).containsExactly("garbage", "2026-13-99").inOrder()
-    }
-
-    @Test
     fun `GIVEN campaign with future start and end WHEN nextWindowTransition THEN returns start`() {
         // Arrange
         val campaign = campaign(startAt = "2026-08-01T12:05:00Z", endAt = "2026-08-01T12:15:00Z")
@@ -91,6 +79,36 @@ internal class MarketingCampaignWindowTest {
 
         // Assert
         assertThat(invalid).containsExactly("not-a-date", "bad-end").inOrder()
+    }
+
+    @Test
+    fun `GIVEN campaign without bounds WHEN nextWindowTransition THEN returns null`() {
+        // Act
+        val next = campaign(startAt = null, endAt = null).nextWindowTransition(NOW)
+
+        // Assert
+        assertThat(next).isNull()
+    }
+
+    @Test
+    fun `GIVEN empty list WHEN nextWindowTransition THEN returns null`() {
+        // Act
+        val next = emptyList<MarketingCampaign>().nextWindowTransition(NOW)
+
+        // Assert
+        assertThat(next).isNull()
+    }
+
+    @Test
+    fun `GIVEN valid dates WHEN validateDates THEN nothing reported`() {
+        // Arrange
+        val invalid = mutableListOf<String>()
+
+        // Act
+        campaign("2026-08-01T11:00:00Z", null).validateDates { invalid += it }
+
+        // Assert
+        assertThat(invalid).isEmpty()
     }
 
     data class Model(val startAt: String?, val endAt: String?, val expected: Boolean)
