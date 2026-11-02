@@ -146,9 +146,16 @@ private fun LazyListScope.body(state: MoneyAccountDetailsUM, listState: LazyList
             SpacerH24()
         }
         with(txHistory.component) {
-            txHistoryContent(listState = listState, state = txHistory.state)
+            txHistoryContent(
+                listState = listState,
+                state = txHistory.state.withoutEmptyStateExplore(),
+            )
         }
     }
+}
+
+private fun TxHistoryItemsUM.withoutEmptyStateExplore(): TxHistoryItemsUM {
+    return if (this is TxHistoryItemsUM.Empty) copy(onExploreClick = null) else this
 }
 
 private class TxHistory(val component: TxHistoryComponent, val state: TxHistoryItemsUM)

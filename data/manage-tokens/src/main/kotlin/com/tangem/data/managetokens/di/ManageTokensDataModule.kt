@@ -14,7 +14,7 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
-import com.tangem.features.jointaccount.JointAccountFeatureToggles
+import com.tangem.data.common.account.SupportedAccountTypes
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -37,7 +37,7 @@ internal object ManageTokensDataModule {
         excludedBlockchains: ExcludedBlockchains,
         networkFactory: NetworkFactory,
         walletAccountsFetcher: WalletAccountsFetcher,
-        jointAccountFeatureToggles: JointAccountFeatureToggles,
+        supportedAccountTypes: SupportedAccountTypes,
     ): ManageTokensRepository {
         return DefaultManageTokensRepository(
             tangemTechApi = tangemTechApi,
@@ -48,7 +48,7 @@ internal object ManageTokensDataModule {
             networkFactory = networkFactory,
             dispatchers = dispatchers,
             walletAccountsFetcher = walletAccountsFetcher,
-            jointAccountFeatureToggles = jointAccountFeatureToggles,
+            supportedAccountTypes = supportedAccountTypes,
         )
     }
 
