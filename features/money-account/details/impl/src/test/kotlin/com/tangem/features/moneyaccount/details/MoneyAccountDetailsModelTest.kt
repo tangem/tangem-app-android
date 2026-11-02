@@ -490,7 +490,7 @@ internal class MoneyAccountDetailsModelTest {
 
     @ParameterizedTest
     @MethodSource("provideErrorBannerModels")
-    fun `GIVEN account error and balance WHEN model created THEN matching banner shown`(
+    fun `GIVEN account error and balance WHEN model created THEN matching banner shown and actions toggled`(
         model: ErrorBannerModel,
     ) = runTest {
         // Arrange
@@ -503,6 +503,8 @@ internal class MoneyAccountDetailsModelTest {
         val banner = detailsModel.uiState.value.messageBanner
         assertThat(banner?.title).isEqualTo(model.expectedTitle)
         assertThat(banner?.secondaryButton != null).isEqualTo(model.hasRenewButton)
+        assertThat(detailsModel.uiState.value.isAddFundsEnabled).isEqualTo(model.isAddFundsEnabled)
+        assertThat(detailsModel.uiState.value.isSendEnabled).isEqualTo(model.isSendEnabled)
         detailsModel.onDestroy()
     }
 
@@ -576,30 +578,45 @@ internal class MoneyAccountDetailsModelTest {
     }
 
     private fun provideErrorBannerModels() = listOf(
-        ErrorBannerModel(balance = balance(), error = null, expectedTitle = null, hasRenewButton = false),
+        ErrorBannerModel(
+            balance = balance(),
+            error = null,
+            expectedTitle = null,
+            hasRenewButton = false,
+            isAddFundsEnabled = true,
+            isSendEnabled = true,
+        ),
         ErrorBannerModel(
             balance = null,
             error = null,
             expectedTitle = resourceReference(R.string.money_account_balance_unavailable_title),
             hasRenewButton = false,
+            isAddFundsEnabled = false,
+            isSendEnabled = false,
         ),
         ErrorBannerModel(
             balance = balance(),
             error = MoneyAccountStatusValue.Error.NotSynced,
             expectedTitle = resourceReference(R.string.tangempay_sync_needed_title),
             hasRenewButton = true,
+            isAddFundsEnabled = false,
+            isSendEnabled = false,
         ),
         ErrorBannerModel(
             balance = null,
             error = MoneyAccountStatusValue.Error.NotSynced,
             expectedTitle = resourceReference(R.string.tangempay_sync_needed_title),
             hasRenewButton = true,
+            isAddFundsEnabled = false,
+            isSendEnabled = false,
         ),
         ErrorBannerModel(
             balance = balance(),
             error = MoneyAccountStatusValue.Error.Unavailable,
             expectedTitle = resourceReference(R.string.tangempay_temporarily_unavailable),
             hasRenewButton = false,
+            isAddFundsEnabled = false,
+            isSendEnabled = false,
         ),
     )
 
@@ -608,6 +625,8 @@ internal class MoneyAccountDetailsModelTest {
         val error: MoneyAccountStatusValue.Error?,
         val expectedTitle: TextReference?,
         val hasRenewButton: Boolean,
+        val isAddFundsEnabled: Boolean,
+        val isSendEnabled: Boolean,
     )
 
     data class AddFundsModel(val balance: MoneyAccountStatusValue.Balance?, val expectedDepositAddress: String?)

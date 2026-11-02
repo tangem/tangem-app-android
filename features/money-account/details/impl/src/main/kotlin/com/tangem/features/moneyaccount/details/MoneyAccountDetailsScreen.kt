@@ -205,6 +205,7 @@ private fun LazyItemScope.ActionBlock(state: MoneyAccountDetailsUM, modifier: Mo
                 tintReference = { TangemTheme.colors3.icon.primary },
             ),
             onClick = state.onAddFundsClick,
+            isEnabled = state.isAddFundsEnabled,
         )
         TangemCircleActionButton(
             modifier = Modifier.padding(horizontal = 16.dp),
@@ -214,6 +215,7 @@ private fun LazyItemScope.ActionBlock(state: MoneyAccountDetailsUM, modifier: Mo
                 tintReference = { TangemTheme.colors3.icon.primary },
             ),
             onClick = state.onSendClick,
+            isEnabled = state.isSendEnabled,
         )
     }
 }
@@ -306,6 +308,8 @@ private fun MoneyAccountDetailsScreenPreview() {
                 onBackClick = {},
                 onAddFundsClick = {},
                 onSendClick = {},
+                isAddFundsEnabled = true,
+                isSendEnabled = true,
                 txHistoryCurrency = null,
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             ),
@@ -334,6 +338,8 @@ private fun MoneyAccountDetailsScreenBalanceUnavailablePreview() {
                 onBackClick = {},
                 onAddFundsClick = {},
                 onSendClick = {},
+                isAddFundsEnabled = false,
+                isSendEnabled = false,
                 txHistoryCurrency = null,
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             ),
