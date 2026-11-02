@@ -1,7 +1,6 @@
 package com.tangem.tap
 
 import androidx.hilt.work.HiltWorkerFactory
-import com.tangem.blockchain.common.ExceptionHandlerOutput
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
@@ -33,8 +32,6 @@ internal interface ApplicationEntryPoint {
     fun getGetAppThemeModeUseCase(): GetAppThemeModeUseCase
 
     fun getTangemLoggingInitializer(): TangemLoggingInitializer
-
-    fun getBlockchainExceptionHandler(): ExceptionHandlerOutput
 
     fun getWorkerFactory(): HiltWorkerFactory
 
