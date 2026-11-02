@@ -13,6 +13,7 @@ import com.tangem.domain.assetsdiscovery.usecase.ObserveAssetsDiscoveryUseCase
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.collectibles.usecase.GetMissingCollectiblesOwnerKeysCountUseCase
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.hotwallet.CheckHotWalletUpgradeBannerUseCase
 import com.tangem.domain.hotwallet.GetAccessCodeSkippedUseCase
@@ -66,6 +67,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getMissingJointOwnerKeysCountUseCase: GetMissingJointOwnerKeysCountUseCase,
+    private val getMissingCollectiblesOwnerKeysCountUseCase: GetMissingCollectiblesOwnerKeysCountUseCase,
     private val onboardingRepository: OnboardingRepository,
     private val shouldShowUpgradeHotWalletBannerUseCase: ShouldShowUpgradeHotWalletBannerUseCase,
     private val getUpgradeBannerClosureTimestampUseCase: GetUpgradeBannerClosureTimestampUseCase,
@@ -170,6 +172,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             val totalFiatBalance = accountList.totalFiatBalance
             val flattenCurrencies = accountList.flattenCurrencies()
             val jointAccounts = accountList.accountStatuses.mapNotNull { it.account as? Account.Joint }
+            val collectiblesAccounts = accountList.accountStatuses.mapNotNull { it.account as? Account.Collectibles }
 
             val paymentAccountStatus = accountList.accountStatuses
                 .filterIsInstance<AccountStatus.Payment>()
@@ -213,6 +216,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
                     cardTypesResolver = cardTypesResolver,
                     flattenCurrencies = flattenCurrencies,
                     jointAccounts = jointAccounts,
+                    collectiblesAccounts = collectiblesAccounts,
                     clickIntents = clickIntents,
                 )
 
@@ -344,6 +348,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
         cardTypesResolver: CardTypesResolver?,
         flattenCurrencies: List<CryptoCurrencyStatus>,
         jointAccounts: List<Account.Joint>,
+        collectiblesAccounts: List<Account.Collectibles>,
         clickIntents: WalletClickIntents,
     ) {
         addIf(
@@ -356,6 +361,7 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             derivedKeysWallet = derivedKeysWallet,
             flattenCurrencies = flattenCurrencies,
             jointAccounts = jointAccounts,
+            collectiblesAccounts = collectiblesAccounts,
             clickIntents = clickIntents,
         )
     }
@@ -365,11 +371,18 @@ internal class GetWalletNotificationsFactory @Inject constructor(
         derivedKeysWallet: UserWallet,
         flattenCurrencies: List<CryptoCurrencyStatus>,
         jointAccounts: List<Account.Joint>,
+        collectiblesAccounts: List<Account.Collectibles>,
         clickIntents: WalletClickIntents,
     ) {
         val currencies = flattenCurrencies.getMissingAddressCurrencies()
         val missingJointOwnerKeysCount = getMissingJointOwnerKeysCountUseCase(jointAccounts, derivedKeysWallet)
-        val missingAddressesCount = currencies.distinctBy { it.network.id }.count() + missingJointOwnerKeysCount
+        val missingCollectiblesOwnerKeysCount = getMissingCollectiblesOwnerKeysCountUseCase(
+            collectiblesAccounts,
+            derivedKeysWallet,
+        )
+        val missingAddressesCount = currencies.distinctBy { it.network.id }.count() +
+            missingJointOwnerKeysCount +
+            missingCollectiblesOwnerKeysCount
 
         addIf(
             element = WalletNotificationUM.MissingAddresses(

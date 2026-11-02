@@ -93,9 +93,9 @@ sealed class CollectiblesAccountStatusValue {
     }
 
     /**
-     * The vault exists but this device has not derived its owner key yet — a wallet restored on a new phone.
+     * The vault exists but this device has not derived its owner key yet — a re-added wallet or a new phone.
      * Like a token with no derivation: a dash instead of a balance, a zero contribution to the wallet total, and
-     * no notification, because deriving the key needs no card tap.
+     * the key is derived by the wallet's missing-addresses notification.
      */
     @Serializable
     data object MissedDerivation : CollectiblesAccountStatusValue() {

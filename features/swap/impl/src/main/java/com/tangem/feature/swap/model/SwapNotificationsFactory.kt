@@ -411,6 +411,9 @@ internal class SwapNotificationsFactory(
         }
 
         when (feeError) {
+            is GetFeeError.GaslessError.TronAllowanceTooHigh -> add(
+                feeError.toReapprovalNotification(quoteModel.fromTokenInfo.swapCurrencyStatus.currency),
+            )
             is GetFeeError.BlockchainErrors.TooLargeSolanaTransactionError -> {
                 add(
                     getWarningForError(
@@ -451,6 +454,17 @@ internal class SwapNotificationsFactory(
                 onClick = actions.openTokenDetailsScreen,
             )
         }
+    }
+
+    private fun GetFeeError.GaslessError.TronAllowanceTooHigh.toReapprovalNotification(
+        fromCurrency: CryptoCurrency,
+    ): NotificationUM {
+        val reapproval = reapproval ?: return NotificationUM.Error.TotalExceedsBalance
+        val leaveAmount = (balance - reapproval.amount).format { crypto(fromCurrency) }
+        return SwapNotificationUM.Error.TronReapprovalRequired(
+            leaveAmount = leaveAmount,
+            onConfirmClick = { actions.onTronReapproveClick(reapproval.spenderAddress, reapproval.amount) },
+        )
     }
 
     private fun MutableList<NotificationUM>.addReduceAmountNotification(

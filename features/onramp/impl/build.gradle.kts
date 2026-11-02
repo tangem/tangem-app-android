@@ -17,6 +17,7 @@ dependencies {
     api(projects.features.commonFeatures.api)
     api(projects.features.onramp.api)
     implementation(projects.features.marketing.api)
+    implementation(projects.domain.marketing)
     implementation(projects.domain.marketing.models)
 
     /** Project - Core */

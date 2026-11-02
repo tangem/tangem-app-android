@@ -7,8 +7,6 @@ import javax.inject.Inject
 internal class DefaultOnboardingV2FeatureToggles @Inject constructor(
     private val featureTogglesManager: FeatureTogglesManager,
 ) : OnboardingV2FeatureToggles {
-    override val isVisaOnboardingEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.VISA_ONBOARDING_ENABLED)
     override val isAddressSyncEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.ADDRESS_SYNC_ENABLED)
     override val isCardLinkedStatusUpdateEnabled: Boolean

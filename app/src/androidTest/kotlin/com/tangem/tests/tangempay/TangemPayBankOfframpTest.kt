@@ -401,9 +401,9 @@ class TangemPayBankOfframpTest : BaseTestCase() {
                     recipientRowWithName(ALICE.fullName).performClick()
                 }
             }
-            step("Assert 'Amount' screen for '${ALICE.displayName}' is displayed") {
+            step("Assert 'Amount' screen for '${ALICE.fullName}' is displayed") {
                 flakySafely {
-                    onTangemPayBankWithdrawAmountScreen { headerTitle(ALICE.displayName).assertIsDisplayed() }
+                    onTangemPayBankWithdrawAmountScreen { headerTitle(ALICE.fullName).assertIsDisplayed() }
                 }
             }
             step("Fill in transfer amount '$amount'") { enterTangemPayBankWithdrawAmount(amount) }

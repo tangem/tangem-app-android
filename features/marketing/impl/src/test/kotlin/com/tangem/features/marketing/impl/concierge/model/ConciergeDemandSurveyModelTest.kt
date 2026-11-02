@@ -5,17 +5,24 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.marketing.SubmitDemandSurveyUseCase
 import com.tangem.domain.marketing.models.SurveyAnswer
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.marketing.api.concierge.ConciergeDemandSurveyComponent
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
+import io.mockk.Runs
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.test.TestScope
@@ -85,6 +92,34 @@ internal class ConciergeDemandSurveyModelTest {
         // Assert
         val selected = model.uiState.value.questions.first { it.key == "goal" }.options.filter { it.isSelected }
         assertThat(selected.map { it.key }).containsExactly("sell")
+    }
+
+    @Test
+    fun `GIVEN optional answer selected WHEN the same option tapped again THEN deselected`() = runTest {
+        // Arrange
+        val model = createModel()
+        model.select("current_solution", "cash_exchange")
+
+        // Act
+        model.select("current_solution", "cash_exchange")
+
+        // Assert
+        val options = model.uiState.value.questions.first { it.key == "current_solution" }.options
+        assertThat(options.filter { it.isSelected }).isEmpty()
+    }
+
+    @Test
+    fun `GIVEN required answer selected WHEN the same option tapped again THEN stays selected`() = runTest {
+        // Arrange
+        val model = createModel()
+        model.select("goal", "buy")
+
+        // Act
+        model.select("goal", "buy")
+
+        // Assert
+        val selected = model.uiState.value.questions.first { it.key == "goal" }.options.filter { it.isSelected }
+        assertThat(selected.map { it.key }).containsExactly("buy")
     }
 
     @Test
@@ -187,6 +222,39 @@ internal class ConciergeDemandSurveyModelTest {
         assertThat(stateAfterError.questions).isEqualTo(questionsBefore)
         coVerify(exactly = 2) { submitDemandSurveyUseCase(any(), any()) }
         assertThat(stacksAfterError).isEmpty()
+        assertThat(stacks).containsExactly(listOf(ConciergeDemandSurveyRoute.Success))
+    }
+
+    @Test
+    fun `GIVEN submission fails WHEN retry tapped in the error dialog THEN the same answers sent again`() = runTest {
+        // Arrange
+        val message = slot<UiMessage>()
+        every { uiMessageSender.send(capture(message)) } just Runs
+        coEvery { submitDemandSurveyUseCase(any(), any()) } returnsMany listOf(
+            IllegalStateException().left(),
+            Unit.right(),
+        )
+        val model = createModel()
+        val stacks = trackStacks(model)
+        model.answerRequired()
+        val answers = listOf(
+            SurveyAnswer(questionKey = "goal", answerKey = "buy_sell"),
+            SurveyAnswer(questionKey = "transaction_size", answerKey = "1m_plus"),
+            SurveyAnswer(questionKey = "frequency", answerKey = "weekly_or_more"),
+            SurveyAnswer(questionKey = "needed_currency", answerKey = "eur"),
+        )
+        model.uiState.value.onSubmitClick()
+        advanceUntilIdle()
+        val dialog = message.captured as DialogMessage
+
+        // Act
+        dialog.firstAction.onClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(dialog.firstAction.title).isEqualTo(resourceReference(R.string.common_retry))
+        assertThat(dialog.secondAction?.title).isEqualTo(resourceReference(R.string.common_cancel))
+        coVerify(exactly = 2) { submitDemandSurveyUseCase(USER_WALLET_ID, answers) }
         assertThat(stacks).containsExactly(listOf(ConciergeDemandSurveyRoute.Success))
     }
 
