@@ -74,6 +74,10 @@ internal class PlacePredictionOrderModel @Inject constructor(
 
     private var pendingPlacement: Job? = null
 
+    private var sessionKeyCheck: Job? = null
+
+    private var isCardWallet = false
+
     val feeSheet = PlacePredictionFeeSheet(
         uiState = uiState,
         scope = modelScope,
@@ -99,23 +103,34 @@ internal class PlacePredictionOrderModel @Inject constructor(
                 return@onRight
             }
 
+            isCardWallet = true
             uiState.update { it.copy(placeButtonStyle = PlaceButtonStyleUM.CARD) }
-            modelScope.launch {
-                if (canSignWithSessionKey()) uiState.update { it.copy(placeButtonStyle = PlaceButtonStyleUM.PLAIN) }
-            }
+            checkSessionKey()
         }
     }
 
-    private suspend fun canSignWithSessionKey(): Boolean {
-        if (!featureToggles.isPolymarketSessionKeysEnabled) return false
+    private fun checkSessionKey() {
+        if (!isCardWallet || !featureToggles.isPolymarketSessionKeysEnabled) return
 
-        return withContext(dispatchers.io) {
-            canSignPredictionOrderWithSessionKeyUseCase(userWalletId = params.userWalletId)
+        sessionKeyCheck?.cancel()
+        sessionKeyCheck = modelScope.launch {
+            val canSign = withContext(dispatchers.io) {
+                canSignPredictionOrderWithSessionKeyUseCase(userWalletId = params.userWalletId)
+            }
+            val style = if (canSign) PlaceButtonStyleUM.PLAIN else PlaceButtonStyleUM.CARD
+            uiState.update { state ->
+                if (state.submit is SubmitUM.Idle) {
+                    state.copy(placeButtonStyle = style)
+                } else {
+                    state
+                }
+            }
         }
     }
 
     fun onResume() {
         quoteEngine.onResume()
+        checkSessionKey()
     }
 
     fun onPause() {
