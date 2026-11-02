@@ -243,6 +243,40 @@ internal class SendConfirmModelTest : SendModelTestBase() {
         }
 
         @Test
+        fun `GIVEN success screen replaces the step WHEN send succeeds THEN success analytics are still sent`() =
+            runTest {
+                // Arrange
+                val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+                every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
+                coEvery { sendTransactionUseCase(any(), any(), any()) } returns "txHash".right()
+                lateinit var model: SendConfirmModel
+                val params = MutableParamsContainer(
+                    defaultSendConfirmParams(
+                        state = normalFeeState(),
+                        cryptoCurrencyStatus = loadedFeeStatus,
+                        feeCryptoCurrencyStatus = loadedFeeStatus,
+                    ).copy(onSendTransaction = { model.onDestroy() }),
+                )
+                model = createSendConfirmModel(this, params)
+                advanceUntilIdle()
+
+                // Act
+                resultFlow.tryEmit(true)
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 1) {
+                    sendAnalyticHelper.sendSuccessAnalytics(
+                        cryptoCurrency = any(),
+                        sendUM = any(),
+                        feeToken = any(),
+                        account = any(),
+                        jointComposition = any(),
+                    )
+                }
+            }
+
+        @Test
         fun `GIVEN transaction creation fails WHEN verifyAndSend THEN show generic error and do NOT send`() = runTest {
             // Arrange
             val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
