@@ -72,6 +72,7 @@ internal class WalletTokensListUMConverter(
             onAccountCollapseClick = clickIntents::onAccountCollapseClick,
             onAccountExpandClick = clickIntents::onAccountExpandClick,
             onManageTokensClick = clickIntents::onManageTokensClick,
+            jointPendingOperations = jointPendingOperations,
         )
     }
 
