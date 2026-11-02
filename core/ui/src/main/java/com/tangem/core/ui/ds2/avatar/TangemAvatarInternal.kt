@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -64,13 +65,19 @@ internal fun TangemAvatarContent(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .matchParentSize()
-                .conditionalCompose(hasIndicator) { indicatorCutout(indicatorSize = tokens.indicatorSize) }
+                .conditionalCompose(hasIndicator) {
+                    indicatorCutout(indicatorSize = tokens.indicatorSize, overhang = tokens.indicatorOverhang)
+                }
                 .clip(shape),
         ) {
             AvatarBody(state = state, tokens = tokens, contentDescription = contentDescription)
         }
         if (hasIndicator) {
-            PendingIndicator(size = tokens.indicatorSize, modifier = Modifier.align(Alignment.BottomEnd))
+            PendingIndicator(
+                size = tokens.indicatorSize,
+                overhang = tokens.indicatorOverhang,
+                modifier = Modifier.align(Alignment.BottomEnd),
+            )
         }
     }
 }
@@ -78,19 +85,22 @@ internal fun TangemAvatarContent(
 @Composable
 private fun BoxScope.AvatarBody(state: TangemAvatar.UiState, tokens: AvatarTokens, contentDescription: String?) {
     when (state) {
-        is TangemAvatar.UiState.Account -> {
-            FilledBackground(color = state.color)
-            when (val glyph = state.glyph) {
-                is AvatarAccountGlyph.Icon -> Icon(
+        is TangemAvatar.UiState.Account -> when (val glyph = state.glyph) {
+            is AvatarAccountGlyph.Icon -> {
+                FilledBackground(color = glyph.color.toColor())
+                AccountGlyphIcon(
                     imageVector = glyph.icon.asImageVector(),
+                    size = tokens.accountGlyphSize,
                     contentDescription = contentDescription,
-                    tint = TangemTheme.colors3.text.staticDark.primary.copy(alpha = ACCOUNT_GLYPH_ALPHA),
-                    modifier = Modifier.size(tokens.accountGlyphSize),
                 )
-                is AvatarAccountGlyph.Letter -> InitialText(
-                    initial = glyph.text.resolveReference().firstSymbol(),
-                    tokens = tokens,
-                )
+            }
+            is AvatarAccountGlyph.Letter -> {
+                FilledBackground(color = glyph.color.toColor())
+                InitialText(initial = glyph.text.resolveReference().firstSymbol(), tokens = tokens)
+            }
+            is AvatarAccountGlyph.Kind -> {
+                FilledBackground(color = glyph.kind.fillColor())
+                AccountKindGlyph(kind = glyph.kind, tokens = tokens, contentDescription = contentDescription)
             }
         }
         is TangemAvatar.UiState.User -> if (state.initial == null) {
@@ -102,7 +112,7 @@ private fun BoxScope.AvatarBody(state: TangemAvatar.UiState, tokens: AvatarToken
                 modifier = Modifier.size(tokens.iconGlyphSize),
             )
         } else {
-            FilledBackground(color = state.color)
+            FilledBackground(color = state.color.toColor())
             InitialText(initial = state.initial.toString(), tokens = tokens)
         }
         is TangemAvatar.UiState.Address -> IdentIcon(
@@ -136,6 +146,30 @@ private fun BoxScope.AvatarBody(state: TangemAvatar.UiState, tokens: AvatarToken
         is TangemAvatar.UiState.Shimmer -> TangemShimmer(
             radius = tokens.cornerRadius,
             modifier = Modifier.matchParentSize(),
+        )
+    }
+}
+
+@Composable
+private fun AccountGlyphIcon(imageVector: ImageVector, size: Dp, contentDescription: String?) {
+    Icon(
+        imageVector = imageVector,
+        contentDescription = contentDescription,
+        tint = TangemTheme.colors3.icon.staticDark.copy(alpha = ACCOUNT_GLYPH_ALPHA),
+        modifier = Modifier.size(size),
+    )
+}
+
+@Composable
+private fun AccountKindGlyph(kind: TangemAvatar.AccountKind, tokens: AvatarTokens, contentDescription: String?) {
+    val size = tokens.accountGlyphSize * kind.glyphScale
+    if (kind.isTinted) {
+        AccountGlyphIcon(imageVector = kind.icon(), size = size, contentDescription = contentDescription)
+    } else {
+        Image(
+            imageVector = kind.icon(),
+            contentDescription = contentDescription,
+            modifier = Modifier.size(size),
         )
     }
 }
@@ -186,8 +220,8 @@ private fun BoxScope.AssetImage(source: AvatarAssetSource, tokens: AvatarTokens,
 }
 
 @Composable
-private fun BoxScope.FilledBackground(color: TangemAvatar.FillColor) {
-    Box(modifier = Modifier.matchParentSize().background(color = color.toColor()))
+private fun BoxScope.FilledBackground(color: Color) {
+    Box(modifier = Modifier.matchParentSize().background(color = color))
 }
 
 @Composable
@@ -196,11 +230,11 @@ private fun BoxScope.AppearanceBackground(appearance: TangemAvatar.Appearance) {
 }
 
 @Composable
-private fun PendingIndicator(size: Dp, modifier: Modifier = Modifier) {
+private fun PendingIndicator(size: Dp, overhang: Dp, modifier: Modifier = Modifier) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
-            .offset(x = 1.dp, y = 1.dp)
+            .offset(x = overhang, y = overhang)
             .size(size)
             .background(color = TangemTheme.colors3.bg.accent.yellow, shape = CircleShape),
     ) {
@@ -217,11 +251,11 @@ private fun PendingIndicator(size: Dp, modifier: Modifier = Modifier) {
  * Punches a transparent ring where the pending indicator overlaps the avatar, so the two never touch.
  * Same technique as the token icon's network badge.
  */
-private fun Modifier.indicatorCutout(indicatorSize: Dp): Modifier = this
+private fun Modifier.indicatorCutout(indicatorSize: Dp, overhang: Dp): Modifier = this
     .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
     .drawWithContent {
         drawContent()
-        val center = size.width - (indicatorSize / 2 - 1.dp).toPx()
+        val center = size.width - (indicatorSize / 2 - overhang).toPx()
         drawCircle(
             color = Color.Transparent,
             radius = (indicatorSize / 2 + 1.dp).toPx(),
