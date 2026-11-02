@@ -514,6 +514,62 @@ internal class PolymarketSessionKeyStateServiceTest {
     }
 
     @Test
+    fun `GIVEN a pending key WHEN the loop restarts and then fails THEN the error is hidden and polling goes on`() =
+        runTest {
+            // Arrange
+            val pending = overview(PolymarketSessionKeyStatus.PENDING)
+            val active = overview(PolymarketSessionKeyStatus.ACTIVE)
+            var reconciles = 0
+            coEvery { reconcile(USER_WALLET_ID) } coAnswers {
+                reconciles++
+                when (reconciles) {
+                    1 -> pending.right()
+                    2 -> error("keystore unavailable")
+                    3 -> PolymarketWalletError.Network.left()
+                    else -> active.right()
+                }
+            }
+
+            // Act
+            service().observe(USER_WALLET_ID).test {
+                // Assert
+                assertThat(awaitItem()).isEqualTo(pending.right())
+                assertThat(awaitItem()).isEqualTo(active.right())
+                assertThat(reconciles).isEqualTo(4)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `GIVEN a settling wallet WHEN its next change elapses with failures THEN retries go on after the polls`() =
+        runTest {
+            // Arrange
+            val settling = overview(PolymarketSessionKeyStatus.PENDING, nextChangeAt = NOW.plus(Duration.ofMinutes(1)))
+            var reconciles = 0
+            coEvery { reconcile(USER_WALLET_ID) } coAnswers {
+                reconciles++
+                if (reconciles == 1) settling.right() else PolymarketWalletError.Network.left()
+            }
+
+            service().observe(USER_WALLET_ID).test {
+                awaitItem()
+
+                // Act
+                advanceTimeBy(POLL_INTERVAL_MILLIS * 100)
+                runCurrent()
+                val afterPolls = reconciles
+                advanceTimeBy(POLL_INTERVAL_MILLIS * 3)
+                runCurrent()
+
+                // Assert
+                assertThat(afterPolls).isEqualTo(101)
+                assertThat(reconciles).isEqualTo(103)
+                expectNoEvents()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
     fun `GIVEN reconcile leaks a foreign cancellation WHEN observed THEN the loop restarts`() = runTest {
         // Arrange
         val active = overview(PolymarketSessionKeyStatus.ACTIVE)
