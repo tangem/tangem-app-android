@@ -81,7 +81,6 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotification.Warning.SomeNetworksUnreachable,
             is WalletNotification.Warning.NetworksUnreachable,
             is WalletNotification.UsedOutdatedData,
-            is WalletNotification.UnlockVisaAccess,
             is WalletNotification.Warning.YeildSupplyApprove, // TODO apply correct event
             is WalletNotification.CloreMigration,
             -> null
