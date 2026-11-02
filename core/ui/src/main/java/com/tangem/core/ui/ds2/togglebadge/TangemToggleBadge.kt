@@ -2,6 +2,7 @@ package com.tangem.core.ui.ds2.togglebadge
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,6 +32,7 @@ import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.badge.BadgeColorTokens
 import com.tangem.core.ui.ds2.badge.BadgeContent
 import com.tangem.core.ui.ds2.badge.TangemBadge
+import com.tangem.core.ui.ds2.badge.focusRingBorder
 import com.tangem.core.ui.ds2.badge.tokens
 import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.extensions.TextReference
@@ -51,6 +53,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  *   overridden. Other [TangemIconUM] subtypes pass through with their own colors intact.
  * - The press overlay follows the selection state as well: `interaction.press.default` when
  *   unselected, `interaction.press.inverse` when selected.
+ * - A focused badge draws the brand focus ring.
  *
  * @param text Badge label.
  * @param isSelected Current selection state.
@@ -80,6 +83,8 @@ fun TangemToggleBadge(
 ) {
     val colorTokens = resolveToggleColorTokens(isSelected = isSelected)
     val sizeTokens = size.tokens()
+    val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
+    val isFocused by resolvedInteractionSource.collectIsFocusedAsState()
 
     TangemSurface(
         modifier = modifier
@@ -92,8 +97,9 @@ fun TangemToggleBadge(
             .heightIn(min = sizeTokens.minHeight),
         onClick = { onSelectedChange(!isSelected) },
         enabled = enabled,
-        interactionSource = interactionSource,
+        interactionSource = resolvedInteractionSource,
         color = colorTokens.backgroundColor,
+        border = if (isFocused) focusRingBorder() else null,
         shape = RoundedCornerShape(999.dp),
     ) {
         BadgeContent(
