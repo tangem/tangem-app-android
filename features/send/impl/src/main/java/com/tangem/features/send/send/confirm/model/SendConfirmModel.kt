@@ -31,6 +31,7 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.jointaccount.model.JointOperationCreateError
+import com.tangem.domain.mcp.models.analytics.McpIntentAnalyticsEvent
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -72,6 +73,7 @@ import com.tangem.features.send.common.SendConfirmAlertFactory
 import com.tangem.features.send.common.ui.state.ConfirmUM
 import com.tangem.features.send.common.ui.state.SendSignaturesUM
 import com.tangem.features.send.impl.R
+import com.tangem.features.send.mcp.model.sendIntentReportErrorCode
 import com.tangem.features.send.send.analytics.SendAnalyticHelper
 import com.tangem.features.send.send.confirm.SendConfirmComponent
 import com.tangem.features.send.send.confirm.model.transformers.*
@@ -526,6 +528,16 @@ internal class SendConfirmModel @Inject constructor(
             reduceAmountBy = confirmData.reduceAmountBy.orZero(),
         )
 
+        // Taken before the transaction is built: a yield-supply send is rewritten to a zero amount sent to the
+        // yield module, which is not what the user transferred.
+        val transfer = SentTransfer(
+            amount = receivingAmount,
+            recipient = destination,
+            memo = confirmData.enteredMemo,
+            decimals = cryptoCurrency.decimals,
+            networkRawId = cryptoCurrency.network.rawId,
+        )
+
         modelScope.launch {
             createTransferTransactionUseCase(
                 amount = receivingAmount.convertToSdkAmount(cryptoCurrencyStatus),
@@ -546,13 +558,13 @@ internal class SendConfirmModel @Inject constructor(
                     )
                 },
                 ifRight = { txData ->
-                    sendTransaction(txData)
+                    sendTransaction(txData, transfer)
                 },
             )
         }
     }
 
-    private suspend fun sendTransaction(txData: TransactionData.Uncompiled) {
+    private suspend fun sendTransaction(txData: TransactionData.Uncompiled, transfer: SentTransfer) {
         val feeExtended = feeUMV2?.feeExtraInfo?.transactionFeeExtended
         val feeToken = getCurrencyStatusForFeePayment().currency
 
@@ -591,19 +603,22 @@ internal class SendConfirmModel @Inject constructor(
             },
             ifRight = { txHash ->
                 updateTransactionStatus(txData, txHash)
-                reportIntentHashIfNeeded(txHash = txHash.ifEmpty { txData.hash.orEmpty() })
+                reportIntentHashIfNeeded(transfer = transfer, txHash = txHash.ifEmpty { txData.hash.orEmpty() })
                 addTokenToWalletIfNeeded()
                 sendBalanceUpdater.scheduleUpdates()
-                modelScope.launch(dispatchers.default) {
+                val sentUM = uiState.value
+                val sentAccount = params.accountFlow.value
+                // The success screen replaces this step right away and cancels modelScope
+                appScope.launch(dispatchers.default) {
                     sendAnalyticHelper.sendSuccessAnalytics(
                         cryptoCurrency = cryptoCurrency,
-                        sendUM = uiState.value,
-                        account = params.accountFlow.value,
+                        sendUM = sentUM,
+                        account = sentAccount,
                         feeToken = feeToken,
                     )
                     recordTokenTransferFromSendUseCase(
                         userWalletId = userWallet.walletId,
-                        sourceAccount = params.accountFlow.value,
+                        sourceAccount = sentAccount,
                         currency = cryptoCurrency,
                         destinationAddress = confirmData.enteredDestination.orEmpty(),
                     )
@@ -614,16 +629,34 @@ internal class SendConfirmModel @Inject constructor(
         )
     }
 
-    private fun reportIntentHashIfNeeded(txHash: String) {
-        val intentId = params.intentId ?: return
+    private fun reportIntentHashIfNeeded(transfer: SentTransfer, txHash: String) {
+        val intent = params.intent ?: return
         if (txHash.isEmpty()) {
-            TangemLogger.e("No transaction hash to report for send intent $intentId")
+            TangemLogger.e("No transaction hash to report for send intent ${intent.id}")
+            analyticsEventHandler.send(
+                McpIntentAnalyticsEvent.IntentReportFailed(intentId = intent.id, errorCode = NO_TX_HASH_ERROR_CODE),
+            )
             return
         }
+        val completedEvent = McpIntentAnalyticsEvent.IntentCompleted(
+            intentId = intent.id,
+            blockchain = cryptoCurrency.network.name,
+            token = cryptoCurrency.symbol,
+            isModified = intent.isModifiedBy(transfer),
+        )
 
         appScope.launch {
-            reportSendIntentHashUseCase(intentId = intentId, txHash = txHash)
-                .onLeft { TangemLogger.e("Gave up reporting the hash of send intent $intentId", it) }
+            reportSendIntentHashUseCase(intentId = intent.id, txHash = txHash)
+                .onRight { analyticsEventHandler.send(completedEvent) }
+                .onLeft { error ->
+                    TangemLogger.e("Gave up reporting the hash of send intent ${intent.id}", error)
+                    analyticsEventHandler.send(
+                        McpIntentAnalyticsEvent.IntentReportFailed(
+                            intentId = intent.id,
+                            errorCode = sendIntentReportErrorCode(error),
+                        ),
+                    )
+                }
         }
     }
 
@@ -797,5 +830,6 @@ internal class SendConfirmModel @Inject constructor(
 
     private companion object {
         const val CHECK_FEE_UPDATE_DELAY = 10_000L
+        const val NO_TX_HASH_ERROR_CODE = "no_hash"
     }
 }

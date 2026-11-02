@@ -1,6 +1,9 @@
 package com.tangem.feature.swap.model
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.ui.notifications.NotificationUM
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -9,6 +12,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.swap.models.SwapCurrencyStatus
+import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedForNetwork
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
@@ -468,6 +472,60 @@ internal class SwapNotificationsFactoryTest {
                     it is SwapNotificationUM.Warning.PredictionMaximumDeposit
             },
         ).isTrue()
+    }
+
+    @Test
+    fun `GIVEN tron allowance too high with reapproval WHEN notifications built THEN leave amount reapproves`() {
+        // Arrange
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns false
+        var reapproveClick: Pair<String, BigDecimal>? = null
+        every { actions.onTronReapproveClick } returns { spender, amount -> reapproveClick = spender to amount }
+        val quoteModel = buildQuotesLoadedState(providerType = ExchangeProviderType.DEX)
+        val feeError = GetFeeError.GaslessError.TronAllowanceTooHigh(
+            balance = BigDecimal("50"),
+            required = BigDecimal("63"),
+            allowance = BigDecimal("50"),
+            reapproval = GetFeeError.TronReapproval(spenderAddress = "TSpender", amount = BigDecimal("35.7")),
+        )
+
+        // Act
+        val notification = factory.getConfirmationStateNotifications(
+            quoteModel = quoteModel,
+            feeCryptoCurrencyStatus = buildCoinFeeStatus(),
+            swapFee = null,
+            feeError = feeError,
+            isFeeCurrencyInStack = false,
+        ).filterIsInstance<SwapNotificationUM.Error.TronReapprovalRequired>().single()
+        notification.onConfirmClick()
+
+        // Assert
+        val fromCurrency = quoteModel.fromTokenInfo.swapCurrencyStatus.currency
+        assertThat(notification.leaveAmount).isEqualTo(BigDecimal("14.3").format { crypto(fromCurrency) })
+        assertThat(reapproveClick).isEqualTo("TSpender" to BigDecimal("35.7"))
+    }
+
+    @Test
+    fun `GIVEN tron allowance too high without reapproval WHEN notifications built THEN total exceeds balance`() {
+        // Arrange
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns false
+        val feeError = GetFeeError.GaslessError.TronAllowanceTooHigh(
+            balance = BigDecimal("50"),
+            required = BigDecimal("63"),
+            allowance = BigDecimal("50"),
+        )
+
+        // Act
+        val notifications = factory.getConfirmationStateNotifications(
+            quoteModel = buildQuotesLoadedState(providerType = ExchangeProviderType.DEX),
+            feeCryptoCurrencyStatus = buildCoinFeeStatus(),
+            swapFee = null,
+            feeError = feeError,
+            isFeeCurrencyInStack = false,
+        )
+
+        // Assert
+        assertThat(notifications).contains(NotificationUM.Error.TotalExceedsBalance)
+        assertThat(notifications.filterIsInstance<SwapNotificationUM.Error.TronReapprovalRequired>()).isEmpty()
     }
 
     // -------------------------------------------------------------------------

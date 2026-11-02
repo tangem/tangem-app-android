@@ -12,6 +12,8 @@ import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.features.polymarket.impl.common.PolymarketOutcomeAccent
 import com.tangem.features.polymarket.impl.common.formatSlippagePercent
+import com.tangem.utils.StringsSigns.ARROW_RIGHT
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
@@ -33,6 +35,8 @@ internal data class PlacePredictionUM(
     val submit: SubmitUM,
     val isPrimaryButtonEnabled: Boolean,
     val isAwaitingFunds: Boolean = false,
+    val lastFeeRate: BigDecimal = BigDecimal.ZERO,
+    val isAmountFromFraction: Boolean = false,
 ) {
 
     companion object {
@@ -80,7 +84,7 @@ private fun PlacePredictionUM.isWholePosition(amount: BigDecimal): Boolean {
     return amount.signum() > 0 && amount.compareTo(position.available) == 0
 }
 
-private val MIN_QUOTABLE_AMOUNT: BigDecimal = BigDecimal("0.01")
+internal val MIN_QUOTABLE_AMOUNT: BigDecimal = BigDecimal("0.01")
 
 internal fun PlacePredictionUM.canQuote(): Boolean = when (val order = order) {
     is OrderSideUM.Buy -> true
@@ -112,6 +116,8 @@ internal fun PlacePredictionUM.canPollPrice(): Boolean = when (val order = order
 internal fun PlacePredictionUM.feeBreakdownQuote(): QuoteUM.Content? =
     (quote as? QuoteUM.Content)?.takeIf { submit is SubmitUM.Idle }
 
+internal fun PlacePredictionUM.orderTotal(): BigDecimal? = (quote as? QuoteUM.Content)?.total
+
 internal fun PlacePredictionUM.canShowFeeBreakdown(): Boolean = feeBreakdownQuote() != null
 
 internal fun PlacePredictionUM.isBelowMinAmount(): Boolean {
@@ -131,7 +137,19 @@ internal data class MarketHeaderUM(
     val outcomeAccent: PolymarketOutcomeAccent = PolymarketOutcomeAccent.Neutral,
     val isPriceUnavailable: Boolean = false,
     val entryPrice: String? = null,
-)
+) {
+
+    fun priceLabel(): String? {
+        val livePrice = when {
+            isPriceUnavailable -> DASH_SIGN
+            outcomePrice != null -> outcomePrice
+            else -> return null
+        }
+        val entryPricePrefix = entryPrice?.let { "$it $ARROW_RIGHT " }.orEmpty()
+
+        return "$entryPricePrefix$livePrice"
+    }
+}
 
 @Immutable
 internal sealed interface AmountCaptionUM {

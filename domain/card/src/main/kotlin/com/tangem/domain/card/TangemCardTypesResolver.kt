@@ -10,7 +10,6 @@ import com.tangem.domain.card.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.card.common.TapWorkarounds.isTestCard
 import com.tangem.domain.card.common.TapWorkarounds.isWallet2
 import com.tangem.domain.card.common.getTwinCardIdForUser
-import com.tangem.domain.card.common.visa.VisaUtilities
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
@@ -49,8 +48,6 @@ internal class TangemCardTypesResolver(
 
     override fun isWallet2(): Boolean = card.isWallet2
 
-    override fun isVisaWallet(): Boolean = productType == ProductType.Visa
-
     override fun isRing(): Boolean {
         return productType == ProductType.Ring
     }
@@ -61,7 +58,7 @@ internal class TangemCardTypesResolver(
 
     override fun isDevKit(): Boolean = card.batchId == DEV_KIT_CARD_BATCH_ID
 
-    override fun isSingleWallet(): Boolean = !isMultiwalletAllowed() && !isSingleWalletWithToken() && !isVisaWallet()
+    override fun isSingleWallet(): Boolean = !isMultiwalletAllowed() && !isSingleWalletWithToken()
 
     override fun isSingleWalletWithToken(): Boolean = walletData?.token != null && !isMultiwalletAllowed()
 
@@ -71,7 +68,6 @@ internal class TangemCardTypesResolver(
         return !isTangemTwins() &&
             !card.isStart2Coin &&
             !isTangemNote() &&
-            !isVisaWallet() &&
             (multiWalletAvailable() || card.wallets.firstOrNull()?.curve == EllipticCurve.Secp256k1)
     }
 
@@ -80,7 +76,6 @@ internal class TangemCardTypesResolver(
     override fun getBlockchain(): Blockchain {
         return when (productType) {
             ProductType.Start2Coin -> if (card.isTestCard) Blockchain.BitcoinTestnet else Blockchain.Bitcoin
-            ProductType.Visa -> VisaUtilities.visaBlockchain
             else -> {
                 val blockchainName: String = walletData?.blockchain
                     ?: if (productType == ProductType.Note) {

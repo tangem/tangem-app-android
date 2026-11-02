@@ -19,12 +19,15 @@ import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.OrderData
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.OrderType
+import com.tangem.domain.pay.model.PaymentAccountActivationState
+import com.tangem.domain.pay.model.TangemPayCustomerState
 import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.FindMoneyAccountCreationOrderUseCase
 import com.tangem.domain.pay.usecase.GetCustomerSummaryUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.pay.usecase.ResolvePaymentAccountStatusFromSummaryUseCase
+import com.tangem.domain.pay.utils.TangemPayCustomerStateConverter
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.visa.error.VisaApiError
@@ -478,19 +481,34 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     error = null,
                 )
             }
-            isEnrolled -> {
-                val resolved = resolveBalance(userWalletId)
-                convertToContentState(
-                    userWalletId = userWalletId,
-                    balance = resolved.balance,
-                    source = resolved.source,
-                    fiatRate = quotesData?.fiatRate,
-                    customerId = customerId,
-                    networks = multichainNetworkStatuses,
-                )
+            else -> {
+                val isPaymentAccountIssuing = isPaymentAccountIssuing(userWalletId)
+                if (isEnrolled || isPaymentAccountIssuing) {
+                    val resolved = resolveBalance(userWalletId)
+                    convertToContentState(
+                        userWalletId = userWalletId,
+                        balance = resolved.balance,
+                        source = resolved.source,
+                        fiatRate = quotesData?.fiatRate,
+                        customerId = customerId,
+                        networks = multichainNetworkStatuses,
+                        isPaymentAccountIssuing = isPaymentAccountIssuing,
+                    )
+                } else {
+                    PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
+                }
             }
-            else -> PaymentAccountStatusValue.IssuingCard(source = StatusSource.ACTUAL)
         }
+    }
+
+    private suspend fun isPaymentAccountIssuing(userWalletId: UserWalletId): Boolean {
+        if (!moneyAccountFeatureToggles.isMoneyAccountsEnabled) return false
+
+        val summary = getCustomerSummaryUseCase(userWalletId, CachePolicy.ONLY_CACHE).getOrNull() ?: return false
+        val state = TangemPayCustomerStateConverter.convert(summary) as? TangemPayCustomerState.Accounts
+        return state?.paymentAccount == PaymentAccountActivationState.Issuing(
+            step = PaymentAccountActivationState.Issuing.Step.ISSUING,
+        )
     }
 
     private suspend fun CustomerInfo.resolveCardlessAccountStatus(
@@ -588,6 +606,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         customerId: String,
         fiatRate: BigDecimal?,
         networks: List<PaymentNetworkStatus>,
+        isPaymentAccountIssuing: Boolean,
     ): PaymentAccountStatusValue {
         val tangemPayCards = resolveCards(userWalletId)
 
@@ -638,6 +657,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             virtualAccount = virtualAccount,
             isBankOfframpAvailable = channels?.contains(TangemPayEligibilityType.BANK_OFFRAMP),
             tariffPlan = tariffPlanState,
+            isPaymentAccountIssuing = isPaymentAccountIssuing || tariffPlanState?.isPlanTransitioningState == true,
         )
     }
 

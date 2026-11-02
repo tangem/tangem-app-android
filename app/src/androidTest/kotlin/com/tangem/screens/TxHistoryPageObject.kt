@@ -2,16 +2,18 @@ package com.tangem.screens
 
 import androidx.annotation.StringRes
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.hasAnyDescendant
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.TransactionHistoryItemTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import androidx.compose.ui.test.hasTestTag as withTestTag
 import androidx.compose.ui.test.hasText as withText
 import com.tangem.core.res.R as CoreResR
 
-class TxHistoryPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
+class TxHistoryPageObject(private val semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<TxHistoryPageObject>(semanticsProvider = semanticsProvider) {
 
     fun transactionItem(title: String): KNode = child {
@@ -19,6 +21,15 @@ class TxHistoryPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         hasAnyDescendant(withText(title))
         useUnmergedTree = true
     }
+
+    // Raw Compose on purpose: polled in a pull-to-refresh loop, where a Kakao check waits out a 10 s retry.
+    fun isTransactionItemShown(title: String): Boolean = semanticsProvider
+        .onAllNodes(
+            matcher = withTestTag(TransactionHistoryItemTestTags.ITEM) and hasAnyDescendant(withText(title)),
+            useUnmergedTree = true,
+        )
+        .fetchSemanticsNodes(atLeastOneRootRequired = false)
+        .isNotEmpty()
 
     /** A settled yield row is a pill whose label and end state read as one text node: "Yield mode Enabled". */
     fun yieldModePill(@StringRes state: Int): KNode = transactionItem(

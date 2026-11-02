@@ -9,6 +9,8 @@ import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.qrscanning.models.QrResult
+import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.features.send.api.SendComponent
@@ -26,6 +28,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -409,7 +412,7 @@ internal class SendModelTest : SendModelTestBase() {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN intent params WHEN currency status loaded THEN opens initial route by balance`(
+        fun `GIVEN intent params WHEN currency status loaded THEN opens initial route by source, amount and balance`(
             model: InitialRouteModel,
         ) = runTest {
             // Arrange
@@ -420,7 +423,8 @@ internal class SendModelTest : SendModelTestBase() {
             every { getAccountCurrencyStatusUseCase(testUserWalletId, testCryptoCurrency) } returns
                 flowOf(AccountCryptoCurrencyStatus(account = account, status = status))
             coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) } returns status.right()
-            val sendModel = createSendModel(this, MutableParamsContainer(intentParams(amount = model.amount)))
+            val params = if (model.isDeeplink) deeplinkParams(model.amount) else intentParams(model.amount)
+            val sendModel = createSendModel(this, MutableParamsContainer(params))
 
             // Act
             advanceUntilIdle()
@@ -429,6 +433,32 @@ internal class SendModelTest : SendModelTestBase() {
             verify(exactly = 1) { router.replaceAll(model.expectedRoute, onComplete = any()) }
             sendModel.onDestroy()
         }
+
+        @Test
+        fun `GIVEN intent send opened WHEN balance updates afterwards THEN initial route is not opened again`() =
+            runTest {
+                // Arrange
+                val account = mockk<Account.Personal>(relaxed = true) {
+                    every { cryptoCurrencies } returns listOf(testCryptoCurrency)
+                }
+                val status = loadedStatus(currency = testCryptoCurrency, balance = BigDecimal.TEN)
+                val updatedStatus = loadedStatus(currency = testCryptoCurrency, balance = BigDecimal.ONE)
+                val statuses = MutableSharedFlow<AccountCryptoCurrencyStatus>(replay = 1)
+                every { getAccountCurrencyStatusUseCase(testUserWalletId, testCryptoCurrency) } returns statuses
+                coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) } returns status.right()
+                val sendModel = createSendModel(this, MutableParamsContainer(intentParams(amount = "5")))
+                statuses.emit(AccountCryptoCurrencyStatus(account = account, status = status))
+                advanceUntilIdle()
+
+                // Act
+                statuses.emit(AccountCryptoCurrencyStatus(account = account, status = updatedStatus))
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { router.replaceAll(any<CommonSendRoute>(), onComplete = any()) }
+                verify(exactly = 1) { router.replaceAll(CommonSendRoute.Confirm, onComplete = any()) }
+                sendModel.onDestroy()
+            }
 
         private fun provideTestModels() = listOf(
             InitialRouteModel(
@@ -441,6 +471,39 @@ internal class SendModelTest : SendModelTestBase() {
                 balance = BigDecimal.ONE,
                 expectedRoute = CommonSendRoute.Amount(isEditMode = false),
             ),
+            InitialRouteModel(
+                amount = "-10",
+                balance = BigDecimal.TEN,
+                expectedRoute = CommonSendRoute.Amount(isEditMode = false),
+            ),
+            InitialRouteModel(
+                amount = "-0.5",
+                balance = BigDecimal.TEN,
+                expectedRoute = CommonSendRoute.Amount(isEditMode = false),
+            ),
+            InitialRouteModel(
+                amount = "0",
+                balance = BigDecimal.TEN,
+                expectedRoute = CommonSendRoute.Amount(isEditMode = false),
+            ),
+            InitialRouteModel(
+                amount = "5",
+                balance = BigDecimal.ONE,
+                expectedRoute = CommonSendRoute.Confirm,
+                isDeeplink = true,
+            ),
+            InitialRouteModel(
+                amount = "-10",
+                balance = BigDecimal.TEN,
+                expectedRoute = CommonSendRoute.Amount(isEditMode = false),
+                isDeeplink = true,
+            ),
+            InitialRouteModel(
+                amount = "0",
+                balance = BigDecimal.TEN,
+                expectedRoute = CommonSendRoute.Amount(isEditMode = false),
+                isDeeplink = true,
+            ),
         )
 
         private fun intentParams(amount: String) = defaultSendParams().copy(
@@ -449,12 +512,58 @@ internal class SendModelTest : SendModelTestBase() {
             tag = INTENT_MEMO,
             intentId = "intent-1",
         )
+
+        private fun deeplinkParams(amount: String) = defaultSendParams().copy(
+            amount = amount,
+            destinationAddress = INTENT_ADDRESS,
+            transactionId = "tx-1",
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class QrScannedInSend {
+
+        @BeforeEach
+        fun resetTrigger() {
+            clearMocks(sendAmountUpdateTrigger)
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN QR with non-positive amount WHEN scanned in send THEN amount is not pre-filled`(
+            amount: BigDecimal,
+        ) = runTest {
+            // Arrange
+            every { listenToQrScanningUseCase(SourceType.SEND) } returns flowOf(QR_CODE).right()
+            every { parseQrCodeUseCase(QR_CODE, any()) } returns
+                QrResult(address = QR_ADDRESS, amount = amount).right()
+
+            // Act
+            val model = createSendModel(this)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.predefinedValues).isEqualTo(
+                PredefinedValues.Content.QrCode(
+                    amount = "",
+                    address = QR_ADDRESS,
+                    memo = null,
+                    source = PredefinedValues.Source.SEND_SCREEN,
+                ),
+            )
+            coVerify(exactly = 0) { sendAmountUpdateTrigger.triggerUpdateAmount(any(), any()) }
+            model.onDestroy()
+        }
+
+        private fun provideTestModels() = listOf(BigDecimal("-10"), BigDecimal("-0.5"), BigDecimal.ZERO)
     }
 
     data class InitialRouteModel(
         val amount: String,
         val balance: BigDecimal,
         val expectedRoute: CommonSendRoute,
+        val isDeeplink: Boolean = false,
     )
 
     private fun deeplink(amount: String) = PredefinedValues.Content.Deeplink(
@@ -467,5 +576,7 @@ internal class SendModelTest : SendModelTestBase() {
     private companion object {
         const val INTENT_ADDRESS = "intentAddress"
         const val INTENT_MEMO = "intentMemo"
+        const val QR_CODE = "qrCode"
+        const val QR_ADDRESS = "qrAddress"
     }
 }

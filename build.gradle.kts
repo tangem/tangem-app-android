@@ -256,8 +256,6 @@ dependencyAnalysis {
                 // Guava's listenablefuture stub exists solely to resolve the duplicate-class conflict
                 // between guava and the standalone ListenableFuture artifact.
                 exclude("com.google.guava:listenablefuture")
-                // OAID collection is a drop-in runtime add-on for the AppsFlyer SDK; it has no API.
-                exclude("com.appsflyer:oaid")
                 // Moshi adapters are registered reflectively when building the Moshi instance.
                 exclude("com.squareup.moshi:moshi-adapters")
                 // agcp brings the AGConnect runtime the huawei flavor reads through
@@ -278,6 +276,12 @@ dependencyAnalysis {
                     "androidx.cardview:cardview",
                     "org.jetbrains.kotlinx:kotlinx-coroutines-play-services",
                 )
+            }
+        }
+        project(":core:analytics:impl") {
+            onUnusedDependencies {
+                // OAID collection is a drop-in runtime add-on for the AppsFlyer SDK; it has no API.
+                exclude("com.appsflyer:oaid")
             }
         }
         // Same CameraX runtime split as in :app.

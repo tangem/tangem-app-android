@@ -1,6 +1,7 @@
 package com.tangem.lib.auth.session
 
 import arrow.core.Either
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Binds a wallet to the already-registered device with the Tangem Auth Service, proving wallet
@@ -37,6 +38,12 @@ interface WalletRegistrar {
      * idempotency check still runs inside [prepare], so a stale `false` only costs one nonce request.
      */
     suspend fun isRegistered(walletId: String): Boolean
+
+    /**
+     * Base64 `UserWalletId`s of the wallets registered on this device, re-emitted on every registration change
+     * made through any path. Stops emitting (without falling back to an empty set) if the marker store can't be read.
+     */
+    fun registeredWalletIds(): Flow<Set<String>>
 
     /**
      * Whether a device session exists, i.e. a registration attempt can reach the backend at all. Lets a

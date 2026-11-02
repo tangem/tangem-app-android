@@ -89,6 +89,7 @@ import javax.inject.Inject
 @ModelScoped
 @Suppress("LongParameterList")
 internal class TxHistoryDetailsModel @Inject constructor(
+    private val tangemBlogUrlBuilder: TangemBlogUrlBuilder,
     @ApplicationContext private val context: Context,
     override val dispatchers: CoroutineDispatcherProvider,
     private val clipboardManager: ClipboardManager,
@@ -113,7 +114,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
     private val params: TxHistoryDetailsComponent.Params = paramsContainer.require()
 
     private val shareTextConverter = ExpressTxToShareTextConverter()
-    private val txHistoryInfo = params.historyTxListManager.txExpressHistoryItemFlow(params.txId)
+    private val txHistoryInfo = params.historyTxListManager.txHistoryItemFlow(params.txId)
         .shareIn(modelScope, SharingStarted.WhileSubscribed(), replay = 1)
 
     /**
@@ -421,7 +422,7 @@ internal class TxHistoryDetailsModel @Inject constructor(
     /** Opens the cross-chain-bridges blog article — wired into the refunded banner's "Learn more" link. */
     private fun onLearnMoreAboutRefunds() {
         modelScope.launch {
-            urlOpener.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.AboutCrossChainBridges))
+            urlOpener.openUrl(tangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.AboutCrossChainBridges))
         }
     }
 

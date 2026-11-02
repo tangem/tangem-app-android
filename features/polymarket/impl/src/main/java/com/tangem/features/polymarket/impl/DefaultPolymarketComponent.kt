@@ -18,6 +18,7 @@ import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.polymarket.api.PolymarketComponent
+import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.details.PolymarketEventDetailsComponent
 import com.tangem.features.polymarket.impl.entry.PolymarketEntryComponent
 import com.tangem.features.polymarket.impl.history.PolymarketHistoryComponent
@@ -40,6 +41,7 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
     @Assisted private val params: PolymarketComponent.Params,
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
+    private val polymarketFeatureToggles: PolymarketFeatureToggles,
 ) : PolymarketComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<PolymarketRoute>()
@@ -115,11 +117,13 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
                 userWalletId = configuration.userWalletId,
                 marketId = configuration.marketId,
                 assetId = configuration.assetId,
+                categoryLabel = configuration.categoryLabel,
             ),
         )
         is PolymarketRoute.PlacePrediction -> PlacePredictionComponent(
             appComponentContext = factoryContext,
             tokenReceiveComponentFactory = tokenReceiveComponentFactory,
+            isQuickOrderEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled,
             params = PlacePredictionComponent.Params.Buy(
                 userWalletId = configuration.userWalletId,
                 eventId = configuration.eventId,
@@ -130,6 +134,7 @@ internal class DefaultPolymarketComponent @AssistedInject constructor(
         is PolymarketRoute.ClosePosition -> PlacePredictionComponent(
             appComponentContext = factoryContext,
             tokenReceiveComponentFactory = tokenReceiveComponentFactory,
+            isQuickOrderEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled,
             params = PlacePredictionComponent.Params.Sell(
                 userWalletId = configuration.userWalletId,
                 positionId = configuration.positionId,
