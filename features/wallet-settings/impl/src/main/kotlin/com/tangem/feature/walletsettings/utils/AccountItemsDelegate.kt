@@ -127,7 +127,13 @@ internal class AccountItemsDelegate @Inject constructor(
             text = resourceReference(R.string.common_accounts),
         )
 
-        val accountItems = accounts.map { it.mapCryptoPortfolio() } + jointAccounts.map { it.mapJoint() }
+        val accountItems = accountStatusList.accountStatuses.mapNotNull { status ->
+            when (status) {
+                is AccountStatus.Personal -> status.mapCryptoPortfolio()
+                is AccountStatus.Joint -> status.mapJoint()
+                else -> null
+            }
+        }
 
         add(header)
         addAll(accountItems.applySortingOrder(order = accountsOrder))
