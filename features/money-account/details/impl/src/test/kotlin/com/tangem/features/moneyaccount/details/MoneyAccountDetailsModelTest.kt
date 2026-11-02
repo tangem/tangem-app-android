@@ -649,6 +649,12 @@ internal class MoneyAccountDetailsModelTest {
         ),
     )
 
+    @Suppress("Unused") // need for ParameterizedTest 
+    private fun provideTestModels() = listOf(
+        AddFundsModel(balance = balance(), expectedDepositAddress = DEPOSIT_ADDRESS),
+        AddFundsModel(balance = null, expectedDepositAddress = null),
+    )
+
     private fun SlotNavigation<MoneyAccountDetailsNavigation>.trackSlot(): List<MoneyAccountDetailsNavigation?> {
         val tracked = mutableListOf<MoneyAccountDetailsNavigation?>()
         subscribe { event -> tracked.add(event.transformer(tracked.lastOrNull())) }
