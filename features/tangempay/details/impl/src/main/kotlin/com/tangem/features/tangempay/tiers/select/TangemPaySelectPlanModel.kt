@@ -61,7 +61,6 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         modelScope.launch {
             val transitionsDeferred = async { getTransitions(params.userWalletId) }
             val tariffPlanDeferred = async { getCurrentTariffUseCase(params.userWalletId) }
-
             either {
                 val loadedTransitions = transitionsDeferred.await().bind()
                 val loadedTariffPlan = tariffPlanDeferred.await().bind()
@@ -163,7 +162,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
                     }
                 },
                 ifLeft = {
-                    updateData { it.copy(isProcessing = false) }
+                    updateData { data -> data.copy(isProcessing = false) }
                     uiMessageSender.send(message = TangemPayMessagesFactory.createGenericError())
                 },
             )
