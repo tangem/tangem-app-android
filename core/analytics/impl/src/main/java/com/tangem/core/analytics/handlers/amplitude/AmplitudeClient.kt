@@ -13,7 +13,7 @@ import org.json.JSONObject
 /**
 [REDACTED_AUTHOR]
  */
-interface AmplitudeAnalyticsClient : EventLogger, UserIdHolder
+internal interface AmplitudeAnalyticsClient : EventLogger, UserIdHolder
 
 internal class AmplitudeClient(
     application: Application,

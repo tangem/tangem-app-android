@@ -121,10 +121,6 @@ internal interface TangemPayDataModule {
     fun bindPaymentAccountStatusFetcher(impl: DefaultPaymentAccountStatusFetcher): PaymentAccountStatusFetcher
 
     @Binds
-    @Singleton
-    fun bindCustomerSummaryRepository(impl: DefaultCustomerSummaryRepository): CustomerSummaryRepository
-
-    @Binds
     @IntoSet
     fun bindTangemPayUserWalletDataCleaner(impl: TangemPayUserWalletDataCleaner): UserWalletDataCleaner
 

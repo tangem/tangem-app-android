@@ -1,7 +1,6 @@
-package com.tangem.tap.common.analytics.events
+package com.tangem.sdk.api.analytics
 
 import com.tangem.common.core.TangemSdkError
-import com.tangem.core.analytics.converters.AnalyticsErrorConverter
 import com.tangem.core.analytics.models.AnalyticsEvent
 
 class TangemSdkErrorEvent(
@@ -13,6 +12,6 @@ class TangemSdkErrorEvent(
 ) {
 
     companion object {
-        private val errorConverter = AnalyticsErrorConverter()
+        private val errorConverter = CardSdkErrorConverter()
     }
 }
