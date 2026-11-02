@@ -39,9 +39,7 @@ internal class TangemPayBankingDetailsErrorModel @Inject constructor(
         if (uiState.value.isRetryLoading) return
         uiState.update { it.copy(isRetryLoading = true) }
         modelScope.launch {
-            params.retry()
-                .onRight { credentials -> params.onResolved(credentials) }
-                .onLeft { uiState.update { state -> state.copy(isRetryLoading = false) } }
+            params.retry().onLeft { uiState.update { state -> state.copy(isRetryLoading = false) } }
         }
     }
 }
