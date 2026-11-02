@@ -16,6 +16,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
@@ -45,6 +46,7 @@ import javax.inject.Inject
 internal class MoneyAccountDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     moneyAccountStatusSupplier: MoneyAccountStatusSupplier,
+    getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
@@ -87,6 +89,10 @@ internal class MoneyAccountDetailsModel @Inject constructor(
                     else -> if (currentState == null) router.pop()
                 }
             }
+            .launchIn(modelScope)
+
+        getBalanceHidingSettingsUseCase.isBalanceHidden()
+            .onEach { isHidden -> uiState.update { it.copy(isBalanceHidden = isHidden) } }
             .launchIn(modelScope)
     }
 
