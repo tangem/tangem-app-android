@@ -1,4 +1,4 @@
-package com.tangem.features.polymarket.common.ui.counter
+package com.tangem.features.polymarket.impl.common.ui.counter
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
