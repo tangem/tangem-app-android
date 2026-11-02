@@ -45,7 +45,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * Design-system v2 badge: a compact pill displaying a short label with optional leading / trailing
  * icons.
  *
- * Version: 1.1.0
+ * Version: 1.1.1
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=2002-213)
  *
@@ -164,7 +164,7 @@ private fun TangemIconUM.applyTint(tint: Color): TangemIconUM = when (this) {
 
 object TangemBadge {
 
-    val version = DsVersion(major = 1, minor = 1, patch = 0)
+    val version = DsVersion(major = 1, minor = 1, patch = 1)
 
     /**
      * Visual style of the badge.
@@ -172,14 +172,13 @@ object TangemBadge {
      * - [Tinted] — soft tinted fill (subtle status color or opaque neutral), no border.
      * - [Outline] — tinted fill with a matching border.
      * - [Solid] — saturated status color fill with static-dark content.
-     * - [Inverse] — inverted surface: the badge reads as the one picked out of a row. It carries no
-     *   status colors, so [Status] is ignored for it.
+     *
+     * For a selectable badge use [com.tangem.core.ui.ds2.togglebadge.TangemToggleBadge].
      */
     enum class Variant {
         Tinted,
         Outline,
         Solid,
-        Inverse,
     }
 
     /** Status color scheme of the badge. */
@@ -368,13 +367,6 @@ private fun resolveColorTokens(variant: TangemBadge.Variant, status: TangemBadge
                 iconTint = colors.icon.staticDark,
             )
         }
-        // the inverted surface flips with the theme, so its content has to flip with it — a static
-        // color would be unreadable in one of the two themes
-        TangemBadge.Variant.Inverse -> BadgeColorTokens(
-            backgroundColor = colors.bg.inverse,
-            textColor = colors.text.inverse.primary,
-            iconTint = colors.icon.inverse,
-        )
     }
 }
 
