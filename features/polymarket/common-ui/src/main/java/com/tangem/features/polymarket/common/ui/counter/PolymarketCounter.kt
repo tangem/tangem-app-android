@@ -103,7 +103,7 @@ private fun CounterContent(
     LaunchedEffect(input) {
         if (selection.needsPositioning(input)) {
             scrollJob?.cancel()
-            pager.scrollToPage(input.selectedIndex.coerceAtLeast(0))
+            pager.centerCounterOn(input.selectedIndex.coerceAtLeast(0))
         }
         selection.synchronized(input)
     }
