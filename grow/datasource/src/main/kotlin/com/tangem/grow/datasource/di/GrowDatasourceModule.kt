@@ -24,6 +24,7 @@ import com.tangem.grow.datasource.config.*
 import com.tangem.grow.datasource.ethpool.P2PEthPoolApi
 import com.tangem.grow.datasource.express.DefaultExpressAuthProvider
 import com.tangem.grow.datasource.express.ExpressAuthProvider
+import com.tangem.grow.datasource.express.ExpressFeatureToggles
 import com.tangem.grow.datasource.express.TangemExpressApi
 import com.tangem.grow.datasource.gasless.GaslessTxServiceApi
 import com.tangem.grow.datasource.gasless.GaslessTxServiceApiV2
@@ -170,30 +171,33 @@ internal object GrowDatasourceModule {
         growEnvironmentConfig: GrowEnvironmentConfig,
         expressAuthProvider: ExpressAuthProvider,
         appInfoProvider: AppInfoProvider,
+        expressFeatureToggles: ExpressFeatureToggles,
     ): ApiConfig {
         return Express(
             growEnvironmentConfig = growEnvironmentConfig,
             expressAuthProvider = expressAuthProvider,
             appInfoProvider = appInfoProvider,
+            isV2Enabled = expressFeatureToggles.isExpressV2Enabled,
         )
     }
 
     @Provides
     @Singleton
-    fun provideExpressApi(factory: RetrofitFactory): TangemExpressApi {
-        return factory.build(expressApiSpec())
+    fun provideExpressApi(factory: RetrofitFactory, expressFeatureToggles: ExpressFeatureToggles): TangemExpressApi {
+        return factory.build(expressApiSpec(isV2Enabled = expressFeatureToggles.isExpressV2Enabled))
     }
 
     @Provides
     @Singleton
-    fun provideOnrampApi(factory: RetrofitFactory): OnrampApi {
-        return factory.build(expressApiSpec())
+    fun provideOnrampApi(factory: RetrofitFactory, expressFeatureToggles: ExpressFeatureToggles): OnrampApi {
+        return factory.build(expressApiSpec(isV2Enabled = expressFeatureToggles.isExpressV2Enabled))
     }
 
-    private fun expressApiSpec() = RetrofitApiSpec(
+    // Express /v2 requires the session JWT; /v1 must keep going out without it
+    private fun expressApiSpec(isV2Enabled: Boolean) = RetrofitApiSpec(
         apiConfigId = Express.ID,
         shouldApplyTimeoutAnnotations = false,
-        shouldUseSessionAuth = false,
+        shouldUseSessionAuth = isV2Enabled,
     )
 
     @Provides

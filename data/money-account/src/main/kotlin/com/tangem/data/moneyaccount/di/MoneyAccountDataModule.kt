@@ -29,6 +29,7 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.GetCustomerSummaryUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayProductsAvailabilityForCustomerUseCase
+import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.moneyaccount.repository.MoneyAccountActivationRepository
 import com.tangem.domain.moneyaccount.usecase.ActivateMoneyAccountUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBalanceUseCase
@@ -37,6 +38,7 @@ import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountCryptoCurrencyStatu
 import com.tangem.domain.moneyaccount.usecase.GetTangemPayProductsAvailabilityUseCase
 import com.tangem.domain.moneyaccount.usecase.IsMoneyAccountPathOccupiedUseCase
 import com.tangem.domain.moneyaccount.usecase.PollTangemPayAccountStatusesUseCase
+import com.tangem.domain.moneyaccount.usecase.RenewTangemPaySessionUseCase
 import com.tangem.domain.moneyaccount.usecase.StartTangemPayOnboardingUseCase
 import com.tangem.domain.pay.usecase.CreateOnboardingOrderUseCase
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -168,6 +170,19 @@ internal interface MoneyAccountDataModule {
         ): PollTangemPayAccountStatusesUseCase {
             return PollTangemPayAccountStatusesUseCase(
                 getCustomerSummaryUseCase = getCustomerSummaryUseCase,
+                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+                moneyAccountStatusFetcher = moneyAccountStatusFetcher,
+            )
+        }
+
+        @Provides
+        fun provideRenewTangemPaySessionUseCase(
+            produceTangemPayInitialDataUseCase: ProduceTangemPayInitialDataUseCase,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+            moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
+        ): RenewTangemPaySessionUseCase {
+            return RenewTangemPaySessionUseCase(
+                produceTangemPayInitialDataUseCase = produceTangemPayInitialDataUseCase,
                 paymentAccountStatusFetcher = paymentAccountStatusFetcher,
                 moneyAccountStatusFetcher = moneyAccountStatusFetcher,
             )

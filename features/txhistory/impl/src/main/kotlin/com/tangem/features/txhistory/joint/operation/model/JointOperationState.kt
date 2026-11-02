@@ -48,6 +48,8 @@ internal data class JointOperationState(
             signer.answer == JointOperationSignerState.Answer.SIGNED
     }
 
+    val isVotingClosed: Boolean = isSending || collected >= threshold
+
     /** Every member who has not declined can still sign, so the threshold is out of reach once too many declined */
     val isReachable: Boolean =
         membersCount - signers.count { it.answer == JointOperationSignerState.Answer.DECLINED } >= threshold

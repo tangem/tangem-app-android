@@ -62,7 +62,6 @@ internal class DetailsModelNavigationTest : DetailsModelTestBase() {
         every { getWalletsUseCase.invokeSync() } returns listOf(wallet)
         every { getSelectedWalletSyncUseCase() } returns wallet.right()
         coEvery { getWalletMetaInfoUseCase(wallet1) } returns meta.right()
-        every { getTangemPayCustomerIdUseCase(wallet1) } returns customerId.right()
 
         // Act
         val model = createModel(this)

@@ -28,6 +28,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -432,6 +433,32 @@ internal class SendModelTest : SendModelTestBase() {
             verify(exactly = 1) { router.replaceAll(model.expectedRoute, onComplete = any()) }
             sendModel.onDestroy()
         }
+
+        @Test
+        fun `GIVEN intent send opened WHEN balance updates afterwards THEN initial route is not opened again`() =
+            runTest {
+                // Arrange
+                val account = mockk<Account.Personal>(relaxed = true) {
+                    every { cryptoCurrencies } returns listOf(testCryptoCurrency)
+                }
+                val status = loadedStatus(currency = testCryptoCurrency, balance = BigDecimal.TEN)
+                val updatedStatus = loadedStatus(currency = testCryptoCurrency, balance = BigDecimal.ONE)
+                val statuses = MutableSharedFlow<AccountCryptoCurrencyStatus>(replay = 1)
+                every { getAccountCurrencyStatusUseCase(testUserWalletId, testCryptoCurrency) } returns statuses
+                coEvery { getFeePaidCryptoCurrencyStatusSyncUseCase(any(), any()) } returns status.right()
+                val sendModel = createSendModel(this, MutableParamsContainer(intentParams(amount = "5")))
+                statuses.emit(AccountCryptoCurrencyStatus(account = account, status = status))
+                advanceUntilIdle()
+
+                // Act
+                statuses.emit(AccountCryptoCurrencyStatus(account = account, status = updatedStatus))
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { router.replaceAll(any<CommonSendRoute>(), onComplete = any()) }
+                verify(exactly = 1) { router.replaceAll(CommonSendRoute.Confirm, onComplete = any()) }
+                sendModel.onDestroy()
+            }
 
         private fun provideTestModels() = listOf(
             InitialRouteModel(
