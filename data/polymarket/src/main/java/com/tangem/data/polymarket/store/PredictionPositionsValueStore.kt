@@ -5,7 +5,7 @@ import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.polymarket.entity.PredictionPositionsValueDTO
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.polymarket.model.PredictionPositionsValue
+import com.tangem.domain.models.account.PredictionPositionsValue
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
