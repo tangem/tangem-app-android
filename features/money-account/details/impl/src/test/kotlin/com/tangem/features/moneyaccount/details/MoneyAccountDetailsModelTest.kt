@@ -15,6 +15,7 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
@@ -81,12 +82,50 @@ internal class MoneyAccountDetailsModelTest {
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter = mockk(relaxed = true)
     private val produceTangemPayInitialDataUseCase: ProduceTangemPayInitialDataUseCase = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
+    private val isBalanceHiddenFlow = MutableStateFlow(false)
 
     @BeforeEach
     fun resetMocks() {
         clearMocks(moneyAccountStatusSupplier, router, sendFeedbackEmailUseCase, urlOpener, analytics)
         clearMocks(getMoneyAccountBankCredentialsUseCase, moneyAccountStatusFetcher, txHistoryContentUpdateEmitter)
-        clearMocks(produceTangemPayInitialDataUseCase, uiMessageSender)
+        clearMocks(produceTangemPayInitialDataUseCase, uiMessageSender, getBalanceHidingSettingsUseCase)
+        isBalanceHiddenFlow.value = false
+        every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns isBalanceHiddenFlow
+    }
+
+    @Test
+    fun `GIVEN balance hidden WHEN model created THEN state is hidden`() = runTest {
+        // Arrange
+        isBalanceHiddenFlow.value = true
+
+        // Act
+        val model = createModel(activeAccount(balance = balance()))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.isBalanceHidden).isTrue()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN screen opened WHEN balance hiding toggled THEN state follows it`() = runTest {
+        // Arrange
+        val model = createModel(activeAccount(balance = balance()))
+        advanceUntilIdle()
+        val states = mutableListOf(model.uiState.value.isBalanceHidden)
+
+        // Act
+        isBalanceHiddenFlow.value = true
+        advanceUntilIdle()
+        states += model.uiState.value.isBalanceHidden
+        isBalanceHiddenFlow.value = false
+        advanceUntilIdle()
+        states += model.uiState.value.isBalanceHidden
+
+        // Assert
+        assertThat(states).containsExactly(false, true, false).inOrder()
+        model.onDestroy()
     }
 
     @ParameterizedTest
@@ -521,6 +560,7 @@ internal class MoneyAccountDetailsModelTest {
         return MoneyAccountDetailsModel(
             paramsContainer = MutableParamsContainer(MoneyAccountDetailsComponent.Params(userWalletId = userWalletId)),
             moneyAccountStatusSupplier = moneyAccountStatusSupplier,
+            getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
             dispatchers = createTestingCoroutineDispatcherProvider(),
             router = router,
             sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
