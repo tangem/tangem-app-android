@@ -34,10 +34,11 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
 - After the gate the region lives in the process-wide `PredictionRegionAccess`, refreshed by Main on open and
   on pull-to-refresh. While it is restricted, Main shows the banner, Add funds is dimmed, and every order
   entry (feed, search, event, Buy more, Close) shows the restrictions modal instead of opening. A failed check
-  keeps the last answer and counts as allowed only when there is none; the amount step still checks on its own.
+  keeps the last answer and counts as allowed only when there is none; the Amount and Order steps still check
+  on their own.
 - Main returns here (`replaceAll(Onboarding)`) the moment the stored credentials are gone, even from under a
-  child: nothing above Main can sign without them. So the order summary answers an `Unauthorized`
-  placement with no dialog and leaves the gate to explain it.
+  child: nothing above Main can sign without them. So the submitting step (Summary or Order) answers an
+  `Unauthorized` placement with no dialog and leaves the gate to explain it.
 
 ## Main screen
 
@@ -60,20 +61,27 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
 
 ## Order flow
 
-- **Confirmation boundary.** Amount freezes a `PreparedPrediction` snapshot on Next (displayed state, quote
-  receipt time, signing params, region decision). Summary displays and signs that snapshot and has no price
-  or quote use cases; Back returns to the retained Amount model, which re-reads immediately.
-- **Quote loop** runs only while Amount is on top and in the foreground (bound to its resume/pause). The
-  quote is never cached; a stale one (>60 s at signing) is refused before submission.
+- **Two flows**, chosen once per opening by the Phase 2 toggle (`isPolymarketPhaseTwoEnabled`, read in
+  `DefaultPolymarketComponent`): single-step `Route.Order` when on, legacy `Amount → Summary` otherwise. Both
+  share `PlacePredictionQuoteEngine`, `PlacePredictionOrderSubmitter` and the fee sheet; Slippage and Status
+  routes are the same.
+- **Confirmation boundary.** The tap that commits freezes a `PreparedPrediction` snapshot (displayed state,
+  quote receipt time, signing params, region decision) — Next on Amount, Place on Order. Summary signs that
+  snapshot and has no price or quote use cases; Back returns to the retained Amount model, which re-reads
+  immediately. Order signs it in place and holds the engine's sources (`holdDuring`) until submission ends,
+  so the NFC pause/resume cannot restart the quote loop or reload the position under the signature.
+- **Back while submitting** is swallowed: the active step implements `SubmittingStep`.
+- **Quote loop** runs only while Amount or Order is on top and in the foreground (bound to its resume/pause).
+  The quote is never cached; a stale one (>60 s at signing) is refused before submission.
 - **Placeable** = `quote.isPlaceable` (a SELL also places on `BELOW_MIN_ORDER_SIZE`) and, for BUY only,
   the price-weighted minimum. A SELL has no floor beyond one whole share or the whole position.
 - **Shares.** The sellable size is the whole position at on-chain precision (6 decimals), not floored to
   the 2-decimal grid — the BFF quotes a whole-position sale at the position's own precision. Display cuts
   to 2 decimals, never more than held; a count below 0.01 keeps its precision so a remainder is not shown
   as `0`. Steps move in whole shares; 100 % is the position itself, so a full close reaches the last fraction.
-- **Ambiguous orders.** A transport or inconclusive HTTP error does not prove rejection. Summary shows
-  the existing error dialog with Support; keep balance/position refreshes and never resubmit
-  automatically, because the order may already be live.
+- **Ambiguous orders.** A transport or inconclusive HTTP error does not prove rejection. The submitting
+  step (Summary or Order) shows the existing error dialog with Support; keep balance/position refreshes and
+  never resubmit automatically, because the order may already be live.
 - **Position indexing.** `/positions/outcome` answers `null` until the position is indexed — for several
   seconds even for an outcome the wallet already held. Details shows Unavailable at once on a first `null`
   and retries only for a shown position whose size lags the last order. The result screen waits longer

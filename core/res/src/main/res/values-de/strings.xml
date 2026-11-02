@@ -1969,10 +1969,10 @@
   <string name="prediction_event_probability">Wahrscheinlichkeit</string>
   <string name="prediction_event_total_volume">Gesamtertrag</string>
   <string name="prediction_fee_sheet_builder_fee">Tangem-Baugebühr</string>
-  <string name="prediction_fee_sheet_buy_description">Kauf von „%1$s“-Aktien zu je %2$s¢. Die endgültige Anzahl der Aktien (und der entsprechende ausgeführte Betrag auf %3$s) kann innerhalb Ihres Slippage-Limits auf %4$s variieren, je nachdem, was dieser Markt abgleichen kann.</string>
+  <string name="prediction_fee_sheet_buy_description">Kauf von %1$s Anteilen zu je %2$s¢. Die endgültige Anzahl der Anteile (und der entsprechende ausgeführte %3$s Betrag) kann innerhalb deiner Slippage-Grenze von %4$s variieren, je nachdem, was dieser Markt ausführen kann.</string>
   <string name="prediction_fee_sheet_order">Vorhersagereihenfolge</string>
   <string name="prediction_fee_sheet_polymarket_fee">Polymarket-Gebühr</string>
-  <string name="prediction_fee_sheet_sell_description">Verkauf von „%1$s“-Aktien zu je %2$s¢. Die endgültige Anzahl der Aktien (und der entsprechende ausgeführte Betrag auf %3$s) kann innerhalb Ihres Slippage-Limits auf %4$s variieren, je nachdem, was dieser Markt abgleichen kann.</string>
+  <string name="prediction_fee_sheet_sell_description">Verkauf von %1$s Anteilen zu je %2$s¢. Die endgültige Anzahl der Anteile (und der entsprechende ausgeführte %3$s Betrag) kann innerhalb deiner Slippage-Grenze von %4$s variieren, je nachdem, was dieser Markt ausführen kann.</string>
   <string name="prediction_fee_sheet_total">Gesamt</string>
   <string name="prediction_history_bought">Gekauft</string>
   <string name="prediction_history_csv_average_price">Durchschnittspreis</string>
@@ -3243,10 +3243,10 @@
   <string name="tangempay_unified_onboarding_plan_subtitle">Basic ist kostenlos.</string>
   <string name="tangempay_unified_onboarding_plan_title">%1$s Plus deckt beides ab und bietet noch viel mehr</string>
   <string name="tangempay_unified_onboarding_terms_button">Geschäftsbedingungen und Gebühren</string>
-  <string name="tangempay_usdc_on_polygon_network">USDC im Polygon</string>
+  <string name="tangempay_usdc_on_polygon_network">USDC im Polygon-Netzwerk</string>
   <string name="tangempay_va_account_details">Kontodetails</string>
   <string name="tangempay_va_available_to_deposit_day">Täglich zur Einzahlung verfügbar:</string>
-  <string name="tangempay_va_banking_details_error_description">Bitte versuche es später erneut. Sollte das Problem weiterhin bestehen, kontaktiere bitte unseren Support. Wir helfen Dir gerne bei der Lösung.</string>
+  <string name="tangempay_va_banking_details_error_description">Bitte versuchen Sie es erneut oder kontaktieren Sie den Support, wenn das Problem weiterhin besteht</string>
   <string name="tangempay_va_banking_details_error_title">Die Bankdaten konnten nicht geladen werden</string>
   <string name="tangempay_va_banner_failed_description">Bitte versuchen Sie es erneut oder kontaktieren Sie den Support, falls das Problem weiterhin besteht.</string>
   <string name="tangempay_va_banner_failed_title">Fehler beim Erstellen der Bankdaten</string>
@@ -4043,8 +4043,8 @@
   <string name="yield_module_main_promo_subtitle">Lassen Sie ungenutzte Coins für sich arbeiten. Keine Sperrfristen, jederzeit abhebbar.</string>
   <string name="yield_module_main_promo_title">Verdienen Sie mit Ihrer Kryptowährung bis zu %1$s%% APY</string>
   <plurals name="yield_module_main_promo_tokens_count">
-    <item quantity="one">Wähle aus %d token</item>
-    <item quantity="other">Wähle aus %d token</item>
+    <item quantity="one">Mehr als %d verfügbarer Token</item>
+    <item quantity="other">Mehr als %d verfügbare Token</item>
   </plurals>
   <string name="yield_module_main_screen_promo_banner_message">Aktiviere %1$s%% Jahreszins auf Dein Guthaben</string>
   <string name="yield_module_main_view_approve_notification_description">Die Genehmigung für Deine Token im Yield-Modus wurde widerrufen. Öffne den Token, um die Berechtigung erneut zu erteilen.</string>

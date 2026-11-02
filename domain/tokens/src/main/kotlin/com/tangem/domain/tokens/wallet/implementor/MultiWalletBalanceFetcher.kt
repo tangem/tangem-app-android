@@ -26,7 +26,7 @@ internal class MultiWalletBalanceFetcher(
 
     override val fetchingSources: Set<WalletFetchingSource> = setOf(
         WalletFetchingSource.Balance(
-            sources = setOf(FetchingSource.NETWORK, FetchingSource.QUOTE, FetchingSource.STAKING),
+            sources = setOf(FetchingSource.NETWORK, FetchingSource.QUOTE, FetchingSource.CONTRIBUTIONS),
         ),
         WalletFetchingSource.TangemPay,
         WalletFetchingSource.Money,

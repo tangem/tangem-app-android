@@ -1386,6 +1386,7 @@
   <string name="money_account_onboarding_transfers_card_caption">入金も、出金も。</string>
   <string name="money_account_onboarding_transfers_card_subtitle">銀行口座情報付きの専用口座で</string>
   <string name="money_account_onboarding_transfers_card_title">法定通貨の送金と受け取り</string>
+  <string name="money_account_send_bank_transfer_unavailable">利用不可</string>
   <string name="money_account_send_fees_footer">手数料には%sのサービス料と推定ネットワーク手数料が含まれます</string>
   <string name="money_account_send_network_fee_note">手数料には推定ネットワーク手数料%sが含まれ、ネットワークの混雑状況により変動します</string>
   <string name="money_account_send_pay_button">%sを支払う</string>
@@ -1654,10 +1655,10 @@
   <string name="prediction_add_funds_max_receive_amount_title">受取額は%sを超えることはできません</string>
   <string name="prediction_add_funds_notification_limits_description">入金額は最低%1$sである必要があります。$50,000を超える入金は推奨されません。大きな金額は複数回に分けて入金してください。</string>
   <string name="prediction_add_funds_notification_limits_title">入金限度額</string>
-  <string name="prediction_add_funds_receive_body" formatted="false">別のウォレットから%1sを送金（最低%2s）</string>
+  <string name="prediction_add_funds_receive_body">別のウォレットから%1$sを送金（最低%2$s）</string>
   <string name="prediction_add_funds_receive_subtitle">Polygonネットワーク上のUSDCをPolymarketアカウントに送金</string>
   <string name="prediction_add_funds_receive_title">別のウォレットまたは取引所から</string>
-  <string name="prediction_add_funds_subtitle" formatted="false">%2s上の%1s</string>
+  <string name="prediction_add_funds_subtitle">%2$s上の%1$s</string>
   <string name="prediction_add_funds_swap_body">保有しているトークンを交換</string>
   <string name="prediction_add_funds_swap_subtitle">Tangemウォレット内の暗号資産を使ってPolymarketアカウントにチャージ</string>
   <string name="prediction_add_funds_swap_title">Tangemウォレットから</string>
@@ -1674,7 +1675,7 @@
   <string name="prediction_close_result_partially_sold_title">一部売却完了</string>
   <string name="prediction_close_result_sold_title">%sを売却しました</string>
   <string name="prediction_close_result_tokens_sold">売却シェア数</string>
-  <string name="prediction_close_selling_of" formatted="false">%2sシェアのうち%1sを売却中</string>
+  <string name="prediction_close_selling_of">%2$sシェアのうち%1$sを売却中</string>
   <string name="prediction_close_selling_tokens">%sシェアを売却中</string>
   <string name="prediction_close_summary_to">受取先</string>
   <string name="prediction_close_title">ポジションを決済</string>
@@ -1693,10 +1694,10 @@
   <string name="prediction_event_probability">確率</string>
   <string name="prediction_event_total_volume">総取引高:</string>
   <string name="prediction_fee_sheet_builder_fee">Tangemビルダー手数料</string>
-  <string name="prediction_fee_sheet_buy_description" formatted="false">%1sシェアを1シェアあたり%2s¢で購入します。最終的なシェア数（および約定する%3sの金額）は、マーケットの流動性に応じて%4sのスリッページ許容範囲内で変動する場合があります。</string>
+  <string name="prediction_fee_sheet_buy_description">%1$sシェアを1シェアあたり%2$s¢で購入します。最終的なシェア数（および約定する%3$sの金額）は、マーケットの流動性に応じて%4$sのスリッページ許容範囲内で変動する場合があります。</string>
   <string name="prediction_fee_sheet_order">予測注文</string>
   <string name="prediction_fee_sheet_polymarket_fee">Polymarket手数料</string>
-  <string name="prediction_fee_sheet_sell_description" formatted="false">%1sシェアを1シェアあたり%2s¢で売却します。最終的なシェア数（および約定する%3sの金額）は、マーケットの流動性に応じて%4sのスリッページ許容範囲内で変動する場合があります。</string>
+  <string name="prediction_fee_sheet_sell_description">%1$sシェアを1シェアあたり%2$s¢で売却します。最終的なシェア数（および約定する%3$sの金額）は、マーケットの流動性に応じて%4$sのスリッページ許容範囲内で変動する場合があります。</string>
   <string name="prediction_fee_sheet_total">合計</string>
   <string name="prediction_history_bought">購入済み</string>
   <string name="prediction_history_csv_average_price">平均価格</string>
@@ -1759,7 +1760,7 @@
   <string name="prediction_onboarding_reconnect_button">予測を続ける</string>
   <string name="prediction_onboarding_reconnect_faq_answer">アクセスキーはお使いの端末にのみ保存されます。アプリの再インストールや機種変更、またはセッションが無効になった際に消去されますが、Polymarket上のアカウント自体は影響を受けません。</string>
   <string name="prediction_onboarding_reconnect_faq_question">なぜこれが表示されるのですか？</string>
-  <string name="prediction_onboarding_reconnect_legal" formatted="false">新たな規約への同意は不要です。%1sおよび%2sとの既存の同意がそのまま適用されます</string>
+  <string name="prediction_onboarding_reconnect_legal">新たな規約への同意は不要です。%1$sおよび%2$sとの既存の同意がそのまま適用されます</string>
   <string name="prediction_onboarding_reconnect_subtitle">入金アカウント、残高、保有ポジションは安全です。この端末を再連携するだけでアクセスを復元できます。カードを1回タップしてください。</string>
   <string name="prediction_onboarding_reconnect_title">Polymarketアカウントを再接続</string>
   <string name="prediction_onboarding_start_button">予測を始める</string>
@@ -1798,7 +1799,7 @@
   <string name="prediction_place_result_no_fill_banner_description">Polymarket上に利用可能なシェアがないため、注文を約定できませんでした。</string>
   <string name="prediction_place_result_no_fill_banner_title">未約定</string>
   <string name="prediction_place_result_no_fill_title">流動性が不足しています</string>
-  <string name="prediction_place_result_partial_amount" formatted="false">%2sのうち%1s</string>
+  <string name="prediction_place_result_partial_amount">%2$sのうち%1$s</string>
   <string name="prediction_place_result_partial_banner_description">スリッページ許容範囲内でのPolymarket上の流動性が不足していたため、注文は一部のみ約定しました。</string>
   <string name="prediction_place_result_partial_banner_title">一部約定</string>
   <string name="prediction_place_result_partial_title">一部注文完了</string>
@@ -1855,7 +1856,7 @@
   <string name="prediction_positions_quantity">シェア数</string>
   <string name="prediction_positions_realized_description">すでに確定した損益です。（一部または全部）売却したシェアや、的中・外れ・分割決済として確定したポジションから算出されます。実現損益にはすべての手数料が含まれます。</string>
   <string name="prediction_positions_realized_pnl">実現損益</string>
-  <string name="prediction_positions_result_amount" formatted="false">%1s %2s</string>
+  <string name="prediction_positions_result_amount">%1$s %2$s</string>
   <string name="prediction_positions_split">分割決済</string>
   <string name="prediction_positions_status">ステータス</string>
   <string name="prediction_positions_title">マイポジション</string>
@@ -1882,7 +1883,7 @@
   <string name="prediction_withdraw_error_generic">出金を送信できませんでした。通信環境を確認して再試行してください</string>
   <string name="prediction_withdraw_error_rejected">Polymarketが出金を拒否しました。再試行してください</string>
   <string name="prediction_withdraw_in_progress_message">前回の出金がまだ処理中です。完了するまで待ってから新しい出金を開始してください。</string>
-  <string name="prediction_withdraw_min_amount">最小出金額は%sです。達するまで資金を追加してください。</string>
+  <string name="prediction_withdraw_min_amount">最小出金額は%@です。達するまで資金を追加してください。</string>
   <string name="prediction_withdraw_status_failed_description">出金の処理中に問題が発生しました。再試行するか、サポートにお問い合わせください。</string>
   <string name="prediction_withdraw_status_failed_notice">出金に失敗しました。資金は引き出されていません。</string>
   <string name="prediction_withdraw_status_failed_title">出金失敗</string>
@@ -2870,7 +2871,7 @@
   <string name="tangempay_topup_receive_body_multichain">USDCまたはUSDTをアカウントのアドレスに送金してください</string>
   <string name="tangempay_topup_receive_title">別のウォレットまたは取引所から</string>
   <string name="tangempay_topup_swap_body">ウォレットの暗号資産を使って、決済アカウントにチャージできます</string>
-  <string name="tangempay_topup_swap_title">Tangemウォレットから</string>
+  <string name="tangempay_topup_swap_title">Tangem Walletから</string>
   <string name="tangempay_unified_onboarding_cashback_caption">キャッシュバック</string>
   <string name="tangempay_unified_onboarding_cashback_subtitle">USDCで支払い</string>
   <string name="tangempay_unified_onboarding_cashback_title">最大2%%。%1$s</string>
@@ -3592,6 +3593,12 @@
   <string name="yield_module_high_network_fees_notification_description">市場が非常に活発なため、現在の手数料は通常よりも高くなっています。今すぐ続行するか、手数料が下がるのを待って後で再確認することもできます。</string>
   <string name="yield_module_high_network_fees_notification_title">ネットワーク手数料が高額です</string>
   <string name="yield_module_historical_returns">過去のリターン</string>
+  <string name="yield_module_main_promo_button">利息モードを試す</string>
+  <string name="yield_module_main_promo_subtitle">眠っている資産を活用。ロックなし、いつでも引き出し可能。</string>
+  <string name="yield_module_main_promo_title">暗号資産で最大%1$s%% APYを獲得</string>
+  <plurals name="yield_module_main_promo_tokens_count">
+    <item quantity="other">%d種類以上のトークンが利用可能</item>
+  </plurals>
   <string name="yield_module_main_screen_promo_banner_message">保有資産に年利%1$s%%を適用</string>
   <string name="yield_module_main_view_approve_notification_description">利息モードでのトークンの承認が取り消されました。トークンを開いて再度許可してください。</string>
   <string name="yield_module_main_view_approve_notification_title">トークンの承認が必要です</string>

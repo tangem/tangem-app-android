@@ -34,6 +34,7 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
+import com.tangem.domain.moneyaccount.usecase.RenewTangemPaySessionUseCase
 import com.tangem.domain.pay.usecase.*
 import com.tangem.domain.pay.usecase.bankofframp.FindActiveBankOfframpOrderUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
@@ -75,7 +76,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val tangemPayWithdrawRepository: TangemPayWithdrawRepository,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
-    private val produceTangemPayInitialDataUseCase: ProduceTangemPayInitialDataUseCase,
+    private val renewTangemPaySessionUseCase: RenewTangemPaySessionUseCase,
     private val onboardingRepository: OnboardingRepository,
     private val getCustomerOffers: GetCustomerOffersUseCase,
     private val getBankCredentialsUseCase: GetBankCredentialsUseCase,
@@ -549,9 +550,8 @@ internal class TangemPayDetailsModel @Inject constructor(
     override fun onRenewSession() {
         baseState.update(TangemPayMessageBannerTransformer(shouldShowProgress = true))
         modelScope.launch {
-            produceTangemPayInitialDataUseCase(userWalletId)
+            renewTangemPaySessionUseCase(userWalletId)
                 .onRight {
-                    paymentAccountStatusFetcher.invoke(userWalletId)
                     baseState.update(TangemPayMessageBannerTransformer(shouldShowProgress = false))
                 }
                 .onLeft {

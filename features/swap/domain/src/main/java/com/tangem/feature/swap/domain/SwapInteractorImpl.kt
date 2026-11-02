@@ -152,6 +152,9 @@ internal class SwapInteractorImpl @Inject constructor(
         ConcurrentHashMap<IntegratedApprovalFallbackKey, Boolean>(),
     )
 
+    /** Allowance ceilings set by [requireTronReapproval]; an entry goes once the allowance is at or below it. */
+    private val tronReapprovalCeilings = ConcurrentHashMap<IntegratedApprovalFallbackKey, TronReapprovalCeiling>()
+
     private val yieldSwapAllowedRouters = newSetFromMap(ConcurrentHashMap<String, Boolean>())
 
     private val yieldSwapAllowedTargets = newSetFromMap(ConcurrentHashMap<String, Boolean>())
@@ -540,8 +543,15 @@ internal class SwapInteractorImpl @Inject constructor(
             ).getOrNull()
         } ?: AllowanceInfo.Enough(allowance = BigDecimal.ZERO)
 
+        val isTronReapprovalPending = isTronReapprovalPending(
+            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+            spenderAddress = spenderAddress,
+            amount = amount.value,
+            allowanceInfo = allowanceInfo,
+        )
         if (allowPermissionsHandler.isAddressAllowanceInProgress(fromTokenAddress) &&
-            isApproveSettled(allowanceInfo, fromTokenAddress)
+            isApproveSettled(allowanceInfo, fromTokenAddress) &&
+            !isTronReapprovalPending
         ) {
             allowPermissionsHandler.removeAddressFromProgress(fromTokenAddress)
             cryptoCurrencyBalanceFetcher(
@@ -556,7 +566,7 @@ internal class SwapInteractorImpl @Inject constructor(
         val isAllowanceSatisfied = if (isIntegratedApproveActive) {
             allowanceInfo !is AllowanceInfo.ResetNeeded
         } else {
-            allowanceInfo is AllowanceInfo.Enough
+            allowanceInfo is AllowanceInfo.Enough && !isTronReapprovalPending
         }
         // For yield swaps the on-chain allowance is not sufficient on its own: spending also
         // requires the yield-module proxy approval (yieldSupplyStatus.isAllowedToSpend).
@@ -1828,6 +1838,46 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
+    override fun requireTronReapproval(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        spenderAddress: String,
+        maxAllowance: BigDecimal,
+    ) {
+        tronReapprovalCeilings[IntegratedApprovalFallbackKey.of(fromSwapCurrencyStatus, spenderAddress)] =
+            TronReapprovalCeiling(
+                tokenAddress = getTokenAddress(fromSwapCurrencyStatus.currency),
+                maxAllowance = maxAllowance,
+            )
+    }
+
+    override fun clearTronReapprovals() {
+        // A sent approval keeps its ceiling: until it lands, the old allowance still covers the amount.
+        tronReapprovalCeilings.values.removeAll { ceiling ->
+            !allowPermissionsHandler.isAddressAllowanceInProgress(ceiling.tokenAddress)
+        }
+    }
+
+    private fun isTronReapprovalPending(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        spenderAddress: String?,
+        amount: BigDecimal,
+        allowanceInfo: AllowanceInfo,
+    ): Boolean {
+        val key = IntegratedApprovalFallbackKey.of(fromSwapCurrencyStatus, spenderAddress)
+        val ceiling = tronReapprovalCeilings[key]?.maxAllowance ?: return false
+        val allowance = when (allowanceInfo) {
+            is AllowanceInfo.Enough -> allowanceInfo.allowance
+            is AllowanceInfo.NotEnough -> allowanceInfo.allowance
+            is AllowanceInfo.ResetNeeded -> allowanceInfo.allowance
+        }
+        // An amount raised past the ceiling is approved as entered; the service judges that allowance anew.
+        if (allowance <= ceiling || amount > ceiling) {
+            tronReapprovalCeilings.remove(key)
+            return false
+        }
+        return true
+    }
+
     override fun integratedApprovalFallback(fromSwapCurrencyStatus: SwapCurrencyStatus, spenderAddress: String) {
         integratedApprovalFallbackContexts.add(
             element = IntegratedApprovalFallbackKey(
@@ -3032,6 +3082,8 @@ internal class SwapInteractorImpl @Inject constructor(
  * failure is structural (the approval simply does not exist yet) and changing the amount cannot fix
  * it — so we must not retry the simulation on every amount change either.
  */
+private data class TronReapprovalCeiling(val tokenAddress: String, val maxAllowance: BigDecimal)
+
 private data class IntegratedApprovalFallbackKey(
     val userWalletId: UserWalletId,
     val fromCurrencyId: CryptoCurrency.ID,

@@ -490,12 +490,67 @@ internal class TronGaslessFeeResolverTest {
             assertThat(nativeFeeStub.preferredCalls).isEqualTo(0)
         }
 
+        @ParameterizedTest
+        @MethodSource("provideAllowanceRefusalModels")
+        fun `GIVEN allowance is refused WHEN resolveWithAutoFeeToken THEN TRX only when payable`(
+            model: AllowanceRefusalModel,
+        ) = runTest {
+            // Arrange
+            val nativeFeeStub = NativeFeeStub().apply { reset(model.nativeFee) }
+            coEvery { getTronGaslessFeeUseCase(any(), any(), any()) } returns allowanceRefusal.left()
+
+            // Act
+            val actual = resolver.resolveWithAutoFeeToken(
+                userWalletId = userWalletId,
+                network = network,
+                transactionData = approval(approvedValue = BigDecimal("50")),
+                nativeCurrencyStatus = statusOf(trx, model.nativeBalance),
+                accountStatusList = accountStatusList(listOf(statusOf(usdt, "50"))),
+                sentCurrencyStatus = null,
+                loadNativeFee = nativeFeeStub::load,
+                onNativeFeePreferred = nativeFeeStub::onPreferred,
+            )
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+            assertThat(nativeFeeStub.preferredCalls).isEqualTo(if (model.expected.isRight()) 1 else 0)
+        }
+
         private fun provideTestModels(): List<GetFeeError.GaslessError> = listOf(
             GetFeeError.GaslessError.TronActivationNotEnoughFunds(minimumAmount = BigDecimal(5), tokenSymbol = "USDT"),
             GetFeeError.GaslessError.TronActivationRateLimited(isPerWallet = true),
             GetFeeError.GaslessError.TronActivationRateLimited(isPerWallet = false),
         )
+
+        private fun provideAllowanceRefusalModels() = listOf(
+            AllowanceRefusalModel(
+                nativeBalance = "50",
+                nativeFee = nativeFee(NATIVE_FEE).right(),
+                expected = nativeFee(NATIVE_FEE).right(),
+            ),
+            AllowanceRefusalModel(
+                nativeBalance = "1",
+                nativeFee = nativeFee(NATIVE_FEE).right(),
+                expected = allowanceRefusal.left(),
+            ),
+            AllowanceRefusalModel(
+                nativeBalance = null,
+                nativeFee = nativeFee(NATIVE_FEE).right(),
+                expected = allowanceRefusal.left(),
+            ),
+            AllowanceRefusalModel(
+                nativeBalance = "50",
+                nativeFee = GetFeeError.UnknownError.left(),
+                expected = allowanceRefusal.left(),
+            ),
+        )
     }
+
+    internal data class AllowanceRefusalModel(
+        val nativeBalance: String?,
+        val nativeFee: Either<GetFeeError, TransactionFeeExtended>,
+        val expected: Either<GetFeeError, TransactionFeeExtended>,
+    )
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -671,6 +726,11 @@ internal class TronGaslessFeeResolverTest {
             contractAddress = USDT_CONTRACT,
         )
         val quote: TronGaslessQuote = mockk()
+        val allowanceRefusal = GetFeeError.GaslessError.TronAllowanceTooHigh(
+            balance = BigDecimal("50"),
+            required = BigDecimal("54.82"),
+            allowance = BigDecimal("50"),
+        )
 
         fun gaslessFee(compensation: String) = TransactionFeeExtended(
             transactionFee = TransactionFee.Single(
