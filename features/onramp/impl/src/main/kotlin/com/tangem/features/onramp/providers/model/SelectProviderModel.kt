@@ -53,11 +53,12 @@ internal class SelectProviderModel @Inject constructor(
     paramsContainer: ParamsContainer,
 ) : Model() {
 
+    private val params: SelectProviderComponent.Params = paramsContainer.require()
+
     val state: StateFlow<SelectPaymentAndProviderUM>
         field = MutableStateFlow(getInitialState())
 
     val bottomSheetNavigation: SlotNavigation<ProviderListBottomSheetConfig> = SlotNavigation()
-    private val params: SelectProviderComponent.Params = paramsContainer.require()
 
     private var userCountry: UserCountry? = null
 
