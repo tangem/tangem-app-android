@@ -25,6 +25,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.TradingPermissionUM
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionAmountIntents
+import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionOrderIntents
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionStatusIntents
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSummaryIntents
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSlippageIntents
@@ -71,6 +72,16 @@ internal class PlacePredictionPreviewProvider : PreviewParameterProvider<PlacePr
         )
 }
 
+internal class PlacePredictionOrderPreviewProvider : PreviewParameterProvider<PlacePredictionUM> {
+
+    override val values: Sequence<PlacePredictionUM>
+        get() = sequenceOf(
+            previewState(amountValue = "4000", quote = previewQuote()),
+            previewState(amountValue = "51.23", quote = previewSellQuote(), order = previewSell()),
+            previewState(amountValue = "4000", quote = QuoteUM.Loading),
+        )
+}
+
 internal class PlaceResultPreviewProvider : PreviewParameterProvider<PlaceResultUM> {
 
     override val values: Sequence<PlaceResultUM>
@@ -94,10 +105,13 @@ internal class PlaceResultPreviewProvider : PreviewParameterProvider<PlaceResult
 internal object PlacePredictionPreviewIntents :
     PlacePredictionAmountIntents,
     PlacePredictionSummaryIntents,
+    PlacePredictionOrderIntents,
     PlacePredictionStatusIntents,
     PlacePredictionSlippageIntents {
     override fun onAmountChange(value: String) = Unit
     override fun onFractionClick(fraction: AmountFractionUM) = Unit
+    override fun onPresetClick(preset: AmountPresetUM) = Unit
+    override fun onMaxClick() = Unit
     override fun onSlippageClick() = Unit
     override fun onSlippageValueChange(value: String) = Unit
     override fun onSlippagePresetClick(percent: BigDecimal) = Unit
@@ -189,9 +203,19 @@ private fun previewSellQuote(status: PredictionQuoteStatus = PredictionQuoteStat
         status = status,
         expected = BigDecimal("43.54"),
         feeTotal = BigDecimal("0.45"),
-        total = BigDecimal("42.66"),
+        total = BigDecimal("43.09"),
         signable = SignableQuoteUM(
-            quote = previewSignableQuote(status = status, side = PredictionOrderSide.SELL),
+            quote = previewSignableQuote(status = status, side = PredictionOrderSide.SELL).copy(
+                shares = BigDecimal("51.23"),
+                notional = BigDecimal("43.54"),
+                expectedExecutionAmount = BigDecimal("43.54"),
+                fees = PredictionOrderFees(
+                    market = BigDecimal.ZERO,
+                    builder = BigDecimal("0.45"),
+                    total = BigDecimal("0.45"),
+                ),
+                total = BigDecimal("43.09"),
+            ),
             receivedAtMillis = PLACED_AT,
             assetId = PREVIEW_ASSET_ID,
         ),
