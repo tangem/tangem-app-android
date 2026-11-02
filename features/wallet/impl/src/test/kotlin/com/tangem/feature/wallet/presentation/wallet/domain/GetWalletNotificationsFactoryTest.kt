@@ -13,6 +13,7 @@ import com.tangem.domain.assetsdiscovery.usecase.ObserveAssetsDiscoveryUseCase
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.IsWalletBackupProblematicUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.collectibles.usecase.GetMissingCollectiblesOwnerKeysCountUseCase
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.hotwallet.CheckHotWalletUpgradeBannerUseCase
 import com.tangem.domain.hotwallet.GetAccessCodeSkippedUseCase
@@ -23,6 +24,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.CollectiblesAccountStatusValue
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -81,6 +83,7 @@ internal class GetWalletNotificationsFactoryTest {
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase = mockk()
     private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
     private val getMissingJointOwnerKeysCountUseCase: GetMissingJointOwnerKeysCountUseCase = mockk()
+    private val getMissingCollectiblesOwnerKeysCountUseCase: GetMissingCollectiblesOwnerKeysCountUseCase = mockk()
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
     private val onboardingRepository: OnboardingRepository = mockk()
     private val shouldShowUpgradeHotWalletBannerUseCase: ShouldShowUpgradeHotWalletBannerUseCase = mockk()
@@ -107,6 +110,7 @@ internal class GetWalletNotificationsFactoryTest {
         isWalletBackedUpUseCase = isWalletBackedUpUseCase,
         getUserWalletUseCase = getUserWalletUseCase,
         getMissingJointOwnerKeysCountUseCase = getMissingJointOwnerKeysCountUseCase,
+        getMissingCollectiblesOwnerKeysCountUseCase = getMissingCollectiblesOwnerKeysCountUseCase,
         onboardingRepository = onboardingRepository,
         shouldShowUpgradeHotWalletBannerUseCase = shouldShowUpgradeHotWalletBannerUseCase,
         getUpgradeBannerClosureTimestampUseCase = getUpgradeBannerClosureTimestampUseCase,
@@ -129,6 +133,7 @@ internal class GetWalletNotificationsFactoryTest {
             isWalletBackedUpUseCase,
             getUserWalletUseCase,
             getMissingJointOwnerKeysCountUseCase,
+            getMissingCollectiblesOwnerKeysCountUseCase,
             singleAccountStatusListSupplier,
             shouldShowUpgradeHotWalletBannerUseCase,
             getUpgradeBannerClosureTimestampUseCase,
@@ -155,6 +160,7 @@ internal class GetWalletNotificationsFactoryTest {
         every { getUserWalletUseCase.invokeFlow(any()) } returns
             flowOf(GetUserWalletError.UserWalletNotFound.left())
         coEvery { getMissingJointOwnerKeysCountUseCase(any(), any()) } returns 0
+        coEvery { getMissingCollectiblesOwnerKeysCountUseCase(any(), any()) } returns 0
         every { shouldShowUpgradeHotWalletBannerUseCase(any()) } returns flowOf(false)
         every { getUpgradeBannerClosureTimestampUseCase(any()) } returns flowOf(null)
         coEvery { checkHotWalletUpgradeBannerUseCase(any(), any(), any(), any()) } returns false.right()
@@ -453,6 +459,58 @@ internal class GetWalletNotificationsFactoryTest {
         val banner = result.filterIsInstance<WalletNotificationUM.MissingAddresses>().single()
         assertThat(banner.missingAddressesCount).isEqualTo(1)
     }
+
+    @Test
+    fun `GIVEN missing collectibles owner key only WHEN create THEN missing-addresses banner is shown`() = runTest {
+        // Arrange
+        stubAccountStatusList(
+            balance = LOADED_NON_ZERO,
+            currencies = emptyList(),
+            accountStatuses = listOf(collectiblesAccountStatus()),
+        )
+        coEvery { getMissingCollectiblesOwnerKeysCountUseCase(listOf(COLLECTIBLES_ACCOUNT), coldWallet) } returns 1
+
+        // Act
+        val result = factory.create(coldWallet, clickIntents).first().notifications
+
+        // Assert
+        val banner = result.filterIsInstance<WalletNotificationUM.MissingAddresses>().single()
+        assertThat(banner.missingAddressesCount).isEqualTo(1)
+    }
+
+    @Test
+    fun `GIVEN no collectibles account WHEN create THEN no collectibles accounts are counted`() = runTest {
+        // Arrange
+        stubAccountStatusList(balance = LOADED_NON_ZERO, currencies = emptyList())
+
+        // Act
+        factory.create(coldWallet, clickIntents).first()
+
+        // Assert
+        coVerify { getMissingCollectiblesOwnerKeysCountUseCase(emptyList(), coldWallet) }
+    }
+
+    @Test
+    fun `GIVEN currencies, a joint and the collectibles owner key missing WHEN create THEN all are counted`() =
+        runTest {
+            // Arrange
+            val jointAccount = mockk<Account.Joint>()
+            stubAccountStatusList(
+                balance = LOADED_NON_ZERO,
+                currencies = listOf(missedDerivationStatus(currencyFactory.ethereum)),
+                accountStatuses = listOf(jointAccountStatus(jointAccount), collectiblesAccountStatus()),
+            )
+            coEvery { getMissingJointOwnerKeysCountUseCase(listOf(jointAccount), coldWallet) } returns 1
+            coEvery { getMissingCollectiblesOwnerKeysCountUseCase(listOf(COLLECTIBLES_ACCOUNT), coldWallet) } returns
+                1
+
+            // Act
+            val result = factory.create(coldWallet, clickIntents).first().notifications
+
+            // Assert
+            val banner = result.filterIsInstance<WalletNotificationUM.MissingAddresses>().single()
+            assertThat(banner.missingAddressesCount).isEqualTo(3)
+        }
 
     @Test
     fun `GIVEN missed derivation currencies and a missing joint owner key WHEN create THEN counts are combined`() =
@@ -1260,10 +1318,16 @@ internal class GetWalletNotificationsFactoryTest {
         every { account } returns jointAccount
     }
 
+    private fun collectiblesAccountStatus(): AccountStatus.Collectibles = AccountStatus.Collectibles(
+        account = COLLECTIBLES_ACCOUNT,
+        value = CollectiblesAccountStatusValue.MissedDerivation,
+    )
+
     private fun provideBooleans() = listOf(true, false)
 
     private companion object {
         val WALLET_ID = UserWalletId("01")
+        val COLLECTIBLES_ACCOUNT = Account.Collectibles(WALLET_ID)
         const val CARD_ID = "cardId"
         const val CLOSURE_TIMESTAMP = 5L
         val LOADED_NON_ZERO = TotalFiatBalance.Loaded(BigDecimal.ONE, StatusSource.ACTUAL)

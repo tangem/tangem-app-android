@@ -1138,6 +1138,84 @@ internal class DexSwapFeeCalculatorTest {
     }
 
     @ParameterizedTest
+    @MethodSource("provideTronReapprovalModels")
+    fun `GIVEN allowance too high for sold token WHEN calculate gasless THEN reapproval leaves compensations`(
+        model: TronReapprovalModel,
+    ) = runTest {
+        // Arrange
+        val fromStatus = buildSwapCurrencyStatus(
+            networkRawId = tronNetwork,
+            contractAddress = TRON_USDT,
+            isCoin = false,
+        )
+        val refusal = GetFeeError.GaslessError.TronAllowanceTooHigh(
+            balance = model.balance,
+            required = BigDecimal("1.3"),
+            allowance = BigDecimal.ONE,
+            allowances = model.allowances,
+        )
+        coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
+        coEvery { getTronGaslessFeeUseCase.forSwap(any(), any(), any()) } returns refusal.left()
+        val approveFee = model.approveCompensation?.let { compensation ->
+            mockk<TransactionFeeExtended> { every { transactionFee.normal.amount.value } returns compensation }
+        }
+        coEvery { getTronGaslessFeeUseCase.forApprove(any(), any(), any()) } returns
+            (approveFee?.right() ?: GetFeeError.UnknownError.left())
+
+        // Act
+        val result = sut.calculate(
+            fromSwapCurrencyStatus = fromStatus,
+            transaction = buildDex(
+                txData = "4c279d6b",
+                txTo = "TRouter",
+                txFrom = "TSender",
+                allowanceContract = "TSpender",
+            ),
+            isGasless = true,
+        )
+
+        // Assert
+        val expectedReapproval = model.expectedAmount?.let { amount ->
+            GetFeeError.TronReapproval(spenderAddress = "TSpender", amount = amount.setScale(18))
+        }
+        assertThat(result.leftOrNull()).isEqualTo(refusal.copy(reapproval = expectedReapproval))
+    }
+
+    @Test
+    fun `GIVEN allowance too high paid in another token WHEN calculate gasless THEN refusal has no reapproval`() =
+        runTest {
+            // Arrange
+            val fromStatus = buildSwapCurrencyStatus(
+                networkRawId = tronNetwork,
+                contractAddress = TRON_USDT,
+                isCoin = false,
+            )
+            val selectedToken = buildSwapCurrencyStatus(
+                networkRawId = tronNetwork,
+                contractAddress = "TOtherToken",
+                isCoin = false,
+            ).status
+            val refusal = GetFeeError.GaslessError.TronAllowanceTooHigh(
+                balance = BigDecimal.ONE,
+                required = BigDecimal("1.3"),
+                allowance = BigDecimal.ONE,
+            )
+            coEvery { getTronGaslessFeeUseCase.forSwap(any(), any(), any()) } returns refusal.left()
+
+            // Act
+            val result = sut.calculate(
+                fromSwapCurrencyStatus = fromStatus,
+                transaction = buildDex(txData = "4c279d6b", txTo = "TRouter", txFrom = "TSender"),
+                selectedToken = selectedToken,
+                isGasless = true,
+            )
+
+            // Assert
+            assertThat(result.leftOrNull()).isEqualTo(refusal)
+            coVerify(exactly = 0) { getTronGaslessFeeUseCase.forApprove(any(), any(), any()) }
+        }
+
+    @ParameterizedTest
     @MethodSource("provideTronGaslessNativeCostModels")
     fun `GIVEN route costs native TRX WHEN calculate gasless THEN network not supported`(
         model: TronGaslessNativeCostModel,
@@ -1349,6 +1427,47 @@ internal class DexSwapFeeCalculatorTest {
     private fun provideTronGaslessNativeCostModels() = listOf(
         TronGaslessNativeCostModel(txValue = "5000000", otherNativeFeeWei = null),
         TronGaslessNativeCostModel(txValue = "0", otherNativeFeeWei = BigDecimal("1000000")),
+    )
+
+    private fun provideTronReapprovalModels() = listOf(
+        // Swap compensation 0.3 with a 10% margin: 1 - 0.33 - 0.1
+        TronReapprovalModel(
+            balance = BigDecimal.ONE,
+            approveCompensation = BigDecimal("0.1"),
+            expectedAmount = BigDecimal("0.57"),
+        ),
+        // The approval quote failed, so the swap compensation stands in for it: 1 - 0.33 - 0.3
+        TronReapprovalModel(
+            balance = BigDecimal.ONE,
+            approveCompensation = null,
+            expectedAmount = BigDecimal("0.37"),
+        ),
+        // The router allowance stays after the approval: 1 - 0.33 - 0.1 - 0.2
+        TronReapprovalModel(
+            balance = BigDecimal.ONE,
+            approveCompensation = BigDecimal("0.1"),
+            allowances = mapOf("TRouter" to BigDecimal("0.2"), "TSpender" to BigDecimal("0.8")),
+            expectedAmount = BigDecimal("0.37"),
+        ),
+        // Capped by the swap amount of 1
+        TronReapprovalModel(
+            balance = BigDecimal("5"),
+            approveCompensation = BigDecimal("0.1"),
+            expectedAmount = BigDecimal.ONE,
+        ),
+        // Nothing is left for the swap
+        TronReapprovalModel(
+            balance = BigDecimal("0.5"),
+            approveCompensation = BigDecimal("0.3"),
+            expectedAmount = null,
+        ),
+    )
+
+    data class TronReapprovalModel(
+        val balance: BigDecimal,
+        val approveCompensation: BigDecimal?,
+        val expectedAmount: BigDecimal?,
+        val allowances: Map<String, BigDecimal> = emptyMap(),
     )
 
     data class TronGaslessNativeCostModel(val txValue: String, val otherNativeFeeWei: BigDecimal?)

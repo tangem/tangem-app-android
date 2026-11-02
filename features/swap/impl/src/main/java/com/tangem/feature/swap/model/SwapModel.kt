@@ -117,6 +117,7 @@ import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedFor
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.analytics.SwapQuotePerformanceTracker
+import com.tangem.core.analytics.api.PerformanceTracer
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
 import com.tangem.feature.swap.component.slippage.SwapSlippageComponent
 import com.tangem.feature.swap.converters.SwapProviderResolver
@@ -223,6 +224,7 @@ internal class SwapModel @Inject constructor(
     private val recordTokenTransferFromSwapUseCase: RecordTokenTransferFromSwapUseCase,
     private val predictionTopUpLimitsResolver: PredictionTopUpLimitsResolver,
     private val getPredictionDepositCurrencyStatusesUseCase: GetPredictionDepositCurrencyStatusesUseCase,
+    performanceTracer: PerformanceTracer,
 ) : Model() {
 
     private val params = paramsContainer.require<SwapComponent.Params>()
@@ -326,7 +328,7 @@ internal class SwapModel @Inject constructor(
     private val amountDebouncer = Debouncer()
     private val transferModeDebouncer = Debouncer()
     private val singleTaskScheduler = SingleTaskScheduler<Map<SwapProvider, SwapState>>()
-    private val performanceTracker = SwapQuotePerformanceTracker()
+    private val performanceTracker = SwapQuotePerformanceTracker(performanceTracer)
 
     val dataStateStateFlow = MutableStateFlow(SwapProcessDataState())
     var dataState
@@ -561,6 +563,7 @@ internal class SwapModel @Inject constructor(
 
     override fun onDestroy() {
         singleTaskScheduler.cancelTask()
+        swapInteractor.clearTronReapprovals()
         performanceTracker.onDestroy()
         super.onDestroy()
     }
@@ -2476,6 +2479,17 @@ internal class SwapModel @Inject constructor(
         )
     }
 
+    @VisibleForTesting
+    internal fun onTronReapproveClick(spenderAddress: String, amount: BigDecimal) {
+        val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus ?: return
+        swapInteractor.requireTronReapproval(
+            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+            spenderAddress = spenderAddress,
+            maxAllowance = amount,
+        )
+        onReduceAmountClicked(SwapAmount(amount, fromSwapCurrencyStatus.currency.decimals))
+    }
+
     private fun onAmountSelected(selected: Boolean) {
         if (selected) {
             analyticsEventHandler.send(SwapEvents.SendTokenBalanceClicked())
@@ -2659,6 +2673,7 @@ internal class SwapModel @Inject constructor(
                     }
                 }
             },
+            onTronReapproveClick = ::onTronReapproveClick,
             onApproveTypeSelect = { provider ->
                 val approval = getSelectApprovalTypeParams(provider)
                 if (approval != null) {

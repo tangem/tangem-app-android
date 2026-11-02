@@ -62,7 +62,7 @@ internal class SendIntentOfferConverterTest {
             ),
             title = resourceReference(
                 R.string.mcp_send_intent_offer_title,
-                wrappedList(stringReference("mcp.claude.com"), "42.00\u00a0USDT"),
+                wrappedList(stringReference("Claude"), "42.00\u00a0USDT"),
             ),
             agent = SendIntentAgentUM.Verified(iconUrl = claude.iconUrl, label = stringReference("mcp.claude.com")),
             description = resourceReference(R.string.mcp_send_intent_offer_description),
@@ -84,7 +84,7 @@ internal class SendIntentOfferConverterTest {
             token = TangemTokenIcon.UiState.Token(TangemTokenIcon.State(url = eth.iconUrl, topIcon = null)),
             title = resourceReference(
                 R.string.mcp_send_intent_offer_title,
-                wrappedList(stringReference("mcp.claude.com"), "1.50\u00a0ETH"),
+                wrappedList(stringReference("Claude"), "1.50\u00a0ETH"),
             ),
             agent = SendIntentAgentUM.Verified(iconUrl = claude.iconUrl, label = stringReference("mcp.claude.com")),
             description = resourceReference(R.string.mcp_send_intent_offer_description),
@@ -108,7 +108,7 @@ internal class SendIntentOfferConverterTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN agent metadata WHEN convert THEN title prefers origin over name and card keeps verified identity`(
+        fun `GIVEN agent metadata WHEN convert THEN title prefers name over origin and card keeps verified identity`(
             model: AgentModel,
         ) {
             // Arrange
@@ -128,7 +128,7 @@ internal class SendIntentOfferConverterTest {
         private fun provideTestModels() = listOf(
             AgentModel(
                 agent = claude,
-                expectedIdentity = stringReference("mcp.claude.com"),
+                expectedIdentity = stringReference("Claude"),
                 expectedAgent = SendIntentAgentUM.Verified(claude.iconUrl, stringReference("mcp.claude.com")),
             ),
             AgentModel(
