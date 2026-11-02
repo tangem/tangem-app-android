@@ -26,6 +26,8 @@ import kotlinx.collections.immutable.toImmutableList
  * [Figma](https://www.figma.com/design/dNvLAk1K7ZQ35oWN2aoAAY/Polymarket?node-id=11668-17461)
  *
  * Touching a line reads all available series at that time; releasing restores their latest values.
+ * Updates animate between snapshots; while inspecting, incoming snapshots wait until release.
+ * Changing the period or the set of series starts a fresh chart without an entrance animation.
  * Histories with fewer than two distinct timestamps use the empty state. Errors are mapped to
  * [PolymarketProbabilityChart.State.NoData] by the caller until an error design is available.
  *
@@ -52,9 +54,15 @@ fun PolymarketProbabilityChart(
     modifier: Modifier = Modifier,
     legendLineCount: Int = 2,
 ) {
-    val content = state as? PolymarketProbabilityChart.State.Content
+    val incoming = state as? PolymarketProbabilityChart.State.Content
+    val seriesIds = incoming?.series?.map { it.id to it.points.isEmpty() }
+    var selectedTime by remember(selectedPeriodId, seriesIds) { mutableStateOf<Long?>(null) }
+    var heldContent by remember(
+        selectedPeriodId,
+        seriesIds,
+    ) { mutableStateOf<PolymarketProbabilityChart.State.Content?>(null) }
+    val content = heldContent ?: incoming
     val scale = remember(content) { content?.let { ProbabilityChartScale.from(it.series) } }
-    var selectedTime by remember(state, selectedPeriodId) { mutableStateOf<Long?>(null) }
     val isLoading = state == PolymarketProbabilityChart.State.Loading
     Column(modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         ProbabilityChartLegend(
@@ -63,16 +71,21 @@ fun PolymarketProbabilityChart(
             lineCount = legendLineCount,
             selectedTime = selectedTime,
         )
-        ProbabilityPlot(
-            content = content?.takeIf { scale != null },
-            scale = scale ?: ProbabilityChartScale.Placeholder,
-            isLoading = isLoading,
-            selectedTime = selectedTime,
-            onSelectTime = { selectedTime = it },
-            formatTime = formatTime,
-            emptyTitle = emptyTitle,
-            emptyDescription = emptyDescription,
-        )
+        key(selectedPeriodId, seriesIds) {
+            ProbabilityPlot(
+                content = content?.takeIf { scale != null },
+                scale = scale ?: ProbabilityChartScale.Placeholder,
+                isLoading = isLoading,
+                selectedTime = selectedTime,
+                onSelectTime = { time ->
+                    heldContent = if (time == null) null else content
+                    selectedTime = time
+                },
+                formatTime = formatTime,
+                emptyTitle = emptyTitle,
+                emptyDescription = emptyDescription,
+            )
+        }
         if (periods.isNotEmpty()) {
             TangemSegmentedControl(
                 items = periods.map { period ->
@@ -177,7 +190,7 @@ private fun ProbabilityPlot(
                 }
                 when {
                     isLoading -> TangemShimmer(Modifier.matchParentSize(), radius = 24.dp)
-                    content != null -> key(content, scale) {
+                    content != null -> {
                         ProbabilityChartLines(
                             content = content,
                             scale = scale,
