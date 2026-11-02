@@ -19,6 +19,7 @@ internal enum class ChartSample(val label: String, val count: Int = 3) {
     Single("One point"),
     Flat("Flat"),
     Partial("Partial history"),
+    Uneven("Uneven timestamps", 2),
 }
 
 internal val chartPeriods = listOf("Live", "6h", "1d", "Max")
@@ -29,12 +30,12 @@ internal fun chartFixture(sample: ChartSample, period: String, revision: Int): C
     if (sample == ChartSample.Empty || sample == ChartSample.Error) return Chart.State.NoData
     val duration = chartDuration(period)
     val colors = when (sample) {
-        ChartSample.Binary -> listOf(SeriesColor.Blue, SeriesColor.Red)
+        ChartSample.Binary, ChartSample.Uneven -> listOf(SeriesColor.Blue, SeriesColor.Red)
         ChartSample.Multiple -> listOf(SeriesColor.Blue, SeriesColor.Green, SeriesColor.Red, SeriesColor.Yellow)
         else -> listOf(SeriesColor.Red, SeriesColor.Blue, SeriesColor.Neutral)
     }
     val names = when (sample) {
-        ChartSample.Binary -> listOf("Yes", "No")
+        ChartSample.Binary, ChartSample.Uneven -> listOf("Yes", "No")
         ChartSample.Multiple -> listOf("Candidate A", "Candidate B", "Candidate C", "Candidate D")
         else -> listOf("Otelul Galati", "FC Corvinul 1921 Hunedoara", "Draw")
     }
@@ -60,6 +61,15 @@ private fun chartDuration(period: String): Long = when (period) {
 }
 
 private fun chartPoints(sample: ChartSample, index: Int, duration: Long, revision: Int): ImmutableList<Chart.Point> {
+    if (sample == ChartSample.Uneven) {
+        val steps = if (index == 0) listOf(0, 1, 4) else listOf(0, 4)
+        return steps.map { step ->
+            Chart.Point(
+                timestampMillis = FIXTURE_START_MILLIS + step * duration / 4,
+                probability = if (index == 0) 0.5 else 0.2 + 0.6 * step / 4,
+            )
+        }.toImmutableList()
+    }
     val count = if (sample == ChartSample.Single) 1 else 80 + revision
     val points = List(count) { point ->
         val wave = if (sample == ChartSample.Flat) 0.0 else sin(point * 0.11) * 0.1 + sin(point * 1.7) * 0.02
@@ -68,7 +78,9 @@ private fun chartPoints(sample: ChartSample, index: Int, duration: Long, revisio
             4 -> listOf(0.4 + wave, 0.3 - wave, 0.2, 0.1)[index]
             else -> listOf(0.45 + wave, 0.35 - wave / 2, 0.2 - wave / 2)[index]
         }
-        Chart.Point(timestampMillis = 1_793_613_600_000L + point * duration / 79, probability = probability)
+        Chart.Point(timestampMillis = FIXTURE_START_MILLIS + point * duration / 79, probability = probability)
     }
     return (if (sample == ChartSample.Partial && index == 1) points.drop(count / 2) else points).toImmutableList()
 }
+
+private const val FIXTURE_START_MILLIS = 1_793_613_600_000L
