@@ -23,6 +23,7 @@ import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceActionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceButtonStyleUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
@@ -254,7 +255,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 runCurrent()
 
                 // Assert
-                assertThat(model.uiState.value.isHoldToConfirm).isTrue()
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.HOLD)
             }
 
         @Test
@@ -268,7 +269,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 runCurrent()
 
                 // Assert
-                assertThat(model.uiState.value.isHoldToConfirm).isFalse()
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
             }
 
         @Test
@@ -282,7 +283,73 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 runCurrent()
 
                 // Assert
-                assertThat(model.uiState.value.isHoldToConfirm).isTrue()
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.HOLD)
+            }
+    }
+
+    @Nested
+    inner class SessionKey {
+
+        @Test
+        fun `GIVEN a card wallet with a usable session key WHEN the screen opens THEN the button is plain`() =
+            runOrderTest {
+                // Arrange
+                every { featureToggles.isPolymarketSessionKeysEnabled } returns true
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+
+                // Act
+                val model = createOrderModel(testScope = this)
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.PLAIN)
+            }
+
+        @Test
+        fun `GIVEN a card wallet without a usable session key WHEN the screen opens THEN the card is asked`() =
+            runOrderTest {
+                // Arrange
+                every { featureToggles.isPolymarketSessionKeysEnabled } returns true
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns false
+
+                // Act
+                val model = createOrderModel(testScope = this)
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+            }
+
+        @Test
+        fun `GIVEN session keys disabled WHEN a card wallet opens the screen THEN the key is not checked`() =
+            runOrderTest {
+                // Arrange
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+
+                // Act
+                val model = createOrderModel(testScope = this)
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+                coVerify(exactly = 0) { signingRouter.canSignWithSessionKey(userWalletId = any()) }
+            }
+
+        @Test
+        fun `GIVEN a hot wallet with a usable session key WHEN the screen opens THEN the button is held`() =
+            runOrderTest {
+                // Arrange
+                every { featureToggles.isPolymarketSessionKeysEnabled } returns true
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                every { getUserWalletUseCase(any()) } returns hotWallet().right()
+
+                // Act
+                val model = createOrderModel(testScope = this)
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.HOLD)
+                coVerify(exactly = 0) { signingRouter.canSignWithSessionKey(userWalletId = any()) }
             }
     }
 
