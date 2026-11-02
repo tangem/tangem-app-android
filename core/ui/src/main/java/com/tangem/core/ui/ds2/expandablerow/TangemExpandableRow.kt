@@ -25,7 +25,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.DsVersion
 import com.tangem.core.ui.ds2.avatar.TangemAvatar
 import com.tangem.core.ui.ds2.expandable.ExpandableAvatar
@@ -48,6 +47,8 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.assets.il_account_airplane
+import com.tangem.core.ui.res.generated.icons.Icons
 
 /**
  * Design-system v2 (DS3) **Expandable Row** — the generic sibling of `TangemAccountRow`: a card that
@@ -657,7 +658,7 @@ private fun PreviewTokenRow() {
 @Composable
 private fun PreviewContainer(content: @Composable (avatar: TangemAvatar.UiState) -> Unit) {
     val avatar = TangemAvatar.UiState.Account(
-        iconRes = R.drawable.ic_airplane_mode_24,
+        imageVector = Icons.il_account_airplane,
         color = TangemAvatar.FillColor.AzureBlue,
     )
     TangemThemePreviewRedesign {
