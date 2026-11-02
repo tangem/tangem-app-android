@@ -9,8 +9,6 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import coil.ImageLoader
 import coil.ImageLoaderFactory
-import com.tangem.blockchain.common.ExceptionHandler
-import com.tangem.blockchain.common.ExceptionHandlerOutput
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.handlers.opentelemetry.OpenTelemetryMetricsHolder
@@ -54,9 +52,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
 
     private val tangemLoggingInitializer: TangemLoggingInitializer
         get() = entryPoint.getTangemLoggingInitializer()
-
-    private val blockchainExceptionHandler: ExceptionHandlerOutput
-        get() = entryPoint.getBlockchainExceptionHandler()
 
     private val workerFactory: HiltWorkerFactory
         get() = entryPoint.getWorkerFactory()
@@ -181,8 +176,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
                 loadNativeLibraries()
             }
         }
-
-        ExceptionHandler.append(blockchainExceptionHandler)
 
         tangemLoggingInitializer.initSdkLogging(this)
 
