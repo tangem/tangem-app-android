@@ -109,7 +109,7 @@ class PolymarketSessionKeyStateService(
 
     private fun backoffDelay(attempt: Long): Duration {
         val doublings = attempt.coerceAtMost(MAX_DOUBLINGS.toLong()).toInt()
-        return (PolymarketSessionKeyRelay.POLL_INTERVAL * (1 shl doublings)).coerceAtMost(MAX_RESTART_DELAY)
+        return (PolymarketSessionKeyRelay.POLL_INTERVAL * (1 shl doublings)).coerceAtMost(MAX_BACKOFF)
     }
 
     private class ReconcileCycle {
@@ -128,7 +128,7 @@ class PolymarketSessionKeyStateService(
             ifLeft = { error ->
                 isElapsedChangeFailure = elapsedChangeRetries > 0 || nextChangeAt?.let { it <= now } == true
                 nextChangeAt = nextChangeAt?.takeIf { it > now }
-                if (hasLoaded && !isSettlePoll) {
+                if (hasLoaded && !isSettlePoll && elapsedChangeRetries == 0) {
                     TangemLogger.e("Polymarket session keys could not be refreshed, keeping the last state: $error")
                 }
                 !hasLoaded
@@ -153,12 +153,11 @@ class PolymarketSessionKeyStateService(
         }
 
         fun takeElapsedChangeRetry(): Int? {
-            if (!isElapsedChangeFailure || elapsedChangeRetries >= ELAPSED_CHANGE_RETRIES) return null
+            if (!isElapsedChangeFailure) return null
             return elapsedChangeRetries++
         }
 
         fun endWait(isPolling: Boolean, isRefreshed: Boolean) {
-            if (isRefreshed) elapsedChangeRetries = 0
             polls = if (isRefreshed) 0 else polls + 1
             isSettlePoll = isPolling && !isRefreshed
         }
@@ -167,8 +166,7 @@ class PolymarketSessionKeyStateService(
     private companion object {
         val STOP_TIMEOUT: Duration = 5.seconds
         const val SETTLE_REFRESHES = 100
-        const val ELAPSED_CHANGE_RETRIES = 10
-        val MAX_RESTART_DELAY: Duration = 1.minutes
+        val MAX_BACKOFF: Duration = 1.minutes
         const val MAX_DOUBLINGS = 5
     }
 }
