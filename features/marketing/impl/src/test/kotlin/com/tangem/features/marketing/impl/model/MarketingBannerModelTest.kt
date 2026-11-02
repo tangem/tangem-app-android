@@ -39,6 +39,10 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import io.mockk.verify
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZoneOffset
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -95,7 +99,10 @@ internal class MarketingBannerModelTest {
         every { useDeskFeatureToggles.isSupportChatDeepLinkEnabled } returns true
     }
 
-    private fun TestScope.createModel(params: MarketingBannerComponent.Params): MarketingBannerModel {
+    private fun TestScope.createModel(
+        params: MarketingBannerComponent.Params,
+        clock: Clock = testClock(),
+    ): MarketingBannerModel {
         val dispatcher = StandardTestDispatcher(testScheduler)
         val dispatchers = object : CoroutineDispatcherProvider {
             override val main = dispatcher
@@ -115,7 +122,20 @@ internal class MarketingBannerModelTest {
             appCoroutineScope = TestAppCoroutineScope(),
             urlOpener = urlOpener,
             useDeskFeatureToggles = useDeskFeatureToggles,
+            clock = clock,
         )
+    }
+
+    private fun TestScope.testClock(baseInstant: Instant = BASE_TEST_INSTANT): Clock = object : Clock() {
+        override fun getZone(): ZoneId = ZoneOffset.UTC
+        override fun withZone(zone: ZoneId?): Clock = this
+        override fun instant(): Instant = baseInstant.plusMillis(testScheduler.currentTime)
+    }
+
+    private class MutableClock(var current: Instant) : Clock() {
+        override fun getZone(): ZoneId = ZoneOffset.UTC
+        override fun withZone(zone: ZoneId?): Clock = this
+        override fun instant(): Instant = current
     }
 
     private fun uriWithUids(vararg uids: String): Uri = mockk {
@@ -128,12 +148,14 @@ internal class MarketingBannerModelTest {
         providerIds: List<String>? = null,
         deeplink: String? = "tangem://support",
         minAmount: java.math.BigDecimal? = null,
+        startAt: String? = null,
+        endAt: String? = null,
     ) = MarketingCampaign(
         id = id,
         type = MarketingScreenType.ONRAMP,
         priority = id,
-        startAt = null,
-        endAt = null,
+        startAt = startAt,
+        endAt = endAt,
         minAmount = minAmount,
         maxAmount = null,
         providerIds = providerIds,
@@ -1090,7 +1112,184 @@ internal class MarketingBannerModelTest {
         HostHandledUidModel(uids = emptyList(), expectedUid = null),
     )
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CampaignWindows {
+
+        @Test
+        fun `GIVEN changing fetch responses WHEN campaign expires THEN one fetch supplies display and timer`() = runTest {
+            // Arrange
+            val activeCampaign = campaign(
+                id = 1,
+                uiType = MarketingBanner.UiType.STANDALONE,
+                endAt = "2026-03-30T10:01:00Z",
+            )
+            coEvery { getMarketingBanner(onrampScreen, null) } returnsMany listOf(
+                listOf(activeCampaign).right(),
+                emptyList<MarketingCampaign>().right(),
+            )
+            val model = createModel(
+                MarketingBannerComponent.Params.Standalone(flowOf(MarketingBannerRequest(onrampScreen))),
+            )
+            advanceTimeBy(300)
+            runCurrent()
+            val beforeExpiry = model.uiState.value.shownIds()
+
+            // Act
+            advanceTimeBy(59_701)
+            runCurrent()
+
+            // Assert
+            assertThat(beforeExpiry).containsExactly(1)
+            assertThat(model.uiState.value).isEqualTo(MarketingBannerListUM.Hidden)
+            coVerify(exactly = 1) { getMarketingBanner(onrampScreen, null) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN future campaign WHEN startAt reached THEN campaign appears dynamically`() = runTest {
+            // Arrange
+            val startAt = "2026-03-30T10:01:00Z"
+            coEvery { getMarketingBanner(onrampScreen, null) } returns listOf(
+                campaign(id = 1, uiType = MarketingBanner.UiType.STANDALONE, startAt = startAt),
+            ).right()
+            val model = createModel(MarketingBannerComponent.Params.Standalone(flowOf(MarketingBannerRequest(onrampScreen))))
+            advanceTimeBy(300)
+            runCurrent()
+
+            // Act & Assert
+            assertThat(model.uiState.value).isEqualTo(MarketingBannerListUM.Hidden)
+
+            advanceTimeBy(59_699)
+            runCurrent()
+            assertThat(model.uiState.value).isEqualTo(MarketingBannerListUM.Hidden)
+
+            advanceTimeBy(1)
+            runCurrent()
+            assertThat(model.uiState.value.shownIds()).containsExactly(1)
+        }
+
+        @Test
+        fun `GIVEN active campaign with endAt WHEN endAt passes THEN campaign hidden dynamically`() = runTest {
+            // Arrange
+            val endAt = "2026-03-30T10:01:00Z"
+            coEvery { getMarketingBanner(onrampScreen, null) } returns listOf(
+                campaign(id = 1, uiType = MarketingBanner.UiType.STANDALONE, endAt = endAt),
+            ).right()
+            val model = createModel(MarketingBannerComponent.Params.Standalone(flowOf(MarketingBannerRequest(onrampScreen))))
+            advanceTimeBy(300)
+            runCurrent()
+
+            // Act & Assert
+            assertThat(model.uiState.value.shownIds()).containsExactly(1)
+
+            advanceTimeBy(59_700)
+            runCurrent()
+            assertThat(model.uiState.value.shownIds()).containsExactly(1)
+
+            advanceTimeBy(1)
+            runCurrent()
+            assertThat(model.uiState.value).isEqualTo(MarketingBannerListUM.Hidden)
+        }
+
+        @Test
+        fun `GIVEN campaigns with future and active bounds WHEN transitions occur THEN uiState updates at each boundary`() =
+            runTest {
+                // Arrange
+                val campaign1 = campaign(
+                    id = 1,
+                    uiType = MarketingBanner.UiType.STANDALONE,
+                    endAt = "2026-03-30T10:01:00Z",
+                )
+                val campaign2 = campaign(
+                    id = 2,
+                    uiType = MarketingBanner.UiType.STANDALONE,
+                    startAt = "2026-03-30T10:01:30Z",
+                    endAt = "2026-03-30T10:02:00Z",
+                )
+                coEvery { getMarketingBanner(onrampScreen, null) } returns listOf(campaign1, campaign2).right()
+                val model = createModel(
+                    MarketingBannerComponent.Params.Standalone(flowOf(MarketingBannerRequest(onrampScreen))),
+                )
+                advanceTimeBy(300)
+                runCurrent()
+
+                // Act & Assert
+                assertThat(model.uiState.value.shownIds()).containsExactly(1)
+
+                advanceTimeBy(59_701)
+                runCurrent()
+                assertThat(model.uiState.value).isEqualTo(MarketingBannerListUM.Hidden)
+
+                advanceTimeBy(29_999)
+                runCurrent()
+                assertThat(model.uiState.value.shownIds()).containsExactly(2)
+
+                advanceTimeBy(30_001)
+                runCurrent()
+                assertThat(model.uiState.value).isEqualTo(MarketingBannerListUM.Hidden)
+            }
+
+        @Test
+        fun `GIVEN future campaign WHEN onResume called after system clock jumps past startAt THEN banner shown immediately`() =
+            runTest {
+                // Arrange
+                val clock = MutableClock(current = BASE_TEST_INSTANT)
+                val startAt = "2026-03-30T11:00:00Z"
+                coEvery { getMarketingBanner(onrampScreen, null) } returns listOf(
+                    campaign(id = 1, uiType = MarketingBanner.UiType.STANDALONE, startAt = startAt),
+                ).right()
+                val model = createModel(
+                    params = MarketingBannerComponent.Params.Standalone(flowOf(MarketingBannerRequest(onrampScreen))),
+                    clock = clock,
+                )
+                advanceTimeBy(300)
+                runCurrent()
+                assertThat(model.uiState.value).isEqualTo(MarketingBannerListUM.Hidden)
+
+                // Act
+                clock.current = Instant.parse("2026-03-30T11:05:00Z")
+                model.onResume()
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.shownIds()).containsExactly(1)
+            }
+
+        @Test
+        fun `GIVEN pending boundary delay WHEN screen changes THEN timer cancelled and new screen campaigns observed`() =
+            runTest {
+                // Arrange
+                val futureCampaign = campaign(
+                    id = 1,
+                    uiType = MarketingBanner.UiType.STANDALONE,
+                    startAt = "2026-03-30T10:05:00Z",
+                )
+                val currentCampaign = campaign(
+                    id = 2,
+                    uiType = MarketingBanner.UiType.STANDALONE,
+                )
+                val requests = MutableStateFlow<MarketingBannerRequest?>(MarketingBannerRequest(onrampScreen))
+                coEvery { getMarketingBanner(onrampScreen, null) } returns listOf(futureCampaign).right()
+                coEvery { getMarketingBanner(eurScreen, null) } returns listOf(currentCampaign).right()
+
+                val model = createModel(MarketingBannerComponent.Params.Standalone(requests))
+                advanceTimeBy(300)
+                runCurrent()
+                assertThat(model.uiState.value).isEqualTo(MarketingBannerListUM.Hidden)
+
+                // Act
+                requests.value = MarketingBannerRequest(eurScreen)
+                advanceTimeBy(300)
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.shownIds()).containsExactly(2)
+            }
+    }
+
     private companion object {
+        val BASE_TEST_INSTANT: Instant = Instant.parse("2026-03-30T10:00:00Z")
         const val HOST_HANDLED_LINK = "tangem://buy"
         const val WAITLIST_LINK = "tangem://onramp?type=concierge_waitlist"
     }
