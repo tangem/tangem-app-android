@@ -15,7 +15,6 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.HOLD_DURATION_MS
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
-import com.tangem.common.constants.TestConstants.TANGEM_PAY_ACCESS_CODE
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
@@ -104,12 +103,10 @@ fun disableTangemPayRealAuth() {
     System.clearProperty(REAL_AUTH_KEY)
 }
 
-fun BaseTestCase.openTangemPay() {
+fun BaseTestCase.openTangemPay(accessCode: String = "") {
     // Existing customer: callers set the `tangem_pay_eligibility` scenario to PaeraCustomer (in
     // additionalBeforeSection, before this runs), which drives the checkCustomerWalletId mock -> Payment account.
-    step("Import hot wallet from Tangem Pay seed phrase (with access code)") {
-        openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
-    }
+    importTangemPayHotWallet(accessCode)
     // The tile only renders once the customer check resolves, so it can lag behind the Main screen.
     step("Click on Tangem Pay tile") {
         awaitSuccess { onTangemPayMainScreen { mainScreenTile.assertIsDisplayed() } }
@@ -117,6 +114,13 @@ fun BaseTestCase.openTangemPay() {
     }
     step("Assert payment account balance is displayed") {
         onTangemPayMainScreen { balance.assertIsDisplayed() }
+    }
+}
+
+fun BaseTestCase.importTangemPayHotWallet(accessCode: String = "") {
+    val suffix = if (accessCode.isEmpty()) "" else " (with access code)"
+    step("Import hot wallet from Tangem Pay seed phrase$suffix") {
+        openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = accessCode)
     }
 }
 
@@ -129,10 +133,8 @@ fun BaseTestCase.clickTangemPayTileUntilPaymentAccountOpens() {
 }
 
 /** Imports the hot wallet and stays on Main with the Tangem Pay tile rendered. */
-fun BaseTestCase.openMainScreenWithTangemPayTile() {
-    step("Import hot wallet from Tangem Pay seed phrase (with access code)") {
-        openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
-    }
+fun BaseTestCase.openMainScreenWithTangemPayTile(accessCode: String = "") {
+    importTangemPayHotWallet(accessCode)
     step("Assert Tangem Pay tile is displayed") {
         awaitSuccess { onTangemPayMainScreen { mainScreenTile.assertIsDisplayed() } }
     }
@@ -903,7 +905,7 @@ fun BaseTestCase.openTangemPayWithdrawReadyToConfirm(receiveToken: String, amoun
 }
 
 // The withdraw HoldToConfirm re-disables during the ~10s quote refresh; re-hold each poll until it takes.
-fun BaseTestCase.confirmTangemPayWithdrawByHolding(accessCode: String) {
+fun BaseTestCase.confirmTangemPayWithdrawByHolding(accessCode: String? = null) {
     // Scoped to the swap screen: the token details screen under it stays composed with buttons of its own.
     val swapScreenButton = hasTestTag(BaseButtonTestTags.BUTTON) and
         !hasAnyAncestor(hasTestTag(BaseDialogTestTags.CONTAINER)) and
@@ -937,7 +939,7 @@ fun BaseTestCase.confirmTangemPayWithdrawByHolding(accessCode: String) {
             composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_SHORT) { isHoldOutcomeShown() }
         }.isSuccess
     }
-    if (composeTestRule.onAllNodes(accessCodeInput).fetchSemanticsNodes().isNotEmpty()) {
+    if (accessCode != null && composeTestRule.onAllNodes(accessCodeInput).fetchSemanticsNodes().isNotEmpty()) {
         composeTestRule.onNode(accessCodeInput).performTextInput(accessCode)
         // Kaspresso treats an open keyboard as a system dialog and stalls every later check on it.
         Espresso.closeSoftKeyboard()
@@ -1428,9 +1430,7 @@ fun BaseTestCase.reopenTangemPayFromMain() {
 }
 
 fun BaseTestCase.openMainScreenWithHotAndCardWallets() {
-    step("Import hot wallet from Tangem Pay seed phrase (with access code)") {
-        openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
-    }
+    importTangemPayHotWallet()
     step("Add a second card wallet") { addNewCardWallet(WalletMockContent) }
 }
 

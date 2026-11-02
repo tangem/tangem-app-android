@@ -11,6 +11,7 @@ import com.tangem.domain.pay.model.CustomerSummary
 import com.tangem.domain.pay.repository.CustomerSummaryRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.wallets.derivations.DerivationsRepository
+import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.spend.datasource.config.TangemPay
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
@@ -42,6 +43,7 @@ internal class MockAwareCustomerSummaryRepository @Inject constructor(
     private suspend fun deriveMoneyAccountKeyIfMissing(userWalletId: UserWalletId) {
         val userWallet = userWalletsListRepository.userWallets.value?.firstOrNull { it.walletId == userWalletId }
         if (userWallet !is UserWallet.Hot) return
+        if (userWallet.hotWalletId.authType != HotWalletId.AuthType.NoPassword) return
 
         runSuspendCatching {
             val currency = moneyAccountCurrencyFactory.create(userWalletId)
