@@ -1,19 +1,19 @@
 @file:Suppress("MagicNumber")
 
-package com.tangem.feature.tester.presentation.storybook.page.ds.counter
+package com.tangem.feature.tester.presentation.storybook.page.polymarket.counter
 
-import com.tangem.core.ui.ds2.counter.TangemCounter
-import com.tangem.feature.tester.presentation.storybook.entity.TangemCounterStory
-import com.tangem.feature.tester.presentation.storybook.entity.TangemCounterStory.Sample
+import com.tangem.feature.tester.presentation.storybook.entity.PolymarketCounterStory
+import com.tangem.feature.tester.presentation.storybook.entity.PolymarketCounterStory.Sample
 import com.tangem.feature.tester.presentation.storybook.viewmodel.StateUpdater
 import com.tangem.feature.tester.presentation.storybook.viewmodel.storyPageFactory
+import com.tangem.features.polymarket.common.ui.counter.PolymarketCounter
 import kotlinx.collections.immutable.toImmutableList
 
-internal val tangemCounterStoryFactory
-    get() = storyPageFactory(StateUpdater<TangemCounterStory>::buildCounter)
+internal val polymarketCounterStoryFactory
+    get() = storyPageFactory(StateUpdater<PolymarketCounterStory>::buildCounter)
 
-private fun StateUpdater<TangemCounterStory>.buildCounter(): TangemCounterStory {
-    return TangemCounterStory(
+private fun StateUpdater<PolymarketCounterStory>.buildCounter(): PolymarketCounterStory {
+    return PolymarketCounterStory(
         sample = Sample.Many,
         items = Sample.Many.items(),
         selectedId = "value-4",
@@ -68,4 +68,4 @@ private fun Sample.items() = when (this) {
     Sample.Negative -> listOf("−4.5", "−3.5", "−2.5", "−1.5", "−0.5", "+0.5", "+1.5", "+2.5", "+3.5")
     Sample.Long -> listOf("−125.5", "−100.5", "−75.5", "−25.5", "+25.5", "+75.5", "+100.5", "+125.5")
     Sample.Duplicate -> List(7) { "1.5" }
-}.mapIndexed { index, label -> TangemCounter.Item(id = "value-$index", label = label) }.toImmutableList()
+}.mapIndexed { index, label -> PolymarketCounter.Item(id = "value-$index", label = label) }.toImmutableList()

@@ -49,7 +49,6 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.button.TangemBut
 import com.tangem.feature.tester.presentation.storybook.page.ds.buttongroup.TangemButtonGroupStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.buttonstack.TangemButtonStackStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.checkbox.TangemCheckboxV2Story
-import com.tangem.feature.tester.presentation.storybook.page.ds.counter.TangemCounterStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.checkmark.TangemCheckmarkStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.fade.TangemFadeStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.filter.TangemFilterGroupStory
@@ -79,6 +78,7 @@ import com.tangem.feature.tester.presentation.storybook.page.message.TangemMessa
 import com.tangem.feature.tester.presentation.storybook.page.opportunities.OpportunitiesBGStory
 import com.tangem.feature.tester.presentation.storybook.page.pagerindicator.TangemPagerIndicatorStory
 import com.tangem.feature.tester.presentation.storybook.page.placeholder.PlaceholderStory
+import com.tangem.feature.tester.presentation.storybook.page.polymarket.counter.PolymarketCounterStory
 import com.tangem.feature.tester.presentation.storybook.page.progress.ProgressIndicatorStory
 import com.tangem.feature.tester.presentation.storybook.page.searchfield.TangemSearchFieldStory
 import com.tangem.feature.tester.presentation.storybook.page.storiesv2.StoriesV2Story
@@ -158,7 +158,7 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
                 is TangemFilterGroupStory -> TangemFilterGroupStory(state = storyState)
                 is TangemTabNavigationStory -> TangemTabNavigationStory(state = storyState)
                 is TangemSegmentedControlStory -> TangemSegmentedControlStory(state = storyState)
-                is TangemCounterStory -> TangemCounterStory(state = storyState)
+                is PolymarketCounterStory -> PolymarketCounterStory(state = storyState)
                 is TextStyleStory -> TextStyleStory(state = storyState)
             }
 

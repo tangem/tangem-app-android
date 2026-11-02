@@ -24,7 +24,6 @@ import com.tangem.core.ui.ds2.button.TangemButtonStack
 import com.tangem.core.ui.ds2.checkbox.TangemCheckbox
 import com.tangem.core.ui.ds2.toggle.TangemSwitch
 import com.tangem.core.ui.ds2.checkbox.TangemCheckmark
-import com.tangem.core.ui.ds2.counter.TangemCounter
 import com.tangem.core.ui.ds2.draggable.TangemDraggable
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.ds2.filter.TangemFilterGroup
@@ -58,7 +57,6 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.buttonstack.tang
 import com.tangem.feature.tester.presentation.storybook.page.ds.checkbox.tangemCheckboxV2StoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.toggle.tangemSwitchStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.checkmark.tangemCheckmarkStoryFactory
-import com.tangem.feature.tester.presentation.storybook.page.ds.counter.tangemCounterStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.draggable.tangemDraggableStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.fade.tangemFadeStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.filter.tangemFilterGroupStoryFactory
@@ -87,7 +85,6 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.topnavigation.ta
 private data class DsStoryItem(val title: String, val version: DsVersion?, val factory: StoryPageFactory)
 
 private fun buildDsStories() = listOf(
-    DsStoryItem("↔ Counter · селектор спредов", TangemCounter.version, tangemCounterStoryFactory),
     DsStoryItem("⏳ TangemLoader", TangemLoader.version, tangemLoaderStoryFactory),
     DsStoryItem("🔘 TangemButton", TangemButton.version, tangemButtonStoryFactory),
     DsStoryItem("🔘 TangemButtonGroup", TangemButtonGroup.version, tangemButtonGroupStoryFactory),
