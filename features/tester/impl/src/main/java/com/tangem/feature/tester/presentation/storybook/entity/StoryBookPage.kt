@@ -18,6 +18,7 @@ import com.tangem.core.ui.ds2.filter.TangemFilterItem
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
+import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
 import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
@@ -445,6 +446,13 @@ internal data class TangemCheckboxV2Story(
     val onEnabledToggle: () -> Unit,
 ) : DsStoryBookPage
 
+internal data class TangemSwitchStory(
+    val isChecked: Boolean,
+    val isEnabled: Boolean,
+    val onCheckedChange: (Boolean) -> Unit,
+    val onEnabledToggle: () -> Unit,
+) : DsStoryBookPage
+
 internal data class TangemCheckmarkStory(
     val isChecked: Boolean,
     val isEnabled: Boolean,
@@ -532,6 +540,43 @@ internal data class TangemMessageBannerStory(
         BgPrimary("bg.primary"),
         BgSecondary("bg.secondary"),
         BgInverse("bg.inverse"),
+    }
+}
+
+@Suppress("BooleanPropertyNaming")
+internal data class TangemMessageBubbleStory(
+    val variant: TangemMessageBubble.Variant,
+    val message: Message,
+    val trailingButton: TrailingButton,
+    val background: Background,
+    val showTip: Boolean,
+    val hasIcon: Boolean,
+    val isClickable: Boolean,
+    val onVariantChange: (TangemMessageBubble.Variant) -> Unit,
+    val onMessageChange: (Message) -> Unit,
+    val onTrailingButtonChange: (TrailingButton) -> Unit,
+    val onBackgroundChange: (Background) -> Unit,
+    val onTipToggle: () -> Unit,
+    val onIconToggle: () -> Unit,
+    val onClickableToggle: () -> Unit,
+) : DsStoryBookPage {
+
+    enum class Message(val label: String) {
+        Short("Short"),
+        Long("Long"),
+        OneLine("Long, 1 line"),
+    }
+
+    enum class TrailingButton(val label: String) {
+        None("None"),
+        Close("Close"),
+        Chevron("Chevron"),
+    }
+
+    /** Backdrop the bubble preview is rendered on top of. */
+    enum class Background(val label: String) {
+        BgPrimary("bg.primary"),
+        BgSecondary("bg.secondary"),
     }
 }
 
@@ -866,18 +911,20 @@ internal data class TangemAvatarStory(
     val fillColor: TangemAvatar.FillColor,
     val appearance: TangemAvatar.Appearance,
     val status: TangemAvatar.Status,
-    val hasPendingIndicator: Boolean,
-    val hasUserInitial: Boolean,
-    val isShimmerRounded: Boolean,
+    val hasAccountIndicator: Boolean,
+    val hasLetter: Boolean,
+    val isRemoteAsset: Boolean,
+    val isRoundedSquare: Boolean,
     val onVariantChange: (Variant) -> Unit,
     val onFillColorChange: (TangemAvatar.FillColor) -> Unit,
     val onAppearanceChange: (TangemAvatar.Appearance) -> Unit,
     val onStatusChange: (TangemAvatar.Status) -> Unit,
-    val onPendingIndicatorToggle: () -> Unit,
-    val onUserInitialToggle: () -> Unit,
-    val onShimmerRoundedToggle: () -> Unit,
+    val onAccountIndicatorToggle: () -> Unit,
+    val onLetterToggle: () -> Unit,
+    val onRemoteAssetToggle: () -> Unit,
+    val onRoundedSquareToggle: () -> Unit,
 ) : DsStoryBookPage {
 
     /** Which [com.tangem.core.ui.ds2.avatar.TangemAvatar.UiState] subtype is rendered. */
-    enum class Variant { Account, User, Address, Icon, Transaction, Shimmer }
+    enum class Variant { Account, User, Address, Icon, Transaction, Asset, Shimmer }
 }

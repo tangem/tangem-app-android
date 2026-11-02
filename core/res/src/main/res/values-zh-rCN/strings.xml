@@ -1389,6 +1389,7 @@
   <string name="money_account_onboarding_transfers_card_caption">入账。出账。</string>
   <string name="money_account_onboarding_transfers_card_subtitle">使用带有银行信息的专属账户</string>
   <string name="money_account_onboarding_transfers_card_title">以法币付款和收款</string>
+  <string name="money_account_send_bank_transfer_unavailable">不可用</string>
   <string name="money_account_send_fees_footer">费用包含%s服务费和预估网络费</string>
   <string name="money_account_send_network_fee_note">费用包含预估网络费%s，可能随网络活跃度变化</string>
   <string name="money_account_send_pay_button">支付 %s</string>
@@ -1657,10 +1658,10 @@
   <string name="prediction_add_funds_max_receive_amount_title">接收金额不得超过 %s</string>
   <string name="prediction_add_funds_notification_limits_description">存款金额必须至少为 %1$s。不建议单笔存入超过 $50,000 — 请将大额资金拆分为多笔小额存款。</string>
   <string name="prediction_add_funds_notification_limits_title">存款限额</string>
-  <string name="prediction_add_funds_receive_body" formatted="false">从其他钱包发送 %1s，最低 %2s</string>
+  <string name="prediction_add_funds_receive_body">从其他钱包发送 %1$s，最低 %2$s</string>
   <string name="prediction_add_funds_receive_subtitle">将 Polygon 网络上的 USDC 发送到您的 Polymarket 账户</string>
   <string name="prediction_add_funds_receive_title">从其他钱包或交易所</string>
-  <string name="prediction_add_funds_subtitle" formatted="false">%2s 上的 %1s</string>
+  <string name="prediction_add_funds_subtitle">%2$s 上的 %1$s</string>
   <string name="prediction_add_funds_swap_body">兑换您已持有的代币</string>
   <string name="prediction_add_funds_swap_subtitle">使用 Tangem 钱包中的加密货币为您的 Polymarket 账户充值</string>
   <string name="prediction_add_funds_swap_title">从您的 Tangem 钱包</string>
@@ -1677,7 +1678,7 @@
   <string name="prediction_close_result_partially_sold_title">部分卖出</string>
   <string name="prediction_close_result_sold_title">已卖出 %s</string>
   <string name="prediction_close_result_tokens_sold">已卖出份额</string>
-  <string name="prediction_close_selling_of" formatted="false">正在卖出 %1s / %2s 份</string>
+  <string name="prediction_close_selling_of">正在卖出 %1$s / %2$s 份</string>
   <string name="prediction_close_selling_tokens">正在卖出 %s 份</string>
   <string name="prediction_close_summary_to">至</string>
   <string name="prediction_close_title">平仓</string>
@@ -1696,10 +1697,10 @@
   <string name="prediction_event_probability">概率</string>
   <string name="prediction_event_total_volume">总交易量：</string>
   <string name="prediction_fee_sheet_builder_fee">Tangem 服务费</string>
-  <string name="prediction_fee_sheet_buy_description" formatted="false">以每份 %2s¢ 的价格买入 %1s 份。根据市场撮合情况，最终成交份额（及相应的 %3s 成交金额）可能会在您设置的 %4s 滑点限制内浮动。</string>
+  <string name="prediction_fee_sheet_buy_description">以每份 %2$s¢ 的价格买入 %1$s 份。根据市场撮合情况，最终成交份额（及相应的 %3$s 成交金额）可能会在您设置的 %4$s 滑点限制内浮动。</string>
   <string name="prediction_fee_sheet_order">预测订单</string>
   <string name="prediction_fee_sheet_polymarket_fee">Polymarket 手续费</string>
-  <string name="prediction_fee_sheet_sell_description" formatted="false">以每份 %2s¢ 的价格卖出 %1s 份。根据市场撮合情况，最终成交份额（及相应的 %3s 成交金额）可能会在您设置的 %4s 滑点限制内浮动。</string>
+  <string name="prediction_fee_sheet_sell_description">以每份 %2$s¢ 的价格卖出 %1$s 份。根据市场撮合情况，最终成交份额（及相应的 %3$s 成交金额）可能会在您设置的 %4$s 滑点限制内浮动。</string>
   <string name="prediction_fee_sheet_total">总计</string>
   <string name="prediction_history_bought">已买入</string>
   <string name="prediction_history_csv_average_price">平均价格</string>
@@ -1752,7 +1753,7 @@
   <string name="prediction_onboarding_faq_risks_question">有哪些风险？</string>
   <string name="prediction_onboarding_faq_tap_answer">您的卡片只需签名一次，即可在 Polymarket 上创建自托管存款账户。此后，您可以直接通过 Tangem 充值、交易和提现 — 且只有您的卡片可以转移资金。</string>
   <string name="prediction_onboarding_faq_tap_question">轻触卡片时会发生什么？</string>
-  <string name="prediction_onboarding_legal" formatted="false">使用预测功能即表示您同意 %1s 和 %2s</string>
+  <string name="prediction_onboarding_legal">使用预测功能即表示您同意 %1$s 和 %2$s</string>
   <string name="prediction_onboarding_legal_polymarket_terms">Polymarket 条款与条件</string>
   <string name="prediction_onboarding_legal_tangem_terms">Tangem 条款与条件</string>
   <string name="prediction_onboarding_reconnect_benefit_safe_subtitle">相同的存款账户，相同的资金。重新关联绝不会转移您的资金</string>
@@ -1762,7 +1763,7 @@
   <string name="prediction_onboarding_reconnect_button">继续预测</string>
   <string name="prediction_onboarding_reconnect_faq_answer">访问密钥仅存储在您的设备上。当您重新安装应用、更换新手机或会话失效时，密钥会被清除。您的账户本身保存在 Polymarket 上，不受任何影响。</string>
   <string name="prediction_onboarding_reconnect_faq_question">为什么会看到此提示？</string>
-  <string name="prediction_onboarding_reconnect_legal" formatted="false">无需接受新条款 — 您与 %1s 和 %2s 的协议仍然有效</string>
+  <string name="prediction_onboarding_reconnect_legal">无需接受新条款 — 您与 %1$s 和 %2$s 的协议仍然有效</string>
   <string name="prediction_onboarding_reconnect_subtitle">您的存款账户、余额和未平仓位均安全无虞。只需重新关联此设备 — 轻触一次卡片即可恢复访问权限。</string>
   <string name="prediction_onboarding_reconnect_title">重新连接您的 Polymarket 账户</string>
   <string name="prediction_onboarding_start_button">开始预测</string>
@@ -1801,7 +1802,7 @@
   <string name="prediction_place_result_no_fill_banner_description">Polymarket 上暂无可用份额 — 您的订单无法成交。</string>
   <string name="prediction_place_result_no_fill_banner_title">未成交</string>
   <string name="prediction_place_result_no_fill_title">流动性不足</string>
-  <string name="prediction_place_result_partial_amount" formatted="false">%1s / %2s</string>
+  <string name="prediction_place_result_partial_amount">%1$s / %2$s</string>
   <string name="prediction_place_result_partial_banner_description">由于在您的滑点容差范围内 Polymarket 流动性不足，您的订单已部分成交。</string>
   <string name="prediction_place_result_partial_banner_title">部分成交</string>
   <string name="prediction_place_result_partial_title">部分下单成功</string>
@@ -1858,7 +1859,7 @@
   <string name="prediction_positions_quantity">份额</string>
   <string name="prediction_positions_realized_description">已锁定的盈利或亏损。来源于您已（部分或全部）卖出的份额，以及已结算为获胜、失败或平分的持仓。已实现盈亏包含所有手续费。</string>
   <string name="prediction_positions_realized_pnl">已实现盈亏</string>
-  <string name="prediction_positions_result_amount" formatted="false">%1s %2s</string>
+  <string name="prediction_positions_result_amount">%1$s %2$s</string>
   <string name="prediction_positions_split">平分结算</string>
   <string name="prediction_positions_status">状态</string>
   <string name="prediction_positions_title">我的持仓</string>
@@ -1885,7 +1886,7 @@
   <string name="prediction_withdraw_error_generic">无法发送提现请求。请检查您的网络连接并重试</string>
   <string name="prediction_withdraw_error_rejected">Polymarket 拒绝了此次提现。请重试</string>
   <string name="prediction_withdraw_in_progress_message">您上一笔提现仍在处理中。请等待其完成后再发起新的提现。</string>
-  <string name="prediction_withdraw_min_amount">最低提现金额为 %s。请添加资金以达到该限额。</string>
+  <string name="prediction_withdraw_min_amount">最低提现金额为 %@。请添加资金以达到该限额。</string>
   <string name="prediction_withdraw_status_failed_description">处理您的提现时出错。请重试或联系客服支持。</string>
   <string name="prediction_withdraw_status_failed_notice">提现失败。未扣除任何资金。</string>
   <string name="prediction_withdraw_status_failed_title">提现失败</string>
@@ -2868,9 +2869,9 @@
   <string name="tangempay_topup_bank_transfer_pending_body">正在创建您的银行账户信息...</string>
   <string name="tangempay_topup_bank_transfer_title">从银行账户</string>
   <string name="tangempay_topup_receive_body_multichain">将 USDC 或 USDT 发送至您账户的地址</string>
-  <string name="tangempay_topup_receive_title">從其他錢包或交易所</string>
+  <string name="tangempay_topup_receive_title">从其他钱包或交易所</string>
   <string name="tangempay_topup_swap_body">使用您钱包中的任意代币为支付账户充值</string>
-  <string name="tangempay_topup_swap_title">從您的 Tangem 錢包</string>
+  <string name="tangempay_topup_swap_title">从您的 Tangem Wallet</string>
   <string name="tangempay_unified_onboarding_cashback_caption">返现</string>
   <string name="tangempay_unified_onboarding_cashback_subtitle">以 USDC 支付</string>
   <string name="tangempay_unified_onboarding_cashback_title">最高 2%%。%1$s</string>
@@ -3584,6 +3585,12 @@
   <string name="yield_module_high_network_fees_notification_description">由于市场活跃，手续费高于平时。您可以立即进行交易，也可以稍后手续费降低时再来查看。</string>
   <string name="yield_module_high_network_fees_notification_title">高昂的网络费用</string>
   <string name="yield_module_historical_returns">历史回报</string>
+  <string name="yield_module_main_promo_button">试用收益模式</string>
+  <string name="yield_module_main_promo_subtitle">让闲置资产为您赚钱。无锁定期，随时可取。</string>
+  <string name="yield_module_main_promo_title">用加密资产赚取最高 %1$s%% APY</string>
+  <plurals name="yield_module_main_promo_tokens_count">
+    <item quantity="other">超过 %d 种可用代币</item>
+  </plurals>
   <string name="yield_module_main_screen_promo_banner_message">为您的余额启用 %1$s%% APY</string>
   <string name="yield_module_main_view_approve_notification_description">您的代币在收益模式下的授权已被撤销。请打开代币以重新授予权限。</string>
   <string name="yield_module_main_view_approve_notification_title">需要代币批准</string>

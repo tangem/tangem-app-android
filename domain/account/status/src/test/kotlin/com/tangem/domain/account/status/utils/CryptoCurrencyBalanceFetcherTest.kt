@@ -13,6 +13,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.*
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -101,7 +102,7 @@ internal class CryptoCurrencyBalanceFetcherTest {
                 balanceFetchingOperations.fetchAll(
                     userWalletId = userWalletId,
                     currencies = listOf(currency),
-                    sources = setOf(FetchingSource.NETWORK, FetchingSource.QUOTE, FetchingSource.STAKING),
+                    sources = setOf(FetchingSource.NETWORK, FetchingSource.QUOTE, FetchingSource.CONTRIBUTIONS),
                 )
             }
         }
@@ -127,7 +128,7 @@ internal class CryptoCurrencyBalanceFetcherTest {
                 balanceFetchingOperations.fetchAll(
                     userWalletId = userWalletId,
                     currencies = listOf(currency),
-                    sources = setOf(FetchingSource.NETWORK, FetchingSource.QUOTE, FetchingSource.STAKING),
+                    sources = setOf(FetchingSource.NETWORK, FetchingSource.QUOTE, FetchingSource.CONTRIBUTIONS),
                 )
             }
         }
@@ -159,7 +160,7 @@ internal class CryptoCurrencyBalanceFetcherTest {
                 balanceFetchingOperations.fetchAll(
                     userWalletId = userWalletId,
                     currencies = currencies,
-                    sources = setOf(FetchingSource.NETWORK, FetchingSource.QUOTE, FetchingSource.STAKING),
+                    sources = setOf(FetchingSource.NETWORK, FetchingSource.QUOTE, FetchingSource.CONTRIBUTIONS),
                 )
             }
         }
@@ -175,7 +176,7 @@ internal class CryptoCurrencyBalanceFetcherTest {
             val fetcher = createFetcher(this)
             val currency = cryptoCurrencyFactory.ethereum
             val error = RuntimeException("Network error")
-            val errors = mapOf(FetchingSource.NETWORK to error)
+            val errors = mapOf(FetchingSource.NETWORK.name to error)
 
             coEvery {
                 balanceFetchingOperations.fetchAll(any(), any(), any())
@@ -197,7 +198,7 @@ internal class CryptoCurrencyBalanceFetcherTest {
             val fetcher = createFetcher(this)
             val currency = cryptoCurrencyFactory.ethereum
             val networkError = RuntimeException("Network error")
-            val errors = mapOf(FetchingSource.NETWORK to networkError)
+            val errors = mapOf(FetchingSource.NETWORK.name to networkError)
 
             coEvery {
                 balanceFetchingOperations.fetchAll(any(), any(), any())
@@ -312,5 +313,23 @@ internal class CryptoCurrencyBalanceFetcherTest {
             // Assert - should be completed after invokeAndAwait returns
             assertThat(completed).isTrue()
         }
+
+        @Test
+        fun `GIVEN finished invokeAndAwait WHEN invokeAndAwait again for same wallet THEN it is not blocked`() =
+            runTest {
+                // Arrange
+                val fetcher = createFetcher(this)
+                val currency = cryptoCurrencyFactory.ethereum
+                coEvery { balanceFetchingOperations.fetchAll(any(), any(), any()) } returns emptyMap()
+
+                // Act
+                fetcher.invokeAndAwait(userWalletId = userWalletId, currency = currency)
+                withTimeout(timeMillis = 1_000) {
+                    fetcher.invokeAndAwait(userWalletId = userWalletId, currency = currency)
+                }
+
+                // Assert
+                coVerify(exactly = 2) { balanceFetchingOperations.fetchAll(userWalletId, listOf(currency), any()) }
+            }
     }
 }

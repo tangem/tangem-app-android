@@ -4,7 +4,7 @@ import com.tangem.core.analytics.api.AnalyticsHandler
 import com.tangem.core.analytics.api.AnalyticsUserIdHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 
-class AmplitudeAnalyticsHandler(
+internal class AmplitudeAnalyticsHandler(
     private val client: AmplitudeAnalyticsClient,
 ) : AnalyticsHandler, AnalyticsUserIdHandler {
 

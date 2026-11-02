@@ -4,6 +4,7 @@ import com.tangem.domain.polymarket.PolymarketBridgeRepository
 import com.tangem.domain.polymarket.PolymarketCredentialsLock
 import com.tangem.domain.polymarket.PolymarketActivityRepository
 import com.tangem.domain.polymarket.PolymarketCredentialsStore
+import com.tangem.domain.polymarket.PolymarketDepositWalletLock
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.PolymarketRedeemRepository
 import com.tangem.domain.polymarket.PolymarketRepository
@@ -19,11 +20,14 @@ import com.tangem.domain.polymarket.flow.DefaultPredictionPositionsUpdater
 import com.tangem.domain.polymarket.flow.PredictionPositionsUpdateEmitter
 import com.tangem.domain.polymarket.flow.PredictionPositionsUpdateListener
 import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
+import com.tangem.domain.polymarket.interactor.ManagePolymarketSessionKeyInteractor
+import com.tangem.domain.polymarket.interactor.ReconcilePolymarketSessionKeysInteractor
 import com.tangem.domain.polymarket.PolymarketOnboardedStore
 import com.tangem.domain.polymarket.PredictionDepositAddressWriter
 import com.tangem.domain.polymarket.PredictionDepositRequisitesStore
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
 import com.tangem.domain.polymarket.interactor.RunPolymarketOnboardingInteractor
+import com.tangem.domain.polymarket.interactor.SignPolymarketSessionKeyBatchesInteractor
 import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
 import com.tangem.domain.polymarket.interactor.SubmitPredictionClaimInteractor
 import com.tangem.domain.polymarket.interactor.SubmitPredictionOrderInteractor
@@ -57,6 +61,7 @@ import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
 import com.tangem.domain.polymarket.sessionkey.PolymarketDeviceIdProvider
 import com.tangem.domain.polymarket.sessionkey.PolymarketOrderSigningRouter
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionCredentialsProvider
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStateService
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyTradingStore
 import com.tangem.domain.polymarket.usecase.SubmitApprovalsUseCase
@@ -424,6 +429,7 @@ internal object PolymarketDomainModule {
         signer: PolymarketTypedDataSigner,
         store: PredictionWithdrawalStore,
         codec: PredictionTransferCallCodec,
+        depositWalletLock: PolymarketDepositWalletLock,
     ): SubmitPredictionWithdrawalInteractor = SubmitPredictionWithdrawalInteractor(
         bridgeRepository = bridgeRepository,
         withdrawRepository = withdrawRepository,
@@ -431,6 +437,7 @@ internal object PolymarketDomainModule {
         signer = signer,
         store = store,
         codec = codec,
+        depositWalletLock = depositWalletLock,
     )
 
     @Provides
@@ -440,10 +447,82 @@ internal object PolymarketDomainModule {
         polymarketRepository: PolymarketRepository,
         positionsRepository: PolymarketPositionsRepository,
         signer: PolymarketTypedDataSigner,
+        depositWalletLock: PolymarketDepositWalletLock,
     ): SubmitPredictionClaimInteractor = SubmitPredictionClaimInteractor(
         redeemRepository = redeemRepository,
         polymarketRepository = polymarketRepository,
         positionsRepository = positionsRepository,
         signer = signer,
+        depositWalletLock = depositWalletLock,
     )
+
+    @Provides
+    @Singleton
+    fun providePolymarketDepositWalletLock(): PolymarketDepositWalletLock = PolymarketDepositWalletLock()
+
+    @Provides
+    @Singleton
+    fun provideSignPolymarketSessionKeyBatchesInteractor(
+        signingSession: PolymarketSigningSession,
+        deriveAddresses: DerivePolymarketAddressesUseCase,
+        getRelayerNonce: GetPolymarketRelayerNonceUseCase,
+        getApiCredentials: GetPolymarketApiCredentialsUseCase,
+    ): SignPolymarketSessionKeyBatchesInteractor = SignPolymarketSessionKeyBatchesInteractor(
+        signingSession = signingSession,
+        deriveAddresses = deriveAddresses,
+        getRelayerNonce = getRelayerNonce,
+        getApiCredentials = getApiCredentials,
+    )
+
+    @Provides
+    @Singleton
+    fun provideManagePolymarketSessionKeyInteractor(
+        signBatches: SignPolymarketSessionKeyBatchesInteractor,
+        sessionKeyRepository: PolymarketSessionKeyRepository,
+        polymarketRepository: PolymarketRepository,
+        sessionKeyStore: PolymarketSessionKeyStore,
+        deviceIdProvider: PolymarketDeviceIdProvider,
+        sessionCredentialsProvider: PolymarketSessionCredentialsProvider,
+        tradingStore: PolymarketSessionKeyTradingStore,
+        getApiCredentials: GetPolymarketApiCredentialsUseCase,
+        deriveApiCredentials: DeriveApiCredentialsUseCase,
+        depositWalletLock: PolymarketDepositWalletLock,
+    ): ManagePolymarketSessionKeyInteractor = ManagePolymarketSessionKeyInteractor(
+        signBatches = signBatches,
+        sessionKeyRepository = sessionKeyRepository,
+        polymarketRepository = polymarketRepository,
+        sessionKeyStore = sessionKeyStore,
+        deviceIdProvider = deviceIdProvider,
+        sessionCredentialsProvider = sessionCredentialsProvider,
+        tradingStore = tradingStore,
+        getApiCredentials = getApiCredentials,
+        deriveApiCredentials = deriveApiCredentials,
+        depositWalletLock = depositWalletLock,
+    )
+
+    @Provides
+    @Singleton
+    fun provideReconcilePolymarketSessionKeysInteractor(
+        polymarketRepository: PolymarketRepository,
+        sessionKeyRepository: PolymarketSessionKeyRepository,
+        sessionKeyStore: PolymarketSessionKeyStore,
+        deviceIdProvider: PolymarketDeviceIdProvider,
+        tradingStore: PolymarketSessionKeyTradingStore,
+        deriveAddresses: DerivePolymarketAddressesUseCase,
+        getApiCredentials: GetPolymarketApiCredentialsUseCase,
+    ): ReconcilePolymarketSessionKeysInteractor = ReconcilePolymarketSessionKeysInteractor(
+        polymarketRepository = polymarketRepository,
+        sessionKeyRepository = sessionKeyRepository,
+        sessionKeyStore = sessionKeyStore,
+        deviceIdProvider = deviceIdProvider,
+        tradingStore = tradingStore,
+        deriveAddresses = deriveAddresses,
+        getApiCredentials = getApiCredentials,
+    )
+
+    @Provides
+    @Singleton
+    fun providePolymarketSessionKeyStateService(
+        reconcile: ReconcilePolymarketSessionKeysInteractor,
+    ): PolymarketSessionKeyStateService = PolymarketSessionKeyStateService(reconcile = reconcile)
 }

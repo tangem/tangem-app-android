@@ -11,7 +11,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.common.analytics.events.Settings
-import com.tangem.tap.common.analytics.events.TangemSdkErrorEvent
+import com.tangem.sdk.api.analytics.TangemSdkErrorEvent
 import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.features.details.ui.cardsettings.domain.CardSettingsInteractor
 import com.tangem.tap.features.details.ui.common.utils.getAllowedSecurityOptions

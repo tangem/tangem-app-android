@@ -280,7 +280,7 @@ fun TangemExpandableRow.Shimmer(modifier: Modifier = Modifier, shape: Shape = Ex
         shape = shape,
     ) {
         TangemAvatar(
-            state = TangemAvatar.UiState.Shimmer(shape = TangemAvatar.UiState.Shimmer.Shape.RoundedSquare),
+            state = TangemAvatar.UiState.Shimmer(shape = TangemAvatar.Shape.RoundedSquare),
             size = TangemAvatar.Size.X40,
             modifier = Modifier.layoutId(ExpandableCardLayoutId.AVATAR),
         )
