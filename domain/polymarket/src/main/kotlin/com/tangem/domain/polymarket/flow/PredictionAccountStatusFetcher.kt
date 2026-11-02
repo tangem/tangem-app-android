@@ -11,5 +11,5 @@ import com.tangem.domain.models.wallet.UserWalletId
  */
 interface PredictionAccountStatusFetcher : FlowFetcher<PredictionAccountStatusFetcher.Params> {
 
-    data class Params(val userWalletId: UserWalletId)
+    data class Params(val userWalletId: UserWalletId, val shouldRefreshPositions: Boolean = true)
 }

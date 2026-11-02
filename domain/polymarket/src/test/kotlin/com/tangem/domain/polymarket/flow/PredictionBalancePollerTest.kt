@@ -10,6 +10,7 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.MockKMatcherScope
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -56,10 +57,12 @@ internal class PredictionBalancePollerTest {
         // Assert
         coVerify(exactly = 1) { statusFetcher(status(WALLET_ID)) }
         coVerify(exactly = 1) { positionsValueFetcher(positions(WALLET_ID)) }
+        coVerify(exactly = 1) { statusFetcher(refreshingPositions(WALLET_ID)) }
         advanceTimeBy(30.seconds)
         runCurrent()
         coVerify(exactly = 2) { statusFetcher(status(WALLET_ID)) }
         coVerify(exactly = 2) { positionsValueFetcher(positions(WALLET_ID)) }
+        coVerify(exactly = 2) { statusFetcher(refreshingPositions(WALLET_ID)) }
         advanceTimeBy(29.seconds)
         runCurrent()
         coVerify(exactly = 2) { statusFetcher(status(WALLET_ID)) }
@@ -251,10 +254,12 @@ internal class PredictionBalancePollerTest {
         // Assert
         coVerify(exactly = 2) { statusFetcher(status(WALLET_ID)) }
         coVerify(exactly = 1) { positionsValueFetcher(positions(WALLET_ID)) }
+        coVerify(exactly = 1) { statusFetcher(refreshingPositions(WALLET_ID)) }
         advanceTimeBy(5.seconds)
         runCurrent()
         coVerify(exactly = 3) { statusFetcher(status(WALLET_ID)) }
         coVerify(exactly = 1) { positionsValueFetcher(positions(WALLET_ID)) }
+        coVerify(exactly = 1) { statusFetcher(refreshingPositions(WALLET_ID)) }
 
         subscription.cancel()
         runCurrent()
@@ -277,10 +282,12 @@ internal class PredictionBalancePollerTest {
         // Assert
         coVerify(exactly = 2) { statusFetcher(status(WALLET_ID)) }
         coVerify(exactly = 1) { positionsValueFetcher(positions(WALLET_ID)) }
+        coVerify(exactly = 1) { statusFetcher(refreshingPositions(WALLET_ID)) }
         advanceTimeBy(1.seconds)
         runCurrent()
         coVerify(exactly = 3) { statusFetcher(status(WALLET_ID)) }
         coVerify(exactly = 2) { positionsValueFetcher(positions(WALLET_ID)) }
+        coVerify(exactly = 2) { statusFetcher(refreshingPositions(WALLET_ID)) }
 
         subscription.cancel()
         runCurrent()
@@ -320,7 +327,11 @@ internal class PredictionBalancePollerTest {
         appScope = TestAppCoroutineScope(coroutineContext = StandardTestDispatcher(testScheduler)),
     )
 
-    private fun status(userWalletId: UserWalletId) = PredictionAccountStatusFetcher.Params(userWalletId = userWalletId)
+    private fun MockKMatcherScope.status(userWalletId: UserWalletId) =
+        match<PredictionAccountStatusFetcher.Params> { it.userWalletId == userWalletId }
+
+    private fun refreshingPositions(userWalletId: UserWalletId) =
+        PredictionAccountStatusFetcher.Params(userWalletId = userWalletId, shouldRefreshPositions = true)
 
     private fun positions(userWalletId: UserWalletId) = PredictionPositionsValueFetcher.Params(userWalletId = userWalletId)
 
