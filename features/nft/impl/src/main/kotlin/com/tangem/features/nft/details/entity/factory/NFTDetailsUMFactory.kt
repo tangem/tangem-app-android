@@ -42,6 +42,7 @@ internal class NFTDetailsUMFactory(
         onSeeAllTraitsClick = onSeeAllTraitsClick,
         onExploreClick = onExploreClick,
         onSendClick = onSendClick,
+        isSendAvailable = (nftAsset.id as? NFTAsset.Identifier.Solana)?.isTransferSupported != false,
     )
 
     private fun NFTAsset.transform(nftCollection: NFTCollection): NFTAssetUM {

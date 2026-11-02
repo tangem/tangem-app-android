@@ -72,8 +72,10 @@ internal class TronPaymentUriParser(
      * - If the number contains a decimal point — use as-is
      * - If no decimal point and <= [AMOUNT_THRESHOLD] — treat as a normal number (e.g. 100 = 100 TRX)
      * - If no decimal point and > [AMOUNT_THRESHOLD] — treat as smallest unit, shift decimal left by [decimals]
+     * - Non-positive amounts are dropped
      */
-    private fun interpretAmount(raw: BigDecimal, decimals: Int): BigDecimal {
+    private fun interpretAmount(raw: BigDecimal, decimals: Int): BigDecimal? {
+        if (raw.signum() <= 0) return null
         val hasDecimalPoint = raw.scale() > 0
         return if (hasDecimalPoint || raw <= AMOUNT_THRESHOLD) {
             raw

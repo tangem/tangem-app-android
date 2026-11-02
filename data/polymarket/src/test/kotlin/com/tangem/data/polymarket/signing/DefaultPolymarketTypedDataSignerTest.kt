@@ -1,6 +1,7 @@
 package com.tangem.data.polymarket.signing
 
 import arrow.core.left
+import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
 import com.tangem.blockchain.common.TransactionSigner
@@ -25,9 +26,12 @@ import com.tangem.domain.polymarket.derivation.POLYMARKET_OWNER_DERIVATION_PATH
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.model.PolymarketApprovalCall
 import com.tangem.domain.polymarket.model.PolymarketExchangeDomain
+import com.tangem.domain.polymarket.model.PolymarketSessionKeyError
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionOrderDraft
 import com.tangem.domain.polymarket.model.PredictionOrderSide
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyEnvelope
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
 import com.tangem.domain.polymarket.signing.PolymarketApprovalsPayload
 import com.tangem.domain.polymarket.signing.PredictionOrderPayload
 import com.tangem.domain.wallets.derivations.DerivationsRepository
@@ -66,6 +70,8 @@ internal class DefaultPolymarketTypedDataSignerTest {
     private val transactionSigner: TransactionSigner = mockk()
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
+    private val sessionKeyStore: PolymarketSessionKeyStore = mockk()
+
     private val signer = DefaultPolymarketTypedDataSigner(
         userWalletsListRepository = userWalletsListRepository,
         derivationsRepository = derivationsRepository,
@@ -73,6 +79,7 @@ internal class DefaultPolymarketTypedDataSignerTest {
         hotSignerFactory = hotSignerFactory,
         digestFactory = PolymarketDigestFactory(),
         formatter = PolymarketSignatureFormatter(),
+        sessionKeyStore = sessionKeyStore,
         dispatchers = dispatchers,
     )
 
@@ -107,6 +114,7 @@ internal class DefaultPolymarketTypedDataSignerTest {
             cardSdkConfigRepository,
             hotSignerFactory,
             transactionSigner,
+            sessionKeyStore,
         )
         mockkStatic(UserWalletsListRepository::getSyncStrict)
     }
@@ -467,6 +475,103 @@ internal class DefaultPolymarketTypedDataSignerTest {
         )
     }
 
+    @Nested
+    inner class SignOrderWithSessionKey {
+
+        @Test
+        fun `GIVEN the held session key WHEN signOrderWithSessionKey THEN the key signs the ERC-7739 digest`() =
+            runTest {
+                // Arrange
+                val digest = slot<ByteArray>()
+                coEvery { sessionKeyStore.sign(userWalletId, SESSION_KEY, capture(digest)) } returns
+                    SESSION_SIGNATURE.right()
+
+                // Act
+                val result = signer.signOrderWithSessionKey(userWalletId, SESSION_KEY, sessionOrderPayload())
+
+                // Assert
+                val order = result.getOrNull()!!.order
+                val expectedDigest = PolymarketErc7739SignatureBuilder.digest(
+                    order = order,
+                    domain = PolymarketExchangeDomain.CTF,
+                    depositWalletAddress = DEPOSIT_WALLET,
+                )
+                assertThat(digest.captured).isEqualTo(expectedDigest)
+                assertThat(order.maker).isEqualTo(DEPOSIT_WALLET)
+                assertThat(order.signer).isEqualTo(DEPOSIT_WALLET)
+                assertThat(order.signatureType).isEqualTo(PolymarketContracts.SIGNATURE_TYPE_DEPOSIT_WALLET)
+                coVerify(exactly = 0) { transactionSigner.sign(any<List<ByteArray>>(), any()) }
+            }
+
+        @Test
+        fun `GIVEN the held session key WHEN signOrderWithSessionKey THEN the wrapped signature is enveloped`() =
+            runTest {
+                // Arrange
+                coEvery { sessionKeyStore.sign(userWalletId, SESSION_KEY, any()) } returns SESSION_SIGNATURE.right()
+
+                // Act
+                val result = signer.signOrderWithSessionKey(userWalletId, SESSION_KEY, sessionOrderPayload())
+
+                // Assert
+                val signedOrder = result.getOrNull()!!
+                val wrapped = PolymarketErc7739SignatureBuilder.wrap(
+                    innerSignature = "0x" + "11".repeat(n = 65),
+                    order = signedOrder.order,
+                    domain = PolymarketExchangeDomain.CTF,
+                )
+                val expected = PolymarketSessionKeyEnvelope
+                    .wrap(depositWalletSignature = wrapped, sessionKeyAddress = SESSION_KEY)
+                    .getOrNull()
+                assertThat(signedOrder.signature).isEqualTo(expected)
+            }
+
+        @Test
+        fun `GIVEN another key is held WHEN signOrderWithSessionKey THEN the store refuses and reports KeyMissing`() =
+            runTest {
+                // Arrange
+                coEvery { sessionKeyStore.sign(userWalletId, SESSION_KEY, any()) } returns
+                    PolymarketSessionKeyError.KeyMissing.left()
+
+                // Act
+                val result = signer.signOrderWithSessionKey(userWalletId, SESSION_KEY, sessionOrderPayload())
+
+                // Assert
+                assertThat(result).isEqualTo(
+                    PolymarketSigningError.SessionKey(PolymarketSessionKeyError.KeyMissing).left(),
+                )
+                coVerify(exactly = 0) { sessionKeyStore.heldAddress(any()) }
+            }
+
+        @Test
+        fun `GIVEN the key cannot sign WHEN signOrderWithSessionKey THEN reports the session key error`() = runTest {
+            // Arrange
+            val error = PolymarketSessionKeyError.Failure(IllegalStateException("keystore"))
+            coEvery { sessionKeyStore.sign(userWalletId, SESSION_KEY, any()) } returns error.left()
+
+            // Act
+            val result = signer.signOrderWithSessionKey(userWalletId, SESSION_KEY, sessionOrderPayload())
+
+            // Assert
+            assertThat(result).isEqualTo(PolymarketSigningError.SessionKey(error).left())
+        }
+
+        private fun sessionOrderPayload(): PredictionOrderPayload = PredictionOrderPayload(
+            draft = PredictionOrderDraft(
+                tokenId = "1116017998421700000000000000000000000000000000000000000000000000047",
+                domain = PolymarketExchangeDomain.CTF,
+                side = PredictionOrderSide.BUY,
+                makerAmount = BigInteger("72000000"),
+                takerAmount = BigInteger("97959180"),
+                takerAmountQuantum = BigInteger.ONE,
+                worstCasePrice = BigDecimal("0.735"),
+                builderCode = "0x00000000000000000000000000000000000000000000000000000000000000aa",
+            ),
+            depositWalletAddress = DEPOSIT_WALLET,
+            salt = 1_234_567_890L,
+            timestampMillis = TIMESTAMP_MILLIS,
+        )
+    }
+
     private fun provideTestModels() = listOf(
         SigningFailureModel(TangemSdkError.UserCancelled(), PolymarketSigningError.UserCancelled),
         SigningFailureModel(TangemSdkError.WalletNotFound(), PolymarketSigningError.MissingWallet),
@@ -478,5 +583,7 @@ internal class DefaultPolymarketTypedDataSignerTest {
         const val TIMESTAMP_MILLIS = 1_787_300_000_000L
         const val DEPOSIT_WALLET = "0x5A057dc6394196fBa51D84457DA3FB8FA241Fc20"
         val OWNER_PRIVATE_KEY: BigInteger = BigInteger.ONE
+        const val SESSION_KEY = "0x5e55000000000000000000000000000000000001"
+        val SESSION_SIGNATURE: ByteArray = "11".repeat(n = 65).hexToBytes()
     }
 }

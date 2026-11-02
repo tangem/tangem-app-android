@@ -7,9 +7,12 @@ import com.tangem.common.routing.DeepLinkScheme
 import com.tangem.common.routing.deeplink.DeepLinkHandler
 import com.tangem.common.routing.deeplink.DeepLinkHandlerRegistry
 import com.tangem.common.routing.deeplink.DeepLinkRequest
+import com.tangem.common.routing.deeplink.DeeplinkConst
 import com.tangem.common.uri.ExternalUrlValidator
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.data.card.sdk.CardSdkProvider
+import com.tangem.domain.marketing.MarketingFeatureToggles
+import com.tangem.domain.marketing.MarketingUidBindingRepository
 import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
 import com.tangem.feature.usedesk.api.UseDeskFeatureToggles
 import com.tangem.feature.usedesk.api.deeplink.SupportDeepLinkHandler
@@ -41,6 +44,7 @@ import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.features.wallet.deeplink.PromoDeeplinkHandler
 import com.tangem.features.wallet.deeplink.WalletDeepLinkHandler
 import com.tangem.features.walletconnect.components.deeplink.WalletConnectDeepLinkHandler
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.extensions.uriValidate
@@ -52,6 +56,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.transformLatest
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -91,6 +96,9 @@ internal class DeepLinkFactory @Inject constructor(
     private val mcpFeatureToggles: McpFeatureToggles,
     private val urlOpener: UrlOpener,
     private val deepLinkFeatureToggles: DeepLinkFeatureToggles,
+    private val marketingFeatureToggles: MarketingFeatureToggles,
+    private val marketingUidBindingRepository: MarketingUidBindingRepository,
+    private val appCoroutineScope: AppCoroutineScope,
     deepLinkHandlers: Map<String, @JvmSuppressWildcards DeepLinkHandler>,
 ) {
     private val deepLinkHandlerRegistry = DeepLinkHandlerRegistry(deepLinkHandlers)
@@ -150,6 +158,16 @@ internal class DeepLinkFactory @Inject constructor(
         }
             .launchIn(coroutineScope)
             .saveIn(deepLinkHandlerJobHolder)
+    }
+
+    fun bindMarketingUid(deeplinkUri: Uri) {
+        // `wc:` and other opaque links have no query: getQueryParameters throws for them
+        if (!marketingFeatureToggles.isUidBindingEnabled || deeplinkUri.isOpaque) return
+
+        val uid = deeplinkUri.getQueryParameters(DeeplinkConst.UID_KEY).firstOrNull(String::isNotEmpty) ?: return
+        if (deepLinkHandlerRegistry.find(deeplinkUri) == null) return
+
+        appCoroutineScope.launch { marketingUidBindingRepository.bind(uid) }
     }
 
     /**

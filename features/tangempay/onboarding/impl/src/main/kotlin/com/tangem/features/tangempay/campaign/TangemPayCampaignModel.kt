@@ -11,7 +11,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWalletId
@@ -22,7 +21,6 @@ import com.tangem.domain.pay.model.TangemPayCampaignResolution
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.pay.usecase.ResolveTangemPayCampaignUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.common.TangemPayCampaignMessages
 import com.tangem.features.tangempay.components.TangemPayCampaignComponent
 import com.tangem.features.tangempay.eligibility.TangemPayWalletSelectorComponent
@@ -43,7 +41,6 @@ internal class TangemPayCampaignModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val uiMessageSender: UiMessageSender,
-    private val urlOpener: UrlOpener,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val eligibilityManager: TangemPayEligibilityManager,
     private val resolveTangemPayCampaignUseCase: ResolveTangemPayCampaignUseCase,
@@ -175,8 +172,6 @@ internal class TangemPayCampaignModel @Inject constructor(
             mode = mode,
             isCtaLoading = false,
             onGetCardClick = ::onGetCardClick,
-            onTermsOfServiceClick = ::onTermsOfServiceClick,
-            onPrivacyPolicyClick = ::onPrivacyPolicyClick,
             onCloseClick = ::onClose,
         )
     }
@@ -224,14 +219,6 @@ internal class TangemPayCampaignModel @Inject constructor(
                 }
             }
         }
-    }
-
-    private fun onTermsOfServiceClick() {
-        router.push(AppRoute.Disclaimer(isTosAccepted = true))
-    }
-
-    private fun onPrivacyPolicyClick() {
-        urlOpener.openUrl(TangemPayConstants.privacyPolicyLink())
     }
 
     private fun setCtaLoading(isLoading: Boolean) {

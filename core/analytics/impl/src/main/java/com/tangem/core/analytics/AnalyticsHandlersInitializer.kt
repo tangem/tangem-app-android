@@ -1,5 +1,6 @@
 package com.tangem.core.analytics
 
+import android.app.Application
 import com.tangem.core.analytics.api.AnalyticsHandler
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -12,7 +13,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Creates analytics SDK handlers (and so initializes the SDKs) off the main thread at app start.
+ * Creates analytics SDK handlers (and so initializes the SDKs) off the main thread at app start. Activity lifecycle
+ * callbacks of the SDK integrations are registered synchronously, so they see every activity regardless of how long the
+ * SDKs take to initialize.
  *
  * SDKs hook the activity lifecycle when they are initialized (push-opened tracking, foreground sessions, app open),
  * so an activity that can start the process from outside the app (today only `MainActivity`) must call
@@ -21,6 +24,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class AnalyticsHandlersInitializer @Inject constructor(
+    private val application: Application,
+    private val activityLifecycleCallbacks: Set<@JvmSuppressWildcards Application.ActivityLifecycleCallbacks>,
     private val handlers: Lazy<Set<@JvmSuppressWildcards AnalyticsHandler>>,
     private val appScope: AppCoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -33,6 +38,7 @@ class AnalyticsHandlersInitializer @Inject constructor(
 
     fun initialize() {
         isStarted = true
+        activityLifecycleCallbacks.forEach(application::registerActivityLifecycleCallbacks)
         appScope.launch(dispatchers.io) {
             try {
                 handlers.get()

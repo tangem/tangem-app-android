@@ -27,6 +27,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.userwallet.SocialLoginWalletIcon
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.text.applyBladeBrush
@@ -167,12 +168,15 @@ private fun SubtitleRow(walletBalanceUM: WalletBalanceUM, modifier: Modifier = M
                         text = walletBalanceUM.name,
                         style = TangemTheme.typography3.subheading.medium,
                         color = TangemTheme.colors3.text.secondary,
-                        modifier = Modifier.testTag(MainScreenTestTags.CARD_TITLE),
+                        modifier = Modifier
+                            .weight(weight = 1f, fill = false)
+                            .testTag(MainScreenTestTags.CARD_TITLE),
                     )
                     TangemDeviceIcon(
                         state = walletBalanceUM.deviceIcon,
                         modifier = Modifier.testTag(MainScreenTestTags.CARD_IMAGE),
                     )
+                    if (walletBalanceUM.additionalInfo?.isSocialLogin == true) SocialLoginWalletIcon()
                 }
             }
         }
@@ -261,6 +265,7 @@ private class WalletBalancePreviewProvider : PreviewParameterProvider<WalletBala
             WalletBalancePreviewData(WalletBalancePreview.content, WalletPreviewData.actionButtons),
             WalletBalancePreviewData(WalletBalancePreview.syncProgress, WalletPreviewData.actionButtons),
             WalletBalancePreviewData(WalletBalancePreview.hiddenBalanceContent, WalletPreviewData.actionButtons),
+            WalletBalancePreviewData(WalletBalancePreview.socialLoginContent, WalletPreviewData.actionButtons),
             WalletBalancePreviewData(WalletBalancePreview.loading, WalletPreviewData.disabledActionButtons),
             WalletBalancePreviewData(WalletBalancePreview.error, WalletPreviewData.disabledActionButtons),
             WalletBalancePreviewData(WalletBalancePreview.empty, WalletPreviewData.disabledActionButtons),

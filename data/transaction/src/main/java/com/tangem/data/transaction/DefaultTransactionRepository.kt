@@ -8,6 +8,7 @@ import com.tangem.blockchain.blockchains.cosmos.CosmosTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.hedera.HederaTransactionExtras
 import com.tangem.blockchain.blockchains.icp.ICPTransactionExtras
+import com.tangem.blockchain.blockchains.solana.nft.SolanaNFTTransferExtras
 import com.tangem.blockchain.blockchains.stellar.StellarMemo
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
 import com.tangem.blockchain.blockchains.ton.TonTransactionExtras
@@ -18,7 +19,7 @@ import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.smartcontract.SmartContractCallDataProviderFactory
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.nft.models.NFTAsset
-import com.tangem.blockchain.yieldsupply.wrapWithYieldModuleUpgradeIfAvailable
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.datasource.api.common.response.fold
@@ -150,13 +151,11 @@ internal class DefaultTransactionRepository(
             amount.type is AmountType.TokenYieldSupply
         if (!isUpgradeApplicable) return callData
 
-        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+        return walletManagersFacade.wrapYieldSendWithModuleUpgrade(
             userWalletId = userWalletId,
-            blockchain = network.toBlockchain(),
-            derivationPath = network.derivationPath.value,
-        ) ?: return callData
-
-        return walletManager.wrapWithYieldModuleUpgradeIfAvailable(callData)
+            network = network,
+            callData = callData,
+        )
     }
 
     override suspend fun createApprovalTransaction(
@@ -229,15 +228,15 @@ internal class DefaultTransactionRepository(
             blockchain = blockchain,
         )
 
-        val extras = if (nftTransferCallData != null) {
-            createTransactionDataExtras(
+        val extras = when {
+            nftTransferCallData != null -> createTransactionDataExtras(
                 callData = nftTransferCallData,
                 network = network,
                 nonce = null,
                 gasLimit = null,
             )
-        } else {
-            null
+            nftAsset.identifier is NFTAsset.Identifier.Solana -> SolanaNFTTransferExtras
+            else -> null
         }
 
         val contractAddress = when (val identifier = nftAsset.identifier) {
@@ -330,7 +329,15 @@ internal class DefaultTransactionRepository(
             blockchain = blockchain,
             derivationPath = network.derivationPath.value,
         )
-        (requireNotNull(walletManager) as TransactionSender).sendMultiple(txsData, signer, sendMode)
+        (requireNotNull(walletManager) as TransactionSender).sendMultiple(txsData, signer, sendMode).also { result ->
+            val isModuleUpgradeSent = txsData.any { tx ->
+                val extras = (tx as? TransactionData.Uncompiled)?.extras as? EthereumTransactionExtras
+                extras?.callData is EthereumYieldSupplyUpgradeToAndCallCallData
+            }
+            if (result is com.tangem.blockchain.extensions.Result.Success && isModuleUpgradeSent) {
+                walletManagersFacade.resetYieldSendUpgradeDecision(userWalletId, network)
+            }
+        }
     }
 
     override fun createTransactionDataExtras(

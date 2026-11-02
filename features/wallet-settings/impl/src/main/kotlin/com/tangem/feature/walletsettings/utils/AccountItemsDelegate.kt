@@ -101,9 +101,10 @@ internal class AccountItemsDelegate @Inject constructor(
         }
 
         fun AccountStatus.Joint.mapJoint(): WalletSettingsAccountsUM {
+            val isCompromised = value is JointAccountStatusValue.Error.Compromised
             val accountItemUM = AccountJointItemUMConverter(
                 onClick = {
-                    if (value is JointAccountStatusValue.Error.Compromised) {
+                    if (isCompromised) {
                         jointAccountCompromisedAlert.show(userWalletId = userWalletId)
                     } else {
                         analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonOpenExistingAccount())
@@ -113,6 +114,7 @@ internal class AccountItemsDelegate @Inject constructor(
                 appCurrency = appCurrency,
                 accountBalance = jointBalance(),
                 isBalanceHidden = isBalanceHidden,
+                isCompromised = isCompromised,
             ).convert(account)
             return WalletSettingsAccountsUM.JointAccount(state = accountItemUM)
         }
@@ -125,7 +127,13 @@ internal class AccountItemsDelegate @Inject constructor(
             text = resourceReference(R.string.common_accounts),
         )
 
-        val accountItems = accounts.map { it.mapCryptoPortfolio() } + jointAccounts.map { it.mapJoint() }
+        val accountItems = accountStatusList.accountStatuses.mapNotNull { status ->
+            when (status) {
+                is AccountStatus.Personal -> status.mapCryptoPortfolio()
+                is AccountStatus.Joint -> status.mapJoint()
+                else -> null
+            }
+        }
 
         add(header)
         addAll(accountItems.applySortingOrder(order = accountsOrder))
@@ -184,9 +192,8 @@ internal class AccountItemsDelegate @Inject constructor(
         return this.sortedBy { positionByAccountId[it.id] ?: Int.MAX_VALUE }
     }
 
-    private fun AccountStatus.Joint.jointBalance(): TotalFiatBalance = when (val status = value) {
+    private fun AccountStatus.Joint.jointBalance(): TotalFiatBalance = when (value) {
         is JointAccountStatusValue.Loading -> TotalFiatBalance.Loading
-        is JointAccountStatusValue.Error.Compromised -> status.fiatBalance
         is JointAccountStatusValue.Error -> TotalFiatBalance.Failed
         else -> tokenList.totalFiatBalance
     }

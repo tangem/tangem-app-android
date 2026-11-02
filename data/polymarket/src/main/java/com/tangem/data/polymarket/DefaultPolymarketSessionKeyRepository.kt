@@ -13,7 +13,7 @@ import com.tangem.data.polymarket.error.PolymarketSessionKeyErrorResolver
 import com.tangem.data.polymarket.signer.PolymarketL2HeaderBuilder
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketSessionKeyRepository
-import com.tangem.domain.polymarket.model.PolymarketApiCredentials
+import com.tangem.domain.polymarket.model.PolymarketClobIdentity
 import com.tangem.domain.polymarket.model.PolymarketAuthError
 import com.tangem.domain.polymarket.model.PolymarketSessionKey
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyAuthorization
@@ -88,14 +88,12 @@ internal class DefaultPolymarketSessionKeyRepository @Inject constructor(
     }
 
     override suspend fun getSessionSigners(
-        ownerAddress: String,
-        credentials: PolymarketApiCredentials,
+        owner: PolymarketClobIdentity.Owner,
     ): Either<PolymarketAuthError, List<PolymarketSessionSigner>> = withContext(dispatchers.io) {
         val headers = Either
             .catch {
                 l2HeaderBuilder.build(
-                    ownerAddress = ownerAddress,
-                    credentials = credentials,
+                    identity = owner,
                     requestPath = SESSION_SIGNERS_SIGNED_PATH,
                 )
             }

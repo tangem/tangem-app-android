@@ -137,6 +137,78 @@ internal class SwapSlippageModelTest {
     }
 
     @Nested
+    inner class PairDefault {
+
+        private val providerDefault = BigDecimal("2")
+        private val pairDefault = BigDecimal("0.05")
+
+        @Test
+        fun `GIVEN pair default below provider default WHEN created THEN field and presets follow pair default`() =
+            runTest {
+                // Arrange
+                val model = createModel(
+                    provider = createProvider(slippage = providerDefault),
+                    defaultPercent = pairDefault,
+                )
+
+                // Act
+                val actual = model.uiState.value.valueState as SwapSlippageBottomSheetConfig.Value.Edit
+
+                // Assert
+                assertThat(actual.value).isEqualTo("0.05")
+                assertThat(actual.presets.map { it.value }).containsExactly("0.03", "0.05", "0.1").inOrder()
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN read only provider with pair default WHEN created THEN shows pair default`() = runTest {
+            // Arrange
+            val model = createModel(
+                provider = createProvider(isCustomSlippageSupported = false, slippage = providerDefault),
+                defaultPercent = pairDefault,
+            )
+
+            // Act
+            val actual = model.uiState.value.valueState
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                SwapSlippageBottomSheetConfig.Value.ReadOnly(slippage = stringReference(pairDefault.formatSlippagePercent())),
+            )
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN value within provider range but above twice pair default WHEN changed THEN rejected`() = runTest {
+            // Arrange
+            val model = createModel(provider = createProvider(slippage = providerDefault), defaultPercent = pairDefault)
+
+            // Act
+            model.onValueChange("1")
+
+            // Assert
+            val state = model.uiState.value
+            val valueState = state.valueState as SwapSlippageBottomSheetConfig.Value.Edit
+            assertThat(ValueChangeResult(valueState.value, valueState.isConfirmEnabled, state.error, state.warning))
+                .isEqualTo(ValueChangeResult("1", false, resourceReference(R.string.swap_slippage_error), null))
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN value below half pair default WHEN changed THEN low warning shown`() = runTest {
+            // Arrange
+            val model = createModel(provider = createProvider(slippage = providerDefault), defaultPercent = pairDefault)
+
+            // Act
+            model.onValueChange("0.02")
+
+            // Assert
+            assertThat(model.uiState.value.warning).isEqualTo(LOW_SLIPPAGE_WARNING)
+            model.onDestroy()
+        }
+    }
+
+    @Nested
     inner class OnConfirmClick {
 
         @Test
@@ -206,6 +278,7 @@ internal class SwapSlippageModelTest {
 
     private fun TestScope.createModel(
         provider: SwapProvider = createProvider(),
+        defaultPercent: BigDecimal = this@SwapSlippageModelTest.defaultPercent,
         customSlippage: BigDecimal? = null,
         onConfirm: (BigDecimal?) -> Unit = {},
         onCloseClick: () -> Unit = {},
@@ -222,14 +295,17 @@ internal class SwapSlippageModelTest {
         ),
     )
 
-    private fun createProvider(isCustomSlippageSupported: Boolean = true) = SwapProvider(
+    private fun createProvider(
+        isCustomSlippageSupported: Boolean = true,
+        slippage: BigDecimal = defaultPercent,
+    ) = SwapProvider(
         providerId = PROVIDER_ID,
         name = "1inch",
         type = ExchangeProviderType.DEX,
         imageLarge = "",
         termsOfUse = null,
         privacyPolicy = null,
-        slippage = defaultPercent,
+        slippage = slippage,
         isCustomSlippageSupported = isCustomSlippageSupported,
     )
 
