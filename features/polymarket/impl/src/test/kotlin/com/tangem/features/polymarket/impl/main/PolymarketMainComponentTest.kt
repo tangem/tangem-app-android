@@ -167,7 +167,6 @@ internal class PolymarketMainComponentTest {
         predictionPositionsValueSupplier = mockk {
             every { this@mockk.invoke(any<UserWalletId>()) } returns flowOf(PredictionPositionsValue.Unknown)
         },
-        predictionPositionsValueFetcher = mockk(relaxed = true),
         predictionBalancePoller = mockk(relaxed = true),
         predictionFundingWindow = fundingWindow,
         observePolymarketCredentialsPresenceUseCase = observeCredentialsPresence,

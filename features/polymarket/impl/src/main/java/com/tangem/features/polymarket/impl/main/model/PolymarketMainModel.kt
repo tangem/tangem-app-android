@@ -48,7 +48,6 @@ import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
-import com.tangem.domain.polymarket.flow.PredictionPositionsValueFetcher
 import com.tangem.domain.polymarket.flow.PredictionPositionsValueSupplier
 import com.tangem.domain.models.account.PredictionPositionsValue
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -94,7 +93,6 @@ internal class PolymarketMainModel @Inject constructor(
     private val regionAccess: PredictionRegionAccess,
     private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
     private val predictionPositionsValueSupplier: PredictionPositionsValueSupplier,
-    private val predictionPositionsValueFetcher: PredictionPositionsValueFetcher,
     private val predictionBalancePoller: PredictionBalancePoller,
     private val predictionFundingWindow: PredictionFundingWindow,
     private val observePolymarketCredentialsPresenceUseCase: ObservePolymarketCredentialsPresenceUseCase,
@@ -426,11 +424,6 @@ internal class PolymarketMainModel @Inject constructor(
                         async {
                             predictionAccountStatusFetcher(
                                 PredictionAccountStatusFetcher.Params(userWalletId = params.userWalletId),
-                            )
-                        },
-                        async {
-                            predictionPositionsValueFetcher(
-                                PredictionPositionsValueFetcher.Params(userWalletId = params.userWalletId),
                             )
                         },
                     ).awaitAll()
