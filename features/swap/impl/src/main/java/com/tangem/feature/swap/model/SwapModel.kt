@@ -3756,7 +3756,8 @@ internal class SwapModel @Inject constructor(
     }
 
     private fun isGaslessDexSwap(fromSwapCurrencyStatus: SwapCurrencyStatus): Boolean =
-        isTronGaslessDexSwap(fromSwapCurrencyStatus) || isEvmGaslessDexSwap(fromSwapCurrencyStatus)
+        !fromSwapCurrencyStatus.isYieldSupplyActive &&
+            (isTronGaslessDexSwap(fromSwapCurrencyStatus) || isEvmGaslessDexSwap(fromSwapCurrencyStatus))
 
     private fun isTronGaslessDexSwap(fromSwapCurrencyStatus: SwapCurrencyStatus): Boolean =
         swapFeatureToggles.isTronGaslessDexSwapEnabled && isTron(fromSwapCurrencyStatus.currency.network.rawId)
