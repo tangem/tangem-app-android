@@ -1,6 +1,7 @@
 package com.tangem.data.account.converter
 
 import com.google.common.truth.Truth
+import com.tangem.data.common.account.SupportedAccountTypes
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
@@ -40,8 +41,10 @@ class AccountListConverterTest {
     private val converter = AccountListConverter(
         userWallet = userWallet,
         cryptoPortfolioConverterFactory = cryptoPortfolioConverterFactory,
-        collectiblesFeatureToggles = collectiblesFeatureToggles,
-        jointAccountFeatureToggles = jointAccountFeatureToggles,
+        supportedAccountTypes = SupportedAccountTypes(
+            jointAccountFeatureToggles = jointAccountFeatureToggles,
+            collectiblesFeatureToggles = collectiblesFeatureToggles,
+        ),
     )
 
     @BeforeEach

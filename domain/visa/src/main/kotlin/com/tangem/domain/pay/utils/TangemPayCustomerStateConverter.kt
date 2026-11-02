@@ -11,8 +11,6 @@ import com.tangem.utils.converter.Converter
 object TangemPayCustomerStateConverter : Converter<CustomerSummary, TangemPayCustomerState> {
 
     override fun convert(value: CustomerSummary): TangemPayCustomerState {
-        if (value.isHidden) return TangemPayCustomerState.Hidden
-
         when (value.customerStatus) {
             CustomerStatus.BLOCKED -> return TangemPayCustomerState.Blocked
             CustomerStatus.FORMER -> return TangemPayCustomerState.Former(
