@@ -655,10 +655,6 @@ internal interface TangemPayDataModule {
 
         @Provides
         @Singleton
-        fun provideBankOfframpRepository(repository: DefaultBankOfframpRepository): BankOfframpRepository = repository
-
-        @Provides
-        @Singleton
         fun provideTangemPayResidencyRepository(
             repository: DefaultTangemPayResidencyRepository,
         ): TangemPayResidencyRepository = CachingTangemPayResidencyRepository(origin = repository)

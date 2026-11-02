@@ -1,8 +1,10 @@
 package com.tangem.data.pay.repository
 
+import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.data.pay.speiBankAccountDetails
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.OrderStep
@@ -11,8 +13,10 @@ import com.tangem.domain.pay.model.bankofframp.BankAccountType
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderRequest
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderState
+import com.tangem.domain.pay.model.bankofframp.BankOfframpQuote
 import com.tangem.domain.pay.model.bankofframp.BankOfframpRecipient
 import com.tangem.domain.pay.model.bankofframp.BankOfframpRoute
+import com.tangem.domain.pay.model.bankofframp.BankOfframpTransfer
 import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.model.bankofframp.Beneficiary
 import com.tangem.domain.pay.model.bankofframp.OfframpEta
@@ -20,6 +24,7 @@ import com.tangem.domain.pay.model.bankofframp.OfframpFee
 import com.tangem.domain.pay.model.bankofframp.PostalAddress
 import com.tangem.test.core.ProvideTestModels
 import kotlinx.coroutines.test.runTest
+import org.joda.time.DateTime
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -211,7 +216,7 @@ internal class MockBankOfframpOrderRepositoryTest {
         }
 
     @Test
-    fun `GIVEN SPEI rail WHEN createRoute THEN unknown error and no route`() = runTest {
+    fun `GIVEN SPEI rail WHEN createRoute THEN unknown error naming the quote flow`() = runTest {
         // Act
         val actual = repository.createRoute(
             userWalletId = WALLET_ID,
@@ -222,7 +227,7 @@ internal class MockBankOfframpOrderRepositoryTest {
         )
 
         // Assert
-        assertThat(actual.leftOrNull()).isInstanceOf(BankOfframpError.Unknown::class.java)
+        assertThat(unknownCauseMessage(actual)).isEqualTo("SPEI is withdrawn by quote, not by route")
     }
 
     @Test
@@ -267,6 +272,133 @@ internal class MockBankOfframpOrderRepositoryTest {
         // Assert
         assertThat(actual).isEqualTo(model.expected.left())
     }
+
+    @Test
+    fun `GIVEN saved SPEI recipient WHEN createQuote THEN percentage fee on top, MXN at the mock rate, 15 minutes`() =
+        runTest {
+            // Act
+            val actual = createSpeiQuote()
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                BankOfframpQuote(
+                    quoteId = "mock-bank-offramp-quote-1",
+                    bankAccountId = "mock-bank-account-spei",
+                    feeAmount = BigDecimal("1.00"),
+                    sourceAmount = BigDecimal("101.00"),
+                    destinationAmount = BigDecimal("1725.00"),
+                    destinationCurrency = "MXN",
+                    exchangeRate = BigDecimal("17.25"),
+                    fee = OfframpFee(
+                        name = "SPEI",
+                        calculationType = AccountFee.CalculationType.PERCENTAGE,
+                        amount = BigDecimal("1"),
+                        currency = "USD",
+                        description = null,
+                    ),
+                    eta = OfframpEta(minDays = 0, maxDays = 0),
+                    expiresAt = DateTime(nowMillis + QUOTE_LIFETIME_MILLIS),
+                ).right(),
+            )
+        }
+
+    @Test
+    fun `GIVEN quote WHEN createQuote is retried with the same key THEN the same quote returned`() = runTest {
+        // Arrange
+        val created = createSpeiQuote()
+
+        // Act
+        val retried = createSpeiQuote()
+
+        // Assert
+        assertThat(retried).isEqualTo(created)
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideQuoteTriggerModels")
+    fun `GIVEN quote error trigger WHEN createQuote THEN mapped error`(model: QuoteTriggerModel) = runTest {
+        // Act
+        val actual = repository.createQuote(WALLET_ID, PRODUCT_INSTANCE_ID, model.amount, model.recipient, KEY)
+
+        // Assert
+        assertThat(actual).isEqualTo(model.expected.left())
+    }
+
+    @Test
+    fun `GIVEN quote WHEN createTransfer twice THEN one transfer to the mock address for the quoted amounts`() =
+        runTest {
+            // Arrange
+            val quote = requireNotNull(createSpeiQuote().getOrNull())
+
+            // Act
+            val created = repository.createTransfer(WALLET_ID, quote.quoteId)
+            val retried = repository.createTransfer(WALLET_ID, quote.quoteId)
+
+            // Assert
+            assertThat(created).isEqualTo(
+                BankOfframpTransfer(
+                    transferId = "mock-bank-offramp-transfer-1",
+                    depositAddress = "0x0000000000000000000000000000000000000004",
+                    sourceAmount = BigDecimal("101.00"),
+                    destinationAmount = BigDecimal("1725.00"),
+                    expiresAt = quote.expiresAt,
+                ).right(),
+            )
+            assertThat(retried).isEqualTo(created)
+        }
+
+    @Test
+    fun `GIVEN expired quote WHEN createTransfer THEN unknown error`() = runTest {
+        // Arrange
+        val quote = requireNotNull(createSpeiQuote().getOrNull())
+        nowMillis += QUOTE_LIFETIME_MILLIS
+
+        // Act
+        val actual = repository.createTransfer(WALLET_ID, quote.quoteId)
+
+        // Assert
+        assertThat(unknownCauseMessage(actual)).isEqualTo("Quote mock-bank-offramp-quote-1 has expired")
+    }
+
+    @Test
+    fun `GIVEN unknown quote WHEN createTransfer THEN unknown error`() = runTest {
+        // Act
+        val actual = repository.createTransfer(WALLET_ID, "nope")
+
+        // Assert
+        assertThat(unknownCauseMessage(actual)).isEqualTo("Unknown quote nope")
+    }
+
+    private fun unknownCauseMessage(result: Either<BankOfframpError, *>): String? =
+        (result.leftOrNull() as? BankOfframpError.Unknown)?.cause?.message
+
+    private suspend fun createSpeiQuote() = repository.createQuote(
+        userWalletId = WALLET_ID,
+        productInstanceId = PRODUCT_INSTANCE_ID,
+        amount = BigDecimal("100.00"),
+        recipient = BankOfframpRecipient.Saved(bankAccountId = "mock-bank-account-spei"),
+        idempotencyKey = KEY,
+    )
+
+    private fun provideQuoteTriggerModels() = listOf(
+        QuoteTriggerModel(
+            amount = BigDecimal("100"),
+            recipient = BankOfframpRecipient.New(
+                speiBankAccountDetails().copy(accountNumber = "002010077777777770"),
+            ),
+            expected = BankOfframpError.Validation,
+        ),
+        QuoteTriggerModel(amount = BigDecimal.ZERO, expected = BankOfframpError.Validation),
+        QuoteTriggerModel(amount = BigDecimal("10.005"), expected = BankOfframpError.Validation),
+        QuoteTriggerModel(amount = BigDecimal("666.00"), expected = BankOfframpError.SenderRegionUnsupported),
+        QuoteTriggerModel(amount = BigDecimal("777"), expected = BankOfframpError.WithdrawalInProgress),
+    )
+
+    internal data class QuoteTriggerModel(
+        val amount: BigDecimal,
+        val recipient: BankOfframpRecipient = BankOfframpRecipient.Saved(bankAccountId = "mock-bank-account-spei"),
+        val expected: BankOfframpError,
+    )
 
     private suspend fun createOrderId(): String {
         return requireNotNull(repository.createOrder(WALLET_ID, request(), KEY).getOrNull()).orderId
@@ -348,5 +480,6 @@ internal class MockBankOfframpOrderRepositoryTest {
         val WALLET_ID = UserWalletId("0123456789abcdef")
         const val KEY = "idempotency-key"
         const val PRODUCT_INSTANCE_ID = "123e4567-e89b-12d3-a456-426614174000"
+        const val QUOTE_LIFETIME_MILLIS = 15 * 60_000L
     }
 }
