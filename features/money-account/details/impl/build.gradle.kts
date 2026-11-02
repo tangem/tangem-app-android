@@ -25,6 +25,7 @@ dependencies {
     implementation(projects.common.routing)
 
     /** Domain */
+    implementation(projects.domain.balanceHiding)
     implementation(projects.domain.feedback)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.models)
