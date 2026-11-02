@@ -22,6 +22,7 @@ import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.button.TangemButtonGroup
 import com.tangem.core.ui.ds2.button.TangemButtonStack
 import com.tangem.core.ui.ds2.checkbox.TangemCheckbox
+import com.tangem.core.ui.ds2.toggle.TangemSwitch
 import com.tangem.core.ui.ds2.checkbox.TangemCheckmark
 import com.tangem.core.ui.ds2.draggable.TangemDraggable
 import com.tangem.core.ui.ds2.fade.TangemFade
@@ -52,6 +53,7 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.button.tangemBut
 import com.tangem.feature.tester.presentation.storybook.page.ds.buttongroup.tangemButtonGroupStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.buttonstack.tangemButtonStackStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.checkbox.tangemCheckboxV2StoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.toggle.tangemSwitchStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.checkmark.tangemCheckmarkStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.draggable.tangemDraggableStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.fade.tangemFadeStoryFactory
@@ -85,6 +87,7 @@ private fun buildDsStories() = listOf(
     DsStoryItem("🔘 TangemButtonStack", TangemButtonStack.version, tangemButtonStackStoryFactory),
     DsStoryItem("🏷️ TangemBadge", TangemBadge.version, tangemBadgeV2StoryFactory),
     DsStoryItem("☑️ TangemCheckbox", TangemCheckbox.version, tangemCheckboxV2StoryFactory),
+    DsStoryItem("🎚️ TangemSwitch", TangemSwitch.version, tangemSwitchStoryFactory),
     DsStoryItem("⭕ TangemCheckmark", TangemCheckmark.version, tangemCheckmarkStoryFactory),
     DsStoryItem("🎨 TangemTokenIcon", TangemTokenIcon.version, tangemTokenIconStoryFactory),
     DsStoryItem("📋 TangemRow", TangemRow.version, tangemRowStoryFactory),
