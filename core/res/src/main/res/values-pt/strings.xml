@@ -248,6 +248,9 @@
   <string name="prediction_withdraw_status_sent_description">O recebimento pode levar até %1$d minutos</string>
   <string name="prediction_withdraw_status_sent_title">Saque enviado</string>
   <string name="tangempay_pay_support">Suporte</string>
+  <string name="tangempay_sync_needed_body">Renove a sessão para consultar o seu cartão e a sua conta</string>
+  <string name="tangempay_sync_needed_button">Renovar sessão</string>
+  <string name="tangempay_sync_needed_title">Sessão expirada</string>
   <string name="tangempay_topup_bank_transfer_body">Receber USD de uma conta bancária via ACH/Wire</string>
   <string name="tangempay_topup_bank_transfer_title">De uma conta bancária</string>
   <string name="tangempay_topup_receive_title">De outra carteira ou plataforma de câmbio</string>

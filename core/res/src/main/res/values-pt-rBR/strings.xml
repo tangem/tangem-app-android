@@ -816,7 +816,7 @@
   <string name="express_exchange_notification_failed_title">Operação falhou devido ao provedor</string>
   <string name="express_exchange_notification_long_transaction_time_text">Sua conversão está demorando mais do que o normal, mas seus fundos estão completamente seguros e serão entregues. Em caso de dúvidas, entre em contato com a equipe de suporte do provedor.</string>
   <string name="express_exchange_notification_long_transaction_time_title">Tempo de transação longo</string>
-  <string name="express_exchange_notification_refund_text">O valor da transação foi reembolsado em %1$s para sua carteira devido às regras do OKX ou da ponte. %2$s</string>
+  <string name="express_exchange_notification_refund_text">O valor da transação foi reembolsado em %1$s para sua carteira devido às regras da OKX ou da bridge. %2$s</string>
   <string name="express_exchange_notification_refund_title">O valor foi reembolsado em %1$s (%2$s rede)</string>
   <string name="express_exchange_notification_refunded_in_text">Seus fundos foram reembolsados em %1$s para sua carteira na rede %2$s, de acordo com as regras da corretora OKX.</string>
   <string name="express_exchange_notification_refunded_in_title">Reembolsado em %s</string>
@@ -2581,10 +2581,10 @@
   <string name="staking_notification_earn_rewards_text_daily">A Tangem permite que os usuários façam staking de suas criptomoedas.</string>
   <string name="staking_notification_earn_rewards_text_hourly">A Tangem permite que os usuários façam staking de suas criptomoedas.</string>
   <string name="staking_notification_earn_rewards_text_monthly">A Tangem permite que os usuários façam staking de suas criptomoedas.</string>
-  <string name="staking_notification_earn_rewards_text_period_day">O staking permite que você receba %1$s. Suas recompensas de staking chegam todos os dias.</string>
-  <string name="staking_notification_earn_rewards_text_period_hour">O staking permite que você receba %1$s. Suas recompensas de staking chegam a cada hora.</string>
-  <string name="staking_notification_earn_rewards_text_period_month">O staking permite que você receba %1$s. Suas recompensas de staking chegam todo mês.</string>
-  <string name="staking_notification_earn_rewards_text_period_week">O staking permite que você receba %1$s. Suas recompensas de staking chegam toda semana.</string>
+  <string name="staking_notification_earn_rewards_text_period_day">O staking permite que você receba %1$s. Suas recompensas de staking são recebidas diariamente.</string>
+  <string name="staking_notification_earn_rewards_text_period_hour">O staking permite que você receba %1$s. Suas recompensas de staking são recebidas a cada hora.</string>
+  <string name="staking_notification_earn_rewards_text_period_month">O staking permite que você receba %1$s. Suas recompensas de staking são recebidas mensalmente.</string>
+  <string name="staking_notification_earn_rewards_text_period_week">O staking permite que você receba %1$s. Suas recompensas de staking são recebidas semanalmente.</string>
   <string name="staking_notification_earn_rewards_text_weekly">A Tangem permite que os usuários façam staking de suas criptomoedas.</string>
   <string name="staking_notification_earn_rewards_title">Ganhe recompensas com staking</string>
   <string name="staking_notification_low_staked_balance_text">Seu saldo em staking restante será muito baixo para ser retirado. Você precisará fazer staking de mais fundos para atingir o valor mínimo necessário para a retirada.</string>
@@ -3251,9 +3251,9 @@
   <string name="tangempay_status_inactive">Inativo</string>
   <string name="tangempay_status_replacing">Substituindo seu cartão</string>
   <string name="tangempay_sync_needed">Use o cartão ou anel para renovar a sessão</string>
-  <string name="tangempay_sync_needed_body">Use o cartão ou anel para renovar a sessão</string>
+  <string name="tangempay_sync_needed_body">Renove sua sessão para ver seu cartão e sua conta</string>
   <string name="tangempay_sync_needed_button">Restaurar acesso</string>
-  <string name="tangempay_sync_needed_title">Tangem Pay sessão expirada</string>
+  <string name="tangempay_sync_needed_title">Sessão expirada</string>
   <string name="tangempay_tangem_visa_card">Use suas criptos no dia a dia</string>
   <string name="tangempay_temporarily_unavailable">O serviço Tangem Pay está temporariamente inacessível.</string>
   <string name="tangempay_title">Tangem Pay</string>
@@ -3410,7 +3410,7 @@
   <string name="token_details_hide_alert_message">Você está prestes a ocultar este token da tela principal. Você pode adicioná-lo novamente a qualquer momento através da página de gerenciamento de tokens.</string>
   <string name="token_details_hide_alert_title">Ocultar %s</string>
   <string name="token_details_hide_token">Ocultar token</string>
-  <string name="token_details_staking_block_subtitle">O staking permite que você receba %1$s e receba recompensas todos os dias %2$s dias</string>
+  <string name="token_details_staking_block_subtitle">O staking permite que você receba %1$s e obtenha recompensas a cada %2$s dias</string>
   <string name="token_details_staking_block_title">Serviço de staking</string>
   <string name="token_details_token_type_subtitle">%1$s token em %%image%% %2$s rede</string>
   <string name="token_details_token_type_subtitle_no_standard">Token em %%image%% %1$s rede</string>
