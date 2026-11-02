@@ -78,6 +78,7 @@ internal class CreateAndSendEvmGaslessPayloadTest {
             nonce = nonce,
             plan = plan,
             withdrawGasLimit = withdrawGasLimit,
+            approveGasLimit = null,
         )
 
         assertThat(result).isInstanceOf(GaslessPayload.Batch::class.java)
@@ -113,6 +114,7 @@ internal class CreateAndSendEvmGaslessPayloadTest {
             nonce = nonce,
             plan = plan,
             withdrawGasLimit = null,
+            approveGasLimit = null,
         )
 
         assertThat(result).isInstanceOf(GaslessPayload.Single::class.java)
@@ -132,6 +134,7 @@ internal class CreateAndSendEvmGaslessPayloadTest {
             nonce = nonce,
             plan = null,
             withdrawGasLimit = null,
+            approveGasLimit = null,
         )
 
         assertThat(result).isInstanceOf(GaslessPayload.Single::class.java)
@@ -154,6 +157,7 @@ internal class CreateAndSendEvmGaslessPayloadTest {
                 nonce = nonce,
                 plan = plan,
                 withdrawGasLimit = null,
+                approveGasLimit = null,
             )
         }
     }
@@ -177,6 +181,7 @@ internal class CreateAndSendEvmGaslessPayloadTest {
                 nonce = nonce,
                 plan = plan,
                 withdrawGasLimit = null,
+                approveGasLimit = null,
             )
         }
     }
@@ -228,7 +233,6 @@ internal class CreateAndSendEvmGaslessPayloadTest {
             feeToken = fakeToken,
             fee = fakeTokenFee,
             approval = approval(extras = EthereumTransactionExtras(callData = fakeApproveCallData)),
-            approveGasLimit = approveGasLimit,
         )
 
         // Act
@@ -238,6 +242,7 @@ internal class CreateAndSendEvmGaslessPayloadTest {
             nonce = nonce,
             plan = plan,
             withdrawGasLimit = null,
+            approveGasLimit = approveGasLimit,
         )
 
         // Assert
@@ -263,7 +268,6 @@ internal class CreateAndSendEvmGaslessPayloadTest {
             feeToken = fakeToken,
             fee = fakeTokenFee,
             approval = approval(extras = null),
-            approveGasLimit = BigInteger.valueOf(65_000),
         )
 
         // Act & Assert
@@ -274,6 +278,7 @@ internal class CreateAndSendEvmGaslessPayloadTest {
                 nonce = nonce,
                 plan = plan,
                 withdrawGasLimit = null,
+                approveGasLimit = BigInteger.valueOf(65_000),
             )
         }
     }

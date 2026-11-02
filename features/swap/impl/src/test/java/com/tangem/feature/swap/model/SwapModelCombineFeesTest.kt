@@ -20,15 +20,8 @@ import java.math.BigDecimal
 import java.math.BigInteger
 
 /**
- * Tests for [SwapModel]'s integrated approve+swap fee combination (private `combineTransactionFees`
- * / `sumEvmFees`). These are pure functions, so they are exercised via reflection (the public
- * fee-loading pipeline that calls them requires a large amount of async wiring; the plan permits
- * reflection for pure private functions where the public path is brittle).
- *
- * Verifies:
- *  - Choosable + Choosable → per-bucket [TransactionFee.Choosable] with summed amount + gasLimit.
- *  - Single involved (either side) → [TransactionFee.Single] summing the `normal` fees.
- *  - Legacy EVM fees are summed too (amount + gasLimit).
+ * Tests for [SwapModel]'s private `loadAndStoreIntegratedApproval`, exercised via reflection since the public
+ * fee-loading pipeline that calls it requires a large amount of async wiring.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class SwapModelCombineFeesTest : SwapModelTestBase() {
@@ -39,56 +32,6 @@ internal class SwapModelCombineFeesTest : SwapModelTestBase() {
     fun setUp() {
         setUpBase()
         model = createModel()
-    }
-
-    @Test
-    fun `GIVEN Choosable plus Choosable THEN per-bucket sum of amount and gasLimit`() {
-        val approval = choosable(min = 1, normal = 2, priority = 3, gas = 21_000)
-        val swap = choosable(min = 10, normal = 20, priority = 30, gas = 50_000)
-
-        val result = combineTransactionFees(approval, swap)
-
-        assertThat(result).isInstanceOf(TransactionFee.Choosable::class.java)
-        val choosable = result as TransactionFee.Choosable
-        assertEip1559(choosable.minimum, expectedValue = 11, expectedGas = 71_000)
-        assertEip1559(choosable.normal, expectedValue = 22, expectedGas = 71_000)
-        assertEip1559(choosable.priority, expectedValue = 33, expectedGas = 71_000)
-    }
-
-    @Test
-    fun `GIVEN Single approval and Choosable swap THEN result is Single summing normals`() {
-        val approval = TransactionFee.Single(normal = eip1559(value = 2, gas = 21_000))
-        val swap = choosable(min = 10, normal = 20, priority = 30, gas = 50_000)
-
-        val result = combineTransactionFees(approval, swap)
-
-        assertThat(result).isInstanceOf(TransactionFee.Single::class.java)
-        assertEip1559((result as TransactionFee.Single).normal, expectedValue = 22, expectedGas = 71_000)
-    }
-
-    @Test
-    fun `GIVEN both Single THEN result is Single summing normals`() {
-        val approval = TransactionFee.Single(normal = eip1559(value = 5, gas = 21_000))
-        val swap = TransactionFee.Single(normal = eip1559(value = 7, gas = 30_000))
-
-        val result = combineTransactionFees(approval, swap)
-
-        assertThat(result).isInstanceOf(TransactionFee.Single::class.java)
-        assertEip1559((result as TransactionFee.Single).normal, expectedValue = 12, expectedGas = 51_000)
-    }
-
-    @Test
-    fun `GIVEN Legacy EVM fees THEN summed amount and gasLimit`() {
-        val approval = TransactionFee.Single(normal = legacy(value = 2, gas = 21_000))
-        val swap = TransactionFee.Single(normal = legacy(value = 20, gas = 50_000))
-
-        val result = combineTransactionFees(approval, swap)
-
-        val normal = (result as TransactionFee.Single).normal
-        assertThat(normal).isInstanceOf(Fee.Ethereum.Legacy::class.java)
-        val legacy = normal as Fee.Ethereum.Legacy
-        assertThat(legacy.amount.value).isEqualTo(BigDecimal(22))
-        assertThat(legacy.gasLimit).isEqualTo(BigInteger.valueOf(71_000))
     }
 
     @Test
@@ -161,33 +104,11 @@ internal class SwapModelCombineFeesTest : SwapModelTestBase() {
             method.invoke(model, *args, cont)
         }
 
-    private fun combineTransactionFees(approvalFee: TransactionFee, swapFee: TransactionFee): TransactionFee {
-        val method = SwapModel::class.java.getDeclaredMethod(
-            "combineTransactionFees",
-            TransactionFee::class.java,
-            TransactionFee::class.java,
-        ).apply { isAccessible = true }
-        return method.invoke(model, approvalFee, swapFee) as TransactionFee
-    }
-
-    private fun choosable(min: Int, normal: Int, priority: Int, gas: Long): TransactionFee.Choosable =
-        TransactionFee.Choosable(
-            minimum = eip1559(value = min, gas = gas),
-            normal = eip1559(value = normal, gas = gas),
-            priority = eip1559(value = priority, gas = gas),
-        )
-
     private fun eip1559(value: Int, gas: Long): Fee.Ethereum.EIP1559 = Fee.Ethereum.EIP1559(
         amount = ethAmount(value),
         gasLimit = BigInteger.valueOf(gas),
         maxFeePerGas = BigInteger.ONE,
         priorityFee = BigInteger.ONE,
-    )
-
-    private fun legacy(value: Int, gas: Long): Fee.Ethereum.Legacy = Fee.Ethereum.Legacy(
-        amount = ethAmount(value),
-        gasLimit = BigInteger.valueOf(gas),
-        gasPrice = BigInteger.ONE,
     )
 
     private fun ethAmount(value: Int): Amount = Amount(
