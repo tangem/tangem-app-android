@@ -569,8 +569,12 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
             // Assert
-            assertThat(model.uiState.value.amountCaption)
-                .isEqualTo(AmountCaptionUM.Shortfall(error = PaymentAmountErrorUM.NotEnoughForFees))
+            assertThat(model.uiState.value.amountCaption).isEqualTo(
+                AmountCaptionUM.Shortfall(
+                    error = PaymentAmountErrorUM.NotEnoughForFees,
+                    payout = BigDecimal("23.8"),
+                ),
+            )
             assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
 
             model.onDestroy()
