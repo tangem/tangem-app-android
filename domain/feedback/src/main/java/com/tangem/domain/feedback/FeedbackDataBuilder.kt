@@ -95,7 +95,6 @@ internal class FeedbackDataBuilder {
 
     fun addTangemPayIssueType(type: FeedbackEmailType.Visa) {
         val issueType = when (type) {
-            is FeedbackEmailType.Visa.Activation,
             is FeedbackEmailType.Visa.DirectUserRequest,
             is FeedbackEmailType.Visa.MoneyAccountRequest,
             is FeedbackEmailType.Visa.FeatureIsBeta,

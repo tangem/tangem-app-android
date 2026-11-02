@@ -23,16 +23,11 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.visa.model.TangemPayInitialData
 import com.tangem.domain.visa.model.MoneyAccountActivationData
-import com.tangem.domain.visa.model.VisaActivationInput
-import com.tangem.domain.visa.model.VisaDataForApprove
-import com.tangem.domain.visa.model.VisaSignedDataByCustomerWallet
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.preflightread.PreflightReadFilter
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.sdk.api.CreateProductWalletTaskResponse
 import com.tangem.sdk.api.TangemSdkManager
-import com.tangem.sdk.api.visa.VisaCardActivationResponse
-import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import com.tangem.tap.domain.sdk.mocks.showMockCardPicker
 import com.tangem.tap.domain.tasks.jointaccount.JointAccountSignTask
@@ -225,19 +220,6 @@ class MockTangemSdkManager(
     // endregion
 
     // region Visa-specific
-
-    override suspend fun activateVisaCard(
-        mode: VisaCardActivationTaskMode,
-        activationInput: VisaActivationInput,
-    ): CompletionResult<VisaCardActivationResponse> {
-        error("Not implemented")
-    }
-
-    override suspend fun visaCustomerWalletApprove(
-        visaDataForApprove: VisaDataForApprove,
-    ): CompletionResult<VisaSignedDataByCustomerWallet> {
-        error("Not implemented")
-    }
 
     override suspend fun tangemPayProduceInitialData(
         preflightReadFilter: PreflightReadFilter,
