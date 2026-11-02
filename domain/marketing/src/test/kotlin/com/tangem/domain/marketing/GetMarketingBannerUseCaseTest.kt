@@ -41,13 +41,15 @@ internal class GetMarketingBannerUseCaseTest {
         priority: Int,
         minAmount: BigDecimal? = null,
         maxAmount: BigDecimal? = null,
+        startAt: String? = null,
+        endAt: String? = null,
         targets: List<MarketingCampaignTarget> = emptyList(),
     ) = MarketingCampaign(
         id = id,
         type = type,
         priority = priority,
-        startAt = null,
-        endAt = null,
+        startAt = startAt,
+        endAt = endAt,
         minAmount = minAmount,
         maxAmount = maxAmount,
         providerIds = null,
@@ -271,5 +273,22 @@ internal class GetMarketingBannerUseCaseTest {
 
         // Assert — only the native coin of the on-screen network matches
         assertThat(result.getOrNull()?.map { it.id }).containsExactly(1)
+    }
+
+    @Test
+    fun `GIVEN campaigns with various window bounds WHEN invoke THEN all candidates returned`() = runTest {
+        // Arrange
+        coEvery { repository.getCampaigns(swapScreen) } returns listOf(
+            campaign(id = 1, type = MarketingScreenType.SWAP, priority = 1, startAt = "2026-08-02T00:00:00Z"),
+            campaign(id = 2, type = MarketingScreenType.SWAP, priority = 2, endAt = "2026-07-31T00:00:00Z"),
+            campaign(id = 3, type = MarketingScreenType.SWAP, priority = 3, startAt = "2026-08-01T12:00:00.000Z"),
+            campaign(id = 4, type = MarketingScreenType.SWAP, priority = 4),
+        ).right()
+
+        // Act
+        val result = useCase(swapScreen)
+
+        // Assert
+        assertThat(result.getOrNull()?.map { it.id }).containsExactly(1, 2, 3, 4).inOrder()
     }
 }

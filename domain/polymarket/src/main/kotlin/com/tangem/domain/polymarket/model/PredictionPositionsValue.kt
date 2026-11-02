@@ -7,6 +7,8 @@ sealed interface PredictionPositionsValue {
 
     data object Unknown : PredictionPositionsValue
 
+    data object Unavailable : PredictionPositionsValue
+
     /**
      * @property amount the current value of every open position, zero when there are none
      * @property source [StatusSource.ONLY_CACHE] once a refresh has failed to re-read [amount]

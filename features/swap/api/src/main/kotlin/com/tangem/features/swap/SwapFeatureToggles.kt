@@ -7,4 +7,5 @@ interface SwapFeatureToggles {
     val isTronLowerFeeTypeEnabled: Boolean
     val isOverallBestPriceEnabled: Boolean
     val isHideRejectedCexProviderEnabled: Boolean
+    val isSolanaGaslessEnabled: Boolean
 }

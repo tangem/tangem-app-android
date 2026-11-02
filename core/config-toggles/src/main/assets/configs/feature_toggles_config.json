@@ -4,10 +4,6 @@
         "version": "undefined"
     },
     {
-        "name": "VISA_ONBOARDING_ENABLED",
-        "version": "undefined"
-    },
-    {
         "name": "TWI_1525_MONEY_ACCOUNTS_ENABLED",
         "version": "undefined"
     },
@@ -128,6 +124,10 @@
         "version": "6.7"
     },
     {
+        "name": "AND_18247_SOLANA_GASLESS_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "TWI_1799_MULTIPLE_HOT_WALLETS_ENABLED",
         "version": "undefined"
     },
@@ -137,6 +137,10 @@
     },
     {
         "name": "TWI_1906_EXPRESS_V2_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED",
         "version": "undefined"
     }
 ]
