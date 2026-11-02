@@ -195,12 +195,7 @@ internal class MarketingBannerModel @Inject constructor(
                     emit(now)
                     val nextTransition = list.nextWindowTransition(now) ?: break
                     val duration = Duration.between(now, nextTransition)
-                    val delayMs = if (duration >= Duration.ofMillis(MAX_BOUNDARY_DELAY_MS)) {
-                        MAX_BOUNDARY_DELAY_MS
-                    } else {
-                        duration.toMillis().coerceAtLeast(1L)
-                    }
-                    delay(delayMs)
+                    delay(duration.toMillis().coerceAtLeast(1L))
                 }
             }
 
@@ -308,7 +303,6 @@ internal class MarketingBannerModel @Inject constructor(
 
     private companion object {
         const val REQUEST_DEBOUNCE_MS = 300L
-        const val MAX_BOUNDARY_DELAY_MS = 24 * 60 * 60 * 1000L
         val CTA_UI_TYPES = setOf(MarketingBanner.UiType.PSEUDO_PROVIDER, MarketingBanner.UiType.STANDALONE_CTA)
     }
 }
