@@ -123,7 +123,10 @@ internal class ResolveMoneyAccountStatusFromSummaryUseCaseTest {
                 bankingStep = MoneyAccount.Activation.Step.ISSUING,
                 bankingFailureReason = MoneyAccount.Activation.FailureReason.RAIN_REJECTED,
             ),
-            expected = MoneyAccountStatusValue.Empty,
+            expected = MoneyAccountStatusValue.Onboarding.Failed(
+                source = StatusSource.ACTUAL,
+                customerId = CUSTOMER_ID,
+            ),
         ),
         ResolveModel(
             name = "closed with failed account",

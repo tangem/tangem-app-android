@@ -20,6 +20,9 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
             is MoneyAccountStatusValue.Onboarding.Activating -> MoneyAccountStatusValueDM.Activating(
                 customerId = value.customerId,
             )
+            is MoneyAccountStatusValue.Onboarding.Failed -> MoneyAccountStatusValueDM.Failed(
+                customerId = value.customerId,
+            )
             is MoneyAccountStatusValue.Account.Active -> MoneyAccountStatusValueDM.ActiveAccount(
                 customerId = value.customerId,
                 productInstanceId = value.productInstanceId,
@@ -36,6 +39,10 @@ internal class MoneyAccountStatusValueDMConverter @Inject constructor(
         return when (value) {
             is MoneyAccountStatusValueDM.Empty -> MoneyAccountStatusValue.Empty
             is MoneyAccountStatusValueDM.Activating -> MoneyAccountStatusValue.Onboarding.Activating(
+                source = StatusSource.CACHE,
+                customerId = value.customerId,
+            )
+            is MoneyAccountStatusValueDM.Failed -> MoneyAccountStatusValue.Onboarding.Failed(
                 source = StatusSource.CACHE,
                 customerId = value.customerId,
             )
