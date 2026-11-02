@@ -2,6 +2,7 @@
 
 package com.tangem.features.polymarket.common.ui.counter
 
+import androidx.compose.animation.core.exponentialDecay
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -32,6 +33,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import kotlinx.collections.immutable.ImmutableList
+
+private val CounterFlingDecay = exponentialDecay<Float>(frictionMultiplier = 4f)
 
 @Composable
 internal fun CounterValues(
@@ -82,6 +85,7 @@ internal fun CounterValues(
             flingBehavior = PagerDefaults.flingBehavior(
                 state = pager,
                 pagerSnapDistance = PagerSnapDistance.atMost(items.size.coerceAtLeast(1)),
+                decayAnimationSpec = CounterFlingDecay,
             ),
         ) { index ->
             CounterValue(
