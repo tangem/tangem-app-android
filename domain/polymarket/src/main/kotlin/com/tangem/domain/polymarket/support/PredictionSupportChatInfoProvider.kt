@@ -5,8 +5,8 @@ import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionPositionsValueSupplier
-import com.tangem.domain.polymarket.model.PredictionPositionsValue
-import com.tangem.domain.polymarket.model.PredictionTotalBalance
+import com.tangem.domain.models.account.PredictionPositionsValue
+import com.tangem.domain.models.account.PredictionTotalBalance
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withTimeoutOrNull
