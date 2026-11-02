@@ -408,7 +408,7 @@ internal class PolymarketSessionKeyStateServiceTest {
         }
 
     @Test
-    fun `GIVEN the next change elapsed WHEN its reconciles keep failing THEN retries stop at the cap`() = runTest {
+    fun `GIVEN the next change elapsed WHEN its reconciles keep failing THEN retries go on every minute`() = runTest {
         // Arrange
         val aboutToChange = overview(PolymarketSessionKeyStatus.ACTIVE, nextChangeAt = NOW.plus(Duration.ofMinutes(1)))
         var reconciles = 0
@@ -416,27 +416,52 @@ internal class PolymarketSessionKeyStateServiceTest {
             reconciles++
             if (reconciles == 1) aboutToChange.right() else PolymarketWalletError.Network.left()
         }
-        val service = service()
 
-        service.observe(USER_WALLET_ID).test {
+        service().observe(USER_WALLET_ID).test {
             awaitItem()
 
             // Act
             advanceTimeBy(Duration.ofHours(1).toMillis())
             runCurrent()
+            val afterOneHour = reconciles
+            advanceTimeBy(Duration.ofMinutes(1).toMillis())
+            runCurrent()
 
             // Assert
-            assertThat(reconciles).isEqualTo(12)
+            assertThat(afterOneHour).isEqualTo(64)
+            assertThat(reconciles).isEqualTo(65)
             expectNoEvents()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `GIVEN a backoff after an elapsed change WHEN a refresh also fails THEN retrying goes on`() = runTest {
+        // Arrange
+        val aboutToChange = overview(PolymarketSessionKeyStatus.ACTIVE, nextChangeAt = NOW.plus(Duration.ofMinutes(1)))
+        val changed = overview(PolymarketSessionKeyStatus.ACTIVE, isTradable = true)
+        coEvery { reconcile(USER_WALLET_ID) } returnsMany listOf(
+            aboutToChange.right(),
+            PolymarketWalletError.Network.left(),
+            PolymarketWalletError.Network.left(),
+            changed.right(),
+        )
+        val service = service()
+
+        service.observe(USER_WALLET_ID).test {
+            awaitItem()
+            advanceTimeBy(Duration.ofMinutes(1).toMillis())
+            runCurrent()
 
             // Act
             service.refresh(USER_WALLET_ID)
             runCurrent()
-            advanceTimeBy(Duration.ofHours(1).toMillis())
+            advanceTimeBy(POLL_INTERVAL_MILLIS * 2)
             runCurrent()
 
             // Assert
-            assertThat(reconciles).isEqualTo(13)
+            assertThat(awaitItem()).isEqualTo(changed.right())
+            coVerify(exactly = 4) { reconcile(USER_WALLET_ID) }
             cancelAndIgnoreRemainingEvents()
         }
     }

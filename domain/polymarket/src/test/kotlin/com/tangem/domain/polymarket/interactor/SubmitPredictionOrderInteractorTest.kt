@@ -30,6 +30,7 @@ import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -305,14 +306,33 @@ internal class SubmitPredictionOrderInteractorTest {
             coVerify(exactly = 0) { placeOrder(any(), sessionOrder, any(), any()) }
             coVerifyOrder {
                 router.reportSigningFailed(addresses = ADDRESSES, identity = SESSION_IDENTITY, failure = failure)
+                stateService.refresh(ADDRESSES.userWalletId)
                 signOrder(ownerRequest)
             }
             coVerify(exactly = 0) { router.reportRefused(any(), any(), any()) }
             coVerify(exactly = 0) { router.reconcile(any()) }
-            coVerifyOrder {
-                placeOrder(ADDRESSES, ownerOrder, PolymarketMarketVersion.V1, PredictionOrderSigningRoute.Owner)
-                stateService.refresh(ADDRESSES.userWalletId)
-            }
+        }
+
+    @Test
+    fun `GIVEN the owner signing is cancelled after a signing failure WHEN invoke THEN the state is still refreshed`() =
+        runTest {
+            // Arrange
+            coEvery { router.route(ADDRESSES) } returns SESSION_ROUTE
+            val failure = PredictionOrderFailure.Signing(
+                error = PolymarketSigningError.SessionKey(error = PolymarketSessionKeyError.KeyMissing),
+            )
+            coEvery { signOrder(sessionRequest) } returns failure.left()
+            coEvery { signOrder(ownerRequest) } throws CancellationException("left the screen")
+
+            // Act
+            val actual = runCatching {
+                interactor(request = request, preference = PredictionOrderSigningPreference.AUTOMATIC)
+            }.exceptionOrNull()
+
+            // Assert
+            assertThat(actual).isInstanceOf(CancellationException::class.java)
+            verify(exactly = 1) { stateService.refresh(ADDRESSES.userWalletId) }
+            coVerify(exactly = 0) { router.reconcile(any()) }
         }
 
     @Test
