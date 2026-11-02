@@ -13,6 +13,11 @@ sealed interface MoneyAccountMainUM {
         val onClick: () -> Unit,
     ) : MoneyAccountMainUM
 
+    data class Failed(
+        val subtitle: TextReference,
+        val onClick: () -> Unit,
+    ) : MoneyAccountMainUM
+
     data class Content(
         val subtitle: TextReference,
         val balance: BalanceUM?,
