@@ -57,7 +57,7 @@ class PolymarketSessionKeyStateService(
             .retryWhen { cause, attempt ->
                 if (cause is CancellationException && !currentCoroutineContext().isActive) throw cause
                 if (attempt == 0L) TangemLogger.e("Polymarket session key state loop failed, restarting it", cause)
-                delay(restartDelay(attempt))
+                delay(backoffDelay(attempt))
                 true
             }
             .distinctUntilChanged()
@@ -77,46 +77,29 @@ class PolymarketSessionKeyStateService(
             launch(start = CoroutineStart.UNDISPATCHED) {
                 refreshes.collect { requested.send(Unit) }
             }
-            var hasLoaded = false
-            var isSettlePoll = false
-            var isSettling = false
-            var nextChangeAt: Instant? = null
-            var polls = 0
+            val cycle = ReconcileCycle()
             while (true) {
                 val overview = reconcile(userWalletId)
-                overview.fold(
-                    ifLeft = { error ->
-                        nextChangeAt = nextChangeAt?.takeIf { it > clock.instant() }
-                        when {
-                            !hasLoaded -> send(overview)
-                            !isSettlePoll -> TangemLogger.e(
-                                "Polymarket session keys could not be refreshed, keeping the last state: $error",
-                            )
-                        }
-                    },
-                    ifRight = {
-                        send(overview)
-                        hasLoaded = true
-                        isSettling = it.wallet.sessionKeys.any { key -> key.status.isSettling() }
-                        nextChangeAt = it.assessment.nextChangeAt
-                    },
-                )
-                if (!isSettling) polls = 0
-                val isPolling = isSettling && polls < SETTLE_REFRESHES
-                if (isSettling && !isPolling) {
-                    TangemLogger.i("Polymarket session keys still settling after $polls polls, waiting for a refresh")
-                }
-                val idleTimeout = if (isPolling) PolymarketSessionKeyRelay.POLL_INTERVAL else timeUntil(nextChangeAt)
-                val isRefreshed = if (idleTimeout != null) {
-                    withTimeoutOrNull(idleTimeout) { requested.receive() } != null
-                } else {
-                    requested.receive()
-                    true
-                }
-                polls = if (isRefreshed) 0 else polls + 1
-                isSettlePoll = isPolling && !isRefreshed
+                if (cycle.accept(overview, now = clock.instant())) send(overview)
+                val isPolling = cycle.startWait()
+                val isRefreshed = awaitRefresh(requested, timeout = idleTimeout(cycle, isPolling))
+                cycle.endWait(isPolling = isPolling, isRefreshed = isRefreshed)
             }
         }
+
+    private suspend fun awaitRefresh(requested: Channel<Unit>, timeout: Duration?): Boolean {
+        if (timeout == null) {
+            requested.receive()
+            return true
+        }
+        return withTimeoutOrNull(timeout) { requested.receive() } != null
+    }
+
+    private fun idleTimeout(cycle: ReconcileCycle, isPolling: Boolean): Duration? {
+        if (isPolling) return PolymarketSessionKeyRelay.POLL_INTERVAL
+        val retry = cycle.takeElapsedChangeRetry() ?: return timeUntil(cycle.nextChangeAt)
+        return backoffDelay(retry.toLong())
+    }
 
     private fun timeUntil(moment: Instant?): Duration? {
         moment ?: return null
@@ -124,14 +107,67 @@ class PolymarketSessionKeyStateService(
         return (moment.toEpochMilli() - now.toEpochMilli()).milliseconds.coerceAtLeast(Duration.ZERO)
     }
 
-    private fun restartDelay(attempt: Long): Duration {
+    private fun backoffDelay(attempt: Long): Duration {
         val doublings = attempt.coerceAtMost(MAX_DOUBLINGS.toLong()).toInt()
         return (PolymarketSessionKeyRelay.POLL_INTERVAL * (1 shl doublings)).coerceAtMost(MAX_RESTART_DELAY)
+    }
+
+    private class ReconcileCycle {
+
+        var nextChangeAt: Instant? = null
+            private set
+
+        private var hasLoaded = false
+        private var isSettling = false
+        private var isSettlePoll = false
+        private var isElapsedChangeFailure = false
+        private var polls = 0
+        private var elapsedChangeRetries = 0
+
+        fun accept(overview: SessionKeyOverviewResult, now: Instant): Boolean = overview.fold(
+            ifLeft = { error ->
+                isElapsedChangeFailure = elapsedChangeRetries > 0 || nextChangeAt?.let { it <= now } == true
+                nextChangeAt = nextChangeAt?.takeIf { it > now }
+                if (hasLoaded && !isSettlePoll) {
+                    TangemLogger.e("Polymarket session keys could not be refreshed, keeping the last state: $error")
+                }
+                !hasLoaded
+            },
+            ifRight = { loaded ->
+                hasLoaded = true
+                isElapsedChangeFailure = false
+                elapsedChangeRetries = 0
+                isSettling = loaded.wallet.sessionKeys.any { key -> key.status.isSettling() }
+                nextChangeAt = loaded.assessment.nextChangeAt
+                true
+            },
+        )
+
+        fun startWait(): Boolean {
+            if (!isSettling) polls = 0
+            val isPolling = isSettling && polls < SETTLE_REFRESHES
+            if (isSettling && !isPolling) {
+                TangemLogger.i("Polymarket session keys still settling after $polls polls, waiting for a refresh")
+            }
+            return isPolling
+        }
+
+        fun takeElapsedChangeRetry(): Int? {
+            if (!isElapsedChangeFailure || elapsedChangeRetries >= ELAPSED_CHANGE_RETRIES) return null
+            return elapsedChangeRetries++
+        }
+
+        fun endWait(isPolling: Boolean, isRefreshed: Boolean) {
+            if (isRefreshed) elapsedChangeRetries = 0
+            polls = if (isRefreshed) 0 else polls + 1
+            isSettlePoll = isPolling && !isRefreshed
+        }
     }
 
     private companion object {
         val STOP_TIMEOUT: Duration = 5.seconds
         const val SETTLE_REFRESHES = 100
+        const val ELAPSED_CHANGE_RETRIES = 10
         val MAX_RESTART_DELAY: Duration = 1.minutes
         const val MAX_DOUBLINGS = 5
     }
