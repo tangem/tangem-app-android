@@ -6,6 +6,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PredictionAccountStatusValue
+import com.tangem.domain.models.account.PredictionPositionsValue
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
@@ -75,6 +76,47 @@ internal class PolymarketWalletBlockConverterTest {
     }
 
     @Test
+    fun `GIVEN open positions WHEN convert THEN the row shows the collateral plus the positions`() {
+        // Arrange
+        val status = active(balance = BigDecimal("10"), positions = positions(amount = BigDecimal("5")))
+        val expected = converter.convert(value = active(balance = BigDecimal("15")).toAccountStatus())
+
+        // Act
+        val actual = converter.convert(value = status.toAccountStatus())
+
+        // Assert
+        assertThat(actual).isInstanceOf(PolymarketWalletBlockUM.Content::class.java)
+        assertThat((actual as PolymarketWalletBlockUM.Content).balance)
+            .isEqualTo((expected as PolymarketWalletBlockUM.Content).balance)
+    }
+
+    @Test
+    fun `GIVEN a positions value that could not be refreshed WHEN convert THEN the row is marked as stale`() {
+        // Arrange
+        val status = active(positions = positions(amount = BigDecimal.ONE, source = StatusSource.ONLY_CACHE))
+
+        // Act
+        val actual = converter.convert(value = status.toAccountStatus()) as PolymarketWalletBlockUM.Content
+
+        // Assert
+        assertThat(actual.isBalanceFromCache).isTrue()
+        assertThat(actual.isBalanceFlickering).isFalse()
+    }
+
+    @Test
+    fun `GIVEN a positions value never read WHEN convert THEN the collateral is shown as refreshing`() {
+        // Arrange
+        val status = active(positions = PredictionPositionsValue.Unknown)
+
+        // Act
+        val actual = converter.convert(value = status.toAccountStatus()) as PolymarketWalletBlockUM.Content
+
+        // Assert
+        assertThat(actual.balance).isInstanceOf(amount)
+        assertThat(actual.isBalanceFlickering).isTrue()
+    }
+
+    @Test
     fun `GIVEN a converted row WHEN clicked THEN the wallet of that account is opened`() {
         // Arrange
         val actual = converter.convert(value = active().toAccountStatus()) as PolymarketWalletBlockUM.Content
@@ -94,13 +136,19 @@ internal class PolymarketWalletBlockConverterTest {
     private fun active(
         source: StatusSource = StatusSource.ACTUAL,
         fiatRate: BigDecimal? = BigDecimal.ONE,
+        balance: BigDecimal = BigDecimal.TEN,
+        positions: PredictionPositionsValue = positions(amount = BigDecimal.ZERO),
     ) = PredictionAccountStatusValue.Active(
         source = source,
-        balance = BigDecimal.TEN,
+        balance = balance,
         fiatRate = fiatRate,
         depositCurrency = mockk(relaxed = true),
         depositAddress = null,
+        positions = positions,
     )
+
+    private fun positions(amount: BigDecimal, source: StatusSource = StatusSource.ACTUAL) =
+        PredictionPositionsValue.Known(amount = amount, source = source)
 
     internal data class BalanceModel(val status: PredictionAccountStatusValue, val expected: Class<*>)
 
