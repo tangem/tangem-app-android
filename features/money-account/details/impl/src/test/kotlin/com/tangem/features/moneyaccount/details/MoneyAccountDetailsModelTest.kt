@@ -746,14 +746,9 @@ internal class MoneyAccountDetailsModelTest {
         activeScreenOpenedModel(amount = BigDecimal("10000"), expectedBand = BalanceBand.FROM_1K_TO_10K),
         activeScreenOpenedModel(amount = BigDecimal("25250.50"), expectedBand = BalanceBand.OVER_10K),
         ScreenOpenedModel(
-            status = MoneyAccountStatusValue.Account.Deactivated(
-                source = StatusSource.ACTUAL,
-                cryptoCurrency = token,
-                balance = null,
-                customerId = CUSTOMER_ID,
-            ),
+            status = activeAccount(balance = null),
             expectedEvent = MoneyAccountAnalyticsEvents.AccountScreenOpened(
-                accountState = MoneyAccountAnalyticsEvents.AccountState.CLOSED,
+                accountState = MoneyAccountAnalyticsEvents.AccountState.ACTIVE,
                 balanceBand = null,
                 currency = null,
             ),
