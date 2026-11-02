@@ -49,6 +49,7 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.button.TangemBut
 import com.tangem.feature.tester.presentation.storybook.page.ds.buttongroup.TangemButtonGroupStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.buttonstack.TangemButtonStackStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.checkbox.TangemCheckboxV2Story
+import com.tangem.feature.tester.presentation.storybook.page.ds.counter.TangemCounterStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.checkmark.TangemCheckmarkStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.fade.TangemFadeStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.filter.TangemFilterGroupStory
@@ -157,6 +158,7 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
                 is TangemFilterGroupStory -> TangemFilterGroupStory(state = storyState)
                 is TangemTabNavigationStory -> TangemTabNavigationStory(state = storyState)
                 is TangemSegmentedControlStory -> TangemSegmentedControlStory(state = storyState)
+                is TangemCounterStory -> TangemCounterStory(state = storyState)
                 is TextStyleStory -> TextStyleStory(state = storyState)
             }
 
