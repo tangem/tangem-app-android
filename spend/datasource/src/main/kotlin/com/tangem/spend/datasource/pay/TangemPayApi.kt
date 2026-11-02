@@ -55,7 +55,10 @@ interface TangemPayApi {
 
     /** Recipients saved for bank off-ramp withdrawals. */
     @GET("v1/account/bank-accounts")
-    suspend fun getBankAccounts(@Header("Authorization") authHeader: String): ApiResponse<BankAccountsResponse>
+    suspend fun getBankAccounts(
+        @Header("Authorization") authHeader: String,
+        @Query("rail") rail: String?,
+    ): ApiResponse<BankAccountsResponse>
 
     /** Source tokens and bank rails a withdrawal can use, with each rail's fee and ETA. */
     @GET("v1/account/bank-offramp/options")

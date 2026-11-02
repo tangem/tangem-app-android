@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
+import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.repository.BankOfframpRepository
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -37,6 +38,21 @@ internal class GetBankAccountsUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(accounts.right())
+    }
+
+    @Test
+    fun `GIVEN SPEI recipient among saved accounts WHEN invoke THEN only non-SPEI accounts returned`() = runTest {
+        // Arrange
+        val ach = bankAccount(id = "1", details = bankAccountDetails(rail = BankRail.ACH))
+        val spei = bankAccount(id = "2", details = bankAccountDetails(rail = BankRail.SPEI))
+        val unknownRail = bankAccount(id = "3", details = bankAccountDetails(rail = null))
+        coEvery { repository.getBankAccounts(TEST_USER_WALLET_ID) } returns listOf(ach, spei, unknownRail).right()
+
+        // Act
+        val actual = useCase(TEST_USER_WALLET_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(listOf(ach, unknownRail).right())
     }
 
     @Test
