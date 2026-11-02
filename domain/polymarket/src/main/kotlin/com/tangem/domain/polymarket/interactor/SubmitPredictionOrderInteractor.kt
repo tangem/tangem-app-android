@@ -72,10 +72,8 @@ class SubmitPredictionOrderInteractor(
             if (!error.refusesSessionKey()) return PredictionSubmitOrderError.NotPlaced(error).left()
 
             router.reportRefused(addresses = request.addresses, identity = route.identity, error = error)
-            reconciliationScope.launch {
-                router.reconcile(addresses = request.addresses)
-                stateService.refresh(request.addresses.userWalletId)
-            }
+            stateService.refresh(request.addresses.userWalletId)
+            reconciliationScope.launch { router.reconcile(addresses = request.addresses) }
             return submit(request = request, route = PredictionOrderSigningRoute.Owner, onStep = onStep)
         }
 
