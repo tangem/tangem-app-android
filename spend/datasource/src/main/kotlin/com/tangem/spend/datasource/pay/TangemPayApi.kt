@@ -53,6 +53,13 @@ interface TangemPayApi {
         @Path("product_instance_id") productInstanceId: String,
     ): ApiResponse<BankCredentialsResponse>
 
+    @GET("v1/account/bank-credentials/{product_instance_id}")
+    suspend fun getAllBankCredentials(
+        @Header("Authorization") authHeader: String,
+        @Path("product_instance_id") productInstanceId: String,
+        @Query("rails") rails: String,
+    ): ApiResponse<BankCredentialsListResponse>
+
     /** Recipients saved for bank off-ramp withdrawals. */
     @GET("v1/account/bank-accounts")
     suspend fun getBankAccounts(@Header("Authorization") authHeader: String): ApiResponse<BankAccountsResponse>
