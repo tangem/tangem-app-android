@@ -5,6 +5,7 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.collectibles.impl.packopening.model.BuybackState
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.format.bigdecimal.anyDecimals
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.collectibles.models.CollectibleGachaMachine
@@ -175,7 +176,8 @@ internal class CollectiblesPackOpeningConverterTest {
         step = step,
     )
 
-    private fun usdc(amount: String) = BigDecimal(amount).format { crypto(cryptoCurrency = MockCollectibles.usdc) }
+    private fun usdc(amount: String) =
+        BigDecimal(amount).format { crypto(cryptoCurrency = MockCollectibles.usdc).anyDecimals(minDecimals = 0) }
 
     private companion object {
 
