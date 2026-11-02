@@ -32,14 +32,13 @@ internal class ProductActivationTracker(
         return stopped
     }
 
-    private fun event(product: TangemPayProduct, outcome: Outcome) =
-        TangemPayAnalyticsEvents.ProductActivationFinished(
-            product = product.toAnalyticsProduct(),
-            result = outcome.result,
-            failureReason = outcome.failureReason,
-            sinceOrder = orderedAt.elapsedNow(),
-            plan = plan,
-        )
+    private fun event(product: TangemPayProduct, outcome: Outcome) = TangemPayAnalyticsEvents.ProductActivationFinished(
+        product = product.toAnalyticsProduct(),
+        result = outcome.result,
+        failureReason = outcome.failureReason,
+        sinceOrder = orderedAt.elapsedNow(),
+        plan = plan,
+    )
 
     private fun TangemPayCustomerState.outcomeOf(product: TangemPayProduct): Outcome? = when (this) {
         is TangemPayCustomerState.Accounts -> product.outcomeIn(paymentAccount, moneyAccount)
