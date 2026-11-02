@@ -27,8 +27,8 @@ import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.GaslessYieldRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
+import com.tangem.domain.transaction.error.mapToFeeError
 import com.tangem.domain.transaction.models.GaslessApproval
-import com.tangem.domain.transaction.models.GaslessFeePlan
 import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.raiseIllegalStateError
@@ -71,7 +71,12 @@ internal class TokenFeeCalculator(
 
             when (result) {
                 is Result.Success -> result.data
-                is Result.Failure -> raise(GaslessError.DataError(result.error))
+                // Kept distinct so the swap can fall back to a separate approve when the RPC rejects the override
+                is Result.Failure -> if (result.error is BlockchainSdkError.Ethereum.EstimateOverrideError) {
+                    raise(result.mapToFeeError())
+                } else {
+                    raise(GaslessError.DataError(result.error))
+                }
             }
         }
     }
@@ -253,14 +258,7 @@ internal class TokenFeeCalculator(
                 // sub-call gas, present only on the yield path where a batch is built.
                 mainTransactionGasLimit = mainTransactionGasLimit,
                 withdrawGasLimit = withdrawGasLimit.takeIf { isYieldActive },
-                gaslessFeePlan = approval?.let { approval ->
-                    GaslessFeePlan.TokenPayWithApproval(
-                        feeToken = tokenForPayFee,
-                        fee = fee,
-                        approval = approval,
-                        approveGasLimit = approveGasLimit,
-                    )
-                },
+                approveGasLimit = approveGasLimit.takeIf { approval != null },
             )
         }
     }
