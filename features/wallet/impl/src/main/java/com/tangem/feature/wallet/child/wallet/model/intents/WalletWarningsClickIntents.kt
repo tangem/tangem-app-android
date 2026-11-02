@@ -47,9 +47,9 @@ import com.tangem.domain.wallets.registration.WalletLinkError
 import com.tangem.domain.yield.supply.usecase.YieldSupplySetShouldShowMainPromoUseCase
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
+import com.tangem.feature.wallet.presentation.wallet.state.WalletLinkProgressHolder
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
-import com.tangem.feature.wallet.presentation.wallet.state.transformers.LinkWalletShowProgressTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
@@ -151,6 +151,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
     private val collectiblesFeatureToggles: CollectiblesFeatureToggles,
     private val linkWalletToDeviceUseCase: LinkWalletToDeviceUseCase,
+    private val walletLinkProgressHolder: WalletLinkProgressHolder,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
 
     override fun onAddBackupCardClick() {
@@ -474,11 +475,16 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
     /** On success the banner goes away by itself: the link status flow re-emits and the banner condition is false. */
     override fun onLinkWalletClick(userWallet: UserWallet) {
-        stateHolder.update(LinkWalletShowProgressTransformer(userWallet.walletId, shouldShowProgress = true))
+        if (!walletLinkProgressHolder.tryStart(userWallet.walletId)) return
 
         modelScope.launch {
-            linkWalletToDeviceUseCase(userWallet).onLeft { error ->
-                stateHolder.update(LinkWalletShowProgressTransformer(userWallet.walletId, shouldShowProgress = false))
+            val result = try {
+                linkWalletToDeviceUseCase(userWallet)
+            } finally {
+                walletLinkProgressHolder.finish(userWallet.walletId)
+            }
+
+            result.onLeft { error ->
                 if (error !is WalletLinkError.Cancelled) {
                     uiMessageSender.send(
                         DialogMessage(

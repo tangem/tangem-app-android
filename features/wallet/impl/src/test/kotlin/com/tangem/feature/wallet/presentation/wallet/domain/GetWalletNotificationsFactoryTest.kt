@@ -42,6 +42,7 @@ import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
+import com.tangem.feature.wallet.presentation.wallet.state.WalletLinkProgressHolder
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotificationUM
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.crypto.BlockchainUtils
@@ -104,7 +105,9 @@ internal class GetWalletNotificationsFactoryTest {
     private val coldWallet: UserWallet.Cold = mockk(relaxed = true)
     private val hotWallet: UserWallet.Hot = mockk(relaxed = true)
 
-    private val factory = GetWalletNotificationsFactory(
+    private var walletLinkProgressHolder = WalletLinkProgressHolder()
+
+    private val factory get() = GetWalletNotificationsFactory(
         isDemoCardUseCase = isDemoCardUseCase,
         isNeedToBackupUseCase = isNeedToBackupUseCase,
         isWalletBackupProblematicUseCase = isWalletBackupProblematicUseCase,
@@ -124,6 +127,7 @@ internal class GetWalletNotificationsFactoryTest {
         isSocialBackupCompletedUseCase = isSocialBackupCompletedUseCase,
         getWalletLinkStatusUseCase = getWalletLinkStatusUseCase,
         walletFeatureToggles = walletFeatureToggles,
+        walletLinkProgressHolder = walletLinkProgressHolder,
     )
 
     @BeforeEach
@@ -155,6 +159,7 @@ internal class GetWalletNotificationsFactoryTest {
             hotWallet,
         )
         mockkStatic(ScanResponse::cardTypesResolver)
+        walletLinkProgressHolder = WalletLinkProgressHolder()
 
         // Defaults: every notification is suppressed. Each test flips exactly one gate on.
         every { accountDependencies.singleAccountStatusListSupplier } returns singleAccountStatusListSupplier
@@ -283,6 +288,52 @@ internal class GetWalletNotificationsFactoryTest {
 
             // Assert
             verify(exactly = 1) { clickIntents.onLinkWalletClick(coldWallet) }
+        }
+
+        @Test
+        fun `GIVEN stored wallet updated WHEN link button clicked THEN link intent gets the stored wallet`() = runTest {
+            // Arrange
+            val storedWallet = mockk<UserWallet.Hot>(relaxed = true) {
+                every { walletId } returns WALLET_ID
+                every { isBackedUp } returns true
+                every { hotWalletId } returns hotWallet.hotWalletId
+            }
+            every { getUserWalletUseCase.invokeFlow(WALLET_ID) } returns flowOf(storedWallet.right())
+            every { getWalletLinkStatusUseCase(hotWallet) } returns flowOf(false)
+            val banner = factory.create(hotWallet, clickIntents).first().notifications.single()
+
+            // Act
+            banner.messageUM.buttonsUM.single().onClick()
+
+            // Assert
+            verify(exactly = 1) { clickIntents.onLinkWalletClick(storedWallet) }
+        }
+
+        @Test
+        fun `GIVEN wallet is being linked WHEN notifications rebuilt THEN banner keeps progress`() = runTest {
+            // Arrange
+            every { getWalletLinkStatusUseCase(coldWallet) } returns flowOf(false)
+            val isNeedToBackup = MutableStateFlow(false)
+            every { isNeedToBackupUseCase(WALLET_ID) } returns isNeedToBackup
+
+            factory.create(coldWallet, clickIntents).test {
+                assertThat(awaitItem().isLinkBannerLoading()).isFalse()
+                walletLinkProgressHolder.tryStart(WALLET_ID)
+                assertThat(awaitItem().isLinkBannerLoading()).isTrue()
+
+                // Act
+                isNeedToBackup.value = true
+
+                // Assert
+                assertThat(awaitItem().isLinkBannerLoading()).isTrue()
+                walletLinkProgressHolder.finish(WALLET_ID)
+                assertThat(awaitItem().isLinkBannerLoading()).isFalse()
+            }
+        }
+
+        private fun WalletNotificationsSnapshot.isLinkBannerLoading(): Boolean {
+            val banner = notifications.filterIsInstance<WalletNotificationUM.LinkWalletToDevice>().single()
+            return banner.messageUM.buttonsUM.single().isLoading
         }
     }
 
