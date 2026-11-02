@@ -1060,7 +1060,7 @@ sealed class TangemPayAnalyticsEvents(
             val railName = when (rail) {
                 BankRail.ACH -> RAIL_ACH
                 BankRail.WIRE -> RAIL_WIRE
-                null -> return emptyMap()
+                BankRail.SPEI, null -> return emptyMap()
             }
 
             return mapOf(AnalyticsParam.Key.TYPE to railName)
