@@ -1319,6 +1319,7 @@
   <string name="money_account_onboarding_transfers_card_caption">Entrées. Sorties.</string>
   <string name="money_account_onboarding_transfers_card_subtitle">avec un compte dédié et des coordonnées bancaires</string>
   <string name="money_account_onboarding_transfers_card_title">Envoyez et recevez des paiements en fiat</string>
+  <string name="money_account_send_bank_transfer_unavailable">Indisponible</string>
   <string name="money_account_send_fees_footer">Les frais incluent le service %s et les frais réseau estimés</string>
   <string name="money_account_send_network_fee_note">Les frais incluent des frais réseau estimés à %s, variables selon l’activité du réseau</string>
   <string name="money_account_send_pay_button">Payer %s</string>
@@ -1589,10 +1590,10 @@
   <string name="prediction_add_funds_max_receive_amount_title">Le montant à recevoir ne doit pas dépasser %s</string>
   <string name="prediction_add_funds_notification_limits_description">Le montant du dépôt doit être d\'au moins %1$s. Les dépôts supérieurs à $50,000 ne sont pas recommandés — divisez un montant important en plusieurs petits dépôts.</string>
   <string name="prediction_add_funds_notification_limits_title">Limites de dépôt</string>
-  <string name="prediction_add_funds_receive_body" formatted="false">Envoyez %1s depuis un autre portefeuille, minimum %2s</string>
+  <string name="prediction_add_funds_receive_body">Envoyez %1$s depuis un autre portefeuille, minimum %2$s</string>
   <string name="prediction_add_funds_receive_subtitle">Envoyez des USDC sur le réseau Polygon vers votre compte Polymarket</string>
   <string name="prediction_add_funds_receive_title">Depuis un autre portefeuille ou une plateforme d\'échange</string>
-  <string name="prediction_add_funds_subtitle" formatted="false">%1s sur %2s</string>
+  <string name="prediction_add_funds_subtitle">%1$s sur %2$s</string>
   <string name="prediction_add_funds_swap_body">Échangez un jeton que vous détenez déjà</string>
   <string name="prediction_add_funds_swap_subtitle">Utilisez les cryptos de votre portefeuille Tangem pour recharger votre compte Polymarket</string>
   <string name="prediction_add_funds_swap_title">Depuis votre portefeuille Tangem</string>
@@ -1609,7 +1610,7 @@
   <string name="prediction_close_result_partially_sold_title">Partiellement vendu</string>
   <string name="prediction_close_result_sold_title">%s vendu(s)</string>
   <string name="prediction_close_result_tokens_sold">Parts vendues</string>
-  <string name="prediction_close_selling_of" formatted="false">Vente de %1s sur %2s parts</string>
+  <string name="prediction_close_selling_of">Vente de %1$s sur %2$s parts</string>
   <string name="prediction_close_selling_tokens">Vente de %s parts</string>
   <string name="prediction_close_summary_to">Vers</string>
   <string name="prediction_close_title">Fermer la position</string>
@@ -1629,10 +1630,10 @@
   <string name="prediction_event_probability">Probabilité</string>
   <string name="prediction_event_total_volume">Volume total :</string>
   <string name="prediction_fee_sheet_builder_fee">Frais Tangem</string>
-  <string name="prediction_fee_sheet_buy_description" formatted="false">Achat de %1s parts à %2s¢ chacune. Le nombre final de parts (et le montant en %3s exécuté correspondant) peut varier dans la limite de votre tolérance au glissement de %4s, selon la liquidité du marché.</string>
+  <string name="prediction_fee_sheet_buy_description">Achat de %1$s parts à %2$s¢ chacune. Le nombre final de parts (et le montant en %3$s exécuté correspondant) peut varier dans la limite de votre tolérance au glissement de %4$s, selon la liquidité du marché.</string>
   <string name="prediction_fee_sheet_order">Ordre de prédiction</string>
   <string name="prediction_fee_sheet_polymarket_fee">Frais Polymarket</string>
-  <string name="prediction_fee_sheet_sell_description" formatted="false">Vente de %1s parts à %2s¢ chacune. Le nombre final de parts (et le montant en %3s exécuté correspondant) peut varier dans la limite de votre tolérance au glissement de %4s, selon la liquidité du marché.</string>
+  <string name="prediction_fee_sheet_sell_description">Vente de %1$s parts à %2$s¢ chacune. Le nombre final de parts (et le montant en %3$s exécuté correspondant) peut varier dans la limite de votre tolérance au glissement de %4$s, selon la liquidité du marché.</string>
   <string name="prediction_fee_sheet_total">Total</string>
   <string name="prediction_history_bought">Acheté</string>
   <string name="prediction_history_csv_average_price">Prix moyen</string>
@@ -1685,7 +1686,7 @@
   <string name="prediction_onboarding_faq_risks_question">Quels sont les risques ?</string>
   <string name="prediction_onboarding_faq_tap_answer">Votre carte signe une fois pour créer un compte de dépôt non-custodial sur Polymarket. Ensuite, vous déposez, échangez et retirez directement depuis Tangem — et seule votre carte peut déplacer les fonds.</string>
   <string name="prediction_onboarding_faq_tap_question">Que se passe-t-il lorsque je scanne ma carte ?</string>
-  <string name="prediction_onboarding_legal" formatted="false">En utilisant la fonctionnalité Prédictions, vous acceptez les %1s et les %2s</string>
+  <string name="prediction_onboarding_legal">En utilisant la fonctionnalité Prédictions, vous acceptez les %1$s et les %2$s</string>
   <string name="prediction_onboarding_legal_polymarket_terms">CGU de Polymarket</string>
   <string name="prediction_onboarding_legal_tangem_terms">CGU de Tangem</string>
   <string name="prediction_onboarding_reconnect_benefit_safe_subtitle">Même compte de dépôt, mêmes fonds. La reconnexion ne déplace jamais vos fonds</string>
@@ -1695,7 +1696,7 @@
   <string name="prediction_onboarding_reconnect_button">Continuer à prédire</string>
   <string name="prediction_onboarding_reconnect_faq_answer">Les clés d\'accès sont stockées uniquement sur votre appareil. Elles sont effacées lorsque vous réinstallez l\'application, changez de téléphone ou lorsqu\'une session expire. Votre compte lui-même reste sur Polymarket et n\'est pas affecté.</string>
   <string name="prediction_onboarding_reconnect_faq_question">Pourquoi est-ce que je vois cela ?</string>
-  <string name="prediction_onboarding_reconnect_legal" formatted="false">Aucune nouvelle condition à accepter — votre accord avec %1s et %2s s\'applique toujours</string>
+  <string name="prediction_onboarding_reconnect_legal">Aucune nouvelle condition à accepter — votre accord avec %1$s et %2$s s\'applique toujours</string>
   <string name="prediction_onboarding_reconnect_subtitle">Votre compte de dépôt, votre solde et vos positions ouvertes sont en sécurité. Cet appareil doit simplement être relié à nouveau — scannez votre carte une fois pour restaurer l\'accès.</string>
   <string name="prediction_onboarding_reconnect_title">Reconnectez votre compte Polymarket</string>
   <string name="prediction_onboarding_start_button">Commencer à prédire</string>
@@ -1734,7 +1735,7 @@
   <string name="prediction_place_result_no_fill_banner_description">Aucune part disponible sur Polymarket — votre ordre n\'a pas pu être exécuté.</string>
   <string name="prediction_place_result_no_fill_banner_title">Non exécuté</string>
   <string name="prediction_place_result_no_fill_title">Liquidité insuffisante</string>
-  <string name="prediction_place_result_partial_amount" formatted="false">%1s sur %2s</string>
+  <string name="prediction_place_result_partial_amount">%1$s sur %2$s</string>
   <string name="prediction_place_result_partial_banner_description">Votre ordre a été partiellement exécuté en raison d\'une liquidité insuffisante sur Polymarket dans votre limite de glissement.</string>
   <string name="prediction_place_result_partial_banner_title">Partiellement exécuté</string>
   <string name="prediction_place_result_partial_title">Partiellement placé</string>
@@ -1791,7 +1792,7 @@
   <string name="prediction_positions_quantity">Parts</string>
   <string name="prediction_positions_realized_description">Profit ou perte déjà verrouillé. Il provient des parts que vous avez vendues (partiellement ou totalement) et des positions résolues comme gagnées, perdues ou partagées. Le P&amp;L réalisé inclut tous les frais.</string>
   <string name="prediction_positions_realized_pnl">P&amp;L réalisé</string>
-  <string name="prediction_positions_result_amount" formatted="false">%1s %2s</string>
+  <string name="prediction_positions_result_amount">%1$s %2$s</string>
   <string name="prediction_positions_split">Partagée</string>
   <string name="prediction_positions_status">Statut</string>
   <string name="prediction_positions_title">Mes positions</string>
@@ -1818,7 +1819,7 @@
   <string name="prediction_withdraw_error_generic">Impossible d\'envoyer le retrait. Vérifiez votre connexion et réessayez</string>
   <string name="prediction_withdraw_error_rejected">Polymarket a rejeté le retrait. Réessayez</string>
   <string name="prediction_withdraw_in_progress_message">Votre retrait précédent est toujours en cours de traitement. Attendez qu\'il se termine avant d\'en lancer un nouveau.</string>
-  <string name="prediction_withdraw_min_amount">Le retrait minimum est de %s. Ajoutez des fonds pour l\'atteindre.</string>
+  <string name="prediction_withdraw_min_amount">Le retrait minimum est de %@. Ajoutez des fonds pour l\'atteindre.</string>
   <string name="prediction_withdraw_status_failed_description">Une erreur s\'est produite lors du traitement de votre retrait. Veuillez réessayer ou contacter le support.</string>
   <string name="prediction_withdraw_status_failed_notice">Échec du retrait. Aucun fonds n\'a été retiré.</string>
   <string name="prediction_withdraw_status_failed_title">Échec du retrait</string>
@@ -2821,7 +2822,7 @@
   <string name="tangempay_va_account_details">Détails du compte</string>
   <string name="tangempay_va_available_to_deposit_day">Dépôt max/jour :</string>
   <string name="tangempay_va_banking_details_error_description">Réessayez ou contactez le support si le problème persiste</string>
-  <string name="tangempay_va_banking_details_error_title">Coordonnées bancaires introuvables</string>
+  <string name="tangempay_va_banking_details_error_title">Impossible de charger les coordonnées bancaires</string>
   <string name="tangempay_va_banner_failed_description">Veuillez réessayer ou contacter le support si le problème persiste</string>
   <string name="tangempay_va_banner_failed_title">Échec de la création des coordonnées bancaires</string>
   <string name="tangempay_va_limit_resetting_everyday">Limite réinitialisée chaque jour</string>
@@ -2924,6 +2925,7 @@
   <string name="token_button_unavailability_reason_sell_unavailable">L\'achat de %s n\'est pas pris en charge par les fournisseurs actuels mais nous travaillons à ajouter plus d\'options.</string>
   <string name="token_button_unavailability_reason_staking_unavailable">Le staking de %s n\'est pas pris en charge par les fournisseurs actuels, mais nous travaillons à ajouter plus d\'options.</string>
   <string name="token_button_unavailability_reason_yield_supply_approval">L’autorisation a été révoquée. Vos fonds restent en mode rendement. Pour effectuer des actions, accédez au mode rendement et accordez à nouveau l’autorisation.</string>
+  <string name="token_details_balance_total">Solde total</string>
   <string name="token_details_earn_staking_subtitle_apy">Jusqu\'à %s APY</string>
   <string name="token_details_generate_xpub">Générer XPUB</string>
   <string name="token_details_hide_alert_hide">Masquer</string>
@@ -3491,6 +3493,13 @@
   <string name="yield_module_high_network_fees_notification_description">Les frais sont plus élevés que d\'habitude car le marché est très actif. Vous pouvez procéder maintenant ou revenir plus tard lorsque les frais seront moins élevés.</string>
   <string name="yield_module_high_network_fees_notification_title">Frais de réseau élevés</string>
   <string name="yield_module_historical_returns">Rendements historiques</string>
+  <string name="yield_module_main_promo_button">Essayer le Mode de rendement</string>
+  <string name="yield_module_main_promo_subtitle">Faites travailler vos cryptos inactives. Sans blocage, retrait à tout moment.</string>
+  <string name="yield_module_main_promo_title">Gagnez avec vos cryptos jusqu’à %1$s%% APY</string>
+  <plurals name="yield_module_main_promo_tokens_count">
+    <item quantity="one">Plus de %d token disponible</item>
+    <item quantity="other">Plus de %d tokens disponibles</item>
+  </plurals>
   <string name="yield_module_main_screen_promo_banner_message">Activez %1$s%% APY sur votre solde</string>
   <string name="yield_module_main_view_approve_notification_description">L\'autorisation pour votre token en mode Rendement a été révoquée. Ouvrez le token pour accorder à nouveau l\'autorisation.</string>
   <string name="yield_module_main_view_approve_notification_title">Approbations de tokens nécessaires</string>
