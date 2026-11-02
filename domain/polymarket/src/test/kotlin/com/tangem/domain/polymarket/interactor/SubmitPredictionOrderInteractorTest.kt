@@ -20,6 +20,7 @@ import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderResult
 import com.tangem.domain.polymarket.model.PredictionSignedOrder
 import com.tangem.domain.polymarket.sessionkey.PolymarketOrderSigningRouter
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStateService
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
@@ -28,6 +29,7 @@ import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -44,12 +46,14 @@ internal class SubmitPredictionOrderInteractorTest {
     private val signOrder: SignPredictionOrderInteractor = mockk()
     private val placeOrder: PlacePredictionOrderUseCase = mockk()
     private val router: PolymarketOrderSigningRouter = mockk(relaxUnitFun = true)
+    private val stateService: PolymarketSessionKeyStateService = mockk(relaxUnitFun = true)
     private val quote: PredictionOrderQuote = mockk()
 
     private val interactor = SubmitPredictionOrderInteractor(
         signOrder = signOrder,
         placeOrder = placeOrder,
         router = router,
+        stateService = stateService,
         reconciliationScope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined),
     )
 
@@ -68,7 +72,7 @@ internal class SubmitPredictionOrderInteractorTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(signOrder, placeOrder, router)
+        clearMocks(signOrder, placeOrder, router, stateService)
 
         every { quote.version } returns PolymarketMarketVersion.V1
         coEvery { signOrder(ownerRequest) } returns ownerOrder.right()
@@ -161,7 +165,10 @@ internal class SubmitPredictionOrderInteractorTest {
                 signOrder(ownerRequest)
                 placeOrder(ADDRESSES, ownerOrder, PolymarketMarketVersion.V1, PredictionOrderSigningRoute.Owner)
             }
-            coVerify(exactly = 1) { router.reconcile(ADDRESSES) }
+            coVerifyOrder {
+                router.reconcile(ADDRESSES)
+                stateService.refresh(ADDRESSES.userWalletId)
+            }
         }
 
     @Test
@@ -217,10 +224,13 @@ internal class SubmitPredictionOrderInteractorTest {
                 reconciliation.await()
                 isReconciled = true
             }
+            var isRefreshed = false
+            every { stateService.refresh(ADDRESSES.userWalletId) } answers { isRefreshed = true }
 
             // Act
             val actual = interactor(request = request, preference = PredictionOrderSigningPreference.AUTOMATIC)
             val isReconciledOnReturn = isReconciled
+            val isRefreshedOnReturn = isRefreshed
             reconciliation.complete(Unit)
 
             // Assert
@@ -229,6 +239,8 @@ internal class SubmitPredictionOrderInteractorTest {
             )
             assertThat(isReconciledOnReturn).isFalse()
             assertThat(isReconciled).isTrue()
+            assertThat(isRefreshedOnReturn).isFalse()
+            assertThat(isRefreshed).isTrue()
         }
 
     @Test
@@ -296,6 +308,7 @@ internal class SubmitPredictionOrderInteractorTest {
         }
         coVerify(exactly = 0) { router.reportRefused(any(), any(), any()) }
         coVerify(exactly = 0) { router.reconcile(any()) }
+        verify(exactly = 0) { stateService.refresh(any()) }
     }
 
     @Test
