@@ -16,6 +16,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.LocalIsInDarkTheme
@@ -28,6 +31,7 @@ import com.tangem.features.polymarket.impl.common.ui.chart.PolymarketProbability
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.delay
 
 internal val probabilityChartStoryFactory = StoryPageFactory { PolymarketProbabilityChartStory }
 
@@ -40,6 +44,18 @@ internal fun PolymarketProbabilityChartStory(modifier: Modifier = Modifier) {
     var fontScale by rememberSaveable { mutableFloatStateOf(1f) }
     var isNarrow by rememberSaveable { mutableStateOf(false) }
     var revision by rememberSaveable { mutableIntStateOf(0) }
+    var isPlaying by rememberSaveable { mutableStateOf(false) }
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(isPlaying, lifecycle) {
+        if (isPlaying) {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                while (true) {
+                    delay(DEMO_UPDATE_INTERVAL_MILLIS)
+                    revision++
+                }
+            }
+        }
+    }
     val content = remember(sample, period, revision) { chartFixture(sample, period, revision) }
     val formatter = remember(period) { SimpleDateFormat(if (period == "Max") "MMM d" else "HH:mm", Locale.ENGLISH) }
     CompositionLocalProvider(LocalIsInDarkTheme provides isDark) {
@@ -65,7 +81,7 @@ internal fun PolymarketProbabilityChartStory(modifier: Modifier = Modifier) {
                             state = content,
                             periods = chartPeriods,
                             selectedPeriodId = period,
-                            onPeriodChange = { id -> period = id; revision = 0 },
+                            onPeriodChange = { id -> period = id; revision = 0; isPlaying = false },
                             formatTime = { formatter.format(Date(it)) },
                             emptyTitle = stringReference("No data yet"),
                             emptyDescription = stringReference("The chart will appear after the first predictions"),
@@ -75,6 +91,18 @@ internal fun PolymarketProbabilityChartStory(modifier: Modifier = Modifier) {
                     }
                 }
                 Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    ChartChoices("Updates") {
+                        ChartChoice("Append live point", false) { revision++ }
+                        ChartChoice(if (isPlaying) "Pause live updates" else "Start live updates", isPlaying) {
+                            if (!isPlaying) {
+                                period = "Live"
+                                if (sample !in listOf(ChartSample.Binary, ChartSample.Sports, ChartSample.Multiple)) {
+                                    sample = ChartSample.Sports
+                                }
+                            }
+                            isPlaying = !isPlaying
+                        }
+                    }
                     Text(
                         text = "Touch and drag to inspect every outcome at the same time. " +
                             "Release to return to the latest values.",
@@ -83,7 +111,7 @@ internal fun PolymarketProbabilityChartStory(modifier: Modifier = Modifier) {
                     )
                     ChartChoices("Data") {
                         ChartSample.entries.forEach { item ->
-                            ChartChoice(item.label, item == sample) { sample = item; revision = 0 }
+                            ChartChoice(item.label, item == sample) { sample = item; revision = 0; isPlaying = false }
                         }
                     }
                     ChartChoices("Theme") {
@@ -104,12 +132,13 @@ internal fun PolymarketProbabilityChartStory(modifier: Modifier = Modifier) {
                         ChartChoice("Full width", !isNarrow) { isNarrow = false }
                         ChartChoice("280 dp", isNarrow) { isNarrow = true }
                     }
-                    ChartChoice("Append live point", false) { revision++ }
                 }
             }
         }
     }
 }
+
+private const val DEMO_UPDATE_INTERVAL_MILLIS = 2_000L
 
 @Composable
 private fun ChartChoices(title: String, content: @Composable () -> Unit) {
