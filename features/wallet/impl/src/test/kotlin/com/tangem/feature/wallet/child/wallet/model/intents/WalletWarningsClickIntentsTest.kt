@@ -1,5 +1,7 @@
 package com.tangem.feature.wallet.child.wallet.model.intents
 
+import arrow.core.left
+import arrow.core.right
 import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
@@ -16,7 +18,12 @@ import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.wallets.usecase.DerivationOutcome
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.wallets.registration.WalletLinkError
 import com.tangem.domain.wallets.usecase.DeriveCurrencyAndOwnerKeysUseCase
+import com.tangem.domain.wallets.usecase.LinkWalletToDeviceUseCase
+import com.tangem.feature.wallet.presentation.wallet.state.WalletLinkProgressHolder
+import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
@@ -36,10 +43,12 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -59,6 +68,8 @@ internal class WalletWarningsClickIntentsTest {
     private val screenLifecycleProvider = ScreenLifecycleProvider()
     private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher = mockk()
     private val collectiblesFeatureToggles: CollectiblesFeatureToggles = mockk()
+    private val stateHolder: WalletStateController = mockk(relaxUnitFun = true)
+    private val linkWalletToDeviceUseCase: LinkWalletToDeviceUseCase = mockk()
 
     private val userWalletId = UserWalletId(stringValue = "0123456789ABCDEF")
     private val currencies = listOf<CryptoCurrency>(mockk(relaxed = true))
@@ -75,6 +86,8 @@ internal class WalletWarningsClickIntentsTest {
             analyticsEventHandler,
             hardwareUpgradeLauncher,
             collectiblesAccountStatusFetcher,
+            stateHolder,
+            linkWalletToDeviceUseCase,
         )
         screenLifecycleProvider.onResume()
         every { collectiblesFeatureToggles.isCollectiblesEnabled } returns true
@@ -202,9 +215,83 @@ internal class WalletWarningsClickIntentsTest {
 
     private fun provideTestModels() = listOf(DerivationOutcome.DERIVED, DerivationOutcome.NOTHING_MISSING)
 
-    private fun createImplementor(scope: TestScope): WalletWarningsClickIntentsImplementor {
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class OnLinkWalletClick {
+
+        private val userWallet: UserWallet = mockk { every { walletId } returns userWalletId }
+
+        private val walletLinkProgressHolder = WalletLinkProgressHolder()
+
+        @Test
+        fun `GIVEN link in progress WHEN link wallet click THEN wallet is linking and no dialog`() = runTest {
+            // Arrange
+            val pendingLink = CompletableDeferred<Unit>()
+            coEvery { linkWalletToDeviceUseCase(userWallet) } coAnswers { pendingLink.await().right() }
+
+            // Act
+            createImplementor(scope = this, walletLinkProgressHolder).onLinkWalletClick(userWallet)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(walletLinkProgressHolder.isLinking(userWalletId).first()).isTrue()
+            verify(exactly = 0) { uiMessageSender.send(any()) }
+            pendingLink.complete(Unit)
+            advanceUntilIdle()
+            assertThat(walletLinkProgressHolder.isLinking(userWalletId).first()).isFalse()
+        }
+
+        @Test
+        fun `GIVEN link in progress WHEN link wallet clicked again THEN link is not started twice`() = runTest {
+            // Arrange
+            val pendingLink = CompletableDeferred<Unit>()
+            coEvery { linkWalletToDeviceUseCase(userWallet) } coAnswers { pendingLink.await().right() }
+            val implementor = createImplementor(scope = this, walletLinkProgressHolder)
+            implementor.onLinkWalletClick(userWallet)
+            advanceUntilIdle()
+
+            // Act
+            implementor.onLinkWalletClick(userWallet)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { linkWalletToDeviceUseCase(userWallet) }
+            pendingLink.complete(Unit)
+            advanceUntilIdle()
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN link fails WHEN link wallet click THEN linking ends and error shown unless cancelled`(
+            model: LinkFailureModel,
+        ) = runTest {
+            // Arrange
+            coEvery { linkWalletToDeviceUseCase(userWallet) } returns model.error.left()
+
+            // Act
+            createImplementor(scope = this, walletLinkProgressHolder).onLinkWalletClick(userWallet)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(walletLinkProgressHolder.isLinking(userWalletId).first()).isFalse()
+            verify(exactly = if (model.isErrorShown) 1 else 0) { uiMessageSender.send(any<DialogMessage>()) }
+        }
+
+        private fun provideTestModels() = listOf(
+            LinkFailureModel(error = WalletLinkError.Cancelled, isErrorShown = false),
+            LinkFailureModel(error = WalletLinkError.Failed(reason = "api"), isErrorShown = true),
+            LinkFailureModel(error = WalletLinkError.NotSupported, isErrorShown = true),
+        )
+    }
+
+    data class LinkFailureModel(val error: WalletLinkError, val isErrorShown: Boolean)
+
+    private fun createImplementor(
+        scope: TestScope,
+        walletLinkProgressHolder: WalletLinkProgressHolder = WalletLinkProgressHolder(),
+    ): WalletWarningsClickIntentsImplementor {
         val implementor = WalletWarningsClickIntentsImplementor(
-            stateHolder = mockk(relaxed = true),
+            stateHolder = stateHolder,
             walletEventSender = mockk(relaxed = true),
             deriveCurrencyAndOwnerKeysUseCase = deriveCurrencyAndOwnerKeysUseCase,
             setCardWasScannedUseCase = mockk(relaxed = true),
@@ -234,6 +321,8 @@ internal class WalletWarningsClickIntentsTest {
             screenLifecycleProvider = screenLifecycleProvider,
             collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
             collectiblesFeatureToggles = collectiblesFeatureToggles,
+            linkWalletToDeviceUseCase = linkWalletToDeviceUseCase,
+            walletLinkProgressHolder = walletLinkProgressHolder,
         )
         implementor.initialize(router = mockk(relaxed = true), coroutineScope = scope)
 

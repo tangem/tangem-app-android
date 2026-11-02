@@ -343,6 +343,7 @@
   <string name="prediction_add_funds_swap_title">從您的 Tangem 錢包</string>
   <string name="prediction_balance_total">總餘額</string>
   <string name="prediction_balance_withdraw">提現</string>
+  <string name="prediction_cash_out">兌現</string>
   <string name="prediction_claim_error_failed">索賠未成功。您的帳戶資金未發生變動，您可以重試。</string>
   <string name="prediction_claim_error_generic">無法發送索賠請求。請重試。</string>
   <string name="prediction_claim_error_rejected">Polymarket 拒絕轉發索賠請求。請重新整理您的持倉並重試。</string>
@@ -373,8 +374,10 @@
   <string name="prediction_event_probability">機率</string>
   <string name="prediction_event_total_volume">總交易量：</string>
   <string name="prediction_fee_sheet_builder_fee">Tangem 建設者費用</string>
+  <string name="prediction_fee_sheet_buy_description">以每份 %2$s¢ 的價格買入 %1$s 份。根據市場撮合情況，最終成交份數（及對應的 %3$s 執行金額）可能會在您設定的 %4$s 滑點限制內浮動。</string>
   <string name="prediction_fee_sheet_order">預測訂單</string>
   <string name="prediction_fee_sheet_polymarket_fee">Polymarket 費用</string>
+  <string name="prediction_fee_sheet_sell_description">以每份 %2$s¢ 的價格賣出 %1$s 份。根據市場撮合情況，最終成交份數（及對應的 %3$s 執行金額）可能會在您設定的 %4$s 滑點限制內浮動。\n</string>
   <string name="prediction_fee_sheet_total">總計</string>
   <string name="prediction_history_bought">已買入</string>
   <string name="prediction_history_csv_average_price">平均價格</string>
