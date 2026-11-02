@@ -2,10 +2,12 @@ package com.tangem.data.pay.repository
 
 import arrow.core.Either
 import arrow.core.left
+import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.right
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.bankofframp.BankAccountDetails
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
@@ -107,21 +109,27 @@ internal class MockBankOfframpOrderRepository(
         }
     }
 
-    private fun createMockRoute(rail: BankRail, recipient: BankOfframpRecipient) = BankOfframpRoute(
-        depositAddress = FAKE_ROUTE_DEPOSIT_ADDRESS,
-        fee = when (rail) {
-            BankRail.ACH -> ACH_FEE
-            BankRail.WIRE -> WIRE_FEE
-        },
-        eta = when (rail) {
-            BankRail.ACH -> ACH_ETA
-            BankRail.WIRE -> WIRE_ETA
-        },
-        bankAccountId = when (recipient) {
-            is BankOfframpRecipient.Saved -> recipient.bankAccountId
-            is BankOfframpRecipient.New -> "$NEW_BANK_ACCOUNT_ID_PREFIX${nextBankAccountIndex++}"
-        },
-    )
+    private fun Raise<BankOfframpError>.createMockRoute(
+        rail: BankRail,
+        recipient: BankOfframpRecipient,
+    ): BankOfframpRoute {
+        val (fee, eta) = when (rail) {
+            BankRail.ACH -> ACH_FEE to ACH_ETA
+            BankRail.WIRE -> WIRE_FEE to WIRE_ETA
+            BankRail.SPEI -> raise(
+                BankOfframpError.Unknown(cause = IllegalArgumentException("SPEI is withdrawn by quote, not by route")),
+            )
+        }
+        return BankOfframpRoute(
+            depositAddress = FAKE_ROUTE_DEPOSIT_ADDRESS,
+            fee = fee,
+            eta = eta,
+            bankAccountId = when (recipient) {
+                is BankOfframpRecipient.Saved -> recipient.bankAccountId
+                is BankOfframpRecipient.New -> "$NEW_BANK_ACCOUNT_ID_PREFIX${nextBankAccountIndex++}"
+            },
+        )
+    }
 
     private fun stateOf(orderId: String, order: MockOrder): BankOfframpOrderState {
         val isProcessing = currentTimeMillis() - order.createdAtMillis < AWAITING_SIGNATURE_DELAY_MILLIS
@@ -190,9 +198,17 @@ internal class MockBankOfframpOrderRepository(
         const val NEW_BANK_ACCOUNT_ID_PREFIX = "mock-bank-account-new-"
         const val FAKE_ROUTE_DEPOSIT_ADDRESS = "0x0000000000000000000000000000000000000003"
         const val USD = "USD"
-        val ACH_FEE = OfframpFee(name = "ACH", amount = BigDecimal("1.50"), currency = USD, description = null)
+        val ACH_FEE = fixedFee(name = "ACH", amount = "1.50")
         val ACH_ETA = OfframpEta(minDays = 1, maxDays = 3)
-        val WIRE_FEE = OfframpFee(name = "FedWire", amount = BigDecimal("15.00"), currency = USD, description = null)
+        val WIRE_FEE = fixedFee(name = "FedWire", amount = "15.00")
         val WIRE_ETA = OfframpEta(minDays = 0, maxDays = 1)
+
+        fun fixedFee(name: String, amount: String) = OfframpFee(
+            name = name,
+            calculationType = AccountFee.CalculationType.FIXED,
+            amount = BigDecimal(amount),
+            currency = USD,
+            description = null,
+        )
     }
 }
