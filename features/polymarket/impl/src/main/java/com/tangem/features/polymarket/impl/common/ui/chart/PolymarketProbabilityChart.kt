@@ -31,14 +31,10 @@ import kotlinx.collections.immutable.toImmutableList
  * Histories with fewer than two distinct timestamps use the empty state. Errors are mapped to
  * [PolymarketProbabilityChart.State.NoData] by the caller until an error design is available.
  *
- * @param state Prepared, ordered histories or a loading/empty state; no data fetching is performed.
  * @param periods Available periods, with localized labels. Empty hides the period control.
  * @param selectedPeriodId Caller-owned selection; changing it also clears the time marker.
  * @param onPeriodChange Requests another period without changing the supplied histories.
  * @param formatTime Localized date/time readout appropriate to the selected period.
- * @param emptyTitle Localized title for the empty/error placeholder.
- * @param emptyDescription Localized description for the empty/error placeholder.
- * @param modifier Controls the outer width. Height adapts to the legend and font size.
  * @param legendLineCount Minimum reserved legend lines, also used for the loading skeleton.
  */
 @Composable

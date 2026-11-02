@@ -15,12 +15,16 @@ import com.patrykandpatrick.vico.compose.cartesian.layer.rememberSplitLine
 import com.patrykandpatrick.vico.core.cartesian.HorizontalLayout
 import com.patrykandpatrick.vico.core.cartesian.Zoom
 import com.patrykandpatrick.vico.core.cartesian.data.AxisValueOverrider
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModel
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
 import com.tangem.common.ui.charts.layer.SplitLineShader
 import com.tangem.features.polymarket.impl.common.ui.chart.PolymarketProbabilityChart.Series
 import com.tangem.features.polymarket.impl.common.ui.chart.PolymarketProbabilityChart.State.Content
+
+// This Vico fork rounds its inferred GCD through Int, which overflows for large millisecond intervals.
+internal val probabilityChartXStep: (CartesianChartModel) -> Double = { 1.0 }
 
 @Composable
 internal fun ProbabilityChartLines(
@@ -72,6 +76,7 @@ internal fun ProbabilityChartLines(
         marker = marker,
         markerVisibilityListener = listener,
         horizontalLayout = HorizontalLayout.FullWidth(),
+        getXStep = probabilityChartXStep,
         decorations = if (isLatestVisible) listOf(latestPoints) else emptyList(),
     )
     CartesianChartHost(
