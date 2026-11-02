@@ -1,4 +1,4 @@
-package com.tangem.features.polymarket.common.ui.counter
+package com.tangem.features.polymarket.impl.common.ui.counter
 
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Test
