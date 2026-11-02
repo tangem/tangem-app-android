@@ -32,6 +32,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -167,10 +168,39 @@ internal class SubmitPredictionOrderInteractorTest {
                 placeOrder(ADDRESSES, ownerOrder, PolymarketMarketVersion.V1, PredictionOrderSigningRoute.Owner)
             }
             coVerifyOrder {
-                router.reconcile(ADDRESSES)
+                router.reportRefused(addresses = ADDRESSES, identity = SESSION_IDENTITY, error = UNAUTHORIZED)
                 stateService.refresh(ADDRESSES.userWalletId)
             }
+            coVerify(exactly = 1) { router.reconcile(ADDRESSES) }
         }
+
+    @Test
+    fun `GIVEN the reconciliation throws WHEN invoke after a refusal THEN the state is still refreshed`() = runTest {
+        // Arrange
+        val interactor = SubmitPredictionOrderInteractor(
+            signOrder = signOrder,
+            placeOrder = placeOrder,
+            router = router,
+            stateService = stateService,
+            reconciliationScope = CoroutineScope(
+                SupervisorJob() + Dispatchers.Unconfined + CoroutineExceptionHandler { _, _ -> },
+            ),
+        )
+        coEvery { router.route(ADDRESSES) } returns SESSION_ROUTE
+        coEvery { placeOrder(ADDRESSES, sessionOrder, PolymarketMarketVersion.V1, SESSION_ROUTE) } returns
+            UNAUTHORIZED.left()
+        coEvery { router.reconcile(any()) } throws IllegalStateException("secure storage locked")
+
+        // Act
+        val actual = interactor(request = request, preference = PredictionOrderSigningPreference.AUTOMATIC)
+
+        // Assert
+        assertThat(actual).isEqualTo(
+            PredictionSubmittedOrder(result = RESULT, route = PredictionOrderSigningRoute.Owner).right(),
+        )
+        coVerify(exactly = 1) { router.reconcile(ADDRESSES) }
+        verify(exactly = 1) { stateService.refresh(ADDRESSES.userWalletId) }
+    }
 
     @Test
     fun `GIVEN the session order could not be sent WHEN invoke THEN signs the order with the owner key`() = runTest {
@@ -225,13 +255,10 @@ internal class SubmitPredictionOrderInteractorTest {
                 reconciliation.await()
                 isReconciled = true
             }
-            var isRefreshed = false
-            every { stateService.refresh(ADDRESSES.userWalletId) } answers { isRefreshed = true }
 
             // Act
             val actual = interactor(request = request, preference = PredictionOrderSigningPreference.AUTOMATIC)
             val isReconciledOnReturn = isReconciled
-            val isRefreshedOnReturn = isRefreshed
             reconciliation.complete(Unit)
 
             // Assert
@@ -240,8 +267,6 @@ internal class SubmitPredictionOrderInteractorTest {
             )
             assertThat(isReconciledOnReturn).isFalse()
             assertThat(isReconciled).isTrue()
-            assertThat(isRefreshedOnReturn).isFalse()
-            assertThat(isRefreshed).isTrue()
         }
 
     @Test

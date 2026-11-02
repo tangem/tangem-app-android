@@ -19,6 +19,8 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.isActive
@@ -53,13 +55,17 @@ class PolymarketSessionKeyStateService(
 
         val refreshes = MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
-        val overview: SharedFlow<SessionKeyOverviewResult> = reconcileLoop(userWalletId, refreshes)
-            .retryWhen { cause, attempt ->
-                if (cause is CancellationException && !currentCoroutineContext().isActive) throw cause
-                if (attempt == 0L) TangemLogger.e("Polymarket session key state loop failed, restarting it", cause)
-                delay(backoffDelay(attempt))
-                true
-            }
+        val overview: SharedFlow<SessionKeyOverviewResult> = flow {
+            val cycle = ReconcileCycle()
+            emitAll(
+                reconcileLoop(userWalletId, refreshes, cycle).retryWhen { cause, attempt ->
+                    if (cause is CancellationException && !currentCoroutineContext().isActive) throw cause
+                    if (attempt == 0L) TangemLogger.e("Polymarket session key state loop failed, restarting it", cause)
+                    delay(backoffDelay(attempt))
+                    true
+                },
+            )
+        }
             .distinctUntilChanged()
             .shareIn(
                 scope = scope,
@@ -71,21 +77,23 @@ class PolymarketSessionKeyStateService(
             )
     }
 
-    private fun reconcileLoop(userWalletId: UserWalletId, refreshes: Flow<Unit>): Flow<SessionKeyOverviewResult> =
-        channelFlow {
-            val requested = Channel<Unit>(Channel.CONFLATED)
-            launch(start = CoroutineStart.UNDISPATCHED) {
-                refreshes.collect { requested.send(Unit) }
-            }
-            val cycle = ReconcileCycle()
-            while (true) {
-                val overview = reconcile(userWalletId)
-                if (cycle.accept(overview, now = clock.instant())) send(overview)
-                val isPolling = cycle.startWait()
-                val isRefreshed = awaitRefresh(requested, timeout = idleTimeout(cycle, isPolling))
-                cycle.endWait(isPolling = isPolling, isRefreshed = isRefreshed)
-            }
+    private fun reconcileLoop(
+        userWalletId: UserWalletId,
+        refreshes: Flow<Unit>,
+        cycle: ReconcileCycle,
+    ): Flow<SessionKeyOverviewResult> = channelFlow {
+        val requested = Channel<Unit>(Channel.CONFLATED)
+        launch(start = CoroutineStart.UNDISPATCHED) {
+            refreshes.collect { requested.send(Unit) }
         }
+        while (true) {
+            val overview = reconcile(userWalletId)
+            if (cycle.accept(overview, now = clock.instant())) send(overview)
+            val isPolling = cycle.startWait()
+            val isRefreshed = awaitRefresh(requested, timeout = idleTimeout(cycle, isPolling))
+            cycle.endWait(isPolling = isPolling, isRefreshed = isRefreshed)
+        }
+    }
 
     private suspend fun awaitRefresh(requested: Channel<Unit>, timeout: Duration?): Boolean {
         if (timeout == null) {
@@ -126,7 +134,7 @@ class PolymarketSessionKeyStateService(
 
         fun accept(overview: SessionKeyOverviewResult, now: Instant): Boolean = overview.fold(
             ifLeft = { error ->
-                isElapsedChangeFailure = elapsedChangeRetries > 0 || nextChangeAt?.let { it <= now } == true
+                if (nextChangeAt?.let { it <= now } == true) isElapsedChangeFailure = true
                 nextChangeAt = nextChangeAt?.takeIf { it > now }
                 if (hasLoaded && !isSettlePoll && elapsedChangeRetries == 0) {
                     TangemLogger.e("Polymarket session keys could not be refreshed, keeping the last state: $error")
