@@ -2,6 +2,7 @@ package com.tangem.data.staking.utils
 
 import com.tangem.data.staking.store.P2PEthPoolBalancesStore
 import com.tangem.data.staking.store.StakeKitBalancesStore
+import com.tangem.domain.common.wallets.CryptoCurrencyDataCleaner
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
@@ -13,9 +14,11 @@ import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
- * Default implementation of [StakingCleaner].
+ * Removes cached staking balances when currencies are removed from a wallet or the wallet is deleted.
  *
  * @property stakeKitBalancesStore Store to manage StakeKit staking balances.
  * @property p2pEthPoolBalancesStore Store to manage P2PEthPool staking balances.
@@ -23,12 +26,13 @@ import kotlinx.coroutines.withContext
  *
 [REDACTED_AUTHOR]
  */
-internal class DefaultStakingCleaner(
+@Singleton
+internal class DefaultStakingCleaner @Inject constructor(
     private val stakingIdFactory: StakingIdFactory,
     private val stakeKitBalancesStore: StakeKitBalancesStore,
     private val p2pEthPoolBalancesStore: P2PEthPoolBalancesStore,
     private val dispatchers: CoroutineDispatcherProvider,
-) : StakingCleaner {
+) : CryptoCurrencyDataCleaner, StakingCleaner {
 
     override suspend fun clear(userWalletIds: List<UserWalletId>) {
         if (userWalletIds.isEmpty()) return
