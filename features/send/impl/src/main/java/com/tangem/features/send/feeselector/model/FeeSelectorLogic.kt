@@ -60,7 +60,7 @@ import kotlinx.coroutines.launch
 import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class FeeSelectorLogic @AssistedInject constructor(
     @Assisted private val params: FeeSelectorParams,
     @Assisted private val modelScope: CoroutineScope,
