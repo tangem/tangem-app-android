@@ -35,15 +35,21 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.verify
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class StartTangemPayOnboardingUseCaseTest {
@@ -69,7 +75,7 @@ internal class StartTangemPayOnboardingUseCaseTest {
         clearMocks(activateMoneyAccountUseCase, createOnboardingOrderUseCase, pollTangemPayAccountStatusesUseCase)
         clearMocks(userWalletsListRepository, analytics)
         sentEvents.clear()
-        coEvery { pollTangemPayAccountStatusesUseCase(any()) } returns TangemPayCustomerState.KycApproved
+        every { pollTangemPayAccountStatusesUseCase.states(any()) } returns emptyFlow()
         coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(wallet<UserWallet.Cold>())
         every { analytics.send(capture(sentEvents)) } just Runs
     }
@@ -97,7 +103,7 @@ internal class StartTangemPayOnboardingUseCaseTest {
                     depositCredentials = CREDENTIALS,
                 )
             }
-            coVerify(exactly = 1) { pollTangemPayAccountStatusesUseCase(USER_WALLET_ID) }
+            verify(exactly = 1) { pollTangemPayAccountStatusesUseCase.states(USER_WALLET_ID) }
         }
 
     @Test
@@ -123,7 +129,7 @@ internal class StartTangemPayOnboardingUseCaseTest {
                     depositCredentials = null,
                 )
             }
-            coVerify(exactly = 1) { pollTangemPayAccountStatusesUseCase(USER_WALLET_ID) }
+            verify(exactly = 1) { pollTangemPayAccountStatusesUseCase.states(USER_WALLET_ID) }
         }
 
     @ParameterizedTest
@@ -152,7 +158,7 @@ internal class StartTangemPayOnboardingUseCaseTest {
                 ),
             ).inOrder()
             coVerify(exactly = 0) { createOnboardingOrderUseCase(any(), any(), any()) }
-            coVerify(exactly = 0) { pollTangemPayAccountStatusesUseCase(any()) }
+            verify(exactly = 0) { pollTangemPayAccountStatusesUseCase.states(any()) }
         }
 
     @Test
@@ -170,7 +176,8 @@ internal class StartTangemPayOnboardingUseCaseTest {
             )
 
             // Assert
-            assertThat(sentEvents).containsExactly(
+            val orderEvents = sentEvents.filterNot { it is TangemPayAnalyticsEvents.ProductActivationFinished }
+            assertThat(orderEvents).containsExactly(
                 TangemPayAnalyticsEvents.WalletSignatureRequested(walletType = WalletType.CARD),
                 TangemPayAnalyticsEvents.WalletSignatureFinished(
                     result = SignatureResult.SIGNED,
@@ -184,19 +191,16 @@ internal class StartTangemPayOnboardingUseCaseTest {
         }
 
     @Test
-    fun `GIVEN order created WHEN activation polling finishes THEN activation result sent per ordered product`() =
+    fun `GIVEN order created WHEN products finish at different times THEN each reported when it finished`() =
         runTest {
             // Arrange
             coEvery { activateMoneyAccountUseCase(USER_WALLET_ID) } returns CREDENTIALS.right()
             coEvery { createOnboardingOrderUseCase(any(), any(), any()) } returns Unit.right()
-            coEvery { pollTangemPayAccountStatusesUseCase(USER_WALLET_ID) } coAnswers {
-                delay(3.minutes)
-                TangemPayCustomerState.Accounts(
-                    paymentAccount = PaymentAccountActivationState.Failed(
-                        reason = CustomerSummary.PaymentAccount.Activation.FailureReason.DEPOSIT_TIMEOUT,
-                    ),
-                    moneyAccount = MoneyAccountActivationState.Completed,
-                )
+            every { pollTangemPayAccountStatusesUseCase.states(USER_WALLET_ID) } returns flow {
+                delay(30.seconds)
+                emit(accounts(paymentAccount = CARD_ISSUING, moneyAccount = MoneyAccountActivationState.Completed))
+                delay(6.minutes)
+                emit(accounts(paymentAccount = CARD_REJECTED, moneyAccount = MoneyAccountActivationState.Completed))
             }
             val useCase = createUseCase()
 
@@ -212,17 +216,17 @@ internal class StartTangemPayOnboardingUseCaseTest {
             assertThat(sentEvents.filterIsInstance<TangemPayAnalyticsEvents.ProductActivationFinished>())
                 .containsExactly(
                     TangemPayAnalyticsEvents.ProductActivationFinished(
-                        product = TangemPayAnalyticsEvents.Product.CARD,
-                        result = ActivationResult.TIMED_OUT,
-                        failureReason = ActivationFailureReason.PLUS_DEPOSIT_TIMEOUT,
-                        sinceOrder = 3.minutes,
-                        plan = TRANSITION.plan,
-                    ),
-                    TangemPayAnalyticsEvents.ProductActivationFinished(
                         product = TangemPayAnalyticsEvents.Product.ACCOUNT,
                         result = ActivationResult.ACTIVE,
                         failureReason = null,
-                        sinceOrder = 3.minutes,
+                        sinceOrder = 30.seconds,
+                        plan = TRANSITION.plan,
+                    ),
+                    TangemPayAnalyticsEvents.ProductActivationFinished(
+                        product = TangemPayAnalyticsEvents.Product.CARD,
+                        result = ActivationResult.FAILED,
+                        failureReason = ActivationFailureReason.ISSUER_REJECTED,
+                        sinceOrder = 6.minutes + 30.seconds,
                         plan = TRANSITION.plan,
                     ),
                 )
@@ -230,35 +234,47 @@ internal class StartTangemPayOnboardingUseCaseTest {
         }
 
     @Test
-    fun `GIVEN order created WHEN activation polling stops THEN polling stopped sent`() = runTest {
-        // Arrange
-        coEvery { createOnboardingOrderUseCase(any(), any(), any()) } returns Unit.right()
-        coEvery { pollTangemPayAccountStatusesUseCase(USER_WALLET_ID) } coAnswers {
-            delay(16.minutes)
-            null
-        }
-        val useCase = createUseCase()
+    fun `GIVEN card still activating after 15 minutes WHEN polling stops THEN active account keeps its result`() =
+        runTest {
+            // Arrange
+            coEvery { activateMoneyAccountUseCase(USER_WALLET_ID) } returns CREDENTIALS.right()
+            coEvery { createOnboardingOrderUseCase(any(), any(), any()) } returns Unit.right()
+            every { pollTangemPayAccountStatusesUseCase.states(USER_WALLET_ID) } returns flow {
+                delay(2.minutes)
+                emit(accounts(paymentAccount = CARD_ISSUING, moneyAccount = MoneyAccountActivationState.Completed))
+                awaitCancellation()
+            }
+            val useCase = createUseCase()
 
-        // Act
-        useCase(
-            userWalletId = USER_WALLET_ID,
-            tariffPlanTransition = null,
-            availableProducts = setOf(TangemPayProduct.PAYMENT_ACCOUNT),
-        )
-        advanceUntilIdle()
-
-        // Assert
-        assertThat(sentEvents.filterIsInstance<TangemPayAnalyticsEvents.ProductActivationFinished>())
-            .containsExactly(
-                TangemPayAnalyticsEvents.ProductActivationFinished(
-                    product = TangemPayAnalyticsEvents.Product.CARD,
-                    result = ActivationResult.POLLING_STOPPED,
-                    failureReason = null,
-                    sinceOrder = 16.minutes,
-                    plan = null,
-                ),
+            // Act
+            useCase(
+                userWalletId = USER_WALLET_ID,
+                tariffPlanTransition = null,
+                availableProducts = setOf(TangemPayProduct.PAYMENT_ACCOUNT, TangemPayProduct.BANKING_ACCOUNT),
             )
-    }
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sentEvents.filterIsInstance<TangemPayAnalyticsEvents.ProductActivationFinished>())
+                .containsExactly(
+                    TangemPayAnalyticsEvents.ProductActivationFinished(
+                        product = TangemPayAnalyticsEvents.Product.ACCOUNT,
+                        result = ActivationResult.ACTIVE,
+                        failureReason = null,
+                        sinceOrder = 2.minutes,
+                        plan = null,
+                    ),
+                    TangemPayAnalyticsEvents.ProductActivationFinished(
+                        product = TangemPayAnalyticsEvents.Product.CARD,
+                        result = ActivationResult.POLLING_STOPPED,
+                        failureReason = null,
+                        sinceOrder = 15.minutes,
+                        plan = null,
+                    ),
+                )
+                .inOrder()
+            assertThat(currentTime).isEqualTo(15.minutes.inWholeMilliseconds)
+        }
 
     @Test
     fun `GIVEN hot wallet WHEN signature requested THEN hot wallet type reported`() = runTest {
@@ -322,7 +338,7 @@ internal class StartTangemPayOnboardingUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(StartTangemPayOnboardingError.Failed.left())
-        coVerify(exactly = 0) { pollTangemPayAccountStatusesUseCase(any()) }
+        verify(exactly = 0) { pollTangemPayAccountStatusesUseCase.states(any()) }
     }
 
     private fun provideTestModels() = listOf(
@@ -358,6 +374,11 @@ internal class StartTangemPayOnboardingUseCaseTest {
         every { walletId } returns USER_WALLET_ID
     }
 
+    private fun accounts(
+        paymentAccount: PaymentAccountActivationState,
+        moneyAccount: MoneyAccountActivationState,
+    ) = TangemPayCustomerState.Accounts(paymentAccount = paymentAccount, moneyAccount = moneyAccount)
+
     private companion object {
         val USER_WALLET_ID = UserWalletId("aabbcc112233")
 
@@ -374,5 +395,10 @@ internal class StartTangemPayOnboardingUseCaseTest {
         )
 
         val CREDENTIALS = MoneyAccountDepositCredentials(address = "0xdeposit", signature = "0xsig")
+
+        val CARD_ISSUING = PaymentAccountActivationState.Issuing(step = PaymentAccountActivationState.Issuing.Step.ISSUING)
+        val CARD_REJECTED = PaymentAccountActivationState.Failed(
+            reason = CustomerSummary.PaymentAccount.Activation.FailureReason.RAIN_REJECTED,
+        )
     }
 }
