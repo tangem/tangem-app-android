@@ -28,6 +28,7 @@ import com.tangem.feature.tester.presentation.storybook.entity.TangemMessageStor
 import com.tangem.feature.tester.presentation.storybook.entity.TangemPagerIndicatorStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemSearchFieldStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemTabStory
+import com.tangem.feature.tester.presentation.storybook.entity.TangemToggleBadgeStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemTokenRowStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemTopBarStory
 import com.tangem.feature.tester.presentation.storybook.entity.TypographyStory
@@ -65,6 +66,7 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.shimmer.TangemSh
 import com.tangem.feature.tester.presentation.storybook.page.ds.shtorka.TangemShtorkaStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tabnavigation.TangemTabNavigationStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.textstyle.TextStyleStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.togglebadge.TangemToggleBadgeStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenicon.TangemTokenIconStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenrowmarket.TangemTokenRowMarketStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenrowv2.TangemTokenRowV2Story
@@ -127,6 +129,7 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
                 is TangemButtonStackStory -> TangemButtonStackStory(state = storyState)
                 is TangemFooterStory -> TangemFooterStory(state = storyState)
                 is TangemBadgeV2Story -> TangemBadgeV2Story(state = storyState)
+                is TangemToggleBadgeStory -> TangemToggleBadgeStory(state = storyState)
                 is TangemCheckboxV2Story -> TangemCheckboxV2Story(state = storyState)
                 is TangemCheckmarkStory -> TangemCheckmarkStory(state = storyState)
                 is TangemTokenIconStory -> TangemTokenIconStory(state = storyState)

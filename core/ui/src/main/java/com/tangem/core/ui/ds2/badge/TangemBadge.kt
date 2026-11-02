@@ -42,7 +42,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * Design-system v2 badge: a compact pill displaying a short label with optional leading / trailing
  * icons.
  *
- * Version: 1.0.0
+ * Version: 1.1.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=2002-213)
  *
@@ -56,7 +56,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * @param text Badge label.
  * @param modifier Modifier applied to the badge container.
  * @param variant Visual style. See [TangemBadge.Variant].
- * @param status Status color scheme (Neutral / Info / Error / Success / Warning).
+ * @param status Status color scheme (Neutral / Info / Error / Success / Warning / Violet).
  * @param size Token-driven size preset controlling height, padding, icon size and text style.
  *   See [TangemBadge.Size].
  * @param iconStart Optional leading icon.
@@ -104,7 +104,7 @@ fun TangemBadge(
 }
 
 @Composable
-private fun BadgeContent(
+internal fun BadgeContent(
     iconStart: TangemIconUM?,
     iconEnd: TangemIconUM?,
     text: TextReference,
@@ -155,7 +155,7 @@ private fun TangemIconUM.applyTint(tint: Color): TangemIconUM = when (this) {
 
 object TangemBadge {
 
-    val version = DsVersion(major = 1, minor = 0, patch = 0)
+    val version = DsVersion(major = 1, minor = 1, patch = 0)
 
     /**
      * Visual style of the badge.
@@ -180,6 +180,7 @@ object TangemBadge {
         Error,
         Success,
         Warning,
+        Violet,
     }
 
     /**
@@ -194,7 +195,7 @@ object TangemBadge {
 }
 
 /** Resolved colors for a (variant, status) pair. */
-private data class BadgeColorTokens(
+internal data class BadgeColorTokens(
     val backgroundColor: Color,
     val textColor: Color,
     val iconTint: Color,
@@ -202,7 +203,7 @@ private data class BadgeColorTokens(
 )
 
 /** Resolved per-size dimensions used by [TangemBadge]. */
-private data class BadgeSizeTokens(
+internal data class BadgeSizeTokens(
     val minHeight: Dp,
     val containerHorizontalPadding: Dp,
     val containerVerticalPadding: Dp,
@@ -213,7 +214,7 @@ private data class BadgeSizeTokens(
 
 @Composable
 @ReadOnlyComposable
-private fun TangemBadge.Size.tokens(): BadgeSizeTokens {
+internal fun TangemBadge.Size.tokens(): BadgeSizeTokens {
     val typography = TangemTheme.typography3
     return when (this) {
         TangemBadge.Size.X9 -> BadgeSizeTokens(
@@ -275,6 +276,11 @@ private fun resolveColorTokens(variant: TangemBadge.Variant, status: TangemBadge
                 textColor = colors.text.status.warning,
                 iconTint = colors.icon.status.warning,
             )
+            TangemBadge.Status.Violet -> BadgeColorTokens(
+                backgroundColor = colors.bg.accent.violetSubtle,
+                textColor = colors.text.accent.violet,
+                iconTint = colors.icon.accent.violet,
+            )
         }
         TangemBadge.Variant.Outline -> when (status) {
             TangemBadge.Status.Neutral -> BadgeColorTokens(
@@ -307,6 +313,12 @@ private fun resolveColorTokens(variant: TangemBadge.Variant, status: TangemBadge
                 iconTint = colors.icon.status.warning,
                 borderColor = colors.border.status.warningSubtle,
             )
+            TangemBadge.Status.Violet -> BadgeColorTokens(
+                backgroundColor = colors.bg.accent.violetSubtle,
+                textColor = colors.text.accent.violet,
+                iconTint = colors.icon.accent.violet,
+                borderColor = colors.border.accent.violetSubtle,
+            )
         }
         TangemBadge.Variant.Solid -> when (status) {
             TangemBadge.Status.Neutral -> BadgeColorTokens(
@@ -331,6 +343,11 @@ private fun resolveColorTokens(variant: TangemBadge.Variant, status: TangemBadge
             )
             TangemBadge.Status.Warning -> BadgeColorTokens(
                 backgroundColor = colors.bg.status.warning,
+                textColor = colors.text.staticDark.primary,
+                iconTint = colors.icon.staticDark,
+            )
+            TangemBadge.Status.Violet -> BadgeColorTokens(
+                backgroundColor = colors.bg.accent.violet,
                 textColor = colors.text.staticDark.primary,
                 iconTint = colors.icon.staticDark,
             )
