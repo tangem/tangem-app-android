@@ -70,7 +70,8 @@ internal class TangemPayDetailsStateFactory(
     fun getLoadedState(status: PaymentAccountStatusValue.Loaded): TangemPayDetailsUM {
         val isFresh = status.isFresh
         val hasIssuingCard = status.cards.any { it.state == TangemPayCardState.Issuing }
-        val isAddCardEnabled = isFresh && !hasIssuingCard
+        val isTariffAwaitingDeposit = status.cards.isEmpty() && status.tariffPlan.isAwaitingDeposit
+        val isAddCardEnabled = isFresh && !hasIssuingCard && !isTariffAwaitingDeposit
         val balance = status.balance
         val hasWithdrawableBalance = status.hasWithdrawableAmount
         val canAddFunds = status.canAddFunds
@@ -97,6 +98,7 @@ internal class TangemPayDetailsStateFactory(
                         state = cardItem.state.toUiState(),
                     )
                 }
+                .ifEmpty { listOfNotNull(issuingPlaceholderCard().takeIf { isTariffAwaitingDeposit }) }
                 .toImmutableList(),
             onAddCardClick = { intents.onAddCardClick(status.tariffPlan) },
             isAddCardEnabled = isAddCardEnabled,
@@ -240,17 +242,7 @@ internal class TangemPayDetailsStateFactory(
                     isWithdrawEnabled = false,
                 ),
                 cardsBlockState = TangemPayDetailsBalanceBlockState.CardsBlockState(
-                    cards = persistentListOf(
-                        TangemPayDetailsBalanceBlockState.Card(
-                            lastDigits = "",
-                            imageUrl = null,
-                            cardType = TangemPayCardType.UNDEFINED,
-                            onClick = {},
-                            isEnabled = false,
-                            isFrozen = false,
-                            state = TangemPayCardUiState.InProgress,
-                        ),
-                    ),
+                    cards = persistentListOf(issuingPlaceholderCard()),
                     progressBanner = CardsProgressBannerUM.Issuing.takeIf { notification == null },
                     onAddCardClick = {},
                     isAddCardEnabled = false,
@@ -306,6 +298,19 @@ internal class TangemPayDetailsStateFactory(
             cashbackBlockState = null,
         )
     }
+
+    private val TangemPayTariffPlanState?.isAwaitingDeposit: Boolean
+        get() = this?.order?.step is TangemPayTariffPlanState.OrderStep.AwaitingDeposit
+
+    private fun issuingPlaceholderCard() = TangemPayDetailsBalanceBlockState.Card(
+        lastDigits = "",
+        imageUrl = null,
+        cardType = TangemPayCardType.UNDEFINED,
+        onClick = {},
+        isEnabled = false,
+        isFrozen = false,
+        state = TangemPayCardUiState.InProgress,
+    )
 
     private fun zeroBalanceOf(tariffPlan: TangemPayTariffPlanState?) = PaymentAccountStatusValue.FiatBalance(
         availableBalance = BigDecimal.ZERO,
