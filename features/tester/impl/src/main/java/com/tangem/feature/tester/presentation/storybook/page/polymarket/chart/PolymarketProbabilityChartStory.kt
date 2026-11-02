@@ -32,6 +32,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 internal val probabilityChartStoryFactory = StoryPageFactory { PolymarketProbabilityChartStory }
 
@@ -45,6 +46,7 @@ internal fun PolymarketProbabilityChartStory(modifier: Modifier = Modifier) {
     var isNarrow by rememberSaveable { mutableStateOf(false) }
     var revision by rememberSaveable { mutableIntStateOf(0) }
     var isPlaying by rememberSaveable { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     LaunchedEffect(isPlaying, lifecycle) {
         if (isPlaying) {
@@ -93,6 +95,12 @@ internal fun PolymarketProbabilityChartStory(modifier: Modifier = Modifier) {
                 Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     ChartChoices("Updates") {
                         ChartChoice("Append live point", false) { revision++ }
+                        ChartChoice("Burst update", false) {
+                            isPlaying = false
+                            scope.launch {
+                                repeat(20) { revision++; delay(16) }
+                            }
+                        }
                         ChartChoice(if (isPlaying) "Pause live updates" else "Start live updates", isPlaying) {
                             if (!isPlaying) {
                                 period = "Live"

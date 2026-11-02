@@ -29,7 +29,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
-import com.tangem.core.ui.res.generated.icons.ic_chart_bar_vertical_20
+import com.tangem.core.ui.res.generated.icons.ic_chart_line_vertical_20
 import com.tangem.features.polymarket.impl.common.formatPolymarketPercent
 import com.tangem.features.polymarket.impl.common.ui.chart.PolymarketProbabilityChart.SeriesColor
 import com.tangem.features.polymarket.impl.common.ui.chart.PolymarketProbabilityChart.State.Content
@@ -109,7 +109,7 @@ internal fun ProbabilityChartEmpty(title: TextReference, description: TextRefere
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Icon(Icons.ic_chart_bar_vertical_20, null, tint = TangemTheme.colors3.icon.secondary)
+        Icon(Icons.ic_chart_line_vertical_20, null, tint = TangemTheme.colors3.icon.secondary)
         Text(
             text = title.resolveReference(),
             color = TangemTheme.colors3.text.primary,
