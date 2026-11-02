@@ -30,6 +30,8 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayEligibilityType
 import com.tangem.domain.models.pay.TangemPayCustomerResidency
+import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.pay.id
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
@@ -152,10 +154,15 @@ internal class DefaultOnboardingRepository @Inject constructor(
 
     override suspend fun getFees(
         userWalletId: UserWalletId,
+        product: TangemPayProduct,
         types: Set<AccountFeeGroupType>,
     ): Either<VisaApiError, List<AccountFee>> {
         return requestHelper.performRequest(userWalletId) { authHeader ->
-            tangemPayApi.getFees(authHeader = authHeader, groups = types.map(AccountFeeGroupType::toString))
+            tangemPayApi.getFees(
+                authHeader = authHeader,
+                accountType = product.id,
+                groups = types.map(AccountFeeGroupType::toString),
+            )
         }.flatMap { response ->
             val result = response.result ?: return@flatMap VisaApiError.UnknownWithoutCode.left()
             result.mapNotNull(AccountFeeConverter::convert).right()

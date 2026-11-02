@@ -23,6 +23,79 @@ internal class KeyedSubscriptionsTest {
     private val services = mutableListOf<FakeService>()
 
     @Test
+    fun `GIVEN shared keys WHEN resubscribed THEN fresh frames preserve references and ignore unobserved keys`() = runTest {
+        // Arrange
+        val subscriptions = createSubscriptions()
+        val first = observe(subscriptions, setOf("a"))
+        val second = observe(subscriptions, setOf("a"))
+        advanceTimeBy(BATCH + 1.milliseconds)
+
+        // Act
+        subscriptions.resubscribe(setOf("a", "unknown"))
+        first.cancel()
+        advanceTimeBy(UNSUBSCRIBE_DELAY + BATCH + 1.milliseconds)
+
+        // Assert
+        assertThat(services.single().frames).containsExactly(
+            Frame.Subscribe(setOf("a")), Frame.Unsubscribe(setOf("a")), Frame.Subscribe(setOf("a")),
+        ).inOrder()
+        assertThat(services.single().openKeys()).containsExactly("a")
+        second.cancel()
+    }
+
+    @Test
+    fun `GIVEN reconnect during refresh WHEN open keys are restored THEN the queued unsubscribe is paired with subscribe`() =
+        runTest {
+            // Arrange
+            val subscriptions = createSubscriptions()
+            observe(subscriptions, setOf("a"))
+            advanceTimeBy(BATCH + 1.milliseconds)
+            val service = services.single()
+            service.onSend = { frame -> if (frame is Frame.Unsubscribe) service.openKeys() }
+
+            // Act
+            subscriptions.resubscribe(setOf("a"))
+            advanceTimeBy(BATCH + 1.milliseconds)
+
+            // Assert
+            assertThat(service.frames).containsExactly(
+                Frame.Subscribe(setOf("a")), Frame.Unsubscribe(setOf("a")), Frame.Subscribe(setOf("a")),
+            ).inOrder()
+        }
+
+    @Test
+    fun `GIVEN a released key WHEN refresh is requested THEN it is not resubscribed`() = runTest {
+        // Arrange
+        val subscriptions = createSubscriptions()
+        val collector = observe(subscriptions, setOf("a"))
+        advanceTimeBy(BATCH + 1.milliseconds)
+        collector.cancel()
+        runCurrent()
+
+        // Act
+        subscriptions.resubscribe(setOf("a"))
+
+        // Assert
+        assertThat(services.single().frames).containsExactly(Frame.Subscribe(setOf("a")))
+    }
+
+    @Test
+    fun `GIVEN a disconnected service WHEN refresh fails THEN reconnect still restores observed keys`() = runTest {
+        // Arrange
+        val subscriptions = createSubscriptions()
+        observe(subscriptions, setOf("a"))
+        advanceTimeBy(BATCH + 1.milliseconds)
+        services.single().isConnected = false
+
+        // Act
+        subscriptions.resubscribe(setOf("a"))
+
+        // Assert
+        assertThat(services.single().frames).containsExactly(Frame.Subscribe(setOf("a")))
+        assertThat(services.single().openKeys()).containsExactly("a")
+    }
+
+    @Test
     fun `GIVEN two observers of one key WHEN both collect THEN one subscribe frame goes out`() = runTest {
         // Arrange
         val subscriptions = createSubscriptions()
@@ -319,8 +392,10 @@ internal class KeyedSubscriptionsTest {
         val events = MutableSharedFlow<Pair<String, Int>>()
         val frames = mutableListOf<Frame>()
         var isConnected = true
+        var onSend: (Frame) -> Unit = {}
 
         fun send(frame: Frame): Boolean {
+            onSend(frame)
             if (isConnected) frames += frame
             return isConnected
         }

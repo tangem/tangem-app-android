@@ -92,6 +92,14 @@ internal class PolymarketMarketLiveTest {
                 if (requireBestQuotes) second.awaitBestBidAsk()
                 val channel = channels.single()
 
+                first.discardBufferedEvents()
+                subscriptions.resubscribe(setOf(assetIds[0]))
+                val refreshed = first.awaitBook()
+                if (requireBestQuotes) first.awaitBestBidAsk()
+                assertThat(refreshed.assetId).isEqualTo(assetIds[0])
+                assertThat(connectionsOpened).isEqualTo(1)
+                println("Live market: watchdog resubscribe received a snapshot on the same connection")
+
                 // Allow the production text heartbeat to run before requesting another server response.
                 delay(12.seconds)
                 first.job.cancelAndJoin()

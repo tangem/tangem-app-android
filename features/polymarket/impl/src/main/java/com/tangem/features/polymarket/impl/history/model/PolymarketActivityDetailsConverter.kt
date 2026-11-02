@@ -81,7 +81,7 @@ internal class PolymarketActivityDetailsConverter(
     private fun redemptionHeadline(result: RedeemResult?) = when (result) {
         RedeemResult.WON -> resourceReference(R.string.prediction_history_prediction_won)
         RedeemResult.LOST -> resourceReference(R.string.prediction_history_prediction_lost)
-        RedeemResult.SPLIT -> resourceReference(R.string.prediction_history_prediction_split)
+        RedeemResult.SPLIT -> resourceReference(R.string.prediction_positions_split)
         null -> null
     }
 

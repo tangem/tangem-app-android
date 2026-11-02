@@ -33,7 +33,10 @@ internal class WcEthNetwork(
     private val chainRequestResolver: WcEthChainRequestResolver,
 ) : WcRequestToUseCaseConverter {
 
+    override val namespaceKey: NamespaceKey = NamespaceKey(NamespaceConverter.ETH_NAMESPACE_KEY)
+
     override fun toWcMethodName(request: WcSdkSessionRequest): WcEthMethodName? {
+        if (!isOwnNamespace(request)) return null
         val methodKey = request.request.method
         val name = WcEthMethodName.entries.find { it.raw == methodKey } ?: return null
         return name

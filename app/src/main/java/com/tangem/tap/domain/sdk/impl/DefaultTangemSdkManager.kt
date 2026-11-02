@@ -46,7 +46,7 @@ import com.tangem.operations.usersetttings.SetUserCodeRecoveryAllowedTask
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.sdk.api.CreateProductWalletTaskResponse
 import com.tangem.sdk.api.TangemSdkManager
-import com.tangem.tap.common.analytics.events.TangemSdkErrorEvent
+import com.tangem.sdk.api.analytics.TangemSdkErrorEvent
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
 import com.tangem.tap.domain.tasks.product.*
 import com.tangem.tap.domain.tasks.visa.*

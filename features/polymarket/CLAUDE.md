@@ -92,9 +92,10 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
   a row whose market lookup failed must not build `ClosePosition`. Buy more reads `isAcceptingOrders` off the
   event's market (found by `conditionId`, outcome by `outcomeIndex`, else by current or legacy asset id) and
   trades the outcome's current asset id: a position still held in a market's legacy token reports no orders
-  while the market trades on under its new token. The resolution status stays the position's, and without a
-  market Buy more falls back to the position's rule. Either button stays enabled and opens the market-closed
-  sheet when untradable.
+  while the market trades on under its new token. The resolution status stays the position's. Both buttons
+  always stay enabled and open the market-closed sheet instead of the flow when untradable, when the position
+  has no `marketId` or no `eventId`, and — Buy more only — when the event read failed or its market holds no
+  outcome of the position. While the event is loading Buy more does nothing.
 - Status: a settled `result` (WON / LOST / SPLIT) wins; otherwise `resolutionStatus` decides, so an
   unrecognised `result` never hides Pending or Disputed. The BFF sends `status` only once `RESOLVED`, and
   a resolved market can still arrive without one while the payout settles — no badge, opens details.

@@ -16,9 +16,15 @@ data class GaslessErrorDto(
     @Json(name = "details") val details: GaslessErrorDetailsDto?,
 )
 
-/** Amounts are read as strings so a JSON number keeps its exact base-unit value instead of passing through Double. */
+/**
+ * Amounts are read as strings so a JSON number keeps its exact base-unit value instead of passing
+ * through Double. [signature] and [status] are populated by the backend on Solana UNCERTAIN / 409
+ * responses.
+ */
 @JsonClass(generateAdapter = true)
 data class GaslessErrorDetailsDto(
-    @Json(name = "minimum") val minimum: String?,
-    @Json(name = "scope") val scope: String?,
+    @Json(name = "minimum") val minimum: String? = null,
+    @Json(name = "scope") val scope: String? = null,
+    @Json(name = "signature") val signature: String? = null,
+    @Json(name = "status") val status: String? = null,
 )

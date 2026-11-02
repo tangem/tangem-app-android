@@ -1,6 +1,6 @@
 package com.tangem.domain.staking.verification
 
-import com.tangem.domain.models.staking.NetworkType
+import com.tangem.domain.staking.model.NetworkType
 
 /**
  * Recognizes whether a raw unsigned StakeKit transaction is a known staking operation,

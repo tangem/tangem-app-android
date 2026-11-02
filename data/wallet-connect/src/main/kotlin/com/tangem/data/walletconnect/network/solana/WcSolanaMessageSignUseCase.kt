@@ -28,6 +28,10 @@ private val TransactionSignAttemptException = IllegalStateException(
     "solana_signMessage payload is a serialized Solana transaction; signing rejected ([REDACTED_TASK_KEY])",
 )
 
+private val NonSolanaNetworkException = IllegalStateException(
+    "solana_signMessage resolved to a non-Solana network; signing rejected",
+)
+
 internal class WcSolanaMessageSignUseCase @AssistedInject constructor(
     @Assisted override val context: WcMethodUseCaseContext,
     @Assisted override val method: WcSolanaMethod.SignMessage,
@@ -43,6 +47,11 @@ internal class WcSolanaMessageSignUseCase @AssistedInject constructor(
     override suspend fun SignCollector<WcMessageSignUseCase.SignModel>.onSign(
         state: WcSignState<WcMessageSignUseCase.SignModel>,
     ) {
+        if (!network.isSolana()) {
+            emit(state.toResult(WcRequestError.UnknownError(NonSolanaNetworkException).left()))
+            return
+        }
+
         val hashToSign = method.rawMessage.decodeBase58() ?: byteArrayOf()
 
         // Never blind-sign a payload that is actually a serialized Solana transaction message — the

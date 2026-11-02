@@ -2,6 +2,8 @@ package com.tangem.features.onramp.deeplink
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.deeplink.OnrampDeeplinkTarget
+import com.tangem.common.routing.deeplink.resolveOnrampDeeplinkTarget
 import com.tangem.features.onramp.success.OnrampSuccessScreenTrigger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -15,27 +17,26 @@ internal class DefaultOnrampDeepLinkHandler @AssistedInject constructor(
     @Assisted queryParams: Map<String, String>,
     appRouter: AppRouter,
     onrampSuccessScreenTrigger: OnrampSuccessScreenTrigger,
+    conciergeWaitlistTrigger: ConciergeWaitlistTrigger,
 ) : OnrampDeepLinkHandler {
 
     init {
-        val txId = queryParams[TX_ID_KEY]
-        val result = OnrampRedirectResult.getResult(queryParams[RESULT_KEY])
-
-        when {
-            !txId.isNullOrEmpty() -> {
+        when (val target = resolveOnrampDeeplinkTarget(queryParams)) {
+            is OnrampDeeplinkTarget.Transaction -> {
                 // finish current onramp flow and show onramp success screen
                 val replaceOnrampScreens = appRouter.stack
                     .filterNot { it is AppRoute.Onramp || it is AppRoute.OnrampSuccess }
-                    .toMutableList() + AppRoute.OnrampSuccess(txId)
+                    .toMutableList() + AppRoute.OnrampSuccess(target.txId)
 
                 appRouter.replaceAll(*replaceOnrampScreens.toTypedArray())
             }
-            result != OnrampRedirectResult.Unknown -> {
-                scope.launch {
-                    onrampSuccessScreenTrigger.triggerOnrampSuccess(result == OnrampRedirectResult.Success)
-                }
+            is OnrampDeeplinkTarget.Redirect -> {
+                scope.launch { onrampSuccessScreenTrigger.triggerOnrampSuccess(target.isSuccess) }
             }
-            else -> {
+            OnrampDeeplinkTarget.ConciergeWaitlist -> {
+                scope.launch { conciergeWaitlistTrigger.triggerOpenWaitlist() }
+            }
+            OnrampDeeplinkTarget.Invalid -> {
                 TangemLogger.e(
                     """
                        Invalid parameters for ONRAMP deeplink
@@ -56,8 +57,5 @@ internal class DefaultOnrampDeepLinkHandler @AssistedInject constructor(
 
     companion object {
         const val DEEPLINK_KEY = "tangem://onramp"
-
-        private const val TX_ID_KEY = "tx_id"
-        private const val RESULT_KEY = "result"
     }
 }
