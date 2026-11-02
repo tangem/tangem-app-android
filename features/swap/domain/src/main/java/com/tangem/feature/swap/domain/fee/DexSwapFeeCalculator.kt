@@ -24,6 +24,8 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.tron.TronGaslessApprove
+import com.tangem.domain.transaction.models.tron.TronGaslessSwap
 import com.tangem.domain.transaction.usecase.CreateTransactionDataExtrasUseCase
 import com.tangem.domain.transaction.usecase.GetEthSpecificFeeUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
@@ -46,6 +48,7 @@ import com.tangem.utils.extensions.orZero
 import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 
 /**
  * Calculates the on-chain transaction fee for a DEX swap.
@@ -278,13 +281,61 @@ class DexSwapFeeCalculator(
             userWalletId = fromSwapCurrencyStatus.userWalletId,
             swap = swap,
             feeToken = feeToken,
-        ).bind()
+        ).mapLeft { error ->
+            // Only a sold token that also pays the compensation is pulled from the balance the service checks.
+            if (error is GetFeeError.GaslessError.TronAllowanceTooHigh && feeToken.id == soldToken.id) {
+                error.withReapproval(fromSwapCurrencyStatus, swap, feeToken)
+            } else {
+                error
+            }
+        }.bind()
 
         return DexFeeResult(
             transactionFee = TransactionFeeResult.LoadedExtended(feeExtended),
             otherNativeFee = BigDecimal.ZERO,
             gas = null,
         )
+    }
+
+    /**
+     * The service checks the allowance, not the swap amount, so lowering the amount alone never makes this swap
+     * payable: the allowance has to be lowered by a new exact approval. It is sized to leave both compensations in
+     * the balance — the swap one is known from the refusal, the approval one is quoted separately and assumed to be
+     * the swap one when that quote fails, since a swap always costs more than its approval.
+     *
+     * The swap compensation is requoted on every estimate, so it gets a margin: without one a slightly dearer quote
+     * after the approval refuses the swap again and asks for one more paid approval. The approval replaces only the
+     * spender allowance; what the router may pull stays and is left in the balance as well.
+     */
+    private suspend fun GetFeeError.GaslessError.TronAllowanceTooHigh.withReapproval(
+        fromSwapCurrencyStatus: SwapCurrencyStatus,
+        swap: TronGaslessSwap,
+        feeToken: CryptoCurrency.Token,
+    ): GetFeeError.GaslessError.TronAllowanceTooHigh {
+        val swapCompensation = required - allowance
+        val approveCompensation = getTronGaslessFeeUseCase.forApprove(
+            userWalletId = fromSwapCurrencyStatus.userWalletId,
+            approve = TronGaslessApprove(
+                fromAddress = swap.fromAddress,
+                tokenContract = swap.tokenContract,
+                amount = BigInteger.TEN.pow(feeToken.decimals),
+                spenderAddress = swap.spenderAddress,
+            ),
+            feeToken = feeToken,
+        ).fold(
+            ifLeft = { swapCompensation },
+            ifRight = { it.transactionFee.normal.amount.value ?: swapCompensation },
+        )
+        val otherAllowances = allowances
+            .filterKeys { address -> address != swap.spenderAddress }
+            .values
+            .fold(BigDecimal.ZERO, BigDecimal::add)
+        val reserved = swapCompensation * REAPPROVAL_SWAP_COMPENSATION_FACTOR + approveCompensation + otherAllowances
+        val swapAmount = swap.amount.toBigDecimal().movePointLeft(feeToken.decimals)
+        val amount = minOf(swapAmount, balance - reserved).setScale(feeToken.decimals, RoundingMode.DOWN)
+        if (amount.signum() <= 0) return this
+
+        return copy(reapproval = GetFeeError.TronReapproval(spenderAddress = swap.spenderAddress, amount = amount))
     }
 
     /**
@@ -577,5 +628,9 @@ class DexSwapFeeCalculator(
             TangemLogger.e("Failed to format the hash: ${e.message.orEmpty()}", e)
             hash
         }
+    }
+
+    private companion object {
+        val REAPPROVAL_SWAP_COMPENSATION_FACTOR = BigDecimal("1.1")
     }
 }

@@ -8,6 +8,7 @@ data class WalletAdditionalInfo(
     val isHideable: Boolean,
     val content: Content,
     val isHotBackedUp: Boolean = false,
+    val isSocialLogin: Boolean = false,
 ) {
     @Immutable
     sealed interface Content {

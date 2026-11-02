@@ -149,7 +149,7 @@ internal class SendIntentModelTest {
         assertThat(model.shownOffer().title).isEqualTo(
             resourceReference(
                 R.string.mcp_send_intent_offer_title,
-                wrappedList(stringReference("mcp.claude.com"), "42.00\u00A0USDT"),
+                wrappedList(stringReference("Claude"), "42.00\u00A0USDT"),
             ),
         )
         model.onDestroy()

@@ -22,6 +22,6 @@ internal class SetAmountFractionTransformer(
 
         val value = amount.parseBigDecimal(decimals = PolymarketConst.COLLATERAL_DISPLAY_DECIMALS)
 
-        return SetAmountTransformer(value = value).transform(prevState).copy(isAmountFromFraction = true)
+        return SetAmountTransformer(value = value, isAmountFromFraction = true).transform(prevState)
     }
 }

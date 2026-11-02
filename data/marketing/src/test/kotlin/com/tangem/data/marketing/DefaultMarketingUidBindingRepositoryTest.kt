@@ -3,26 +3,28 @@ package com.tangem.data.marketing
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.data.common.wallet.WalletServerBinder
 import com.tangem.datasource.api.marketing.models.BindMarketingUidWalletsBody
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.marketing.MarketingFeatureToggles
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import io.mockk.Runs
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.yield
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -32,213 +34,126 @@ internal class DefaultMarketingUidBindingRepositoryTest {
     private val tangemTechApi: TangemTechApi = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val featureToggles: MarketingFeatureToggles = mockk()
+    private val walletServerBinder: WalletServerBinder = mockk()
 
     private val defaultWallet = wallet(WALLET_ID)
+    private val userWallets = MutableStateFlow<List<UserWallet>?>(null)
 
-    private lateinit var repository: DefaultMarketingUidBindingRepository
+    private val repository = DefaultMarketingUidBindingRepository(
+        tangemTechApi = tangemTechApi,
+        userWalletsListRepository = userWalletsListRepository,
+        featureToggles = featureToggles,
+        walletServerBinder = walletServerBinder,
+    )
 
     @BeforeEach
     fun setUp() {
-        clearMocks(tangemTechApi, userWalletsListRepository, featureToggles)
+        clearMocks(tangemTechApi, userWalletsListRepository, featureToggles, walletServerBinder)
+        userWallets.value = listOf(defaultWallet)
 
         every { featureToggles.isUidBindingEnabled } returns true
-        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(defaultWallet)
+        every { userWalletsListRepository.userWallets } returns userWallets
         coEvery { tangemTechApi.bindMarketingUidWallets(any(), any()) } returns success()
-
-        repository = DefaultMarketingUidBindingRepository(
-            tangemTechApi = tangemTechApi,
-            userWalletsListRepository = userWalletsListRepository,
-            featureToggles = featureToggles,
-            dispatchers = TestingCoroutineDispatcherProvider(),
-        )
+        coEvery { walletServerBinder.awaitBound(any()) } just Runs
     }
 
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class Bind {
+    @Test
+    fun `GIVEN toggle off WHEN bind THEN no request is made`() = runTest {
+        // Arrange
+        every { featureToggles.isUidBindingEnabled } returns false
 
-        @Test
-        fun `GIVEN toggle off WHEN bind THEN neither wallets nor backend are touched`() = runTest {
-            // Arrange
-            every { featureToggles.isUidBindingEnabled } returns false
+        // Act
+        repository.bind(UID)
 
-            // Act
-            repository.bind(UID)
+        // Assert
+        verify(exactly = 0) { userWalletsListRepository.userWallets }
+        coVerify(exactly = 0) { tangemTechApi.bindMarketingUidWallets(any(), any()) }
+    }
 
-            // Assert
-            coVerify(exactly = 0) { userWalletsListRepository.userWalletsSync() }
-            coVerify(exactly = 0) { tangemTechApi.bindMarketingUidWallets(any(), any()) }
+    @Test
+    fun `GIVEN wallets WHEN bind THEN every wallet id is sent as is`() = runTest {
+        // Arrange
+        val otherId = "cd".repeat(32)
+        val shortId = "ab12"
+        userWallets.value = listOf(defaultWallet, wallet(otherId), wallet(shortId))
+
+        // Act
+        repository.bind(UID)
+
+        // Assert
+        coVerify(exactly = 1) {
+            tangemTechApi.bindMarketingUidWallets(
+                uid = UID,
+                body = BindMarketingUidWalletsBody(walletIds = listOf(WALLET_ID, otherId, shortId)),
+            )
         }
-
-        @Test
-        fun `GIVEN wallets WHEN bind THEN every wallet id is sent as is`() = runTest {
-            // Arrange
-            val otherId = "cd".repeat(32)
-            val shortId = "ab12"
-            coEvery { userWalletsListRepository.userWalletsSync() } returns
-                listOf(defaultWallet, wallet(otherId), wallet(shortId))
-
-            // Act
-            repository.bind(UID)
-
-            // Assert
-            coVerify(exactly = 1) {
-                tangemTechApi.bindMarketingUidWallets(
-                    uid = UID,
-                    body = BindMarketingUidWalletsBody(walletIds = listOf(WALLET_ID, otherId, shortId)),
-                )
-            }
-        }
-
-        @Test
-        fun `GIVEN wallets WHEN the same uid is bound twice THEN each open sends a request`() = runTest {
-            // Act
-            repository.bind(UID)
-            repository.bind(UID)
-
-            // Assert
-            coVerify(exactly = 2) { tangemTechApi.bindMarketingUidWallets(UID, any()) }
-        }
-
-        @Test
-        fun `GIVEN backend fails WHEN bind THEN the binding is not retried`() = runTest {
-            // Arrange
-            coEvery { tangemTechApi.bindMarketingUidWallets(any(), any()) } returns
-                errorResponse(ApiResponseError.NetworkException())
-
-            // Act
-            repository.bind(UID)
-            repository.bindPending()
-
-            // Assert
-            coVerify(exactly = 1) { tangemTechApi.bindMarketingUidWallets(UID, any()) }
-        }
-
-        @Test
-        fun `GIVEN no wallets WHEN bind THEN no request is made`() = runTest {
-            // Arrange
-            coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
-
-            // Act
-            repository.bind(UID)
-
-            // Assert
-            coVerify(exactly = 0) { tangemTechApi.bindMarketingUidWallets(any(), any()) }
-        }
-
-        @Test
-        fun `GIVEN wallet list fails to load WHEN bind THEN nothing is thrown and the uid waits`() = runTest {
-            // Arrange
-            coEvery { userWalletsListRepository.userWalletsSync() } throws IllegalStateException()
-
-            // Act
-            val actual = runCatching { repository.bind(UID) }
-            coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(defaultWallet)
-            repository.bindPending()
-
-            // Assert
-            assertThat(actual.exceptionOrNull()).isNull()
-            coVerify(exactly = 1) { tangemTechApi.bindMarketingUidWallets(UID, any()) }
+        listOf(WALLET_ID, otherId, shortId).forEach { id ->
+            coVerify(exactly = 1) { walletServerBinder.awaitBound(UserWalletId(id)) }
         }
     }
 
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class BindPending {
+    @Test
+    fun `GIVEN wallets WHEN the same uid is bound twice THEN each open sends a request`() = runTest {
+        // Act
+        repository.bind(UID)
+        repository.bind(UID)
 
-        @Test
-        fun `GIVEN uid waits for a wallet WHEN bindPending with a wallet THEN it is sent once`() = runTest {
-            // Arrange
-            coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
-            repository.bind(UID)
-            coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(defaultWallet)
+        // Assert
+        coVerify(exactly = 2) { tangemTechApi.bindMarketingUidWallets(UID, any()) }
+    }
 
-            // Act
-            repository.bindPending()
-            repository.bindPending()
+    @Test
+    fun `GIVEN backend fails WHEN bind THEN the binding is not retried`() = runTest {
+        // Arrange
+        coEvery { tangemTechApi.bindMarketingUidWallets(any(), any()) } returns
+            errorResponse(ApiResponseError.NetworkException())
 
-            // Assert
-            coVerify(exactly = 1) { tangemTechApi.bindMarketingUidWallets(UID, any()) }
+        // Act
+        repository.bind(UID)
+
+        // Assert
+        coVerify(exactly = 1) { tangemTechApi.bindMarketingUidWallets(UID, any()) }
+    }
+
+    @Test
+    fun `GIVEN list not loaded WHEN it loads with a wallet THEN sent after asking the server`() = runTest {
+        // Arrange
+        userWallets.value = null
+        launch { repository.bind(UID) }
+        runCurrent()
+
+        // Act
+        userWallets.value = listOf(defaultWallet)
+        runCurrent()
+
+        // Assert
+        coVerifyOrder {
+            walletServerBinder.awaitBound(UserWalletId(WALLET_ID))
+            tangemTechApi.bindMarketingUidWallets(UID, BindMarketingUidWalletsBody(walletIds = listOf(WALLET_ID)))
         }
+    }
 
-        @Test
-        fun `GIVEN the same uid opened twice without wallets WHEN bindPending THEN one request is sent`() = runTest {
-            // Arrange
-            coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
-            repository.bind(UID)
-            repository.bind(UID)
-            coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(defaultWallet)
+    @Test
+    fun `GIVEN no wallet WHEN the first wallet appears THEN sent once the server has it`() = runTest {
+        // Arrange
+        val serverHasWallet = CompletableDeferred<Unit>()
+        val sentBodies = mutableListOf<BindMarketingUidWalletsBody>()
+        coEvery { walletServerBinder.awaitBound(UserWalletId(WALLET_ID)) } coAnswers { serverHasWallet.await() }
+        coEvery { tangemTechApi.bindMarketingUidWallets(UID, capture(sentBodies)) } returns success()
+        userWallets.value = emptyList()
+        launch { repository.bind(UID) }
+        runCurrent()
 
-            // Act
-            repository.bindPending()
+        // Act
+        userWallets.value = listOf(defaultWallet)
+        runCurrent()
+        val sentBeforeServerHasWallet = sentBodies.toList()
+        serverHasWallet.complete(Unit)
+        runCurrent()
 
-            // Assert
-            coVerify(exactly = 1) { tangemTechApi.bindMarketingUidWallets(UID, any()) }
-        }
-
-        @Test
-        fun `GIVEN toggle off WHEN bindPending THEN no request is made`() = runTest {
-            // Arrange
-            coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
-            repository.bind(UID)
-            coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(defaultWallet)
-            every { featureToggles.isUidBindingEnabled } returns false
-
-            // Act
-            repository.bindPending()
-
-            // Assert
-            coVerify(exactly = 0) { tangemTechApi.bindMarketingUidWallets(any(), any()) }
-        }
-
-        @Test
-        fun `GIVEN a request throws WHEN bindPending THEN the uids not yet sent stay pending`() = runTest {
-            // Arrange
-            coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
-            repository.bind(UID)
-            repository.bind(OTHER_UID)
-            coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(defaultWallet)
-            coEvery { tangemTechApi.bindMarketingUidWallets(UID, any()) } throws IllegalStateException()
-
-            // Act
-            repository.bindPending()
-            repository.bindPending()
-
-            // Assert
-            coVerify(exactly = 1) { tangemTechApi.bindMarketingUidWallets(OTHER_UID, any()) }
-        }
-
-        @Test
-        fun `GIVEN nothing pending WHEN bindPending THEN wallets are not read`() = runTest {
-            // Act
-            repository.bindPending()
-
-            // Assert
-            coVerify(exactly = 0) { userWalletsListRepository.userWalletsSync() }
-        }
-
-        @Test
-        fun `GIVEN concurrent calls WHEN the wallets load THEN a uid is sent once`() = runTest {
-            // Arrange
-            coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
-            repository.bind(UID)
-            val wallets = CompletableDeferred<List<UserWallet>>()
-            coEvery { userWalletsListRepository.userWalletsSync() } coAnswers { wallets.await() }
-            coEvery { tangemTechApi.bindMarketingUidWallets(any(), any()) } coAnswers {
-                yield()
-                success()
-            }
-            launch { repository.bindPending() }
-            launch { repository.bindPending() }
-            runCurrent()
-
-            // Act
-            wallets.complete(listOf(defaultWallet))
-            advanceUntilIdle()
-
-            // Assert
-            coVerify(exactly = 1) { tangemTechApi.bindMarketingUidWallets(UID, any()) }
-        }
+        // Assert
+        assertThat(sentBeforeServerHasWallet).isEmpty()
+        assertThat(sentBodies).containsExactly(BindMarketingUidWalletsBody(walletIds = listOf(WALLET_ID)))
     }
 
     private fun wallet(id: String): UserWallet = mockk<UserWallet.Hot> {
@@ -253,7 +168,6 @@ internal class DefaultMarketingUidBindingRepositoryTest {
 
     private companion object {
         const val UID = "spring-campaign"
-        const val OTHER_UID = "autumn-campaign"
         val WALLET_ID = "AB".repeat(32)
     }
 }

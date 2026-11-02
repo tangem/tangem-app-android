@@ -1,7 +1,6 @@
 package com.tangem.feature.swap.model
 
 import arrow.core.Either
-import com.google.firebase.perf.FirebasePerformance
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
@@ -12,12 +11,9 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -28,16 +24,6 @@ internal class SwapModelDeeplinkAmountTest : SwapModelTestBase() {
     @BeforeEach
     fun setUp() {
         setUpBase()
-        // SwapQuotePerformanceTracker.onLoadingStarted() calls FirebasePerformance.getInstance(),
-        // which reaches into un-mocked Android framework APIs (android.os.Process) in this plain
-        // JVM unit-test environment. Stub it out so the real quotes-loading path can run.
-        mockkStatic(FirebasePerformance::class)
-        every { FirebasePerformance.getInstance() } returns mockk(relaxed = true)
-    }
-
-    @AfterEach
-    fun tearDown() {
-        unmockkStatic(FirebasePerformance::class)
     }
 
     @Test
