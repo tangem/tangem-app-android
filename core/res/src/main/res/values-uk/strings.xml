@@ -18,6 +18,7 @@
   <string name="prediction_add_funds_swap_title">З вашого гаманця Tangem</string>
   <string name="prediction_balance_total">Загальний баланс</string>
   <string name="prediction_balance_withdraw">Вивести</string>
+  <string name="prediction_cash_out">Обналичити</string>
   <string name="prediction_claim_error_failed">Запит на отримання не пройшов. Кошти залишилися на вашому рахунку, ви можете спробувати ще раз.</string>
   <string name="prediction_claim_error_generic">Не вдалося надіслати запит на отримання. Спробуйте ще раз.</string>
   <string name="prediction_claim_error_rejected">Polymarket відхилив запит на отримання. Оновіть свої позиції та спробуйте ще раз.</string>
