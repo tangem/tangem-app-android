@@ -141,7 +141,7 @@ internal fun PolymarketProbabilityChartStory(modifier: Modifier = Modifier) {
 private const val DEMO_UPDATE_INTERVAL_MILLIS = 2_000L
 
 @Composable
-private fun ChartChoices(title: String, content: @Composable () -> Unit) {
+internal fun ChartChoices(title: String, content: @Composable () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(title, color = TangemTheme.colors3.text.primary, style = TangemTheme.typography3.subheading.medium)
         FlowRow(
@@ -152,7 +152,7 @@ private fun ChartChoices(title: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun ChartChoice(label: String, isSelected: Boolean, onClick: () -> Unit) {
+internal fun ChartChoice(label: String, isSelected: Boolean, onClick: () -> Unit) {
     TangemButton(
         text = stringReference(label),
         onClick = onClick,
