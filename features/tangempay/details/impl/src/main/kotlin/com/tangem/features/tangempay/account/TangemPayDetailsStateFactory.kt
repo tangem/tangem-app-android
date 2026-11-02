@@ -13,6 +13,7 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.account.VirtualAccountOnramp
 import com.tangem.domain.models.account.feeCurrencyOrDefault
+import com.tangem.domain.models.account.isAwaitingDeposit
 import com.tangem.domain.models.account.isPlanTransitioningState
 import com.tangem.domain.models.pay.TangemPayCard
 import com.tangem.domain.models.pay.TangemPayCardState
@@ -70,7 +71,7 @@ internal class TangemPayDetailsStateFactory(
     fun getLoadedState(status: PaymentAccountStatusValue.Loaded): TangemPayDetailsUM {
         val isFresh = status.isFresh
         val hasIssuingCard = status.cards.any { it.state == TangemPayCardState.Issuing }
-        val isTariffAwaitingDeposit = status.cards.isEmpty() && status.tariffPlan.isAwaitingDeposit
+        val isTariffAwaitingDeposit = status.cards.isEmpty() && status.tariffPlan?.isAwaitingDeposit == true
         val isAddCardEnabled = isFresh && !hasIssuingCard && !isTariffAwaitingDeposit
         val balance = status.balance
         val hasWithdrawableBalance = status.hasWithdrawableAmount
@@ -298,9 +299,6 @@ internal class TangemPayDetailsStateFactory(
             cashbackBlockState = null,
         )
     }
-
-    private val TangemPayTariffPlanState?.isAwaitingDeposit: Boolean
-        get() = this?.order?.step is TangemPayTariffPlanState.OrderStep.AwaitingDeposit
 
     private fun issuingPlaceholderCard() = TangemPayDetailsBalanceBlockState.Card(
         lastDigits = "",
