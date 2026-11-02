@@ -136,19 +136,118 @@ internal class MoneyAccountAddFundsOptionsModelTest {
     }
 
     @Test
-    fun `GIVEN MXN toggle WHEN bank option clicked THEN credentials of all rails requested`() = runTest {
+    fun `GIVEN MXN toggle off WHEN model created THEN credentials not requested`() = runTest {
+        // Act
+        val model = createModel(depositAddress = DEPOSIT_ADDRESS)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { getMoneyAccountBankCredentialsUseCase(any(), any()) }
+        model.onDestroy()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideBankDescriptionModels")
+    fun `GIVEN MXN toggle WHEN model created THEN bank option names the rails of the prefetched routes`(
+        model: BankDescriptionModel,
+    ) = runTest {
         // Arrange
         every { moneyAccountFeatureToggles.isMxnEnabled } returns true
-        coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId, true) } returns listOf(CREDENTIALS).right()
+        coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId, true) } returns model.credentials
+
+        // Act
+        val optionsModel = createModel(depositAddress = DEPOSIT_ADDRESS)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(optionsModel.bankOption().description).isEqualTo(model.expectedDescription)
+        coVerify(exactly = 1) { getMoneyAccountBankCredentialsUseCase(userWalletId, true) }
+        optionsModel.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN MXN toggle and prefetched routes WHEN bank option clicked THEN no new request`() =
+        runTest {
+            // Arrange
+            every { moneyAccountFeatureToggles.isMxnEnabled } returns true
+            coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId, true) } returns ROUTES.right()
+            val model = createModel(depositAddress = DEPOSIT_ADDRESS)
+            advanceUntilIdle()
+
+            // Act
+            model.bankOption().onClick?.invoke()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { listener.onBankDetailsLoaded(ROUTES) }
+            coVerify(exactly = 1) { getMoneyAccountBankCredentialsUseCase(userWalletId, true) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN MXN toggle and prefetch in flight WHEN bank option clicked THEN it waits for the prefetch`() = runTest {
+        // Arrange
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns true
+        val pending = CompletableDeferred<Either<VisaApiError, List<BankCredentials>>>()
+        coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId, true) } coAnswers { pending.await() }
         val model = createModel(depositAddress = DEPOSIT_ADDRESS)
+        advanceUntilIdle()
+
+        // Act
+        model.bankOption().onClick?.invoke()
+        advanceUntilIdle()
+        val loadingOption = model.bankOption()
+        pending.complete(ROUTES.right())
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(loadingOption.isLoading).isTrue()
+        assertThat(model.bankOption().isLoading).isTrue()
+        verify(exactly = 1) { listener.onBankDetailsLoaded(ROUTES) }
+        coVerify(exactly = 1) { getMoneyAccountBankCredentialsUseCase(userWalletId, true) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN MXN toggle and every request fails WHEN bank option clicked THEN failure reported and loading reset`() =
+        runTest {
+            // Arrange
+            every { moneyAccountFeatureToggles.isMxnEnabled } returns true
+            coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId, true) } returns
+                VisaApiError.ServerUnavailable.left()
+            val model = createModel(depositAddress = DEPOSIT_ADDRESS)
+            advanceUntilIdle()
+
+            // Act
+            model.bankOption().onClick?.invoke()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { listener.onBankingDetailsLoadFailed() }
+            verify(exactly = 0) { listener.onBankDetailsLoaded(any()) }
+            assertThat(model.bankOption().isLoading).isFalse()
+            coVerify(exactly = 2) { getMoneyAccountBankCredentialsUseCase(userWalletId, true) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN MXN toggle and failed prefetch WHEN bank option clicked THEN routes requested again`() = runTest {
+        // Arrange
+        every { moneyAccountFeatureToggles.isMxnEnabled } returns true
+        coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId, true) } returnsMany listOf(
+            VisaApiError.ServerUnavailable.left(),
+            ROUTES.right(),
+        )
+        val model = createModel(depositAddress = DEPOSIT_ADDRESS)
+        advanceUntilIdle()
 
         // Act
         model.bankOption().onClick?.invoke()
         advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 1) { getMoneyAccountBankCredentialsUseCase(userWalletId, true) }
-        verify(exactly = 1) { listener.onBankDetailsLoaded(listOf(CREDENTIALS)) }
+        verify(exactly = 1) { listener.onBankDetailsLoaded(ROUTES) }
+        coVerify(exactly = 2) { getMoneyAccountBankCredentialsUseCase(userWalletId, true) }
         model.onDestroy()
     }
 
@@ -229,6 +328,21 @@ internal class MoneyAccountAddFundsOptionsModelTest {
         ),
     )
 
+    private fun provideBankDescriptionModels() = listOf(
+        BankDescriptionModel(
+            credentials = ROUTES.right(),
+            expectedDescription = resourceReference(R.string.money_account_add_funds_bank_description),
+        ),
+        BankDescriptionModel(
+            credentials = listOf(CREDENTIALS).right(),
+            expectedDescription = resourceReference(R.string.tangempay_topup_bank_transfer_body),
+        ),
+        BankDescriptionModel(
+            credentials = VisaApiError.ServerUnavailable.left(),
+            expectedDescription = resourceReference(R.string.tangempay_topup_bank_transfer_body),
+        ),
+    )
+
     data class OptionsModel(val depositAddress: String?, val expectedTitles: List<TextReference>)
 
     private fun provideMethodModels() = listOf(
@@ -251,6 +365,11 @@ internal class MoneyAccountAddFundsOptionsModelTest {
     private fun MoneyAccountAddFundsOptionsModel.option(title: TextReference) = uiState.value.items.first {
         it.title == title
     }
+
+    data class BankDescriptionModel(
+        val credentials: Either<VisaApiError, List<BankCredentials>>,
+        val expectedDescription: TextReference,
+    )
 
     private fun MoneyAccountAddFundsOptionsModel.receiveOption() = uiState.value.items.first {
         it.title == resourceReference(R.string.tangempay_topup_receive_title)
@@ -278,5 +397,6 @@ internal class MoneyAccountAddFundsOptionsModelTest {
         const val DEPOSIT_ADDRESS = "0xdeposit"
 
         val CREDENTIALS = MockBankCredentials.bankCredentials()
+        val ROUTES = listOf(CREDENTIALS, MockBankCredentials.speiBankCredentials())
     }
 }
