@@ -436,6 +436,41 @@ internal class DefaultCollectiblesRepositoryTest {
             // Assert
             assertThat(actual).isEqualTo(CollectibleTxState(status = CollectibleTxStatus.PACK_OPENED, pack = null))
         }
+
+        @Test
+        fun `GIVEN an auto buyback in the answer WHEN openPack THEN the payout is returned in whole USDC`() = runTest {
+            // Arrange
+            coEvery { collectiblesApi.openPack(any(), any(), any()) } returns ApiResponse.Success(
+                CollectibleTxResponse(
+                    txId = "tx-id",
+                    status = CollectibleTxStatusDTO.AUTO_BUYBACKED,
+                    autoBuyback = CollectibleTxResponse.AutoBuybackDTO(
+                        buybackId = "buyback-id",
+                        nftAddress = "nft",
+                        fromAddress = "owner",
+                        toNetwork = "solana",
+                        toContractAddress = "usdc-mint",
+                        toDecimals = 6,
+                        toAmount = "42500000",
+                        toAddress = "vault",
+                        updatedAt = "2026-08-25T08:21:07.518119Z",
+                        createdAt = "2026-08-25T08:21:07.518119Z",
+                    ),
+                ),
+            )
+
+            // Act
+            val actual = repository.openPack(userWalletId, txId = "tx-id")
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                CollectibleTxState(
+                    status = CollectibleTxStatus.AUTO_BUYBACKED,
+                    pack = null,
+                    autoBuybackAmount = BigDecimal("42.500000"),
+                ),
+            )
+        }
     }
 
     @Nested
