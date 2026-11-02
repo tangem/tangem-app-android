@@ -154,6 +154,7 @@ internal class PolymarketSessionKeyStateServiceTest {
     fun `GIVEN another wallet is refreshed WHEN observed THEN this wallet is not reconciled again`() = runTest {
         // Arrange
         coEvery { reconcile(USER_WALLET_ID) } returns overview(PolymarketSessionKeyStatus.ACTIVE).right()
+        coEvery { reconcile(OTHER_WALLET_ID) } returns overview(PolymarketSessionKeyStatus.ACTIVE).right()
         val service = service()
 
         // Act
@@ -622,7 +623,7 @@ internal class PolymarketSessionKeyStateServiceTest {
     }
 
     @Test
-    fun `GIVEN an unobserved wallet WHEN refresh THEN a later observe reconciles it once`() = runTest {
+    fun `GIVEN an unobserved wallet WHEN refresh THEN it is reconciled exactly once`() = runTest {
         // Arrange
         coEvery { reconcile(USER_WALLET_ID) } returns overview(PolymarketSessionKeyStatus.ACTIVE).right()
         val service = service()
@@ -630,17 +631,68 @@ internal class PolymarketSessionKeyStateServiceTest {
         // Act
         service.refresh(USER_WALLET_ID)
         runCurrent()
+        advanceTimeBy(Duration.ofHours(1).toMillis())
+        runCurrent()
 
         // Assert
-        coVerify(exactly = 0) { reconcile(any()) }
+        coVerify(exactly = 1) { reconcile(USER_WALLET_ID) }
+    }
+
+    @Test
+    fun `GIVEN an observed wallet WHEN refresh THEN only its loop reconciles once more`() = runTest {
+        // Arrange
+        val active = overview(PolymarketSessionKeyStatus.ACTIVE)
+        val revoked = overview(PolymarketSessionKeyStatus.REVOKED)
+        coEvery { reconcile(USER_WALLET_ID) } returnsMany listOf(active.right(), revoked.right())
+        val service = service()
+
         service.observe(USER_WALLET_ID).test {
             awaitItem()
+
+            // Act
+            service.refresh(USER_WALLET_ID)
             runCurrent()
-            expectNoEvents()
-            coVerify(exactly = 1) { reconcile(USER_WALLET_ID) }
+
+            // Assert
+            assertThat(awaitItem()).isEqualTo(revoked.right())
+            coVerify(exactly = 2) { reconcile(USER_WALLET_ID) }
             cancelAndIgnoreRemainingEvents()
         }
     }
+
+    @Test
+    fun `GIVEN the loop is backing off after a crash WHEN refresh THEN the refresh is kept for the restarted loop`() =
+        runTest {
+            // Arrange
+            val active = overview(PolymarketSessionKeyStatus.ACTIVE)
+            val revoked = overview(PolymarketSessionKeyStatus.REVOKED)
+            var reconciles = 0
+            coEvery { reconcile(USER_WALLET_ID) } coAnswers {
+                reconciles++
+                when (reconciles) {
+                    1 -> error("keystore unavailable")
+                    2 -> active.right()
+                    else -> revoked.right()
+                }
+            }
+            val service = service()
+
+            service.observe(USER_WALLET_ID).test {
+                runCurrent()
+
+                // Act
+                service.refresh(USER_WALLET_ID)
+                runCurrent()
+                advanceTimeBy(POLL_INTERVAL_MILLIS)
+                runCurrent()
+
+                // Assert
+                assertThat(awaitItem()).isEqualTo(active.right())
+                assertThat(awaitItem()).isEqualTo(revoked.right())
+                assertThat(reconciles).isEqualTo(3)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
 
     private fun TestScope.service() = PolymarketSessionKeyStateService(
         reconcile = reconcile,
