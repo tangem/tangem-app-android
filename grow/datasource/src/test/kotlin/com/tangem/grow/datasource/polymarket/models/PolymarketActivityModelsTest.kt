@@ -169,6 +169,18 @@ internal class PolymarketActivityModelsTest {
     }
 
     @Test
+    fun `GIVEN a reconcile response without a retry delay WHEN decoded THEN defaults to thirty seconds`() {
+        // Arrange
+        val json = """{"state":"SCANNING"}"""
+
+        // Act
+        val actual = moshi.adapter(PolymarketDepositReconcileResponse::class.java).fromJson(json)
+
+        // Assert
+        assertThat(actual).isEqualTo(PolymarketDepositReconcileResponse(state = "SCANNING", retryAfterSeconds = 30))
+    }
+
+    @Test
     fun `GIVEN a reconcile response WHEN decoded THEN the retry delay retains its int64 range`() {
         // Arrange
         val json = """{"state":"SCANNING","retryAfterSeconds":2147483648}"""
