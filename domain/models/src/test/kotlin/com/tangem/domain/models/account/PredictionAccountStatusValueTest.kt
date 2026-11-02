@@ -113,6 +113,58 @@ internal class PredictionAccountStatusValueTest {
                 value = active(balance = BigDecimal("100"), fiatRate = null),
                 expected = TotalFiatBalance.Failed,
             ),
+            TotalFiatBalanceModel(
+                value = active(
+                    balance = BigDecimal("100"),
+                    fiatRate = null,
+                    positions = PredictionPositionsValue.Known(amount = BigDecimal("50"), source = StatusSource.ACTUAL),
+                ),
+                expected = TotalFiatBalance.Failed,
+            ),
+            TotalFiatBalanceModel(
+                value = active(
+                    balance = BigDecimal("100"),
+                    fiatRate = BigDecimal("0.9"),
+                    positions = PredictionPositionsValue.Known(amount = BigDecimal("50"), source = StatusSource.ACTUAL),
+                ),
+                expected = TotalFiatBalance.Loaded(amount = BigDecimal("135.0"), source = StatusSource.ACTUAL),
+            ),
+            TotalFiatBalanceModel(
+                value = active(
+                    balance = BigDecimal("100"),
+                    fiatRate = BigDecimal("0.9"),
+                    source = StatusSource.CACHE,
+                    positions = PredictionPositionsValue.Known(amount = BigDecimal("50"), source = StatusSource.ACTUAL),
+                ),
+                expected = TotalFiatBalance.Loaded(amount = BigDecimal("135.0"), source = StatusSource.CACHE),
+            ),
+            TotalFiatBalanceModel(
+                value = active(
+                    balance = BigDecimal("100"),
+                    fiatRate = BigDecimal("0.9"),
+                    positions = PredictionPositionsValue.Known(
+                        amount = BigDecimal("50"),
+                        source = StatusSource.ONLY_CACHE,
+                    ),
+                ),
+                expected = TotalFiatBalance.Loaded(amount = BigDecimal("135.0"), source = StatusSource.ONLY_CACHE),
+            ),
+            TotalFiatBalanceModel(
+                value = active(
+                    balance = BigDecimal("100"),
+                    fiatRate = BigDecimal("0.9"),
+                    positions = PredictionPositionsValue.Unknown,
+                ),
+                expected = TotalFiatBalance.Loaded(amount = BigDecimal("90.0"), source = StatusSource.CACHE),
+            ),
+            TotalFiatBalanceModel(
+                value = active(
+                    balance = BigDecimal("100"),
+                    fiatRate = BigDecimal("0.9"),
+                    positions = PredictionPositionsValue.Unavailable,
+                ),
+                expected = TotalFiatBalance.Loaded(amount = BigDecimal("90.0"), source = StatusSource.ONLY_CACHE),
+            ),
         )
     }
 
@@ -184,7 +236,7 @@ internal class PredictionAccountStatusValueTest {
 
     private companion object {
         val COLLATERAL: CryptoCurrency.Token = mockk(relaxed = true)
-
+        val NO_POSITIONS = PredictionPositionsValue.Known(amount = BigDecimal.ZERO, source = StatusSource.ACTUAL)
 
         fun onboarding(source: StatusSource, stage: PredictionAccountStatusValue.Onboarding.Stage) =
             PredictionAccountStatusValue.Onboarding(source = source, stage = stage)
@@ -193,12 +245,14 @@ internal class PredictionAccountStatusValueTest {
             balance: BigDecimal,
             fiatRate: BigDecimal?,
             source: StatusSource = StatusSource.ACTUAL,
+            positions: PredictionPositionsValue = NO_POSITIONS,
         ) = PredictionAccountStatusValue.Active(
             source = source,
             balance = balance,
             fiatRate = fiatRate,
             depositCurrency = COLLATERAL,
             depositAddress = "0xbridge",
+            positions = positions,
         )
     }
 }
