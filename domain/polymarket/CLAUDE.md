@@ -111,12 +111,13 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
   CLOB `401` on a session order counts as a refusal, and so does any other `4xx` whose `error` message names the
   signature, the signer, an authorization or the API key (`ClobSignerRefusalParser`, data layer — the CLOB sends
   no error code); a bare `403`, a geoblock for one, is a normal failure. A session key that cannot sign the order
-  or an order that cannot be sent (`NotSent`) counts as a refusal too, as on iOS (a signing failure is not
-  reconciled); a cancelled signing does not. On a refusal the
+  or an order that cannot be sent (`NotSent`) counts as a refusal too, as on iOS (the router does not
+  reconcile on a signing failure); a cancelled signing does not. On a refusal the
   key is marked refused and its stored readiness dropped before the same order is signed with the owner key, so it
   stays out of trading until a new authorization (enable, renew, replace) marks it ready or the app restarts, as on
   iOS — a reconciliation that finds it listed does not lift it; the wallet is reconciled in the app scope,
-  after the owner result is returned. Market, liquidity and balance errors are final. The owner route maps those
+  after the owner result is returned. After either kind of refusal `PolymarketSessionKeyStateService` is refreshed
+  in the app scope too, after the owner result. Market, liquidity and balance errors are final. The owner route maps those
   responses as before.
 - Every relayer batch takes the next deposit-wallet nonce, so claim, withdrawal confirm/resend and the session key
   lifecycle (`ManagePolymarketSessionKeyInteractor`) share `PolymarketDepositWalletLock` from signing until the

@@ -358,21 +358,85 @@ internal class PolymarketSessionKeyStateServiceTest {
     }
 
     @Test
-    fun `GIVEN a failing reconcile at the next change WHEN time advances THEN the loop does not spin`() = runTest {
+    fun `GIVEN the next change elapsed WHEN its reconciles fail THEN they are retried with backoff until a Right`() =
+        runTest {
+            // Arrange
+            val aboutToChange = overview(
+                PolymarketSessionKeyStatus.ACTIVE,
+                isTradable = true,
+                nextChangeAt = NOW.plus(Duration.ofMinutes(1)),
+            )
+            val changed = overview(PolymarketSessionKeyStatus.ACTIVE)
+            coEvery { reconcile(USER_WALLET_ID) } returnsMany listOf(
+                aboutToChange.right(),
+                PolymarketWalletError.Network.left(),
+                PolymarketWalletError.Network.left(),
+                changed.right(),
+            )
+
+            service().observe(USER_WALLET_ID).test {
+                assertThat(awaitItem()).isEqualTo(aboutToChange.right())
+
+                // Act
+                advanceTimeBy(Duration.ofMinutes(1).toMillis())
+                runCurrent()
+                advanceTimeBy(POLL_INTERVAL_MILLIS - 1)
+                runCurrent()
+
+                // Assert
+                coVerify(exactly = 2) { reconcile(USER_WALLET_ID) }
+
+                // Act
+                advanceTimeBy(1)
+                runCurrent()
+                advanceTimeBy(POLL_INTERVAL_MILLIS * 2 - 1)
+                runCurrent()
+
+                // Assert
+                coVerify(exactly = 3) { reconcile(USER_WALLET_ID) }
+                expectNoEvents()
+
+                // Act
+                advanceTimeBy(1)
+                runCurrent()
+
+                // Assert
+                assertThat(awaitItem()).isEqualTo(changed.right())
+                coVerify(exactly = 4) { reconcile(USER_WALLET_ID) }
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `GIVEN the next change elapsed WHEN its reconciles keep failing THEN retries stop at the cap`() = runTest {
         // Arrange
         val aboutToChange = overview(PolymarketSessionKeyStatus.ACTIVE, nextChangeAt = NOW.plus(Duration.ofMinutes(1)))
-        coEvery { reconcile(USER_WALLET_ID) } returnsMany listOf(aboutToChange.right(), PolymarketWalletError.Network.left())
+        var reconciles = 0
+        coEvery { reconcile(USER_WALLET_ID) } coAnswers {
+            reconciles++
+            if (reconciles == 1) aboutToChange.right() else PolymarketWalletError.Network.left()
+        }
+        val service = service()
 
-        // Act
-        service().observe(USER_WALLET_ID).test {
+        service.observe(USER_WALLET_ID).test {
+            awaitItem()
+
+            // Act
+            advanceTimeBy(Duration.ofHours(1).toMillis())
+            runCurrent()
+
             // Assert
-            assertThat(awaitItem()).isEqualTo(aboutToChange.right())
-            advanceTimeBy(Duration.ofMinutes(1).toMillis())
+            assertThat(reconciles).isEqualTo(12)
+            expectNoEvents()
+
+            // Act
+            service.refresh(USER_WALLET_ID)
             runCurrent()
             advanceTimeBy(Duration.ofHours(1).toMillis())
             runCurrent()
-            expectNoEvents()
-            coVerify(exactly = 2) { reconcile(USER_WALLET_ID) }
+
+            // Assert
+            assertThat(reconciles).isEqualTo(13)
             cancelAndIgnoreRemainingEvents()
         }
     }

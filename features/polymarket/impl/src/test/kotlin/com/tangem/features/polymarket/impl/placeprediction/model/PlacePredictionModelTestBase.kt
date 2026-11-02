@@ -259,6 +259,7 @@ internal abstract class PlacePredictionModelTestBase {
                 signOrder = signOrderInteractor,
                 placeOrder = placeOrderUseCase,
                 router = signingRouter,
+                stateService = mockk(relaxed = true),
                 reconciliationScope = testScope.backgroundScope,
             ),
             featureToggles = featureToggles,
