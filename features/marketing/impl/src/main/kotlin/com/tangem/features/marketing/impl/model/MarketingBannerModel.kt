@@ -2,39 +2,47 @@ package com.tangem.features.marketing.impl.model
 
 import android.net.Uri
 import arrow.core.getOrElse
+import com.tangem.common.routing.deeplink.DeeplinkConst
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.deeplink.DeeplinkLauncher
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.marketing.DismissMarketingBannerUseCase
 import com.tangem.domain.marketing.GetMarketingBannerUseCase
 import com.tangem.domain.marketing.MarketingUidBindingRepository
 import com.tangem.domain.marketing.models.MarketingBanner
 import com.tangem.domain.marketing.models.MarketingCampaign
 import com.tangem.domain.marketing.models.MarketingScreen
+import com.tangem.domain.marketing.models.hasAmountBounds
 import com.tangem.domain.marketing.models.matchesUsdAmount
+import com.tangem.domain.quotes.GetFiatUSDRateUseCase
+import com.tangem.feature.usedesk.api.UseDeskFeatureToggles
+import com.tangem.features.marketing.api.MarketingBannerAmount
 import com.tangem.features.marketing.api.MarketingBannerComponent
 import com.tangem.features.marketing.impl.ui.state.MarketingBannerListUM
 import com.tangem.features.marketing.impl.ui.state.MarketingBannerUM
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
-@OptIn(FlowPreview::class)
 @ModelScoped
 internal class MarketingBannerModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
@@ -42,12 +50,24 @@ internal class MarketingBannerModel @Inject constructor(
     private val getMarketingBanner: GetMarketingBannerUseCase,
     private val dismissMarketingBanner: DismissMarketingBannerUseCase,
     private val deeplinkLauncher: DeeplinkLauncher,
+    private val getFiatUSDRate: GetFiatUSDRateUseCase,
     private val marketingUidBindingRepository: MarketingUidBindingRepository,
     private val appCoroutineScope: AppCoroutineScope,
+    private val urlOpener: UrlOpener,
+    private val useDeskFeatureToggles: UseDeskFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<MarketingBannerComponent.Params>()
     private val dismissedIds = MutableStateFlow<Set<Int>>(emptySet())
+
+    /** How each fetched CTA campaign's link opens, by link. Classified once per fetch, not per amount change. */
+    private var ctaLinks: Map<String?, CtaBannerLink> = emptyMap()
+
+    /**
+     * One lookup per currency, run in [modelScope] so a new amount awaits it instead of restarting it. A failed
+     * lookup is dropped, so that currency is retried on its next amount change.
+     */
+    private val fiatUsdRateLookups = mutableMapOf<String, Deferred<BigDecimal?>>()
 
     val uiState: StateFlow<MarketingBannerListUM>
         field = MutableStateFlow<MarketingBannerListUM>(MarketingBannerListUM.Hidden)
@@ -57,17 +77,25 @@ internal class MarketingBannerModel @Inject constructor(
     }
 
     fun onBannerClick(deeplink: String?) {
-        if (deeplink.isNullOrBlank()) return
+        val link = deeplink?.trim()
+        if (link.isNullOrEmpty()) return
+        if (ctaLinks[deeplink] == CtaBannerLink.PARTNER_PAGE) {
+            bindMarketingUid(link)
+            urlOpener.openUrl(link)
+            return
+        }
         // Let the host route contextual deeplinks (swap/buy for the current token). Fall back to the
         // generic launcher for external links and when no interceptor is provided.
         val isHandledByHost = (params as? MarketingBannerComponent.Params.Standalone)
-            ?.onDeeplinkClick?.invoke(deeplink) == true
-        if (isHandledByHost) bindMarketingUid(deeplink) else deeplinkLauncher.launch(deeplink)
+            ?.onDeeplinkClick?.invoke(link) == true
+        if (isHandledByHost) bindMarketingUid(link) else deeplinkLauncher.launch(link)
     }
 
-    // A link handled by the host never reaches MainActivity, which binds the uid of every other link
+    // A link handled by the host or opened as a partner page never reaches MainActivity, which binds the uid of
+    // every other link
     private fun bindMarketingUid(deeplink: String) {
-        val uid = Uri.parse(deeplink).getQueryParameters(MARKETING_UID_PARAM).firstOrNull(String::isNotEmpty) ?: return
+        val uid = Uri.parse(deeplink).getQueryParameters(DeeplinkConst.UID_KEY)
+            .firstOrNull(String::isNotEmpty) ?: return
         appCoroutineScope.launch { marketingUidBindingRepository.bind(uid) }
     }
 
@@ -80,32 +108,53 @@ internal class MarketingBannerModel @Inject constructor(
         val requestFlow: Flow<MarketingRequest?> = when (val p = params) {
             is MarketingBannerComponent.Params.Standalone ->
                 p.requestFlow.map { request ->
-                    request?.let { MarketingRequest(screen = it.screen, amountUsd = it.amountUsd) }
+                    request?.let { MarketingRequest(screen = it.screen, amount = it.amount) }
                 }
             is MarketingBannerComponent.Params.Linked ->
                 p.requestFlow.map { request ->
-                    request?.let { MarketingRequest(screen = it.screen, amountUsd = it.amountUsd) }
+                    request?.let { MarketingRequest(screen = it.screen, amount = it.amount) }
+                }
+            is MarketingBannerComponent.Params.Cta ->
+                p.requestFlow.map { request ->
+                    request ?: return@map null
+                    MarketingRequest(
+                        screen = request.screen,
+                        amount = request.amount,
+                        isConciergeWaitlistHidden = request.isDemandSurveyCompleted,
+                    )
                 }
         }
 
-        val campaigns: Flow<List<MarketingCampaign>> = requestFlow
-            .map { it?.screen }
-            .distinctUntilChanged()
-            .debounce(REQUEST_DEBOUNCE_MS)
-            .mapLatest { screen -> if (screen != null) fetch(screen) else emptyList() }
+        val campaigns: Flow<List<MarketingCampaign>> = observeCampaigns(requestFlow)
 
-        val amountUsd: Flow<BigDecimal?> = requestFlow.map { it?.amountUsd }.distinctUntilChanged()
+        val amount: Flow<MarketingBannerAmount?> = requestFlow.map { it?.amount }.distinctUntilChanged()
+
+        val amountMatchingCampaigns: Flow<List<MarketingCampaign>> = combine(campaigns, amount, ::Pair)
+            .transformLatest { (list, amount) ->
+                if (list.none(MarketingCampaign::hasAmountBounds)) {
+                    emit(list)
+                    return@transformLatest
+                }
+                if (!isUsdAvailableNow(amount)) emit(list.filterNot(MarketingCampaign::hasAmountBounds))
+                val usd = amount?.let { toUsd(it) }
+                emit(list.filter { it.matchesUsdAmount(usd) })
+            }
+
+        // Applied after the USD conversion, so hiding never waits for a rate lookup. Null while there is no request.
+        val isConciergeWaitlistHidden: Flow<Boolean?> = requestFlow
+            .map { it?.isConciergeWaitlistHidden }
+            .distinctUntilChanged()
 
         modelScope.launch {
             combine(
-                flow = campaigns,
-                flow2 = amountUsd,
+                flow = amountMatchingCampaigns,
+                flow2 = isConciergeWaitlistHidden,
                 flow3 = dismissedIds,
-            ) { list, usd, dismissed ->
+            ) { list, isWaitlistHidden, dismissed ->
+                if (isWaitlistHidden == null) return@combine emptyList()
                 list.asSequence()
                     .filterNot { it.id in dismissed }
-                    .filter { it.matchesUsdAmount(usd) }
-                    .filter { matchesUiType(it) }
+                    .filterNot { isWaitlistHidden && isConciergeWaitlist(it) }
                     .map { it.toUM() }
                     .toList()
             }.collect { banners ->
@@ -118,19 +167,74 @@ internal class MarketingBannerModel @Inject constructor(
         }
     }
 
+    /**
+     * The previous screen's campaigns are cleared at once, so they're never filtered with the new amount. A null
+     * request only hides the banners: the host leaving its content and coming back to the same screen, e.g. on
+     * refresh, reuses the campaigns instead of fetching them again.
+     */
+    private fun observeCampaigns(requestFlow: Flow<MarketingRequest?>): Flow<List<MarketingCampaign>> = requestFlow
+        .mapNotNull { it?.screen }
+        .distinctUntilChanged()
+        .transformLatest { screen ->
+            emit(emptyList())
+            delay(REQUEST_DEBOUNCE_MS)
+            val campaigns = fetch(screen).filter(::matchesUiType)
+            ctaLinks = classifyCtaLinks(campaigns)
+            emit(campaigns.filter(::hasOpenableLink))
+        }
+
+    private suspend fun toUsd(amount: MarketingBannerAmount): BigDecimal? = when (amount) {
+        is MarketingBannerAmount.Usd -> amount.value
+        is MarketingBannerAmount.Fiat -> getFiatUsdRate(amount.currencyCode)?.let(amount.value::multiply)
+    }
+
+    private fun isUsdAvailableNow(amount: MarketingBannerAmount?): Boolean {
+        if (amount !is MarketingBannerAmount.Fiat) return true
+        return fiatUsdRateLookups[amount.currencyCode.uppercase()]?.isCompleted == true
+    }
+
+    /**
+     * A failed lookup evicts itself, even when nobody awaits it any more. It starts lazily, so it is already in the
+     * map when it completes.
+     */
+    private suspend fun getFiatUsdRate(currencyCode: String): BigDecimal? {
+        val code = currencyCode.uppercase()
+        val lookup = fiatUsdRateLookups.getOrPut(code) {
+            modelScope.async(start = CoroutineStart.LAZY) {
+                getFiatUSDRate(code).also { rate -> if (rate == null) fiatUsdRateLookups.remove(code) }
+            }
+        }
+        return lookup.await()
+    }
+
     private suspend fun fetch(screen: MarketingScreen): List<MarketingCampaign> =
         getMarketingBanner(screen, amountUsd = null).getOrElse { emptyList() }
 
-    private fun matchesUiType(campaign: MarketingCampaign): Boolean = when (params) {
-        is MarketingBannerComponent.Params.Standalone ->
-            campaign.banner.uiType == MarketingBanner.UiType.STANDALONE
-        is MarketingBannerComponent.Params.Linked ->
-            campaign.banner.uiType == MarketingBanner.UiType.LINKED_TO_PROVIDER
+    private fun matchesUiType(campaign: MarketingCampaign): Boolean = campaign.banner.uiType in when (params) {
+        is MarketingBannerComponent.Params.Standalone -> setOf(MarketingBanner.UiType.STANDALONE)
+        is MarketingBannerComponent.Params.Linked -> setOf(MarketingBanner.UiType.LINKED_TO_PROVIDER)
+        is MarketingBannerComponent.Params.Cta -> CTA_UI_TYPES
     }
+
+    private fun classifyCtaLinks(campaigns: List<MarketingCampaign>): Map<String?, CtaBannerLink> {
+        if (params !is MarketingBannerComponent.Params.Cta) return emptyMap()
+        val isSupportChatEnabled = useDeskFeatureToggles.isSupportChatDeepLinkEnabled
+        return campaigns.map { it.banner.deeplink }.distinct().associateWith { link ->
+            resolveCtaBannerLink(link?.trim(), isSupportChatEnabled)
+        }
+    }
+
+    private fun hasOpenableLink(campaign: MarketingCampaign): Boolean =
+        params !is MarketingBannerComponent.Params.Cta ||
+            ctaLinks[campaign.banner.deeplink] != CtaBannerLink.UNSUPPORTED
+
+    private fun isConciergeWaitlist(campaign: MarketingCampaign): Boolean =
+        ctaLinks[campaign.banner.deeplink] == CtaBannerLink.CONCIERGE_WAITLIST
 
     private data class MarketingRequest(
         val screen: MarketingScreen,
-        val amountUsd: BigDecimal?,
+        val amount: MarketingBannerAmount?,
+        val isConciergeWaitlistHidden: Boolean = false,
     )
 
     private fun MarketingCampaign.toUM() = MarketingBannerUM(
@@ -147,10 +251,23 @@ internal class MarketingBannerModel @Inject constructor(
         isDismissible = banner.isDismissible,
         deeplink = banner.deeplink,
         providerIds = providerIds?.toSet().orEmpty(),
+        categoryLabel = banner.categoryLabel,
+        subtitle = banner.subtitle,
+        etaLabel = banner.etaLabel,
+        partnerLabel = banner.partnerLabel,
+        buttonText = banner.buttonText,
+        hasGlow = banner.hasGlow,
+        style = when (banner.uiType) {
+            MarketingBanner.UiType.PSEUDO_PROVIDER -> MarketingBannerUM.Style.PSEUDO_PROVIDER
+            MarketingBanner.UiType.STANDALONE_CTA -> MarketingBannerUM.Style.STANDALONE_CTA
+            MarketingBanner.UiType.STANDALONE,
+            MarketingBanner.UiType.LINKED_TO_PROVIDER,
+            -> MarketingBannerUM.Style.DEFAULT
+        },
     )
 
     private companion object {
         const val REQUEST_DEBOUNCE_MS = 300L
-        const val MARKETING_UID_PARAM = "uid"
+        val CTA_UI_TYPES = setOf(MarketingBanner.UiType.PSEUDO_PROVIDER, MarketingBanner.UiType.STANDALONE_CTA)
     }
 }

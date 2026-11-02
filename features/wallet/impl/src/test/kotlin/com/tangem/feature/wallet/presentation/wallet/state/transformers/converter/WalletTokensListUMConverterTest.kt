@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers.convert
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.ds2.accountrow.TangemAccountRow
+import com.tangem.core.ui.ds2.avatar.TangemAvatar
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.pluralReference
@@ -12,6 +13,7 @@ import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.jointaccount.model.JointPendingOperation
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokensGroupType
@@ -78,6 +80,7 @@ internal class WalletTokensListUMConverterTest {
         clickIntents: WalletClickIntents = mockk(relaxed = true),
         isAccountsModeEnabled: Boolean = false,
         isRedesignedAccountRowsEnabled: Boolean = false,
+        jointPendingOperations: List<JointPendingOperation> = emptyList(),
     ): WalletTokensListUMConverter = WalletTokensListUMConverter(
         appCurrency = AppCurrency.Default,
         selectedWallet = selectedWallet,
@@ -87,6 +90,7 @@ internal class WalletTokensListUMConverterTest {
         expandedAccounts = emptySet(),
         stakingAvailabilityMap = emptyMap(),
         shouldShowMainPromo = false,
+        jointPendingOperations = jointPendingOperations,
         isRedesignedAccountRowsEnabled = isRedesignedAccountRowsEnabled,
     )
 
@@ -178,6 +182,33 @@ internal class WalletTokensListUMConverterTest {
             pluralReference(R.plurals.joint_account_members_count, 3, wrappedList(3)),
         )
         assertThat(accounts.flatMap { it.tokenList }.all { it is TokensListItemUM2.TokenV2 }).isTrue()
+    }
+
+    @Test
+    fun `GIVEN a pending joint operation WHEN convert THEN only its account avatar carries the indicator`() {
+        // Arrange
+        val joint = activeJointStatus()
+        val operation = mockk<JointPendingOperation>(relaxed = true) { every { account } returns joint.account }
+        val converter = createConverter(
+            selectedWallet = mockColdWallet(false, false),
+            isAccountsModeEnabled = true,
+            isRedesignedAccountRowsEnabled = true,
+            jointPendingOperations = listOf(operation),
+        )
+        val personal = AccountStatus.Personal(
+            account = createMainAccount(userWalletId),
+            tokenList = ungroupedTokenList(),
+            priceChangeLce = Unit.lceError(),
+        )
+
+        // Act
+        val result = converter.convert(accountListOf(personal, joint))
+
+        // Assert
+        val accounts = (result as WalletTokensListUM.Content).tokenList.map { it as TokensListItemUM2.AccountV2 }
+        assertThat(accounts.map { (it.avatar as TangemAvatar.UiState.Account).hasIndicator })
+            .containsExactly(false, true)
+            .inOrder()
     }
 
     @Test

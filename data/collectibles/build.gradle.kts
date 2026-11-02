@@ -54,6 +54,7 @@ dependencies {
 
     // region Data
     implementation(projects.data.common)
+    implementation(projects.store.datasource)
     implementation(projects.data.wallets)
     // endregion
 
@@ -68,6 +69,8 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.wallets)
     // endregion
+
+    implementation(projects.features.collectibles.api)
 
     // region Tests
     testImplementation(projects.test.core)

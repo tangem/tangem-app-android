@@ -24,12 +24,9 @@ dependencies {
     api(projects.core.configToggles)
     implementation(projects.core.local)
     api(projects.core.decompose)
-    implementation(projects.spend.datasource)
     api(projects.core.navigation)
     api(projects.core.ui)
     api(projects.core.utils)
-    implementation(projects.core.error)
-    implementation(projects.core.error.ext)
 
     /** Common */
     api(projects.common.ui)
@@ -50,10 +47,8 @@ dependencies {
     api(projects.domain.socialLogin)
     api(projects.domain.staking)
     api(projects.domain.tokens)
-    api(projects.domain.visa)
     api(projects.domain.wallets)
     implementation(projects.domain.feedback.models)
-    implementation(projects.domain.visa.models)
     implementation(projects.domain.wallets.models)
     runtimeOnly(projects.domain.onramp)
     runtimeOnly(projects.domain.transaction)
@@ -91,7 +86,6 @@ dependencies {
     api(deps.kotlin.immutable.collections)
     implementation(deps.arrow.core)
     implementation(deps.kotlin.serialization)
-    implementation(deps.firebase.crashlytics)
 
     /** DI */
     implementation(deps.hilt.android)

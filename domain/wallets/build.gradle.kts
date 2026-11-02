@@ -22,11 +22,6 @@ dependencies {
     implementation(deps.hilt.android)
     // endregion
 
-    // region Firebase
-    implementation(platform(deps.firebase.bom))
-    implementation(deps.firebase.analytics)
-    // endregion
-
     // region Core modules
     api(projects.core.analytics)
     api(projects.core.analytics.models)
@@ -42,6 +37,7 @@ dependencies {
     api(projects.domain.socialLogin)
     api(projects.domain.walletManager)
     api(projects.domain.core)
+    implementation(projects.domain.collectibles)
     implementation(projects.domain.jointAccount)
     implementation(projects.domain.notifications)
     implementation(projects.domain.pushNotificationPreferences)

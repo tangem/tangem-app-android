@@ -17,6 +17,9 @@ internal data class MarketingBannerUM(
     val partnerLabel: String? = null,
     val buttonText: String? = null,
     val hasGlow: Boolean = false,
+    val style: Style = Style.DEFAULT,
 ) {
     enum class IconAlign { LEFT, RIGHT }
+
+    enum class Style { DEFAULT, PSEUDO_PROVIDER, STANDALONE_CTA }
 }

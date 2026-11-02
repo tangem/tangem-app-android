@@ -8,6 +8,7 @@ import com.tangem.common.card.WalletData
 import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
+import com.tangem.data.common.account.SupportedAccountTypes
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
@@ -22,6 +23,8 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
+import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,6 +44,10 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val excludedBlockchains = ExcludedBlockchains()
     private val walletAccountsFetcher = mockk<WalletAccountsFetcher>()
+    private val jointAccountFeatureToggles = mockk<JointAccountFeatureToggles>()
+    private val collectiblesFeatureToggles = mockk<CollectiblesFeatureToggles> {
+        every { isCollectiblesEnabled } returns false
+    }
 
     private val factory = DefaultCardCryptoCurrencyFactory(
         demoConfig = DemoConfig,
@@ -50,6 +57,10 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
             networkFactory = NetworkFactory(excludedBlockchains = excludedBlockchains),
         ),
         walletAccountsFetcher = walletAccountsFetcher,
+        supportedAccountTypes = SupportedAccountTypes(
+            jointAccountFeatureToggles = jointAccountFeatureToggles,
+            collectiblesFeatureToggles = collectiblesFeatureToggles,
+        ),
     )
 
     private val cryptoCurrencyFactory = MockCryptoCurrencyFactory()
@@ -61,7 +72,8 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
 
     @BeforeEach
     fun init() {
-        clearMocks(userWalletsListRepository, walletAccountsFetcher, iconUri)
+        clearMocks(userWalletsListRepository, walletAccountsFetcher, jointAccountFeatureToggles, iconUri)
+        every { jointAccountFeatureToggles.isJointAccountEnabled } returns true
 
         mockkStatic(Uri::class)
         every { Uri.parse(any()) } returns iconUri
@@ -167,6 +179,25 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
 
                 // Assert
                 Truth.assertThat(actual).isEqualTo(mapOf(ethereum.network to listOf(ethereum)))
+            }
+
+        @Test
+        fun `GIVEN joint accounts disabled WHEN create for the joint network THEN no joint currency is created`() =
+            runTest {
+                // Arrange
+                every { jointAccountFeatureToggles.isJointAccountEnabled } returns false
+                val userWallet = createMultiWallet()
+                every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(userWallet))
+                coEvery { walletAccountsFetcher.getSaved(userWallet.walletId) } returns createJointAccountsResponse(
+                    personalCurrencies = listOf(ethereum),
+                    jointCurrencies = listOf(ethereum),
+                )
+
+                // Act
+                val actual = factory.create(userWalletId = userWallet.walletId, networks = setOf(jointNetwork))
+
+                // Assert
+                Truth.assertThat(actual).isEqualTo(mapOf(jointNetwork to emptyList<CryptoCurrency>()))
             }
 
         private fun createJointAccountsResponse(

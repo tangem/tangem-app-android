@@ -115,6 +115,7 @@ import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedFor
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.analytics.SwapQuotePerformanceTracker
+import com.tangem.core.analytics.api.PerformanceTracer
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
 import com.tangem.feature.swap.component.slippage.SwapSlippageComponent
 import com.tangem.feature.swap.converters.SwapProviderResolver
@@ -140,6 +141,7 @@ import com.tangem.feature.swap.utils.getContractAddress
 import com.tangem.features.approval.api.GiveApprovalComponent
 import com.tangem.features.approval.api.SelectApprovalTypeComponent
 import com.tangem.features.commonfeatures.api.choosetoken.*
+import com.tangem.features.marketing.api.MarketingBannerAmount
 import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
@@ -220,6 +222,7 @@ internal class SwapModel @Inject constructor(
     private val recordTokenTransferFromSwapUseCase: RecordTokenTransferFromSwapUseCase,
     private val predictionTopUpLimitsResolver: PredictionTopUpLimitsResolver,
     private val getPredictionDepositCurrencyStatusesUseCase: GetPredictionDepositCurrencyStatusesUseCase,
+    performanceTracer: PerformanceTracer,
 ) : Model() {
 
     private val params = paramsContainer.require<SwapComponent.Params>()
@@ -323,7 +326,7 @@ internal class SwapModel @Inject constructor(
     private val amountDebouncer = Debouncer()
     private val transferModeDebouncer = Debouncer()
     private val singleTaskScheduler = SingleTaskScheduler<Map<SwapProvider, SwapState>>()
-    private val performanceTracker = SwapQuotePerformanceTracker()
+    private val performanceTracker = SwapQuotePerformanceTracker(performanceTracer)
 
     val dataStateStateFlow = MutableStateFlow(SwapProcessDataState())
     var dataState
@@ -368,7 +371,7 @@ internal class SwapModel @Inject constructor(
                 toNetwork = toCurrency.network.rawId,
                 toContractAddress = (toCurrency as? CryptoCurrency.Token)?.contractAddress.orEmpty(),
             ),
-            amountUsd = amountUsd,
+            amount = amountUsd?.let(MarketingBannerAmount::Usd),
         )
     }
 
@@ -558,6 +561,7 @@ internal class SwapModel @Inject constructor(
 
     override fun onDestroy() {
         singleTaskScheduler.cancelTask()
+        swapInteractor.clearTronReapprovals()
         performanceTracker.onDestroy()
         super.onDestroy()
     }
@@ -1279,6 +1283,7 @@ internal class SwapModel @Inject constructor(
                         amountToSwap = amount,
                         reduceBalanceBy = reduceBalanceBy,
                         customSlippage = dataState.slippage.customOrNull,
+                        quoteDefaultSlippages = dataState.currentQuoteDefaultSlippages,
                         intentId = params.intentId,
                     )
                 }
@@ -1290,6 +1295,10 @@ internal class SwapModel @Inject constructor(
                     )
 
                     if (providersState.isNotEmpty()) {
+                        rememberQuoteDefaultSlippages(
+                            quoteKey = SlippageQuoteKey(fromSwapCurrencyStatus, toSwapCurrencyStatus, amount),
+                            states = providersState,
+                        )
                         val restoredStates = providersState.withRememberedApproveTypes()
                         val (provider, state) = applyDeeplinkProviderOverride(
                             selected = updateLoadedQuotes(restoredStates),
@@ -1423,6 +1432,7 @@ internal class SwapModel @Inject constructor(
             isHighNetworkFee = isHighNetworkFee(swapFee),
             isFeeCurrencyInStack = isFeeCurrencyInStack(state, dataState.feePaidCryptoCurrency),
             slippage = dataState.slippage,
+            defaultSlippage = dataState.defaultSlippage(provider),
         )
     }
 
@@ -1795,6 +1805,7 @@ internal class SwapModel @Inject constructor(
                     isTangemPayWithdrawal = isTangemPayWithdrawal,
                     integratedApproval = lastLoadedQuotesState.integratedApprovalData,
                     customSlippage = dataState.slippage.customOrNull,
+                    quoteDefaultSlippages = dataState.currentQuoteDefaultSlippages,
                     intentId = params.intentId,
                 )
             }.onSuccess { swapTransactionState ->
@@ -2466,6 +2477,17 @@ internal class SwapModel @Inject constructor(
         )
     }
 
+    @VisibleForTesting
+    internal fun onTronReapproveClick(spenderAddress: String, amount: BigDecimal) {
+        val fromSwapCurrencyStatus = dataState.fromSwapCurrencyStatus ?: return
+        swapInteractor.requireTronReapproval(
+            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+            spenderAddress = spenderAddress,
+            maxAllowance = amount,
+        )
+        onReduceAmountClicked(SwapAmount(amount, fromSwapCurrencyStatus.currency.decimals))
+    }
+
     private fun onAmountSelected(selected: Boolean) {
         if (selected) {
             analyticsEventHandler.send(SwapEvents.SendTokenBalanceClicked())
@@ -2649,6 +2671,7 @@ internal class SwapModel @Inject constructor(
                     }
                 }
             },
+            onTronReapproveClick = ::onTronReapproveClick,
             onApproveTypeSelect = { provider ->
                 val approval = getSelectApprovalTypeParams(provider)
                 if (approval != null) {
@@ -2726,7 +2749,7 @@ internal class SwapModel @Inject constructor(
     @VisibleForTesting
     internal fun onSlippageClick() {
         val provider = dataState.selectedProvider ?: return
-        val defaultPercent = provider.defaultSlippage ?: return
+        val defaultPercent = dataState.defaultSlippage(provider) ?: return
         val params = SwapSlippageComponent.Params(
             provider = provider,
             defaultPercent = defaultPercent,
@@ -2746,7 +2769,7 @@ internal class SwapModel @Inject constructor(
 
     @VisibleForTesting
     internal fun onSlippageConfirm(customSlippage: BigDecimal?) {
-        (customSlippage ?: dataState.selectedProvider?.defaultSlippage)?.let { confirmedSlippage ->
+        (customSlippage ?: dataState.selectedProvider?.let(dataState::defaultSlippage))?.let { confirmedSlippage ->
             sendSlippageEvent { from, to -> SwapEvents.ButtonSlippageConfirm(from, to, confirmedSlippage) }
         }
         val isChanged = customSlippage != dataState.slippage.customOrNull
@@ -2769,9 +2792,10 @@ internal class SwapModel @Inject constructor(
     /** The provider's quote carries the slippage it actually applied, which may differ from the one requested. */
     private fun appliedSlippagePercent(): BigDecimal? {
         val provider = dataState.selectedProvider ?: return null
+        val defaultPercent = dataState.defaultSlippage(provider)
         return dataState.getCurrentLoadedSwapState()?.slippage
-            ?: provider.acceptedSlippageOrNull(dataState.slippage.customOrNull)
-            ?: provider.defaultSlippage
+            ?: provider.acceptedSlippageOrNull(dataState.slippage.customOrNull, defaultPercent)
+            ?: defaultPercent
     }
 
     private fun currentSlippageQuoteKey(): SlippageQuoteKey? {
@@ -2779,6 +2803,24 @@ internal class SwapModel @Inject constructor(
         val to = dataState.toSwapCurrencyStatus ?: return null
         val amount = dataState.amount ?: return null
         return SlippageQuoteKey(from, to, amount)
+    }
+
+    /**
+     * Only quotes requested without a custom slippage carry the pair default: a custom one is echoed back. A custom
+     * slippage goes only to providers that accept it, so this is decided per quote. Merged per provider, so a provider
+     * missing from this response keeps the default it had for the same pair and amount.
+     */
+    @VisibleForTesting
+    internal fun rememberQuoteDefaultSlippages(quoteKey: SlippageQuoteKey, states: Map<SwapProvider, SwapState>) {
+        val loaded = states.getLastLoadedSuccessStates().entries
+            .filter { (_, state) -> state.requestedCustomSlippage == null }
+            .mapNotNull { (provider, state) -> state.slippage?.let { provider.providerId to it } }
+            .toMap()
+        if (loaded.isEmpty()) return
+        val previous = dataState.quoteDefaultSlippages?.takeIf { it.quoteKey == quoteKey }?.byProviderId.orEmpty()
+        dataState = dataState.copy(
+            quoteDefaultSlippages = QuoteDefaultSlippages(quoteKey = quoteKey, byProviderId = previous + loaded),
+        )
     }
 
     @VisibleForTesting
@@ -2804,10 +2846,13 @@ internal class SwapModel @Inject constructor(
 
     private fun refreshSlippageUM() {
         val provider = dataState.selectedProvider ?: return
+        val toAccount = dataState.toSwapCurrencyStatus?.account ?: return
         uiState = stateBuilder.updateSlippage(
             uiState = uiState,
             swapProvider = provider,
             slippage = dataState.slippage,
+            defaultSlippage = dataState.defaultSlippage(provider),
+            toAccount = toAccount,
         )
     }
 

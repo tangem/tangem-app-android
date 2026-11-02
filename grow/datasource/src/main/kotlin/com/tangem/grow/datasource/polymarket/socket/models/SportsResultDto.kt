@@ -2,6 +2,7 @@ package com.tangem.grow.datasource.polymarket.socket.models
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 /**
  * @property gameId the same id as the Gamma event `gameId`, which comes as a string over REST
@@ -15,4 +16,7 @@ data class SportsResultDto(
     @SerialName("period") val period: String? = null,
     @SerialName("live") val isLive: Boolean? = null,
     @SerialName("ended") val isEnded: Boolean? = null,
+    @SerialName("homeTeam") val homeTeam: String? = null,
+    @SerialName("awayTeam") val awayTeam: String? = null,
+    @SerialName("last_update") val lastUpdate: JsonElement? = null,
 )

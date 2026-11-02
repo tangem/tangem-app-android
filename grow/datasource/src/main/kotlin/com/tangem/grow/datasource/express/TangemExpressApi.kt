@@ -5,14 +5,18 @@ import com.tangem.grow.datasource.express.models.request.AssetsRequestBody
 import com.tangem.grow.datasource.express.models.request.ExchangeSentRequestBody
 import com.tangem.grow.datasource.express.models.request.PairsRequestBody
 import com.tangem.grow.datasource.express.models.response.*
+import com.tangem.lib.auth.api.RequiresSessionAuth
 import retrofit2.http.*
 
 /**
  * Interface of Tangem Express API (new swap mechanism)
+ *
+ * [RequiresSessionAuth] takes effect only on Express `/v2`, where the client is built with session auth.
  */
 @Suppress("LongParameterList")
 interface TangemExpressApi {
 
+    @RequiresSessionAuth
     @POST("assets")
     suspend fun getAssets(
         @Header("user-id") userWalletId: String,
@@ -20,6 +24,7 @@ interface TangemExpressApi {
         @Body body: AssetsRequestBody,
     ): ApiResponse<List<Asset>>
 
+    @RequiresSessionAuth
     @POST("pairs")
     suspend fun getPairs(
         @Header("user-id") userWalletId: String,
@@ -27,12 +32,14 @@ interface TangemExpressApi {
         @Body body: PairsRequestBody,
     ): ApiResponse<List<SwapPair>>
 
+    @RequiresSessionAuth
     @GET("providers")
     suspend fun getProviders(
         @Header("user-id") userWalletId: String,
         @Header("refcode") refCode: String?,
     ): ApiResponse<List<ExchangeProvider>>
 
+    @RequiresSessionAuth
     @GET("exchange-quote")
     suspend fun getExchangeQuote(
         @Header("user-id") userWalletId: String,
@@ -50,6 +57,7 @@ interface TangemExpressApi {
         @Query("slippage") slippage: String? = null, // percent × 100, e.g. "50" for 0.5 %
     ): ApiResponse<ExchangeQuoteResponse>
 
+    @RequiresSessionAuth
     @GET("exchange-data")
     suspend fun getExchangeData(
         @Header("user-id") userWalletId: String,
@@ -76,6 +84,7 @@ interface TangemExpressApi {
         @Query("intentId") intentId: String? = null, // MCP exchange intent the transaction fulfils
     ): ApiResponse<ExchangeDataResponse>
 
+    @RequiresSessionAuth
     @GET("exchange-status")
     suspend fun getExchangeStatus(
         @Header("user-id") userWalletId: String,
@@ -84,12 +93,14 @@ interface TangemExpressApi {
     ): ApiResponse<ExchangeItemResponse>
 
     /** Reads the exchange intent an MCP agent stored, and the exchanges the user sent from it. */
+    @RequiresSessionAuth
     @GET("exchange-intent")
     suspend fun getExchangeIntent(
         @Header("user-id") userWalletId: String,
         @Query("intentId") intentId: String,
     ): ApiResponse<ExchangeIntentResponse>
 
+    @RequiresSessionAuth
     @POST("exchange-sent")
     suspend fun exchangeSent(
         @Header("user-id") userWalletId: String,
@@ -97,6 +108,7 @@ interface TangemExpressApi {
         @Body body: ExchangeSentRequestBody,
     ): ApiResponse<ExchangeSentResponseBody>
 
+    @RequiresSessionAuth
     @GET("history/exchange")
     suspend fun getHistory(
         @Header("user-id") userWalletId: String,
@@ -104,6 +116,7 @@ interface TangemExpressApi {
         @Query("limit") limit: Int = 100,
     ): ApiResponse<ExchangeHistoryResponse>
 
+    @RequiresSessionAuth
     @GET("history/delta/exchange")
     suspend fun getHistoryDelta(
         @Header("user-id") userWalletId: String,

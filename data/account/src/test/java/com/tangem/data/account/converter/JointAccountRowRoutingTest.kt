@@ -1,6 +1,7 @@
 package com.tangem.data.account.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.data.common.account.SupportedAccountTypes
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
@@ -47,6 +48,10 @@ internal class JointAccountRowRoutingTest {
     private val listConverter = AccountListConverter(
         userWallet = userWallet,
         cryptoPortfolioConverterFactory = cryptoPortfolioConverterFactory,
+        supportedAccountTypes = SupportedAccountTypes(
+            jointAccountFeatureToggles = mockk { every { isJointAccountEnabled } returns true },
+            collectiblesFeatureToggles = mockk { every { isCollectiblesEnabled } returns false },
+        ),
     )
 
     @ParameterizedTest

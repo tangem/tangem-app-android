@@ -1,5 +1,6 @@
 package com.tangem.domain.polymarket.usecase
 
+import com.tangem.domain.polymarket.model.PredictionOrderSigningRoute
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
@@ -155,6 +156,29 @@ internal class AwaitDelayedPredictionOrderUseCaseTest {
             answer = PredictionOrderStateError.Unauthorized(detail = "invalid signature").left(),
         ),
     )
+
+    @Test
+    fun `GIVEN an order placed on the session route WHEN invoked THEN it is read with the session identity`() = runTest {
+        // Arrange
+        val session = PolymarketClobIdentity.Session(
+            address = "0x5e55000000000000000000000000000000000001",
+            credentials = PolymarketApiCredentials(apiKey = "session", secret = "s", passphrase = "p"),
+        )
+        coEvery { repository.getOrder(session, ORDER_ID) } returns
+            PredictionOrderStateError.NotFound.left()
+
+        // Act
+        val actual = useCase(
+            addresses = ADDRESSES,
+            orderId = ORDER_ID,
+            route = PredictionOrderSigningRoute.Session(identity = session),
+        )
+
+        // Assert
+        assertThat(actual).isInstanceOf(DelayedPredictionOrderOutcome.Failed::class.java)
+        coVerify(exactly = 1) { repository.getOrder(session, ORDER_ID) }
+        coVerify(exactly = 0) { getApiCredentials(any()) }
+    }
 
     @Test
     fun `GIVEN no stored credentials WHEN invoked THEN nothing is read and the wait fails`() = runTest {
