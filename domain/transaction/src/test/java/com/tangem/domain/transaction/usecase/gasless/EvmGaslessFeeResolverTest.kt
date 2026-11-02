@@ -1,5 +1,6 @@
 package com.tangem.domain.transaction.usecase.gasless
 
+import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
@@ -31,7 +32,6 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.GaslessApproval
 import com.tangem.domain.transaction.models.GaslessFeePlan
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import io.mockk.Called
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -62,7 +62,12 @@ internal class EvmGaslessFeeResolverTest {
         resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
     )
 
-    private val swapTransactionData: TransactionData = mockk()
+    private val swapTransactionData = TransactionData.Uncompiled(
+        amount = Amount(currencySymbol = "ETH", value = BigDecimal.ZERO, decimals = 18),
+        fee = null,
+        sourceAddress = EOA,
+        destinationAddress = SPENDER,
+    )
     private val approval = GaslessApproval(
         spenderAddress = SPENDER,
         approvalTransaction = TransactionData.Uncompiled(
@@ -95,6 +100,16 @@ internal class EvmGaslessFeeResolverTest {
         coEvery { gaslessTransactionRepository.getSupportedTokens(network = any()) } returns setOf(usdc)
         coEvery { gaslessTransactionRepository.getTokenFeeReceiverAddress() } returns FEE_RECEIVER
         every { gaslessTransactionRepository.getBaseGasForTransaction() } returns BigInteger("21000")
+        coEvery {
+            resolveGaslessFeePlanUseCase(
+                userWallet = any(),
+                tokenStatus = any(),
+                tokenFee = any(),
+                isYieldActive = false,
+                sendAmountInFeeToken = any(),
+                approval = approval,
+            )
+        } answers { GaslessFeePlan.TokenPayWithApproval(feeToken = usdc, fee = arg(2), approval = approval).right() }
     }
 
     @Nested
@@ -147,11 +162,12 @@ internal class EvmGaslessFeeResolverTest {
                 // Assert
                 val feeExtended = result.getOrNull()!!
                 assertThat(feeExtended.feeTokenId).isEqualTo(usdc.id)
-                assertThat(feeExtended.nativeFee).isEqualTo(SWAP_FEE)
-                val plan = feeExtended.gaslessFeePlan as GaslessFeePlan.TokenPayWithApproval
-                assertThat(plan.approval).isEqualTo(approval)
-                assertThat(plan.approveGasLimit).isEqualTo(PADDED_APPROVE_GAS)
-                coVerify { resolveGaslessFeePlanUseCase wasNot Called }
+                assertThat(feeExtended.nativeFee).isEqualTo(SWAP_WITH_APPROVE_FEE)
+                assertThat(feeExtended.gaslessFeePlan).isInstanceOf(GaslessFeePlan.TokenPayWithApproval::class.java)
+                assertThat(feeExtended.approveGasLimit).isEqualTo(PADDED_APPROVE_GAS)
+                coVerify(exactly = 1) {
+                    resolveGaslessFeePlanUseCase(any(), any(), any(), isYieldActive = false, any(), approval = approval)
+                }
             }
 
         @Test
@@ -201,12 +217,14 @@ internal class EvmGaslessFeeResolverTest {
                 // Assert
                 val feeExtended = result.getOrNull()!!
                 assertThat(feeExtended.feeTokenId).isEqualTo(usdc.id)
-                assertThat(feeExtended.nativeFee).isEqualTo(SWAP_FEE)
-                val plan = feeExtended.gaslessFeePlan as GaslessFeePlan.TokenPayWithApproval
-                assertThat(plan.approval).isEqualTo(approval)
-                assertThat(plan.approveGasLimit).isEqualTo(PADDED_APPROVE_GAS)
+                assertThat(feeExtended.nativeFee).isEqualTo(SWAP_WITH_APPROVE_FEE)
+                assertThat(feeExtended.gaslessFeePlan).isInstanceOf(GaslessFeePlan.TokenPayWithApproval::class.java)
+                assertThat(feeExtended.approveGasLimit).isEqualTo(PADDED_APPROVE_GAS)
                 coVerify(exactly = 1) {
                     walletManager.estimateFeeWithOverride(swapTransactionData, SPENDER, isSimulate = true)
+                }
+                coVerify(exactly = 1) {
+                    resolveGaslessFeePlanUseCase(any(), any(), any(), isYieldActive = false, any(), approval = approval)
                 }
             }
 
@@ -356,6 +374,9 @@ internal class EvmGaslessFeeResolverTest {
 
         val SWAP_FEE = TransactionFee.Single(normal = ethFee(value = "0.001", gasLimit = "100000"))
         val APPROVE_FEE = TransactionFee.Single(normal = ethFee(value = "0.0005", gasLimit = "46000"))
+
+        /** Swap and approve paid in the native coin as two transactions. */
+        val SWAP_WITH_APPROVE_FEE = TransactionFee.Single(normal = ethFee(value = "0.0015", gasLimit = "146000"))
 
         fun ethFee(value: String, gasLimit: String) = Fee.Ethereum.EIP1559(
             amount = Amount(currencySymbol = "ETH", value = BigDecimal(value), decimals = 18),
