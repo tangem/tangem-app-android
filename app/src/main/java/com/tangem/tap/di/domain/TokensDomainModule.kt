@@ -14,6 +14,7 @@ import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
+import com.tangem.domain.polymarket.flow.PredictionPositionsValueFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
@@ -174,6 +175,7 @@ internal object TokensDomainModule {
         paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
         moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
         predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
+        predictionPositionsValueFetcher: PredictionPositionsValueFetcher,
         collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
         moneyAccountsFeatureToggles: MoneyAccountFeatureToggles,
         polymarketFeatureToggles: PolymarketFeatureToggles,
@@ -195,6 +197,7 @@ internal object TokensDomainModule {
             paymentAccountStatusFetcher = paymentAccountStatusFetcher,
             moneyAccountStatusFetcher = moneyAccountStatusFetcher,
             predictionAccountStatusFetcher = predictionAccountStatusFetcher,
+            predictionPositionsValueFetcher = predictionPositionsValueFetcher,
             collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
             moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
             polymarketFeatureToggles = polymarketFeatureToggles,

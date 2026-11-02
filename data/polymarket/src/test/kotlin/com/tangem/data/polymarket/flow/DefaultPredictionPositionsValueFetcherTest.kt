@@ -3,6 +3,7 @@ package com.tangem.data.polymarket.flow
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.polymarket.store.PredictionPositionsValueStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
@@ -14,6 +15,8 @@ import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketPositionsError
 import com.tangem.domain.polymarket.model.PredictionPositionsValue
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
+import com.tangem.test.core.TestAppCoroutineScope
+import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -22,6 +25,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -49,7 +53,7 @@ internal class DefaultPredictionPositionsValueFetcherTest {
     fun `GIVEN the value is read WHEN invoke THEN it is stored as actual`() = runTest {
         // Arrange
         coEvery { positionsRepository.getPositionsValue(ADDRESSES) } returns BigDecimal("7.5").right()
-        val store = PredictionPositionsValueStore()
+        val store = createStore(testScope = this)
 
         // Act
         val actual = createFetcher(store).invoke(PARAMS)
@@ -64,7 +68,7 @@ internal class DefaultPredictionPositionsValueFetcherTest {
     fun `GIVEN no stored addresses WHEN invoke THEN nothing is read or stored`() = runTest {
         // Arrange
         coEvery { deriveAddresses.stored(WALLET) } returns null
-        val store = PredictionPositionsValueStore()
+        val store = createStore(testScope = this)
 
         // Act
         createFetcher(store).invoke(PARAMS)
@@ -79,7 +83,7 @@ internal class DefaultPredictionPositionsValueFetcherTest {
         runTest {
             // Arrange
             coEvery { positionsRepository.getPositionsValue(ADDRESSES) } returns BigDecimal("7.5").right()
-            val store = PredictionPositionsValueStore()
+            val store = createStore(testScope = this)
             val fetcher = createFetcher(store)
             fetcher.invoke(PARAMS)
             every { userWallet.isLocked } returns true
@@ -97,7 +101,7 @@ internal class DefaultPredictionPositionsValueFetcherTest {
     fun `GIVEN a wallet that is not in the list WHEN invoke THEN nothing is read or stored`() = runTest {
         // Arrange
         every { userWalletsListRepository.userWallets } returns MutableStateFlow<List<UserWallet>?>(emptyList())
-        val store = PredictionPositionsValueStore()
+        val store = createStore(testScope = this)
 
         // Act
         createFetcher(store).invoke(PARAMS)
@@ -112,7 +116,7 @@ internal class DefaultPredictionPositionsValueFetcherTest {
         // Arrange
         coEvery { positionsRepository.getPositionsValue(ADDRESSES) } returns BigDecimal("7.5").right() andThen
             PolymarketPositionsError.Network.left()
-        val store = PredictionPositionsValueStore()
+        val store = createStore(testScope = this)
         val fetcher = createFetcher(store)
         fetcher.invoke(PARAMS)
 
@@ -125,23 +129,23 @@ internal class DefaultPredictionPositionsValueFetcherTest {
     }
 
     @Test
-    fun `GIVEN nothing cached WHEN the read fails THEN nothing is stored`() = runTest {
+    fun `GIVEN nothing cached WHEN the read fails THEN the value is unavailable`() = runTest {
         // Arrange
         coEvery { positionsRepository.getPositionsValue(ADDRESSES) } returns PolymarketPositionsError.Network.left()
-        val store = PredictionPositionsValueStore()
+        val store = createStore(testScope = this)
 
         // Act
         createFetcher(store).invoke(PARAMS)
 
         // Assert
-        assertThat(store.getSyncOrNull(WALLET)).isNull()
+        assertThat(store.getSyncOrNull(WALLET)).isEqualTo(PredictionPositionsValue.Unavailable)
     }
 
     @Test
     fun `GIVEN a cached value WHEN the addresses cannot be read THEN the cached value is flagged`() = runTest {
         // Arrange
         coEvery { positionsRepository.getPositionsValue(ADDRESSES) } returns BigDecimal("7.5").right()
-        val store = PredictionPositionsValueStore()
+        val store = createStore(testScope = this)
         val fetcher = createFetcher(store)
         fetcher.invoke(PARAMS)
         coEvery { deriveAddresses.stored(WALLET) } throws IllegalStateException("boom")
@@ -151,8 +155,15 @@ internal class DefaultPredictionPositionsValueFetcherTest {
 
         // Assert
         assertThat(actual.isLeft()).isTrue()
-        assertThat(store.getSyncOrNull(WALLET)?.source).isEqualTo(StatusSource.ONLY_CACHE)
+        assertThat(store.getSyncOrNull(WALLET))
+            .isEqualTo(PredictionPositionsValue.Known(amount = BigDecimal("7.5"), source = StatusSource.ONLY_CACHE))
     }
+
+    private fun createStore(testScope: TestScope) = PredictionPositionsValueStore(
+        runtimeStore = RuntimeSharedStore(),
+        persistenceDataStore = MockStateDataStore(emptyMap()),
+        scope = TestAppCoroutineScope(testScope),
+    )
 
     private fun createFetcher(store: PredictionPositionsValueStore) = DefaultPredictionPositionsValueFetcher(
         store = store,
