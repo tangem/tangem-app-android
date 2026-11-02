@@ -35,7 +35,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.visa.model.*
 import com.tangem.domain.wallets.derivations.DerivationsHelper
-import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.hot.sdk.android.PassphraseValidator
 import com.tangem.operations.ScanTask
 import com.tangem.operations.derivation.DerivationTaskResponse
@@ -47,8 +46,6 @@ import com.tangem.operations.usersetttings.SetUserCodeRecoveryAllowedTask
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.sdk.api.CreateProductWalletTaskResponse
 import com.tangem.sdk.api.TangemSdkManager
-import com.tangem.sdk.api.visa.VisaCardActivationResponse
-import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
 import com.tangem.sdk.api.analytics.TangemSdkErrorEvent
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
 import com.tangem.tap.domain.tasks.product.*
@@ -56,7 +53,6 @@ import com.tangem.tap.domain.tasks.visa.*
 import com.tangem.tap.domain.twins.CreateFirstTwinWalletTask
 import com.tangem.tap.domain.twins.CreateSecondTwinWalletTask
 import com.tangem.tap.domain.twins.FinalizeTwinTask
-import com.tangem.tap.domain.visa.VisaCardScanHandler
 import com.tangem.tap.domain.walletregistration.WalletRegistrationLauncher
 import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.R
@@ -68,11 +64,8 @@ import kotlin.coroutines.resume
 internal class DefaultTangemSdkManager(
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val resources: Resources,
-    private val visaCardScanHandler: VisaCardScanHandler,
-    private val visaCardActivationTaskFactory: VisaCardActivationTask.Factory,
     private val tangemPayChallengeTask: TangemPayGenerateAddressAndSignChallengeTask,
     private val tangemPayMoneyAccountTask: TangemPayGenerateMoneyAccountAddressTask,
-    private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsErrorHandler: AnalyticsErrorHandler,
     private val cardContextInterceptorFactory: CardContextInterceptor.Factory,
@@ -153,22 +146,17 @@ internal class DefaultTangemSdkManager(
         source: AnalyticsParam.ScreensSources,
     ): CompletionResult<ScanResponse> {
         val message = Message(resources.getStringSafe(messageRes ?: R.string.initial_message_scan_header))
-        return coroutineScope {
-            runTaskAsyncReturnOnMain(
-                runnable = ScanProductTask(
-                    card = null,
-                    allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
-                    visaCardScanHandler = visaCardScanHandler,
-                    sessionCoroutineScope = this,
-                    shouldCheckIsAlreadyActivated = shouldCheckIsAlreadyActivated,
-                    onboardingV2FeatureToggles = onboardingV2FeatureToggles,
-                    cardRepository = cardRepository,
-                ),
-                cardId = cardId,
-                initialMessage = message,
-                registerColdWallet = true,
-            ).also { sendAnalytics(result = it, source = source) }
-        }
+        return runTaskAsyncReturnOnMain(
+            runnable = ScanProductTask(
+                card = null,
+                allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
+                shouldCheckIsAlreadyActivated = shouldCheckIsAlreadyActivated,
+                cardRepository = cardRepository,
+            ),
+            cardId = cardId,
+            initialMessage = message,
+            registerColdWallet = true,
+        ).also { sendAnalytics(result = it, source = source) }
     }
 
     override suspend fun createProductWallet(
@@ -592,42 +580,6 @@ internal class DefaultTangemSdkManager(
     // endregion
 
     // region Visa-specific
-
-    override suspend fun activateVisaCard(
-        mode: VisaCardActivationTaskMode,
-        activationInput: VisaActivationInput,
-    ): CompletionResult<VisaCardActivationResponse> {
-        return coroutineScope {
-            runTaskAsyncReturnOnMain(
-                runnable = visaCardActivationTaskFactory.create(
-                    mode = mode,
-                    activationInput = activationInput,
-                    coroutineScope = this,
-                ),
-                cardId = activationInput.cardId,
-                initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
-                registerColdWallet = false, // Visa — not a cold wallet registration target
-            )
-        }
-    }
-
-    override suspend fun visaCustomerWalletApprove(
-        visaDataForApprove: VisaDataForApprove,
-    ): CompletionResult<VisaSignedDataByCustomerWallet> {
-        return runTaskAsyncReturnOnMain(
-            runnable = VisaCustomerWalletApproveTask(
-                VisaCustomerWalletApproveTask.Input(
-                    cardId = visaDataForApprove.customerWalletCardId,
-                    targetAddress = visaDataForApprove.targetAddress,
-                    hashToSign = visaDataForApprove.dataToSign.hashToSign,
-                    sign = visaDataForApprove.dataToSign::sign,
-                ),
-            ),
-            cardId = visaDataForApprove.customerWalletCardId,
-            initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
-            registerColdWallet = false, // Visa — not a cold wallet registration target
-        )
-    }
 
     override suspend fun tangemPayProduceInitialData(
         preflightReadFilter: PreflightReadFilter,

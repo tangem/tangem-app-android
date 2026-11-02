@@ -62,8 +62,6 @@ internal interface PlacePredictionOrderIntents {
 
     fun onTangemTermsClick()
 
-    fun onBackClick()
-
     fun onCloseClick()
 }
 

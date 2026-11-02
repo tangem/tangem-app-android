@@ -5,10 +5,14 @@ import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperationSignerState
 import com.tangem.domain.jointaccount.model.JointOperationSignerState.Answer
 import com.tangem.domain.jointaccount.model.JointTransferIntent
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.MockAccounts
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigInteger
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class JointOperationStateTest {
 
     @Test
@@ -248,10 +252,46 @@ internal class JointOperationStateTest {
         assertThat(actual).isFalse()
     }
 
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN an operation WHEN state built THEN voting is closed once the threshold is reached`(
+        model: VotingClosedModel,
+    ) {
+        // Arrange
+        val state = state(
+            signers = listOf(
+                signer(address = OTHER, answer = Answer.CREATED),
+                signer(address = OWN, answer = Answer.WAITING),
+                signer(address = THIRD),
+            ),
+            isSending = model.isSending,
+        )
+
+        // Act
+        val actual = state.withOwnAnswer(answeredLocally = model.answeredLocally).isVotingClosed
+
+        // Assert
+        assertThat(actual).isEqualTo(model.expected)
+    }
+
+    private fun provideTestModels() = listOf(
+        VotingClosedModel(isSending = false, answeredLocally = null, expected = false),
+        VotingClosedModel(isSending = false, answeredLocally = Answer.DECLINED, expected = false),
+        VotingClosedModel(isSending = false, answeredLocally = Answer.SIGNED, expected = true),
+        VotingClosedModel(isSending = true, answeredLocally = null, expected = true),
+    )
+
+    data class VotingClosedModel(
+        val isSending: Boolean,
+        val answeredLocally: Answer?,
+        val expected: Boolean,
+    )
+
     private fun state(
         signers: List<JointOperationSignerState>,
         ownAddress: String? = OWN,
         initiator: String? = OTHER,
+        isSending: Boolean = false,
     ) = JointOperationState(
         account = MockAccounts.createJointAccount(),
         displayed = JointTransferIntent.Native(recipient = OTHER, amountWei = BigInteger.ONE),
@@ -263,6 +303,7 @@ internal class JointOperationStateTest {
         canSign = true,
         ownAddress = ownAddress,
         initiator = initiator,
+        isSending = isSending,
     )
 
     private fun signer(address: String, answer: Answer = Answer.WAITING, at: String? = null) =

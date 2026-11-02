@@ -299,7 +299,6 @@ sealed class AnalyticsParam {
         Start2Coin("Start2Coin"),
         Wallet2("Wallet 2.0"),
         Ring("Ring"),
-        Visa("VISA"),
         MobileWallet("Mobile Wallet"),
     }
 

@@ -18,12 +18,15 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencies
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
+import com.tangem.domain.polymarket.flow.PredictionPositionsValueFetcher
 import com.tangem.domain.polymarket.model.PredictionCollateral
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
+import com.tangem.domain.staking.contribution.StakingContributionFetcher
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.tokens.FetchingSource
+import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.wallet.implementor.MultiWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletWithTokenBalanceFetcher
@@ -60,10 +63,18 @@ internal class WalletBalanceFetcherTest {
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk()
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher = mockk()
     private val stakingIdFactory: StakingIdFactory = mockk()
+    private val stakingContributionFetcher = StakingContributionFetcher(
+        multiStakingBalanceFetcher = multiStakingBalanceFetcher,
+        stakingIdFactory = stakingIdFactory,
+    )
+    private val tokensFeatureToggles: TokensFeatureToggles = mockk {
+        every { isPluggableBalanceSourcesEnabled } returns true
+    }
     private val moneyAccountsFeatureToggles: MoneyAccountFeatureToggles = mockk {
         every { isMoneyAccountsEnabled } returns false
     }
     private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher = mockk()
+    private val predictionPositionsValueFetcher: PredictionPositionsValueFetcher = mockk()
     private val polymarketFeatureToggles: PolymarketFeatureToggles = mockk {
         every { isPolymarketEnabled } returns false
     }
@@ -80,12 +91,15 @@ internal class WalletBalanceFetcherTest {
         singleWalletBalanceFetcher = singleWalletBalanceFetcher,
         multiNetworkStatusFetcher = multiNetworkStatusFetcher,
         multiQuoteStatusFetcher = multiQuoteStatusFetcher,
+        balanceContributionFetchers = setOf(stakingContributionFetcher),
+        tokensFeatureToggles = tokensFeatureToggles,
         multiStakingBalanceFetcher = multiStakingBalanceFetcher,
+        stakingIdFactory = stakingIdFactory,
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
         moneyAccountStatusFetcher = moneyAccountStatusFetcher,
         predictionAccountStatusFetcher = predictionAccountStatusFetcher,
+        predictionPositionsValueFetcher = predictionPositionsValueFetcher,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
-        stakingIdFactory = stakingIdFactory,
         moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
         polymarketFeatureToggles = polymarketFeatureToggles,
         collectiblesFeatureToggles = collectiblesFeatureToggles,
@@ -107,6 +121,7 @@ internal class WalletBalanceFetcherTest {
             paymentAccountStatusFetcher,
             moneyAccountStatusFetcher,
             predictionAccountStatusFetcher,
+            predictionPositionsValueFetcher,
             collectiblesAccountStatusFetcher,
         )
         mockkStatic(UserWalletsListRepository::getSyncStrict)
@@ -387,7 +402,7 @@ internal class WalletBalanceFetcherTest {
         coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
         coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
         every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
-            WalletFetchingSource.Balance(setOf(FetchingSource.STAKING)),
+            WalletFetchingSource.Balance(setOf(FetchingSource.CONTRIBUTIONS)),
         )
         coEvery {
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.ethereum)
@@ -399,6 +414,67 @@ internal class WalletBalanceFetcherTest {
 
         // Act
         val actual = fetcher(
+            params = WalletBalanceFetcher.Params(
+                userWalletId = userWalletId,
+            ),
+        )
+
+        // Assert
+        val expected = IllegalStateException(
+            "Failed to fetch next sources for UserWalletId(011...011):\n" +
+                "StakingContributionFetcher – java.lang.IllegalStateException: Error",
+        ).left()
+        assertEither(actual, expected)
+
+        coVerifyOrder {
+            userWalletsListRepository.getSyncStrict(userWalletId)
+            multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            expressServiceFetcher.fetch(userWallet = any(), assetIds = any())
+            multiWalletBalanceFetcher.fetchingSources
+            stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.ethereum)
+            stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.stellar)
+            multiStakingBalanceFetcher(params = stakingBalanceFetcherParams)
+        }
+
+        coVerify(inverse = true) {
+            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            singleWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            multiNetworkStatusFetcher(params = any())
+            multiQuoteStatusFetcher(params = any())
+        }
+    }
+
+    @Test
+    fun `GIVEN legacy staking fetch WHEN fetchStaking RETURNS LEFT THEN the same STAKING failure`() = runTest {
+        // Arrange
+        val cardTypesResolver = mockk<CardTypesResolver> {
+            every { isMultiwalletAllowed() } returns true
+        }
+
+        val currencies = cryptoCurrencyFactory.ethereumAndStellar.toSet()
+        val stakingBalanceFetcherParams = MultiStakingBalanceFetcher.Params(
+            userWalletId = userWalletId,
+            stakingIds = setOf(ethereumStakingId, stellarStakingId),
+        )
+
+        val exception = IllegalStateException("Error")
+
+        mockColdWallet(cardTypesResolver)
+        coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
+        coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
+        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
+            WalletFetchingSource.Balance(setOf(FetchingSource.CONTRIBUTIONS)),
+        )
+        coEvery {
+            stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.ethereum)
+        } returns Either.Right(ethereumStakingId)
+        coEvery {
+            stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.stellar)
+        } returns Either.Right(stellarStakingId)
+        coEvery { multiStakingBalanceFetcher(params = stakingBalanceFetcherParams) } returns exception.left()
+
+        // Act
+        val actual = createFetcher(isPluggableBalanceSourcesEnabled = false)(
             params = WalletBalanceFetcher.Params(
                 userWalletId = userWalletId,
             ),
@@ -442,7 +518,7 @@ internal class WalletBalanceFetcherTest {
         coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
         coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
         every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
-            WalletFetchingSource.Balance(setOf(FetchingSource.STAKING)),
+            WalletFetchingSource.Balance(setOf(FetchingSource.CONTRIBUTIONS)),
         )
         coEvery {
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = any())
@@ -494,7 +570,7 @@ internal class WalletBalanceFetcherTest {
         coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
         coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
         every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
-            WalletFetchingSource.Balance(setOf(FetchingSource.STAKING)),
+            WalletFetchingSource.Balance(setOf(FetchingSource.CONTRIBUTIONS)),
         )
         coEvery { stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = any()) } returns stakingId
 
@@ -545,7 +621,7 @@ internal class WalletBalanceFetcherTest {
         coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
         coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
         every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
-            WalletFetchingSource.Balance(setOf(FetchingSource.STAKING)),
+            WalletFetchingSource.Balance(setOf(FetchingSource.CONTRIBUTIONS)),
         )
         coEvery {
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.ethereum)
@@ -612,7 +688,7 @@ internal class WalletBalanceFetcherTest {
         coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
         coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
         every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
-            WalletFetchingSource.Balance(setOf(FetchingSource.NETWORK, FetchingSource.QUOTE, FetchingSource.STAKING)),
+            WalletFetchingSource.Balance(setOf(FetchingSource.NETWORK, FetchingSource.QUOTE, FetchingSource.CONTRIBUTIONS)),
         )
         coEvery { multiNetworkStatusFetcher(params = networkStatusFetcherParams) } returns exception.left()
         coEvery { multiQuoteStatusFetcher(params = quoteStatusFetcherParams) } returns exception.left()
@@ -636,7 +712,7 @@ internal class WalletBalanceFetcherTest {
             "Failed to fetch next sources for UserWalletId(011...011):\n" +
                 "NETWORK – java.lang.IllegalStateException: Error\n" +
                 "QUOTE – java.lang.IllegalStateException: Error\n" +
-                "STAKING – java.lang.IllegalStateException: Error",
+                "StakingContributionFetcher – java.lang.IllegalStateException: Error",
         ).left()
         assertEither(actual, expected)
 
@@ -686,7 +762,7 @@ internal class WalletBalanceFetcherTest {
         coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
         coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
         every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
-            WalletFetchingSource.Balance(setOf(FetchingSource.NETWORK, FetchingSource.QUOTE, FetchingSource.STAKING)),
+            WalletFetchingSource.Balance(setOf(FetchingSource.NETWORK, FetchingSource.QUOTE, FetchingSource.CONTRIBUTIONS)),
         )
         coEvery { multiNetworkStatusFetcher(params = networkStatusFetcherParams) } returns Unit.right()
         coEvery { multiQuoteStatusFetcher(params = quoteStatusFetcherParams) } returns Unit.right()
@@ -870,7 +946,7 @@ internal class WalletBalanceFetcherTest {
         coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
         coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
         every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
-            WalletFetchingSource.Balance(setOf(FetchingSource.NETWORK, FetchingSource.QUOTE, FetchingSource.STAKING)),
+            WalletFetchingSource.Balance(setOf(FetchingSource.NETWORK, FetchingSource.QUOTE, FetchingSource.CONTRIBUTIONS)),
         )
         coEvery { multiNetworkStatusFetcher(params = networkStatusFetcherParams) } returns Unit.right()
         coEvery { multiQuoteStatusFetcher(params = quoteStatusFetcherParams) } returns Unit.right()
@@ -926,6 +1002,40 @@ internal class WalletBalanceFetcherTest {
     }
 
     @Test
+    fun `GIVEN prediction source and polymarket enabled WHEN fetch THEN the positions value is fetched`() = runTest {
+        // Arrange
+        arrangePredictionFetch()
+        coEvery { predictionAccountStatusFetcher(params = any()) } returns Unit.right()
+
+        // Act
+        val actual = createFetcher(isPolymarketEnabled = true).invoke(WalletBalanceFetcher.Params(userWalletId))
+
+        // Assert
+        assertEither(actual, Unit.right())
+        coVerify(exactly = 1) {
+            predictionPositionsValueFetcher(
+                params = PredictionPositionsValueFetcher.Params(userWalletId = userWalletId),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN the positions value fails WHEN fetch THEN the wallet fetch and the prediction status still run`() =
+        runTest {
+            // Arrange
+            arrangePredictionFetch()
+            coEvery { predictionAccountStatusFetcher(params = any()) } returns Unit.right()
+            coEvery { predictionPositionsValueFetcher(params = any()) } returns IllegalStateException("Error").left()
+
+            // Act
+            val actual = createFetcher(isPolymarketEnabled = true).invoke(WalletBalanceFetcher.Params(userWalletId))
+
+            // Assert
+            assertEither(actual, Unit.right())
+            coVerify(exactly = 1) { predictionAccountStatusFetcher(params = any()) }
+        }
+
+    @Test
     fun `GIVEN prediction source and polymarket disabled WHEN fetch THEN prediction status is not fetched`() =
         runTest {
             // Arrange
@@ -937,6 +1047,7 @@ internal class WalletBalanceFetcherTest {
             // Assert
             assertEither(actual, Unit.right())
             coVerify(inverse = true) { predictionAccountStatusFetcher(params = any()) }
+            coVerify(inverse = true) { predictionPositionsValueFetcher(params = any()) }
         }
 
     /**
@@ -1067,7 +1178,10 @@ internal class WalletBalanceFetcherTest {
         coVerify(exactly = 1) { multiNetworkStatusFetcher(params = any()) }
     }
 
-    private fun arrangePredictionFetch() = arrangeSpecialAccountFetch(source = WalletFetchingSource.Prediction)
+    private fun arrangePredictionFetch() {
+        arrangeSpecialAccountFetch(source = WalletFetchingSource.Prediction)
+        coEvery { predictionPositionsValueFetcher(params = any()) } returns Unit.right()
+    }
 
     private fun arrangeCollectiblesFetch() = arrangeSpecialAccountFetch(source = WalletFetchingSource.Collectibles)
 
@@ -1099,6 +1213,7 @@ internal class WalletBalanceFetcherTest {
     private fun createFetcher(
         isPolymarketEnabled: Boolean = false,
         isCollectiblesEnabled: Boolean = false,
+        isPluggableBalanceSourcesEnabled: Boolean = true,
     ): WalletBalanceFetcher = WalletBalanceFetcher(
         userWalletsListRepository = userWalletsListRepository,
         expressServiceFetcher = expressServiceFetcher,
@@ -1107,12 +1222,17 @@ internal class WalletBalanceFetcherTest {
         singleWalletBalanceFetcher = singleWalletBalanceFetcher,
         multiNetworkStatusFetcher = multiNetworkStatusFetcher,
         multiQuoteStatusFetcher = multiQuoteStatusFetcher,
+        balanceContributionFetchers = setOf(stakingContributionFetcher),
+        tokensFeatureToggles = mockk {
+            every { this@mockk.isPluggableBalanceSourcesEnabled } returns isPluggableBalanceSourcesEnabled
+        },
         multiStakingBalanceFetcher = multiStakingBalanceFetcher,
+        stakingIdFactory = stakingIdFactory,
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
         moneyAccountStatusFetcher = moneyAccountStatusFetcher,
         predictionAccountStatusFetcher = predictionAccountStatusFetcher,
+        predictionPositionsValueFetcher = predictionPositionsValueFetcher,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
-        stakingIdFactory = stakingIdFactory,
         moneyAccountsFeatureToggles = moneyAccountsFeatureToggles,
         polymarketFeatureToggles = mockk {
             every { this@mockk.isPolymarketEnabled } returns isPolymarketEnabled

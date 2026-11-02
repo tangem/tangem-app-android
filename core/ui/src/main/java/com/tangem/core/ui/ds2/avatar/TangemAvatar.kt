@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import arrow.core.Either
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.DsVersion
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -26,23 +28,22 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
 import com.tangem.core.ui.res.generated.icons.ic_grid_plus_20
 
 /**
- * Design-system v2 (DS3) **Avatar** — the round (or, for an account, rounded-square) image that leads a
- * row: an account's coloured glyph, a person's initial, an address identicon, a status glyph, or a
- * transaction's icon.
+ * Design-system v2 (DS3) **Avatar** — the round or rounded-square image that leads a row: an account's
+ * coloured glyph or letter, a person's initial, an address identicon, a status glyph, a transaction's icon,
+ * or an arbitrary image asset.
  *
- * Version: 1.0.1
+ * Version: 1.3.0
  *
  * [Figma](https://www.figma.com/design/AsnJ5CPHib4Qxw12gszjMS/%F0%9F%92%A0-DS-Components?node-id=9737-838)
  *
  * Behavior notes:
- * - [TangemAvatar.UiState.Account] is the only rounded-square variant; every other one is a circle.
+ * - Every variant takes a [TangemAvatar.Shape]; [TangemAvatar.UiState.Account] defaults to a rounded
+ *   square, every other one to a circle.
  * - [TangemAvatar.UiState.User] with a `null` initial falls back to a neutral person glyph and ignores
  *   its colour, matching the Figma `Fallback` state.
- * - The pending indicator is drawn only for [TangemAvatar.UiState.Transaction] at
- *   [TangemAvatar.Size.X40] and [TangemAvatar.Size.X44] — Figma defines no indicator for the other two
- *   sizes. It overhangs the avatar's corner and punches a transparent ring behind itself.
- * - The account fills come from the `colors3.account` tokens; [TangemAvatar.FillColor.Predictions],
- *   [TangemAvatar.FillColor.Gacha] and [TangemAvatar.FillColor.Money] stay fixed brand hexes.
+ * - The pending indicator is drawn only for [TangemAvatar.UiState.Account] at [TangemAvatar.Size.X72],
+ *   [TangemAvatar.Size.X44] and [TangemAvatar.Size.X40] — Figma defines no indicator at
+ *   [TangemAvatar.Size.X16]. It overhangs the avatar's corner and punches a transparent ring behind itself.
  *
  * @param state What the avatar shows. See [TangemAvatar.UiState].
  * @param size One of the fixed [TangemAvatar.Size] presets driving every dimension.
@@ -69,7 +70,7 @@ fun TangemAvatar(
 /** Public API surface of [TangemAvatar]. */
 object TangemAvatar {
 
-    val version = DsVersion(major = 1, minor = 0, patch = 1)
+    val version = DsVersion(major = 1, minor = 3, patch = 0)
 
     /** Fixed size presets: `X72` = 72dp … `X16` = 16dp. */
     enum class Size { X72, X44, X40, X16 }
@@ -101,65 +102,115 @@ object TangemAvatar {
     /** Background and glyph colour scheme of the [UiState.Icon] variant. */
     enum class Appearance { Neutral, Success, Error, Warning, Info }
 
+    /**
+     * Outline every [UiState] is clipped to, mirroring the Figma `Rounded` property: `Rounded=True` is
+     * [Circle], `Rounded=False` is [RoundedSquare] with a per-[Size] corner radius.
+     */
+    enum class Shape { Circle, RoundedSquare }
+
     /** Lifecycle of the transaction an avatar stands for, driving its colour scheme. */
-    enum class Status { Progress, Finished, Failed }
+    enum class Status { Progress, Finished, Failed, Pending }
 
     /** What a [TangemAvatar] shows — one subtype per Figma variant. */
     @Immutable
     sealed class UiState {
 
+        abstract val shape: Shape
+
         /**
-         * Account variant — a rounded square filled with [color] and a white glyph.
+         * Account variant — filled with [color] and carrying a white icon (half the avatar's side) or a
+         * single letter, uppercased when drawn. Pick the content through the `iconRes`, `imageVector` or
+         * `letter` constructor. The `TextReference` form takes the first character of the resolved text, so a
+         * name defined as a string resource can be passed whole, and shows only the fill when it resolves empty.
          *
-         * @param icon Account glyph, half the avatar's side.
          * @param color Fill colour. See [FillColor].
+         * @param hasIndicator Draws the pending clock badge over the bottom-end corner. Ignored at
+         * [Size.X16].
+         * @param shape Outline. Defaults to [Shape.RoundedSquare], unlike every other variant.
          */
-        data class Account(
-            internal val icon: Either<Int, ImageVector>,
+        @ConsistentCopyVisibility
+        data class Account internal constructor(
+            internal val glyph: AvatarAccountGlyph,
             val color: FillColor,
+            val hasIndicator: Boolean,
+            override val shape: Shape,
         ) : UiState() {
 
-            constructor(@DrawableRes iconRes: Int, color: FillColor) : this(Either.Left(iconRes), color)
+            constructor(
+                @DrawableRes iconRes: Int,
+                color: FillColor,
+                hasIndicator: Boolean = false,
+                shape: Shape = Shape.RoundedSquare,
+            ) : this(AvatarAccountGlyph.Icon(Either.Left(iconRes)), color, hasIndicator, shape)
 
-            constructor(imageVector: ImageVector, color: FillColor) : this(Either.Right(imageVector), color)
+            constructor(
+                imageVector: ImageVector,
+                color: FillColor,
+                hasIndicator: Boolean = false,
+                shape: Shape = Shape.RoundedSquare,
+            ) : this(AvatarAccountGlyph.Icon(Either.Right(imageVector)), color, hasIndicator, shape)
+
+            constructor(
+                letter: Char,
+                color: FillColor,
+                hasIndicator: Boolean = false,
+                shape: Shape = Shape.RoundedSquare,
+            ) : this(AvatarAccountGlyph.Letter(stringReference(letter.toString())), color, hasIndicator, shape)
+
+            constructor(
+                letter: TextReference,
+                color: FillColor,
+                hasIndicator: Boolean = false,
+                shape: Shape = Shape.RoundedSquare,
+            ) : this(AvatarAccountGlyph.Letter(letter), color, hasIndicator, shape)
         }
 
         /**
-         * User variant — a circle filled with [color] carrying [initial].
+         * User variant — filled with [color] and carrying [initial].
          *
          * @param initial Single character, uppercased when drawn. `null` renders the neutral fallback
          * person glyph and ignores [color].
          * @param color Fill colour. See [FillColor].
+         * @param shape Outline. See [Shape].
          */
-        data class User(val initial: Char?, val color: FillColor) : UiState()
+        data class User(
+            val initial: Char?,
+            val color: FillColor,
+            override val shape: Shape = Shape.Circle,
+        ) : UiState()
 
         /**
-         * Address variant — the Blockies identicon generated from [address], clipped to a circle.
+         * Address variant — the Blockies identicon generated from [address].
          *
          * @param address Raw address used as the identicon seed. Blank renders nothing.
+         * @param shape Outline the identicon is clipped to. See [Shape].
          */
-        data class Address(val address: String) : UiState()
+        data class Address(val address: String, override val shape: Shape = Shape.Circle) : UiState()
 
         /**
-         * Icon variant — a circle with a tinted background and a glyph.
+         * Icon variant — a tinted background with a glyph.
          *
          * @param icon Glyph to draw.
          * @param appearance Colour scheme. See [Appearance].
+         * @param shape Outline. See [Shape].
          */
         data class Icon(
             internal val icon: Either<Int, ImageVector>,
             val appearance: Appearance = Appearance.Neutral,
+            override val shape: Shape = Shape.Circle,
         ) : UiState() {
 
             constructor(
                 @DrawableRes iconRes: Int,
                 appearance: Appearance = Appearance.Neutral,
-            ) : this(Either.Left(iconRes), appearance)
+                shape: Shape = Shape.Circle,
+            ) : this(Either.Left(iconRes), appearance, shape)
 
             constructor(
                 imageVector: ImageVector,
                 appearance: Appearance = Appearance.Neutral,
-            ) : this(Either.Right(imageVector), appearance)
+                shape: Shape = Shape.Circle,
+            ) : this(Either.Right(imageVector), appearance, shape)
         }
 
         /**
@@ -167,38 +218,60 @@ object TangemAvatar {
          *
          * @param icon Glyph describing the transaction kind (send, receive, swap…).
          * @param status Lifecycle driving the colour scheme. See [Status].
-         * @param hasPendingIndicator Draws the pending clock badge over the bottom-end corner. Honoured
-         * at [Size.X40] and [Size.X44] only.
+         * @param shape Outline. See [Shape].
          */
         data class Transaction(
             internal val icon: Either<Int, ImageVector>,
             val status: Status,
-            val hasPendingIndicator: Boolean = false,
+            override val shape: Shape = Shape.Circle,
         ) : UiState() {
 
             constructor(
                 @DrawableRes iconRes: Int,
                 status: Status,
-                hasPendingIndicator: Boolean = false,
-            ) : this(Either.Left(iconRes), status, hasPendingIndicator)
+                shape: Shape = Shape.Circle,
+            ) : this(Either.Left(iconRes), status, shape)
 
             constructor(
                 imageVector: ImageVector,
                 status: Status,
-                hasPendingIndicator: Boolean = false,
-            ) : this(Either.Right(imageVector), status, hasPendingIndicator)
+                shape: Shape = Shape.Circle,
+            ) : this(Either.Right(imageVector), status, shape)
+        }
+
+        /**
+         * Asset variant — an image filling the whole avatar, cropped to fit. Pick the source through the
+         * `url` (loaded remotely, shimmering until it arrives and falling back to a neutral fill on error),
+         * `iconRes` (vector or raster drawable) or `imageVector` constructor.
+         *
+         * @param shape Outline the image is clipped to. An image with transparent corners, such as a round
+         * token logo, looks the same in either shape.
+         */
+        @ConsistentCopyVisibility
+        data class Asset internal constructor(
+            internal val source: AvatarAssetSource,
+            override val shape: Shape,
+        ) : UiState() {
+
+            constructor(url: String, shape: Shape = Shape.Circle) : this(AvatarAssetSource.Url(url), shape)
+
+            constructor(
+                @DrawableRes iconRes: Int,
+                shape: Shape = Shape.Circle,
+            ) : this(AvatarAssetSource.Local(Either.Left(iconRes)), shape)
+
+            constructor(
+                imageVector: ImageVector,
+                shape: Shape = Shape.Circle,
+            ) : this(AvatarAssetSource.Local(Either.Right(imageVector)), shape)
         }
 
         /**
          * Loading placeholder.
          *
-         * @param shape Whether the placeholder is a circle or the account variant's rounded square.
+         * @param shape Outline — match the variant the placeholder stands in for. See [Shape].
          */
-        data class Shimmer(val shape: Shape = Shape.Circle) : UiState() {
-
-            /** Outline a [Shimmer] takes, so it matches the variant it stands in for. */
-            enum class Shape { Circle, RoundedSquare }
-        }
+        data class Shimmer(override val shape: Shape = Shape.Circle) : UiState()
     }
 }
 
@@ -218,7 +291,27 @@ private fun TangemAvatarPreview() {
         PreviewRow(state = TangemAvatar.UiState.User(initial = 'A', color = TangemAvatar.FillColor.CandyGrapeFizz))
         PreviewRow(state = TangemAvatar.UiState.User(initial = null, color = TangemAvatar.FillColor.CandyGrapeFizz))
         PreviewRow(state = TangemAvatar.UiState.Address(address = "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984"))
+        PreviewRow(
+            state = TangemAvatar.UiState.Account(
+                letter = 'A',
+                color = TangemAvatar.FillColor.Predictions,
+                hasIndicator = true,
+            ),
+        )
         PreviewRow(state = TangemAvatar.UiState.Icon(Icons.ic_grid_plus_20, TangemAvatar.Appearance.Neutral))
+        PreviewRow(
+            state = TangemAvatar.UiState.Icon(
+                imageVector = Icons.ic_grid_plus_20,
+                appearance = TangemAvatar.Appearance.Info,
+                shape = TangemAvatar.Shape.RoundedSquare,
+            ),
+        )
+        PreviewRow(
+            state = TangemAvatar.UiState.Asset(
+                iconRes = R.drawable.ic_airplane_mode_24,
+                shape = TangemAvatar.Shape.RoundedSquare,
+            ),
+        )
     }
 }
 
@@ -232,12 +325,11 @@ private fun TangemAvatarStatesPreview() {
                 state = TangemAvatar.UiState.Transaction(
                     imageVector = Icons.ic_arrow_up_20,
                     status = status,
-                    hasPendingIndicator = true,
                 ),
             )
         }
         PreviewRow(state = TangemAvatar.UiState.Shimmer())
-        PreviewRow(state = TangemAvatar.UiState.Shimmer(TangemAvatar.UiState.Shimmer.Shape.RoundedSquare))
+        PreviewRow(state = TangemAvatar.UiState.Shimmer(TangemAvatar.Shape.RoundedSquare))
     }
 }
 
