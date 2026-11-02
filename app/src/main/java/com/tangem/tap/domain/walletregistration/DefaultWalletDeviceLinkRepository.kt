@@ -3,6 +3,7 @@ package com.tangem.tap.domain.walletregistration
 import android.util.Base64
 import arrow.core.Either
 import arrow.core.left
+import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -48,8 +49,15 @@ internal class DefaultWalletDeviceLinkRepository @Inject constructor(
             }
     }
 
+    /**
+     * The cold signer signs with the card's first wallet and rejects any curve but secp256k1, so a card whose first
+     * wallet is on another curve (an Ed25519-only card) could never be linked and would keep the banner forever.
+     */
     private fun UserWallet.canBeLinked(): Boolean = when (this) {
-        is UserWallet.Cold -> scanResponse.card.isColdRegistrationSupported
+        is UserWallet.Cold -> {
+            val card = scanResponse.card
+            card.isColdRegistrationSupported && card.wallets.firstOrNull()?.curve == EllipticCurve.Secp256k1
+        }
         is UserWallet.Hot -> true
     }
 
