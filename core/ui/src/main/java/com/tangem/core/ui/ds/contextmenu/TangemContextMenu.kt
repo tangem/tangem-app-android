@@ -37,6 +37,14 @@ import kotlin.math.min
 /**
  * Just copy paste [DropdownMenu] from material3 with deleting vertical paddings.
  */
+@Deprecated(
+    message = "Use the DS3 TangemMenu",
+    replaceWith = ReplaceWith(
+        "TangemMenu(isExpanded = expanded, onDismissRequest = onDismissRequest, modifier = modifier, " +
+            "positionProvider = positionProvider, content = content)",
+        "com.tangem.core.ui.ds2.menu.TangemMenu",
+    ),
+)
 @Composable
 fun TangemContextMenu(
     expanded: Boolean,
