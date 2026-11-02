@@ -1599,6 +1599,7 @@
   <string name="prediction_add_funds_swap_title">Depuis votre portefeuille Tangem</string>
   <string name="prediction_balance_total">Solde total</string>
   <string name="prediction_balance_withdraw">Retirer</string>
+  <string name="prediction_cash_out">Encaisser</string>
   <string name="prediction_claim_error_failed">La réclamation n\'a pas abouti. Rien n\'a quitté votre compte, vous pouvez réessayer.</string>
   <string name="prediction_claim_error_generic">La réclamation n\'a pas pu être envoyée. Veuillez réessayer.</string>
   <string name="prediction_claim_error_rejected">Polymarket a refusé de relayer la réclamation. Actualisez vos positions et réessayez.</string>
@@ -2269,6 +2270,7 @@
   <string name="support_chat_swap_prefilled_message">Données du SWAP :\nDepuis :%1$s%2$s\nVers :%3$s%4$s\nPar :%5$s-%6$s</string>
   <string name="support_selector_view_chat_button">Accéder au chat</string>
   <string name="support_selector_view_email_button">Ouvrir un email</string>
+  <string name="survey_demand_success_description">Nous lançons Concierge pays par pays. Nous vous préviendrons dans l’app dès qu’il sera disponible chez vous.</string>
   <string name="swap_approve_description">En approuvant, vous autorisez le contrat intelligent à utiliser vos jetons dans de futures transactions.</string>
   <string name="swap_custom_slippage_info">Le slippage ne peut pas être personnalisé avec ce fournisseur et peut atteindre %s dans de rares cas</string>
   <string name="swap_detailed_mode">Mode détaillé</string>
