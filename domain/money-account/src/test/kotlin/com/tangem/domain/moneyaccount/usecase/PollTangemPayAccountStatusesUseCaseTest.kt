@@ -21,6 +21,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.currentTime
@@ -68,29 +69,39 @@ internal class PollTangemPayAccountStatusesUseCaseTest {
     }
 
     @Test
-    fun `GIVEN terminal summary WHEN invoke THEN its customer state returned`() = runTest {
-        // Arrange
-        coEvery { getCustomerSummaryUseCase(USER_WALLET_ID, CachePolicy.ONLY_CACHE) } returns terminalSummary().right()
+    fun `GIVEN summary becomes terminal WHEN states collected THEN every observed state emitted until terminal`() =
+        runTest {
+            // Arrange
+            coEvery { getCustomerSummaryUseCase(USER_WALLET_ID, CachePolicy.ONLY_CACHE) } returnsMany listOf(
+                inProgressSummary().right(),
+                null.right(),
+                terminalSummary().right(),
+            )
 
-        // Act
-        val actual = useCase(USER_WALLET_ID)
+            // Act
+            val actual = useCase.states(USER_WALLET_ID).toList()
 
-        // Assert
-        assertThat(actual).isEqualTo(TangemPayCustomerStateConverter.convert(terminalSummary()))
-    }
+            // Assert
+            assertThat(actual).containsExactly(
+                TangemPayCustomerStateConverter.convert(inProgressSummary()),
+                TangemPayCustomerStateConverter.convert(terminalSummary()),
+            ).inOrder()
+        }
 
     @Test
-    fun `GIVEN summary in progress for 15 minutes WHEN invoke THEN polling stops without a final state`() = runTest {
+    fun `GIVEN summary in progress WHEN 20 minutes pass THEN polling continues`() = runTest {
         // Arrange
         coEvery { getCustomerSummaryUseCase(USER_WALLET_ID, CachePolicy.ONLY_CACHE) } returns
             inProgressSummary().right()
+        val job = launch { useCase(USER_WALLET_ID) }
 
         // Act
-        val actual = useCase(USER_WALLET_ID)
+        advanceTimeBy(20.minutes)
+        runCurrent()
 
         // Assert
-        assertThat(actual).isNull()
-        assertThat(currentTime).isEqualTo(15.minutes.inWholeMilliseconds)
+        verifyFetched(times = 41)
+        job.cancel()
     }
 
     @Test
