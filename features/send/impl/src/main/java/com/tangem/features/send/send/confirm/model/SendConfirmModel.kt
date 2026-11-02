@@ -606,16 +606,19 @@ internal class SendConfirmModel @Inject constructor(
                 reportIntentHashIfNeeded(transfer = transfer, txHash = txHash.ifEmpty { txData.hash.orEmpty() })
                 addTokenToWalletIfNeeded()
                 sendBalanceUpdater.scheduleUpdates()
-                modelScope.launch(dispatchers.default) {
+                val sentUM = uiState.value
+                val sentAccount = params.accountFlow.value
+                // The success screen replaces this step right away and cancels modelScope
+                appScope.launch(dispatchers.default) {
                     sendAnalyticHelper.sendSuccessAnalytics(
                         cryptoCurrency = cryptoCurrency,
-                        sendUM = uiState.value,
-                        account = params.accountFlow.value,
+                        sendUM = sentUM,
+                        account = sentAccount,
                         feeToken = feeToken,
                     )
                     recordTokenTransferFromSendUseCase(
                         userWalletId = userWallet.walletId,
-                        sourceAccount = params.accountFlow.value,
+                        sourceAccount = sentAccount,
                         currency = cryptoCurrency,
                         destinationAddress = confirmData.enteredDestination.orEmpty(),
                     )

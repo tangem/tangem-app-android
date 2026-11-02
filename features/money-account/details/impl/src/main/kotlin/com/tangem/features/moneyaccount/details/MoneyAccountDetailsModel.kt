@@ -12,7 +12,11 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
@@ -24,10 +28,12 @@ import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBankCredentialsUseCase
+import com.tangem.domain.moneyaccount.usecase.RenewTangemPaySessionUseCase
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.features.moneyaccount.details.addfunds.options.MoneyAccountAddFundsOptionsListener
 import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
+import com.tangem.features.moneyaccount.details.impl.R
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
@@ -40,6 +46,7 @@ import javax.inject.Inject
 internal class MoneyAccountDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     moneyAccountStatusSupplier: MoneyAccountStatusSupplier,
+    getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
@@ -49,6 +56,8 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     private val getMoneyAccountBankCredentialsUseCase: GetMoneyAccountBankCredentialsUseCase,
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
+    private val renewTangemPaySessionUseCase: RenewTangemPaySessionUseCase,
+    private val uiMessageSender: UiMessageSender,
 ) : Model(), MoneyAccountAddFundsOptionsListener {
 
     private val params = paramsContainer.require<MoneyAccountDetailsComponent.Params>()
@@ -59,6 +68,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
         onSupportClick = ::onSupportClick,
         onBackClick = ::onBackClick,
         onRefresh = ::onRefresh,
+        onRenewSession = ::onRenewSession,
     )
     val uiState: StateFlow<MoneyAccountDetailsUM>
         field = MutableStateFlow(stateFactory.createInitialState())
@@ -80,6 +90,10 @@ internal class MoneyAccountDetailsModel @Inject constructor(
                 }
             }
             .launchIn(modelScope)
+
+        getBalanceHidingSettingsUseCase.isBalanceHidden()
+            .onEach { isHidden -> uiState.update { it.copy(isBalanceHidden = isHidden) } }
+            .launchIn(modelScope)
     }
 
     private fun onBackClick() {
@@ -93,6 +107,28 @@ internal class MoneyAccountDetailsModel @Inject constructor(
             if (uiState.value.txHistoryCurrency != null) txHistoryContentUpdateEmitter.triggerUpdate()
             moneyAccountStatusFetcher(params.userWalletId)
             updateRefreshing(isRefreshing = false)
+        }
+    }
+
+    private fun onRenewSession() {
+        updateRenewSessionProgress(isLoading = true)
+        modelScope.launch {
+            renewTangemPaySessionUseCase(params.userWalletId)
+                .onRight { moneyAccountStatusFetcher(params.userWalletId) }
+                .onLeft { uiMessageSender.send(SnackbarMessage(resourceReference(R.string.common_error))) }
+            updateRenewSessionProgress(isLoading = false)
+        }
+    }
+
+    private fun updateRenewSessionProgress(isLoading: Boolean) {
+        uiState.update { state ->
+            val banner = state.messageBanner
+            val button = banner?.secondaryButton
+            if (banner == null || button == null) {
+                state
+            } else {
+                state.copy(messageBanner = banner.copy(secondaryButton = button.copy(isLoading = isLoading)))
+            }
         }
     }
 

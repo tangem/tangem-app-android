@@ -7,7 +7,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 /**
  * Customer.io analytics handler.
  */
-class CustomerIoAnalyticsHandler(
+internal class CustomerIoAnalyticsHandler(
     private val client: CustomerIoAnalyticsClient,
 ) : AnalyticsHandler, AnalyticsUserIdHandler {
 

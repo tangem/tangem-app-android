@@ -20,7 +20,6 @@ import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.onboarding.v2.TitleProvider
 import com.tangem.features.onboarding.v2.common.ui.CantLeaveBackupDialog
-import com.tangem.features.onboarding.v2.done.api.OnboardingDoneComponent
 import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
 import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent.Mode
 import com.tangem.features.onboarding.v2.entry.impl.analytics.OnboardingEntryEvent
@@ -28,7 +27,6 @@ import com.tangem.features.onboarding.v2.entry.impl.routing.OnboardingRoute
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.title.OnboardingTitle
 import com.tangem.features.onboarding.v2.twin.api.OnboardingTwinComponent
-import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.OnboardingVisaAnalyticsEvent
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.sdk.api.TangemSdkManager
@@ -109,11 +107,6 @@ internal class OnboardingEntryModel @Inject constructor(
                     mode = multiWalletNavigationMode,
                 )
             }
-            ProductType.Visa -> OnboardingRoute.Visa(
-                scanResponse = scanResponse,
-                titleProvider = titleProvider,
-                onDone = ::onVisaOnboardingDone,
-            )
             ProductType.Note -> OnboardingRoute.Note(
                 scanResponse = scanResponse,
                 titleProvider = titleProvider,
@@ -141,12 +134,7 @@ internal class OnboardingEntryModel @Inject constructor(
         val mode = params.mode
         when {
             mode == Mode.AddBackupWallet1 -> {
-                stackNavigation.replaceAll(
-                    OnboardingRoute.Done(
-                        mode = OnboardingDoneComponent.Mode.WalletCreated,
-                        onDone = ::exitComponentScreen,
-                    ),
-                )
+                stackNavigation.replaceAll(OnboardingRoute.Done(onDone = ::exitComponentScreen))
             }
             userWallet.scanResponse.cardTypesResolver.isMultiwalletAllowed() && mode !is Mode.UpgradeHotWallet -> {
                 stackNavigation.replaceAll(OnboardingRoute.ManageTokens(userWallet))
@@ -157,28 +145,17 @@ internal class OnboardingEntryModel @Inject constructor(
         }
     }
 
-    private fun onVisaOnboardingDone() {
-        navigateToFinalScreenFlow(doneMode = OnboardingDoneComponent.Mode.GoodToGo)
-    }
-
-    private fun navigateToFinalScreenFlow(
-        doneMode: OnboardingDoneComponent.Mode = OnboardingDoneComponent.Mode.WalletCreated,
-    ) {
+    private fun navigateToFinalScreenFlow() {
         modelScope.launch {
             if (tangemSdkManager.checkCanUseBiometry() && settingsRepository.shouldShowAskBiometry()) {
-                doIfVisa {
-                    analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.BiometricScreenOpened())
-                }
-                stackNavigation.replaceAll(
-                    OnboardingRoute.AskBiometry(modelCallbacks = AskBiometryModelCallbacks(doneMode)),
-                )
+                stackNavigation.replaceAll(OnboardingRoute.AskBiometry(modelCallbacks = AskBiometryModelCallbacks()))
             } else {
-                navigateToPushNotificationsOrDone(doneMode)
+                navigateToPushNotificationsOrDone()
             }
         }
     }
 
-    private suspend fun navigateToPushNotificationsOrDone(doneMode: OnboardingDoneComponent.Mode) {
+    private suspend fun navigateToPushNotificationsOrDone() {
         // A failing read must not strand the viewer on the previous step, so the flow finishes instead.
         val shouldAsk = runSuspendCatching { shouldAskPermissionUseCase(PUSH_PERMISSION) }
             .getOrElse { error ->
@@ -187,48 +164,36 @@ internal class OnboardingEntryModel @Inject constructor(
             }
         if (shouldAsk) {
             stackNavigation.replaceAll(
-                OnboardingRoute.PushNotifications(modelCallbacks = PushNotificationsCallbacks(doneMode)),
+                OnboardingRoute.PushNotifications(modelCallbacks = PushNotificationsCallbacks()),
             )
         } else {
-            navigateToDone(doneMode)
+            navigateToDone()
         }
     }
 
-    private fun navigateToDone(doneMode: OnboardingDoneComponent.Mode) {
-        doIfVisa {
-            analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.SuccessScreenOpened())
-        }
-        stackNavigation.replaceAll(
-            OnboardingRoute.Done(
-                mode = doneMode,
-                onDone = ::exitComponentScreen,
-            ),
-        )
+    private fun navigateToDone() {
+        stackNavigation.replaceAll(OnboardingRoute.Done(onDone = ::exitComponentScreen))
     }
 
-    inner class AskBiometryModelCallbacks(
-        private val doneMode: OnboardingDoneComponent.Mode,
-    ) : AskBiometryComponent.ModelCallbacks {
+    inner class AskBiometryModelCallbacks : AskBiometryComponent.ModelCallbacks {
         override fun onAllowed() {
             analyticsEventHandler.send(OnboardingEntryEvent.Biometric(OnboardingEntryEvent.Biometric.State.On))
-            modelScope.launch { navigateToPushNotificationsOrDone(doneMode) }
+            modelScope.launch { navigateToPushNotificationsOrDone() }
         }
 
         override fun onDenied() {
             analyticsEventHandler.send(OnboardingEntryEvent.Biometric(OnboardingEntryEvent.Biometric.State.Off))
-            modelScope.launch { navigateToPushNotificationsOrDone(doneMode) }
+            modelScope.launch { navigateToPushNotificationsOrDone() }
         }
     }
 
-    inner class PushNotificationsCallbacks(
-        private val doneMode: OnboardingDoneComponent.Mode,
-    ) : PushNotificationsModelCallbacks {
+    inner class PushNotificationsCallbacks : PushNotificationsModelCallbacks {
 
-        override fun onAllowSystemPermission() = navigateToDone(doneMode)
+        override fun onAllowSystemPermission() = navigateToDone()
 
-        override fun onDenySystemPermission() = navigateToDone(doneMode)
+        override fun onDenySystemPermission() = navigateToDone()
 
-        override fun onDismiss() = navigateToDone(doneMode)
+        override fun onDismiss() = navigateToDone()
     }
 
     private fun popOrExitComponentScreen() {
@@ -246,12 +211,6 @@ internal class OnboardingEntryModel @Inject constructor(
             } else {
                 router.replaceAll(AppRoute.Wallet)
             }
-        }
-    }
-
-    private inline fun doIfVisa(function: () -> Unit) {
-        if (params.scanResponse.productType == ProductType.Visa) {
-            function()
         }
     }
 
