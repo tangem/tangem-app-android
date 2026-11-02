@@ -42,14 +42,6 @@ dependencies {
     implementation(deps.retrofit)
     // endregion
 
-    // region Firebase
-    implementation(platform(deps.firebase.bom))
-    implementation(deps.firebase.perf) {
-        exclude(group = "com.google.firebase", module = "protolite-well-known-types")
-        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
-    }
-    // endregion
-
     // region Tangem
     implementation(tangemDeps.card.android)
     implementation(tangemDeps.card.core)

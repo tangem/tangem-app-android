@@ -37,6 +37,19 @@ internal class DefaultPolymarketSessionKeyTradingStore(
         refused.update { it.without(userWalletId, address) }
         missingOnExchange.update { it.without(userWalletId, address) }
 
+        recordReadiness(userWalletId, address, validUntil)
+    }
+
+    override suspend fun restoreReadyOnExchange(
+        userWalletId: UserWalletId,
+        sessionKeyAddress: String,
+        validUntil: Instant,
+    ) {
+        if (isRefused(userWalletId, sessionKeyAddress)) return
+        recordReadiness(userWalletId, sessionKeyAddress.normalized(), validUntil)
+    }
+
+    private suspend fun recordReadiness(userWalletId: UserWalletId, address: String, validUntil: Instant) {
         val record = PolymarketSessionKeyReadinessDTO(address = address, validUntil = validUntil.epochSecond)
         runSuspendCatching { readinessDataStore.updateData { it + (userWalletId.stringValue to record) } }
             .onFailure { TangemLogger.e("Failed to record the session key readiness of $userWalletId", it) }

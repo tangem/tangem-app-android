@@ -49,7 +49,7 @@ import com.tangem.sdk.api.CreateProductWalletTaskResponse
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.api.visa.VisaCardActivationResponse
 import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
-import com.tangem.tap.common.analytics.events.TangemSdkErrorEvent
+import com.tangem.sdk.api.analytics.TangemSdkErrorEvent
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
 import com.tangem.tap.domain.tasks.product.*
 import com.tangem.tap.domain.tasks.visa.*

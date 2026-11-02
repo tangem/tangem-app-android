@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -25,6 +26,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.assets.il_account_safe
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.test.MoneyAccountTestTags
 import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
 import com.tangem.features.moneyaccount.main.impl.R
 import com.tangem.utils.StringsSigns.DASH_SIGN
@@ -63,7 +65,9 @@ private fun MoneyAccountRow(
     isBalanceHidden: Boolean = false,
 ) {
     TangemRow(
-        modifier = modifier.moneyAccountCard(),
+        modifier = modifier
+            .moneyAccountCard()
+            .testTag(MoneyAccountTestTags.MAIN_ROW),
         contentLead = TangemRowContentLead.Start,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         onClick = onClick,

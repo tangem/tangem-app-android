@@ -14,11 +14,16 @@ android {
 dependencies {
     /** Project - API */
     implementation(projects.features.marketing.api)
+    implementation(projects.features.usedesk.api)
 
     /** Domain */
     implementation(projects.domain.marketing)
     implementation(projects.domain.marketing.models)
     implementation(projects.domain.models)
+    implementation(projects.domain.quotes)
+
+    /** Common */
+    implementation(projects.common.routing)
 
     /** Core */
     implementation(projects.core.decompose)
