@@ -813,11 +813,38 @@ internal class MoneyAccountDetailsModelTest {
             expectedType = "send",
             expectedStatus = "unknown",
         ),
+        collateralClick(collateralType = TangemPayTxHistoryItem.Type.Deposit, expectedType = "deposit"),
+        collateralClick(collateralType = TangemPayTxHistoryItem.Type.Cashback, expectedType = "deposit"),
+        collateralClick(collateralType = TangemPayTxHistoryItem.Type.Withdrawal, expectedType = "send"),
+        spendClick(spendStatus = TangemPayTxHistoryItem.Status.PENDING, expectedStatus = "pending"),
+        spendClick(spendStatus = TangemPayTxHistoryItem.Status.RESERVED, expectedStatus = "pending"),
+        spendClick(spendStatus = TangemPayTxHistoryItem.Status.COMPLETED, expectedStatus = "completed"),
+        spendClick(spendStatus = TangemPayTxHistoryItem.Status.DECLINED, expectedStatus = "declined"),
+        spendClick(spendStatus = TangemPayTxHistoryItem.Status.REVERSED, expectedStatus = "declined"),
+        spendClick(spendStatus = TangemPayTxHistoryItem.Status.UNKNOWN, expectedStatus = "unknown"),
         TransactionClickModel(
-            item = OnChainTx.TangemPay(mockk<TangemPayTxHistoryItem.Collateral>()),
-            expectedType = "deposit",
+            item = OnChainTx.TangemPay(mockk<TangemPayTxHistoryItem.Payment>()),
+            expectedType = "send",
             expectedStatus = "unknown",
         ),
+        TransactionClickModel(
+            item = OnChainTx.TangemPay(mockk<TangemPayTxHistoryItem.Fee>()),
+            expectedType = "send",
+            expectedStatus = "unknown",
+        ),
+    )
+
+    private fun collateralClick(collateralType: TangemPayTxHistoryItem.Type, expectedType: String) =
+        TransactionClickModel(
+            item = OnChainTx.TangemPay(mockk<TangemPayTxHistoryItem.Collateral> { every { type } returns collateralType }),
+            expectedType = expectedType,
+            expectedStatus = "unknown",
+        )
+
+    private fun spendClick(spendStatus: TangemPayTxHistoryItem.Status, expectedStatus: String) = TransactionClickModel(
+        item = OnChainTx.TangemPay(mockk<TangemPayTxHistoryItem.Spend> { every { status } returns spendStatus }),
+        expectedType = "send",
+        expectedStatus = expectedStatus,
     )
 
     data class TransactionClickModel(val item: TxHistoryInfo, val expectedType: String, val expectedStatus: String)
