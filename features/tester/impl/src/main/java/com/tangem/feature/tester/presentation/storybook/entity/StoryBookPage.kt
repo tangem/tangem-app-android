@@ -18,6 +18,7 @@ import com.tangem.core.ui.ds2.filter.TangemFilterItem
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
+import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
 import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
@@ -532,6 +533,43 @@ internal data class TangemMessageBannerStory(
         BgPrimary("bg.primary"),
         BgSecondary("bg.secondary"),
         BgInverse("bg.inverse"),
+    }
+}
+
+@Suppress("BooleanPropertyNaming")
+internal data class TangemMessageBubbleStory(
+    val variant: TangemMessageBubble.Variant,
+    val message: Message,
+    val trailingButton: TrailingButton,
+    val background: Background,
+    val showTip: Boolean,
+    val hasIcon: Boolean,
+    val isClickable: Boolean,
+    val onVariantChange: (TangemMessageBubble.Variant) -> Unit,
+    val onMessageChange: (Message) -> Unit,
+    val onTrailingButtonChange: (TrailingButton) -> Unit,
+    val onBackgroundChange: (Background) -> Unit,
+    val onTipToggle: () -> Unit,
+    val onIconToggle: () -> Unit,
+    val onClickableToggle: () -> Unit,
+) : DsStoryBookPage {
+
+    enum class Message(val label: String) {
+        Short("Short"),
+        Long("Long"),
+        OneLine("Long, 1 line"),
+    }
+
+    enum class TrailingButton(val label: String) {
+        None("None"),
+        Close("Close"),
+        Chevron("Chevron"),
+    }
+
+    /** Backdrop the bubble preview is rendered on top of. */
+    enum class Background(val label: String) {
+        BgPrimary("bg.primary"),
+        BgSecondary("bg.secondary"),
     }
 }
 
