@@ -37,6 +37,7 @@ dependencies {
     api(projects.domain.socialLogin)
     api(projects.domain.walletManager)
     api(projects.domain.core)
+    implementation(projects.domain.collectibles)
     implementation(projects.domain.jointAccount)
     implementation(projects.domain.notifications)
     implementation(projects.domain.pushNotificationPreferences)

@@ -51,7 +51,7 @@ internal class JointAccountCompositionVerifierTest {
             signatureRecoverer = signatureRecoverer,
         )
         coEvery { ownerAddressResolver.resolve(userWalletId, ownerKeyIndex) } returns ALICE.right()
-        every { safeAddressCalculator.compute(owners = any(), threshold = any(), singleton = any()) } returns
+        every { safeAddressCalculator.compute(owners = any(), threshold = any()) } returns
             SAFE_ADDRESS.right()
         every { signatureRecoverer.recoverPayloadSigner(payload = any(), signature = any()) } answers {
             SIGNERS[secondArg<String>()]?.right() ?: IllegalArgumentException("not a signature").left()
@@ -79,7 +79,7 @@ internal class JointAccountCompositionVerifierTest {
     @Test
     fun `GIVEN safe address not computed from members WHEN verify THEN not verified`() = runTest {
         // Arrange
-        every { safeAddressCalculator.compute(owners = any(), threshold = any(), singleton = any()) } returns
+        every { safeAddressCalculator.compute(owners = any(), threshold = any()) } returns
             OTHER_SAFE_ADDRESS.right()
 
         // Act
@@ -100,7 +100,7 @@ internal class JointAccountCompositionVerifierTest {
 
             // Assert
             assertThat(actual).isTrue()
-            coVerify(exactly = 0) { safeAddressCalculator.compute(owners = any(), threshold = any(), singleton = any()) }
+            coVerify(exactly = 0) { safeAddressCalculator.compute(owners = any(), threshold = any()) }
             verify(exactly = 0) { signatureRecoverer.recoverPayloadSigner(payload = any(), signature = any()) }
         }
 

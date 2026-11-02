@@ -44,7 +44,7 @@ internal class WalletJointAccountItemConverter(
                 id = account.accountId.value,
                 title = account.accountName.toUM().value,
             )
-            is JointAccountStatusValue.Error.Compromised -> compromised(account = account, status = status)
+            is JointAccountStatusValue.Error.Compromised -> compromised(account = account)
             is JointAccountStatusValue.Pending -> notActive(
                 account = account,
                 totalMembers = status.totalMembers,
@@ -78,20 +78,12 @@ internal class WalletJointAccountItemConverter(
     }
 
     /** The composition does not verify: the badge takes the place of the balance, the tap explains why */
-    private fun compromised(
-        account: Account.Joint,
-        status: JointAccountStatusValue.Error.Compromised,
-    ): TangemAccountRow.State.Unreachable {
+    private fun compromised(account: Account.Joint): TangemAccountRow.State.Unreachable {
         return TangemAccountRow.State.Unreachable(
             id = account.accountId.value,
             title = account.accountName.toUM().value,
-            badge = resourceReference(R.string.joint_account_main_cant_verify),
-            label = pluralReference(
-                id = R.plurals.common_tokens_count,
-                count = status.tokensCount,
-                formatArgs = wrappedList(status.tokensCount),
-            ),
-            description = membersCount(status.totalMembers),
+            badge = resourceReference(R.string.joint_account_main_unavailable),
+            label = resourceReference(R.string.joint_account_main_paused_for_safety),
             onClick = { onCompromisedAccountClick(userWalletId) },
         )
     }
