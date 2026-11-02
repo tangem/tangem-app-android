@@ -81,6 +81,6 @@ internal class StatusConverterTest {
         val error = runCatching { converter.convert(response) }.exceptionOrNull()
 
         // Assert
-        assertThat(error).isNotNull()
+        assertThat(error).isInstanceOf(com.squareup.moshi.JsonDataException::class.java)
     }
 }

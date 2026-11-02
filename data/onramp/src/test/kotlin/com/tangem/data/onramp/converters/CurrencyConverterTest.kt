@@ -21,10 +21,10 @@ internal class CurrencyConverterTest {
     @Test
     fun `GIVEN currency WHEN convertBack THEN all fields are mapped`() {
         // Act
-        val actual = converter.convertBack(createCurrency(unit = "$") )
+        val actual = converter.convertBack(createCurrency(unit = "$"))
 
         // Assert
-        assertThat(actual).isEqualTo(createDto(unit = "$") )
+        assertThat(actual).isEqualTo(createDto(unit = "$"))
     }
 
     private fun createDto(unit: String?) = OnrampCurrencyDTO(
