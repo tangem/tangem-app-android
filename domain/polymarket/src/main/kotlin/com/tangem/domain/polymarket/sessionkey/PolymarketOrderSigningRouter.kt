@@ -5,18 +5,13 @@ import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.PolymarketSessionKeyRepository
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketClobIdentity
-import com.tangem.domain.polymarket.model.PolymarketSessionKeyStatus
 import com.tangem.domain.polymarket.model.PolymarketSessionSigner
-import com.tangem.domain.polymarket.model.PolymarketWalletState
-import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.model.PredictionOrderFailure
 import com.tangem.domain.polymarket.model.PredictionOrderSigningRoute
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
 import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.utils.logging.TangemLogger
 import java.time.Clock
-import java.time.Duration
-import java.time.Instant
 
 @Suppress("LongParameterList")
 class PolymarketOrderSigningRouter(
@@ -34,21 +29,13 @@ class PolymarketOrderSigningRouter(
         val userWalletId = addresses.userWalletId
         val sessionKeyAddress = sessionKeyStore.heldAddress(userWalletId) ?: return PredictionOrderSigningRoute.Owner
 
-        if (tradingStore.isRefused(userWalletId, sessionKeyAddress)) {
-            return owner(reason = "the exchange refused the session key")
-        }
-        if (tradingStore.isMissingOnExchange(userWalletId, sessionKeyAddress)) {
-            return owner(reason = "the session key is gone from Polymarket")
-        }
-
-        val state = polymarketRepository.getWalletStatusByWalletId(walletId = userWalletId.stringValue)
-            .getOrElse { error -> return owner(reason = "the wallet could not be read: $error") }
-        val validUntil = state.tradableValidUntil(sessionKeyAddress = sessionKeyAddress)
-            ?: return owner(reason = "the BFF does not let the session key trade")
-
-        if (!tradingStore.isReadyOnExchange(userWalletId, sessionKeyAddress, validUntil)) {
-            return owner(reason = "Polymarket has not listed the session key since its authorization")
-        }
+        val tradability = tradingStore.tradability(
+            userWalletId = userWalletId,
+            sessionKeyAddress = sessionKeyAddress,
+            clock = clock,
+            readWallet = { polymarketRepository.getWalletStatusByWalletId(walletId = userWalletId.stringValue) },
+        )
+        if (tradability is PolymarketSessionKeyTradability.Untradable) return owner(reason = tradability.reason)
 
         val identity = sessionCredentialsProvider.get(userWalletId)
             .getOrElse { error -> return owner(reason = "the session credentials could not be derived: $error") }
@@ -116,25 +103,8 @@ class PolymarketOrderSigningRouter(
                     .getOrNull()
             }
 
-    private fun PolymarketWalletState.tradableValidUntil(sessionKeyAddress: String): Instant? {
-        if (status != PolymarketWalletStatus.READY_TO_TRADE) return null
-
-        val record = sessionKeys.firstOrNull { it.address.equals(sessionKeyAddress, ignoreCase = true) }
-            ?: return null
-        val validUntil = record.validUntil ?: return null
-        val isTradable = record.status == PolymarketSessionKeyStatus.ACTIVE &&
-            record.isEnabled &&
-            clock.instant() < validUntil - SIGNING_EXPIRY_MARGIN
-
-        return validUntil.takeIf { isTradable }
-    }
-
     private fun owner(reason: String): PredictionOrderSigningRoute {
         TangemLogger.i("Polymarket order signed with the owner key: $reason")
         return PredictionOrderSigningRoute.Owner
-    }
-
-    private companion object {
-        val SIGNING_EXPIRY_MARGIN: Duration = Duration.ofMinutes(10)
     }
 }

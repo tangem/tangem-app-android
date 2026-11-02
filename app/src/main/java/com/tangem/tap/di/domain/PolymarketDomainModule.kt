@@ -327,11 +327,13 @@ internal object PolymarketDomainModule {
         signOrder: SignPredictionOrderInteractor,
         placeOrder: PlacePredictionOrderUseCase,
         router: PolymarketOrderSigningRouter,
+        stateService: PolymarketSessionKeyStateService,
         appCoroutineScope: AppCoroutineScope,
     ): SubmitPredictionOrderInteractor = SubmitPredictionOrderInteractor(
         signOrder = signOrder,
         placeOrder = placeOrder,
         router = router,
+        stateService = stateService,
         reconciliationScope = appCoroutineScope,
     )
 
@@ -524,5 +526,9 @@ internal object PolymarketDomainModule {
     @Singleton
     fun providePolymarketSessionKeyStateService(
         reconcile: ReconcilePolymarketSessionKeysInteractor,
-    ): PolymarketSessionKeyStateService = PolymarketSessionKeyStateService(reconcile = reconcile)
+        appCoroutineScope: AppCoroutineScope,
+    ): PolymarketSessionKeyStateService = PolymarketSessionKeyStateService(
+        reconcile = reconcile,
+        scope = appCoroutineScope,
+    )
 }
