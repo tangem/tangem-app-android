@@ -3,11 +3,14 @@
 package com.tangem.features.polymarket.common.ui.counter
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.MutatePriority
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -22,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,7 +64,7 @@ internal fun CounterValues(
         val slotWidth = maxWidth / visibleCount
         LaunchedEffect(slotWidth, rowHeight) {
             val selectedIndex = items.indexOfFirst { it.id == selectedId }
-            if (selectedIndex >= 0) pager.scrollToPage(selectedIndex)
+            if (selectedIndex >= 0) pager.centerCounterOn(selectedIndex)
         }
         if (hasSelection) {
             Box(
@@ -95,6 +99,13 @@ internal fun CounterValues(
     }
 }
 
+internal suspend fun PagerState.centerCounterOn(page: Int) {
+    // External selection and layout changes must take precedence over an active pointer drag.
+    scroll(MutatePriority.PreventUserInput) {
+        updateCurrentPage(page)
+    }
+}
+
 @Composable
 private fun CounterValue(
     item: PolymarketCounter.Item,
@@ -103,12 +114,14 @@ private fun CounterValue(
     isEnabled: Boolean,
     onClick: () -> Unit,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
     Box(
         modifier = Modifier
             .fillMaxSize()
             .selectable(
                 selected = isSelected,
-                interactionSource = null,
+                interactionSource = interactionSource,
                 indication = null,
                 enabled = isEnabled,
                 role = Role.RadioButton,
@@ -122,7 +135,19 @@ private fun CounterValue(
             color = if (isCentered) TangemTheme.colors3.text.primary else TangemTheme.colors3.text.secondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            modifier = Modifier
+                .then(
+                    if (isFocused) {
+                        Modifier.border(
+                            width = 2.dp,
+                            color = TangemTheme.colors3.interaction.focusRing.brand,
+                            shape = RoundedCornerShape(6.dp),
+                        )
+                    } else {
+                        Modifier
+                    },
+                )
+                .padding(horizontal = 8.dp, vertical = 2.dp),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
     }
