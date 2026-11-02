@@ -6,12 +6,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
 import com.tangem.feature.tester.presentation.storybook.page.polymarket.chart.PolymarketProbabilityChartStory
+import com.tangem.feature.tester.presentation.storybook.page.polymarket.chart.PolymarketEventChartStory
 import androidx.compose.ui.Modifier
 import com.tangem.feature.tester.presentation.storybook.entity.ButtonsStory
 import com.tangem.feature.tester.presentation.storybook.entity.DeviceIconStory
 import com.tangem.feature.tester.presentation.storybook.entity.DsComponentsListStory
 import com.tangem.feature.tester.presentation.storybook.entity.NorthernLightsStory
 import com.tangem.feature.tester.presentation.storybook.entity.PolymarketProbabilityChartStory
+import com.tangem.feature.tester.presentation.storybook.entity.PolymarketEventChartStory
 import com.tangem.feature.tester.presentation.storybook.entity.OpportunitiesBGStory
 import com.tangem.feature.tester.presentation.storybook.entity.PlaceholderStory
 import com.tangem.feature.tester.presentation.storybook.entity.ProgressIndicatorStory
@@ -105,10 +107,11 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
         val isEdgeToEdgePage = storyState is TangemShtorkaStory ||
             storyState is TangemModalStory ||
             storyState is StoriesV2Story ||
-            storyState is TangemStatusScreenStory
+            storyState is TangemStatusScreenStory || storyState is PolymarketEventChartStory
         val insetsModifier = if (isEdgeToEdgePage) Modifier else Modifier.systemBarsPadding()
         Box(modifier = insetsModifier) {
             when (storyState) {
+                PolymarketEventChartStory -> PolymarketEventChartStory()
                 PolymarketProbabilityChartStory -> PolymarketProbabilityChartStory()
                 StoryList -> StoryBookListScreen(state = state)
                 StoriesV2Story -> StoriesV2Story()
