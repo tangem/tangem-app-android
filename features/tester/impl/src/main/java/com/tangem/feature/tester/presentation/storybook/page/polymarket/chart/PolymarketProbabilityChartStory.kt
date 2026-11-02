@@ -2,7 +2,6 @@
 
 package com.tangem.feature.tester.presentation.storybook.page.polymarket.chart
 
-import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -13,7 +12,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -24,7 +22,6 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemeRedesign
-import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.feature.tester.presentation.storybook.entity.PolymarketProbabilityChartStory
 import com.tangem.feature.tester.presentation.storybook.entity.StoryPageFactory
 import com.tangem.features.polymarket.impl.common.ui.chart.PolymarketProbabilityChart
@@ -127,14 +124,9 @@ internal fun PolymarketProbabilityChartStory(modifier: Modifier = Modifier) {
                         ChartChoice("Dark", isDark) { isDark = true }
                     }
                     ChartChoices("Text size") {
-                        listOf(
-                            1f,
-                            1.5f,
-                            2f,
-                        ).forEach { size -> ChartChoice(
-                            "${(size * 100).toInt()}%",
-                            size == fontScale,
-                        ) { fontScale = size } }
+                        listOf(1f, 1.5f, 2f).forEach { size ->
+                            ChartChoice("${(size * 100).toInt()}%", size == fontScale) { fontScale = size }
+                        }
                     }
                     ChartChoices("Width") {
                         ChartChoice("Full width", !isNarrow) { isNarrow = false }
@@ -167,22 +159,4 @@ private fun ChartChoice(label: String, isSelected: Boolean, onClick: () -> Unit)
         variant = if (isSelected) TangemButton.Variant.Primary else TangemButton.Variant.Secondary,
         size = TangemButton.Size.X8,
     )
-}
-
-@Preview(name = "Light", showBackground = true)
-@Preview(name = "Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun ProbabilityChartPreview() {
-    TangemThemePreviewRedesign {
-        PolymarketProbabilityChart(
-            state = chartFixture(ChartSample.Sports, "6h", 0),
-            periods = chartPeriods,
-            selectedPeriodId = "6h",
-            onPeriodChange = {},
-            formatTime = { "12:00" },
-            emptyTitle = stringReference("No data yet"),
-            emptyDescription = stringReference("The chart will appear after the first predictions"),
-            modifier = Modifier.fillMaxWidth().background(TangemTheme.colors3.bg.secondary),
-        )
-    }
 }
