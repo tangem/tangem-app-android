@@ -75,7 +75,7 @@ class TangemPayPolygonUsdcTransferTest : BaseTestCase() {
             step("Enter amount '$depositAmount'") { inputAmount(depositAmount) }
             step("Assert Transfer mode is ready without a provider") { assertTransferReady() }
             step("Assert network fee is displayed") { waitForFeeDisplayed() }
-            step("Hold to confirm the transfer") { holdToConfirmTransfer() }
+            step("Hold to confirm the transfer") { holdToConfirmTransferUntilInProgress() }
             step("Assert 'Transfer in progress' screen is displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { onSwapSuccessScreen { transferInProgressTitle.assertIsDisplayed() } }
             }

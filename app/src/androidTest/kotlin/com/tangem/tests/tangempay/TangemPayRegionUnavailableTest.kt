@@ -239,7 +239,7 @@ class TangemPayRegionUnavailableTest : BaseTestCase() {
                 onTangemPayWaitlistSheet { saveButton.clickWithAssertion() }
             }
             step("Assert waitlist request carries the email, the US state and the marketing consent") {
-                val body = awaitTangemPayWaitlistRequestBody(waitlistRequestsBefore)
+                val body = awaitTangemPayWaitlistRequestBody(waitlistRequestsBefore, productPaymentAccount)
                 assertEquals(validEmail, body.getString("email"))
                 assertEquals(true, body.getBoolean("marketing_consent"))
                 assertEquals(unitedStatesCode, body.getString("country_code"))
@@ -298,7 +298,7 @@ class TangemPayRegionUnavailableTest : BaseTestCase() {
                 onTangemPayWaitlistSheet { saveButton.clickWithAssertion() }
             }
             step("Assert waitlist request carries the email and the country without a region and consent") {
-                val body = awaitTangemPayWaitlistRequestBody(waitlistRequestsBefore)
+                val body = awaitTangemPayWaitlistRequestBody(waitlistRequestsBefore, productPaymentAccount)
                 assertEquals(validEmail, body.getString("email"))
                 assertEquals(false, body.getBoolean("marketing_consent"))
                 assertEquals(kazakhstanCode, body.getString("country_code"))
