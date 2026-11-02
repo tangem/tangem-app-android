@@ -287,6 +287,9 @@
   <string name="prediction_withdraw_status_sent_title">출금 전송됨</string>
   <string name="tangempay_pay_support">고객 지원</string>
   <string name="tangempay_residency_search_empty">검색 결과가 없습니다. 검색어를 변경해 주세요</string>
+  <string name="tangempay_sync_needed_body">카드와 계좌를 확인하려면 세션을 갱신해 주세요</string>
+  <string name="tangempay_sync_needed_button">세션 갱신</string>
+  <string name="tangempay_sync_needed_title">세션이 만료되었습니다</string>
   <string name="tangempay_topup_bank_transfer_body">ACH/Wire로 은행 계좌에서 USD를 받으세요</string>
   <string name="tangempay_topup_bank_transfer_title">은행 계좌에서</string>
   <string name="tangempay_topup_receive_title">다른 지갑 또는 거래소에서</string>

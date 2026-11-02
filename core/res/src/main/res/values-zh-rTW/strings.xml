@@ -1088,9 +1088,9 @@
   <string name="tangempay_status_inactive">未啟用</string>
   <string name="tangempay_status_replacing">正在更換您的卡片</string>
   <string name="tangempay_sync_needed">用卡或戒指續期會話</string>
-  <string name="tangempay_sync_needed_body">用卡或戒指續期會話</string>
+  <string name="tangempay_sync_needed_body">請更新工作階段以查看您的卡片和帳戶</string>
   <string name="tangempay_sync_needed_button">恢復存取權限</string>
-  <string name="tangempay_sync_needed_title">Tangem Pay 工作階段已過期</string>
+  <string name="tangempay_sync_needed_title">工作階段已過期</string>
   <string name="tangempay_tangem_visa_card">在現實生活中隨心消費加密資產</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay暂时不可用</string>
   <string name="tangempay_title">Tangem Pay</string>
