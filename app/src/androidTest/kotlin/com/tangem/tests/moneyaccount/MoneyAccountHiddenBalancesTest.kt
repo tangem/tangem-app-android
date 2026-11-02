@@ -23,7 +23,6 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
-import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -77,7 +76,6 @@ class MoneyAccountHiddenBalancesTest : BaseTestCase() {
         }
     }
 
-    @Ignore("[REDACTED_JIRA]")
     @AllureId("13456")
     @DisplayName("Money account: hidden balances mask the account screen header as on Main")
     @Test
@@ -313,7 +311,6 @@ class MoneyAccountHiddenBalancesTest : BaseTestCase() {
         }
     }
 
-    @Ignore("[REDACTED_JIRA]")
     @AllureId("13463")
     @DisplayName("Money account: unhiding balances on the open account screen reveals the header and history")
     @Test
