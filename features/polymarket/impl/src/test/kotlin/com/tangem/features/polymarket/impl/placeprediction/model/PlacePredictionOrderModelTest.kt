@@ -4,15 +4,20 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.Model
+import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionOrderFailure
 import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.models.StatusSource
 import com.tangem.features.polymarket.impl.common.FakeSlotHost
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
+import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
+import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
+import com.tangem.features.polymarket.impl.placeprediction.model.converter.PredictionFeeSheetUMConverter
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -538,6 +543,30 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         } finally {
             models.forEach(Model::onDestroy)
             models.clear()
+        }
+    }
+
+    @Nested
+    inner class FeeSheet {
+
+        @Test
+        fun `GIVEN a priced quote WHEN fee clicked THEN the sheet is titled total`() = runOrderTest {
+            // Arrange
+            val model = createQuotedModel()
+            val slot = FakeSlotHost(model.feeSheet.navigation)
+            val expected = PredictionFeeSheetUMConverter.convert(
+                quote = createQuote(),
+                slippage = SlippageUM.of(percent = DEFAULT_SLIPPAGE_PERCENT),
+                tokenSymbol = PolymarketCollateralCurrencyFactory.COLLATERAL_SYMBOL,
+                heading = PredictionFeeSheetUM.Heading.Total,
+            )
+
+            // Act
+            model.onFeeClick()
+
+            // Assert
+            assertThat(slot.configuration).isEqualTo(Unit)
+            assertThat(model.feeSheet.state.value).isEqualTo(expected)
         }
     }
 
