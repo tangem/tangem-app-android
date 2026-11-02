@@ -445,6 +445,13 @@ internal data class TangemCheckboxV2Story(
     val onEnabledToggle: () -> Unit,
 ) : DsStoryBookPage
 
+internal data class TangemSwitchStory(
+    val isChecked: Boolean,
+    val isEnabled: Boolean,
+    val onCheckedChange: (Boolean) -> Unit,
+    val onEnabledToggle: () -> Unit,
+) : DsStoryBookPage
+
 internal data class TangemCheckmarkStory(
     val isChecked: Boolean,
     val isEnabled: Boolean,
