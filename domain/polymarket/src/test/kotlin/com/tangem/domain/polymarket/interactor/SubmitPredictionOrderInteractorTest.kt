@@ -31,11 +31,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -56,7 +51,6 @@ internal class SubmitPredictionOrderInteractorTest {
         placeOrder = placeOrder,
         router = router,
         stateService = stateService,
-        reconciliationScope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined),
     )
 
     private val request = PredictionSignRequest(
@@ -171,36 +165,8 @@ internal class SubmitPredictionOrderInteractorTest {
                 router.reportRefused(addresses = ADDRESSES, identity = SESSION_IDENTITY, error = UNAUTHORIZED)
                 stateService.refresh(ADDRESSES.userWalletId)
             }
-            coVerify(exactly = 1) { router.reconcile(ADDRESSES) }
+            verify(exactly = 1) { stateService.refresh(ADDRESSES.userWalletId) }
         }
-
-    @Test
-    fun `GIVEN the reconciliation throws WHEN invoke after a refusal THEN the state is still refreshed`() = runTest {
-        // Arrange
-        val interactor = SubmitPredictionOrderInteractor(
-            signOrder = signOrder,
-            placeOrder = placeOrder,
-            router = router,
-            stateService = stateService,
-            reconciliationScope = CoroutineScope(
-                SupervisorJob() + Dispatchers.Unconfined + CoroutineExceptionHandler { _, _ -> },
-            ),
-        )
-        coEvery { router.route(ADDRESSES) } returns SESSION_ROUTE
-        coEvery { placeOrder(ADDRESSES, sessionOrder, PolymarketMarketVersion.V1, SESSION_ROUTE) } returns
-            UNAUTHORIZED.left()
-        coEvery { router.reconcile(any()) } throws IllegalStateException("secure storage locked")
-
-        // Act
-        val actual = interactor(request = request, preference = PredictionOrderSigningPreference.AUTOMATIC)
-
-        // Assert
-        assertThat(actual).isEqualTo(
-            PredictionSubmittedOrder(result = RESULT, route = PredictionOrderSigningRoute.Owner).right(),
-        )
-        coVerify(exactly = 1) { router.reconcile(ADDRESSES) }
-        verify(exactly = 1) { stateService.refresh(ADDRESSES.userWalletId) }
-    }
 
     @Test
     fun `GIVEN the session order could not be sent WHEN invoke THEN signs the order with the owner key`() = runTest {
@@ -220,6 +186,7 @@ internal class SubmitPredictionOrderInteractorTest {
         coVerify(exactly = 1) {
             router.reportRefused(addresses = ADDRESSES, identity = SESSION_IDENTITY, error = notSent)
         }
+        verify(exactly = 1) { stateService.refresh(ADDRESSES.userWalletId) }
     }
 
     @Test
@@ -240,33 +207,7 @@ internal class SubmitPredictionOrderInteractorTest {
             coVerify(exactly = 1) {
                 router.reportRefused(addresses = ADDRESSES, identity = SESSION_IDENTITY, error = SESSION_KEY_REFUSED)
             }
-        }
-
-    @Test
-    fun `GIVEN the reconciliation is still running WHEN invoke after a refusal THEN the owner result returns first`() =
-        runTest {
-            // Arrange
-            val reconciliation = CompletableDeferred<Unit>()
-            var isReconciled = false
-            coEvery { router.route(ADDRESSES) } returns SESSION_ROUTE
-            coEvery { placeOrder(ADDRESSES, sessionOrder, PolymarketMarketVersion.V1, SESSION_ROUTE) } returns
-                UNAUTHORIZED.left()
-            coEvery { router.reconcile(any()) } coAnswers {
-                reconciliation.await()
-                isReconciled = true
-            }
-
-            // Act
-            val actual = interactor(request = request, preference = PredictionOrderSigningPreference.AUTOMATIC)
-            val isReconciledOnReturn = isReconciled
-            reconciliation.complete(Unit)
-
-            // Assert
-            assertThat(actual).isEqualTo(
-                PredictionSubmittedOrder(result = RESULT, route = PredictionOrderSigningRoute.Owner).right(),
-            )
-            assertThat(isReconciledOnReturn).isFalse()
-            assertThat(isReconciled).isTrue()
+            verify(exactly = 1) { stateService.refresh(ADDRESSES.userWalletId) }
         }
 
     @Test
@@ -335,7 +276,6 @@ internal class SubmitPredictionOrderInteractorTest {
                 signOrder(ownerRequest)
             }
             coVerify(exactly = 0) { router.reportRefused(any(), any(), any()) }
-            coVerify(exactly = 0) { router.reconcile(any()) }
         }
 
     @Test
@@ -357,7 +297,6 @@ internal class SubmitPredictionOrderInteractorTest {
             // Assert
             assertThat(actual).isInstanceOf(CancellationException::class.java)
             verify(exactly = 1) { stateService.refresh(ADDRESSES.userWalletId) }
-            coVerify(exactly = 0) { router.reconcile(any()) }
         }
 
     @Test

@@ -114,9 +114,9 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
   an order that cannot be sent (`NotSent`) is a refusal too, as on iOS; a cancelled signing is not. A refused key is
   marked refused and loses its stored readiness before the order is re-signed with the owner key; it stays out of
   trading until a new authorization (enable, renew, replace) or an app restart — a reconciliation that finds it listed
-  does not lift it. Every refusal refreshes `PolymarketSessionKeyStateService`; an exchange refusal also makes the
-  router reconcile in the app scope. Both run alongside the owner retry. Market, liquidity and balance errors are
-  final. The owner route maps those responses as before.
+  does not lift it. Every refusal refreshes `PolymarketSessionKeyStateService`, the only place that reconciles the
+  wallet, alongside the owner retry. Market, liquidity and balance errors are final. The owner route maps those
+  responses as before.
 - Every relayer batch takes the next deposit-wallet nonce, so claim, withdrawal confirm/resend and the session key
   lifecycle (`ManagePolymarketSessionKeyInteractor`) share `PolymarketDepositWalletLock` from signing until the
   relayer accepted the batch. On top of that, one lifecycle operation (enable, renew, replace, revoke)
