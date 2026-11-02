@@ -15,6 +15,7 @@ import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
 import com.tangem.domain.polymarket.model.PredictionOrderSide
+import com.tangem.domain.polymarket.model.PredictionOrderSigningRoute
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.features.polymarket.impl.common.FakeSlotHost
@@ -349,6 +350,99 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
 
                 // Assert
                 assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.HOLD)
+                coVerify(exactly = 0) { signingRouter.canSignWithSessionKey(userWalletId = any()) }
+            }
+
+        @Test
+        fun `GIVEN the session key becomes usable WHEN the screen resumes THEN the button turns plain`() =
+            runOrderTest {
+                // Arrange
+                every { featureToggles.isPolymarketSessionKeysEnabled } returns true
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returnsMany
+                    listOf(false, true)
+                val model = createOrderModel(testScope = this)
+                runCurrent()
+
+                // Act
+                model.onResume()
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.PLAIN)
+            }
+
+        @Test
+        fun `GIVEN the session key stops being usable WHEN the screen resumes THEN the card is asked`() =
+            runOrderTest {
+                // Arrange
+                every { featureToggles.isPolymarketSessionKeysEnabled } returns true
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returnsMany
+                    listOf(true, false)
+                val model = createOrderModel(testScope = this)
+                runCurrent()
+
+                // Act
+                model.onResume()
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+            }
+
+        @Test
+        fun `GIVEN an order being signed WHEN the session key check answers THEN the button keeps its style`() =
+            runOrderTest {
+                // Arrange
+                every { featureToggles.isPolymarketSessionKeysEnabled } returns true
+                coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
+                coEvery { signOrderInteractor(request = any()) } coAnswers {
+                    delay(timeMillis = SIGNING_MILLIS)
+                    SIGNED_ORDER.right()
+                }
+                val model = createQuotedModel()
+                runCurrent()
+                model.onPlaceClick()
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+
+                // Act
+                model.onResume()
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Signing)
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+            }
+
+        @Test
+        fun `GIVEN a hot wallet WHEN the screen resumes THEN the session key is not checked`() = runOrderTest {
+            // Arrange
+            every { featureToggles.isPolymarketSessionKeysEnabled } returns true
+            every { getUserWalletUseCase(any()) } returns hotWallet().right()
+            val model = createOrderModel(testScope = this)
+            runCurrent()
+
+            // Act
+            model.onResume()
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.HOLD)
+            coVerify(exactly = 0) { signingRouter.canSignWithSessionKey(userWalletId = any()) }
+        }
+
+        @Test
+        fun `GIVEN session keys disabled WHEN the screen resumes THEN the session key is not checked`() =
+            runOrderTest {
+                // Arrange
+                val model = createOrderModel(testScope = this)
+                runCurrent()
+
+                // Act
+                model.onResume()
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
                 coVerify(exactly = 0) { signingRouter.canSignWithSessionKey(userWalletId = any()) }
             }
     }
