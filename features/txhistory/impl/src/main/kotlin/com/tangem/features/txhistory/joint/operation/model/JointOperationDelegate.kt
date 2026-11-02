@@ -7,6 +7,7 @@ import com.tangem.common.routing.entity.AddressBookOpenMode
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.addressbook.usecase.IsAddressBookCompatibleUseCase
+import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
 import com.tangem.domain.models.currency.isJoint
 import kotlinx.coroutines.flow.map
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -19,12 +20,13 @@ import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.jointaccount.address.JointOwnerAddressResolver
-import com.tangem.domain.jointaccount.fetcher.SingleJointAccountListFetcher
+import com.tangem.domain.jointaccount.model.FinishedJointOperation
 import com.tangem.domain.jointaccount.model.JointAccount
 import com.tangem.domain.jointaccount.model.JointOperation
 import com.tangem.domain.jointaccount.model.JointOperationRejectError
 import com.tangem.domain.jointaccount.model.JointOperationSignError
 import com.tangem.domain.jointaccount.model.SafeGasToken
+import com.tangem.domain.jointaccount.network.JointNetworkReader
 import com.tangem.domain.jointaccount.safe.JointOperationSignersResolver
 import com.tangem.domain.jointaccount.safe.JointOperationTransferResolver
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
@@ -36,6 +38,9 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.txhistory.model.JointOperationTx
+import com.tangem.domain.txhistory.repository.JointOperationHistoryRepository
+import com.tangem.features.txhistory.joint.operation.signers.FinishedJointOperationSigners
 import com.tangem.features.txhistory.joint.ownJointAccount
 import com.tangem.features.txhistory.model.ContactCandidate
 import com.tangem.features.txhistory.model.TxHistoryOwnerLookupProducer
@@ -45,23 +50,23 @@ import com.tangem.utils.extensions.addHexPrefix
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.runningReduce
 import javax.inject.Inject
 
-/**
- * An operation is exposed while the backend lists it: awaiting signatures, or past the threshold and on its way to
- * the network. A status this build does not know is hidden rather than guessed at.
- */
 @Suppress("LongParameterList")
 internal class JointOperationDelegate @Inject constructor(
     private val router: Router,
     private val accountListSupplier: SingleAccountListSupplier,
     private val jointAccountListSupplier: SingleJointAccountListSupplier,
     private val jointAccountListFetcher: SingleJointAccountListFetcher,
+    private val historyRepository: JointOperationHistoryRepository,
+    private val finishedSigners: FinishedJointOperationSigners,
     private val transferResolver: JointOperationTransferResolver,
     private val signersResolver: JointOperationSignersResolver,
     private val ownerAddressResolver: JointOwnerAddressResolver,
+    private val networkReader: JointNetworkReader,
     private val signJointOperationUseCase: SignJointOperationUseCase,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
@@ -73,13 +78,6 @@ internal class JointOperationDelegate @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val displayGate: JointOperationDisplayGate,
 ) {
-
-    /**
-
-
-     * that stale read; a genuinely gone operation still resolves to `null` after it.
-     */
-    private var hasRetriedMissingOperationFetch = false
 
     fun isColdWallet(userWalletId: UserWalletId): Boolean {
         return userWalletsListRepository.getSyncOrNull(id = userWalletId) is UserWallet.Cold
@@ -124,21 +122,40 @@ internal class JointOperationDelegate @Inject constructor(
         )
     }
 
-    fun observe(userWalletId: UserWalletId, currency: CryptoCurrency, operationId: String): Flow<JointOperationState?> {
-        if (!currency.isJoint) return flowOf(null)
+    fun observe(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+        operationId: String,
+    ): Flow<JointOperationSnapshot> {
+        if (!currency.isJoint) return flowOf(JointOperationSnapshot.Unreadable)
 
+        var hasRefetchedList = false
         return combine(
             flow = accountListSupplier.ownJointAccount(userWalletId = userWalletId, currency = currency),
             flow2 = jointAccountListSupplier(userWalletId = userWalletId),
-        ) { account, accounts ->
+            flow3 = historyRepository.observeOperation(userWalletId = userWalletId, operationId = operationId),
+        ) { account, accounts, finished ->
             resolve(
-                userWalletId = userWalletId,
                 account = account,
                 currency = currency,
                 operationId = operationId,
                 accounts = accounts,
+                finished = finished,
             )
         }
+            .onEach { snapshot ->
+                if (snapshot == JointOperationSnapshot.NotSynced && !hasRefetchedList) {
+                    hasRefetchedList = true
+                    jointAccountListFetcher(userWalletId = userWalletId)
+                }
+            }
+            .runningReduce { previous, next ->
+                if (previous is JointOperationSnapshot.InFlight && next == JointOperationSnapshot.NotSynced) {
+                    previous.copy(isHeld = true)
+                } else {
+                    next
+                }
+            }
             .distinctUntilChanged()
     }
 
@@ -170,40 +187,64 @@ internal class JointOperationDelegate @Inject constructor(
     }
 
     private suspend fun resolve(
-        userWalletId: UserWalletId,
         account: Account.Joint?,
         currency: CryptoCurrency,
         operationId: String,
         accounts: List<JointAccount>,
-    ): JointOperationState? {
-        if (account == null) return null
+        finished: FinishedJointOperation?,
+    ): JointOperationSnapshot {
+        if (account == null) return JointOperationSnapshot.Unreadable
+        val jointAccount = accounts.firstOrNull { jointAccount ->
+            jointAccount.cryptoAccountId.equals(account.accountId.value, ignoreCase = true)
+        } ?: return JointOperationSnapshot.NotSynced
 
-        buildState(account = account, currency = currency, operationId = operationId, accounts = accounts)?.let {
-            return it
+        val chainId = networkReader.getChainId(network = currency.network).getOrNull()
+            ?: return JointOperationSnapshot.Unreadable
+
+        if (finished != null) {
+            val isOwnOperation = finished.chainId == chainId &&
+                finished.safeAddress.equals(jointAccount.safeAddress, ignoreCase = true)
+            if (!isOwnOperation) return JointOperationSnapshot.Unreadable
+
+            return finished(account = account, jointAccount = jointAccount, currency = currency, operation = finished)
+                ?: JointOperationSnapshot.Unreadable
         }
-        if (hasRetriedMissingOperationFetch) return null
-        hasRetriedMissingOperationFetch = true
 
-        jointAccountListFetcher(userWalletId = userWalletId).getOrElse { return null }
-        val freshAccounts = jointAccountListSupplier(userWalletId = userWalletId).firstOrNull() ?: return null
+        val inFlight = jointAccount.inFlightOperations[chainId]
+            ?.takeIf { it.operationId == operationId }
+            ?: return JointOperationSnapshot.NotSynced
 
-        return buildState(account = account, currency = currency, operationId = operationId, accounts = freshAccounts)
+        return buildState(account = account, jointAccount = jointAccount, currency = currency, operation = inFlight)
+            ?.let(JointOperationSnapshot::InFlight)
+            ?: JointOperationSnapshot.Unreadable
+    }
+
+    private fun finished(
+        account: Account.Joint,
+        jointAccount: JointAccount,
+        currency: CryptoCurrency,
+        operation: FinishedJointOperation,
+    ): JointOperationSnapshot.Finished? {
+        val transfer = transferResolver.resolve(
+            safeTx = operation.safeTx,
+            currencies = account.cryptoCurrencies,
+            network = currency.network,
+            safeAddress = operation.safeAddress,
+        ) ?: return null
+
+        return JointOperationSnapshot.Finished(
+            tx = JointOperationTx(operation = operation, transfer = transfer, txInfo = null),
+            signatures = finishedSigners.signatures(jointAccount = jointAccount, operation = operation),
+        )
     }
 
     private suspend fun buildState(
         account: Account.Joint,
+        jointAccount: JointAccount,
         currency: CryptoCurrency,
-        operationId: String,
-        accounts: List<JointAccount>,
+        operation: JointOperation,
     ): JointOperationState? {
-        val jointAccount = accounts
-            .firstOrNull { it.cryptoAccountId.equals(account.accountId.value, ignoreCase = true) }
-            ?: return null
-
-        val operation = jointAccount.inFlightOperations.values
-            .firstOrNull { it.operationId == operationId }
-            ?.takeIf { it.status != JointOperation.Status.UNKNOWN }
-            ?: return null
+        if (operation.status == JointOperation.Status.UNKNOWN) return null
 
         val safeAddress = jointAccount.safeAddress ?: return null
         val transfer = transferResolver.resolve(

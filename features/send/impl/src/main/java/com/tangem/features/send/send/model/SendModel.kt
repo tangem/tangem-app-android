@@ -549,6 +549,7 @@ internal class SendModel @Inject constructor(
         return resolved ?: cryptoCurrencyStatus
     }
 
+    /** Only the first resolved route opens: later balance updates must not pull the user back over the result. */
     private fun subscribeOnStatusForInitialNavigation() {
         combine(
             cryptoCurrencyStatusFlow,
@@ -556,20 +557,30 @@ internal class SendModel @Inject constructor(
         ) { cryptoCurrencyStatus, _ ->
             if (!isAvailableForSend) {
                 if (isUnavailableForSend) showAlertError()
-                return@combine
+                return@combine null
             }
-            val route = resolveInitialRoute(cryptoCurrencyStatus) ?: return@combine
-            router.replaceAll(route)
-        }.launchIn(modelScope)
+            resolveInitialRoute(cryptoCurrencyStatus)
+        }
+            .filterNotNull()
+            .take(1)
+            .onEach { route -> router.replaceAll(route) }
+            .launchIn(modelScope)
     }
 
     private fun resolveInitialRoute(cryptoCurrencyStatus: CryptoCurrencyStatus): CommonSendRoute? {
         return when (predefinedValues) {
-            is PredefinedValues.Content.Deeplink -> CommonSendRoute.Confirm
+            is PredefinedValues.Content.Deeplink -> {
+                val deeplink = predefinedValues as PredefinedValues.Content.Deeplink
+                if (deeplink.amount.toSendableAmountOrNull() == null) {
+                    CommonSendRoute.Amount(isEditMode = false)
+                } else {
+                    CommonSendRoute.Confirm
+                }
+            }
             is PredefinedValues.Content.QrCode -> {
                 if (!predefinedValues.isFromMainScreenQr) return null
                 val amount = (predefinedValues as PredefinedValues.Content.QrCode).amount ?: return null
-                if (isPredefinedAmountExceedsBalance(amount, cryptoCurrencyStatus)) {
+                if (isPredefinedAmountUnsendable(amount, cryptoCurrencyStatus)) {
                     CommonSendRoute.Amount(isEditMode = false)
                 } else {
                     CommonSendRoute.Confirm
@@ -579,11 +590,13 @@ internal class SendModel @Inject constructor(
         }
     }
 
-    private fun isPredefinedAmountExceedsBalance(amount: String, cryptoCurrencyStatus: CryptoCurrencyStatus): Boolean {
-        val predefinedAmount = amount.parseBigDecimalOrNull() ?: return false
+    private fun isPredefinedAmountUnsendable(amount: String, cryptoCurrencyStatus: CryptoCurrencyStatus): Boolean {
+        val predefinedAmount = amount.toSendableAmountOrNull() ?: return true
         val balance = cryptoCurrencyStatus.value.amount ?: return false
         return predefinedAmount > balance
     }
+
+    private fun String.toSendableAmountOrNull(): BigDecimal? = parseBigDecimalOrNull()?.takeIf { it.signum() > 0 }
 
     private fun CryptoCurrencyStatus.hasAvailableStatus(): Boolean = this.value is CryptoCurrencyStatus.Loaded ||
         this.value is CryptoCurrencyStatus.Custom ||
@@ -622,7 +635,9 @@ internal class SendModel @Inject constructor(
         val parsedQrCode = parseQrCodeUseCase(address, cryptoCurrency).getOrNull()
         // Decompose component can be active or inactive depending on its state and navigation stack
         // If it is in inactive state use parameter to pass value to amount component
-        val amount = parsedQrCode?.amount?.parseBigDecimal(cryptoCurrency.decimals)
+        val amount = parsedQrCode?.amount
+            ?.takeIf { it.signum() > 0 }
+            ?.parseBigDecimal(cryptoCurrency.decimals)
         predefinedValues = PredefinedValues.Content.QrCode(
             amount = amount.orEmpty(),
             address = parsedQrCode?.address.orEmpty(),

@@ -50,6 +50,15 @@ interface HistorySyncStateDao {
 
     @Query(
         """
+        DELETE FROM history_sync_state
+        WHERE type = :type
+          AND user_wallet_id IN (:userWalletIds)
+        """,
+    )
+    suspend fun delete(type: String, userWalletIds: List<String>)
+
+    @Query(
+        """
         SELECT *
         FROM history_sync_state
         WHERE type = :type

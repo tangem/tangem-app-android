@@ -12,6 +12,7 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
     implementation(projects.domain.marketing.models)
+    implementation(projects.domain.models)
 
     implementation(deps.kotlin.coroutines)
 

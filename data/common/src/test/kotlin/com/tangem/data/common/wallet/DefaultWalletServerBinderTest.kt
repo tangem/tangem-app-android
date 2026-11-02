@@ -5,6 +5,7 @@ import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.WalletIdBody
+import com.tangem.datasource.api.tangemTech.models.WalletResponse
 import com.tangem.datasource.api.tangemTech.models.WalletType
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -15,6 +16,8 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
@@ -228,6 +231,80 @@ internal class DefaultWalletServerBinderTest {
                 appsFlyerRepository.getConversionData()
                 tangemTechApi.createWallet(requestBody)
             }
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class AwaitBound {
+
+        // A fresh binder per test: it remembers the wallets the server confirmed
+        private fun createBinder() = DefaultWalletServerBinder(
+            userWalletsListRepository = userWalletsListRepository,
+            appsFlyerRepository = appsFlyerRepository,
+            tangemTechApi = tangemTechApi,
+            dispatchers = dispatchers,
+        )
+
+        @Test
+        fun `GIVEN server has the wallet WHEN awaitBound THEN returns without waiting for bind`() = runTest {
+            // Arrange
+            val binder = createBinder()
+            coEvery { tangemTechApi.getWalletById(userWalletId.stringValue) } returns
+                ApiResponse.Success(mockk<WalletResponse>())
+
+            // Act
+            binder.awaitBound(userWalletId)
+
+            // Assert
+            coVerify(exactly = 0) { tangemTechApi.createWallet(any()) }
+        }
+
+        @Test
+        fun `GIVEN server lacks the wallet WHEN bind succeeds THEN awaitBound returns`() = runTest {
+            // Arrange
+            val binder = createBinder()
+            stubServerLacksWallet()
+            coEvery { tangemTechApi.createWallet(any()) } returns ApiResponse.Success(Unit)
+            val awaiting = launch { binder.awaitBound(userWalletId) }
+            runCurrent()
+
+            // Act
+            binder.bind(userWallet = userWallet)
+            runCurrent()
+
+            // Assert
+            Truth.assertThat(awaiting.isCompleted).isTrue()
+        }
+
+        @Test
+        fun `GIVEN server lacks the wallet WHEN bind fails THEN awaitBound keeps waiting`() = runTest {
+            // Arrange
+            val binder = createBinder()
+            stubServerLacksWallet()
+            coEvery { tangemTechApi.createWallet(any()) } returns
+                ApiResponse.Error(ApiResponseError.TimeoutException()) as ApiResponse<Unit>
+            val awaiting = launch { binder.awaitBound(userWalletId) }
+            runCurrent()
+
+            // Act
+            binder.bind(userWallet = userWallet)
+            runCurrent()
+
+            // Assert
+            Truth.assertThat(awaiting.isActive).isTrue()
+            awaiting.cancel()
+        }
+
+        private fun stubServerLacksWallet() {
+            coEvery { appsFlyerRepository.getConversionData() } returns null
+            coEvery { tangemTechApi.getWalletById(userWalletId.stringValue) } returns ApiResponse.Error(
+                ApiResponseError.HttpException(
+                    code = ApiResponseError.HttpException.Code.NOT_FOUND,
+                    message = null,
+                    errorBody = null,
+                ),
+            ) as ApiResponse<WalletResponse>
         }
     }
 }

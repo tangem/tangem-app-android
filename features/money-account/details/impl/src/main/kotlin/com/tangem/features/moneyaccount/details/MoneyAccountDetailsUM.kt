@@ -1,7 +1,9 @@
 package com.tangem.features.moneyaccount.details
 
 import androidx.compose.runtime.Immutable
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import kotlinx.collections.immutable.ImmutableList
@@ -12,11 +14,13 @@ internal data class MoneyAccountDetailsUM(
     val subtitle: TextReference,
     val balance: MoneyAccountBalanceBlockState,
     val isBalanceHidden: Boolean,
+    val messageBanner: TangemMessageBanner.State?,
     val menuItems: ImmutableList<MoneyAccountMenuItemUM>,
     val onBackClick: () -> Unit,
     val onAddFundsClick: () -> Unit,
     val onSendClick: () -> Unit,
     val txHistoryCurrency: CryptoCurrency.Token?,
+    val pullToRefreshConfig: PullToRefreshConfig,
 )
 
 @Immutable

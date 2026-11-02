@@ -3,10 +3,10 @@ package com.tangem.datasource.local.token.converter
 import com.tangem.grow.datasource.stakekit.models.response.model.BalanceDTO
 import com.tangem.grow.datasource.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.staking.BalanceItem
-import com.tangem.domain.models.staking.StakingBalance
-import com.tangem.domain.models.staking.StakingID
-import com.tangem.domain.models.staking.YieldBalanceItem
+import com.tangem.domain.staking.model.BalanceItem
+import com.tangem.domain.staking.model.StakingBalance
+import com.tangem.domain.staking.model.StakingID
+import com.tangem.domain.staking.model.YieldBalanceItem
 import com.tangem.utils.converter.Converter
 import kotlinx.datetime.Instant
 

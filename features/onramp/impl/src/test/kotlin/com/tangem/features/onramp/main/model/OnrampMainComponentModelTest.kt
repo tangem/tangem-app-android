@@ -7,15 +7,29 @@ import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.model.MutableParamsContainer
+import com.tangem.domain.marketing.ObserveDemandSurveyCompletedUseCase
+import com.tangem.domain.marketing.models.MarketingScreen
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.onramp.GetOnrampCountryUseCase
 import com.tangem.domain.onramp.GetOnrampQuotesUseCase
+import com.tangem.domain.onramp.OnrampFetchPairsUseCase
 import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
+import com.tangem.domain.onramp.model.OnrampCountry
+import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.features.marketing.api.CtaBannerRequest
+import com.tangem.features.marketing.api.LinkedBannerRequest
+import com.tangem.features.marketing.api.MarketingBannerAmount
+import com.tangem.features.marketing.api.MarketingBannerRequest
+import com.tangem.features.marketing.api.concierge.ConciergeDemandSurveyComponent
+import com.tangem.features.onramp.deeplink.DefaultConciergeWaitlistTrigger
 import com.tangem.features.onramp.main.OnrampMainComponent
+import com.tangem.features.onramp.main.entity.OnrampMainBottomSheetConfig
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.Runs
 import io.mockk.clearMocks
@@ -24,14 +38,22 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import java.math.BigDecimal
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestCoroutineScheduler
+import kotlinx.coroutines.test.TestScope
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import java.math.BigDecimal
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
 /**
  * Covers the branch selection in `OnrampMainComponentModel.handleQuoteResult` — the routing that decides
@@ -64,6 +86,9 @@ internal class OnrampMainComponentModelTest {
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
     private val getOnrampQuotesUseCase: GetOnrampQuotesUseCase = mockk()
     private val getWalletsUseCase: GetWalletsUseCase = mockk()
+    private val getOnrampCountryUseCase: GetOnrampCountryUseCase = mockk()
+    private val fetchPairsUseCase: OnrampFetchPairsUseCase = mockk()
+    private val observeDemandSurveyCompletedUseCase: ObserveDemandSurveyCompletedUseCase = mockk()
 
     private val cryptoCurrency = MockCryptoCurrencyFactory().ethereum
     private val userWallet: UserWallet = mockk(relaxed = true) {
@@ -71,11 +96,22 @@ internal class OnrampMainComponentModelTest {
     }
 
     private val sentEvents = mutableListOf<AnalyticsEvent>()
+    private val conciergeWaitlistTrigger = DefaultConciergeWaitlistTrigger()
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(analyticsEventHandler, getOnrampQuotesUseCase, getWalletsUseCase)
+        clearMocks(
+            analyticsEventHandler,
+            getOnrampQuotesUseCase,
+            getWalletsUseCase,
+            getOnrampCountryUseCase,
+            fetchPairsUseCase,
+            observeDemandSurveyCompletedUseCase,
+        )
+        every { observeDemandSurveyCompletedUseCase(any()) } returns flowOf(false)
         every { getWalletsUseCase.invokeSync() } returns listOf(userWallet)
+        every { getOnrampCountryUseCase.invoke() } returns emptyFlow()
+        coEvery { fetchPairsUseCase.invoke(any(), any()) } returns Unit.right()
         sentEvents.clear()
         every { analyticsEventHandler.send(capture(sentEvents)) } just Runs
     }
@@ -265,6 +301,342 @@ internal class OnrampMainComponentModelTest {
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN started screen WHEN waitlist deeplink triggered THEN survey opened for the Buy wallet`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val model = createModel(scheduler = scheduler, quotes = emptyList())
+        model.attachBottomSheetSlot(initial = null)
+        val activatedSurveys = model.collectActivatedSurveys()
+        model.onStart()
+        scheduler.runCurrent()
+
+        // Act
+        triggerWaitlist(scheduler)
+
+        // Assert
+        assertThat(activatedSurveys).containsExactly(ConciergeDemandSurveyComponent.Params(USER_WALLET_ID))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN started screen WHEN waitlist deeplink triggered THEN screen state kept`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val model = createModel(scheduler = scheduler, quotes = emptyList())
+        model.onStart()
+        scheduler.runCurrent()
+        val stateBefore = model.state.value
+
+        // Act
+        triggerWaitlist(scheduler)
+
+        // Assert
+        assertThat(model.state.value).isSameInstanceAs(stateBefore)
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN stopped screen WHEN waitlist deeplink triggered THEN survey not opened`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val model = createModel(scheduler = scheduler, quotes = emptyList())
+        model.attachBottomSheetSlot(initial = null)
+        val activatedSurveys = model.collectActivatedSurveys()
+        model.onStart()
+        scheduler.runCurrent()
+        model.onStop()
+        scheduler.runCurrent()
+
+        // Act
+        triggerWaitlist(scheduler)
+
+        // Assert
+        assertThat(activatedSurveys).isEmpty()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN all offers sheet open WHEN waitlist deeplink triggered THEN sheet closed and survey opened`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val model = createModel(scheduler = scheduler, quotes = emptyList())
+        val bottomSheetSlot = model.attachBottomSheetSlot(initial = OnrampMainBottomSheetConfig.AllOffers("USD"))
+        val activatedSurveys = model.collectActivatedSurveys()
+        model.onStart()
+        scheduler.runCurrent()
+
+        // Act
+        triggerWaitlist(scheduler)
+
+        // Assert
+        assertThat(bottomSheetSlot.config).isNull()
+        assertThat(activatedSurveys).containsExactly(ConciergeDemandSurveyComponent.Params(USER_WALLET_ID))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN residency confirmation open WHEN waitlist deeplink triggered THEN survey not opened`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val model = createModel(scheduler = scheduler, quotes = emptyList())
+        val residency = OnrampMainBottomSheetConfig.ConfirmResidency(country = mockk(relaxed = true))
+        val bottomSheetSlot = model.attachBottomSheetSlot(initial = residency)
+        val activatedSurveys = model.collectActivatedSurveys()
+        model.onStart()
+        scheduler.runCurrent()
+
+        // Act
+        triggerWaitlist(scheduler)
+
+        // Assert
+        assertThat(bottomSheetSlot.config).isEqualTo(residency)
+        assertThat(activatedSurveys).isEmpty()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN amount above every provider limit WHEN amount typed THEN marketing requests carry fiat amount`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val quotes = listOf(createAmountErrorQuote(OnrampError.AmountError.TooBigError(BigDecimal("1000"))))
+        val model = createModel(scheduler = scheduler, quotes = quotes, fiatCode = "USD")
+        val requests = collectAll(scheduler, model.marketingRequest)
+        val linkedRequests = collectAll(scheduler, model.linkedMarketingRequest)
+        scheduler.runCurrent()
+
+        // Act
+        model.onAmountValueChanged("50000")
+        scheduler.runCurrent()
+
+        // Assert
+        val expectedScreen = onrampScreen(fiatCode = "USD")
+        val expectedAmount = MarketingBannerAmount.Fiat(value = BigDecimal("50000"), currencyCode = "USD")
+        assertThat(requests.last()).isEqualTo(MarketingBannerRequest(screen = expectedScreen, amount = expectedAmount))
+        assertThat(linkedRequests.last())
+            .isEqualTo(LinkedBannerRequest(screen = expectedScreen, amount = expectedAmount))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN eur selected WHEN amount typed THEN request carries eur amount`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val model = createModel(scheduler = scheduler, quotes = emptyList(), fiatCode = "EUR")
+        val requests = collectAll(scheduler, model.marketingRequest)
+        scheduler.runCurrent()
+
+        // Act
+        model.onAmountValueChanged("100")
+        scheduler.runCurrent()
+
+        // Assert
+        val expectedAmount = MarketingBannerAmount.Fiat(value = BigDecimal("100"), currencyCode = "EUR")
+        assertThat(requests.last())
+            .isEqualTo(MarketingBannerRequest(screen = onrampScreen("EUR"), amount = expectedAmount))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN typed zero WHEN amount typed THEN request carries zero amount`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val model = createModel(scheduler = scheduler, quotes = emptyList(), fiatCode = "USD")
+        val requests = collectAll(scheduler, model.marketingRequest)
+        scheduler.runCurrent()
+
+        // Act
+        model.onAmountValueChanged("0")
+        scheduler.runCurrent()
+
+        // Assert
+        val expectedAmount = MarketingBannerAmount.Fiat(value = BigDecimal("0"), currencyCode = "USD")
+        assertThat(requests.last())
+            .isEqualTo(MarketingBannerRequest(screen = onrampScreen("USD"), amount = expectedAmount))
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN typed amount WHEN field cleared THEN request has no amount`() {
+        // Arrange
+        val scheduler = TestCoroutineScheduler()
+        val model = createModel(scheduler = scheduler, quotes = emptyList(), fiatCode = "USD")
+        val requests = collectAll(scheduler, model.marketingRequest)
+        scheduler.runCurrent()
+        model.onAmountValueChanged("100")
+        scheduler.runCurrent()
+        val requestBeforeClearing = requests.last()
+
+        // Act
+        model.onAmountValueChanged("")
+        scheduler.runCurrent()
+
+        // Assert
+        val typedAmount = MarketingBannerAmount.Fiat(value = BigDecimal("100"), currencyCode = "USD")
+        assertThat(requestBeforeClearing)
+            .isEqualTo(MarketingBannerRequest(screen = onrampScreen("USD"), amount = typedAmount))
+        assertThat(requests.last()).isEqualTo(MarketingBannerRequest(screen = onrampScreen("USD"), amount = null))
+        model.onDestroy()
+    }
+
+    private class FakeBottomSheetSlot(var config: OnrampMainBottomSheetConfig?)
+
+    private fun OnrampMainComponentModel.attachBottomSheetSlot(
+        initial: OnrampMainBottomSheetConfig?,
+    ): FakeBottomSheetSlot {
+        val slot = FakeBottomSheetSlot(initial)
+        bottomSheetNavigation.subscribe { event ->
+            val oldConfig = slot.config
+            slot.config = event.transformer(oldConfig)
+            event.onComplete(slot.config, oldConfig)
+        }
+        return slot
+    }
+
+    private fun OnrampMainComponentModel.collectActivatedSurveys(): List<ConciergeDemandSurveyComponent.Params> {
+        val activated = mutableListOf<ConciergeDemandSurveyComponent.Params>()
+        demandSurveyNavigation.subscribe { event -> event.transformer(null)?.let(activated::add) }
+        return activated
+    }
+
+    private fun triggerWaitlist(scheduler: TestCoroutineScheduler) {
+        TestScope(scheduler).launch { conciergeWaitlistTrigger.triggerOpenWaitlist() }
+        scheduler.runCurrent()
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CtaMarketingRequest {
+
+        @Test
+        fun `GIVEN survey status pending WHEN it arrives THEN request hides the strip until then`() {
+            // Arrange
+            val surveyStatus = MutableSharedFlow<Boolean>()
+            every { observeDemandSurveyCompletedUseCase(USER_WALLET_ID) } returns surveyStatus
+            val scheduler = TestCoroutineScheduler()
+            val model = createModel(scheduler = scheduler, quotes = emptyList(), fiatCode = "USD")
+            val requests = collectAll(scheduler, model.ctaMarketingRequest)
+            scheduler.runCurrent()
+            model.onAmountValueChanged("100")
+            scheduler.runCurrent()
+            val emittedWhilePending = requests.toList()
+
+            // Act
+            TestScope(scheduler).launch { surveyStatus.emit(false) }
+            scheduler.runCurrent()
+
+            // Assert
+            assertThat(emittedWhilePending).containsExactly(
+                ctaRequest(fiatCode = "USD", amount = null, isDemandSurveyCompleted = true),
+                ctaRequest(fiatCode = "USD", amount = "100", isDemandSurveyCompleted = true),
+            ).inOrder()
+            assertThat(requests.drop(emittedWhilePending.size)).containsExactly(
+                ctaRequest(fiatCode = "USD", amount = "100", isDemandSurveyCompleted = false),
+            )
+            model.onDestroy()
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN survey status WHEN eur amount typed THEN request carries the status and the eur amount`(
+            model: SurveyStatusModel,
+        ) {
+            // Arrange
+            every { observeDemandSurveyCompletedUseCase(USER_WALLET_ID) } returns flowOf(model.isCompleted)
+            val scheduler = TestCoroutineScheduler()
+            val onrampModel = createModel(scheduler = scheduler, quotes = emptyList(), fiatCode = "EUR")
+            val requests = collectAll(scheduler, onrampModel.ctaMarketingRequest)
+            scheduler.runCurrent()
+
+            // Act
+            onrampModel.onAmountValueChanged("250")
+            scheduler.runCurrent()
+
+            // Assert
+            assertThat(requests.last()).isEqualTo(
+                ctaRequest(fiatCode = "EUR", amount = "250", isDemandSurveyCompleted = model.isCompleted),
+            )
+            onrampModel.onDestroy()
+        }
+
+        /** A failed status request reaches the model as `false`, see `DefaultDemandSurveyRepository` */
+        private fun provideTestModels() = listOf(
+            SurveyStatusModel(isCompleted = true),
+            SurveyStatusModel(isCompleted = false),
+        )
+
+        @Test
+        fun `GIVEN content WHEN screen refreshed THEN request is null until content returns, status requested once`() {
+            // Arrange
+            var statusRequests = 0
+            every { observeDemandSurveyCompletedUseCase(USER_WALLET_ID) } returns flow {
+                statusRequests++
+                emit(false)
+            }
+            val country = MutableSharedFlow<Either<OnrampError, OnrampCountry?>>(replay = 1)
+            country.tryEmit(onrampCountry("USD").right())
+            every { getOnrampCountryUseCase.invoke() } returns country
+            val scheduler = TestCoroutineScheduler()
+            val model = createModel(scheduler = scheduler, quotesFlow = flowOf(emptyList<OnrampQuote>().right()))
+            // The banner drops repeated requests, and Content comes back through more than one state update
+            val requests = collectAll(scheduler, model.ctaMarketingRequest.distinctUntilChanged())
+            scheduler.runCurrent()
+            model.onAmountValueChanged("100")
+            scheduler.runCurrent()
+            val emittedBefore = requests.size
+
+            // Act
+            model.onRefresh()
+            scheduler.runCurrent()
+            TestScope(scheduler).launch { country.emit(onrampCountry("USD").right()) }
+            scheduler.runCurrent()
+
+            // Assert
+            assertThat(requests.drop(emittedBefore - 1)).containsExactly(
+                ctaRequest(fiatCode = "USD", amount = "100", isDemandSurveyCompleted = false),
+                null,
+                ctaRequest(fiatCode = "USD", amount = null, isDemandSurveyCompleted = false),
+            ).inOrder()
+            assertThat(statusRequests).isEqualTo(1)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN two collectors WHEN request collected THEN survey status requested once for the Buy wallet`() {
+            // Arrange
+            var statusRequests = 0
+            every { observeDemandSurveyCompletedUseCase(USER_WALLET_ID) } returns flow {
+                statusRequests++
+                emit(false)
+            }
+            val scheduler = TestCoroutineScheduler()
+            val model = createModel(scheduler = scheduler, quotes = emptyList(), fiatCode = "USD")
+
+            // Act
+            collectAll(scheduler, model.ctaMarketingRequest)
+            collectAll(scheduler, model.ctaMarketingRequest)
+            scheduler.runCurrent()
+
+            // Assert
+            assertThat(statusRequests).isEqualTo(1)
+            model.onDestroy()
+        }
+    }
+
+    internal data class SurveyStatusModel(val isCompleted: Boolean)
+
+    private fun ctaRequest(fiatCode: String, amount: String?, isDemandSurveyCompleted: Boolean) = CtaBannerRequest(
+        screen = onrampScreen(fiatCode),
+        amount = amount?.let { MarketingBannerAmount.Fiat(value = BigDecimal(it), currencyCode = fiatCode) },
+        isDemandSurveyCompleted = isDemandSurveyCompleted,
+    )
+
+    private fun <T> collectAll(scheduler: TestCoroutineScheduler, flow: Flow<T>): List<T> {
+        val values = mutableListOf<T>()
+        TestScope(scheduler).launch { flow.collect(values::add) }
+        return values
+    }
+
     /** `replay = 1` so an emission made before the model's collector starts is still delivered. */
     private fun quotesFlow() = MutableSharedFlow<Either<OnrampError, List<OnrampQuote>>>(
         replay = 1,
@@ -287,9 +659,34 @@ internal class OnrampMainComponentModelTest {
         every { error } returns OnrampError.DataError(code = "500", description = "boom")
     }
 
-    private fun createAmountErrorQuote() = mockk<OnrampQuote.AmountError>(relaxed = true) {
-        every { error } returns OnrampError.AmountError.TooSmallError(requiredAmount = BigDecimal.TEN)
+    private fun createAmountErrorQuote(
+        amountError: OnrampError.AmountError = OnrampError.AmountError.TooSmallError(requiredAmount = BigDecimal.TEN),
+    ) = mockk<OnrampQuote.AmountError>(relaxed = true) {
+        every { error } returns amountError
     }
+
+    private fun onrampScreen(fiatCode: String) = MarketingScreen.Onramp(
+        fromFiat = fiatCode,
+        toNetwork = cryptoCurrency.network.rawId,
+        toContractAddress = "",
+    )
+
+    private fun onrampCountry(fiatCode: String) = OnrampCountry(
+        id = "1",
+        name = "Country",
+        code = "CC",
+        image = "",
+        alpha3 = "CCC",
+        continent = "Europe",
+        defaultCurrency = OnrampCurrency(
+            name = fiatCode,
+            code = fiatCode,
+            image = null,
+            precision = 2,
+            unit = fiatCode,
+        ),
+        isOnrampAvailable = true,
+    )
 
     private fun geoRestrictionEvents() = sentEvents.filterIsInstance<OnrampAnalyticsEvent.NoticeGeoRestriction>()
 
@@ -300,6 +697,15 @@ internal class OnrampMainComponentModelTest {
 
     private fun createModel(scheduler: TestCoroutineScheduler, quotes: List<OnrampQuote>) =
         createModel(scheduler = scheduler, quotesFlow = flowOf(quotes.right()))
+
+    private fun createModel(
+        scheduler: TestCoroutineScheduler,
+        quotes: List<OnrampQuote>,
+        fiatCode: String,
+    ): OnrampMainComponentModel {
+        every { getOnrampCountryUseCase.invoke() } returns flowOf(onrampCountry(fiatCode).right())
+        return createModel(scheduler = scheduler, quotesFlow = flowOf(quotes.right()))
+    }
 
     private fun createModel(
         scheduler: TestCoroutineScheduler,
@@ -320,17 +726,18 @@ internal class OnrampMainComponentModelTest {
             checkOnrampAvailabilityUseCase = mockk(relaxed = true) {
                 coEvery { this@mockk.invoke(any()) } returns mockk(relaxed = true)
             },
-            getOnrampCountryUseCase = mockk(relaxed = true),
+            getOnrampCountryUseCase = getOnrampCountryUseCase,
             clearOnrampCacheUseCase = mockk(relaxed = true),
             fetchQuotesUseCase = mockk(relaxed = true),
             getOnrampQuotesUseCase = getOnrampQuotesUseCase,
-            fetchPairsUseCase = mockk(relaxed = true),
+            fetchPairsUseCase = fetchPairsUseCase,
             rampStateManager = mockk(relaxed = true),
             amountInputManager = mockk(relaxed = true),
             getOnrampOffersUseCase = mockk(relaxed = true),
             isDemoCardUseCase = mockk(relaxed = true),
             messageSender = mockk(relaxed = true),
-            getCurrencyUSDQuoteUseCase = mockk(relaxed = true),
+            conciergeWaitlistListener = conciergeWaitlistTrigger,
+            observeDemandSurveyCompletedUseCase = observeDemandSurveyCompletedUseCase,
             paramsContainer = MutableParamsContainer(value = params),
             getWalletsUseCase = getWalletsUseCase,
         )

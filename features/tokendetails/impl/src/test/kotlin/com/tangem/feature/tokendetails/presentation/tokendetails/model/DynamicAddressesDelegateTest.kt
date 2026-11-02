@@ -37,9 +37,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
 import io.mockk.slot
-import io.mockk.unmockkObject
 import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -71,6 +69,7 @@ internal class DynamicAddressesDelegateTest {
     private val getExtendedPublicKeyUseCase: GetExtendedPublicKeyForCurrencyUseCase = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
+    private val tangemBlogUrlBuilder: TangemBlogUrlBuilder = mockk()
 
     private val network: Network = mockk(relaxed = true) {
         every { name } returns BLOCKCHAIN_NAME
@@ -301,23 +300,17 @@ internal class DynamicAddressesDelegateTest {
         every { dynamicAddressesRepository.getStatus(userWalletId, network) } returns
             flowOf(DynamicAddressesStatus.ENABLED)
         coEvery { isConsolidationRequiredUseCase(userWalletId, network) } returns false.right()
-        mockkObject(TangemBlogUrlBuilder)
+        coEvery { tangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.WhatIsTransactionFee) } returns TEST_BLOG_URL
 
-        try {
-            coEvery { TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.WhatIsTransactionFee) } returns TEST_BLOG_URL
+        val delegate = createDelegate(cryptoCurrencyStatus = cryptoCurrencyStatus)
+        delegate.openBottomSheet()
 
-            val delegate = createDelegate(cryptoCurrencyStatus = cryptoCurrencyStatus)
-            delegate.openBottomSheet()
+        // WHEN
+        (delegate.bottomSheetConfig.value as DynamicAddressesBottomSheetConfig.DisableWithoutConsolidation)
+            .onReadMoreClick()
 
-            // WHEN
-            (delegate.bottomSheetConfig.value as DynamicAddressesBottomSheetConfig.DisableWithoutConsolidation)
-                .onReadMoreClick()
-
-            // THEN
-            verify { urlOpener.openUrl(TEST_BLOG_URL) }
-        } finally {
-            unmockkObject(TangemBlogUrlBuilder)
-        }
+        // THEN
+        verify { urlOpener.openUrl(TEST_BLOG_URL) }
     }
 
     @Test
@@ -466,6 +459,7 @@ internal class DynamicAddressesDelegateTest {
     private fun createDelegate(cryptoCurrencyStatus: CryptoCurrencyStatus?): DynamicAddressesDelegate {
         val scope = CoroutineScope(Dispatchers.Unconfined + SupervisorJob())
         return DynamicAddressesDelegate(
+            tangemBlogUrlBuilder = tangemBlogUrlBuilder,
             enableDynamicAddressesUseCase = enableDynamicAddressesUseCase,
             isConsolidationRequiredUseCase = isConsolidationRequiredUseCase,
             createConsolidationTransactionUseCase = createConsolidationTransactionUseCase,
