@@ -769,6 +769,21 @@ internal data class TangemBadgeV2Story(
     }
 }
 
+internal data class TangemToggleBadgeStory(
+    val isSelected: Boolean,
+    val isEnabled: Boolean,
+    val size: TangemBadge.Size,
+    val hasIconStart: Boolean,
+    val hasIconEnd: Boolean,
+    val textScale: Float,
+    val onSelectedChange: (Boolean) -> Unit,
+    val onEnabledToggle: () -> Unit,
+    val onSizeChange: (TangemBadge.Size) -> Unit,
+    val onIconStartToggle: () -> Unit,
+    val onIconEndToggle: () -> Unit,
+    val onTextScaleChange: (Float) -> Unit,
+) : DsStoryBookPage
+
 internal data class TangemSegmentedControlStory(
     val segmentCount: Int,
     val selectedId: String,
