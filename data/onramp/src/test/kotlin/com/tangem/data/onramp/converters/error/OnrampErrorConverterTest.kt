@@ -1,24 +1,17 @@
 package com.tangem.data.onramp.converters.error
 
 import com.google.common.truth.Truth.assertThat
-import com.squareup.moshi.FromJson
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.ToJson
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.grow.datasource.express.models.response.ExpressErrorResponse
+import com.tangem.test.core.datastore.legacyDataStoreMoshi
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 internal class OnrampErrorConverterTest {
 
     private val converter = OnrampErrorConverter(
-        Moshi.Builder().add(BigDecimalAdapter()).build().adapter(ExpressErrorResponse::class.java),
+        legacyDataStoreMoshi.adapter(ExpressErrorResponse::class.java),
     )
-
-    private class BigDecimalAdapter {
-        @FromJson fun fromJson(value: String) = BigDecimal(value)
-        @ToJson fun toJson(value: BigDecimal) = value.toString()
-    }
 
     @Test
     fun `GIVEN too small response WHEN convert THEN required amount is scaled`() {

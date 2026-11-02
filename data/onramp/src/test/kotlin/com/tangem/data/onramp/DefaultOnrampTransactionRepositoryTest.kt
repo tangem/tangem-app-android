@@ -2,9 +2,6 @@ package com.tangem.data.onramp
 
 import androidx.datastore.preferences.core.emptyPreferences
 import com.google.common.truth.Truth.assertThat
-import com.squareup.moshi.FromJson
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.ToJson
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.OnrampStatus
@@ -12,6 +9,7 @@ import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.grow.datasource.preferences.GrowPreferencesKeys
 import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.test.core.datastore.createAppPreferencesStore
+import com.tangem.test.core.datastore.legacyDataStoreMoshi
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -23,7 +21,7 @@ internal class DefaultOnrampTransactionRepositoryTest {
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val keys = GrowPreferencesKeys()
     private val preferences = createAppPreferencesStore(
-        moshi = Moshi.Builder().add(BigDecimalAdapter()).build(),
+        moshi = legacyDataStoreMoshi,
         dispatchers = dispatchers,
         preferencesDataStore = MockStateDataStore(emptyPreferences()),
     )
@@ -59,7 +57,7 @@ internal class DefaultOnrampTransactionRepositoryTest {
         // Arrange
         val matching = transaction(txId = "tx-1", walletId = WALLET_ID, currencyId = CURRENCY_ID.value)
         repository.storeTransaction(matching)
-        repository.storeTransaction(transaction(txId = "tx-2", walletId = OTHER_WALLET_ID, currencyId = "ethereum"))
+        repository.storeTransaction(transaction(txId = "tx-2", walletId = OTHER_WALLET_ID))
         repository.storeTransaction(transaction(txId = "tx-3", walletId = WALLET_ID, currencyId = "bitcoin"))
 
         // Act
@@ -118,8 +116,33 @@ internal class DefaultOnrampTransactionRepositoryTest {
         assertThat(repository.isHandledTransaction("tx-1")).isTrue()
     }
 
+    @Test
+    fun `GIVEN missing transaction WHEN status updated THEN existing transactions remain unchanged`() = runTest {
+        // Arrange
+        val existing = transaction()
+        repository.storeTransaction(existing)
+        // Act
+        repository.updateTransactionStatus("missing", "external", "url", OnrampStatus.Status.Finished)
+        // Assert
+        assertThat(repository.getAllTransactions().first()).containsExactly(existing)
+        assertThat(repository.isHandledTransaction("missing")).isFalse()
+    }
+
+    @Test
+    fun `GIVEN expired and recent handled records WHEN transactions collected THEN only expired record removed`() = runTest {
+        // Arrange
+        val old = com.tangem.data.onramp.models.OnrampTerminalTransactionDTO("old", 0)
+        val recent = com.tangem.data.onramp.models.OnrampTerminalTransactionDTO("recent", System.currentTimeMillis())
+        preferences.editData { it.setObjectSet(keys.onrampHandledTransactionsKey, setOf(old, recent)) }
+        // Act
+        repository.getAllTransactions().first()
+        // Assert
+        assertThat(repository.isHandledTransaction("old")).isFalse()
+        assertThat(repository.isHandledTransaction("recent")).isTrue()
+    }
+
     private fun transaction(
-        txId: String,
+        txId: String = "tx-1",
         walletId: UserWalletId = WALLET_ID,
         currencyId: String = CURRENCY_ID.value,
         status: OnrampStatus.Status = OnrampStatus.Status.Created,
@@ -143,11 +166,6 @@ internal class DefaultOnrampTransactionRepositoryTest {
         paymentMethod = "card",
         residency = "USA",
     )
-
-    private class BigDecimalAdapter {
-        @FromJson fun fromJson(value: String) = BigDecimal(value)
-        @ToJson fun toJson(value: BigDecimal) = value.toString()
-    }
 
     private companion object {
         val WALLET_ID = UserWalletId("0011")
