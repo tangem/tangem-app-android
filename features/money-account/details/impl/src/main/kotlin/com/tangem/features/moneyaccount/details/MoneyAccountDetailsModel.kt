@@ -263,7 +263,6 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     private fun MoneyAccountStatusValue.Account.toScreenOpenedEvent() = MoneyAccountAnalyticsEvents.AccountScreenOpened(
         accountState = when (this) {
             is MoneyAccountStatusValue.Account.Active -> MoneyAccountAnalyticsEvents.AccountState.ACTIVE
-            is MoneyAccountStatusValue.Account.Deactivated -> MoneyAccountAnalyticsEvents.AccountState.CLOSED
         },
         balanceBand = balance?.cryptoAmount?.let(MoneyAccountAnalyticsEvents.BalanceBand::of),
         currency = balance?.currencyCode,
