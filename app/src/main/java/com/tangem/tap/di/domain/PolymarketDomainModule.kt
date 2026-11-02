@@ -302,23 +302,16 @@ internal object PolymarketDomainModule {
 
     @Provides
     @Singleton
-    @Suppress("LongParameterList")
     fun providePolymarketOrderSigningRouter(
         polymarketRepository: PolymarketRepository,
-        sessionKeyRepository: PolymarketSessionKeyRepository,
         sessionKeyStore: PolymarketSessionKeyStore,
         tradingStore: PolymarketSessionKeyTradingStore,
         sessionCredentialsProvider: PolymarketSessionCredentialsProvider,
-        deviceIdProvider: PolymarketDeviceIdProvider,
-        getApiCredentials: GetPolymarketApiCredentialsUseCase,
     ): PolymarketOrderSigningRouter = PolymarketOrderSigningRouter(
         polymarketRepository = polymarketRepository,
-        sessionKeyRepository = sessionKeyRepository,
         sessionKeyStore = sessionKeyStore,
         tradingStore = tradingStore,
         sessionCredentialsProvider = sessionCredentialsProvider,
-        deviceIdProvider = deviceIdProvider,
-        getApiCredentials = getApiCredentials,
     )
 
     @Provides
@@ -328,13 +321,11 @@ internal object PolymarketDomainModule {
         placeOrder: PlacePredictionOrderUseCase,
         router: PolymarketOrderSigningRouter,
         stateService: PolymarketSessionKeyStateService,
-        appCoroutineScope: AppCoroutineScope,
     ): SubmitPredictionOrderInteractor = SubmitPredictionOrderInteractor(
         signOrder = signOrder,
         placeOrder = placeOrder,
         router = router,
         stateService = stateService,
-        reconciliationScope = appCoroutineScope,
     )
 
     @Provides
