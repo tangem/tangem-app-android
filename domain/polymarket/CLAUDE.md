@@ -62,6 +62,9 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
    `PolymarketOnboardedStore`, so the gate offers Reconnect, not a full onboarding. Reading, clearing and
    re-deriving one wallet's credentials share one non-reentrant `PolymarketCredentialsLock`, so a late `401`
    cannot wipe a set a Reconnect has just stored.
+   A session key's credentials (`PolymarketClobIdentity.Session`) are never stored and take no part in that
+   lock: `PolymarketSessionCredentialsProvider` derives them in memory from a ClobAuth the key signs itself, and a
+   `401` on them is answered with `invalidate`, which leaves the owner's credentials alone.
 9. **A withdrawal is persisted before it is submitted.** The relayer keys submissions on
    `(deposit wallet, nonce)`, so resending the same batch returns the same receipt. The record is cleared
    on a terminal receipt or on a rejection of the submit itself (`RelayerRejected`, `InvalidRequest` — the
@@ -85,8 +88,10 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
 
 ## Signing and orders
 
-- Relayer batches (approvals, withdrawal, claim) carry `deadline = now + 600 s`. Known gap: the tracker's
-  `resend` of a persisted withdrawal skips the expiry check that `confirm` does.
+- Relayer batches (approvals, withdrawal, claim) carry `deadline = now + 600 s`. Session key batches signed
+  together take 600 s for the first one and 1200 s for each follow-up, which waits for the first one to
+  settle. Known gap: the tracker's `resend` of a persisted withdrawal skips the expiry check that `confirm`
+  does.
 - Orders use `signatureType = 3` (deposit wallet) wrapped in ERC-7739. The exchange and its domain version
   come from the quote, but only as `PolymarketExchangeDomain.of(quote.version, isNegRisk)` allows: V1 →
   CTF or neg-risk CTF exchange, domain `"2"`; V2 → ExchangeV3, domain `"3"`; unknown → never signed. Any
@@ -94,6 +99,40 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
   and the draft carries the table's constants, never the quoted strings. The signed order is re-validated
   against the draft, the domain, the deposit wallet, the market and the quote age (60 s) before it is sent,
   and the repository checks the signature tail against the domain once more.
+- An order on `PredictionOrderSigningRoute.Session` keeps `maker = signer = deposit wallet`: the session key signs
+  the same ERC-7739 digest, and the wrapped signature goes into `PolymarketSessionKeyEnvelope`. Validation and the
+  repository unwrap it and refuse an envelope the placing identity's key did not make — or any envelope on the
+  owner route. The order is placed and read back under the route's session identity. Choosing the route is the
+  caller's.
+- `SubmitPredictionOrderInteractor` takes the route from `PolymarketOrderSigningRouter` (guide §3.3, strict: a BFF
+  record is required, unlike iOS) unless the preference is `OWNER_ONLY` — Session Keys toggle off or "Sign with
+  card". The readiness check after authorization and the last reconciliation live in
+  `PolymarketSessionKeyTradingStore`; the readiness is keyed by `validUntil`, so a renewal needs a new check. A
+  CLOB `401` on a session order counts as a refusal, and so does any other `4xx` whose `error` message names the
+  signature, the signer, an authorization or the API key (`ClobSignerRefusalParser`, data layer — the CLOB sends
+  no error code); a bare `403`, a geoblock for one, is a normal failure. A session key that cannot sign the order
+  or an order that cannot be sent (`NotSent`) counts as a refusal too, as on iOS (a signing failure is not
+  reconciled); a cancelled signing does not. On a refusal the
+  key is marked refused and its stored readiness dropped before the same order is signed with the owner key, so it
+  stays out of trading until a new authorization (enable, renew, replace) marks it ready or the app restarts, as on
+  iOS — a reconciliation that finds it listed does not lift it; the wallet is reconciled in the app scope,
+  after the owner result is returned. Market, liquidity and balance errors are final. The owner route maps those
+  responses as before.
+- Every relayer batch takes the next deposit-wallet nonce, so claim, withdrawal confirm/resend and the session key
+  lifecycle (`ManagePolymarketSessionKeyInteractor`) share `PolymarketDepositWalletLock` from signing until the
+  relayer accepted the batch. On top of that, one lifecycle operation (enable, renew, replace, revoke)
+  runs per wallet: a second one ends at once in `OperationInProgress`, nothing signed; toggling is not guarded, as
+  on iOS. Progress is emitted
+  outside the lock. Renewal and replacement release the lock while the revocation settles and take it again to
+  send the pre-signed authorization; a claim in between takes that nonce. Nothing is signed twice without the
+  user: a batch refused for its signature (`NONCE_ALREADY_USED`, `INVALID_DEADLINE`, `INVALID_VALID_UNTIL`,
+  `RELAYER_REJECTED`) or a pre-signed authorization expired before it is sent ends in `StaleSignature`, and the
+  user starts the operation again; only an unanswered or `502` send is repeated, with the same body. The one
+  exception: the authorization sent after a revocation is resent up to 5 times, 3 s apart, on `RELAYER_REJECTED`
+  — the BFF reports the key `REVOKED` while the revocation is still in flight and rejects the next batch with
+  "wallet has in-flight action" (seen on prod 26.10.2026; iOS does not resend).
+  A withdrawal reads its nonce in `prepare`, outside the lock: a lifecycle operation in between costs it a
+  `RelayerRejected`.
 - SELL: `makerAmount = shares`, `takerAmount = collateral`; BUY the reverse.
 - A claim signs only redeem calls the BFF served, and only after `PredictionRedeemCallValidator` accepted
   them against the position: one adapter `redeemPositions` call on the root collection of the condition for

@@ -1,7 +1,7 @@
 package com.tangem.domain.staking.fixtures
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.mock.staking.MockStaking

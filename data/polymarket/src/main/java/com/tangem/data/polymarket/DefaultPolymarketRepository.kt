@@ -36,7 +36,9 @@ import com.tangem.domain.core.error.DataError
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.approval.PolymarketContracts
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyEnvelope
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
+import com.tangem.domain.polymarket.model.PolymarketClobIdentity
 import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PolymarketClobAsset
 import com.tangem.domain.polymarket.model.PolymarketApprovalsBatch
@@ -219,26 +221,27 @@ internal class DefaultPolymarketRepository @Inject constructor(
     }
 
     override suspend fun placeOrder(
-        ownerAddress: String,
-        credentials: PolymarketApiCredentials,
+        identity: PolymarketClobIdentity,
         signedOrder: PredictionSignedOrder,
     ): Either<PredictionPlaceOrderError, PredictionPlaceOrderResult> = withContext(dispatchers.io) {
-        if (!signedOrder.isSignedFor(signedOrder.domain)) {
+        if (!signedOrder.isSignedFor(identity = identity, domain = signedOrder.domain)) {
             return@withContext PredictionPlaceOrderError.NotSent(
-                detail = "Order not signed for ${signedOrder.domain}",
+                detail = "Order not signed for ${signedOrder.domain} by the key of the ${identity::class.simpleName}",
             ).left()
         }
 
         val json = Either
-            .catch { PolymarketPlaceOrderBodyBuilder.build(signedOrder = signedOrder, apiKey = credentials.apiKey) }
+            .catch { PolymarketPlaceOrderBodyBuilder.build(
+                signedOrder = signedOrder,
+                apiKey = identity.credentials.apiKey,
+            ) }
             .mapLeft { PredictionPlaceOrderError.NotSent(detail = it.message) }
             .getOrElse { return@withContext it.left() }
 
         val headers = Either
             .catch {
                 l2HeaderBuilder.build(
-                    ownerAddress = ownerAddress,
-                    credentials = credentials,
+                    identity = identity,
                     requestPath = PLACE_ORDER_SIGNED_PATH,
                     method = HTTP_METHOD_POST,
                     body = json,
@@ -264,20 +267,18 @@ internal class DefaultPolymarketRepository @Inject constructor(
                         }
                     }
             },
-            onError = { placeOrderErrorResolver.resolve(it).left() },
+            onError = { placeOrderErrorResolver.resolve(error = it, identity = identity).left() },
         )
     }
 
     override suspend fun getOrder(
-        ownerAddress: String,
-        credentials: PolymarketApiCredentials,
+        identity: PolymarketClobIdentity,
         orderId: String,
     ): Either<PredictionOrderStateError, PredictionOrderState> = withContext(dispatchers.io) {
         val headers = Either
             .catch {
                 l2HeaderBuilder.build(
-                    ownerAddress = ownerAddress,
-                    credentials = credentials,
+                    identity = identity,
                     requestPath = "$ORDER_READ_SIGNED_PATH/$orderId",
                 )
             }
@@ -534,8 +535,7 @@ internal class DefaultPolymarketRepository @Inject constructor(
     ): Either<PolymarketAuthError, Map<String, String>> = Either
         .catch {
             l2HeaderBuilder.build(
-                ownerAddress = ownerAddress,
-                credentials = credentials,
+                identity = PolymarketClobIdentity.Owner(address = ownerAddress, credentials = credentials),
                 requestPath = requestPath,
             )
         }
@@ -581,11 +581,22 @@ internal class DefaultPolymarketRepository @Inject constructor(
             PredictionOrderQuoteError.Unknown(httpCode = null, detail = cause.message ?: message)
     }
 
-    private fun PredictionSignedOrder.isSignedFor(domain: PolymarketExchangeDomain): Boolean {
+    private fun PredictionSignedOrder.isSignedFor(
+        identity: PolymarketClobIdentity,
+        domain: PolymarketExchangeDomain,
+    ): Boolean {
+        val envelope = PolymarketSessionKeyEnvelope.unwrap(signature)
+        val depositWalletSignature = when (identity) {
+            is PolymarketClobIdentity.Owner -> signature.takeIf { envelope == null }
+            is PolymarketClobIdentity.Session -> envelope
+                ?.takeIf { it.sessionKeyAddress.equals(identity.address, ignoreCase = true) }
+                ?.depositWalletSignature
+        } ?: return false
+
         val expected = PolymarketOrderTypedDataBuilder.domainSeparator(domain)
             .toHexString()
             .lowercase()
-        val tail = signature.removePrefix(PolymarketContracts.HEX_PREFIX)
+        val tail = depositWalletSignature.removePrefix(PolymarketContracts.HEX_PREFIX)
             .lowercase()
             .drop(n = PolymarketContracts.SIGNATURE_RSV_HEX_LENGTH)
 

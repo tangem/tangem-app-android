@@ -20,6 +20,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
+import com.tangem.domain.transaction.TransactionFeatureToggles
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
@@ -101,6 +102,10 @@ internal class GetFeeForGaslessUseCaseTronTest {
         tronGaslessFeeResolver = TronGaslessFeeResolver(
             getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
             isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
+            transactionFeatureToggles = object : TransactionFeatureToggles {
+                override val isTronClientEnergyEnabled = true
+                override val isTronLowerFeeTypeEnabled = true
+            },
         ),
     )
 

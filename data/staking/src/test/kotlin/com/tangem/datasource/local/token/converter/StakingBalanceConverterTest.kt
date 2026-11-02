@@ -2,16 +2,16 @@ package com.tangem.datasource.local.token.converter
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.staking.BalanceItem
-import com.tangem.domain.models.staking.BalanceType
-import com.tangem.domain.models.staking.NetworkType
-import com.tangem.domain.models.staking.PendingAction
-import com.tangem.domain.models.staking.PendingActionConstraints
-import com.tangem.domain.models.staking.StakingBalance
-import com.tangem.domain.models.staking.StakingID
-import com.tangem.domain.models.staking.YieldBalanceItem
-import com.tangem.domain.models.staking.YieldToken
-import com.tangem.domain.models.staking.action.StakingActionType
+import com.tangem.domain.staking.model.BalanceItem
+import com.tangem.domain.staking.model.BalanceType
+import com.tangem.domain.staking.model.NetworkType
+import com.tangem.domain.staking.model.PendingAction
+import com.tangem.domain.staking.model.PendingActionConstraints
+import com.tangem.domain.staking.model.StakingBalance
+import com.tangem.domain.staking.model.StakingID
+import com.tangem.domain.staking.model.YieldBalanceItem
+import com.tangem.domain.staking.model.YieldToken
+import com.tangem.domain.staking.model.action.StakingActionType
 import com.tangem.grow.datasource.stakekit.models.request.Address
 import com.tangem.grow.datasource.stakekit.models.response.model.BalanceDTO
 import com.tangem.grow.datasource.stakekit.models.response.model.BalanceDTO.BalanceTypeDTO

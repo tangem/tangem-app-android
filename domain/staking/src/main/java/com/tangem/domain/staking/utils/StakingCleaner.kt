@@ -1,7 +1,7 @@
 package com.tangem.domain.staking.utils
 
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
 
 /**

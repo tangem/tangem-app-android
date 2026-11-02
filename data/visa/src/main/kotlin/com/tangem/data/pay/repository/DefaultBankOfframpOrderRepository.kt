@@ -105,7 +105,7 @@ internal class DefaultBankOfframpOrderRepository @Inject constructor(
                 idempotencyKey = idempotencyKey,
                 body = body,
             )
-        }.mapLeft { error -> error.toBankOfframpError(operation = "createRoute") }.bind()
+        }.mapLeft { error -> error.toRouteError() }.bind()
 
         val result = ensureNotNull(response.result) { emptyResult(operation = "createRoute") }
         ensureNotNull(BankOfframpRouteConverter.convert(result)) { incompleteResult(operation = "createRoute") }
@@ -113,6 +113,13 @@ internal class DefaultBankOfframpOrderRepository @Inject constructor(
 
     private fun VisaApiError.toBankOfframpError(operation: String) =
         BankOfframpErrorConverter.convert(BankOfframpErrorConverter.Input(error = this, operation = operation))
+
+    private fun VisaApiError.toRouteError(): BankOfframpError =
+        if (this == VisaApiError.NotFound || errorCode == FORBIDDEN_ERROR_CODE) {
+            BankOfframpError.Unavailable(errorCode = errorCode)
+        } else {
+            toBankOfframpError(operation = "createRoute")
+        }
 
     private fun emptyResult(operation: String) = BankOfframpError.Unknown(
         cause = IllegalStateException("Bank off-ramp $operation returned an empty result"),
@@ -122,3 +129,5 @@ internal class DefaultBankOfframpOrderRepository @Inject constructor(
         cause = IllegalStateException("Bank off-ramp $operation returned an incomplete result"),
     )
 }
+
+private const val FORBIDDEN_ERROR_CODE = 104_120_100

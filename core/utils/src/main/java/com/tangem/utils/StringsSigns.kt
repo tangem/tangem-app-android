@@ -21,6 +21,7 @@ object StringsSigns {
     const val ASTERISK = "*"
     const val PASSWORD_VISUAL_CHAR = '\u2022'
     const val APPROXIMATE = "≈"
+    const val ARROW_RIGHT = "→"
     const val WHITE_SPACE = " "
     const val NEW_LINE = "\n"
     const val LIGHTNING = "⚡"

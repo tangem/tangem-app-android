@@ -15,9 +15,9 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.models.staking.BalanceType
-import com.tangem.domain.models.staking.PendingAction
-import com.tangem.domain.models.staking.RewardBlockType
+import com.tangem.domain.staking.model.BalanceType
+import com.tangem.domain.staking.model.PendingAction
+import com.tangem.domain.staking.model.RewardBlockType
 import com.tangem.domain.staking.StakingTransactionVerdict
 import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.domain.staking.model.stakekit.Yield

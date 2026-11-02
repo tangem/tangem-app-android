@@ -251,7 +251,7 @@ internal class SingleAccountStatusListProducerSpecialAccountsTest {
                 every { this@mockk.invoke(userWalletId = walletId) } returns flowOf(
                     AccountStatus.Money(
                         account = Account.Money(walletId),
-                        value = MoneyAccountStatusValue.NotCreated,
+                        value = MoneyAccountStatusValue.Empty,
                     ),
                 )
             },

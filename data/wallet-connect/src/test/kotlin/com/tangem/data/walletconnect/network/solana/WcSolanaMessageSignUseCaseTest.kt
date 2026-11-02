@@ -3,6 +3,7 @@ package com.tangem.data.walletconnect.network.solana
 import app.cash.turbine.test
 import arrow.core.right
 import com.domain.blockaid.models.dapp.CheckDAppResult
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.extensions.encodeBase58
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
@@ -10,6 +11,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.usecase.SignUseCase
 import com.tangem.domain.walletconnect.model.WcRequestError
 import com.tangem.domain.walletconnect.model.WcSession
@@ -38,29 +40,8 @@ internal class WcSolanaMessageSignUseCaseTest {
     private val respondService: WcRespondService = mockk()
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
 
-    private val context: WcMethodUseCaseContext = WcMethodUseCaseContext(
-        network = MockCryptoCurrencyFactory().ethereum.network,
-        accountAddress = "",
-        rawSdkRequest = WcSdkSessionRequest(
-            topic = "",
-            chainId = "",
-            dAppMetaData = WcAppMetaData(name = "", description = "", url = "", icons = listOf(), redirect = ""),
-            request = WcSdkSessionRequest.JSONRPCRequest(id = 0L, method = "", params = ""),
-        ),
-        networkDerivationsCount = 1,
-        session = WcSession(
-            wallet = MockUserWalletFactory.create(),
-            networks = setOf(),
-            account = Account.Personal.createMainAccount(MockUserWalletFactory.create().walletId),
-            securityStatus = CheckDAppResult.FAILED_TO_VERIFY,
-            connectingTime = 0L,
-            sdkModel = WcSdkSession(
-                topic = "",
-                namespaces = mapOf(),
-                appMetaData = WcAppMetaData(name = "", description = "", url = "", icons = listOf(), redirect = ""),
-            ),
-            shouldShowWalletInfo = false,
-        ),
+    private val context: WcMethodUseCaseContext = createContext(
+        network = MockCryptoCurrencyFactory().createCoin(Blockchain.Solana).network,
     )
 
     @BeforeEach
@@ -96,6 +77,29 @@ internal class WcSolanaMessageSignUseCaseTest {
         }
 
     @Test
+    fun `GIVEN non-Solana network WHEN sign THEN request rejected without signing`() =
+        runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            val message = "Sign in to Tangem".toByteArray()
+            val useCase = createUseCase(
+                rawMessage = message.encodeBase58(),
+                context = createContext(network = MockCryptoCurrencyFactory().ethereum.network),
+            )
+
+            // Act
+            useCase.invoke().test {
+                awaitItem() // initial PreSign state
+                useCase.sign()
+                val result = (expectMostRecentItem().domainStep as WcSignStep.Result).result
+
+                // Assert
+                assertTrue(result.leftOrNull() is WcRequestError.UnknownError)
+            }
+            coVerify(exactly = 0) { signUseCase(hash = any(), userWallet = any(), network = any()) }
+            coVerify(exactly = 0) { respondService.respond(any(), any()) }
+        }
+
+    @Test
     fun `GIVEN human-readable message WHEN sign THEN it is signed and responded`() =
         runTest(UnconfinedTestDispatcher()) {
             // Arrange
@@ -123,12 +127,38 @@ internal class WcSolanaMessageSignUseCaseTest {
             coVerify(exactly = 1) { respondService.respond(any(), any()) }
         }
 
-    private fun createUseCase(rawMessage: String) = WcSolanaMessageSignUseCase(
-        context = context,
-        method = WcSolanaMethod.SignMessage(pubKey = "", rawMessage = rawMessage, humanMsg = ""),
-        signUseCase = signUseCase,
-        respondService = respondService,
-        analytics = analytics,
+    private fun createUseCase(rawMessage: String, context: WcMethodUseCaseContext = this.context) =
+        WcSolanaMessageSignUseCase(
+            context = context,
+            method = WcSolanaMethod.SignMessage(pubKey = "", rawMessage = rawMessage, humanMsg = ""),
+            signUseCase = signUseCase,
+            respondService = respondService,
+            analytics = analytics,
+        )
+
+    private fun createContext(network: Network) = WcMethodUseCaseContext(
+        network = network,
+        accountAddress = "",
+        rawSdkRequest = WcSdkSessionRequest(
+            topic = "",
+            chainId = "",
+            dAppMetaData = WcAppMetaData(name = "", description = "", url = "", icons = listOf(), redirect = ""),
+            request = WcSdkSessionRequest.JSONRPCRequest(id = 0L, method = "", params = ""),
+        ),
+        networkDerivationsCount = 1,
+        session = WcSession(
+            wallet = MockUserWalletFactory.create(),
+            networks = setOf(),
+            account = Account.Personal.createMainAccount(MockUserWalletFactory.create().walletId),
+            securityStatus = CheckDAppResult.FAILED_TO_VERIFY,
+            connectingTime = 0L,
+            sdkModel = WcSdkSession(
+                topic = "",
+                namespaces = mapOf(),
+                appMetaData = WcAppMetaData(name = "", description = "", url = "", icons = listOf(), redirect = ""),
+            ),
+            shouldShowWalletInfo = false,
+        ),
     )
 
     private companion object {

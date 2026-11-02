@@ -34,6 +34,7 @@ import com.tangem.features.polymarket.impl.positiondetails.model.PolymarketPosit
 import com.tangem.features.polymarket.impl.positionresult.model.PolymarketPositionResultModel
 import com.tangem.features.polymarket.impl.model.PolymarketModel
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionAmountModel
+import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionOrderModel
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionStatusModel
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSummaryModel
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSlippageModel
@@ -134,6 +135,11 @@ internal interface PolymarketModelModule {
     @IntoMap
     @ClassKey(PlacePredictionSummaryModel::class)
     fun bindPlacePredictionSummaryModel(impl: PlacePredictionSummaryModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(PlacePredictionOrderModel::class)
+    fun bindPlacePredictionOrderModel(impl: PlacePredictionOrderModel): Model
 
     @Binds
     @IntoMap
