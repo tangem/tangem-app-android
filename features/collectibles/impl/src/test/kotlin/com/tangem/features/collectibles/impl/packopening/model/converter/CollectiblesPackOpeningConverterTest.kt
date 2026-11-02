@@ -142,6 +142,11 @@ internal class CollectiblesPackOpeningConverterTest {
         ButtonModel(usdcBalance = BigDecimal("100"), step = OpenPackStep.Generating, expected = GENERATING),
         ButtonModel(usdcBalance = BigDecimal("100"), step = OpenPackStep.Confirming, expected = CONFIRMING),
         ButtonModel(usdcBalance = BigDecimal.ZERO, step = OpenPackStep.Opening, expected = OPENING),
+        ButtonModel(
+            usdcBalance = BigDecimal("100"),
+            step = OpenPackStep.AutoBuybacked(amount = BigDecimal("42.5")),
+            expected = OPENING,
+        ),
         ButtonModel(usdcBalance = BigDecimal("100"), step = FAILED_BEFORE_PAYMENT, expected = APPROVE),
         ButtonModel(usdcBalance = BigDecimal.ZERO, step = FAILED_BEFORE_PAYMENT, expected = NOT_ENOUGH_FUNDS),
     )
