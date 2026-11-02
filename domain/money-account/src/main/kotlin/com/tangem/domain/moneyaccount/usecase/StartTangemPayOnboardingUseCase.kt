@@ -95,6 +95,10 @@ class StartTangemPayOnboardingUseCase(
                         sendSignatureFinished(result = SignatureResult.CANCELLED, walletType = walletType)
                         StartTangemPayOnboardingError.UserCancelled
                     }
+                    MoneyAccountActivationError.PersistenceFailed -> {
+                        sendSignatureFinished(result = SignatureResult.SIGNED, walletType = walletType)
+                        StartTangemPayOnboardingError.Failed
+                    }
                     MoneyAccountActivationError.Unknown -> {
                         sendSignatureFinished(result = SignatureResult.FAILED, walletType = walletType)
                         StartTangemPayOnboardingError.Failed

@@ -348,6 +348,11 @@ internal class StartTangemPayOnboardingUseCaseTest {
             expectedSignatureResult = SignatureResult.CANCELLED,
         ),
         ActivationErrorModel(
+            activationError = MoneyAccountActivationError.PersistenceFailed,
+            expected = StartTangemPayOnboardingError.Failed.left(),
+            expectedSignatureResult = SignatureResult.SIGNED,
+        ),
+        ActivationErrorModel(
             activationError = MoneyAccountActivationError.Unknown,
             expected = StartTangemPayOnboardingError.Failed.left(),
             expectedSignatureResult = SignatureResult.FAILED,
