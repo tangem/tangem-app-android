@@ -9,45 +9,56 @@ import com.tangem.domain.pay.model.TangemPayCustomerState
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents.ActivationFailureReason
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents.ActivationResult
-import kotlin.time.Duration
+import kotlin.time.TimeMark
 
-internal object ProductActivationFinishedEvents {
+internal class ProductActivationTracker(
+    orderedProducts: Set<TangemPayProduct>,
+    private val plan: TangemPayTariffPlan?,
+    private val orderedAt: TimeMark,
+) {
+    private val unfinished = orderedProducts.toMutableSet()
 
-    fun of(
-        finalState: TangemPayCustomerState?,
-        orderedProducts: Set<TangemPayProduct>,
-        sinceOrder: Duration,
-        plan: TangemPayTariffPlan?,
-    ): List<TangemPayAnalyticsEvents.ProductActivationFinished> = orderedProducts.mapNotNull { product ->
-        val outcome = if (finalState == null) {
-            Outcome(result = ActivationResult.POLLING_STOPPED)
-        } else {
-            finalState.outcomeOf(product) ?: return@mapNotNull null
+    fun onState(state: TangemPayCustomerState): List<TangemPayAnalyticsEvents.ProductActivationFinished> {
+        val finished = unfinished.mapNotNull { product ->
+            state.outcomeOf(product)?.let { outcome -> product to outcome }
         }
+        unfinished -= finished.map { (product, _) -> product }
+        return finished.map { (product, outcome) -> event(product, outcome) }
+    }
+
+    fun onPollingStopped(): List<TangemPayAnalyticsEvents.ProductActivationFinished> {
+        val stopped = unfinished.map { product -> event(product, Outcome(result = ActivationResult.POLLING_STOPPED)) }
+        unfinished.clear()
+        return stopped
+    }
+
+    private fun event(product: TangemPayProduct, outcome: Outcome) =
         TangemPayAnalyticsEvents.ProductActivationFinished(
             product = product.toAnalyticsProduct(),
             result = outcome.result,
             failureReason = outcome.failureReason,
-            sinceOrder = sinceOrder,
+            sinceOrder = orderedAt.elapsedNow(),
             plan = plan,
         )
+
+    private fun TangemPayCustomerState.outcomeOf(product: TangemPayProduct): Outcome? = when (this) {
+        is TangemPayCustomerState.Accounts -> product.outcomeIn(paymentAccount, moneyAccount)
+        is TangemPayCustomerState.Former -> product.outcomeIn(paymentAccount, moneyAccount)
+        TangemPayCustomerState.Blocked,
+        TangemPayCustomerState.KycDeclined,
+        -> failedForOtherReason()
+        TangemPayCustomerState.KycRequired,
+        TangemPayCustomerState.KycInProgress,
+        TangemPayCustomerState.KycApproved,
+        -> null
     }
 
-    private fun TangemPayCustomerState.outcomeOf(product: TangemPayProduct): Outcome? {
-        val (paymentAccount, moneyAccount) = when (this) {
-            is TangemPayCustomerState.Accounts -> paymentAccount to moneyAccount
-            is TangemPayCustomerState.Former -> paymentAccount to moneyAccount
-            TangemPayCustomerState.Blocked,
-            TangemPayCustomerState.KycRequired,
-            TangemPayCustomerState.KycInProgress,
-            TangemPayCustomerState.KycDeclined,
-            TangemPayCustomerState.KycApproved,
-            -> return null
-        }
-        return when (product) {
-            TangemPayProduct.PAYMENT_ACCOUNT -> paymentAccount.toOutcome()
-            TangemPayProduct.BANKING_ACCOUNT -> moneyAccount.toOutcome()
-        }
+    private fun TangemPayProduct.outcomeIn(
+        paymentAccount: PaymentAccountActivationState,
+        moneyAccount: MoneyAccountActivationState,
+    ): Outcome? = when (this) {
+        TangemPayProduct.PAYMENT_ACCOUNT -> paymentAccount.toOutcome()
+        TangemPayProduct.BANKING_ACCOUNT -> moneyAccount.toOutcome()
     }
 
     private fun PaymentAccountActivationState.toOutcome(): Outcome? = when (this) {
@@ -63,8 +74,8 @@ internal object ProductActivationFinishedEvents {
             -> failedForOtherReason()
         }
         PaymentAccountActivationState.Unavailable -> failedForOtherReason()
+        is PaymentAccountActivationState.AwaitingKyc -> kycStatus.toOutcome()
         PaymentAccountActivationState.NotStarted,
-        is PaymentAccountActivationState.AwaitingKyc,
         is PaymentAccountActivationState.Issuing,
         -> null
     }
@@ -78,12 +89,15 @@ internal object ProductActivationFinishedEvents {
             -> failedForOtherReason()
         }
         MoneyAccountActivationState.Unavailable -> failedForOtherReason()
+        is MoneyAccountActivationState.AwaitingKyc -> kycStatus.toOutcome()
         MoneyAccountActivationState.NotStarted,
-        is MoneyAccountActivationState.AwaitingKyc,
         MoneyAccountActivationState.Issuing,
         MoneyAccountActivationState.Deactivated,
         -> null
     }
+
+    private fun CustomerSummary.KycStatus.toOutcome(): Outcome? =
+        if (this == CustomerSummary.KycStatus.DECLINED) failedForOtherReason() else null
 
     private fun issuerRejected() = Outcome(
         result = ActivationResult.FAILED,

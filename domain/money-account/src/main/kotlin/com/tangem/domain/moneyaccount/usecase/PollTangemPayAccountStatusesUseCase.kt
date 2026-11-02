@@ -8,9 +8,10 @@ import com.tangem.domain.pay.usecase.GetCustomerSummaryUseCase
 import com.tangem.domain.pay.utils.TangemPayCustomerStateConverter
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 class PollTangemPayAccountStatusesUseCase(
@@ -18,15 +19,19 @@ class PollTangemPayAccountStatusesUseCase(
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
 ) {
-    suspend operator fun invoke(userWalletId: UserWalletId): TangemPayCustomerState? =
-        withTimeoutOrNull(POLLING_TIMEOUT) { pollUntilTerminal(userWalletId) }
+    suspend operator fun invoke(userWalletId: UserWalletId) {
+        states(userWalletId).collect()
+    }
 
-    private suspend fun pollUntilTerminal(userWalletId: UserWalletId): TangemPayCustomerState {
+    fun states(userWalletId: UserWalletId): Flow<TangemPayCustomerState> = flow {
         while (true) {
             fetchAccountStatuses(userWalletId)
             val state = getCustomerSummaryUseCase(userWalletId, CachePolicy.ONLY_CACHE).getOrNull()
                 ?.let(TangemPayCustomerStateConverter::convert)
-            if (state != null && state.isTerminal) return state
+            if (state != null) {
+                emit(state)
+                if (state.isTerminal) return@flow
+            }
             delay(POLLING_INTERVAL)
         }
     }
@@ -40,7 +45,6 @@ class PollTangemPayAccountStatusesUseCase(
 
     private companion object {
         val POLLING_INTERVAL = 30.seconds
-        val POLLING_TIMEOUT = 15.minutes
 
         val PaymentAccountActivationState.isTerminal: Boolean
             get() = when (this) {
