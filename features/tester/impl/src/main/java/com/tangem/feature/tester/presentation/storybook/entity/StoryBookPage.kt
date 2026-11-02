@@ -18,6 +18,7 @@ import com.tangem.core.ui.ds2.filter.TangemFilterItem
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
+import com.tangem.core.ui.ds2.menu.TangemMenu
 import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
 import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus
@@ -943,3 +944,28 @@ internal data class TangemAvatarStory(
     /** Which [com.tangem.core.ui.ds2.avatar.TangemAvatar.UiState] subtype is rendered. */
     enum class Variant { Account, User, Address, Icon, Transaction, Asset, Shimmer }
 }
+
+internal data class TangemMenuStory(
+    val variant: TangemMenu.Variant,
+    val isExpanded: Boolean,
+    val isSelectable: Boolean,
+    val selectedIndex: Int,
+    val hasIconStart: Boolean,
+    val hasIconEnd: Boolean,
+    val hasDescription: Boolean,
+    val hasDivider: Boolean,
+    val hasDividerTitle: Boolean,
+    val lastItemVariant: TangemMenu.ItemVariant,
+    val isLastItemEnabled: Boolean,
+    val onVariantChange: (TangemMenu.Variant) -> Unit,
+    val onExpandedChange: (Boolean) -> Unit,
+    val onItemSelect: (Int) -> Unit,
+    val onSelectableToggle: () -> Unit,
+    val onIconStartToggle: () -> Unit,
+    val onIconEndToggle: () -> Unit,
+    val onDescriptionToggle: () -> Unit,
+    val onDividerToggle: () -> Unit,
+    val onDividerTitleToggle: () -> Unit,
+    val onLastItemVariantChange: (TangemMenu.ItemVariant) -> Unit,
+    val onLastItemEnabledToggle: () -> Unit,
+) : DsStoryBookPage
