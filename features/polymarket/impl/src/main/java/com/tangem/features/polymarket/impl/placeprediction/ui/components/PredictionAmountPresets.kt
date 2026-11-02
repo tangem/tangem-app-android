@@ -25,6 +25,7 @@ import kotlinx.collections.immutable.ImmutableList
 internal fun PredictionAmountPresets(
     presets: ImmutableList<AmountPresetUM>,
     isEnabled: Boolean,
+    isMaxEnabled: Boolean,
     onPresetClick: (AmountPresetUM) -> Unit,
     onMaxClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -48,7 +49,7 @@ internal fun PredictionAmountPresets(
             variant = TangemButton.Variant.Secondary,
             size = TangemButton.Size.X8,
             text = resourceReference(R.string.send_max_amount),
-            isEnabled = isEnabled,
+            isEnabled = isEnabled && isMaxEnabled,
             onClick = onMaxClick,
         )
     }
@@ -65,6 +66,7 @@ private fun PredictionAmountPresetsPreview() {
                 .padding(vertical = 16.dp),
             presets = PreviewAmountPresets,
             isEnabled = true,
+            isMaxEnabled = true,
             onPresetClick = {},
             onMaxClick = {},
         )
