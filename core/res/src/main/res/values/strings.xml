@@ -16,6 +16,7 @@
   <string name="access_code_create_description">Set a %s-digit access code to unlock your wallet.</string>
   <string name="access_code_create_title">Create access code</string>
   <string name="access_code_navtitle">Access code</string>
+  <string name="account_add_limit_badge">Full</string>
   <string name="account_add_limit_dialog_description">You cannot create more than %1$s accounts. Archive one to add a new one.</string>
   <string name="account_add_limit_dialog_title">Can’t add new account</string>
   <string name="account_archive_success_message">Account archived</string>
@@ -1981,6 +1982,14 @@
   <string name="prediction_balance_total">Total Balance</string>
   <string name="prediction_balance_withdraw">Withdraw</string>
   <string name="prediction_cash_out">Cash Out</string>
+  <string name="prediction_chart_empty_description">The chart will appear after the first predictions</string>
+  <string name="prediction_chart_empty_title">No data yet</string>
+  <string name="prediction_chart_period_1d">1d</string>
+  <string name="prediction_chart_period_1h">1h</string>
+  <string name="prediction_chart_period_1m">1m</string>
+  <string name="prediction_chart_period_1w">1w</string>
+  <string name="prediction_chart_period_6h">6h</string>
+  <string name="prediction_chart_period_max">Max</string>
   <string name="prediction_claim_error_failed">The claim did not go through. Nothing left your account, and you can try again.</string>
   <string name="prediction_claim_error_generic">The claim could not be sent. Please try again.</string>
   <string name="prediction_claim_error_rejected">Polymarket refused to relay the claim. Refresh your positions and try again.</string>
@@ -2862,6 +2871,7 @@
   <string name="tangempay_bank_transfer_details_daily_deposits">Daily deposits</string>
   <string name="tangempay_bank_transfer_details_daily_deposits_hint">If you want to deposit more than %s – contact support</string>
   <string name="tangempay_bank_transfer_details_daily_deposits_left">Left today</string>
+  <string name="tangempay_bank_transfer_details_exchange_rate">Exchange rate</string>
   <string name="tangempay_bank_transfer_details_fee_header">Deposit methods and fees</string>
   <string name="tangempay_bank_transfer_details_limitations">Limitations</string>
   <string name="tangempay_bank_transfer_details_minimum_deposit">Minimum deposit</string>
@@ -3256,9 +3266,9 @@
   <string name="tangempay_status_inactive">Inactive</string>
   <string name="tangempay_status_replacing">Replacing your card</string>
   <string name="tangempay_sync_needed">Use your card or ring to renew session</string>
-  <string name="tangempay_sync_needed_body">Use your card or ring to renew session</string>
+  <string name="tangempay_sync_needed_body">Renew your session to view your card and account</string>
   <string name="tangempay_sync_needed_button">Renew session</string>
-  <string name="tangempay_sync_needed_title">Payment account session expired</string>
+  <string name="tangempay_sync_needed_title">Session expired</string>
   <string name="tangempay_tangem_visa_card">Spend crypto anywhere in real life</string>
   <string name="tangempay_temporarily_unavailable">Connection issues</string>
   <string name="tangempay_title">Tangem Pay</string>

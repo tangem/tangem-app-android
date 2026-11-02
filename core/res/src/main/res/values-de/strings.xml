@@ -3227,9 +3227,9 @@
   <string name="tangempay_status_inactive">Inaktiv</string>
   <string name="tangempay_status_replacing">Ersetzen deine Karte</string>
   <string name="tangempay_sync_needed">Karte oder Ring verwenden, um die Sitzung zu verlängern</string>
-  <string name="tangempay_sync_needed_body">Karte oder Ring verwenden, um die Sitzung zu verlängern</string>
+  <string name="tangempay_sync_needed_body">Erneuern Sie Ihre Sitzung, um Ihre Karte und Ihr Konto anzuzeigen</string>
   <string name="tangempay_sync_needed_button">Zugang wiederherstellen</string>
-  <string name="tangempay_sync_needed_title">Tangem Pay sitzung abgelaufen</string>
+  <string name="tangempay_sync_needed_title">Sitzung abgelaufen</string>
   <string name="tangempay_tangem_visa_card">Krypto ganz einfach im Alltag ausgeben</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay ist vorübergehend nicht erreichbar.</string>
   <string name="tangempay_title">Tangem Pay</string>

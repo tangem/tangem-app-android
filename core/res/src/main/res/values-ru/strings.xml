@@ -2964,9 +2964,9 @@
   <string name="tangempay_status_inactive">Неактивна</string>
   <string name="tangempay_status_replacing">Замена вашей карты</string>
   <string name="tangempay_sync_needed">Используйте карту или кольцо для обновления сессии</string>
-  <string name="tangempay_sync_needed_body">Используйте карту или кольцо для обновления сессии</string>
+  <string name="tangempay_sync_needed_body">Обновите сессию, чтобы увидеть карту и счёт</string>
   <string name="tangempay_sync_needed_button">Обновить сессию</string>
-  <string name="tangempay_sync_needed_title">Tangem Pay · Сессия истекла</string>
+  <string name="tangempay_sync_needed_title">Сессия истекла</string>
   <string name="tangempay_tangem_visa_card">Платите за ежедневные покупки криптой</string>
   <string name="tangempay_temporarily_unavailable">Проблема с соединением</string>
   <string name="tangempay_title">Tangem Pay</string>
