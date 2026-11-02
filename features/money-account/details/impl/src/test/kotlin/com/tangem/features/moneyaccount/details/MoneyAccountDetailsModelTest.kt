@@ -15,6 +15,7 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
@@ -30,7 +31,7 @@ import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBankCredentialsUseCase
-import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
+import com.tangem.domain.moneyaccount.usecase.RenewTangemPaySessionUseCase
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
 import com.tangem.features.moneyaccount.details.impl.R
@@ -79,14 +80,52 @@ internal class MoneyAccountDetailsModelTest {
     private val getMoneyAccountBankCredentialsUseCase: GetMoneyAccountBankCredentialsUseCase = mockk()
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher = mockk()
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter = mockk(relaxed = true)
-    private val produceTangemPayInitialDataUseCase: ProduceTangemPayInitialDataUseCase = mockk()
+    private val renewTangemPaySessionUseCase: RenewTangemPaySessionUseCase = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
+    private val isBalanceHiddenFlow = MutableStateFlow(false)
 
     @BeforeEach
     fun resetMocks() {
         clearMocks(moneyAccountStatusSupplier, router, sendFeedbackEmailUseCase, urlOpener, analytics)
         clearMocks(getMoneyAccountBankCredentialsUseCase, moneyAccountStatusFetcher, txHistoryContentUpdateEmitter)
-        clearMocks(produceTangemPayInitialDataUseCase, uiMessageSender)
+        clearMocks(renewTangemPaySessionUseCase, uiMessageSender, getBalanceHidingSettingsUseCase)
+        isBalanceHiddenFlow.value = false
+        every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns isBalanceHiddenFlow
+    }
+
+    @Test
+    fun `GIVEN balance hidden WHEN model created THEN state is hidden`() = runTest {
+        // Arrange
+        isBalanceHiddenFlow.value = true
+
+        // Act
+        val model = createModel(activeAccount(balance = balance()))
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.isBalanceHidden).isTrue()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN screen opened WHEN balance hiding toggled THEN state follows it`() = runTest {
+        // Arrange
+        val model = createModel(activeAccount(balance = balance()))
+        advanceUntilIdle()
+        val states = mutableListOf(model.uiState.value.isBalanceHidden)
+
+        // Act
+        isBalanceHiddenFlow.value = true
+        advanceUntilIdle()
+        states += model.uiState.value.isBalanceHidden
+        isBalanceHiddenFlow.value = false
+        advanceUntilIdle()
+        states += model.uiState.value.isBalanceHidden
+
+        // Assert
+        assertThat(states).containsExactly(false, true, false).inOrder()
+        model.onDestroy()
     }
 
     @ParameterizedTest
@@ -470,7 +509,7 @@ internal class MoneyAccountDetailsModelTest {
     @Test
     fun `GIVEN not synced banner WHEN renew session succeeds THEN status fetched and progress hidden`() = runTest {
         // Arrange
-        coEvery { produceTangemPayInitialDataUseCase(userWalletId) } returns Unit.right()
+        coEvery { renewTangemPaySessionUseCase(userWalletId) } returns Unit.right()
         coEvery { moneyAccountStatusFetcher(userWalletId) } returns Unit.right()
         val model = createModel(activeAccount(balance = balance(), error = MoneyAccountStatusValue.Error.NotSynced))
         advanceUntilIdle()
@@ -489,7 +528,7 @@ internal class MoneyAccountDetailsModelTest {
     @Test
     fun `GIVEN not synced banner WHEN renew session fails THEN error shown and status not fetched`() = runTest {
         // Arrange
-        coEvery { produceTangemPayInitialDataUseCase(userWalletId) } returns IllegalStateException().left()
+        coEvery { renewTangemPaySessionUseCase(userWalletId) } returns IllegalStateException().left()
         val model = createModel(activeAccount(balance = balance(), error = MoneyAccountStatusValue.Error.NotSynced))
         advanceUntilIdle()
 
@@ -521,6 +560,7 @@ internal class MoneyAccountDetailsModelTest {
         return MoneyAccountDetailsModel(
             paramsContainer = MutableParamsContainer(MoneyAccountDetailsComponent.Params(userWalletId = userWalletId)),
             moneyAccountStatusSupplier = moneyAccountStatusSupplier,
+            getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
             dispatchers = createTestingCoroutineDispatcherProvider(),
             router = router,
             sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
@@ -530,7 +570,7 @@ internal class MoneyAccountDetailsModelTest {
             getMoneyAccountBankCredentialsUseCase = getMoneyAccountBankCredentialsUseCase,
             moneyAccountStatusFetcher = moneyAccountStatusFetcher,
             txHistoryContentUpdateEmitter = txHistoryContentUpdateEmitter,
-            produceTangemPayInitialDataUseCase = produceTangemPayInitialDataUseCase,
+            renewTangemPaySessionUseCase = renewTangemPaySessionUseCase,
             uiMessageSender = uiMessageSender,
         )
     }
@@ -568,11 +608,6 @@ internal class MoneyAccountDetailsModelTest {
         val error: MoneyAccountStatusValue.Error?,
         val expectedTitle: TextReference?,
         val hasRenewButton: Boolean,
-    )
-
-    private fun provideTestModels() = listOf(
-        AddFundsModel(balance = balance(), expectedDepositAddress = DEPOSIT_ADDRESS),
-        AddFundsModel(balance = null, expectedDepositAddress = null),
     )
 
     data class AddFundsModel(val balance: MoneyAccountStatusValue.Balance?, val expectedDepositAddress: String?)
@@ -652,6 +687,12 @@ internal class MoneyAccountDetailsModelTest {
         receiveAddress = listOf(
             ReceiveAddressModel(displayType = ReceiveAddressModel.DisplayType.Default, value = DEPOSIT_ADDRESS),
         ),
+    )
+
+    @Suppress("Unused") // need for ParameterizedTest 
+    private fun provideTestModels() = listOf(
+        AddFundsModel(balance = balance(), expectedDepositAddress = DEPOSIT_ADDRESS),
+        AddFundsModel(balance = null, expectedDepositAddress = null),
     )
 
     private fun SlotNavigation<MoneyAccountDetailsNavigation>.trackSlot(): List<MoneyAccountDetailsNavigation?> {

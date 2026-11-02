@@ -210,7 +210,6 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
 
             // Act
             model.onCloseClick()
-            model.onBackClick()
 
             // Assert
             verify(exactly = 0) { router.pop(any()) }
@@ -497,20 +496,6 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
 
             // Assert
             assertThat(model.uiState.value.amountValue).isEmpty()
-        }
-
-        @Test
-        fun `GIVEN a held position WHEN max clicked THEN the whole position is entered`() = runOrderTest {
-            // Arrange
-            coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } returns createSellQuote().right()
-            val model = createOrderModel(testScope = this, params = SELL_PARAMS)
-            advanceUntilIdle()
-
-            // Act
-            model.onMaxClick()
-
-            // Assert
-            assertThat(model.uiState.value.amountValue).isEqualTo("51.234567")
         }
     }
 

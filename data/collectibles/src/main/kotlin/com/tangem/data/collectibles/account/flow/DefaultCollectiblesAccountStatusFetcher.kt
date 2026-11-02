@@ -3,6 +3,9 @@ package com.tangem.data.collectibles.account.flow
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.data.collectibles.account.store.CollectiblesAccountStore
+import com.tangem.data.common.account.WalletAccountsFetcher
+import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
+import com.tangem.datasource.api.tangemTech.models.account.isCollectibles
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
@@ -32,6 +35,7 @@ internal class DefaultCollectiblesAccountStatusFetcher @Inject constructor(
     private val collectiblesOwnerDeriver: CollectiblesOwnerDeriver,
     private val gachaVaultRepository: GachaVaultRepository,
     private val hotDelegate: CollectiblesHotDelegate,
+    private val walletAccountsFetcher: WalletAccountsFetcher,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : CollectiblesAccountStatusFetcher {
 
@@ -46,24 +50,28 @@ internal class DefaultCollectiblesAccountStatusFetcher @Inject constructor(
     }
 
     private suspend fun refresh(userWalletId: UserWalletId) {
-        val stored = collectiblesAccountStore.getSyncOrNull(userWalletId)
+        val stored = collectiblesAccountStore.getSyncOrNull(userWalletId).takeIf { it.isAccountCreated }
 
-        if (stored == null || !stored.isAccountCreated) return markUnrefreshed(userWalletId = userWalletId)
+        if (stored == null && !isListedOnBackend(userWalletId)) return
 
         val userWallet = userWalletsListRepository.getSyncOrNull(userWalletId)
             ?: return markUnrefreshed(userWalletId = userWalletId)
 
         if (userWallet.isLocked) return markUnrefreshed(userWalletId = userWalletId)
 
-        // TODO check whether this branch is still needed once accounts are synced from the backend
-        if (collectiblesOwnerDeriver.storedOwner(userWalletId) == null) {
-            return collectiblesAccountStore.store(
-                userWalletId = userWalletId,
-                value = CollectiblesAccountStatusValue.MissedDerivation,
-            )
+        if (collectiblesOwnerDeriver.storedOwner(userWalletId) == null) return
+
+        val accountState = resolveAccountState(userWallet = userWallet, currentState = stored) ?: return
+
+        if (stored == null) {
+            // Onboarding may have recorded the account during the vault read; its record is newer than this read
+            if (collectiblesAccountStore.getSyncOrNull(userWalletId).isAccountCreated) return
+
+            collectiblesAccountStore.store(userWalletId = userWalletId, value = accountState)
+
+            if (accountState is CollectiblesAccountStatusValue.NotOnboarded) return
         }
 
-        val accountState = resolveAccountState(userWallet = userWallet, currentState = stored)
         val balance = resolveBalance(userWallet, accountState.balance)
 
         // A relink that finished during the reads above has already recorded its result, which outranks this one
@@ -76,13 +84,14 @@ internal class DefaultCollectiblesAccountStatusFetcher @Inject constructor(
     }
 
     /**
-     * Whether the vault's `hot_delegate` is this device's key. A failed read or a missing vault changes nothing, and
-     * neither does another key while this device's relink may still land.
+     * Whether the vault's `hot_delegate` is this device's key. A failed read changes nothing, and neither does another
+     * key while this device's relink may still land. A missing vault keeps a record, while an account only the
+     * backend lists is then no account.
      */
     private suspend fun resolveAccountState(
         userWallet: UserWallet,
-        currentState: CollectiblesAccountStatusValue,
-    ): CollectiblesAccountStatusValue {
+        currentState: CollectiblesAccountStatusValue?,
+    ): CollectiblesAccountStatusValue? {
         val accountId = AccountId.forCollectiblesAccount(userWallet.walletId)
         val localDelegate = hotDelegate.getPublicKeyOrNull(accountId)?.base58
         val vaultDelegate = gachaVaultRepository.getVaultHotDelegate(userWallet).getOrElse { error ->
@@ -91,20 +100,24 @@ internal class DefaultCollectiblesAccountStatusFetcher @Inject constructor(
         }
 
         return when {
-            vaultDelegate == null -> currentState
+            vaultDelegate == null -> currentState ?: CollectiblesAccountStatusValue.NotOnboarded
             vaultDelegate == localDelegate -> {
                 collectiblesAccountRepository.clearRelinkPending(userWallet.walletId)
                 CollectiblesAccountStatusValue.Onboarded(
                     source = StatusSource.ACTUAL,
-                    vaultBalance = currentState.balance,
+                    vaultBalance = currentState?.balance,
                 )
             }
             collectiblesAccountRepository.isRelinkPending(userWallet.walletId) -> currentState
             else -> CollectiblesAccountStatusValue.UpdateRequired(
                 source = StatusSource.ACTUAL,
-                vaultBalance = currentState.balance,
+                vaultBalance = currentState?.balance,
             )
         }
+    }
+
+    private suspend fun isListedOnBackend(userWalletId: UserWalletId): Boolean {
+        return walletAccountsFetcher.getSaved(userWalletId)?.accounts.orEmpty().any(WalletAccountDTO::isCollectibles)
     }
 
     /** The vault's own amount, which for an empty vault is an honest zero. `null` is a read that did not answer. */

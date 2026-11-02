@@ -233,9 +233,7 @@ abstract class BaseTestCase : TestCase(
         // overrides (the `feature_toggles` GitHub Actions input / Allure TestOps launch parameter, delivered
         // via the `featureToggles` instrumentation arg) merge on top and win. Keys must be current
         // FeatureToggles rawNames; stale keys match nothing and are logged as ignored.
-        val baseToggles = mapOf(
-            "VISA_ONBOARDING_ENABLED" to true, // "undefined" on develop → forced on for tests
-        )
+        val baseToggles = emptyMap<String, Boolean>()
         // Overrides supplied at launch time (GitHub Actions `feature_toggles` input / Allure TestOps launch
         // parameter, delivered via the `featureToggles` instrumentation arg) win over the base map. Empty
         // when nothing was passed, so the default behaviour is unchanged.

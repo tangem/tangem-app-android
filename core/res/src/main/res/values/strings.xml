@@ -607,6 +607,7 @@
   <string name="common_retry">Retry</string>
   <string name="common_save">Save</string>
   <string name="common_save_changes">Save changes</string>
+  <string name="common_scan_card">Scan card</string>
   <string name="common_search">Search</string>
   <string name="common_search_tokens">Search tokens</string>
   <string name="common_second_no_param">sec</string>
@@ -1390,6 +1391,7 @@
   <string name="joint_operation_deleted_snackbar">Transaction deleted</string>
   <string name="joint_operation_malicious_subtitle">This transaction was flagged as malicious. Signing is blocked</string>
   <string name="joint_operation_malicious_title">Dangerous transaction</string>
+  <string name="joint_operation_no_response">No response</string>
   <string name="joint_operation_sending_to_network">Sending to the network</string>
   <string name="joint_operation_sent_footer">Signed by %1$s of %2$s and sent to the network</string>
   <string name="joint_operation_signatures_progress">Signatures %1$s of %2$s</string>
@@ -1686,7 +1688,7 @@
   <string name="money_account_onboarding_transfers_card_subtitle">with a dedicated account with banking details</string>
   <string name="money_account_onboarding_transfers_card_title">Send and receive fiat payments</string>
   <string name="money_account_send_bank_transfer_unavailable">Unavailable</string>
-  <string name="money_account_send_fees_footer">Fees include %s service charge and estimated network fee</string>
+  <string name="money_account_send_fees_footer">Fees include %s service\ncharge and estimated network fee</string>
   <string name="money_account_send_network_fee_note">Fees include an estimated %s network fee, which may vary with network activity</string>
   <string name="money_account_send_pay_button">Pay %s</string>
   <string name="money_account_send_unavailable_description">Try again in 5 minutes</string>
@@ -3818,6 +3820,9 @@
   <string name="warning_kaspa_unfinished_token_transaction_message">Your transaction with an amount of %1$s %2$s was not completed. You can try again to complete it.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">You have an unfinished transaction</string>
   <string name="warning_last_balance_updated_time">Last update was %s</string>
+  <string name="warning_link_wallet_cold_message">Scan your card to link your wallet to this device.</string>
+  <string name="warning_link_wallet_hot_message">Confirm to link your wallet to this device.</string>
+  <string name="warning_link_wallet_title">Link your wallet to this device</string>
   <string name="warning_low_signatures_message">Only %s signatures are left on this card. You must withdraw all of your funds.</string>
   <string name="warning_low_signatures_title">Low signature count</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Tokens on different networks can have different addresses. Double-check that your address matches the network when you transfer funds.</string>
@@ -4091,8 +4096,8 @@
   <string name="yield_module_main_promo_subtitle">Put idle coins to work. No lockups, withdraw anytime.</string>
   <string name="yield_module_main_promo_title">Earn with your crypto up to %1$s%% APY</string>
   <plurals name="yield_module_main_promo_tokens_count">
-    <item quantity="one">Choose from %d token</item>
-    <item quantity="other">Choose from %d tokens</item>
+    <item quantity="one">More than %d available token</item>
+    <item quantity="other">More than %d available tokens</item>
   </plurals>
   <string name="yield_module_main_screen_promo_banner_message">Enable %1$s%% APY on your balance</string>
   <string name="yield_module_main_view_approve_notification_description">Approval for your token in Yield Mode has been revoked. Open the token to grant permission again.</string>

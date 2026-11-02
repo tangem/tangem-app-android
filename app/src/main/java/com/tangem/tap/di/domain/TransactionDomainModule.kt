@@ -439,6 +439,22 @@ internal object TransactionDomainModule {
 
     @Provides
     @Singleton
+    fun provideCreateAndSendSolanaGaslessTransactionUseCase(
+        walletManagersFacade: WalletManagersFacade,
+        solanaGaslessTransactionRepository: SolanaGaslessTransactionRepository,
+        singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
+        gaslessSignerProvider: GaslessSignerProvider,
+    ): CreateAndSendSolanaGaslessTransactionUseCase {
+        return CreateAndSendSolanaGaslessTransactionUseCase(
+            walletManagersFacade = walletManagersFacade,
+            solanaGaslessTransactionRepository = solanaGaslessTransactionRepository,
+            singleNetworkStatusFetcher = singleNetworkStatusFetcher,
+            gaslessSignerProvider = gaslessSignerProvider,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideGetFeeForTokenUseCase(
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,

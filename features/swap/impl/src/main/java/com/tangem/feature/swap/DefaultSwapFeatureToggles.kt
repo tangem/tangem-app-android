@@ -38,4 +38,9 @@ internal class DefaultSwapFeatureToggles @Inject constructor(
         get() = featureTogglesManager.isFeatureEnabled(
             toggle = FeatureToggles.TWI_1876_KYC_PRESCREENING_CEX_ENABLED,
         )
+
+    override val isSolanaGaslessEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(
+            toggle = FeatureToggles.AND_18247_SOLANA_GASLESS_ENABLED,
+        )
 }

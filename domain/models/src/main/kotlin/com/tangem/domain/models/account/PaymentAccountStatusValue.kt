@@ -225,6 +225,8 @@ sealed class PaymentAccountStatusValue {
      *                                   lookup failed. Transient: not persisted in the local cache.
      * @property tariffPlan Current tariff plan with subscription data (Tiers).
      *                      Transient: not persisted in the local cache.
+     * @property isPaymentAccountIssuing Whether the payment account is still being issued.
+     *                                   Transient: not persisted in the local cache.
      */
     @Serializable
     data class Loaded(
@@ -240,6 +242,7 @@ sealed class PaymentAccountStatusValue {
         val virtualAccount: VirtualAccountOnramp?,
         val isBankOfframpAvailable: Boolean?,
         val tariffPlan: TangemPayTariffPlanState?,
+        val isPaymentAccountIssuing: Boolean,
     ) : PaymentAccountStatusValue() {
 
         /**
