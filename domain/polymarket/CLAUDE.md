@@ -154,13 +154,17 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
 
 - **Funding window** (5 s polling instead of 30 s, up to 90 s like iOS) opens only on a send this app made; an
   external transfer's timing is unknown.
-- **Positions value** is fetched and stored apart from the account status: it needs only the deposit-wallet
-  address (public data API), and a failed read must not touch the balance. The status producer mixes it into
-  `Active.positions` like the rate, and the wallet total and the wallet-screen row count collateral plus
-  positions (iOS parity, [REDACTED_TASK_KEY]). `PredictionTotalBalance.of` is the one place the two are added. The value
-  is persisted per wallet and restored as `CACHE`; never read → the collateral alone, flagged `CACHE`; failed
-  with nothing cached → the collateral alone, flagged `ONLY_CACHE` — never `Loading` or `Failed` (invariant 7).
-  The funding-window poll skips it, so a total right after a send pairs fresh collateral with the last value.
+- **Positions value** is read by the status fetcher in parallel with the collateral, as on iOS, and kept in
+  `Active.positions`, so it is persisted with the status and restored as `CACHE`. A failed read flags a cached
+  value `ONLY_CACHE` or, with nothing cached, records `Unavailable`; it never touches the collateral. A failed
+  collateral read (other than a missing or rejected key) keeps the cached collateral flagged `ONLY_CACHE` but
+  still commits the positions answer to the cached `Active`: the CLOB throttles, the data API is another host, so
+  neither failure hides the other's answer — a deliberate deviation from iOS, which drops it. The funding-window
+  poll skips the read (`shouldRefreshPositions = false`). `PredictionTotalBalance.of` is the one place collateral
+  and positions are added.
+  The wallet total and the wallet-screen row count collateral plus positions. Never read → the collateral
+  alone, flagged `CACHE`; failed with nothing cached → the collateral alone in the total, flagged `ONLY_CACHE`,
+  and a dash in the row — never `Loading` or `Failed` (invariant 7). iOS shows a dash in the total too.
 - **Withdraw destinations** are filtered to USDC · Polygon (phase 1, owner decision 15.09.2026).
 - **Withdraw has no minimum** by design (guide §7.1); `minCheckoutUsd` is deposit-only.
 - **Withdrawal tracker** is started from the swap withdraw flow only, not on cold start (known gap).
