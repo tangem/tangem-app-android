@@ -6,7 +6,9 @@ import androidx.compose.animation.core.EaseOutBack
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -56,6 +58,7 @@ import com.tangem.core.ui.test.SwitchTestTags
  * Behavior notes:
  * - Toggling animates the track color (200 ms, ease-in-out) and slides the knob (200 ms, ease-out-back,
  *   so it slightly overshoots before settling).
+ * - While focused (keyboard / D-pad), a brand focus ring outlines the track.
  * - Fixed 48 × 24 dp; the knob follows the layout direction (slides to the left in RTL).
  * - Pass a [contentDescription] when there is no adjacent label merged into the same semantics node;
  *   TalkBack then announces it together with the on/off state.
@@ -77,6 +80,7 @@ fun TangemSwitch(
     contentDescription: String? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
+    val isFocused by interactionSource.collectIsFocusedAsState()
     val trackColor by animateColorAsState(
         targetValue = if (checked) TangemTheme.colors3.bg.status.info else TangemTheme.colors3.bg.special.switch,
         animationSpec = tween(durationMillis = 200, easing = EaseInOut),
@@ -119,6 +123,13 @@ fun TangemSwitch(
                 .fillMaxSize()
                 .clip(CircleShape)
                 .background(trackColor)
+                .conditionalCompose(isFocused) {
+                    border(
+                        width = 2.dp,
+                        color = TangemTheme.colors3.interaction.focusRing.brand,
+                        shape = CircleShape,
+                    )
+                }
                 .padding(2.dp),
             contentAlignment = Alignment.CenterStart,
         ) {
