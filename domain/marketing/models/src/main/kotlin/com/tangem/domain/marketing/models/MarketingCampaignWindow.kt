@@ -5,12 +5,12 @@ import java.time.format.DateTimeParseException
 
 /**
  * Display window gate: hidden when [now] is before `startAt` or after `endAt`,
- * both bounds inclusive and each optional. A bound that is not a valid ISO-8601 instant is reported via
- * [onInvalidDate] and treated as absent, so a backend format slip does not hide the banner.
+ * both bounds inclusive and each optional. A bound that is not a valid ISO-8601 instant is treated as absent,
+ * so a backend format slip does not hide the banner (see [validateDates] to report it).
  */
-fun MarketingCampaign.isActiveAt(now: Instant, onInvalidDate: (String) -> Unit = {}): Boolean {
-    val start = startAt.parseInstant(onInvalidDate)
-    val end = endAt.parseInstant(onInvalidDate)
+fun MarketingCampaign.isActiveAt(now: Instant): Boolean {
+    val start = startAt.parseInstant()
+    val end = endAt.parseInstant()
     if (start != null && now.isBefore(start)) return false
     if (end != null && now.isAfter(end)) return false
     return true

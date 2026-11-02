@@ -53,7 +53,7 @@ import javax.inject.Inject
 
 @Suppress("LongParameterList")
 @ModelScoped
-internal class MarketingBannerModel(
+internal class MarketingBannerModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
     private val getMarketingBanner: GetMarketingBannerUseCase,
@@ -64,7 +64,7 @@ internal class MarketingBannerModel(
     private val appCoroutineScope: AppCoroutineScope,
     private val urlOpener: UrlOpener,
     private val useDeskFeatureToggles: UseDeskFeatureToggles,
-    private val clock: Clock = Clock.systemUTC(),
+    private val clock: Clock,
 ) : Model() {
 
     private val params = paramsContainer.require<MarketingBannerComponent.Params>()
@@ -86,32 +86,6 @@ internal class MarketingBannerModel(
     init {
         observeBanners()
     }
-
-    @Inject
-    constructor(
-        dispatchers: CoroutineDispatcherProvider,
-        paramsContainer: ParamsContainer,
-        getMarketingBanner: GetMarketingBannerUseCase,
-        dismissMarketingBanner: DismissMarketingBannerUseCase,
-        deeplinkLauncher: DeeplinkLauncher,
-        getFiatUSDRate: GetFiatUSDRateUseCase,
-        marketingUidBindingRepository: MarketingUidBindingRepository,
-        appCoroutineScope: AppCoroutineScope,
-        urlOpener: UrlOpener,
-        useDeskFeatureToggles: UseDeskFeatureToggles,
-    ) : this(
-        dispatchers = dispatchers,
-        paramsContainer = paramsContainer,
-        getMarketingBanner = getMarketingBanner,
-        dismissMarketingBanner = dismissMarketingBanner,
-        deeplinkLauncher = deeplinkLauncher,
-        getFiatUSDRate = getFiatUSDRate,
-        marketingUidBindingRepository = marketingUidBindingRepository,
-        appCoroutineScope = appCoroutineScope,
-        urlOpener = urlOpener,
-        useDeskFeatureToggles = useDeskFeatureToggles,
-        clock = Clock.systemUTC(),
-    )
 
     fun onBannerClick(deeplink: String?) {
         val link = deeplink?.trim()
