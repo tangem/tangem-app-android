@@ -1,5 +1,6 @@
 package com.tangem.domain.onramp
 
+import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.tangem.domain.core.utils.EitherFlow
@@ -27,8 +28,10 @@ class GetOnrampAllOffersUseCase(
         cryptoCurrencyId: CryptoCurrency.ID,
     ): EitherFlow<OnrampError, List<OnrampPaymentMethodGroup>> {
         return onrampRepository.getQuotes()
-            .map { quotes -> processAllOffers(quotes).right() }
-            .catch { throwable -> errorResolver.resolve(throwable).left() }
+            .map<List<OnrampQuote>, Either<OnrampError, List<OnrampPaymentMethodGroup>>> { quotes ->
+                processAllOffers(quotes).right()
+            }
+            .catch { emit(errorResolver.resolve(it).left()) }
     }
 
     private suspend fun processAllOffers(quotes: List<OnrampQuote>): List<OnrampPaymentMethodGroup> {
