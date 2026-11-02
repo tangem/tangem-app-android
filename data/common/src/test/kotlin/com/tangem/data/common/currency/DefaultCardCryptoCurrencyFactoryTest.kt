@@ -8,6 +8,7 @@ import com.tangem.common.card.WalletData
 import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
+import com.tangem.data.common.account.SupportedAccountTypes
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
@@ -22,6 +23,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.jointaccount.JointAccountFeatureToggles
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.*
@@ -43,6 +45,9 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
     private val excludedBlockchains = ExcludedBlockchains()
     private val walletAccountsFetcher = mockk<WalletAccountsFetcher>()
     private val jointAccountFeatureToggles = mockk<JointAccountFeatureToggles>()
+    private val collectiblesFeatureToggles = mockk<CollectiblesFeatureToggles> {
+        every { isCollectiblesEnabled } returns false
+    }
 
     private val factory = DefaultCardCryptoCurrencyFactory(
         demoConfig = DemoConfig,
@@ -52,7 +57,10 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
             networkFactory = NetworkFactory(excludedBlockchains = excludedBlockchains),
         ),
         walletAccountsFetcher = walletAccountsFetcher,
-        jointAccountFeatureToggles = jointAccountFeatureToggles,
+        supportedAccountTypes = SupportedAccountTypes(
+            jointAccountFeatureToggles = jointAccountFeatureToggles,
+            collectiblesFeatureToggles = collectiblesFeatureToggles,
+        ),
     )
 
     private val cryptoCurrencyFactory = MockCryptoCurrencyFactory()
