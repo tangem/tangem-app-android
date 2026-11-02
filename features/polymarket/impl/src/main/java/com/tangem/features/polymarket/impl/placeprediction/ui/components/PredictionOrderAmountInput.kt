@@ -11,6 +11,7 @@ internal fun PredictionOrderAmountInput(
     onAmountChange: (String) -> Unit,
     onAddFundsClick: () -> Unit,
     isEnabled: Boolean = true,
+    captionStyle: PredictionAmountCaptionStyle = PredictionAmountCaptionStyle.Amount,
     presets: (@Composable () -> Unit)? = null,
     isCalculatorDivided: Boolean = false,
 ) {
@@ -22,6 +23,7 @@ internal fun PredictionOrderAmountInput(
             balance = order.balance,
             isAddFundsEnabled = order.isAddFundsEnabled,
             isEnabled = isEnabled,
+            captionStyle = captionStyle,
             onAmountChange = onAmountChange,
             onAddFundsClick = onAddFundsClick,
             footer = presets,

@@ -159,7 +159,7 @@ internal class PlacePredictionNotificationsFactoryTest {
         // Assert
         assertThat((actual.order as OrderSideUM.Buy).hasSufficientBalance).isFalse()
         assertThat(actual.amountCaption)
-            .isEqualTo(AmountCaptionUM.Shortfall(error = PaymentAmountErrorUM.NotEnoughForBet))
+            .isEqualTo(AmountCaptionUM.Shortfall(error = PaymentAmountErrorUM.NotEnoughForBet, payout = QUOTE_PAYOUT))
     }
 
     @Test
@@ -172,8 +172,21 @@ internal class PlacePredictionNotificationsFactoryTest {
 
         // Assert
         assertThat(actual.amountCaption)
-            .isEqualTo(AmountCaptionUM.Shortfall(error = PaymentAmountErrorUM.NotEnoughForFees))
+            .isEqualTo(AmountCaptionUM.Shortfall(error = PaymentAmountErrorUM.NotEnoughForFees, payout = QUOTE_PAYOUT))
         assertThat(actual.isPrimaryButtonEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN the balance falls short before a quote arrives WHEN the gate runs THEN the shortfall has no payout`() {
+        // Arrange
+        val state = createState(balance = BigDecimal("5"), quote = QuoteUM.Loading)
+
+        // Act
+        val actual = state.recomputeGate()
+
+        // Assert
+        assertThat(actual.amountCaption)
+            .isEqualTo(AmountCaptionUM.Shortfall(error = PaymentAmountErrorUM.NotEnoughForBet, payout = null))
     }
 
     @Test
@@ -217,7 +230,7 @@ internal class PlacePredictionNotificationsFactoryTest {
 
         // Assert
         assertThat(actual.amountCaption)
-            .isEqualTo(AmountCaptionUM.Shortfall(error = PaymentAmountErrorUM.NotEnoughForBet))
+            .isEqualTo(AmountCaptionUM.Shortfall(error = PaymentAmountErrorUM.NotEnoughForBet, payout = QUOTE_PAYOUT))
         assertThat(actual.isPrimaryButtonEnabled).isFalse()
     }
 

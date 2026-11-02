@@ -30,6 +30,7 @@ import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
@@ -787,6 +788,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 quote = createQuote(),
                 slippage = SlippageUM.of(percent = DEFAULT_SLIPPAGE_PERCENT),
                 tokenSymbol = PolymarketCollateralCurrencyFactory.COLLATERAL_SYMBOL,
+                heading = PredictionFeeSheetUM.Heading.Fee,
             )
 
             // Act

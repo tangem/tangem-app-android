@@ -150,7 +150,7 @@ private fun PlacePredictionUM.buyCaption(
     val minAmount = minAmount
 
     return when {
-        error != null -> AmountCaptionUM.Shortfall(error = error)
+        error != null -> AmountCaptionUM.Shortfall(error = error, payout = quote.payout())
         isBelowMinAmount && minAmount != null -> AmountCaptionUM.BelowMinimum(minAmount = minAmount)
         else -> quote.payout()?.let(AmountCaptionUM::ToWin)
     }
