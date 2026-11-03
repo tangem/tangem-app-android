@@ -20,7 +20,7 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.CancelTangemPayOrderUseCase
 import com.tangem.domain.pay.usecase.CancelTariffPlanPendingTransitionUseCase
 import com.tangem.domain.pay.usecase.CancelTariffTransitionUseCase
-import com.tangem.domain.pay.usecase.HasCompletedTangemPayProductUseCase
+import com.tangem.domain.pay.usecase.IsTangemPayCustomerVerifiedUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayConstants
@@ -52,7 +52,7 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
     private val cancelPendingTransition: CancelTariffPlanPendingTransitionUseCase,
     private val cancelTariffTransitionUseCase: CancelTariffTransitionUseCase,
     private val cancelTangemPayOrderUseCase: CancelTangemPayOrderUseCase,
-    private val hasCompletedTangemPayProductUseCase: HasCompletedTangemPayProductUseCase,
+    private val isTangemPayCustomerVerifiedUseCase: IsTangemPayCustomerVerifiedUseCase,
     private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
@@ -198,10 +198,10 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
                                 moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(params.userWalletId))
                             }
                         }
-                        when (hasCompletedTangemPayProductUseCase(userWalletId = params.userWalletId).getOrNull()) {
+                        when (isTangemPayCustomerVerifiedUseCase(userWalletId = params.userWalletId).getOrNull()) {
                             null -> router.replaceAll(AppRoute.Wallet)
-                            true -> Unit
-                            false -> router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayVerified(params.userWalletId))
+                            true -> router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayVerified(params.userWalletId))
+                            false -> Unit
                         }
                     }
                 }
