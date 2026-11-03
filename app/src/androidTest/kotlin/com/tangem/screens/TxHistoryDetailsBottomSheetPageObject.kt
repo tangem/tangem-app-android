@@ -79,6 +79,11 @@ class TxHistoryDetailsBottomSheetPageObject(semanticsProvider: SemanticsNodeInte
         hasText(text)
         useUnmergedTree = true
     }
+
+    val amount: KNode = child {
+        hasTestTag(TxHistoryDetailsTestTags.AMOUNT)
+        useUnmergedTree = true
+    }
 }
 
 private const val UNICODE_MINUS = "\u2212"
