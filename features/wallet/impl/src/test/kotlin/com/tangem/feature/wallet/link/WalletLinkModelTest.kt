@@ -84,7 +84,7 @@ internal class WalletLinkModelTest {
         val pendingLink = CompletableDeferred<Unit>()
         coEvery { linkWalletToDeviceUseCase(userWallet) } coAnswers { pendingLink.await().right() }
         requestLink(userWallet)
-        val renderedButton = requireNotNull(model.uiState.value).buttons.single()
+        val renderedButton = requireNotNull(model.uiState.value).modal.buttons.single()
 
         // Act
         renderedButton.onClick(actionScope)
@@ -166,6 +166,27 @@ internal class WalletLinkModelTest {
     }
 
     @Test
+    fun `GIVEN sheet shown WHEN link progress updates and next request comes THEN only the request changes the id`() =
+        runTest {
+            // Arrange
+            val otherWallet: UserWallet.Hot = mockk()
+            coEvery { linkWalletToDeviceUseCase(userWallet) } returns WalletLinkError.Cancelled.left()
+            requestLink(userWallet)
+            val firstRequestId = model.uiState.value?.requestId
+            clickLink()
+            val idAfterProgress = model.uiState.value?.requestId
+            requestLink(otherWallet)
+
+            // Act
+            model.onDismiss()
+            runCurrent()
+
+            // Assert
+            assertThat(idAfterProgress).isEqualTo(firstRequestId)
+            assertThat(model.uiState.value?.requestId).isNotEqualTo(firstRequestId)
+        }
+
+    @Test
     fun `GIVEN link in progress WHEN caller cancelled THEN sheet closes and link is cancelled`() = runTest {
         // Arrange
         var isLinkCancelled = false
@@ -192,10 +213,10 @@ internal class WalletLinkModelTest {
         return backgroundScope.async(start = CoroutineStart.UNDISPATCHED) { model.request(wallet) }
     }
 
-    private fun isLinkLoading(): Boolean = requireNotNull(model.uiState.value).buttons.single().isLoading
+    private fun isLinkLoading(): Boolean = requireNotNull(model.uiState.value).modal.buttons.single().isLoading
 
     private fun clickLink() {
-        val button = requireNotNull(model.uiState.value).buttons.single()
+        val button = requireNotNull(model.uiState.value).modal.buttons.single()
         button.onClick(actionScope)
     }
 }
