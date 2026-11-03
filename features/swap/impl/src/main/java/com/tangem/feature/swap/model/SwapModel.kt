@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.getOrElse
+import arrow.core.right
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
@@ -108,9 +109,11 @@ import com.tangem.domain.tangempay.TangemPayWithdrawWithSwapUseCase
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
+import com.tangem.domain.transaction.combineTransactionFees
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.domain.transaction.models.isGasless
 import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedForNetwork
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.feature.swap.analytics.SwapEvents
@@ -3554,7 +3557,7 @@ internal class SwapModel @Inject constructor(
                     ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
                         if (quoteState.txType == ExpressTxType.SEND) {
                             null
-                        } else if (isTronGaslessDexSwap(fromSwapCurrencyStatus)) {
+                        } else if (isGaslessDexSwap(fromSwapCurrencyStatus)) {
                             quoteState.swapDataModel ?: return Either.Left(GetFeeError.UnknownError)
                         } else {
                             return Either.Left(GetFeeError.GaslessError.NetworkIsNotSupported)
@@ -3584,8 +3587,34 @@ internal class SwapModel @Inject constructor(
                             nativeFee = res.fee,
                         )
                     }
+                }.flatMap { feeExtended ->
+                    addIntegratedApprovalFee(
+                        feeExtended = feeExtended,
+                        fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                        quoteState = quoteState,
+                        approvalAmount = amount,
+                    )
                 }
             }
+        }
+
+        private suspend fun addIntegratedApprovalFee(
+            feeExtended: TransactionFeeExtended,
+            fromSwapCurrencyStatus: SwapCurrencyStatus,
+            quoteState: SwapState.QuotesLoadedState,
+            approvalAmount: BigDecimal,
+        ): Either<GetFeeError, TransactionFeeExtended> {
+            val permissionSettings = quoteState.permissionState as? PermissionDataState.PermissionSettings
+            // A gasless fee already carries the approve inside its batch.
+            if (permissionSettings == null || feeExtended.isGasless) return feeExtended.right()
+
+            return loadAndStoreIntegratedApproval(
+                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+                quoteState = quoteState,
+                permissionSettings = permissionSettings,
+                approvalAmount = approvalAmount,
+                swapTxFee = feeExtended.transactionFee,
+            ).map { combinedFee -> feeExtended.copy(transactionFee = combinedFee, nativeFee = combinedFee) }
         }
 
         override fun onResult(newState: FeeSelectorUM) {
@@ -3726,8 +3755,16 @@ internal class SwapModel @Inject constructor(
         }
     }
 
+    private fun isGaslessDexSwap(fromSwapCurrencyStatus: SwapCurrencyStatus): Boolean =
+        !fromSwapCurrencyStatus.isYieldSupplyActive &&
+            (isTronGaslessDexSwap(fromSwapCurrencyStatus) || isEvmGaslessDexSwap(fromSwapCurrencyStatus))
+
     private fun isTronGaslessDexSwap(fromSwapCurrencyStatus: SwapCurrencyStatus): Boolean =
         swapFeatureToggles.isTronGaslessDexSwapEnabled && isTron(fromSwapCurrencyStatus.currency.network.rawId)
+
+    private fun isEvmGaslessDexSwap(fromSwapCurrencyStatus: SwapCurrencyStatus): Boolean =
+        swapFeatureToggles.isEvmGaslessDexSwapEnabled &&
+            isEvmGaslessFeeSupportedForNetwork(fromSwapCurrencyStatus.currency.network)
 
     /**
      * Loads the approval transaction + its fee, stores both on the current
@@ -3761,43 +3798,6 @@ internal class SwapModel @Inject constructor(
                 },
             )
             combineTransactionFees(integratedApprovalData.approvalFee, swapTxFee)
-        }
-    }
-
-    /**
-     * Per-bucket sum of two EVM [TransactionFee]s — used to present the integrated
-     * approve+swap total to the user. Mirrors `GiveApprovalModel.estimateFeeForResetApproval`'s
-     * sum strategy (same gas-price, summed gas-limit). Non-EVM fees fall back to the swap fee
-     * alone since the integrated path is currently EVM-only (DEX, non-Solana).
-     */
-    private fun combineTransactionFees(approvalFee: TransactionFee, swapFee: TransactionFee): TransactionFee {
-        return when {
-            approvalFee is TransactionFee.Choosable && swapFee is TransactionFee.Choosable ->
-                TransactionFee.Choosable(
-                    minimum = sumEvmFees(approvalFee.minimum, swapFee.minimum),
-                    normal = sumEvmFees(approvalFee.normal, swapFee.normal),
-                    priority = sumEvmFees(approvalFee.priority, swapFee.priority),
-                )
-            else -> TransactionFee.Single(normal = sumEvmFees(approvalFee.normal, swapFee.normal))
-        }
-    }
-
-    /**
-     * Sums two [Fee.Ethereum] fees as approval + swap. Adds gas limits (same gas price) and
-     * recomputes the on-chain amount. For non-Ethereum fees returns [right] unchanged — the
-     * integrated approve+swap path is EVM-only today.
-     */
-    private fun sumEvmFees(left: Fee, right: Fee): Fee {
-        if (left !is Fee.Ethereum || right !is Fee.Ethereum) return right
-        val leftValue = left.amount.value ?: return right
-        val rightValue = right.amount.value ?: return right
-        val combinedValue = leftValue + rightValue
-        val combinedGasLimit = left.gasLimit + right.gasLimit
-        val combinedAmount = right.amount.copy(value = combinedValue)
-        return when (right) {
-            is Fee.Ethereum.EIP1559 -> right.copy(amount = combinedAmount, gasLimit = combinedGasLimit)
-            is Fee.Ethereum.Legacy -> right.copy(amount = combinedAmount, gasLimit = combinedGasLimit)
-            is Fee.Ethereum.TokenCurrency -> right
         }
     }
 

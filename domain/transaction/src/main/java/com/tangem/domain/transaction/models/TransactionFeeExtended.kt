@@ -27,6 +27,11 @@ data class TransactionFeeExtended(
      */
     val withdrawGasLimit: BigInteger? = null,
     /**
+     * Per-call gas limit for the approve sub-call that precedes the main transaction in a batch. Non-null only
+     * when the fee is paid via [GaslessFeePlan.TokenPayWithApproval].
+     */
+    val approveGasLimit: BigInteger? = null,
+    /**
      * Non-null exactly when the fee is gasless — every resolver quoting one must set it. Null means the
      * fee is paid in the network's own coin.
      */
