@@ -14,6 +14,7 @@ import com.tangem.core.ui.ds.message.TangemMessageUM
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.tokens.model.Amount
@@ -41,6 +42,7 @@ internal class OnrampStateFactory(
             errorNotification = null,
             topBarConfig = OnrampMainTopBarUM(
                 title = combinedReference(resourceReference(R.string.common_buy), stringReference(" $currency")),
+                subtitle = getNetworkSubtitle(),
                 startButtonUM = TopAppBarButtonUM.Close(
                     onCloseClick = onClose,
                     enabled = true,
@@ -52,6 +54,26 @@ internal class OnrampStateFactory(
                 ),
             ),
         )
+    }
+
+    private fun getNetworkSubtitle(): TextReference {
+        val networkName = cryptoCurrency.network.name
+        return when (cryptoCurrency) {
+            is CryptoCurrency.Token -> {
+                val standardName = cryptoCurrency.network.standardType
+                    .takeIf { it !is Network.StandardType.Unspecified }
+                    ?.name
+                if (standardName != null) {
+                    resourceReference(
+                        R.string.token_details_toolbar_subtitle_standard,
+                        wrappedList(standardName, networkName),
+                    )
+                } else {
+                    resourceReference(R.string.token_details_toolbar_subtitle_network, wrappedList(networkName))
+                }
+            }
+            is CryptoCurrency.Coin -> resourceReference(R.string.common_main_network)
+        }
     }
 
     fun getReadyState(currency: OnrampCurrency, initialFiatAmount: BigDecimal? = null): OnrampMainComponentUM.Content {
