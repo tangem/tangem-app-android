@@ -34,6 +34,7 @@ internal class SwapAlertFactory @Inject constructor(
         expressError: ExpressError,
         onFailedTxEmailClick: () -> Unit,
         popBack: () -> Unit = {},
+        isSwapAttemptAlert: Boolean = false,
         providerName: String? = null,
         amountCurrency: CryptoCurrency? = null,
     ) {
@@ -42,6 +43,7 @@ internal class SwapAlertFactory @Inject constructor(
                 title = SwapUtils.getExpressErrorTitle(expressError),
                 message = SwapUtils.getExpressErrorMessage(
                     expressError = expressError,
+                    isSwapAttemptAlert = isSwapAttemptAlert,
                     providerName = providerName,
                     amountCurrency = amountCurrency,
                 ),

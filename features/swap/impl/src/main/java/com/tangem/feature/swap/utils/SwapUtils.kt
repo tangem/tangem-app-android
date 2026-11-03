@@ -14,6 +14,7 @@ import com.tangem.feature.swap.presentation.R
 
 internal fun getExpressErrorMessage(
     expressError: ExpressError,
+    isSwapAttemptAlert: Boolean = false,
     providerName: String? = null,
     amountCurrency: CryptoCurrency? = null,
 ): TextReference {
@@ -41,7 +42,7 @@ internal fun getExpressErrorMessage(
             formatArgs = wrappedList(expressError.code),
         )
         is ExpressError.ExchangeNotPossibleError -> resourceReference(
-            id = if (providerName != null) {
+            id = if (isSwapAttemptAlert) {
                 R.string.warning_express_pair_unavailable_message_v2
             } else {
                 R.string.warning_express_pair_unavailable_message
@@ -74,7 +75,14 @@ private fun getAmountLimitMessage(
     amountCurrency: CryptoCurrency?,
 ): TextReference {
     if (amountCurrency == null) return getGeneralErrorMessage(expressError)
-    return resourceReference(id = id, formatArgs = wrappedList(expressError.amount.format { crypto(amountCurrency) }))
+    return resourceReference(
+        id = id,
+        formatArgs = wrappedList(
+            expressError.amount.format {
+                crypto(symbol = amountCurrency.symbol, decimals = amountCurrency.decimals)
+            },
+        ),
+    )
 }
 
 private fun getGeneralErrorMessage(expressError: ExpressError): TextReference {
