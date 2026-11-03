@@ -15,7 +15,7 @@ import androidx.core.content.ContextCompat.startActivity
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.StackAnimation
-import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.androidPredictiveBackAnimatable
+import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.androidPredictiveBackAnimatableV2
 import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.predictiveBackAnimation
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.router.stack.ChildStack
@@ -131,7 +131,7 @@ private fun childrenAnimation(
             backHandler = backHandler,
             onBack = onBack,
             selector = { backEvent, _, _ ->
-                androidPredictiveBackAnimatable(backEvent)
+                androidPredictiveBackAnimatableV2(backEvent)
             },
             fallbackAnimation = stackAnimation<AppRoute, RoutingComponent.Child> { child ->
                 RoutingTransitionAnimationFactory.create(child.configuration)
