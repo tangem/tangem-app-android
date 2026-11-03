@@ -11,7 +11,8 @@ import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.transaction.SolanaGaslessTransactionRepository
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.error.SolanaGaslessError
-import com.tangem.domain.transaction.error.SolanaGaslessSendError
+import com.tangem.domain.transaction.models.GaslessProtocolData
+import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.logging.TangemLogger
@@ -27,24 +28,27 @@ class CreateAndSendSolanaGaslessTransactionUseCase(
     private val gaslessSignerProvider: GaslessSignerProvider,
 ) {
 
+    /** @param fee must carry [GaslessProtocolData.Solana], which names the sponsor and the signing network. */
     suspend operator fun invoke(
         userWallet: UserWallet,
-        network: Network,
         transactionData: TransactionData,
-        feePayer: String,
-    ): Either<SolanaGaslessSendError, String> = either {
+        fee: TransactionFeeExtended,
+    ): Either<SendTransactionError, String> = either {
+        val sponsorship = fee.gaslessProtocolData as? GaslessProtocolData.Solana
+            ?: raise(SendTransactionError.DataError("Solana gasless send called without a fee payer"))
+        val network = sponsorship.network
         val signed = when (
             val result = walletManagersFacade.signSolanaGaslessTransaction(
                 userWalletId = userWallet.walletId,
                 network = network,
                 transactionData = transactionData,
-                feePayer = feePayer,
+                feePayer = sponsorship.feePayer,
                 signer = gaslessSignerProvider(userWallet),
             )
         ) {
             is Result.Success -> result.data
-            is Result.Failure -> raise(SolanaGaslessSendError.Signing(SendTransactionUseCase.handleError(result)))
-            null -> raise(SolanaGaslessSendError.Signing(SendTransactionError.UnknownError()))
+            is Result.Failure -> raise(SendTransactionUseCase.handleError(result))
+            null -> raise(SendTransactionError.UnknownError())
         }
 
         val signature = solanaGaslessTransactionRepository.submit(
@@ -57,7 +61,7 @@ class CreateAndSendSolanaGaslessTransactionUseCase(
                     refreshNetworkStatus(userWalletId = userWallet.walletId, network = network)
                 }
             }
-            .mapLeft(SolanaGaslessSendError::Service)
+            .mapLeft(SendTransactionError::SolanaGasless)
             .bind()
 
         refreshNetworkStatus(userWalletId = userWallet.walletId, network = network)
