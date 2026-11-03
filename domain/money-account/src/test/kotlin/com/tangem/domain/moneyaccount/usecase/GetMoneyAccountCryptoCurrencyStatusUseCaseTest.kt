@@ -95,6 +95,7 @@ internal class GetMoneyAccountCryptoCurrencyStatusUseCaseTest {
                 value = MoneyAccountStatusValue.Onboarding.Activating(
                     source = StatusSource.ACTUAL,
                     customerId = CUSTOMER_ID,
+                    step = MoneyAccountStatusValue.Onboarding.Activating.Step.ISSUING,
                 ),
                 currency = ACCOUNT_TOKEN,
                 expected = null,

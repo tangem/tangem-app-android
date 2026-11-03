@@ -60,7 +60,7 @@ class PollTangemPayAccountStatusesUseCase(
 
         val MoneyAccountActivationState.isTerminal: Boolean
             get() = when (this) {
-                MoneyAccountActivationState.Issuing -> false
+                is MoneyAccountActivationState.Issuing -> false
                 is MoneyAccountActivationState.AwaitingKyc -> !kycStatus.isInProgress
 
                 MoneyAccountActivationState.NotStarted,
