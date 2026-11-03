@@ -4,17 +4,12 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.toKeccak
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.UnmarshalHelper
 import com.tangem.common.card.EllipticCurve
-import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.common.extensions.toHexString
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
-import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.moneyaccount.derivation.MONEY_ACCOUNT_DERIVATION_PATH
 import java.util.Locale
-
-private const val VISA_BATCH_START = "AE"
-private const val VISA_BATCH_START_2 = "FFFC"
 
 object VisaUtilities {
 
@@ -30,15 +25,6 @@ object VisaUtilities {
 
     fun moneyAccountDepositAddressMessage(depositAddress: String): String {
         return "Banking account deposit address ${depositAddress.lowercase(Locale.US)}"
-    }
-
-    fun isVisaCard(card: CardDTO): Boolean {
-        return isVisaCard(card.firmwareVersion.doubleValue, card.batchId)
-    }
-
-    fun isVisaCard(firmwareVersion: Double, batchId: String): Boolean {
-        return firmwareVersion in FirmwareVersion.visaRange &&
-            (batchId.startsWith(VISA_BATCH_START) || batchId.startsWith(VISA_BATCH_START_2))
     }
 
     // TODO: [REDACTED_TASK_KEY] - Get this public function from Blockchain SDK

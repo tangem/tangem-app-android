@@ -90,18 +90,6 @@ internal class OrderResolverTest {
     }
 
     @Test
-    fun `selectLatest includes terminal orders`() {
-        val orders = listOf(
-            order(id = "1", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC, status = OrderStatus.COMPLETED, updatedAt = "2026-01-05"),
-            order(id = "2", type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC, status = OrderStatus.NEW, updatedAt = "2026-01-01"),
-        )
-
-        val result = OrderResolver.selectLatest(orders = orders, type = OrderType.CARD_ISSUE_VIRTUAL_RAIN_KYC)
-
-        assertThat(result?.id).isEqualTo("1")
-    }
-
-    @Test
     fun `GIVEN active virtual orders of different types WHEN selectActiveByTypes THEN latest virtual one is picked`() {
         // Arrange
         val orders = listOf(

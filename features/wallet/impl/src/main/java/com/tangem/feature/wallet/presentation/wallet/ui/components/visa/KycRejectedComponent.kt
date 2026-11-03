@@ -8,13 +8,10 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheet
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.domain.models.wallet.UserWalletId
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
 
-internal class KycRejectedComponent @AssistedInject constructor(
-    @Assisted appComponentContext: AppComponentContext,
-    @Assisted params: Params,
+internal class KycRejectedComponent(
+    appComponentContext: AppComponentContext,
+    params: Params,
 ) : ComposableBottomSheetComponent, AppComponentContext by appComponentContext {
 
     private val model: KycRejectedModel = getOrCreateModel(params = params)
@@ -35,11 +32,6 @@ internal class KycRejectedComponent @AssistedInject constructor(
         val customerId: String,
         val onDismiss: () -> Unit,
     )
-
-    @AssistedFactory
-    interface Factory {
-        fun create(appComponentContext: AppComponentContext, params: Params): KycRejectedComponent
-    }
 }
 
 internal interface KycRejectedCallbacks {

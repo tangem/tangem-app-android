@@ -32,9 +32,6 @@ dependencies {
     // region Core modules
     api(projects.core.analytics.models)
     api(projects.core.utils)
-    // core:error provides UniversalError — a supertype of VisaActivationError (used via
-    // domain:visa:models) the compiler needs on the classpath, though never referenced directly.
-    implementation(projects.core.error)
     // endregion
 
     // region Domain
@@ -43,7 +40,6 @@ dependencies {
 
     // region Domain models
     api(projects.domain.models)
-    api(projects.domain.visa.models)
     implementation(projects.domain.moneyAccount.models)
     // endregion
 
