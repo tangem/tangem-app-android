@@ -24,6 +24,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import com.arkivanov.decompose.Child
@@ -132,6 +133,7 @@ internal class DefaultStackAnimation<C : Any, T : Any>(
                     PredictiveBackController(
                         stack = currentStack,
                         predictiveBackParams = predictiveBackParams,
+                        isRegularTransitionRunning = { nextItems != null || items.isRegularTransition() },
                         onItemsChange = { items = it },
                     )
                 }
@@ -215,6 +217,7 @@ internal class DefaultStackAnimation<C : Any, T : Any>(
     private fun PredictiveBackController(
         stack: ChildStack<C, T>,
         predictiveBackParams: PredictiveBackParams,
+        isRegularTransitionRunning: () -> Boolean,
         onItemsChange: (Map<Any, AnimationItem<C, T>>) -> Unit,
     ) {
         val scope = rememberCoroutineScope()
@@ -225,6 +228,7 @@ internal class DefaultStackAnimation<C : Any, T : Any>(
                     stack = stack,
                     scope = scope,
                     predictiveBackParams = predictiveBackParams,
+                    isRegularTransitionRunning = isRegularTransitionRunning,
                     setItems = onItemsChange,
                 )
             }
@@ -259,16 +263,28 @@ internal class DefaultStackAnimation<C : Any, T : Any>(
         private val stack: ChildStack<C, T>,
         private val scope: CoroutineScope,
         private val predictiveBackParams: PredictiveBackParams,
+        private val isRegularTransitionRunning: () -> Boolean,
         private val setItems: (Map<Any, AnimationItem<C, T>>) -> Unit,
     ) : BackCallback() {
         private var animationHandler: AnimationHandler? = null
         private var initialBackEvent: BackEvent? = null
 
+        /**
+         * Set from a committed back until its pop has gone through. The callback stays registered meanwhile —
+         * disabling it would hand the next back to whoever is below, possibly the activity — so the gestures that
+         * arrive in between are dropped: they would replace the committing handler and pop a second time.
+         */
+        private var isCommitting = false
+
         override fun onBackStarted(backEvent: BackEvent) {
-            initialBackEvent = backEvent
+            if (isCommitting) return
+            // seeking would replace a running push or pop with fresh states, and the screen would jump; the back
+            // still pops once the gesture completes, through the regular transition
+            initialBackEvent = backEvent.takeUnless { isRegularTransitionRunning() }
         }
 
         override fun onBackProgressed(backEvent: BackEvent) {
+            if (isCommitting) return
             startIfNeeded()
 
             scope.launch {
@@ -318,6 +334,7 @@ internal class DefaultStackAnimation<C : Any, T : Any>(
         }
 
         override fun onBackCancelled() {
+            if (isCommitting) return
             initialBackEvent = null
             val handler = animationHandler ?: return
 
@@ -332,6 +349,8 @@ internal class DefaultStackAnimation<C : Any, T : Any>(
         }
 
         override fun onBack() {
+            if (isCommitting) return
+            isCommitting = true
             initialBackEvent = null
 
             scope.launch {
@@ -342,6 +361,11 @@ internal class DefaultStackAnimation<C : Any, T : Any>(
                 }
 
                 predictiveBackParams.onBack()
+
+                // a pop re-keys this controller, which disposes it and cancels this scope; only a pop the router
+                // declined lives to the next frame, and leaves the stack — and this callback — in place
+                withFrameNanos {}
+                isCommitting = false
             }
         }
     }
@@ -448,5 +472,10 @@ private fun TransitionState<*>.isIdle(): Boolean = when (this) {
     is SeekableTransitionState -> false
     else -> false
 }
+
+/** A push or pop animating on its own, as opposed to a predictive back seeking under the finger. */
+@ExperimentalDecomposeApi
+private fun Map<Any, AnimationItem<*, *>>.isRegularTransition(): Boolean =
+    size > 1 && !values.last().transitionState.isSeekable()
 
 private fun TransitionState<*>.isSeekable(): Boolean = this is SeekableTransitionState
