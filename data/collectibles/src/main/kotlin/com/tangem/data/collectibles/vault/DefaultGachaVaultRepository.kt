@@ -163,7 +163,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
                     .bind()
 
                 walletManager.getCollectiblesVault().toEither()
-                    .map { vault -> vault?.hotDelegate }
+                    .map { vault -> vault?.sessionKey }
                     .mapLeft { it.toVaultFailure(userWallet) }
                     .bind()
             }
@@ -344,7 +344,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
             }
 
             walletManager.sendPurchasePack(
-                hotDelegate = delegate.base58,
+                sessionKey = delegate.base58,
                 amount = amount,
                 feeAmount = feeAmount,
                 memo = memo,
@@ -426,7 +426,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
                 )
                 walletManager.sendVaultTransaction(signer, onSigned) {
                     buildInitCollectiblesVault(
-                        hotDelegate = hotDelegate.base58,
+                        sessionKey = hotDelegate.base58,
                         perSpinCap = limits.perSpinCap,
                         dailyCap = limits.dailyCap,
                     )
@@ -436,14 +436,14 @@ internal class DefaultGachaVaultRepository @Inject constructor(
                     .bind()
             }
 
-            existing.hotDelegate != hotDelegate.base58 -> {
+            existing.sessionKey != hotDelegate.base58 -> {
                 TangemLogger.d(
                     "vault: is the hot key the same as in the User Account PDA? -> " +
                         "No, updating the key in the PDA (update_vault) (tap)",
                 )
                 walletManager.sendVaultTransaction(signer, onSigned) {
                     buildUpdateCollectiblesVault(
-                        hotDelegate = hotDelegate.base58,
+                        sessionKey = hotDelegate.base58,
                         perSpinCap = null,
                         dailyCap = null,
                     )
