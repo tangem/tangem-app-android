@@ -1,8 +1,11 @@
 package com.tangem.core.ui.utils
 
 import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.SharedTransitionScope.ResizeMode.Companion.scaleToBounds
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
@@ -24,6 +27,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
@@ -107,11 +111,17 @@ fun Modifier.zoomTransitionSource(key: String, shape: Shape): Modifier {
 fun Modifier.zoomTransitionDestination(key: String?, shape: Shape): Modifier {
     if (key == null) return this
     val host = LocalZoomHosts.current.lastOrNull() ?: return this
-    return zoomBounds(
-        host = host,
-        sharedContentState = host.sharedTransitionScope.rememberSharedContentState(key = key),
-        shape = shape,
-    )
+    val sharedContentState = host.sharedTransitionScope.rememberSharedContentState(key = key)
+
+    // Shared bounds without a match skip their enter and exit, and the stack doesn't slide a zoomed screen, so a
+    // source gone by the time of the zoom (its block hid) would cut instead. A plain fade covers that case.
+    val fallbackAlpha by host.animatedVisibilityScope.transition.animateFloat(
+        transitionSpec = { tween() },
+        label = "zoom fallback alpha",
+    ) { state -> if (state == EnterExitState.Visible) 1f else 0f }
+
+    return graphicsLayer { alpha = if (sharedContentState.isMatchFound) 1f else fallbackAlpha }
+        .zoomBounds(host = host, sharedContentState = sharedContentState, shape = shape)
 }
 
 @Composable
