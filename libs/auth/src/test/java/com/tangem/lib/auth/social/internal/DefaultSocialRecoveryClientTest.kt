@@ -333,6 +333,90 @@ internal class DefaultSocialRecoveryClientTest {
             assertThat(result.isRight()).isTrue()
         }
 
+    @Test
+    fun `GIVEN the KMS key has a kid WHEN registerBinding THEN the kid of the sealing key is sent verbatim`() =
+        runTest {
+            // Arrange
+            val recoveryKey = ByteArray(size = 32) { it.toByte() }
+            stubRegistrationNonce()
+            coEvery { api.getRecoveryPublicKey() } returns kmsKeySuccess(
+                algorithm = RecoveryKeyRsaCipher.SUPPORTED_ALGORITHM,
+                keyId = KMS_KEY_ID,
+            )
+            val request = slot<SocialWalletRegistrationApiRequest>()
+            coEvery { api.registerWalletBinding(capture(request)) } returns tokenSuccess()
+
+            // Act
+            val result = client.registerBinding(
+                walletId = WALLET_ID,
+                providerIdToken = ID_TOKEN,
+                recoveryKey = recoveryKey,
+                signer = signer,
+            )
+
+            // Assert
+            assertThat(result.isRight()).isTrue()
+            assertThat(request.captured.kmsKeyId).isEqualTo(KMS_KEY_ID)
+            val sealed = JavaBase64.getDecoder().decode(request.captured.encryptedRecoveryKey)
+            assertThat(decryptWithKms(sealed)).isEqualTo(recoveryKey)
+            coVerify(exactly = 1) { api.getRecoveryPublicKey() }
+        }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = ["", "  "])
+    fun `GIVEN the KMS key has no kid WHEN registerBinding THEN the binding is registered without it`(
+        keyId: String?,
+    ) = runTest {
+        // Arrange
+        stubRegistrationNonce()
+        coEvery { api.getRecoveryPublicKey() } returns kmsKeySuccess(
+            algorithm = RecoveryKeyRsaCipher.SUPPORTED_ALGORITHM,
+            keyId = keyId,
+        )
+        val request = slot<SocialWalletRegistrationApiRequest>()
+        coEvery { api.registerWalletBinding(capture(request)) } returns tokenSuccess()
+
+        // Act
+        val result = client.registerBinding(
+            walletId = WALLET_ID,
+            providerIdToken = ID_TOKEN,
+            recoveryKey = ByteArray(size = 32),
+            signer = signer,
+        )
+
+        // Assert
+        assertThat(result.isRight()).isTrue()
+        assertThat(request.captured.kmsKeyId).isNull()
+    }
+
+    @Test
+    fun `GIVEN the backend rejects the kid WHEN registerBinding THEN the API error is returned`() = runTest {
+        // Arrange
+        stubRegistrationNonce()
+        coEvery { api.getRecoveryPublicKey() } returns kmsKeySuccess(
+            algorithm = RecoveryKeyRsaCipher.SUPPORTED_ALGORITHM,
+            keyId = KMS_KEY_ID,
+        )
+        coEvery { api.registerWalletBinding(any()) } returns httpError(
+            code = ApiResponseError.HttpException.Code.BAD_REQUEST,
+            message = "Unknown kmsKeyId",
+        )
+
+        // Act
+        val result = client.registerBinding(
+            walletId = WALLET_ID,
+            providerIdToken = ID_TOKEN,
+            recoveryKey = ByteArray(size = 32),
+            signer = signer,
+        )
+
+        // Assert
+        assertThat(result.leftOrNull()).isInstanceOf(SocialRecoveryError.Api::class.java)
+        coVerify(exactly = 0) { sessionTokensStore.save(any()) }
+        coVerify(exactly = 0) { walletRegistrar.markRegistered(any()) }
+    }
+
     @ParameterizedTest
     @NullSource
     @ValueSource(strings = ["RSA-OAEP-512"])
@@ -550,11 +634,12 @@ internal class DefaultSocialRecoveryClientTest {
             doFinal(ciphertext)
         }
 
-    private fun kmsKeySuccess(algorithm: String?) = ApiResponse.Success(
+    private fun kmsKeySuccess(algorithm: String?, keyId: String? = null) = ApiResponse.Success(
         data = RecoveryPublicKeyApiResponse(
             modulus = (kmsKeyPair.public as RSAPublicKey).modulus.toBase64Url(),
             exponent = (kmsKeyPair.public as RSAPublicKey).publicExponent.toBase64Url(),
             algorithm = algorithm,
+            keyId = keyId,
         ),
     )
 
@@ -601,5 +686,6 @@ internal class DefaultSocialRecoveryClientTest {
         const val ATTESTATION_TOKEN = "attestation-token"
         const val CIPHERED_NONCE = "ciphered"
         const val NONCE = "bm9uY2Ux"
+        const val KMS_KEY_ID = "Recovery-Key/2026-11 v3"
     }
 }
