@@ -49,6 +49,7 @@ internal class MoneyAccountDetailsScreenComponent(
                     userWalletId = params.userWalletId,
                     currency = currency,
                     openExplorer = model::onExploreClick,
+                    onTransactionClick = model::onTransactionClick,
                 ),
             )
         },

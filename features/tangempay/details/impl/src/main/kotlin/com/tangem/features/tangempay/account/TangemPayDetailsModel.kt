@@ -478,7 +478,13 @@ internal class TangemPayDetailsModel @Inject constructor(
             is TangemPayTxHistoryItem.Payment -> "payment" to "unknown"
             is TangemPayTxHistoryItem.Spend -> "spend" to item.status.name.lowercase()
         }
-        analytics.send(TangemPayAnalyticsEvents.TransactionInListClicked(type = type, status = status))
+        analytics.send(
+            TangemPayAnalyticsEvents.TransactionInListClicked(
+                product = TangemPayAnalyticsEvents.Product.CARD,
+                type = type,
+                status = status,
+            ),
+        )
         bottomSheetNavigation.activate(
             configuration = TangemPayDetailsNavigation.TransactionDetails(
                 transaction = item,

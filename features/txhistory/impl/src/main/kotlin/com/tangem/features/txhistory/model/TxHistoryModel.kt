@@ -292,6 +292,7 @@ internal class TxHistoryModel @Inject constructor(
 
     override fun onTransactionClick(item: TxHistoryInfo) {
         vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Tick)
+        params.onTransactionClick(item)
         txDetailsNavigation.activate(TxHistoryDetailsSlotConfig(item.txId))
     }
 

@@ -14,6 +14,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -26,12 +27,20 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
+import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents.BalanceBand
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusSupplier
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBankCredentialsUseCase
 import com.tangem.domain.moneyaccount.usecase.RenewTangemPaySessionUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.txhistory.model.ExpressTx
+import com.tangem.domain.txhistory.model.JointOperationTx
+import com.tangem.domain.txhistory.model.OnChainTx
+import com.tangem.domain.txhistory.model.TxHistoryInfo
+import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
 import com.tangem.features.moneyaccount.details.impl.R
@@ -49,6 +58,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -240,21 +250,23 @@ internal class MoneyAccountDetailsModelTest {
     }
 
     @Test
-    fun `GIVEN bank details loaded WHEN reported THEN open sheet dismissed and details screen pushed`() = runTest {
-        // Arrange
-        val model = createModel(activeAccount(balance = balance()))
-        val openedSheets = model.bottomSheetNavigation.trackSlot()
-        advanceUntilIdle()
-        model.onBankingDetailsLoadFailed()
+    fun `GIVEN bank details loaded WHEN reported THEN sheet replaced by details screen and bank details event sent`() =
+        runTest {
+            // Arrange
+            val model = createModel(activeAccount(balance = balance()))
+            val openedSheets = model.bottomSheetNavigation.trackSlot()
+            advanceUntilIdle()
+            model.onBankingDetailsLoadFailed()
 
-        // Act
-        model.onBankDetailsLoaded(CREDENTIALS)
+            // Act
+            model.onBankDetailsLoaded(CREDENTIALS)
 
-        // Assert
-        assertThat(openedSheets.last()).isNull()
-        verify(exactly = 1) { router.push(MoneyAccountDetailsRoute.BankDetails(CREDENTIALS), any()) }
-        model.onDestroy()
-    }
+            // Assert
+            assertThat(openedSheets.last()).isNull()
+            verify(exactly = 1) { router.push(MoneyAccountDetailsRoute.BankDetails(CREDENTIALS), any()) }
+            verify(exactly = 1) { analytics.send(MoneyAccountAnalyticsEvents.AddFundsBankDetailsShown()) }
+            model.onDestroy()
+        }
 
     @Test
     fun `GIVEN error sheet WHEN support clicked THEN sheet dismissed and support email sent with customer id`() =
@@ -272,16 +284,131 @@ internal class MoneyAccountDetailsModelTest {
             // Assert
             assertThat(openedSheets.last()).isNull()
             verify(exactly = 1) { analytics.send(ofType<MoneyAccountAnalyticsEvents.DetailsErrorSupportTapped>()) }
-            coVerify(exactly = 1) {
-                sendFeedbackEmailUseCase(
-                    FeedbackEmailType.Visa.MoneyAccountRequest(
-                        walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId),
-                        customerId = CUSTOMER_ID,
-                    ),
-                )
-            }
+            verify(exactly = 0) { analytics.send(ofType<MoneyAccountAnalyticsEvents.SupportClicked>()) }
+            coVerify(exactly = 1) { sendFeedbackEmailUseCase(supportEmailType()) }
             model.onDestroy()
         }
+
+    @Test
+    fun `GIVEN account menu WHEN support clicked THEN support event sent and support email sent with customer id`() =
+        runTest {
+            // Arrange
+            val model = createModel(activeAccount(balance = balance()))
+            advanceUntilIdle()
+
+            // Act
+            model.menuItem(resourceReference(R.string.tangempay_pay_support)).onClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { analytics.send(MoneyAccountAnalyticsEvents.SupportClicked()) }
+            coVerify(exactly = 1) { sendFeedbackEmailUseCase(supportEmailType()) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN account menu WHEN terms clicked THEN account terms event sent and terms opened`() = runTest {
+        // Arrange
+        val model = createModel(activeAccount(balance = balance()))
+        advanceUntilIdle()
+
+        // Act
+        model.menuItem(stringReference("Terms and Limits")).onClick()
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(
+                TangemPayAnalyticsEvents.TermsAndLimitsClicked(product = TangemPayAnalyticsEvents.Product.ACCOUNT),
+            )
+        }
+        verify(exactly = 1) { urlOpener.openUrl(TERMS_URL) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN account screen WHEN menu opened THEN account menu event sent`() = runTest {
+        // Arrange
+        val model = createModel(activeAccount(balance = balance()))
+        advanceUntilIdle()
+
+        // Act
+        model.uiState.value.onMenuClick()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(MoneyAccountAnalyticsEvents.AccountMenuClicked()) }
+        model.onDestroy()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideScreenOpenedModels")
+    fun `GIVEN account WHEN first loaded THEN screen opened event sent with its state and balance band`(
+        model: ScreenOpenedModel,
+    ) = runTest {
+        // Act
+        val detailsModel = createModel(model.status)
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(model.expectedEvent) }
+        detailsModel.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN account shown WHEN account updated THEN screen opened event not repeated`() = runTest {
+        // Arrange
+        val statuses = MutableStateFlow<MoneyAccountStatusValue>(activeAccount(balance = balance()))
+        val model = createModel(statuses)
+        advanceUntilIdle()
+
+        // Act
+        statuses.value = activeAccount(balance = balance(amount = BigDecimal.ZERO))
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(ofType<MoneyAccountAnalyticsEvents.AccountScreenOpened>()) }
+        model.onDestroy()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideBalanceBannerModels")
+    fun `GIVEN account updates WHEN balance becomes unavailable THEN banner event sent once per appearance`(
+        model: BalanceBannerModel,
+    ) = runTest {
+        // Act
+        val detailsModel = createModel(model.balances.map { activeAccount(balance = it) }.asFlow())
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = model.expectedEvents) {
+            analytics.send(ofType<MoneyAccountAnalyticsEvents.BalanceErrorBannerShown>())
+        }
+        detailsModel.onDestroy()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideTransactionClickModels")
+    fun `GIVEN history row WHEN clicked THEN account transaction event sent with its type and status`(
+        model: TransactionClickModel,
+    ) = runTest {
+        // Arrange
+        val detailsModel = createModel(activeAccount(balance = balance()))
+        advanceUntilIdle()
+
+        // Act
+        detailsModel.onTransactionClick(model.item)
+
+        // Assert
+        verify(exactly = 1) {
+            analytics.send(
+                TangemPayAnalyticsEvents.TransactionInListClicked(
+                    product = TangemPayAnalyticsEvents.Product.ACCOUNT,
+                    type = model.expectedType,
+                    status = model.expectedStatus,
+                ),
+            )
+        }
+        detailsModel.onDestroy()
+    }
 
     @Test
     fun `GIVEN options sheet WHEN swap clicked THEN swap opens with the account token as TO`() = runTest {
@@ -651,6 +778,117 @@ internal class MoneyAccountDetailsModelTest {
         val expectedRoute: MoneyAccountDetailsRoute? = null,
     )
 
+    private fun provideScreenOpenedModels() = listOf(
+        activeScreenOpenedModel(amount = BigDecimal.ZERO, expectedBand = BalanceBand.ZERO),
+        activeScreenOpenedModel(amount = BigDecimal("99.99"), expectedBand = BalanceBand.UNDER_100),
+        activeScreenOpenedModel(amount = BigDecimal("100"), expectedBand = BalanceBand.FROM_100_TO_1K),
+        activeScreenOpenedModel(amount = BigDecimal("1000"), expectedBand = BalanceBand.FROM_1K_TO_10K),
+        activeScreenOpenedModel(amount = BigDecimal("10000"), expectedBand = BalanceBand.FROM_1K_TO_10K),
+        activeScreenOpenedModel(amount = BigDecimal("25250.50"), expectedBand = BalanceBand.OVER_10K),
+        ScreenOpenedModel(
+            status = activeAccount(balance = null),
+            expectedEvent = MoneyAccountAnalyticsEvents.AccountScreenOpened(
+                accountState = MoneyAccountAnalyticsEvents.AccountState.ACTIVE,
+                balanceBand = null,
+                currency = null,
+            ),
+        ),
+    )
+
+    data class ScreenOpenedModel(
+        val status: MoneyAccountStatusValue.Account,
+        val expectedEvent: MoneyAccountAnalyticsEvents.AccountScreenOpened,
+    )
+
+    private fun activeScreenOpenedModel(amount: BigDecimal, expectedBand: BalanceBand) = ScreenOpenedModel(
+        status = activeAccount(balance = balance(amount = amount)),
+        expectedEvent = MoneyAccountAnalyticsEvents.AccountScreenOpened(
+            accountState = MoneyAccountAnalyticsEvents.AccountState.ACTIVE,
+            balanceBand = expectedBand,
+            currency = "USD",
+        ),
+    )
+
+    private fun provideBalanceBannerModels() = listOf(
+        BalanceBannerModel(balances = listOf(null), expectedEvents = 1),
+        BalanceBannerModel(balances = listOf(balance()), expectedEvents = 0),
+        BalanceBannerModel(balances = listOf(balance(), null), expectedEvents = 1),
+        BalanceBannerModel(balances = listOf(null, null), expectedEvents = 1),
+        BalanceBannerModel(balances = listOf(null, balance(), null), expectedEvents = 2),
+    )
+
+    data class BalanceBannerModel(val balances: List<MoneyAccountStatusValue.Balance?>, val expectedEvents: Int)
+
+    private fun provideTransactionClickModels() = listOf(
+        TransactionClickModel(
+            item = OnChainTx.BSDK(txInfo(isOutgoing = false, status = TxInfo.TransactionStatus.Confirmed)),
+            expectedType = "deposit",
+            expectedStatus = "completed",
+        ),
+        TransactionClickModel(
+            item = OnChainTx.BSDK(txInfo(isOutgoing = true, status = TxInfo.TransactionStatus.Unconfirmed)),
+            expectedType = "send",
+            expectedStatus = "pending",
+        ),
+        TransactionClickModel(
+            item = OnChainTx.BSDK(txInfo(isOutgoing = true, status = TxInfo.TransactionStatus.Failed)),
+            expectedType = "send",
+            expectedStatus = "declined",
+        ),
+        TransactionClickModel(
+            item = ExpressTx.Swap(tx = mockk(), isOutgoing = true, txInfo = null),
+            expectedType = "send",
+            expectedStatus = "unknown",
+        ),
+        TransactionClickModel(
+            item = ExpressTx.Onramp(
+                tx = mockk(),
+                txInfo = OnChainTx.BSDK(txInfo(isOutgoing = false, status = TxInfo.TransactionStatus.Confirmed)),
+            ),
+            expectedType = "deposit",
+            expectedStatus = "completed",
+        ),
+        TransactionClickModel(
+            item = JointOperationTx(operation = mockk(), transfer = mockk(), txInfo = null),
+            expectedType = "send",
+            expectedStatus = "unknown",
+        ),
+        collateralClick(collateralType = TangemPayTxHistoryItem.Type.Deposit, expectedType = "deposit"),
+        collateralClick(collateralType = TangemPayTxHistoryItem.Type.Cashback, expectedType = "deposit"),
+        collateralClick(collateralType = TangemPayTxHistoryItem.Type.Withdrawal, expectedType = "send"),
+        spendClick(spendStatus = TangemPayTxHistoryItem.Status.PENDING, expectedStatus = "pending"),
+        spendClick(spendStatus = TangemPayTxHistoryItem.Status.RESERVED, expectedStatus = "pending"),
+        spendClick(spendStatus = TangemPayTxHistoryItem.Status.COMPLETED, expectedStatus = "completed"),
+        spendClick(spendStatus = TangemPayTxHistoryItem.Status.DECLINED, expectedStatus = "declined"),
+        spendClick(spendStatus = TangemPayTxHistoryItem.Status.REVERSED, expectedStatus = "declined"),
+        spendClick(spendStatus = TangemPayTxHistoryItem.Status.UNKNOWN, expectedStatus = "unknown"),
+        TransactionClickModel(
+            item = OnChainTx.TangemPay(mockk<TangemPayTxHistoryItem.Payment>()),
+            expectedType = "send",
+            expectedStatus = "unknown",
+        ),
+        TransactionClickModel(
+            item = OnChainTx.TangemPay(mockk<TangemPayTxHistoryItem.Fee>()),
+            expectedType = "send",
+            expectedStatus = "unknown",
+        ),
+    )
+
+    private fun collateralClick(collateralType: TangemPayTxHistoryItem.Type, expectedType: String) =
+        TransactionClickModel(
+            item = OnChainTx.TangemPay(mockk<TangemPayTxHistoryItem.Collateral> { every { type } returns collateralType }),
+            expectedType = expectedType,
+            expectedStatus = "unknown",
+        )
+
+    private fun spendClick(spendStatus: TangemPayTxHistoryItem.Status, expectedStatus: String) = TransactionClickModel(
+        item = OnChainTx.TangemPay(mockk<TangemPayTxHistoryItem.Spend> { every { status } returns spendStatus }),
+        expectedType = "send",
+        expectedStatus = expectedStatus,
+    )
+
+    data class TransactionClickModel(val item: TxHistoryInfo, val expectedType: String, val expectedStatus: String)
+
     private fun provideNonAccountStatuses() = listOf(
         MoneyAccountStatusValue.Error.Unavailable,
         MoneyAccountStatusValue.Error.ExposedDevice,
@@ -672,8 +910,8 @@ internal class MoneyAccountDetailsModelTest {
         error = error,
     )
 
-    private fun balance() = MoneyAccountStatusValue.Balance(
-        cryptoAmount = BigDecimal("25250.50"),
+    private fun balance(amount: BigDecimal = BigDecimal("25250.50")) = MoneyAccountStatusValue.Balance(
+        cryptoAmount = amount,
         depositAddress = DEPOSIT_ADDRESS,
         currencyCode = "USD",
         fiatRate = BigDecimal.ONE,
@@ -695,6 +933,26 @@ internal class MoneyAccountDetailsModelTest {
         AddFundsModel(balance = null, expectedDepositAddress = null),
     )
 
+    private fun txInfo(isOutgoing: Boolean, status: TxInfo.TransactionStatus) = TxInfo.Single(
+        txHash = "0xhash",
+        timestampInMillis = 0L,
+        isOutgoing = isOutgoing,
+        destinationType = TxInfo.DestinationType.Single(addressType = TxInfo.AddressType.User(DEPOSIT_ADDRESS)),
+        sourceType = TxInfo.SourceType.Single(address = DEPOSIT_ADDRESS),
+        interactionAddressType = null,
+        status = status,
+        type = TxInfo.TransactionType.Transfer,
+        amount = BigDecimal.ONE,
+    )
+
+    private fun supportEmailType() = FeedbackEmailType.Visa.MoneyAccountRequest(
+        walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId),
+        customerId = CUSTOMER_ID,
+    )
+
+    private fun MoneyAccountDetailsModel.menuItem(title: TextReference) =
+        uiState.value.menuItems.first { it.title == title }
+
     private fun SlotNavigation<MoneyAccountDetailsNavigation>.trackSlot(): List<MoneyAccountDetailsNavigation?> {
         val tracked = mutableListOf<MoneyAccountDetailsNavigation?>()
         subscribe { event -> tracked.add(event.transformer(tracked.lastOrNull())) }
@@ -705,6 +963,7 @@ internal class MoneyAccountDetailsModelTest {
         const val CUSTOMER_ID = "customer"
         const val DEPOSIT_ADDRESS = "0xdeposit"
         const val PRODUCT_INSTANCE_ID = "instance-1"
+        const val TERMS_URL = "https://tangem.com/docs/en/virtual-account-terms.pdf"
 
         val CREDENTIALS = MockBankCredentials.bankCredentials()
     }
