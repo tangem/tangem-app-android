@@ -45,7 +45,7 @@ import kotlinx.coroutines.launch
 
 @ExperimentalDecomposeApi
 internal class DefaultStackAnimation<C : Any, T : Any>(
-    private val disableInputDuringAnimation: Boolean,
+    private val isInputDisabledDuringAnimation: Boolean,
     private val predictiveBackParams: (ChildStack<C, T>) -> PredictiveBackParams?,
     private val selector: (
         child: Child.Created<C, T>,
@@ -72,7 +72,7 @@ internal class DefaultStackAnimation<C : Any, T : Any>(
             val oldStack = currentStack
             currentStack = stack
 
-            val updateItems =
+            val shouldUpdateItems =
                 when {
                     stack.active.key == oldStack.active.key ->
                         items.keys.singleOrNull() != stack.active.key ||
@@ -82,7 +82,7 @@ internal class DefaultStackAnimation<C : Any, T : Any>(
                     else -> items.keys.toList() != stackKeys
                 }
 
-            if (updateItems) {
+            if (shouldUpdateItems) {
                 val newItems = getAnimationItems(newStack = currentStack, oldStack = oldStack)
                 if (items.size == 1 || items.values.last().transitionState.isSeekable()) {
                     items = newItems
@@ -120,7 +120,7 @@ internal class DefaultStackAnimation<C : Any, T : Any>(
 
             // A workaround until https://issuetracker.google.com/issues/214231672.
             // Normally only the exiting child should be disabled.
-            if (disableInputDuringAnimation && (items.size > 1 || nextItems != null)) {
+            if (isInputDisabledDuringAnimation && (items.size > 1 || nextItems != null)) {
                 Overlay(modifier = Modifier.matchParentSize())
             }
         }
