@@ -62,11 +62,13 @@ internal class ReferralBlockComponent(
     @Composable
     override fun Content(modifier: Modifier) {
         val isLoading by model.isLoading.collectAsStateWithLifecycle()
+        // shared by both: returning from the referral screen reloads the statuses, and the zoom back needs its card
+        val cardModifier = modifier.zoomTransitionSource(key = SHARED_TRANSITION_KEY, shape = FeedBlockShape)
 
         if (isLoading) {
             FeedPromoCardSkeleton(
                 ambientVariant = TangemAmbientBackground.Variant.Red,
-                modifier = modifier,
+                modifier = cardModifier,
                 icon = { ReferralIcon() },
             )
         } else {
@@ -75,7 +77,7 @@ internal class ReferralBlockComponent(
                 description = stringResourceSafe(R.string.feed_promo_referral_description, REFERRAL_AWARD),
                 ambientVariant = TangemAmbientBackground.Variant.Red,
                 onClick = ::onClick,
-                modifier = modifier.zoomTransitionSource(key = SHARED_TRANSITION_KEY, shape = FeedBlockShape),
+                modifier = cardModifier,
                 icon = { ReferralIcon() },
             )
         }
