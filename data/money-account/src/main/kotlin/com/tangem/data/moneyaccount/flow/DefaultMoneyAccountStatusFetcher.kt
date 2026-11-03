@@ -112,6 +112,7 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
             else -> MoneyAccountStatusValue.Onboarding.Activating(
                 source = StatusSource.ACTUAL,
                 customerId = customerInfo.customerId,
+                step = MoneyAccountStatusValue.Onboarding.Activating.Step.ISSUING,
             )
         }
     }

@@ -1659,6 +1659,7 @@
   <string name="money_account_main_status_activating">Activating…</string>
   <string name="money_account_main_status_active">%1$s ACH</string>
   <string name="money_account_main_status_active_v2">ACH</string>
+  <string name="money_account_main_status_awaiting_deposit">Opens after your deposit</string>
   <string name="money_account_main_status_dialog_activating_description">We\'re getting your account ready. This may take a little time</string>
   <string name="money_account_main_status_dialog_activating_title">Creating your banking account</string>
   <string name="money_account_main_status_dialog_country_not_supported_description">We\'re working on expanding to more regions. Need help?</string>
