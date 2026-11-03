@@ -34,6 +34,7 @@ import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.UnlockHotWalletContextualUseCase
 import com.tangem.features.hotwallet.CreateCloudBackupComponent
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.createcloudbackup.entity.CreateCloudBackupUM
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.hot.sdk.model.SeedPhrasePrivateInfo
@@ -70,6 +71,7 @@ internal class CreateCloudBackupModelTest {
     private val createCloudBackupUseCase: CreateCloudBackupUseCase = mockk()
     private val setCloudBackupStateUseCase: SetCloudBackupStateUseCase = mockk(relaxed = true)
     private val cloudBackupRepository: CloudBackupRepository = mockk()
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles = mockk()
     private val saveBackupPasswordUseCase: SaveBackupPasswordUseCase = mockk()
     private val paramsContainer: ParamsContainer = mockk()
 
@@ -98,6 +100,8 @@ internal class CreateCloudBackupModelTest {
         walletId = "011",
     )
 
+    private var pinnedWalletId: String? = null
+
     @BeforeEach
     fun setUp() {
         every { paramsContainer.require<CreateCloudBackupComponent.Params>() } returns
@@ -106,6 +110,13 @@ internal class CreateCloudBackupModelTest {
         every { hotWalletId.authType } returns HotWalletId.AuthType.Password
         coEvery { exportSeedPhraseUseCase.invoke(hotWalletId) } returns privateInfo.right()
         coEvery { cloudBackupRepository.getAccountInfo(any()) } returns ACCOUNT.right()
+        every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns true
+        coEvery { cloudBackupRepository.hasAccountOf(any()) } returns false
+        pinnedWalletId = null
+        coEvery { cloudBackupRepository.withAccountOf<Any?>(any(), any()) } coAnswers {
+            pinnedWalletId = firstArg()
+            secondArg<suspend () -> Any?>().invoke().also { pinnedWalletId = null }
+        }
 
         // Mirrors the accessor: unlocking prompts the user and caches the result, which is then held
         every { getHotWalletContextualUnlockUseCase(hotWalletId) } answers { heldUnlock.right() }
@@ -144,6 +155,72 @@ internal class CreateCloudBackupModelTest {
             assertThat(state).isInstanceOf(CreateCloudBackupUM.Completed::class.java)
             (state as CreateCloudBackupUM.Completed).onFinishClick()
             verify(exactly = 1) { router.pop() }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN wallet remembers its account WHEN backup created THEN it is authorized AND uploaded in that account`() =
+        runTest {
+            // Arrange
+            coEvery { cloudBackupRepository.hasAccountOf("011") } returns true
+            var authorizedFor: String? = null
+            coEvery { cloudBackupRepository.getAccountInfo(interactive = true) } coAnswers {
+                authorizedFor = pinnedWalletId
+                ACCOUNT.right()
+            }
+            var uploadedFor: String? = null
+            coEvery { createCloudBackupUseCase(any(), any(), any(), any()) } coAnswers {
+                uploadedFor = pinnedWalletId
+                backupInfo.right()
+            }
+            var markedFor: String? = null
+            coEvery { setCloudBackupStateUseCase("011", isBackedUp = true) } coAnswers { markedFor = pinnedWalletId }
+            val model = createModel(this)
+            advanceUntilIdle()
+
+            // Act
+            driveToConfirmAndSubmit(model)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(listOf(authorizedFor, uploadedFor, markedFor)).containsExactly("011", "011", "011")
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN wallet without a remembered account WHEN backup created THEN the pinned account is used`() = runTest {
+        // Arrange
+        coEvery { createCloudBackupUseCase(any(), any(), any(), any()) } returns backupInfo.right()
+        val model = createModel(this)
+        advanceUntilIdle()
+
+        // Act
+        driveToConfirmAndSubmit(model)
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { cloudBackupRepository.withAccountOf<Any?>(any(), any()) }
+        coVerify(exactly = 1) { setCloudBackupStateUseCase("011", isBackedUp = true) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN multiple hot wallets disabled AND a remembered account WHEN backup created THEN the pinned account is used`() =
+        runTest {
+            // Arrange
+            every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns false
+            coEvery { cloudBackupRepository.hasAccountOf("011") } returns true
+            coEvery { createCloudBackupUseCase(any(), any(), any(), any()) } returns backupInfo.right()
+            val model = createModel(this)
+            advanceUntilIdle()
+
+            // Act
+            driveToConfirmAndSubmit(model)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) { cloudBackupRepository.withAccountOf<Any?>(any(), any()) }
+            coVerify(exactly = 1) { setCloudBackupStateUseCase("011", isBackedUp = true) }
             model.onDestroy()
         }
 
@@ -748,6 +825,7 @@ internal class CreateCloudBackupModelTest {
             createCloudBackupUseCase = createCloudBackupUseCase,
             setCloudBackupStateUseCase = setCloudBackupStateUseCase,
             cloudBackupRepository = cloudBackupRepository,
+            hotWalletFeatureToggles = hotWalletFeatureToggles,
             saveBackupPasswordUseCase = saveBackupPasswordUseCase,
         )
     }
