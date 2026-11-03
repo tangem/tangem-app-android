@@ -340,8 +340,9 @@ internal class DefaultStackAnimation<C : Any, T : Any>(
 
             scope.launch {
                 handler.cancel()
-                // a new gesture can start while this one settles back; its handler and items are not ours to reset
-                if (animationHandler === handler) {
+                // a new gesture can start while this one settles back, and a back can commit it; either way the
+                // handler and items are no longer ours to reset
+                if (animationHandler === handler && !isCommitting) {
                     animationHandler = null
                     setItems(getAnimationItems(newStack = stack))
                 }
