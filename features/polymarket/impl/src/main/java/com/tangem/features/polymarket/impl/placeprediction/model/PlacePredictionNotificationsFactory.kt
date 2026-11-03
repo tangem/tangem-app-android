@@ -4,6 +4,7 @@ import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountCaptionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PaymentAmountErrorUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceActionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PriceErrorUM
@@ -62,7 +63,7 @@ internal object PlacePredictionNotificationsFactory {
             else -> emptyList()
         }
         is QuoteUM.Error -> listOf(PredictionNotificationUM.QuoteFailed)
-        QuoteUM.Empty, QuoteUM.Loading -> emptyList()
+        QuoteUM.Empty, is QuoteUM.Loading -> emptyList()
     }
 }
 
@@ -70,7 +71,7 @@ internal object PlacePredictionNotificationsFactory {
  * The single place the primary button is gated.
  *
  * Every transformer ends with this, so the notifications and the button can never disagree with the state
- * that produced them. Nothing else — no model, no composable — may compute `isPrimaryButtonEnabled`: the
+ * that produced them. Nothing else — no model, no composable — may compute `placeAction`: the
  * flow this one is modelled on gates its button from three places, one of them outside the notifications.
  */
 internal fun PlacePredictionUM.recomputeGate(): PlacePredictionUM {
@@ -89,19 +90,15 @@ internal fun PlacePredictionUM.recomputeGate(): PlacePredictionUM {
         tradingPermission == TradingPermissionUM.Allowed &&
         priced.order.allowsPlacing(entered = entered)
 
-    val isPrimaryButtonEnabled = isPlaceableApartFromQuote &&
-        quote is QuoteUM.Content &&
-        priced.order.isPlaceable(status = quote.status)
-    val isPrimaryButtonEnabledWhileQuoting = isPlaceableApartFromQuote &&
-        quote is QuoteUM.Loading &&
-        isAwaitingFreshQuote
+    val placeAction = when {
+        submit is SubmitUM.AwaitingQuote -> PlaceActionUM.AwaitingQuote
+        !isPlaceableApartFromQuote -> PlaceActionUM.Unavailable
+        quote is QuoteUM.Content && priced.order.isPlaceable(status = quote.status) -> PlaceActionUM.Ready
+        quote is QuoteUM.Loading && quote.isAnswerExpected -> PlaceActionUM.ReadyOnceQuoted
+        else -> PlaceActionUM.Unavailable
+    }
 
-    return priced.copy(
-        notifications = notifications,
-        isPrimaryButtonEnabled = isPrimaryButtonEnabled,
-        isPrimaryButtonEnabledWhileQuoting = isPrimaryButtonEnabledWhileQuoting,
-        isPlaceButtonEnabled = isPrimaryButtonEnabled || isPrimaryButtonEnabledWhileQuoting || isPlacementPending,
-    )
+    return priced.copy(notifications = notifications, placeAction = placeAction)
 }
 
 private fun OrderSideUM.isPlaceable(status: PredictionQuoteStatus): Boolean = when (this) {

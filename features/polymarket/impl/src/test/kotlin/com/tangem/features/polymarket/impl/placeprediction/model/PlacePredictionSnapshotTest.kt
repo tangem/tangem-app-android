@@ -13,6 +13,7 @@ import com.tangem.features.polymarket.impl.common.FakeSlotHost
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.isReadyToPlace
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -110,8 +111,8 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
         amount.onNextClick()
 
         // Assert
-        assertThat(amount.uiState.value.quote).isEqualTo(QuoteUM.Loading)
-        assertThat(amount.uiState.value.isPrimaryButtonEnabled).isFalse()
+        assertThat(amount.uiState.value.quote).isEqualTo(QuoteUM.Loading(isAnswerExpected = false))
+        assertThat(amount.uiState.value.isReadyToPlace).isFalse()
         verify(exactly = 0) { router.push(any<PlacePredictionRoute.Summary>(), any()) }
         advanceTimeBy(1_001)
         val prepared = prepareOrder(amount)
