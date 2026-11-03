@@ -184,7 +184,9 @@ cursor from the last item) and signals exhaustion with `BatchFetchResult.Error(E
 `CollectiblesPackOpeningModel` loads the machine (from memory when opened from the catalogue), watches the
 vault balance via `CollectiblesAccountStatusSupplier`, and on approve runs
 `OpenCollectiblePackUseCase(userWallet, OpenPackRequest.Buy(externalId, isTurboEnabled))`. The use case
-emits `Generating → Confirming → Opening → Opened(pack)` or an `OpenPackStep.Failed`:
+emits `Generating → Confirming → Opening → Opened(pack)`, `AutoBuybacked(amount)` when Turbo mode sold the card
+back (the `/status` or `/open-pack` answer is `auto-buybacked` with an `autoBuyback.toAmount`; once `/status` says
+so, `/open-pack` is skipped), or an `OpenPackStep.Failed`:
 `LowInventory` / `PackUnopened(txId)` open a sheet (`PackUnopened` retries with `OpenPackRequest.Reopen`),
 everything else is a snackbar.
 
