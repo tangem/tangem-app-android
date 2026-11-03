@@ -227,7 +227,6 @@ internal class SingleAccountStatusListProducerJointAccountsTest {
                     PredictionAccountStatusValue.NotOnboarded,
                 )
             },
-            polymarketFeatureToggles = mockk { every { this@mockk.isPolymarketEnabled } returns false },
             // the toggle is off, so the supplier is never invoked
             collectiblesAccountStatusSupplier = mockk(),
             collectiblesFeatureToggles = mockk { every { isCollectiblesEnabled } returns false },

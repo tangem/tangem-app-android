@@ -1,7 +1,5 @@
 package com.tangem.data.yield.supply.incentives.di
 
-import com.tangem.core.configtoggle.FeatureToggles
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.yield.supply.incentives.DefaultYieldIncentivesRepository
 import com.tangem.data.yield.supply.incentives.cache.DefaultYieldIncentivesCache
 import com.tangem.domain.yield.supply.incentives.YieldIncentivesRepository
@@ -21,16 +19,13 @@ internal object YieldIncentivesDataModule {
     @Singleton
     fun provideYieldIncentivesRepository(
         api: YieldIncentivesApi,
-        featureTogglesManager: FeatureTogglesManager,
         dispatchers: CoroutineDispatcherProvider,
     ): YieldIncentivesRepository {
         return DefaultYieldIncentivesRepository(
             api = api,
             cache = DefaultYieldIncentivesCache(),
             dispatchers = dispatchers,
-            isMerklIncentivesEnabled = featureTogglesManager.isFeatureEnabled(
-                FeatureToggles.TWI_1520_MERKL_INCENTIVES_ENABLED,
-            ),
+            isMerklIncentivesEnabled = true,
         )
     }
 }
