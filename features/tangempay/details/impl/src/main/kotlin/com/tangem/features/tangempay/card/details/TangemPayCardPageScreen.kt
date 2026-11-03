@@ -370,8 +370,10 @@ private fun CardPageTopBar(
     TangemTopNavigation(
         modifier = modifier,
         startButton = { TangemButton.Back(onClick = onBackClick) },
-        endButtonsGroup = {
-            PayContextMenuButton(items = items, testTag = TangemPayTestTags.CARD_PAGE_MORE_BUTTON)
+        endButtonsGroup = if (items.isNotEmpty()) {
+            { PayContextMenuButton(items = items, testTag = TangemPayTestTags.CARD_PAGE_MORE_BUTTON) }
+        } else {
+            null
         },
     )
 }

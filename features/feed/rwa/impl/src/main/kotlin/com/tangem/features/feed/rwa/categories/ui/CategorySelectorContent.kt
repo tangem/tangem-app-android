@@ -22,13 +22,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.button.TangemButtonGroup
 import com.tangem.core.ui.ds2.checkbox.TangemCheckmark
 import com.tangem.core.ui.ds2.footer.TangemFooter
 import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.ds2.shimmers.TangemShimmer
+import com.tangem.core.ui.ds2.togglebadge.TangemToggleBadge
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -141,11 +141,10 @@ private fun SectorsRail(tags: ImmutableList<CategorySectorUM>, modifier: Modifie
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         tags.fastForEach { tag ->
-            TangemBadge(
+            TangemToggleBadge(
                 text = tag.label,
-                variant = if (tag.isSelected) TangemBadge.Variant.Inverse else TangemBadge.Variant.Solid,
-                size = TangemBadge.Size.X9,
-                onClick = tag.onItemClick,
+                isSelected = tag.isSelected,
+                onSelectedChange = { tag.onItemClick() },
             )
         }
     }

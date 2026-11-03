@@ -152,7 +152,9 @@ internal class CreateHardwareWalletModel @Inject constructor(
                 delay(HIDE_PROGRESS_DELAY)
                 setLoading(false)
                 when (saveWalletError) {
-                    is SaveWalletError.DataError -> TangemLogger.e("Unable to save user wallet: $saveWalletError")
+                    is SaveWalletError.DataError,
+                    is SaveWalletError.HotWalletsLimitReached,
+                    -> TangemLogger.e("Unable to save user wallet: $saveWalletError")
                     is SaveWalletError.WalletAlreadySaved -> handleAlreadySavedCard(
                         saveWalletError.messageId,
                         walletId = userWallet.walletId,

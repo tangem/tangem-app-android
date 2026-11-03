@@ -9,6 +9,7 @@ import com.tangem.screens.VirtualAccountRequisitesBottomSheetPageObject
 import com.tangem.screens.moneyaccount.onMoneyAccountAddFundsSheet
 import com.tangem.screens.moneyaccount.onMoneyAccountScreen
 import com.tangem.screens.onTxHistoryScreen
+import com.tangem.screens.tangempay.onTangemPayWithdrawHubScreen
 import com.tangem.screens.onVirtualAccountRequisitesBottomSheet
 import io.qameta.allure.kotlin.Allure.step
 import org.junit.Assert.assertFalse
@@ -34,7 +35,7 @@ fun BaseTestCase.clickMoneyAccountRowUntilDetailsOpen() {
     var detailsBalance: SemanticsMatcher? = null
     onMoneyAccountScreen { detailsBalance = balanceMatcher }
     composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-        runCatching { onMoneyAccountScreen { clickMainRowViaOnClickAction() } }
+        runCatching { onMoneyAccountScreen { clickMainRow() } }
         runCatching {
             composeTestRule.waitUntilAtLeastOneExists(checkNotNull(detailsBalance), DETAILS_OPEN_TIMEOUT_MILLIS)
         }.isSuccess
@@ -48,6 +49,16 @@ fun BaseTestCase.openMoneyAccountAddFunds() {
     }
     step("Assert 'Add funds' sheet is displayed") {
         awaitSuccess { onMoneyAccountAddFundsSheet { bankTransferOption.assertIsDisplayed() } }
+    }
+}
+
+fun BaseTestCase.openMoneyAccountSendHub() {
+    step("Click on 'Send' button") {
+        awaitSuccess { onMoneyAccountScreen { sendButton.assertIsDisplayed() } }
+        onMoneyAccountScreen { sendButton.performClick() }
+    }
+    step("Assert 'Send' hub screen is displayed") {
+        awaitSuccess { onTangemPayWithdrawHubScreen { withinPortfolioCard.assertIsDisplayed() } }
     }
 }
 

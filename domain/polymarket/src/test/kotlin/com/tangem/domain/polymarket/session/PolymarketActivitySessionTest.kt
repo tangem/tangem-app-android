@@ -32,6 +32,8 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -193,16 +195,19 @@ internal class PolymarketActivitySessionTest {
         assertThat(requests.map { it.first }).containsExactly(PolymarketActivityFilter(), selected).inOrder()
     }
 
-    @Test
-    fun `GIVEN an accepted scan WHEN its delay expires THEN rereads once without submitting another scan`() = runTest {
+    @ParameterizedTest
+    @ValueSource(longs = [10, 30])
+    fun `GIVEN an accepted scan WHEN its delay expires THEN rereads once without submitting another scan`(
+        delaySeconds: Long,
+    ) = runTest {
         // Arrange
         val session = createSession()
-        coEvery { repository.reconcileDeposits(addresses) } returns Either.Right(10.seconds)
+        coEvery { repository.reconcileDeposits(addresses) } returns Either.Right(delaySeconds.seconds)
         session.resume(backgroundScope)
         runCurrent()
 
         // Act
-        advanceTimeBy(9999)
+        advanceTimeBy(delaySeconds * 1000 - 1)
         runCurrent()
 
         // Assert

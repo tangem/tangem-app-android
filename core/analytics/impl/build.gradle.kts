@@ -73,5 +73,6 @@ dependencies {
 
     // region Tests
     testImplementation(projects.test.core)
+    testRuntimeOnly(deps.orgJson)
     // endregion
 }

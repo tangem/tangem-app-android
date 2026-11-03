@@ -59,6 +59,23 @@ internal class MoneyAccountStatusValueDMConverterTest {
     }
 
     @Test
+    fun `GIVEN failed onboarding WHEN cached and restored THEN failed from cache`() {
+        // Arrange
+        val failed = MoneyAccountStatusValue.Onboarding.Failed(
+            source = StatusSource.ACTUAL,
+            customerId = "customer-1",
+        )
+
+        // Act
+        val cached = converter.convert(failed)
+        val restored = converter.convertBack(userWalletId = USER_WALLET_ID, value = cached)
+
+        // Assert
+        assertThat(cached).isEqualTo(MoneyAccountStatusValueDM.Failed(customerId = "customer-1"))
+        assertThat(restored).isEqualTo(failed.copy(source = StatusSource.CACHE))
+    }
+
+    @Test
     fun `GIVEN active account with refresh error WHEN cached and restored THEN error dropped`() {
         // Arrange
         val active = MoneyAccountStatusValue.Account.Active(
