@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.domain.models.wallet.UserWalletId
@@ -255,6 +256,21 @@ internal class FakeEarnProductTest {
 
         @ParameterizedTest
         @ProvideTestModels
+        fun `GIVEN position behavior WHEN summaries THEN source is not actual when the position was not read`(
+            model: PositionModel,
+        ) = runTest {
+            // Arrange
+            val product = createProduct(FakeEarnProductPreset.Lending, model.position)
+
+            // Act
+            val actual = product.summary().source
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expectedSource)
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
         fun `GIVEN position behavior WHEN summary click THEN info route if active and picker route if not`(
             model: PositionModel,
         ) = runTest {
@@ -274,16 +290,19 @@ internal class FakeEarnProductTest {
             PositionModel(
                 position = FakeEarnPosition.None,
                 expectedSummaryPosition = null,
+                expectedSource = StatusSource.ACTUAL,
                 expectedClickRoute = { EarnPickerRoute(preselected = it) },
             ),
             PositionModel(
                 position = FakeEarnPosition.Unknown,
                 expectedSummaryPosition = null,
+                expectedSource = StatusSource.ONLY_CACHE,
                 expectedClickRoute = { EarnPickerRoute(preselected = it) },
             ),
             PositionModel(
                 position = FakeEarnPosition.Known,
                 expectedSummaryPosition = EarnPositionSummary(cryptoAmount = BigDecimal("1.482")),
+                expectedSource = StatusSource.ACTUAL,
                 expectedClickRoute = { EarnInfoRoute(productId = it) },
             ),
         )
@@ -604,6 +623,7 @@ internal class FakeEarnProductTest {
     internal data class PositionModel(
         val position: FakeEarnPosition,
         val expectedSummaryPosition: EarnPositionSummary?,
+        val expectedSource: StatusSource,
         val expectedClickRoute: (EarnProductId) -> EarnRoute,
     ) {
         override fun toString(): String = "$position"
