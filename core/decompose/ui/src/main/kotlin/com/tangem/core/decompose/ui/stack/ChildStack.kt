@@ -95,9 +95,9 @@ private fun SaveableStateHolder.RetainStates(currentKeys: Set<String>) {
     val keys = remember(this) { Keys(currentKeys) }
 
     DisposableEffect(this, currentKeys) {
-        keys.set.forEach {
-            if (it !in currentKeys) {
-                removeState(it)
+        keys.set.forEach { key ->
+            if (key !in currentKeys) {
+                removeState(key)
             }
         }
 

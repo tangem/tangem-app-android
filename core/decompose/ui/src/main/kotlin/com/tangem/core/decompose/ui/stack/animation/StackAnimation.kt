@@ -51,7 +51,7 @@ fun <C : Any, T : Any> stackAnimation(
         isPredictiveBack: Boolean,
     ) -> StackAnimator?,
 ): StackAnimation<C, T> = DefaultStackAnimation(
-    disableInputDuringAnimation = disableInputDuringAnimation,
+    isInputDisabledDuringAnimation = disableInputDuringAnimation,
     predictiveBackParams = predictiveBackParams,
     selector = selector,
 )
@@ -71,7 +71,7 @@ fun <C : Any, T : Any> stackAnimation(
     disableInputDuringAnimation: Boolean = true,
     predictiveBackParams: (ChildStack<C, T>) -> PredictiveBackParams? = { null },
 ): StackAnimation<C, T> = DefaultStackAnimation(
-    disableInputDuringAnimation = disableInputDuringAnimation,
+    isInputDisabledDuringAnimation = disableInputDuringAnimation,
     predictiveBackParams = predictiveBackParams,
     selector = { _, _, _, _ -> animator },
 )
