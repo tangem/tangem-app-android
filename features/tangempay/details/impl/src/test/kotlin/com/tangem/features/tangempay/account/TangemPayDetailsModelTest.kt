@@ -380,8 +380,28 @@ internal class TangemPayDetailsModelTest {
 
         // Assert
         verify(exactly = if (case.expectedOpened) 1 else 0) {
-            analytics.send(ofType<TangemPayAnalyticsEvents.TransactionInListClicked>())
+            analytics.send(
+                TangemPayAnalyticsEvents.TransactionInListClicked(
+                    product = TangemPayAnalyticsEvents.Product.CARD,
+                    type = "payment",
+                    status = "unknown",
+                ),
+            )
         }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN account WHEN current plan clicked THEN payment account plan event sent`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this)
+        advanceUntilIdle()
+
+        // Act
+        model.onClickCurrentPlan(mockk())
+
+        // Assert
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Tiers.CurrentPlanClicked()) }
         model.onDestroy()
     }
 

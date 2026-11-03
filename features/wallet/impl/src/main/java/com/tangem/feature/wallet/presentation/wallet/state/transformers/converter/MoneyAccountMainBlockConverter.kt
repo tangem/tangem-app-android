@@ -28,6 +28,15 @@ internal class MoneyAccountMainBlockConverter(
                 subtitle = resourceReference(R.string.money_account_main_status_activating),
                 onClick = moneyAccountIntents::onMoneyAccountActivatingClicked,
             )
+            is MoneyAccountStatusValue.Onboarding.Failed -> MoneyAccountMainUM.Failed(
+                subtitle = resourceReference(R.string.money_account_main_status_failed),
+                onClick = {
+                    moneyAccountIntents.onMoneyAccountFailedClicked(
+                        userWalletId = userWalletId,
+                        customerId = statusValue.customerId,
+                    )
+                },
+            )
             is MoneyAccountStatusValue.Account.Active -> statusValue.toUM(userWalletId)
             is MoneyAccountStatusValue.Error.Unavailable,
             is MoneyAccountStatusValue.Error.NotSynced,

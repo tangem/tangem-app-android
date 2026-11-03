@@ -18,16 +18,20 @@ internal class FeeTokenForListConverter(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val canPayFee: Boolean,
     private val onTokenClick: () -> Unit,
+    private val isSponsoredFee: Boolean = false,
 ) : Converter<CryptoCurrencyStatus, FeeTokenItemState> {
 
     override fun convert(value: CryptoCurrencyStatus): FeeTokenItemState {
-        if (value.value !is CryptoCurrencyStatus.Loaded) {
-            return FeeTokenItemState(TokenItemState.Loading(id = value.currency.id.value))
+        // The sponsor pays, so the user's balance in the coin, even an empty or unopened account, does not matter
+        val isShown = value.value is CryptoCurrencyStatus.Loaded ||
+            isSponsoredFee && value.value !is CryptoCurrencyStatus.Loading
+        if (!isShown) {
+            return FeeTokenItemState(TokenItemState.Loading(id = value.currency.id.value).withSponsoredFee(value))
         }
 
         val appCurrency = appCurrencyProvider()
         val isBalanceZero = value.value.amount?.isZero() == true
-        val isSelectable = isBalanceZero.not() && canPayFee
+        val isSelectable = isSponsoredFee || isBalanceZero.not() && canPayFee
         val tokenItemConverter = TokenItemStateConverter(
             appCurrency = appCurrencyProvider(),
             onItemClick = if (isSelectable) {
@@ -61,8 +65,11 @@ internal class FeeTokenForListConverter(
         }
 
         return FeeTokenItemState(
-            state = updatedState,
+            state = updatedState.withSponsoredFee(value),
             isAvailable = isSelectable,
         )
     }
+
+    private fun TokenItemState.withSponsoredFee(value: CryptoCurrencyStatus): TokenItemState =
+        if (isSponsoredFee) asSponsoredFee(value.currency.symbol) else this
 }

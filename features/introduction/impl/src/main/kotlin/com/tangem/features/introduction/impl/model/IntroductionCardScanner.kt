@@ -126,7 +126,9 @@ internal class IntroductionCardScanner @Inject constructor(
         saveWalletUseCase(userWallet = userWallet, analyticsSource = analyticsSource).fold(
             ifLeft = { error ->
                 when (error) {
-                    is SaveWalletError.DataError -> {
+                    is SaveWalletError.DataError,
+                    is SaveWalletError.HotWalletsLimitReached,
+                    -> {
                         TangemLogger.e("Unable to save user wallet: $error")
                         reportFailure(messageId = error.messageId, onFailed = onFailed)
                     }

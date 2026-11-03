@@ -16,6 +16,9 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.anyDecimals
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.message.EventMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
@@ -521,6 +524,45 @@ internal class CollectiblesPackOpeningModelTest {
 
         // Assert
         assertThat(shownSheet).isEqualTo(CollectiblesConfirmOrderBottomSheetConfig.LowInventory)
+    }
+
+    @Test
+    fun `GIVEN turbo sold the card back WHEN approve tapped THEN the payout sheet is shown`() = runTest {
+        // Arrange
+        coEvery { getMachineUseCase(any(), any()) } returns createMachine(
+            price = BigDecimal("50"),
+            feeAmount = BigDecimal("1"),
+        ).right()
+        every { openCollectiblePackUseCase(any(), any()) } returns
+            flowOf(OpenPackStep.AutoBuybacked(amount = BigDecimal("42.5")))
+        val model = startModel()
+        var shownSheet: CollectiblesConfirmOrderBottomSheetConfig? = null
+        model.bottomSheetNavigation.subscribe { event -> shownSheet = event.transformer(shownSheet) }
+
+        // Act
+        model.content().onApproveClick()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(shownSheet).isEqualTo(
+            CollectiblesConfirmOrderBottomSheetConfig.AutoBuyback(
+                amount = "+" + usdc("42.5"),
+                price = usdc("51", minDecimals = 0),
+            ),
+        )
+        verify(exactly = 0) { messageSender.send(any()) }
+    }
+
+    @Test
+    fun `GIVEN the payout sheet WHEN open again tapped THEN the flow goes back to the machine`() = runTest {
+        // Arrange
+        val model = startModel()
+
+        // Act
+        model.onOpenAgain()
+
+        // Assert
+        verify(exactly = 1) { router.pop(any()) }
     }
 
     @Test
@@ -1352,7 +1394,12 @@ internal class CollectiblesPackOpeningModelTest {
 
     private fun CollectiblesPackOpeningModel.order() = (uiState.value as CollectiblesPackOpeningUM.Content).order
 
-    private fun onboarded(usdcAmount: String) = CollectiblesAccountStatusValue.Onboarded(
+    private fun usdc(amount: String, minDecimals: Int? = null) = BigDecimal(amount).format {
+        val usdc = crypto(cryptoCurrency = MockCollectibles.usdc)
+        if (minDecimals == null) usdc else usdc.anyDecimals(minDecimals = minDecimals)
+    }
+
+    private fun onboarded(usdcAmount: String) =CollectiblesAccountStatusValue.Onboarded(
         source = StatusSource.ACTUAL,
         vaultBalance = MockCollectibles.vaultBalance(amount = BigDecimal(usdcAmount), fiatRate = BigDecimal.ONE),
     )

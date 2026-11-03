@@ -607,6 +607,7 @@
   <string name="common_retry">Wiederholen</string>
   <string name="common_save">Speichern</string>
   <string name="common_save_changes">Änderungen speichern</string>
+  <string name="common_scan_card">Karte einscannen</string>
   <string name="common_search">Suchen</string>
   <string name="common_search_tokens">Token suchen</string>
   <string name="common_second_no_param">sek.</string>
@@ -1060,6 +1061,7 @@
   <string name="hw_cloud_backup_permissions_title_v2">Vollzugriff auf %1$s gewähren</string>
   <string name="hw_cloud_backup_remove_title">%1$s %2$s Backup</string>
   <string name="hw_cloud_backup_removed">Backup entfernt</string>
+  <string name="hw_cloud_backup_restore_all_added_hint">Alle Backups in diesem „ %1$s “-Konto befinden sich bereits in Tangem</string>
   <string name="hw_cloud_backup_restore_error_title">Etwas ist schiefgelaufen.</string>
   <string name="hw_cloud_backup_restore_error_with_recovery">Bitte versuchen Sie es später erneut oder importieren Sie Ihre Wiederherstellungsphrase.</string>
   <string name="hw_cloud_backup_restore_navtitle">Cloud-Backup</string>
@@ -1153,6 +1155,8 @@
   <string name="hw_upgrade_title">Upgrade auf Hardware Wallet</string>
   <string name="hw_upgrade_to_cold_banner_description">Schütze Deine Kryptowährungen mit Tangems erstklassiger Hardware-Wallet.</string>
   <string name="hw_upgrade_to_cold_banner_title">Rüste Deine Wallet auf Hardware-Sicherheit auf.</string>
+  <string name="hw_wallets_limit_alert_message">In Tangem können Sie bis zu %1$s mobile Wallets anlegen. Um eine neue Wallet anzulegen oder zu importieren, müssen Sie zunächst eine Ihrer bestehenden mobilen Wallets entfernen.</string>
+  <string name="hw_wallets_limit_alert_title">Sie haben das Limit für Ihr mobiles Portemonnaie erreicht</string>
   <string name="information_generated_with_ai">Diese Informationen wurden mithilfe von KI generiert.\nTippe hier, wenn Du Fehler findest.</string>
   <string name="initial_message_change_access_code_body">Um den Zugangscode zu ändern, halte die Karte oder Ring wie oben gezeigt an das Gerät und entferne sie erst am Ende des Vorgangs.</string>
   <string name="initial_message_change_passcode_body">Um den Passcode zu ändern, halte die Karte oder Ring wie oben gezeigt an das Gerät und entferne sie erst am Ende des Vorgangs.</string>
@@ -1234,6 +1238,7 @@
   <string name="joint_account_invite_members_about_signatures_title">Über Signaturen</string>
   <string name="joint_account_invite_members_approvals_value">Jede %1$s von %2$s</string>
   <string name="joint_account_invite_members_creator">Urheber</string>
+  <string name="joint_account_invite_members_everyone_joined">Alle haben sich angemeldet</string>
   <string name="joint_account_invite_members_invite">Einladen</string>
   <string name="joint_account_invite_members_invite_expired">Einladung abgelaufen</string>
   <string name="joint_account_invite_members_invited">Eingeladen</string>
@@ -1286,6 +1291,8 @@
   <string name="joint_account_join_to_account_btn_text">Jetzt anmelden</string>
   <string name="joint_account_join_to_approve">Genehmigen</string>
   <string name="joint_account_main_cant_verify">Kann nicht überprüft werden</string>
+  <string name="joint_account_main_paused_for_safety">Aus Sicherheitsgründen unterbrochen</string>
+  <string name="joint_account_main_unavailable">Nicht verfügbar</string>
   <plurals name="joint_account_members_count">
     <item quantity="one">Mitglied</item>
     <item quantity="other">Mitglieder</item>
@@ -1358,6 +1365,7 @@
   <string name="joint_operation_deleted_snackbar">Transaktion gelöscht</string>
   <string name="joint_operation_malicious_subtitle">Diese Transaktion wurde als bösartig gekennzeichnet. Die Signierung wurde blockiert.</string>
   <string name="joint_operation_malicious_title">Gefährliche Transaktion</string>
+  <string name="joint_operation_no_response">Keine Antwort</string>
   <string name="joint_operation_sending_to_network">An das Netzwerk senden</string>
   <string name="joint_operation_sent_footer">Unterzeichnet von %1$s von %2$s und an das Netzwerk gesendet</string>
   <string name="joint_operation_signatures_progress">Unterschriften %1$s von %2$s</string>
@@ -1614,16 +1622,21 @@
   <string name="money_account_add_funds_bank_description">USD von einem Bankkonto per ACH/Überweisung oder SPEI empfangen</string>
   <string name="money_account_add_funds_receive_description">Senden Sie USDC über Polygon an Ihre Kontoadresse</string>
   <string name="money_account_add_funds_swap_description">Nutzen Sie Krypto aus Ihrer Wallet, um Ihr USD-Konto aufzuladen</string>
+  <string name="money_account_balance_unavailable_description">Wir haben Probleme beim Abrufen Ihres Guthabens. Bitte versuchen Sie es später erneut.</string>
+  <string name="money_account_balance_unavailable_title">Guthaben nicht verfügbar</string>
   <string name="money_account_close_account">Konto schließen</string>
   <string name="money_account_main_name">USD-Konto</string>
   <string name="money_account_main_status_action_required">Aktion erforderlich</string>
   <string name="money_account_main_status_activating">Wird aktiviert…</string>
   <string name="money_account_main_status_active">Netzwerk %1$s</string>
+  <string name="money_account_main_status_active_v2">ACH</string>
   <string name="money_account_main_status_dialog_activating_description">Wir richten gerade Ihr Konto ein. Das kann einen Moment dauern.</string>
   <string name="money_account_main_status_dialog_activating_title">Ein Bankkonto eröffnen</string>
   <string name="money_account_main_status_dialog_country_not_supported_description">Wir arbeiten daran, in weitere Regionen zu expandieren. Brauchst du Hilfe?</string>
   <string name="money_account_main_status_dialog_country_not_supported_description_template">Wir erweitern die Verfügbarkeit auf weitere Regionen. Benötigen Sie Hilfe? %s</string>
   <string name="money_account_main_status_dialog_country_not_supported_title">In Ihrer Region noch nicht verfügbar</string>
+  <string name="money_account_main_status_dialog_failed_description">Bei der Aktivierung ist ein Fehler aufgetreten</string>
+  <string name="money_account_main_status_dialog_failed_title">Wir konnten Ihr Konto nicht aktivieren</string>
   <string name="money_account_main_status_dialog_hide_account">Konto von der Startseite ausblenden</string>
   <string name="money_account_main_status_dialog_join_waitlist">Tragen Sie sich in die Warteliste ein</string>
   <string name="money_account_main_status_dialog_verification_declined_description">Leider konnten wir Ihre Identität anhand der angegebenen Informationen nicht überprüfen.</string>
@@ -1631,6 +1644,7 @@
   <string name="money_account_main_status_dialog_verification_description">Das dauert in der Regel ein paar Minuten. Den Status können Sie unten einsehen.</string>
   <string name="money_account_main_status_dialog_verification_title">Überprüfung Ihrer Identität</string>
   <string name="money_account_main_status_dialog_view_status">Status anzeigen</string>
+  <string name="money_account_main_status_failed">Fehlgeschlagen</string>
   <string name="money_account_main_status_verification">Überprüfung läuft…</string>
   <string name="money_account_onboarding_currency_card_caption">Kontowährung</string>
   <string name="money_account_onboarding_description">Funktioniert genau wie ein normales Bankkonto. Aber auf Krypto-Basis und vollständig unter Ihrer Kontrolle.</string>
@@ -2448,10 +2462,16 @@
   <string name="social_login_creating_wallet_description">Das dauert nur ein paar Sekunden.</string>
   <string name="social_login_error_account_linked">Dieses „ %s “-Konto ist bereits mit einer anderen Geldbörse verknüpft.</string>
   <string name="social_login_error_backup_not_saved">Die Sicherung konnte nicht gespeichert werden – stellen Sie sicher, dass Ihr Cloud-Speicher verfügbar ist, und versuchen Sie es erneut</string>
+  <string name="social_login_error_backup_not_saved_description">Stellen Sie sicher, dass Ihr Cloud-Speicher verfügbar ist, und versuchen Sie es erneut.</string>
+  <string name="social_login_error_backup_not_saved_title">Sicherung konnte nicht gespeichert werden</string>
   <string name="social_login_error_cloud_access_description">Stellen Sie sicher, dass Tangem Zugriff auf %s hat, und versuchen Sie es dann erneut.</string>
   <string name="social_login_error_cloud_access_title">Die Wallet konnte nicht wiederhergestellt werden</string>
   <string name="social_login_error_generic">Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.</string>
+  <string name="social_login_error_generic_v2">Bitte überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.</string>
+  <string name="social_login_error_network_description">Überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.</string>
+  <string name="social_login_error_network_title">Keine Internetverbindung</string>
   <string name="social_login_error_no_account">Fügen Sie diesem Gerät ein %s-Konto hinzu, um fortzufahren.</string>
+  <string name="social_login_error_no_account_title">Auf diesem Gerät ist kein „ %1$s “-Konto eingerichtet.</string>
   <string name="social_login_error_restore_failed_description">Wir konnten die Wallet für dieses Konto nicht wiederherstellen. Versuchen Sie es erneut oder wenden Sie sich an den Support.</string>
   <string name="social_login_error_session_expired">Die Sitzung ist abgelaufen. Bitte versuchen Sie es erneut.</string>
   <string name="social_login_error_support">Support kontaktieren</string>
@@ -2460,6 +2480,8 @@
   <string name="social_login_restoring_wallet_description">Ihre Token werden wiederhergestellt</string>
   <string name="social_login_toast_wallet_added">Wallet hinzugefügt</string>
   <string name="social_login_toast_wallet_created">Wallet erstellt</string>
+  <string name="social_wallet_already_added_alert_message">Auf diesem Gerät kann nur eine Wallet die Funktion „Mit %1$s anmelden“ nutzen. Um ein anderes Konto zu verwenden, melden Sie sich bitte zunächst vom aktuellen Konto ab.</string>
+  <string name="social_wallet_already_added_alert_title">Sie sind bereits angemeldet mit %1$s</string>
   <string name="social_wallet_delete_anyway">Trotzdem löschen</string>
   <string name="social_wallet_delete_attention_acknowledge">Mir ist klar, dass ich den Zugriff auf diese Wallet für immer verliere, wenn ich meine Wiederherstellungsphrase nicht gesichert habe.</string>
   <string name="social_wallet_delete_attention_description">Dadurch wird die Wallet von diesem Gerät gelöscht und die Verknüpfung mit Ihrem %1$s-Konto aufgehoben, und Ihre verschlüsselten Schlüssel werden aus der Cloud gelöscht. Eine Anmeldung mit %1$s führt nicht mehr zur Wiederherstellung der Wallet.</string>
@@ -3526,6 +3548,7 @@
   <string name="user_wallet_list_delete_prompt">Möchtest Du diese Wallet wirklich entfernen?</string>
   <string name="user_wallet_list_error_unable_to_unlock">Es ist ein Fehler aufgetreten, bitte scanne deine Karte oder Ring, um sich anzumelden</string>
   <string name="user_wallet_list_error_wallet_already_saved">Dieses Wallet wurde bereits gespeichert, du kannst ein weiteres hinzufügen</string>
+  <string name="user_wallet_list_error_wallet_already_saved_title">Wallet wurde bereits hinzugefügt</string>
   <string name="user_wallet_list_rename_popup_error_already_exists">Die Wallet mit dem Namen %s existiert bereits</string>
   <string name="user_wallet_list_rename_popup_placeholder">Wallet-Name</string>
   <string name="user_wallet_list_rename_popup_title">Wallet umbenennen</string>
@@ -3771,6 +3794,9 @@
   <string name="warning_kaspa_unfinished_token_transaction_message">Deine Transaktion mit einem Betrag von %1$s %2$s wurde nicht abgeschlossen. Du kannst versuchen, diese erneut abzuschließen.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">Du hast eine nicht abgeschlossene Transaktion</string>
   <string name="warning_last_balance_updated_time">Letzte Aktualisierung war %s</string>
+  <string name="warning_link_wallet_cold_message">Scannen Sie Ihre Karte, um Ihre Wallet mit diesem Gerät zu verknüpfen.</string>
+  <string name="warning_link_wallet_hot_message">Bestätigen Sie, um Ihre Wallet mit diesem Gerät zu verknüpfen.</string>
+  <string name="warning_link_wallet_title">Verbinden Sie Ihre Wallet mit diesem Gerät</string>
   <string name="warning_low_signatures_message">Auf dieser Karte oder Ring sind nur noch %s Unterschriften übrig. Du musst dein gesamtes Guthaben abheben.</string>
   <string name="warning_low_signatures_title">Geringe Anzahl von Unterschriften</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Token in verschiedenen Netzwerken können unterschiedliche Adressen haben. Überprüfe bei der Überweisung noch einmal, ob deine Adresse mit der des Netzwerks übereinstimmt.</string>

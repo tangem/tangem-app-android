@@ -1,8 +1,7 @@
-package com.tangem.domain.polymarket.model
+package com.tangem.domain.models.account
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.mockk

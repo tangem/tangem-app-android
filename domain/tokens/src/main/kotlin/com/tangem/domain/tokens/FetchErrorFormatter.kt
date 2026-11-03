@@ -14,7 +14,7 @@ object FetchErrorFormatter {
      *
      * @param userWalletId the user wallet identifier for context
      * @param errors the map of source name to error (keys: [FetchingSource] names for network and quote,
-     * [com.tangem.domain.models.currency.balance.BalanceContributionFetcher.name] for contributions)
+     * the [com.tangem.domain.models.currency.balance.BalanceContributionFetcher] class simple name for contributions)
      * @return formatted error message
      */
     fun format(userWalletId: UserWalletId, errors: Map<String, Throwable>): String {
