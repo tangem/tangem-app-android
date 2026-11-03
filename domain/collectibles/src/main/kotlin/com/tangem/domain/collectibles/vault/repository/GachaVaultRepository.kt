@@ -10,9 +10,8 @@ import com.tangem.domain.models.wallet.UserWallet
 /**
  * Access to a wallet's `tangem_gacha_vault` account.
  *
- * The vault's `cold_owner` is the key at `COLLECTIBLES_OWNER_DERIVATION_PATH`, not the wallet's ordinary Solana
- * account, and the vault address is `PDA(["vault", cold_owner])`. "Cold" is the program's wording: a mobile wallet
- * derives and signs the same key locally.
+ * The vault's `owner` is the key at `COLLECTIBLES_OWNER_DERIVATION_PATH`, not the wallet's ordinary Solana
+ * account, and the vault address is `PDA(["vault", owner])`.
  */
 interface GachaVaultRepository {
 
