@@ -71,6 +71,7 @@ sealed interface EarnAmount {
 
     data class Exact(val value: BigDecimal) : EarnAmount
 
+    /** The whole balance of the action's source. The session does not subtract the fee: the flow does. */
     data object Entire : EarnAmount
 }
 
