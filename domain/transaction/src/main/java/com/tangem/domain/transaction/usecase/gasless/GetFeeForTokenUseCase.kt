@@ -14,6 +14,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
+import com.tangem.domain.transaction.models.GaslessApproval
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.raiseIllegalStateError
 import java.math.BigDecimal
@@ -40,6 +41,7 @@ class GetFeeForTokenUseCase(
         token: CryptoCurrency,
         transactionData: TransactionData,
         sentAmount: BigDecimal? = null,
+        approval: GaslessApproval? = null,
     ): Either<GetFeeError, TransactionFeeExtended> {
         return either {
             catch(
@@ -73,6 +75,7 @@ class GetFeeForTokenUseCase(
                         tokenCurrencyStatus = tokenCurrencyStatus,
                         nativeTransactionData = transactionData,
                         sentAmount = sentAmount,
+                        approval = approval,
                     ).bind()
                 },
                 catch = {
