@@ -39,6 +39,7 @@ import com.tangem.core.ui.test.PredictionTestTags
 import com.tangem.features.polymarket.impl.common.ui.PolymarketCardShape
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.isReadyToPlace
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionAmountIntents
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionAmountFractionsRow
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionMarketBlock
@@ -85,7 +86,7 @@ internal fun PlacePredictionAmountContent(
                             is OrderSideUM.Sell -> R.string.prediction_close_button
                         },
                     ),
-                    isEnabled = state.isPrimaryButtonEnabled,
+                    isEnabled = state.isReadyToPlace,
                     onClick = intents::onNextClick,
                 )
                 if (WindowInsets.isImeVisible && state.hasFractionsToOffer()) {

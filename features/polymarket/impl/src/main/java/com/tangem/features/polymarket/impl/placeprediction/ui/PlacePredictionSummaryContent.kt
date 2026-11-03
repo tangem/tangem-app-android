@@ -27,6 +27,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.isReadyToPlace
 import com.tangem.features.polymarket.impl.placeprediction.entity.payout
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionSummaryIntents
@@ -73,7 +74,7 @@ internal fun PlacePredictionSummaryContent(
                 PredictionPlaceButton(
                     order = state.order,
                     isLoading = state.submit !is SubmitUM.Idle,
-                    isEnabled = state.isPrimaryButtonEnabled,
+                    isEnabled = state.isReadyToPlace,
                     onClick = intents::onPlaceClick,
                 )
             }
