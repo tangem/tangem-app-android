@@ -3,6 +3,7 @@ package com.tangem.domain.transaction.usecase.gasless
 import arrow.core.Either
 import arrow.core.raise.Raise
 import arrow.core.raise.either
+import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.blockchains.ethereum.tokenmethods.TransferERC20TokenCallData
 import com.tangem.blockchain.common.Amount
@@ -26,6 +27,8 @@ import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.GaslessYieldRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
+import com.tangem.domain.transaction.error.mapToFeeError
+import com.tangem.domain.transaction.models.GaslessApproval
 import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.raiseIllegalStateError
@@ -48,21 +51,33 @@ internal class TokenFeeCalculator(
         network: Network,
         walletManager: EthereumWalletManager,
         transactionData: TransactionData,
+        allowanceSpenderAddress: String? = null,
     ): Either<GetFeeError, TransactionFee> {
         return either {
-            val transactionSender = if (userWallet is UserWallet.Cold &&
+            val isDemo = userWallet is UserWallet.Cold &&
                 demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)
-            ) {
-                demoTransactionSender(userWallet, network)
-            } else {
-                walletManager
+
+            val result = when {
+                isDemo -> demoTransactionSender(userWallet, network).getFee(transactionData = transactionData)
+                allowanceSpenderAddress != null -> {
+                    walletManager.estimateFeeWithOverride(
+                        transactionData = transactionData,
+                        spenderAddress = allowanceSpenderAddress,
+                        isSimulate = true,
+                    )
+                }
+                else -> walletManager.getFee(transactionData = transactionData)
             }
 
-            val maybeFee = when (val result = transactionSender.getFee(transactionData = transactionData)) {
+            when (result) {
                 is Result.Success -> result.data
-                is Result.Failure -> raise(GaslessError.DataError(result.error))
+                // Kept distinct so the swap can fall back to a separate approve when the RPC rejects the override
+                is Result.Failure -> if (result.error is BlockchainSdkError.Ethereum.EstimateOverrideError) {
+                    raise(result.mapToFeeError())
+                } else {
+                    raise(GaslessError.DataError(result.error))
+                }
             }
-            maybeFee
         }
     }
 
@@ -134,7 +149,7 @@ internal class TokenFeeCalculator(
         }
     }
 
-    @Suppress("LongMethod", "CyclomaticComplexity")
+    @Suppress("LongMethod")
     suspend fun calculateTokenFee(
         walletManager: EthereumWalletManager,
         tokenForPayFeeStatus: CryptoCurrencyStatus,
@@ -142,6 +157,7 @@ internal class TokenFeeCalculator(
         initialFee: Fee.Ethereum,
         isYieldActive: Boolean = false,
         userWallet: UserWallet? = null,
+        approval: GaslessApproval? = null,
     ): Either<GetFeeError, TransactionFeeExtended> {
         return either {
             // fast finish to skip calculations if no funds in token.
@@ -177,12 +193,15 @@ internal class TokenFeeCalculator(
                 BigInteger.ZERO
             }
 
+            val approveGasLimit = estimateApproveGasLimit(walletManager, approval)
+
             // Safety margin over the raw estimation
             val mainTransactionGasLimit = initialFee.gasLimit
                 .increaseByPercent(PERCENT_TO_INCREASE_SUB_CALL_GASLIMIT)
             val withdrawGasLimit = withdrawGas.increaseByPercent(PERCENT_TO_INCREASE_SUB_CALL_GASLIMIT)
 
-            val maxTokenFeeGas = mainTransactionGasLimit + feeTransferGasLimit + baseGas + withdrawGasLimit
+            val maxTokenFeeGas = mainTransactionGasLimit + feeTransferGasLimit +
+                baseGas + withdrawGasLimit + approveGasLimit
 
             val maxFeePerGas = when (initialFee) {
                 is Fee.Ethereum.EIP1559 -> initialFee.maxFeePerGas
@@ -239,6 +258,7 @@ internal class TokenFeeCalculator(
                 // sub-call gas, present only on the yield path where a batch is built.
                 mainTransactionGasLimit = mainTransactionGasLimit,
                 withdrawGasLimit = withdrawGasLimit.takeIf { isYieldActive },
+                approveGasLimit = approveGasLimit.takeIf { approval != null },
             )
         }
     }
@@ -319,6 +339,28 @@ internal class TokenFeeCalculator(
             is Result.Success -> result.data
             is Result.Failure -> WITHDRAW_GAS_LIMIT
         }
+    }
+
+    private suspend fun Raise<GetFeeError>.estimateApproveGasLimit(
+        walletManager: EthereumWalletManager,
+        approval: GaslessApproval?,
+    ): BigInteger {
+        if (approval == null) return BigInteger.ZERO
+
+        val approvalTransaction = approval.approvalTransaction
+        val callData = (approvalTransaction.extras as? EthereumTransactionExtras)?.callData
+            ?: raiseIllegalStateError("Approve call data is required")
+        val gasLimit = when (
+            val result = walletManager.getGasLimit(
+                amount = approvalTransaction.amount,
+                destination = approvalTransaction.destinationAddress,
+                callData = callData,
+            )
+        ) {
+            is Result.Success -> result.data
+            is Result.Failure -> raise(GaslessError.DataError(result.error))
+        }
+        return gasLimit.increaseByPercent(PERCENT_TO_INCREASE_SUB_CALL_GASLIMIT)
     }
 
     private fun BlockchainError.isContractExecutionError(): Boolean {
