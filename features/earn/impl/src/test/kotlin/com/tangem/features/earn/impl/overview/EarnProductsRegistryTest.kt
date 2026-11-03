@@ -112,10 +112,7 @@ internal class EarnProductsRegistryTest {
         private fun provideTestModels() = listOf(
             DuplicateIdsModel(
                 name = "two products of one preset",
-                products = setOf(
-                    createFakeEarnProduct(FakeEarnProductPreset.Lending),
-                    createFakeEarnProduct(FakeEarnProductPreset.Lending),
-                ),
+                products = setOf(lending, RankedProduct(id = lending.id, rank = 0)),
                 rateSources = emptySet(),
             ),
             DuplicateIdsModel(

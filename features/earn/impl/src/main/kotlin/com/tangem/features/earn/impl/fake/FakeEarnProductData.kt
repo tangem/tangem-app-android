@@ -122,6 +122,7 @@ internal fun fakeSummary(preset: FakeEarnProductPreset, position: FakeEarnPositi
     val isActive = position == FakeEarnPosition.Known
     return EarnProductSummary(
         productId = preset.spec.id,
+        // Written by the product, unlike the overview badge built from the rate: the formats differ by design
         rateText = stringReference("5.5% APY"),
         risk = EarnRisk.Low,
         availability = ProductAvailability.Available,

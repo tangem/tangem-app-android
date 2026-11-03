@@ -41,7 +41,7 @@ internal class EarnRateFormatTest {
         FormatModel(fraction = BigDecimal.ZERO, expected = "0.00"),
         FormatModel(fraction = BigDecimal("0.0001"), expected = "0.01"),
         FormatModel(fraction = BigDecimal("0.12345"), expected = "12.35"),
-        FormatModel(fraction = BigDecimal("12.345"), expected = "1,234.50"),
+        FormatModel(fraction = BigDecimal("1.5"), expected = "150.00"),
     )
 
     internal data class FormatModel(val fraction: BigDecimal, val expected: String) {

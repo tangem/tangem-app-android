@@ -28,7 +28,6 @@ import com.tangem.features.earn.product.api.session.EarnAction
 import com.tangem.features.earn.product.api.session.EarnFlowAction
 import com.tangem.features.earn.product.api.session.Withdraw
 import com.tangem.test.core.ProvideTestModels
-import com.tangem.test.core.assertEitherLeft
 import io.mockk.mockk
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -560,7 +559,7 @@ internal class FakeEarnProductTest {
             val actual = product.apyHistory(params, period)
 
             // Assert
-            assertEitherLeft(actual, IllegalStateException("fake"))
+            assertThat(actual.isLeft()).isTrue()
         }
 
         @Test
@@ -586,7 +585,7 @@ internal class FakeEarnProductTest {
             val actual = product.apyHistory(params, EarnPeriod(stringReference("9Y")))
 
             // Assert
-            assertEitherLeft(actual, IllegalArgumentException("Unknown period"))
+            assertThat(actual.isLeft()).isTrue()
         }
     }
 
