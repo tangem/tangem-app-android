@@ -11,15 +11,14 @@ import com.tangem.domain.polymarket.model.PredictionOrderSigningRoute
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderResult
 import com.tangem.domain.polymarket.sessionkey.PolymarketOrderSigningRouter
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStateService
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
 class SubmitPredictionOrderInteractor(
     private val signOrder: SignPredictionOrderInteractor,
     private val placeOrder: PlacePredictionOrderUseCase,
     private val router: PolymarketOrderSigningRouter,
-    private val reconciliationScope: CoroutineScope,
+    private val stateService: PolymarketSessionKeyStateService,
 ) {
 
     /**
@@ -56,6 +55,7 @@ class SubmitPredictionOrderInteractor(
             if (!failure.isLocalSigningFailure()) return PredictionSubmitOrderError.NotSigned(failure).left()
 
             router.reportSigningFailed(addresses = request.addresses, identity = route.identity, failure = failure)
+            stateService.refresh(request.addresses.userWalletId)
             return submit(request = request, route = PredictionOrderSigningRoute.Owner, onStep = onStep)
         }
 
@@ -69,7 +69,7 @@ class SubmitPredictionOrderInteractor(
             if (!error.refusesSessionKey()) return PredictionSubmitOrderError.NotPlaced(error).left()
 
             router.reportRefused(addresses = request.addresses, identity = route.identity, error = error)
-            reconciliationScope.launch { router.reconcile(addresses = request.addresses) }
+            stateService.refresh(request.addresses.userWalletId)
             return submit(request = request, route = PredictionOrderSigningRoute.Owner, onStep = onStep)
         }
 
