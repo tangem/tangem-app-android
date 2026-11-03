@@ -9,6 +9,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.swap.models.SwapCurrencyStatus
+import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedForNetwork
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
@@ -83,7 +84,7 @@ internal class SwapNotificationsFactorySponsoredFeeTest {
 
     private fun provideTestModels() = listOf(
         WarningModel(
-            balanceStatus = SwapBalanceStatus.SponsoredFee(feePayer = "feePayerAddress"),
+            balanceStatus = SwapBalanceStatus.SponsoredFee(fee = mockk<TransactionFeeExtended>()),
             hasUnableToCoverFeeWarning = false,
         ),
         WarningModel(
