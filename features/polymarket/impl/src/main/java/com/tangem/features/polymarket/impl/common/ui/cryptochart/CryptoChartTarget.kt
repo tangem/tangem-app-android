@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -24,13 +24,28 @@ import com.tangem.core.ui.res.generated.icons.ic_chevron_up_12
 import com.tangem.core.ui.res.generated.icons.ic_chevron_down_12
 
 @Composable
-internal fun BoxScope.CryptoChartTarget(price: Double, label: TextReference, scale: CryptoChartScale, labelHeight: Dp) {
+internal fun BoxScope.CryptoChartTarget(
+    price: Double,
+    label: TextReference,
+    frame: State<CryptoChartFrame>,
+    labelHeight: Dp,
+) {
+    val placement by remember(price, frame) {
+        derivedStateOf {
+            val scale = frame.value.scale
+            when {
+                price > scale.max -> 1
+                price < scale.min -> -1
+                else -> 0
+            }
+        }
+    }
     val targetColor = TangemTheme.colors3.border.secondary
     BoxWithConstraints(Modifier.matchParentSize()) {
         val pillMaxWidth = maxWidth * 0.8f
-        val y = labelHeight / 2 + (maxHeight - labelHeight) * scale.y(price)
         Row(
             Modifier.fillMaxWidth().offset {
+                val y = labelHeight / 2 + (maxHeight - labelHeight) * frame.value.scale.y(price)
                 val captionHeight = labelHeight + 16.dp
                 IntOffset(0, (y - captionHeight / 2).coerceIn(0.dp, maxHeight - captionHeight).roundToPx())
             },
@@ -55,9 +70,9 @@ internal fun BoxScope.CryptoChartTarget(price: Double, label: TextReference, sca
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    if (price !in scale.min..scale.max) {
+                    if (placement != 0) {
                         Icon(
-                            imageVector = if (price > scale.max) Icons.ic_chevron_up_12 else Icons.ic_chevron_down_12,
+                            imageVector = if (placement > 0) Icons.ic_chevron_up_12 else Icons.ic_chevron_down_12,
                             contentDescription = null,
                             tint = TangemTheme.colors3.icon.primary,
                         )
@@ -65,7 +80,7 @@ internal fun BoxScope.CryptoChartTarget(price: Double, label: TextReference, sca
                 }
             }
             Canvas(Modifier.weight(1f).height(1.dp)) {
-                if (price in scale.min..scale.max) {
+                if (placement == 0) {
                     drawLine(
                         color = targetColor,
                         start = Offset.Zero,

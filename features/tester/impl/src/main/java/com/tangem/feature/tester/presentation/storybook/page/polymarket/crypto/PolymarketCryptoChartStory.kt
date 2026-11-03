@@ -9,6 +9,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.delay
+import com.tangem.utils.time.CurrentTimeProvider
+import com.tangem.features.polymarket.impl.common.ui.cryptochart.PolymarketLiveCryptoChart
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
@@ -28,9 +34,37 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
+@Suppress("LongMethod")
 internal fun PolymarketCryptoChartStory(state: PolymarketCryptoChartStory, modifier: Modifier = Modifier) {
+    val priceFormatter = remember { CryptoDemoPriceFormatter() }
     val snapshot = remember(state.sample, state.interval, state.target) {
         cryptoFixture(state.sample, state.interval, state.target)
+    }
+    var generation by remember { mutableIntStateOf(0) }
+    val clock = remember(state.sample, state.interval, generation, state.isLive) {
+        val origin = System.currentTimeMillis()
+        CurrentTimeProvider { snapshot.range.endMillis + System.currentTimeMillis() - origin }
+    }
+    var revision by remember(clock) { mutableIntStateOf(0) }
+    var freezeAt by remember(clock) { mutableStateOf<Long?>(null) }
+    val points = remember(
+        snapshot,
+        revision,
+        state.updateMode,
+    ) { liveCryptoPoints(snapshot, revision, state.updateMode) }
+    val rangePolicy = remember(state.interval) {
+        { now: Long -> PolymarketCryptoChart.TimeRange(now - state.interval.millis, now) }
+    }
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(state.isLive, clock, freezeAt, lifecycle) {
+        if (state.isLive && freezeAt == null) {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                while (true) {
+                    revision = ((clock.nowMillis() - snapshot.range.endMillis) / 1_000).toInt().coerceAtLeast(0)
+                    delay(1_000)
+                }
+            }
+        }
     }
     val time = remember(state.interval) {
         SimpleDateFormat(
@@ -54,7 +88,7 @@ internal fun PolymarketCryptoChartStory(state: PolymarketCryptoChartStory, modif
                     ) {
                         val digits = if (state.sample == PolymarketCryptoChartStory.Sample.Tiny) 9 else 2
                         val target =
-                            stringReference("Target ${formatCryptoDemoPrice(snapshot.targetPrice ?: 0.0, digits)}")
+                            stringReference("Target ${priceFormatter.format(snapshot.targetPrice ?: 0.0, digits)}")
                         if (state.isCompact) {
                             TangemSurface(
                                 color = TangemTheme.colors3.bg.secondary,
@@ -64,23 +98,55 @@ internal fun PolymarketCryptoChartStory(state: PolymarketCryptoChartStory, modif
                                     snapshot = snapshot,
                                     targetLabel = target,
                                     emptyLabel = stringReference("No data"),
-                                    formatPrice = ::formatCryptoDemoPrice,
+                                    formatPrice = priceFormatter::format,
                                     modifier = Modifier.padding(16.dp),
                                 )
                             }
+                        } else if (state.isLive) {
+                            PolymarketLiveCryptoChart(
+                                points = points,
+                                targetPrice = snapshot.targetPrice,
+                                windowId = "${state.sample}-${state.interval}-$generation",
+                                timeRange = rangePolicy,
+                                timeProvider = clock,
+                                targetLabel = target,
+                                emptyLabel = stringReference("No data"),
+                                formatPrice = priceFormatter::format,
+                                formatTime = { time.format(Date(it)) },
+                                freezeAtMillis = freezeAt,
+                            )
                         } else {
                             PolymarketCryptoChart(
                                 snapshot = snapshot,
                                 targetLabel = target,
                                 emptyLabel = stringReference("No data"),
-                                formatPrice = ::formatCryptoDemoPrice,
+                                formatPrice = priceFormatter::format,
                                 formatTime = { time.format(Date(it)) },
                             )
                         }
                     }
                 }
                 Spacer(Modifier.height(24.dp))
-                CryptoChartControls(state, Modifier.weight(1f).verticalScroll(rememberScrollState()))
+                Column(
+                    Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    if (!state.isCompact) {
+                        ChartChoices("Playback") {
+                            ChartChoice(if (state.isLive) "Stop live" else "Start live", state.isLive) {
+                                state.onLive(!state.isLive)
+                            }
+                            ChartChoice("Finish interval", freezeAt != null) { freezeAt = clock.nowMillis() - 1_500 }
+                            ChartChoice("New window", false) { generation++ }
+                        }
+                        ChartChoices("Quotes") {
+                            PolymarketCryptoChartStory.UpdateMode.entries.forEach { mode ->
+                                ChartChoice(mode.name, mode == state.updateMode) { state.onUpdateMode(mode) }
+                            }
+                        }
+                    }
+                    CryptoChartControls(state)
+                }
             }
         }
     }
