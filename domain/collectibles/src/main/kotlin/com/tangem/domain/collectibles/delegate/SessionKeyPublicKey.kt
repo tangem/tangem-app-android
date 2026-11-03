@@ -1,4 +1,4 @@
 package com.tangem.domain.collectibles.delegate
 
 @JvmInline
-value class HotDelegatePublicKey(val base58: String)
+value class SessionKeyPublicKey(val base58: String)

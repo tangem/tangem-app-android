@@ -102,7 +102,7 @@ sealed class CollectiblesAccountStatusValue {
         override val source: StatusSource = StatusSource.ACTUAL
     }
 
-    /** The vault exists and its `hot_delegate` is the key this device holds, so it can sign spins. */
+    /** The vault exists and its `session_key` is the key this device holds, so it can sign spins. */
     @Serializable
     data class Onboarded(
         override val source: StatusSource,
@@ -110,7 +110,7 @@ sealed class CollectiblesAccountStatusValue {
     ) : CollectiblesAccountStatusValue()
 
     /**
-     * The vault exists but its `hot_delegate` is some other key — the app was reinstalled, or the delegate was
+     * The vault exists but its `session_key` is some other key — the app was reinstalled, or the session key was
      * rotated on another device. Spins fail with error 2001 until `update_vault` points the vault back at this
      * device, which needs a signature from the vault's owner.
      */

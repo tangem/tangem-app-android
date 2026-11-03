@@ -23,8 +23,8 @@ import com.tangem.data.wallets.hot.TangemHotWalletSigner
 import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
-import com.tangem.domain.collectibles.delegate.HotDelegatePublicKey
+import com.tangem.domain.collectibles.delegate.CollectiblesSessionKey
+import com.tangem.domain.collectibles.delegate.SessionKeyPublicKey
 import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencyFactory
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
@@ -67,13 +67,13 @@ internal class DefaultGachaVaultRepository @Inject constructor(
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val tangemSdkManager: TangemSdkManager,
     private val hotWalletSignerFactory: TangemHotWalletSigner.Factory,
-    private val hotDelegate: CollectiblesHotDelegate,
+    private val sessionKey: CollectiblesSessionKey,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : GachaVaultRepository {
 
     override suspend fun initOrUpdateVault(
         userWallet: UserWallet,
-        hotDelegate: HotDelegatePublicKey,
+        sessionKey: SessionKeyPublicKey,
         limits: GachaVaultLimits,
     ): Either<CollectiblesAccountError, Unit> = withContext(dispatchers.io) {
         either {
@@ -82,7 +82,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
             initOrUpdateVaultInternal(
                 userWalletId = userWallet.walletId,
                 network = network,
-                hotDelegate = hotDelegate,
+                sessionKey = sessionKey,
                 limits = limits,
                 signer = userWallet.signer(),
                 onSigned = {},
@@ -102,17 +102,17 @@ internal class DefaultGachaVaultRepository @Inject constructor(
      */
     override suspend fun deriveOwnerAndSetUpVault(
         userWallet: UserWallet,
-        hotDelegate: HotDelegatePublicKey,
+        sessionKey: SessionKeyPublicKey,
         limits: GachaVaultLimits,
     ): Either<CollectiblesAccountError, Unit> = withContext(dispatchers.io) {
         when (userWallet) {
             is UserWallet.Cold -> {
                 TangemLogger.d("vault: deriveOwnerAndSetUpVault -> Cold wallet, deriving in a card session (tap)")
-                deriveAndInitInCardSession(userWallet, hotDelegate, limits)
+                deriveAndInitInCardSession(userWallet, sessionKey, limits)
             }
             is UserWallet.Hot -> {
                 TangemLogger.d("vault: deriveOwnerAndSetUpVault -> Hot wallet, deriving locally (no tap)")
-                deriveAndInitLocally(userWallet, hotDelegate, limits)
+                deriveAndInitLocally(userWallet, sessionKey, limits)
             }
         }
     }
@@ -154,7 +154,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
         }
     }
 
-    override suspend fun getVaultHotDelegate(userWallet: UserWallet): Either<CollectiblesAccountError, String?> =
+    override suspend fun getVaultSessionKey(userWallet: UserWallet): Either<CollectiblesAccountError, String?> =
         withContext(dispatchers.io) {
             either {
                 val network = networkProvider.create(userWallet).mapLeft { it.asFailure() }.bind()
@@ -189,7 +189,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
 
     private suspend fun deriveAndInitInCardSession(
         userWallet: UserWallet.Cold,
-        hotDelegate: HotDelegatePublicKey,
+        sessionKey: SessionKeyPublicKey,
         limits: GachaVaultLimits,
     ): Either<CollectiblesAccountError, Unit> = coroutineScope {
         val seedKey = userWallet.solanaSeedKey()
@@ -213,7 +213,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
                 val result = runSuspendCatching {
                     setUpVault(
                         userWallet = userWallet,
-                        hotDelegate = hotDelegate,
+                        sessionKey = sessionKey,
                         limits = limits,
                         session = session,
                         onSigned = {
@@ -256,7 +256,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
     @Suppress("LongParameterList")
     private suspend fun setUpVault(
         userWallet: UserWallet.Cold,
-        hotDelegate: HotDelegatePublicKey,
+        sessionKey: SessionKeyPublicKey,
         limits: GachaVaultLimits,
         session: CardSession,
         onSigned: () -> Unit,
@@ -266,7 +266,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
         initOrUpdateVaultInternal(
             userWalletId = userWallet.walletId,
             network = network,
-            hotDelegate = hotDelegate,
+            sessionKey = sessionKey,
             limits = limits,
             signer = userWallet.signer(session = session),
             onSigned = onSigned,
@@ -287,11 +287,11 @@ internal class DefaultGachaVaultRepository @Inject constructor(
 
     private suspend fun deriveAndInitLocally(
         userWallet: UserWallet.Hot,
-        hotDelegate: HotDelegatePublicKey,
+        sessionKey: SessionKeyPublicKey,
         limits: GachaVaultLimits,
     ): Either<CollectiblesAccountError, Unit> = either {
         ownerDeriver.deriveOwner(userWallet.walletId).bind()
-        initOrUpdateVault(userWallet, hotDelegate, limits).bind()
+        initOrUpdateVault(userWallet, sessionKey, limits).bind()
     }
 
     private suspend fun closeVaultInternal(
@@ -325,8 +325,8 @@ internal class DefaultGachaVaultRepository @Inject constructor(
     ): Either<CollectiblesAccountError, String> = withContext(dispatchers.io) {
         either {
             val accountId = AccountId.forCollectiblesAccount(userWalletId = userWallet.walletId)
-            val delegate = hotDelegate.getPublicKeyOrNull(accountId)
-                ?: raise(CollectiblesAccountError.DelegateNotProvisioned)
+            val sessionKey = sessionKey.getPublicKeyOrNull(accountId)
+                ?: raise(CollectiblesAccountError.SessionKeyNotProvisioned)
             val network = networkProvider.create(userWallet).mapLeft { it.asFailure() }.bind()
             val walletManager = vaultWalletManager(userWalletId = userWallet.walletId, network = network)
                 .mapLeft { error -> error.toVaultFailure(userWallet) }
@@ -334,17 +334,17 @@ internal class DefaultGachaVaultRepository @Inject constructor(
 
             var signingFailure: CollectiblesAccountError? = null
             val signer: suspend (ByteArray) -> Result<ByteArray> = { message ->
-                this@DefaultGachaVaultRepository.hotDelegate.sign(accountId, message).fold(
+                this@DefaultGachaVaultRepository.sessionKey.sign(accountId, message).fold(
                     ifLeft = { error ->
                         signingFailure = error
-                        Result.Failure(BlockchainSdkError.CustomError("Hot delegate failed to sign: $error"))
+                        Result.Failure(BlockchainSdkError.CustomError("Session key failed to sign: $error"))
                     },
                     ifRight = { signature -> Result.Success(signature) },
                 )
             }
 
             walletManager.sendPurchasePack(
-                sessionKey = delegate.base58,
+                sessionKey = sessionKey.base58,
                 amount = amount,
                 feeAmount = feeAmount,
                 memo = memo,
@@ -408,7 +408,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
     private suspend fun initOrUpdateVaultInternal(
         userWalletId: UserWalletId,
         network: Network,
-        hotDelegate: HotDelegatePublicKey,
+        sessionKey: SessionKeyPublicKey,
         limits: GachaVaultLimits,
         signer: TransactionSigner,
         onSigned: () -> Unit,
@@ -426,7 +426,7 @@ internal class DefaultGachaVaultRepository @Inject constructor(
                 )
                 walletManager.sendVaultTransaction(signer, onSigned) {
                     buildInitCollectiblesVault(
-                        sessionKey = hotDelegate.base58,
+                        sessionKey = sessionKey.base58,
                         perSpinCap = limits.perSpinCap,
                         dailyCap = limits.dailyCap,
                     )
@@ -436,14 +436,14 @@ internal class DefaultGachaVaultRepository @Inject constructor(
                     .bind()
             }
 
-            existing.sessionKey != hotDelegate.base58 -> {
+            existing.sessionKey != sessionKey.base58 -> {
                 TangemLogger.d(
                     "vault: is the hot key the same as in the User Account PDA? -> " +
                         "No, updating the key in the PDA (update_vault) (tap)",
                 )
                 walletManager.sendVaultTransaction(signer, onSigned) {
                     buildUpdateCollectiblesVault(
-                        sessionKey = hotDelegate.base58,
+                        sessionKey = sessionKey.base58,
                         perSpinCap = null,
                         dailyCap = null,
                     )

@@ -22,7 +22,7 @@ import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupp
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
 import com.tangem.domain.collectibles.usecase.CloseCollectiblesVaultUseCase
 import com.tangem.domain.collectibles.CollectiblesAccountError
-import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
+import com.tangem.domain.collectibles.delegate.CollectiblesSessionKey
 import com.tangem.domain.collectibles.usecase.CreateOrReactivateCollectiblesAccountUseCase
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
@@ -68,7 +68,7 @@ internal class CollectiblesMainModel @Inject constructor(
     private val collectiblesAccountRepository: CollectiblesAccountRepository,
     private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    private val hotDelegate: CollectiblesHotDelegate,
+    private val sessionKey: CollectiblesSessionKey,
     private val clipboardManager: ClipboardManager,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
@@ -94,12 +94,12 @@ internal class CollectiblesMainModel @Inject constructor(
 
     private var vaultStatus: CollectiblesVaultBalance? = null
 
-    private var hotDelegateAddress: String? = null
+    private var sessionKeyAddress: String? = null
 
     init {
         observeBalance()
         observeCollectiblesStatus()
-        loadHotDelegate()
+        loadSessionKey()
     }
 
     /** Every return to the screen re-reads the vault, so a vault re-pointed by another phone shows the relink banner */
@@ -111,12 +111,12 @@ internal class CollectiblesMainModel @Inject constructor(
     }
 
     // TODO testing only, remove once Gasless pays the spin fee
-    private fun loadHotDelegate() {
+    private fun loadSessionKey() {
         modelScope.launch {
-            val key = hotDelegate.getPublicKeyOrNull(AccountId.forCollectiblesAccount(params.userWalletId))
+            val key = sessionKey.getPublicKeyOrNull(AccountId.forCollectiblesAccount(params.userWalletId))
                 ?: return@launch
 
-            hotDelegateAddress = key.base58
+            sessionKeyAddress = key.base58
             uiState.update { state ->
                 state.copy(menu = menuConverter.convert(key.base58).copy(isShown = state.menu.isShown))
             }
@@ -205,7 +205,7 @@ internal class CollectiblesMainModel @Inject constructor(
             CollectiblesMenuItem.DELIVERIES -> onDeliveriesClick()
             CollectiblesMenuItem.HOW_IT_WORKS -> onHowItWorksClick()
             CollectiblesMenuItem.GET_ASSISTANCE -> onGetAssistanceClick()
-            CollectiblesMenuItem.HOT_DELEGATE -> onHotDelegateClick()
+            CollectiblesMenuItem.SESSION_KEY -> onSessionKeyClick()
             CollectiblesMenuItem.CLOSE_ACCOUNT -> onCloseAccountClick()
         }
     }
@@ -285,9 +285,9 @@ internal class CollectiblesMainModel @Inject constructor(
         // TODO([REDACTED_TASK_KEY]): support entry point is not wired yet.
     }
 
-    private fun onHotDelegateClick() {
+    private fun onSessionKeyClick() {
         onMenuDismiss()
-        hotDelegateAddress?.let { address -> clipboardManager.setText(text = address, isSensitive = false) }
+        sessionKeyAddress?.let { address -> clipboardManager.setText(text = address, isSensitive = false) }
     }
 
     private fun isRelinkLoading(): Boolean {
@@ -307,7 +307,7 @@ internal class CollectiblesMainModel @Inject constructor(
             } else {
                 createOrReactivateCollectiblesAccountUseCase(userWallet).fold(
                     ifLeft = ::onVaultActionFailed,
-                    ifRight = { loadHotDelegate() },
+                    ifRight = { loadSessionKey() },
                 )
             }
 
