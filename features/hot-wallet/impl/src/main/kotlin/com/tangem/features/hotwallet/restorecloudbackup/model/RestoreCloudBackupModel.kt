@@ -17,6 +17,7 @@ import com.tangem.domain.cloudbackup.models.CloudBackupSecretData
 import com.tangem.domain.cloudbackup.usecase.GetBackupPasswordUseCase
 import com.tangem.domain.cloudbackup.usecase.RestoreCloudBackupUseCase
 import com.tangem.domain.cloudbackup.usecase.SetCloudBackupStateUseCase
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImportError
 import com.tangem.features.hotwallet.addexistingwallet.im.port.model.HotWalletImporter
@@ -51,6 +52,7 @@ internal class RestoreCloudBackupModel @Inject constructor(
     cloudRestoreResultHolder: CloudRestoreResultHolder,
     private val restoreCloudBackupUseCase: RestoreCloudBackupUseCase,
     private val setCloudBackupStateUseCase: SetCloudBackupStateUseCase,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val mnemonicRepository: MnemonicRepository,
     private val hotWalletImporter: HotWalletImporter,
     private val uiMessageSender: UiMessageSender,
@@ -207,7 +209,7 @@ internal class RestoreCloudBackupModel @Inject constructor(
     }
 
     private suspend fun runRestore(backup: CloudBackupInfo) {
-        restoreCloudBackupUseCase(fileId = backup.fileId, password = password).fold(
+        restoreCloudBackupUseCase(backup.fileId, password, accountName = backupAccountName()).fold(
             ifLeft = { error ->
                 if (error == CloudBackupError.WrongPassword) {
                     analyticsEventHandler.send(OnboardingAnalyticsEvent.Backup.WrongCloudBackupPassword())
@@ -299,11 +301,14 @@ internal class RestoreCloudBackupModel @Inject constructor(
             },
             ifRight = { userWalletId ->
                 wipeSecrets()
-                setCloudBackupStateUseCase(userWalletId.stringValue, isBackedUp = true)
+                // the restored wallet keeps the account it came from, the other wallets keep theirs
+                setCloudBackupStateUseCase(userWalletId.stringValue, isBackedUp = true, backupAccountName())
                 params.callbacks.onWalletImported(userWalletId)
             },
         )
     }
+
+    private fun backupAccountName() = accountEmail.takeIf { hotWalletFeatureToggles.isMultipleHotWalletsEnabled }
 
     private fun showAlreadyAdded() {
         uiState.value = buildCurrentStepUM()
