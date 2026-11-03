@@ -993,7 +993,8 @@ internal class SwapInteractorImpl @Inject constructor(
                 fromSwapCurrencyStatus = fromSwapCurrencyStatus,
                 toSwapCurrencyStatus = toSwapCurrencyStatus,
                 amountToSwap = amountToSwap,
-                isSponsored = balanceStatus is SwapBalanceStatus.SponsoredFee || fee?.isSponsored == true,
+                // The picked fee wins: the quote keeps a sponsorship until the fee patch that follows a new pick
+                isSponsored = if (fee != null) fee.isSponsored else balanceStatus is SwapBalanceStatus.SponsoredFee,
             )
             isPsbtSwapSupported(networkId) -> onSwapUtxoPsbt(
                 provider = swapProvider,
