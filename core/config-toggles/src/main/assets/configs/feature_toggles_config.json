@@ -120,6 +120,10 @@
         "version": "6.7"
     },
     {
+        "name": "AND_19119_YIELD_MODE_SMART_GAS_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "TWI_1822_SOLANA_PNFT_AND_METAPLEX_CORE_ENABLED",
         "version": "6.7"
     },

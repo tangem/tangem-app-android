@@ -1,6 +1,7 @@
 package com.tangem.domain.transaction.error
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.common.core.TangemSdkError
 import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -21,6 +22,10 @@ internal class GaslessSendErrorMapperTest {
     internal data class TestModel(val throwable: Throwable, val expected: SendTransactionError)
 
     private fun provideTestModels() = listOf(
+        TestModel(
+            throwable = TangemSdkError.UserCancelled(),
+            expected = SendTransactionError.UserCancelledError,
+        ),
         TestModel(
             throwable = GaslessServiceException(httpCode = 503, message = "Service Unavailable"),
             expected = SendTransactionError.NetworkError(message = "Service Unavailable", code = "503"),

@@ -7,6 +7,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
 import com.tangem.utils.transformer.Transformer
@@ -19,6 +20,7 @@ internal class YieldSupplyStopEarningFeeContentTransformer(
     private val appCurrency: AppCurrency,
     private val transactions: List<TransactionData.Uncompiled>,
     private val feeValue: BigDecimal,
+    private val gaslessFee: TransactionFeeExtended? = null,
 ) : Transformer<YieldSupplyActionUM> {
     override fun transform(prevState: YieldSupplyActionUM): YieldSupplyActionUM {
         val feeFiatValueRaw = feeCryptoCurrencyStatus.value.fiatRate?.let { rate ->
@@ -38,6 +40,8 @@ internal class YieldSupplyStopEarningFeeContentTransformer(
                     minTopUpFiatValue = TextReference.EMPTY,
                     feeNoteValue = TextReference.EMPTY,
                     estimatedFiatValue = TextReference.EMPTY,
+                    gaslessFee = gaslessFee,
+                    feeCurrency = feeCryptoCurrencyStatus.currency,
                 ),
             )
         }

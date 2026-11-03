@@ -78,7 +78,7 @@ internal class CreateAndSendGaslessTransactionUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(TX_HASH.right())
-        coVerify(exactly = 0) { evmUseCase(any(), any(), any()) }
+        coVerify(exactly = 0) { evmUseCase(any(), any<TransactionData>(), any()) }
     }
 
     @Test
@@ -114,7 +114,7 @@ internal class CreateAndSendGaslessTransactionUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(SendTransactionError.DataError("Gasless send called with a native fee").left())
-        coVerify(exactly = 0) { evmUseCase(any(), any(), any()) }
+        coVerify(exactly = 0) { evmUseCase(any(), any<TransactionData>(), any()) }
         coVerify(exactly = 0) { tronUseCase(any(), any(), any()) }
     }
 

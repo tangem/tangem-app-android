@@ -7,38 +7,28 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.MerklClaimCallData
-import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
-import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.yield.supply.YieldSupplyError
 import com.tangem.domain.yield.supply.models.YieldSupplyClaimOrigin
-import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
-import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyStopEarningUseCase
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
-import com.tangem.features.yield.supply.impl.subcomponents.YieldSupplyActionModelTestBase
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.entity.YieldSupplyNotificationData
-import com.tangem.features.yield.supply.impl.subcomponents.stopearning.YieldSupplyStopEarningComponent
 import com.tangem.test.mock.yield.MockYieldSupply
-import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
-import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -50,30 +40,7 @@ import kotlin.time.TestTimeSource
 import kotlin.time.TimeMark
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase() {
-
-    private val stopEarningUseCase: YieldSupplyStopEarningUseCase = mockk()
-    private val deactivateUseCase: YieldSupplyDeactivateUseCase = mockk()
-    private val withdrawalClaimPreparer: YieldSupplyWithdrawalClaimPreparer = mockk()
-    private val claimTracker: YieldSupplyClaimTracker = mockk(relaxed = true)
-    private val callback: YieldSupplyStopEarningComponent.ModelCallback = mockk(relaxed = true)
-    private val tangemBlogUrlBuilder: TangemBlogUrlBuilder = mockk()
-
-    @BeforeEach
-    fun setUp() {
-        coEvery { stopEarningUseCase(any(), any(), any()) } returns uncompiledTx().right()
-        coEvery { getFeeUseCase(any(), any(), any()) } returns transactionFee().right()
-        coEvery {
-            sendTransactionUseCase(txsData = any(), userWallet = any(), network = any(), sendMode = any())
-        } returns listOf("0xhash").right()
-        coEvery { deactivateUseCase(any(), any()) } returns true.right()
-        coEvery {
-            withdrawalClaimPreparer.prepare(
-                userWallet = any(),
-                cryptoCurrencyStatus = any(),
-            )
-        } returns YieldPreClaim.Skip
-    }
+internal class YieldSupplyStopEarningModelTest : YieldSupplyStopEarningModelTestBase() {
 
     @Test
     fun `GIVEN successful fee load WHEN model created THEN fee content and button enabled`() = runTest {
@@ -242,6 +209,29 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
         verify { callback.onTransactionProgress(false) }
         verify(exactly = 0) { callback.onStopEarningTransactionSent() }
     }
+
+    @Test
+    fun `GIVEN a fee load in flight WHEN a reload cannot build the exit THEN the load finishes with the fee`() =
+        runTest {
+            // Arrange
+            coEvery { stopEarningUseCase(any(), any(), any()) } returnsMany listOf(
+                uncompiledTx().right(),
+                YieldSupplyError.DataError(Throwable()).left(),
+            )
+            coEvery { getFeeUseCase(any(), any(), any()) } coAnswers {
+                delay(1_000)
+                transactionFee().right()
+            }
+            val model = createModel()
+            runCurrent()
+
+            // Act
+            model.onFeeReload()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.yieldSupplyFeeUM).isInstanceOf(YieldSupplyFeeUM.Content::class.java)
+        }
 
     @Test
     fun `WHEN onReadMoreClick THEN opens url`() = runTest {
@@ -593,35 +583,6 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyActionModelTestBase(
             preparedAt = preparedAt,
         )
     }
-
-    private fun TestScope.createModel(
-        statusFlow: StateFlow<CryptoCurrencyStatus> = cryptoCurrencyStatusFlow,
-    ): YieldSupplyStopEarningModel = YieldSupplyStopEarningModel(
-        tangemBlogUrlBuilder = tangemBlogUrlBuilder,
-        dispatchers = createTestingCoroutineDispatcherProvider(),
-        paramsContainer = MutableParamsContainer(
-            YieldSupplyStopEarningComponent.Params(
-                userWallet = userWallet,
-                cryptoCurrencyStatusFlow = statusFlow,
-                callback = callback,
-            ),
-        ),
-        analytics = analytics,
-        getFeeUseCase = getFeeUseCase,
-        getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
-        getFeePaidCryptoCurrencyStatusSyncUseCase = getFeePaidCryptoCurrencyStatusSyncUseCase,
-        sendTransactionUseCase = sendTransactionUseCase,
-        yieldSupplyStopEarningUseCase = stopEarningUseCase,
-        urlOpener = urlOpener,
-        yieldSupplyNotificationsUpdateTrigger = notificationsUpdateTrigger,
-        yieldSupplyAlertFactory = alertFactory,
-        yieldSupplyDeactivateUseCase = deactivateUseCase,
-        yieldSupplyRepository = yieldSupplyRepository,
-        yieldSupplyPendingTracker = pendingTracker,
-        appsFlyerRepository = appsFlyerRepository,
-        yieldSupplyWithdrawalClaimPreparer = withdrawalClaimPreparer,
-        yieldSupplyClaimTracker = claimTracker,
-    )
 
     private companion object {
         const val LATEST_IMPLEMENTATION = "0x5555555555555555555555555555555555555555"

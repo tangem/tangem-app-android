@@ -91,6 +91,7 @@ internal class YieldSupplyStartEarningFeeContentTransformerTest {
                 id = R.string.yield_module_fee_policy_sheet_min_amount_note,
                 formatArgs = wrappedList(minFiatText, minCryptoText),
             ),
+            feeCurrency = token,
         )
     }
 

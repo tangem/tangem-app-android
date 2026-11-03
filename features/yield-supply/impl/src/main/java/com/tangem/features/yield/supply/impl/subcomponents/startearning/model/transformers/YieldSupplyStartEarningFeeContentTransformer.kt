@@ -9,6 +9,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.yield.supply.models.YieldSupplyMaxFee
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
@@ -27,6 +28,7 @@ internal class YieldSupplyStartEarningFeeContentTransformer(
     private val estimatedFeeValueInTokenCurrency: BigDecimal,
     private val maxNetworkFee: YieldSupplyMaxFee,
     private val minAmount: BigDecimal,
+    private val gaslessFee: TransactionFeeExtended? = null,
 ) : Transformer<YieldSupplyActionUM> {
     override fun transform(prevState: YieldSupplyActionUM): YieldSupplyActionUM {
         val cryptoCurrency = cryptoCurrencyStatus.currency
@@ -78,6 +80,8 @@ internal class YieldSupplyStartEarningFeeContentTransformer(
                     feeNoteValue = feeNoteValue,
                     minFeeNoteValue = minFeeNoteValue,
                     estimatedFiatValue = stringReference(estimatedFeeFiatValueText),
+                    gaslessFee = gaslessFee,
+                    feeCurrency = feeCryptoCurrencyStatus.currency,
                 ),
             )
         }

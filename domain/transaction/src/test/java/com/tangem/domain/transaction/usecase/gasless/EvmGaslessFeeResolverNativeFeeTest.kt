@@ -126,7 +126,7 @@ internal class EvmGaslessFeeResolverNativeFeeTest {
             // Assert
             val fee = actual.getOrNull()
             assertThat(fee?.nativeFee).isEqualTo(wrappedFee)
-            assertThat(fee?.mainTransactionGasLimit).isEqualTo(expectedMainGasLimit)
+            assertThat(fee?.callGasLimits).isEqualTo(listOf(expectedMainGasLimit))
         }
 
     @Test

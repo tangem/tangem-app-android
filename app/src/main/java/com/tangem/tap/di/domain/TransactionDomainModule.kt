@@ -559,6 +559,29 @@ internal object TransactionDomainModule {
 
     @Provides
     @Singleton
+    fun provideEstimateFeeForGaslessBatchUseCase(
+        walletManagersFacade: WalletManagersFacade,
+        gaslessTransactionRepository: GaslessTransactionRepository,
+        gaslessYieldRepository: GaslessYieldRepository,
+        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+        nonPortfolioCurrenciesProvider: NonPortfolioCurrenciesProvider,
+        currencyChecksRepository: CurrencyChecksRepository,
+        resolveGaslessFeePlanUseCase: ResolveGaslessFeePlanUseCase,
+    ): EstimateFeeForGaslessBatchUseCase {
+        return EstimateFeeForGaslessBatchUseCase(
+            walletManagersFacade = walletManagersFacade,
+            demoConfig = DemoConfig,
+            gaslessTransactionRepository = gaslessTransactionRepository,
+            gaslessYieldRepository = gaslessYieldRepository,
+            singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+            nonPortfolioCurrenciesProvider = nonPortfolioCurrenciesProvider,
+            currencyChecksRepository = currencyChecksRepository,
+            resolveGaslessFeePlanUseCase = resolveGaslessFeePlanUseCase,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideSignCloreMessageUseCase(
         walletManagersFacade: WalletManagersFacade,
         cardSdkConfigRepository: CardSdkConfigRepository,
