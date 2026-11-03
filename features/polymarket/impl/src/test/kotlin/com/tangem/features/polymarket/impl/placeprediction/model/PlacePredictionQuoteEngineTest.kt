@@ -8,7 +8,9 @@ import com.tangem.domain.polymarket.model.PolymarketOnboardingError
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.isReadyToPlace
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -281,7 +283,7 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
         engine.onResume()
         engine.onAmountChange(value = "10")
         advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
-        assertThat(uiState.value.isPrimaryButtonEnabled).isTrue()
+        assertThat(uiState.value.isReadyToPlace).isTrue()
 
         // Act
         val prepared = engine.holdDuring { engine.prepare() }
@@ -416,7 +418,7 @@ internal class PlacePredictionQuoteEngineTest : PlacePredictionModelTestBase() {
             engine.abandonFreshQuote()
 
             // Assert
-            assertThat(uiState.value.isAwaitingFreshQuote).isFalse()
+            assertThat(uiState.value.quote).isEqualTo(QuoteUM.Loading(isAnswerExpected = false))
             assertThat(engine.awaitFreshQuote()).isFalse()
             engine.onPause()
         }
