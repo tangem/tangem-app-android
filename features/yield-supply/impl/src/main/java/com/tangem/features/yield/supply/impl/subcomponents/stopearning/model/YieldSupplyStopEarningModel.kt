@@ -4,7 +4,7 @@ import arrow.core.getOrElse
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
-import com.tangem.blockchain.common.TransactionSender
+import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.MerklClaimCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.unwrapYieldModuleUpgrade
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -24,8 +24,10 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.transaction.error.SendTransactionError
+import com.tangem.domain.transaction.models.YieldModuleSameTokenRule
+import com.tangem.domain.transaction.models.isGasless
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
-import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForGaslessBatchUseCase
 import com.tangem.domain.yield.supply.INCREASE_GAS_LIMIT_FOR_SUPPLY
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.increaseGasLimitBy
@@ -35,13 +37,18 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
 import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyPendingTracker
 import com.tangem.domain.yield.supply.usecase.YieldSupplyStopEarningUseCase
+import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
+import com.tangem.features.yield.supply.impl.common.YieldSupplyFeeLoads
+import com.tangem.features.yield.supply.impl.common.YieldSupplySmartGas
+import com.tangem.features.yield.supply.impl.common.YieldSupplySmartGasFee
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
 import com.tangem.features.yield.supply.impl.common.entity.transformer.YieldSupplyTransactionInProgressTransformer
 import com.tangem.features.yield.supply.impl.common.entity.transformer.YieldSupplyTransactionReadyTransformer
+import com.tangem.features.yield.supply.impl.common.feeAssetType
 import com.tangem.features.yield.supply.impl.incentives.claim.model.YieldSupplyClaimPreparer
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsComponent
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsUpdateTrigger
@@ -55,10 +62,11 @@ import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class YieldSupplyStopEarningModel @Inject constructor(
     private val tangemBlogUrlBuilder: TangemBlogUrlBuilder,
@@ -68,7 +76,6 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     private val getFeeUseCase: GetFeeUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
-    private val sendTransactionUseCase: SendTransactionUseCase,
     private val yieldSupplyStopEarningUseCase: YieldSupplyStopEarningUseCase,
     private val urlOpener: UrlOpener,
     private val yieldSupplyNotificationsUpdateTrigger: YieldSupplyNotificationsUpdateTrigger,
@@ -79,6 +86,9 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     private val appsFlyerRepository: AppsFlyerRepository,
     private val yieldSupplyWithdrawalClaimPreparer: YieldSupplyWithdrawalClaimPreparer,
     private val yieldSupplyClaimTracker: YieldSupplyClaimTracker,
+    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
+    private val estimateFeeForGaslessBatchUseCase: EstimateFeeForGaslessBatchUseCase,
+    private val yieldSupplySmartGas: YieldSupplySmartGas,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStopEarningComponent.Params = paramsContainer.require()
@@ -96,10 +106,8 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
             ),
         )
 
-    private val feeCryptoCurrencyStatus: CryptoCurrencyStatus
-        get() = feeCryptoCurrencyStatusFlow.value
-
     private var appCurrency = AppCurrency.Default
+    private val feeLoads = YieldSupplyFeeLoads()
 
     private var withdrawalClaim: YieldPreClaim.Ready? = null
 
@@ -137,9 +145,8 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     }
 
     override fun onFeeReload() {
-        modelScope.launch {
-            onLoadFee()
-        }
+        val load = feeLoads.start()
+        modelScope.launch { onLoadFee(load) }
     }
 
     fun onReadMoreClick() {
@@ -152,6 +159,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
         params.callback.onTransactionProgress(true)
 
         val yieldSupplyFeeUM = uiState.value.yieldSupplyFeeUM as? YieldSupplyFeeUM.Content ?: return
+        val feeCurrency = yieldSupplyFeeUM.feeCurrency ?: feeCryptoCurrencyStatusFlow.value.currency
         analytics.send(
             YieldSupplyAnalytics.ButtonStopEarning(
                 token = cryptoCurrency.symbol,
@@ -163,7 +171,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
         val claimIndex = yieldSupplyFeeUM.transactionDataList.indexOfFirst {
             (it.extras as? EthereumTransactionExtras)?.callData?.unwrapYieldModuleUpgrade() is MerklClaimCallData
         }
-        // Read on the same frame as the fee content: both are written together when the fee loads
+        // Safe to pair with the fee content: Content means the latest load has written both the claim and the fee
         val claim = withdrawalClaim?.takeIf { claimIndex != -1 }
         if (claim != null && claim.preparedAt.elapsedNow() >= YieldSupplyClaimPreparer.PREPARATION_VALIDITY) {
             uiState.update(YieldSupplyTransactionReadyTransformer)
@@ -173,11 +181,10 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
         }
 
         modelScope.launch(dispatchers.default) {
-            sendTransactionUseCase(
-                txsData = yieldSupplyFeeUM.transactionDataList,
+            yieldSupplySmartGas.sendTransactions(
                 userWallet = userWallet,
                 network = cryptoCurrency.network,
-                sendMode = TransactionSender.MultipleTransactionSendMode.DEFAULT,
+                yieldSupplyFeeUM = yieldSupplyFeeUM,
             ).fold(
                 ifLeft = { error ->
                     TangemLogger.e(error.toString())
@@ -205,9 +212,14 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                     params.callback.onTransactionProgress(false)
                 },
                 ifRight = { hashes ->
-                    val claimHash = hashes.getOrNull(claimIndex)
+                    // A Smart Gas batch goes on-chain as one transaction, so its hash is the claim's too
+                    val claimHash = if (yieldSupplyFeeUM.gaslessFee != null) {
+                        hashes.single()
+                    } else {
+                        hashes.getOrNull(claimIndex)
+                    }
                     if (claim != null && claimHash != null) trackWithdrawalClaim(claim, transactionHash = claimHash)
-                    onStopEarningTransactionSuccess(hashes.last())
+                    onStopEarningTransactionSuccess(yieldSupplyFeeUM, feeCurrency, hashes.last())
                 },
             )
         }
@@ -223,7 +235,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
             userAddress = claim.userAddress,
             claimedRewards = claim.claimedRewards,
         )
-        modelScope.launch { onLoadFee() }
+        onFeeReload()
     }
 
     private fun trackWithdrawalClaim(claim: YieldPreClaim.Ready, transactionHash: String) {
@@ -238,7 +250,11 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
         )
     }
 
-    private suspend fun onStopEarningTransactionSuccess(txId: String) {
+    private suspend fun onStopEarningTransactionSuccess(
+        yieldSupplyFeeUM: YieldSupplyFeeUM.Content,
+        feeCurrency: CryptoCurrency,
+        txId: String,
+    ) {
         yieldSupplyRepository.saveTokenProtocolPendingStatus(
             userWalletId = userWallet.walletId,
             cryptoCurrency = cryptoCurrency,
@@ -251,24 +267,19 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                 referralId = appsFlyerRepository.getConversionData()?.refcode,
             ),
         )
-        val feeAssetType = if (feeCryptoCurrencyStatus.currency is CryptoCurrency.Coin) {
-            AnalyticsParam.FeeAssetType.Coin
-        } else {
-            AnalyticsParam.FeeAssetType.Token
-        }
         val event = AnalyticsParam.TxSentFrom.Earning(
             blockchain = cryptoCurrency.network.name,
             token = cryptoCurrency.symbol,
             feeType = AnalyticsParam.FeeType.Normal,
-            feeToken = feeCryptoCurrencyStatus.currency.symbol,
-            feeAssetType = feeAssetType,
+            feeToken = feeCurrency.symbol,
+            feeAssetType = yieldSupplyFeeUM.feeAssetType(feeCurrency),
         )
         analytics.send(
             Basic.TransactionSent(
                 sentFrom = event,
                 memoType = Basic.TransactionSent.MemoType.Null,
                 isCustomToken = cryptoCurrency.isCustom,
-                isCustomFeeToken = feeCryptoCurrencyStatus.currency.isCustom,
+                isCustomFeeToken = feeCurrency.isCustom,
             ),
         )
         val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
@@ -286,20 +297,28 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
         }
     }
 
-    private suspend fun onLoadFee() = coroutineScope {
+    private suspend fun onLoadFee(load: Int) = coroutineScope {
         // The fee check of the notifications reads this status, and the balance may have moved since the last load
         val feeStatus = getFeePaidCryptoCurrencyStatusSyncUseCase(
             userWalletId = userWallet.walletId,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
         ).getOrNull()
-        feeCryptoCurrencyStatusFlow.update { feeStatus ?: cryptoCurrencyStatus }
-        if (cryptoCurrency !is CryptoCurrency.Token || uiState.value.isTransactionSending) return@coroutineScope
+        val nativeFeeStatus = feeStatus ?: cryptoCurrencyStatus
+        if (cryptoCurrency !is CryptoCurrency.Token || uiState.value.isTransactionSending) {
+            refreshNativeFeeStatus(load, nativeFeeStatus)
+            return@coroutineScope
+        }
 
         val exitTransitionData = yieldSupplyStopEarningUseCase(
             userWalletId = userWallet.walletId,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             fee = null,
-        ).getOrNull() ?: return@coroutineScope
+        ).getOrNull()
+        if (exitTransitionData == null) {
+            refreshNativeFeeStatus(load, nativeFeeStatus)
+            return@coroutineScope
+        }
+        if (!feeLoads.takeOver(load, coroutineContext.job)) return@coroutineScope
 
         uiState.update {
             it.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Loading)
@@ -314,6 +333,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
         ).fold(
             ifLeft = { feeError ->
                 preparedClaim.cancel()
+                feeCryptoCurrencyStatusFlow.update { nativeFeeStatus }
                 yieldSupplyNotificationsUpdateTrigger.triggerUpdate(
                     data = YieldSupplyNotificationData(
                         feeValue = null,
@@ -332,25 +352,90 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                 withdrawalClaim = claim
                 // The claim goes first: it pays out of the module the withdrawal is about to deactivate
                 val transactions = listOfNotNull(claim?.transactionData, exitTransaction)
-                val feeCryptoValue = transactions.sumOf { it.fee?.amount?.value.orZero() }
-
-                uiState.update(
-                    YieldSupplyStopEarningFeeContentTransformer(
-                        cryptoCurrencyStatus = cryptoCurrencyStatus,
-                        feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
-                        appCurrency = appCurrency,
-                        transactions = transactions,
-                        feeValue = feeCryptoValue,
-                    ),
-                )
-
-                yieldSupplyNotificationsUpdateTrigger.triggerUpdate(
-                    data = YieldSupplyNotificationData(
-                        feeValue = feeCryptoValue,
-                        feeError = null,
-                    ),
-                )
+                onExitFeeEstimated(transactions, nativeFeeStatus)
             },
+        )
+    }
+
+    /**
+     * A load that returns before taking over only refreshes the balance of the native fee currency. It must not
+     * replace the status a later load has written, nor the Smart Gas fee token of the fee that is shown.
+     */
+    private fun refreshNativeFeeStatus(load: Int, nativeFeeStatus: CryptoCurrencyStatus) {
+        if (feeLoads.isSuperseded(load)) return
+        val shownFee = uiState.value.yieldSupplyFeeUM as? YieldSupplyFeeUM.Content
+        if (shownFee?.gaslessFee != null) return
+        feeCryptoCurrencyStatusFlow.update { nativeFeeStatus }
+    }
+
+    private suspend fun onExitFeeEstimated(
+        transactions: List<TransactionData.Uncompiled>,
+        nativeFeeStatus: CryptoCurrencyStatus,
+    ) {
+        val smartGasFee = if (yieldSupplyFeatureToggles.isSmartGasEnabled) resolveSmartGasFee(transactions) else null
+        val feeCryptoValue = smartGasFee?.feeAmount ?: transactions.sumOf { it.fee?.amount?.value.orZero() }
+        val feeStatus = smartGasFee?.feeTokenStatus ?: nativeFeeStatus
+        feeCryptoCurrencyStatusFlow.update { feeStatus }
+
+        uiState.update(
+            YieldSupplyStopEarningFeeContentTransformer(
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                feeCryptoCurrencyStatus = feeStatus,
+                appCurrency = appCurrency,
+                transactions = transactions,
+                feeValue = feeCryptoValue,
+                gaslessFee = smartGasFee?.fee,
+            ),
+        )
+
+        yieldSupplyNotificationsUpdateTrigger.triggerUpdate(
+            data = YieldSupplyNotificationData(
+                feeValue = feeCryptoValue,
+                feeError = null,
+            ),
+        )
+    }
+
+    /**
+     * Returns null — and the native fee stays — whenever Smart Gas can't pay: the native coin covers the batch or the
+     * fee token isn't in the portfolio. The exit returns everything to the wallet, so the calls go as they are.
+     */
+    private suspend fun resolveSmartGasFee(calls: List<TransactionData.Uncompiled>): YieldSupplySmartGasFee? {
+        val operationTokenStatus = cryptoCurrencyStatus
+        val fee = estimateFeeForGaslessBatchUseCase(
+            userWallet = userWallet,
+            operationTokenStatus = operationTokenStatus,
+            calls = calls,
+            sameTokenRule = YieldModuleSameTokenRule.Exit,
+        ).getOrElse { error ->
+            TangemLogger.e("Yield Mode exit Smart Gas fee estimate failed: $error")
+            return null
+        }
+        if (fee == null || !fee.isGasless) return null
+
+        val feeAmount = fee.transactionFee.normal.amount.value ?: run {
+            TangemLogger.e("Yield Mode exit Smart Gas fee has no amount")
+            return null
+        }
+
+        val feeTokenStatus = if (fee.feeTokenId == cryptoCurrency.id) {
+            operationTokenStatus
+        } else {
+            yieldSupplySmartGas.getFeeTokenStatus(
+                userWalletId = userWallet.walletId,
+                feeTokenId = fee.feeTokenId,
+                network = cryptoCurrency.network,
+            )
+        }
+        if (feeTokenStatus == null) {
+            TangemLogger.e("Yield Mode exit Smart Gas fee token ${fee.feeTokenId} is not in the portfolio")
+            return null
+        }
+        return YieldSupplySmartGasFee(
+            fee = fee,
+            feeTokenStatus = feeTokenStatus,
+            feeAmount = feeAmount,
+            transactions = calls,
         )
     }
 
