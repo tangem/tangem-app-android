@@ -55,7 +55,7 @@ import java.util.Base64
  * a manager of the wrong blockchain simply answers `isCollectiblesVaultSupported() == false`.
  *
  * The provider only builds wire bytes; the manager's own `send` signs and broadcasts them. The wallet is therefore
- * both `cold_owner` and `payer` — rent and network fee come out of its SOL balance.
+ * both `owner` and `payer` — rent and network fee come out of its SOL balance.
  */
 @Suppress("LongParameterList", "LargeClass")
 internal class DefaultGachaVaultRepository @Inject constructor(
