@@ -31,7 +31,7 @@ import kotlinx.collections.immutable.toImmutableList
  * Histories with fewer than two distinct timestamps use the empty state. Errors are mapped to
  * [PolymarketProbabilityChart.State.NoData] by the caller until an error design is available.
  *
- * @param periods Available periods, with localized labels. Empty hides the period control.
+ * @param periods Available periods, with localized labels. Fewer than two hides the period control.
  * @param selectedPeriodId Caller-owned selection; changing it also clears the time marker.
  * @param onPeriodChange Requests another period without changing the supplied histories.
  * @param formatTime Localized date/time readout appropriate to the selected period.
@@ -82,7 +82,7 @@ fun PolymarketProbabilityChart(
                 emptyDescription = emptyDescription,
             )
         }
-        if (periods.isNotEmpty()) {
+        if (periods.size > 1) {
             TangemSegmentedControl(
                 items = periods.map { period ->
                     TangemSegmentedControl.Item(
