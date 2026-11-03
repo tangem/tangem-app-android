@@ -205,7 +205,9 @@ internal class ProductActivationTrackerTest {
                 paymentAccount = PaymentAccountActivationState.Issuing(
                     step = PaymentAccountActivationState.Issuing.Step.ISSUING,
                 ),
-                moneyAccount = MoneyAccountActivationState.Issuing,
+                moneyAccount = MoneyAccountActivationState.Issuing(
+                    step = MoneyAccountActivationState.Issuing.Step.ISSUING,
+                ),
             ),
             orderedProducts = BOTH,
             expectedOnState = emptyList(),
