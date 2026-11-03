@@ -23,7 +23,7 @@ internal val FAKE_QUOTE_TTL = 60.seconds
 internal val FAKE_INSTANT = Instant.parse("2030-01-01T00:00:00Z")
 
 private const val ETH_DECIMALS = 18
-private const val FAKE_ETH_CURRENCY_ID = "coin⟨ETH⟩ethereum"
+internal const val FAKE_ETH_CURRENCY_ID = "coin⟨ETH⟩ethereum"
 private const val FAKE_WALLET_ID = "0123456789abcdef"
 private const val FAKE_TX_REF_VERSION = 1
 
