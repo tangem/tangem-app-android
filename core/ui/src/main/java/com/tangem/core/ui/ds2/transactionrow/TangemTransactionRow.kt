@@ -16,6 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -53,6 +55,9 @@ import kotlinx.collections.immutable.persistentListOf
  *   failed transaction should read unsigned, as in Figma.
  * - Pressing an interactive row draws the `interaction.press.default` overlay.
  *
+ * Accessibility: colour alone does not tell the states apart, so the row announces [status] as its state
+ * description — "In progress", "Pending" or "Transaction failed"; a finished row announces none.
+ *
  * @param icon Transaction kind glyph (send, receive, swap…), drawn in a 40dp circle tinted by [status].
  * @param title Transaction title (e.g. `"Send"`). Single line, ellipsized.
  * @param status Lifecycle of the transaction. See [TangemTransactionRow.Status].
@@ -82,8 +87,9 @@ fun TangemTransactionRow(
     isBalanceHidden: Boolean = false,
     onClick: (() -> Unit)? = null,
 ) {
+    val stateDescription = status.stateDescription()
     TangemRow(
-        modifier = modifier,
+        modifier = modifier.semantics { stateDescription?.let { this.stateDescription = it } },
         contentLead = TangemRowContentLead.Start,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = { TransactionRowHeadAvatar(icon = icon, status = status) },
