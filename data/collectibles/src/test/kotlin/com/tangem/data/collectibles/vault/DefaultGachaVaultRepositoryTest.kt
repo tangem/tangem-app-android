@@ -132,7 +132,7 @@ internal class DefaultGachaVaultRepositoryTest {
             assertThat(actual).isEqualTo(Unit.right())
             coVerify(exactly = 1) {
                 walletManager.buildInitCollectiblesVault(
-                    hotDelegate = DELEGATE.base58,
+                    sessionKey = DELEGATE.base58,
                     perSpinCap = GachaVaultLimits.Default.perSpinCap,
                     dailyCap = GachaVaultLimits.Default.dailyCap,
                 )
@@ -153,7 +153,7 @@ internal class DefaultGachaVaultRepositoryTest {
             assertThat(actual).isEqualTo(Unit.right())
             coVerify(exactly = 1) {
                 walletManager.buildUpdateCollectiblesVault(
-                    hotDelegate = DELEGATE.base58,
+                    sessionKey = DELEGATE.base58,
                     perSpinCap = null,
                     dailyCap = null,
                 )
@@ -227,7 +227,7 @@ internal class DefaultGachaVaultRepositoryTest {
         }
 
         private fun vault(hotDelegate: String): CollectiblesVault = mockk {
-            every { this@mockk.hotDelegate } returns hotDelegate
+            every { this@mockk.sessionKey } returns hotDelegate
         }
     }
 
