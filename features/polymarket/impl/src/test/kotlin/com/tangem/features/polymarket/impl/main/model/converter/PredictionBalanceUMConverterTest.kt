@@ -43,7 +43,6 @@ internal class PredictionBalanceUMConverterTest {
         val actual = converter.convert(
             PredictionBalanceUMConverter.Input(
                 status = status,
-                positions = PredictionPositionsValue.Unknown,
                 requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
                 regionStatus = model.regionStatus,
                 mode = PredictionBalanceMode.AVAILABLE,
@@ -66,7 +65,6 @@ internal class PredictionBalanceUMConverterTest {
         val actual = converter.convert(
             PredictionBalanceUMConverter.Input(
                 status = status,
-                positions = PredictionPositionsValue.Unknown,
                 requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
                 regionStatus = PredictionRegionStatus.ALLOWED,
                 mode = PredictionBalanceMode.AVAILABLE,
@@ -86,7 +84,6 @@ internal class PredictionBalanceUMConverterTest {
         val actual = converter.convert(
             PredictionBalanceUMConverter.Input(
                 status = status,
-                positions = PredictionPositionsValue.Unknown,
                 requisites = RequisitesState.Failed,
                 regionStatus = PredictionRegionStatus.ALLOWED,
                 mode = PredictionBalanceMode.AVAILABLE,
@@ -107,7 +104,6 @@ internal class PredictionBalanceUMConverterTest {
         val actual = converter.convert(
             PredictionBalanceUMConverter.Input(
                 status = status,
-                positions = PredictionPositionsValue.Unknown,
                 requisites = RequisitesState.Loading,
                 regionStatus = PredictionRegionStatus.ALLOWED,
                 mode = PredictionBalanceMode.AVAILABLE,
@@ -128,7 +124,6 @@ internal class PredictionBalanceUMConverterTest {
         val actual = converter.convert(
             PredictionBalanceUMConverter.Input(
                 status = status,
-                positions = PredictionPositionsValue.Unknown,
                 requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
                 regionStatus = PredictionRegionStatus.RESTRICTED,
                 mode = PredictionBalanceMode.AVAILABLE,
@@ -161,7 +156,7 @@ internal class PredictionBalanceUMConverterTest {
 
         // Act
         val actual = converter.convert(
-            input(status = status, mode = PredictionBalanceMode.TOTAL, positions = positions(amount = "2.5")),
+            input(status = status.copy(positions = positions(amount = "2.5")), mode = PredictionBalanceMode.TOTAL),
         )
 
         // Assert
@@ -177,7 +172,7 @@ internal class PredictionBalanceUMConverterTest {
 
         // Act
         val actual = converter.convert(
-            input(status = status, mode = PredictionBalanceMode.AVAILABLE, positions = positions(amount = "2.5")),
+            input(status = status.copy(positions = positions(amount = "2.5")), mode = PredictionBalanceMode.AVAILABLE),
         )
 
         // Assert
@@ -250,7 +245,6 @@ internal class PredictionBalanceUMConverterTest {
         // Arrange
         val input = PredictionBalanceUMConverter.Input(
             status = ACTIVE,
-            positions = PredictionPositionsValue.Unknown,
             requisites = RequisitesState.Loading,
             regionStatus = PredictionRegionStatus.ALLOWED,
             mode = PredictionBalanceMode.AVAILABLE,
@@ -270,7 +264,6 @@ internal class PredictionBalanceUMConverterTest {
         // Arrange
         val input = PredictionBalanceUMConverter.Input(
             status = ACTIVE,
-            positions = PredictionPositionsValue.Unknown,
             requisites = RequisitesState.Failed,
             regionStatus = PredictionRegionStatus.ALLOWED,
             mode = PredictionBalanceMode.AVAILABLE,
@@ -289,7 +282,6 @@ internal class PredictionBalanceUMConverterTest {
         // Arrange
         val input = PredictionBalanceUMConverter.Input(
             status = ACTIVE,
-            positions = PredictionPositionsValue.Unknown,
             requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
             regionStatus = PredictionRegionStatus.ALLOWED,
             mode = PredictionBalanceMode.AVAILABLE,
@@ -307,7 +299,6 @@ internal class PredictionBalanceUMConverterTest {
         // Arrange
         val input = PredictionBalanceUMConverter.Input(
             status = ACTIVE,
-            positions = PredictionPositionsValue.Unknown,
             requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
             regionStatus = PredictionRegionStatus.ALLOWED,
             mode = PredictionBalanceMode.AVAILABLE,
@@ -325,7 +316,6 @@ internal class PredictionBalanceUMConverterTest {
         // Arrange
         val input = PredictionBalanceUMConverter.Input(
             status = ACTIVE,
-            positions = PredictionPositionsValue.Unknown,
             requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
             regionStatus = PredictionRegionStatus.UNKNOWN,
             mode = PredictionBalanceMode.AVAILABLE,
@@ -343,7 +333,6 @@ internal class PredictionBalanceUMConverterTest {
         // Arrange
         val input = PredictionBalanceUMConverter.Input(
             status = ACTIVE,
-            positions = PredictionPositionsValue.Unknown,
             requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
             regionStatus = PredictionRegionStatus.RESTRICTED,
             mode = PredictionBalanceMode.AVAILABLE,
@@ -362,7 +351,6 @@ internal class PredictionBalanceUMConverterTest {
         // Arrange
         val input = PredictionBalanceUMConverter.Input(
             status = ACTIVE.copy(depositAddress = null),
-            positions = PredictionPositionsValue.Unknown,
             requisites = RequisitesState.Ready(target = DEPOSIT_TARGET),
             regionStatus = PredictionRegionStatus.ALLOWED,
             mode = PredictionBalanceMode.AVAILABLE,
@@ -380,7 +368,6 @@ internal class PredictionBalanceUMConverterTest {
         // Arrange
         val input = PredictionBalanceUMConverter.Input(
             status = ACTIVE.copy(depositAddress = null),
-            positions = PredictionPositionsValue.Unknown,
             requisites = RequisitesState.Failed,
             regionStatus = PredictionRegionStatus.ALLOWED,
             mode = PredictionBalanceMode.AVAILABLE,
@@ -399,7 +386,6 @@ internal class PredictionBalanceUMConverterTest {
         // Arrange
         val input = PredictionBalanceUMConverter.Input(
             status = PredictionAccountStatusValue.NotOnboarded,
-            positions = PredictionPositionsValue.Unknown,
             requisites = RequisitesState.Failed,
             regionStatus = PredictionRegionStatus.ALLOWED,
             mode = PredictionBalanceMode.AVAILABLE,
@@ -492,14 +478,9 @@ internal class PredictionBalanceUMConverterTest {
         ),
     )
 
-    private fun input(
-        status: PredictionAccountStatusValue,
-        mode: PredictionBalanceMode,
-        positions: PredictionPositionsValue = PredictionPositionsValue.Unknown,
-    ) =
+    private fun input(status: PredictionAccountStatusValue, mode: PredictionBalanceMode) =
         PredictionBalanceUMConverter.Input(
             status = status,
-            positions = positions,
             requisites = RequisitesState.Loading,
             regionStatus = PredictionRegionStatus.ALLOWED,
             mode = mode,

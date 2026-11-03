@@ -20,7 +20,6 @@ import com.tangem.domain.polymarket.model.PolymarketEventsBatch
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
 import com.tangem.domain.polymarket.model.PolymarketEventsUpdateRequest
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
-import com.tangem.domain.models.account.PredictionPositionsValue
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
@@ -164,9 +163,6 @@ internal class PolymarketMainComponentTest {
             dispatchers = TestingCoroutineDispatcherProvider(),
         ),
         predictionAccountStatusFetcher = mockk(relaxed = true),
-        predictionPositionsValueSupplier = mockk {
-            every { this@mockk.invoke(any<UserWalletId>()) } returns flowOf(PredictionPositionsValue.Unknown)
-        },
         predictionBalancePoller = mockk(relaxed = true),
         predictionFundingWindow = fundingWindow,
         observePolymarketCredentialsPresenceUseCase = observeCredentialsPresence,
