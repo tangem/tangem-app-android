@@ -34,7 +34,6 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
-import com.tangem.domain.transaction.usecase.gasless.CreateAndSendSolanaGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendTronGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -104,8 +103,6 @@ internal open class SwapInteractorImplTestBase {
         mockk(relaxed = true)
     protected val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase = mockk(relaxed = true)
     protected val solanaGaslessSwapResolver: SolanaGaslessSwapResolver = mockk()
-    protected val createAndSendSolanaGaslessTransactionUseCase: CreateAndSendSolanaGaslessTransactionUseCase =
-        mockk(relaxed = true)
 
     // endregion
 
@@ -146,7 +143,6 @@ internal open class SwapInteractorImplTestBase {
             createAndSendTronGaslessTransactionUseCase = createAndSendTronGaslessTransactionUseCase,
             isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
             solanaGaslessSwapResolver = solanaGaslessSwapResolver,
-            createAndSendSolanaGaslessTransactionUseCase = createAndSendSolanaGaslessTransactionUseCase,
         )
     }
 
