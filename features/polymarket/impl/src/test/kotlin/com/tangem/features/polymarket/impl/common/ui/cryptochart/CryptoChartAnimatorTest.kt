@@ -58,10 +58,57 @@ internal class CryptoChartAnimatorTest {
         val midway = animator.frame(updated, range, null, 135, 1f)
 
         // Act
-        val next = animator.frame(updated + Point(3000, 400.0), range, null, 150, 1f)
+        val next = animator.frame(updated + Point(3000, 400.0), range, null, 135, 1f)
 
         // Assert
         assertThat(next.points.last()).isEqualTo(midway.points.last())
+    }
+
+    @Test
+    fun `GIVEN a quote every frame WHEN animating THEN the head keeps advancing and eventually settles`() {
+        // Arrange
+        val animator = CryptoChartAnimator()
+        val range = TimeRange(0, 3000)
+        var points = listOf(Point(0, 100.0), Point(1000, 110.0))
+        var frame = animator.frame(points, range, null, 0, 1f)
+
+        // Act
+        val displayedTimes = (1..60).map { index ->
+            val elapsed = index * 16L
+            points = points + Point(1000 + elapsed, 110.0 + index)
+            frame = animator.frame(points, range, null, elapsed, 1f)
+            frame.points.last().timestampMillis
+        }
+        val settled = animator.frame(points, range, null, 1500, 1f)
+
+        // Assert
+        assertThat(displayedTimes).isInStrictOrder()
+        assertThat(frame.points.last().timestampMillis).isLessThan(points.last().timestampMillis)
+        assertThat(frame.points.last().price).isGreaterThan(110.0)
+        assertThat(settled.points).isEqualTo(points)
+    }
+
+    @Test
+    fun `GIVEN a correction every frame WHEN animating THEN the displayed price keeps progressing`() {
+        // Arrange
+        val animator = CryptoChartAnimator()
+        val range = TimeRange(0, 1000)
+        var points = listOf(Point(0, 100.0), Point(1000, 110.0))
+        var frame = animator.frame(points, range, null, 0, 1f)
+
+        // Act
+        val displayedPrices = (1..60).map { index ->
+            points = listOf(points.first(), Point(1000, 110.0 + index))
+            frame = animator.frame(points, range, null, index * 16L, 1f)
+            frame.points.last().price
+        }
+        val settled = animator.frame(points, range, null, 1500, 1f)
+
+        // Assert
+        assertThat(displayedPrices).isInStrictOrder()
+        assertThat(frame.points.last().timestampMillis).isEqualTo(1000L)
+        assertThat(frame.points.last().price).isLessThan(points.last().price)
+        assertThat(settled.points).isEqualTo(points)
     }
 
     @Test

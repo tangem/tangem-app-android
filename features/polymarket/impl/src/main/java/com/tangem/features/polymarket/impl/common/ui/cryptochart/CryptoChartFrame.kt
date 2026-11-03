@@ -33,10 +33,35 @@ internal class CryptoChartAnimator {
         motionScale: Float,
     ): CryptoChartFrame {
         if (previousInput !== points) {
+            previousInput?.let { previous ->
+                advance(
+                    points = previous,
+                    range = range,
+                    target = target,
+                    frameMillis = frameMillis,
+                    motionScale = motionScale,
+                )
+            }
             transitionFrom = lastFrame
             transitionStartedAt = frameMillis
             previousInput = points
         }
+        return advance(
+            points = points,
+            range = range,
+            target = target,
+            frameMillis = frameMillis,
+            motionScale = motionScale,
+        )
+    }
+
+    private fun advance(
+        points: List<Point>,
+        range: TimeRange,
+        target: Double?,
+        frameMillis: Long,
+        motionScale: Float,
+    ): CryptoChartFrame {
         val raw = CryptoChartFrame.from(points, range, target)
         val old = lastFrame?.takeIf { it.points.isNotEmpty() }
         val displayed = if (old == null || motionScale == 0f || raw.points.isEmpty()) {
