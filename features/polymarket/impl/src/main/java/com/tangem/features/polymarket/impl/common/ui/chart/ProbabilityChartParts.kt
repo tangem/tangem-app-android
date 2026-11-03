@@ -66,7 +66,7 @@ internal fun ProbabilityChartLegend(content: Content?, isLoading: Boolean, lineC
         Spacer(Modifier.height(24.dp))
     } else {
         FlowRow(
-            modifier = Modifier.fillMaxWidth().heightIn(min = lineHeight * lineCount.coerceAtLeast(1)),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
