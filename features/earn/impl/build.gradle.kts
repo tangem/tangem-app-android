@@ -12,7 +12,7 @@ android {
 
 dependencies {
     /** Feature */
-    implementation(projects.features.earn.api)
+    api(projects.features.earn.api)
     api(projects.features.earn.product.api)
 
     /** Core */
