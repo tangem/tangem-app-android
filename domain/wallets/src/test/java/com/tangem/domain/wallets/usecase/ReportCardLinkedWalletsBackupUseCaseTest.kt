@@ -3,6 +3,7 @@ package com.tangem.domain.wallets.usecase
 import arrow.core.left
 import arrow.core.right
 import com.tangem.common.card.EllipticCurve
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -14,15 +15,24 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 internal class ReportCardLinkedWalletsBackupUseCaseTest {
 
+    private val userWallets = MutableStateFlow<List<UserWallet>?>(null)
+    private val userWalletsListRepository: UserWalletsListRepository = mockk {
+        every { this@mockk.userWallets } returns this@ReportCardLinkedWalletsBackupUseCaseTest.userWallets
+    }
     private val walletCardsBackupRepository: WalletCardsBackupRepository = mockk(relaxUnitFun = true)
     private val reportWalletCardsBackupUseCase: ReportWalletCardsBackupUseCase = mockk()
 
     private val useCase = ReportCardLinkedWalletsBackupUseCase(
+        userWalletsListRepository = userWalletsListRepository,
         walletCardsBackupRepository = walletCardsBackupRepository,
         reportWalletCardsBackupUseCase = reportWalletCardsBackupUseCase,
     )
@@ -32,9 +42,10 @@ internal class ReportCardLinkedWalletsBackupUseCaseTest {
         // Arrange
         coEvery { walletCardsBackupRepository.isCardLinkedReported(WALLET_ID) } returns false
         coEvery { reportWalletCardsBackupUseCase(any(), any(), any()) } returns Unit.right()
+        startUseCase()
 
         // Act
-        useCase(listOf(coldWallet(isImported = true)))
+        emit(listOf(coldWallet(isImported = true)))
 
         // Assert
         coVerify(exactly = 1) {
@@ -59,9 +70,10 @@ internal class ReportCardLinkedWalletsBackupUseCaseTest {
     fun `GIVEN CardLinked wallet already reported WHEN invoke THEN nothing is reported`() = runTest {
         // Arrange
         coEvery { walletCardsBackupRepository.isCardLinkedReported(WALLET_ID) } returns true
+        startUseCase()
 
         // Act
-        useCase(listOf(coldWallet()))
+        emit(listOf(coldWallet()))
 
         // Assert
         coVerify(exactly = 0) { reportWalletCardsBackupUseCase(any(), any(), any()) }
@@ -76,9 +88,10 @@ internal class ReportCardLinkedWalletsBackupUseCaseTest {
             coldWallet(backupStatus = null),
             mockk<UserWallet.Hot>(),
         )
+        startUseCase()
 
         // Act
-        useCase(wallets)
+        emit(wallets)
 
         // Assert
         coVerify(exactly = 0) { walletCardsBackupRepository.isCardLinkedReported(any()) }
@@ -90,30 +103,41 @@ internal class ReportCardLinkedWalletsBackupUseCaseTest {
         // Arrange
         coEvery { walletCardsBackupRepository.isCardLinkedReported(WALLET_ID) } returns false
         coEvery { reportWalletCardsBackupUseCase(any(), any(), any()) } returns Unit.right()
+        startUseCase()
 
         // Act
-        useCase(listOf(coldWallet(isLocked = true)))
-        useCase(listOf(coldWallet()))
+        emit(listOf(coldWallet(isLocked = true)))
+        emit(listOf(coldWallet()))
 
         // Assert
         coVerify(exactly = 1) { reportWalletCardsBackupUseCase(any(), any(), any()) }
     }
 
     @Test
-    fun `GIVEN report not delivered WHEN invoke twice THEN flag is not set and report is queued once`() = runTest {
+    fun `GIVEN report not delivered WHEN wallets emitted twice THEN flag is not set and report is queued once`() = runTest {
         // Arrange
         coEvery { walletCardsBackupRepository.isCardLinkedReported(WALLET_ID) } returns false
         coEvery {
             reportWalletCardsBackupUseCase(any(), any(), any())
         } returns WalletCardsBackupError.NoInternetConnection.left()
+        startUseCase()
 
         // Act
-        useCase(listOf(coldWallet()))
-        useCase(listOf(coldWallet()))
+        emit(listOf(coldWallet()))
+        emit(listOf(coldWallet()))
 
         // Assert
         coVerify(exactly = 1) { reportWalletCardsBackupUseCase(any(), any(), any()) }
         coVerify(exactly = 0) { walletCardsBackupRepository.setCardLinkedReported(any()) }
+    }
+
+    private fun TestScope.startUseCase() {
+        backgroundScope.launch { useCase() }
+    }
+
+    private fun TestScope.emit(wallets: List<UserWallet>) {
+        userWallets.value = wallets
+        runCurrent()
     }
 
     private fun coldWallet(
