@@ -177,9 +177,7 @@ internal object BlockchainSDKFactoryModule {
             blockchainSDKLogger = blockchainSDKLogger,
             featureToggleValues = WalletManagerFactoryCreator.FeatureToggleValues(
                 isYieldModeSwapEnabled = true,
-                isMonadEnabled = featureTogglesManager.isFeatureEnabled(
-                    FeatureToggles.TWI_1520_MERKL_INCENTIVES_ENABLED,
-                ),
+                isMonadEnabled = true,
                 isYieldModuleV3Enabled = featureTogglesManager.isFeatureEnabled(
                     FeatureToggles.AND_18834_YIELD_MODULE_V3_ENABLED,
                 ),
