@@ -1,0 +1,142 @@
+@file:Suppress("MagicNumber")
+
+package com.tangem.features.polymarket.impl.common.ui.cryptochart
+
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.haze.ProvideHaze
+import com.tangem.core.ui.components.haze.hazeSourceTangem
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.polymarket.impl.common.ui.cryptochart.PolymarketCryptoChart.Snapshot
+
+@Composable
+@Suppress("LongParameterList", "LongMethod")
+internal fun CryptoPricePlot(
+    snapshot: Snapshot,
+    targetLabel: TextReference,
+    emptyLabel: TextReference,
+    formatPrice: (Double, Int) -> String,
+    formatTime: (Long) -> String,
+    isCompact: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val points = remember(snapshot.points, snapshot.range) { snapshot.points.visiblePoints(snapshot.range) }
+    val scale = remember(points, snapshot.targetPrice) { CryptoChartScale.from(points, snapshot.targetPrice) }
+    val tickCount = if (isCompact) 5 else 11
+    val digits = scale.fractionDigits(tickCount)
+    val style = TangemTheme.typography3.caption.medium.copy(color = TangemTheme.colors3.text.secondary)
+    val measurer = rememberTextMeasurer()
+    val labels = remember(scale, tickCount, formatPrice, style, measurer) {
+        scale.ticks(tickCount).map { measurer.measure(formatPrice(it, digits), style) }
+    }
+    val density = LocalDensity.current
+    val labelHeight = with(density) { labels.maxOf { it.size.height }.toDp() }
+    val axisWidth = with(density) { labels.maxOf { it.size.width }.toDp() }
+    val plotHeight = if (isCompact) 124.dp else maxOf(364.dp, labelHeight * (tickCount - 1) * 1.5f)
+    val lineColor = TangemTheme.colors3.border.accent.yellow
+    val gridColor = TangemTheme.colors3.border.primary
+    val latestDescription = points.lastOrNull()?.let {
+        listOf(formatPrice(it.price, digits), formatTime(it.timestampMillis)).filter(String::isNotEmpty).joinToString()
+    }
+    ProvideHaze {
+        Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(
+                    Modifier.weight(1f).height(plotHeight).semantics {
+                        latestDescription?.let { contentDescription = it }
+                    },
+                ) {
+                    Canvas(
+                        Modifier.matchParentSize().padding(vertical = labelHeight / 2)
+                            .hazeSourceTangem().background(TangemTheme.colors3.bg.primary).clearAndSetSemantics {},
+                    ) {
+                        val dash = PathEffect.dashPathEffect(floatArrayOf(3.dp.toPx(), 3.dp.toPx()))
+                        scale.ticks(tickCount).forEach { value ->
+                            val y = scale.y(value) * size.height
+                            drawLine(
+                                color = gridColor,
+                                start = Offset(0f, y),
+                                end = Offset(size.width, y),
+                                strokeWidth = 1.dp.toPx(),
+                                pathEffect = dash,
+                            )
+                        }
+                        drawCryptoPrice(points = points, range = snapshot.range, scale = scale, color = lineColor)
+                    }
+                    if (points.isEmpty()) {
+                        Text(
+                            text = emptyLabel.resolveReference(),
+                            modifier = Modifier.align(Alignment.Center),
+                            color = TangemTheme.colors3.text.secondary,
+                            style = TangemTheme.typography3.caption.medium,
+                        )
+                    } else if (snapshot.targetPrice != null) {
+                        CryptoChartTarget(
+                            price = snapshot.targetPrice,
+                            label = targetLabel,
+                            scale = scale,
+                            labelHeight = labelHeight,
+                        )
+                    }
+                }
+                if (!isCompact) {
+                    Canvas(Modifier.width(axisWidth).height(plotHeight).clearAndSetSemantics {}) {
+                        labels.forEachIndexed { index, label ->
+                            drawText(
+                                label,
+                                topLeft = Offset(0f, index * (size.height - labelHeight.toPx()) / (tickCount - 1)),
+                            )
+                        }
+                    }
+                }
+            }
+            if (!isCompact) {
+                CryptoChartDates(
+                    snapshot = snapshot,
+                    formatTime = formatTime,
+                    modifier = Modifier.fillMaxWidth().padding(end = axisWidth + 8.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CryptoChartDates(snapshot: Snapshot, formatTime: (Long) -> String, modifier: Modifier = Modifier) {
+    val style = TangemTheme.typography3.caption.medium.copy(color = TangemTheme.colors3.text.secondary)
+    val measurer = rememberTextMeasurer()
+    val labels = remember(snapshot.range, formatTime, style, measurer) {
+        val range = snapshot.range
+        listOf(range.startMillis, range.startMillis + (range.endMillis - range.startMillis) / 2, range.endMillis)
+            .map { measurer.measure(formatTime(it), style) }
+    }
+    val height = with(LocalDensity.current) { labels.maxOf { it.size.height }.toDp() }
+    Canvas(modifier.height(height).clearAndSetSemantics {}) {
+        val isStartVisible = labels.first().size.width + labels.last().size.width + 8.dp.toPx() <= size.width
+        val isMiddleVisible = labels.sumOf { it.size.width } + 16.dp.toPx() <= size.width
+        labels.forEachIndexed { index, label ->
+            val isVisible = when (index) {
+                0 -> isStartVisible
+                1 -> isMiddleVisible
+                else -> true
+            }
+            if (isVisible) drawText(label, topLeft = Offset((size.width - label.size.width) * index / 2, 0f))
+        }
+    }
+}
