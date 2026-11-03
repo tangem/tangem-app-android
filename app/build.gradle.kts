@@ -219,6 +219,7 @@ dependencies {
     implementation(projects.grow.datasource)
     implementation(projects.core.utils)
     implementation(projects.core.decompose)
+    implementation(projects.core.decompose.ui)
     implementation(projects.core.error.ext)
     implementation(projects.core.security)
     implementation(projects.core.biometricAuth.impl)
