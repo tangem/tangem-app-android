@@ -15,7 +15,6 @@ import com.tangem.data.polymarket.derivation.DefaultPolymarketDepositWalletDeriv
 import com.tangem.data.polymarket.derivation.DefaultPolymarketEoaDeriver
 import com.tangem.data.polymarket.flow.DefaultPredictionAccountStatusFetcher
 import com.tangem.data.polymarket.flow.DefaultPredictionAccountStatusProducer
-import com.tangem.data.polymarket.flow.DefaultPredictionPositionsValueFetcher
 import com.tangem.data.polymarket.flow.DefaultPredictionPositionsValueProducer
 import com.tangem.data.polymarket.quote.PolymarketQuoteStore
 import com.tangem.data.polymarket.store.DefaultPolymarketBridgeAssetsStore
@@ -41,7 +40,6 @@ import com.tangem.domain.polymarket.flow.DefaultPredictionFundingWindow
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusProducer
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
-import com.tangem.domain.polymarket.flow.PredictionPositionsValueFetcher
 import com.tangem.domain.polymarket.flow.PredictionPositionsValueProducer
 import com.tangem.domain.polymarket.flow.PredictionPositionsValueSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
@@ -120,12 +118,6 @@ internal interface PolymarketDataModule {
 
     @Binds
     @Singleton
-    fun bindPredictionPositionsValueFetcher(
-        impl: DefaultPredictionPositionsValueFetcher,
-    ): PredictionPositionsValueFetcher
-
-    @Binds
-    @Singleton
     fun bindPredictionPositionsValueProducerFactory(
         impl: DefaultPredictionPositionsValueProducer.Factory,
     ): PredictionPositionsValueProducer.Factory
@@ -192,13 +184,11 @@ internal interface PolymarketDataModule {
         @Singleton
         fun providePredictionBalancePoller(
             statusFetcher: PredictionAccountStatusFetcher,
-            positionsValueFetcher: PredictionPositionsValueFetcher,
             fundingWindow: PredictionFundingWindow,
             config: PredictionBalancePollingConfig,
             appScope: AppCoroutineScope,
         ): PredictionBalancePoller = PredictionBalancePoller(
             statusFetcher = statusFetcher,
-            positionsValueFetcher = positionsValueFetcher,
             fundingWindow = fundingWindow,
             config = config,
             appScope = appScope,

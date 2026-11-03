@@ -35,6 +35,7 @@ import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelector
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
 import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams
 import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams.FeeStateConfiguration
+import com.tangem.features.send.api.subcomponents.feeSelector.params.SponsoredFeeAvailability
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorCheckReloadListener
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorCheckReloadTrigger
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadListener
@@ -233,6 +234,28 @@ internal class FeeSelectorLogicTest {
                 coVerify(exactly = 1) { onLoadFeeExtended(tokenStatus) }
                 coVerify(exactly = 0) { onLoadFee() }
                 assertThat(sut.uiState.value).isInstanceOf(FeeSelectorUM.Error::class.java)
+            }
+
+        @Test
+        fun `GIVEN token picked by user AND state reset to loading WHEN fee reloads THEN the token is not pinned`() =
+            runTest(UnconfinedTestDispatcher()) {
+                // Arrange
+                coEvery { onLoadFeeExtended(any()) } returns GetFeeError.GaslessError.YieldBalanceUnavailable.left()
+                coEvery { onLoadFee() } returns singleFee().right()
+                val sut = buildModel(gaslessEnabled = true, nativeFeeCurrency = true)
+                advanceUntilIdle()
+                sut.onTokenSelected(tokenStatus)
+                advanceUntilIdle()
+                clearMocks(onLoadFee, onLoadFeeExtended, answers = false, recordedCalls = true, childMocks = false)
+
+                // Act
+                sut.uiState.value = FeeSelectorUM.Loading
+                reloadTriggerFlow.emit(FeeSelectorData())
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 1) { onLoadFeeExtended(null) }
+                coVerify(exactly = 0) { onLoadFeeExtended(tokenStatus) }
             }
 
         @Test
@@ -636,6 +659,174 @@ internal class FeeSelectorLogicTest {
             }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SponsoredFee {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN sponsorship availability WHEN load fee THEN sponsored fee offered and selected by default`(
+            model: SponsoredFeeModel,
+        ) = runTest(UnconfinedTestDispatcher()) {
+            // Arrange
+            coEvery { onLoadFee() } returns singleFee().right()
+
+            // Act
+            val sut = buildSponsorableModel(availability = model.availability)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sut.uiState.value.toSponsoredFeeResult()).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            SponsoredFeeModel(
+                availability = SponsoredFeeAvailability.Unavailable,
+                expected = SponsoredFeeResult(isAvailable = false, isSelected = false, fee = BigDecimal("0.001")),
+            ),
+            SponsoredFeeModel(
+                availability = SponsoredFeeAvailability.Available,
+                expected = SponsoredFeeResult(isAvailable = true, isSelected = false, fee = BigDecimal("0.001")),
+            ),
+            SponsoredFeeModel(
+                availability = SponsoredFeeAvailability.Preferred,
+                expected = SponsoredFeeResult(isAvailable = true, isSelected = true, fee = BigDecimal.ZERO),
+            ),
+        )
+
+        @Test
+        fun `GIVEN sponsorship available WHEN sponsored fee picked THEN it is selected with a zero fee`() =
+            runTest(UnconfinedTestDispatcher()) {
+                // Arrange
+                coEvery { onLoadFee() } returns singleFee().right()
+                val sut = buildSponsorableModel(availability = SponsoredFeeAvailability.Available)
+                advanceUntilIdle()
+
+                // Act
+                sut.onSponsoredFeeSelected()
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(sut.uiState.value.toSponsoredFeeResult())
+                    .isEqualTo(SponsoredFeeResult(isAvailable = true, isSelected = true, fee = BigDecimal.ZERO))
+            }
+
+        @Test
+        fun `GIVEN sponsorship preferred AND coin picked by user WHEN fee reloads THEN the user pays the fee`() =
+            runTest(UnconfinedTestDispatcher()) {
+                // Arrange
+                coEvery { onLoadFee() } returns singleFee().right()
+                val sut = buildSponsorableModel(availability = SponsoredFeeAvailability.Preferred)
+                advanceUntilIdle()
+
+                // Act
+                sut.onTokenSelected(coinStatus)
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(sut.uiState.value.toSponsoredFeeResult())
+                    .isEqualTo(SponsoredFeeResult(isAvailable = true, isSelected = false, fee = BigDecimal("0.001")))
+            }
+
+        @Test
+        fun `GIVEN sponsored fee picked WHEN sponsorship becomes unavailable THEN the user pays the fee`() =
+            runTest(UnconfinedTestDispatcher()) {
+                // Arrange
+                coEvery { onLoadFee() } returns singleFee().right()
+                var availability = SponsoredFeeAvailability.Available
+                val sut = buildSponsorableModel(onLoadSponsoredFee = { availability })
+                advanceUntilIdle()
+                sut.onSponsoredFeeSelected()
+                advanceUntilIdle()
+
+                // Act
+                availability = SponsoredFeeAvailability.Unavailable
+                reloadTriggerFlow.emit(FeeSelectorData())
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(sut.uiState.value.toSponsoredFeeResult())
+                    .isEqualTo(SponsoredFeeResult(isAvailable = false, isSelected = false, fee = BigDecimal("0.001")))
+            }
+
+        @Test
+        fun `GIVEN sponsored fee picked AND sponsorship briefly unavailable WHEN it returns THEN the pick is restored`() =
+            runTest(UnconfinedTestDispatcher()) {
+                // Arrange
+                coEvery { onLoadFee() } returns singleFee().right()
+                var availability = SponsoredFeeAvailability.Available
+                val sut = buildSponsorableModel(onLoadSponsoredFee = { availability })
+                advanceUntilIdle()
+                sut.onSponsoredFeeSelected()
+                advanceUntilIdle()
+                availability = SponsoredFeeAvailability.Unavailable
+                reloadTriggerFlow.emit(FeeSelectorData())
+                advanceUntilIdle()
+
+                // Act
+                availability = SponsoredFeeAvailability.Available
+                reloadTriggerFlow.emit(FeeSelectorData())
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(sut.uiState.value.toSponsoredFeeResult())
+                    .isEqualTo(SponsoredFeeResult(isAvailable = true, isSelected = true, fee = BigDecimal.ZERO))
+            }
+
+        @Test
+        fun `GIVEN sponsored fee picked AND state reset to loading WHEN fee reloads THEN the pick is kept`() =
+            runTest(UnconfinedTestDispatcher()) {
+                // Arrange
+                coEvery { onLoadFee() } returns singleFee().right()
+                val sut = buildSponsorableModel(availability = SponsoredFeeAvailability.Available)
+                advanceUntilIdle()
+                sut.onSponsoredFeeSelected()
+                advanceUntilIdle()
+
+                // Act
+                sut.uiState.value = FeeSelectorUM.Loading
+                reloadTriggerFlow.emit(FeeSelectorData())
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(sut.uiState.value.toSponsoredFeeResult())
+                    .isEqualTo(SponsoredFeeResult(isAvailable = true, isSelected = true, fee = BigDecimal.ZERO))
+            }
+
+        @Test
+        fun `GIVEN coin picked over preferred sponsorship AND state reset to loading WHEN fee reloads THEN the user pays`() =
+            runTest(UnconfinedTestDispatcher()) {
+                // Arrange
+                coEvery { onLoadFee() } returns singleFee().right()
+                val sut = buildSponsorableModel(availability = SponsoredFeeAvailability.Preferred)
+                advanceUntilIdle()
+                sut.onTokenSelected(coinStatus)
+                advanceUntilIdle()
+
+                // Act
+                sut.uiState.value = FeeSelectorUM.Loading
+                reloadTriggerFlow.emit(FeeSelectorData())
+                advanceUntilIdle()
+
+                // Assert
+                assertThat(sut.uiState.value.toSponsoredFeeResult())
+                    .isEqualTo(SponsoredFeeResult(isAvailable = true, isSelected = false, fee = BigDecimal("0.001")))
+            }
+    }
+
+    data class SponsoredFeeModel(val availability: SponsoredFeeAvailability, val expected: SponsoredFeeResult)
+
+    data class SponsoredFeeResult(val isAvailable: Boolean, val isSelected: Boolean, val fee: BigDecimal?)
+
+    private fun FeeSelectorUM.toSponsoredFeeResult(): SponsoredFeeResult? {
+        val content = this as? FeeSelectorUM.Content ?: return null
+        return SponsoredFeeResult(
+            isAvailable = content.feeExtraInfo.sponsoredFee.isAvailable,
+            isSelected = content.feeExtraInfo.sponsoredFee.isSelected,
+            fee = content.fees.normal.amount.value,
+        )
+    }
+
     // region fixtures
 
     private fun TestScope.buildModel(
@@ -674,6 +865,26 @@ internal class FeeSelectorLogicTest {
             analyticsCategoryName = "test_fee",
             analyticsSendSource = CommonSendAnalyticEvents.CommonSendSource.Send,
             isTronGaslessSupported = isTronGaslessSupported,
+        )
+        return createLogic(params)
+    }
+
+    /** A token swap whose fee can be sponsored. */
+    private fun TestScope.buildSponsorableModel(
+        availability: SponsoredFeeAvailability = SponsoredFeeAvailability.Unavailable,
+        onLoadSponsoredFee: suspend (TransactionFee) -> SponsoredFeeAvailability = { availability },
+    ): FeeSelectorLogic {
+        val params = FeeSelectorParams.FeeSelectorBlockParams(
+            state = FeeSelectorUM.Loading,
+            userWalletId = testUserWalletId,
+            onLoadFee = onLoadFee,
+            cryptoCurrencyStatus = tokenStatus,
+            feeCryptoCurrencyStatus = coinStatus,
+            feeStateConfiguration = FeeStateConfiguration.None,
+            feeDisplaySource = FeeSelectorParams.FeeDisplaySource.BottomSheet,
+            analyticsCategoryName = "test_fee",
+            analyticsSendSource = CommonSendAnalyticEvents.CommonSendSource.Send,
+            onLoadSponsoredFee = onLoadSponsoredFee,
         )
         return createLogic(params)
     }

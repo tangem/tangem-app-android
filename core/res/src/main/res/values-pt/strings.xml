@@ -18,6 +18,7 @@
   <string name="prediction_add_funds_swap_title">Da sua carteira Tangem</string>
   <string name="prediction_balance_total">Saldo total</string>
   <string name="prediction_balance_withdraw">Sacar</string>
+  <string name="prediction_cash_out">Resgatar</string>
   <string name="prediction_claim_error_failed">O resgate não foi concluído. Nada saiu da sua conta e você pode tentar novamente.</string>
   <string name="prediction_claim_error_generic">Não foi possível enviar a solicitação de resgate. Tente novamente.</string>
   <string name="prediction_claim_error_rejected">A Polymarket recusou processar o resgate. Atualize suas posições e tente novamente.</string>
@@ -29,6 +30,7 @@
   <string name="prediction_close_result_partially_sold_title">Parcialmente vendido</string>
   <string name="prediction_close_result_sold_title">Vendido %s</string>
   <string name="prediction_close_result_tokens_sold">Cotas vendidas</string>
+  <string name="prediction_close_selling_of">Vendendo %1$s de %2$s cotas</string>
   <string name="prediction_close_selling_tokens">Vendendo %s cotas</string>
   <string name="prediction_close_summary_to">Para</string>
   <string name="prediction_close_title">Fechar posição</string>

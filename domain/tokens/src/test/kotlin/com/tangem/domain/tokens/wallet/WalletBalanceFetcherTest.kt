@@ -502,6 +502,67 @@ internal class WalletBalanceFetcherTest {
     }
 
     @Test
+    fun `GIVEN legacy staking fetch WHEN fetchStaking RETURNS LEFT THEN STAKING failure`() = runTest {
+        // Arrange
+        val cardTypesResolver = mockk<CardTypesResolver> {
+            every { isMultiwalletAllowed() } returns true
+        }
+
+        val currencies = cryptoCurrencyFactory.ethereumAndStellar.toSet()
+        val stakingBalanceFetcherParams = MultiStakingBalanceFetcher.Params(
+            userWalletId = userWalletId,
+            stakingIds = setOf(ethereumStakingId, stellarStakingId),
+        )
+
+        val exception = IllegalStateException("Error")
+
+        mockColdWallet(cardTypesResolver)
+        coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
+        coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
+        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
+            WalletFetchingSource.Balance(setOf(FetchingSource.CONTRIBUTIONS)),
+        )
+        coEvery {
+            stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.ethereum)
+        } returns Either.Right(ethereumStakingId)
+        coEvery {
+            stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.stellar)
+        } returns Either.Right(stellarStakingId)
+        coEvery { multiStakingBalanceFetcher(params = stakingBalanceFetcherParams) } returns exception.left()
+
+        // Act
+        val actual = createFetcher(isPluggableBalanceSourcesEnabled = false)(
+            params = WalletBalanceFetcher.Params(
+                userWalletId = userWalletId,
+            ),
+        )
+
+        // Assert
+        val expected = IllegalStateException(
+            "Failed to fetch next sources for UserWalletId(011...011):\n" +
+                "STAKING – java.lang.IllegalStateException: Error",
+        ).left()
+        assertEither(actual, expected)
+
+        coVerifyOrder {
+            userWalletsListRepository.getSyncStrict(userWalletId)
+            multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            expressServiceFetcher.fetch(userWallet = any(), assetIds = any())
+            multiWalletBalanceFetcher.fetchingSources
+            stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.ethereum)
+            stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.stellar)
+            multiStakingBalanceFetcher(params = stakingBalanceFetcherParams)
+        }
+
+        coVerify(inverse = true) {
+            singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            singleWalletBalanceFetcher.getCryptoCurrencies(userWallet = any())
+            multiNetworkStatusFetcher(params = any())
+            multiQuoteStatusFetcher(params = any())
+        }
+    }
+
+    @Test
     fun `fetch failure if stakingIdFactory RETURNS UnsupportedCurrency for all currencies`() = runTest {
         // Arrange
         val cardTypesResolver = mockk<CardTypesResolver> {
@@ -708,7 +769,7 @@ internal class WalletBalanceFetcherTest {
             "Failed to fetch next sources for UserWalletId(011...011):\n" +
                 "NETWORK – java.lang.IllegalStateException: Error\n" +
                 "QUOTE – java.lang.IllegalStateException: Error\n" +
-                "StakingContributionFetcher – java.lang.IllegalStateException: Error",
+                "${StakingContributionFetcher::class.java.simpleName} – java.lang.IllegalStateException: Error",
         ).left()
         assertEither(actual, expected)
 

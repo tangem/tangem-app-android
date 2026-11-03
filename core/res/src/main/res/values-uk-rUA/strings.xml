@@ -3411,9 +3411,9 @@
   <string name="yield_module_high_network_fees_notification_description">Комісії наразі вищі чим зазвичай із-за високої активності на ринку. Ви можете продовжити зараз чи повернутися пізніше, коли комісія знизиться.</string>
   <string name="yield_module_high_network_fees_notification_title">Висока мережева комісія</string>
   <string name="yield_module_historical_returns">Історична прибутковість</string>
-  <string name="yield_module_main_promo_button">Спробувати Режим дохідності</string>
+  <string name="yield_module_main_promo_button">Спробувати режим дохідності</string>
   <string name="yield_module_main_promo_subtitle">Нехай вільні монети працюють. Без блокування, виведення в будь-який час.</string>
-  <string name="yield_module_main_promo_title">Заробляйте на крипті до %1$s%% APY</string>
+  <string name="yield_module_main_promo_title">Заробляйте на крипті з дохідністю до %1$s%% APY</string>
   <plurals name="yield_module_main_promo_tokens_count">
     <item quantity="one">Понад %d доступний токен</item>
     <item quantity="few">Понад %d доступні токени</item>

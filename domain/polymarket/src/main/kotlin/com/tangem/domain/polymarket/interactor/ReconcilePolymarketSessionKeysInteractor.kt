@@ -1,7 +1,9 @@
 package com.tangem.domain.polymarket.interactor
 
 import arrow.core.Either
+import arrow.core.raise.Raise
 import arrow.core.raise.either
+import arrow.core.right
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketRepository
 import com.tangem.domain.polymarket.PolymarketSessionKeyRepository
@@ -15,10 +17,13 @@ import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyAssessment
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyAssessor
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeySnapshot
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyStore
+import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyTradability
 import com.tangem.domain.polymarket.sessionkey.PolymarketSessionKeyTradingStore
 import com.tangem.domain.polymarket.sessionkey.lists
+import com.tangem.domain.polymarket.sessionkey.tradability
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import java.time.Clock
 
@@ -38,26 +43,54 @@ class ReconcilePolymarketSessionKeysInteractor(
         userWalletId: UserWalletId,
     ): Either<PolymarketWalletError, PolymarketSessionKeyOverview> = either {
         val wallet = polymarketRepository.getWalletStatusByWalletId(walletId = userWalletId.stringValue).bind()
-        val localKeyAddress = sessionKeyStore.heldAddress(userWalletId)
+        val localKeyAddress = guarded { sessionKeyStore.heldAddress(userWalletId) }
         val signers = readSigners(userWalletId)
+        val deviceId = guarded { deviceIdProvider.deviceId() }
         val assessment = PolymarketSessionKeyAssessor.assess(
             PolymarketSessionKeySnapshot(
                 sessionKeys = wallet.sessionKeys,
                 localKeyAddress = localKeyAddress,
-                deviceId = deviceIdProvider.deviceId(),
+                deviceId = deviceId,
                 signers = signers,
                 now = clock.instant(),
             ),
         )
-        tradingStore.setReconciliation(userWalletId, assessment.reconciliation)
-        markListedKeyReady(
-            userWalletId = userWalletId,
+        guarded {
+            tradingStore.setReconciliation(userWalletId, assessment.reconciliation)
+            markListedKeyReady(
+                userWalletId = userWalletId,
+                wallet = wallet,
+                localKeyAddress = localKeyAddress,
+                signers = signers,
+            )
+        }
+
+        PolymarketSessionKeyOverview(
             wallet = wallet,
             localKeyAddress = localKeyAddress,
-            signers = signers,
+            assessment = assessment,
+            isTradable = isTradable(userWalletId = userWalletId, wallet = wallet, localKeyAddress = localKeyAddress),
         )
+    }
 
-        PolymarketSessionKeyOverview(wallet = wallet, localKeyAddress = localKeyAddress, assessment = assessment)
+    private suspend fun isTradable(
+        userWalletId: UserWalletId,
+        wallet: PolymarketWalletState,
+        localKeyAddress: String?,
+    ): Boolean {
+        localKeyAddress ?: return false
+        val tradability = runSuspendCatching {
+            tradingStore.tradability(
+                userWalletId = userWalletId,
+                sessionKeyAddress = localKeyAddress,
+                clock = clock,
+                readWallet = { wallet.right() },
+            )
+        }.getOrElse { error ->
+            TangemLogger.e("Polymarket session key tradability could not be read", error)
+            return false
+        }
+        return tradability is PolymarketSessionKeyTradability.Tradable
     }
 
     private suspend fun markListedKeyReady(
@@ -78,15 +111,27 @@ class ReconcilePolymarketSessionKeysInteractor(
     }
 
     private suspend fun readSigners(userWalletId: UserWalletId): List<PolymarketSessionSigner>? {
-        val addresses = deriveAddresses.stored(userWalletId) ?: return null
-        val credentials = getApiCredentials(userWalletId) ?: return null
+        val owner = runSuspendCatching { ownerIdentity(userWalletId) }.getOrElse { error ->
+            TangemLogger.e("Polymarket session signers could not be read, the owner identity failed", error)
+            return null
+        } ?: return null
         return sessionKeyRepository
-            .getSessionSigners(
-                PolymarketClobIdentity.Owner(address = addresses.ownerAddress, credentials = credentials),
-            )
+            .getSessionSigners(owner)
             .onLeft { error -> TangemLogger.e("Polymarket session signers could not be read: $error") }
             .getOrNull()
     }
+
+    private suspend fun ownerIdentity(userWalletId: UserWalletId): PolymarketClobIdentity.Owner? {
+        val addresses = deriveAddresses.stored(userWalletId) ?: return null
+        val credentials = getApiCredentials(userWalletId) ?: return null
+        return PolymarketClobIdentity.Owner(address = addresses.ownerAddress, credentials = credentials)
+    }
+
+    private suspend inline fun <T> Raise<PolymarketWalletError>.guarded(crossinline block: suspend () -> T): T =
+        runSuspendCatching { block() }.getOrElse { error ->
+            TangemLogger.e("Polymarket session keys could not be reconciled", error)
+            raise(PolymarketWalletError.Unexpected(httpCode = null, detail = error.message))
+        }
 }
 
 /**
@@ -96,4 +141,5 @@ data class PolymarketSessionKeyOverview(
     val wallet: PolymarketWalletState,
     val localKeyAddress: String?,
     val assessment: PolymarketSessionKeyAssessment,
+    val isTradable: Boolean,
 )

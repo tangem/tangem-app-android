@@ -29,7 +29,7 @@ internal class MarketingCampaignAmountTest {
 
     @Test
     fun `GIVEN bounded campaign of any type WHEN amount out of range THEN false`() {
-        // Bounds apply regardless of screen type (iOS parity): type no longer exempts a bounded campaign.
+        // Bounds apply regardless of screen type: type no longer exempts a bounded campaign.
         val c = campaign(MarketingScreenType.TOKEN_DETAILS, minAmount = BigDecimal(50), maxAmount = BigDecimal(300))
         assertThat(c.matchesUsdAmount(BigDecimal(10))).isFalse()
         assertThat(c.matchesUsdAmount(BigDecimal(100))).isTrue()
