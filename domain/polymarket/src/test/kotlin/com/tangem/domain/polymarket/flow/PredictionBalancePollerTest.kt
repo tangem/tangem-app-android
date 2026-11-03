@@ -30,16 +30,14 @@ import kotlin.time.Duration.Companion.seconds
 internal class PredictionBalancePollerTest {
 
     private val statusFetcher: PredictionAccountStatusFetcher = mockk()
-    private val positionsValueFetcher: PredictionPositionsValueFetcher = mockk()
     private val fundingWindow: PredictionFundingWindow = mockk()
     private val isOpen = MutableStateFlow(false)
     private val config = PredictionBalancePollingConfig(baseInterval = 30.seconds, fundingInterval = 5.seconds)
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(statusFetcher, positionsValueFetcher, fundingWindow)
+        clearMocks(statusFetcher, fundingWindow)
         coEvery { statusFetcher(any()) } returns Unit.right()
-        coEvery { positionsValueFetcher(any()) } returns Unit.right()
         isOpen.value = false
         every { fundingWindow.isOpen(any()) } returns isOpen
         coEvery { fundingWindow.watch(any()) } coAnswers { awaitCancellation() }
@@ -56,13 +54,11 @@ internal class PredictionBalancePollerTest {
 
         // Assert
         coVerify(exactly = 1) { statusFetcher(status(WALLET_ID)) }
-        coVerify(exactly = 1) { positionsValueFetcher(positions(WALLET_ID)) }
-        coVerify(exactly = 1) { statusFetcher(refreshingPositions(WALLET_ID)) }
+        coVerify(exactly = 1) { statusFetcher(positions(WALLET_ID)) }
         advanceTimeBy(30.seconds)
         runCurrent()
         coVerify(exactly = 2) { statusFetcher(status(WALLET_ID)) }
-        coVerify(exactly = 2) { positionsValueFetcher(positions(WALLET_ID)) }
-        coVerify(exactly = 2) { statusFetcher(refreshingPositions(WALLET_ID)) }
+        coVerify(exactly = 2) { statusFetcher(positions(WALLET_ID)) }
         advanceTimeBy(29.seconds)
         runCurrent()
         coVerify(exactly = 2) { statusFetcher(status(WALLET_ID)) }
@@ -157,7 +153,6 @@ internal class PredictionBalancePollerTest {
         } throws IllegalStateException("boom") andThen Unit.right()
         val poller = PredictionBalancePoller(
             statusFetcher = statusFetcher,
-            positionsValueFetcher = positionsValueFetcher,
             fundingWindow = fundingWindow,
             config = config,
             appScope = TestAppCoroutineScope(
@@ -190,7 +185,6 @@ internal class PredictionBalancePollerTest {
             } throws IllegalStateException("boom") andThen Unit.right()
             val poller = PredictionBalancePoller(
                 statusFetcher = statusFetcher,
-                positionsValueFetcher = positionsValueFetcher,
                 fundingWindow = fundingWindow,
                 config = config,
                 appScope = TestAppCoroutineScope(
@@ -253,13 +247,11 @@ internal class PredictionBalancePollerTest {
 
         // Assert
         coVerify(exactly = 2) { statusFetcher(status(WALLET_ID)) }
-        coVerify(exactly = 1) { positionsValueFetcher(positions(WALLET_ID)) }
-        coVerify(exactly = 1) { statusFetcher(refreshingPositions(WALLET_ID)) }
+        coVerify(exactly = 1) { statusFetcher(positions(WALLET_ID)) }
         advanceTimeBy(5.seconds)
         runCurrent()
         coVerify(exactly = 3) { statusFetcher(status(WALLET_ID)) }
-        coVerify(exactly = 1) { positionsValueFetcher(positions(WALLET_ID)) }
-        coVerify(exactly = 1) { statusFetcher(refreshingPositions(WALLET_ID)) }
+        coVerify(exactly = 1) { statusFetcher(positions(WALLET_ID)) }
 
         subscription.cancel()
         runCurrent()
@@ -281,13 +273,11 @@ internal class PredictionBalancePollerTest {
 
         // Assert
         coVerify(exactly = 2) { statusFetcher(status(WALLET_ID)) }
-        coVerify(exactly = 1) { positionsValueFetcher(positions(WALLET_ID)) }
-        coVerify(exactly = 1) { statusFetcher(refreshingPositions(WALLET_ID)) }
+        coVerify(exactly = 1) { statusFetcher(positions(WALLET_ID)) }
         advanceTimeBy(1.seconds)
         runCurrent()
         coVerify(exactly = 3) { statusFetcher(status(WALLET_ID)) }
-        coVerify(exactly = 2) { positionsValueFetcher(positions(WALLET_ID)) }
-        coVerify(exactly = 2) { statusFetcher(refreshingPositions(WALLET_ID)) }
+        coVerify(exactly = 2) { statusFetcher(positions(WALLET_ID)) }
 
         subscription.cancel()
         runCurrent()
@@ -321,7 +311,6 @@ internal class PredictionBalancePollerTest {
 
     private fun TestScope.createPoller() = PredictionBalancePoller(
         statusFetcher = statusFetcher,
-        positionsValueFetcher = positionsValueFetcher,
         fundingWindow = fundingWindow,
         config = config,
         appScope = TestAppCoroutineScope(coroutineContext = StandardTestDispatcher(testScheduler)),
@@ -330,10 +319,8 @@ internal class PredictionBalancePollerTest {
     private fun MockKMatcherScope.status(userWalletId: UserWalletId) =
         match<PredictionAccountStatusFetcher.Params> { it.userWalletId == userWalletId }
 
-    private fun refreshingPositions(userWalletId: UserWalletId) =
+    private fun positions(userWalletId: UserWalletId) =
         PredictionAccountStatusFetcher.Params(userWalletId = userWalletId, shouldRefreshPositions = true)
-
-    private fun positions(userWalletId: UserWalletId) = PredictionPositionsValueFetcher.Params(userWalletId = userWalletId)
 
     private companion object {
         val WALLET_ID = UserWalletId("011")
