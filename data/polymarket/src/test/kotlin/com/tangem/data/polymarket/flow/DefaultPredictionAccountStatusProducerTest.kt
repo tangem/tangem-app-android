@@ -5,12 +5,10 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.data.polymarket.converter.PredictionAccountStatusValueDTOConverter
 import com.tangem.data.polymarket.store.PredictionAccountStatusStore
-import com.tangem.data.polymarket.store.PredictionPositionsValueStore
 import com.tangem.data.polymarket.store.WalletIdWithPredictionStatusDTO
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
-import com.tangem.domain.models.account.PredictionPositionsValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWalletId
@@ -109,45 +107,6 @@ internal class DefaultPredictionAccountStatusProducerTest {
     }
 
     @Test
-    fun `GIVEN a cached balance and a positions value WHEN produce THEN the positions value is mixed in`() = runTest {
-        // Arrange
-        val rate = BigDecimal("0.92")
-        every { quoteSupplier.invoke(any<SingleQuoteStatusProducer.Params>()) } returns quoteFlow(rate = rate)
-        val store = createStore(testScope = this)
-        store.store(userWalletId = WALLET, value = ACTIVE)
-        val positionsStore = createPositionsStore(testScope = this)
-        positionsStore.store(userWalletId = WALLET, value = POSITIONS)
-
-        // Act
-        val actual = createProducer(testScope = this, store = store, positionsStore = positionsStore).produce()
-            .first { it !is PredictionAccountStatusValue.Loading }
-
-        // Assert
-        assertThat(actual).isEqualTo(ACTIVE.copy(fiatRate = rate, positions = POSITIONS))
-    }
-
-    @Test
-    fun `GIVEN a priced balance WHEN the positions value changes THEN the status follows it`() = runTest {
-        // Arrange
-        val rate = BigDecimal("0.92")
-        every { quoteSupplier.invoke(any<SingleQuoteStatusProducer.Params>()) } returns quoteFlow(rate = rate)
-        val store = createStore(testScope = this)
-        store.store(userWalletId = WALLET, value = ACTIVE)
-        val positionsStore = createPositionsStore(testScope = this)
-
-        createProducer(testScope = this, store = store, positionsStore = positionsStore).produce().test {
-            assertThat(awaitItem()).isEqualTo(PredictionAccountStatusValue.Loading)
-            assertThat(awaitItem()).isEqualTo(ACTIVE.copy(fiatRate = rate))
-
-            // Act
-            positionsStore.store(userWalletId = WALLET, value = POSITIONS)
-
-            // Assert
-            assertThat(awaitItem()).isEqualTo(ACTIVE.copy(fiatRate = rate, positions = POSITIONS))
-        }
-    }
-
-    @Test
     fun `GIVEN a cached balance and a pending quote WHEN produce THEN it reports loading, not a failed price`() =
         runTest {
             // Arrange
@@ -202,21 +161,13 @@ internal class DefaultPredictionAccountStatusProducerTest {
         scope = TestAppCoroutineScope(testScope),
     )
 
-    private fun createPositionsStore(testScope: TestScope) = PredictionPositionsValueStore(
-        runtimeStore = RuntimeSharedStore(),
-        persistenceDataStore = MockStateDataStore(emptyMap()),
-        scope = TestAppCoroutineScope(testScope),
-    )
-
     private fun createProducer(
         testScope: TestScope,
         store: PredictionAccountStatusStore = createStore(testScope),
-        positionsStore: PredictionPositionsValueStore = createPositionsStore(testScope),
     ) = DefaultPredictionAccountStatusProducer(
         params = PredictionAccountStatusProducer.Params(userWalletId = WALLET),
         flowProducerTools = mockk(),
         statusStore = store,
-        positionsValueStore = positionsStore,
         singleQuoteStatusSupplier = quoteSupplier,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
@@ -233,8 +184,6 @@ internal class DefaultPredictionAccountStatusProducerTest {
             depositCurrency = COLLATERAL,
             depositAddress = "0xbridge0000000000000000000000000000000001",
         )
-
-        val POSITIONS = PredictionPositionsValue.Known(amount = BigDecimal("12.5"), source = StatusSource.ACTUAL)
 
         val ONBOARDING = PredictionAccountStatusValue.Onboarding(
             source = StatusSource.ACTUAL,
