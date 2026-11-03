@@ -70,8 +70,10 @@ internal class AmplitudeABTestsManager(
         )
     }
 
+    // No fetch here: the analytics SDK clears its user id asynchronously, so a fetch could still go out for the
+    // removed wallet. Variants are fetched again once the next wallet sets its user.
     override fun removeUserProperties() {
-        fetchIfUserChanged(ExperimentUser())
+        client.setUser(ExperimentUser())
     }
 
     override suspend fun getValue(key: String, defaultValue: String): String {

@@ -65,6 +65,7 @@ internal class AmplitudeABTestsManagerTest {
             fetchFuture
         }
         every { client.getUser() } answers { currentUser }
+        every { client.setUser(any()) } answers { currentUser = firstArg() }
         every { fetchFuture.get() } returns client
         every { client.all() } returns emptyMap()
     }
@@ -129,7 +130,7 @@ internal class AmplitudeABTestsManagerTest {
     }
 
     @Test
-    fun `GIVEN user set WHEN removeUserProperties THEN variants are fetched for an empty user`() {
+    fun `GIVEN user set WHEN removeUserProperties THEN user is cleared without a fetch`() {
         // Arrange
         val manager = createManager()
         manager.init()
@@ -139,20 +140,23 @@ internal class AmplitudeABTestsManagerTest {
         manager.removeUserProperties()
 
         // Assert
-        verify(exactly = 1) { client.fetch(ExperimentUser()) }
+        verify(exactly = 1) { client.setUser(ExperimentUser()) }
+        verify(exactly = 0) { client.fetch(ExperimentUser()) }
     }
 
     @Test
-    fun `GIVEN no user set WHEN removeUserProperties THEN variants are not fetched again`() {
+    fun `GIVEN user removed WHEN setUserProperties with the same user THEN variants are fetched again`() {
         // Arrange
         val manager = createManager()
         manager.init()
-
-        // Act
+        manager.setWalletUser()
         manager.removeUserProperties()
 
+        // Act
+        manager.setWalletUser()
+
         // Assert
-        verify(exactly = 1) { client.fetch(any()) }
+        verify(exactly = 2) { client.fetch(walletUser) }
     }
 
     private fun AmplitudeABTestsManager.setWalletUser() {
