@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.link
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.essenty.lifecycle.doOnDestroy
@@ -36,13 +37,16 @@ internal class DefaultWalletLinkComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
 
-        state?.let { messageModalUM ->
-            MessageModal(
-                state = messageModalUM,
-                onDismissRequest = model::onDismiss,
-                // A request can come from a screen showing a dialog-window sheet, which would cover an overlay
-                presentation = TangemModal.Presentation.Dialog,
-            )
+        state?.let { walletLinkUM ->
+            // A queued request can replace a swiped-away sheet within one frame, so it needs a modal of its own
+            key(walletLinkUM.requestId) {
+                MessageModal(
+                    state = walletLinkUM.modal,
+                    onDismissRequest = model::onDismiss,
+                    // A request can come from a screen showing a dialog-window sheet, which would cover an overlay
+                    presentation = TangemModal.Presentation.Dialog,
+                )
+            }
         }
     }
 
