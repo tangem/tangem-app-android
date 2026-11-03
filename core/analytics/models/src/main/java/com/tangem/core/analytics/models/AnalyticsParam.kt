@@ -353,6 +353,7 @@ sealed class AnalyticsParam {
         const val STATE = "State"
         const val BATCH = "Batch"
         const val TYPE = "Type"
+        const val LIMIT = "Limit"
         const val FIELD = "Field"
         const val SECTION = "Section"
         const val SHTORKA_STATE = "Shtorka State"

@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.right
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.common.*
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -20,6 +21,7 @@ import com.tangem.domain.common.wallets.UserWalletSelectedHandler
 import com.tangem.domain.common.wallets.UserWalletTransformAction
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository.LockMethod
+import com.tangem.domain.common.wallets.isHotWalletsLimitReached
 import com.tangem.domain.common.wallets.error.*
 import com.tangem.domain.hotwallet.repository.HotWalletRepository
 import com.tangem.domain.models.scan.CardDTO
@@ -75,6 +77,7 @@ internal class DefaultUserWalletsListRepository(
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase,
     private val getCompletedBackupsUseCase: GetCompletedBackupsUseCase,
     private val walletRegistrationTrigger: Lazy<WalletRegistrationTrigger>,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : UserWalletsListRepository {
 
     override val userWallets = MutableStateFlow<List<UserWallet>?>(null)
@@ -143,6 +146,8 @@ internal class DefaultUserWalletsListRepository(
             (userWallet as? UserWallet.Cold)?.let { refreshStoredCardState(scanResponse = it.scanResponse) }
             raise(SaveWalletError.WalletAlreadySaved(messageId = R.string.user_wallet_list_error_wallet_already_saved))
         }
+
+        if (isHotWalletsLimitReachedFor(userWallet)) raise(SaveWalletError.HotWalletsLimitReached(messageId = null))
 
         val isFirstWallet = userWallets.value?.isEmpty() == true
 
@@ -640,6 +645,14 @@ internal class DefaultUserWalletsListRepository(
         if (userWallet != null && previousId != userWallet.walletId) {
             userWalletSelectedHandler.get().invoke(userWallet)
         }
+    }
+
+    private suspend fun isHotWalletsLimitReachedFor(userWallet: UserWallet): Boolean {
+        if (userWallet !is UserWallet.Hot || !hotWalletFeatureToggles.isMultipleHotWalletsEnabled) return false
+
+        val currentWallets = userWalletsSync()
+        val isNewWallet = currentWallets.none { it.walletId == userWallet.walletId }
+        return isNewWallet && currentWallets.isHotWalletsLimitReached()
     }
 
     private fun updateWallets(block: (List<UserWallet>?) -> List<UserWallet>?) {

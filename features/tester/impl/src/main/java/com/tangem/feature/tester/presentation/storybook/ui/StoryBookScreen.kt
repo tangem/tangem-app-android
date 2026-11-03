@@ -28,6 +28,7 @@ import com.tangem.feature.tester.presentation.storybook.entity.TangemMessageStor
 import com.tangem.feature.tester.presentation.storybook.entity.TangemPagerIndicatorStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemSearchFieldStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemTabStory
+import com.tangem.feature.tester.presentation.storybook.entity.TangemToggleBadgeStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemTokenRowStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemTopBarStory
 import com.tangem.feature.tester.presentation.storybook.entity.TypographyStory
@@ -57,6 +58,7 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.loader.TangemLoa
 import com.tangem.feature.tester.presentation.storybook.page.ds.toggle.TangemSwitchStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.statusscreen.TangemStatusScreenStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.messagebanner.TangemMessageBannerStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.menu.TangemMenuStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.messagebubble.TangemMessageBubbleStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.actionmessage.TangemActionMessageStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.modal.TangemModalStory
@@ -67,6 +69,7 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.shimmer.TangemSh
 import com.tangem.feature.tester.presentation.storybook.page.ds.shtorka.TangemShtorkaStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tabnavigation.TangemTabNavigationStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.textstyle.TextStyleStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.togglebadge.TangemToggleBadgeStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenicon.TangemTokenIconStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenrowmarket.TangemTokenRowMarketStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenrowv2.TangemTokenRowV2Story
@@ -76,6 +79,7 @@ import com.tangem.feature.tester.presentation.storybook.page.message.TangemMessa
 import com.tangem.feature.tester.presentation.storybook.page.opportunities.OpportunitiesBGStory
 import com.tangem.feature.tester.presentation.storybook.page.pagerindicator.TangemPagerIndicatorStory
 import com.tangem.feature.tester.presentation.storybook.page.placeholder.PlaceholderStory
+import com.tangem.feature.tester.presentation.storybook.page.polymarket.counter.PolymarketCounterStory
 import com.tangem.feature.tester.presentation.storybook.page.progress.ProgressIndicatorStory
 import com.tangem.feature.tester.presentation.storybook.page.searchfield.TangemSearchFieldStory
 import com.tangem.feature.tester.presentation.storybook.page.storiesv2.StoriesV2Story
@@ -129,6 +133,7 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
                 is TangemButtonStackStory -> TangemButtonStackStory(state = storyState)
                 is TangemFooterStory -> TangemFooterStory(state = storyState)
                 is TangemBadgeV2Story -> TangemBadgeV2Story(state = storyState)
+                is TangemToggleBadgeStory -> TangemToggleBadgeStory(state = storyState)
                 is TangemCheckboxV2Story -> TangemCheckboxV2Story(state = storyState)
                 is TangemSwitchStory -> TangemSwitchStory(state = storyState)
                 is TangemCheckmarkStory -> TangemCheckmarkStory(state = storyState)
@@ -143,6 +148,7 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
                 is TangemTopNavigationStory -> TangemTopNavigationStory(state = storyState)
                 is TangemMessageBannerStory -> TangemMessageBannerStory(state = storyState)
                 is TangemMessageBubbleStory -> TangemMessageBubbleStory(state = storyState)
+                is TangemMenuStory -> TangemMenuStory(state = storyState)
                 is TangemActionMessageStory -> TangemActionMessageStory(state = storyState)
                 is TangemStatusScreenStory -> TangemStatusScreenStory(state = storyState)
                 is TangemAccountRowStory -> TangemAccountRowStory(state = storyState)
@@ -154,6 +160,7 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
                 is TangemFilterGroupStory -> TangemFilterGroupStory(state = storyState)
                 is TangemTabNavigationStory -> TangemTabNavigationStory(state = storyState)
                 is TangemSegmentedControlStory -> TangemSegmentedControlStory(state = storyState)
+                is PolymarketCounterStory -> PolymarketCounterStory(state = storyState)
                 is TextStyleStory -> TextStyleStory(state = storyState)
             }
 

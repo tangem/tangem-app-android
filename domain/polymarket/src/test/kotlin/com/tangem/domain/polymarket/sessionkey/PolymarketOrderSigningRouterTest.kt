@@ -4,9 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.polymarket.PolymarketCredentialsStore
 import com.tangem.domain.polymarket.PolymarketRepository
-import com.tangem.domain.polymarket.PolymarketSessionKeyRepository
 import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketAuthError
@@ -15,7 +13,6 @@ import com.tangem.domain.polymarket.model.PolymarketSessionCredentialsError
 import com.tangem.domain.polymarket.model.PolymarketSessionKey
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyError
 import com.tangem.domain.polymarket.model.PolymarketSessionKeyStatus
-import com.tangem.domain.polymarket.model.PolymarketSessionSigner
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PolymarketWalletError
 import com.tangem.domain.polymarket.model.PolymarketWalletState
@@ -23,14 +20,12 @@ import com.tangem.domain.polymarket.model.PolymarketWalletStatus
 import com.tangem.domain.polymarket.model.PredictionOrderFailure
 import com.tangem.domain.polymarket.model.PredictionOrderSigningRoute
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
-import com.tangem.domain.polymarket.usecase.GetPolymarketApiCredentialsUseCase
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -45,21 +40,15 @@ import java.time.ZoneOffset
 internal class PolymarketOrderSigningRouterTest {
 
     private val repository: PolymarketRepository = mockk()
-    private val sessionKeyRepository: PolymarketSessionKeyRepository = mockk()
     private val sessionKeyStore: PolymarketSessionKeyStore = mockk()
     private val tradingStore: PolymarketSessionKeyTradingStore = mockk(relaxUnitFun = true)
     private val sessionCredentialsProvider: PolymarketSessionCredentialsProvider = mockk()
-    private val deviceIdProvider: PolymarketDeviceIdProvider = mockk()
-    private val credentialsStore: PolymarketCredentialsStore = mockk()
 
     private val router = PolymarketOrderSigningRouter(
         polymarketRepository = repository,
-        sessionKeyRepository = sessionKeyRepository,
         sessionKeyStore = sessionKeyStore,
         tradingStore = tradingStore,
         sessionCredentialsProvider = sessionCredentialsProvider,
-        deviceIdProvider = deviceIdProvider,
-        getApiCredentials = GetPolymarketApiCredentialsUseCase(credentialsStore = credentialsStore),
         clock = Clock.fixed(NOW, ZoneOffset.UTC),
     )
 
@@ -67,12 +56,9 @@ internal class PolymarketOrderSigningRouterTest {
     fun resetMocks() {
         clearMocks(
             repository,
-            sessionKeyRepository,
             sessionKeyStore,
             tradingStore,
             sessionCredentialsProvider,
-            deviceIdProvider,
-            credentialsStore,
         )
     }
 
@@ -293,71 +279,6 @@ internal class PolymarketOrderSigningRouterTest {
         }
     }
 
-    @Nested
-    inner class Reconcile {
-
-        @BeforeEach
-        fun arrangeReconciliation() {
-            coEvery { sessionKeyStore.heldAddress(USER_WALLET_ID) } returns SESSION_KEY
-            coEvery { deviceIdProvider.deviceId() } returns DEVICE_ID
-            coEvery { credentialsStore.get(USER_WALLET_ID) } returns OWNER_CREDENTIALS
-        }
-
-        @Test
-        fun `GIVEN the key is gone from Polymarket WHEN reconcile THEN records it missing on the exchange`() =
-            runTest {
-                // Arrange
-                coEvery { repository.getWalletStatusByWalletId(WALLET_ID) } returns walletState(
-                    keys = listOf(sessionKey(authorizedAt = NOW - Duration.ofDays(1))),
-                ).right()
-                coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns
-                    emptyList<PolymarketSessionSigner>().right()
-
-                // Act
-                router.reconcile(addresses = ADDRESSES)
-
-                // Assert
-                verify(exactly = 1) {
-                    tradingStore.setReconciliation(
-                        USER_WALLET_ID,
-                        PolymarketSessionKeyReconciliation.Checked(
-                            foreignSigners = emptyList(),
-                            missingOnExchange = setOf(SESSION_KEY),
-                        ),
-                    )
-                }
-            }
-
-        @Test
-        fun `GIVEN the signers cannot be read WHEN reconcile THEN keeps an unavailable reconciliation`() = runTest {
-            // Arrange
-            coEvery { repository.getWalletStatusByWalletId(WALLET_ID) } returns walletState().right()
-            coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns
-                PolymarketAuthError.Network.left()
-
-            // Act
-            router.reconcile(addresses = ADDRESSES)
-
-            // Assert
-            verify(exactly = 1) {
-                tradingStore.setReconciliation(USER_WALLET_ID, PolymarketSessionKeyReconciliation.Unavailable)
-            }
-        }
-
-        @Test
-        fun `GIVEN the wallet cannot be read WHEN reconcile THEN reconciles nothing`() = runTest {
-            // Arrange
-            coEvery { repository.getWalletStatusByWalletId(WALLET_ID) } returns PolymarketWalletError.Network.left()
-
-            // Act
-            router.reconcile(addresses = ADDRESSES)
-
-            // Assert
-            verify(exactly = 0) { tradingStore.setReconciliation(any(), any()) }
-            coVerify(exactly = 0) { sessionKeyRepository.getSessionSigners(any()) }
-        }
-    }
-
     data class BffModel(
         val case: String,
         val state: PolymarketWalletState,
@@ -384,8 +305,6 @@ internal class PolymarketOrderSigningRouterTest {
             address = SESSION_KEY,
             credentials = PolymarketApiCredentials(apiKey = "session", secret = "c2VjcmV0", passphrase = "pass"),
         )
-        val OWNER_CREDENTIALS = PolymarketApiCredentials(apiKey = "owner", secret = "c2VjcmV0", passphrase = "pass")
-        val OWNER_IDENTITY = PolymarketClobIdentity.Owner(address = OWNER, credentials = OWNER_CREDENTIALS)
         val UNAUTHORIZED = PredictionPlaceOrderError.Unauthorized(detail = "Unauthorized/Invalid api key")
 
         fun sessionKey(

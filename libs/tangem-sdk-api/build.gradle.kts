@@ -41,4 +41,8 @@ dependencies {
     api(projects.domain.models)
     api(projects.domain.visa.models)
     // endregion
+
+    // region Tests
+    testImplementation(projects.test.core)
+    // endregion
 }

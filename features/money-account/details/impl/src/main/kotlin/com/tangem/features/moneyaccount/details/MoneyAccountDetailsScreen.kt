@@ -205,15 +205,19 @@ private fun LazyItemScope.ActionBlock(state: MoneyAccountDetailsUM, modifier: Mo
                 tintReference = { TangemTheme.colors3.icon.primary },
             ),
             onClick = state.onAddFundsClick,
+            isEnabled = state.isAddFundsEnabled,
         )
         TangemCircleActionButton(
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .testTag(MoneyAccountTestTags.SEND_BUTTON),
             title = resourceReference(R.string.common_send),
             icon = TangemIconUM.Icon(
                 imageVector = Icons.ic_arrow_up_24,
                 tintReference = { TangemTheme.colors3.icon.primary },
             ),
             onClick = state.onSendClick,
+            isEnabled = state.isSendEnabled,
         )
     }
 }
@@ -235,17 +239,24 @@ private fun TopBar(state: MoneyAccountDetailsUM, onHeightChange: (Dp) -> Unit, m
                 variant = TangemButton.Variant.Material,
             )
         },
-        endContent = { MenuButton(items = state.menuItems) },
+        endContent = { MenuButton(items = state.menuItems, onClick = state.onMenuClick) },
     )
 }
 
 @Composable
-private fun MenuButton(items: ImmutableList<MoneyAccountMenuItemUM>, modifier: Modifier = Modifier) {
+private fun MenuButton(
+    items: ImmutableList<MoneyAccountMenuItemUM>,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     var isMenuShown by rememberSaveable { mutableStateOf(false) }
     Box(modifier = modifier) {
         TangemButton(
             iconStart = TangemIconUM.Icon(imageVector = Icons.ic_dots_vertical_24),
-            onClick = { isMenuShown = true },
+            onClick = {
+                isMenuShown = true
+                onClick()
+            },
             size = TangemButton.Size.X11,
             variant = TangemButton.Variant.Material,
         )
@@ -303,9 +314,12 @@ private fun MoneyAccountDetailsScreenPreview() {
                 isBalanceHidden = false,
                 messageBanner = null,
                 menuItems = persistentListOf(),
+                onMenuClick = {},
                 onBackClick = {},
                 onAddFundsClick = {},
                 onSendClick = {},
+                isAddFundsEnabled = true,
+                isSendEnabled = true,
                 txHistoryCurrency = null,
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             ),
@@ -331,9 +345,12 @@ private fun MoneyAccountDetailsScreenBalanceUnavailablePreview() {
                     description = resourceReference(R.string.money_account_balance_unavailable_description),
                 ),
                 menuItems = persistentListOf(),
+                onMenuClick = {},
                 onBackClick = {},
                 onAddFundsClick = {},
                 onSendClick = {},
+                isAddFundsEnabled = false,
+                isSendEnabled = false,
                 txHistoryCurrency = null,
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             ),

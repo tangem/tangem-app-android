@@ -9,6 +9,7 @@ import com.tangem.domain.account.status.utils.CryptoCurrencyMetadataCleaner
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.card.IsWalletBackupProblematicUseCase
+import com.tangem.domain.common.wallets.CryptoCurrencyDataCleaner
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.express.ExpressServiceFetcher
@@ -223,12 +224,16 @@ internal object AccountStatusUseCaseModule {
     @Provides
     @Singleton
     fun provideCryptoCurrencyMetadataCleaner(
+        currencyDataCleaners: Set<@JvmSuppressWildcards CryptoCurrencyDataCleaner>,
+        tokensFeatureToggles: TokensFeatureToggles,
         networksCleaner: NetworksCleaner,
         stakingCleaner: StakingCleaner,
         nftCleaner: NFTCleaner,
         dispatchers: CoroutineDispatcherProvider,
     ): CryptoCurrencyMetadataCleaner {
         return CryptoCurrencyMetadataCleaner(
+            currencyDataCleaners = currencyDataCleaners,
+            tokensFeatureToggles = tokensFeatureToggles,
             networksCleaner = networksCleaner,
             stakingCleaner = stakingCleaner,
             nftCleaner = nftCleaner,
