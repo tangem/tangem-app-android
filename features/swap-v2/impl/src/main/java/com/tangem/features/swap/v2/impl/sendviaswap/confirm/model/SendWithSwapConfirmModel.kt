@@ -60,6 +60,7 @@ import com.tangem.features.swap.v2.impl.amount.model.SwapAmountQuoteUtils
 import com.tangem.features.swap.v2.impl.common.ConfirmData
 import com.tangem.features.swap.v2.impl.common.SwapAlertFactory
 import com.tangem.features.swap.v2.impl.common.SwapUtils.INCREASE_GAS_LIMIT_FOR_CEX
+import com.tangem.features.swap.v2.impl.common.resolveAmountErrorCurrency
 import com.tangem.features.swap.v2.impl.common.entity.ConfirmUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent.Params.SwapNotificationData
@@ -366,9 +367,15 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                             ),
                         )
                     }
+                    val amountCurrency = if (fromCurrency != null && toCurrency != null) {
+                        resolveAmountErrorCurrency(fromCurrency, toCurrency, confirmData.amountType)
+                    } else {
+                        null
+                    }
                     swapAlertFactory.getGenericErrorState(
                         expressError = expressError,
                         providerName = provider.name.takeIf { isHideRejectedProviderEnabled },
+                        amountCurrency = amountCurrency,
                         onFailedTxEmailClick = {
                             modelScope.launch {
                                 swapAlertFactory.onFailedTxEmailClick(

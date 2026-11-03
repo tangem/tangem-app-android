@@ -5,6 +5,7 @@ import com.tangem.common.ui.alerts.TransactionErrorDialogFactory
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.error.SolanaGaslessError
 import com.tangem.feature.swap.domain.models.ui.SwapTransactionState
@@ -15,6 +16,7 @@ import com.tangem.utils.converter.Converter
 
 internal class SwapTransactionErrorStateConverter(
     private val providerName: String?,
+    private val amountCurrency: CryptoCurrency? = null,
     private val onDismiss: () -> Unit,
     private val onSupportClick: (String) -> Unit,
     private val transactionErrorDialogFactory: TransactionErrorDialogFactory = TransactionErrorDialogFactory(),
@@ -30,7 +32,11 @@ internal class SwapTransactionErrorStateConverter(
             }
             is SwapTransactionState.Error.ExpressError -> {
                 SwapAlertUM.expressErrorAlert(
-                    message = getExpressErrorMessage(value.error.toExpressError(), providerName),
+                    message = getExpressErrorMessage(
+                        expressError = value.error.toExpressError(),
+                        providerName = providerName,
+                        amountCurrency = amountCurrency,
+                    ),
                     onConfirmClick = { onSupportClick(value.error.code.toString()) },
                 )
             }

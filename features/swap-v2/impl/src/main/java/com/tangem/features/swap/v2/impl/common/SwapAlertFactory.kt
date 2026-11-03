@@ -35,11 +35,16 @@ internal class SwapAlertFactory @Inject constructor(
         onFailedTxEmailClick: () -> Unit,
         popBack: () -> Unit = {},
         providerName: String? = null,
+        amountCurrency: CryptoCurrency? = null,
     ) {
         uiMessageSender.send(
             DialogMessage.Companion(
                 title = SwapUtils.getExpressErrorTitle(expressError),
-                message = SwapUtils.getExpressErrorMessage(expressError = expressError, providerName = providerName),
+                message = SwapUtils.getExpressErrorMessage(
+                    expressError = expressError,
+                    providerName = providerName,
+                    amountCurrency = amountCurrency,
+                ),
                 onDismissRequest = popBack,
                 dismissOnFirstAction = false,
                 firstActionBuilder = {
