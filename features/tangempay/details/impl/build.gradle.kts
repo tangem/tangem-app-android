@@ -32,6 +32,7 @@ dependencies {
     api(projects.features.tangempay.details.api)
     implementation(projects.features.tangempay.commonUi)
     implementation(projects.features.tangempay.eligibility.api)
+    implementation(projects.features.moneyAccount.details.api)
     api(projects.features.tokenRecieve.api)
     implementation(projects.features.tokendetails.api)
     api(projects.features.promoBanners.api)
