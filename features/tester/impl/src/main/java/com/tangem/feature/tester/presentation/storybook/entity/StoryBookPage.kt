@@ -29,6 +29,7 @@ import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItem
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
+import com.tangem.core.ui.ds2.transactionrow.TangemTransactionRow
 import com.tangem.core.ui.ds2.util.TangemPriceChange
 import kotlinx.collections.immutable.ImmutableSet
 
@@ -656,6 +657,35 @@ internal data class TangemTokenRowMarketStory(
     val onChartToggle: () -> Unit,
     val onLongTitleToggle: () -> Unit,
 ) : DsStoryBookPage
+
+@Suppress("BooleanPropertyNaming")
+internal data class TangemTransactionRowStory(
+    val variant: Variant,
+    val status: TangemTransactionRow.Status,
+    val subtitle: Subtitle,
+    val hasDescription: Boolean,
+    val hasAmount: Boolean,
+    val hasCaption: Boolean,
+    val hasBadge: Boolean,
+    val hasStatusMessage: Boolean,
+    val isBalanceHidden: Boolean,
+    val onVariantChange: (Variant) -> Unit,
+    val onStatusChange: (TangemTransactionRow.Status) -> Unit,
+    val onSubtitleChange: (Subtitle) -> Unit,
+    val onDescriptionToggle: () -> Unit,
+    val onAmountToggle: () -> Unit,
+    val onCaptionToggle: () -> Unit,
+    val onBadgeToggle: () -> Unit,
+    val onStatusMessageToggle: () -> Unit,
+    val onBalanceHiddenToggle: () -> Unit,
+) : DsStoryBookPage {
+
+    /** Which [TangemTransactionRow] variant is rendered. */
+    enum class Variant { Content, Shimmer }
+
+    /** Which [TangemTransactionRow.Subtitle] variant is shown under the title. */
+    enum class Subtitle { None, Entity, Address, Stack, Text }
+}
 
 internal data class TangemFilterGroupStory(
     val variant: TangemFilterItem.Variant,

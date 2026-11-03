@@ -30,6 +30,7 @@ import com.tangem.feature.tester.presentation.storybook.entity.TangemSearchField
 import com.tangem.feature.tester.presentation.storybook.entity.TangemTabStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemToggleBadgeStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemTokenRowStory
+import com.tangem.feature.tester.presentation.storybook.entity.TangemTransactionRowStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemTopBarStory
 import com.tangem.feature.tester.presentation.storybook.entity.TypographyStory
 import com.tangem.feature.tester.presentation.storybook.entity.*
@@ -73,6 +74,7 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.togglebadge.Tang
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenicon.TangemTokenIconStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenrowmarket.TangemTokenRowMarketStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenrowv2.TangemTokenRowV2Story
+import com.tangem.feature.tester.presentation.storybook.page.ds.transactionrow.TangemTransactionRowStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.topnavigation.TangemTopNavigationStory
 import com.tangem.feature.tester.presentation.storybook.page.headerrow.TangemHeaderRowStory
 import com.tangem.feature.tester.presentation.storybook.page.message.TangemMessageStory
@@ -157,6 +159,7 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
                 is TangemAvatarStory -> TangemAvatarStory(state = storyState)
                 is TangemTokenRowV2Story -> TangemTokenRowV2Story(state = storyState)
                 is TangemTokenRowMarketStory -> TangemTokenRowMarketStory(state = storyState)
+                is TangemTransactionRowStory -> TangemTransactionRowStory(state = storyState)
                 is TangemFilterGroupStory -> TangemFilterGroupStory(state = storyState)
                 is TangemTabNavigationStory -> TangemTabNavigationStory(state = storyState)
                 is TangemSegmentedControlStory -> TangemSegmentedControlStory(state = storyState)
