@@ -58,6 +58,7 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.loader.TangemLoa
 import com.tangem.feature.tester.presentation.storybook.page.ds.toggle.TangemSwitchStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.statusscreen.TangemStatusScreenStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.messagebanner.TangemMessageBannerStory
+import com.tangem.feature.tester.presentation.storybook.page.ds.menu.TangemMenuStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.messagebubble.TangemMessageBubbleStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.actionmessage.TangemActionMessageStory
 import com.tangem.feature.tester.presentation.storybook.page.ds.modal.TangemModalStory
@@ -146,6 +147,7 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
                 is TangemTopNavigationStory -> TangemTopNavigationStory(state = storyState)
                 is TangemMessageBannerStory -> TangemMessageBannerStory(state = storyState)
                 is TangemMessageBubbleStory -> TangemMessageBubbleStory(state = storyState)
+                is TangemMenuStory -> TangemMenuStory(state = storyState)
                 is TangemActionMessageStory -> TangemActionMessageStory(state = storyState)
                 is TangemStatusScreenStory -> TangemStatusScreenStory(state = storyState)
                 is TangemAccountRowStory -> TangemAccountRowStory(state = storyState)
