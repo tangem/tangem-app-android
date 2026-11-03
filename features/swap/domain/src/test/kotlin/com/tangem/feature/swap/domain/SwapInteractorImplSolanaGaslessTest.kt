@@ -661,6 +661,42 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
         }
     }
 
+    @Test
+    fun `GIVEN quote still SponsoredFee AND paid fee picked WHEN onSwap THEN sent with the paid fee`() = runTest {
+        // Arrange
+        mockkStatic(Base64::class)
+        every { Base64.decode(any<String>(), any()) } returns ByteArray(64)
+        coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any(), any()) } returns "FeePayer123"
+        coEvery {
+            sendTransactionUseCase(txData = any(), userWallet = any(), network = any())
+        } returns "sig".right()
+
+        // Act
+        val result = sut.onSwap(
+            fromSwapCurrencyStatus = solanaSwapCurrencyStatus(),
+            toSwapCurrencyStatus = solanaSwapCurrencyStatus(),
+            swapProvider = buildSwapProvider(ExchangeProviderType.DEX),
+            swapData = solanaDexSwapData(),
+            amountToSwap = "1.0",
+            balanceStatus = SwapBalanceStatus.SponsoredFee(feePayer = "FeePayer123"),
+            fee = buildSolanaSwapFee(feeValue = BigDecimal("0.000005"), isSponsored = false),
+            expressOperationType = ExpressOperationType.SWAP,
+            isTangemPayWithdrawal = false,
+        )
+
+        // Assert
+        assertThat(result).isInstanceOf(SwapTransactionState.TxSent::class.java)
+        coVerify(exactly = 0) {
+            createAndSendSolanaGaslessTransactionUseCase(
+                userWallet = any(),
+                network = any(),
+                transactionData = any(),
+                feePayer = any(),
+            )
+        }
+        coVerify(exactly = 1) { sendTransactionUseCase(txData = any(), userWallet = any(), network = any()) }
+    }
+
     /** Backed by an explicit plain [UserWallet] mock so the `is UserWallet.Cold` demo check is false. */
     private fun solanaSwapCurrencyStatus(): SwapCurrencyStatus {
         val wallet = mockk<UserWallet>(relaxed = true)
