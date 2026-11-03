@@ -1,9 +1,9 @@
-package com.tangem.tap.common.analytics.events
+package com.tangem.blockchainsdk.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 
-class BlockchainApiExceptionEvent(
+internal class BlockchainApiExceptionEvent(
     selectedHost: String,
     exceptionHost: String,
     error: String,

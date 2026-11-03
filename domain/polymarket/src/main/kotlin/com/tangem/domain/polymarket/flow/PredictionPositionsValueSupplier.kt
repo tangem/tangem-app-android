@@ -2,7 +2,7 @@ package com.tangem.domain.polymarket.flow
 
 import com.tangem.domain.core.flow.FlowCachingSupplier
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.polymarket.model.PredictionPositionsValue
+import com.tangem.domain.models.account.PredictionPositionsValue
 import kotlinx.coroutines.flow.Flow
 
 /**

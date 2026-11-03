@@ -14,12 +14,14 @@ import com.tangem.domain.pay.model.CustomerSummary.PaymentAccount
 import com.tangem.domain.pay.model.CustomerSummary.MoneyAccount.Activation.Status as MoneyStatus
 import com.tangem.domain.pay.model.CustomerSummary.PaymentAccount.Activation.Status as PaymentStatus
 import com.tangem.domain.pay.usecase.GetCustomerSummaryUseCase
+import com.tangem.domain.pay.utils.TangemPayCustomerStateConverter
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.currentTime
@@ -64,6 +66,42 @@ internal class PollTangemPayAccountStatusesUseCaseTest {
         // Assert
         assertThat(currentTime).isEqualTo(0)
         verifyFetched(times = 1)
+    }
+
+    @Test
+    fun `GIVEN summary becomes terminal WHEN states collected THEN every observed state emitted until terminal`() =
+        runTest {
+            // Arrange
+            coEvery { getCustomerSummaryUseCase(USER_WALLET_ID, CachePolicy.ONLY_CACHE) } returnsMany listOf(
+                inProgressSummary().right(),
+                null.right(),
+                terminalSummary().right(),
+            )
+
+            // Act
+            val actual = useCase.states(USER_WALLET_ID).toList()
+
+            // Assert
+            assertThat(actual).containsExactly(
+                TangemPayCustomerStateConverter.convert(inProgressSummary()),
+                TangemPayCustomerStateConverter.convert(terminalSummary()),
+            ).inOrder()
+        }
+
+    @Test
+    fun `GIVEN summary in progress WHEN 20 minutes pass THEN polling continues`() = runTest {
+        // Arrange
+        coEvery { getCustomerSummaryUseCase(USER_WALLET_ID, CachePolicy.ONLY_CACHE) } returns
+            inProgressSummary().right()
+        val job = launch { useCase(USER_WALLET_ID) }
+
+        // Act
+        advanceTimeBy(20.minutes)
+        runCurrent()
+
+        // Assert
+        verifyFetched(times = 41)
+        job.cancel()
     }
 
     @Test

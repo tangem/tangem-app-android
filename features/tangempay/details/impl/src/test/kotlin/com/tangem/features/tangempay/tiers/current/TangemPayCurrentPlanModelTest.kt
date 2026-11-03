@@ -144,6 +144,18 @@ internal class TangemPayCurrentPlanModelTest {
     }
 
     @Test
+    fun `GIVEN active plan WHEN change plan clicked THEN change plan event sent from the payment account`() {
+        // GIVEN
+        val model = createModel(planState = tariffPlanState())
+
+        // WHEN
+        model.state.value.onChangePlanClick?.invoke()
+
+        // THEN
+        verify(exactly = 1) { analytics.send(TangemPayAnalyticsEvents.Tiers.ChangePlanClicked()) }
+    }
+
+    @Test
     fun `GIVEN markdown link WHEN onLinkClick THEN url is opened in app`() {
         // GIVEN
         val model = createModel(planState = tariffPlanState())
@@ -240,7 +252,7 @@ internal class TangemPayCurrentPlanModelTest {
     }
 
     @Test
-    fun `GIVEN any plan WHEN full terms clicked THEN analytics sent AND terms link opened`() {
+    fun `GIVEN any plan WHEN full terms clicked THEN card terms event sent AND terms link opened`() {
         // GIVEN
         val model = createModel(planState = tariffPlanState())
 
@@ -248,7 +260,11 @@ internal class TangemPayCurrentPlanModelTest {
         model.state.value.onFullTermsClick()
 
         // THEN
-        verify(exactly = 1) { analytics.send(ofType<TangemPayAnalyticsEvents.TermsAndLimitsClicked>()) }
+        verify(exactly = 1) {
+            analytics.send(
+                TangemPayAnalyticsEvents.TermsAndLimitsClicked(product = TangemPayAnalyticsEvents.Product.CARD),
+            )
+        }
         verify(exactly = 1) { urlOpener.openUrl(match { it.startsWith(TangemPayConstants.TERMS_AND_LIMITS_URL) }) }
     }
 

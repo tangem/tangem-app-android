@@ -69,7 +69,14 @@ class PredictionBalancePoller(
     }
 
     private suspend fun refresh(userWalletId: UserWalletId, isFundingWindowOpen: Boolean) = coroutineScope {
-        launch { statusFetcher(PredictionAccountStatusFetcher.Params(userWalletId = userWalletId)) }
+        launch {
+            statusFetcher(
+                PredictionAccountStatusFetcher.Params(
+                    userWalletId = userWalletId,
+                    shouldRefreshPositions = !isFundingWindowOpen,
+                ),
+            )
+        }
 
         if (!isFundingWindowOpen) {
             launch { positionsValueFetcher(PredictionPositionsValueFetcher.Params(userWalletId = userWalletId)) }

@@ -3,11 +3,9 @@ package com.tangem.screens.moneyaccount
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
-import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.swipeDown
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.MoneyAccountTestTags
-import io.github.kakaocup.compose.intercept.operation.ComposeOperationType
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
@@ -19,11 +17,6 @@ class MoneyAccountPageObject(private val semanticsProvider: SemanticsNodeInterac
 
     val mainRow: KNode = child {
         hasTestTag(MoneyAccountTestTags.MAIN_ROW)
-    }
-
-    // A touch can land on a neighbouring Main item while the layout is still shifting; OnClick can't miss.
-    fun clickMainRowViaOnClickAction() {
-        mainRow.delegate.perform(MainRowAction.ON_CLICK) { performSemanticsAction(SemanticsActions.OnClick) }
     }
 
     val balance: KNode = child {
@@ -54,6 +47,16 @@ class MoneyAccountPageObject(private val semanticsProvider: SemanticsNodeInterac
         hasAnyAncestor(withTestTag(MoneyAccountTestTags.ADD_FUNDS_BUTTON))
     }
 
+    val sendButton: KNode = child {
+        hasClickAction()
+        hasAnyAncestor(withTestTag(MoneyAccountTestTags.SEND_BUTTON))
+    }
+
+    // A real tap lands on the Markets sheet once the row sits under it at the bottom of Main.
+    fun clickMainRow() {
+        mainRow { performSemanticsAction(SemanticsActions.OnClick) }
+    }
+
     fun mainRowWithText(text: String): KNode = child {
         hasTestTag(MoneyAccountTestTags.MAIN_ROW)
         hasText(text = text, substring = true)
@@ -61,8 +64,6 @@ class MoneyAccountPageObject(private val semanticsProvider: SemanticsNodeInterac
 }
 
 private const val PULL_DISTANCE_FACTOR = 6f
-
-private enum class MainRowAction : ComposeOperationType { ON_CLICK }
 
 internal fun BaseTestCase.onMoneyAccountScreen(function: MoneyAccountPageObject.() -> Unit) =
     onComposeScreen(composeTestRule, function)

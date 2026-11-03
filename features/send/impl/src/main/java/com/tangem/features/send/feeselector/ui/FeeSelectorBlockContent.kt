@@ -253,7 +253,8 @@ private fun FeeContent(state: FeeSelectorUM.Content, modifier: Modifier = Modifi
                 .testTag(FeeSelectorBlockTestTags.FEE_AMOUNT),
         )
 
-        val isGaslessAvailable = state.feeExtraInfo.transactionFeeExtended != null
+        val isGaslessAvailable = state.feeExtraInfo.transactionFeeExtended != null ||
+            state.feeExtraInfo.sponsoredFee.isAvailable
 
         if (!state.feeItems.isSingleItem() || isGaslessAvailable) {
             Icon(

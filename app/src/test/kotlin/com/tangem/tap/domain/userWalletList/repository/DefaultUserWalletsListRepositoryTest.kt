@@ -1,6 +1,8 @@
 package com.tangem.tap.domain.userWalletList.repository
 
+import arrow.core.left
 import com.google.common.truth.Truth.assertThat
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
 import com.tangem.common.test.domain.card.MockScanResponseFactory
@@ -13,7 +15,9 @@ import com.tangem.store.datasource.preferences.StorePreferencesKeys
 import com.tangem.domain.appsflyer.usecase.ClearReferralInstallUseCase
 import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.common.wallets.UserWalletSelectedHandler
+import com.tangem.domain.common.wallets.MAX_HOT_WALLETS_COUNT
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.hotwallet.repository.HotWalletRepository
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.wallet.UserWallet
@@ -25,9 +29,11 @@ import com.tangem.domain.wallets.usecase.GetCompletedBackupsUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.model.HotAuth
+import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
 import com.tangem.tap.domain.userWalletList.model.UserWalletSensitiveInformation
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.Provider
 import com.tangem.utils.ProviderSuspend
 import dagger.Lazy
@@ -41,6 +47,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultUserWalletsListRepositoryTest {
@@ -63,6 +70,7 @@ internal class DefaultUserWalletsListRepositoryTest {
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase = mockk(relaxed = true)
     private val getCompletedBackupsUseCase: GetCompletedBackupsUseCase = mockk(relaxed = true)
     private val walletRegistrationTrigger: WalletRegistrationTrigger = mockk(relaxed = true)
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles = mockk()
 
     private val walletA = MockUserWalletFactory.create().copy(walletId = UserWalletId("0011"), name = "Wallet A")
     private val walletB = MockUserWalletFactory.create().copy(walletId = UserWalletId("0022"), name = "Wallet B")
@@ -80,8 +88,10 @@ internal class DefaultUserWalletsListRepositoryTest {
             clearReferralInstallUseCase,
             userWalletSelectedHandler,
             walletRegistrationTrigger,
+            hotWalletFeatureToggles,
         )
 
+        every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns true
         coEvery { publicInformationRepository.delete(any()) } returns CompletionResult.Success(Unit)
         coEvery { sensitiveInformationRepository.delete(any()) } returns CompletionResult.Success(Unit)
 
@@ -105,6 +115,7 @@ internal class DefaultUserWalletsListRepositoryTest {
             isWalletBackedUpUseCase = isWalletBackedUpUseCase,
             getCompletedBackupsUseCase = getCompletedBackupsUseCase,
             walletRegistrationTrigger = Lazy { walletRegistrationTrigger },
+            hotWalletFeatureToggles = hotWalletFeatureToggles,
         )
     }
 
@@ -407,6 +418,86 @@ internal class DefaultUserWalletsListRepositoryTest {
             )
         }
         verify(exactly = 0) { walletRegistrationTrigger.onMobileWalletsUnlocked(any()) }
+    }
+
+    @Test
+    fun `GIVEN hot wallets limit reached WHEN save new hot wallet THEN limit error and nothing persisted`() =
+        runTest {
+            // Arrange
+            val listedWallets = hotWallets(MAX_HOT_WALLETS_COUNT)
+            repository.userWallets.value = listedWallets
+
+            // Act
+            val result = repository.saveWithoutLock(hotWallet(index = 99), canOverride = true)
+
+            // Assert
+            assertThat(result).isEqualTo(SaveWalletError.HotWalletsLimitReached(messageId = null).left())
+            assertThat(repository.userWallets.value).isEqualTo(listedWallets)
+            coVerify(exactly = 0) { publicInformationRepository.save(any(), any()) }
+            coVerify(exactly = 0) { sensitiveInformationRepository.save(any(), any()) }
+            verify(exactly = 0) { walletRegistrationTrigger.onMobileWalletCreated(any()) }
+        }
+
+    @ParameterizedTest
+    @ProvideTestModels
+    fun `GIVEN hot wallets listed WHEN save wallet allowed by limit THEN wallet saved`(model: HotWalletsLimitModel) =
+        runTest {
+            // Arrange
+            every { hotWalletFeatureToggles.isMultipleHotWalletsEnabled } returns model.isMultipleHotWalletsEnabled
+            repository.userWallets.value = model.listedWallets
+            coEvery { publicInformationRepository.save(any(), any()) } returns CompletionResult.Success(Unit)
+            coEvery { sensitiveInformationRepository.save(any(), any()) } returns CompletionResult.Success(Unit)
+
+            // Act
+            val result = repository.saveWithoutLock(model.walletToSave, canOverride = true)
+
+            // Assert
+            assertThat(result.getOrNull()).isEqualTo(model.walletToSave)
+            assertThat(repository.userWallets.value).contains(model.walletToSave)
+            coVerify(exactly = 1) { publicInformationRepository.save(model.walletToSave, true) }
+        }
+
+    private fun provideTestModels() = listOf(
+        HotWalletsLimitModel(
+            description = "existing hot wallet re-saved at the limit",
+            listedWallets = hotWallets(MAX_HOT_WALLETS_COUNT),
+            walletToSave = hotWallet(index = 0).copy(name = "Renamed"),
+        ),
+        HotWalletsLimitModel(
+            description = "new cold wallet at the limit",
+            listedWallets = hotWallets(MAX_HOT_WALLETS_COUNT),
+            walletToSave = MockUserWalletFactory.create().copy(walletId = UserWalletId("00aa")),
+        ),
+        HotWalletsLimitModel(
+            description = "new hot wallet below the limit",
+            listedWallets = hotWallets(MAX_HOT_WALLETS_COUNT - 1),
+            walletToSave = hotWallet(index = 99),
+        ),
+        HotWalletsLimitModel(
+            description = "new hot wallet at the limit with multiple hot wallets disabled",
+            listedWallets = hotWallets(MAX_HOT_WALLETS_COUNT),
+            walletToSave = hotWallet(index = 99),
+            isMultipleHotWalletsEnabled = false,
+        ),
+    )
+
+    private fun hotWallets(count: Int): List<UserWallet> = List(count) { hotWallet(index = it) }
+
+    private fun hotWallet(index: Int): UserWallet.Hot = UserWallet.Hot(
+        name = "Hot $index",
+        walletId = UserWalletId("ff%02x".format(index)),
+        hotWalletId = HotWalletId(value = "hot_$index", authType = HotWalletId.AuthType.NoPassword),
+        wallets = null,
+        isBackedUp = false,
+    )
+
+    data class HotWalletsLimitModel(
+        val description: String,
+        val listedWallets: List<UserWallet>,
+        val walletToSave: UserWallet,
+        val isMultipleHotWalletsEnabled: Boolean = true,
+    ) {
+        override fun toString(): String = description
     }
 
     private companion object {

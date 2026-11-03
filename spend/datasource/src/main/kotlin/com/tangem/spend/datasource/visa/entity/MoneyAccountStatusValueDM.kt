@@ -18,6 +18,12 @@ sealed interface MoneyAccountStatusValueDM {
     ) : MoneyAccountStatusValueDM
 
     @Serializable
+    @SerialName("failed")
+    data class Failed(
+        @SerialName("customer_id") val customerId: String,
+    ) : MoneyAccountStatusValueDM
+
+    @Serializable
     @SerialName("active_account")
     data class ActiveAccount(
         @SerialName("customer_id") val customerId: String,
