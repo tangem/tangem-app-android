@@ -63,8 +63,8 @@ internal fun CryptoPricePlot(
                     },
                 ) {
                     Canvas(
-                        Modifier.matchParentSize().padding(vertical = labelHeight / 2)
-                            .hazeSourceTangem().background(TangemTheme.colors3.bg.primary).clearAndSetSemantics {},
+                        Modifier.matchParentSize().hazeSourceTangem().background(TangemTheme.colors3.bg.primary)
+                            .padding(vertical = labelHeight / 2).clearAndSetSemantics {},
                     ) {
                         val dash = PathEffect.dashPathEffect(floatArrayOf(3.dp.toPx(), 3.dp.toPx()))
                         scale.ticks(tickCount).forEach { value ->
