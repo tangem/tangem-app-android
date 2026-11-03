@@ -14,10 +14,13 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.models.account.*
+import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
+import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.CancelTangemPayOrderUseCase
 import com.tangem.domain.pay.usecase.CancelTariffPlanPendingTransitionUseCase
 import com.tangem.domain.pay.usecase.CancelTariffTransitionUseCase
+import com.tangem.domain.pay.usecase.HasCompletedTangemPayProductUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayConstants
@@ -35,6 +38,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -48,8 +52,11 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
     private val cancelPendingTransition: CancelTariffPlanPendingTransitionUseCase,
     private val cancelTariffTransitionUseCase: CancelTariffTransitionUseCase,
     private val cancelTangemPayOrderUseCase: CancelTangemPayOrderUseCase,
+    private val hasCompletedTangemPayProductUseCase: HasCompletedTangemPayProductUseCase,
     private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
+    private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+    private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
     private val uiMessageSender: UiMessageSender,
     private val analytics: AnalyticsEventHandler,
     private val urlOpener: UrlOpener,
@@ -183,7 +190,19 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
                     orderId = orderId,
                 ).onRight {
                     if (currentPlanState.tariff.isDefaultTariff) {
-                        router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayVerified(params.userWalletId))
+                        coroutineScope {
+                            launch {
+                                paymentAccountStatusFetcher(PaymentAccountStatusFetcher.Params(params.userWalletId))
+                            }
+                            launch {
+                                moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(params.userWalletId))
+                            }
+                        }
+                        when (hasCompletedTangemPayProductUseCase(userWalletId = params.userWalletId).getOrNull()) {
+                            null -> router.replaceAll(AppRoute.Wallet)
+                            true -> Unit
+                            false -> router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayVerified(params.userWalletId))
+                        }
                     }
                 }
             } else {
