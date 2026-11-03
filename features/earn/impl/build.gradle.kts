@@ -13,7 +13,7 @@ android {
 dependencies {
     /** Feature */
     implementation(projects.features.earn.api)
-    implementation(projects.features.earn.product.api)
+    api(projects.features.earn.product.api)
 
     /** Core */
     implementation(projects.core.configToggles)
@@ -22,6 +22,16 @@ dependencies {
 
     /** Domain */
     implementation(projects.domain.models)
+    implementation(projects.domain.transaction)
+    implementation(projects.domain.transaction.models)
+
+    /** SDK */
+    implementation(tangemDeps.blockchain)
+
+    /** Kotlin */
+    implementation(deps.arrow.core)
+    implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.datetime)
 
     /** Compose */
     implementation(deps.compose.foundation)
