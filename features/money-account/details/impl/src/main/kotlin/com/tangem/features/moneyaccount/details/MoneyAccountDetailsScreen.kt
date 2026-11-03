@@ -237,17 +237,24 @@ private fun TopBar(state: MoneyAccountDetailsUM, onHeightChange: (Dp) -> Unit, m
                 variant = TangemButton.Variant.Material,
             )
         },
-        endContent = { MenuButton(items = state.menuItems) },
+        endContent = { MenuButton(items = state.menuItems, onClick = state.onMenuClick) },
     )
 }
 
 @Composable
-private fun MenuButton(items: ImmutableList<MoneyAccountMenuItemUM>, modifier: Modifier = Modifier) {
+private fun MenuButton(
+    items: ImmutableList<MoneyAccountMenuItemUM>,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     var isMenuShown by rememberSaveable { mutableStateOf(false) }
     Box(modifier = modifier) {
         TangemButton(
             iconStart = TangemIconUM.Icon(imageVector = Icons.ic_dots_vertical_24),
-            onClick = { isMenuShown = true },
+            onClick = {
+                isMenuShown = true
+                onClick()
+            },
             size = TangemButton.Size.X11,
             variant = TangemButton.Variant.Material,
         )
@@ -305,6 +312,7 @@ private fun MoneyAccountDetailsScreenPreview() {
                 isBalanceHidden = false,
                 messageBanner = null,
                 menuItems = persistentListOf(),
+                onMenuClick = {},
                 onBackClick = {},
                 onAddFundsClick = {},
                 onSendClick = {},
@@ -333,6 +341,7 @@ private fun MoneyAccountDetailsScreenBalanceUnavailablePreview() {
                     description = resourceReference(R.string.money_account_balance_unavailable_description),
                 ),
                 menuItems = persistentListOf(),
+                onMenuClick = {},
                 onBackClick = {},
                 onAddFundsClick = {},
                 onSendClick = {},
