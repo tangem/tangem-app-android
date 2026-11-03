@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -33,6 +34,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_warning_16_filled
+import com.tangem.core.ui.test.TransactionHistoryItemTestTags
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -102,6 +104,7 @@ internal fun TransactionRowEndBottom(badge: TextReference?, caption: TextReferen
                 style = TangemTheme.typography3.caption.medium,
                 color = TangemTheme.colors3.text.secondary,
                 maxLines = 1,
+                modifier = Modifier.testTag(TransactionHistoryItemTestTags.CURRENCY),
             )
         }
     }

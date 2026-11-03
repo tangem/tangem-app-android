@@ -15,6 +15,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -31,6 +32,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
+import com.tangem.core.ui.test.TransactionHistoryItemTestTags
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -93,7 +95,12 @@ fun TangemTransactionRow(
         },
         valueSlot = amount?.let { value ->
             {
-                TransactionRowAmount(amount = value, status = status, isBalanceHidden = isBalanceHidden)
+                TransactionRowAmount(
+                    amount = value,
+                    status = status,
+                    isBalanceHidden = isBalanceHidden,
+                    modifier = Modifier.testTag(TransactionHistoryItemTestTags.AMOUNT),
+                )
             }
         },
         subvalueSlot = if (badge != null || caption != null) {
