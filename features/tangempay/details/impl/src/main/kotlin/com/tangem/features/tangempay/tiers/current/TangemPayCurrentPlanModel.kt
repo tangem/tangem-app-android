@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.tiers.current
 
 import androidx.compose.runtime.Stable
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -12,14 +13,13 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.DateTimeFormatters
-import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
-import com.tangem.domain.models.account.TangemPayTariffPlan
-import com.tangem.domain.models.account.TangemPayTariffPlanState
-import com.tangem.domain.models.account.isPlanTransitioningState
+import com.tangem.domain.models.account.*
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.pay.usecase.CancelTangemPayOrderUseCase
 import com.tangem.domain.pay.usecase.CancelTariffPlanPendingTransitionUseCase
 import com.tangem.domain.pay.usecase.CancelTariffTransitionUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.common.TangemPayMessagesFactory
@@ -46,7 +46,9 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val cancelPendingTransition: CancelTariffPlanPendingTransitionUseCase,
-    private val cancelTariffTransition: CancelTariffTransitionUseCase,
+    private val cancelTariffTransitionUseCase: CancelTariffTransitionUseCase,
+    private val cancelTangemPayOrderUseCase: CancelTangemPayOrderUseCase,
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier,
     private val uiMessageSender: UiMessageSender,
     private val analytics: AnalyticsEventHandler,
@@ -59,7 +61,7 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
     private var currentPlanState: TangemPayTariffPlanState = params.tariffPlan
 
     val state: StateFlow<TangemPayCurrentPlanUM>
-        field = MutableStateFlow(createState(currentPlanState))
+        field = MutableStateFlow(createState())
 
     init {
         observePlanChanges()
@@ -72,7 +74,7 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
                 .distinctUntilChanged()
                 .collect { planState ->
                     currentPlanState = planState
-                    state.value = createState(planState)
+                    updateState()
                 }
         }
     }
@@ -82,14 +84,18 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
         router.pop()
     }
 
-    private fun createState(planState: TangemPayTariffPlanState): TangemPayCurrentPlanUM = TangemPayCurrentPlanUM(
-        planName = stringReference(planState.tariff.plan.name),
-        notification = createNotification(planState),
-        sections = buildSections(planState.tariff.plan),
+    private fun updateState() {
+        state.value = createState()
+    }
+
+    private fun createState(): TangemPayCurrentPlanUM = TangemPayCurrentPlanUM(
+        planName = stringReference(currentPlanState.tariff.plan.name),
+        notification = createNotification(currentPlanState),
+        sections = buildSections(currentPlanState.tariff.plan),
         onBackClick = ::onBackClick,
         onChangePlanClick = ::onChangePlanClick.takeIf {
-            planState.tariff.status != TangemPayCustomerTariffPlan.Status.DOWNGRADE_PENDING &&
-                !planState.isPlanTransitioningState
+            currentPlanState.tariff.status != TangemPayCustomerTariffPlan.Status.DOWNGRADE_PENDING &&
+                !currentPlanState.isPlanTransitioningState
         },
         onLinkClick = urlOpener::openUrl,
         onFullTermsClick = ::onFullTermsClick,
@@ -169,12 +175,27 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
         if (isProcessing) return
         analytics.send(TangemPayAnalyticsEvents.Tiers.CancelPlusMoveToBasicClicked())
         isProcessing = true
-        state.value = createState(currentPlanState)
+        updateState()
         modelScope.launch {
-            cancelTariffTransition(userWalletId = params.userWalletId, orderId = orderId)
-                .onLeft { uiMessageSender.send(message = TangemPayMessagesFactory.createGenericError()) }
+            if (moneyAccountFeatureToggles.isMoneyAccountsEnabled) {
+                cancelTangemPayOrderUseCase(
+                    userWalletId = params.userWalletId,
+                    orderId = orderId,
+                ).onRight {
+                    if (currentPlanState.tariff.isDefaultTariff) {
+                        router.replaceAll(AppRoute.Wallet, AppRoute.TangemPayVerified(params.userWalletId))
+                    }
+                }
+            } else {
+                cancelTariffTransitionUseCase(
+                    userWalletId = params.userWalletId,
+                    orderId = orderId,
+                )
+            }.onLeft {
+                uiMessageSender.send(message = TangemPayMessagesFactory.createGenericError())
+            }
             isProcessing = false
-            state.value = createState(currentPlanState)
+            updateState()
         }
     }
 
@@ -197,12 +218,12 @@ internal class TangemPayCurrentPlanModel @Inject constructor(
         if (isProcessing) return
         analytics.send(TangemPayAnalyticsEvents.Tiers.StayOnPlusPopupClicked())
         isProcessing = true
-        state.value = createState(currentPlanState)
+        updateState()
         modelScope.launch {
             cancelPendingTransition(params.userWalletId).fold(
                 ifRight = {},
                 ifLeft = {
-                    state.value = createState(currentPlanState)
+                    updateState()
                     uiMessageSender.send(message = TangemPayMessagesFactory.createGenericError())
                 },
             )
