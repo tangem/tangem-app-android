@@ -72,7 +72,6 @@ import com.tangem.domain.yield.supply.YieldModuleAddressProvider
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.fee.CexSwapFeeCalculator
 import com.tangem.feature.swap.domain.fee.DexSwapFeeCalculator
-import com.tangem.feature.swap.domain.fee.SolanaGaslessSendGuard
 import com.tangem.feature.swap.domain.fee.SolanaGaslessSwapResolver
 import com.tangem.feature.swap.domain.fee.SwapFeeFactory
 import com.tangem.feature.swap.domain.fee.TransactionFeeResult
@@ -140,7 +139,6 @@ internal class SwapInteractorImpl @Inject constructor(
     private val createAndSendTronGaslessTransactionUseCase: CreateAndSendTronGaslessTransactionUseCase,
     private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase,
     private val solanaGaslessSwapResolver: SolanaGaslessSwapResolver,
-    private val solanaGaslessSendGuard: SolanaGaslessSendGuard,
     private val createAndSendSolanaGaslessTransactionUseCase: CreateAndSendSolanaGaslessTransactionUseCase,
 ) : SwapInteractor {
 
@@ -1516,8 +1514,7 @@ internal class SwapInteractorImpl @Inject constructor(
 
     /**
      * [isSponsored]: the user picked the sponsored fee, so the swap goes out sponsored or not at all. The sponsor is
-     * resolved here again: the quote may still carry its status from before the fee was applied, or a sponsor that a
-     * refusal or a send in flight has withdrawn since.
+     * resolved here again: the quote may still carry its status from before the fee was applied.
      */
     private suspend fun onSwapSolanaDex(
         provider: SwapProvider,
@@ -1558,21 +1555,17 @@ internal class SwapInteractorImpl @Inject constructor(
         )
 
         val feePayer = solanaGaslessSwapResolver.resolveFeePayer(fromSwapCurrencyStatus, provider, swapData)
-            ?: return notSentSponsored(reason = "no sponsor at send")
+        if (feePayer == null) {
+            TangemLogger.i("Solana sponsored swap is not sent: no sponsor at send")
+            return SwapTransactionState.Error.SolanaGaslessError(SolanaGaslessError.ServiceUnavailable(code = null))
+        }
 
-        return solanaGaslessSendGuard.guard(fromSwapCurrencyStatus.userWalletId) {
-            sendSponsoredSolanaDex(
-                fromSwapCurrencyStatus = fromSwapCurrencyStatus,
-                compiledTransaction = compiledTransaction,
-                feePayer = feePayer,
-                finalizeSponsoredSwap = ::finalizeSponsoredSwap,
-            )
-        } ?: notSentSponsored(reason = "another sponsored send of this wallet is in flight")
-    }
-
-    private fun notSentSponsored(reason: String): SwapTransactionState {
-        TangemLogger.i("Solana sponsored swap is not sent: $reason")
-        return SwapTransactionState.Error.SolanaGaslessError(SolanaGaslessError.ServiceUnavailable(code = null))
+        return sendSponsoredSolanaDex(
+            fromSwapCurrencyStatus = fromSwapCurrencyStatus,
+            compiledTransaction = compiledTransaction,
+            feePayer = feePayer,
+            finalizeSponsoredSwap = ::finalizeSponsoredSwap,
+        )
     }
 
     private suspend fun sendSponsoredSolanaDex(
