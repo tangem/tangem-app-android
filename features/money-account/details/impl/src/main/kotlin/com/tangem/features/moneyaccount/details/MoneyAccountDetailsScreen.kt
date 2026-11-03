@@ -207,7 +207,9 @@ private fun LazyItemScope.ActionBlock(state: MoneyAccountDetailsUM, modifier: Mo
             onClick = state.onAddFundsClick,
         )
         TangemCircleActionButton(
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .testTag(MoneyAccountTestTags.SEND_BUTTON),
             title = resourceReference(R.string.common_send),
             icon = TangemIconUM.Icon(
                 imageVector = Icons.ic_arrow_up_24,
