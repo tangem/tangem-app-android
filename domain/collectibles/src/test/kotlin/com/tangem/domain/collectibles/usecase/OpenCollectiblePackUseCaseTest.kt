@@ -501,6 +501,27 @@ internal class OpenCollectiblePackUseCaseTest {
     }
 
     @Test
+    fun `GIVEN the status answers auto-buybacked with a payout WHEN reopen requested THEN it ends auto-buybacked without opening`() =
+        runTest {
+            // Arrange
+            coEvery { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any()) } returns CollectibleTxState(
+                status = CollectibleTxStatus.AUTO_BUYBACKED,
+                pack = null,
+                autoBuybackAmount = BigDecimal("42.5"),
+            )
+
+            // Act
+            val actual = useCase(userWallet, OpenPackRequest.Reopen(TX_ID)).toList()
+
+            // Assert
+            assertThat(actual).containsExactly(
+                OpenPackStep.Confirming,
+                OpenPackStep.AutoBuybacked(BigDecimal("42.5")),
+            ).inOrder()
+            coVerify(exactly = 0) { collectiblesRepository.openPack(any(), any()) }
+        }
+
+    @Test
     fun `GIVEN opening fails again WHEN reopen requested THEN the pack is still left unopened`() = runTest {
         // Arrange
         coEvery { collectiblesRepository.openPack(WALLET_ID, TX_ID) } throws IllegalStateException()
