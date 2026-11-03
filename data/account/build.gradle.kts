@@ -61,7 +61,6 @@ dependencies {
 
     // region Project - Features
     api(projects.features.moneyAccount.details.api) // AND_15325_MONEY_ACCOUNTS_ENABLED
-    implementation(projects.features.polymarket.api) // POLYMARKET_ENABLED
     // endregion
 
     // region Project - Common
