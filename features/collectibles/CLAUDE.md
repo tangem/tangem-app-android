@@ -42,7 +42,7 @@ features/collectibles/
 ```
 packopening/
   CollectiblesPackOpeningComponent  — the route; bottom-sheet slot, system back handler, reports the app theme
-  CollectiblesConfirmOrderBottomSheetConfig, sheet/CollectiblesConfirmOrderSheetComponent — PackUnopened / LowInventory
+  CollectiblesConfirmOrderBottomSheetConfig, sheet/CollectiblesConfirmOrderSheetComponent — PackUnopened / LowInventory / AutoBuyback
   PackOpeningConst                  — VIDEO_READY_TIMEOUT_MS, card-slab constants
   model/CollectiblesPackOpeningModel
   model/converter/                  — CollectiblesPackOpeningConverter (order), CollectiblesRewardCardConverter
@@ -107,8 +107,9 @@ AppRoute.Collectibles(userWalletId, startRoute) → DefaultCollectiblesEntryComp
   └─ CollectiblesRoute.ConfirmOrder(externalId, isTurboEnabled)
         → CollectiblesPackOpeningComponent → CollectiblesPackOpeningModel
         confirm order → throw → video → card, all inside the one route
-        slot: PackUnopened(txId) / LowInventory sheets
+        slot: PackUnopened(txId) / LowInventory / AutoBuyback(amount, price) sheets
         "Enable Turbo" → router.pop(); "Explore packs" → router.popTo(Main(id))
+        AutoBuyback: "Open again", close, scrim tap and back → router.pop() to MachineDetails
         "Keep card" / a completed "Sell back" → router.pop() to MachineDetails
 ```
 
@@ -188,7 +189,7 @@ emits `Generating → Confirming → Opening → Opened(pack)`, `AutoBuybacked(a
 back (the `/status` or `/open-pack` answer is `auto-buybacked` with an `autoBuyback.toAmount`; once `/status` says
 so, `/open-pack` is skipped), or an `OpenPackStep.Failed`:
 `LowInventory` / `PackUnopened(txId)` open a sheet (`PackUnopened` retries with `OpenPackRequest.Reopen`),
-everything else is a snackbar.
+`AutoBuybacked` opens the payout sheet instead of a card, everything else is a snackbar.
 
 The UI beat is `CollectiblesPackOpeningUM.Stage` — `Order → Launching → Reveal → Reward`:
 
