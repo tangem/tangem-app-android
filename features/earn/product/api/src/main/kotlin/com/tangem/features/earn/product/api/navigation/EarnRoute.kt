@@ -7,5 +7,5 @@ sealed interface EarnRoute : Route
 
 data class EarnPickerRoute(
     val preselected: EarnProductId? = null,
-    val redirectToActive: Boolean = false,
+    val shouldRedirectToActive: Boolean = false,
 ) : EarnRoute

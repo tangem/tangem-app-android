@@ -25,19 +25,19 @@ internal class EarnEntryInitialRouteTest {
     private fun provideTestModels() = listOf(
         InitialRouteModel(
             start = EarnEntryStart.Picker(),
-            expected = EarnPickerRoute(preselected = null, redirectToActive = false),
+            expected = EarnPickerRoute(preselected = null, shouldRedirectToActive = false),
         ),
         InitialRouteModel(
             start = EarnEntryStart.Picker(preselected = LENDING),
-            expected = EarnPickerRoute(preselected = LENDING, redirectToActive = false),
+            expected = EarnPickerRoute(preselected = LENDING, shouldRedirectToActive = false),
         ),
         InitialRouteModel(
             start = EarnEntryStart.Info(productId = LENDING),
-            expected = EarnPickerRoute(preselected = LENDING, redirectToActive = false),
+            expected = EarnPickerRoute(preselected = LENDING, shouldRedirectToActive = false),
         ),
         InitialRouteModel(
             start = EarnEntryStart.Auto,
-            expected = EarnPickerRoute(preselected = null, redirectToActive = true),
+            expected = EarnPickerRoute(preselected = null, shouldRedirectToActive = true),
         ),
     )
 
