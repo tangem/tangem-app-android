@@ -1,11 +1,13 @@
 package com.tangem.domain.wallets.usecase
 
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.backup.CardBackupConverter
 import com.tangem.domain.wallets.models.backup.WalletCardBackup
 import com.tangem.domain.wallets.repository.WalletCardsBackupRepository
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -18,6 +20,7 @@ import kotlinx.coroutines.sync.withLock
  * its card is stored without wallets and the curves would be lost.
  */
 class ReportCardLinkedWalletsBackupUseCase(
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val walletCardsBackupRepository: WalletCardsBackupRepository,
     private val reportWalletCardsBackupUseCase: ReportWalletCardsBackupUseCase,
 ) {
@@ -27,7 +30,14 @@ class ReportCardLinkedWalletsBackupUseCase(
     // an undelivered report stays queued and is resent by the repository, so it is not re-queued in this process
     private val attemptedWalletIds = mutableSetOf<UserWalletId>()
 
-    suspend operator fun invoke(userWallets: List<UserWallet>) = mutex.withLock {
+    /** Watches the saved wallets for as long as the caller's scope lives */
+    suspend operator fun invoke() {
+        userWalletsListRepository.userWallets
+            .filterNotNull()
+            .collect { userWallets -> reportUnreported(userWallets) }
+    }
+
+    private suspend fun reportUnreported(userWallets: List<UserWallet>) = mutex.withLock {
         userWallets
             .filterIsInstance<UserWallet.Cold>()
             .filter { !it.isLocked && it.scanResponse.card.backupStatus is CardDTO.BackupStatus.CardLinked }

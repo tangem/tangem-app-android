@@ -468,10 +468,12 @@ internal object WalletsDomainModule {
     @Provides
     @Singleton
     fun provideReportCardLinkedWalletsBackupUseCase(
+        userWalletsListRepository: UserWalletsListRepository,
         walletCardsBackupRepository: WalletCardsBackupRepository,
         reportWalletCardsBackupUseCase: ReportWalletCardsBackupUseCase,
     ): ReportCardLinkedWalletsBackupUseCase {
         return ReportCardLinkedWalletsBackupUseCase(
+            userWalletsListRepository = userWalletsListRepository,
             walletCardsBackupRepository = walletCardsBackupRepository,
             reportWalletCardsBackupUseCase = reportWalletCardsBackupUseCase,
         )
