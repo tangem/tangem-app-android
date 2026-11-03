@@ -374,6 +374,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     }
                     swapAlertFactory.getGenericErrorState(
                         expressError = expressError,
+                        isSwapAttemptAlert = true,
                         providerName = provider.name.takeIf { isHideRejectedProviderEnabled },
                         amountCurrency = amountCurrency,
                         onFailedTxEmailClick = {

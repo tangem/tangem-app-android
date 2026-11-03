@@ -1874,6 +1874,7 @@ internal class SwapModel @Inject constructor(
                             startLoadingQuotesFromLastState()
                             showTransactionErrorAlert(
                                 error = swapTransactionState,
+                                isSwapAttemptAlert = true,
                                 providerName = provider.name,
                                 amountCurrency = fromSwapCurrencyStatus.currency,
                             )
@@ -1881,6 +1882,7 @@ internal class SwapModel @Inject constructor(
                             startLoadingQuotesFromLastState()
                             showTransactionErrorAlert(
                                 error = swapTransactionState,
+                                isSwapAttemptAlert = true,
                                 amountCurrency = fromSwapCurrencyStatus.currency,
                             )
                         }
@@ -2558,11 +2560,13 @@ internal class SwapModel @Inject constructor(
 
     private fun showTransactionErrorAlert(
         error: SwapTransactionState.Error,
+        isSwapAttemptAlert: Boolean = false,
         providerName: String? = null,
         amountCurrency: CryptoCurrency? = null,
         onSupportClick: (String) -> Unit = ::onFailedTxEmailClick,
     ) {
         val errorAlert = SwapTransactionErrorStateConverter(
+            isSwapAttemptAlert = isSwapAttemptAlert,
             providerName = providerName,
             amountCurrency = amountCurrency,
             onDismiss = {},

@@ -15,6 +15,7 @@ import com.tangem.feature.swap.utils.getExpressErrorMessage
 import com.tangem.utils.converter.Converter
 
 internal class SwapTransactionErrorStateConverter(
+    private val isSwapAttemptAlert: Boolean = false,
     private val providerName: String?,
     private val amountCurrency: CryptoCurrency? = null,
     private val onDismiss: () -> Unit,
@@ -34,6 +35,7 @@ internal class SwapTransactionErrorStateConverter(
                 SwapAlertUM.expressErrorAlert(
                     message = getExpressErrorMessage(
                         expressError = value.error.toExpressError(),
+                        isSwapAttemptAlert = isSwapAttemptAlert,
                         providerName = providerName,
                         amountCurrency = amountCurrency,
                     ),

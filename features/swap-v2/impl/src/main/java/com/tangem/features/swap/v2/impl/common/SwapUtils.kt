@@ -24,6 +24,7 @@ internal object SwapUtils {
 
     fun getExpressErrorMessage(
         expressError: ExpressError,
+        isSwapAttemptAlert: Boolean = false,
         providerName: String? = null,
         amountCurrency: CryptoCurrency? = null,
     ): TextReference {
@@ -49,7 +50,7 @@ internal object SwapUtils {
                 formatArgs = wrappedList(expressError.code),
             )
             is ExpressError.ExchangeNotPossibleError -> resourceReference(
-                id = if (providerName != null) {
+                id = if (isSwapAttemptAlert) {
                     R.string.warning_express_pair_unavailable_message_v2
                 } else {
                     R.string.warning_express_pair_unavailable_message
@@ -84,7 +85,11 @@ internal object SwapUtils {
         if (amountCurrency == null) return getGeneralErrorMessage(expressError)
         return resourceReference(
             id = id,
-            formatArgs = wrappedList(expressError.amount.format { crypto(amountCurrency) }),
+            formatArgs = wrappedList(
+                expressError.amount.format {
+                    crypto(symbol = amountCurrency.symbol, decimals = amountCurrency.decimals)
+                },
+            ),
         )
     }
 
