@@ -103,15 +103,11 @@ interface SwapInteractor {
      * Recomputes `preparedSwapConfigState.balanceStatus`, plus `currencyCheck` and `validationResult`.
      *
      * **Idempotent**: applying the same [SwapFee] twice yields an equal state.
-     *
-     * @param isSolanaGaslessSuppressed the caller (one swap screen) saw the gasless service refuse this swap, so
-     *   [SwapBalanceStatus.SponsoredFee] must not be offered again.
      */
     suspend fun applySwapFee(
         state: SwapState.QuotesLoadedState,
         fee: SwapFee,
         lastReducedBalanceBy: BigDecimal,
-        isSolanaGaslessSuppressed: Boolean = false,
     ): SwapState.QuotesLoadedState
 
     /**

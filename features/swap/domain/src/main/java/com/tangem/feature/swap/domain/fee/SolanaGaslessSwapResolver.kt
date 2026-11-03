@@ -37,6 +37,7 @@ internal class SolanaGaslessSwapResolver @Inject constructor(
     private val solanaGaslessTransactionRepository: SolanaGaslessTransactionRepository,
     private val walletManagersFacade: WalletManagersFacade,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
+    private val solanaGaslessSendGuard: SolanaGaslessSendGuard,
 ) {
 
     private val resolutionMutex = Mutex()
@@ -63,6 +64,7 @@ internal class SolanaGaslessSwapResolver @Inject constructor(
         if (!isSponsorable(fromSwapCurrencyStatus.currency) || provider.providerId in UNSUPPORTED_PROVIDER_IDS) {
             return null
         }
+        if (solanaGaslessSendGuard.isBlocked(fromSwapCurrencyStatus.userWalletId)) return null
         val dexTransaction = swapData?.transaction as? ExpressTransactionModel.DEX ?: return null
         // The sponsor pays only the network fee: a bridge fee would still come from the user's SOL, behind a $0 fee
         if (dexTransaction.otherNativeFeeWei?.signum() == 1) return null
