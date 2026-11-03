@@ -823,9 +823,9 @@
   <string name="tangempay_status_inactive">Inattiva</string>
   <string name="tangempay_status_replacing">Sostituzione carta</string>
   <string name="tangempay_sync_needed">Usa la carta o l\'anello per rinnovare la sessione</string>
-  <string name="tangempay_sync_needed_body">Usa la carta o l\'anello per rinnovare la sessione</string>
+  <string name="tangempay_sync_needed_body">Rinnovi per vedere la carta e il conto</string>
   <string name="tangempay_sync_needed_button">Ripristina accesso</string>
-  <string name="tangempay_sync_needed_title">Tangem Pay sessione scaduta</string>
+  <string name="tangempay_sync_needed_title">Sessione scaduta</string>
   <string name="tangempay_tangem_visa_card">Spendi le tue crypto nel mondo reale</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay è temporaneamente non disponibile</string>
   <string name="tangempay_title">Tangem Pay</string>
