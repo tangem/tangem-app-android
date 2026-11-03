@@ -127,7 +127,7 @@ internal fun fakeSummary(preset: FakeEarnProductPreset, position: FakeEarnPositi
         availability = ProductAvailability.Available,
         rate = fakeRate(),
         position = EarnPositionSummary(FAKE_PRODUCT_POSITION).takeIf { isActive },
-        source = StatusSource.ACTUAL,
+        source = if (position == FakeEarnPosition.Unknown) StatusSource.ONLY_CACHE else StatusSource.ACTUAL,
         onClickAction = if (isActive) FakeNavigationAction.OpenInfo else FakeNavigationAction.OpenPicker,
         route = FakeForeignRoute.takeIf { preset == FakeEarnProductPreset.Staking },
     )
