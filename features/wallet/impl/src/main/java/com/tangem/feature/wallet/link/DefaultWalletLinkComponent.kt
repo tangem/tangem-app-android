@@ -7,6 +7,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.message.modal.MessageModal
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.registration.WalletLinkRequester
@@ -29,17 +30,19 @@ internal class DefaultWalletLinkComponent @AssistedInject constructor(
         lifecycle.doOnDestroy { requesterProxy.componentRequester.compareAndSet(expect = this, update = null) }
     }
 
-    override suspend fun requestLink(userWallet: UserWallet): WalletLinkRequester.Result {
-        model.show(userWallet)
-        return model.waitResult()
-    }
+    override suspend fun requestLink(userWallet: UserWallet): WalletLinkRequester.Result = model.request(userWallet)
 
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
 
         state?.let { messageModalUM ->
-            MessageModal(state = messageModalUM, onDismissRequest = model::onDismiss)
+            MessageModal(
+                state = messageModalUM,
+                onDismissRequest = model::onDismiss,
+                // A request can come from a screen showing a dialog-window sheet, which would cover an overlay
+                presentation = TangemModal.Presentation.Dialog,
+            )
         }
     }
 

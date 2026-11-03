@@ -18,7 +18,12 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.async
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -50,20 +55,19 @@ internal class WalletLinkModelTest {
     fun teardown() = model.onDestroy()
 
     @Test
-    fun `GIVEN hidden sheet WHEN show THEN sheet is shown without progress`() {
+    fun `GIVEN hidden sheet WHEN request THEN sheet is shown without progress`() = runTest {
         // Act
-        model.show(userWallet)
+        requestLink(userWallet)
 
         // Assert
-        assertThat(model.uiState.value?.buttons?.single()?.isLoading).isFalse()
+        assertThat(isLinkLoading()).isFalse()
     }
 
     @Test
     fun `GIVEN sheet shown WHEN link succeeds THEN sheet closes with Linked`() = runTest {
         // Arrange
         coEvery { linkWalletToDeviceUseCase(userWallet) } returns Unit.right()
-        model.show(userWallet)
-        val result = async { model.waitResult() }
+        val result = requestLink(userWallet)
 
         // Act
         clickLink()
@@ -75,18 +79,19 @@ internal class WalletLinkModelTest {
     }
 
     @Test
-    fun `GIVEN link in progress WHEN link clicked again THEN link is not started twice`() = runTest {
+    fun `GIVEN rendered button WHEN it is clicked twice before recomposition THEN link is started once`() = runTest {
         // Arrange
         val pendingLink = CompletableDeferred<Unit>()
         coEvery { linkWalletToDeviceUseCase(userWallet) } coAnswers { pendingLink.await().right() }
-        model.show(userWallet)
-        clickLink()
+        requestLink(userWallet)
+        val renderedButton = requireNotNull(model.uiState.value).buttons.single()
 
         // Act
-        clickLink()
+        renderedButton.onClick(actionScope)
+        renderedButton.onClick(actionScope)
 
         // Assert
-        assertThat(model.uiState.value?.buttons?.single()?.isLoading).isTrue()
+        assertThat(isLinkLoading()).isTrue()
         coVerify(exactly = 1) { linkWalletToDeviceUseCase(userWallet) }
         pendingLink.complete(Unit)
     }
@@ -95,13 +100,13 @@ internal class WalletLinkModelTest {
     fun `GIVEN user cancels WHEN link fails THEN sheet stays open without progress and error`() = runTest {
         // Arrange
         coEvery { linkWalletToDeviceUseCase(userWallet) } returns WalletLinkError.Cancelled.left()
-        model.show(userWallet)
+        requestLink(userWallet)
 
         // Act
         clickLink()
 
         // Assert
-        assertThat(model.uiState.value?.buttons?.single()?.isLoading).isFalse()
+        assertThat(isLinkLoading()).isFalse()
         verify(exactly = 0) { uiMessageSender.send(any()) }
     }
 
@@ -112,8 +117,7 @@ internal class WalletLinkModelTest {
     ) = runTest {
         // Arrange
         coEvery { linkWalletToDeviceUseCase(userWallet) } returns error.left()
-        model.show(userWallet)
-        val result = async { model.waitResult() }
+        val result = requestLink(userWallet)
 
         // Act
         clickLink()
@@ -130,8 +134,7 @@ internal class WalletLinkModelTest {
     fun `GIVEN link in progress WHEN sheet dismissed THEN sheet closes with Dismissed`() = runTest {
         // Arrange
         coEvery { linkWalletToDeviceUseCase(userWallet) } coAnswers { CompletableDeferred<Unit>().await().right() }
-        model.show(userWallet)
-        val result = async { model.waitResult() }
+        val result = requestLink(userWallet)
         clickLink()
 
         // Act
@@ -142,6 +145,54 @@ internal class WalletLinkModelTest {
         assertThat(model.uiState.value).isNull()
         verify(exactly = 0) { uiMessageSender.send(any()) }
     }
+
+    @Test
+    fun `GIVEN request pending WHEN another wallet requested THEN each caller gets its own result`() = runTest {
+        // Arrange
+        val otherWallet: UserWallet.Hot = mockk()
+        coEvery { linkWalletToDeviceUseCase(userWallet) } returns Unit.right()
+        val firstResult = requestLink(userWallet)
+        val secondResult = requestLink(otherWallet)
+
+        // Act
+        clickLink()
+        runCurrent()
+        model.onDismiss()
+
+        // Assert
+        assertThat(firstResult.await()).isEqualTo(WalletLinkRequester.Result.Linked)
+        assertThat(secondResult.await()).isEqualTo(WalletLinkRequester.Result.Dismissed)
+        coVerify(exactly = 0) { linkWalletToDeviceUseCase(otherWallet) }
+    }
+
+    @Test
+    fun `GIVEN link in progress WHEN caller cancelled THEN sheet closes and link is cancelled`() = runTest {
+        // Arrange
+        var isLinkCancelled = false
+        coEvery { linkWalletToDeviceUseCase(userWallet) } coAnswers {
+            try {
+                awaitCancellation()
+            } finally {
+                isLinkCancelled = true
+            }
+        }
+        val result = requestLink(userWallet)
+        clickLink()
+
+        // Act
+        result.cancel()
+        runCurrent()
+
+        // Assert
+        assertThat(model.uiState.value).isNull()
+        assertThat(isLinkCancelled).isTrue()
+    }
+
+    private fun TestScope.requestLink(wallet: UserWallet): Deferred<WalletLinkRequester.Result> {
+        return backgroundScope.async(start = CoroutineStart.UNDISPATCHED) { model.request(wallet) }
+    }
+
+    private fun isLinkLoading(): Boolean = requireNotNull(model.uiState.value).buttons.single().isLoading
 
     private fun clickLink() {
         val button = requireNotNull(model.uiState.value).buttons.single()
