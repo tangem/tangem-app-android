@@ -241,7 +241,8 @@ class TangemPayAccountVisibilityTest : BaseTestCase() {
             // Fetched after the import, not before it: a pairing URI expires, and importing the
             // wallet takes minutes.
             step("Set WalletConnect URI to clipboard") {
-                setClipboardText(context, getWcUri())
+                val wcUri = requireNotNull(getWcUri()) { "qa-tools returned no WalletConnect URI, see getWcUri logs" }
+                setClipboardText(context, wcUri)
             }
             step("Create connection via 'Paste from clipboard' button") {
                 createConnectionViaPasteFromClipboardButton()

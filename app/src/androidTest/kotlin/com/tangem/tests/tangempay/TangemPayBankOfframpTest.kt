@@ -227,7 +227,7 @@ class TangemPayBankOfframpTest : BaseTestCase() {
             step("Set WireMock scenarios for a Tangem Pay customer with the bank off-ramp") {
                 setTangemPayBankOfframpScenarios()
             }
-            step("Open Tangem Pay 'Withdraw' hub") { openTangemPayWithdrawHub() }
+            step("Open Tangem Pay 'Withdraw' hub") { openTangemPayWithdrawHub(accessCode = TANGEM_PAY_ACCESS_CODE) }
             step("Assert 'Bank transfer' recents zero state is displayed") {
                 flakySafely { onTangemPayWithdrawHubScreen { bankRecentsEmpty.assertIsDisplayed() } }
             }
@@ -304,7 +304,7 @@ class TangemPayBankOfframpTest : BaseTestCase() {
             step("Assert receive amount is displayed") {
                 onSwapTokenScreen { flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { receiveAmount.assertIsDisplayed() } }
             }
-            step("Confirm swap by holding the button") { confirmTangemPayWithdrawByHolding(TANGEM_PAY_ACCESS_CODE) }
+            step("Confirm swap by holding the button") { confirmTangemPayWithdrawByHolding() }
             step("Assert 'Swap in progress' screen is displayed") {
                 onSwapSuccessScreen { flakySafely(WAIT_UNTIL_TIMEOUT_VERY_LONG) { title.assertIsDisplayed() } }
             }

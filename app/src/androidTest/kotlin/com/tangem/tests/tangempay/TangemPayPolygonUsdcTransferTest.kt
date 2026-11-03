@@ -2,7 +2,6 @@ package com.tangem.tests.tangempay
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
-import com.tangem.common.constants.TestConstants.TANGEM_PAY_ACCESS_CODE
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
@@ -76,7 +75,7 @@ class TangemPayPolygonUsdcTransferTest : BaseTestCase() {
             step("Enter amount '$depositAmount'") { inputAmount(depositAmount) }
             step("Assert Transfer mode is ready without a provider") { assertTransferReady() }
             step("Assert network fee is displayed") { waitForFeeDisplayed() }
-            step("Hold to confirm the transfer") { holdToConfirmTransfer() }
+            step("Hold to confirm the transfer") { holdToConfirmTransferUntilInProgress() }
             step("Assert 'Transfer in progress' screen is displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) { onSwapSuccessScreen { transferInProgressTitle.assertIsDisplayed() } }
             }
@@ -162,7 +161,7 @@ class TangemPayPolygonUsdcTransferTest : BaseTestCase() {
                 onSwapTokenScreen { networkFeeBlock.assertDoesNotExist() }
             }
             step("Confirm the transfer by holding the button") {
-                confirmTangemPayWithdrawByHolding(TANGEM_PAY_ACCESS_CODE)
+                confirmTangemPayWithdrawByHolding()
             }
             step("Assert 'Transfer in progress' screen is displayed") {
                 flakySafely { onSwapSuccessScreen { transferInProgressTitle.assertIsDisplayed() } }

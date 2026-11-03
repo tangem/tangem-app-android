@@ -2,7 +2,6 @@ package com.tangem.tests.tangempay
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
-import com.tangem.common.constants.TestConstants.TANGEM_PAY_ACCESS_CODE
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_KYC_STATUS_SCENARIO
@@ -42,7 +41,7 @@ class TangemPayOnboardingKycTest : BaseTestCase() {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, paeraCustomerState)
             }
             step("Open 'Main' screen with existing hot wallet") {
-                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Assert Tangem Pay tile is displayed on Main") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
@@ -67,7 +66,7 @@ class TangemPayOnboardingKycTest : BaseTestCase() {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO, channelsBannerState)
             }
             step("Open 'Main' screen with existing hot wallet") {
-                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Assert 'Get Tangem Pay' banner is displayed on Main") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
@@ -88,7 +87,7 @@ class TangemPayOnboardingKycTest : BaseTestCase() {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityStartedState)
             }
             step("Open 'Main' screen with existing hot wallet") {
-                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Click on 'More' button") {
                 onMainScreenTopBar { moreButton.clickWithAssertion() }
@@ -126,7 +125,7 @@ class TangemPayOnboardingKycTest : BaseTestCase() {
                 setWireMockScenarioState(TANGEM_PAY_KYC_STATUS_SCENARIO, kycInProgressState)
             }
             step("Open 'Main' screen with existing hot wallet") {
-                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Assert Tangem Pay tile with '$kycInProgressText' is displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
@@ -174,7 +173,7 @@ class TangemPayOnboardingKycTest : BaseTestCase() {
                 setWireMockScenarioState(TANGEM_PAY_KYC_STATUS_SCENARIO, kycDeclinedState)
             }
             step("Open 'Main' screen with existing hot wallet") {
-                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12, accessCode = TANGEM_PAY_ACCESS_CODE)
+                openMainScreenWithExistingHotWallet(SVS_SEED_PHRASE_12)
             }
             step("Assert Tangem Pay tile with '$kycRejectedTileText' is displayed") {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {

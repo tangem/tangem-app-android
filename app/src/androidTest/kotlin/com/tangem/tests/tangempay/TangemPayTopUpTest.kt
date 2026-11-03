@@ -2,7 +2,6 @@ package com.tangem.tests.tangempay
 
 import androidx.test.espresso.Espresso
 import com.tangem.common.BaseTestCase
-import com.tangem.common.constants.TestConstants.TANGEM_PAY_ACCESS_CODE
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_VERY_LONG
@@ -95,7 +94,7 @@ class TangemPayTopUpTest : BaseTestCase() {
                 }
             }
             step("Confirm swap by holding the button") {
-                confirmSwapByHolding(accessCode = TANGEM_PAY_ACCESS_CODE)
+                confirmSwapByHolding()
             }
             step("Wait for 'Swap in progress' screen") {
                 onSwapSuccessScreen {

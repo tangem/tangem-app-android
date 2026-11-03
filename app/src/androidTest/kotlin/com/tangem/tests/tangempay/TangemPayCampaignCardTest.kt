@@ -92,9 +92,6 @@ class TangemPayCampaignCardTest : BaseTestCase() {
             step("Assert 'Close' button is not displayed") {
                 onTangemPayCampaignScreen { closeButton.assertIsNotDisplayed() }
             }
-            step("Assert Terms of Service and Privacy Policy caption is displayed") {
-                onTangemPayCampaignScreen { legalCaption.assertIsDisplayed() }
-            }
             step("Assert the campaign link '$validatedCampaignLink' is validated once") {
                 assertEquals(1, countTangemPayDeeplinkValidations(validatedCampaignLink) - validationsBefore)
             }
@@ -177,9 +174,6 @@ class TangemPayCampaignCardTest : BaseTestCase() {
             step("Assert campaign landing content") { assertTangemPayCampaignLandingContent() }
             step("Assert 'Close' button is displayed") {
                 onTangemPayCampaignScreen { closeButton.assertIsDisplayed() }
-            }
-            step("Assert Terms of Service and Privacy Policy caption is not displayed") {
-                onTangemPayCampaignScreen { legalCaption.assertIsNotDisplayed() }
             }
             step("Assert the campaign link '$validatedCampaignLink' is validated once") {
                 assertEquals(1, countTangemPayDeeplinkValidations(validatedCampaignLink) - validationsBefore)

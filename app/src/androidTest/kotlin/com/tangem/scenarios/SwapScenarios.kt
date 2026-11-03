@@ -22,6 +22,7 @@ import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.R as CoreUiR
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.HotWalletAccessCodeTestTags
+import com.tangem.core.ui.test.TransactionSuccessScreenTestTags
 import com.tangem.screens.*
 import com.tangem.tap.domain.sdk.mocks.MockContent
 import io.github.kakaocup.kakao.common.utilities.getResourceString
@@ -671,6 +672,21 @@ fun BaseTestCase.holdToConfirmTransfer() {
             hasText(getResourceString(CoreUiR.string.swapping_transfer_action)),
     ).performTouchInput { longClick(durationMillis = HOLD_DURATION_MS) }
     waitForIdle()
+}
+
+fun BaseTestCase.holdToConfirmTransferUntilInProgress() {
+    val inProgressTitle = hasTestTag(TransactionSuccessScreenTestTags.TITLE) and
+        hasText(getResourceString(CoreUiR.string.transfer_in_progress_title))
+
+    fun isInProgressShown(): Boolean =
+        composeTestRule.onAllNodes(inProgressTitle, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+
+    var attemptsLeft = HOLD_ATTEMPTS
+    while (attemptsLeft > 0 && !isInProgressShown()) {
+        attemptsLeft--
+        runCatching { holdToConfirmTransfer() }
+        runCatching { composeTestRule.waitUntil(HOLD_CONFIRMATION_TIMEOUT) { isInProgressShown() } }
+    }
 }
 
 sealed class SwapEntryPoint {

@@ -86,12 +86,13 @@ fun getTangemPayEligibilityCheckRequestCountByCountry(countryCode: String): Int 
         queryValue = countryCode,
     )
 
-fun BaseTestCase.awaitTangemPayWaitlistRequestBody(countBefore: Int): JSONObject {
+// One request per available product is sent in parallel, so the newest one may belong to another product.
+fun BaseTestCase.awaitTangemPayWaitlistRequestBody(countBefore: Int, product: String): JSONObject {
     lateinit var body: JSONObject
     awaitSuccess {
-        val bodies = getTangemPayWaitlistRequestBodies()
-        if (bodies.size <= countBefore) throw AssertionError("Waitlist was not requested")
-        body = bodies.last()
+        val newBodies = getTangemPayWaitlistRequestBodies().drop(countBefore)
+        body = newBodies.firstOrNull { it.optString("product") == product }
+            ?: throw AssertionError("Waitlist was not requested for '$product': $newBodies")
     }
     return body
 }
