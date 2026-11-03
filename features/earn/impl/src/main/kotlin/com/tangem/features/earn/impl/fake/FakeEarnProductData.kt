@@ -112,7 +112,11 @@ internal class FakeEarnProjection : EarnProjection {
     override fun yearlyEstimate(amountFiat: BigDecimal): BigDecimal = amountFiat.multiply(netRate)
 }
 
-internal val fakeApyPeriods: List<EarnPeriod> = listOf("1M", "3M", "6M").map { EarnPeriod(stringReference(it)) }
+internal val fakeApyPeriods: List<EarnPeriod> = listOf(
+    EarnPeriod(id = "1m", label = stringReference("1M")),
+    EarnPeriod(id = "3m", label = stringReference("3M")),
+    EarnPeriod(id = "6m", label = stringReference("6M")),
+)
 
 private val fakeApyAverages = listOf(BigDecimal("0.052"), BigDecimal("0.0505"), BigDecimal("0.0512"))
 
@@ -162,7 +166,7 @@ internal fun fakeReadyState(preset: FakeEarnProductPreset, position: FakeEarnPos
 }
 
 internal fun fakeApyHistory(period: EarnPeriod): Either<Throwable, EarnApyHistory> {
-    val index = fakeApyPeriods.indexOf(period)
+    val index = fakeApyPeriods.indexOfFirst { it.id == period.id }
     if (index < 0) return IllegalArgumentException("Unknown period").left()
 
     val average = fakeApyAverages[index]
