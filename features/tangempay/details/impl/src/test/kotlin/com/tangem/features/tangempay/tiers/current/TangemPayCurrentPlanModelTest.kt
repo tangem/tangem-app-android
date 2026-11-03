@@ -24,7 +24,7 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.usecase.CancelTangemPayOrderUseCase
 import com.tangem.domain.pay.usecase.CancelTariffPlanPendingTransitionUseCase
 import com.tangem.domain.pay.usecase.CancelTariffTransitionUseCase
-import com.tangem.domain.pay.usecase.HasCompletedTangemPayProductUseCase
+import com.tangem.domain.pay.usecase.IsTangemPayCustomerVerifiedUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
@@ -60,7 +60,7 @@ internal class TangemPayCurrentPlanModelTest {
     private val cancelTariffTransition: CancelTariffTransitionUseCase = mockk()
     private val cancelTangemPayOrder: CancelTangemPayOrderUseCase = mockk()
     private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles = mockk()
-    private val hasCompletedProduct: HasCompletedTangemPayProductUseCase = mockk()
+    private val isCustomerVerified: IsTangemPayCustomerVerifiedUseCase = mockk()
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk()
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher = mockk()
@@ -76,7 +76,7 @@ internal class TangemPayCurrentPlanModelTest {
             cancelTariffTransition,
             cancelTangemPayOrder,
             moneyAccountFeatureToggles,
-            hasCompletedProduct,
+            isCustomerVerified,
             paymentAccountStatusFetcher,
             moneyAccountStatusFetcher,
             uiMessageSender,
@@ -252,11 +252,11 @@ internal class TangemPayCurrentPlanModelTest {
     }
 
     @Test
-    fun `GIVEN money accounts AND onboarding order AND no products WHEN cancel clicked THEN verified opened`() {
+    fun `GIVEN money accounts AND onboarding order AND customer verified WHEN cancel clicked THEN verified opened`() {
         // Arrange
         every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
         coEvery { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) } returns Unit.right()
-        coEvery { hasCompletedProduct(USER_WALLET_ID) } returns false.right()
+        coEvery { isCustomerVerified(USER_WALLET_ID) } returns true.right()
         val model = createModel(planState = awaitingDepositState(source = TangemPayCustomerTariffPlan.Source.DEFAULT))
 
         // Act
@@ -267,11 +267,11 @@ internal class TangemPayCurrentPlanModelTest {
         coVerify(exactly = 0) { cancelTariffTransition(any(), any()) }
         coVerifyOrder {
             paymentAccountStatusFetcher(PaymentAccountStatusFetcher.Params(USER_WALLET_ID))
-            hasCompletedProduct(USER_WALLET_ID)
+            isCustomerVerified(USER_WALLET_ID)
         }
         coVerifyOrder {
             moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(USER_WALLET_ID))
-            hasCompletedProduct(USER_WALLET_ID)
+            isCustomerVerified(USER_WALLET_ID)
         }
         verify(exactly = 1) {
             router.replaceAll(
@@ -284,11 +284,11 @@ internal class TangemPayCurrentPlanModelTest {
     }
 
     @Test
-    fun `GIVEN money accounts AND onboarding order AND completed product WHEN cancel clicked THEN no navigation`() {
+    fun `GIVEN money accounts AND onboarding order AND customer not verified WHEN cancel clicked THEN no navigation`() {
         // Arrange
         every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
         coEvery { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) } returns Unit.right()
-        coEvery { hasCompletedProduct(USER_WALLET_ID) } returns true.right()
+        coEvery { isCustomerVerified(USER_WALLET_ID) } returns false.right()
         val model = createModel(planState = awaitingDepositState(source = TangemPayCustomerTariffPlan.Source.DEFAULT))
 
         // Act
@@ -305,7 +305,7 @@ internal class TangemPayCurrentPlanModelTest {
         // Arrange
         every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
         coEvery { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) } returns Unit.right()
-        coEvery { hasCompletedProduct(USER_WALLET_ID) } returns VisaApiError.Unspecified.left()
+        coEvery { isCustomerVerified(USER_WALLET_ID) } returns VisaApiError.Unspecified.left()
         val model = createModel(planState = awaitingDepositState(source = TangemPayCustomerTariffPlan.Source.DEFAULT))
 
         // Act
@@ -328,7 +328,7 @@ internal class TangemPayCurrentPlanModelTest {
 
         // Assert
         coVerify(exactly = 1) { cancelTangemPayOrder(USER_WALLET_ID, ORDER_ID) }
-        coVerify(exactly = 0) { hasCompletedProduct(any()) }
+        coVerify(exactly = 0) { isCustomerVerified(any()) }
         coVerify(exactly = 0) { paymentAccountStatusFetcher(any<PaymentAccountStatusFetcher.Params>()) }
         coVerify(exactly = 0) { moneyAccountStatusFetcher(any<MoneyAccountStatusFetcher.Params>()) }
         verify(exactly = 0) { router.replaceAll(routes = anyVararg(), onComplete = any()) }
@@ -392,7 +392,7 @@ internal class TangemPayCurrentPlanModelTest {
             cancelPendingTransition = cancelPendingTransition,
             cancelTariffTransitionUseCase = cancelTariffTransition,
             cancelTangemPayOrderUseCase = cancelTangemPayOrder,
-            hasCompletedTangemPayProductUseCase = hasCompletedProduct,
+            isTangemPayCustomerVerifiedUseCase = isCustomerVerified,
             moneyAccountFeatureToggles = moneyAccountFeatureToggles,
             paymentAccountStatusSupplier = paymentAccountStatusSupplier,
             paymentAccountStatusFetcher = paymentAccountStatusFetcher,
