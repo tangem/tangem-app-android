@@ -17,8 +17,8 @@ import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupp
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
 import com.tangem.domain.collectibles.usecase.CloseCollectiblesVaultUseCase
 import com.tangem.domain.collectibles.CollectiblesAccountError
-import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
-import com.tangem.domain.collectibles.delegate.HotDelegatePublicKey
+import com.tangem.domain.collectibles.delegate.CollectiblesSessionKey
+import com.tangem.domain.collectibles.delegate.SessionKeyPublicKey
 import com.tangem.domain.collectibles.usecase.CreateOrReactivateCollectiblesAccountUseCase
 import com.tangem.domain.collectibles.vault.GachaVaultError
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -69,7 +69,7 @@ internal class CollectiblesMainModelTest {
     private val accountRepository: CollectiblesAccountRepository = mockk()
     private val accountStatusFetcher: CollectiblesAccountStatusFetcher = mockk()
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
-    private val hotDelegate: CollectiblesHotDelegate = mockk()
+    private val sessionKey: CollectiblesSessionKey = mockk()
     private val clipboardManager: ClipboardManager = mockk(relaxed = true)
 
     private val coldWallet = MockUserWalletFactory.create()
@@ -92,7 +92,7 @@ internal class CollectiblesMainModelTest {
             accountRepository,
             accountStatusFetcher,
             getSelectedAppCurrencyUseCase,
-            hotDelegate,
+            sessionKey,
             clipboardManager,
         )
         walletsFlow = MutableStateFlow(listOf(coldWallet, selectedWallet))
@@ -102,7 +102,7 @@ internal class CollectiblesMainModelTest {
         every { accountRepository.getStatus(coldWallet.walletId) } returns statusFlow
         every { getSelectedAppCurrencyUseCase.invokeOrDefault() } returns MutableStateFlow(AppCurrency.Default)
         coEvery { accountStatusFetcher(any()) } returns Unit.right()
-        coEvery { hotDelegate.getPublicKeyOrNull(any()) } returns HotDelegatePublicKey(HOT_DELEGATE)
+        coEvery { sessionKey.getPublicKeyOrNull(any()) } returns SessionKeyPublicKey(SESSION_KEY)
     }
 
     @Nested
@@ -269,34 +269,34 @@ internal class CollectiblesMainModelTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class HotDelegate {
+    inner class SessionKey {
 
         @Test
-        fun `GIVEN a hot delegate WHEN its menu item clicked THEN the full address is copied`() = runTest {
+        fun `GIVEN a session key WHEN its menu item clicked THEN the full address is copied`() = runTest {
             // Arrange
             val model = createModel(testScope = this)
             advanceUntilIdle()
 
             // Act
-            model.uiState.value.menu.items.single { it.id == "hot_delegate" }.onClick()
+            model.uiState.value.menu.items.single { it.id == "session_key" }.onClick()
 
             // Assert
-            verify(exactly = 1) { clipboardManager.setText(text = HOT_DELEGATE, isSensitive = false) }
+            verify(exactly = 1) { clipboardManager.setText(text = SESSION_KEY, isSensitive = false) }
             assertThat(model.uiState.value.menu.isShown).isFalse()
             model.onDestroy()
         }
 
         @Test
-        fun `GIVEN no hot delegate WHEN menu built THEN the item is absent`() = runTest {
+        fun `GIVEN no session key WHEN menu built THEN the item is absent`() = runTest {
             // Arrange
-            coEvery { hotDelegate.getPublicKeyOrNull(any()) } returns null
+            coEvery { sessionKey.getPublicKeyOrNull(any()) } returns null
 
             // Act
             val model = createModel(testScope = this)
             advanceUntilIdle()
 
             // Assert
-            assertThat(model.uiState.value.menu.items.none { it.id == "hot_delegate" }).isTrue()
+            assertThat(model.uiState.value.menu.items.none { it.id == "session_key" }).isTrue()
             model.onDestroy()
         }
     }
@@ -553,7 +553,7 @@ internal class CollectiblesMainModelTest {
         }
 
         private fun relinkFailures() = listOf(
-            Arguments.of(CollectiblesAccountError.DelegateKeyCreationFailed(IllegalStateException("keystore")), true),
+            Arguments.of(CollectiblesAccountError.SessionKeyCreationFailed(IllegalStateException("keystore")), true),
             Arguments.of(CollectiblesAccountError.CardError(code = 1, message = "refused"), false),
             Arguments.of(CollectiblesAccountError.Cancelled, false),
         )
@@ -575,7 +575,7 @@ internal class CollectiblesMainModelTest {
             collectiblesAccountRepository = accountRepository,
             collectiblesAccountStatusFetcher = accountStatusFetcher,
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
-            hotDelegate = hotDelegate,
+            sessionKey = sessionKey,
             clipboardManager = clipboardManager,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
         )
@@ -601,7 +601,7 @@ internal class CollectiblesMainModelTest {
 
     private companion object {
 
-        const val HOT_DELEGATE = "3hTCy6rJu8iXNWnFMB741HrVnbS5bViyfguEAMF5iT2P"
+        const val SESSION_KEY = "3hTCy6rJu8iXNWnFMB741HrVnbS5bViyfguEAMF5iT2P"
 
         val PRICED_VAULT = CollectiblesAccountStatusValue.Onboarded(
             source = StatusSource.ACTUAL,
