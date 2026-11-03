@@ -17,6 +17,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.haze.ProvideHaze
 import com.tangem.core.ui.components.haze.hazeSourceTangem
@@ -40,17 +41,23 @@ internal fun CryptoPricePlot(
     val initial = remember(snapshot) { CryptoChartFrame.from(snapshot.points, snapshot.range, snapshot.targetPrice) }
     val frame = liveFrame ?: rememberUpdatedState(initial)
     val isEmpty by remember(frame) { derivedStateOf { frame.value.points.isEmpty() } }
-    val scale = initial.scale
     val tickCount = if (isCompact) 5 else 11
-    val digits = scale.fractionDigits(tickCount)
     val style = TangemTheme.typography3.caption.medium.copy(color = TangemTheme.colors3.text.secondary)
-    val measurer = rememberTextMeasurer()
-    val labels = remember(scale, tickCount, formatPrice, style, measurer) {
-        scale.ticks(tickCount).map { measurer.measure(formatPrice(it, digits), style) }
+    val measurer = rememberTextMeasurer(cacheSize = tickCount)
+    val labels = remember(frame, tickCount, formatPrice, style, measurer) {
+        derivedStateOf {
+            val scale = frame.value.scale
+            scale.ticks(tickCount).map { measurer.measure(formatPrice(it, scale.fractionDigits(tickCount)), style) }
+        }
+    }
+    val labelSize by remember(labels) {
+        derivedStateOf {
+            IntSize(labels.value.maxOf { it.size.width }, labels.value.maxOf { it.size.height })
+        }
     }
     val density = LocalDensity.current
-    val labelHeight = with(density) { labels.maxOf { it.size.height }.toDp() }
-    val axisWidth = with(density) { labels.maxOf { it.size.width }.toDp() }
+    val labelHeight = with(density) { labelSize.height.toDp() }
+    val axisWidth = with(density) { labelSize.width.toDp() }
     val plotHeight = if (isCompact) 124.dp else maxOf(364.dp, labelHeight * (tickCount - 1) * 1.5f)
     val lineColor = TangemTheme.colors3.border.accent.yellow
     val gridColor = TangemTheme.colors3.border.primary
@@ -117,12 +124,7 @@ internal fun CryptoPricePlot(
                 }
                 if (!isCompact) {
                     Canvas(Modifier.width(axisWidth).height(plotHeight).clearAndSetSemantics {}) {
-                        val currentScale = frame.value.scale
-                        currentScale.ticks(tickCount).forEachIndexed { index, value ->
-                            val label = measurer.measure(
-                                formatPrice(value, currentScale.fractionDigits(tickCount)),
-                                style,
-                            )
+                        labels.value.forEachIndexed { index, label ->
                             drawText(
                                 label,
                                 topLeft = Offset(0f, index * (size.height - labelHeight.toPx()) / (tickCount - 1)),

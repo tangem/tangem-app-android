@@ -20,8 +20,8 @@ internal data class PolymarketCryptoChartStory(
     val onDark: (Boolean) -> Unit,
     val onFontScale: (Float) -> Unit,
 ) : StoryBookPage {
-    enum class UpdateMode { Regular, Sparse, Jump }
-    enum class Sample { Bitcoin, Ethereum, Tiny, Empty, Single, Flat, Gap, Stale }
+    enum class UpdateMode(val cadenceMillis: Long) { Regular(1_000), Sparse(1_000), Jump(1_000), Fast(16) }
+    enum class Sample { Bitcoin, Ethereum, Tiny, Empty, Single, Flat, Gap, Stale, Narrowing }
     enum class Interval(val label: String, val millis: Long) {
         Minute("1 min", 60_000),
         QuarterHour("15 min", 900_000),

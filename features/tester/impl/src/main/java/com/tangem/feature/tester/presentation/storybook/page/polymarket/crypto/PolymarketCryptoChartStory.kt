@@ -41,30 +41,30 @@ internal fun PolymarketCryptoChartStory(state: PolymarketCryptoChartStory, modif
         cryptoFixture(state.sample, state.interval, state.target)
     }
     var generation by remember { mutableIntStateOf(0) }
-    val clock = remember(state.sample, state.interval, generation, state.isLive) {
+    val clock = remember(state.sample, state.interval, generation, state.isLive, state.updateMode) {
         val origin = System.currentTimeMillis()
         CurrentTimeProvider { snapshot.range.endMillis + System.currentTimeMillis() - origin }
     }
-    var revision by remember(clock) { mutableIntStateOf(0) }
     var freezeAt by remember(clock) { mutableStateOf<Long?>(null) }
+    val revision by rememberCryptoRevision(
+        state = state,
+        clock = clock,
+        startMillis = snapshot.range.endMillis,
+        freezeAt = freezeAt,
+    )
     val points = remember(
         snapshot,
         revision,
         state.updateMode,
-    ) { liveCryptoPoints(snapshot, revision, state.updateMode) }
+    ) {
+        if (state.sample == PolymarketCryptoChartStory.Sample.Narrowing) {
+            snapshot.points
+        } else {
+            liveCryptoPoints(snapshot, revision, state.updateMode)
+        }
+    }
     val rangePolicy = remember(state.interval) {
         { now: Long -> PolymarketCryptoChart.TimeRange(now - state.interval.millis, now) }
-    }
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
-    LaunchedEffect(state.isLive, clock, freezeAt, lifecycle) {
-        if (state.isLive && freezeAt == null) {
-            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                while (true) {
-                    revision = ((clock.nowMillis() - snapshot.range.endMillis) / 1_000).toInt().coerceAtLeast(0)
-                    delay(1_000)
-                }
-            }
-        }
     }
     val time = remember(state.interval) {
         SimpleDateFormat(
@@ -106,7 +106,7 @@ internal fun PolymarketCryptoChartStory(state: PolymarketCryptoChartStory, modif
                             PolymarketLiveCryptoChart(
                                 points = points,
                                 targetPrice = snapshot.targetPrice,
-                                windowId = "${state.sample}-${state.interval}-$generation",
+                                windowId = "${state.sample}-${state.interval}-${state.updateMode}-$generation",
                                 timeRange = rangePolicy,
                                 timeProvider = clock,
                                 targetLabel = target,
@@ -150,6 +150,31 @@ internal fun PolymarketCryptoChartStory(state: PolymarketCryptoChartStory, modif
             }
         }
     }
+}
+
+@Composable
+private fun rememberCryptoRevision(
+    state: PolymarketCryptoChartStory,
+    clock: CurrentTimeProvider,
+    startMillis: Long,
+    freezeAt: Long?,
+): State<Int> {
+    val revision = remember(clock) { mutableIntStateOf(0) }
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(state.isLive, clock, freezeAt, lifecycle) {
+        if (state.isLive && freezeAt == null && state.sample != PolymarketCryptoChartStory.Sample.Narrowing) {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                while (true) {
+                    val isFast = state.updateMode == PolymarketCryptoChartStory.UpdateMode.Fast
+                    if (isFast) withFrameNanos { }
+                    revision.intValue = ((clock.nowMillis() - startMillis) / state.updateMode.cadenceMillis)
+                        .toInt().coerceAtLeast(0)
+                    if (!isFast) delay(state.updateMode.cadenceMillis)
+                }
+            }
+        }
+    }
+    return revision
 }
 
 @Composable
