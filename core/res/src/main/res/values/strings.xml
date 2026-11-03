@@ -16,6 +16,7 @@
   <string name="access_code_create_description">Set a %s-digit access code to unlock your wallet.</string>
   <string name="access_code_create_title">Create access code</string>
   <string name="access_code_navtitle">Access code</string>
+  <string name="account_add_limit_badge">Full</string>
   <string name="account_add_limit_dialog_description">You cannot create more than %1$s accounts. Archive one to add a new one.</string>
   <string name="account_add_limit_dialog_title">Can’t add new account</string>
   <string name="account_archive_success_message">Account archived</string>
@@ -1158,6 +1159,7 @@
   <string name="hw_upgrade_start_description">You\'re about to upgrade to our hardware wallet. It will keep your assets safe in cold storage.</string>
   <string name="hw_upgrade_start_title">Tangem Wallet</string>
   <string name="hw_upgrade_title">Upgrade to our Hardware Wallet</string>
+  <string name="hw_upgrade_to_cold_badge">Upgrade to a cold wallet</string>
   <string name="hw_upgrade_to_cold_banner_description">Keep your crypto safe with Tangem\'s top-tier hardware wallet.</string>
   <string name="hw_upgrade_to_cold_banner_title">Upgrade your wallet to hardware security</string>
   <string name="hw_wallets_limit_alert_message">You can have up to %1$s mobile wallets in Tangem. To create or import a new one, remove one of your existing mobile wallets first.</string>
@@ -1659,6 +1661,7 @@
   <string name="money_account_main_status_activating">Activating…</string>
   <string name="money_account_main_status_active">%1$s ACH</string>
   <string name="money_account_main_status_active_v2">ACH</string>
+  <string name="money_account_main_status_awaiting_deposit">Opens after your deposit</string>
   <string name="money_account_main_status_dialog_activating_description">We\'re getting your account ready. This may take a little time</string>
   <string name="money_account_main_status_dialog_activating_title">Creating your banking account</string>
   <string name="money_account_main_status_dialog_country_not_supported_description">We\'re working on expanding to more regions. Need help?</string>
@@ -1981,6 +1984,14 @@
   <string name="prediction_balance_total">Total Balance</string>
   <string name="prediction_balance_withdraw">Withdraw</string>
   <string name="prediction_cash_out">Cash Out</string>
+  <string name="prediction_chart_empty_description">The chart will appear after the first predictions</string>
+  <string name="prediction_chart_empty_title">No data yet</string>
+  <string name="prediction_chart_period_1d">1d</string>
+  <string name="prediction_chart_period_1h">1h</string>
+  <string name="prediction_chart_period_1m">1m</string>
+  <string name="prediction_chart_period_1w">1w</string>
+  <string name="prediction_chart_period_6h">6h</string>
+  <string name="prediction_chart_period_max">Max</string>
   <string name="prediction_claim_error_failed">The claim did not go through. Nothing left your account, and you can try again.</string>
   <string name="prediction_claim_error_generic">The claim could not be sent. Please try again.</string>
   <string name="prediction_claim_error_rejected">Polymarket refused to relay the claim. Refresh your positions and try again.</string>
@@ -2862,6 +2873,7 @@
   <string name="tangempay_bank_transfer_details_daily_deposits">Daily deposits</string>
   <string name="tangempay_bank_transfer_details_daily_deposits_hint">If you want to deposit more than %s – contact support</string>
   <string name="tangempay_bank_transfer_details_daily_deposits_left">Left today</string>
+  <string name="tangempay_bank_transfer_details_exchange_rate">Exchange rate</string>
   <string name="tangempay_bank_transfer_details_fee_header">Deposit methods and fees</string>
   <string name="tangempay_bank_transfer_details_limitations">Limitations</string>
   <string name="tangempay_bank_transfer_details_minimum_deposit">Minimum deposit</string>
@@ -3256,9 +3268,9 @@
   <string name="tangempay_status_inactive">Inactive</string>
   <string name="tangempay_status_replacing">Replacing your card</string>
   <string name="tangempay_sync_needed">Use your card or ring to renew session</string>
-  <string name="tangempay_sync_needed_body">Use your card or ring to renew session</string>
+  <string name="tangempay_sync_needed_body">Renew to see your card and account</string>
   <string name="tangempay_sync_needed_button">Renew session</string>
-  <string name="tangempay_sync_needed_title">Payment account session expired</string>
+  <string name="tangempay_sync_needed_title">Session expired</string>
   <string name="tangempay_tangem_visa_card">Spend crypto anywhere in real life</string>
   <string name="tangempay_temporarily_unavailable">Connection issues</string>
   <string name="tangempay_title">Tangem Pay</string>
@@ -3284,6 +3296,7 @@
   <string name="tangempay_unified_onboarding_money_account_header">USD account</string>
   <string name="tangempay_unified_onboarding_money_account_subtitle">Receive ACH transfers USD to USDC 1:1; flat $1 fee</string>
   <string name="tangempay_unified_onboarding_money_account_title">Your own US account details. %1$s</string>
+  <string name="tangempay_unified_onboarding_money_account_title_v2">Personal US account details</string>
   <string name="tangempay_unified_onboarding_payment_account_caption">Pay as you want</string>
   <string name="tangempay_unified_onboarding_payment_account_header">Visa Card</string>
   <string name="tangempay_unified_onboarding_payment_account_subtitle_android">with Google Pay</string>
@@ -3455,6 +3468,7 @@
   <string name="transaction_history_approve_high_risk_subtitle">You\'re connected. Funds may be at risk. Consider revoking access.</string>
   <string name="transaction_history_approve_high_risk_title">High Risk</string>
   <string name="transaction_history_approved_amount">Approved amount</string>
+  <string name="transaction_history_awaiting_signatures">Awaiting signatures</string>
   <string name="transaction_history_claiming_incentive_rewards">Claiming incentive rewards</string>
   <string name="transaction_history_claiming_reward">Claiming reward</string>
   <string name="transaction_history_contract_address">contract: %s</string>
@@ -3481,6 +3495,7 @@
   <string name="transaction_history_not_supported_description">Transaction history is currently not supported for this blockchain. But don\'t worry, we\'re working on it! In the meantime you can check it in the explorer.</string>
   <string name="transaction_history_operation">Operation</string>
   <string name="transaction_history_pending">Pending</string>
+  <string name="transaction_history_pending_send">Pending send</string>
   <string name="transaction_history_rewards_restaked">Rewards restaked</string>
   <string name="transaction_history_rewards_restaking">Rewards restaking</string>
   <string name="transaction_history_staking_reward">Staking reward</string>
