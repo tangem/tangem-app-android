@@ -51,6 +51,7 @@ internal fun CryptoPricePlot(
     val plotHeight = if (isCompact) 124.dp else maxOf(364.dp, labelHeight * (tickCount - 1) * 1.5f)
     val lineColor = TangemTheme.colors3.border.accent.yellow
     val gridColor = TangemTheme.colors3.border.primary
+    val background = if (isCompact) TangemTheme.colors3.bg.secondary else TangemTheme.colors3.bg.primary
     val latestDescription = points.lastOrNull()?.let {
         listOf(formatPrice(it.price, digits), formatTime(it.timestampMillis)).filter(String::isNotEmpty).joinToString()
     }
@@ -63,7 +64,7 @@ internal fun CryptoPricePlot(
                     },
                 ) {
                     Canvas(
-                        Modifier.matchParentSize().hazeSourceTangem().background(TangemTheme.colors3.bg.primary)
+                        Modifier.matchParentSize().hazeSourceTangem().background(background)
                             .padding(vertical = labelHeight / 2).clearAndSetSemantics {},
                     ) {
                         val dash = PathEffect.dashPathEffect(floatArrayOf(3.dp.toPx(), 3.dp.toPx()))
