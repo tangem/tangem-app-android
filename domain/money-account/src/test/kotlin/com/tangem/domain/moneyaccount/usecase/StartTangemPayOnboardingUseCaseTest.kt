@@ -73,7 +73,7 @@ internal class StartTangemPayOnboardingUseCaseTest {
         clearMocks(activateMoneyAccountUseCase, createOnboardingOrderUseCase, pollTangemPayAccountStatusesUseCase)
         clearMocks(userWalletsListRepository, analytics)
         sentEvents.clear()
-        every { pollTangemPayAccountStatusesUseCase.states(any()) } returns emptyFlow()
+        every { pollTangemPayAccountStatusesUseCase(any()) } returns emptyFlow()
         coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(wallet<UserWallet.Cold>())
         every { analytics.send(capture(sentEvents)) } just Runs
     }
@@ -101,7 +101,7 @@ internal class StartTangemPayOnboardingUseCaseTest {
                     depositCredentials = CREDENTIALS,
                 )
             }
-            verify(exactly = 1) { pollTangemPayAccountStatusesUseCase.states(USER_WALLET_ID) }
+            verify(exactly = 1) { pollTangemPayAccountStatusesUseCase(USER_WALLET_ID) }
         }
 
     @Test
@@ -127,7 +127,7 @@ internal class StartTangemPayOnboardingUseCaseTest {
                     depositCredentials = null,
                 )
             }
-            verify(exactly = 1) { pollTangemPayAccountStatusesUseCase.states(USER_WALLET_ID) }
+            verify(exactly = 1) { pollTangemPayAccountStatusesUseCase(USER_WALLET_ID) }
         }
 
     @ParameterizedTest
@@ -156,7 +156,7 @@ internal class StartTangemPayOnboardingUseCaseTest {
                 ),
             ).inOrder()
             coVerify(exactly = 0) { createOnboardingOrderUseCase(any(), any(), any()) }
-            verify(exactly = 0) { pollTangemPayAccountStatusesUseCase.states(any()) }
+            verify(exactly = 0) { pollTangemPayAccountStatusesUseCase(any()) }
         }
 
     @Test
@@ -194,7 +194,7 @@ internal class StartTangemPayOnboardingUseCaseTest {
             // Arrange
             coEvery { activateMoneyAccountUseCase(USER_WALLET_ID) } returns CREDENTIALS.right()
             coEvery { createOnboardingOrderUseCase(any(), any(), any()) } returns Unit.right()
-            every { pollTangemPayAccountStatusesUseCase.states(USER_WALLET_ID) } returns flow {
+            every { pollTangemPayAccountStatusesUseCase(USER_WALLET_ID) } returns flow {
                 delay(30.seconds)
                 emit(accounts(paymentAccount = CARD_ISSUING, moneyAccount = MoneyAccountActivationState.Completed))
                 delay(6.minutes)
@@ -237,7 +237,7 @@ internal class StartTangemPayOnboardingUseCaseTest {
             // Arrange
             coEvery { activateMoneyAccountUseCase(USER_WALLET_ID) } returns CREDENTIALS.right()
             coEvery { createOnboardingOrderUseCase(any(), any(), any()) } returns Unit.right()
-            every { pollTangemPayAccountStatusesUseCase.states(USER_WALLET_ID) } returns flow {
+            every { pollTangemPayAccountStatusesUseCase(USER_WALLET_ID) } returns flow {
                 delay(40.minutes)
                 emit(accounts(paymentAccount = CARD_ISSUING, moneyAccount = MoneyAccountActivationState.Completed))
             }
@@ -334,7 +334,7 @@ internal class StartTangemPayOnboardingUseCaseTest {
 
         // Assert
         assertThat(actual).isEqualTo(StartTangemPayOnboardingError.Failed.left())
-        verify(exactly = 0) { pollTangemPayAccountStatusesUseCase.states(any()) }
+        verify(exactly = 0) { pollTangemPayAccountStatusesUseCase(any()) }
     }
 
     private fun provideTestModels() = listOf(
