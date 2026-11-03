@@ -35,7 +35,7 @@ import kotlinx.collections.immutable.toImmutableList
  * @param selectedPeriodId Caller-owned selection; changing it also clears the time marker.
  * @param onPeriodChange Requests another period without changing the supplied histories.
  * @param formatTime Localized date/time readout appropriate to the selected period.
- * @param legendLineCount Minimum reserved legend lines, also used for the loading skeleton.
+ * @param legendLineCount Number of legend rows in the loading skeleton; loaded content wraps to its actual height.
  */
 @Composable
 @Suppress("LongParameterList")
