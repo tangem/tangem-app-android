@@ -149,6 +149,7 @@ import com.tangem.features.marketing.api.MarketingBannerRequest
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.params.SponsoredFeeAvailability
 import com.tangem.features.send.impl.R
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.swap.SwapFeatureToggles
@@ -1841,6 +1842,7 @@ internal class SwapModel @Inject constructor(
                             dataState = dataState,
                             txUrl = url,
                             swapFee = swapFee,
+                            isFeeSponsored = swapFee.isSponsored,
                             onExploreClick = {
                                 if (swapTransactionState.txHash.isNotEmpty()) {
                                     urlOpener.openUrl(url)
@@ -3377,6 +3379,7 @@ internal class SwapModel @Inject constructor(
             selectedFeeToken = feeStateUM.feeExtraInfo.feeCryptoCurrencyStatus,
             otherNativeFee = resolveOtherNativeFee(),
             feeBucket = feeStateUM.selectedFeeItem.toFeeBucket(),
+            isSponsored = feeStateUM.feeExtraInfo.sponsoredFee.isSelected,
         )
     }
 
@@ -3615,6 +3618,15 @@ internal class SwapModel @Inject constructor(
                 approvalAmount = approvalAmount,
                 swapTxFee = feeExtended.transactionFee,
             ).map { combinedFee -> feeExtended.copy(transactionFee = combinedFee, nativeFee = combinedFee) }
+        }
+
+        override suspend fun loadSponsoredFee(userPaidFee: TransactionFee): SponsoredFeeAvailability {
+            val quoteState = dataState.getCurrentLoadedSwapState() ?: return SponsoredFeeAvailability.Unavailable
+            return swapInteractor.getSponsoredFeeAvailability(
+                state = quoteState,
+                userPaidFee = userPaidFee.normal.amount.value ?: BigDecimal.ZERO,
+                lastReducedBalanceBy = lastReducedBalanceBy.value,
+            )
         }
 
         override fun onResult(newState: FeeSelectorUM) {
