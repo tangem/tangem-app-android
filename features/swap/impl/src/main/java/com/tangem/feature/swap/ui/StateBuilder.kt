@@ -664,7 +664,6 @@ internal class StateBuilder(
                     priceImpact = priceImpact,
                     swapFee = swapFee,
                     isTangemPayWithdrawal = isTangemPayWithdrawal,
-                    balanceStatus = quoteModel.preparedSwapConfigState.balanceStatus,
                 ),
                 isHoldToConfirm = fromSwapCurrencyStatus.userWallet.isHotWallet,
                 onClick = actions.onSwapClick,
@@ -785,9 +784,8 @@ internal class StateBuilder(
         priceImpact: PriceImpact,
         swapFee: SwapFee?,
         isTangemPayWithdrawal: Boolean,
-        balanceStatus: SwapBalanceStatus,
     ): Boolean {
-        val isSwapTxReady = (isTangemPayWithdrawal || swapFee != null) && !isSponsorPending(swapFee, balanceStatus)
+        val isSwapTxReady = isTangemPayWithdrawal || swapFee != null
         return isSwapTxReady && notifications.none { notification ->
             notification is SwapNotificationUM.Error || notification is NotificationUM.Error ||
                 notification is SwapNotificationUM.Warning.ExpressErrorWarning ||
@@ -800,10 +798,6 @@ internal class StateBuilder(
                 notification is SwapNotificationUM.Info.PermissionNeeded
         } && !priceImpact.shouldDisableButton()
     }
-
-    /** A sponsored fee is shown as zero, so the swap must wait for its sponsor rather than go out paid by the user. */
-    private fun isSponsorPending(swapFee: SwapFee?, balanceStatus: SwapBalanceStatus): Boolean =
-        swapFee?.isSponsored == true && balanceStatus !is SwapBalanceStatus.SponsoredFee
 
     @Suppress("LongParameterList")
     fun createQuotesErrorState(

@@ -42,6 +42,7 @@ import com.tangem.domain.yield.supply.YieldModuleAddressProvider
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.fee.CexSwapFeeCalculator
 import com.tangem.feature.swap.domain.fee.DexSwapFeeCalculator
+import com.tangem.feature.swap.domain.fee.SolanaGaslessSendGuard
 import com.tangem.feature.swap.domain.fee.SolanaGaslessSwapResolver
 import com.tangem.feature.swap.domain.fee.TransactionFeeResult
 import com.tangem.feature.swap.domain.models.SwapAmount
@@ -104,6 +105,8 @@ internal open class SwapInteractorImplTestBase {
         mockk(relaxed = true)
     protected val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase = mockk(relaxed = true)
     protected val solanaGaslessSwapResolver: SolanaGaslessSwapResolver = mockk()
+    protected var nowMillis = 0L
+    protected val solanaGaslessSendGuard = SolanaGaslessSendGuard { nowMillis }
     protected val createAndSendSolanaGaslessTransactionUseCase: CreateAndSendSolanaGaslessTransactionUseCase =
         mockk(relaxed = true)
 
@@ -146,6 +149,7 @@ internal open class SwapInteractorImplTestBase {
             createAndSendTronGaslessTransactionUseCase = createAndSendTronGaslessTransactionUseCase,
             isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
             solanaGaslessSwapResolver = solanaGaslessSwapResolver,
+            solanaGaslessSendGuard = solanaGaslessSendGuard,
             createAndSendSolanaGaslessTransactionUseCase = createAndSendSolanaGaslessTransactionUseCase,
         )
     }
@@ -161,6 +165,8 @@ internal open class SwapInteractorImplTestBase {
      */
     @BeforeEach
     open fun setupSolanaGaslessSwapResolverDefault() {
+        // The guard outlives a test; moving the clock past its hold releases the previous test's refusals
+        nowMillis += SOLANA_GASLESS_HOLD_EXPIRED_MILLIS
         coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any(), any()) } returns null
         coEvery { solanaGaslessSwapResolver.excludeUnsupportedProviders(any(), any(), any()) } answers { thirdArg() }
     }
@@ -180,6 +186,10 @@ internal open class SwapInteractorImplTestBase {
     open fun clearMocksAfterEachTest() {
         clearAllMocks()
         unmockkAll()
+    }
+
+    protected companion object {
+        const val SOLANA_GASLESS_HOLD_EXPIRED_MILLIS = 120_000L
     }
 }
 
