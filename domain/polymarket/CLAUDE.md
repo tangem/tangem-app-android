@@ -110,13 +110,12 @@ One Tangem wallet ↔ one Polymarket account; confusing these three is the class
   `PolymarketSessionKeyTradingStore`; the readiness is keyed by `validUntil`, so a renewal needs a new check. A
   CLOB `401` on a session order counts as a refusal, and so does any other `4xx` whose `error` message names the
   signature, the signer, an authorization or the API key (`ClobSignerRefusalParser`, data layer — the CLOB sends
-  no error code); a bare `403`, a geoblock for one, is a normal failure. A session key that cannot sign the order
-  or an order that cannot be sent (`NotSent`) counts as a refusal too, as on iOS (a signing failure is not
-  reconciled); a cancelled signing does not. On a refusal the
-  key is marked refused and its stored readiness dropped before the same order is signed with the owner key, so it
-  stays out of trading until a new authorization (enable, renew, replace) marks it ready or the app restarts, as on
-  iOS — a reconciliation that finds it listed does not lift it; the wallet is reconciled in the app scope,
-  after the owner result is returned. Market, liquidity and balance errors are final. The owner route maps those
+  no error code); a bare `403`, a geoblock for one, is a normal failure. A session key that cannot sign the order or
+  an order that cannot be sent (`NotSent`) is a refusal too, as on iOS; a cancelled signing is not. A refused key is
+  marked refused and loses its stored readiness before the order is re-signed with the owner key; it stays out of
+  trading until a new authorization (enable, renew, replace) or an app restart — a reconciliation that finds it listed
+  does not lift it. Every refusal refreshes `PolymarketSessionKeyStateService`, the only place that reconciles the
+  wallet, alongside the owner retry. Market, liquidity and balance errors are final. The owner route maps those
   responses as before.
 - Every relayer batch takes the next deposit-wallet nonce, so claim, withdrawal confirm/resend and the session key
   lifecycle (`ManagePolymarketSessionKeyInteractor`) share `PolymarketDepositWalletLock` from signing until the
