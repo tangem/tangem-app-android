@@ -110,7 +110,6 @@ private val Status.testTagSuffix: String
 
 // region Subtitle
 
-@Suppress("LongMethod")
 @Composable
 private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Modifier = Modifier) {
     val textStyle = TangemTheme.typography3.caption.medium

@@ -25,12 +25,14 @@ import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.transactions.INLINE_IMAGE_PLACEHOLDER
 import com.tangem.core.ui.components.transactions.InlineImagesText
+import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.avatar.TangemAvatar
 import com.tangem.core.ui.ds2.badge.TangemBadge
 import com.tangem.core.ui.ds2.expandable.ExpandableDot
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_warning_16_filled
@@ -132,7 +134,7 @@ internal fun TransactionRowStatusMessage(text: TextReference, modifier: Modifier
             text = text.resolveReference(),
             style = TangemTheme.typography3.caption.medium,
             color = TangemTheme.colors3.text.status.warning,
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
         )
@@ -224,6 +226,14 @@ internal fun TransactionRowSubtitleText(text: String, modifier: Modifier = Modif
 
 private fun subtitleAvatarIcon(avatar: TangemAvatar.UiState): @Composable () -> Unit = {
     TangemAvatar(state = avatar, size = TangemAvatar.Size.X16)
+}
+
+@Composable
+internal fun TangemTransactionRow.Status.stateDescription(): String? = when (this) {
+    TangemTransactionRow.Status.Progress -> stringResourceSafe(R.string.common_in_progress)
+    TangemTransactionRow.Status.Pending -> stringResourceSafe(R.string.transaction_history_pending)
+    TangemTransactionRow.Status.Failed -> stringResourceSafe(R.string.common_transaction_failed)
+    TangemTransactionRow.Status.Finished -> null
 }
 
 private fun TangemTransactionRow.Status.toAvatarStatus(): TangemAvatar.Status = when (this) {
