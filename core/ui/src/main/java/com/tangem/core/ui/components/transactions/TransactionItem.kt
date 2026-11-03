@@ -3,15 +3,11 @@ package com.tangem.core.ui.components.transactions
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -20,20 +16,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -52,14 +43,8 @@ import com.tangem.core.ui.components.transactions.state.TxIcon
 import com.tangem.core.ui.components.transactions.state.asImageVector
 import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.ds.image.TangemDeviceIcon
-import com.tangem.core.ui.ds.row.TangemRowContainer
-import com.tangem.core.ui.ds.row.TangemRowLayoutId
-import com.tangem.core.ui.ds2.badge.TangemBadge
-import com.tangem.core.ui.ds2.tokenrow.TokenRowPendingDots
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.orMaskWithStars
+import com.tangem.core.ui.ds2.transactionrow.TangemTransactionRow
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -69,7 +54,6 @@ import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
 import com.tangem.core.ui.res.generated.icons.ic_card_20
-import com.tangem.core.ui.res.generated.icons.ic_clock_12
 import com.tangem.core.ui.res.generated.icons.ic_cross_20
 import com.tangem.core.ui.test.TransactionHistoryItemTestTags
 
@@ -91,160 +75,30 @@ fun TransactionItem(state: TransactionItemUM, isBalanceHidden: Boolean, modifier
 
 @Composable
 private fun ContentItem(state: TransactionItemUM.Content, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = state.onClick)
-            .testTag(TransactionHistoryItemTestTags.ITEM),
-    ) {
-        TangemRowContainer(
-            contentPadding = PaddingValues(
-                horizontal = 16.dp,
-                vertical = 12.dp,
-            ),
-        ) {
-            StatusIcon(
-                icon = state.icon,
-                status = state.status,
-                modifier = Modifier.layoutId(TangemRowLayoutId.HEAD).padding(end = 12.dp),
-            )
-            TitleRow(
-                title = state.title,
-                status = state.status,
-                modifier = Modifier
-                    .layoutId(TangemRowLayoutId.START_TOP)
-                    .testTag(TransactionHistoryItemTestTags.TITLE),
-            )
-            SubtitleText(
-                subtitle = state.subtitle,
-                status = state.status,
-                modifier = Modifier
-                    .layoutId(TangemRowLayoutId.START_BOTTOM)
-                    .padding(top = 2.dp),
-            )
-            state.amount?.let { amount ->
-                AmountText(
-                    amount = amount,
-                    status = state.status,
-                    isBalanceHidden = isBalanceHidden,
-                    modifier = Modifier
-                        .layoutId(TangemRowLayoutId.END_TOP)
-                        .testTag(TransactionHistoryItemTestTags.AMOUNT),
-                )
-            }
-            CurrencyText(
-                symbol = state.currencySymbol,
-                modifier = Modifier
-                    .layoutId(TangemRowLayoutId.END_BOTTOM)
-                    .padding(top = 2.dp)
-                    .testTag(TransactionHistoryItemTestTags.CURRENCY),
-            )
-        }
-        state.warning?.let { warning ->
-            WarningLine(
-                warning = warning,
-                modifier = Modifier.padding(
-                    start = 16.dp,
-                    end = 16.dp,
-                    bottom = 12.dp,
-                ),
-            )
-        }
-    }
-}
-
-@Composable
-private fun WarningLine(warning: TextReference, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_alert_triangle_20),
-            contentDescription = null,
-            tint = TangemTheme.colors3.icon.status.warning,
-            modifier = Modifier.size(20.dp),
-        )
-        Text(
-            text = warning.resolveReference(),
-            color = TangemTheme.colors3.text.status.warning,
-            style = TangemTheme.typography3.caption.medium,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
+    Box(modifier = modifier.testTag(TransactionHistoryItemTestTags.ITEM)) {
+        TangemTransactionRow(
+            icon = state.icon.asImageVector(),
+            title = state.title,
+            status = state.status.toRowStatus(),
+            modifier = Modifier.testTag(TransactionHistoryItemTestTags.STATUS_PREFIX + state.status.testTagSuffix),
+            subtitle = { SubtitleText(subtitle = state.subtitle, status = state.status) },
+            amount = state.amount?.let { amount ->
+                stringReference(if (state.status is Status.Failed) amount.stripLeadingSign() else amount)
+            },
+            caption = stringReference(state.currencySymbol),
+            statusMessage = state.warning,
+            isBalanceHidden = isBalanceHidden,
+            onClick = state.onClick,
         )
     }
 }
 
-// region Status circle
-
-@Composable
-private fun StatusIcon(icon: TxIcon, status: Status, modifier: Modifier = Modifier) {
-    Box(modifier = modifier.size(40.dp)) {
-        StatusCircle(
-            icon = icon,
-            status = status,
-            modifier = Modifier
-                .fillMaxSize()
-                .testTag(TransactionHistoryItemTestTags.STATUS_PREFIX + status.testTagSuffix),
-        )
-        if (status is Status.PendingSignature) {
-            PendingSignatureBadge(modifier = Modifier.align(Alignment.BottomEnd))
-        }
-    }
+private fun Status.toRowStatus(): TangemTransactionRow.Status = when (this) {
+    is Status.Confirmed -> TangemTransactionRow.Status.Finished
+    is Status.Unconfirmed -> TangemTransactionRow.Status.Progress
+    is Status.Failed -> TangemTransactionRow.Status.Failed
+    is Status.PendingSignature -> TangemTransactionRow.Status.Pending
 }
-
-@Composable
-private fun PendingSignatureBadge(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .size(16.dp)
-            .border(width = 2.dp, color = TangemTheme.colors3.bg.primary, shape = CircleShape)
-            .background(color = TangemTheme.colors3.bg.status.warningSubtle, shape = CircleShape),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            imageVector = Icons.ic_clock_12,
-            contentDescription = null,
-            tint = TangemTheme.colors3.icon.status.warning,
-            modifier = Modifier.size(12.dp),
-        )
-    }
-}
-
-@Composable
-private fun StatusCircle(icon: TxIcon, status: Status, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.background(
-            color = status.backgroundColor,
-            shape = CircleShape,
-        ),
-    ) {
-        Icon(
-            imageVector = icon.asImageVector(),
-            contentDescription = null,
-            tint = status.iconTint,
-            modifier = Modifier
-                .size(20.dp)
-                .align(Alignment.Center),
-        )
-    }
-}
-
-private val Status.backgroundColor: Color
-    @Composable get() = when (this) {
-        is Status.Confirmed, is Status.PendingSignature -> TangemTheme.colors3.bg.transparent.secondary
-        is Status.Unconfirmed -> TangemTheme.colors3.bg.status.infoSubtle
-        is Status.Failed -> TangemTheme.colors3.bg.status.errorSubtle
-    }
-
-private val Status.iconTint: Color
-    @Composable get() = when (this) {
-        is Status.Confirmed -> TangemTheme.colors3.icon.primary
-        is Status.PendingSignature -> TangemTheme.colors3.icon.secondary
-        is Status.Unconfirmed -> TangemTheme.colors3.icon.brand
-        is Status.Failed -> TangemTheme.colors3.icon.status.error
-    }
 
 private val Status.testTagSuffix: String
     get() = when (this) {
@@ -254,58 +108,13 @@ private val Status.testTagSuffix: String
         is Status.Failed -> "FAILED"
     }
 
-// endregion
-
-// region Title / Subtitle
-
-@Composable
-private fun TitleRow(title: TextReference, status: Status, modifier: Modifier = Modifier) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = modifier,
-    ) {
-        TitleText(title = title, status = status, modifier = Modifier.weight(weight = 1f, fill = false))
-        if (status is Status.Unconfirmed) {
-            TokenRowPendingDots(color = status.titleColor)
-        }
-        if (status is Status.PendingSignature) {
-            TangemBadge(
-                text = resourceReference(R.string.transaction_history_pending),
-                variant = TangemBadge.Variant.Tinted,
-                status = TangemBadge.Status.Warning,
-                size = TangemBadge.Size.X4,
-            )
-        }
-    }
-}
-
-@Composable
-private fun TitleText(title: TextReference, status: Status, modifier: Modifier = Modifier) {
-    Text(
-        text = title.resolveReference(),
-        color = status.titleColor,
-        style = TangemTheme.typography3.body.medium,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-        modifier = modifier,
-    )
-}
-
-private val Status.titleColor: Color
-    @Composable get() = when (this) {
-        is Status.Confirmed, is Status.PendingSignature -> TangemTheme.colors3.text.primary
-        is Status.Unconfirmed -> TangemTheme.colors3.text.brand
-        is Status.Failed -> TangemTheme.colors3.text.status.error
-    }
+// region Subtitle
 
 @Suppress("LongMethod")
 @Composable
 private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Modifier = Modifier) {
     val textStyle = TangemTheme.typography3.caption.medium
     val secondary = TangemTheme.colors3.text.secondary
-    val primary = TangemTheme.colors3.text.primary
-    val isFailed = status is Status.Failed
     when (subtitle) {
         is ContentSubtitle.Plain -> Text(
             text = subtitle.text.resolveReference(),
@@ -315,16 +124,11 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
             overflow = TextOverflow.Ellipsis,
             modifier = modifier,
         )
-        is ContentSubtitle.PlainAddress -> PlainAddressText(
-            subtitle = subtitle,
-            status = status,
-            modifier = modifier,
-        )
+        is ContentSubtitle.PlainAddress -> PlainAddressText(subtitle = subtitle, modifier = modifier)
         is ContentSubtitle.ExternalAddress -> InlineAddressSubtitle(
             template = stringResourceSafe(subtitle.direction.templateResId(), subtitle.rawAddress),
             address = subtitle.rawAddress,
             color = secondary,
-            addressColor = if (isFailed) secondary else primary,
             textStyle = TangemTheme.typography3.caption.medium,
             modifier = modifier,
         ) {
@@ -342,7 +146,6 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
                 subtitle.accountName.resolveReference(),
             ),
             color = secondary,
-            afterIconColor = primary,
             textStyle = TangemTheme.typography3.caption.medium,
             modifier = modifier,
         ) {
@@ -351,8 +154,8 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
         is ContentSubtitle.OwnWallet -> OwnWalletSubtitle(subtitle = subtitle, modifier = modifier)
         is ContentSubtitle.Contact -> ContactSubtitle(subtitle = subtitle, status = status, modifier = modifier)
         is ContentSubtitle.Asset -> AssetSubtitle(subtitle = subtitle, status = status, modifier = modifier)
-        is ContentSubtitle.FeeFor -> FeeForSubtitle(subtitle = subtitle, status = status, modifier = modifier)
-        is ContentSubtitle.Provider -> ProviderSubtitle(subtitle = subtitle, status = status, modifier = modifier)
+        is ContentSubtitle.FeeFor -> FeeForSubtitle(subtitle = subtitle, modifier = modifier)
+        is ContentSubtitle.Provider -> ProviderSubtitle(subtitle = subtitle, modifier = modifier)
     }
 }
 
@@ -370,9 +173,6 @@ private fun SubtitleText(subtitle: ContentSubtitle, status: Status, modifier: Mo
 @Composable
 private fun AssetSubtitle(subtitle: ContentSubtitle.Asset, status: Status, modifier: Modifier = Modifier) {
     val secondary = TangemTheme.colors3.text.secondary
-    val primary = TangemTheme.colors3.text.primary
-    // Only the values (symbol, owner name) are highlighted; the "to:"/"in" template literals stay secondary.
-    val valueColor = if (status is Status.Failed) secondary else primary
 
     val owner = subtitle.owner
     val ownerName = owner.resolveName()
@@ -403,8 +203,6 @@ private fun AssetSubtitle(subtitle: ContentSubtitle.Asset, status: Status, modif
             template = template,
             icons = icons,
             color = secondary,
-            highlights = listOfNotNull(subtitle.symbol, ownerName),
-            highlightColor = valueColor,
             textStyle = textStyle,
         )
         (owner as? ContentSubtitle.AssetOwner.Address)?.let { address ->
@@ -416,7 +214,7 @@ private fun AssetSubtitle(subtitle: ContentSubtitle.Asset, status: Status, modif
             ) {
                 EllipsisText(
                     text = address.rawAddress,
-                    color = valueColor,
+                    color = secondary,
                     style = textStyle,
                     ellipsis = TextEllipsis.Middle,
                 )
@@ -464,12 +262,8 @@ private fun ContentSubtitle.Asset.resolveTemplate(ownerName: String?): String = 
     )
 }
 
-/**
- * Fee-only counterparty subtitle: "Send {tokenIcon} {SYMBOL}". Only the ticker is highlighted — the "Send" literal
- * belongs to the template a translator controls, so its wording and word order stay localizable.
- */
 @Composable
-private fun FeeForSubtitle(subtitle: ContentSubtitle.FeeFor, status: Status, modifier: Modifier = Modifier) {
+private fun FeeForSubtitle(subtitle: ContentSubtitle.FeeFor, modifier: Modifier = Modifier) {
     val secondary = TangemTheme.colors3.text.secondary
     val template = stringResourceSafe(R.string.transaction_history_fee_sending_asset, subtitle.symbol)
     val icon = subtitle.icon
@@ -491,8 +285,6 @@ private fun FeeForSubtitle(subtitle: ContentSubtitle.FeeFor, status: Status, mod
             }
         },
         color = secondary,
-        highlights = listOf(subtitle.symbol),
-        highlightColor = if (status is Status.Failed) secondary else TangemTheme.colors3.text.primary,
         textStyle = TangemTheme.typography3.caption.medium,
         modifier = modifier,
     )
@@ -504,15 +296,10 @@ private fun String.withoutInlineImage(): String = replace("$INLINE_IMAGE_PLACEHO
     .replace(INLINE_IMAGE_PLACEHOLDER, "")
 
 @Composable
-private fun ProviderSubtitle(subtitle: ContentSubtitle.Provider, status: Status, modifier: Modifier = Modifier) {
+private fun ProviderSubtitle(subtitle: ContentSubtitle.Provider, modifier: Modifier = Modifier) {
     InlineImageSubtitle(
         template = stringResourceSafe(subtitle.direction.templateResId(), subtitle.name.resolveReference()),
         color = TangemTheme.colors3.text.secondary,
-        afterIconColor = if (status is Status.Failed) {
-            TangemTheme.colors3.text.secondary
-        } else {
-            TangemTheme.colors3.text.primary
-        },
         textStyle = TangemTheme.typography3.caption.medium,
         modifier = modifier,
     ) {
@@ -556,10 +343,9 @@ private fun AssetOwnerIcon(owner: ContentSubtitle.AssetOwner?, isFailed: Boolean
 }
 
 @Composable
-private fun PlainAddressText(subtitle: ContentSubtitle.PlainAddress, status: Status, modifier: Modifier = Modifier) {
+private fun PlainAddressText(subtitle: ContentSubtitle.PlainAddress, modifier: Modifier = Modifier) {
     val full = subtitle.text.resolveReference()
     val secondary = TangemTheme.colors3.text.secondary
-    val addressColor = if (status is Status.Failed) secondary else TangemTheme.colors3.text.primary
     val textStyle = TangemTheme.typography3.caption.medium
     val addressStart = full.lastIndexOf(subtitle.address)
     if (addressStart < 0) {
@@ -591,7 +377,7 @@ private fun PlainAddressText(subtitle: ContentSubtitle.PlainAddress, status: Sta
         ) {
             EllipsisText(
                 text = subtitle.address,
-                color = addressColor,
+                color = secondary,
                 style = textStyle,
                 ellipsis = TextEllipsis.Middle,
             )
@@ -612,7 +398,6 @@ private fun OwnAccountSubtitle(subtitle: ContentSubtitle.OwnAccount, status: Sta
     InlineImageSubtitle(
         template = stringResourceSafe(subtitle.direction.templateResId(), subtitle.accountName.resolveReference()),
         color = TangemTheme.colors3.text.secondary,
-        afterIconColor = if (isFailed) TangemTheme.colors3.text.secondary else TangemTheme.colors3.text.primary,
         textStyle = TangemTheme.typography3.caption.medium,
         modifier = modifier,
     ) {
@@ -630,7 +415,6 @@ private fun ContactSubtitle(subtitle: ContentSubtitle.Contact, status: Status, m
     InlineImageSubtitle(
         template = stringResourceSafe(subtitle.direction.templateResId(), subtitle.contactName),
         color = TangemTheme.colors3.text.secondary,
-        afterIconColor = if (isFailed) TangemTheme.colors3.text.secondary else TangemTheme.colors3.text.primary,
         textStyle = TangemTheme.typography3.caption.medium,
         modifier = modifier,
     ) {
@@ -683,17 +467,7 @@ private fun PortfolioAvatar(avatar: ContentSubtitle.PortfolioAvatar, shape: Shap
  */
 @Composable
 private fun OwnWalletSubtitle(subtitle: ContentSubtitle.OwnWallet, modifier: Modifier = Modifier) {
-    val primary = TangemTheme.colors3.text.primary
-    val full = stringResourceSafe(subtitle.direction.plainTemplateResId(), subtitle.walletName)
-    val text = remember(full, subtitle.walletName, primary) {
-        buildAnnotatedString {
-            append(full)
-            val start = full.lastIndexOf(subtitle.walletName)
-            if (start >= 0) {
-                addStyle(SpanStyle(color = primary), start, start + subtitle.walletName.length)
-            }
-        }
-    }
+    val text = stringResourceSafe(subtitle.direction.plainTemplateResId(), subtitle.walletName)
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
@@ -736,35 +510,6 @@ private fun ContentSubtitle.Direction.plainTemplateResId(): Int = when (this) {
 // endregion
 
 // region Amount
-
-@Composable
-private fun AmountText(amount: String, status: Status, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
-    val display = if (status is Status.Failed) amount.stripLeadingSign() else amount
-    Text(
-        text = display.orMaskWithStars(isBalanceHidden),
-        color = if (status is Status.Confirmed) {
-            TangemTheme.colors3.text.primary
-        } else {
-            TangemTheme.colors3.text.secondary
-        },
-        // Nothing to strike through once the amount is stars — the line would cross the mask, not a number.
-        textDecoration = if (status is Status.Failed && !isBalanceHidden) TextDecoration.LineThrough else null,
-        style = TangemTheme.typography3.body.medium,
-        maxLines = 1,
-        modifier = modifier,
-    )
-}
-
-@Composable
-private fun CurrencyText(symbol: String, modifier: Modifier = Modifier) {
-    Text(
-        text = symbol,
-        color = TangemTheme.colors3.text.secondary,
-        style = TangemTheme.typography3.caption.medium,
-        maxLines = 1,
-        modifier = modifier,
-    )
-}
 
 private fun String.stripLeadingSign(): String = when {
     startsWith('+') || startsWith('-') || startsWith('−') -> drop(1).trim()
