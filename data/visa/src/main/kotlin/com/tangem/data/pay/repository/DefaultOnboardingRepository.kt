@@ -6,6 +6,7 @@ import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.data.pay.analytics.TangemPayUserPropertiesSender
 import com.tangem.data.pay.store.CashbackSummaryStore
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.store.TangemPayCustomerInfoStore
@@ -66,6 +67,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
     private val cashbackSummaryStore: CashbackSummaryStore,
     private val customerInfoStore: TangemPayCustomerInfoStore,
     private val derivationsRepository: DerivationsRepository,
+    private val userPropertiesSender: TangemPayUserPropertiesSender,
 ) : OnboardingRepository {
 
     override suspend fun validateDeeplink(link: String): Either<VisaApiError, Boolean> {
@@ -138,6 +140,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
                 }
                 getCustomerInfo(userWalletId = userWalletId, response = result).right()
             }
+            .onRight { customerInfo -> userPropertiesSender.onCustomerInfoFetched(userWalletId, customerInfo) }
     }
 
     override suspend fun getBankCredentials(

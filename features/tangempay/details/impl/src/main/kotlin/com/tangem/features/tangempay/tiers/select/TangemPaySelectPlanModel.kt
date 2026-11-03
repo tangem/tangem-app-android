@@ -61,6 +61,17 @@ internal class TangemPaySelectPlanModel @Inject constructor(
 
     private val params = paramsContainer.require<TangemPaySelectPlanComponent.Params>()
 
+    private val analyticsProducts = (params.mode as? TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder)
+        ?.availableProducts
+        ?.let(TangemPayAnalyticsEvents.ProductSet::of)
+
+    private val analyticsContext = when (params.mode) {
+        TangemPaySelectPlanComponent.Mode.ChangePlan -> TangemPayAnalyticsEvents.Tiers.PlanContext.CHANGE_PLAN
+        TangemPaySelectPlanComponent.Mode.TiersOnboarding,
+        is TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder,
+        -> TangemPayAnalyticsEvents.Tiers.PlanContext.ONBOARDING
+    }
+
     private var tariffPlan: TangemPayCustomerTariffPlan? = null
     private var transitions: List<TangemPayTariffPlanTransition> = emptyList()
 
@@ -78,7 +89,7 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         field = MutableStateFlow(buildState())
 
     init {
-        analytics.send(TangemPayAnalyticsEvents.Tiers.TierSelectionScreenShowed())
+        analytics.send(TangemPayAnalyticsEvents.Tiers.TierSelectionScreenShowed(products = analyticsProducts))
         loadData()
     }
 
@@ -104,7 +115,13 @@ internal class TangemPaySelectPlanModel @Inject constructor(
         val transition = allowedTransitions.getOrNull(selectedIndex) ?: return
 
         val tierId = transition.plan.tierId
-        analytics.send(TangemPayAnalyticsEvents.Tiers.PlanSelectedClick(tierId))
+        analytics.send(
+            TangemPayAnalyticsEvents.Tiers.PlanSelectedClick(
+                tierId = tierId,
+                products = analyticsProducts,
+                context = analyticsContext,
+            ),
+        )
 
         when (val mode = params.mode) {
             TangemPaySelectPlanComponent.Mode.TiersOnboarding -> applyTransition(transition)
