@@ -533,7 +533,9 @@ internal fun ExpressDataError.toExpressError(): ExpressError = when (this) {
     is ExpressDataError.ExchangeProviderNotAvailableError -> ExpressError.ProviderNotAvailableError(code)
     is ExpressDataError.ExchangeProviderProviderInternalError -> ExpressError.ProviderInternalError(code)
     is ExpressDataError.ExchangeNotPossibleError -> ExpressError.ExchangeNotPossibleError(code)
+    is ExpressDataError.ExchangeInvalidAmountError -> ExpressError.InvalidAmountError(code)
     is ExpressDataError.ExchangeNotEnoughBalanceError -> ExpressError.NotEnoughBalanceError(code)
+    is ExpressDataError.ExchangeNotEnoughBalanceForGasFeeError -> ExpressError.NotEnoughBalanceForGasFeeError(code)
     is ExpressDataError.ExchangeInvalidAddressError -> ExpressError.InvalidAddressError(code)
     is ExpressDataError.ExchangeProviderAddressBannedByAmlError ->
         ExpressError.ExchangeProviderAddressBannedByAmlError(code)
