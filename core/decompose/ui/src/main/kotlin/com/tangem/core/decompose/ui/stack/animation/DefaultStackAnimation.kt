@@ -319,10 +319,12 @@ internal class DefaultStackAnimation<C : Any, T : Any>(
 
         override fun onBackCancelled() {
             initialBackEvent = null
+            val handler = animationHandler ?: return
 
             scope.launch {
-                animationHandler?.also { handler ->
-                    handler.cancel()
+                handler.cancel()
+                // a new gesture can start while this one settles back; its handler and items are not ours to reset
+                if (animationHandler === handler) {
                     animationHandler = null
                     setItems(getAnimationItems(newStack = stack))
                 }
