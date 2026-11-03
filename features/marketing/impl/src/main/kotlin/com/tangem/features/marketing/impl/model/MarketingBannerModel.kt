@@ -15,7 +15,10 @@ import com.tangem.domain.marketing.models.MarketingBanner
 import com.tangem.domain.marketing.models.MarketingCampaign
 import com.tangem.domain.marketing.models.MarketingScreen
 import com.tangem.domain.marketing.models.hasAmountBounds
+import com.tangem.domain.marketing.models.isActiveAt
 import com.tangem.domain.marketing.models.matchesUsdAmount
+import com.tangem.domain.marketing.models.nextWindowTransition
+import com.tangem.domain.marketing.models.validateDates
 import com.tangem.domain.quotes.GetFiatUSDRateUseCase
 import com.tangem.feature.usedesk.api.UseDeskFeatureToggles
 import com.tangem.features.marketing.api.MarketingBannerAmount
@@ -24,6 +27,7 @@ import com.tangem.features.marketing.impl.ui.state.MarketingBannerListUM
 import com.tangem.features.marketing.impl.ui.state.MarketingBannerUM
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
@@ -31,15 +35,20 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
+import java.time.Clock
+import java.time.Duration
+import java.time.Instant
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -55,10 +64,12 @@ internal class MarketingBannerModel @Inject constructor(
     private val appCoroutineScope: AppCoroutineScope,
     private val urlOpener: UrlOpener,
     private val useDeskFeatureToggles: UseDeskFeatureToggles,
+    private val clock: Clock,
 ) : Model() {
 
     private val params = paramsContainer.require<MarketingBannerComponent.Params>()
     private val dismissedIds = MutableStateFlow<Set<Int>>(emptySet())
+    private val resumeSignal = MutableStateFlow(0L)
 
     /** How each fetched CTA campaign's link opens, by link. Classified once per fetch, not per amount change. */
     private var ctaLinks: Map<String?, CtaBannerLink> = emptyMap()
@@ -104,6 +115,10 @@ internal class MarketingBannerModel @Inject constructor(
         modelScope.launch { dismissMarketingBanner(campaignId) }
     }
 
+    fun onResume() {
+        resumeSignal.update { it + 1 }
+    }
+
     private fun observeBanners() {
         val requestFlow: Flow<MarketingRequest?> = when (val p = params) {
             is MarketingBannerComponent.Params.Standalone ->
@@ -126,6 +141,7 @@ internal class MarketingBannerModel @Inject constructor(
         }
 
         val campaigns: Flow<List<MarketingCampaign>> = observeCampaigns(requestFlow)
+            .shareIn(scope = modelScope, started = SharingStarted.Lazily, replay = 1)
 
         val amount: Flow<MarketingBannerAmount?> = requestFlow.map { it?.amount }.distinctUntilChanged()
 
@@ -140,6 +156,8 @@ internal class MarketingBannerModel @Inject constructor(
                 emit(list.filter { it.matchesUsdAmount(usd) })
             }
 
+        val timeWindowTick = observeWindowTicks(campaigns)
+
         // Applied after the USD conversion, so hiding never waits for a rate lookup. Null while there is no request.
         val isConciergeWaitlistHidden: Flow<Boolean?> = requestFlow
             .map { it?.isConciergeWaitlistHidden }
@@ -150,11 +168,13 @@ internal class MarketingBannerModel @Inject constructor(
                 flow = amountMatchingCampaigns,
                 flow2 = isConciergeWaitlistHidden,
                 flow3 = dismissedIds,
-            ) { list, isWaitlistHidden, dismissed ->
+                flow4 = timeWindowTick,
+            ) { list, isWaitlistHidden, dismissed, now ->
                 if (isWaitlistHidden == null) return@combine emptyList()
                 list.asSequence()
                     .filterNot { it.id in dismissed }
                     .filterNot { isWaitlistHidden && isConciergeWaitlist(it) }
+                    .filter { it.isActiveAt(now) }
                     .map { it.toUM() }
                     .toList()
             }.collect { banners ->
@@ -166,6 +186,18 @@ internal class MarketingBannerModel @Inject constructor(
             }
         }
     }
+
+    private fun observeWindowTicks(campaigns: Flow<List<MarketingCampaign>>): Flow<Instant> =
+        combine(campaigns, resumeSignal) { list, _ -> list }
+            .transformLatest { list ->
+                while (true) {
+                    val now = Instant.now(clock)
+                    emit(now)
+                    val nextTransition = list.nextWindowTransition(now) ?: break
+                    val duration = Duration.between(now, nextTransition)
+                    delay(duration.toMillis().coerceAtLeast(1L))
+                }
+            }
 
     /**
      * The previous screen's campaigns are cleared at once, so they're never filtered with the new amount. A null
@@ -179,6 +211,9 @@ internal class MarketingBannerModel @Inject constructor(
             emit(emptyList())
             delay(REQUEST_DEBOUNCE_MS)
             val campaigns = fetch(screen).filter(::matchesUiType)
+            campaigns.forEach { campaign ->
+                campaign.validateDates { TangemLogger.e("Campaign ${campaign.id}: invalid date '$it' ignored") }
+            }
             ctaLinks = classifyCtaLinks(campaigns)
             emit(campaigns.filter(::hasOpenableLink))
         }

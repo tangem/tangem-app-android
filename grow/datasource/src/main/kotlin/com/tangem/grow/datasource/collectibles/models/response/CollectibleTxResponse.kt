@@ -8,6 +8,7 @@ import kotlinx.serialization.Serializable
  * Only the fields the app reads are declared.
  *
  * @property nftWon present once the pack is opened
+ * @property autoBuyback present when Turbo mode sold the card back right on opening
  */
 @Serializable
 data class CollectibleTxResponse(
@@ -17,7 +18,46 @@ data class CollectibleTxResponse(
     val status: CollectibleTxStatusDTO = CollectibleTxStatusDTO.UNKNOWN,
     @SerialName("nftWon")
     val nftWon: NftWonDTO? = null,
+    @SerialName("autoBuyback")
+    val autoBuyback: AutoBuybackDTO? = null,
 ) {
+
+    /**
+     * @property txId null when the card was not bought through Tangem
+     * @property toNetwork `solana` or `solana-dev`, by environment
+     * @property toAmount the payout in base units of the token, [toDecimals] digits
+     */
+    @Serializable
+    data class AutoBuybackDTO(
+        @SerialName("buybackId")
+        val buybackId: String,
+        @SerialName("txId")
+        val txId: String? = null,
+        @SerialName("nftAddress")
+        val nftAddress: String,
+        @SerialName("fromAddress")
+        val fromAddress: String,
+        @SerialName("toNetwork")
+        val toNetwork: String,
+        @SerialName("toContractAddress")
+        val toContractAddress: String,
+        @SerialName("toDecimals")
+        val toDecimals: Int,
+        @SerialName("toAmount")
+        val toAmount: String,
+        @SerialName("toAddress")
+        val toAddress: String,
+        @SerialName("buybackTxHash")
+        val buybackTxHash: String? = null,
+        @SerialName("buybackedAt")
+        val buybackedAt: String? = null,
+        @SerialName("status")
+        val status: BuybackStatusResponse.BuybackStatusDTO = BuybackStatusResponse.BuybackStatusDTO.UNKNOWN,
+        @SerialName("updatedAt")
+        val updatedAt: String,
+        @SerialName("createdAt")
+        val createdAt: String,
+    )
 
     @Serializable
     enum class CollectibleTxStatusDTO {

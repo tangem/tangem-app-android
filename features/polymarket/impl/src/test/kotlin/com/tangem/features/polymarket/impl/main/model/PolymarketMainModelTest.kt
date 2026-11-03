@@ -31,9 +31,8 @@ import com.tangem.domain.polymarket.model.PolymarketDepositRequisites
 import com.tangem.domain.polymarket.model.PolymarketDepositToken
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
-import com.tangem.domain.polymarket.flow.PredictionPositionsValueFetcher
 import com.tangem.domain.polymarket.flow.PredictionPositionsValueSupplier
-import com.tangem.domain.polymarket.model.PredictionPositionsValue
+import com.tangem.domain.models.account.PredictionPositionsValue
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketCredentialsPresenceUseCase
@@ -110,7 +109,6 @@ internal class PolymarketMainModelTest {
     private val checkGeoblock: CheckPolymarketGeoblockUseCase = mockk()
     private val accountStatusFetcher: PredictionAccountStatusFetcher = mockk(relaxed = true)
     private val positionsValueSupplier: PredictionPositionsValueSupplier = mockk()
-    private val positionsValueFetcher: PredictionPositionsValueFetcher = mockk(relaxed = true)
     private val balancePoller: PredictionBalancePoller = mockk()
     private val fundingWindow: PredictionFundingWindow = mockk(relaxed = true)
     private val hasCredentials = MutableStateFlow(value = true)
@@ -812,9 +810,6 @@ internal class PolymarketMainModelTest {
             assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
             coVerify(exactly = 1) {
                 accountStatusFetcher(PredictionAccountStatusFetcher.Params(userWalletId = USER_WALLET_ID))
-            }
-            coVerify(exactly = 1) {
-                positionsValueFetcher(PredictionPositionsValueFetcher.Params(userWalletId = USER_WALLET_ID))
             }
         }
 
@@ -1752,7 +1747,6 @@ internal class PolymarketMainModelTest {
             ),
             predictionAccountStatusFetcher = accountStatusFetcher,
             predictionPositionsValueSupplier = positionsValueSupplier,
-            predictionPositionsValueFetcher = positionsValueFetcher,
             predictionBalancePoller = balancePoller,
             predictionFundingWindow = fundingWindow,
             observePolymarketCredentialsPresenceUseCase = observeCredentialsPresence,

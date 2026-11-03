@@ -302,23 +302,16 @@ internal object PolymarketDomainModule {
 
     @Provides
     @Singleton
-    @Suppress("LongParameterList")
     fun providePolymarketOrderSigningRouter(
         polymarketRepository: PolymarketRepository,
-        sessionKeyRepository: PolymarketSessionKeyRepository,
         sessionKeyStore: PolymarketSessionKeyStore,
         tradingStore: PolymarketSessionKeyTradingStore,
         sessionCredentialsProvider: PolymarketSessionCredentialsProvider,
-        deviceIdProvider: PolymarketDeviceIdProvider,
-        getApiCredentials: GetPolymarketApiCredentialsUseCase,
     ): PolymarketOrderSigningRouter = PolymarketOrderSigningRouter(
         polymarketRepository = polymarketRepository,
-        sessionKeyRepository = sessionKeyRepository,
         sessionKeyStore = sessionKeyStore,
         tradingStore = tradingStore,
         sessionCredentialsProvider = sessionCredentialsProvider,
-        deviceIdProvider = deviceIdProvider,
-        getApiCredentials = getApiCredentials,
     )
 
     @Provides
@@ -327,12 +320,12 @@ internal object PolymarketDomainModule {
         signOrder: SignPredictionOrderInteractor,
         placeOrder: PlacePredictionOrderUseCase,
         router: PolymarketOrderSigningRouter,
-        appCoroutineScope: AppCoroutineScope,
+        stateService: PolymarketSessionKeyStateService,
     ): SubmitPredictionOrderInteractor = SubmitPredictionOrderInteractor(
         signOrder = signOrder,
         placeOrder = placeOrder,
         router = router,
-        reconciliationScope = appCoroutineScope,
+        stateService = stateService,
     )
 
     @Provides
@@ -524,5 +517,9 @@ internal object PolymarketDomainModule {
     @Singleton
     fun providePolymarketSessionKeyStateService(
         reconcile: ReconcilePolymarketSessionKeysInteractor,
-    ): PolymarketSessionKeyStateService = PolymarketSessionKeyStateService(reconcile = reconcile)
+        appCoroutineScope: AppCoroutineScope,
+    ): PolymarketSessionKeyStateService = PolymarketSessionKeyStateService(
+        reconcile = reconcile,
+        scope = appCoroutineScope,
+    )
 }

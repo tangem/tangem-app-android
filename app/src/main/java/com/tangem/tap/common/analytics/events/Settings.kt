@@ -12,10 +12,6 @@ sealed class Settings(
     params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category, event, params) {
 
-    class ScreenOpened : Settings(event = "Settings Screen Opened")
-    class ButtonStartWalletConnectSession : Settings(event = "Button - Start Wallet Connect Session")
-    class ButtonStopWalletConnectSession : Settings(event = "Button - Stop Wallet Connect Session")
-
     sealed class CardSettings(
         event: String,
         params: Map<String, String> = emptyMap(),
@@ -63,11 +59,6 @@ sealed class Settings(
         event: String,
         params: Map<String, String> = emptyMap(),
     ) : Settings(category = "Settings / App Settings", event = event, params = params) {
-
-        class SaveWalletSwitcherChanged(state: AnalyticsParam.OnOffState) : AppSettings(
-            event = "Save Wallet Switcher Changed",
-            params = mapOf("State" to state.value),
-        )
 
         class SaveAccessCodeSwitcherChanged(state: AnalyticsParam.OnOffState) : AppSettings(
             event = "Save Access Code Switcher Changed",

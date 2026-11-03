@@ -41,6 +41,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class OpenCollectiblePackUseCaseTest {
@@ -440,6 +441,36 @@ internal class OpenCollectiblePackUseCaseTest {
     }
 
     @Test
+    fun `GIVEN the opening answers auto-buybacked with a payout WHEN invoked THEN it ends auto-buybacked`() = runTest {
+        // Arrange
+        coEvery { collectiblesRepository.openPack(WALLET_ID, TX_ID) } returns CollectibleTxState(
+            status = CollectibleTxStatus.AUTO_BUYBACKED,
+            pack = PACK,
+            autoBuybackAmount = BigDecimal("42.5"),
+        )
+
+        // Act
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = true)).toList().last()
+
+        // Assert
+        assertThat(actual).isEqualTo(OpenPackStep.AutoBuybacked(BigDecimal("42.5")))
+    }
+
+    @Test
+    fun `GIVEN the opening answers auto-buybacked with the card but no payout WHEN invoked THEN it fails as unexpected`() =
+        runTest {
+            // Arrange
+            coEvery { collectiblesRepository.openPack(WALLET_ID, TX_ID) } returns
+                state(CollectibleTxStatus.AUTO_BUYBACKED, pack = PACK)
+
+            // Act
+            val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = true)).toList().last()
+
+            // Assert
+            assertThat(actual).isEqualTo(OpenPackStep.Failed.Unexpected)
+        }
+
+    @Test
     fun `GIVEN the pack opens without the card WHEN invoked THEN the pack is left unopened`() = runTest {
         // Arrange
         coEvery { collectiblesRepository.openPack(WALLET_ID, TX_ID) } returns state(CollectibleTxStatus.PACK_OPENED)
@@ -468,6 +499,27 @@ internal class OpenCollectiblePackUseCaseTest {
         }
         coVerify(exactly = 1) { collectiblesRepository.openPack(WALLET_ID, TX_ID) }
     }
+
+    @Test
+    fun `GIVEN the status answers auto-buybacked with a payout WHEN reopen requested THEN it ends auto-buybacked without opening`() =
+        runTest {
+            // Arrange
+            coEvery { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any()) } returns CollectibleTxState(
+                status = CollectibleTxStatus.AUTO_BUYBACKED,
+                pack = null,
+                autoBuybackAmount = BigDecimal("42.5"),
+            )
+
+            // Act
+            val actual = useCase(userWallet, OpenPackRequest.Reopen(TX_ID)).toList()
+
+            // Assert
+            assertThat(actual).containsExactly(
+                OpenPackStep.Confirming,
+                OpenPackStep.AutoBuybacked(BigDecimal("42.5")),
+            ).inOrder()
+            coVerify(exactly = 0) { collectiblesRepository.openPack(any(), any()) }
+        }
 
     @Test
     fun `GIVEN opening fails again WHEN reopen requested THEN the pack is still left unopened`() = runTest {

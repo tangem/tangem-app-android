@@ -9,11 +9,11 @@ import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepo
 import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
 import com.tangem.domain.collectibles.models.CollectibleException
 import com.tangem.domain.collectibles.models.CollectibleTurboMode
+import com.tangem.domain.collectibles.models.CollectibleTxState
 import com.tangem.domain.collectibles.models.CollectibleTxStatus
 import com.tangem.domain.collectibles.models.GeneratePurchaseTxParams
 import com.tangem.domain.collectibles.models.OpenPackRequest
 import com.tangem.domain.collectibles.models.OpenPackStep
-import com.tangem.domain.collectibles.models.OpenedCollectiblePack
 import com.tangem.domain.collectibles.repository.CollectiblesRepository
 import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
 import com.tangem.domain.models.StatusSource
@@ -64,16 +64,16 @@ class OpenCollectiblePackUseCase @Inject constructor(
                 }
             }
 
-            awaitPurchase(userWallet, txId)
+            val purchaseState = awaitPurchase(userWallet, txId)
+            if (purchaseState.status == CollectibleTxStatus.AUTO_BUYBACKED) return@either autoBuybacked(purchaseState)
 
             emit(OpenPackStep.Opening)
             openPack(userWallet, txId)
         }
 
-        // Any outcome may have moved money; refreshed alongside, so the reveal does not wait for it
         coroutineScope {
             launch { accountStatusFetcher(CollectiblesAccountStatusFetcher.Params(userWallet.walletId)) }
-            emit(result.fold(ifLeft = { it }, ifRight = { OpenPackStep.Opened(it) }))
+            emit(result.getOrElse { it })
         }
     }
 
@@ -156,51 +156,59 @@ class OpenCollectiblePackUseCase @Inject constructor(
     }
 
     /** A status request that fails is just another poll: only the deadline or a final status ends the wait. */
-    private suspend fun Raise<OpenPackStep.Failed>.awaitPurchase(userWallet: UserWallet, txId: String) {
-        val status = withTimeoutOrNull(PAYMENT_TIMEOUT) { pollUntilSettled(userWallet, txId) }
+    private suspend fun Raise<OpenPackStep.Failed>.awaitPurchase(
+        userWallet: UserWallet,
+        txId: String,
+    ): CollectibleTxState {
+        val state = withTimeoutOrNull(PAYMENT_TIMEOUT) { pollUntilSettled(userWallet, txId) }
             ?: fail(OpenPackStep.Failed.PackUnopened(txId), cause = "payment timeout")
 
-        failIfClosed(txId, status)
+        failIfClosed(txId, state.status)
+
+        return state
     }
 
-    private suspend fun pollUntilSettled(userWallet: UserWallet, txId: String): CollectibleTxStatus {
+    private suspend fun pollUntilSettled(userWallet: UserWallet, txId: String): CollectibleTxState {
         while (true) {
-            val status = txStatus(userWallet, txId)
-            if (status != null && !status.isPaymentInProgress) return status
+            val state = txState(userWallet, txId)
+            if (state != null && !state.status.isPaymentInProgress) return state
             delay(POLL_INTERVAL)
         }
     }
 
-    /** The opening answers with the card, so it is shown at once. */
-    private suspend fun Raise<OpenPackStep.Failed>.openPack(
-        userWallet: UserWallet,
-        txId: String,
-    ): OpenedCollectiblePack {
+    private suspend fun Raise<OpenPackStep.Failed>.openPack(userWallet: UserWallet, txId: String): OpenPackStep {
         val state = runSuspendCatching { collectiblesRepository.openPack(userWallet.walletId, txId) }
             .getOrElse { fail(OpenPackStep.Failed.PackUnopened(txId), cause = it) }
 
-        return state.pack ?: run {
+        if (state.status == CollectibleTxStatus.AUTO_BUYBACKED) return autoBuybacked(state)
+
+        val pack = state.pack ?: run {
             failIfClosed(txId, state.status)
             fail(OpenPackStep.Failed.PackUnopened(txId), cause = "no nftWon in ${state.status}")
         }
+
+        return OpenPackStep.Opened(pack)
     }
 
-    /** A status that leaves no pack to open ends the flow; any other one goes on. */
+    private fun Raise<OpenPackStep.Failed>.autoBuybacked(state: CollectibleTxState): OpenPackStep.AutoBuybacked {
+        val amount = state.autoBuybackAmount
+            ?: fail(OpenPackStep.Failed.Unexpected, cause = "auto-buybacked without a payout")
+
+        return OpenPackStep.AutoBuybacked(amount)
+    }
+
     private fun Raise<OpenPackStep.Failed>.failIfClosed(txId: String, status: CollectibleTxStatus) {
         when (status) {
             CollectibleTxStatus.EXPIRED -> fail(OpenPackStep.Failed.Expired, cause = status)
             CollectibleTxStatus.REFUNDED -> fail(OpenPackStep.Failed.Refunded, cause = status)
             CollectibleTxStatus.PAUSED -> fail(OpenPackStep.Failed.PackUnopened(txId), cause = status)
-            // TODO turbo mode: an auto-sold pack is a result of its own, not a failure
-            CollectibleTxStatus.AUTO_BUYBACKED,
-            CollectibleTxStatus.MANUALLY_BUYBACKED,
-            -> fail(OpenPackStep.Failed.Unexpected, cause = status)
+            CollectibleTxStatus.MANUALLY_BUYBACKED -> fail(OpenPackStep.Failed.Unexpected, cause = status)
             else -> Unit
         }
     }
 
-    private suspend fun txStatus(userWallet: UserWallet, txId: String): CollectibleTxStatus? =
-        runSuspendCatching { collectiblesRepository.getTxState(userWallet.walletId, txId).status }
+    private suspend fun txState(userWallet: UserWallet, txId: String): CollectibleTxState? =
+        runSuspendCatching { collectiblesRepository.getTxState(userWallet.walletId, txId) }
             .onFailure { TangemLogger.e("open pack: status request failed", it) }
             .getOrNull()
 

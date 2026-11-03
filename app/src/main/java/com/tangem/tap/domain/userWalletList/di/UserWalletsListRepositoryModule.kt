@@ -3,6 +3,7 @@ package com.tangem.tap.domain.userWalletList.di
 import android.content.Context
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.common.authentication.storage.AuthenticatedStorage
 import com.tangem.common.json.TangemSdkAdapter
 import com.tangem.common.services.secure.SecureStorage
@@ -66,6 +67,7 @@ internal object UserWalletsListRepositoryModule {
         getCompletedBackupsUseCase: GetCompletedBackupsUseCase,
         walletRegistrationTrigger: Lazy<WalletRegistrationTrigger>,
         tangemSdkManager: Lazy<TangemSdkManager>,
+        hotWalletFeatureToggles: HotWalletFeatureToggles,
     ): UserWalletsListRepository {
         val moshi = buildMoshi()
         val secureStorage = buildSecureStorage(applicationContext = applicationContext)
@@ -122,6 +124,7 @@ internal object UserWalletsListRepositoryModule {
             isWalletBackedUpUseCase = isWalletBackedUpUseCase,
             getCompletedBackupsUseCase = getCompletedBackupsUseCase,
             walletRegistrationTrigger = walletRegistrationTrigger,
+            hotWalletFeatureToggles = hotWalletFeatureToggles,
         )
     }
 
