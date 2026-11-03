@@ -30,11 +30,13 @@ import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SharesProceedsUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.isReadyToPlace
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PredictionFeeSheetUMConverter
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.domain.polymarket.model.PolymarketApiCredentials
@@ -787,6 +789,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 quote = createQuote(),
                 slippage = SlippageUM.of(percent = DEFAULT_SLIPPAGE_PERCENT),
                 tokenSymbol = PolymarketCollateralCurrencyFactory.COLLATERAL_SYMBOL,
+                heading = PredictionFeeSheetUM.Heading.Fee,
             )
 
             // Act
@@ -870,7 +873,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 advanceUntilIdle()
 
                 // Assert
-                assertThat(quoted.isPrimaryButtonEnabled).isTrue()
+                assertThat(quoted.isReadyToPlace).isTrue()
                 assertThat(quoted.market.outcomePrice).isEqualTo("42¢")
                 coVerify(exactly = 1) { signOrderInteractor(request = any()) }
 
@@ -934,7 +937,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 assertThat((model.uiState.value.order as OrderSideUM.Sell).position)
                     .isEqualTo(SellPositionUM.Held(available = BigDecimal("12.799")))
                 assertThat(model.uiState.value.amountValue).isEqualTo("12.80")
-                assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+                assertThat(model.uiState.value.isReadyToPlace).isFalse()
                 verify { messageSender.send(any()) }
                 coVerify(exactly = 0) { signOrderInteractor(request = any()) }
 
@@ -961,7 +964,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             // Assert
             assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
             assertThat((model.uiState.value.order as OrderSideUM.Sell).position).isEqualTo(SellPositionUM.NotHeld)
-            assertThat(model.uiState.value.isPrimaryButtonEnabled).isFalse()
+            assertThat(model.uiState.value.isReadyToPlace).isFalse()
             verify { messageSender.send(any()) }
             coVerify(exactly = 0) { signOrderInteractor(request = any()) }
 

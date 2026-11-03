@@ -33,7 +33,7 @@ internal data class PlacePredictionUM(
     val minAmount: BigDecimal? = null,
     val priceError: PriceErrorUM? = null,
     val submit: SubmitUM,
-    val isPrimaryButtonEnabled: Boolean,
+    val placeAction: PlaceActionUM,
     val isAwaitingFunds: Boolean = false,
     val lastFeeRate: BigDecimal = BigDecimal.ZERO,
     val isAmountFromFraction: Boolean = false,
@@ -65,7 +65,7 @@ internal data class PlacePredictionUM(
             tradingPermission = TradingPermissionUM.Unknown,
             notifications = persistentListOf(),
             submit = SubmitUM.Idle,
-            isPrimaryButtonEnabled = false,
+            placeAction = PlaceActionUM.Unavailable,
         )
     }
 }
@@ -113,6 +113,9 @@ internal fun PlacePredictionUM.canPollPrice(): Boolean = when (val order = order
     }
 }
 
+internal val PlacePredictionUM.isReadyToPlace: Boolean
+    get() = placeAction == PlaceActionUM.Ready
+
 internal fun PlacePredictionUM.feeBreakdownQuote(): QuoteUM.Content? =
     (quote as? QuoteUM.Content)?.takeIf { submit is SubmitUM.Idle }
 
@@ -154,11 +157,13 @@ internal data class MarketHeaderUM(
 @Immutable
 internal sealed interface AmountCaptionUM {
 
+    sealed interface Error : AmountCaptionUM
+
     data class ToWin(val payout: BigDecimal) : AmountCaptionUM
 
-    data class Shortfall(val error: PaymentAmountErrorUM) : AmountCaptionUM
+    data class Shortfall(val error: PaymentAmountErrorUM, val payout: BigDecimal?) : AmountCaptionUM.Error
 
-    data class BelowMinimum(val minAmount: BigDecimal) : AmountCaptionUM
+    data class BelowMinimum(val minAmount: BigDecimal) : AmountCaptionUM.Error
 }
 
 internal enum class PaymentAmountErrorUM(val text: TextReference) {
@@ -245,7 +250,8 @@ internal sealed interface QuoteUM {
 
     data object Empty : QuoteUM
 
-    data object Loading : QuoteUM
+    /** @property isAnswerExpected a request for the amount just entered is in flight, so a tap may wait for it */
+    data class Loading(val isAnswerExpected: Boolean) : QuoteUM
 
     /**
      * @property expected the leg the user receives at the average price — shares on a buy, collateral on a sell
@@ -279,6 +285,8 @@ internal sealed interface SubmitUM {
 
     data object Idle : SubmitUM
 
+    data object AwaitingQuote : SubmitUM
+
     data object Signing : SubmitUM
 
     data object Posting : SubmitUM
@@ -286,4 +294,19 @@ internal sealed interface SubmitUM {
     data object AwaitingFill : SubmitUM
 
     data class Result(val result: PlaceResultUM) : SubmitUM
+}
+
+internal val SubmitUM.canAcceptQuote: Boolean
+    get() = this is SubmitUM.Idle || this is SubmitUM.AwaitingQuote
+
+@Immutable
+internal sealed interface PlaceActionUM {
+
+    data object Unavailable : PlaceActionUM
+
+    data object Ready : PlaceActionUM
+
+    data object ReadyOnceQuoted : PlaceActionUM
+
+    data object AwaitingQuote : PlaceActionUM
 }

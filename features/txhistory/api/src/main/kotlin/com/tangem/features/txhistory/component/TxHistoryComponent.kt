@@ -7,6 +7,7 @@ import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.features.txhistory.entity.TxHistoryItemsUM
 import kotlinx.coroutines.flow.StateFlow
 
@@ -21,6 +22,7 @@ interface TxHistoryComponent : ComposableContentComponent {
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
         val openExplorer: () -> Unit,
+        val onTransactionClick: (TxHistoryInfo) -> Unit = {},
     )
 
     interface Factory : ComponentFactory<Params, TxHistoryComponent>

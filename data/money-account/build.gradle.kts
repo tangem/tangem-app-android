@@ -32,6 +32,7 @@ dependencies {
     // endregion
 
     // region Project - Core
+    implementation(projects.core.analytics)
     implementation(projects.core.local)
     implementation(projects.core.security)
     implementation(projects.core.utils)

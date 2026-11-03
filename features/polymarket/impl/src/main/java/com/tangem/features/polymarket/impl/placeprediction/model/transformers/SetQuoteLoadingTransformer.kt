@@ -5,13 +5,17 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.model.recomputeGate
 import com.tangem.utils.transformer.Transformer
 
-internal object SetQuoteLoadingTransformer : Transformer<PlacePredictionUM> {
+internal class SetQuoteLoadingTransformer(
+    private val isAnswerExpected: Boolean,
+) : Transformer<PlacePredictionUM> {
 
     override fun transform(prevState: PlacePredictionUM): PlacePredictionUM {
-        return if (prevState.quote is QuoteUM.Empty) {
-            prevState.copy(quote = QuoteUM.Loading).recomputeGate()
-        } else {
-            prevState
+        val loading = QuoteUM.Loading(isAnswerExpected = isAnswerExpected)
+
+        return when (prevState.quote) {
+            loading -> prevState
+            QuoteUM.Empty, is QuoteUM.Loading -> prevState.copy(quote = loading).recomputeGate()
+            else -> prevState
         }
     }
 }

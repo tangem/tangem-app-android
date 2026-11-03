@@ -8,6 +8,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPrediction
 import com.tangem.features.polymarket.impl.placeprediction.entity.toStatusRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -34,7 +35,11 @@ internal class PlacePredictionSummaryModel @Inject constructor(
 
     private val orderSubmitter = orderSubmitterFactory.create(params = params, uiState = uiState, scope = modelScope)
 
-    val feeSheet = PlacePredictionFeeSheet(uiState = uiState, scope = modelScope)
+    val feeSheet = PlacePredictionFeeSheet(
+        uiState = uiState,
+        scope = modelScope,
+        heading = PredictionFeeSheetUM.Heading.Fee,
+    )
 
     override fun onFeeClick() {
         feeSheet.onFeeClick()

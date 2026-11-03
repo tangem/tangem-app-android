@@ -16,11 +16,17 @@ import kotlinx.collections.immutable.persistentListOf
 
 internal object PredictionFeeSheetUMConverter {
 
-    fun convert(quote: PredictionOrderQuote, slippage: SlippageUM, tokenSymbol: String): PredictionFeeSheetUM {
+    fun convert(
+        quote: PredictionOrderQuote,
+        slippage: SlippageUM,
+        tokenSymbol: String,
+        heading: PredictionFeeSheetUM.Heading,
+    ): PredictionFeeSheetUM {
         return PredictionFeeSheetUM(
+            title = resourceReference(heading.titleRes),
             rows = persistentListOf(
                 PredictionFeeSheetUM.Row(
-                    title = resourceReference(R.string.prediction_fee_sheet_order),
+                    title = resourceReference(quote.orderRowTitleRes(heading)),
                     amount = quote.notional.formatPolymarketMoney(),
                     description = quote.orderDescription(slippage, tokenSymbol),
                 ),
@@ -38,6 +44,11 @@ internal object PredictionFeeSheetUMConverter {
                 ),
             ),
         )
+    }
+
+    private fun PredictionOrderQuote.orderRowTitleRes(heading: PredictionFeeSheetUM.Heading): Int = when (side) {
+        PredictionOrderSide.BUY -> heading.buyOrderRowTitleRes
+        PredictionOrderSide.SELL -> heading.sellOrderRowTitleRes
     }
 
     private fun PredictionOrderQuote.orderDescription(slippage: SlippageUM, tokenSymbol: String): TextReference {

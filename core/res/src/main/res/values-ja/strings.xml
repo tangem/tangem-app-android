@@ -1664,6 +1664,7 @@
   <string name="prediction_add_funds_swap_title">Tangemウォレットから</string>
   <string name="prediction_balance_total">総残高</string>
   <string name="prediction_balance_withdraw">出金</string>
+  <string name="prediction_cash_out">キャッシュアウト</string>
   <string name="prediction_claim_error_failed">請求は完了しませんでした。アカウントから資産は移動しておらず、再試行できます。</string>
   <string name="prediction_claim_error_generic">請求を送信できませんでした。もう一度お試しください。</string>
   <string name="prediction_claim_error_rejected">Polymarketが請求の中継を拒否しました。ポジションを更新して再試行してください。</string>

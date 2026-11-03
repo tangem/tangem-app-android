@@ -120,6 +120,7 @@
   <string name="prediction_add_funds_max_receive_amount_title">L\'importo da ricevere non deve superare %s</string>
   <string name="prediction_add_funds_notification_limits_description">L\'importo del deposito deve essere di almeno %1$s. I depositi superiori a 50.000 $ non sono consigliati: suddividi gli importi più elevati in più depositi minori.</string>
   <string name="prediction_add_funds_notification_limits_title">Limiti di deposito</string>
+  <string name="prediction_add_funds_receive_body">Invia %1$s da un altro wallet, minimo %2$s</string>
   <string name="prediction_add_funds_receive_subtitle">Invia USDC sulla rete Polygon al tuo account Polymarket</string>
   <string name="prediction_add_funds_receive_title">Da un altro wallet o exchange</string>
   <string name="prediction_add_funds_subtitle">%1$s su %2$s</string>
@@ -128,6 +129,7 @@
   <string name="prediction_add_funds_swap_title">Dal tuo Tangem Wallet</string>
   <string name="prediction_balance_total">Saldo totale</string>
   <string name="prediction_balance_withdraw">Preleva</string>
+  <string name="prediction_cash_out">Incassa</string>
   <string name="prediction_claim_error_failed">La richiesta non è andata a buon fine. Nulla ha lasciato il tuo account e puoi riprovare.</string>
   <string name="prediction_claim_error_generic">Impossibile inviare la richiesta. Riprova.</string>
   <string name="prediction_claim_error_rejected">Polymarket ha rifiutato di inoltrare la richiesta. Aggiorna le tue posizioni e riprova.</string>
@@ -159,8 +161,10 @@
   <string name="prediction_event_probability">Probabilità</string>
   <string name="prediction_event_total_volume">Volume totale:</string>
   <string name="prediction_fee_sheet_builder_fee">Commissione builder Tangem</string>
+  <string name="prediction_fee_sheet_buy_description">Acquisto di %1$s quote a %2$s¢ ciascuna. Il conteggio finale delle quote (e il relativo importo in %3$s eseguito) può variare entro il limite di slippage del %4$s, a seconda di ciò che questo mercato può abbinare.</string>
   <string name="prediction_fee_sheet_order">Ordine di previsione</string>
   <string name="prediction_fee_sheet_polymarket_fee">Commissione Polymarket</string>
+  <string name="prediction_fee_sheet_sell_description">Vendita di %1$s quote a %2$s¢ ciascuna. Il conteggio finale delle quote (e il relativo importo in %3$s eseguito) può variare entro il limite di slippage del %4$s, a seconda di ciò che questo mercato può abbinare.</string>
   <string name="prediction_fee_sheet_total">Totale</string>
   <string name="prediction_history_bought">Acquistato</string>
   <string name="prediction_history_csv_average_price">Prezzo medio</string>

@@ -31,6 +31,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -48,13 +49,29 @@ internal class MoneyAccountAddFundsOptionsModelTest {
     }
 
     @Test
-    fun `GIVEN options sheet WHEN model created THEN info screen event sent`() = runTest {
+    fun `GIVEN options sheet WHEN model created THEN add funds screen opened event sent`() = runTest {
         // Act
         val model = createModel(depositAddress = DEPOSIT_ADDRESS)
 
         // Assert
-        verify(exactly = 1) { analytics.send(ofType<MoneyAccountAnalyticsEvents.DepositInfoScreenOpened>()) }
+        verify(exactly = 1) { analytics.send(MoneyAccountAnalyticsEvents.AddFundsScreenOpened()) }
         model.onDestroy()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideMethodModels")
+    fun `GIVEN option WHEN clicked THEN its add funds method reported`(model: MethodModel) = runTest {
+        // Arrange
+        coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId) } returns CREDENTIALS.right()
+        val optionsModel = createModel(depositAddress = DEPOSIT_ADDRESS)
+
+        // Act
+        optionsModel.option(model.title).onClick?.invoke()
+        advanceUntilIdle()
+
+        // Assert
+        verify(exactly = 1) { analytics.send(MoneyAccountAnalyticsEvents.AddFundsMethodSelected(model.expectedMethod)) }
+        optionsModel.onDestroy()
     }
 
     @ParameterizedTest
@@ -133,7 +150,7 @@ internal class MoneyAccountAddFundsOptionsModelTest {
     }
 
     @Test
-    fun `GIVEN credentials in flight WHEN bank option tapped twice THEN one request and the row is loading`() =
+    fun `GIVEN credentials in flight WHEN bank option tapped twice THEN one request and one method event sent`() =
         runTest {
             // Arrange
             val pending = CompletableDeferred<Either<VisaApiError, BankCredentials>>()
@@ -150,6 +167,13 @@ internal class MoneyAccountAddFundsOptionsModelTest {
             assertThat(model.bankOption().isLoading).isTrue()
             assertThat(model.bankOption().onClick).isNull()
             coVerify(exactly = 1) { getMoneyAccountBankCredentialsUseCase(userWalletId) }
+            verify(exactly = 1) {
+                analytics.send(
+                    MoneyAccountAnalyticsEvents.AddFundsMethodSelected(
+                        MoneyAccountAnalyticsEvents.AddFundsMethod.BANK_TRANSFER,
+                    ),
+                )
+            }
             pending.complete(CREDENTIALS.right())
             advanceUntilIdle()
             model.onDestroy()
@@ -184,6 +208,27 @@ internal class MoneyAccountAddFundsOptionsModelTest {
     )
 
     data class OptionsModel(val depositAddress: String?, val expectedTitles: List<TextReference>)
+
+    private fun provideMethodModels() = listOf(
+        MethodModel(
+            title = resourceReference(R.string.tangempay_topup_swap_title),
+            expectedMethod = MoneyAccountAnalyticsEvents.AddFundsMethod.WALLET,
+        ),
+        MethodModel(
+            title = resourceReference(R.string.tangempay_topup_receive_title),
+            expectedMethod = MoneyAccountAnalyticsEvents.AddFundsMethod.EXTERNAL_WALLET,
+        ),
+        MethodModel(
+            title = resourceReference(R.string.tangempay_topup_bank_transfer_title),
+            expectedMethod = MoneyAccountAnalyticsEvents.AddFundsMethod.BANK_TRANSFER,
+        ),
+    )
+
+    data class MethodModel(val title: TextReference, val expectedMethod: MoneyAccountAnalyticsEvents.AddFundsMethod)
+
+    private fun MoneyAccountAddFundsOptionsModel.option(title: TextReference) = uiState.value.items.first {
+        it.title == title
+    }
 
     private fun MoneyAccountAddFundsOptionsModel.receiveOption() = uiState.value.items.first {
         it.title == resourceReference(R.string.tangempay_topup_receive_title)

@@ -1667,6 +1667,7 @@
   <string name="prediction_add_funds_swap_title">从您的 Tangem 钱包</string>
   <string name="prediction_balance_total">总余额</string>
   <string name="prediction_balance_withdraw">提现</string>
+  <string name="prediction_cash_out">兑现</string>
   <string name="prediction_claim_error_failed">申领未成功。您的账户资金未发生变动，可以重试。</string>
   <string name="prediction_claim_error_generic">无法发送申领请求。请重试。</string>
   <string name="prediction_claim_error_rejected">Polymarket 拒绝处理该申领。请刷新您的持仓并重试。</string>
@@ -2342,6 +2343,7 @@
   <string name="support_chat_swap_prefilled_message">兑换操作数据：\n从： %1$s %2$s\n到： %3$s %4$s\n由： %5$s - %6$s</string>
   <string name="support_selector_view_chat_button">打开聊天</string>
   <string name="support_selector_view_email_button">打开邮件</string>
+  <string name="survey_demand_success_description">Concierge 正在按国家/地区陆续上线。在您所在地区开放后，我们会第一时间在 App 内通知您。</string>
   <string name="swap_approve_description">批准后，您即允许智能合约在未来的交易中使用您的代币。</string>
   <string name="swap_custom_slippage_info">该服务商无法自定义滑点，在极少数情况下滑点可能高达 %s</string>
   <string name="swap_detailed_mode">详细模式</string>
