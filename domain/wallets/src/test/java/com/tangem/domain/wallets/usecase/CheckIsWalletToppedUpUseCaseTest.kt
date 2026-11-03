@@ -30,9 +30,8 @@ internal class CheckIsWalletToppedUpUseCaseTest {
 
     @ParameterizedTest
     @ProvideTestModels
-    fun `GIVEN stored and current balance states WHEN invoke THEN topped up only on transition`(
-        model: InvokeModel,
-    ) = runTest {
+    fun `GIVEN stored and current balance states WHEN invoke THEN topped up only on transition`(model: InvokeModel) =
+        runTest {
         // Arrange
         coEvery { repository.getWalletBalanceState(USER_WALLET_ID) } returns model.stored
 
@@ -87,14 +86,26 @@ internal class CheckIsWalletToppedUpUseCaseTest {
         InvokeModel(
             stored = WalletBalanceState.Error,
             current = WalletBalanceState.ToppedUp,
-            expected = true,
+            expected = false,
             isStored = true,
+        ),
+        InvokeModel(
+            stored = WalletBalanceState.Error,
+            current = WalletBalanceState.Empty,
+            expected = false,
+            isStored = true,
+        ),
+        InvokeModel(
+            stored = null,
+            current = WalletBalanceState.Error,
+            expected = false,
+            isStored = false,
         ),
         InvokeModel(
             stored = WalletBalanceState.Empty,
             current = WalletBalanceState.Error,
             expected = false,
-            isStored = true,
+            isStored = false,
         ),
     )
 
