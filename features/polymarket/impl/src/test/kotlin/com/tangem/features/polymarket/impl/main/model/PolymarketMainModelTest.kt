@@ -1295,7 +1295,7 @@ internal class PolymarketMainModelTest {
         }
 
     @Test
-    fun `GIVEN a successful prefetch WHEN a pull refresh fails THEN add funds keeps the known target`() = runTest {
+    fun `GIVEN a successful prefetch WHEN a pull refresh fails THEN add funds and withdraw are dimmed`() = runTest {
         // Arrange
         coEvery { refreshRequisites(USER_WALLET_ID) } returnsMany listOf(
             REQUISITES.right(),
@@ -1310,10 +1310,66 @@ internal class PolymarketMainModelTest {
 
         // Assert
         coVerify(exactly = 2) { refreshRequisites(USER_WALLET_ID) }
-        assertThat(model.uiState.value.balance.addFunds.isEnabled).isTrue()
-        assertThat(model.uiState.value.balance.addFunds.isDimmed).isFalse()
+        val balance = model.uiState.value.balance
+        assertThat(balance.addFunds.isEnabled).isTrue()
+        assertThat(balance.addFunds.isDimmed).isTrue()
+        assertThat(balance.withdraw.isEnabled).isTrue()
+        assertThat(balance.withdraw.isDimmed).isTrue()
         model.onDestroy()
     }
+
+    @Test
+    fun `GIVEN a successful prefetch WHEN a pull refresh fails and withdraw is clicked THEN nothing opens and the error alert is shown`() =
+        runTest {
+            // Arrange
+            coEvery { refreshRequisites(USER_WALLET_ID) } returnsMany listOf(
+                REQUISITES.right(),
+                PolymarketBridgeError.Network.left(),
+            )
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+            advanceUntilIdle()
+            val message = slot<EventMessage>()
+            every { messageSender.send(capture(message)) } returns Unit
+
+            // Act
+            model.uiState.value.balance.withdraw.onClick()
+
+            // Assert
+            verify(exactly = 0) { router.push(any(), any()) }
+            assertThat((message.captured as DialogMessage).message)
+                .isEqualTo(resourceReference(R.string.prediction_add_funds_error_description))
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN a pull refresh failed after a successful prefetch WHEN the error is dismissed and the bridge recovers THEN withdraw is ready again`() =
+        runTest {
+            // Arrange
+            coEvery { refreshRequisites(USER_WALLET_ID) } returnsMany listOf(
+                REQUISITES.right(),
+                PolymarketBridgeError.Network.left(),
+                REQUISITES.right(),
+            )
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            model.uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+            advanceUntilIdle()
+            val message = slot<EventMessage>()
+            every { messageSender.send(capture(message)) } returns Unit
+            model.uiState.value.balance.withdraw.onClick()
+
+            // Act
+            (message.captured as DialogMessage).onDismissRequest()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 3) { refreshRequisites(USER_WALLET_ID) }
+            assertThat(model.uiState.value.balance.withdraw.isEnabled).isTrue()
+            assertThat(model.uiState.value.balance.withdraw.isDimmed).isFalse()
+            model.onDestroy()
+        }
 
     @Test
     fun `GIVEN the first prefetch is still in flight WHEN a pull refresh succeeds first THEN the stale failure is dropped`() =
