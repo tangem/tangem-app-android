@@ -4,7 +4,6 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
-import com.tangem.core.analytics.models.AnalyticsParam
 import io.mockk.clearMocks
 import io.mockk.mockk
 import io.mockk.slot
@@ -40,10 +39,10 @@ internal class BlockchainExceptionHandlerTest {
         assertThat(event.captured.id).isEqualTo("[BlockchainSdk] Exception")
         assertThat(event.captured.params).isEqualTo(
             mapOf(
-                AnalyticsParam.BLOCKCHAIN_SELECTED_HOST to "https://next.host",
-                AnalyticsParam.BLOCKCHAIN_EXCEPTION_HOST to "https://failed.host",
-                AnalyticsParam.ERROR_DESCRIPTION to "timeout",
-                AnalyticsParam.BLOCKCHAIN to "ethereum",
+                "selected_host" to "https://next.host",
+                "exception_host" to "https://failed.host",
+                "Error Description" to "timeout",
+                "Blockchain" to "ethereum",
             ),
         )
     }
