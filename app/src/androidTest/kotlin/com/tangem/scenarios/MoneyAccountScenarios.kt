@@ -158,6 +158,7 @@ fun BaseTestCase.openMainWithMoneyAccountAndTwoAccounts() {
     step("Assert 'Money account' row shows '$activeAccountBalance'") {
         waitForMoneyAccountRowWithText(activeAccountBalance)
     }
+    step("Close 'Finalize wallet setup' sheet if shown") { closeFinishWalletActivationSheetIfShown() }
 }
 
 private const val DETAILS_OPEN_TIMEOUT_MILLIS = 3_000L
