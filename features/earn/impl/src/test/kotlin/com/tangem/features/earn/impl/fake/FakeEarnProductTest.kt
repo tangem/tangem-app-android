@@ -582,7 +582,34 @@ internal class FakeEarnProductTest {
             val product = createProduct(FakeEarnProductPreset.Lending)
 
             // Act
-            val actual = product.apyHistory(params, EarnPeriod(stringReference("9Y")))
+            val actual = product.apyHistory(params, EarnPeriod(id = "9y", label = stringReference("9Y")))
+
+            // Assert
+            assertThat(actual.isLeft()).isTrue()
+        }
+
+        @Test
+        fun `GIVEN lending WHEN apyHistory for a known id with another label THEN history of that id`() = runTest {
+            // Arrange
+            val product = createProduct(FakeEarnProductPreset.Lending)
+            val known = product.readyState().apyPeriods.first()
+
+            // Act
+            val actual = product.apyHistory(params, known.copy(label = stringReference("one month")))
+
+            // Assert
+            assertThat(actual.isRight()).isTrue()
+            assertThat(actual).isEqualTo(product.apyHistory(params, known))
+        }
+
+        @Test
+        fun `GIVEN lending WHEN apyHistory for a known label with an unknown id THEN Left`() = runTest {
+            // Arrange
+            val product = createProduct(FakeEarnProductPreset.Lending)
+            val known = product.readyState().apyPeriods.first()
+
+            // Act
+            val actual = product.apyHistory(params, known.copy(id = "unknown"))
 
             // Assert
             assertThat(actual.isLeft()).isTrue()

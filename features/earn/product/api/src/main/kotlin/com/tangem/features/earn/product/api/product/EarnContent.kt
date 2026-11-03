@@ -12,7 +12,11 @@ data class EarnLimits(
     val remainingCap: BigDecimal?,
 )
 
-data class EarnPeriod(val label: TextReference)
+/**
+ * A chart period. [id] is the stable key a product recognises the period by in `apyHistory`
+ * and is unique within `apyPeriods`; [label] is display text only and may be localised.
+ */
+data class EarnPeriod(val id: String, val label: TextReference)
 
 data class EarnApyHistory(
     val points: List<EarnApyPoint>,
