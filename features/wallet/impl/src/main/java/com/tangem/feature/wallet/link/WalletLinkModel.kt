@@ -18,11 +18,13 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @ModelScoped
@@ -36,15 +38,31 @@ internal class WalletLinkModel @Inject constructor(
     val uiState: StateFlow<MessageModalUM?>
         field = MutableStateFlow(null)
 
-    private val result = MutableStateFlow<WalletLinkRequester.Result?>(null)
+    private val requestMutex = Mutex()
+    private var pendingResult: CompletableDeferred<WalletLinkRequester.Result>? = null
     private val linkJobHolder = JobHolder()
 
-    fun show(userWallet: UserWallet) {
-        result.value = null
-        uiState.value = createState(userWallet, isLoading = false)
-    }
+    /**
+     * Requests are served one at a time, so each caller gets the result for its own wallet. A caller that stops
+     * waiting closes its sheet and cancels the linking it started.
+     */
+    suspend fun request(userWallet: UserWallet): WalletLinkRequester.Result = requestMutex.withLock {
+        withContext(dispatchers.mainImmediate) {
+            val result = CompletableDeferred<WalletLinkRequester.Result>()
+            pendingResult = result
+            uiState.value = createState(userWallet, isLoading = false)
 
-    suspend fun waitResult(): WalletLinkRequester.Result = result.filterNotNull().first()
+            try {
+                result.await()
+            } finally {
+                if (!result.isCompleted) {
+                    linkJobHolder.cancel()
+                    uiState.value = null
+                }
+                pendingResult = null
+            }
+        }
+    }
 
     fun onDismiss() {
         linkJobHolder.cancel()
@@ -52,6 +70,7 @@ internal class WalletLinkModel @Inject constructor(
     }
 
     private fun onLinkClick(userWallet: UserWallet) {
+        if (linkJobHolder.isActive) return
         uiState.value = createState(userWallet, isLoading = true)
 
         modelScope.launch {
@@ -71,7 +90,7 @@ internal class WalletLinkModel @Inject constructor(
 
     private fun close(result: WalletLinkRequester.Result) {
         uiState.value = null
-        this.result.value = result
+        pendingResult?.complete(result)
     }
 
     private fun showErrorDialog() {
@@ -102,7 +121,7 @@ internal class WalletLinkModel @Inject constructor(
                 text = resourceReference(if (isHotWallet) R.string.common_confirm else R.string.common_scan_card)
                 iconEnd = walletInterationIcon(userWallet)?.let { icon -> TangemIconUM.Icon(iconRes = icon) }
                 this.isLoading = isLoading
-                onClick { if (!isLoading) onLinkClick(userWallet) }
+                onClick { onLinkClick(userWallet) }
             }
         }
     }
