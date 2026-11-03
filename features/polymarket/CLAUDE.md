@@ -52,6 +52,8 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
 - **Withdraw** waits on the same funding requisites as Add funds (QA, [REDACTED_TASK_KEY]): disabled while they load,
   dimmed and answering with Add funds' error when they failed. Unlike Add funds it ignores the region.
 - Failed requisites are re-requested when that error is dismissed (Main and the amount step) and on resume.
+  A failed refresh fails them even after a success, as on iOS: the spec wants every refresh to end in Ready
+  or Failed.
 - **Awaiting-funds banner** opens on a completed top-up swap or a sent order, never on Receive.
 - Pull-to-refresh refreshes region, positions preview and account status (with the positions value), then the
   requisites. Feed pages are not re-requested — they are kept per visited category and refreshed by
