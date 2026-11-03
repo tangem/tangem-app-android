@@ -57,9 +57,6 @@ internal class DefaultEarnEntryComponent @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory : EarnEntryComponent.Factory {
-        override fun create(
-            context: AppComponentContext,
-            params: EarnEntryComponent.Params,
-        ): DefaultEarnEntryComponent
+        override fun create(context: AppComponentContext, params: EarnEntryComponent.Params): DefaultEarnEntryComponent
     }
 }
