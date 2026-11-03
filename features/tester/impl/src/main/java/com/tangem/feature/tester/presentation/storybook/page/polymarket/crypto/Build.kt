@@ -9,12 +9,16 @@ internal val cryptoChartStoryFactory
 
 private fun StateUpdater<PolymarketCryptoChartStory>.build() = PolymarketCryptoChartStory(
     isCompact = false,
+    isLive = false,
+    updateMode = PolymarketCryptoChartStory.UpdateMode.Regular,
     sample = PolymarketCryptoChartStory.Sample.Bitcoin,
     interval = PolymarketCryptoChartStory.Interval.Minute,
     target = PolymarketCryptoChartStory.Target.Inside,
     isDark = true,
     fontScale = 1f,
-    onCompact = { value -> updateStory { it.copy(isCompact = value) } },
+    onLive = { value -> updateStory { it.copy(isLive = value) } },
+    onUpdateMode = { value -> updateStory { it.copy(updateMode = value) } },
+    onCompact = { value -> updateStory { it.copy(isCompact = value, isLive = false) } },
     onSample = { value -> updateStory { it.copy(sample = value) } },
     onInterval = { value -> updateStory { it.copy(interval = value) } },
     onTarget = { value -> updateStory { it.copy(target = value) } },
