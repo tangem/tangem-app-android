@@ -77,9 +77,7 @@ data class CustomerMeResponse(
     @Serializable
     data class ProductInstance(
         @SerialName("id") val id: String,
-        @SerialName("cid") val cid: String?,
         @SerialName("card_id") val cardId: String?,
-        @SerialName("card_wallet_address") val cardWalletAddress: String?,
         /**
          * A status this build does not know falls back to [Status.UNKNOWN] since app version 6.5. Older versions
          * fail to parse the whole `customer/me` response on it.

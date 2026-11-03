@@ -94,14 +94,6 @@ data class OrderRequest(
     ) : Data
 
     @Serializable
-    @SerialName("ACCOUNT_ISSUE_BANKING_RAIN")
-    data class BankingAccountIssue(
-        @SerialName("deposit_address") val depositAddress: String,
-        @SerialName("signature") val signature: String,
-        @SerialName("specification_name") val specificationName: String = ACCOUNT_SPECIFICATION_NAME,
-    ) : Data
-
-    @Serializable
     @SerialName("ONBOARDING_RAIN")
     data class Onboarding(
         @SerialName("customer_wallet_address") val customerWalletAddress: String,

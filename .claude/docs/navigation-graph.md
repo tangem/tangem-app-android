@@ -945,13 +945,10 @@ _Config has 1 screen(s) no longer in code (kept, harmless): SwapCrypto_
       "color": "#22C55E",
       "roots": [
         "features:kyc",
-        "features:payment",
         "features:tangempay",
         "features:virtual-accounts",
-        "domain:payment",
         "domain:virtual-account",
         "domain:visa",
-        "data:payment",
         "data:virtual-account",
         "data:visa"
       ],

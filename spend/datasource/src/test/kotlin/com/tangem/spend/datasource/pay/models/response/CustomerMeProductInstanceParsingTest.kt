@@ -34,9 +34,7 @@ internal class CustomerMeProductInstanceParsingTest {
         assertThat(actual).isEqualTo(
             ProductInstance(
                 id = INSTANCE_ID,
-                cid = null,
                 cardId = null,
-                cardWalletAddress = null,
                 status = ProductInstance.Status.ACTIVE,
                 updatedAt = "2026-01-02T03:04:05Z",
                 paymentAccountId = "pa-1",
