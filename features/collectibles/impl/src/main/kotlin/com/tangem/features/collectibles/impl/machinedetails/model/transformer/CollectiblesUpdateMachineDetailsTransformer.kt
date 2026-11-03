@@ -4,10 +4,9 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.format.bigdecimal.simple
 import com.tangem.domain.collectibles.models.CollectibleGachaMachine
 import com.tangem.features.collectibles.impl.common.formatter.formatUsd
+import com.tangem.features.collectibles.impl.common.formatter.formatUsdc
 import com.tangem.features.collectibles.impl.machinedetails.model.converter.CollectiblesMachineDetailRowsConverter
 import com.tangem.features.collectibles.impl.machinedetails.model.converter.CollectiblesMachineTiersConverter
 import com.tangem.features.collectibles.impl.machinedetails.ui.state.CollectiblesMachineDetailsUM
@@ -37,7 +36,7 @@ internal class CollectiblesUpdateMachineDetailsTransformer(
                 expectedValue = stringReference(machine.expectedValue.formatUsd()),
                 buyButtonText = resourceReference(
                     id = R.string.collectibles_machine_open_button,
-                    formatArgs = wrappedList("${machine.price.format { simple(decimals = 2) }} USDC"),
+                    formatArgs = wrappedList(machine.price.formatUsdc(minDecimals = 0)),
                 ),
                 onBuyClick = onBuyClick,
             ),
