@@ -18,6 +18,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.features.polymarket.impl.common.FakeSlotHost
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceActionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
@@ -591,7 +592,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 runCurrent()
 
                 // Assert
-                assertThat(model.uiState.value.isPlacementPending).isTrue()
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.AwaitingQuote)
                 assertThat(model.isSubmitting()).isTrue()
                 coVerify(exactly = 0) { signOrderInteractor(request = any()) }
             }
@@ -607,7 +608,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             runCurrent()
 
             // Assert
-            assertThat(model.uiState.value.isPlacementPending).isFalse()
+            assertThat(model.uiState.value.submit).isNotEqualTo(SubmitUM.AwaitingQuote)
             coVerify(exactly = 1) { signOrderInteractor(request = any()) }
             verify(exactly = 1) {
                 router.replaceAll(match<PlacePredictionRoute.Status> { it.side == BUY_PARAMS.side }, onComplete = any())
@@ -626,7 +627,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 runCurrent()
 
                 // Assert
-                assertThat(model.uiState.value.isPlacementPending).isFalse()
+                assertThat(model.uiState.value.submit).isNotEqualTo(SubmitUM.AwaitingQuote)
                 assertThat(model.isSubmitting()).isFalse()
                 coVerify(exactly = 0) { signOrderInteractor(request = any()) }
             }
@@ -645,7 +646,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 runCurrent()
 
                 // Assert
-                assertThat(model.uiState.value.isPlacementPending).isFalse()
+                assertThat(model.uiState.value.submit).isNotEqualTo(SubmitUM.AwaitingQuote)
                 coVerify(exactly = 0) { signOrderInteractor(request = any()) }
                 verify(exactly = 0) { router.pop(any()) }
             }
@@ -665,7 +666,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             runCurrent()
 
             // Assert
-            assertThat(model.uiState.value.isPlacementPending).isFalse()
+            assertThat(model.uiState.value.submit).isNotEqualTo(SubmitUM.AwaitingQuote)
             coVerify(exactly = expectedSignings) { signOrderInteractor(request = any()) }
         }
 
@@ -680,7 +681,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             runCurrent()
 
             // Assert
-            assertThat(model.uiState.value.isPlacementPending).isFalse()
+            assertThat(model.uiState.value.submit).isNotEqualTo(SubmitUM.AwaitingQuote)
             model.onResume()
             advanceTimeBy(delayTimeMillis = QUOTE_MILLIS * 2)
             runCurrent()
@@ -698,7 +699,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             runCurrent()
 
             // Assert
-            assertThat(model.uiState.value.isPlacementPending).isFalse()
+            assertThat(model.uiState.value.submit).isNotEqualTo(SubmitUM.AwaitingQuote)
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + QUOTE_MILLIS * 2)
             runCurrent()
             coVerify(exactly = 0) { signOrderInteractor(request = any()) }
@@ -734,7 +735,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 runCurrent()
 
                 // Assert
-                assertThat(model.uiState.value.isPlacementPending).isFalse()
+                assertThat(model.uiState.value.submit).isNotEqualTo(SubmitUM.AwaitingQuote)
                 coVerify(exactly = 0) { signOrderInteractor(request = any()) }
             }
 
@@ -758,9 +759,9 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 model.onPlaceClick()
 
                 // Assert
-                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading)
-                assertThat(model.uiState.value.isPrimaryButtonTappable).isFalse()
-                assertThat(model.uiState.value.isPlacementPending).isFalse()
+                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading(isAnswerExpected = false))
+                assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.Unavailable)
+                assertThat(model.uiState.value.submit).isNotEqualTo(SubmitUM.AwaitingQuote)
             }
 
         @Test
@@ -782,9 +783,9 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 model.onCloseClick()
 
                 // Assert
-                assertThat(model.uiState.value.isPlacementPending).isFalse()
+                assertThat(model.uiState.value.submit).isNotEqualTo(SubmitUM.AwaitingQuote)
                 assertThat(model.isSubmitting()).isFalse()
-                assertThat(model.uiState.value.isPrimaryButtonTappable).isFalse()
+                assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.Unavailable)
                 coVerify(exactly = 0) { signOrderInteractor(request = any()) }
                 verify(exactly = 1) { router.pop(any()) }
             }
@@ -810,7 +811,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 runCurrent()
 
                 // Assert
-                assertThat(model.uiState.value.isPrimaryButtonTappable).isTrue()
+                assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.ReadyOnceQuoted)
             }
 
         @Test
@@ -835,12 +836,12 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 // Act
                 advanceTimeBy(delayTimeMillis = POSITION_READ_MILLIS)
                 runCurrent()
-                val isPendingAfterRestart = model.uiState.value.isPlacementPending
+                val submitAfterRestart = model.uiState.value.submit
                 advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
                 runCurrent()
 
                 // Assert
-                assertThat(isPendingAfterRestart).isTrue()
+                assertThat(submitAfterRestart).isEqualTo(SubmitUM.AwaitingQuote)
                 coVerify(atLeast = 2) { getQuoteUseCase(userWalletId = any(), request = any()) }
                 coVerify(exactly = 1) { signOrderInteractor(request = any()) }
             }
@@ -878,7 +879,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             runCurrent()
 
             // Assert
-            assertThat(model.uiState.value.isPlacementPending).isFalse()
+            assertThat(model.uiState.value.submit).isNotEqualTo(SubmitUM.AwaitingQuote)
             assertThat(model.isSubmitting()).isFalse()
             coVerify(exactly = 0) { signOrderInteractor(request = any()) }
         }
@@ -898,10 +899,8 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 runCurrent()
 
                 // Assert
-                assertThat(midWait.isPlacementPending).isTrue()
-                assertThat(midWait.isPrimaryButtonTappable).isFalse()
-                assertThat(midWait.isPlaceButtonEnabled).isTrue()
-                assertThat(model.uiState.value.isPlacementPending).isFalse()
+                assertThat(midWait.placeAction).isEqualTo(PlaceActionUM.AwaitingQuote)
+                assertThat(model.uiState.value.submit).isNotEqualTo(SubmitUM.AwaitingQuote)
                 coVerify(exactly = 0) { signOrderInteractor(request = any()) }
             }
 
@@ -919,7 +918,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             runCurrent()
 
             // Assert
-            assertThat(model.uiState.value.isPlacementPending).isTrue()
+            assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.AwaitingQuote)
             assertThat(model.isSubmitting()).isTrue()
         }
 
@@ -947,8 +946,8 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 model.onPlaceClick()
 
                 // Assert
-                assertThat(model.uiState.value.isPrimaryButtonEnabledWhileQuoting).isFalse()
-                assertThat(model.uiState.value.isPlacementPending).isFalse()
+                assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.Unavailable)
+                assertThat(model.uiState.value.submit).isNotEqualTo(SubmitUM.AwaitingQuote)
             }
     }
 
@@ -972,7 +971,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
 
             // Assert
             assertThat(model.uiState.value.quote).isEqualTo(answeredQuote)
-            assertThat(model.uiState.value.isPrimaryButtonEnabledWhileQuoting).isFalse()
+            assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.Unavailable)
         }
 
         @Test
@@ -992,8 +991,8 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
 
                 // Assert
                 assertThat(model.uiState.value.amountValue).isNotEmpty()
-                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading)
-                assertThat(model.uiState.value.isPrimaryButtonTappable).isTrue()
+                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading(isAnswerExpected = true))
+                assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.ReadyOnceQuoted)
             }
 
         @Test
@@ -1006,8 +1005,8 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 model.onPause()
 
                 // Assert
-                assertThat(model.uiState.value.isAwaitingFreshQuote).isFalse()
-                assertThat(model.uiState.value.isPrimaryButtonTappable).isFalse()
+                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading(isAnswerExpected = false))
+                assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.Unavailable)
             }
 
         @Test
@@ -1030,8 +1029,8 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 runCurrent()
 
                 // Assert
-                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading)
-                assertThat(model.uiState.value.isPrimaryButtonTappable).isFalse()
+                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading(isAnswerExpected = false))
+                assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.Unavailable)
                 coVerify(exactly = 1) { getQuoteUseCase(userWalletId = any(), request = any()) }
             }
 
@@ -1047,8 +1046,8 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 runCurrent()
 
                 // Assert
-                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading)
-                assertThat(model.uiState.value.isPrimaryButtonTappable).isFalse()
+                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading(isAnswerExpected = false))
+                assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.Unavailable)
             }
 
         @Test
@@ -1067,7 +1066,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
 
                 // Assert
                 assertThat(model.uiState.value.quote).isEqualTo(failedQuote)
-                assertThat(model.uiState.value.isPrimaryButtonEnabledWhileQuoting).isFalse()
+                assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.Unavailable)
             }
 
         @Test
@@ -1084,8 +1083,8 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 runCurrent()
 
                 // Assert
-                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading)
-                assertThat(model.uiState.value.isPrimaryButtonEnabledWhileQuoting).isTrue()
+                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading(isAnswerExpected = true))
+                assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.ReadyOnceQuoted)
             }
     }
 

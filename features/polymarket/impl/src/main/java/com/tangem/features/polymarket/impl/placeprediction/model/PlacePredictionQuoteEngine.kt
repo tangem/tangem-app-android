@@ -33,10 +33,10 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.canPollPrice
 import com.tangem.features.polymarket.impl.placeprediction.entity.enteredAmount
 import com.tangem.features.polymarket.impl.placeprediction.entity.isMarketClosed
 import com.tangem.features.polymarket.impl.placeprediction.entity.isQuotable
+import com.tangem.features.polymarket.impl.placeprediction.entity.isReadyToPlace
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAddFundsAvailabilityTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAmountFractionTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAmountTransformer
-import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAwaitingFreshQuoteTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetAwaitingFundsTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetBalanceTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetCollateralTransformer
@@ -45,6 +45,7 @@ import com.tangem.features.polymarket.impl.placeprediction.model.transformers.Se
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetPositionTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetPriceErrorTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteLoadingTransformer
+import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteRequestEndedTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteResultTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetSellPositionStateTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetTradingPermissionTransformer
@@ -203,7 +204,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
         val state = uiState.value
         val isNegRisk = isNegRiskMarket ?: return null
-        if (!state.isPrimaryButtonEnabled) return null
+        if (!state.isReadyToPlace) return null
 
         cancelQuote()
         return PreparedPrediction(params = params, state = state, isNegRisk = isNegRisk, positionId = positionId)
@@ -427,7 +428,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         if (!state.isQuotable()) return
 
         freshQuote.during { isFresh ->
-            uiState.update(SetQuoteLoadingTransformer(isAwaitingFreshQuote = isFresh))
+            uiState.update(SetQuoteLoadingTransformer(isAnswerExpected = isFresh))
             val result = withContext(dispatchers.default) {
                 getPredictionOrderQuoteUseCase(
                     userWalletId = params.userWalletId,
@@ -509,9 +510,7 @@ private class FreshQuoteSignal(private val uiState: MutableStateFlow<PlacePredic
         if (request == null) return
 
         request = null
-        if (uiState.value.isAwaitingFreshQuote) {
-            uiState.update(SetAwaitingFreshQuoteTransformer(isAwaitingFreshQuote = false))
-        }
+        uiState.update(SetQuoteRequestEndedTransformer)
     }
 
     private data class FreshAmount(val id: Long, val status: Status) {

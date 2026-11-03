@@ -31,6 +31,7 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountPresetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceActionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
@@ -59,7 +60,7 @@ internal fun PlacePredictionOrderContent(
     modifier: Modifier = Modifier,
 ) {
     var footerHeight by remember { mutableIntStateOf(0) }
-    val isIdle = state.submit is SubmitUM.Idle && !state.isPlacementPending
+    val isIdle = state.submit is SubmitUM.Idle
     val focusManager = LocalFocusManager.current
 
     TangemTopBarScaffold(
@@ -82,7 +83,7 @@ internal fun PlacePredictionOrderContent(
                 PredictionPlaceButton(
                     order = state.order,
                     isLoading = !isIdle,
-                    isEnabled = state.isPlaceButtonEnabled,
+                    isEnabled = state.placeAction != PlaceActionUM.Unavailable,
                     onClick = {
                         focusManager.clearFocus()
                         intents.onPlaceClick()
@@ -109,7 +110,7 @@ private fun OrderBody(
     contentPadding: PaddingValues,
     footerHeight: Int,
 ) {
-    val isIdle = state.submit is SubmitUM.Idle && !state.isPlacementPending
+    val isIdle = state.submit is SubmitUM.Idle
 
     Column(
         modifier = Modifier
