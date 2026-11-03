@@ -36,6 +36,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPredic
 import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SignableQuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.isReadyToPlace
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceOutcome
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PlaceResultUMConverter
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetBalanceTransformer
@@ -74,7 +75,7 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
 ) {
 
     suspend fun submit(prepared: PreparedPrediction): PlaceResultUM? {
-        if (uiState.value.submit !is SubmitUM.Idle || !uiState.value.isPrimaryButtonEnabled) return null
+        if (uiState.value.submit !is SubmitUM.Idle || !uiState.value.isReadyToPlace) return null
         uiState.update(SetSubmitTransformer(submit = SubmitUM.Signing))
         return place(frozen = prepared.quote, isNegRisk = prepared.isNegRisk)
     }
@@ -85,6 +86,7 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
         is SubmitUM.AwaitingFill,
         -> true
         is SubmitUM.Idle,
+        is SubmitUM.AwaitingQuote,
         is SubmitUM.Result,
         -> false
     }

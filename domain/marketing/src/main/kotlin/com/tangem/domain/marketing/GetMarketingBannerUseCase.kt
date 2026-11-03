@@ -12,7 +12,7 @@ class GetMarketingBannerUseCase(
 ) {
 
     /**
-     * Returns campaigns for [screen], filtered (dismissed, target match, USD amount range) and sorted by priority.
+     * Returns candidate campaigns for [screen], filtered (dismissed, target match, USD amount range) and sorted by priority.
      *
      * @param amountUsd USD equivalent of the entered amount (swap/onramp only). When null, the amount filter is skipped.
      */

@@ -8,6 +8,9 @@ import com.tangem.domain.pay.usecase.GetCustomerSummaryUseCase
 import com.tangem.domain.pay.utils.TangemPayCustomerStateConverter
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
 
@@ -17,10 +20,18 @@ class PollTangemPayAccountStatusesUseCase(
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
 ) {
     suspend operator fun invoke(userWalletId: UserWalletId) {
+        states(userWalletId).collect()
+    }
+
+    fun states(userWalletId: UserWalletId): Flow<TangemPayCustomerState> = flow {
         while (true) {
             fetchAccountStatuses(userWalletId)
-            val summary = getCustomerSummaryUseCase(userWalletId, CachePolicy.ONLY_CACHE).getOrNull()
-            if (summary != null && TangemPayCustomerStateConverter.convert(summary).isTerminal) return
+            val state = getCustomerSummaryUseCase(userWalletId, CachePolicy.ONLY_CACHE).getOrNull()
+                ?.let(TangemPayCustomerStateConverter::convert)
+            if (state != null) {
+                emit(state)
+                if (state.isTerminal) return@flow
+            }
             delay(POLLING_INTERVAL)
         }
     }

@@ -3,12 +3,14 @@ package com.tangem.data.nft.di
 import com.tangem.data.nft.DefaultNFTFeatureToggles
 import com.tangem.data.nft.DefaultNFTRepository
 import com.tangem.domain.nft.NFTFeatureToggles
+import com.tangem.domain.common.wallets.CryptoCurrencyDataCleaner
 import com.tangem.domain.nft.repository.NFTRepository
 import com.tangem.domain.nft.utils.NFTCleaner
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
 import javax.inject.Singleton
 
 @Module
@@ -26,4 +28,8 @@ internal interface NFTDataModule {
     @Binds
     @Singleton
     fun bindNFTFeatureToggles(defaultNFTFeatureToggles: DefaultNFTFeatureToggles): NFTFeatureToggles
+
+    @Binds
+    @IntoSet
+    fun bindNFTCryptoCurrencyDataCleaner(nftCleaner: NFTCleaner): CryptoCurrencyDataCleaner
 }

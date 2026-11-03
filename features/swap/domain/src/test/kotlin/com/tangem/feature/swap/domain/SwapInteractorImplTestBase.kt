@@ -34,6 +34,7 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
+import com.tangem.domain.transaction.usecase.gasless.CreateAndSendSolanaGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendTronGaslessTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -41,6 +42,7 @@ import com.tangem.domain.yield.supply.YieldModuleAddressProvider
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.fee.CexSwapFeeCalculator
 import com.tangem.feature.swap.domain.fee.DexSwapFeeCalculator
+import com.tangem.feature.swap.domain.fee.SolanaGaslessSwapResolver
 import com.tangem.feature.swap.domain.fee.TransactionFeeResult
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
@@ -101,6 +103,9 @@ internal open class SwapInteractorImplTestBase {
     protected val createAndSendTronGaslessTransactionUseCase: CreateAndSendTronGaslessTransactionUseCase =
         mockk(relaxed = true)
     protected val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase = mockk(relaxed = true)
+    protected val solanaGaslessSwapResolver: SolanaGaslessSwapResolver = mockk()
+    protected val createAndSendSolanaGaslessTransactionUseCase: CreateAndSendSolanaGaslessTransactionUseCase =
+        mockk(relaxed = true)
 
     // endregion
 
@@ -140,12 +145,24 @@ internal open class SwapInteractorImplTestBase {
             getFeeUseCase = getFeeUseCase,
             createAndSendTronGaslessTransactionUseCase = createAndSendTronGaslessTransactionUseCase,
             isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
+            solanaGaslessSwapResolver = solanaGaslessSwapResolver,
+            createAndSendSolanaGaslessTransactionUseCase = createAndSendSolanaGaslessTransactionUseCase,
         )
     }
 
     @BeforeEach
     fun stubUnscaledSourceAmounts() {
         coEvery { walletManagersFacade.getScaledUiAmountMultiplier(any(), any()) } returns null.right()
+    }
+
+    /**
+     * [solanaGaslessSwapResolver] is a strict mock (not relaxed), so every test needs a default stub for the
+     * unstubbed-call case — "no sponsor" — or existing tests that never mention it would throw.
+     */
+    @BeforeEach
+    open fun setupSolanaGaslessSwapResolverDefault() {
+        coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any(), any()) } returns null
+        coEvery { solanaGaslessSwapResolver.excludeUnsupportedProviders(any(), any(), any()) } answers { thirdArg() }
     }
 
     /**

@@ -31,12 +31,14 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.polymarket.impl.common.formatPolymarketMoney
 import com.tangem.features.polymarket.impl.placeprediction.entity.AmountPresetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceActionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.canShowFeeBreakdown
 import com.tangem.features.polymarket.impl.placeprediction.entity.orderTotal
 import com.tangem.features.polymarket.impl.placeprediction.model.PlacePredictionOrderIntents
+import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionAmountCaptionStyle
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionAmountPresets
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionNotificationsBlock
 import com.tangem.features.polymarket.impl.placeprediction.ui.components.PredictionOrderAmountInput
@@ -81,7 +83,7 @@ internal fun PlacePredictionOrderContent(
                 PredictionPlaceButton(
                     order = state.order,
                     isLoading = !isIdle,
-                    isEnabled = state.isPrimaryButtonEnabled,
+                    isEnabled = state.placeAction != PlaceActionUM.Unavailable,
                     onClick = {
                         focusManager.clearFocus()
                         intents.onPlaceClick()
@@ -138,6 +140,7 @@ private fun OrderBody(
                     }
                 },
                 isCalculatorDivided = true,
+                captionStyle = PredictionAmountCaptionStyle.Order,
             )
         }
         Column(

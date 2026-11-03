@@ -22,6 +22,7 @@ import kotlinx.collections.immutable.persistentListOf
 internal class MoneyAccountDetailsStateFactory(
     private val onAddFundsClick: () -> Unit,
     private val onSendClick: () -> Unit,
+    private val onMenuClick: () -> Unit,
     private val onTermsClick: () -> Unit,
     private val onSupportClick: () -> Unit,
     private val onBackClick: () -> Unit,
@@ -52,9 +53,12 @@ internal class MoneyAccountDetailsStateFactory(
                 onClick = onSupportClick,
             ),
         ),
+        onMenuClick = onMenuClick,
         onBackClick = onBackClick,
         onAddFundsClick = onAddFundsClick,
         onSendClick = onSendClick,
+        isAddFundsEnabled = true,
+        isSendEnabled = true,
         txHistoryCurrency = null,
         pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = { onRefresh() }),
     )
@@ -64,6 +68,7 @@ internal class MoneyAccountDetailsStateFactory(
         account: MoneyAccountStatusValue.Account,
     ): MoneyAccountDetailsUM {
         val balance = account.balance
+        val isActionAvailable = account.error == null && balance != null
         return prevState.copy(
             balance = if (balance == null) {
                 MoneyAccountBalanceBlockState.Unavailable
@@ -81,6 +86,8 @@ internal class MoneyAccountDetailsStateFactory(
                 )
             },
             txHistoryCurrency = account.cryptoCurrency,
+            isAddFundsEnabled = isActionAvailable,
+            isSendEnabled = isActionAvailable,
             messageBanner = createErrorBanner(account.error)
                 ?: createBalanceUnavailableBanner().takeIf { balance == null },
         )

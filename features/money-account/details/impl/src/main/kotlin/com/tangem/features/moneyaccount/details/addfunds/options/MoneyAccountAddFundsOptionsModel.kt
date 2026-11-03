@@ -26,9 +26,9 @@ internal class MoneyAccountAddFundsOptionsModel @Inject constructor(
 
     private val converter = MoneyAccountAddFundsOptionsUMConverter(
         depositAddress = params.depositAddress,
-        onSwapClick = params.listener::onSwapClick,
-        onReceiveClick = params.listener::onReceiveClick,
-        onBankTransferClick = ::loadBankingDetails,
+        onSwapClick = ::onSwapClick,
+        onReceiveClick = ::onReceiveClick,
+        onBankTransferClick = ::onBankTransferClick,
     )
 
     private var isBankTransferLoading = false
@@ -37,15 +37,26 @@ internal class MoneyAccountAddFundsOptionsModel @Inject constructor(
         field = MutableStateFlow(converter.convert(MoneyAccountAddFundsOptionsUMConverter.Input()))
 
     init {
-        analytics.send(MoneyAccountAnalyticsEvents.DepositInfoScreenOpened())
+        analytics.send(MoneyAccountAnalyticsEvents.AddFundsScreenOpened())
     }
 
     fun onDismiss() {
         params.listener.onDismissAddFunds()
     }
 
-    private fun loadBankingDetails() {
+    private fun onSwapClick() {
+        sendMethodSelected(MoneyAccountAnalyticsEvents.AddFundsMethod.WALLET)
+        params.listener.onSwapClick()
+    }
+
+    private fun onReceiveClick(depositAddress: String) {
+        sendMethodSelected(MoneyAccountAnalyticsEvents.AddFundsMethod.EXTERNAL_WALLET)
+        params.listener.onReceiveClick(depositAddress)
+    }
+
+    private fun onBankTransferClick() {
         if (isBankTransferLoading) return
+        sendMethodSelected(MoneyAccountAnalyticsEvents.AddFundsMethod.BANK_TRANSFER)
         setBankTransferLoading(isLoading = true)
         modelScope.launch {
             getMoneyAccountBankCredentialsUseCase(params.userWalletId)
@@ -55,6 +66,10 @@ internal class MoneyAccountAddFundsOptionsModel @Inject constructor(
                     params.listener.onBankingDetailsLoadFailed()
                 }
         }
+    }
+
+    private fun sendMethodSelected(method: MoneyAccountAnalyticsEvents.AddFundsMethod) {
+        analytics.send(MoneyAccountAnalyticsEvents.AddFundsMethodSelected(method))
     }
 
     private fun setBankTransferLoading(isLoading: Boolean) {

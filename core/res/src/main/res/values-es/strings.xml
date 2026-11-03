@@ -1739,6 +1739,7 @@
   <string name="prediction_add_funds_swap_title">Desde tu billetera Tangem</string>
   <string name="prediction_balance_total">Saldo total</string>
   <string name="prediction_balance_withdraw">Retirar</string>
+  <string name="prediction_cash_out">Cobrar</string>
   <string name="prediction_claim_error_failed">La reclamación no se procesó. No ha salido nada de tu cuenta y puedes intentarlo de nuevo.</string>
   <string name="prediction_claim_error_generic">No se pudo enviar la reclamación. Inténtalo de nuevo.</string>
   <string name="prediction_claim_error_rejected">Polymarket rechazó procesar la reclamación. Actualiza tus posiciones e inténtalo de nuevo.</string>
