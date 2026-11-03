@@ -37,6 +37,7 @@ import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlin.math.roundToInt
 
 @Composable
+@ReadOnlyComposable
 internal fun SeriesColor.lineColor(): Color = when (this) {
     SeriesColor.Blue -> TangemTheme.colors3.border.accent.blue
     SeriesColor.Red -> TangemTheme.colors3.border.accent.red
