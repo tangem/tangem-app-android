@@ -13,7 +13,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.startActivity
 import com.arkivanov.decompose.ExperimentalDecomposeApi
-import com.arkivanov.decompose.extensions.compose.stack.animation.isEnter
 import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.androidPredictiveBackAnimatableV2
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.Value
@@ -138,9 +137,9 @@ private fun childrenAnimation(
             null
         }
     },
-    selector = { child, otherChild, direction, _ ->
-        val newActive = if (direction.isEnter) child else otherChild
-        if (newActive.configuration is AppRoute.Initial) {
+    // Initial renders nothing: the first real screen replacing it appears at once, as does going back to it
+    selector = { child, otherChild, _, _ ->
+        if (child.configuration is AppRoute.Initial || otherChild.configuration is AppRoute.Initial) {
             null
         } else {
             RoutingTransitionAnimationFactory.create(child.configuration)
