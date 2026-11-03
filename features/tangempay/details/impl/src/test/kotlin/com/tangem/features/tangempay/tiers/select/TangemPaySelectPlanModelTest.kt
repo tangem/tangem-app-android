@@ -32,6 +32,8 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 internal class TangemPaySelectPlanModelTest {
 
@@ -79,6 +81,41 @@ internal class TangemPaySelectPlanModelTest {
         assertThat(model.state.value.plans).hasSize(3)
         verify(exactly = 1) {
             analytics.send(ofType<TangemPayAnalyticsEvents.Tiers.TierSelectionScreenShowed>())
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideAnalyticsModels")
+    fun `GIVEN mode WHEN model created THEN tier selection event sent with its products`(model: AnalyticsModel) {
+        // GIVEN + WHEN
+        createModel(mode = model.mode)
+
+        // THEN
+        verify(exactly = 1) {
+            analytics.send(TangemPayAnalyticsEvents.Tiers.TierSelectionScreenShowed(products = model.expectedProducts))
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideAnalyticsModels")
+    fun `GIVEN mode WHEN plan selected THEN plan event sent with its products and context`(model: AnalyticsModel) {
+        // GIVEN
+        coEvery { submitTariffTransitionUseCase(USER_WALLET_ID, any()) } returns Unit.right()
+        coEvery { startTangemPayOnboardingUseCase(any(), any(), any()) } returns Unit.right()
+        val selectPlanModel = createModel(mode = model.mode)
+
+        // WHEN
+        selectContent(selectPlanModel).onSelectClick()
+
+        // THEN
+        verify(exactly = 1) {
+            analytics.send(
+                TangemPayAnalyticsEvents.Tiers.PlanSelectedClick(
+                    tierId = UPGRADE_TRANSITION.plan.tierId,
+                    products = model.expectedProducts,
+                    context = model.expectedContext,
+                ),
+            )
         }
     }
 
@@ -476,8 +513,42 @@ internal class TangemPaySelectPlanModelTest {
     private fun confirmContent(model: TangemPaySelectPlanModel) =
         model.state.value.content as TangemPaySelectPlanUM.Content.Confirm
 
+    data class AnalyticsModel(
+        val mode: TangemPaySelectPlanComponent.Mode,
+        val expectedProducts: TangemPayAnalyticsEvents.ProductSet?,
+        val expectedContext: TangemPayAnalyticsEvents.Tiers.PlanContext,
+    )
+
     private companion object {
         val USER_WALLET_ID = UserWalletId("aabbcc112233")
+
+        @JvmStatic
+        fun provideAnalyticsModels() = listOf(
+            AnalyticsModel(
+                mode = TangemPaySelectPlanComponent.Mode.ChangePlan,
+                expectedProducts = null,
+                expectedContext = TangemPayAnalyticsEvents.Tiers.PlanContext.CHANGE_PLAN,
+            ),
+            AnalyticsModel(
+                mode = TangemPaySelectPlanComponent.Mode.TiersOnboarding,
+                expectedProducts = null,
+                expectedContext = TangemPayAnalyticsEvents.Tiers.PlanContext.ONBOARDING,
+            ),
+            AnalyticsModel(
+                mode = TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder(
+                    availableProducts = setOf(TangemPayProduct.PAYMENT_ACCOUNT, TangemPayProduct.BANKING_ACCOUNT),
+                ),
+                expectedProducts = TangemPayAnalyticsEvents.ProductSet.CARD_AND_ACCOUNT,
+                expectedContext = TangemPayAnalyticsEvents.Tiers.PlanContext.ONBOARDING,
+            ),
+            AnalyticsModel(
+                mode = TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder(
+                    availableProducts = setOf(TangemPayProduct.PAYMENT_ACCOUNT),
+                ),
+                expectedProducts = TangemPayAnalyticsEvents.ProductSet.CARD,
+                expectedContext = TangemPayAnalyticsEvents.Tiers.PlanContext.ONBOARDING,
+            ),
+        )
 
         val AVAILABLE_PRODUCTS = setOf(TangemPayProduct.BANKING_ACCOUNT, TangemPayProduct.PAYMENT_ACCOUNT)
         val CREATE_ONBOARDING_ORDER_MODE = TangemPaySelectPlanComponent.Mode.CreateOnboardingOrder(
