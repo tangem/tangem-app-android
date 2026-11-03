@@ -14,6 +14,11 @@ internal class DefaultSwapFeatureToggles @Inject constructor(
             toggle = FeatureToggles.TWI_1850_TRON_GASLESS_DEX_SWAP_ENABLED,
         )
 
+    override val isEvmGaslessDexSwapEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(
+            toggle = FeatureToggles.AND_18712_EVM_GASLESS_DEX_SWAP_ENABLED,
+        )
+
     override val isTronClientEnergyEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(
             toggle = FeatureToggles.TWI_1858_TRON_CLIENT_ENERGY_ENABLED,

@@ -1,10 +1,13 @@
 package com.tangem.domain.transaction.usecase.gasless
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
+import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.transaction.models.GaslessApproval
 import com.tangem.domain.transaction.models.GaslessBatchTransactionData
 import com.tangem.domain.transaction.models.GaslessFeePlan
 import com.tangem.domain.transaction.models.GaslessTransactionData
@@ -75,6 +78,7 @@ internal class CreateAndSendEvmGaslessPayloadTest {
             nonce = nonce,
             plan = plan,
             withdrawGasLimit = withdrawGasLimit,
+            approveGasLimit = null,
         )
 
         assertThat(result).isInstanceOf(GaslessPayload.Batch::class.java)
@@ -110,6 +114,7 @@ internal class CreateAndSendEvmGaslessPayloadTest {
             nonce = nonce,
             plan = plan,
             withdrawGasLimit = null,
+            approveGasLimit = null,
         )
 
         assertThat(result).isInstanceOf(GaslessPayload.Single::class.java)
@@ -129,6 +134,7 @@ internal class CreateAndSendEvmGaslessPayloadTest {
             nonce = nonce,
             plan = null,
             withdrawGasLimit = null,
+            approveGasLimit = null,
         )
 
         assertThat(result).isInstanceOf(GaslessPayload.Single::class.java)
@@ -151,6 +157,7 @@ internal class CreateAndSendEvmGaslessPayloadTest {
                 nonce = nonce,
                 plan = plan,
                 withdrawGasLimit = null,
+                approveGasLimit = null,
             )
         }
     }
@@ -174,6 +181,7 @@ internal class CreateAndSendEvmGaslessPayloadTest {
                 nonce = nonce,
                 plan = plan,
                 withdrawGasLimit = null,
+                approveGasLimit = null,
             )
         }
     }
@@ -214,4 +222,85 @@ internal class CreateAndSendEvmGaslessPayloadTest {
     )
 
     data class UpgradePlanModel(val plan: GaslessFeePlan?, val expected: Boolean)
+
+    // ─── Case 6: TokenPayWithApproval → GaslessPayload.Batch with the approve first ─
+
+    @Test
+    fun `GIVEN TokenPayWithApproval plan WHEN assembleGaslessPayload THEN returns Batch with approve before mainTx`() {
+        // Arrange
+        val approveGasLimit = BigInteger.valueOf(65_000)
+        val plan = GaslessFeePlan.TokenPayWithApproval(
+            feeToken = fakeToken,
+            fee = fakeTokenFee,
+            approval = approval(extras = EthereumTransactionExtras(callData = fakeApproveCallData)),
+        )
+
+        // Act
+        val result = CreateAndSendEvmGaslessTransactionUseCase.assembleGaslessPayload(
+            mainTx = mainTx,
+            feeObj = feeObj,
+            nonce = nonce,
+            plan = plan,
+            withdrawGasLimit = null,
+            approveGasLimit = approveGasLimit,
+        )
+
+        // Assert
+        assertThat(result).isInstanceOf(GaslessPayload.Batch::class.java)
+        val batch = (result as GaslessPayload.Batch).data
+        assertThat(batch.transactions).hasSize(2)
+        val approveTx = batch.transactions[0]
+        assertThat(approveTx.to).isEqualTo(APPROVE_TOKEN_CONTRACT)
+        assertThat(approveTx.value).isEqualTo(BigInteger.ZERO)
+        assertThat(approveTx.gasLimit).isEqualTo(approveGasLimit)
+        assertThat(approveTx.data).isEqualTo(fakeApproveCallData.data)
+        assertThat(batch.transactions[1]).isEqualTo(mainTx)
+        assertThat(batch.fee).isEqualTo(feeObj)
+        assertThat(batch.nonce).isEqualTo(nonce)
+    }
+
+    // ─── Case 7: approve without call data → throws ──────────────────────────────
+
+    @Test
+    fun `GIVEN TokenPayWithApproval plan without approve call data WHEN assembleGaslessPayload THEN throws`() {
+        // Arrange
+        val plan = GaslessFeePlan.TokenPayWithApproval(
+            feeToken = fakeToken,
+            fee = fakeTokenFee,
+            approval = approval(extras = null),
+        )
+
+        // Act & Assert
+        assertThrows<IllegalStateException> {
+            CreateAndSendEvmGaslessTransactionUseCase.assembleGaslessPayload(
+                mainTx = mainTx,
+                feeObj = feeObj,
+                nonce = nonce,
+                plan = plan,
+                withdrawGasLimit = null,
+                approveGasLimit = BigInteger.valueOf(65_000),
+            )
+        }
+    }
+
+    private val fakeApproveCallData = object : SmartContractCallData {
+        override val methodId: String = "0x095ea7b3"
+        override val data: ByteArray = byteArrayOf(0x09, 0x5e)
+        override fun validate(blockchain: com.tangem.blockchain.common.Blockchain) = true
+    }
+
+    private fun approval(extras: EthereumTransactionExtras?) = GaslessApproval(
+        spenderAddress = "0xspender",
+        approvalTransaction = TransactionData.Uncompiled(
+            amount = mockk(relaxed = true),
+            fee = null,
+            sourceAddress = "0xsource",
+            destinationAddress = APPROVE_TOKEN_CONTRACT,
+            extras = extras,
+        ),
+    )
+
+    private companion object {
+        const val APPROVE_TOKEN_CONTRACT = "0xusdt"
+    }
 }
