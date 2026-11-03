@@ -41,9 +41,13 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.domain.polymarket.model.PolymarketPositionsFilter
+import com.tangem.domain.polymarket.model.PolymarketPositionsTab
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 internal fun PolymarketPositionsFilterDropdown(
+    options: ImmutableList<PolymarketPositionsFilter>,
     selected: PolymarketPositionsFilter,
     onSelect: (PolymarketPositionsFilter) -> Unit,
     modifier: Modifier = Modifier,
@@ -79,7 +83,7 @@ internal fun PolymarketPositionsFilterDropdown(
             modifier = Modifier.hazeEffectTangem { blurRadius = 10.dp },
             offset = menuOffset,
         ) {
-            PositionsFilterOptions(selected = selected, onSelect = { filter ->
+            PositionsFilterOptions(options = options, selected = selected, onSelect = { filter ->
                 isExpanded = false
                 onSelect(filter)
             })
@@ -88,9 +92,13 @@ internal fun PolymarketPositionsFilterDropdown(
 }
 
 @Composable
-private fun PositionsFilterOptions(selected: PolymarketPositionsFilter, onSelect: (PolymarketPositionsFilter) -> Unit) {
+private fun PositionsFilterOptions(
+    options: ImmutableList<PolymarketPositionsFilter>,
+    selected: PolymarketPositionsFilter,
+    onSelect: (PolymarketPositionsFilter) -> Unit,
+) {
     Column(modifier = Modifier.selectableGroup().padding(vertical = 8.dp)) {
-        PolymarketPositionsFilter.entries.forEach { filter ->
+        options.forEach { filter ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -133,6 +141,7 @@ private val PolymarketPositionsFilter.label: TextReference
             PolymarketPositionsFilter.DISPUTED -> R.string.prediction_positions_disputed
             PolymarketPositionsFilter.PENDING -> R.string.prediction_positions_pending
             PolymarketPositionsFilter.SPLIT -> R.string.prediction_positions_split
+            PolymarketPositionsFilter.CLOSED -> R.string.prediction_positions_closed
         },
     )
 
@@ -144,7 +153,11 @@ private fun PositionsFilterOptionsPreview() {
     var selected by remember { mutableStateOf(PolymarketPositionsFilter.ALL) }
     TangemThemePreviewRedesign {
         Column(modifier = Modifier.background(TangemTheme.colors3.bg.primary)) {
-            PositionsFilterOptions(selected = selected, onSelect = { selected = it })
+            PositionsFilterOptions(
+                options = PolymarketPositionsFilter.of(PolymarketPositionsTab.ACTIVE).toImmutableList(),
+                selected = selected,
+                onSelect = { selected = it },
+            )
         }
     }
 }
