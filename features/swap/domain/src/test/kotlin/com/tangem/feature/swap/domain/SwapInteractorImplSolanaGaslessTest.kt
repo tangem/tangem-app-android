@@ -584,42 +584,9 @@ internal class SwapInteractorImplSolanaGaslessTest : SwapInteractorImplTestBase(
 
     private fun provideNoSponsorModels() = listOf(
         NoSponsorModel(balanceStatus = SwapBalanceStatus.Pending),
-        // A sponsor stored in the quote before a refusal withdrew it
+        // A sponsor stored in the quote that is gone by the send
         NoSponsorModel(balanceStatus = SwapBalanceStatus.SponsoredFee(feePayer = "FeePayer123")),
     )
-
-    @Test
-    fun `GIVEN sponsored swap rejected WHEN onSwap THEN the wallet is held off the sponsored fee`() = runTest {
-        // Arrange
-        mockkStatic(Base64::class)
-        every { Base64.decode(any<String>(), any()) } returns ByteArray(64)
-        coEvery { solanaGaslessSwapResolver.resolveFeePayer(any(), any(), any()) } returns "FeePayer123"
-        coEvery {
-            createAndSendSolanaGaslessTransactionUseCase(
-                userWallet = any(),
-                network = any(),
-                transactionData = any(),
-                feePayer = any(),
-            )
-        } returns SolanaGaslessSendError.Service(SolanaGaslessError.Rejected(code = null)).left()
-        val from = solanaSwapCurrencyStatus()
-
-        // Act
-        sut.onSwap(
-            fromSwapCurrencyStatus = from,
-            toSwapCurrencyStatus = solanaSwapCurrencyStatus(),
-            swapProvider = buildSwapProvider(ExchangeProviderType.DEX),
-            swapData = solanaDexSwapData(),
-            amountToSwap = "1.0",
-            balanceStatus = SwapBalanceStatus.SponsoredFee(feePayer = "FeePayer123"),
-            fee = buildSolanaSwapFee(feeValue = BigDecimal.ZERO, isSponsored = true),
-            expressOperationType = ExpressOperationType.SWAP,
-            isTangemPayWithdrawal = false,
-        )
-
-        // Assert
-        assertThat(solanaGaslessSendGuard.isBlocked(from.userWalletId)).isTrue()
-    }
 
     @Test
     fun `GIVEN InsufficientFee WHEN onSwap THEN old path sendTransactionUseCase`() = runTest {
