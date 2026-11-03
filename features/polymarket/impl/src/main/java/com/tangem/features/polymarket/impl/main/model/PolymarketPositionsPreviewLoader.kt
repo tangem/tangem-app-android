@@ -1,6 +1,7 @@
 package com.tangem.features.polymarket.impl.main.model
 
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.polymarket.model.PolymarketAddresses
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionsPageRequest
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
@@ -16,6 +17,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
@@ -41,6 +44,7 @@ internal class PolymarketPositionsPreviewLoader @Inject constructor(
     private var isResumed = false
     private var appliedRevision = 0L
     private var indexingRetry = INDEXING_RETRY_INTERVALS.size
+    private var hasFinished = false
 
     fun resume(
         scope: CoroutineScope,
@@ -124,32 +128,50 @@ internal class PolymarketPositionsPreviewLoader @Inject constructor(
     ) {
         val result = withContext(dispatchers.default) {
             val addresses = deriveAddresses.stored(userWalletId) ?: return@withContext null
-            repository.getOpenPositions(
-                addresses = addresses,
-                request = PolymarketPositionsPageRequest.First(PREVIEW_SIZE),
-            )
+            coroutineScope {
+                val finished = async { readHasFinished(addresses) }
+                val open = repository.getOpenPositions(
+                    addresses = addresses,
+                    request = PolymarketPositionsPageRequest.First(PREVIEW_SIZE + 1),
+                )
+                open to finished.await()
+            }
         }
         currentCoroutineContext().ensureActive()
         if (result == null) {
             showError(reason = "Stored addresses unavailable", onRetry = onRetry)
             return
         }
-        result.fold(
+        val (open, finished) = result
+        finished?.let { hasFinished = it }
+        open.fold(
             ifLeft = { showError(reason = it.toString(), onRetry = onRetry) },
             ifRight = { page ->
                 state.value = PolymarketPositionsPreviewUM.Content(
                     positions = page.positions.take(PREVIEW_SIZE).map(converter::convert).toImmutableList(),
+                    hasMoreActive = page.nextCursor != null || page.positions.size > PREVIEW_SIZE,
+                    hasFinished = hasFinished,
                 )
             },
         )
     }
 
+    private suspend fun readHasFinished(addresses: PolymarketAddresses): Boolean? = repository
+        .getClosedPositions(addresses = addresses, request = PolymarketPositionsPageRequest.First(1))
+        .fold(
+            ifLeft = { error ->
+                TangemLogger.e("Failed to check finished Polymarket positions: $error")
+                null
+            },
+            ifRight = { page -> page.positions.isNotEmpty() },
+        )
+
     private fun showError(reason: String, onRetry: () -> Unit) {
         TangemLogger.e("Failed to refresh Polymarket positions preview: $reason")
         val previous = state.value
         state.value = when (previous) {
-            is PolymarketPositionsPreviewUM.Content -> previous.copy(onRetry = onRetry)
-            else -> PolymarketPositionsPreviewUM.Error(onRetry)
+            is PolymarketPositionsPreviewUM.Content -> previous.copy(hasFinished = hasFinished, onRetry = onRetry)
+            else -> PolymarketPositionsPreviewUM.Error(onRetry = onRetry, hasFinished = hasFinished)
         }
     }
 
