@@ -70,8 +70,8 @@ interface SwapInteractor {
      *  - CEX, gasless / token fee (`fee.transactionFeeResult is LoadedExtended` and
      *    `fee.selectedFeeToken.currency is CryptoCurrency.Token`) → `createAndSendGaslessTransactionUseCase`
 
-     *  - DEX (Solana) → compiled tx signed as-is, or, with [SwapBalanceStatus.SponsoredFee], sent through the
-     *    gasless service. `fee` is carried for analytics / UI only.
+     *  - DEX (Solana) → compiled tx signed as-is, or, when `fee.isSponsored` (or, without [fee],
+     *    [SwapBalanceStatus.SponsoredFee]), sent through the gasless service by the sponsor resolved at send.
      *
      * @param fee the user-selected fee for the transaction. Required for DEX (non-Solana) and CEX;
      *   may be `null` for Solana DEX and the Tangem Pay withdrawal short-circuit.
