@@ -148,7 +148,21 @@ internal class TangemPayCustomerStateConverterTest {
             ),
             expected = accounts(
                 payment = PaymentAccountActivationState.NotStarted,
-                money = MoneyAccountActivationState.Issuing,
+                money = MoneyAccountActivationState.Issuing(MoneyAccountActivationState.Issuing.Step.ISSUING),
+            ),
+        ),
+        ConvertModel(
+            name = "payment not started, money awaiting deposit",
+            summary = summary(
+                kycStatus = KycStatus.APPROVED,
+                banking = banking(
+                    status = MoneyAccount.Activation.Status.PROCESSING,
+                    step = MoneyAccount.Activation.Step.AWAITING_DEPOSIT,
+                ),
+            ),
+            expected = accounts(
+                payment = PaymentAccountActivationState.NotStarted,
+                money = MoneyAccountActivationState.Issuing(MoneyAccountActivationState.Issuing.Step.AWAITING_DEPOSIT),
             ),
         ),
         ConvertModel(
