@@ -10,6 +10,9 @@ android {
 }
 
 dependencies {
+    /** Feature */
+    api(projects.features.earn.api)
+
     /** Core */
     api(projects.core.decompose)
     api(projects.core.ui)
