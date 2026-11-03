@@ -5,6 +5,7 @@ package com.tangem.feature.tester.presentation.storybook.page.polymarket.crypto
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -13,6 +14,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemeRedesign
@@ -54,12 +56,18 @@ internal fun PolymarketCryptoChartStory(state: PolymarketCryptoChartStory, modif
                         val target =
                             stringReference("Target ${formatCryptoDemoPrice(snapshot.targetPrice ?: 0.0, digits)}")
                         if (state.isCompact) {
-                            PolymarketCryptoChartMini(
-                                snapshot = snapshot,
-                                targetLabel = target,
-                                emptyLabel = stringReference("No data"),
-                                formatPrice = ::formatCryptoDemoPrice,
-                            )
+                            TangemSurface(
+                                color = TangemTheme.colors3.bg.secondary,
+                                shape = RoundedCornerShape(24.dp),
+                            ) {
+                                PolymarketCryptoChartMini(
+                                    snapshot = snapshot,
+                                    targetLabel = target,
+                                    emptyLabel = stringReference("No data"),
+                                    formatPrice = ::formatCryptoDemoPrice,
+                                    modifier = Modifier.padding(16.dp),
+                                )
+                            }
                         } else {
                             PolymarketCryptoChart(
                                 snapshot = snapshot,
