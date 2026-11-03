@@ -35,10 +35,11 @@ internal class WalletLinkModel @Inject constructor(
 ) : Model() {
 
     /** `null` while the sheet is hidden */
-    val uiState: StateFlow<MessageModalUM?>
+    val uiState: StateFlow<WalletLinkUM?>
         field = MutableStateFlow(null)
 
     private val requestMutex = Mutex()
+    private var requestId = 0L
     private var pendingResult: CompletableDeferred<WalletLinkRequester.Result>? = null
     private val linkJobHolder = JobHolder()
 
@@ -50,7 +51,8 @@ internal class WalletLinkModel @Inject constructor(
         withContext(dispatchers.mainImmediate) {
             val result = CompletableDeferred<WalletLinkRequester.Result>()
             pendingResult = result
-            uiState.value = createState(userWallet, isLoading = false)
+            requestId++
+            showSheet(userWallet, isLoading = false)
 
             try {
                 result.await()
@@ -71,13 +73,13 @@ internal class WalletLinkModel @Inject constructor(
 
     private fun onLinkClick(userWallet: UserWallet) {
         if (linkJobHolder.isActive) return
-        uiState.value = createState(userWallet, isLoading = true)
+        showSheet(userWallet, isLoading = true)
 
         modelScope.launch {
             linkWalletToDeviceUseCase(userWallet).fold(
                 ifLeft = { error ->
                     if (error is WalletLinkError.Cancelled) {
-                        uiState.value = createState(userWallet, isLoading = false)
+                        showSheet(userWallet, isLoading = false)
                     } else {
                         close(WalletLinkRequester.Result.Dismissed)
                         showErrorDialog()
@@ -102,7 +104,11 @@ internal class WalletLinkModel @Inject constructor(
         )
     }
 
-    private fun createState(userWallet: UserWallet, isLoading: Boolean): MessageModalUM {
+    private fun showSheet(userWallet: UserWallet, isLoading: Boolean) {
+        uiState.value = WalletLinkUM(requestId = requestId, modal = createModal(userWallet, isLoading))
+    }
+
+    private fun createModal(userWallet: UserWallet, isLoading: Boolean): MessageModalUM {
         val isHotWallet = userWallet is UserWallet.Hot
 
         return messageModalUM {
