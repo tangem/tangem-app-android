@@ -102,6 +102,7 @@ internal class ReconcilePolymarketSessionKeysInteractorTest {
                 wallet = wallet(listOf(key())),
                 localKeyAddress = KEY,
                 assessment = expectedAssessment,
+                isTradable = false,
             ).right(),
         )
         verify(exactly = 1) { tradingStore.setReconciliation(USER_WALLET_ID, expectedAssessment.reconciliation) }
@@ -185,6 +186,51 @@ internal class ReconcilePolymarketSessionKeysInteractorTest {
         }
 
     @Test
+    fun `GIVEN the own key is listed and ready WHEN reconcile THEN it is tradable`() = runTest {
+        // Arrange
+        givenWallet(listOf(key()))
+        coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns listOf(signer(KEY)).right()
+        coEvery { tradingStore.isReadyOnExchange(USER_WALLET_ID, KEY, VALID_UNTIL) } returns true
+
+        // Act
+        val actual = interactor(USER_WALLET_ID)
+
+        // Assert
+        assertThat(actual.getOrNull()?.isTradable).isTrue()
+        coVerify(exactly = 1) { polymarketRepository.getWalletStatusByWalletId(any()) }
+    }
+
+    @Test
+    fun `GIVEN the own key was refused by the CLOB WHEN reconcile THEN it is not tradable`() = runTest {
+        // Arrange
+        givenWallet(listOf(key()))
+        coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns listOf(signer(KEY)).right()
+        coEvery { tradingStore.isReadyOnExchange(USER_WALLET_ID, KEY, VALID_UNTIL) } returns true
+        every { tradingStore.isRefused(USER_WALLET_ID, KEY) } returns true
+
+        // Act
+        val actual = interactor(USER_WALLET_ID)
+
+        // Assert
+        assertThat(actual.getOrNull()?.isTradable).isFalse()
+    }
+
+    @Test
+    fun `GIVEN no key on this device WHEN reconcile THEN it is not tradable`() = runTest {
+        // Arrange
+        givenWallet(listOf(key()))
+        coEvery { sessionKeyStore.heldAddress(USER_WALLET_ID) } returns null
+        coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns listOf(signer(KEY)).right()
+        coEvery { tradingStore.isReadyOnExchange(any(), any(), any()) } returns true
+
+        // Act
+        val actual = interactor(USER_WALLET_ID)
+
+        // Assert
+        assertThat(actual.getOrNull()?.isTradable).isFalse()
+    }
+
+    @Test
     fun `GIVEN the wallet cannot be read WHEN reconcile THEN the error is returned and nothing is kept`() = runTest {
         // Arrange
         coEvery { polymarketRepository.getWalletStatusByWalletId(USER_WALLET_ID.stringValue) } returns
@@ -196,6 +242,88 @@ internal class ReconcilePolymarketSessionKeysInteractorTest {
         // Assert
         assertThat(actual).isEqualTo(PolymarketWalletError.Network.left())
         verify(exactly = 0) { tradingStore.setReconciliation(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN the key store throws WHEN reconcile THEN an unexpected error is returned and nothing is kept`() =
+        runTest {
+            // Arrange
+            givenWallet(listOf(key()))
+            coEvery { sessionKeyStore.heldAddress(USER_WALLET_ID) } throws IllegalStateException("keystore locked")
+
+            // Act
+            val actual = interactor(USER_WALLET_ID)
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                PolymarketWalletError.Unexpected(httpCode = null, detail = "keystore locked").left(),
+            )
+            verify(exactly = 0) { tradingStore.setReconciliation(any(), any()) }
+        }
+
+    @Test
+    fun `GIVEN the trading store throws WHEN reconcile THEN an unexpected error is returned`() = runTest {
+        // Arrange
+        givenWallet(listOf(key()))
+        coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns listOf(signer(KEY)).right()
+        every { tradingStore.setReconciliation(any(), any()) } throws IllegalStateException("store closed")
+
+        // Act
+        val actual = interactor(USER_WALLET_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(PolymarketWalletError.Unexpected(httpCode = null, detail = "store closed").left())
+    }
+
+    @Test
+    fun `GIVEN the owner addresses cannot be read WHEN reconcile THEN the overview is built without signers`() =
+        runTest {
+            // Arrange
+            givenWallet(listOf(key()))
+            coEvery { deriveAddresses.stored(USER_WALLET_ID) } throws IllegalStateException("keystore locked")
+
+            // Act
+            val actual = interactor(USER_WALLET_ID)
+
+            // Assert
+            assertThat(actual.getOrNull()?.assessment?.reconciliation)
+                .isEqualTo(PolymarketSessionKeyReconciliation.Unavailable)
+            coVerify(exactly = 0) { sessionKeyRepository.getSessionSigners(any()) }
+            verify(exactly = 1) {
+                tradingStore.setReconciliation(USER_WALLET_ID, PolymarketSessionKeyReconciliation.Unavailable)
+            }
+        }
+
+    @Test
+    fun `GIVEN the owner credentials cannot be read WHEN reconcile THEN the overview is built without signers`() =
+        runTest {
+            // Arrange
+            givenWallet(listOf(key()))
+            coEvery { getApiCredentials(USER_WALLET_ID) } throws IllegalStateException("keystore locked")
+
+            // Act
+            val actual = interactor(USER_WALLET_ID)
+
+            // Assert
+            assertThat(actual.getOrNull()?.assessment?.reconciliation)
+                .isEqualTo(PolymarketSessionKeyReconciliation.Unavailable)
+            coVerify(exactly = 0) { sessionKeyRepository.getSessionSigners(any()) }
+        }
+
+    @Test
+    fun `GIVEN the tradability cannot be read WHEN reconcile THEN the overview is kept and not tradable`() = runTest {
+        // Arrange
+        givenWallet(listOf(key()))
+        coEvery { sessionKeyRepository.getSessionSigners(OWNER_IDENTITY) } returns emptyList<PolymarketSessionSigner>()
+            .right()
+        every { tradingStore.isRefused(USER_WALLET_ID, KEY) } throws IllegalStateException("store closed")
+
+        // Act
+        val actual = interactor(USER_WALLET_ID)
+
+        // Assert
+        assertThat(actual.isRight()).isTrue()
+        assertThat(actual.getOrNull()?.isTradable).isFalse()
     }
 
     private fun givenWallet(sessionKeys: List<PolymarketSessionKey>) {
