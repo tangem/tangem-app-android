@@ -52,6 +52,7 @@ internal class SolanaGaslessSwapResolverTest {
     private val solanaGaslessTransactionRepository: SolanaGaslessTransactionRepository = mockk()
     private val walletManagersFacade: WalletManagersFacade = mockk()
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase = mockk()
+    private val solanaGaslessSendGuard: SolanaGaslessSendGuard = mockk()
 
     private val liFi = buildSwapProvider(providerId = "li-fi")
     private val jupiter = buildSwapProvider(providerId = "jupiter")
@@ -67,8 +68,10 @@ internal class SolanaGaslessSwapResolverTest {
             solanaGaslessTransactionRepository,
             walletManagersFacade,
             getFeePaidCryptoCurrencyStatusSyncUseCase,
+            solanaGaslessSendGuard,
         )
         every { swapFeatureToggles.isSolanaGaslessEnabled } returns true
+        every { solanaGaslessSendGuard.isBlocked(any()) } returns false
         coEvery {
             walletManagersFacade.simulateSolanaGaslessTransaction(
                 userWalletId = any(), network = any(), transactionData = any(), feePayer = any(),
@@ -90,6 +93,22 @@ internal class SolanaGaslessSwapResolverTest {
         assertThat(actual).isNull()
         coVerify(exactly = 0) { solanaGaslessTransactionRepository.getFeePayer() }
     }
+
+    @Test
+    fun `GIVEN wallet held by the send guard WHEN resolveFeePayer THEN returns null and getFeePayer is not called`() =
+        runTest {
+            // Arrange
+            val from = buildSwapCurrencyStatus(networkRawId = solanaNetwork, isCoin = false)
+            every { solanaGaslessSendGuard.isBlocked(from.userWalletId) } returns true
+            val swapData = buildDexSwapData(message = providerMessage(size = SIZE_FITS))
+
+            // Act
+            val actual = sut.resolveFeePayer(from, jupiter, swapData)
+
+            // Assert
+            assertThat(actual).isNull()
+            coVerify(exactly = 0) { solanaGaslessTransactionRepository.getFeePayer() }
+        }
 
     @Test
     fun `GIVEN network is not Solana WHEN resolveFeePayer THEN returns null`() = runTest {
@@ -368,6 +387,7 @@ internal class SolanaGaslessSwapResolverTest {
         solanaGaslessTransactionRepository = solanaGaslessTransactionRepository,
         walletManagersFacade = walletManagersFacade,
         getFeePaidCryptoCurrencyStatusSyncUseCase = getFeePaidCryptoCurrencyStatusSyncUseCase,
+        solanaGaslessSendGuard = solanaGaslessSendGuard,
     )
 
     private fun provideTestModels() = listOf(
