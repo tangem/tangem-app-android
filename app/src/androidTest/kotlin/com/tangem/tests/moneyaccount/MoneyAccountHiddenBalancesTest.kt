@@ -5,6 +5,7 @@ import com.tangem.common.constants.TangemPayBankAccounts.JOHN
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_CHANNELS_SCENARIO
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.utils.hideBalances
 import com.tangem.common.utils.setWireMockScenarioState
@@ -121,7 +122,9 @@ class MoneyAccountHiddenBalancesTest : BaseTestCase() {
             }
             listOf(sentTitle, transferredTitle, swappedTitle).forEach { title ->
                 step("Assert '$title' amount is '$THREE_STARS'") {
-                    flakySafely { onTxHistoryScreen { transactionAmount(title).assertTextEquals(THREE_STARS) } }
+                    flakySafely(WAIT_UNTIL_TIMEOUT) {
+                        onTxHistoryScreen { transactionAmount(title).assertTextEquals(THREE_STARS) }
+                    }
                 }
             }
         }
