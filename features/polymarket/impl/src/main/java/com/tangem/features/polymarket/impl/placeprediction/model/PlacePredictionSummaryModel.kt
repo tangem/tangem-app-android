@@ -5,8 +5,11 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.models.wallet.isHotWallet
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceButtonStyleUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPrediction
@@ -15,6 +18,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -25,6 +29,7 @@ internal class PlacePredictionSummaryModel @Inject constructor(
     private val urlOpener: UrlOpener,
     override val dispatchers: CoroutineDispatcherProvider,
     orderSubmitterFactory: PlacePredictionOrderSubmitter.Factory,
+    getUserWalletUseCase: GetUserWalletUseCase,
 ) : Model(), PlacePredictionSummaryIntents {
 
     private val order = paramsContainer.require<PreparedPrediction>()
@@ -32,6 +37,13 @@ internal class PlacePredictionSummaryModel @Inject constructor(
 
     val uiState: StateFlow<PlacePredictionUM>
         field = MutableStateFlow(order.state)
+
+    init {
+        getUserWalletUseCase(params.userWalletId).onRight { userWallet ->
+            val style = if (userWallet.isHotWallet) PlaceButtonStyleUM.HOLD else PlaceButtonStyleUM.CARD
+            uiState.update { it.copy(placeButtonStyle = style) }
+        }
+    }
 
     private val orderSubmitter = orderSubmitterFactory.create(params = params, uiState = uiState, scope = modelScope)
 
@@ -45,9 +57,13 @@ internal class PlacePredictionSummaryModel @Inject constructor(
         feeSheet.onFeeClick()
     }
 
-    override fun onPlaceClick() {
+    override fun onPlaceClick(confirmedWith: PlaceButtonStyleUM) {
         modelScope.launch(start = CoroutineStart.UNDISPATCHED) {
-            val result = orderSubmitter.submit(prepared = order) ?: return@launch
+            val result = orderSubmitter.submit(prepared = order, confirmedWith = confirmedWith, onKeyLost = {})
+            if (result == null) {
+                uiState.update { it.copy(holdResetKey = it.holdResetKey + 1) }
+                return@launch
+            }
             router.replaceAll(order.toStatusRoute(result = result))
         }
     }

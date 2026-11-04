@@ -210,21 +210,21 @@ internal class PlacePredictionOrderModel @Inject constructor(
         quoteEngine.retryQuote()
     }
 
-    override fun onPlaceClick() {
+    override fun onPlaceClick(confirmedWith: PlaceButtonStyleUM) {
         when (uiState.value.placeAction) {
-            PlaceActionUM.Ready -> quoteEngine.prepare()?.let(::place) ?: settleButtonIfIdle()
-            PlaceActionUM.ReadyOnceQuoted -> placeOnceQuoted()
+            PlaceActionUM.Ready -> quoteEngine.prepare()?.let { place(it, confirmedWith) } ?: settleButtonIfIdle()
+            PlaceActionUM.ReadyOnceQuoted -> placeOnceQuoted(confirmedWith)
             PlaceActionUM.AwaitingQuote -> resetHold()
             PlaceActionUM.Unavailable -> settleButtonIfIdle()
         }
     }
 
-    private fun placeOnceQuoted() {
+    private fun placeOnceQuoted(confirmedWith: PlaceButtonStyleUM) {
         val wait = modelScope.launch {
             when (withTimeoutOrNull(PENDING_PLACEMENT_LIFETIME) { quoteEngine.awaitFreshQuote() }) {
                 true -> {
                     releaseTap()
-                    quoteEngine.prepare()?.let(::place)
+                    quoteEngine.prepare()?.let { place(it, confirmedWith) }
                 }
                 null -> quoteEngine.abandonFreshQuote()
                 false -> Unit
@@ -263,10 +263,14 @@ internal class PlacePredictionOrderModel @Inject constructor(
         uiState.update { it.copy(holdResetKey = it.holdResetKey + 1) }
     }
 
-    private fun place(prepared: PreparedPrediction) {
+    private fun place(prepared: PreparedPrediction, confirmedWith: PlaceButtonStyleUM) {
         modelScope.launch(start = CoroutineStart.UNDISPATCHED) {
             quoteEngine.holdDuring {
-                val result = orderSubmitter.submit(prepared = prepared, onKeyLost = ::confirmWithOwnerKey)
+                val result = orderSubmitter.submit(
+                    prepared = prepared,
+                    confirmedWith = confirmedWith,
+                    onKeyLost = ::confirmWithOwnerKey,
+                )
                 if (result == null) {
                     settleButtonIfIdle()
                     return@holdDuring
