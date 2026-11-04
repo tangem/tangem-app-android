@@ -39,8 +39,6 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.isReadyToPlace
 import com.tangem.features.polymarket.impl.placeprediction.model.converter.PredictionFeeSheetUMConverter
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
-import com.tangem.domain.polymarket.model.PolymarketApiCredentials
-import com.tangem.domain.polymarket.model.PolymarketClobIdentity
 import com.tangem.domain.polymarket.model.PredictionOrderSigningRoute
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -1110,14 +1108,5 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
             return amountModel
         }
-    }
-
-    private companion object {
-        val SESSION_ROUTE = PredictionOrderSigningRoute.Session(
-            identity = PolymarketClobIdentity.Session(
-                address = "0x5e55000000000000000000000000000000000001",
-                credentials = PolymarketApiCredentials(apiKey = "session", secret = "c2VjcmV0", passphrase = "pass"),
-            ),
-        )
     }
 }
