@@ -1,5 +1,7 @@
 package com.tangem.data.txhistory.repository
 
+import androidx.annotation.VisibleForTesting
+import com.tangem.core.local.connection.NetworkConnectionManager
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.converter.ExpressProviderConverter
 import com.tangem.data.txhistory.repository.converter.ExpressOnrampConverter
@@ -38,6 +40,7 @@ import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchListSource
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -57,6 +60,7 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
     private val expressTxByIdFactory: ExpressTxByIdFactory,
     private val cacheRegistry: CacheRegistry,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val networkConnectionManager: NetworkConnectionManager,
 ) : TxHistoryRepositoryV2 {
 
     private val sdkPageConverter = SdkPageConverter()
@@ -293,15 +297,22 @@ internal class RefactoredTxHistoryRepository @Inject constructor(
             )
         }
 
-    private suspend fun loadItems(
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal suspend fun loadItems(
         request: TxHistoryPageBatchFetcher.Request<TxHistoryListConfig>,
         batchSize: Int,
     ): PaginationWrapper<TxInfo> {
-        cacheRegistry.invokeOnExpire(
-            key = getTxHistoryPageKey(request.page, request.params),
-            skipCache = request.params.shouldRefresh,
-            block = { fetch(request, batchSize) },
-        )
+        runSuspendCatching {
+            cacheRegistry.invokeOnExpire(
+                key = getTxHistoryPageKey(request.page, request.params),
+                skipCache = request.params.shouldRefresh,
+                block = { fetch(request, batchSize) },
+            )
+        }.onFailure { error ->
+            val isCacheShownOffline = request.params.shouldUseCacheWhenOffline && !networkConnectionManager.isOnlineSync
+            val hasCachedPage = txHistoryItemsStore.getSyncOrNull(request.params.storeKey, request.page) != null
+            if (!isCacheShownOffline || !hasCachedPage) throw error
+        }
 
         return txHistoryItemsStore.getSync(request.page, request.params)
     }
