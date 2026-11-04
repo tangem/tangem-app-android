@@ -506,6 +506,26 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             }
 
         @Test
+        fun `GIVEN the session key could not sign WHEN the screen resumes THEN a fresh check decides the style`() =
+            runOrderTest {
+                // Arrange
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
+                val model = createQuotedModel()
+                runCurrent()
+                model.tapPlace()
+                runCurrent()
+                model.onPause()
+
+                // Act
+                model.onResume()
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.PLAIN)
+            }
+
+        @Test
         fun `GIVEN a plain hot wallet button WHEN the exchange refuses the session key THEN the owner key never signs`() =
             runOrderTest {
                 // Arrange

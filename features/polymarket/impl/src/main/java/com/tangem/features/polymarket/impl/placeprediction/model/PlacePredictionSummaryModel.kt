@@ -42,10 +42,6 @@ internal class PlacePredictionSummaryModel @Inject constructor(
         scope = modelScope,
     )
 
-    init {
-        buttonStyle.checkSessionKey()
-    }
-
     private val orderSubmitter = orderSubmitterFactory.create(params = params, uiState = uiState, scope = modelScope)
 
     val feeSheet = PlacePredictionFeeSheet(
@@ -53,6 +49,10 @@ internal class PlacePredictionSummaryModel @Inject constructor(
         scope = modelScope,
         heading = PredictionFeeSheetUM.Heading.Fee,
     )
+
+    fun onResume() {
+        buttonStyle.checkSessionKey()
+    }
 
     override fun onFeeClick() {
         feeSheet.onFeeClick()
