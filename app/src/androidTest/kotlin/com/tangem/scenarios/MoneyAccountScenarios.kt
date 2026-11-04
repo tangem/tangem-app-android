@@ -5,6 +5,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
+import com.tangem.common.utils.getWireMockRequestCount
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.screens.VirtualAccountRequisitesBottomSheetPageObject
 import com.tangem.screens.moneyaccount.onMoneyAccountAddFundsSheet
@@ -90,13 +91,60 @@ fun BaseTestCase.refreshMainUntilMoneyAccountBalance(balance: String) {
     var rowWithBalance: SemanticsMatcher? = null
     onMoneyAccountScreen { rowWithBalance = mainRowWithTextMatcher(balance) }
     step("Refresh 'Main' until the 'Money account' row shows '$balance'") {
-        // A pull can land before the switched balance mock reaches the app, so pull until the value changes.
-        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-            closeFinishWalletActivationSheetIfShown()
-            pullToRefreshMainScreen()
-            runCatching {
-                composeTestRule.waitUntilAtLeastOneExists(checkNotNull(rowWithBalance), BALANCE_RELOAD_TIMEOUT_MILLIS)
-            }.isSuccess
+        refreshMainUntil {
+            composeTestRule.waitUntilAtLeastOneExists(checkNotNull(rowWithBalance), BALANCE_RELOAD_TIMEOUT_MILLIS)
+        }
+    }
+}
+
+fun BaseTestCase.refreshMainUntilMoneyAccountCacheIcon() {
+    step("Refresh 'Main' until the 'Money account' row shows the cached-data icon") {
+        refreshMainUntil {
+            composeTestRule.waitUntil(timeoutMillis = BALANCE_RELOAD_TIMEOUT_MILLIS) {
+                var isShown = false
+                onMoneyAccountScreen { isShown = isMainRowCacheIconShown() }
+                isShown
+            }
+        }
+    }
+}
+
+fun BaseTestCase.refreshMainUntilCustomerSummaryRequested() {
+    val requestsBefore = getWireMockRequestCount("GET", CUSTOMER_SUMMARY_PATH)
+    step("Refresh 'Main' until '$CUSTOMER_SUMMARY_PATH' is requested") {
+        refreshMainUntil {
+            composeTestRule.waitUntil(timeoutMillis = BALANCE_RELOAD_TIMEOUT_MILLIS) {
+                getWireMockRequestCount("GET", CUSTOMER_SUMMARY_PATH) > requestsBefore
+            }
+        }
+    }
+}
+
+// A pull can land before the switched mock reaches the app, so pull until the expected change shows up.
+private fun BaseTestCase.refreshMainUntil(awaitChange: () -> Unit) {
+    composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+        closeFinishWalletActivationSheetIfShown()
+        pullToRefreshMainScreen()
+        runCatching(awaitChange).isSuccess
+    }
+}
+
+fun BaseTestCase.assertMoneyAccountRowShowsCachedBalance(balance: String) {
+    step("Assert 'Money account' row shows the cached '$balance'") {
+        waitForMoneyAccountRowWithText(balance)
+    }
+    step("Assert cached-data icon is displayed on the 'Money account' row") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onMoneyAccountScreen { mainRowCacheIcon.assertIsDisplayed() }
+        }
+    }
+}
+
+fun BaseTestCase.assertMoneyAccountActionsDisabled() {
+    step("Assert 'Add funds' and 'Send' buttons are disabled") {
+        onMoneyAccountScreen {
+            addFundsButton.assertIsNotEnabled()
+            sendButton.assertIsNotEnabled()
         }
     }
 }
@@ -163,3 +211,4 @@ fun BaseTestCase.openMainWithMoneyAccountAndTwoAccounts() {
 
 private const val DETAILS_OPEN_TIMEOUT_MILLIS = 3_000L
 private const val BALANCE_RELOAD_TIMEOUT_MILLIS = 5_000L
+private const val CUSTOMER_SUMMARY_PATH = "/bff-v2/v1/customer/summary"
