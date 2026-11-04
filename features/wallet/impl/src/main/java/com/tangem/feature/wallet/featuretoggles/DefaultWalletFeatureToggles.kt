@@ -14,4 +14,7 @@ internal class DefaultWalletFeatureToggles @Inject constructor(
 
     override val isWalletLinkingEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_19037_WALLET_LINKING_ENABLED)
+
+    override val isRedesignedTokenRowsEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED)
 }
