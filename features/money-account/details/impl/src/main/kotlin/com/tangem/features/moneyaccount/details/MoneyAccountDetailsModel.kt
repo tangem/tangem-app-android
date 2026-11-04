@@ -33,11 +33,15 @@ import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.moneyaccount.details.addfunds.options.MoneyAccountAddFundsOptionsListener
 import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
 import com.tangem.features.moneyaccount.details.impl.R
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -56,6 +60,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
     private val analytics: AnalyticsEventHandler,
     private val getMoneyAccountBankCredentialsUseCase: GetMoneyAccountBankCredentialsUseCase,
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     private val renewTangemPaySessionUseCase: RenewTangemPaySessionUseCase,
@@ -71,6 +76,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
         onSupportClick = ::onSupportClick,
         onBackClick = ::onBackClick,
         onRefresh = ::onRefresh,
+        onTxHistoryReload = ::onTxHistoryReload,
         onRenewSession = ::onRenewSession,
     )
     val uiState: StateFlow<MoneyAccountDetailsUM>
@@ -79,6 +85,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     val bottomSheetNavigation: SlotNavigation<MoneyAccountDetailsNavigation> = SlotNavigation()
 
     private var currentState: MoneyAccountStatusValue.Account? = null
+    private val statusRefreshJobHolder = JobHolder()
 
     init {
         moneyAccountStatusSupplier.invoke(params.userWalletId)
@@ -94,6 +101,8 @@ internal class MoneyAccountDetailsModel @Inject constructor(
         getBalanceHidingSettingsUseCase.isBalanceHidden()
             .onEach { isHidden -> uiState.update { it.copy(isBalanceHidden = isHidden) } }
             .launchIn(modelScope)
+
+        refreshStatus()
     }
 
     private fun onAccountLoaded(account: MoneyAccountStatusValue.Account) {
@@ -101,11 +110,14 @@ internal class MoneyAccountDetailsModel @Inject constructor(
         currentState = account
         uiState.update { state -> stateFactory.createAccountState(prevState = state, account = account) }
         if (previous == null) analytics.send(account.toScreenOpenedEvent())
-        val wasBalanceUnavailable = previous != null && previous.balance == null
-        if (account.balance == null && !wasBalanceUnavailable) {
+        val wasBannerShown = previous?.hasBalanceUnavailableBanner == true
+        if (account.hasBalanceUnavailableBanner && !wasBannerShown) {
             analytics.send(MoneyAccountAnalyticsEvents.BalanceErrorBannerShown())
         }
     }
+
+    private fun refreshStatus(): Job = modelScope.launch { moneyAccountStatusFetcher(params.userWalletId) }
+        .saveIn(statusRefreshJobHolder)
 
     private fun onBackClick() {
         router.pop()
@@ -116,16 +128,21 @@ internal class MoneyAccountDetailsModel @Inject constructor(
         updateRefreshing(isRefreshing = true)
         modelScope.launch {
             if (uiState.value.txHistoryCurrency != null) txHistoryContentUpdateEmitter.triggerUpdate()
-            moneyAccountStatusFetcher(params.userWalletId)
+            refreshStatus().join()
             updateRefreshing(isRefreshing = false)
         }
+    }
+
+    private fun onTxHistoryReload() {
+        modelScope.launch { txHistoryContentUpdateEmitter.triggerUpdate() }
+        refreshStatus()
     }
 
     private fun onRenewSession() {
         updateRenewSessionProgress(isLoading = true)
         modelScope.launch {
             renewTangemPaySessionUseCase(params.userWalletId)
-                .onRight { moneyAccountStatusFetcher(params.userWalletId) }
+                .onRight { refreshStatus().join() }
                 .onLeft { uiMessageSender.send(SnackbarMessage(resourceReference(R.string.common_error))) }
             updateRenewSessionProgress(isLoading = false)
         }
@@ -221,12 +238,15 @@ internal class MoneyAccountDetailsModel @Inject constructor(
         }
     }
 
-    suspend fun retryBankCredentials(): Either<VisaApiError, BankCredentials> {
+    suspend fun retryBankCredentials(): Either<VisaApiError, Unit> {
         analytics.send(MoneyAccountAnalyticsEvents.DetailsRetryTapped())
-        return getMoneyAccountBankCredentialsUseCase(params.userWalletId)
+        return getMoneyAccountBankCredentialsUseCase(
+            userWalletId = params.userWalletId,
+            includeAllRails = moneyAccountFeatureToggles.isMxnEnabled,
+        ).map(::onBankDetailsLoaded)
     }
 
-    override fun onBankDetailsLoaded(bankCredentials: BankCredentials) {
+    override fun onBankDetailsLoaded(bankCredentials: List<BankCredentials>) {
         analytics.send(MoneyAccountAnalyticsEvents.AddFundsBankDetailsShown())
         bottomSheetNavigation.dismiss()
         router.push(MoneyAccountDetailsRoute.BankDetails(bankCredentials))

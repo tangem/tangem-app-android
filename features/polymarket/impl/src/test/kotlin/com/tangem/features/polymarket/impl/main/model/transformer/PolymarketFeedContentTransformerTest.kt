@@ -25,7 +25,6 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.domain.models.account.PredictionAccountStatusValue
-import com.tangem.domain.models.account.PredictionPositionsValue
 import com.tangem.features.polymarket.impl.main.model.converter.PredictionBalanceUMConverter
 import kotlin.reflect.KClass
 
@@ -243,7 +242,6 @@ internal class PolymarketFeedContentTransformerTest {
                 .convert(
                     PredictionBalanceUMConverter.Input(
                         status = PredictionAccountStatusValue.Loading,
-                        positions = PredictionPositionsValue.Unknown,
                         requisites = RequisitesState.Loading,
                         regionStatus = PredictionRegionStatus.UNKNOWN,
                         mode = PredictionBalanceMode.AVAILABLE,

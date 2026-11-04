@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.card.gpay
 
 import android.content.Context
 import arrow.core.getOrElse
+import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.error.UniversalError
@@ -37,6 +38,9 @@ import kotlinx.coroutines.launch
 
 private const val LOG_TAG = "TangemPay: GoogleWallet"
 private const val LAST_DIGITS_LENGTH = 4
+private const val EXPERIMENT_KEY = "twi_1062_google_wallet_push_provisioning"
+private const val ON_VARIANT = "on"
+private const val OFF_VARIANT = "off"
 
 @Suppress("LongParameterList")
 internal class TangemPayAddToGoogleWalletController @AssistedInject constructor(
@@ -47,12 +51,17 @@ internal class TangemPayAddToGoogleWalletController @AssistedInject constructor(
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val uiMessageSender: UiMessageSender,
     private val analytics: AnalyticsEventHandler,
+    private val abTestsManager: ABTestsManager,
     featureToggles: TangemPayFeatureToggles,
 ) {
 
     private val logger = TangemLogger.withTag(LOG_TAG)
 
-    private val isEnabled = featureToggles.isGoogleWalletPushProvisioningEnabled
+    private var availability = if (featureToggles.isGoogleWalletPushProvisioningEnabled) {
+        Availability.RESOLVING
+    } else {
+        Availability.DISABLED
+    }
 
     @RemoveWithToggle(
         toggleName = "TWI_1062_GOOGLE_WALLET_PUSH_PROVISIONING_ENABLED",
@@ -73,6 +82,10 @@ internal class TangemPayAddToGoogleWalletController @AssistedInject constructor(
     private val statusCheckJobHolder = JobHolder()
     private val walletChangesJobHolder = JobHolder()
 
+    init {
+        if (availability == Availability.RESOLVING) resolveAvailability()
+    }
+
     fun selectCard(card: TangemPayCard?) {
         if (card?.id != this.card?.id) {
             statusCheckJobHolder.cancel()
@@ -91,12 +104,9 @@ internal class TangemPayAddToGoogleWalletController @AssistedInject constructor(
 
     fun onStart() {
         isStarted = true
-        if (!isEnabled) return
+        if (availability != Availability.ENABLED) return
         if (!statusCheckJobHolder.isActive) checkWalletStatus()
-        provisioner.walletChanges
-            .onEach { checkWalletStatus() }
-            .launchIn(scope)
-            .saveIn(walletChangesJobHolder)
+        observeWalletChanges()
     }
 
     fun onStop() {
@@ -214,8 +224,28 @@ internal class TangemPayAddToGoogleWalletController @AssistedInject constructor(
         uiMessageSender.send(TangemPayMessagesFactory.createAddToGoogleWalletUnavailableError())
     }
 
+    private fun resolveAvailability() {
+        scope.launch {
+            val variant = abTestsManager.getValue(key = EXPERIMENT_KEY, defaultValue = OFF_VARIANT)
+            logger.i("Push provisioning experiment variant: $variant")
+            availability = if (variant == ON_VARIANT) Availability.ENABLED else Availability.DISABLED
+            if (availability == Availability.ENABLED) {
+                checkWalletStatus()
+                if (isStarted) observeWalletChanges()
+            }
+            updateEntry()
+        }
+    }
+
+    private fun observeWalletChanges() {
+        provisioner.walletChanges
+            .onEach { checkWalletStatus() }
+            .launchIn(scope)
+            .saveIn(walletChangesJobHolder)
+    }
+
     private fun checkWalletStatus() {
-        val checkedCard = card?.takeIf { isEnabled && it.canBeAddedToWallet() } ?: return
+        val checkedCard = card?.takeIf { availability == Availability.ENABLED && it.canBeAddedToWallet() } ?: return
         isCardChecked = true
         scope.launch {
             walletStatus = provisioner.getCardStatus(lastFourDigits = checkedCard.lastDigits)
@@ -234,7 +264,14 @@ internal class TangemPayAddToGoogleWalletController @AssistedInject constructor(
 
     private fun resolveEntry(): Entry {
         val isUnfrozen = frozenState == TangemPayCardFrozenState.Unfrozen
-        if (!isEnabled) return if (isUnfrozen) Entry.ManualGuide else Entry.Hidden
+        return when (availability) {
+            Availability.RESOLVING -> Entry.Hidden
+            Availability.DISABLED -> if (isUnfrozen) Entry.ManualGuide else Entry.Hidden
+            Availability.ENABLED -> resolvePushProvisioningEntry(isUnfrozen)
+        }
+    }
+
+    private fun resolvePushProvisioningEntry(isUnfrozen: Boolean): Entry {
         if (card?.canBeAddedToWallet() != true || !isUnfrozen) return Entry.Hidden
 
         val status = walletStatus
@@ -263,6 +300,8 @@ internal class TangemPayAddToGoogleWalletController @AssistedInject constructor(
         data object ManualGuide : Entry
         data class Button(val isLoading: Boolean) : Entry
     }
+
+    private enum class Availability { RESOLVING, ENABLED, DISABLED }
 
     @AssistedFactory
     interface Factory {

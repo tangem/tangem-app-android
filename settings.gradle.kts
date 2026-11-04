@@ -358,6 +358,12 @@ include(":features:details:impl")
 include(":features:disclaimer:api")
 include(":features:disclaimer:impl")
 
+include(":features:earn:api")
+include(":features:earn:flow:api")
+include(":features:earn:flow:impl")
+include(":features:earn:impl")
+include(":features:earn:product:api")
+
 include(":features:force-update:api")
 include(":features:force-update:impl")
 
