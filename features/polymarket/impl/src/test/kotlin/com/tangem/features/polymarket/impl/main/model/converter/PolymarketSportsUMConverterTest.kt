@@ -18,37 +18,79 @@ internal class PolymarketSportsUMConverterTest {
     private val home = PolymarketTeam("São Paulo", "SAO1", "Trícolor", "home.png", "home")
     private val away = PolymarketTeam("Away", "AWY", null, "away.png", "away")
 
-    @ParameterizedTest
-    @ValueSource(booleans = [false, true])
-    fun `GIVEN REST team order WHEN mapped THEN score sides follow provider order as on iOS`(homeFirst: Boolean) {
+    @Test
+    fun `GIVEN domain sides and oriented score WHEN mapped THEN presentation uses them directly`() {
         // Arrange
-        val teams = if (homeFirst) listOf(home, away) else listOf(away, home)
-        val event = createEvent().copy(teams = teams)
+        val game = createGame()
 
         // Act
-        val actual = PolymarketSportsUMConverter { _, _, _ -> }.convert(createGame(), event)
+        val actual = PolymarketSportsUMConverter(false) { _, _, _ -> }.convert(game)
 
         // Assert
         assertThat(actual).isEqualTo(PolymarketSportsUM(
             home = PolymarketSportsUM.Team(stringReference("São Paulo"), "home.png"),
             away = PolymarketSportsUM.Team(stringReference("Away"), "away.png"),
-            homeScore = if (homeFirst) "2" else "1",
-            awayScore = if (homeFirst) "1" else "2",
-            period = "Q3", isLive = true,
+            homeScore = "1", awayScore = "2", period = "Q3", isLive = true,
         ))
     }
 
     @Test
-    fun `GIVEN more than two REST teams WHEN mapped THEN score sides are not guessed`() {
+    fun `GIVEN unresolved domain score WHEN mapped THEN numbers are not guessed`() {
         // Arrange
-        val event = createEvent().copy(teams = listOf(home, away, home.copy(name = "Other")))
+        val game = createGame().copy(score = null)
 
         // Act
-        val actual = PolymarketSportsUMConverter { _, _, _ -> }.convert(createGame(), event)
+        val actual = PolymarketSportsUMConverter(false) { _, _, _ -> }.convert(game)
 
         // Assert
         assertThat(actual.homeScore).isNull()
         assertThat(actual.awayScore).isNull()
+    }
+
+    @Test
+    fun `GIVEN missing REST ordering WHEN domain resolves sides THEN the sports card uses those sides`() {
+        // Arrange
+        val event = createEvent().copy(teams = listOf(away.copy(ordering = null), home.copy(ordering = null)))
+        val game = createGame().copy(
+            home = PolymarketSportsState.Team(event.teams!![1], 1),
+            away = PolymarketSportsState.Team(event.teams!![0], 0),
+        )
+
+        // Act
+        val actual = PolymarketEventUMConverter({}, { _, _, _ -> }, true).convert(event, game)
+
+        // Assert
+        assertThat(actual.sports?.homeScore).isEqualTo("1")
+        assertThat(actual.sports?.awayScore).isEqualTo("2")
+        assertThat(actual.rows.single().outcomes.map { it.assetId }).containsExactly("home", "away").inOrder()
+    }
+
+    @Test
+    fun `GIVEN a reordered REST snapshot WHEN domain still has old indices THEN buttons are not reversed`() {
+        // Arrange
+        val event = createEvent().copy(teams = listOf(home, away))
+
+        // Act
+        val actual = PolymarketEventUMConverter({}, { _, _, _ -> }, true).convert(event, createGame())
+
+        // Assert
+        assertThat(actual.sports).isNull()
+        assertThat(actual.rows.single().outcomes.map { it.assetId }).containsExactly("away", "home").inOrder()
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["CAN", "POST", "INT", "AB", "int", "Post"])
+    fun `GIVEN stopped provider period WHEN mapped THEN only the Live badge is hidden`(period: String) {
+        // Arrange
+        val game = createGame().copy(period = period)
+
+        // Act
+        val actual = PolymarketEventUMConverter({}, { _, _, _ -> }, true).convert(createEvent(), game)
+
+        // Assert
+        assertThat(actual.sports?.isLive).isFalse()
+        assertThat(actual.sports?.period).isEqualTo(period)
+        assertThat(actual.rows.single().outcomes).hasSize(2)
     }
 
     @ParameterizedTest
@@ -80,10 +122,15 @@ internal class PolymarketSportsUMConverterTest {
     @Test
     fun `GIVEN one missing team abbreviation WHEN mapping sports buttons THEN both use full team names`() {
         // Arrange
-        val event = createEvent("Tricolor").copy(teams = listOf(home, away.copy(abbreviation = null)))
+        val other = away.copy(abbreviation = null)
+        val event = createEvent("Tricolor").copy(teams = listOf(home, other))
+        val game = createGame().copy(
+            home = PolymarketSportsState.Team(home, 0),
+            away = PolymarketSportsState.Team(other, 1),
+        )
 
         // Act
-        val actual = PolymarketEventUMConverter({}, { _, _, _ -> }, isPhaseTwoEnabled = true).convert(event, createGame())
+        val actual = PolymarketEventUMConverter({}, { _, _, _ -> }, isPhaseTwoEnabled = true).convert(event, game)
 
         // Assert
         assertThat(actual.rows.single().outcomes.map { it.title })
@@ -170,7 +217,7 @@ internal class PolymarketSportsUMConverterTest {
     ).copy(gameId = "11", teams = listOf(away, home))
 
     private fun createGame() = PolymarketSportsState.Game(
-        gameId = "11", score = PolymarketSportsState.Score(2, 1), period = "Q3", isLive = true,
+        gameId = "11", score = PolymarketSportsState.Score(1, 2), period = "Q3", isLive = true,
         isEnded = false, isStale = false,
         home = PolymarketSportsState.Team(home, restIndex = 1),
         away = PolymarketSportsState.Team(away, restIndex = 0),
