@@ -62,6 +62,7 @@ interface HistoryTxListManager {
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
         val modelScope: CoroutineScope,
+        val shouldUseCacheWhenOffline: Boolean = false,
     )
 
     enum class OnChainSource { BSDK, TangemPay, IndexTable }
@@ -71,6 +72,7 @@ interface HistoryTxListManager {
             userWalletId: UserWalletId,
             currency: CryptoCurrency,
             modelScope: CoroutineScope,
+            shouldUseCacheWhenOffline: Boolean,
         ): HistoryTxListManager
     }
 }
