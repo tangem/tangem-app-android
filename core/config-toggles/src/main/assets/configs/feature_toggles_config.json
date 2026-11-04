@@ -154,5 +154,9 @@
     {
         "name": "AND_19037_WALLET_LINKING_ENABLED",
         "version": "6.8"
+    },
+    {
+        "name": "TWI_1676_EARN_ENABLED",
+        "version": "undefined"
     }
 ]
