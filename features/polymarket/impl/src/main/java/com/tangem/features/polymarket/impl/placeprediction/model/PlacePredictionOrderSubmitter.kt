@@ -30,6 +30,7 @@ import com.tangem.domain.polymarket.usecase.DelayedPredictionOrderOutcome
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceButtonStyleUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPrediction
@@ -74,10 +75,11 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
     private val positionsUpdateEmitter: PredictionPositionsUpdateEmitter,
 ) {
 
-    suspend fun submit(prepared: PreparedPrediction): PlaceResultUM? {
+    /** @param onKeyLost told when an order confirmed for the session key cannot be signed with it */
+    suspend fun submit(prepared: PreparedPrediction, onKeyLost: () -> Unit = {}): PlaceResultUM? {
         if (uiState.value.submit !is SubmitUM.Idle || !uiState.value.isReadyToPlace) return null
         uiState.update(SetSubmitTransformer(submit = SubmitUM.Signing))
-        return place(frozen = prepared.quote, isNegRisk = prepared.isNegRisk)
+        return place(frozen = prepared.quote, isNegRisk = prepared.isNegRisk, onKeyLost = onKeyLost)
     }
 
     fun isSubmitting(): Boolean = when (uiState.value.submit) {
@@ -91,7 +93,7 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
         -> false
     }
 
-    private suspend fun place(frozen: SignableQuoteUM, isNegRisk: Boolean): PlaceResultUM? {
+    private suspend fun place(frozen: SignableQuoteUM, isNegRisk: Boolean, onKeyLost: () -> Unit): PlaceResultUM? {
         val addresses = withContext(dispatchers.default) {
             derivePolymarketAddressesUseCase.stored(userWalletId = params.userWalletId)
         }
@@ -136,6 +138,11 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
                     null
                 }
                 is PredictionSubmitOrderError.NotPlaced -> onPlaceError(error = error.error)
+                PredictionSubmitOrderError.SessionKeyUnavailable -> {
+                    onKeyLost()
+                    showPlaceFailure(reason = "The session key could not sign an order confirmed for it")
+                    null
+                }
             }
         }
 
@@ -154,12 +161,11 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
         )
     }
 
-    private fun signingPreference(): PredictionOrderSigningPreference =
-        if (featureToggles.isPolymarketSessionKeysEnabled) {
-            PredictionOrderSigningPreference.AUTOMATIC
-        } else {
-            PredictionOrderSigningPreference.OWNER_ONLY
-        }
+    private fun signingPreference(): PredictionOrderSigningPreference = when {
+        !featureToggles.isPolymarketSessionKeysEnabled -> PredictionOrderSigningPreference.OWNER_ONLY
+        uiState.value.placeButtonStyle == PlaceButtonStyleUM.PLAIN -> PredictionOrderSigningPreference.SESSION_KEY_ONLY
+        else -> PredictionOrderSigningPreference.AUTOMATIC
+    }
 
     private fun onSubmitStep(step: PredictionOrderSubmitStep) {
         val submit = when (step) {

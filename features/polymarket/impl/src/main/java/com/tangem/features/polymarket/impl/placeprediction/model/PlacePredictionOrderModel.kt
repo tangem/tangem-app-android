@@ -120,6 +120,11 @@ internal class PlacePredictionOrderModel @Inject constructor(
         }
     }
 
+    private fun confirmWithOwnerKey() {
+        sessionKeyCheck?.cancel()
+        sessionKeyStyle = ownerStyle
+    }
+
     private fun applySessionKeyStyleIfIdle() {
         val style = sessionKeyStyle ?: return
         uiState.update { state -> if (state.isIdle()) state.copy(placeButtonStyle = style) else state }
@@ -261,7 +266,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
     private fun place(prepared: PreparedPrediction) {
         modelScope.launch(start = CoroutineStart.UNDISPATCHED) {
             quoteEngine.holdDuring {
-                val result = orderSubmitter.submit(prepared = prepared)
+                val result = orderSubmitter.submit(prepared = prepared, onKeyLost = ::confirmWithOwnerKey)
                 if (result == null) {
                     settleButtonIfIdle()
                     return@holdDuring
