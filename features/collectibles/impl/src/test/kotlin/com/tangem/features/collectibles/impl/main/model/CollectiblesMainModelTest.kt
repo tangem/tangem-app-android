@@ -10,8 +10,10 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.utils.StringsSigns.THREE_STARS
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
@@ -69,6 +71,7 @@ internal class CollectiblesMainModelTest {
     private val accountRepository: CollectiblesAccountRepository = mockk()
     private val accountStatusFetcher: CollectiblesAccountStatusFetcher = mockk()
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase = mockk()
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase = mockk()
     private val sessionKey: CollectiblesSessionKey = mockk()
     private val clipboardManager: ClipboardManager = mockk(relaxed = true)
 
@@ -79,6 +82,7 @@ internal class CollectiblesMainModelTest {
 
     private lateinit var walletsFlow: MutableStateFlow<List<UserWallet>?>
     private lateinit var statusFlow: MutableStateFlow<CollectiblesAccountStatusValue>
+    private lateinit var isBalanceHiddenFlow: MutableStateFlow<Boolean>
 
     @BeforeEach
     fun resetMocks() {
@@ -92,15 +96,18 @@ internal class CollectiblesMainModelTest {
             accountRepository,
             accountStatusFetcher,
             getSelectedAppCurrencyUseCase,
+            getBalanceHidingSettingsUseCase,
             sessionKey,
             clipboardManager,
         )
         walletsFlow = MutableStateFlow(listOf(coldWallet, selectedWallet))
         statusFlow = MutableStateFlow(CollectiblesAccountStatusValue.Loading)
+        isBalanceHiddenFlow = MutableStateFlow(false)
         every { userWalletsListRepository.userWallets } returns walletsFlow
         every { accountStatusSupplier(coldWallet.walletId) } returns statusFlow
         every { accountRepository.getStatus(coldWallet.walletId) } returns statusFlow
         every { getSelectedAppCurrencyUseCase.invokeOrDefault() } returns MutableStateFlow(AppCurrency.Default)
+        every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns isBalanceHiddenFlow
         coEvery { accountStatusFetcher(any()) } returns Unit.right()
         coEvery { sessionKey.getPublicKeyOrNull(any()) } returns SessionKeyPublicKey(SESSION_KEY)
     }
@@ -132,10 +139,56 @@ internal class CollectiblesMainModelTest {
 
             // Assert
             val expected = CollectiblesBalanceConverter().convert(
-                CollectiblesBalanceConverter.Input(status = PRICED_VAULT, appCurrency = AppCurrency.Default),
+                CollectiblesBalanceConverter.Input(
+                    status = PRICED_VAULT,
+                    appCurrency = AppCurrency.Default,
+                    isBalanceHidden = false,
+                ),
             )
             assertThat(model.uiState.value.balance).isEqualTo(expected)
             assertThat(model.uiState.value.balance.crypto).isNotEqualTo(stringReference(DASH_SIGN))
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a priced vault WHEN balance hidden THEN every balance field is masked`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            statusFlow.value = PRICED_VAULT
+            advanceUntilIdle()
+
+            // Act
+            isBalanceHiddenFlow.value = true
+            advanceUntilIdle()
+
+            // Assert
+            val masked = stringReference(THREE_STARS)
+            val expected = CollectiblesMainUM.BalanceUM(fiatStyled = masked, fiatPlain = masked, crypto = masked)
+            assertThat(model.uiState.value.balance).isEqualTo(expected)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN a hidden balance WHEN balance shown again THEN the account's balance is back`() = runTest {
+            // Arrange
+            isBalanceHiddenFlow.value = true
+            val model = createModel(testScope = this)
+            statusFlow.value = PRICED_VAULT
+            advanceUntilIdle()
+
+            // Act
+            isBalanceHiddenFlow.value = false
+            advanceUntilIdle()
+
+            // Assert
+            val expected = CollectiblesBalanceConverter().convert(
+                CollectiblesBalanceConverter.Input(
+                    status = PRICED_VAULT,
+                    appCurrency = AppCurrency.Default,
+                    isBalanceHidden = false,
+                ),
+            )
+            assertThat(model.uiState.value.balance).isEqualTo(expected)
             model.onDestroy()
         }
 
@@ -576,6 +629,7 @@ internal class CollectiblesMainModelTest {
             collectiblesAccountStatusFetcher = accountStatusFetcher,
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
             sessionKey = sessionKey,
+            getBalanceHidingSettingsUseCase = getBalanceHidingSettingsUseCase,
             clipboardManager = clipboardManager,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
         )
