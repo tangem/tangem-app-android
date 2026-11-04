@@ -36,6 +36,8 @@ Rules of "Predictions" that the code does not make evident. Read the domain inva
   as on iOS ([REDACTED_TASK_KEY]).
 - Add funds needs a confirmed deposit address; without one, report an unknown error rather than offer an address
   that may be wrong.
+- Games/Questions exist only on categories that advertise them: the general feed answers `filter` with 400, so
+  don't emulate them by classifying events locally.
 
 ## Order flow
 
