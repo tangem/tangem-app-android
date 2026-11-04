@@ -1,6 +1,7 @@
 package com.tangem.features.polymarket.impl.placeprediction.model
 
 import arrow.core.right
+import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -11,30 +12,29 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
-import com.tangem.domain.polymarket.approval.PolymarketContracts
-import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
-import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
-import com.tangem.domain.polymarket.interactor.SubmitPredictionOrderInteractor
-import com.tangem.domain.polymarket.sessionkey.PolymarketOrderSigningRouter
-import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
+import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
 import com.tangem.domain.polymarket.flow.PredictionPositionsUpdateEmitter
+import com.tangem.domain.polymarket.interactor.GetPolymarketBalanceInteractor
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
+import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
+import com.tangem.domain.polymarket.interactor.SubmitPredictionOrderInteractor
+import com.tangem.domain.polymarket.model.PolymarketAddresses
+import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.model.PolymarketChainFamily
 import com.tangem.domain.polymarket.model.PolymarketDepositNetwork
 import com.tangem.domain.polymarket.model.PolymarketDepositRequisites
 import com.tangem.domain.polymarket.model.PolymarketDepositToken
+import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarketVersion
 import com.tangem.domain.polymarket.model.PolymarketPosition
 import com.tangem.domain.polymarket.model.PolymarketPositionId
-import com.tangem.domain.polymarket.model.PolymarketAddresses
-import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
-import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PredictionCollateral
 import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
@@ -42,19 +42,24 @@ import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderResult
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.domain.polymarket.model.PredictionSignedOrder
+import com.tangem.domain.polymarket.sessionkey.PolymarketOrderSigningRouter
+import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCollateralCurrencyUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionOrderQuoteUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionPriceUseCase
-import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
 import com.tangem.domain.polymarket.usecase.PlacePredictionOrderUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.createPolymarketEvent
 import com.tangem.features.polymarket.impl.createPolymarketMarket
 import com.tangem.features.polymarket.impl.createPolymarketOutcome
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPrediction
 import com.tangem.features.polymarket.impl.positions.model.createPolymarketPosition
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -63,16 +68,13 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import java.math.BigDecimal
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.TestScope
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
-import java.math.BigDecimal
-import com.tangem.core.decompose.model.Model
-import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPrediction
-import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
-import kotlinx.coroutines.CoroutineScope
 
 internal abstract class PlacePredictionModelTestBase {
 
@@ -97,6 +99,9 @@ internal abstract class PlacePredictionModelTestBase {
     protected val positionsUpdateEmitter: PredictionPositionsUpdateEmitter = mockk(relaxed = true)
     protected val statusSupplier: PredictionAccountStatusSupplier = mockk()
     protected val balancePoller: PredictionBalancePoller = mockk()
+    protected val getUserWalletUseCase: GetUserWalletUseCase = mockk {
+        every { this@mockk(any()) } returns coldWallet().right()
+    }
     protected val refreshRequisites: RefreshPredictionDepositRequisitesInteractor = mockk()
 
     protected val statusFlow = MutableStateFlow<PredictionAccountStatusValue>(value = activeStatus())
@@ -274,13 +279,18 @@ internal abstract class PlacePredictionModelTestBase {
         params: PlacePredictionComponent.Params = BUY_PARAMS,
         router: Router = this.router,
         dispatchers: CoroutineDispatcherProvider = testScope.createTestingCoroutineDispatcherProvider(),
+        orderSubmitterFactory: PlacePredictionOrderSubmitter.Factory = createOrderSubmitterFactory(
+            testScope = testScope,
+            dispatchers = dispatchers,
+        ),
     ): PlacePredictionOrderModel = PlacePredictionOrderModel(
         paramsContainer = MutableParamsContainer(value = params),
         router = router,
         urlOpener = urlOpener,
         dispatchers = dispatchers,
         quoteEngineFactory = createQuoteEngineFactory(dispatchers = dispatchers, router = router),
-        orderSubmitterFactory = createOrderSubmitterFactory(testScope = testScope, dispatchers = dispatchers),
+        orderSubmitterFactory = orderSubmitterFactory,
+        getUserWalletUseCase = getUserWalletUseCase,
     ).also(models::add)
 
     protected fun createStatusModel(
@@ -297,6 +307,14 @@ internal abstract class PlacePredictionModelTestBase {
 
     protected val getCollateralCurrencyUseCase: GetPolymarketCollateralCurrencyUseCase = mockk {
         every { this@mockk.invoke() } returns createCollateralCurrency()
+    }
+
+    protected fun hotWallet(): UserWallet = mockk<UserWallet.Hot> {
+        every { walletId } returns USER_WALLET_ID
+    }
+
+    protected fun coldWallet(): UserWallet = mockk<UserWallet.Cold> {
+        every { walletId } returns USER_WALLET_ID
     }
 
     protected fun createCollateralCurrency(): CryptoCurrency.Token {
