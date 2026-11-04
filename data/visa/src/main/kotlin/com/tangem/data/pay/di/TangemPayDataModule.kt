@@ -553,6 +553,13 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
+        fun provideIsTangemPayCustomerVerifiedUseCase(
+            getCustomerSummaryUseCase: GetCustomerSummaryUseCase,
+        ): IsTangemPayCustomerVerifiedUseCase {
+            return IsTangemPayCustomerVerifiedUseCase(getCustomerSummaryUseCase = getCustomerSummaryUseCase)
+        }
+
+        @Provides
         fun provideResolvePaymentAccountStatusFromSummaryUseCase(
             onboardingRepository: OnboardingRepository,
         ): ResolvePaymentAccountStatusFromSummaryUseCase {
