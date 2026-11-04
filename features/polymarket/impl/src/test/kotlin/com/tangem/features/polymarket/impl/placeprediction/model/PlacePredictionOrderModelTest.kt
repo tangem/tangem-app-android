@@ -5,18 +5,18 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.Model
-import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
-import com.tangem.domain.polymarket.model.PolymarketSigningError
-import com.tangem.domain.polymarket.model.PredictionOrderFailure
 import com.tangem.domain.polymarket.model.PolymarketEventError
 import com.tangem.domain.polymarket.model.PolymarketPositionsError
+import com.tangem.domain.polymarket.model.PolymarketSigningError
+import com.tangem.domain.polymarket.model.PredictionOrderFailure
 import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
-import com.tangem.domain.models.StatusSource
+import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.features.polymarket.impl.common.FakeSlotHost
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
@@ -41,10 +41,11 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import java.math.BigDecimal
+import java.util.Locale
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
@@ -58,8 +59,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
-import java.math.BigDecimal
-import java.util.Locale
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
@@ -248,7 +247,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a hot wallet WHEN the order screen opens THEN the order is placed by holding the button`() =
             runOrderTest {
                 // Arrange
-                every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(hotWallet()))
+                every { getUserWalletUseCase(any()) } returns hotWallet().right()
 
                 // Act
                 val model = createOrderModel(testScope = this)
@@ -262,41 +261,10 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a card wallet WHEN the order screen opens THEN the order is placed by tapping the button`() =
             runOrderTest {
                 // Arrange
-                every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(coldWallet()))
+                every { getUserWalletUseCase(any()) } returns coldWallet().right()
 
                 // Act
                 val model = createOrderModel(testScope = this)
-                runCurrent()
-
-                // Assert
-                assertThat(model.uiState.value.isHoldToConfirm).isFalse()
-            }
-
-        @Test
-        fun `GIVEN the wallets are not loaded WHEN the order screen opens THEN the order is placed by holding`() =
-            runOrderTest {
-                // Arrange
-                every { userWalletsListRepository.userWallets } returns MutableStateFlow(null)
-
-                // Act
-                val model = createOrderModel(testScope = this)
-                runCurrent()
-
-                // Assert
-                assertThat(model.uiState.value.isHoldToConfirm).isTrue()
-            }
-
-        @Test
-        fun `GIVEN the wallets are not loaded WHEN the card arrives THEN the order is placed by tapping`() =
-            runOrderTest {
-                // Arrange
-                val wallets = MutableStateFlow<List<UserWallet>?>(null)
-                every { userWalletsListRepository.userWallets } returns wallets
-                val model = createOrderModel(testScope = this)
-                runCurrent()
-
-                // Act
-                wallets.value = listOf(coldWallet())
                 runCurrent()
 
                 // Assert
@@ -307,7 +275,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN the wallet is not in the list WHEN the order screen opens THEN the order is placed by holding`() =
             runOrderTest {
                 // Arrange
-                every { userWalletsListRepository.userWallets } returns MutableStateFlow(emptyList())
+                every { getUserWalletUseCase(any()) } returns GetUserWalletError.UserWalletNotFound.left()
 
                 // Act
                 val model = createOrderModel(testScope = this)
