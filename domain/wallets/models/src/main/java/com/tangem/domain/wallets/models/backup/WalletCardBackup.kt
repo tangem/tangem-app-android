@@ -11,7 +11,7 @@ import com.tangem.common.card.EllipticCurve
  * @property cardId        card identifier
  * @property cardPublicKey public key of the card, hex encoded — the same encoding the `card_public_key` request
  *                         header uses
- * @property role          role of the card within the wallet
+ * @property role          role of the card within the wallet, `null` when it is not known for certain
  * @property backupStatus  backup state of the card
 
  * @property error         error received while performing a card command, if any
@@ -19,7 +19,7 @@ import com.tangem.common.card.EllipticCurve
 data class WalletCardBackup(
     val cardId: String,
     val cardPublicKey: String,
-    val role: Role,
+    val role: Role?,
     val backupStatus: CardBackupStatus,
     val curves: List<EllipticCurve>,
     val error: CardBackupError? = null,
