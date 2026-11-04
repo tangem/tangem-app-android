@@ -14,7 +14,7 @@ import javax.inject.Inject
 
 /**
  * Builds the offer an agent's exchange intent is shown as: the two currencies the wallet swaps between, what the agent
- * asks for and who asks. The headline prefers the verified origin over the self-declared name.
+ * asks for and who asks. The headline names the client, falling back to its origin.
  * Returns `null` when the intent amount is not a positive number.
  */
 internal class ExchangeIntentOfferConverter @Inject constructor(
@@ -33,7 +33,7 @@ internal class ExchangeIntentOfferConverter @Inject constructor(
         val swap = swapTextConverter.convert(
             ExchangeIntentSwapTextConverter.Input(intent = value.intent, from = value.from, to = value.to),
         ) ?: return null
-        val agentIdentity = (value.agent.origin ?: value.agent.name)?.let(::stringReference)
+        val agentIdentity = (value.agent.name ?: value.agent.origin)?.let(::stringReference)
             ?: resourceReference(R.string.mcp_intent_unknown_agent_name)
 
         return ExchangeIntentUM.Offer(

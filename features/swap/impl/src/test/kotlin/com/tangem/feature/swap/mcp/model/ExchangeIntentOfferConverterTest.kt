@@ -77,7 +77,7 @@ internal class ExchangeIntentOfferConverterTest {
             assertThat(actual?.title).isEqualTo(
                 resourceReference(
                     R.string.mcp_swap_intent_offer_title,
-                    wrappedList(stringReference("mcp.claude.com"), model.expectedFrom, model.expectedTo),
+                    wrappedList(stringReference("Claude"), model.expectedFrom, model.expectedTo),
                 ),
             )
         }
@@ -155,7 +155,7 @@ internal class ExchangeIntentOfferConverterTest {
 
         @ParameterizedTest
         @ProvideTestModels
-        fun `GIVEN agent metadata WHEN convert THEN headline prefers origin and card preserves verified identity`(
+        fun `GIVEN agent metadata WHEN convert THEN headline prefers name over origin and card preserves verified identity`(
             model: AgentModel,
         ) {
             // Arrange
@@ -187,12 +187,12 @@ internal class ExchangeIntentOfferConverterTest {
         }
 
         private fun provideTestModels() = listOf(
-            AgentModel(claude, expectedIdentity = stringReference("mcp.claude.com")),
-            AgentModel(claude.copy(iconUrl = null), expectedIdentity = stringReference("mcp.claude.com")),
+            AgentModel(claude, expectedIdentity = stringReference("Claude")),
+            AgentModel(claude.copy(iconUrl = null), expectedIdentity = stringReference("Claude")),
             AgentModel(claude.copy(name = null), expectedIdentity = stringReference("mcp.claude.com")),
             AgentModel(
                 claude.copy(name = "Tangem", origin = "agent.example.com"),
-                expectedIdentity = stringReference("agent.example.com"),
+                expectedIdentity = stringReference("Tangem"),
             ),
             AgentModel(claude.copy(origin = null), expectedIdentity = stringReference("Claude")),
             AgentModel(claude.copy(origin = null, iconUrl = null), expectedIdentity = stringReference("Claude")),
@@ -315,7 +315,7 @@ internal class ExchangeIntentOfferConverterTest {
             assertThat(actual.title).isEqualTo(
                 resourceReference(
                     R.string.mcp_swap_intent_offer_title,
-                    wrappedList(stringReference("mcp.claude.com"), model.expectedFrom, model.expectedTo),
+                    wrappedList(stringReference("Claude"), model.expectedFrom, model.expectedTo),
                 ),
             )
             assertThat(proceeded).isTrue()
@@ -474,7 +474,7 @@ internal class ExchangeIntentOfferConverterTest {
             assertThat(actual.title).isEqualTo(
                 resourceReference(
                     R.string.mcp_swap_intent_offer_title,
-                    wrappedList(stringReference("mcp.claude.com"), expectedFrom, expectedTo),
+                    wrappedList(stringReference("Claude"), expectedFrom, expectedTo),
                 ),
             )
             assertThat(proceeded).isTrue()
