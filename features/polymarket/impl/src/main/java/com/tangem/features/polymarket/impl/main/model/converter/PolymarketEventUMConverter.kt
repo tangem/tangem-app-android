@@ -30,7 +30,7 @@ import java.math.BigDecimal
 internal class PolymarketEventUMConverter(
     private val onEventClick: (String) -> Unit,
     private val onOutcomeClick: (eventId: String, marketId: String, assetId: String) -> Unit,
-    private val isPhaseTwoEnabled: Boolean = false,
+    private val isPhaseTwoEnabled: Boolean,
 ) : Converter<PolymarketEvent, PolymarketEventUM> {
 
     private val sportsConverter = PolymarketSportsUMConverter(isPhaseTwoEnabled, onOutcomeClick)
@@ -45,7 +45,7 @@ internal class PolymarketEventUMConverter(
             title = stringReference(value.title),
             iconUrl = value.iconUrl,
             volume = stringReference(value.volume.formatPolymarketVolume()),
-            sports = game?.takeIf { sportsRow != null }?.let { sportsConverter.convert(it, value) },
+            sports = game?.takeIf { sportsRow != null }?.let { sportsConverter.convert(it) },
             rows = sportsRow?.let(::listOf)?.toImmutableList() ?: value.markets
                 .map { convertRow(event = value, market = it) }
                 .toImmutableList(),

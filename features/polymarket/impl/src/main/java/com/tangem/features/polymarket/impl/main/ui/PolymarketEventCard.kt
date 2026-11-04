@@ -188,7 +188,6 @@ private fun EventOutcomes(outcomes: ImmutableList<PolymarketOutcomeUM>, isExpand
             content = buttons,
         )
     } else {
-        // Compact market rows keep content-sized buttons rather than equalizing the available width.
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,

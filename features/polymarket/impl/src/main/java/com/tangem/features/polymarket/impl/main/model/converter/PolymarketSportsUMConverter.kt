@@ -5,6 +5,7 @@ import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketSportsState
 import com.tangem.domain.polymarket.model.PolymarketTeam
 import com.tangem.features.polymarket.impl.common.PolymarketOutcomeAccent
+import com.tangem.features.polymarket.impl.common.PolymarketOutcomeButtonTitle
 import com.tangem.features.polymarket.impl.common.PolymarketTeamMatcher
 import com.tangem.features.polymarket.impl.common.formatPolymarketPrice
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventRowUM
@@ -15,35 +16,30 @@ import java.math.BigDecimal
 import java.util.Locale
 
 internal class PolymarketSportsUMConverter(
-    private val isTeamAbbreviationEnabled: Boolean = false,
+    private val isTeamAbbreviationEnabled: Boolean,
     private val onOutcomeClick: (eventId: String, marketId: String, assetId: String) -> Unit,
 ) {
 
-    fun convert(game: PolymarketSportsState.Game, event: PolymarketEvent): PolymarketSportsUM {
-        val teams = event.teams.orEmpty()
-        val score = game.score.takeIf { teams.size == 2 }
-        val orderedScore = when (teams.firstOrNull()?.ordering?.lowercase(Locale.ROOT)) {
-            "home" -> score
-            "away" -> score?.let { PolymarketSportsState.Score(it.away, it.home) }
-            else -> null
-        }
-        return PolymarketSportsUM(
-            home = teams.firstOrNull { it.isOnSide("home") }?.toTeam(),
-            away = teams.firstOrNull { it.isOnSide("away") }?.toTeam(),
-            homeScore = orderedScore?.home?.toString(),
-            awayScore = orderedScore?.away?.toString(),
-            period = game.period?.takeIf(String::isNotBlank),
-            isLive = game.shouldShowLiveBadge,
-        )
-    }
+    fun convert(game: PolymarketSportsState.Game): PolymarketSportsUM = PolymarketSportsUM(
+        home = game.home?.value?.toTeam(),
+        away = game.away?.value?.toTeam(),
+        homeScore = game.score?.home?.toString(),
+        awayScore = game.score?.away?.toString(),
+        period = game.period?.takeIf(String::isNotBlank),
+        isLive = game.isLive && !game.isEnded && game.period?.uppercase(Locale.ROOT) !in NO_LIVE_PERIODS,
+    )
 
     fun outcomes(event: PolymarketEvent, game: PolymarketSportsState.Game?): PolymarketEventRowUM? {
         if (game == null || !game.isLive && !game.isEnded) return null
-        val teams = event.teams.orEmpty()
-        val home = teams.firstOrNull { it.isOnSide("home") } ?: return null
-        val away = teams.firstOrNull { it.isOnSide("away") } ?: return null
+        val home = restTeam(event, game.home) ?: return null
+        val away = restTeam(event, game.away) ?: return null
+        if (home == away) return null
         val ordered = moneylineChoices(event = event, home = home, away = away) ?: return null
-        val titles = teamTitles(listOf(home, away))
+        val titles = PolymarketOutcomeButtonTitle.convert(
+            listOf(home.name, away.name),
+            listOf(home, away),
+            isTeamAbbreviationEnabled,
+        )
         return PolymarketEventRowUM(
             marketId = ordered.first().marketId,
             title = null,
@@ -65,6 +61,11 @@ internal class PolymarketSportsUMConverter(
         )
     }
 
+    private fun restTeam(event: PolymarketEvent, side: PolymarketSportsState.Team?): PolymarketTeam? {
+        val index = side?.restIndex ?: return null
+        return event.teams?.getOrNull(index)?.takeIf { it.name == side.value.name }
+    }
+
     private fun moneylineChoices(event: PolymarketEvent, home: PolymarketTeam, away: PolymarketTeam): List<Choice>? {
         val choices = choices(event)
         val homeChoice = choices.firstOrNull {
@@ -81,15 +82,6 @@ internal class PolymarketSportsUMConverter(
             null
         }
         return listOfNotNull(homeChoice, draw, awayChoice)
-    }
-
-    private fun teamTitles(teams: List<PolymarketTeam>): List<String> {
-        val abbreviations = teams.map { it.abbreviation?.trim()?.takeIf(String::isNotEmpty)?.uppercase(Locale.ROOT) }
-        return if (isTeamAbbreviationEnabled && abbreviations.all { it != null }) {
-            abbreviations.filterNotNull()
-        } else {
-            teams.map { it.name }
-        }
     }
 
     private fun choices(event: PolymarketEvent): List<Choice> {
@@ -113,10 +105,9 @@ internal class PolymarketSportsUMConverter(
 
     private fun PolymarketTeam.toTeam() = PolymarketSportsUM.Team(stringReference(name), logoUrl)
 
-    private fun PolymarketTeam.isOnSide(side: String): Boolean = ordering.equals(side, ignoreCase = true)
-
     private companion object {
         const val GROUPED_MARKETS_COUNT = 3
+        val NO_LIVE_PERIODS = setOf("CAN", "POST", "INT", "AB")
     }
 
     private data class Choice(val marketId: String, val assetId: String, val label: String, val price: BigDecimal?)
