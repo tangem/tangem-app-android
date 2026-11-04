@@ -211,6 +211,16 @@ internal class PromoCampaignV3ConverterTest {
             expected = createCampaign(summary = null),
         ),
         ConvertModel(
+            description = "GIVEN payout texts WHEN convert THEN passed through",
+            dto = createDto(payoutButtonName = "Choose token", payoutAccountTitle = "Payout account"),
+            expected = createCampaign(payoutButtonName = "Choose token", payoutAccountTitle = "Payout account"),
+        ),
+        ConvertModel(
+            description = "GIVEN blank payout texts WHEN convert THEN null",
+            dto = createDto(payoutButtonName = " ", payoutAccountTitle = ""),
+            expected = createCampaign(payoutButtonName = null, payoutAccountTitle = null),
+        ),
+        ConvertModel(
             description = "GIVEN missing id WHEN convert THEN null",
             dto = createDto(id = null),
             expected = null,
@@ -223,6 +233,8 @@ internal class PromoCampaignV3ConverterTest {
         blocks: List<DescriptionBlock> = emptyList(),
         id: Int? = CAMPAIGN_ID,
         campaignDescription: String? = "summary",
+        payoutButtonName: String? = null,
+        payoutAccountTitle: String? = null,
     ) = PromotionDto(
         id = id,
         name = "example_campaign",
@@ -239,6 +251,8 @@ internal class PromoCampaignV3ConverterTest {
             publicImage = "https://cdn.tangem.com/c.png",
             tncLink = Link(text = "terms", url = "https://tangem.com/c/terms"),
             actionButtonName = "action",
+            payoutButtonName = payoutButtonName,
+            payoutAccountTitle = payoutAccountTitle,
         ),
     )
 
@@ -247,6 +261,8 @@ internal class PromoCampaignV3ConverterTest {
         payoutTokens: List<PromoPayoutToken>? = null,
         blocks: List<PromoDescriptionBlock> = emptyList(),
         summary: String? = "summary",
+        payoutButtonName: String? = null,
+        payoutAccountTitle: String? = null,
     ) = PromoCampaign(
         id = CAMPAIGN_ID,
         name = "example_campaign",
@@ -260,6 +276,8 @@ internal class PromoCampaignV3ConverterTest {
             imageUrl = "https://cdn.tangem.com/c.png",
             tncLink = PromoLink(text = "terms", url = "https://tangem.com/c/terms"),
             actionButtonName = "action",
+            payoutButtonName = payoutButtonName,
+            payoutAccountTitle = payoutAccountTitle,
         ),
     )
 
