@@ -426,17 +426,58 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             }
 
         @Test
-        fun `GIVEN a hot wallet with a usable session key WHEN the screen resumes THEN it is held unchecked`() =
+        fun `GIVEN a hot wallet with a usable session key WHEN the screen opens THEN the button is plain`() =
             runOrderTest {
                 // Arrange
                 coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
                 every { getUserWalletUseCase(any()) } returns hotWallet().right()
-                val model = openOrderModel()
-                model.onPause()
 
                 // Act
-                model.onResume()
-                runCurrent()
+                val model = openOrderModel()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.PLAIN)
+            }
+
+        @Test
+        fun `GIVEN a hot wallet without a usable session key WHEN the screen opens THEN the button is held`() =
+            runOrderTest {
+                // Arrange
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns false
+                every { getUserWalletUseCase(any()) } returns hotWallet().right()
+
+                // Act
+                val model = openOrderModel()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.HOLD)
+            }
+
+        @Test
+        fun `GIVEN a hot wallet and session keys disabled WHEN the screen opens THEN it is held unchecked`() =
+            runOrderTest {
+                // Arrange
+                every { featureToggles.isPolymarketSessionKeysEnabled } returns false
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                every { getUserWalletUseCase(any()) } returns hotWallet().right()
+
+                // Act
+                val model = openOrderModel()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.HOLD)
+                coVerify(exactly = 0) { signingRouter.canSignWithSessionKey(userWalletId = any()) }
+            }
+
+        @Test
+        fun `GIVEN the wallet is not found WHEN the screen opens THEN the session key is not checked`() =
+            runOrderTest {
+                // Arrange
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                every { getUserWalletUseCase(any()) } returns GetUserWalletError.UserWalletNotFound.left()
+
+                // Act
+                val model = openOrderModel()
 
                 // Assert
                 assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.HOLD)
