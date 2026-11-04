@@ -1,5 +1,6 @@
 package com.tangem.features.collectibles.impl.main.model.converter
 
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.defaultAmount
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -25,7 +26,7 @@ internal class CollectiblesBalanceConverter :
                     fiatCurrencySymbol = value.appCurrency.symbol,
                     spanStyleReference = { TangemTheme.typography3.heading.medium.toSpanStyle() },
                 )
-            },
+            }.orMaskWithStars(value.isBalanceHidden),
             fiatPlain = stringReference(
                 value.status.fiatBalance.format {
                     fiat(
@@ -33,10 +34,15 @@ internal class CollectiblesBalanceConverter :
                         fiatCurrencySymbol = value.appCurrency.symbol,
                     ).defaultAmount()
                 },
-            ),
-            crypto = stringReference(value.status.balance?.usdcAmount?.formatUsdc() ?: DASH_SIGN),
+            ).orMaskWithStars(value.isBalanceHidden),
+            crypto = stringReference(value.status.balance?.usdcAmount?.formatUsdc() ?: DASH_SIGN)
+                .orMaskWithStars(value.isBalanceHidden),
         )
     }
 
-    data class Input(val status: CollectiblesAccountStatusValue, val appCurrency: AppCurrency)
+    data class Input(
+        val status: CollectiblesAccountStatusValue,
+        val appCurrency: AppCurrency,
+        val isBalanceHidden: Boolean,
+    )
 }
