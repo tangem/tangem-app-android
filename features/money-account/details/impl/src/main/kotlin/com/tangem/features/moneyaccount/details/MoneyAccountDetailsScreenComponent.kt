@@ -50,6 +50,7 @@ internal class MoneyAccountDetailsScreenComponent(
                     currency = currency,
                     openExplorer = model::onExploreClick,
                     onTransactionClick = model::onTransactionClick,
+                    shouldUseCacheWhenOffline = true,
                 ),
             )
         },
