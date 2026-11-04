@@ -596,8 +596,33 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             runCurrent()
 
             // Assert
+            coVerify(exactly = 0) { signingRouter.route(addresses = any()) }
             coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+            verify(exactly = 1) { messageSender.send(any()) }
+            assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
         }
+
+        @Test
+        fun `GIVEN a cached plain style WHEN an owner placement fails THEN the session key is checked again`() =
+            runOrderTest {
+                // Arrange
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returnsMany
+                    listOf(true, false)
+                coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
+                coEvery { signOrderInteractor(request = any()) } returns
+                    PredictionOrderFailure.Signing(error = PolymarketSigningError.UserCancelled).left()
+                val model = createQuotedModel()
+                runCurrent()
+
+                // Act
+                model.onPlaceClick(confirmedWith = PlaceButtonStyleUM.CARD)
+                runCurrent()
+
+                // Assert
+                coVerify(exactly = 2) { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) }
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+            }
 
         @Test
         fun `GIVEN session keys disabled WHEN the screen opens and resumes THEN the session key is not checked`() =
