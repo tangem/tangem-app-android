@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.local.connection.NetworkConnectionManager
 import com.tangem.data.moneyaccount.store.MoneyAccountStatusesStore
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
@@ -52,6 +53,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     private val resolveMoneyAccountStatusFromSummaryUseCase: ResolveMoneyAccountStatusFromSummaryUseCase = mockk()
     private val getCustomerSummaryUseCase: GetCustomerSummaryUseCase = mockk()
     private val summary: CustomerSummary = mockk()
+    private val networkConnectionManager: NetworkConnectionManager = mockk()
 
     private val fetcher = DefaultMoneyAccountStatusFetcher(
         moneyAccountStatusesStore = moneyAccountStatusesStore,
@@ -62,6 +64,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         moneyAccountCurrencyFactory = moneyAccountCurrencyFactory,
         resolveMoneyAccountStatusFromSummaryUseCase = resolveMoneyAccountStatusFromSummaryUseCase,
         getCustomerSummaryUseCase = getCustomerSummaryUseCase,
+        networkConnectionManager = networkConnectionManager,
     )
 
     @BeforeEach
@@ -73,7 +76,9 @@ internal class DefaultMoneyAccountStatusFetcherTest {
             moneyAccountCurrencyFactory,
             resolveMoneyAccountStatusFromSummaryUseCase,
             getCustomerSummaryUseCase,
+            networkConnectionManager,
         )
+        every { networkConnectionManager.isOnlineSync } returns true
         every { deviceSecurity.isRooted } returns false
         coEvery { moneyAccountStatusesStore.getSyncOrNull(USER_WALLET_ID) } returns null
         every { moneyAccountCurrencyFactory.create(USER_WALLET_ID) } returns cryptoCurrency
@@ -138,6 +143,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     ) = runTest {
         // Arrange
         mockCachedAccount(model.cached)
+        every { networkConnectionManager.isOnlineSync } returns model.isOnline
         coEvery { getCustomerSummaryUseCase(USER_WALLET_ID, CachePolicy.REFRESH) } returns model.error.left()
 
         // Act
@@ -155,6 +161,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     ) = runTest {
         // Arrange
         mockCachedAccount(model.cached)
+        every { networkConnectionManager.isOnlineSync } returns model.isOnline
         coEvery { onboardingRepository.getCustomerInfo(USER_WALLET_ID) } returns model.error.left()
 
         // Act
@@ -459,6 +466,15 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         ),
         CachedAccountErrorModel(
             cached = active(),
+            error = VisaApiError.RefreshTokenExpired,
+            isOnline = false,
+            expected = active().copy(
+                source = StatusSource.ONLY_CACHE,
+                error = MoneyAccountStatusValue.Error.Unavailable,
+            ),
+        ),
+        CachedAccountErrorModel(
+            cached = active(),
             error = VisaApiError.ServerUnavailable,
             expected = active().copy(
                 source = StatusSource.ONLY_CACHE,
@@ -478,6 +494,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     data class CachedAccountErrorModel(
         val cached: MoneyAccountStatusValue.Account,
         val error: VisaApiError,
+        val isOnline: Boolean = true,
         val expected: MoneyAccountStatusValue.Account,
     )
 
