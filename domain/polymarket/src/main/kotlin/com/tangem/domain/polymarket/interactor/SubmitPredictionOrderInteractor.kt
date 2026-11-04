@@ -32,14 +32,21 @@ class SubmitPredictionOrderInteractor(
     ): Either<PredictionSubmitOrderError, PredictionSubmittedOrder> {
         val route = when (preference) {
             PredictionOrderSigningPreference.OWNER_ONLY -> PredictionOrderSigningRoute.Owner
-            PredictionOrderSigningPreference.AUTOMATIC -> router.route(addresses = request.addresses)
+            PredictionOrderSigningPreference.AUTOMATIC,
+            PredictionOrderSigningPreference.SESSION_KEY_ONLY,
+            -> router.route(addresses = request.addresses)
         }
 
         return when (route) {
-            PredictionOrderSigningRoute.Owner -> submit(request = request, route = route, onStep = onStep)
+            PredictionOrderSigningRoute.Owner -> submitWithOwnerKey(
+                request = request,
+                preference = preference,
+                onStep = onStep,
+            )
             is PredictionOrderSigningRoute.Session -> submitWithSessionKey(
                 request = request,
                 route = route,
+                preference = preference,
                 onStep = onStep,
             )
         }
@@ -48,6 +55,7 @@ class SubmitPredictionOrderInteractor(
     private suspend fun submitWithSessionKey(
         request: PredictionSignRequest,
         route: PredictionOrderSigningRoute.Session,
+        preference: PredictionOrderSigningPreference,
         onStep: (PredictionOrderSubmitStep) -> Unit,
     ): Either<PredictionSubmitOrderError, PredictionSubmittedOrder> {
         onStep(PredictionOrderSubmitStep.SIGNING)
@@ -56,7 +64,7 @@ class SubmitPredictionOrderInteractor(
 
             router.reportSigningFailed(addresses = request.addresses, identity = route.identity, failure = failure)
             stateService.refresh(request.addresses.userWalletId)
-            return submit(request = request, route = PredictionOrderSigningRoute.Owner, onStep = onStep)
+            return submitWithOwnerKey(request = request, preference = preference, onStep = onStep)
         }
 
         onStep(PredictionOrderSubmitStep.POSTING)
@@ -70,10 +78,21 @@ class SubmitPredictionOrderInteractor(
 
             router.reportRefused(addresses = request.addresses, identity = route.identity, error = error)
             stateService.refresh(request.addresses.userWalletId)
-            return submit(request = request, route = PredictionOrderSigningRoute.Owner, onStep = onStep)
+            return submitWithOwnerKey(request = request, preference = preference, onStep = onStep)
         }
 
         return PredictionSubmittedOrder(result = result, route = route).right()
+    }
+
+    private suspend fun submitWithOwnerKey(
+        request: PredictionSignRequest,
+        preference: PredictionOrderSigningPreference,
+        onStep: (PredictionOrderSubmitStep) -> Unit,
+    ): Either<PredictionSubmitOrderError, PredictionSubmittedOrder> {
+        if (preference == PredictionOrderSigningPreference.SESSION_KEY_ONLY) {
+            return PredictionSubmitOrderError.SessionKeyUnavailable.left()
+        }
+        return submit(request = request, route = PredictionOrderSigningRoute.Owner, onStep = onStep)
     }
 
     private suspend fun submit(
@@ -127,4 +146,6 @@ sealed interface PredictionSubmitOrderError {
     data class NotSigned(val failure: PredictionOrderFailure) : PredictionSubmitOrderError
 
     data class NotPlaced(val error: PredictionPlaceOrderError) : PredictionSubmitOrderError
+
+    data object SessionKeyUnavailable : PredictionSubmitOrderError
 }

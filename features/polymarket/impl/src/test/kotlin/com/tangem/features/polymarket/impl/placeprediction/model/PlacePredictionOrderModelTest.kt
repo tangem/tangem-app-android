@@ -16,6 +16,7 @@ import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
 import com.tangem.domain.polymarket.model.PredictionOrderSide
 import com.tangem.domain.polymarket.model.PredictionOrderSigningRoute
+import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.features.polymarket.impl.common.FakeSlotHost
@@ -485,6 +486,67 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             }
 
         @Test
+        fun `GIVEN a plain button WHEN the router picks the owner key THEN nothing is signed and owner confirmation is asked`() =
+            runOrderTest {
+                // Arrange
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
+                val model = createQuotedModel()
+                runCurrent()
+
+                // Act
+                model.onPlaceClick()
+                runCurrent()
+
+                // Assert
+                coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+                verify(exactly = 1) { messageSender.send(any()) }
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+            }
+
+        @Test
+        fun `GIVEN a plain hot wallet button WHEN the exchange refuses the session key THEN the owner key never signs`() =
+            runOrderTest {
+                // Arrange
+                every { getUserWalletUseCase(any()) } returns hotWallet().right()
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                coEvery { signingRouter.route(addresses = ADDRESSES) } returns SESSION_ROUTE
+                coEvery { placeOrderUseCase(any(), any(), any(), SESSION_ROUTE) } returns
+                    PredictionPlaceOrderError.Unauthorized(detail = "Unauthorized/Invalid api key").left()
+                val model = createQuotedModel()
+                runCurrent()
+
+                // Act
+                model.onPlaceClick()
+                runCurrent()
+
+                // Assert
+                coVerify(exactly = 1) { signOrderInteractor(request = any()) }
+                coVerify(exactly = 0) { signOrderInteractor(request = match { it.route == PredictionOrderSigningRoute.Owner }) }
+                verify(exactly = 1) { messageSender.send(any()) }
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.HOLD)
+            }
+
+        @Test
+        fun `GIVEN a card button WHEN the router picks the owner key THEN the owner key signs`() =
+            runOrderTest {
+                // Arrange
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns false
+                coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
+                val model = createQuotedModel()
+                runCurrent()
+
+                // Act
+                model.onPlaceClick()
+                runCurrent()
+
+                // Assert
+                coVerify(exactly = 1) { signOrderInteractor(request = match { it.route == PredictionOrderSigningRoute.Owner }) }
+            }
+
+        @Test
         fun `GIVEN session keys disabled WHEN the screen opens and resumes THEN the session key is not checked`() =
             runOrderTest {
                 // Arrange
@@ -640,7 +702,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN the submitter refuses the order WHEN place clicked THEN the hold button is reset`() = runOrderTest {
             // Arrange
             val refusingSubmitter = mockk<PlacePredictionOrderSubmitter> {
-                coEvery { submit(prepared = any()) } returns null
+                coEvery { submit(prepared = any(), onKeyLost = any()) } returns null
                 every { isSubmitting() } returns false
             }
             val model = createOrderModel(
@@ -658,7 +720,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             runCurrent()
 
             // Assert
-            coVerify(exactly = 1) { refusingSubmitter.submit(prepared = any()) }
+            coVerify(exactly = 1) { refusingSubmitter.submit(prepared = any(), onKeyLost = any()) }
             assertThat(model.uiState.value.holdResetKey).isEqualTo(before + 1)
         }
 
