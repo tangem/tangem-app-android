@@ -7,8 +7,8 @@ import com.tangem.domain.collectibles.CollectiblesAccountError
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
-import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
-import com.tangem.domain.collectibles.delegate.HotDelegatePublicKey
+import com.tangem.domain.collectibles.delegate.CollectiblesSessionKey
+import com.tangem.domain.collectibles.delegate.SessionKeyPublicKey
 import com.tangem.domain.collectibles.models.CollectibleException
 import com.tangem.domain.collectibles.models.CollectiblePurchaseTx
 import com.tangem.domain.collectibles.models.CollectibleTurboMode
@@ -51,7 +51,7 @@ internal class OpenCollectiblePackUseCaseTest {
     private val ownerDeriver: CollectiblesOwnerDeriver = mockk()
     private val accountStatusFetcher: CollectiblesAccountStatusFetcher = mockk()
     private val accountRepository: CollectiblesAccountRepository = mockk()
-    private val hotDelegate: CollectiblesHotDelegate = mockk()
+    private val sessionKey: CollectiblesSessionKey = mockk()
 
     private val userWallet: UserWallet = mockk { every { walletId } returns WALLET_ID }
 
@@ -61,7 +61,7 @@ internal class OpenCollectiblePackUseCaseTest {
         ownerDeriver = ownerDeriver,
         accountStatusFetcher = accountStatusFetcher,
         accountRepository = accountRepository,
-        hotDelegate = hotDelegate,
+        sessionKey = sessionKey,
     )
 
     @BeforeEach
@@ -72,10 +72,10 @@ internal class OpenCollectiblePackUseCaseTest {
             ownerDeriver,
             accountStatusFetcher,
             accountRepository,
-            hotDelegate,
+            sessionKey,
         )
-        coEvery { gachaVaultRepository.getVaultHotDelegate(userWallet) } returns DELEGATE.base58.right()
-        coEvery { hotDelegate.getPublicKeyOrNull(ACCOUNT_ID) } returns DELEGATE
+        coEvery { gachaVaultRepository.getVaultSessionKey(userWallet) } returns SESSION_KEY.base58.right()
+        coEvery { sessionKey.getPublicKeyOrNull(ACCOUNT_ID) } returns SESSION_KEY
         coEvery { accountRepository.getStatusSync(WALLET_ID) } returns ONBOARDED
         coEvery { accountRepository.saveAccount(any(), any()) } just runs
         every { accountRepository.isRelinkPending(WALLET_ID) } returns false
@@ -103,7 +103,7 @@ internal class OpenCollectiblePackUseCaseTest {
     fun `GIVEN the purchase fails WHEN invoked THEN the vault balance is refreshed anyway`() = runTest {
         // Arrange
         coEvery { gachaVaultRepository.sendPurchasePack(any(), any(), any(), any()) } returns
-            CollectiblesAccountError.DelegateNotProvisioned.left()
+            CollectiblesAccountError.SessionKeyNotProvisioned.left()
 
         // Act
         val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
@@ -217,10 +217,10 @@ internal class OpenCollectiblePackUseCaseTest {
     }
 
     @Test
-    fun `GIVEN the vault answers to another delegate WHEN invoked THEN a relink is required and nothing is paid`() =
+    fun `GIVEN the vault answers to another session key WHEN invoked THEN a relink is required and nothing is paid`() =
         runTest {
             // Arrange
-            coEvery { gachaVaultRepository.getVaultHotDelegate(userWallet) } returns OTHER_DELEGATE.right()
+            coEvery { gachaVaultRepository.getVaultSessionKey(userWallet) } returns OTHER_SESSION_KEY.right()
 
             // Act
             val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
@@ -234,7 +234,7 @@ internal class OpenCollectiblePackUseCaseTest {
     @Test
     fun `GIVEN a relink still landing WHEN invoked THEN nothing is paid and no new relink is asked`() = runTest {
         // Arrange
-        coEvery { gachaVaultRepository.getVaultHotDelegate(userWallet) } returns OTHER_DELEGATE.right()
+        coEvery { gachaVaultRepository.getVaultSessionKey(userWallet) } returns OTHER_SESSION_KEY.right()
         every { accountRepository.isRelinkPending(WALLET_ID) } returns true
 
         // Act
@@ -249,9 +249,9 @@ internal class OpenCollectiblePackUseCaseTest {
     }
 
     @Test
-    fun `GIVEN the vault delegate cannot be read WHEN invoked THEN the purchase fails and pays nothing`() = runTest {
+    fun `GIVEN the vault session key cannot be read WHEN invoked THEN the purchase fails and pays nothing`() = runTest {
         // Arrange
-        coEvery { gachaVaultRepository.getVaultHotDelegate(userWallet) } returns
+        coEvery { gachaVaultRepository.getVaultSessionKey(userWallet) } returns
             CollectiblesAccountError.Vault(GachaVaultError.WalletUnavailable).left()
 
         // Act
@@ -266,8 +266,8 @@ internal class OpenCollectiblePackUseCaseTest {
     @Test
     fun `GIVEN the vault is re-pointed while paying WHEN the send fails THEN a relink is required`() = runTest {
         // Arrange
-        coEvery { gachaVaultRepository.getVaultHotDelegate(userWallet) } returnsMany
-            listOf(DELEGATE.base58.right(), OTHER_DELEGATE.right())
+        coEvery { gachaVaultRepository.getVaultSessionKey(userWallet) } returnsMany
+            listOf(SESSION_KEY.base58.right(), OTHER_SESSION_KEY.right())
         coEvery { gachaVaultRepository.sendPurchasePack(any(), any(), any(), any()) } returns
             CollectiblesAccountError.Vault(GachaVaultError.WalletUnavailable).left()
 
@@ -280,7 +280,7 @@ internal class OpenCollectiblePackUseCaseTest {
     }
 
     @Test
-    fun `GIVEN the delegate still matches WHEN the send fails THEN the account is left as it is`() = runTest {
+    fun `GIVEN the session key still matches WHEN the send fails THEN the account is left as it is`() = runTest {
         // Arrange
         coEvery { gachaVaultRepository.sendPurchasePack(any(), any(), any(), any()) } returns
             CollectiblesAccountError.Vault(GachaVaultError.WalletUnavailable).left()
@@ -289,15 +289,15 @@ internal class OpenCollectiblePackUseCaseTest {
         useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList()
 
         // Assert
-        coVerify(exactly = 2) { gachaVaultRepository.getVaultHotDelegate(userWallet) }
+        coVerify(exactly = 2) { gachaVaultRepository.getVaultSessionKey(userWallet) }
         coVerify(exactly = 0) { accountRepository.saveAccount(any(), any()) }
     }
 
     @Test
-    fun `GIVEN the hot delegate is not provisioned WHEN invoked THEN the purchase fails as unpaid`() = runTest {
+    fun `GIVEN the session key is not provisioned WHEN invoked THEN the purchase fails as unpaid`() = runTest {
         // Arrange
         coEvery { gachaVaultRepository.sendPurchasePack(any(), any(), any(), any()) } returns
-            CollectiblesAccountError.DelegateNotProvisioned.left()
+            CollectiblesAccountError.SessionKeyNotProvisioned.left()
 
         // Act
         val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
@@ -307,10 +307,10 @@ internal class OpenCollectiblePackUseCaseTest {
     }
 
     @Test
-    fun `GIVEN the hot delegate fails to sign WHEN invoked THEN the purchase fails as unpaid`() = runTest {
+    fun `GIVEN the session key fails to sign WHEN invoked THEN the purchase fails as unpaid`() = runTest {
         // Arrange
         coEvery { gachaVaultRepository.sendPurchasePack(any(), any(), any(), any()) } returns
-            CollectiblesAccountError.DelegateSigningFailed(IllegalStateException()).left()
+            CollectiblesAccountError.SessionKeySigningFailed(IllegalStateException()).left()
 
         // Act
         val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
@@ -543,10 +543,10 @@ internal class OpenCollectiblePackUseCaseTest {
         const val AMOUNT = 50_000_000L
         const val FEE_AMOUNT = 1_000_000L
         const val TX_HASH = "hash"
-        const val OTHER_DELEGATE = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
+        const val OTHER_SESSION_KEY = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
 
         val ACCOUNT_ID = AccountId.forCollectiblesAccount(WALLET_ID)
-        val DELEGATE = HotDelegatePublicKey("CfzgiAsor8k46oAr1zLybapCbAK44892DYxBJUerNX31")
+        val SESSION_KEY = SessionKeyPublicKey("CfzgiAsor8k46oAr1zLybapCbAK44892DYxBJUerNX31")
         val BALANCE: CollectiblesVaultBalance = mockk()
         val ONBOARDED = CollectiblesAccountStatusValue.Onboarded(source = StatusSource.CACHE, vaultBalance = BALANCE)
         val RELINK_REQUIRED = CollectiblesAccountStatusValue.UpdateRequired(
