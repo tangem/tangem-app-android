@@ -43,6 +43,8 @@ import com.tangem.features.moneyaccount.common.ui.TangemBalanceHeader
 import com.tangem.features.moneyaccount.common.ui.TangemBalanceHeaderState
 import com.tangem.features.moneyaccount.common.ui.TangemCircleActionButton
 import com.tangem.features.moneyaccount.details.impl.R
+import com.tangem.features.tangempay.common.TangemPayEmptyTransactionHistoryState
+import com.tangem.features.tangempay.common.tangemPayTxHistoryNonContentItem
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.txhistory.entity.TxHistoryItemsUM
 import kotlinx.collections.immutable.ImmutableList
@@ -112,8 +114,7 @@ internal fun MoneyAccountDetailsScreen(
 }
 
 private fun LazyListScope.body(state: MoneyAccountDetailsUM, listState: LazyListState, txHistory: TxHistory?) {
-    val isBalanceUnavailable = state.balance is MoneyAccountBalanceBlockState.Unavailable
-    val balanceAlpha = if (isBalanceUnavailable) UNAVAILABLE_BALANCE_ALPHA else 1f
+    val balanceAlpha = if (state.isBalanceUnavailable) UNAVAILABLE_BALANCE_ALPHA else 1f
 
     item("balanceBlock") {
         BalanceBlock(
@@ -145,17 +146,20 @@ private fun LazyListScope.body(state: MoneyAccountDetailsUM, listState: LazyList
         item("transactionsSpacer") {
             SpacerH24()
         }
-        with(txHistory.component) {
-            txHistoryContent(
+        when (txHistory.state) {
+            is TxHistoryItemsUM.Empty -> tangemPayTxHistoryNonContentItem(
                 listState = listState,
-                state = txHistory.state.withoutEmptyStateExplore(),
+                state = TangemPayEmptyTransactionHistoryState.Empty,
             )
+            is TxHistoryItemsUM.Error -> tangemPayTxHistoryNonContentItem(
+                listState = listState,
+                state = TangemPayEmptyTransactionHistoryState.FailedToLoad(onReload = state.onTxHistoryReloadClick),
+            )
+            else -> with(txHistory.component) {
+                txHistoryContent(listState = listState, state = txHistory.state)
+            }
         }
     }
-}
-
-private fun TxHistoryItemsUM.withoutEmptyStateExplore(): TxHistoryItemsUM {
-    return if (this is TxHistoryItemsUM.Empty) copy(onExploreClick = null) else this
 }
 
 private class TxHistory(val component: TxHistoryComponent, val state: TxHistoryItemsUM)
@@ -312,6 +316,7 @@ private fun MoneyAccountDetailsScreenPreview() {
                     isBalanceFlickering = false,
                 ),
                 isBalanceHidden = false,
+                isBalanceUnavailable = false,
                 messageBanner = null,
                 menuItems = persistentListOf(),
                 onMenuClick = {},
@@ -322,6 +327,7 @@ private fun MoneyAccountDetailsScreenPreview() {
                 isSendEnabled = true,
                 txHistoryCurrency = null,
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
+                onTxHistoryReloadClick = {},
             ),
             txHistoryComponent = PreviewTxHistoryComponent,
         )
@@ -339,6 +345,7 @@ private fun MoneyAccountDetailsScreenBalanceUnavailablePreview() {
                 subtitle = resourceReference(R.string.tangempay_usdc_on_polygon_network),
                 balance = MoneyAccountBalanceBlockState.Unavailable,
                 isBalanceHidden = false,
+                isBalanceUnavailable = true,
                 messageBanner = TangemMessageBanner.State(
                     title = resourceReference(R.string.money_account_balance_unavailable_title),
                     variant = TangemMessageBanner.Variant.Error,
@@ -353,6 +360,7 @@ private fun MoneyAccountDetailsScreenBalanceUnavailablePreview() {
                 isSendEnabled = false,
                 txHistoryCurrency = null,
                 pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
+                onTxHistoryReloadClick = {},
             ),
             txHistoryComponent = PreviewTxHistoryComponent,
         )

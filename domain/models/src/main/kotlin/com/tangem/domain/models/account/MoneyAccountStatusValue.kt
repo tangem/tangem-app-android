@@ -39,7 +39,18 @@ sealed class MoneyAccountStatusValue {
         data class Activating(
             @SerialName("source") override val source: StatusSource,
             @SerialName("customer_id") override val customerId: String,
-        ) : Onboarding()
+            @SerialName("step") val step: Step,
+        ) : Onboarding() {
+
+            @Serializable
+            enum class Step {
+                @SerialName("issuing")
+                ISSUING,
+
+                @SerialName("awaiting_deposit")
+                AWAITING_DEPOSIT,
+            }
+        }
 
         @Serializable
         data class Failed(

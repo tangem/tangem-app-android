@@ -23,6 +23,7 @@ interface TxHistoryComponent : ComposableContentComponent {
         val currency: CryptoCurrency,
         val openExplorer: () -> Unit,
         val onTransactionClick: (TxHistoryInfo) -> Unit = {},
+        val shouldUseCacheWhenOffline: Boolean = false,
     )
 
     interface Factory : ComponentFactory<Params, TxHistoryComponent>
