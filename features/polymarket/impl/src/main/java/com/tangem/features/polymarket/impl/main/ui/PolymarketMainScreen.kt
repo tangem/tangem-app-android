@@ -13,19 +13,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -55,13 +53,9 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.PredictionTestTags
 import com.tangem.domain.polymarket.model.PolymarketCategoryIcon
 import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadMoreEffect
-import com.tangem.features.polymarket.impl.common.ui.PolymarketEventCardSkeleton
 import com.tangem.features.polymarket.impl.common.ui.PolymarketEventCardSkeletonHeight
 import com.tangem.features.polymarket.impl.common.ui.PolymarketSearchBar
 import com.tangem.features.polymarket.impl.common.ui.PolymarketSearchBarClearance
-import com.tangem.features.polymarket.impl.common.ui.PolymarketNextPageLoader
-import com.tangem.features.polymarket.impl.common.ui.PolymarketEmptyListPrompt
-import com.tangem.features.polymarket.impl.common.ui.PolymarketReloadPrompt
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketCategoryTabUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventRowUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventUM
@@ -75,7 +69,6 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.milliseconds
@@ -87,7 +80,6 @@ import java.math.BigDecimal
 private const val TAB_BAND_INDEX = 1
 private const val KEY_HEADER = "header"
 private const val KEY_TAB_BAND = "tab_band"
-private const val KEY_STATUS = "status"
 
 private val ScrollIdleDebounce = 500.milliseconds
 
@@ -131,7 +123,12 @@ internal fun PolymarketMainScreen(
     val selectedCategoryId = state.categories.firstOrNull { it.isSelected }?.id
 
     PolymarketLoadMoreEffect(listState = listState, onLoadMore = onLoadMore)
-    VisibleEventsEffect(listState = listState, onVisibleEventsChange = onVisibleEventsChange)
+    PolymarketVisibleEventsEffect(
+        listState = listState,
+        feedKey = selectedCategoryId,
+        onVisibleEventsChange = onVisibleEventsChange,
+        excludedKeys = setOf(KEY_HEADER, KEY_TAB_BAND, POLYMARKET_FEED_STATUS_KEY),
+    )
     ScrollIdleEffect(
         listState = listState,
         selectedCategoryId = selectedCategoryId,
@@ -290,72 +287,8 @@ private fun FeedList(
                 }
             }
 
-            eventsSection(content = state.content, skeletonCount = skeletonCount)
+            polymarketEventsSection(content = state.content, skeletonCount = skeletonCount)
         }
-    }
-}
-
-private fun LazyListScope.eventsSection(content: PolymarketMainUM.ContentUM, skeletonCount: Int) {
-    when (content) {
-        is PolymarketMainUM.ContentUM.Loading -> items(count = skeletonCount, key = { it }) {
-            PolymarketEventCardSkeleton(modifier = Modifier.padding(horizontal = 16.dp))
-        }
-        is PolymarketMainUM.ContentUM.Empty -> item(key = KEY_STATUS) {
-            PolymarketEmptyListPrompt(
-                text = resourceReference(R.string.prediction_main_empty_events),
-                modifier = Modifier.height(180.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp),
-            )
-        }
-        is PolymarketMainUM.ContentUM.Error -> item(key = KEY_STATUS) {
-            PolymarketReloadPrompt(
-                text = resourceReference(R.string.prediction_main_events_load_error),
-                onReloadClick = content.onReloadClick,
-                modifier = Modifier.height(180.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp),
-            )
-        }
-        is PolymarketMainUM.ContentUM.Content -> {
-            items(
-                items = content.events,
-                key = { it.id },
-            ) { event ->
-                PolymarketEventCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    state = event,
-                )
-            }
-
-            when (val footer = content.footer) {
-                is PolymarketFeedFooterUM.None -> Unit
-                is PolymarketFeedFooterUM.Loading -> item(key = KEY_STATUS) {
-                    PolymarketNextPageLoader()
-                }
-                is PolymarketFeedFooterUM.Error -> item(key = KEY_STATUS) {
-                    PolymarketReloadPrompt(
-                        text = resourceReference(R.string.prediction_main_events_load_error),
-                        onReloadClick = footer.onRetryClick,
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun VisibleEventsEffect(listState: LazyListState, onVisibleEventsChange: (Set<String>) -> Unit) {
-    val currentOnVisibleEventsChanged by rememberUpdatedState(onVisibleEventsChange)
-
-    LaunchedEffect(listState) {
-        snapshotFlow {
-            listState.layoutInfo.visibleItemsInfo
-                .mapNotNull { it.key as? String }
-                .filterNotTo(mutableSetOf()) { it == KEY_HEADER || it == KEY_TAB_BAND || it == KEY_STATUS }
-        }
-            .distinctUntilChanged()
-            .collect { visibleEventIds -> currentOnVisibleEventsChanged(visibleEventIds) }
     }
 }
 

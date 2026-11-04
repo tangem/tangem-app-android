@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.test.TestScope
@@ -46,13 +47,45 @@ internal class PolymarketFeedSportsTest {
     private val seen = mutableListOf<PolymarketSportsState>()
 
     @Test
+    fun `GIVEN final score WHEN disposed pages are replaced THEN final result stays and reconnect refreshes new pages`() =
+        runTest {
+            resumed.value = true
+            val feeds = MutableStateFlow(createFeed())
+            createSports().observe(feeds, resumed).onEach(seen::add).launchIn(backgroundScope)
+            runCurrent()
+            frames.emit(createFrame().copy(period = "FT", isLive = false, isEnded = true))
+            runCurrent()
+            val finished = seen.last().events.getValue("event-1")
+
+            batches.value = PolymarketEventsBatchListState(emptyList(), PaginationStatus.None)
+            runCurrent()
+            assertThat(seen.last().events.getValue("event-1")).isEqualTo(finished)
+            val replacementActions = MutableSharedFlow<PolymarketEventsBatchAction>(replay = 10)
+            feeds.value = createFeed(
+                batches = MutableStateFlow(batchState(createEvent().copy(dataFetchedAt = Instant.ofEpochSecond(130)))),
+                actions = replacementActions,
+            )
+            runCurrent()
+
+            assertThat(seen.last().events.getValue("event-1")).isEqualTo(finished)
+            verify(exactly = 1) { repository.observeLiveScores(setOf("11")) }
+            connections.value = false
+            runCurrent()
+            connections.value = true
+            runCurrent()
+
+            assertThat(refreshes()).isEmpty()
+            assertThat(replacementActions.replayCache.filterIsInstance<BatchAction.UpdateBatches<*, *>>()).hasSize(1)
+        }
+
+    @Test
     fun `GIVEN phase two disabled WHEN feed resumes THEN no sports repository is observed`() = runTest {
         // Arrange
         val sports = createSports(enabled = false)
         resumed.value = true
 
         // Act
-        sports.observe(createFeed(), resumed).onEach(seen::add).launchIn(backgroundScope)
+        sports.observe(flowOf(createFeed()), resumed).onEach(seen::add).launchIn(backgroundScope)
         runCurrent()
 
         // Assert
@@ -64,7 +97,7 @@ internal class PolymarketFeedSportsTest {
     @Test
     fun `GIVEN loaded sports feed WHEN resumed paused and disposed THEN subscription follows visibility`() = runTest {
         // Arrange
-        val job = createSports().observe(createFeed(), resumed).onEach(seen::add).launchIn(backgroundScope)
+        val job = createSports().observe(flowOf(createFeed()), resumed).onEach(seen::add).launchIn(backgroundScope)
         runCurrent()
         assertThat(frames.subscriptionCount.value).isEqualTo(0)
 
@@ -246,7 +279,7 @@ internal class PolymarketFeedSportsTest {
         resumed.value = true
         val feed = createFeed()
         feed.poller.setVisibleEventIds(setOf("event-1"))
-        createSports().observe(feed, resumed).onEach(seen::add).launchIn(backgroundScope)
+        createSports().observe(flowOf(feed), resumed).onEach(seen::add).launchIn(backgroundScope)
         runCurrent()
 
         // Act
@@ -268,7 +301,7 @@ internal class PolymarketFeedSportsTest {
 
     private fun TestScope.collectSports() {
         resumed.value = true
-        createSports().observe(createFeed(), resumed).onEach(seen::add).launchIn(backgroundScope)
+        createSports().observe(flowOf(createFeed()), resumed).onEach(seen::add).launchIn(backgroundScope)
         runCurrent()
     }
 
@@ -284,7 +317,10 @@ internal class PolymarketFeedSportsTest {
         )
     }
 
-    private fun TestScope.createFeed(): PolymarketCategoryFeed {
+    private fun TestScope.createFeed(
+        batches: MutableStateFlow<PolymarketEventsBatchListState> = this@PolymarketFeedSportsTest.batches,
+        actions: MutableSharedFlow<PolymarketEventsBatchAction> = this@PolymarketFeedSportsTest.actions,
+    ): PolymarketCategoryFeed {
         val batchFlow = mockk<PolymarketEventsBatchFlow> {
             every { state } returns batches
             every { updateResults } returns MutableSharedFlow()
