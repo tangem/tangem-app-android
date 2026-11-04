@@ -37,6 +37,7 @@ internal fun OnrampMainScreen(
                 startButton = state.topBarConfig.startButtonUM,
                 endButton = state.topBarConfig.endButtonUM,
                 title = state.topBarConfig.title.resolveReference(),
+                subtitle = state.topBarConfig.subtitle.resolveReference(),
             )
         },
         contentWindowInsets = WindowInsetsZero,

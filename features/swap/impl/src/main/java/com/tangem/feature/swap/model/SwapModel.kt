@@ -153,6 +153,7 @@ import com.tangem.features.send.api.subcomponents.feeSelector.params.SponsoredFe
 import com.tangem.features.send.impl.R
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.swap.SwapFeatureToggles
+import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
@@ -193,6 +194,7 @@ internal class SwapModel @Inject constructor(
     private val backupErrorWarningSender: BackupErrorWarningSender,
     private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
+    private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     private val swapInteractor: SwapInteractor,
     private val swapTransferInteractor: SwapTransferInteractor,
     private val swapTransferStateBuilder: SwapTransferStateBuilder,
@@ -1878,10 +1880,19 @@ internal class SwapModel @Inject constructor(
                         if (swapFeatureToggles.isHideRejectedCexProviderEnabled) {
                             hideProviderIfRejected(provider = provider, error = swapTransactionState)
                             startLoadingQuotesFromLastState()
-                            showTransactionErrorAlert(error = swapTransactionState, providerName = provider.name)
+                            showTransactionErrorAlert(
+                                error = swapTransactionState,
+                                isSwapAttemptAlert = true,
+                                providerName = provider.name,
+                                amountCurrency = fromSwapCurrencyStatus.currency,
+                            )
                         } else {
                             startLoadingQuotesFromLastState()
-                            showTransactionErrorAlert(swapTransactionState)
+                            showTransactionErrorAlert(
+                                error = swapTransactionState,
+                                isSwapAttemptAlert = true,
+                                amountCurrency = fromSwapCurrencyStatus.currency,
+                            )
                         }
                     }
                     is SwapTransactionState.TangemPayWithdrawalData -> {
@@ -2557,11 +2568,15 @@ internal class SwapModel @Inject constructor(
 
     private fun showTransactionErrorAlert(
         error: SwapTransactionState.Error,
+        isSwapAttemptAlert: Boolean = false,
         providerName: String? = null,
+        amountCurrency: CryptoCurrency? = null,
         onSupportClick: (String) -> Unit = ::onFailedTxEmailClick,
     ) {
         val errorAlert = SwapTransactionErrorStateConverter(
+            isSwapAttemptAlert = isSwapAttemptAlert,
             providerName = providerName,
+            amountCurrency = amountCurrency,
             onDismiss = {},
             onSupportClick = onSupportClick,
         ).convert(error)
@@ -3275,6 +3290,7 @@ internal class SwapModel @Inject constructor(
             }
             toAccount is Account.Money || fromAccount is Account.Money ->
                 refreshAccountWithDelay(accountName = "money account") {
+                    txHistoryContentUpdateEmitter.triggerUpdate()
                     moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(params.userWalletId))
                 }
         }

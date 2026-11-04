@@ -50,6 +50,7 @@ internal class MoneyAccountDetailsScreenComponent(
                     currency = currency,
                     openExplorer = model::onExploreClick,
                     onTransactionClick = model::onTransactionClick,
+                    shouldUseCacheWhenOffline = true,
                 ),
             )
         },
@@ -113,7 +114,6 @@ internal class MoneyAccountDetailsScreenComponent(
                     retry = model::retryBankCredentials,
                     onDismiss = model.bottomSheetNavigation::dismiss,
                     onContactSupport = model::onBankDetailsSupportClick,
-                    onResolved = model::onBankDetailsLoaded,
                 ),
             )
         }

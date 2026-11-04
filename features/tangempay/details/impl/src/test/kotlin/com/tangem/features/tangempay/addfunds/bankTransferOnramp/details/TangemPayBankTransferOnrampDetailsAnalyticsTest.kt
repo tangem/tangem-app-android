@@ -59,6 +59,8 @@ internal class TangemPayBankTransferOnrampDetailsAnalyticsTest {
     private fun provideTestModels() = listOf(
         FieldModel(field = RequisiteField.ACCOUNT_NUMBER, fieldName = "Account number"),
         FieldModel(field = RequisiteField.ROUTING_NUMBER, fieldName = "Routing number"),
+        FieldModel(field = RequisiteField.CLABE, fieldName = "CLABE"),
+        FieldModel(field = RequisiteField.REFERENCE, fieldName = "Reference"),
         FieldModel(field = RequisiteField.BENEFICIARY_NAME, fieldName = "Beneficiary name"),
         FieldModel(field = RequisiteField.BENEFICIARY_ADDRESS, fieldName = "Beneficiary address"),
         FieldModel(field = RequisiteField.BANK_NAME, fieldName = "Bank name"),

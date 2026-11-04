@@ -50,9 +50,16 @@ internal class TangemPaySelectPlanModelTest {
         mode: TangemPaySelectPlanComponent.Mode = TangemPaySelectPlanComponent.Mode.ChangePlan,
         currentTariff: Either<VisaApiError, TangemPayCustomerTariffPlan?> = CUSTOMER_TARIFF.right(),
         transitions: List<TangemPayTariffPlanTransition> = DEFAULT_TRANSITIONS,
+        transitionsResult: Either<VisaApiError, List<TangemPayTariffPlanTransition>> = transitions.right(),
     ): TangemPaySelectPlanModel {
-        coEvery { getTransitions(USER_WALLET_ID) } returns transitions.right()
+        coEvery { getTransitions(USER_WALLET_ID) } returns transitionsResult
         coEvery { getCurrentTariffUseCase(USER_WALLET_ID) } returns currentTariff
+        return createModelWithoutStubs(mode = mode)
+    }
+
+    private fun createModelWithoutStubs(
+        mode: TangemPaySelectPlanComponent.Mode = TangemPaySelectPlanComponent.Mode.ChangePlan,
+    ): TangemPaySelectPlanModel {
         return TangemPaySelectPlanModel(
             paramsContainer = MutableParamsContainer(
                 TangemPaySelectPlanComponent.Params(
@@ -120,32 +127,54 @@ internal class TangemPaySelectPlanModelTest {
     }
 
     @Test
-    fun `GIVEN getTransitions fails WHEN model created THEN plans are empty`() {
+    fun `GIVEN getTransitions fails WHEN model created THEN error content shown`() {
         // GIVEN
-        coEvery { getTransitions(USER_WALLET_ID) } returns VisaApiError.Unspecified.left()
-        coEvery { getCurrentTariffUseCase(USER_WALLET_ID) } returns CUSTOMER_TARIFF.right()
+        val transitionsResult: Either<VisaApiError, List<TangemPayTariffPlanTransition>> =
+            VisaApiError.Unspecified.left()
 
         // WHEN
-        val model = TangemPaySelectPlanModel(
-            paramsContainer = MutableParamsContainer(
-                TangemPaySelectPlanComponent.Params(
-                    userWalletId = USER_WALLET_ID,
-                    mode = TangemPaySelectPlanComponent.Mode.ChangePlan,
-                ),
-            ),
-            dispatchers = TestingCoroutineDispatcherProvider(),
-            router = router,
-            getTransitions = getTransitions,
-            getCurrentTariffUseCase = getCurrentTariffUseCase,
-            submitTariffTransitionUseCase = submitTariffTransitionUseCase,
-            startTangemPayOnboardingUseCase = startTangemPayOnboardingUseCase,
-            uiMessageSender = uiMessageSender,
-            analytics = analytics,
-            urlOpener = urlOpener,
-        )
+        val model = createModel(transitionsResult = transitionsResult)
 
         // THEN
         assertThat(model.state.value.plans).isEmpty()
+        assertThat(model.state.value.content).isInstanceOf(TangemPaySelectPlanUM.Content.Error::class.java)
+    }
+
+    @Test
+    fun `GIVEN getTransitions pending WHEN model created THEN loading content shown`() {
+        // GIVEN
+        val pending = CompletableDeferred<Either<VisaApiError, List<TangemPayTariffPlanTransition>>>()
+        coEvery { getTransitions(USER_WALLET_ID) } coAnswers { pending.await() }
+        coEvery { getCurrentTariffUseCase(USER_WALLET_ID) } returns CUSTOMER_TARIFF.right()
+
+        // WHEN
+        val model = createModelWithoutStubs()
+
+        // THEN
+        assertThat(model.state.value.content).isEqualTo(TangemPaySelectPlanUM.Content.Loading)
+
+        // WHEN
+        pending.complete(DEFAULT_TRANSITIONS.right())
+
+        // THEN
+        assertThat(model.state.value.content).isInstanceOf(TangemPaySelectPlanUM.Content.Select::class.java)
+    }
+
+    @Test
+    fun `GIVEN error content WHEN onRetryClick AND getTransitions succeeds THEN select content with plans shown`() {
+        // GIVEN
+        val model = createModel(transitionsResult = VisaApiError.Unspecified.left())
+        val errorContent = model.state.value.content as TangemPaySelectPlanUM.Content.Error
+        coEvery { getTransitions(USER_WALLET_ID) } returns DEFAULT_TRANSITIONS.right()
+
+        // WHEN
+        errorContent.onRetryClick()
+
+        // THEN
+        assertThat(model.state.value.content).isInstanceOf(TangemPaySelectPlanUM.Content.Select::class.java)
+        assertThat(model.state.value.plans).hasSize(3)
+        coVerify(exactly = 2) { getTransitions(USER_WALLET_ID) }
+        coVerify(exactly = 2) { getCurrentTariffUseCase(USER_WALLET_ID) }
     }
 
     @Test
@@ -322,9 +351,18 @@ internal class TangemPaySelectPlanModelTest {
     }
 
     @Test
-    fun `GIVEN current tariff loading fails WHEN onComparePlansClick THEN compare has only transitions`() {
-        // GIVEN
+    fun `GIVEN current tariff loading fails WHEN model created THEN error content shown`() {
+        // GIVEN + WHEN
         val model = createModel(currentTariff = VisaApiError.Unspecified.left())
+
+        // THEN
+        assertThat(model.state.value.content).isInstanceOf(TangemPaySelectPlanUM.Content.Error::class.java)
+    }
+
+    @Test
+    fun `GIVEN no current tariff WHEN onComparePlansClick THEN compare has only transitions`() {
+        // GIVEN
+        val model = createModel(currentTariff = null.right())
 
         // WHEN
         selectContent(model).onComparePlansClick()
