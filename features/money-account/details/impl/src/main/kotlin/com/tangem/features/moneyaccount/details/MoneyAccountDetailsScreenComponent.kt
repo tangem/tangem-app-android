@@ -113,7 +113,6 @@ internal class MoneyAccountDetailsScreenComponent(
                     retry = model::retryBankCredentials,
                     onDismiss = model.bottomSheetNavigation::dismiss,
                     onContactSupport = model::onBankDetailsSupportClick,
-                    onResolved = model::onBankDetailsLoaded,
                 ),
             )
         }
