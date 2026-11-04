@@ -153,6 +153,7 @@ import com.tangem.features.send.api.subcomponents.feeSelector.params.SponsoredFe
 import com.tangem.features.send.impl.R
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.swap.SwapFeatureToggles
+import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
@@ -193,6 +194,7 @@ internal class SwapModel @Inject constructor(
     private val backupErrorWarningSender: BackupErrorWarningSender,
     private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
+    private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     private val swapInteractor: SwapInteractor,
     private val swapTransferInteractor: SwapTransferInteractor,
     private val swapTransferStateBuilder: SwapTransferStateBuilder,
@@ -3275,6 +3277,7 @@ internal class SwapModel @Inject constructor(
             }
             toAccount is Account.Money || fromAccount is Account.Money ->
                 refreshAccountWithDelay(accountName = "money account") {
+                    txHistoryContentUpdateEmitter.triggerUpdate()
                     moneyAccountStatusFetcher(MoneyAccountStatusFetcher.Params(params.userWalletId))
                 }
         }
