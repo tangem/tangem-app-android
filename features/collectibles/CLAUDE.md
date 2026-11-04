@@ -21,8 +21,7 @@ producer) consumes it via `CollectiblesFeatureToggles`.
 
 ```
 features/collectibles/
-  api/    — CollectiblesEntryComponent, CollectiblesFeatureToggles,
-            walletblock/ (CollectiblesWalletBlockComponent + CollectiblesWalletBlockUM — the wallet screen's account row)
+  api/    — CollectiblesEntryComponent, CollectiblesFeatureToggles
   impl/
     common/ui/      — CollectiblesStatus (inline error/empty), CollectiblesLoadMoreEffect, CollectiblesBottomSheet,
                       CollectiblesPackImage
@@ -34,7 +33,6 @@ features/collectibles/
     discovery/      — The packs catalogue: tabs, search, paginated pack rows
     machinedetails/ — One machine: hero, odds, pack facts, paginated prize pool, Turbo switch, pinned CTA footer
     packopening/    — Buy + open one pack: confirm order, pack throw, reveal video, reward card
-    walletblock/    — DefaultCollectiblesWalletBlockComponent, the account row rendered in the wallet screen
 ```
 
 `packopening/` in detail:
@@ -131,8 +129,9 @@ draws only the active child, so a modal sheet raised inside this feature scrims 
 
 Reached from two places: the feed tile (visibility from `CollectiblesFeatureToggles.isCollectiblesEnabled`
 via `CollectiblesBlockModel.isVisible`) and the wallet screen's account row, whose click goes through
-`DefaultWalletRouter.openCollectibles` with `startRoute = Main`. The row itself is rendered by the
-api-level `CollectiblesWalletBlockComponent`.
+`DefaultWalletRouter.openCollectibles` with `startRoute = Main`. The row is one of the wallet's account rows
+(`TokensListItemUM2.Collectibles` in `features/wallet`), placed by the account order the user sets in the wallet
+settings; a new collectibles record is stored first, right below the app-only Tangem Pay and Predictions blocks.
 
 Inner navigation is an `InnerRouter<CollectiblesRoute>` — routes of that type go to the inner stack,
 everything else falls through to the app `AppRouter`. `onChildBack()` reads
@@ -289,7 +288,7 @@ the config requires updating `CollectiblesConfigTest`, which asserts the exact h
 
 | Module | Scope | Provides |
 |---|---|---|
-| `CollectiblesComponentModule` | `SingletonComponent` | `CollectiblesEntryComponent.Factory`, `CollectiblesDiscoveryComponent.Factory`, `CollectiblesWalletBlockComponent.Factory`, `PackRevealVideoPlayer.Factory` |
+| `CollectiblesComponentModule` | `SingletonComponent` | `CollectiblesEntryComponent.Factory`, `CollectiblesDiscoveryComponent.Factory`, `PackRevealVideoPlayer.Factory` |
 | `CollectiblesModelModule` | **`ModelComponent`** | All six models `@IntoMap @ClassKey` into the model map read by `getOrCreateModel()` |
 | `CollectiblesFeatureTogglesModule` | `SingletonComponent` | `CollectiblesFeatureToggles` |
 | `CollectiblesDataModule` (in `data/collectibles/`) | `SingletonComponent` | Repositories, owner deriver, account store/supplier/fetcher, machine store, wallet data cleaner |
