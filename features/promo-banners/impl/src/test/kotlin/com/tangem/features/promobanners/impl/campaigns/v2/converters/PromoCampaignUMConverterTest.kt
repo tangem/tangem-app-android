@@ -1,6 +1,7 @@
 package com.tangem.features.promobanners.impl.campaigns.v2.converters
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.promo.models.PromoDescriptionBlock
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.util.Locale
 
@@ -100,6 +102,59 @@ internal class PromoCampaignUMConverterTest {
     }
 
     @Test
+    fun `GIVEN payout needed and payout button name WHEN convert THEN footer shows backend button name`() {
+        // Act
+        val footer = converter.convert(
+            createPromoCampaign(isPayoutNeeded = true, payoutButtonName = "Choose payout token"),
+        ).footer
+
+        // Assert
+        assertThat(footer.terms).isNull()
+        assertThat(footer.buttonText).isEqualTo(stringReference("Choose payout token"))
+    }
+
+    @Test
+    fun `GIVEN payout button name WHEN token chosen THEN footer shows action button name`() {
+        // Arrange
+        val campaign = createPromoCampaign(isPayoutNeeded = true, payoutButtonName = "Choose payout token")
+
+        // Act
+        val footer = converter.convertFooter(campaign = campaign, isPayoutTokenPending = false)
+
+        // Assert
+        assertThat(footer.buttonText).isEqualTo(stringReference("Enroll"))
+        assertThat(footer.terms?.text).isEqualTo(stringReference("T&C"))
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideAccountTitleModels")
+    fun convertAccountTitle(model: AccountTitleModel) {
+        // Act
+        val selector = converter.convert(
+            createPromoCampaign(isPayoutNeeded = true, payoutAccountTitle = model.payoutAccountTitle),
+        ).tokenSelector
+
+        // Assert
+        assertThat(selector?.accountTitle).isEqualTo(model.expected)
+    }
+
+    @Test
+    fun `GIVEN payout not needed and payout texts WHEN convert THEN footer shows action button name`() {
+        // Act
+        val actual = converter.convert(
+            createPromoCampaign(
+                isPayoutNeeded = false,
+                payoutButtonName = "Choose payout token",
+                payoutAccountTitle = "Payout account",
+            ),
+        )
+
+        // Assert
+        assertThat(actual.tokenSelector).isNull()
+        assertThat(actual.footer.buttonText).isEqualTo(stringReference("Enroll"))
+    }
+
+    @Test
     fun `GIVEN footer WHEN terms and button clicked THEN tnc url opened and action invoked`() {
         // Arrange
         val footer = converter.convert(createPromoCampaign(blocks = emptyList())).footer
@@ -145,6 +200,16 @@ internal class PromoCampaignUMConverterTest {
     }
 
     data class BlockModel(val block: PromoDescriptionBlock, val expected: PromoBlockUM)
+
+    data class AccountTitleModel(val payoutAccountTitle: String?, val expected: TextReference)
+
+    private fun provideAccountTitleModels() = listOf(
+        AccountTitleModel(payoutAccountTitle = "Payout account", expected = stringReference("Payout account")),
+        AccountTitleModel(
+            payoutAccountTitle = null,
+            expected = resourceReference(R.string.promo_campaign_selected_cashback_account),
+        ),
+    )
 
     private fun provideTestModels() = listOf(
         BlockModel(

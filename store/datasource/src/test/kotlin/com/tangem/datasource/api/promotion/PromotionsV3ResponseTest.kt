@@ -48,7 +48,9 @@ internal class PromotionsV3ResponseTest {
               {"type":"highlight","title":"Deadline","text":"Акция действует только до 31 августа"}],
             "publicImage":"https://cdn.tangem.com/campaigns/example_campaign.png",
             "tncLink":{"text":"Terms and conditions","url":"https://tangem.com/campaigns/example_campaign/terms"},
-            "actionButtonName":"Select cashback token"},
+            "actionButtonName":"Select cashback token",
+            "payoutButtonName":"Выбрать токен для кэшбека",
+            "payoutAccountTitle":"Аккаунт для кэшбека"},
             "properties":{"payoutNeeded":true,"payoutTokens":[
               {"tokenAddress":"0xdac17f958d2ee523a2206206994597c13d831ec7","networkId":"ethereum",
               "tokenSymbol":"USDT","tokenName":"Tether USD","tokenId":"tether","decimals":6}],
@@ -130,6 +132,8 @@ internal class PromotionsV3ResponseTest {
                         ),
                     ),
                     campaignDescription = "Кэшбек за стейкинг до конца лета",
+                    payoutButtonName = "Выбрать токен для кэшбека",
+                    payoutAccountTitle = "Аккаунт для кэшбека",
                 ),
             ),
         )
@@ -217,6 +221,8 @@ internal class PromotionsV3ResponseTest {
         publicDescription: List<DescriptionBlock>,
         campaignDescription: String?,
         id: Int? = 1,
+        payoutButtonName: String? = null,
+        payoutAccountTitle: String? = null,
     ) = PromotionDto(
         id = id,
         name = "example_campaign",
@@ -232,6 +238,8 @@ internal class PromotionsV3ResponseTest {
                 url = "https://tangem.com/campaigns/example_campaign/terms",
             ),
             actionButtonName = "Select cashback token",
+            payoutButtonName = payoutButtonName,
+            payoutAccountTitle = payoutAccountTitle,
         ),
     )
 

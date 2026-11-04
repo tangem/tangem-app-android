@@ -164,7 +164,7 @@ private fun PromoTokenSelector(state: PromoTokenSelectorUM) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = if (state.selectedAccount != null) {
-                    stringResourceSafe(R.string.promo_campaign_selected_cashback_account)
+                    state.accountTitle.resolveReference()
                 } else {
                     stringResourceSafe(R.string.promo_campaign_selected_token)
                 },

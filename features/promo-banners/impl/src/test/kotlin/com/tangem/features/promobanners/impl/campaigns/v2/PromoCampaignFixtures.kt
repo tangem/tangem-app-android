@@ -20,6 +20,8 @@ internal fun createPromoCampaign(
     payoutTokens: List<PromoPayoutToken> = emptyList(),
     isAlreadyEnrolled: Boolean = false,
     matchMode: PromoMatchMode = PromoMatchMode.Strict,
+    payoutButtonName: String? = null,
+    payoutAccountTitle: String? = null,
 ) = PromoCampaign(
     id = id,
     name = name,
@@ -33,5 +35,7 @@ internal fun createPromoCampaign(
         imageUrl = PROMO_IMAGE_URL,
         tncLink = PromoLink(text = "T&C", url = PROMO_TNC_URL),
         actionButtonName = "Enroll",
+        payoutButtonName = payoutButtonName,
+        payoutAccountTitle = payoutAccountTitle,
     ),
 )
