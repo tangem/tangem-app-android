@@ -5,8 +5,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.domain.models.wallet.isHotWallet
-import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceButtonStyleUM
@@ -29,7 +27,7 @@ internal class PlacePredictionSummaryModel @Inject constructor(
     private val urlOpener: UrlOpener,
     override val dispatchers: CoroutineDispatcherProvider,
     orderSubmitterFactory: PlacePredictionOrderSubmitter.Factory,
-    getUserWalletUseCase: GetUserWalletUseCase,
+    buttonStyleFactory: PlacePredictionButtonStyle.Factory,
 ) : Model(), PlacePredictionSummaryIntents {
 
     private val order = paramsContainer.require<PreparedPrediction>()
@@ -38,11 +36,14 @@ internal class PlacePredictionSummaryModel @Inject constructor(
     val uiState: StateFlow<PlacePredictionUM>
         field = MutableStateFlow(order.state)
 
+    private val buttonStyle = buttonStyleFactory.create(
+        userWalletId = params.userWalletId,
+        uiState = uiState,
+        scope = modelScope,
+    )
+
     init {
-        getUserWalletUseCase(params.userWalletId).onRight { userWallet ->
-            val style = if (userWallet.isHotWallet) PlaceButtonStyleUM.HOLD else PlaceButtonStyleUM.CARD
-            uiState.update { it.copy(placeButtonStyle = style) }
-        }
+        buttonStyle.checkSessionKey()
     }
 
     private val orderSubmitter = orderSubmitterFactory.create(params = params, uiState = uiState, scope = modelScope)
@@ -59,9 +60,15 @@ internal class PlacePredictionSummaryModel @Inject constructor(
 
     override fun onPlaceClick(confirmedWith: PlaceButtonStyleUM) {
         modelScope.launch(start = CoroutineStart.UNDISPATCHED) {
-            val result = orderSubmitter.submit(prepared = order, confirmedWith = confirmedWith, onKeyLost = {})
+            val result = orderSubmitter.submit(
+                prepared = order,
+                confirmedWith = confirmedWith,
+                onKeyLost = buttonStyle::onSessionKeyLost,
+            )
             if (result == null) {
+                buttonStyle.onPlacementFailed()
                 uiState.update { it.copy(holdResetKey = it.holdResetKey + 1) }
+                buttonStyle.applyIfIdle()
                 return@launch
             }
             router.replaceAll(order.toStatusRoute(result = result))

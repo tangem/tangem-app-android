@@ -8,10 +8,6 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
-import com.tangem.domain.models.wallet.isHotWallet
-import com.tangem.domain.polymarket.usecase.CanSignPredictionOrderWithSessionKeyUseCase
-import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
 import com.tangem.features.polymarket.impl.common.formatPolymarketEnteredAmount
@@ -42,7 +38,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -58,9 +53,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     quoteEngineFactory: PlacePredictionQuoteEngine.Factory,
     orderSubmitterFactory: PlacePredictionOrderSubmitter.Factory,
-    private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val featureToggles: PolymarketFeatureToggles,
-    private val canSignPredictionOrderWithSessionKeyUseCase: CanSignPredictionOrderWithSessionKeyUseCase,
+    buttonStyleFactory: PlacePredictionButtonStyle.Factory,
 ) : Model(), PlacePredictionOrderIntents, PolymarketAddFundsComponent.ModelCallback {
 
     private val params = paramsContainer.require<PlacePredictionComponent.Params>()
@@ -74,11 +67,11 @@ internal class PlacePredictionOrderModel @Inject constructor(
 
     private var pendingPlacement: Job? = null
 
-    private var sessionKeyCheck: Job? = null
-
-    private var ownerStyle: PlaceButtonStyleUM? = null
-
-    private var sessionKeyStyle: PlaceButtonStyleUM? = null
+    private val buttonStyle = buttonStyleFactory.create(
+        userWalletId = params.userWalletId,
+        uiState = uiState,
+        scope = modelScope,
+    )
 
     val feeSheet = PlacePredictionFeeSheet(
         uiState = uiState,
@@ -94,45 +87,9 @@ internal class PlacePredictionOrderModel @Inject constructor(
         is PlacePredictionComponent.Params.Sell -> persistentListOf()
     }
 
-    init {
-        resolveWalletType()
-    }
-
-    private fun resolveWalletType() {
-        getUserWalletUseCase(params.userWalletId).onRight { userWallet ->
-            val style = if (userWallet.isHotWallet) PlaceButtonStyleUM.HOLD else PlaceButtonStyleUM.CARD
-            ownerStyle = style
-            uiState.update { it.copy(placeButtonStyle = style) }
-        }
-    }
-
-    private fun checkSessionKey() {
-        val ownerStyle = ownerStyle ?: return
-        if (!featureToggles.isPolymarketSessionKeysEnabled) return
-
-        sessionKeyCheck?.cancel()
-        sessionKeyCheck = modelScope.launch {
-            val canSign = withContext(dispatchers.io) {
-                canSignPredictionOrderWithSessionKeyUseCase(userWalletId = params.userWalletId)
-            }
-            sessionKeyStyle = if (canSign) PlaceButtonStyleUM.PLAIN else ownerStyle
-            applySessionKeyStyleIfIdle()
-        }
-    }
-
-    private fun confirmWithOwnerKey() {
-        sessionKeyCheck?.cancel()
-        sessionKeyStyle = ownerStyle
-    }
-
-    private fun applySessionKeyStyleIfIdle() {
-        val style = sessionKeyStyle ?: return
-        uiState.update { state -> if (state.isIdle()) state.copy(placeButtonStyle = style) else state }
-    }
-
     fun onResume() {
         quoteEngine.onResume()
-        checkSessionKey()
+        buttonStyle.checkSessionKey()
     }
 
     fun onPause() {
@@ -254,7 +211,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
         if (!uiState.value.isIdle()) return
 
         resetHold()
-        applySessionKeyStyleIfIdle()
+        buttonStyle.applyIfIdle()
     }
 
     private fun PlacePredictionUM.isIdle(): Boolean = submit is SubmitUM.Idle
@@ -269,9 +226,10 @@ internal class PlacePredictionOrderModel @Inject constructor(
                 val result = orderSubmitter.submit(
                     prepared = prepared,
                     confirmedWith = confirmedWith,
-                    onKeyLost = ::confirmWithOwnerKey,
+                    onKeyLost = buttonStyle::onSessionKeyLost,
                 )
                 if (result == null) {
+                    buttonStyle.onPlacementFailed()
                     settleButtonIfIdle()
                     return@holdDuring
                 }
