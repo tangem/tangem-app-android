@@ -247,6 +247,14 @@ dependencyAnalysis {
                 // provider repository). Nothing references it by type until the social login feature
                 // modules land.
                 exclude(":data:social-login")
+                // Same reason: the Earn modules are wired for Hilt only, nothing references them by type
+                // until the Earn navigation integration (AppRoute.EarnEntry and the ChildFactory branch),
+                // which must remove this exclusion.
+                exclude(
+                    ":features:earn:api",
+                    ":features:earn:impl",
+                    ":features:earn:flow:impl",
+                )
                 // CameraX is split into runtime-wired artifacts: camera-lifecycle and camera-view back
                 // the preview/ProcessCameraProvider machinery that camera2 (runtimeOnly) drives.
                 exclude(
