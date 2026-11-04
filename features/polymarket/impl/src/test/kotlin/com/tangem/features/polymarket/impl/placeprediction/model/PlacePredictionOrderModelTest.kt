@@ -87,7 +87,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             val model = createQuotedModel()
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             runCurrent()
 
             // Assert
@@ -120,7 +120,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
                 advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
 
                 // Assert
@@ -137,7 +137,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             model.onAmountChange(value = "10")
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             runCurrent()
 
             // Assert
@@ -156,8 +156,8 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             val model = createQuotedModel()
 
             // Act
-            model.onPlaceClick()
-            model.onPlaceClick()
+            model.tapPlace()
+            model.tapPlace()
             advanceTimeBy(delayTimeMillis = SIGNING_MILLIS + 1)
 
             // Assert
@@ -175,7 +175,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             val model = createQuotedModel()
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
 
             // Assert
             assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Signing)
@@ -190,7 +190,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             val model = createQuotedModel()
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             runCurrent()
 
             // Assert
@@ -210,7 +210,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 }
                 val model = createQuotedModel()
                 val fundingSheet = FakeSlotHost(model.fundingSheetNavigation)
-                model.onPlaceClick()
+                model.tapPlace()
 
                 // Act
                 input.apply(model)
@@ -233,7 +233,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 SIGNED_ORDER.right()
             }
             val model = createQuotedModel()
-            model.onPlaceClick()
+            model.tapPlace()
 
             // Act
             model.onCloseClick()
@@ -377,7 +377,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 }
                 val model = createQuotedModel()
                 runCurrent()
-                model.onPlaceClick()
+                model.tapPlace()
                 coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
 
                 // Act
@@ -410,7 +410,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 model.onAmountChange(value = "10")
                 advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS)
                 runCurrent()
-                model.onPlaceClick()
+                model.tapPlace()
 
                 // Act
                 advanceTimeBy(delayTimeMillis = SESSION_KEY_CHECK_MILLIS - QUOTE_DEBOUNCE_MILLIS + 1)
@@ -495,7 +495,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 runCurrent()
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
                 runCurrent()
 
                 // Assert
@@ -518,7 +518,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 runCurrent()
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
                 runCurrent()
 
                 // Assert
@@ -539,12 +539,65 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 runCurrent()
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
                 runCurrent()
 
                 // Assert
                 coVerify(exactly = 1) { signOrderInteractor(request = match { it.route == PredictionOrderSigningRoute.Owner }) }
             }
+
+        @Test
+        fun `GIVEN a plain tap WHEN the button already turned to the card THEN only the session key may sign`() =
+            runOrderTest {
+                // Arrange
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns false
+                coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
+                val model = createQuotedModel()
+                runCurrent()
+
+                // Act
+                model.onPlaceClick(confirmedWith = PlaceButtonStyleUM.PLAIN)
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+                coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+                verify(exactly = 1) { messageSender.send(any()) }
+            }
+
+        @Test
+        fun `GIVEN a card tap WHEN the button already turned plain THEN the owner key may sign`() = runOrderTest {
+            // Arrange
+            coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+            coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
+            val model = createQuotedModel()
+            runCurrent()
+
+            // Act
+            model.onPlaceClick(confirmedWith = PlaceButtonStyleUM.CARD)
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 1) {
+                signOrderInteractor(request = match { it.route == PredictionOrderSigningRoute.Owner })
+            }
+        }
+
+        @Test
+        fun `GIVEN session keys turned off WHEN a plain tap places THEN the owner key never signs`() = runOrderTest {
+            // Arrange
+            every { featureToggles.isPolymarketSessionKeysEnabled } returns false
+            coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
+            val model = createQuotedModel()
+            runCurrent()
+
+            // Act
+            model.onPlaceClick(confirmedWith = PlaceButtonStyleUM.PLAIN)
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+        }
 
         @Test
         fun `GIVEN session keys disabled WHEN the screen opens and resumes THEN the session key is not checked`() =
@@ -585,7 +638,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             val before = model.uiState.value.holdResetKey
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             runCurrent()
 
             // Assert
@@ -601,7 +654,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             val before = model.uiState.value.holdResetKey
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             runCurrent()
 
             // Assert
@@ -615,7 +668,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             val before = model.uiState.value.holdResetKey
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             runCurrent()
 
             // Assert
@@ -629,7 +682,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             val before = model.uiState.value.holdResetKey
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             runCurrent()
 
             // Assert
@@ -642,7 +695,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 // Arrange
                 val model = createQuotingModel()
                 val before = model.uiState.value.holdResetKey
-                model.onPlaceClick()
+                model.tapPlace()
 
                 // Act
                 advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
@@ -657,12 +710,12 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a tap waiting WHEN place clicked again THEN the hold button is reset`() = runOrderTest {
             // Arrange
             val model = createQuotingModel()
-            model.onPlaceClick()
+            model.tapPlace()
             runCurrent()
             val before = model.uiState.value.holdResetKey
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
 
             // Assert
             assertThat(model.uiState.value.holdResetKey).isEqualTo(before + 1)
@@ -672,7 +725,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a tap waiting WHEN the amount changes THEN the hold button is reset`() = runOrderTest {
             // Arrange
             val model = createQuotingModel()
-            model.onPlaceClick()
+            model.tapPlace()
             runCurrent()
             val before = model.uiState.value.holdResetKey
 
@@ -687,7 +740,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a tap waiting WHEN the screen pauses THEN the hold button is reset`() = runOrderTest {
             // Arrange
             val model = createQuotingModel()
-            model.onPlaceClick()
+            model.tapPlace()
             runCurrent()
             val before = model.uiState.value.holdResetKey
 
@@ -702,7 +755,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN the submitter refuses the order WHEN place clicked THEN the hold button is reset`() = runOrderTest {
             // Arrange
             val refusingSubmitter = mockk<PlacePredictionOrderSubmitter> {
-                coEvery { submit(prepared = any(), onKeyLost = any()) } returns null
+                coEvery { submit(prepared = any(), confirmedWith = any(), onKeyLost = any()) } returns null
                 every { isSubmitting() } returns false
             }
             val model = createOrderModel(
@@ -716,11 +769,11 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             val before = model.uiState.value.holdResetKey
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             runCurrent()
 
             // Assert
-            coVerify(exactly = 1) { refusingSubmitter.submit(prepared = any(), onKeyLost = any()) }
+            coVerify(exactly = 1) { refusingSubmitter.submit(prepared = any(), confirmedWith = any(), onKeyLost = any()) }
             assertThat(model.uiState.value.holdResetKey).isEqualTo(before + 1)
         }
 
@@ -733,12 +786,12 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                     SIGNED_ORDER.right()
                 }
                 val model = createQuotedModel()
-                model.onPlaceClick()
+                model.tapPlace()
                 runCurrent()
                 val before = model.uiState.value.holdResetKey
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
                 runCurrent()
 
                 // Assert
@@ -755,12 +808,12 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                     createPlaceResult().right()
                 }
                 val model = createQuotedModel()
-                model.onPlaceClick()
+                model.tapPlace()
                 runCurrent()
                 val before = model.uiState.value.holdResetKey
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
                 runCurrent()
 
                 // Assert
@@ -773,7 +826,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             // Arrange
             val model = createQuotingModel(result = PredictionOrderQuoteError.Network.left())
             val before = model.uiState.value.holdResetKey
-            model.onPlaceClick()
+            model.tapPlace()
 
             // Act
             advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
@@ -826,7 +879,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 every { router.replaceAll(capture(status), onComplete = any()) } returns Unit
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
                 runCurrent()
 
                 // Assert
@@ -1229,7 +1282,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 val model = createQuotingModel()
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
                 runCurrent()
 
                 // Assert
@@ -1242,7 +1295,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a tap while quoting WHEN the quote arrives THEN the order is placed`() = runOrderTest {
             // Arrange
             val model = createQuotingModel()
-            model.onPlaceClick()
+            model.tapPlace()
 
             // Act
             advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
@@ -1261,7 +1314,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             runOrderTest {
                 // Arrange
                 val model = createQuotingModel(result = PredictionOrderQuoteError.Network.left())
-                model.onPlaceClick()
+                model.tapPlace()
 
                 // Act
                 advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
@@ -1280,7 +1333,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 val model = createQuotingModel(
                     result = createQuote(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY).right(),
                 )
-                model.onPlaceClick()
+                model.tapPlace()
 
                 // Act
                 advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
@@ -1300,7 +1353,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         ) = runOrderTest {
             // Arrange
             val model = createQuotingModel(quoteMillis = quoteMillis)
-            model.onPlaceClick()
+            model.tapPlace()
 
             // Act
             advanceTimeBy(delayTimeMillis = quoteMillis)
@@ -1315,7 +1368,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a tap while quoting WHEN the screen is left THEN the tap is dropped`() = runOrderTest {
             // Arrange
             val model = createQuotingModel()
-            model.onPlaceClick()
+            model.tapPlace()
 
             // Act
             model.onPause()
@@ -1333,7 +1386,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a tap while quoting WHEN the amount changes THEN the tap is dropped`() = runOrderTest {
             // Arrange
             val model = createQuotingModel()
-            model.onPlaceClick()
+            model.tapPlace()
 
             // Act
             model.onAmountChange(value = "25")
@@ -1352,8 +1405,8 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             val model = createQuotingModel()
 
             // Act
-            model.onPlaceClick()
-            model.onPlaceClick()
+            model.tapPlace()
+            model.tapPlace()
             advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
             runCurrent()
 
@@ -1367,11 +1420,11 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             runOrderTest {
                 // Arrange
                 val model = createQuotingModel(quoteMillis = 10_001L)
-                model.onPlaceClick()
+                model.tapPlace()
                 advanceTimeBy(delayTimeMillis = 5_000L)
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
                 advanceTimeBy(delayTimeMillis = 5_001L)
                 runCurrent()
 
@@ -1397,7 +1450,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 // Act
                 model.onAmountChange(value = "10")
                 advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
-                model.onPlaceClick()
+                model.tapPlace()
 
                 // Assert
                 assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading(isAnswerExpected = false))
@@ -1416,7 +1469,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 model.onAmountChange(value = "10")
                 advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS)
                 runCurrent()
-                model.onPlaceClick()
+                model.tapPlace()
 
                 // Act
                 advanceTimeBy(delayTimeMillis = PENDING_PLACEMENT_MILLIS + 1)
@@ -1442,7 +1495,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 model.onAmountChange(value = "10")
                 advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS)
                 runCurrent()
-                model.onPlaceClick()
+                model.tapPlace()
                 advanceTimeBy(delayTimeMillis = PENDING_PLACEMENT_MILLIS + 1)
                 runCurrent()
 
@@ -1472,7 +1525,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 runCurrent()
                 model.onResume()
                 runCurrent()
-                model.onPlaceClick()
+                model.tapPlace()
 
                 // Act
                 advanceTimeBy(delayTimeMillis = POSITION_READ_MILLIS)
@@ -1513,7 +1566,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             runCurrent()
             model.onResume()
             runCurrent()
-            model.onPlaceClick()
+            model.tapPlace()
 
             // Act
             advanceTimeBy(delayTimeMillis = POSITION_READ_MILLIS)
@@ -1530,7 +1583,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             runOrderTest {
                 // Arrange
                 val model = createQuotingModel()
-                model.onPlaceClick()
+                model.tapPlace()
 
                 // Act
                 statusFlow.value = activeStatus(balance = BigDecimal("5"))
@@ -1549,13 +1602,13 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a dropped tap WHEN a new tap waits for the next amount THEN it stays pending`() = runOrderTest {
             // Arrange
             val model = createQuotingModel()
-            model.onPlaceClick()
+            model.tapPlace()
             model.onAmountChange(value = "25")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS)
             runCurrent()
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             runCurrent()
 
             // Assert
@@ -1567,7 +1620,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a tap while quoting WHEN close clicked THEN the flow stays`() = runOrderTest {
             // Arrange
             val model = createQuotingModel()
-            model.onPlaceClick()
+            model.tapPlace()
 
             // Act
             model.onCloseClick()
@@ -1584,7 +1637,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 val model = createQuotingModel()
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
 
                 // Assert
                 assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.Unavailable)

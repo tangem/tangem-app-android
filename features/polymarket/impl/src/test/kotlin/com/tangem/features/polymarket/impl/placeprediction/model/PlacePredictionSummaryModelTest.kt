@@ -29,6 +29,7 @@ import com.tangem.features.polymarket.impl.common.FakeSlotHost
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceButtonStyleUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SellPositionUM
@@ -79,7 +80,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             val model = createSummaryModel(testScope = this, amountModel = amountModel)
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             advanceUntilIdle()
 
             // Assert
@@ -106,7 +107,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             val model = createSummaryModel(testScope = this, amountModel = amountModel)
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
 
             // Assert
@@ -127,8 +128,8 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             val model = createSummaryModel(testScope = this, amountModel = amountModel)
 
             // Act
-            model.onPlaceClick()
-            model.onPlaceClick()
+            model.tapPlace()
+            model.tapPlace()
             advanceUntilIdle()
 
             // Assert
@@ -154,7 +155,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             }
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             advanceUntilIdle()
 
             // Assert
@@ -182,7 +183,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 createPlaceResult(takingAmount = BigDecimal(filledShares)).right()
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             advanceUntilIdle()
 
             // Assert
@@ -205,7 +206,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 PredictionPlaceOrderError.NoLiquidity(detail = "no orders found to match with FAK order").left()
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             advanceUntilIdle()
 
             // Assert
@@ -228,7 +229,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 PredictionPlaceOrderError.Ambiguous(detail = "the exchange never answered").left()
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             advanceUntilIdle()
 
             // Assert
@@ -252,7 +253,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             amountModel.onPause()
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             advanceUntilIdle()
 
             // Assert
@@ -277,7 +278,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 amountModel.onPause()
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
                 advanceUntilIdle()
 
                 // Assert
@@ -304,7 +305,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             amountModel.onPause()
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             advanceUntilIdle()
 
             // Assert
@@ -329,7 +330,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                     PredictionPlaceOrderError.NoLiquidity(detail = "no orders found to match with FAK order").left()
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
                 advanceUntilIdle()
 
                 // Assert
@@ -357,7 +358,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 amountModel.onPause()
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
                 advanceUntilIdle()
 
                 // Assert
@@ -381,7 +382,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             amountModel.onPause()
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             advanceUntilIdle()
 
             // Assert
@@ -410,7 +411,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 coEvery { getWalletMetaInfoUseCase(userWalletId = USER_WALLET_ID) } returns walletMetaInfo.right()
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
                 advanceUntilIdle()
 
                 // Assert
@@ -462,7 +463,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 }
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
                 advanceUntilIdle()
 
                 // Assert
@@ -495,7 +496,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 amountModel.onPause()
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
                 advanceUntilIdle()
 
                 // Assert
@@ -522,7 +523,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 amountModel.onPause()
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
                 advanceUntilIdle()
 
                 // Assert
@@ -549,7 +550,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 DelayedPredictionOrderOutcome.Unconfirmed
             }
             amountModel.onPause()
-            model.onPlaceClick()
+            model.tapPlace()
             advanceTimeBy(delayTimeMillis = 1_000)
             clearMocks(router)
 
@@ -581,7 +582,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             amountModel.onPause()
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             advanceUntilIdle()
 
             // Assert
@@ -604,7 +605,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             coEvery { signOrderInteractor(request = capture(request)) } returns SIGNED_ORDER.right()
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             advanceUntilIdle()
 
             // Assert
@@ -629,7 +630,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 PredictionOrderFailure.Signing(error = PolymarketSigningError.UserCancelled).left()
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
 
             // Assert
@@ -653,7 +654,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             amountModel.onPause()
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
 
             // Assert
@@ -679,7 +680,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             }
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             advanceUntilIdle()
 
             // Assert
@@ -703,7 +704,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             amountModel.onPause()
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             advanceUntilIdle()
 
             // Assert
@@ -730,7 +731,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             amountModel.onPause()
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             advanceUntilIdle()
 
             // Assert
@@ -756,7 +757,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 amountModel.onPause()
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
                 advanceUntilIdle()
 
                 // Assert
@@ -817,7 +818,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             }
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             advanceUntilIdle()
 
             // Assert
@@ -839,7 +840,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             model.onFeeClick()
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             advanceUntilIdle()
 
             // Assert
@@ -867,7 +868,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
 
                 // Act
                 val quoted = model.uiState.value
-                model.onPlaceClick()
+                model.tapPlace()
                 advanceUntilIdle()
 
                 // Assert
@@ -898,7 +899,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 clearMocks(positionsRepository, getBalanceInteractor, answers = false)
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
                 advanceUntilIdle()
 
                 // Assert
@@ -927,7 +928,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 amountModel.onPause()
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
                 advanceUntilIdle()
 
                 // Assert
@@ -956,7 +957,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             amountModel.onPause()
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             advanceUntilIdle()
 
             // Assert
@@ -981,12 +982,12 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             val model = createSummaryModel(testScope = this, amountModel = amountModel)
             coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns null.right()
             amountModel.onPause()
-            model.onPlaceClick()
+            model.tapPlace()
             advanceUntilIdle()
             clearMocks(positionsRepository, answers = false)
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             advanceUntilIdle()
 
             // Assert
@@ -1011,7 +1012,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             amountModel.onPause()
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             advanceUntilIdle()
 
             // Assert
@@ -1037,7 +1038,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 amountModel.onPause()
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
                 advanceUntilIdle()
 
                 // Assert
@@ -1059,7 +1060,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 val model = createSummaryModel(testScope = this, amountModel = pricedAmountModel())
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
                 advanceUntilIdle()
 
                 // Assert
@@ -1087,7 +1088,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 val model = createSummaryModel(testScope = this, amountModel = pricedAmountModel())
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
                 advanceUntilIdle()
 
                 // Assert
@@ -1101,6 +1102,61 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             }
 
         private fun TestScope.pricedAmountModel(): PlacePredictionAmountModel {
+            val amountModel = createAmountModel(testScope = this)
+            advanceUntilIdle()
+            amountModel.onResume()
+            amountModel.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            return amountModel
+        }
+    }
+
+    @Nested
+    inner class ConfirmationStyle {
+
+        @Test
+        fun `GIVEN a hot wallet WHEN the summary opens THEN the order is placed by holding the button`() = runTest {
+            // Arrange
+            every { getUserWalletUseCase(any()) } returns hotWallet().right()
+            val amountModel = quotedAmountModel()
+
+            // Act
+            val model = createSummaryModel(testScope = this, amountModel = amountModel)
+
+            // Assert
+            assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.HOLD)
+        }
+
+        @Test
+        fun `GIVEN a card wallet WHEN the summary opens THEN the order is placed with the card`() = runTest {
+            // Arrange
+            every { getUserWalletUseCase(any()) } returns coldWallet().right()
+            val amountModel = quotedAmountModel()
+
+            // Act
+            val model = createSummaryModel(testScope = this, amountModel = amountModel)
+
+            // Assert
+            assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+        }
+
+        @Test
+        fun `GIVEN a plain tap on the summary WHEN the router picks the owner key THEN nothing is signed`() = runTest {
+            // Arrange
+            every { featureToggles.isPolymarketSessionKeysEnabled } returns true
+            coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
+            val model = createSummaryModel(testScope = this, amountModel = quotedAmountModel())
+
+            // Act
+            model.onPlaceClick(confirmedWith = PlaceButtonStyleUM.PLAIN)
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+            assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+        }
+
+        private fun TestScope.quotedAmountModel(): PlacePredictionAmountModel {
             val amountModel = createAmountModel(testScope = this)
             advanceUntilIdle()
             amountModel.onResume()
