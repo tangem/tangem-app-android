@@ -3,6 +3,8 @@ package com.tangem.feature.wallet.child.organizetokens.entity
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.ds.row.header.TangemHeaderRowUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
+import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
+import com.tangem.utils.annotations.RemoveWithToggle
 
 /**
  * Helper class for the DND list items
@@ -24,13 +26,16 @@ internal sealed class OrganizeRowItemUM {
      * @property groupId            ID of the network group which contains this token
      * @property accountId          ID of account which contains this token
      * @property tokenRowUM         state of the token item
+     * @property tokenRowState      state of the redesigned token item
      * @property roundingModeUM     item [RoundingModeUM]
      * @property isShowShadow       if true then item should be elevated
      * */
     data class Token(
         override val isShowShadow: Boolean = false,
         override val roundingModeUM: RoundingModeUM = RoundingModeUM.None,
+        @RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
         val tokenRowUM: TangemTokenRowUM,
+        val tokenRowState: TangemTokenRow.State.Organize,
         val groupId: String,
         val accountId: String = "",
     ) : OrganizeRowItemUM() {
