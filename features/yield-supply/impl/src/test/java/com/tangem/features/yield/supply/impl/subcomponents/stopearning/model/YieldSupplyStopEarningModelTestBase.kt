@@ -15,6 +15,7 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyStopEarningUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.features.yield.supply.impl.common.YieldSupplySmartGas
+import com.tangem.features.yield.supply.impl.common.YieldSupplyTxHistoryUpdater
 import com.tangem.features.yield.supply.impl.subcomponents.YieldSupplyActionModelTestBase
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.YieldSupplyStopEarningComponent
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -32,6 +33,7 @@ import org.junit.jupiter.api.BeforeEach
 @OptIn(ExperimentalCoroutinesApi::class)
 internal abstract class YieldSupplyStopEarningModelTestBase : YieldSupplyActionModelTestBase() {
 
+    protected val txHistoryUpdater: YieldSupplyTxHistoryUpdater = mockk(relaxed = true)
     protected val stopEarningUseCase: YieldSupplyStopEarningUseCase = mockk()
     protected val deactivateUseCase: YieldSupplyDeactivateUseCase = mockk()
     protected val withdrawalClaimPreparer: YieldSupplyWithdrawalClaimPreparer = mockk()
@@ -103,5 +105,6 @@ internal abstract class YieldSupplyStopEarningModelTestBase : YieldSupplyActionM
             getAvailableFeeTokensUseCase = getAvailableFeeTokensUseCase,
         ),
         isEvmGaslessFeeSupportedForNetwork = isEvmGaslessFeeSupportedForNetwork,
+        yieldSupplyTxHistoryUpdater = txHistoryUpdater,
     )
 }

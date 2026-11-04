@@ -112,7 +112,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyStopEarningModelTest
     }
 
     @Test
-    fun `GIVEN content loaded WHEN onClick THEN sends deactivates tracks pending and notifies sent`() = runTest {
+    fun `GIVEN content loaded WHEN onClick THEN sends deactivates tracks pending reloads history and notifies sent`() = runTest {
         // Arrange
         val model = createModel()
         advanceUntilIdle()
@@ -126,6 +126,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyStopEarningModelTest
         coVerify { yieldSupplyRepository.saveTokenProtocolPendingStatus(userWalletId, any(), any()) }
         coVerify { deactivateUseCase(any(), any()) }
         coVerify { pendingTracker.addPending(userWalletId, any(), any()) }
+        verify(exactly = 1) { txHistoryUpdater.scheduleUpdates(userWalletId, any(), any()) }
         verify { callback.onStopEarningTransactionSent() }
 
         // Token fee asset (default fee currency is the token itself)

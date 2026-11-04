@@ -53,6 +53,7 @@ import com.tangem.features.yield.supply.impl.common.YieldSupplyFeeCurrencyChoice
 import com.tangem.features.yield.supply.impl.common.YieldSupplyFeeLoads
 import com.tangem.features.yield.supply.impl.common.YieldSupplySmartGas
 import com.tangem.features.yield.supply.impl.common.YieldSupplySmartGasFee
+import com.tangem.features.yield.supply.impl.common.YieldSupplyTxHistoryUpdater
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
 import com.tangem.features.yield.supply.impl.common.entity.transformer.YieldSupplyTransactionInProgressTransformer
@@ -100,6 +101,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     private val estimateFeeForGaslessBatchUseCase: EstimateFeeForGaslessBatchUseCase,
     private val yieldSupplySmartGas: YieldSupplySmartGas,
     isEvmGaslessFeeSupportedForNetwork: IsEvmGaslessFeeSupportedForNetwork,
+    private val yieldSupplyTxHistoryUpdater: YieldSupplyTxHistoryUpdater,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStopEarningComponent.Params = paramsContainer.require()
@@ -322,6 +324,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                 cryptoCurrency = cryptoCurrency,
                 txIds = listOf(txId),
             )
+            yieldSupplyTxHistoryUpdater.scheduleUpdates(userWallet.walletId, cryptoCurrency, listOf(txId))
             params.callback.onStopEarningTransactionSent()
         }
     }
