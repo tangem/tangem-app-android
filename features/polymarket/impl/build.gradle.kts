@@ -42,6 +42,7 @@ dependencies {
     implementation(projects.domain.core)
     implementation(projects.domain.stories)
     implementation(projects.domain.stories.models)
+    implementation(projects.domain.wallets)
 
     /** Kotlin */
     implementation(deps.jodatime)

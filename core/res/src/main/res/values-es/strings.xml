@@ -2945,7 +2945,7 @@
   <string name="tangempay_status_inactive">Inactiva</string>
   <string name="tangempay_status_replacing">Reemplazo de su tarjeta</string>
   <string name="tangempay_sync_needed">Usa la tarjeta o el anillo para renovar la sesión</string>
-  <string name="tangempay_sync_needed_body">Renueve la sesión para ver su tarjeta y su cuenta</string>
+  <string name="tangempay_sync_needed_body">Renueve para ver su tarjeta y su cuenta</string>
   <string name="tangempay_sync_needed_button">Restablecer acceso</string>
   <string name="tangempay_sync_needed_title">La sesión ha caducado</string>
   <string name="tangempay_tangem_visa_card">Gaste sus criptos en el día a día</string>

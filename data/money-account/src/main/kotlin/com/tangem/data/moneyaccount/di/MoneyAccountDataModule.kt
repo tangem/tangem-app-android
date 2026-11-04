@@ -54,6 +54,7 @@ import dagger.multibindings.IntoSet
 import javax.inject.Singleton
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
+import kotlin.time.TimeSource
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -178,6 +179,7 @@ internal interface MoneyAccountDataModule {
                 getCustomerSummaryUseCase = getCustomerSummaryUseCase,
                 paymentAccountStatusFetcher = paymentAccountStatusFetcher,
                 moneyAccountStatusFetcher = moneyAccountStatusFetcher,
+                timeSource = TimeSource.Monotonic,
             )
         }
 
