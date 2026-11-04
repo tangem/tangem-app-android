@@ -33,6 +33,7 @@ import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.txhistory.model.TxHistoryInfo
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.features.moneyaccount.details.addfunds.options.MoneyAccountAddFundsOptionsListener
 import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
 import com.tangem.features.moneyaccount.details.impl.R
@@ -56,6 +57,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
     private val analytics: AnalyticsEventHandler,
     private val getMoneyAccountBankCredentialsUseCase: GetMoneyAccountBankCredentialsUseCase,
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     private val renewTangemPaySessionUseCase: RenewTangemPaySessionUseCase,
@@ -223,10 +225,13 @@ internal class MoneyAccountDetailsModel @Inject constructor(
 
     suspend fun retryBankCredentials(): Either<VisaApiError, Unit> {
         analytics.send(MoneyAccountAnalyticsEvents.DetailsRetryTapped())
-        return getMoneyAccountBankCredentialsUseCase(params.userWalletId).map(::onBankDetailsLoaded)
+        return getMoneyAccountBankCredentialsUseCase(
+            userWalletId = params.userWalletId,
+            includeAllRails = moneyAccountFeatureToggles.isMxnEnabled,
+        ).map(::onBankDetailsLoaded)
     }
 
-    override fun onBankDetailsLoaded(bankCredentials: BankCredentials) {
+    override fun onBankDetailsLoaded(bankCredentials: List<BankCredentials>) {
         analytics.send(MoneyAccountAnalyticsEvents.AddFundsBankDetailsShown())
         bottomSheetNavigation.dismiss()
         router.push(MoneyAccountDetailsRoute.BankDetails(bankCredentials))
