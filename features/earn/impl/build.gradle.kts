@@ -21,6 +21,8 @@ dependencies {
     implementation(projects.core.ui)
 
     /** Domain */
+    implementation(projects.domain.appCurrency)
+    implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.models)
     implementation(projects.domain.transaction)
     implementation(projects.domain.transaction.models)
