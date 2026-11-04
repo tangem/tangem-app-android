@@ -76,7 +76,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
 
     private var sessionKeyCheck: Job? = null
 
-    private var isCardWallet = false
+    private var ownerStyle: PlaceButtonStyleUM? = null
 
     private var sessionKeyStyle: PlaceButtonStyleUM? = null
 
@@ -100,25 +100,22 @@ internal class PlacePredictionOrderModel @Inject constructor(
 
     private fun resolveWalletType() {
         getUserWalletUseCase(params.userWalletId).onRight { userWallet ->
-            if (userWallet.isHotWallet) {
-                uiState.update { it.copy(placeButtonStyle = PlaceButtonStyleUM.HOLD) }
-                return@onRight
-            }
-
-            isCardWallet = true
-            uiState.update { it.copy(placeButtonStyle = PlaceButtonStyleUM.CARD) }
+            val style = if (userWallet.isHotWallet) PlaceButtonStyleUM.HOLD else PlaceButtonStyleUM.CARD
+            ownerStyle = style
+            uiState.update { it.copy(placeButtonStyle = style) }
         }
     }
 
     private fun checkSessionKey() {
-        if (!isCardWallet || !featureToggles.isPolymarketSessionKeysEnabled) return
+        val ownerStyle = ownerStyle ?: return
+        if (!featureToggles.isPolymarketSessionKeysEnabled) return
 
         sessionKeyCheck?.cancel()
         sessionKeyCheck = modelScope.launch {
             val canSign = withContext(dispatchers.io) {
                 canSignPredictionOrderWithSessionKeyUseCase(userWalletId = params.userWalletId)
             }
-            sessionKeyStyle = if (canSign) PlaceButtonStyleUM.PLAIN else PlaceButtonStyleUM.CARD
+            sessionKeyStyle = if (canSign) PlaceButtonStyleUM.PLAIN else ownerStyle
             applySessionKeyStyleIfIdle()
         }
     }
