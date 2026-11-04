@@ -178,6 +178,38 @@ internal class SendConfirmModelTest : SendModelTestBase() {
     }
 
     @Nested
+    inner class CheckFeeResultWithoutAmount {
+
+        @Test
+        fun `GIVEN no entered amount WHEN check reload succeeds THEN sending is switched off`() = runTest {
+            // Arrange
+            val resultFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+            every { feeSelectorCheckReloadListener.checkReloadResultFlow } returns resultFlow
+            val state = normalFeeState().copy(
+                amountUM = AmountState.Empty,
+                confirmUM = ConfirmUM.Content(
+                    isPrimaryButtonEnabled = true,
+                    walletName = mockk(relaxed = true),
+                    isSending = false,
+                    isShowTapHelp = false,
+                    sendingFooter = mockk(relaxed = true),
+                    notifications = persistentListOf(),
+                ),
+            )
+            val sut = createSendConfirmModel(this, confirmParams(state))
+            advanceUntilIdle()
+
+            // Act
+            resultFlow.tryEmit(true)
+            advanceUntilIdle()
+
+            // Assert
+            val confirmUM = sut.uiState.value.confirmUM as ConfirmUM.Content
+            assertThat(confirmUM.isSending).isFalse()
+        }
+    }
+
+    @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class SendTransactionDispatch {
 
