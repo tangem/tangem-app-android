@@ -103,7 +103,7 @@ internal class YieldSupplyStartEarningModelTest : YieldSupplyStartEarningModelTe
     }
 
     @Test
-    fun `GIVEN content loaded WHEN onClick THEN tracks pending and notifies sent`() = runTest {
+    fun `GIVEN content loaded WHEN onClick THEN tracks pending reloads history and notifies sent`() = runTest {
         // Arrange
         val model = createModel()
         advanceUntilIdle()
@@ -115,6 +115,7 @@ internal class YieldSupplyStartEarningModelTest : YieldSupplyStartEarningModelTe
         // Assert
         coVerify { yieldSupplyRepository.saveTokenProtocolPendingStatus(userWalletId, any(), any()) }
         coVerify { pendingTracker.addPending(userWalletId, any(), any(), any()) }
+        verify(exactly = 1) { txHistoryUpdater.scheduleUpdates(userWalletId, any(), any()) }
         verify { callback.onTransactionSent() }
     }
 
