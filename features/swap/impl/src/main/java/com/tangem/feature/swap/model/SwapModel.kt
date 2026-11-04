@@ -1880,10 +1880,19 @@ internal class SwapModel @Inject constructor(
                         if (swapFeatureToggles.isHideRejectedCexProviderEnabled) {
                             hideProviderIfRejected(provider = provider, error = swapTransactionState)
                             startLoadingQuotesFromLastState()
-                            showTransactionErrorAlert(error = swapTransactionState, providerName = provider.name)
+                            showTransactionErrorAlert(
+                                error = swapTransactionState,
+                                isSwapAttemptAlert = true,
+                                providerName = provider.name,
+                                amountCurrency = fromSwapCurrencyStatus.currency,
+                            )
                         } else {
                             startLoadingQuotesFromLastState()
-                            showTransactionErrorAlert(swapTransactionState)
+                            showTransactionErrorAlert(
+                                error = swapTransactionState,
+                                isSwapAttemptAlert = true,
+                                amountCurrency = fromSwapCurrencyStatus.currency,
+                            )
                         }
                     }
                     is SwapTransactionState.TangemPayWithdrawalData -> {
@@ -2559,11 +2568,15 @@ internal class SwapModel @Inject constructor(
 
     private fun showTransactionErrorAlert(
         error: SwapTransactionState.Error,
+        isSwapAttemptAlert: Boolean = false,
         providerName: String? = null,
+        amountCurrency: CryptoCurrency? = null,
         onSupportClick: (String) -> Unit = ::onFailedTxEmailClick,
     ) {
         val errorAlert = SwapTransactionErrorStateConverter(
+            isSwapAttemptAlert = isSwapAttemptAlert,
             providerName = providerName,
+            amountCurrency = amountCurrency,
             onDismiss = {},
             onSupportClick = onSupportClick,
         ).convert(error)

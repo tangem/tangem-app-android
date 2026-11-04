@@ -27,12 +27,14 @@ class ExpressErrorConverter(
                 2240 -> ExpressError.ExchangeNotPossibleError(code = error.code)
                 2250 -> error.toTooSmallAmountError()
                 2251 -> error.toTooBigAmountError()
+                2252 -> ExpressError.InvalidAmountError(code = error.code)
                 2260 -> error.toNotEnoughAllowanceError()
                 2264 -> ExpressError.ExchangeProviderAddressBannedByAmlError(code = error.code)
                 2270 -> ExpressError.NotEnoughBalanceError(code = error.code)
                 2280 -> ExpressError.InvalidAddressError(code = error.code)
                 2290 -> error.toInvalidFromDecimalsError()
 
+                2310 -> ExpressError.NotEnoughBalanceForGasFeeError(code = error.code)
                 2320 -> error.toProviderDifferentAmountError()
 
                 2600 -> ExpressError.IntentNotFoundError(code = error.code)
