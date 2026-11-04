@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.bankofframp.BankAccountDetails
 import com.tangem.domain.pay.model.bankofframp.BankAccountType
@@ -198,6 +199,7 @@ internal class MockBankOfframpOrderRepositoryTest {
                     depositAddress = "0x0000000000000000000000000000000000000003",
                     fee = OfframpFee(
                         name = "FedWire",
+                        calculationType = AccountFee.CalculationType.FIXED,
                         amount = BigDecimal("15.00"),
                         currency = "USD",
                         description = null,
@@ -207,6 +209,21 @@ internal class MockBankOfframpOrderRepositoryTest {
                 ).right(),
             )
         }
+
+    @Test
+    fun `GIVEN SPEI rail WHEN createRoute THEN unknown error and no route`() = runTest {
+        // Act
+        val actual = repository.createRoute(
+            userWalletId = WALLET_ID,
+            productInstanceId = PRODUCT_INSTANCE_ID,
+            rail = BankRail.SPEI,
+            recipient = BankOfframpRecipient.Saved("mock-bank-account-1"),
+            idempotencyKey = KEY,
+        )
+
+        // Assert
+        assertThat(actual.leftOrNull()).isInstanceOf(BankOfframpError.Unknown::class.java)
+    }
 
     @Test
     fun `GIVEN new recipient WHEN createRoute is retried with the same key THEN the same route returned`() = runTest {
@@ -221,7 +238,13 @@ internal class MockBankOfframpOrderRepositoryTest {
         assertThat(created).isEqualTo(
             BankOfframpRoute(
                 depositAddress = "0x0000000000000000000000000000000000000003",
-                fee = OfframpFee(name = "ACH", amount = BigDecimal("1.50"), currency = "USD", description = null),
+                fee = OfframpFee(
+                    name = "ACH",
+                    calculationType = AccountFee.CalculationType.FIXED,
+                    amount = BigDecimal("1.50"),
+                    currency = "USD",
+                    description = null,
+                ),
                 eta = OfframpEta(minDays = 1, maxDays = 3),
                 bankAccountId = "mock-bank-account-new-1",
             ).right(),

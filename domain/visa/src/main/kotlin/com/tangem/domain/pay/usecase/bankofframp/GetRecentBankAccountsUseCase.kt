@@ -15,7 +15,7 @@ class GetRecentBankAccountsUseCase(
 ) {
 
     suspend operator fun invoke(userWalletId: UserWalletId): Either<BankOfframpError, RecentBankAccounts> {
-        return repository.getBankAccounts(userWalletId).map { accounts ->
+        return repository.getBankAccounts(userWalletId).map(::withoutSpeiRecipients).map { accounts ->
             RecentBankAccounts(
                 recents = accounts.take(MAX_RECENTS),
                 hasMoreAccounts = accounts.size > MAX_RECENTS,

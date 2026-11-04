@@ -7,6 +7,7 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.core.remote.response.ApiResponse
 import com.tangem.core.remote.response.ApiResponseError
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.AccountFee
 import com.tangem.domain.pay.model.OrderStep
 import com.tangem.domain.pay.model.bankofframp.BankAccountDetails
 import com.tangem.domain.pay.model.bankofframp.BankAccountType
@@ -277,6 +278,7 @@ internal class DefaultBankOfframpOrderRepositoryTest {
                         depositAddress = DEPOSIT_ADDRESS,
                         fee = OfframpFee(
                             name = "ACH",
+                            calculationType = AccountFee.CalculationType.FIXED,
                             amount = BigDecimal("1.50"),
                             currency = "USD",
                             description = "ACH offramp fee",
