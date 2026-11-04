@@ -36,7 +36,7 @@ internal class MoneyAccountAddFundsOptionsComponent(
 internal interface MoneyAccountAddFundsOptionsListener {
     fun onSwapClick()
     fun onReceiveClick(depositAddress: String)
-    fun onBankDetailsLoaded(bankCredentials: BankCredentials)
+    fun onBankDetailsLoaded(bankCredentials: List<BankCredentials>)
     fun onBankingDetailsLoadFailed()
     fun onDismissAddFunds()
 }

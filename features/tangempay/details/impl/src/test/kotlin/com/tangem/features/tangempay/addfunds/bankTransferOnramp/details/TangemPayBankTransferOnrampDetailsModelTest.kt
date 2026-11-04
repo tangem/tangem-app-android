@@ -314,7 +314,7 @@ internal class TangemPayBankTransferOnrampDetailsModelTest {
         paramsContainer = MutableParamsContainer(
             TangemPayBankTransferOnrampDetailsComponent.Params(
                 userWalletId = userWalletId,
-                bankCredentials = bankCredentials,
+                bankCredentials = listOf(bankCredentials),
                 feeSource = feeSource,
                 analytics = analytics,
             ),
