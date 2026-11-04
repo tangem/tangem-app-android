@@ -40,6 +40,7 @@ import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.txhistory.model.JointOperationTx
 import com.tangem.domain.txhistory.model.OnChainTx
 import com.tangem.domain.txhistory.model.TxHistoryInfo
+import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsComponent
@@ -234,18 +235,39 @@ internal class MoneyAccountDetailsModelTest {
         }
 
     @Test
-    fun `GIVEN error sheet WHEN retried THEN credentials requested again and retry event sent`() = runTest {
+    fun `GIVEN error sheet WHEN retried THEN credentials requested again, details pushed and retry event sent`() =
+        runTest {
+            // Arrange
+            coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId) } returns CREDENTIALS.right()
+            val model = createModel(activeAccount(balance = balance()))
+            advanceUntilIdle()
+
+            // Act
+            val actual = model.retryBankCredentials()
+
+            // Assert
+            assertThat(actual).isEqualTo(Unit.right())
+            verify(exactly = 1) { router.push(MoneyAccountDetailsRoute.BankDetails(CREDENTIALS), any()) }
+            verify(exactly = 1) { analytics.send(ofType<MoneyAccountAnalyticsEvents.DetailsRetryTapped>()) }
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN credentials fail WHEN error sheet retried THEN error returned and the error sheet kept`() = runTest {
         // Arrange
-        coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId) } returns CREDENTIALS.right()
+        coEvery { getMoneyAccountBankCredentialsUseCase(userWalletId) } returns VisaApiError.ServerUnavailable.left()
         val model = createModel(activeAccount(balance = balance()))
+        val openedSheets = model.bottomSheetNavigation.trackSlot()
         advanceUntilIdle()
+        model.onBankingDetailsLoadFailed()
 
         // Act
         val actual = model.retryBankCredentials()
 
         // Assert
-        assertThat(actual).isEqualTo(CREDENTIALS.right())
-        verify(exactly = 1) { analytics.send(ofType<MoneyAccountAnalyticsEvents.DetailsRetryTapped>()) }
+        assertThat(actual).isEqualTo(VisaApiError.ServerUnavailable.left())
+        assertThat(openedSheets.last()).isEqualTo(MoneyAccountDetailsNavigation.BankDetailsError)
+        verify(exactly = 0) { router.push(any(), any()) }
         model.onDestroy()
     }
 
