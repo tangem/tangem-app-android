@@ -57,7 +57,6 @@ internal fun PolymarketEventCardFrame(
                 modifier = Modifier.fillMaxWidth(),
                 includeInnerPaddings = false,
                 titleSlot = {
-                    // The DS subtitle gap is 2dp; cards use 4dp or 8dp between title and metadata.
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(titleMetaSpacing),
@@ -80,7 +79,6 @@ internal fun PolymarketEventCardFrame(
 
 @Composable
 internal fun PolymarketCardIcon(iconUrl: String?, modifier: Modifier = Modifier) {
-    // TangemAvatar has no URL variant; TangemIconUM.Url uses Fit and a glyph fallback, not this cropped image.
     Box(
         modifier = modifier
             .size(PolymarketCardIconSize)

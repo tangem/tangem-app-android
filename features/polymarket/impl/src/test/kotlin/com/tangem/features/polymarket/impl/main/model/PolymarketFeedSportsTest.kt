@@ -3,6 +3,7 @@ package com.tangem.features.polymarket.impl.main.model
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.polymarket.PolymarketLiveScoresRepository
 import com.tangem.domain.polymarket.model.PolymarketEvent
+import com.tangem.domain.polymarket.model.PolymarketTeam
 import com.tangem.domain.polymarket.model.PolymarketEventsBatch
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchAction
 import com.tangem.domain.polymarket.model.PolymarketEventsBatchFlow
@@ -305,6 +306,7 @@ internal class PolymarketFeedSportsTest {
 
     private fun createEvent(gameId: String = "11") = createPolymarketEvent(isLive = true).copy(
         gameId = gameId, score = "1-0", period = "1H", dataFetchedAt = Instant.ofEpochSecond(100),
+        teams = listOf(PolymarketTeam("Home", null, null, null, "home"), PolymarketTeam("Away", null, null, null, "away")),
     )
 
     private fun createFrame() = PolymarketLiveScore(
