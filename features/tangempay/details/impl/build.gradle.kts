@@ -35,6 +35,7 @@ dependencies {
     implementation(projects.features.tangempay.eligibility.api)
     api(projects.features.tokenRecieve.api)
     implementation(projects.features.tokendetails.api)
+    implementation(projects.features.txhistory.api)
     api(projects.features.promoBanners.api)
 
     /** Domain */
