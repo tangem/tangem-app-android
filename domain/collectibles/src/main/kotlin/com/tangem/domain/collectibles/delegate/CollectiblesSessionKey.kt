@@ -5,20 +5,20 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.collectibles.CollectiblesAccountError
 
 /**
- * Custodian of the `hot_delegate` key of a collectibles account's gacha vault: an ed25519 keypair in the hot SDK
+ * Custodian of the `session_key` of a collectibles account's gacha vault: an ed25519 keypair in the hot SDK
  * keystore, deliberately not a wallet — absent from the wallets list, bound to the vault only by its on-chain
- * `hot_delegate` field, which `init_vault` sets and `update_vault` rotates.
+ * `session_key` field, which `init_vault` sets and `update_vault` rotates.
  *
  * Keyed by [AccountId], so a wallet's other accounts cannot reach it. Signing never prompts: a spin is signed
  * while the user watches an animation, so a stolen phone is limited by the vault's caps, not by a local prompt.
  */
-interface CollectiblesHotDelegate {
+interface CollectiblesSessionKey {
 
-    /** Returns the existing delegate, creating one on first call. Idempotent. */
-    suspend fun provision(accountId: AccountId): Either<CollectiblesAccountError, HotDelegatePublicKey>
+    /** Returns the existing session key, creating one on first call. Idempotent. */
+    suspend fun provision(accountId: AccountId): Either<CollectiblesAccountError, SessionKeyPublicKey>
 
-    /** Reads the existing delegate without ever creating one; null if there is none or it cannot be read. */
-    suspend fun getPublicKeyOrNull(accountId: AccountId): HotDelegatePublicKey?
+    /** Reads the existing session key without ever creating one; null if there is none or it cannot be read. */
+    suspend fun getPublicKeyOrNull(accountId: AccountId): SessionKeyPublicKey?
 
     /** Signs whatever it is handed — deciding that a transaction is safe to sign is the caller's job. */
     suspend fun sign(accountId: AccountId, message: ByteArray): Either<CollectiblesAccountError, ByteArray>
