@@ -94,6 +94,38 @@ internal class BankAccountConverterTest {
     }
 
     @Test
+    fun `GIVEN SPEI recipient with a CLABE and no US bank fields WHEN convert THEN kept as a SPEI recipient`() {
+        // Arrange
+        val response = response(
+            currency = "MXN",
+            rail = "spei",
+            beneficiaryAddress = null,
+            bankName = null,
+            bankAddress = null,
+            accountNumber = CLABE,
+            routingNumber = null,
+            accountType = null,
+        )
+
+        // Act
+        val actual = BankAccountConverter.convert(response)
+
+        // Assert
+        assertThat(actual?.details).isEqualTo(
+            expectedDetails().copy(
+                currency = "MXN",
+                rail = BankRail.SPEI,
+                beneficiaryAddress = null,
+                bankName = null,
+                bankAddress = null,
+                accountNumber = CLABE,
+                routingNumber = null,
+                accountType = null,
+            ),
+        )
+    }
+
+    @Test
     fun `GIVEN recipient without a currency WHEN convert THEN account kept with a null currency`() {
         // Act
         val actual = BankAccountConverter.convert(response(currency = null))
@@ -175,6 +207,7 @@ internal class BankAccountConverterTest {
         rail: String? = "ACH",
         beneficiary: BankAccountsResponse.Beneficiary? = beneficiary(),
         beneficiaryAddress: BankAccountsResponse.Address? = address(line2 = "Apt 4B"),
+        bankName: String? = "Chase Bank",
         bankAddress: BankAccountsResponse.Address? = address(),
         accountNumber: String? = "1234567890",
         routingNumber: String? = "021000021",
@@ -188,7 +221,7 @@ internal class BankAccountConverterTest {
             isThirdParty = false,
             beneficiary = beneficiary,
             beneficiaryAddress = beneficiaryAddress,
-            bankName = "Chase Bank",
+            bankName = bankName,
             bankAddress = bankAddress,
             accountNumber = accountNumber,
             routingNumber = routingNumber,
@@ -239,4 +272,8 @@ internal class BankAccountConverterTest {
         postalCode = "10001",
         countryCode = "US",
     )
+
+    private companion object {
+        const val CLABE = "002010077777777771"
+    }
 }
