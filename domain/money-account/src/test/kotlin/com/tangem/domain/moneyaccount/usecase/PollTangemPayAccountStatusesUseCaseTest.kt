@@ -21,12 +21,15 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.testTimeSource
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -41,11 +44,13 @@ internal class PollTangemPayAccountStatusesUseCaseTest {
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk()
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher = mockk()
 
-    private val useCase = PollTangemPayAccountStatusesUseCase(
-        getCustomerSummaryUseCase = getCustomerSummaryUseCase,
-        paymentAccountStatusFetcher = paymentAccountStatusFetcher,
-        moneyAccountStatusFetcher = moneyAccountStatusFetcher,
-    )
+    private val TestScope.useCase: PollTangemPayAccountStatusesUseCase
+        get() = PollTangemPayAccountStatusesUseCase(
+            getCustomerSummaryUseCase = getCustomerSummaryUseCase,
+            paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+            moneyAccountStatusFetcher = moneyAccountStatusFetcher,
+            timeSource = testTimeSource,
+        )
 
     @BeforeEach
     fun resetMocks() {
@@ -61,7 +66,7 @@ internal class PollTangemPayAccountStatusesUseCaseTest {
         coEvery { getCustomerSummaryUseCase(USER_WALLET_ID, CachePolicy.ONLY_CACHE) } returns terminalSummary().right()
 
         // Act
-        useCase(USER_WALLET_ID)
+        useCase(USER_WALLET_ID).collect()
 
         // Assert
         assertThat(currentTime).isEqualTo(0)
@@ -69,7 +74,7 @@ internal class PollTangemPayAccountStatusesUseCaseTest {
     }
 
     @Test
-    fun `GIVEN summary becomes terminal WHEN states collected THEN every observed state emitted until terminal`() =
+    fun `GIVEN summary becomes terminal WHEN collected THEN every observed state emitted until terminal`() =
         runTest {
             // Arrange
             coEvery { getCustomerSummaryUseCase(USER_WALLET_ID, CachePolicy.ONLY_CACHE) } returnsMany listOf(
@@ -79,7 +84,7 @@ internal class PollTangemPayAccountStatusesUseCaseTest {
             )
 
             // Act
-            val actual = useCase.states(USER_WALLET_ID).toList()
+            val actual = useCase(USER_WALLET_ID).toList()
 
             // Assert
             assertThat(actual).containsExactly(
@@ -89,18 +94,50 @@ internal class PollTangemPayAccountStatusesUseCaseTest {
         }
 
     @Test
-    fun `GIVEN summary in progress WHEN 20 minutes pass THEN polling continues`() = runTest {
+    fun `GIVEN summary always in progress WHEN invoke THEN polling stops after 15 minutes`() = runTest {
         // Arrange
         coEvery { getCustomerSummaryUseCase(USER_WALLET_ID, CachePolicy.ONLY_CACHE) } returns
             inProgressSummary().right()
-        val job = launch { useCase(USER_WALLET_ID) }
 
         // Act
-        advanceTimeBy(20.minutes)
+        useCase(USER_WALLET_ID).collect()
+
+        // Assert
+        assertThat(currentTime).isEqualTo(15.minutes.inWholeMilliseconds)
+        verifyFetched(times = 25)
+    }
+
+    @Test
+    fun `GIVEN summary in progress WHEN first 2 minutes pass THEN statuses fetched every 10 seconds`() = runTest {
+        // Arrange
+        coEvery { getCustomerSummaryUseCase(USER_WALLET_ID, CachePolicy.ONLY_CACHE) } returns
+            inProgressSummary().right()
+        val job = launch { useCase(USER_WALLET_ID).collect() }
+
+        // Act
+        advanceTimeBy(2.minutes)
         runCurrent()
 
         // Assert
-        verifyFetched(times = 41)
+        verifyFetched(times = 13)
+        job.cancel()
+    }
+
+    @Test
+    fun `GIVEN 2 minutes of polling passed WHEN next minute passes THEN statuses fetched once`() = runTest {
+        // Arrange
+        coEvery { getCustomerSummaryUseCase(USER_WALLET_ID, CachePolicy.ONLY_CACHE) } returns
+            inProgressSummary().right()
+        val job = launch { useCase(USER_WALLET_ID).collect() }
+        advanceTimeBy(2.minutes)
+        runCurrent()
+
+        // Act
+        advanceTimeBy(1.minutes)
+        runCurrent()
+
+        // Assert
+        verifyFetched(times = 14)
         job.cancel()
     }
 
@@ -113,10 +150,10 @@ internal class PollTangemPayAccountStatusesUseCaseTest {
         )
 
         // Act
-        useCase(USER_WALLET_ID)
+        useCase(USER_WALLET_ID).collect()
 
         // Assert
-        assertThat(currentTime).isEqualTo(30.seconds.inWholeMilliseconds)
+        assertThat(currentTime).isEqualTo(10.seconds.inWholeMilliseconds)
         verifyFetched(times = 2)
     }
 
@@ -129,7 +166,7 @@ internal class PollTangemPayAccountStatusesUseCaseTest {
         )
 
         // Act
-        useCase(USER_WALLET_ID)
+        useCase(USER_WALLET_ID).collect()
 
         // Assert
         verifyFetched(times = 2)
@@ -140,7 +177,7 @@ internal class PollTangemPayAccountStatusesUseCaseTest {
         // Arrange
         coEvery { getCustomerSummaryUseCase(USER_WALLET_ID, CachePolicy.ONLY_CACHE) } returns
             inProgressSummary().right()
-        val job = launch { useCase(USER_WALLET_ID) }
+        val job = launch { useCase(USER_WALLET_ID).collect() }
         advanceTimeBy(1.minutes)
         runCurrent()
 
@@ -149,7 +186,7 @@ internal class PollTangemPayAccountStatusesUseCaseTest {
         advanceTimeBy(5.minutes)
 
         // Assert
-        verifyFetched(times = 3)
+        verifyFetched(times = 7)
     }
 
     @ParameterizedTest
@@ -163,7 +200,7 @@ internal class PollTangemPayAccountStatusesUseCaseTest {
             )
 
             // Act
-            useCase(USER_WALLET_ID)
+            useCase(USER_WALLET_ID).collect()
 
             // Assert
             verifyFetched(times = if (model.isTerminal) 1 else 2)
@@ -201,6 +238,16 @@ internal class PollTangemPayAccountStatusesUseCaseTest {
                 kycStatus = KycStatus.APPROVED,
                 paymentStatus = PaymentStatus.PROCESSING,
                 paymentStep = PaymentAccount.Activation.Step.AWAITING_DEPOSIT,
+            ),
+            isTerminal = false,
+        ),
+        StateModel(
+            name = "payment account awaiting deposit with money account not started",
+            summary = summary(
+                kycStatus = KycStatus.APPROVED,
+                paymentStatus = PaymentStatus.PROCESSING,
+                paymentStep = PaymentAccount.Activation.Step.AWAITING_DEPOSIT,
+                moneyStatus = MoneyStatus.NOT_STARTED,
             ),
             isTerminal = false,
         ),

@@ -72,7 +72,7 @@ class StartTangemPayOnboardingUseCase(
     }
 
     private suspend fun trackActivation(userWalletId: UserWalletId, tracker: ProductActivationTracker) {
-        pollTangemPayAccountStatusesUseCase.states(userWalletId).collect { state ->
+        pollTangemPayAccountStatusesUseCase(userWalletId).collect { state ->
             tracker.onState(state).forEach(analytics::send)
         }
         tracker.onPollingStopped().forEach(analytics::send)
