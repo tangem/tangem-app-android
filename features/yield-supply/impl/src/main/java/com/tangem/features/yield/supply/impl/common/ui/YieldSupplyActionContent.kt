@@ -2,6 +2,7 @@ package com.tangem.features.yield.supply.impl.common.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -39,6 +40,7 @@ internal fun YieldSupplyActionContent(
     yieldSupplyNotificationsComponent: ComposableContentComponent,
     modifier: Modifier = Modifier,
     enableFooterClick: Boolean = true,
+    onFeeClick: () -> Unit = {},
     iconContent: @Composable ColumnScope.() -> Unit,
 ) {
     Column(
@@ -86,24 +88,37 @@ internal fun YieldSupplyActionContent(
                     top = 8.dp,
                 ),
             ) {
-                val fee = when (val yieldSupplyFeeUM = yieldSupplyActionUM.yieldSupplyFeeUM) {
-                    is YieldSupplyFeeUM.Content -> yieldSupplyFeeUM.feeFiatValue
-                    YieldSupplyFeeUM.Error -> stringReference(StringsSigns.DASH_SIGN)
-                    YieldSupplyFeeUM.Loading -> null
-                }
-                YieldSupplyFeeRow(
-                    title = resourceReference(R.string.common_network_fee_title),
-                    value = fee,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(TangemTheme.colors3.bg.secondary)
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                )
+                YieldSupplyActionFeeRow(yieldSupplyActionUM = yieldSupplyActionUM, onFeeClick = onFeeClick)
             }
         }
         yieldSupplyNotificationsComponent.Content(Modifier)
     }
+}
+
+@Composable
+private fun YieldSupplyActionFeeRow(yieldSupplyActionUM: YieldSupplyActionUM, onFeeClick: () -> Unit) {
+    val yieldSupplyFeeUM = yieldSupplyActionUM.yieldSupplyFeeUM
+    val fee = when (yieldSupplyFeeUM) {
+        is YieldSupplyFeeUM.Content -> yieldSupplyFeeUM.feeFiatValue
+        YieldSupplyFeeUM.Error -> stringReference(StringsSigns.DASH_SIGN)
+        YieldSupplyFeeUM.Loading -> null
+    }
+    val isFeeClickable = yieldSupplyActionUM.isFeeCurrencySelectable &&
+        yieldSupplyFeeUM != YieldSupplyFeeUM.Loading &&
+        !yieldSupplyActionUM.isTransactionSending
+    val feeCurrencySymbol = (yieldSupplyFeeUM as? YieldSupplyFeeUM.Content)?.feeCurrency?.symbol
+    YieldSupplyFeeRow(
+        title = resourceReference(R.string.common_network_fee_title),
+        value = fee,
+        badge = feeCurrencySymbol?.let(::stringReference),
+        isSelectable = isFeeClickable,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(TangemTheme.colors3.bg.secondary)
+            .clickable(enabled = isFeeClickable, onClick = onFeeClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+    )
 }
 
 // region Preview
