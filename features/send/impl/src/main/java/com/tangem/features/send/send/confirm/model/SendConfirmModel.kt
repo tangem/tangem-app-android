@@ -185,7 +185,14 @@ internal class SendConfirmModel @Inject constructor(
      * stay stale until a successful send.
      */
     fun updateEditedState(state: SendUM) {
-        _uiState.update { it.copy(amountUM = state.amountUM, destinationUM = state.destinationUM) }
+        _uiState.update { current ->
+            current.copy(
+                amountUM = state.amountUM.takeUnless { it is AmountState.Empty } ?: current.amountUM,
+                destinationUM = state.destinationUM
+                    .takeIf { it is DestinationUM.Content && it.isInitialized }
+                    ?: current.destinationUM,
+            )
+        }
         onFeeReload()
         updateConfirmNotifications()
     }
