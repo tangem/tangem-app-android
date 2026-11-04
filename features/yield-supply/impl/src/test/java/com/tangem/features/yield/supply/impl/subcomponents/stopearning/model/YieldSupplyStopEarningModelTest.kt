@@ -157,7 +157,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyStopEarningModelTest
 
     @Test
     fun `GIVEN fee not loaded WHEN onClick THEN does not send transaction`() = runTest {
-        // Arrange — fee load fails so the fee state is Error; onClick reports progress then early-returns
+        // Arrange
         coEvery { getFeeUseCase(any(), any(), any()) } returns GetFeeError.UnknownError.left()
         val model = createModel()
         advanceUntilIdle()
@@ -167,7 +167,7 @@ internal class YieldSupplyStopEarningModelTest : YieldSupplyStopEarningModelTest
         advanceUntilIdle()
 
         // Assert
-        verify { callback.onTransactionProgress(true) }
+        verify(exactly = 0) { callback.onTransactionProgress(any()) }
         coVerify(exactly = 0) {
             sendTransactionUseCase(txsData = any(), userWallet = any(), network = any(), sendMode = any())
         }

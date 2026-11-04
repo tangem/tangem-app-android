@@ -1,6 +1,8 @@
 package com.tangem.features.yield.supply.impl.subcomponents.stopearning
 
 import androidx.compose.foundation.background
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorComponent
+import com.tangem.features.yield.supply.impl.common.YieldSupplyFeeCurrencySelector
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -54,6 +56,13 @@ internal class YieldSupplyStopEarningComponent(
             feeCryptoCurrencyStatusFlow = model.feeCryptoCurrencyStatusFlow,
             callback = model,
         ),
+    )
+
+    private val feeCurrencySelector = YieldSupplyFeeCurrencySelector(
+        context = this,
+        feeSelectorComponentFactory = params.feeSelectorComponentFactory,
+        createParams = model::createFeeSelectorParams,
+        onPicked = model::onFeeCurrencyPicked,
     )
 
     override fun dismiss() {
@@ -110,6 +119,7 @@ internal class YieldSupplyStopEarningComponent(
                     yieldSupplyActionUM = state,
                     onFooterClick = model::onReadMoreClick,
                     yieldSupplyNotificationsComponent = yieldSupplyNotificationsComponent,
+                    onFeeClick = feeCurrencySelector::show,
                 ) {
                     Box(
                         modifier = Modifier
@@ -128,12 +138,14 @@ internal class YieldSupplyStopEarningComponent(
                 }
             },
         )
+        feeCurrencySelector.BottomSheet()
     }
 
     data class Params(
         val userWallet: UserWallet,
         val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
         val callback: ModelCallback,
+        val feeSelectorComponentFactory: FeeSelectorComponent.Factory,
     )
 
     interface ModelCallback {
