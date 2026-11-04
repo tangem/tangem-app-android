@@ -7,6 +7,9 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.pay.TangemPayProduct
 import com.tangem.domain.pay.usecase.GetOnrampFeesUseCase
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesLoader
@@ -15,7 +18,11 @@ import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayR
 import com.tangem.features.tangempay.components.TangemPayBankTransferOnrampDetailsComponent
 import com.tangem.features.tangempay.components.TangemPayBankTransferOnrampDetailsComponent.FeeSource
 import com.tangem.features.tangempay.components.TangemPayBankTransferOnrampDetailsComponent.RequisiteField
+import com.tangem.features.tangempay.details.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -39,28 +46,23 @@ internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
     private val requisitesConverter = TangemPayBankTransferOnrampRequisitesUMConverter(onCopyClick = ::onCopyClick)
     private val dailyDepositLimitConverter = TangemPayDailyDepositLimitUMConverter()
 
-    private val bankCredentials = params.bankCredentials.first()
-    private val requisites = requisitesConverter.convert(bankCredentials)
-
     val uiState: StateFlow<TangemPayBankTransferOnrampDetailsScreenUM>
         field = MutableStateFlow(
             TangemPayBankTransferOnrampDetailsScreenUM(
-                requisites = requisites,
+                tabs = persistentListOf(),
+                requisites = persistentListOf(),
+                referenceWarning = null,
                 fees = TangemPayOnrampFeesUM.Loading,
-                dailyDepositLimit = bankCredentials.depositLimit?.let(dailyDepositLimitConverter::convert),
+                dailyDepositLimit = null,
                 onShareClick = ::onShareClick,
                 onCloseClick = ::onCloseClick,
-            ),
+            ).withSelectedRoute(index = 0),
         )
 
     init {
         params.analytics.onDetailsShown()
-        when (val feeSource = params.feeSource) {
-            is FeeSource.Catalogue -> loadCatalogueFees(feeSource.product)
-            FeeSource.Route -> uiState.update { state ->
-                state.copy(fees = TangemPayRouteFeeUMConverter.convert(bankCredentials))
-            }
-        }
+        val feeSource = params.feeSource
+        if (feeSource is FeeSource.Catalogue) loadCatalogueFees(feeSource.product)
     }
 
     private fun loadCatalogueFees(product: TangemPayProduct) {
@@ -80,6 +82,39 @@ internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
         router.pop()
     }
 
+    private fun onTabClick(index: Int) {
+        uiState.update { state -> state.withSelectedRoute(index) }
+    }
+
+    private fun TangemPayBankTransferOnrampDetailsScreenUM.withSelectedRoute(
+        index: Int,
+    ): TangemPayBankTransferOnrampDetailsScreenUM {
+        val credentials = params.bankCredentials[index]
+        return copy(
+            tabs = createTabs(selectedIndex = index),
+            requisites = requisitesConverter.convert(credentials),
+            referenceWarning = resourceReference(R.string.tangempay_bank_transfer_details_reference_warning)
+                .takeIf { credentials.isSpei && !credentials.transferMessage.isNullOrBlank() },
+            fees = when (params.feeSource) {
+                is FeeSource.Catalogue -> fees
+                FeeSource.Route -> TangemPayRouteFeeUMConverter.convert(credentials)
+            },
+            dailyDepositLimit = dailyDepositLimitConverter.convert(credentials),
+        )
+    }
+
+    private fun createTabs(selectedIndex: Int): ImmutableList<TangemTabItemUM> {
+        if (params.bankCredentials.size < 2) return persistentListOf()
+        return params.bankCredentials.mapIndexed { index, credentials ->
+            TangemTabItemUM.Content(
+                id = index.toString(),
+                label = stringReference(credentials.depositCurrencyCode),
+                isSelected = index == selectedIndex,
+                onClick = { onTabClick(index) },
+            )
+        }.toImmutableList()
+    }
+
     private fun onCopyClick(field: RequisiteField, value: String) {
         params.analytics.onFieldCopied(field)
         clipboardManager.setText(text = value, isSensitive = true)
@@ -87,6 +122,7 @@ internal class TangemPayBankTransferOnrampDetailsModel @Inject constructor(
 
     private fun onShareClick() {
         params.analytics.onShareClicked()
+        val requisites = uiState.value.requisites
         shareManager.shareText(requisites.joinToString(separator = "\n") { "${it.key}: ${it.value}" })
     }
 }
