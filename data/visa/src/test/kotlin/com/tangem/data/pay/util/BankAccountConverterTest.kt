@@ -1,6 +1,7 @@
 package com.tangem.data.pay.util
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.data.pay.TEST_CLABE
 import com.tangem.domain.pay.model.bankofframp.BankAccount
 import com.tangem.domain.pay.model.bankofframp.BankAccountDetails
 import com.tangem.domain.pay.model.bankofframp.BankAccountType
@@ -102,7 +103,7 @@ internal class BankAccountConverterTest {
             beneficiaryAddress = null,
             bankName = null,
             bankAddress = null,
-            accountNumber = CLABE,
+            accountNumber = TEST_CLABE,
             routingNumber = null,
             accountType = null,
         )
@@ -118,7 +119,7 @@ internal class BankAccountConverterTest {
                 beneficiaryAddress = null,
                 bankName = null,
                 bankAddress = null,
-                accountNumber = CLABE,
+                accountNumber = TEST_CLABE,
                 routingNumber = null,
                 accountType = null,
             ),
@@ -272,8 +273,4 @@ internal class BankAccountConverterTest {
         postalCode = "10001",
         countryCode = "US",
     )
-
-    private companion object {
-        const val CLABE = "002010077777777771"
-    }
 }

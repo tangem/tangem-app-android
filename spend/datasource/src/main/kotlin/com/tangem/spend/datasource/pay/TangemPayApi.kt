@@ -81,6 +81,19 @@ interface TangemPayApi {
         @Body body: BankOfframpRouteRequest,
     ): ApiResponse<BankOfframpRouteResponse>
 
+    @POST("v1/account/bank-offramp/quote")
+    suspend fun createBankOfframpQuote(
+        @Header("Authorization") authHeader: String,
+        @Header("X-Idempotency-Key") idempotencyKey: String,
+        @Body body: BankOfframpQuoteRequest,
+    ): ApiResponse<BankOfframpQuoteResponse>
+
+    @POST("v1/account/bank-offramp/transfer")
+    suspend fun createBankOfframpTransfer(
+        @Header("Authorization") authHeader: String,
+        @Body body: BankOfframpTransferRequest,
+    ): ApiResponse<BankOfframpTransferResponse>
+
     @GET("v1/customer/wallets/{customer_wallet_id}")
     suspend fun checkCustomerWalletId(
         @Path("customer_wallet_id") customerWalletId: String,
