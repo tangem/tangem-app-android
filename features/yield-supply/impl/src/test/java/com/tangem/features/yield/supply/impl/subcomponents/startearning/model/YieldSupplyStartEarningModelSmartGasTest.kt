@@ -1,6 +1,7 @@
 package com.tangem.features.yield.supply.impl.subcomponents.startearning.model
 
 import arrow.core.left
+import com.tangem.features.send.api.analytics.CommonSendAnalyticEvents
 import arrow.core.none
 import arrow.core.right
 import arrow.core.some
@@ -18,6 +19,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.AvailableFeeTokens
 import com.tangem.domain.transaction.models.YieldModuleSameTokenRule
 import com.tangem.domain.transaction.models.GaslessFeePlan
 import com.tangem.domain.transaction.models.GaslessProtocolData
@@ -38,6 +40,8 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -449,6 +453,212 @@ internal class YieldSupplyStartEarningModelSmartGasTest : YieldSupplyStartEarnin
             verify(exactly = 2) { analytics.send(ofType<Basic.TransactionSent>()) }
         }
 
+    @Test
+    fun `GIVEN gasless network with a token to offer WHEN fee loaded THEN fee currency selectable`() = runTest {
+        // Arrange
+        stubBatchEstimate(nativeFee().right())
+
+        // Act
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.isFeeCurrencySelectable).isTrue()
+    }
+
+    @Test
+    fun `GIVEN network without gasless WHEN fee loaded THEN fee currency not selectable`() = runTest {
+        // Arrange
+        stubBatchEstimate(nativeFee().right())
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns false
+
+        // Act
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.isFeeCurrencySelectable).isFalse()
+    }
+
+    @Test
+    fun `GIVEN only the native coin offered WHEN fee loaded THEN fee currency not selectable`() = runTest {
+        // Arrange
+        stubBatchEstimate(nativeFee().right())
+        coEvery {
+            getAvailableFeeTokensUseCase(
+                userWallet = any(),
+                network = any(),
+                sentCurrencyStatus = any(),
+                nativeFeeAmount = any(),
+                enteringYieldTokenId = any(),
+            )
+        } returns AvailableFeeTokens(tokens = listOf(nativeFeeStatus)).right()
+
+        // Act
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.isFeeCurrencySelectable).isFalse()
+    }
+
+    @Test
+    fun `GIVEN another token picked WHEN fee reloaded THEN fee quoted in the picked token`() = runTest {
+        // Arrange
+        stubBatchEstimate(nativeFee().right())
+        stubPickedEstimate(usdcStatus, gaslessFee(usdc.id).right())
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Act
+        model.onFeeCurrencyPicked(usdcStatus)
+        advanceUntilIdle()
+
+        // Assert
+        val feeUM = model.uiState.value.yieldSupplyFeeUM as YieldSupplyFeeUM.Content
+        assertThat(feeUM.gaslessFee).isEqualTo(gaslessFee(usdc.id))
+        assertThat(feeUM.feeCurrency).isEqualTo(usdc)
+        assertThat(model.feeCryptoCurrencyStatusFlow.value).isEqualTo(usdcStatus)
+    }
+
+    @Test
+    fun `GIVEN coin picked WHEN fee reloaded THEN native fee kept without a token quote`() = runTest {
+        // Arrange
+        stubBatchEstimate(gaslessFee(usdc.id).right())
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Act
+        model.onFeeCurrencyPicked(nativeFeeStatus)
+        advanceUntilIdle()
+
+        // Assert
+        assertNativeFeeKept(model)
+        coVerify(exactly = 1) {
+            estimateFeeForGaslessBatchUseCase(
+                userWallet = any(),
+                operationTokenStatus = any(),
+                calls = any(),
+                sameTokenRule = any(),
+                isOperationTokenExcluded = any(),
+                feeCurrencyStatus = any(),
+            )
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("pickedFeeErrors")
+    fun `GIVEN picked token fails WHEN fee reloaded THEN error shown in the picked token`(model: PickedFeeErrorModel) =
+        runTest {
+            // Arrange
+            stubBatchEstimate(nativeFee().right())
+            stubPickedEstimate(usdcStatus, model.estimateError.left())
+            val yieldModel = createModel()
+            advanceUntilIdle()
+
+            // Act
+            yieldModel.onFeeCurrencyPicked(usdcStatus)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(yieldModel.uiState.value.yieldSupplyFeeUM).isEqualTo(YieldSupplyFeeUM.Error)
+            assertThat(yieldModel.feeCryptoCurrencyStatusFlow.value).isEqualTo(usdcStatus)
+            coVerify {
+                notificationsUpdateTrigger.triggerUpdate(
+                    YieldSupplyNotificationData(feeValue = null, feeError = model.shownError),
+                )
+            }
+        }
+
+    @ParameterizedTest
+    @MethodSource("enterAmountSupport")
+    fun `GIVEN module enter amount support WHEN fee loaded THEN entered token offered only if supported`(
+        isSupported: Boolean,
+    ) = runTest {
+        // Arrange
+        stubBatchEstimate(nativeFee().right())
+        coEvery { applyEnterAmountUseCase.supportsEnterAmount(any(), any(), any()) } returns isSupported
+        val expectedTokenId = token.id.takeIf { isSupported }
+
+        // Act
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Assert
+        val params = checkNotNull(model.createFeeSelectorParams(callback = mockk()))
+        assertThat(params.enteringYieldTokenId).isEqualTo(expectedTokenId)
+        coVerify {
+            getAvailableFeeTokensUseCase(
+                userWallet = any(),
+                network = any(),
+                sentCurrencyStatus = any(),
+                nativeFeeAmount = any(),
+                enteringYieldTokenId = expectedTokenId,
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN entered token picked and module lacks enter amount WHEN fee reloaded THEN auto fee used`() = runTest {
+        // Arrange
+        stubBatchEstimate(nativeFee().right())
+        coEvery { applyEnterAmountUseCase.supportsEnterAmount(any(), any(), any()) } returns false
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Act
+        model.onFeeCurrencyPicked(cryptoCurrencyStatus)
+        advanceUntilIdle()
+
+        // Assert
+        assertNativeFeeKept(model)
+        coVerify(exactly = 0) {
+            estimateFeeForGaslessBatchUseCase(
+                userWallet = any(),
+                operationTokenStatus = any(),
+                calls = any(),
+                sameTokenRule = any(),
+                isOperationTokenExcluded = any(),
+                feeCurrencyStatus = cryptoCurrencyStatus,
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN fee shown WHEN fee selector params created THEN token list opens on the shown fee`() = runTest {
+        // Arrange
+        stubBatchEstimate(gaslessFee(usdc.id).right())
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Act
+        val params = checkNotNull(model.createFeeSelectorParams(callback = mockk()))
+
+        // Assert
+        assertThat(params.shouldShowOnlyTokenOption).isTrue()
+        assertThat(params.analyticsCategoryName).isEqualTo("Earning")
+        assertThat(params.analyticsSendSource).isEqualTo(CommonSendAnalyticEvents.CommonSendSource.Earning)
+        assertThat(params.feeCryptoCurrencyStatus).isEqualTo(nativeFeeStatus)
+        val shownFee = checkNotNull(params.onLoadFeeExtended).invoke(null).getOrNull()
+        assertThat(shownFee?.feeTokenId).isEqualTo(usdc.id)
+    }
+
+    private fun stubPickedEstimate(
+        pickedStatus: CryptoCurrencyStatus,
+        result: arrow.core.Either<GetFeeError, TransactionFeeExtended?>,
+    ) {
+        coEvery {
+            estimateFeeForGaslessBatchUseCase(
+                userWallet = any(),
+                operationTokenStatus = any(),
+                calls = any(),
+                sameTokenRule = YieldModuleSameTokenRule.Enter,
+                isOperationTokenExcluded = any(),
+                feeCurrencyStatus = pickedStatus,
+            )
+        } returns result
+    }
+
     private fun assertNativeFeeKept(model: YieldSupplyStartEarningModel) {
         val feeUM = model.uiState.value.yieldSupplyFeeUM as YieldSupplyFeeUM.Content
         assertThat(feeUM.transactionDataList).containsExactlyElementsIn(estimatedCalls).inOrder()
@@ -512,8 +722,33 @@ internal class YieldSupplyStartEarningModelSmartGasTest : YieldSupplyStartEarnin
         )
     }
 
+    data class PickedFeeErrorModel(val estimateError: GetFeeError, val shownError: GetFeeError)
+
     private companion object {
         const val GASLESS_HASH = "0xgasless"
         val TOKEN_FEE = BigDecimal("0.5")
+
+        @JvmStatic
+        fun enterAmountSupport() = listOf(true, false)
+
+        @JvmStatic
+        fun pickedFeeErrors() = listOf(
+            PickedFeeErrorModel(
+                estimateError = GetFeeError.GaslessError.NotEnoughFunds,
+                shownError = GetFeeError.GaslessError.NotEnoughFunds,
+            ),
+            PickedFeeErrorModel(
+                estimateError = GetFeeError.GaslessError.NoSupportedTokensFound,
+                shownError = GetFeeError.GaslessError.NotEnoughFunds,
+            ),
+            PickedFeeErrorModel(
+                estimateError = GetFeeError.GaslessError.YieldBalanceUnavailable,
+                shownError = GetFeeError.UnknownError,
+            ),
+            PickedFeeErrorModel(
+                estimateError = GetFeeError.GaslessError.DataError(cause = null),
+                shownError = GetFeeError.UnknownError,
+            ),
+        )
     }
 }
