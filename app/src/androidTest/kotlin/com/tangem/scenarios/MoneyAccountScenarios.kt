@@ -5,7 +5,6 @@ import androidx.compose.ui.test.SemanticsMatcher
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
-import com.tangem.common.utils.getWireMockRequestCount
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.screens.VirtualAccountRequisitesBottomSheetPageObject
 import com.tangem.screens.moneyaccount.onMoneyAccountAddFundsSheet
@@ -109,12 +108,13 @@ fun BaseTestCase.refreshMainUntilMoneyAccountCacheIcon() {
     }
 }
 
-fun BaseTestCase.refreshMainUntilCustomerSummaryRequested() {
-    val requestsBefore = getWireMockRequestCount("GET", CUSTOMER_SUMMARY_PATH)
-    step("Refresh 'Main' until '$CUSTOMER_SUMMARY_PATH' is requested") {
+fun BaseTestCase.refreshMainUntilMoneyAccountCacheIconHidden() {
+    step("Refresh 'Main' until the 'Money account' row hides the cached-data icon") {
         refreshMainUntil {
             composeTestRule.waitUntil(timeoutMillis = BALANCE_RELOAD_TIMEOUT_MILLIS) {
-                getWireMockRequestCount("GET", CUSTOMER_SUMMARY_PATH) > requestsBefore
+                var isShown = true
+                onMoneyAccountScreen { isShown = isMainRowCacheIconShown() }
+                !isShown
             }
         }
     }
@@ -211,4 +211,3 @@ fun BaseTestCase.openMainWithMoneyAccountAndTwoAccounts() {
 
 private const val DETAILS_OPEN_TIMEOUT_MILLIS = 3_000L
 private const val BALANCE_RELOAD_TIMEOUT_MILLIS = 5_000L
-private const val CUSTOMER_SUMMARY_PATH = "/bff-v2/v1/customer/summary"
