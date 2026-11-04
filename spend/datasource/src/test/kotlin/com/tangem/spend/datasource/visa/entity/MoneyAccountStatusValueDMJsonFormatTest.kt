@@ -79,8 +79,18 @@ internal class MoneyAccountStatusValueDMJsonFormatTest {
     private fun provideTestModels() = listOf(
         FormatModel(status = MoneyAccountStatusValueDM.Empty, json = """{"__type":"empty"}"""),
         FormatModel(
-            status = MoneyAccountStatusValueDM.Activating(customerId = "cust-2"),
-            json = """{"__type":"activating","customer_id":"cust-2"}""",
+            status = MoneyAccountStatusValueDM.Activating(
+                customerId = "cust-2",
+                step = MoneyAccountStatusValueDM.Activating.StepDM.ISSUING,
+            ),
+            json = """{"__type":"activating","customer_id":"cust-2","step":"issuing"}""",
+        ),
+        FormatModel(
+            status = MoneyAccountStatusValueDM.Activating(
+                customerId = "cust-2",
+                step = MoneyAccountStatusValueDM.Activating.StepDM.AWAITING_DEPOSIT,
+            ),
+            json = """{"__type":"activating","customer_id":"cust-2","step":"awaiting_deposit"}""",
         ),
         FormatModel(
             status = MoneyAccountStatusValueDM.ActiveAccount(
