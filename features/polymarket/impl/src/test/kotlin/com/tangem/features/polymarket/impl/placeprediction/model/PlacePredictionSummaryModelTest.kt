@@ -1158,14 +1158,14 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         }
 
         @Test
-        fun `GIVEN a usable session key WHEN the summary opens THEN the button is plain`() = runTest {
+        fun `GIVEN a usable session key WHEN the summary resumes THEN the button is plain`() = runTest {
             // Arrange
             every { featureToggles.isPolymarketSessionKeysEnabled } returns true
             coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
-            val amountModel = quotedAmountModel()
+            val model = createSummaryModel(testScope = this, amountModel = quotedAmountModel())
 
             // Act
-            val model = createSummaryModel(testScope = this, amountModel = amountModel)
+            model.onResume()
             advanceUntilIdle()
 
             // Assert
@@ -1173,14 +1173,32 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
         }
 
         @Test
-        fun `GIVEN no usable session key WHEN the summary opens THEN the card is asked`() = runTest {
+        fun `GIVEN no usable session key WHEN the summary resumes THEN the card is asked`() = runTest {
             // Arrange
             every { featureToggles.isPolymarketSessionKeysEnabled } returns true
             coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns false
-            val amountModel = quotedAmountModel()
+            val model = createSummaryModel(testScope = this, amountModel = quotedAmountModel())
 
             // Act
-            val model = createSummaryModel(testScope = this, amountModel = amountModel)
+            model.onResume()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+        }
+
+        @Test
+        fun `GIVEN the session key expired meanwhile WHEN the summary resumes THEN the card is asked`() = runTest {
+            // Arrange
+            every { featureToggles.isPolymarketSessionKeysEnabled } returns true
+            coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returnsMany
+                listOf(true, false)
+            val model = createSummaryModel(testScope = this, amountModel = quotedAmountModel())
+            model.onResume()
+            advanceUntilIdle()
+
+            // Act
+            model.onResume()
             advanceUntilIdle()
 
             // Assert

@@ -36,8 +36,6 @@ internal class PlacePredictionButtonStyle @AssistedInject constructor(
 
     private var sessionKeyCheck: Job? = null
 
-    private var isSessionKeyLost = false
-
     init {
         getUserWalletUseCase(userWalletId).onRight { userWallet ->
             val style = if (userWallet.isHotWallet) PlaceButtonStyleUM.HOLD else PlaceButtonStyleUM.CARD
@@ -50,7 +48,7 @@ internal class PlacePredictionButtonStyle @AssistedInject constructor(
         val ownerStyle = ownerStyle ?: return
         sessionKeyCheck?.cancel()
 
-        if (isSessionKeyLost || !featureToggles.isPolymarketSessionKeysEnabled) {
+        if (!featureToggles.isPolymarketSessionKeysEnabled) {
             sessionKeyStyle = ownerStyle
             applyIfIdle()
             return
@@ -67,7 +65,6 @@ internal class PlacePredictionButtonStyle @AssistedInject constructor(
 
     fun onSessionKeyLost() {
         sessionKeyCheck?.cancel()
-        isSessionKeyLost = true
         sessionKeyStyle = ownerStyle
     }
 
