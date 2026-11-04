@@ -2,6 +2,7 @@ package com.tangem.core.decompose.navigation
 
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.google.common.truth.Truth.assertThat
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import com.tangem.utils.logging.Severity
 import com.tangem.utils.logging.TangemLogger
@@ -14,7 +15,10 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 
 internal class DefaultRouterTest {
 
@@ -127,6 +131,58 @@ internal class DefaultRouterTest {
         assertThat(stack).containsExactly(RouteA)
         assertThat(results).containsExactly(true)
     }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class PopTo {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN stack WHEN popTo route THEN completion tells whether the route ended up on top`(model: PopToModel) {
+            // Arrange
+            stack = model.stack
+
+            // Act
+            router.popTo(RouteA, onComplete)
+
+            // Assert
+            assertThat(stack).containsExactlyElementsIn(model.expectedStack).inOrder()
+            assertThat(results).containsExactly(model.expectedIsSuccess)
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN stack WHEN popTo route class THEN completion tells whether the route ended up on top`(
+            model: PopToModel,
+        ) {
+            // Arrange
+            stack = model.stack
+
+            // Act
+            router.popTo(RouteA::class, onComplete)
+
+            // Assert
+            assertThat(stack).containsExactlyElementsIn(model.expectedStack).inOrder()
+            assertThat(results).containsExactly(model.expectedIsSuccess)
+        }
+
+        private fun provideTestModels() = listOf(
+            PopToModel(stack = listOf(RouteA, RouteB), expectedStack = listOf(RouteA), expectedIsSuccess = true),
+            PopToModel(stack = listOf(RouteA), expectedStack = listOf(RouteA), expectedIsSuccess = true),
+            PopToModel(
+                stack = listOf(RouteB, RouteA),
+                expectedStack = listOf(RouteB, RouteA),
+                expectedIsSuccess = true,
+            ),
+            PopToModel(
+                stack = listOf(RouteB, RouteC),
+                expectedStack = listOf(RouteB, RouteC),
+                expectedIsSuccess = false,
+            ),
+        )
+    }
+
+    data class PopToModel(val stack: List<Route>, val expectedStack: List<Route>, val expectedIsSuccess: Boolean)
 
     @Test
     fun `GIVEN navigation throws WHEN push THEN failure is reported as unsuccessful completion`() {

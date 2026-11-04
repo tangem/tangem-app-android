@@ -75,7 +75,7 @@ inline fun <reified T : Route> AppComponentContext.InnerRouter(
                         .dropLastWhile { it != route }
                         .ifEmpty { stack }
                 },
-                onComplete = { newStack, oldStack -> onComplete(newStack.size < oldStack.size) },
+                onComplete = { newStack, _ -> onComplete(newStack.lastOrNull() == route) },
             )
         } else {
             fallBackRouter.popTo(route, onComplete)
@@ -90,7 +90,7 @@ inline fun <reified T : Route> AppComponentContext.InnerRouter(
                         .dropLastWhile { it::class != routeClass }
                         .ifEmpty { stack }
                 },
-                onComplete = { newStack, oldStack -> onComplete(newStack.size < oldStack.size) },
+                onComplete = { newStack, _ -> onComplete(newStack.lastOrNull()?.let { it::class } == routeClass) },
             )
         } else {
             fallBackRouter.popTo(routeClass, onComplete)
