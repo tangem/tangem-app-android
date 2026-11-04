@@ -95,7 +95,7 @@ internal class PolymarketSportsMerger(private val time: TimeSource) {
                 null
             },
             period = period,
-            isLive = isLive && !isEnded && period !in NO_LIVE_PERIODS,
+            isLive = isLive && !isEnded,
             isEnded = isEnded,
             home = home,
             away = away,
@@ -117,6 +117,5 @@ internal class PolymarketSportsMerger(private val time: TimeSource) {
 
     private companion object {
         val STALE_AFTER = 60.seconds
-        val NO_LIVE_PERIODS = setOf("CAN", "POST", "INT", "AB")
     }
 }
