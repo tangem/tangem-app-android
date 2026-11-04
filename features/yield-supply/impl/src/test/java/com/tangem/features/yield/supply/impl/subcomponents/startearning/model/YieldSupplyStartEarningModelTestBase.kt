@@ -28,6 +28,7 @@ import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
 import com.tangem.features.yield.supply.impl.common.YieldSupplySmartGas
+import com.tangem.features.yield.supply.impl.common.YieldSupplyTxHistoryUpdater
 import com.tangem.features.yield.supply.impl.subcomponents.YieldSupplyActionModelTestBase
 import com.tangem.features.yield.supply.impl.subcomponents.startearning.YieldSupplyStartEarningComponent
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
@@ -62,6 +63,7 @@ internal abstract class YieldSupplyStartEarningModelTestBase : YieldSupplyAction
     protected val isEvmGaslessFeeSupportedForNetwork: IsEvmGaslessFeeSupportedForNetwork = mockk()
     protected val accountStatusList: AccountStatusList = mockk()
     protected val callback: YieldSupplyStartEarningComponent.ModelCallback = mockk(relaxed = true)
+    protected val txHistoryUpdater: YieldSupplyTxHistoryUpdater = mockk(relaxed = true)
 
     @BeforeEach
     fun startEarningSetUp() {
@@ -139,6 +141,7 @@ internal abstract class YieldSupplyStartEarningModelTestBase : YieldSupplyAction
             getAvailableFeeTokensUseCase = getAvailableFeeTokensUseCase,
         ),
         isEvmGaslessFeeSupportedForNetwork = isEvmGaslessFeeSupportedForNetwork,
+        yieldSupplyTxHistoryUpdater = txHistoryUpdater,
     )
 
     private fun actionUM(): YieldSupplyActionUM = YieldSupplyActionUM(
