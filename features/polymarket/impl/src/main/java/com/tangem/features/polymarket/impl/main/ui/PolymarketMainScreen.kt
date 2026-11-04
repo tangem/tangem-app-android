@@ -5,6 +5,8 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -35,8 +38,10 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
+import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.core.ui.components.haze.ProvideHaze
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.fade.TangemFade
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
@@ -88,6 +93,8 @@ private val ScrollRestoreTimeout = 2.seconds
 /** Fixed height of the category tab band: 36dp pills + 8dp vertical padding. */
 private val TabBandHeight = 52.dp
 
+private val FilterTabBandHeight = 48.dp
+
 private val TabBandPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
 
 private const val LOADING_TAB_COUNT = 6
@@ -121,22 +128,23 @@ internal fun PolymarketMainScreen(
     }
 
     val selectedCategoryId = state.categories.firstOrNull { it.isSelected }?.id
+    val filterRowState = key(selectedCategoryId) { rememberScrollState() }
 
     PolymarketLoadMoreEffect(listState = listState, onLoadMore = onLoadMore)
     PolymarketVisibleEventsEffect(
         listState = listState,
-        feedKey = selectedCategoryId,
+        feedKey = state.selection,
         onVisibleEventsChange = onVisibleEventsChange,
         excludedKeys = setOf(KEY_HEADER, KEY_TAB_BAND, POLYMARKET_FEED_STATUS_KEY),
     )
-    ScrollIdleEffect(
+    PolymarketScrollIdleEffect(
         listState = listState,
-        selectedCategoryId = selectedCategoryId,
+        feedKey = state.selection,
         onScrollIdle = onScrollIdle,
     )
     CategorySwitchEffect(
         listState = listState,
-        selectedCategoryId = selectedCategoryId,
+        feedKey = state.selection,
         pendingScrollPosition = state.pendingScrollPosition,
         isTabBandPinned = isTabBandPinned,
         onScrollPositionRestore = onScrollPositionRestore,
@@ -151,6 +159,7 @@ internal fun PolymarketMainScreen(
                     positions = positions,
                     listState = listState,
                     tabRowState = tabRowState,
+                    filterRowState = filterRowState,
                     isTabBandPinned = isTabBandPinned,
                     onBackClick = onBackClick,
                     onHistoryClick = onHistoryClick,
@@ -178,12 +187,15 @@ private fun PolymarketMainScaffold(
     positions: (@Composable (Modifier) -> Unit)?,
     listState: LazyListState,
     tabRowState: ScrollState,
+    filterRowState: ScrollState,
     isTabBandPinned: Boolean,
     onBackClick: () -> Unit,
     onHistoryClick: () -> Unit,
     onSupportChatClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val hasFilters = state.filters.isNotEmpty() || state.onSeeAllClick != null
+    val tabBandHeight = TabBandHeight + if (hasFilters) FilterTabBandHeight else 0.dp
     TangemTopBarScaffold(
         modifier = modifier,
         topBar = {
@@ -203,7 +215,7 @@ private fun PolymarketMainScaffold(
             val topPadding = contentPadding.calculateTopPadding()
 
             val frostHeight by animateDpAsState(
-                targetValue = if (isTabBandPinned) topPadding + TabBandHeight else topPadding,
+                targetValue = if (isTabBandPinned) topPadding + tabBandHeight else topPadding,
                 label = "headerFrostHeight",
             )
             TangemFade(
@@ -214,6 +226,9 @@ private fun PolymarketMainScaffold(
 
             CategoryTabBar(
                 categories = state.categories,
+                filters = state.filters,
+                onSeeAllClick = state.onSeeAllClick,
+                filterRowState = filterRowState,
                 isLoading = state.isCategoriesLoading,
                 state = tabRowState,
                 isShown = isTabBandPinned,
@@ -233,6 +248,7 @@ private fun PolymarketMainScaffold(
                 positions = positions,
                 listState = listState,
                 tabRowState = tabRowState,
+                filterRowState = filterRowState,
                 isTabBandPinned = isTabBandPinned,
                 contentPadding = contentPadding,
             )
@@ -247,6 +263,7 @@ private fun FeedList(
     positions: (@Composable (Modifier) -> Unit)?,
     listState: LazyListState,
     tabRowState: ScrollState,
+    filterRowState: ScrollState,
     isTabBandPinned: Boolean,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
@@ -280,6 +297,9 @@ private fun FeedList(
                     KeepItemComposed()
                     CategoryTabBar(
                         categories = state.categories,
+                        filters = state.filters,
+                        onSeeAllClick = state.onSeeAllClick,
+                        filterRowState = filterRowState,
                         isLoading = state.isCategoriesLoading,
                         state = tabRowState,
                         isShown = !isTabBandPinned,
@@ -293,11 +313,15 @@ private fun FeedList(
 }
 
 @Composable
-private fun ScrollIdleEffect(listState: LazyListState, selectedCategoryId: Int?, onScrollIdle: (Int, Int) -> Unit) {
+internal fun PolymarketScrollIdleEffect(
+    listState: LazyListState,
+    feedKey: PolymarketEventsListConfig?,
+    onScrollIdle: (Int, Int) -> Unit,
+) {
     val currentOnScrollIdle by rememberUpdatedState(onScrollIdle)
 
-    // Keyed by the category: a pending report belongs to the tab that is gone.
-    LaunchedEffect(listState, selectedCategoryId) {
+    // Keyed by category and filter: a pending report belongs to the selection that is gone.
+    LaunchedEffect(listState, feedKey) {
         snapshotFlow { listState.isScrollInProgress }
             .collectLatest { isScrollInProgress ->
                 if (isScrollInProgress) return@collectLatest
@@ -312,17 +336,17 @@ private fun ScrollIdleEffect(listState: LazyListState, selectedCategoryId: Int?,
 @Composable
 private fun CategorySwitchEffect(
     listState: LazyListState,
-    selectedCategoryId: Int?,
+    feedKey: PolymarketEventsListConfig?,
     pendingScrollPosition: PolymarketFeedScrollPosition?,
     isTabBandPinned: Boolean,
     onScrollPositionRestore: () -> Unit,
 ) {
     val currentOnScrollPositionRestore by rememberUpdatedState(onScrollPositionRestore)
-    var appliedCategoryId by remember { mutableStateOf(selectedCategoryId) }
+    var appliedSelection by remember { mutableStateOf(feedKey) }
 
-    LaunchedEffect(selectedCategoryId) {
-        if (selectedCategoryId == appliedCategoryId) return@LaunchedEffect
-        appliedCategoryId = selectedCategoryId
+    LaunchedEffect(feedKey) {
+        if (feedKey == appliedSelection) return@LaunchedEffect
+        appliedSelection = feedKey
 
         val target = pendingScrollPosition
             ?: PolymarketFeedScrollPosition(index = TAB_BAND_INDEX, offset = 0).takeIf { isTabBandPinned }
@@ -345,9 +369,13 @@ private fun LazyListState.isTabBandPinned(): Boolean {
     return firstVisibleIndex > TAB_BAND_INDEX
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun CategoryTabBar(
     categories: ImmutableList<PolymarketCategoryTabUM>,
+    filters: ImmutableList<TangemTabItemUM.Content>,
+    onSeeAllClick: (() -> Unit)?,
+    filterRowState: ScrollState,
     isLoading: Boolean,
     state: ScrollState,
     isShown: Boolean,
@@ -356,15 +384,36 @@ private fun CategoryTabBar(
     val tabs = remember(categories, isLoading) {
         if (isLoading) loadingTabs() else categories.map { it.toTangemTabItemUM() }.toImmutableList()
     }
-    TangemTabNavigation(
-        tabs = tabs,
-        scrollState = state,
-        variant = if (isShown) TangemTabItem.Variant.Material else TangemTabItem.Variant.Transparent,
-        contentPadding = TabBandPadding,
-        modifier = modifier
-            .placedOnlyWhen(isShown)
-            .height(TabBandHeight),
-    )
+    val variant = if (isShown) TangemTabItem.Variant.Material else TangemTabItem.Variant.Transparent
+    Column(modifier = modifier.placedOnlyWhen(isShown)) {
+        TangemTabNavigation(
+            tabs = tabs,
+            scrollState = state,
+            variant = variant,
+            contentPadding = TabBandPadding,
+            modifier = Modifier.height(TabBandHeight),
+        )
+        if (filters.isNotEmpty() || onSeeAllClick != null) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TangemTabNavigation(
+                    tabs = filters,
+                    scrollState = filterRowState,
+                    variant = variant,
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 8.dp),
+                    modifier = Modifier.weight(1f).height(FilterTabBandHeight),
+                )
+                onSeeAllClick?.let { onClick ->
+                    TangemButton(
+                        text = resourceReference(R.string.common_see_all),
+                        variant = TangemButton.Variant.Ghost,
+                        size = TangemButton.Size.X7,
+                        onClick = onClick,
+                        modifier = Modifier.padding(end = 16.dp),
+                    )
+                }
+            }
+        }
+    }
 }
 
 private fun Modifier.placedOnlyWhen(isPlaced: Boolean) = this
@@ -388,9 +437,9 @@ private fun KeepItemComposed() {
 private fun loadingTabs(): ImmutableList<TangemTabItemUM> =
     List(LOADING_TAB_COUNT) { index -> TangemTabItemUM.Loading(id = "loading_$index") }.toImmutableList()
 
-private fun PolymarketCategoryTabUM.toTangemTabItemUM() = TangemTabItemUM.Content(
+internal fun PolymarketCategoryTabUM.toTangemTabItemUM() = TangemTabItemUM.Content(
     id = id.toString(),
-    label = stringReference(label),
+    label = label,
     iconStart = icon?.let { TangemIconUM.Icon(imageVector = it.tabIcon) },
     isSelected = isSelected,
     onClick = onClick,
@@ -573,21 +622,21 @@ private fun PolymarketMainScreenLoadingPreview() {
 private fun previewCategories() = persistentListOf(
     PolymarketCategoryTabUM(
         id = 1,
-        label = "Trending",
+        label = stringReference("Trending"),
         icon = PolymarketCategoryIcon.TRENDING,
         isSelected = true,
         onClick = {},
     ),
     PolymarketCategoryTabUM(
         id = 2,
-        label = "Business",
+        label = stringReference("Business"),
         icon = null,
         isSelected = false,
         onClick = {},
     ),
     PolymarketCategoryTabUM(
         id = 3,
-        label = "Sport",
+        label = stringReference("Sport"),
         icon = PolymarketCategoryIcon.SPORTS,
         isSelected = false,
         onClick = {},

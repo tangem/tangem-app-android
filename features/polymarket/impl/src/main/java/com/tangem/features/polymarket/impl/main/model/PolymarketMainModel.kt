@@ -134,13 +134,13 @@ internal class PolymarketMainModel @Inject constructor(
             ),
         )
 
-    private val isPhaseTwoEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled
-
     private val eventUMConverter = PolymarketEventUMConverter(
         onEventClick = ::onEventClick,
         onOutcomeClick = ::onOutcomeClick,
         isPhaseTwoEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled,
     )
+
+    private val isPhaseTwoEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled
 
     private val categoryTabConverter = PolymarketCategoryTabUMConverter(onCategoryClick = ::onCategorySelected)
 
@@ -282,7 +282,8 @@ internal class PolymarketMainModel @Inject constructor(
 
             categories = loadedCategories
             selectedCategoryId = loadedCategories.firstOrNull()?.id
-            uiState.update { it.copy(categories = buildTabs(), isCategoriesLoading = false) }
+            updateCategoryTabs()
+            uiState.update { it.copy(isCategoriesLoading = false) }
 
             val categoryId = selectedCategoryId
             if (categoryId == null) {
@@ -297,13 +298,31 @@ internal class PolymarketMainModel @Inject constructor(
     private fun onCategorySelected(categoryId: Int) {
         if (categoryId == selectedCategoryId) return
         selectedCategoryId = categoryId
-        uiState.update { it.copy(categories = buildTabs()) }
+        updateCategoryTabs()
         selectFeed(categoryId = categoryId)
     }
 
+    private fun updateCategoryTabs() {
+        val category = selectedFeedCategory().takeIf { isPhaseTwoEnabled }
+        uiState.update { state ->
+            state.copy(
+                categories = buildTabs(),
+                onSeeAllClick = if (category?.subcategories.isNullOrEmpty()) null else ::openCategory,
+            )
+        }
+    }
+
+    private fun openCategory() {
+        if (!isPhaseTwoEnabled) return
+        val category = categories.firstOrNull { it.id == selectedCategoryId } ?: return
+        if (category.subcategories.isEmpty()) return
+        router.push(PolymarketRoute.Category(userWalletId = params.userWalletId, category = category))
+    }
+
     private fun selectFeed(categoryId: Int, reloadVisited: Boolean = false) {
-        val scrollPosition = feedController.select(PolymarketEventsListConfig(category = categoryId), reloadVisited)
-        uiState.update { it.copy(pendingScrollPosition = scrollPosition) }
+        val selection = PolymarketEventsListConfig(category = categoryId)
+        val scrollPosition = feedController.select(selection, reloadVisited)
+        uiState.update { it.copy(selection = selection, pendingScrollPosition = scrollPosition) }
     }
 
     private fun reload() {
@@ -318,6 +337,8 @@ internal class PolymarketMainModel @Inject constructor(
         ),
     )
 
+    private fun selectedFeedCategory(): PolymarketCategory? = categories.firstOrNull { it.id == selectedCategoryId }
+
     private fun reportStaleData() {
         messageSender.send(SnackbarMessage(message = resourceReference(R.string.prediction_main_data_outdated)))
     }
@@ -327,7 +348,7 @@ internal class PolymarketMainModel @Inject constructor(
             PolymarketRoute.EventDetails(
                 eventId = eventId,
                 userWalletId = params.userWalletId,
-                categoryLabel = categories.firstOrNull { it.id == selectedCategoryId }?.label,
+                categoryLabel = selectedFeedCategory()?.label,
             ),
         )
     }
@@ -359,8 +380,8 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     private fun setRefreshing(isRefreshing: Boolean) {
-        uiState.update {
-            it.copy(pullToRefreshConfig = it.pullToRefreshConfig.copy(isRefreshing = isRefreshing))
+        uiState.update { state ->
+            state.copy(pullToRefreshConfig = state.pullToRefreshConfig.copy(isRefreshing = isRefreshing))
         }
     }
 

@@ -1,6 +1,7 @@
 package com.tangem.features.polymarket.impl.main.model.transformer
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.polymarket.model.PolymarketAccessMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketEventsBatch
@@ -248,7 +249,7 @@ internal class PolymarketFeedContentTransformerTest {
                     ),
                 ),
             categories = persistentListOf(
-                PolymarketCategoryTabUM(id = 1, label = "Politics", icon = null, isSelected = true, onClick = {}),
+                PolymarketCategoryTabUM(id = 1, label = stringReference("Politics"), icon = null, isSelected = true, onClick = {}),
             ),
             content = PolymarketMainUM.ContentUM.Loading,
             pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),

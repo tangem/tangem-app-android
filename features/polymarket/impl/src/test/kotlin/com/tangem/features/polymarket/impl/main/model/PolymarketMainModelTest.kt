@@ -1802,6 +1802,44 @@ internal class PolymarketMainModelTest {
         positions = positions,
     )
 
+    @Test
+    fun `GIVEN a parent with children WHEN See all tapped THEN the category screen opens`() = runTest {
+        // Arrange
+        val category = PolymarketCategory(
+            id = 6, label = "Sports", icon = null,
+            subcategories = listOf(PolymarketCategory(id = 14, label = "Soccer", icon = null)),
+        )
+        coEvery { getCategoriesUseCase(any()) } returns listOf(category).right()
+        val model = createModel(this, isPhaseTwoEnabled = true)
+        advanceUntilIdle()
+
+        // Act
+        requireNotNull(model.uiState.value.onSeeAllClick).invoke()
+
+        // Assert
+        verify { router.push(PolymarketRoute.Category(USER_WALLET_ID, category)) }
+    }
+
+    @Test
+    fun `GIVEN D2 disabled WHEN parent has children THEN See all stays hidden`() = runTest {
+        // Arrange
+        val category = PolymarketCategory(
+            id = 6, label = "Sports", icon = null,
+            subcategories = listOf(PolymarketCategory(id = 14, label = "Soccer", icon = null)),
+        )
+        coEvery { getCategoriesUseCase(any()) } returns listOf(category).right()
+
+        // Act
+        val model = createModel(this, isPhaseTwoEnabled = false)
+        advanceUntilIdle()
+
+        // Assert
+        assertThat(model.uiState.value.onSeeAllClick).isNull()
+        assertThat(dispatchedActions).containsExactly(
+            BatchAction.Reload(requestParams = PolymarketEventsListConfig(category = 6)),
+        )
+    }
+
     private fun createModel(testScope: TestScope, isPhaseTwoEnabled: Boolean = false): PolymarketMainModel {
         val featureToggles = mockk<PolymarketFeatureToggles> {
             every { isPolymarketPhaseTwoEnabled } returns isPhaseTwoEnabled
