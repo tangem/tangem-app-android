@@ -514,10 +514,12 @@ internal object TransactionDomainModule {
     fun provideCreateAndSendGaslessTransactionUseCase(
         createAndSendEvmGaslessTransactionUseCase: CreateAndSendEvmGaslessTransactionUseCase,
         createAndSendTronGaslessTransactionUseCase: CreateAndSendTronGaslessTransactionUseCase,
+        createAndSendSolanaGaslessTransactionUseCase: CreateAndSendSolanaGaslessTransactionUseCase,
     ): CreateAndSendGaslessTransactionUseCase {
         return CreateAndSendGaslessTransactionUseCase(
             createAndSendEvmGaslessTransactionUseCase = createAndSendEvmGaslessTransactionUseCase,
             createAndSendTronGaslessTransactionUseCase = createAndSendTronGaslessTransactionUseCase,
+            createAndSendSolanaGaslessTransactionUseCase = createAndSendSolanaGaslessTransactionUseCase,
         )
     }
 

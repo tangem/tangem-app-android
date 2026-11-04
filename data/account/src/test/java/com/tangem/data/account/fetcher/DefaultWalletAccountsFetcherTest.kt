@@ -10,6 +10,7 @@ import com.tangem.data.account.converter.createWalletAccountDTO
 import com.tangem.data.account.fetcher.DefaultWalletAccountsFetcher.FetchResult
 import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
+import com.tangem.data.account.store.WalletAccountsSyncStatusStore
 import com.tangem.data.account.tokens.DefaultMainAccountTokensMigration
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
 import com.tangem.data.common.cache.etag.ETagsStore
@@ -47,6 +48,7 @@ class DefaultWalletAccountsFetcherTest {
     private val fetchWalletAccountsErrorHandler: FetchWalletAccountsErrorHandler = mockk()
     private val defaultWalletAccountsResponseFactory: DefaultWalletAccountsResponseFactory = mockk()
     private val eTagsStore: ETagsStore = mockk(relaxUnitFun = true)
+    private val syncStatusStore: WalletAccountsSyncStatusStore = mockk(relaxUnitFun = true)
 
     private val fetcher: DefaultWalletAccountsFetcher = DefaultWalletAccountsFetcher(
         walletAccountsApi = walletAccountsApi,
@@ -57,6 +59,7 @@ class DefaultWalletAccountsFetcherTest {
         walletAccountsETags = WalletAccountsETags(eTagsStore = eTagsStore),
         dispatchers = TestingCoroutineDispatcherProvider(),
         mainAccountTokensMigration = tokensMigration,
+        syncStatusStore = syncStatusStore,
     )
 
     private val userWalletId = UserWalletId("011")
@@ -76,6 +79,7 @@ class DefaultWalletAccountsFetcherTest {
     @BeforeEach
     fun setUpEach() {
         every { walletAccountsApi.isV2Enabled } returns false
+        coEvery { syncStatusStore.isSyncedWithRemote(any()) } returns true
     }
 
     @AfterEach
@@ -84,6 +88,7 @@ class DefaultWalletAccountsFetcherTest {
             walletAccountsApi,
             userTokensSaver,
             fetchWalletAccountsErrorHandler,
+            syncStatusStore,
         )
 
         accountsResponseStoreFlow.value = null
@@ -438,6 +443,30 @@ class DefaultWalletAccountsFetcherTest {
         }
 
         @Test
+        fun `GIVEN successful request WHEN fetch THEN the document is stored before the wallet is marked synced`() =
+            runTest {
+                // Arrange
+                val accountsResponse = createGetWalletAccountsResponse(
+                    userWalletId = userWalletId,
+                    unassignedTokens = emptyList(),
+                )
+                coEvery {
+                    walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = eTag)
+                } returns ApiResponse.Success(data = accountsResponse)
+                coEvery { accountsResponseStore.updateData(any()) } returns accountsResponse
+
+                // Act
+                fetcher.fetch(userWalletId)
+
+                // Assert
+                coVerifyOrder {
+                    walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = eTag)
+                    accountsResponseStore.updateData(any())
+                    syncStatusStore.markSyncedWithRemote(userWalletId)
+                }
+            }
+
+        @Test
         fun `fetch should call error handler when getWalletAccounts returns error`() = runTest {
             // Arrange
             val savedAccountsResponse = createGetWalletAccountsResponse(userWalletId)
@@ -483,6 +512,7 @@ class DefaultWalletAccountsFetcherTest {
                 eTagsStore.store(userWalletId = any(), key = any(), value = any())
                 walletAccountsApi.saveAccounts(walletId = any(), eTag = any(), body = any())
                 userTokensSaver.push(userWalletId = any(), response = any())
+                syncStatusStore.markSyncedWithRemote(any())
             }
         }
 
@@ -576,6 +606,292 @@ class DefaultWalletAccountsFetcherTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class LocalOnlyDocument {
+
+        private val apiError = ApiResponse.Error(ApiResponseError.NetworkException())
+
+        @BeforeEach
+        fun setupLocalOnlyDocument() {
+            coEvery {
+                walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = eTag)
+            } returns apiError as ApiResponse<GetWalletAccountsResponse>
+        }
+
+        @Test
+        fun `GIVEN no saved document WHEN request fails THEN wallet marked local-only before the handler stores`() =
+            runTest {
+                // Arrange
+                val defaultResponse = createGetWalletAccountsResponse(userWalletId)
+                stubErrorHandler(savedAccountsResponse = null, result = defaultResponse)
+
+                // Act
+                runCatching { fetcher.fetch(userWalletId) }
+
+                // Assert
+                coVerifyOrder {
+                    syncStatusStore.markLocalOnly(userWalletId)
+                    fetchWalletAccountsErrorHandler.handle(
+                        error = apiError.cause,
+                        userWalletId = userWalletId,
+                        savedAccountsResponse = null,
+                        pushWalletAccounts = any(),
+                        storeWalletAccounts = any(),
+                    )
+                }
+            }
+
+        @Test
+        fun `GIVEN saved document WHEN request fails THEN its sync status is kept`() = runTest {
+            // Arrange
+            val savedResponse = createGetWalletAccountsResponse(userWalletId)
+            accountsResponseStoreFlow.value = savedResponse
+            stubErrorHandler(savedAccountsResponse = savedResponse, result = savedResponse)
+
+            // Act
+            runCatching { fetcher.fetch(userWalletId) }
+
+            // Assert
+            coVerify(exactly = 0) { syncStatusStore.markLocalOnly(any()) }
+        }
+
+        @Test
+        fun `GIVEN local-only wallet WHEN fetch THEN the request is unconditional`() = runTest {
+            // Arrange
+            val serverResponse = createGetWalletAccountsResponse(userWalletId)
+            coEvery { syncStatusStore.isSyncedWithRemote(userWalletId) } returns false
+            coEvery {
+                walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = null)
+            } returns ApiResponse.Success(data = serverResponse)
+            coEvery { accountsResponseStore.updateData(any()) } returns serverResponse
+
+            // Act
+            fetcher.fetch(userWalletId)
+
+            // Assert
+            coVerify(exactly = 1) { walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = null) }
+            coVerify(exactly = 0) { walletAccountsApi.getAccounts(walletId = any(), eTag = eTag) }
+        }
+
+        @Test
+        fun `GIVEN wallet missing on backend WHEN the default accounts are created there THEN wallet marked synced`() =
+            runTest {
+                // Arrange
+                val defaultResponse = createGetWalletAccountsResponse(userWalletId, tokens = null)
+                val notFound = ApiResponse.Error(
+                    ApiResponseError.HttpException(
+                        code = ApiResponseError.HttpException.Code.NOT_FOUND,
+                        message = null,
+                        errorBody = null,
+                    ),
+                )
+                val createdETag = "created-etag"
+                val saveBody = SaveWalletAccountsResponse(defaultResponse.accounts)
+                val pushWalletAccounts = slot<suspend (List<WalletAccountDTO>, String) -> GetWalletAccountsResponse?>()
+
+                coEvery {
+                    walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = eTag)
+                } returns notFound as ApiResponse<GetWalletAccountsResponse>
+                coEvery {
+                    walletAccountsApi.saveAccounts(walletId = userWalletId.stringValue, eTag = createdETag, body = saveBody)
+                } returns ApiResponse.Success(data = defaultResponse)
+                coEvery {
+                    fetchWalletAccountsErrorHandler.handle(
+                        error = notFound.cause,
+                        userWalletId = userWalletId,
+                        savedAccountsResponse = null,
+                        pushWalletAccounts = capture(pushWalletAccounts),
+                        storeWalletAccounts = any(),
+                    )
+                } coAnswers {
+                    pushWalletAccounts.captured(defaultResponse.accounts, createdETag)
+                    FetchResult(defaultResponse, notFound.cause)
+                }
+
+                // Act
+                runCatching { fetcher.fetch(userWalletId) }
+
+                // Assert
+                coVerifyOrder {
+                    syncStatusStore.markLocalOnly(userWalletId)
+                    walletAccountsApi.saveAccounts(walletId = userWalletId.stringValue, eTag = createdETag, body = saveBody)
+                    syncStatusStore.markSyncedWithRemote(userWalletId)
+                }
+            }
+
+        @Test
+        fun `GIVEN concurrent fetch stored the server document WHEN a failed fetch stores its fallback THEN the server document is kept`() =
+            runTest {
+                // Arrange
+                val defaultResponse = createGetWalletAccountsResponse(userWalletId, accountName = "Default")
+                val serverResponse = createGetWalletAccountsResponse(userWalletId, accountName = "Server")
+                val transform = arrangeFallbackStore(savedAccountsResponse = null, fallback = defaultResponse)
+
+                // Act
+                runCatching { fetcher.fetch(userWalletId) }
+                val stored = transform.captured(serverResponse)
+
+                // Assert
+                Truth.assertThat(stored).isEqualTo(serverResponse)
+            }
+
+        @Test
+        fun `GIVEN nothing stored WHEN a failed fetch stores its fallback THEN the fallback is stored`() = runTest {
+            // Arrange
+            val defaultResponse = createGetWalletAccountsResponse(userWalletId, accountName = "Default")
+            val transform = arrangeFallbackStore(savedAccountsResponse = null, fallback = defaultResponse)
+
+            // Act
+            runCatching { fetcher.fetch(userWalletId) }
+            val stored = transform.captured(null)
+
+            // Assert
+            Truth.assertThat(stored).isEqualTo(defaultResponse)
+        }
+
+        private fun arrangeFallbackStore(
+            savedAccountsResponse: GetWalletAccountsResponse?,
+            fallback: GetWalletAccountsResponse,
+        ): CapturingSlot<suspend (GetWalletAccountsResponse?) -> GetWalletAccountsResponse?> {
+            val storeWalletAccounts = slot<suspend (UserWalletId, GetWalletAccountsResponse) -> Unit>()
+            val transform = slot<suspend (GetWalletAccountsResponse?) -> GetWalletAccountsResponse?>()
+
+            coEvery { accountsResponseStore.updateData(capture(transform)) } returns fallback
+            coEvery {
+                fetchWalletAccountsErrorHandler.handle(
+                    error = apiError.cause,
+                    userWalletId = userWalletId,
+                    savedAccountsResponse = savedAccountsResponse,
+                    pushWalletAccounts = any(),
+                    storeWalletAccounts = capture(storeWalletAccounts),
+                )
+            } coAnswers {
+                storeWalletAccounts.captured(userWalletId, fallback)
+                FetchResult(fallback, apiError.cause)
+            }
+
+            return transform
+        }
+
+        private fun stubErrorHandler(
+            savedAccountsResponse: GetWalletAccountsResponse?,
+            result: GetWalletAccountsResponse,
+        ) {
+            coEvery {
+                fetchWalletAccountsErrorHandler.handle(
+                    error = apiError.cause,
+                    userWalletId = userWalletId,
+                    savedAccountsResponse = savedAccountsResponse,
+                    pushWalletAccounts = any(),
+                    storeWalletAccounts = any(),
+                )
+            } returns FetchResult(result, apiError.cause)
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SyncTokens {
+
+        private val savedResponse = createGetWalletAccountsResponse(userWalletId)
+
+        @Test
+        fun `GIVEN local-only wallet and backend unreachable WHEN syncTokens THEN reconciliation tried and nothing pushed`() =
+            runTest {
+                // Arrange
+                val apiError = ApiResponse.Error(ApiResponseError.NetworkException())
+                accountsResponseStoreFlow.value = savedResponse
+                coEvery { syncStatusStore.isSyncedWithRemote(userWalletId) } returns false
+                coEvery {
+                    walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = null)
+                } returns apiError as ApiResponse<GetWalletAccountsResponse>
+                coEvery {
+                    fetchWalletAccountsErrorHandler.handle(
+                        error = apiError.cause,
+                        userWalletId = userWalletId,
+                        savedAccountsResponse = savedResponse,
+                        pushWalletAccounts = any(),
+                        storeWalletAccounts = any(),
+                    )
+                } returns FetchResult(savedResponse, apiError.cause)
+
+                // Act
+                fetcher.syncTokens(userWalletId)
+
+                // Assert
+                coVerify(exactly = 1) { walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = null) }
+                coVerify(exactly = 0) { userTokensSaver.pushWithRetryer(userWalletId = any(), response = any()) }
+            }
+
+        @Test
+        fun `GIVEN local-only wallet WHEN syncTokens THEN the backend document is fetched and pushed instead`() =
+            runTest {
+                // Arrange
+                val localResponse = createGetWalletAccountsResponse(
+                    userWalletId = userWalletId,
+                    sortType = UserTokensResponse.SortType.MANUAL,
+                )
+                val serverResponse = createGetWalletAccountsResponse(
+                    userWalletId = userWalletId,
+                    sortType = UserTokensResponse.SortType.BALANCE,
+                )
+                accountsResponseStoreFlow.value = localResponse
+                var isSynced = false
+                coEvery { syncStatusStore.isSyncedWithRemote(userWalletId) } answers { isSynced }
+                coEvery { syncStatusStore.markSyncedWithRemote(userWalletId) } answers { isSynced = true }
+                coEvery {
+                    walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = null)
+                } returns ApiResponse.Success(data = serverResponse)
+                coEvery { accountsResponseStore.updateData(any()) } coAnswers {
+                    accountsResponseStoreFlow.value = serverResponse
+                    serverResponse
+                }
+
+                // Act
+                fetcher.syncTokens(userWalletId)
+
+                // Assert
+                coVerifyOrder {
+                    walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = null)
+                    accountsResponseStore.updateData(any())
+                    userTokensSaver.pushWithRetryer(
+                        userWalletId = userWalletId,
+                        response = serverResponse.toUserTokensResponse(),
+                    )
+                }
+                coVerify(exactly = 0) {
+                    userTokensSaver.pushWithRetryer(userWalletId = any(), response = localResponse.toUserTokensResponse())
+                }
+            }
+
+        @Test
+        fun `GIVEN synced wallet WHEN syncTokens THEN the saved document is pushed`() = runTest {
+            // Arrange
+            accountsResponseStoreFlow.value = savedResponse
+
+            // Act
+            fetcher.syncTokens(userWalletId)
+
+            // Assert
+            coVerify(exactly = 1) {
+                userTokensSaver.pushWithRetryer(
+                    userWalletId = userWalletId,
+                    response = savedResponse.toUserTokensResponse(),
+                )
+            }
+        }
+
+        @Test
+        fun `GIVEN no saved document WHEN syncTokens THEN nothing is pushed`() = runTest {
+            // Act
+            fetcher.syncTokens(userWalletId)
+
+            // Assert
+            coVerify(exactly = 0) { userTokensSaver.pushWithRetryer(userWalletId = any(), response = any()) }
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class Get {
 
         @Test
@@ -658,13 +974,61 @@ class DefaultWalletAccountsFetcherTest {
             fetcher.push(userWalletId, saveResponse)
 
             // Assert
-            coVerify {
+            coVerifyOrder {
                 walletAccountsApi.saveAccounts(
                     walletId = userWalletId.stringValue,
                     eTag = eTag,
                     body = saveResponse,
                 )
+                syncStatusStore.markSyncedWithRemote(userWalletId)
             }
+        }
+
+        @Test
+        fun `GIVEN local-only wallet WHEN push THEN backend document fetched but the stale body is not sent`() =
+            runTest {
+                // Arrange
+                val serverResponse = createGetWalletAccountsResponse(userWalletId)
+                val saveResponse = SaveWalletAccountsResponse(
+                    accounts = listOf(createWalletAccountDTO(userWalletId = userWalletId, tokens = null)),
+                )
+                var isSynced = false
+                coEvery { syncStatusStore.isSyncedWithRemote(userWalletId) } answers { isSynced }
+                coEvery { syncStatusStore.markSyncedWithRemote(userWalletId) } answers { isSynced = true }
+                coEvery {
+                    walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = null)
+                } returns ApiResponse.Success(data = serverResponse)
+                coEvery { accountsResponseStore.updateData(any()) } returns serverResponse
+
+                // Act
+                val actual = fetcher.push(userWalletId, saveResponse)
+
+                // Assert
+                Truth.assertThat(actual).isNull()
+                coVerify(exactly = 1) {
+                    walletAccountsApi.getAccounts(walletId = userWalletId.stringValue, eTag = null)
+                }
+                coVerify(exactly = 0) {
+                    walletAccountsApi.saveAccounts(walletId = any(), eTag = any(), body = any())
+                }
+            }
+
+        @Test
+        fun `GIVEN write fails WHEN push THEN the wallet is not marked synced`() = runTest {
+            // Arrange
+            val saveResponse = SaveWalletAccountsResponse(
+                accounts = listOf(createWalletAccountDTO(userWalletId = userWalletId, tokens = null)),
+            )
+            coEvery {
+                walletAccountsApi.saveAccounts(walletId = userWalletId.stringValue, eTag = eTag, body = saveResponse)
+            } returns ApiResponse.Error(ApiResponseError.TimeoutException()) as ApiResponse<GetWalletAccountsResponse>
+
+            // Act
+            val actual = fetcher.push(userWalletId, saveResponse)
+
+            // Assert
+            Truth.assertThat(actual).isNull()
+            coVerify(exactly = 0) { syncStatusStore.markSyncedWithRemote(any()) }
         }
 
         @Test

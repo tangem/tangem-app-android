@@ -8,6 +8,7 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
 import com.tangem.blockchain.blockchains.ethereum.gasless.EthereumGaslessDataProvider
 import com.tangem.blockchain.blockchains.ethereum.models.EIP7702AuthorizationData
 import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.smartcontract.CompiledSmartContractCallData
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.Result
@@ -31,7 +32,9 @@ import com.tangem.domain.transaction.models.Eip7702Authorization
 import com.tangem.domain.transaction.models.GaslessBatchTransactionData
 import com.tangem.domain.transaction.models.GaslessFeePlan
 import com.tangem.domain.transaction.models.GaslessTransactionData
+import com.tangem.domain.transaction.models.GaslessTransactionData.*
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.domain.transaction.usecase.gasless.CreateAndSendEvmGaslessTransactionUseCase.GaslessPayload.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import java.math.BigInteger
 
@@ -125,6 +128,7 @@ class CreateAndSendEvmGaslessTransactionUseCase(
             nonce = gaslessContractNonce,
             plan = fee.gaslessFeePlan,
             withdrawGasLimit = fee.withdrawGasLimit,
+            approveGasLimit = fee.approveGasLimit,
         )
 
         val chainId = gaslessTransactionRepository.getChainIdForNetwork(currency.network)
@@ -405,12 +409,14 @@ class CreateAndSendEvmGaslessTransactionUseCase(
          * - [GaslessFeePlan.NativePay] → error: native-pay fees must never reach this use case
          *   (they are handled by the standard send path).
          */
+        @Suppress("LongParameterList")
         internal fun assembleGaslessPayload(
             mainTx: GaslessTransactionData.Transaction,
             feeObj: GaslessTransactionData.Fee,
             nonce: BigInteger,
             plan: GaslessFeePlan?,
             withdrawGasLimit: BigInteger?,
+            approveGasLimit: BigInteger?,
         ): GaslessPayload = when (plan) {
             is GaslessFeePlan.TokenPayWithYieldWithdraw -> GaslessPayload.Batch(
                 GaslessBatchTransactionData(
@@ -432,6 +438,25 @@ class CreateAndSendEvmGaslessTransactionUseCase(
                 GaslessTransactionData(transaction = mainTx, fee = feeObj, nonce = nonce),
             )
             is GaslessFeePlan.NativePay -> error("NativePay must not reach the gasless send path")
+            is GaslessFeePlan.TokenPayWithApproval -> GaslessPayload.Batch(
+                GaslessBatchTransactionData(
+                    // The approve must run first: the main transaction spends the allowance it grants
+                    transactions = listOf(
+                        GaslessTransactionData.Transaction(
+                            to = plan.approval.approvalTransaction.destinationAddress,
+                            value = BigInteger.ZERO,
+                            gasLimit = approveGasLimit
+                                ?: error("Approve gas limit is required for an approve batch"),
+                            data = (plan.approval.approvalTransaction.extras as? EthereumTransactionExtras)
+                                ?.callData?.data
+                                ?: error("Approve call data is required"),
+                        ),
+                        mainTx,
+                    ),
+                    fee = feeObj,
+                    nonce = nonce,
+                ),
+            )
         }
 
         internal fun GaslessFeePlan?.upgradesYieldModule(): Boolean {
@@ -458,11 +483,11 @@ class CreateAndSendEvmGaslessTransactionUseCase(
          *   ([TransactionData.Uncompiled.contractAddress], the token contract).
          */
         internal fun getDestinationAddress(txData: TransactionData.Uncompiled): String {
-            val ethereumCallData = (txData.extras as? EthereumTransactionExtras)?.callData
-            return if (ethereumCallData is EthereumYieldSupplySendCallData) {
-                txData.destinationAddress
-            } else {
-                txData.contractAddress ?: error("supports only Token transaction with contract address")
+            return when ((txData.extras as? EthereumTransactionExtras)?.callData) {
+                is EthereumYieldSupplySendCallData,
+                is CompiledSmartContractCallData,
+                -> txData.destinationAddress
+                else -> txData.contractAddress ?: error("supports only Token transaction with contract address")
             }
         }
 

@@ -152,6 +152,12 @@ internal class DefaultSocialRecoveryClient(
                     TangemLogger.e("Failed to seal the recovery key for the KMS key", e)
                     raise(SocialRecoveryError.Unknown(e))
                 }
+                // taken from the same response as the key: after a rotation the backend unwraps with the key
+                // this id names, so an id from any other response could point at the wrong one
+                val kmsKeyId = kmsPublicKey.keyId?.takeUnless { it.isBlank() }
+                if (kmsKeyId == null) {
+                    TangemLogger.i("The recovery public key has no kid, registering the binding without it")
+                }
 
                 // fresh nonce per attempt: the call returns credentials, so the backend consumes the nonce
                 // and a byte-identical retry can never be replayed
@@ -176,6 +182,7 @@ internal class DefaultSocialRecoveryClient(
                     walletSignatureSalt = bundle.walletSignatureSalt.toBase64NoWrap(),
                     providerIdToken = providerIdToken,
                     encryptedRecoveryKey = sealed.toBase64NoWrap(),
+                    kmsKeyId = kmsKeyId,
                     attestationToken = attestationProvider.getAttestationTokenOrNull(nonce),
                     metadata = signedRequestPayload.deviceMetadata,
                 )

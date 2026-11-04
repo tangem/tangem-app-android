@@ -2713,7 +2713,7 @@
   <string name="tangempay_status_inactive">Неактивна</string>
   <string name="tangempay_status_replacing">Заміна вашої картки</string>
   <string name="tangempay_sync_needed">Використайте картку або кільце для поновлення сесії</string>
-  <string name="tangempay_sync_needed_body">Оновіть сесію, щоб побачити картку й рахунок</string>
+  <string name="tangempay_sync_needed_body">Оновіть, щоб побачити картку й рахунок</string>
   <string name="tangempay_sync_needed_button">Відновити доступ</string>
   <string name="tangempay_sync_needed_title">Сесія закінчилася</string>
   <string name="tangempay_tangem_visa_card">Витрачайте крипту в реальному житті</string>
