@@ -112,6 +112,8 @@ internal class ResolveEarnRateUseCaseTest {
         source = EarnRate.Source.YieldSupply(BigDecimal("5.5")),
     )
 
+    internal data class YieldAndStakingActivityModel(val isYieldActive: Boolean, val isStakingActive: Boolean)
+
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class YieldSupply {
@@ -229,6 +231,34 @@ internal class ResolveEarnRateUseCaseTest {
             // Assert
             assertThat(actual).isEqualTo(yieldSupplyRate())
         }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN token in yield map and staking map WHEN invoke THEN yield supply wins with yield activity`(
+            model: YieldAndStakingActivityModel,
+        ) {
+            // Arrange
+            val staking = mapOf<CryptoCurrency, StakingAvailability>(
+                usdcEvm to StakingAvailability.Available(stakeKitOption(vPref7)),
+            )
+            val currencyStatus = status(
+                currency = usdcEvm,
+                stakingBalance = stakedOn("validator-1").takeIf { model.isStakingActive },
+                isYieldActive = model.isYieldActive,
+            )
+
+            // Act
+            val actual = useCase(currencyStatus, mapOf(evmKeyUpper to BigDecimal("5.5")), staking)
+
+            // Assert
+            assertThat(actual).isEqualTo(yieldSupplyRate(isActive = model.isYieldActive))
+        }
+
+        private fun provideTestModels() = listOf(
+            YieldAndStakingActivityModel(isYieldActive = true, isStakingActive = false),
+            YieldAndStakingActivityModel(isYieldActive = false, isStakingActive = true),
+            YieldAndStakingActivityModel(isYieldActive = true, isStakingActive = true),
+        )
     }
 
     @Nested
