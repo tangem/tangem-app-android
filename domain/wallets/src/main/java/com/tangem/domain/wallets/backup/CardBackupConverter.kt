@@ -14,7 +14,7 @@ import com.tangem.domain.wallets.models.backup.WalletCardBackup
  */
 object CardBackupConverter {
 
-    fun convert(card: CardDTO, role: WalletCardBackup.Role, error: CardBackupError? = null): WalletCardBackup {
+    fun convert(card: CardDTO, role: WalletCardBackup.Role?, error: CardBackupError? = null): WalletCardBackup {
         return WalletCardBackup(
             cardId = card.cardId,
             cardPublicKey = card.cardPublicKey.toHexString(),
@@ -32,7 +32,7 @@ object CardBackupConverter {
     fun convert(
         cardId: String,
         cardPublicKey: ByteArray,
-        role: WalletCardBackup.Role,
+        role: WalletCardBackup.Role?,
         backupStatus: CardBackupStatus,
         error: CardBackupError? = null,
     ): WalletCardBackup {
