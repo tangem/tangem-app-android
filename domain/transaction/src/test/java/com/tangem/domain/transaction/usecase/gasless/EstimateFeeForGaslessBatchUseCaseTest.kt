@@ -357,6 +357,68 @@ internal class EstimateFeeForGaslessBatchUseCaseTest {
         }
 
     @Test
+    fun `GIVEN coin picked and only a token can pay WHEN invoke THEN native fee`() = runTest {
+        // Arrange
+        val coinStatus = coinStatus(balance = BigDecimal.ZERO)
+        val operationTokenStatus = usdcStatus(balance = BigDecimal("100"))
+        givenAccountStatusList(coinStatus, operationTokenStatus)
+
+        // Act
+        val result = useCase(
+            userWallet = userWallet,
+            operationTokenStatus = operationTokenStatus,
+            calls = enterCalls(),
+            sameTokenRule = YieldModuleSameTokenRule.Enter,
+            feeCurrencyStatus = coinStatus,
+        )
+
+        // Assert
+        assertThat(result).isEqualTo(nativeFeeExtended(enterNativeFee()).right())
+    }
+
+    @Test
+    fun `GIVEN another token picked and native covers WHEN invoke THEN pays in the picked token`() = runTest {
+        // Arrange
+        val operationTokenStatus = usdcStatus(balance = BigDecimal("100"))
+        val usdtStatus = usdtStatus(balance = BigDecimal("10"), yieldSupplyStatus = null)
+        givenAccountStatusList(coinStatus(balance = BigDecimal("1")), operationTokenStatus, usdtStatus)
+
+        // Act
+        val result = useCase(
+            userWallet = userWallet,
+            operationTokenStatus = operationTokenStatus,
+            calls = enterCalls(),
+            sameTokenRule = YieldModuleSameTokenRule.Enter,
+            feeCurrencyStatus = usdtStatus,
+        )
+
+        // Assert
+        val expected = tokenFeeExtended(feeToken = usdt, tokenFee = result.tokenFee(), gaslessFeePlan = null)
+        assertThat(result).isEqualTo(expected.right())
+    }
+
+    @Test
+    fun `GIVEN Enter with the operation token picked and liquid equals the fee WHEN invoke THEN not enough funds`() =
+        runTest {
+            // Arrange
+            val operationTokenStatus = usdcStatusWithLiquid(liquid = enterTokenFeeAmount())
+            val usdtStatus = usdtStatus(balance = BigDecimal("10"), yieldSupplyStatus = null)
+            givenAccountStatusList(coinStatus(balance = BigDecimal("1")), operationTokenStatus, usdtStatus)
+
+            // Act
+            val result = useCase(
+                userWallet = userWallet,
+                operationTokenStatus = operationTokenStatus,
+                calls = enterCalls(),
+                sameTokenRule = YieldModuleSameTokenRule.Enter,
+                feeCurrencyStatus = operationTokenStatus,
+            )
+
+            // Assert
+            assertThat(result).isEqualTo(GetFeeError.GaslessError.NotEnoughFunds.left())
+        }
+
+    @Test
     fun `GIVEN operation token excluded and another token pays WHEN invoke THEN pays in the other`() = runTest {
         // Arrange
         val operationTokenStatus = usdcStatus(balance = BigDecimal("100"))

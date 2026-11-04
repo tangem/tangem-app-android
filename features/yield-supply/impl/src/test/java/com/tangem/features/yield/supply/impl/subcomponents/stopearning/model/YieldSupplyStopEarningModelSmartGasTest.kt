@@ -45,6 +45,8 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.time.TestTimeSource
@@ -496,6 +498,68 @@ internal class YieldSupplyStopEarningModelSmartGasTest : YieldSupplyStopEarningM
         model.onDestroy()
     }
 
+    @Test
+    fun `GIVEN another token picked WHEN fee reloaded THEN fee quoted in the picked token with exit rule`() = runTest {
+        // Arrange
+        stubBatchEstimate(nativeFee().right())
+        stubPickedEstimate(usdcStatus, gaslessFee(usdc).right())
+        val model = createModel()
+        advanceUntilIdle()
+
+        // Act
+        model.onFeeCurrencyPicked(usdcStatus)
+        advanceUntilIdle()
+
+        // Assert
+        val feeUM = model.uiState.value.yieldSupplyFeeUM as YieldSupplyFeeUM.Content
+        assertThat(feeUM.gaslessFee).isEqualTo(gaslessFee(usdc))
+        assertThat(model.feeCryptoCurrencyStatusFlow.value).isEqualTo(usdcStatus)
+
+        model.onDestroy()
+    }
+
+    @ParameterizedTest
+    @MethodSource("pickedFeeErrors")
+    fun `GIVEN picked token fails WHEN fee reloaded THEN error shown in the picked token`(model: PickedFeeErrorModel) =
+        runTest {
+            // Arrange
+            stubBatchEstimate(nativeFee().right())
+            stubPickedEstimate(usdcStatus, model.estimateError.left())
+            val yieldModel = createModel()
+            advanceUntilIdle()
+
+            // Act
+            yieldModel.onFeeCurrencyPicked(usdcStatus)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(yieldModel.uiState.value.yieldSupplyFeeUM).isEqualTo(YieldSupplyFeeUM.Error)
+            assertThat(yieldModel.feeCryptoCurrencyStatusFlow.value).isEqualTo(usdcStatus)
+            coVerify {
+                notificationsUpdateTrigger.triggerUpdate(
+                    YieldSupplyNotificationData(feeValue = null, feeError = model.shownError),
+                )
+            }
+
+            yieldModel.onDestroy()
+        }
+
+    private fun stubPickedEstimate(
+        pickedStatus: CryptoCurrencyStatus,
+        result: Either<GetFeeError, TransactionFeeExtended?>,
+    ) {
+        coEvery {
+            estimateFeeForGaslessBatchUseCase(
+                userWallet = any(),
+                operationTokenStatus = any(),
+                calls = any(),
+                sameTokenRule = YieldModuleSameTokenRule.Exit,
+                isOperationTokenExcluded = any(),
+                feeCurrencyStatus = pickedStatus,
+            )
+        } returns result
+    }
+
     private fun assertNativeFeeKept(model: YieldSupplyStopEarningModel) {
         val feeUM = model.uiState.value.yieldSupplyFeeUM as YieldSupplyFeeUM.Content
         assertThat(feeUM.transactionDataList).containsExactly(exitTransaction)
@@ -581,6 +645,8 @@ internal class YieldSupplyStopEarningModelSmartGasTest : YieldSupplyStopEarningM
         )
     }
 
+    data class PickedFeeErrorModel(val estimateError: GetFeeError, val shownError: GetFeeError)
+
     private companion object {
         const val GASLESS_HASH = "0xgasless"
         const val CHAIN_ID = 1
@@ -588,5 +654,25 @@ internal class YieldSupplyStopEarningModelSmartGasTest : YieldSupplyStopEarningM
         const val CLAIM_ADDRESS = "0x3333333333333333333333333333333333333333"
         val CLAIM_FEE: BigDecimal = BigDecimal("0.0005")
         val TOKEN_FEE: BigDecimal = BigDecimal("0.5")
+
+        @JvmStatic
+        fun pickedFeeErrors() = listOf(
+            PickedFeeErrorModel(
+                estimateError = GetFeeError.GaslessError.NotEnoughFunds,
+                shownError = GetFeeError.GaslessError.NotEnoughFunds,
+            ),
+            PickedFeeErrorModel(
+                estimateError = GetFeeError.GaslessError.NoSupportedTokensFound,
+                shownError = GetFeeError.GaslessError.NotEnoughFunds,
+            ),
+            PickedFeeErrorModel(
+                estimateError = GetFeeError.GaslessError.YieldBalanceUnavailable,
+                shownError = GetFeeError.UnknownError,
+            ),
+            PickedFeeErrorModel(
+                estimateError = GetFeeError.GaslessError.DataError(cause = null),
+                shownError = GetFeeError.UnknownError,
+            ),
+        )
     }
 }

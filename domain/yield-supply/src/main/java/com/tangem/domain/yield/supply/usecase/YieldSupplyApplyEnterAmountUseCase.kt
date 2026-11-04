@@ -92,6 +92,16 @@ class YieldSupplyApplyEnterAmountUseCase(
         calls.dropLast(1) + newEnterTransaction
     }
 
+    /**
+     * Whether the module the batch ends up on takes an enter amount, i.e. a fee paid in the entered token is possible at
+     * all. The balance is weighed later, by [invoke].
+     */
+    suspend fun supportsEnterAmount(
+        userWalletId: UserWalletId,
+        token: CryptoCurrency.Token,
+        calls: List<TransactionData.Uncompiled>,
+    ): Boolean = ensureModuleSupportsEnterAmount(userWalletId, token, calls).isRight()
+
     private suspend fun ensureModuleSupportsEnterAmount(
         userWalletId: UserWalletId,
         token: CryptoCurrency.Token,

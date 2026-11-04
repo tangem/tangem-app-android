@@ -15,6 +15,7 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableModularContentComponent
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorComponent
 import com.tangem.features.yield.supply.impl.subcomponents.feepolicy.YieldSupplyFeePolicyComponent
 import com.tangem.features.yield.supply.impl.subcomponents.startearning.model.YieldSupplyStartEarningEntryModel
 import com.tangem.features.yield.supply.impl.subcomponents.startearning.ui.YieldSupplyStartEarningBottomSheet
@@ -86,6 +87,7 @@ internal class YieldSupplyStartEarningEntryComponent(
                 cryptoCurrency = params.cryptoCurrency,
                 yieldSupplyActionUM = model.uiState.value,
                 callback = model,
+                feeSelectorComponentFactory = params.feeSelectorComponentFactory,
             ),
         )
     }
@@ -102,5 +104,6 @@ internal class YieldSupplyStartEarningEntryComponent(
         val userWalletId: UserWalletId,
         val cryptoCurrency: CryptoCurrency,
         val onDismiss: (Boolean) -> Unit,
+        val feeSelectorComponentFactory: FeeSelectorComponent.Factory,
     )
 }

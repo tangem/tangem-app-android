@@ -1,6 +1,7 @@
 package com.tangem.features.yield.supply.impl.promo
 
 import androidx.compose.runtime.Composable
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorComponent
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
@@ -26,6 +27,7 @@ import dagger.assisted.AssistedInject
 internal class DefaultYieldSupplyPromoComponent @AssistedInject constructor(
     @Assisted private val appComponentContext: AppComponentContext,
     @Assisted private val params: YieldSupplyPromoComponent.Params,
+    private val feeSelectorComponentFactory: FeeSelectorComponent.Factory,
 ) : YieldSupplyPromoComponent, AppComponentContext by appComponentContext {
 
     private val model: YieldSupplyPromoModel = getOrCreateModel(params = params)
@@ -95,6 +97,7 @@ internal class DefaultYieldSupplyPromoComponent @AssistedInject constructor(
             params = YieldSupplyStartEarningEntryComponent.Params(
                 userWalletId = params.userWalletId,
                 cryptoCurrency = params.currency,
+                feeSelectorComponentFactory = feeSelectorComponentFactory,
                 onDismiss = { isProcessing ->
                     if (isProcessing) {
                         router.pop()

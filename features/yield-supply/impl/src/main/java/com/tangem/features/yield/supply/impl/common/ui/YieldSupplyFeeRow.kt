@@ -3,10 +3,13 @@ package com.tangem.features.yield.supply.impl.common.ui
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerWMax
@@ -25,6 +28,7 @@ internal fun YieldSupplyFeeRow(
     value: TextReference?,
     modifier: Modifier = Modifier,
     badge: TextReference? = null,
+    isSelectable: Boolean = false,
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -54,6 +58,14 @@ internal fun YieldSupplyFeeRow(
                     text = stringResourceSafe(R.string.common_fee_error),
                 )
             }
+        }
+        if (isSelectable) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_select_18_24),
+                contentDescription = null,
+                tint = TangemTheme.colors3.icon.secondary,
+                modifier = Modifier.size(width = 18.dp, height = 24.dp),
+            )
         }
     }
 }

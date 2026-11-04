@@ -18,7 +18,7 @@ import com.tangem.features.yield.supply.api.promobottomsheet.YieldModePromoOffer
 sealed class YieldSupplyAnalytics(
     event: String,
     params: Map<String, String> = emptyMap(),
-) : AnalyticsEvent(category = "Earning", event = event, params = params) {
+) : AnalyticsEvent(category = CATEGORY, event = event, params = params) {
 
     data class EarningScreenInfoOpened(
         val token: String,
@@ -270,6 +270,10 @@ sealed class YieldSupplyAnalytics(
         Interrupted("Interrupted"),
         DataNotReady("Data Not Ready"),
         NoEligibleToken("No Eligible Token"),
+    }
+
+    companion object {
+        const val CATEGORY = "Earning"
     }
 }
 

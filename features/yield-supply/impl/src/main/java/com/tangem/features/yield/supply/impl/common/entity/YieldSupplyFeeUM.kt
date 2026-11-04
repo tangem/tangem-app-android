@@ -38,4 +38,6 @@ internal data class YieldSupplyActionUM(
     val isPrimaryButtonEnabled: Boolean,
     val isTransactionSending: Boolean,
     val isHoldToConfirmEnabled: Boolean,
+    /** Whether the fee row opens the fee token list. */
+    val isFeeCurrencySelectable: Boolean = false,
 )

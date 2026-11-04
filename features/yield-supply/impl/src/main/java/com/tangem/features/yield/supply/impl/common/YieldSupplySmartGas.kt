@@ -16,6 +16,7 @@ import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendEvmGaslessTransactionUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetAvailableFeeTokensUseCase
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -26,6 +27,7 @@ internal class YieldSupplySmartGas @Inject constructor(
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val createAndSendEvmGaslessTransactionUseCase: CreateAndSendEvmGaslessTransactionUseCase,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val getAvailableFeeTokensUseCase: GetAvailableFeeTokensUseCase,
 ) {
 
     /** A Smart Gas batch goes on-chain as one transaction, so it returns a single hash. */
@@ -46,6 +48,20 @@ internal class YieldSupplySmartGas @Inject constructor(
             network = network,
             sendMode = TransactionSender.MultipleTransactionSendMode.DEFAULT,
         )
+    }
+
+    /** Matches iOS: the fee currency opens for picking only when the list would offer more than one. */
+    suspend fun hasFeeCurrencyChoice(
+        userWallet: UserWallet,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        enteringYieldTokenId: CryptoCurrency.ID? = null,
+    ): Boolean {
+        return getAvailableFeeTokensUseCase(
+            userWallet = userWallet,
+            network = cryptoCurrencyStatus.currency.network,
+            sentCurrencyStatus = cryptoCurrencyStatus,
+            enteringYieldTokenId = enteringYieldTokenId,
+        ).fold(ifLeft = { false }, ifRight = { it.tokens.size > 1 })
     }
 
     suspend fun getFeeTokenStatus(

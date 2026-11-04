@@ -1,6 +1,7 @@
 package com.tangem.features.yield.supply.impl.active
 
 import androidx.activity.compose.BackHandler
+import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorComponent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
@@ -46,6 +47,7 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
     @Assisted private val appComponentContext: AppComponentContext,
     @Assisted private val params: YieldSupplyActiveComponent.Params,
     private val marketingBannerComponentFactory: MarketingBannerComponent.Factory,
+    private val feeSelectorComponentFactory: FeeSelectorComponent.Factory,
 ) : YieldSupplyActiveComponent, AppComponentContext by appComponentContext {
 
     private val model: YieldSupplyActiveModel = getOrCreateModel(params = params)
@@ -160,6 +162,7 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
                 userWallet = model.userWallet,
                 cryptoCurrencyStatusFlow = model.cryptoCurrencyStatusFlow,
                 callback = model,
+                feeSelectorComponentFactory = feeSelectorComponentFactory,
             ),
         )
         is YieldSupplyActiveRoute.AboutApy -> YieldSupplyAboutApyComponent(

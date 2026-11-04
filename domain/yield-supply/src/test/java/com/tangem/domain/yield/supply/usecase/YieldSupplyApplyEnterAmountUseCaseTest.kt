@@ -82,6 +82,33 @@ internal class YieldSupplyApplyEnterAmountUseCaseTest {
     }
 
     @Test
+    fun `GIVEN up-to-date module WHEN supportsEnterAmount THEN true`() = runTest {
+        // Arrange
+        val enter = createTransaction(EthereumYieldSupplyEnterCallData(TOKEN_ADDRESS))
+
+        // Act
+        val actual = useCase.supportsEnterAmount(userWalletId = userWalletId, token = token, calls = listOf(enter))
+
+        // Assert
+        assertThat(actual).isTrue()
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideOutdatedVersionStatuses")
+    fun `GIVEN not up-to-date module WHEN supportsEnterAmount THEN false`(versionStatus: YieldModuleVersionStatus) =
+        runTest {
+            // Arrange
+            val enter = createTransaction(EthereumYieldSupplyEnterCallData(TOKEN_ADDRESS))
+            coEvery { repository.getYieldModuleVersionStatus(userWalletId, token.network) } returns versionStatus
+
+            // Act
+            val actual = useCase.supportsEnterAmount(userWalletId = userWalletId, token = token, calls = listOf(enter))
+
+            // Assert
+            assertThat(actual).isFalse()
+        }
+
+    @Test
     fun `GIVEN module version check fails WHEN invoke THEN returns left`() = runTest {
         // Arrange
         val enter = createTransaction(EthereumYieldSupplyEnterCallData(TOKEN_ADDRESS))

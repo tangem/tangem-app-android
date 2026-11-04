@@ -343,6 +343,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
                 network = params.cryptoCurrencyStatus.currency.network,
                 sentCurrencyStatus = params.cryptoCurrencyStatus,
                 nativeFeeAmount = nativeFeeAmount,
+                enteringYieldTokenId = (params as? FeeSelectorParams.FeeSelectorDetailsParams)?.enteringYieldTokenId,
             ).bind()
         }
     }

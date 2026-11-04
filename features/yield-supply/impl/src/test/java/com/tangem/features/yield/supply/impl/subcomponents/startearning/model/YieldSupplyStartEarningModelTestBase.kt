@@ -1,6 +1,7 @@
 package com.tangem.features.yield.supply.impl.subcomponents.startearning.model
 
 import arrow.core.Option
+import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedForNetwork
 import arrow.core.right
 import arrow.core.some
 import com.tangem.core.decompose.model.MutableParamsContainer
@@ -58,6 +59,7 @@ internal abstract class YieldSupplyStartEarningModelTestBase : YieldSupplyAction
     protected val applyEnterAmountUseCase: YieldSupplyApplyEnterAmountUseCase = mockk()
     protected val createAndSendEvmGaslessTransactionUseCase: CreateAndSendEvmGaslessTransactionUseCase = mockk()
 
+    protected val isEvmGaslessFeeSupportedForNetwork: IsEvmGaslessFeeSupportedForNetwork = mockk()
     protected val accountStatusList: AccountStatusList = mockk()
     protected val callback: YieldSupplyStartEarningComponent.ModelCallback = mockk(relaxed = true)
 
@@ -78,6 +80,8 @@ internal abstract class YieldSupplyStartEarningModelTestBase : YieldSupplyAction
         } returns listOf("0xhash").right()
         coEvery { activateUseCase(any(), any(), any()) } returns true.right()
         every { yieldSupplyFeatureToggles.isSmartGasEnabled } returns false
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns true
+        coEvery { applyEnterAmountUseCase.supportsEnterAmount(any(), any(), any()) } returns true
     }
 
     @AfterEach
@@ -107,6 +111,7 @@ internal abstract class YieldSupplyStartEarningModelTestBase : YieldSupplyAction
                 cryptoCurrency = token,
                 yieldSupplyActionUM = actionUM(),
                 callback = callback,
+                feeSelectorComponentFactory = mockk(),
             ),
         ),
         analytics = analytics,
@@ -131,7 +136,9 @@ internal abstract class YieldSupplyStartEarningModelTestBase : YieldSupplyAction
             sendTransactionUseCase = sendTransactionUseCase,
             createAndSendEvmGaslessTransactionUseCase = createAndSendEvmGaslessTransactionUseCase,
             singleAccountStatusListSupplier = accountStatusListSupplier,
+            getAvailableFeeTokensUseCase = getAvailableFeeTokensUseCase,
         ),
+        isEvmGaslessFeeSupportedForNetwork = isEvmGaslessFeeSupportedForNetwork,
     )
 
     private fun actionUM(): YieldSupplyActionUM = YieldSupplyActionUM(

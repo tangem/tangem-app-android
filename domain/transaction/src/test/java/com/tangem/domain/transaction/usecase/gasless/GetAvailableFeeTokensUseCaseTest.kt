@@ -355,6 +355,49 @@ internal class GetAvailableFeeTokensUseCaseTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class EnteringYieldToken {
+
+        @BeforeEach
+        fun resetMocks() {
+            clearMocks(singleAccountStatusListSupplier, gaslessTransactionRepository, currencyChecksRepository)
+
+            coEvery { currencyChecksRepository.isNetworkSupportedForGaslessTx(any()) } returns true
+            coEvery { gaslessTransactionRepository.getSupportedTokens(network = any()) } returns setOf(usdc)
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN token with inactive yield module WHEN invoke THEN offered only while entering yield`(
+            model: EnteringYieldTokenModel,
+        ) = runTest {
+            // Arrange
+            val usdcInactiveYield = CryptoCurrencyStatus(
+                currency = usdc,
+                value = loadedValue(BigDecimal("20")).copy(yieldSupplyStatus = INACTIVE_YIELD),
+            )
+            val statuses = listOf(nativeCoin.status(), usdcInactiveYield)
+            coEvery { singleAccountStatusListSupplier.getSyncOrNull(userWalletId) } returns accountStatusList(statuses)
+
+            // Act
+            val actual = createUseCase().invoke(
+                userWallet = userWallet,
+                network = network,
+                sentCurrencyStatus = usdcInactiveYield,
+                enteringYieldTokenId = model.enteringYieldTokenId,
+            )
+
+            // Assert
+            assertThat(actual.offeredCurrencies()).isEqualTo(model.expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            EnteringYieldTokenModel(enteringYieldTokenId = usdc.id, expected = listOf(nativeCoin, usdc)),
+            EnteringYieldTokenModel(enteringYieldTokenId = null, expected = listOf(nativeCoin)),
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class TronGasless {
 
         @BeforeEach
@@ -615,6 +658,11 @@ internal class GetAvailableFeeTokensUseCaseTest {
         ),
         network = tronNetwork,
         contractAddress = USDC_TRON_CONTRACT,
+    )
+
+    internal data class EnteringYieldTokenModel(
+        val enteringYieldTokenId: CryptoCurrency.ID?,
+        val expected: List<CryptoCurrency>,
     )
 
     internal data class EligibilityModel(
