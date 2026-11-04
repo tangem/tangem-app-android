@@ -18,7 +18,7 @@ import com.patrykandpatrick.vico.core.common.shader.CacheableDynamicShader
  * Must stay a data class: `rememberSplitLine` keys its `remember` on the shader, so identity equality
  * would recreate the line on every recomposition.
  */
-internal data class SplitLineShader(
+data class SplitLineShader(
     val leftColor: Int,
     val rightColor: Int,
     val splitFraction: Float,
