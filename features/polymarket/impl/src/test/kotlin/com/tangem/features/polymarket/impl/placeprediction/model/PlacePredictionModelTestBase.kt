@@ -245,6 +245,7 @@ internal abstract class PlacePredictionModelTestBase {
             urlOpener = urlOpener,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             orderSubmitterFactory = createOrderSubmitterFactory(testScope),
+            getUserWalletUseCase = getUserWalletUseCase,
         ).also(models::add)
 
     protected fun createOrderSubmitterFactory(
@@ -487,3 +488,7 @@ internal abstract class PlacePredictionModelTestBase {
         )
     }
 }
+
+internal fun PlacePredictionOrderModel.tapPlace() = onPlaceClick(confirmedWith = uiState.value.placeButtonStyle)
+
+internal fun PlacePredictionSummaryModel.tapPlace() = onPlaceClick(confirmedWith = uiState.value.placeButtonStyle)
