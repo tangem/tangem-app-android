@@ -241,7 +241,7 @@ internal class EarnApyConverterTest {
     }
 
     @Test
-    fun `GIVEN a coin AND a non-empty yield map WHEN convert THEN yield mode is skipped and staking is used`() {
+    fun `GIVEN a coin AND a non-empty yield map WHEN convert THEN staking is used`() {
         // Arrange
         val converter = converter(
             availability = StakingAvailability.Available(
