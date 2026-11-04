@@ -1,13 +1,11 @@
 package com.tangem.common.ui.account
 
 import com.tangem.common.ui.R
+import com.tangem.common.ui.userwallet.ext.toUserWalletItemBalance
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.format.bigdecimal.fiat
-import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.utils.converter.Converter
@@ -54,30 +52,8 @@ class AccountPortfolioItemUMConverter(
         )
     }
 
-    private fun getBalanceInfo(): UserWalletItemUM.Balance {
-        return when {
-            isBalanceHidden -> UserWalletItemUM.Balance.Hidden
-            accountBalance == null -> UserWalletItemUM.Balance.Loading
-            else -> {
-                when (accountBalance) {
-                    is TotalFiatBalance.Loading -> UserWalletItemUM.Balance.Loading
-                    is TotalFiatBalance.Failed -> UserWalletItemUM.Balance.Failed
-                    is TotalFiatBalance.Loaded -> {
-                        if (appCurrency != null) {
-                            val formattedAmount = accountBalance.amount.format {
-                                fiat(appCurrency.code, appCurrency.symbol)
-                            }
-
-                            UserWalletItemUM.Balance.Loaded(
-                                value = formattedAmount,
-                                isFlickering = accountBalance.source == StatusSource.CACHE,
-                            )
-                        } else {
-                            UserWalletItemUM.Balance.Failed
-                        }
-                    }
-                }
-            }
-        }
-    }
+    private fun getBalanceInfo(): UserWalletItemUM.Balance = accountBalance.toUserWalletItemBalance(
+        appCurrency = appCurrency,
+        isBalanceHidden = isBalanceHidden,
+    )
 }
