@@ -19,6 +19,7 @@ dependencies {
     api(projects.features.swap.domain)
     implementation(projects.features.marketing.api)
     implementation(projects.features.send.impl)
+    implementation(projects.features.txhistory.api)
 
     /** Core modules */
     api(projects.core.analytics)

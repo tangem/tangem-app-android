@@ -2879,7 +2879,7 @@
   <string name="tangempay_status_inactive">未激活</string>
   <string name="tangempay_status_replacing">更换您的卡片</string>
   <string name="tangempay_sync_needed">用卡或戒指续期会话</string>
-  <string name="tangempay_sync_needed_body">请续期会话以查看您的卡片和账户</string>
+  <string name="tangempay_sync_needed_body">请更新以查看您的卡片和账户</string>
   <string name="tangempay_sync_needed_button">恢复访问权限</string>
   <string name="tangempay_sync_needed_title">会话已过期</string>
   <string name="tangempay_tangem_visa_card">在现实生活中随心消费加密资产</string>

@@ -20,6 +20,13 @@ sealed interface GaslessFeePlan {
         val fee: Fee.Ethereum.TokenCurrency,
     ) : GaslessFeePlan
 
+    /** Pay the fee from the token's plain balance, granting [approval] first in the same batch. */
+    data class TokenPayWithApproval(
+        val feeToken: CryptoCurrency.Token,
+        val fee: Fee.Ethereum.TokenCurrency,
+        val approval: GaslessApproval,
+    ) : GaslessFeePlan
+
     /**
      * Pay the fee by first withdrawing the token from the user's yield module (appended as a second
      * batch transaction). [withdrawCallData] is already upgrade-wrapped when the module needs an upgrade.

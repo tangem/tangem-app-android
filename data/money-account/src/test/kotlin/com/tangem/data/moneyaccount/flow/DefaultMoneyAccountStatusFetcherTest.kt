@@ -92,6 +92,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
         val resolved = MoneyAccountStatusValue.Onboarding.Activating(
             source = StatusSource.ACTUAL,
             customerId = CUSTOMER_ID,
+            step = MoneyAccountStatusValue.Onboarding.Activating.Step.ISSUING,
         )
         every { resolveMoneyAccountStatusFromSummaryUseCase(summary) } returns resolved
 
@@ -408,6 +409,7 @@ internal class DefaultMoneyAccountStatusFetcherTest {
     private fun activating() = MoneyAccountStatusValue.Onboarding.Activating(
         source = StatusSource.ACTUAL,
         customerId = CUSTOMER_ID,
+        step = MoneyAccountStatusValue.Onboarding.Activating.Step.ISSUING,
     )
 
     private fun createCustomerInfo(

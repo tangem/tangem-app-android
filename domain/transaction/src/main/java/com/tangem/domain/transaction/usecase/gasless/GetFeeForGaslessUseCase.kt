@@ -16,6 +16,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
+import com.tangem.domain.transaction.models.GaslessApproval
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.raiseIllegalStateError
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
@@ -47,6 +48,7 @@ class GetFeeForGaslessUseCase(
         transactionData: TransactionData,
         sentAmount: BigDecimal? = null,
         sentCurrencyStatus: CryptoCurrencyStatus? = null,
+        approval: GaslessApproval? = null,
         onNativeFeePreferred: () -> Unit = {},
     ): Either<GetFeeError, TransactionFeeExtended> {
         return either {
@@ -84,6 +86,7 @@ class GetFeeForGaslessUseCase(
                             tokenCurrencyStatus = nonPortfolioFeeToken,
                             nativeTransactionData = transactionData,
                             sentAmount = sentAmount,
+                            approval = approval,
                         ).bind()
                         else -> evmGaslessFeeResolver.resolveWithAutoFeeToken(
                             userWallet = userWallet,
@@ -93,6 +96,7 @@ class GetFeeForGaslessUseCase(
                             accountStatusList = accountStatusList,
                             nativeTransactionData = transactionData,
                             sentAmount = sentAmount,
+                            approval = approval,
                         ).bind()
                     }
                 },

@@ -71,6 +71,7 @@ import com.tangem.features.commonfeatures.api.choosetoken.ChooseTokenBridge
 import com.tangem.features.send.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.swap.SwapFeatureToggles
+import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
@@ -148,6 +149,7 @@ internal abstract class SwapModelTestBase {
     protected val moneyAccountStatusFetcher: MoneyAccountStatusFetcher = mockk {
         coEvery { this@mockk(any<MoneyAccountStatusFetcher.Params>()) } returns Unit.right()
     }
+    protected val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter = mockk(relaxUnitFun = true)
     protected val backupErrorWarningSender: BackupErrorWarningSender = mockk {
         every { forWallet(any(), any(), any(), any(), any()) } answers { lastArg<() -> Unit>().invoke() }
     }
@@ -303,6 +305,7 @@ internal abstract class SwapModelTestBase {
         backupErrorWarningSender = backupErrorWarningSender,
         collectiblesAccountStatusFetcher = collectiblesAccountStatusFetcher,
         moneyAccountStatusFetcher = moneyAccountStatusFetcher,
+        txHistoryContentUpdateEmitter = txHistoryContentUpdateEmitter,
         performanceTracer = mockk(relaxed = true),
     )
 
