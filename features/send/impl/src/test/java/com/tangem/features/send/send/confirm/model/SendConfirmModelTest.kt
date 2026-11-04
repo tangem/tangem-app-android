@@ -781,7 +781,9 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             val sut = createSendConfirmModel(this, confirmParams(normalFeeState()))
             advanceUntilIdle()
             val editedAmount = mockk<AmountState.Data>(relaxed = true)
-            val editedDestination = mockk<DestinationUM.Content>(relaxed = true)
+            val editedDestination = mockk<DestinationUM.Content>(relaxed = true) {
+                every { isInitialized } returns true
+            }
 
             // Act
             sut.updateEditedState(staleParentState(editedAmount, editedDestination))
@@ -805,7 +807,9 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             sut.updateEditedState(
                 staleParentState(
                     amountUM = mockk<AmountState.Data>(relaxed = true),
-                    destinationUM = mockk<DestinationUM.Content>(relaxed = true),
+                    destinationUM = mockk<DestinationUM.Content>(relaxed = true) {
+                        every { isInitialized } returns true
+                    },
                 ),
             )
             advanceUntilIdle()
@@ -814,6 +818,26 @@ internal class SendConfirmModelTest : SendModelTestBase() {
             // parent's Empty, which would disable the confirm blocks; the fee state must survive as is
             assertThat(sut.uiState.value.confirmUM).isInstanceOf(ConfirmUM.Content::class.java)
             assertThat(sut.uiState.value.feeSelectorUM).isEqualTo(feeSelectorUMBefore)
+        }
+
+        @Test
+        fun `GIVEN parent never saw amount or recipient WHEN updateEditedState THEN confirm keeps its own`() = runTest {
+            // Arrange: an intent opens straight on Confirm, so the parent still holds its initial empty state
+            val sut = createSendConfirmModel(this, confirmParams(normalFeeState()))
+            advanceUntilIdle()
+            val amountBefore = sut.uiState.value.amountUM
+            val destinationBefore = sut.uiState.value.destinationUM
+            val uninitializedDestination = mockk<DestinationUM.Content>(relaxed = true) {
+                every { isInitialized } returns false
+            }
+
+            // Act
+            sut.updateEditedState(staleParentState(AmountState.Empty, uninitializedDestination))
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(sut.uiState.value.amountUM).isEqualTo(amountBefore)
+            assertThat(sut.uiState.value.destinationUM).isEqualTo(destinationBefore)
         }
 
         private fun staleParentState(amountUM: AmountState, destinationUM: DestinationUM) = SendUM(
