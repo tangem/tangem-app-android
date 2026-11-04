@@ -1,6 +1,9 @@
 package com.tangem.features.yield.supply.impl.subcomponents.startearning.model
 
+import arrow.core.Either
 import arrow.core.getOrElse
+import arrow.core.raise.either
+import arrow.core.right
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
@@ -29,19 +32,24 @@ import com.tangem.domain.transaction.models.YieldModuleSameTokenRule
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.models.isGasless
 import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForGaslessBatchUseCase
+import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedForNetwork
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.models.YieldSupplyFee
 import com.tangem.domain.yield.supply.models.YieldSupplyMaxFee
 import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
 import com.tangem.domain.yield.supply.usecase.*
+import com.tangem.features.send.api.subcomponents.feeSelector.callbacks.FeeSelectorModelCallback
+import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams
 import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
+import com.tangem.features.yield.supply.impl.common.YieldSupplyFeeCurrencyChoice
 import com.tangem.features.yield.supply.impl.common.YieldSupplyFeeLoads
 import com.tangem.features.yield.supply.impl.common.YieldSupplySmartGas
 import com.tangem.features.yield.supply.impl.common.YieldSupplySmartGasFee
+import com.tangem.features.yield.supply.impl.common.toPickedFeeCurrencyError
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
 import com.tangem.features.yield.supply.impl.common.entity.transformer.YieldSupplyTransactionInProgressTransformer
@@ -88,6 +96,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private val estimateFeeForGaslessBatchUseCase: EstimateFeeForGaslessBatchUseCase,
     private val yieldSupplyApplyEnterAmountUseCase: YieldSupplyApplyEnterAmountUseCase,
     private val yieldSupplySmartGas: YieldSupplySmartGas,
+    isEvmGaslessFeeSupportedForNetwork: IsEvmGaslessFeeSupportedForNetwork,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStartEarningComponent.Params = paramsContainer.require()
@@ -138,6 +147,11 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private var nativeFeeCurrencyStatus: CryptoCurrencyStatus = feeCryptoCurrencyStatusFlow.value
     private var appCurrency = AppCurrency.Default
     private val feeLoads = YieldSupplyFeeLoads()
+    private var pickedFeeCurrencyStatus: CryptoCurrencyStatus? = null
+    private var feeCurrencyChoice: YieldSupplyFeeCurrencyChoice? = null
+    private var enteringYieldTokenId: CryptoCurrency.ID? = null
+    private val isSmartGasNetwork = yieldSupplyFeatureToggles.isSmartGasEnabled &&
+        isEvmGaslessFeeSupportedForNetwork(cryptoCurrency.network)
 
     init {
         analytics.send(
@@ -212,8 +226,16 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
         maxFee: YieldSupplyMaxFee,
         estimatedFee: YieldSupplyFee,
     ) {
+        enteringYieldTokenId = resolveEnteringYieldTokenId(updatedTransactionList)
+        if (enteringYieldTokenId == null && pickedFeeCurrencyStatus?.currency?.id == cryptoCurrency.id) {
+            pickedFeeCurrencyStatus = null
+        }
+        updateFeeCurrencySelectable()
         val smartGasFee = if (yieldSupplyFeatureToggles.isSmartGasEnabled) {
-            resolveSmartGasFee(updatedTransactionList)
+            resolveSmartGasFee(updatedTransactionList).getOrElse { error ->
+                showPickedFeeCurrencyError(updatedTransactionList, error)
+                return
+            }
         } else {
             null
         }
@@ -221,6 +243,12 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
             it.fee?.amount?.value.orZero()
         }
         feeCryptoCurrencyStatusFlow.update { smartGasFee?.feeTokenStatus ?: nativeFeeCurrencyStatus }
+        feeCurrencyChoice = YieldSupplyFeeCurrencyChoice(
+            calls = updatedTransactionList,
+            feeCurrencyId = feeCryptoCurrencyStatusFlow.value.currency.id,
+            gaslessFee = smartGasFee?.fee,
+            enteringYieldTokenId = enteringYieldTokenId,
+        )
 
         uiState.update(
             YieldSupplyStartEarningFeeContentTransformer(
@@ -244,12 +272,56 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
         )
     }
 
+    private suspend fun resolveSmartGasFee(
+        calls: List<TransactionData.Uncompiled>,
+    ): Either<GetFeeError, YieldSupplySmartGasFee?> {
+        val pickedStatus = pickedFeeCurrencyStatus ?: return resolveAutoSmartGasFee(calls).right()
+        return resolvePickedSmartGasFee(pickedStatus, calls)
+    }
+
+    /** A picked currency is kept even when it can't pay: the fee shows the error instead of moving elsewhere. */
+    private suspend fun resolvePickedSmartGasFee(
+        pickedStatus: CryptoCurrencyStatus,
+        calls: List<TransactionData.Uncompiled>,
+    ): Either<GetFeeError, YieldSupplySmartGasFee?> = either {
+        if (pickedStatus.currency is CryptoCurrency.Coin) return@either null
+
+        val fee = estimateFeeForGaslessBatchUseCase(
+            userWallet = userWallet,
+            operationTokenStatus = cryptoCurrencyStatus,
+            calls = calls,
+            sameTokenRule = YieldModuleSameTokenRule.Enter,
+            feeCurrencyStatus = pickedStatus,
+        ).bind()?.takeIf { it.isGasless } ?: raise(GetFeeError.UnknownError)
+        val feeAmount = fee.feeAmount() ?: raise(GetFeeError.UnknownError)
+
+        if (fee.feeTokenId != cryptoCurrency.id) {
+            return@either otherTokenSmartGasFee(fee, feeAmount, calls) ?: raise(GetFeeError.UnknownError)
+        }
+
+        val transactions = yieldSupplyApplyEnterAmountUseCase(
+            userWalletId = userWalletId,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            calls = calls,
+            feeAmount = feeAmount,
+        ).getOrElse { error ->
+            TangemLogger.e("Yield Mode enter can't leave the picked Smart Gas fee on the wallet", error)
+            raise(GetFeeError.GaslessError.NotEnoughFunds)
+        }
+        YieldSupplySmartGasFee(
+            fee = fee,
+            feeTokenStatus = cryptoCurrencyStatus,
+            feeAmount = feeAmount,
+            transactions = transactions,
+        )
+    }
+
     /**
      * Returns null — and the native fee stays — whenever Smart Gas can't pay: the native coin covers the batch, the
      * fee token isn't in the portfolio, or the enter can't leave a same-token fee on the wallet and no other token
      * can pay.
      */
-    private suspend fun resolveSmartGasFee(calls: List<TransactionData.Uncompiled>): YieldSupplySmartGasFee? {
+    private suspend fun resolveAutoSmartGasFee(calls: List<TransactionData.Uncompiled>): YieldSupplySmartGasFee? {
         val operationTokenStatus = cryptoCurrencyStatus
         val fee = estimateSmartGasFee(calls, isOperationTokenExcluded = false) ?: return null
         val feeAmount = fee.feeAmount() ?: return null
@@ -319,6 +391,44 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
             feeAmount = feeAmount,
             transactions = calls,
         )
+    }
+
+    /**
+     * As on iOS, the entered token is offered for the fee only when its module takes an enter amount; whether the
+     * balance then covers the fee is shown once it is picked.
+     */
+    private suspend fun resolveEnteringYieldTokenId(calls: List<TransactionData.Uncompiled>): CryptoCurrency.ID? {
+        val token = cryptoCurrency as? CryptoCurrency.Token ?: return null
+        if (!isSmartGasNetwork) return null
+        val isSupported = yieldSupplyApplyEnterAmountUseCase.supportsEnterAmount(
+            userWalletId = userWalletId,
+            token = token,
+            calls = calls,
+        )
+        return token.id.takeIf { isSupported }
+    }
+
+    private suspend fun updateFeeCurrencySelectable() {
+        val isSelectable = isSmartGasNetwork && yieldSupplySmartGas.hasFeeCurrencyChoice(
+            userWallet = userWallet,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            enteringYieldTokenId = enteringYieldTokenId,
+        )
+        uiState.update { it.copy(isFeeCurrencySelectable = isSelectable) }
+    }
+
+    fun createFeeSelectorParams(callback: FeeSelectorModelCallback): FeeSelectorParams.FeeSelectorDetailsParams? {
+        return feeCurrencyChoice?.toFeeSelectorParams(
+            userWalletId = userWalletId,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            nativeFeeCurrencyStatus = nativeFeeCurrencyStatus,
+            callback = callback,
+        )
+    }
+
+    fun onFeeCurrencyPicked(feeCurrencyStatus: CryptoCurrencyStatus) {
+        pickedFeeCurrencyStatus = feeCurrencyStatus
+        onFeeReload()
     }
 
     fun onClick() {
@@ -527,6 +637,22 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                 }
             },
             popBack = params.callback::onBackClick,
+        )
+    }
+
+    private suspend fun showPickedFeeCurrencyError(calls: List<TransactionData.Uncompiled>, error: GetFeeError) {
+        val pickedStatus = pickedFeeCurrencyStatus ?: nativeFeeCurrencyStatus
+        TangemLogger.e("Yield Mode enter fee in the picked ${pickedStatus.currency.symbol} failed: $error")
+        feeCurrencyChoice = YieldSupplyFeeCurrencyChoice(
+            calls = calls,
+            feeCurrencyId = pickedStatus.currency.id,
+            gaslessFee = null,
+            enteringYieldTokenId = enteringYieldTokenId,
+        )
+        feeCryptoCurrencyStatusFlow.update { pickedStatus }
+        uiState.update { it.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Error) }
+        yieldSupplyNotificationsUpdateTrigger.triggerUpdate(
+            data = YieldSupplyNotificationData(feeValue = null, feeError = error.toPickedFeeCurrencyError()),
         )
     }
 

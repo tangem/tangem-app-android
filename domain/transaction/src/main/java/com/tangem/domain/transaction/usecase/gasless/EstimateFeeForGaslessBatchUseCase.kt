@@ -9,6 +9,7 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCoinStatus
@@ -56,6 +57,8 @@ class EstimateFeeForGaslessBatchUseCase(
      *
      * @param isOperationTokenExcluded leaves the operation token out of the fee-token candidates, for callers that
      *   cannot apply the [sameTokenRule] adjustment the operation token's fee requires.
+     * @param feeCurrencyStatus currency the user picked to pay the fee; null picks it automatically. A picked token
+     *   that cannot pay is an error rather than a silent switch to another currency.
      */
     suspend operator fun invoke(
         userWallet: UserWallet,
@@ -63,6 +66,7 @@ class EstimateFeeForGaslessBatchUseCase(
         calls: List<TransactionData.Uncompiled>,
         sameTokenRule: YieldModuleSameTokenRule,
         isOperationTokenExcluded: Boolean = false,
+        feeCurrencyStatus: CryptoCurrencyStatus? = null,
     ): Either<GetFeeError, TransactionFeeExtended?> = either {
         catch(
             block = {
@@ -88,12 +92,15 @@ class EstimateFeeForGaslessBatchUseCase(
                     nativeFee = nativeFee,
                 )
 
+                if (feeCurrencyStatus?.currency is CryptoCurrency.Coin) return@either nativeResult
+                val pickedToken = feeCurrencyStatus?.let { accountStatusList.freshStatusOf(it) }
+
                 val nativeBalance = nativeCurrencyStatus.value.amount ?: BigDecimal.ZERO
                 val nativeFeeValue = nativeFee.normal.amount.value ?: raise(GetFeeError.UnknownError)
-                if (nativeBalance >= nativeFeeValue) return@either nativeResult
+                if (pickedToken == null && nativeBalance >= nativeFeeValue) return@either nativeResult
 
-                val networkCurrenciesStatuses = feeCurrencies.nonPortfolioFeeToken?.let(::listOf)
-                    ?: accountStatusList.flattenPersonalCurrencies().filter { it.currency.network.id == network.id }
+                val networkCurrenciesStatuses = pickedToken?.let(::listOf)
+                    ?: networkFeeTokenCandidates(feeCurrencies.nonPortfolioFeeToken, accountStatusList, network)
 
                 findTokenToPayFee(
                     userWallet = userWallet,
@@ -103,13 +110,18 @@ class EstimateFeeForGaslessBatchUseCase(
                     networkCurrenciesStatuses = networkCurrenciesStatuses,
                     operationTokenStatus = operationTokenStatus,
                     sameTokenRule = sameTokenRule,
-                    isOperationTokenExcluded = isOperationTokenExcluded,
+                    isOperationTokenExcluded = isOperationTokenExcluded(
+                        pickedToken = pickedToken,
+                        operationTokenStatus = operationTokenStatus,
+                        isExcludedByCaller = isOperationTokenExcluded,
+                    ),
                 ).map { tokenFee ->
                     tokenFee.copy(
                         callGasLimits = callFees.map { tokenFeeCalculator.withSubCallGasMargin(it.gasLimit) },
                         nativeFee = nativeFee,
                     )
                 }.getOrElse { error ->
+                    if (pickedToken != null) raise(error)
                     when (error) {
                         GaslessError.NotEnoughFunds,
                         GaslessError.YieldBalanceUnavailable,
@@ -121,6 +133,29 @@ class EstimateFeeForGaslessBatchUseCase(
             },
             catch = { raise(GaslessError.DataError(it)) },
         )
+    }
+
+    private fun AccountStatusList.freshStatusOf(status: CryptoCurrencyStatus): CryptoCurrencyStatus {
+        return flattenPersonalCurrencies().firstOrNull { it.currency.id == status.currency.id } ?: status
+    }
+
+    /** A picked token is the only candidate, so the operation token stays only when it is the one picked. */
+    private fun isOperationTokenExcluded(
+        pickedToken: CryptoCurrencyStatus?,
+        operationTokenStatus: CryptoCurrencyStatus,
+        isExcludedByCaller: Boolean,
+    ): Boolean {
+        if (pickedToken == null) return isExcludedByCaller
+        return pickedToken.currency.id != operationTokenStatus.currency.id
+    }
+
+    private fun networkFeeTokenCandidates(
+        nonPortfolioFeeToken: CryptoCurrencyStatus?,
+        accountStatusList: AccountStatusList,
+        network: Network,
+    ): List<CryptoCurrencyStatus> {
+        return nonPortfolioFeeToken?.let(::listOf)
+            ?: accountStatusList.flattenPersonalCurrencies().filter { it.currency.network.id == network.id }
     }
 
     /**

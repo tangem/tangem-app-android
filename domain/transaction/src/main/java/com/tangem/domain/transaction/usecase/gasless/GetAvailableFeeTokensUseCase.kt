@@ -37,6 +37,9 @@ class GetAvailableFeeTokensUseCase(
      * native balance cannot cover it, the native coin is reported as not enough for the fee — paying with
      * it would fail anyway. It is still offered normally when no token can pay the fee either.
      *
+     * @param enteringYieldTokenId token being put into Yield Mode by this transaction. Its module is not active yet,
+     * which otherwise hides it, but the enter can leave the fee on the wallet — pass it only when the module can.
+     *
      * @return the offered currencies, the native one first, along with those that cannot cover the fee
      */
     suspend operator fun invoke(
@@ -44,6 +47,7 @@ class GetAvailableFeeTokensUseCase(
         network: Network,
         sentCurrencyStatus: CryptoCurrencyStatus,
         nativeFeeAmount: BigDecimal? = null,
+        enteringYieldTokenId: CryptoCurrency.ID? = null,
     ): Either<GetFeeError, AvailableFeeTokens> {
         return either {
             catch(
@@ -103,7 +107,7 @@ class GetAvailableFeeTokensUseCase(
                     buildFeeTokens(
                         nativeCurrencyStatus = nativeCurrencyStatus,
                         nativeFeeAmount = nativeFeeAmount,
-                        tokens = getGaslessTokens(network, userCurrenciesStatuses),
+                        tokens = getGaslessTokens(network, userCurrenciesStatuses, enteringYieldTokenId),
                     )
                 },
                 catch = {
@@ -133,6 +137,7 @@ class GetAvailableFeeTokensUseCase(
     private suspend fun getGaslessTokens(
         network: Network,
         userCurrenciesStatuses: List<CryptoCurrencyStatus>,
+        enteringYieldTokenId: CryptoCurrency.ID? = null,
     ): List<CryptoCurrencyStatus> {
         val supportedGaslessTokens = gaslessTransactionRepository.getSupportedTokens(network)
             .mapNotNull {
@@ -140,7 +145,7 @@ class GetAvailableFeeTokensUseCase(
             }.toSet()
         return userCurrenciesStatuses
             .asSequence()
-            .filter { isEligibleFeeToken(it) }
+            .filter { isEligibleFeeToken(it) || it.currency.id == enteringYieldTokenId }
             .filter { it.currency.network.id == network.id }
             .filter { currencyStatus ->
                 val token = currencyStatus.currency

@@ -1,6 +1,7 @@
 package com.tangem.features.yield.supply.impl.subcomponents.stopearning.model
 
 import arrow.core.right
+import com.tangem.domain.transaction.usecase.gasless.IsEvmGaslessFeeSupportedForNetwork
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.account.models.AccountStatusList
@@ -42,6 +43,7 @@ internal abstract class YieldSupplyStopEarningModelTestBase : YieldSupplyActionM
     protected val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles = mockk()
     protected val estimateFeeForGaslessBatchUseCase: EstimateFeeForGaslessBatchUseCase = mockk()
     protected val createAndSendEvmGaslessTransactionUseCase: CreateAndSendEvmGaslessTransactionUseCase = mockk()
+    protected val isEvmGaslessFeeSupportedForNetwork: IsEvmGaslessFeeSupportedForNetwork = mockk()
 
     @BeforeEach
     fun stopEarningSetUp() {
@@ -57,6 +59,7 @@ internal abstract class YieldSupplyStopEarningModelTestBase : YieldSupplyActionM
         } returns YieldPreClaim.Skip
         coEvery { accountStatusListSupplier.getSyncOrNull(userWalletId) } returns accountStatusList
         every { yieldSupplyFeatureToggles.isSmartGasEnabled } returns false
+        every { isEvmGaslessFeeSupportedForNetwork(any()) } returns true
     }
 
     @AfterEach
@@ -74,6 +77,7 @@ internal abstract class YieldSupplyStopEarningModelTestBase : YieldSupplyActionM
                 userWallet = userWallet,
                 cryptoCurrencyStatusFlow = statusFlow,
                 callback = callback,
+                feeSelectorComponentFactory = mockk(),
             ),
         ),
         analytics = analytics,
@@ -96,6 +100,8 @@ internal abstract class YieldSupplyStopEarningModelTestBase : YieldSupplyActionM
             sendTransactionUseCase = sendTransactionUseCase,
             createAndSendEvmGaslessTransactionUseCase = createAndSendEvmGaslessTransactionUseCase,
             singleAccountStatusListSupplier = accountStatusListSupplier,
+            getAvailableFeeTokensUseCase = getAvailableFeeTokensUseCase,
         ),
+        isEvmGaslessFeeSupportedForNetwork = isEvmGaslessFeeSupportedForNetwork,
     )
 }
