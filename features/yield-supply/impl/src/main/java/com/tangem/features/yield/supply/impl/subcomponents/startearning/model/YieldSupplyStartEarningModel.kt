@@ -49,6 +49,7 @@ import com.tangem.features.yield.supply.impl.common.YieldSupplyFeeCurrencyChoice
 import com.tangem.features.yield.supply.impl.common.YieldSupplyFeeLoads
 import com.tangem.features.yield.supply.impl.common.YieldSupplySmartGas
 import com.tangem.features.yield.supply.impl.common.YieldSupplySmartGasFee
+import com.tangem.features.yield.supply.impl.common.YieldSupplyTxHistoryUpdater
 import com.tangem.features.yield.supply.impl.common.toPickedFeeCurrencyError
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
@@ -97,6 +98,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private val yieldSupplyApplyEnterAmountUseCase: YieldSupplyApplyEnterAmountUseCase,
     private val yieldSupplySmartGas: YieldSupplySmartGas,
     isEvmGaslessFeeSupportedForNetwork: IsEvmGaslessFeeSupportedForNetwork,
+    private val yieldSupplyTxHistoryUpdater: YieldSupplyTxHistoryUpdater,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStartEarningComponent.Params = paramsContainer.require()
@@ -538,6 +540,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                 txIds = txsData,
                 depositContext = depositContext,
             )
+            yieldSupplyTxHistoryUpdater.scheduleUpdates(userWalletId, cryptoCurrency, txsData)
             params.callback.onTransactionSent()
         }
     }
