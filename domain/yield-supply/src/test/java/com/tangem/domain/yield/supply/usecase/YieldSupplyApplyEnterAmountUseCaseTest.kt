@@ -11,7 +11,6 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionStatus
 import com.tangem.blockchain.yieldsupply.providers.ethereum.factory.EthereumYieldSupplyDeployCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyInitTokenCallData
@@ -30,13 +29,9 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.math.BigInteger
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class YieldSupplyApplyEnterAmountUseCaseTest {
 
     private val repository: YieldSupplyTransactionRepository = mockk()
@@ -49,8 +44,7 @@ internal class YieldSupplyApplyEnterAmountUseCaseTest {
     @BeforeEach
     fun setUp() {
         clearMocks(repository)
-        coEvery { repository.getYieldModuleVersionStatus(userWalletId, token.network) } returns
-            YieldModuleVersionStatus.UpToDate
+        coEvery { repository.supportsEnterWithAmount(userWalletId, token.network) } returns true
     }
 
     @Test
@@ -70,18 +64,15 @@ internal class YieldSupplyApplyEnterAmountUseCaseTest {
             // Assert
             assertCalls(result, expected = listOf(approve, enter.withEnterAmount(BigInteger("9500000"))))
             coVerify(exactly = 0) { repository.getEffectiveProtocolBalance(any(), any()) }
-            coVerify(exactly = 1) { repository.getYieldModuleVersionStatus(userWalletId, token.network) }
+            coVerify(exactly = 1) { repository.supportsEnterWithAmount(userWalletId, token.network) }
         }
 
-    @ParameterizedTest
-    @MethodSource("provideOutdatedVersionStatuses")
-    fun `GIVEN plain enter on not up-to-date module WHEN invoke THEN returns left`(
-        versionStatus: YieldModuleVersionStatus,
-    ) = runTest {
+    @Test
+    fun `GIVEN plain enter on module without enter with amount WHEN invoke THEN returns left`() = runTest {
         // Arrange
         val enter = createTransaction(EthereumYieldSupplyEnterCallData(TOKEN_ADDRESS))
         val status = createTokenStatus(total = BigDecimal("10"), yieldSupplyStatus = createYieldStatus(BigDecimal.ZERO))
-        coEvery { repository.getYieldModuleVersionStatus(userWalletId, token.network) } returns versionStatus
+        coEvery { repository.supportsEnterWithAmount(userWalletId, token.network) } returns false
 
         // Act
         val result = invokeUseCase(status = status, calls = listOf(enter), feeAmount = BigDecimal("1"))
@@ -96,7 +87,7 @@ internal class YieldSupplyApplyEnterAmountUseCaseTest {
         val enter = createTransaction(EthereumYieldSupplyEnterCallData(TOKEN_ADDRESS))
         val status = createTokenStatus(total = BigDecimal("10"), yieldSupplyStatus = createYieldStatus(BigDecimal.ZERO))
         coEvery {
-            repository.getYieldModuleVersionStatus(userWalletId, token.network)
+            repository.supportsEnterWithAmount(userWalletId, token.network)
         } throws IllegalStateException("rpc")
 
         // Act
@@ -124,7 +115,7 @@ internal class YieldSupplyApplyEnterAmountUseCaseTest {
 
         // Assert
         assertCalls(result, expected = listOf(deploy, enter.withEnterAmount(BigInteger("9000000"))))
-        coVerify(exactly = 0) { repository.getYieldModuleVersionStatus(any(), any()) }
+        coVerify(exactly = 0) { repository.supportsEnterWithAmount(any(), any()) }
         coVerify(exactly = 0) { repository.getEffectiveProtocolBalance(any(), any()) }
     }
 
@@ -199,7 +190,7 @@ internal class YieldSupplyApplyEnterAmountUseCaseTest {
 
             // Assert
             assertCalls(result, expected = listOf(upgradedInit, enter.withEnterAmount(BigInteger("9000000"))))
-            coVerify(exactly = 0) { repository.getYieldModuleVersionStatus(any(), any()) }
+            coVerify(exactly = 0) { repository.supportsEnterWithAmount(any(), any()) }
         }
 
     @Test
@@ -227,7 +218,7 @@ internal class YieldSupplyApplyEnterAmountUseCaseTest {
             ),
         )
         assertCalls(result, expected = listOf(expected))
-        coVerify(exactly = 0) { repository.getYieldModuleVersionStatus(any(), any()) }
+        coVerify(exactly = 0) { repository.supportsEnterWithAmount(any(), any()) }
     }
 
     @Test
@@ -374,16 +365,6 @@ internal class YieldSupplyApplyEnterAmountUseCaseTest {
     private fun TransactionData.Uncompiled.ethereumExtras(): EthereumTransactionExtras =
         extras as? EthereumTransactionExtras ?: error("No EVM extras")
 
-    private fun provideOutdatedVersionStatuses(): List<YieldModuleVersionStatus> = listOf(
-        YieldModuleVersionStatus.UpgradeAvailable(
-            currentImplementation = OLD_IMPLEMENTATION,
-            latestImplementation = NEW_IMPLEMENTATION,
-        ),
-        YieldModuleVersionStatus.UpgradeUnavailable(currentImplementation = OLD_IMPLEMENTATION),
-        YieldModuleVersionStatus.Indeterminate(reason = "rpc"),
-        YieldModuleVersionStatus.NotDeployed,
-    )
-
     private fun createAmount(value: BigDecimal): Amount = Amount(
         currencySymbol = "USDC",
         value = value,
@@ -470,6 +451,5 @@ internal class YieldSupplyApplyEnterAmountUseCaseTest {
         const val WALLET_ADDRESS = "0x1111111111111111111111111111111111111111"
         const val MODULE_ADDRESS = "0x2222222222222222222222222222222222222222"
         const val NEW_IMPLEMENTATION = "0x3333333333333333333333333333333333333333"
-        const val OLD_IMPLEMENTATION = "0x4444444444444444444444444444444444444444"
     }
 }

@@ -9,7 +9,6 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.yieldsupply.YieldSupplyContractCallDataProviderFactory
-import com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionStatus
 import com.tangem.blockchain.yieldsupply.providers.ethereum.factory.EthereumYieldSupplyDeployCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyInitTokenCallData
@@ -33,8 +32,9 @@ import java.math.RoundingMode
  * an `upgradeToAndCall` wrapper keeps its implementation around the new inner call, so the upgrade decision made when
  * the batch was built is not re-derived.
  *
- * `enterProtocolByOwner(token, amount)` exists only in recent module implementations, so the batch must end up on one:
- * it deploys a new module, upgrades the existing one in one of its calls, or the module is already up to date.
+ * `enterProtocolByOwner(token, amount)` exists only since the V2 module implementation, so the batch must end up on one:
+ * it deploys a new module, upgrades the existing one in one of its calls, or the module is already on V2 or later —
+ * even if the factory can't upgrade it to the latest version.
  */
 class YieldSupplyApplyEnterAmountUseCase(
     private val yieldSupplyTransactionRepository: YieldSupplyTransactionRepository,
@@ -104,9 +104,9 @@ class YieldSupplyApplyEnterAmountUseCase(
         if (isModuleDeployedOrUpgraded) return Either.Right(Unit)
 
         return Either.catch {
-            yieldSupplyTransactionRepository.getYieldModuleVersionStatus(userWalletId, token.network)
-        }.flatMap { versionStatus ->
-            if (versionStatus is YieldModuleVersionStatus.UpToDate) {
+            yieldSupplyTransactionRepository.supportsEnterWithAmount(userWalletId, token.network)
+        }.flatMap { isSupported ->
+            if (isSupported) {
                 Either.Right(Unit)
             } else {
                 Either.Left(IllegalStateException("The ${token.symbol} yield module may lack the enter with amount"))
