@@ -16,8 +16,8 @@ import com.tangem.scenarios.clickMoneyAccountRowUntilDetailsOpen
 import com.tangem.scenarios.closeFinishWalletActivationSheetIfShown
 import com.tangem.scenarios.openMainWithMoneyAccountWallet
 import com.tangem.scenarios.openMoneyAccount
-import com.tangem.scenarios.refreshMainUntilCustomerSummaryRequested
 import com.tangem.scenarios.refreshMainUntilMoneyAccountCacheIcon
+import com.tangem.scenarios.refreshMainUntilMoneyAccountCacheIconHidden
 import com.tangem.scenarios.returnToMainFromMoneyAccount
 import com.tangem.scenarios.waitForMoneyAccountRowWithText
 import com.tangem.screens.moneyaccount.onMoneyAccountScreen
@@ -254,20 +254,17 @@ class MoneyAccountStateCachingTest : BaseTestCase() {
             step("Assert 'Money account' row shows the cached data") {
                 assertMoneyAccountRowShowsCachedBalance(cachedBalance)
             }
+            step("Reset WireMock scenario '$summaryScenario'") { resetWireMockScenarioState(summaryScenario) }
+            step("Refresh 'Main' screen") { refreshMainUntilMoneyAccountCacheIconHidden() }
             step("Set WireMock scenario '$summaryScenario' to '$summaryConnectionResetState'") {
                 setWireMockScenarioState(summaryScenario, summaryConnectionResetState)
             }
-            step("Refresh 'Main' screen") { refreshMainUntilCustomerSummaryRequested() }
+            step("Refresh 'Main' screen") { refreshMainUntilMoneyAccountCacheIcon() }
             step("Assert 'Money account' row shows the cached data") {
                 assertMoneyAccountRowShowsCachedBalance(cachedBalance)
             }
             step("Reset WireMock scenario '$summaryScenario'") { resetWireMockScenarioState(summaryScenario) }
-            step("Refresh 'Main' screen") { refreshMainUntilCustomerSummaryRequested() }
-            step("Assert cached-data icon is not displayed on the 'Money account' row") {
-                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                    onMoneyAccountScreen { mainRowCacheIcon.assertDoesNotExist() }
-                }
-            }
+            step("Refresh 'Main' screen") { refreshMainUntilMoneyAccountCacheIconHidden() }
             step("Assert 'Money account' row shows '$cachedBalance'") {
                 onMoneyAccountScreen { mainRowWithText(cachedBalance).assertIsDisplayed() }
             }
