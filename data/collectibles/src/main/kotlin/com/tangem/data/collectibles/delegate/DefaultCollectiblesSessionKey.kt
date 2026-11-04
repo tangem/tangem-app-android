@@ -9,8 +9,8 @@ import com.tangem.blockchain.extensions.encodeBase58
 import com.tangem.common.card.EllipticCurve
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.data.collectibles.account.store.CollectiblesAccountStore
-import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
-import com.tangem.domain.collectibles.delegate.HotDelegatePublicKey
+import com.tangem.domain.collectibles.delegate.CollectiblesSessionKey
+import com.tangem.domain.collectibles.delegate.SessionKeyPublicKey
 import com.tangem.domain.models.account.AccountId
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.model.DataToSign
@@ -35,55 +35,55 @@ import com.tangem.domain.collectibles.CollectiblesAccountError
  * where this key deliberately is not, and prompts for auth on every call.
  */
 @Singleton
-internal class DefaultCollectiblesHotDelegate @Inject constructor(
+internal class DefaultCollectiblesSessionKey @Inject constructor(
     private val tangemHotSdk: TangemHotSdk,
     private val accountStore: CollectiblesAccountStore,
     private val dispatchers: CoroutineDispatcherProvider,
-) : CollectiblesHotDelegate {
+) : CollectiblesSessionKey {
 
     private val lock = Mutex()
 
-    override suspend fun provision(accountId: AccountId): Either<CollectiblesAccountError, HotDelegatePublicKey> {
+    override suspend fun provision(accountId: AccountId): Either<CollectiblesAccountError, SessionKeyPublicKey> {
         return withContext(dispatchers.io) {
             lock.withLock {
                 runSuspendCatching {
-                    val stored = storedDelegate(accountId)
+                    val stored = storedSessionKey(accountId)
 
                     if (stored != null) {
-                        TangemLogger.d("hotDelegate: is a hot session key stored on the phone -> Yes")
+                        TangemLogger.d("sessionKey: is a hot session key stored on the phone -> Yes")
                         derivePublicKey(stored.hotWalletId)
                     } else {
-                        TangemLogger.d("hotDelegate: is a hot session key stored on the phone -> No")
+                        TangemLogger.d("sessionKey: is a hot session key stored on the phone -> No")
                         create(accountId)
                     }
                 }.fold(
                     onSuccess = { it.right() },
                     onFailure = { error ->
-                        TangemLogger.d("hotDelegate: provision failed, error=$error")
-                        CollectiblesAccountError.DelegateKeyCreationFailed(error).left()
+                        TangemLogger.d("sessionKey: provision failed, error=$error")
+                        CollectiblesAccountError.SessionKeyCreationFailed(error).left()
                     },
                 )
             }
         }
     }
 
-    override suspend fun getPublicKeyOrNull(accountId: AccountId): HotDelegatePublicKey? {
+    override suspend fun getPublicKeyOrNull(accountId: AccountId): SessionKeyPublicKey? {
         return withContext(dispatchers.io) {
-            val delegate = storedDelegate(accountId) ?: return@withContext null
+            val stored = storedSessionKey(accountId) ?: return@withContext null
 
-            runSuspendCatching { derivePublicKey(delegate.hotWalletId) }
-                .onFailure { TangemLogger.e("Failed to read the collectibles hot delegate", it) }
+            runSuspendCatching { derivePublicKey(stored.hotWalletId) }
+                .onFailure { TangemLogger.e("Failed to read the collectibles session key", it) }
                 .getOrNull()
         }
     }
 
-    private suspend fun create(accountId: AccountId): HotDelegatePublicKey {
+    private suspend fun create(accountId: AccountId): SessionKeyPublicKey {
         val hotWalletId = tangemHotSdk.generateWallet(HotAuth.NoAuth, MnemonicType.Words12)
 
         return runSuspendCatching {
             val publicKey = derivePublicKey(hotWalletId)
 
-            accountStore.storeDelegate(userWalletId = accountId.userWalletId, hotWalletId = hotWalletId.value)
+            accountStore.storeSessionKey(userWalletId = accountId.userWalletId, hotWalletId = hotWalletId.value)
 
             publicKey
         }
@@ -94,13 +94,13 @@ internal class DefaultCollectiblesHotDelegate @Inject constructor(
 
     override suspend fun sign(accountId: AccountId, message: ByteArray): Either<CollectiblesAccountError, ByteArray> {
         return withContext(dispatchers.io) {
-            val delegate = storedDelegate(accountId)
-                ?: return@withContext CollectiblesAccountError.DelegateNotProvisioned.left()
+            val stored = storedSessionKey(accountId)
+                ?: return@withContext CollectiblesAccountError.SessionKeyNotProvisioned.left()
 
             runSuspendCatching {
                 val signed = tangemHotSdk.signHashes(
                     unlockHotWallet = UnlockHotWallet(
-                        walletId = delegate.hotWalletId,
+                        walletId = stored.hotWalletId,
                         auth = HotAuth.NoAuth,
                     ),
                     dataToSign = listOf(
@@ -114,7 +114,7 @@ internal class DefaultCollectiblesHotDelegate @Inject constructor(
                     ?: error("Hot SDK returned no signature for $CURVE")
             }.fold(
                 onSuccess = { it.right() },
-                onFailure = { CollectiblesAccountError.DelegateSigningFailed(it).left() },
+                onFailure = { CollectiblesAccountError.SessionKeySigningFailed(it).left() },
             )
         }
     }
@@ -122,13 +122,13 @@ internal class DefaultCollectiblesHotDelegate @Inject constructor(
     override suspend fun forget(accountId: AccountId) {
         withContext(dispatchers.io) {
             lock.withLock {
-                val delegate = storedDelegate(accountId)
+                val stored = storedSessionKey(accountId)
 
-                if (delegate != null) {
+                if (stored != null) {
                     runSuspendCatching {
-                        tangemHotSdk.delete(delegate.hotWalletId)
-                        accountStore.removeDelegate(accountId.userWalletId)
-                    }.onFailure { TangemLogger.e("Failed to delete collectibles hot delegate", it) }
+                        tangemHotSdk.delete(stored.hotWalletId)
+                        accountStore.removeSessionKey(accountId.userWalletId)
+                    }.onFailure { TangemLogger.e("Failed to delete collectibles session key", it) }
                 }
             }
         }
@@ -136,10 +136,10 @@ internal class DefaultCollectiblesHotDelegate @Inject constructor(
 
     private suspend fun deleteQuietly(hotWalletId: HotWalletId) {
         runSuspendCatching { tangemHotSdk.delete(hotWalletId) }
-            .onFailure { TangemLogger.e("Failed to delete collectibles hot delegate", it) }
+            .onFailure { TangemLogger.e("Failed to delete collectibles session key", it) }
     }
 
-    private suspend fun derivePublicKey(hotWalletId: HotWalletId): HotDelegatePublicKey {
+    private suspend fun derivePublicKey(hotWalletId: HotWalletId): SessionKeyPublicKey {
         val response = tangemHotSdk.derivePublicKey(
             unlockHotWallet = UnlockHotWallet(walletId = hotWalletId, auth = HotAuth.NoAuth),
             request = DeriveWalletRequest(
@@ -154,11 +154,11 @@ internal class DefaultCollectiblesHotDelegate @Inject constructor(
             ?.publicKey
             ?: error("Hot SDK returned no public key for $CURVE at $derivationPath")
 
-        return HotDelegatePublicKey(publicKey.encodeBase58())
+        return SessionKeyPublicKey(publicKey.encodeBase58())
     }
 
-    private suspend fun storedDelegate(accountId: AccountId): CollectiblesHotWalletId? {
-        return accountStore.getDelegate(accountId.userWalletId)
+    private suspend fun storedSessionKey(accountId: AccountId): CollectiblesHotWalletId? {
+        return accountStore.getSessionKey(accountId.userWalletId)
             ?.let { CollectiblesHotWalletId(accountId = accountId, keystoreId = it) }
     }
 

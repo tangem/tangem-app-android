@@ -2,7 +2,7 @@ package com.tangem.domain.collectibles.usecase
 
 import arrow.core.Either
 import arrow.core.raise.either
-import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
+import com.tangem.domain.collectibles.delegate.CollectiblesSessionKey
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
@@ -20,16 +20,16 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Creates a wallet's collectibles account: the local delegate, the on-chain vault, the local record of it.
+ * Creates a wallet's collectibles account: the local session key, the on-chain vault, the local record of it.
  *
  * Never more than one tap, and none at all for a mobile wallet or for an account that already exists. What the
  * device already has decides which operation that tap signs.
  *
- * Reactivating a vault that answers to another phone re-issues the hot delegate rather than reusing the one stored
+ * Reactivating a vault that answers to another phone re-issues the session key rather than reusing the one stored
  * here, so a key that may have leaked with an old install is never trusted again.
  */
 class CreateOrReactivateCollectiblesAccountUseCase @Inject constructor(
-    private val hotDelegate: CollectiblesHotDelegate,
+    private val sessionKey: CollectiblesSessionKey,
     private val ownerDeriver: CollectiblesOwnerDeriver,
     private val gachaVaultRepository: GachaVaultRepository,
     private val accountRepository: CollectiblesAccountRepository,
@@ -47,23 +47,23 @@ class CreateOrReactivateCollectiblesAccountUseCase @Inject constructor(
 
         val limits = GachaVaultLimits.Default
         val accountId = AccountId.forCollectiblesAccount(userWalletId = userWallet.walletId)
-        if (accountStatus is CollectiblesAccountStatusValue.UpdateRequired) hotDelegate.forget(accountId)
+        if (accountStatus is CollectiblesAccountStatusValue.UpdateRequired) sessionKey.forget(accountId)
 
-        val delegate = hotDelegate.provision(accountId)
-            .onLeft { TangemLogger.d("create account: hot delegate provisioning failed: $it") }
-            .onRight { TangemLogger.d("create account: hot delegate ready") }
+        val publicKey = sessionKey.provision(accountId)
+            .onLeft { TangemLogger.d("create account: session key provisioning failed: $it") }
+            .onRight { TangemLogger.d("create account: session key ready") }
             .bind()
 
         val storedOwner = ownerDeriver.storedOwner(userWallet.walletId)
 
         if (storedOwner == null) {
             TangemLogger.d("create account: -> No locally stored Solana address, deriveOwnerAndSetUpVault")
-            gachaVaultRepository.deriveOwnerAndSetUpVault(userWallet, delegate, limits)
+            gachaVaultRepository.deriveOwnerAndSetUpVault(userWallet, publicKey, limits)
                 .onLeft { TangemLogger.d("create account: deriveOwnerAndSetUpVault failed: $it") }
                 .bind()
         } else {
             TangemLogger.d("create account: -> Solana address of the key stored locally, initOrUpdateVault")
-            gachaVaultRepository.initOrUpdateVault(userWallet, delegate, limits)
+            gachaVaultRepository.initOrUpdateVault(userWallet, publicKey, limits)
                 .onLeft { TangemLogger.d("create account: initOrUpdateVault failed: $it") }
                 .bind()
         }
