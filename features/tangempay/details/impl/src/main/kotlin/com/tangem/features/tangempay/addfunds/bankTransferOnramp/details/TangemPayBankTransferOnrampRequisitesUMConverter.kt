@@ -14,7 +14,25 @@ internal class TangemPayBankTransferOnrampRequisitesUMConverter(
     private val onCopyClick: (field: RequisiteField, value: String) -> Unit,
 ) : Converter<BankCredentials, ImmutableList<RequisiteUM>> {
 
-    override fun convert(value: BankCredentials): ImmutableList<RequisiteUM> = listOfNotNull(
+    override fun convert(value: BankCredentials): ImmutableList<RequisiteUM> {
+        val requisites = if (value.isSpei) speiRequisites(value) else usRequisites(value)
+        return requisites.toImmutableList()
+    }
+
+    private fun speiRequisites(value: BankCredentials): List<RequisiteUM> = listOfNotNull(
+        requisite(
+            field = RequisiteField.CLABE,
+            titleId = R.string.virtual_account_requisites_clabe,
+            value = value.accountNumber,
+        ),
+        requisite(
+            field = RequisiteField.REFERENCE,
+            titleId = R.string.virtual_account_requisites_reference,
+            value = value.transferMessage.orEmpty(),
+        ),
+    )
+
+    private fun usRequisites(value: BankCredentials): List<RequisiteUM> = listOfNotNull(
         requisite(
             field = RequisiteField.ACCOUNT_NUMBER,
             titleId = R.string.virtual_account_requisites_account_number,
@@ -45,7 +63,7 @@ internal class TangemPayBankTransferOnrampRequisitesUMConverter(
             titleId = R.string.virtual_account_requisites_bank_address,
             value = value.beneficiaryBankAddress,
         ),
-    ).toImmutableList()
+    )
 
     private fun requisite(field: RequisiteField, @StringRes titleId: Int, value: String): RequisiteUM? {
         if (value.isBlank()) return null
@@ -62,6 +80,8 @@ internal val RequisiteField.label: String
     get() = when (this) {
         RequisiteField.ACCOUNT_NUMBER -> "Account number"
         RequisiteField.ROUTING_NUMBER -> "Routing number"
+        RequisiteField.CLABE -> "CLABE"
+        RequisiteField.REFERENCE -> "Reference"
         RequisiteField.BENEFICIARY_NAME -> "Beneficiary name"
         RequisiteField.BENEFICIARY_ADDRESS -> "Beneficiary address"
         RequisiteField.BANK_NAME -> "Bank name"
