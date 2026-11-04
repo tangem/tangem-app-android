@@ -22,6 +22,7 @@ internal fun OfframpDestination.toTitleReference(): TextReference =
 private fun BankRail.toDefaultTitleReference(): TextReference = when (this) {
     BankRail.ACH -> resourceReference(R.string.tangempay_bank_transfer_fee_ach)
     BankRail.WIRE -> resourceReference(R.string.tangempay_bank_transfer_fee_fedwire)
+    BankRail.SPEI -> stringReference(name)
 }
 
 internal fun OfframpEta.toTextReference(): TextReference = when {

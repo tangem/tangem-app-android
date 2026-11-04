@@ -9,7 +9,7 @@ import com.tangem.datasource.api.tangemTech.models.account.isCollectibles
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
-import com.tangem.domain.collectibles.delegate.CollectiblesHotDelegate
+import com.tangem.domain.collectibles.delegate.CollectiblesSessionKey
 import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncOrNull
@@ -34,7 +34,7 @@ internal class DefaultCollectiblesAccountStatusFetcher @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val collectiblesOwnerDeriver: CollectiblesOwnerDeriver,
     private val gachaVaultRepository: GachaVaultRepository,
-    private val hotDelegate: CollectiblesHotDelegate,
+    private val sessionKey: CollectiblesSessionKey,
     private val walletAccountsFetcher: WalletAccountsFetcher,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : CollectiblesAccountStatusFetcher {
@@ -84,7 +84,7 @@ internal class DefaultCollectiblesAccountStatusFetcher @Inject constructor(
     }
 
     /**
-     * Whether the vault's `hot_delegate` is this device's key. A failed read changes nothing, and neither does another
+     * Whether the vault's `session_key` is this device's key. A failed read changes nothing, and neither does another
      * key while this device's relink may still land. A missing vault keeps a record, while an account only the
      * backend lists is then no account.
      */
@@ -93,15 +93,15 @@ internal class DefaultCollectiblesAccountStatusFetcher @Inject constructor(
         currentState: CollectiblesAccountStatusValue?,
     ): CollectiblesAccountStatusValue? {
         val accountId = AccountId.forCollectiblesAccount(userWallet.walletId)
-        val localDelegate = hotDelegate.getPublicKeyOrNull(accountId)?.base58
-        val vaultDelegate = gachaVaultRepository.getVaultHotDelegate(userWallet).getOrElse { error ->
-            logger.e("Failed to read the collectibles vault delegate of ${userWallet.walletId}: $error")
+        val localSessionKey = sessionKey.getPublicKeyOrNull(accountId)?.base58
+        val vaultSessionKey = gachaVaultRepository.getVaultSessionKey(userWallet).getOrElse { error ->
+            logger.e("Failed to read the collectibles vault session key of ${userWallet.walletId}: $error")
             return currentState
         }
 
         return when {
-            vaultDelegate == null -> currentState ?: CollectiblesAccountStatusValue.NotOnboarded
-            vaultDelegate == localDelegate -> {
+            vaultSessionKey == null -> currentState ?: CollectiblesAccountStatusValue.NotOnboarded
+            vaultSessionKey == localSessionKey -> {
                 collectiblesAccountRepository.clearRelinkPending(userWallet.walletId)
                 CollectiblesAccountStatusValue.Onboarded(
                     source = StatusSource.ACTUAL,
