@@ -53,7 +53,7 @@ internal fun PredictionPlaceButton(
     order: OrderSideUM,
     isLoading: Boolean,
     isEnabled: Boolean,
-    onClick: () -> Unit,
+    onClick: (confirmedWith: PlaceButtonStyleUM) -> Unit,
     modifier: Modifier = Modifier,
     style: PlaceButtonStyleUM = PlaceButtonStyleUM.CARD,
     holdResetKey: Int = 0,
@@ -72,7 +72,7 @@ internal fun PredictionPlaceButton(
                 text = text.resolveReference(),
                 isLoading = isLoading,
                 enabled = isEnabled,
-                onConfirm = onClick,
+                onConfirm = { onClick(PlaceButtonStyleUM.HOLD) },
             )
         }
         PlaceButtonStyleUM.CARD -> TangemButton(
@@ -82,7 +82,7 @@ internal fun PredictionPlaceButton(
             iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24),
             text = text,
             isEnabled = isEnabled,
-            onClick = onClick,
+            onClick = { onClick(PlaceButtonStyleUM.CARD) },
         )
         PlaceButtonStyleUM.PLAIN -> TangemButton(
             modifier = modifier.fillMaxWidth(),
@@ -90,7 +90,7 @@ internal fun PredictionPlaceButton(
             isLoading = isLoading,
             text = text,
             isEnabled = isEnabled,
-            onClick = onClick,
+            onClick = { onClick(PlaceButtonStyleUM.PLAIN) },
         )
     }
 }
