@@ -10,24 +10,31 @@ import com.tangem.store.datasource.txhistory.db.dao.HistoryIndexDao
 import com.tangem.store.datasource.txhistory.db.entity.HistoryIndexEntity
 import com.tangem.store.datasource.txhistory.db.entity.express.ExpressExchangeEntity
 import com.tangem.store.datasource.txhistory.db.entity.express.ExpressOnrampEntity
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
+import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.express.models.ExpressExchangeStatus
 import com.tangem.domain.express.models.ExpressOnrampStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.model.ExpressTx
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.yield.supply.YieldModuleAddressProvider
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.CapturingSlot
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.joda.time.DateTime
@@ -50,7 +57,10 @@ internal class RefactoredTxHistoryRepositoryTest {
     private val historyIndexDao: HistoryIndexDao = mockk()
     private val expressTransactionAssetFactory: ExpressTransactionAssetFactory = mockk()
     private val cacheRegistry: CacheRegistry = mockk()
+    private val yieldModuleAddressProvider: YieldModuleAddressProvider = mockk()
     private val currency: CryptoCurrency = mockk(relaxed = true)
+    private val token = MockCryptoCurrencyFactory().createToken(Blockchain.Polygon)
+    private val coin = MockCryptoCurrencyFactory().createCoin(Blockchain.Polygon)
 
     private val repository = RefactoredTxHistoryRepository(
         walletManagersFacade = walletManagersFacade,
@@ -60,12 +70,19 @@ internal class RefactoredTxHistoryRepositoryTest {
         expressTransactionAssetFactory = expressTransactionAssetFactory,
         expressTxByIdFactory = ExpressTxByIdFactory(expressTransactionAssetFactory),
         cacheRegistry = cacheRegistry,
+        watchedAddresses = ExpressWatchedAddresses(walletManagersFacade, yieldModuleAddressProvider),
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(walletManagersFacade, expressHistoryDao, historyIndexDao, expressTransactionAssetFactory)
+        clearMocks(
+            walletManagersFacade,
+            expressHistoryDao,
+            historyIndexDao,
+            expressTransactionAssetFactory,
+            yieldModuleAddressProvider,
+        )
         coEvery { walletManagersFacade.getAddresses(any(), any()) } returns setOf(defaultAddress())
         coEvery { walletManagersFacade.usedDynamicAddresses(any(), any()) } returns null
         coEvery { expressTransactionAssetFactory.create(any(), any(), any(), any(), any()) } returns emptyMap()
@@ -260,7 +277,92 @@ internal class RefactoredTxHistoryRepositoryTest {
             // Assert
             assertThat(addresses.captured).containsExactly(DYNAMIC_ADDRESS)
         }
+
+        @Test
+        fun `GIVEN a token WHEN getExpressHistory THEN its yield module is queried along with the wallet`() = runTest {
+            // Arrange
+            val addresses = stubQueriesCapturingAddresses()
+            coEvery { yieldModuleAddressProvider.getOrFetch(USER_WALLET_ID, token.network) } returns YIELD_MODULE
+
+            // Act
+            repository.getExpressHistory(USER_WALLET_ID, token, NO_LOWER_BOUND).last()
+
+            // Assert
+            assertThat(addresses.captured).containsExactly(ADDRESS, YIELD_MODULE)
+        }
+
+        @Test
+        fun `GIVEN the yield module is still resolving WHEN getExpressHistory THEN the wallet history is emitted`() =
+            runTest {
+                // Arrange
+                val addresses = stubQueriesCapturingAddresses()
+                coEvery { yieldModuleAddressProvider.getOrFetch(USER_WALLET_ID, token.network) } coAnswers {
+                    awaitCancellation()
+                }
+
+                // Act
+                repository.getExpressHistory(USER_WALLET_ID, token, NO_LOWER_BOUND).first()
+
+                // Assert
+                assertThat(addresses.captured).containsExactly(ADDRESS)
+            }
+
+        @Test
+        fun `GIVEN a token WHEN getIndexedExpressHistory THEN the index page spans its yield module`() = runTest {
+            // Arrange
+            stubQueries()
+            coEvery { yieldModuleAddressProvider.getOrFetch(USER_WALLET_ID, token.network) } returns YIELD_MODULE
+            val addresses = slot<List<String>>()
+            every {
+                historyIndexDao.observePage(capture(addresses), any<HistoryIndexDao.Cursor>(), any())
+            } returns flowOf(emptyList())
+
+            // Act
+            repository.getIndexedExpressHistory(USER_WALLET_ID, token, limit = 50).last()
+
+            // Assert
+            assertThat(addresses.captured).containsExactly(ADDRESS, YIELD_MODULE)
+            coVerify(exactly = 1) { yieldModuleAddressProvider.getOrFetch(USER_WALLET_ID, token.network) }
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN the yield module is unavailable WHEN getExpressHistory THEN only the wallet is queried`(
+            model: UnavailableYieldModuleModel,
+        ) = runTest {
+            // Arrange
+            val addresses = stubQueriesCapturingAddresses()
+            coEvery { yieldModuleAddressProvider.getOrFetch(USER_WALLET_ID, token.network) } answers {
+                model.error?.let { throw it }
+                null
+            }
+
+            // Act
+            repository.getExpressHistory(USER_WALLET_ID, token, NO_LOWER_BOUND).first()
+
+            // Assert
+            assertThat(addresses.captured).containsExactly(ADDRESS)
+        }
+
+        private fun provideTestModels() = listOf(
+            UnavailableYieldModuleModel(error = null),
+            UnavailableYieldModuleModel(error = IllegalStateException("Wallet manager not found")),
+        )
+
+        @Test
+        fun `GIVEN a coin WHEN getExpressHistory THEN no yield module is looked up`() = runTest {
+            // Arrange
+            stubQueriesCapturingAddresses()
+
+            // Act
+            repository.getExpressHistory(USER_WALLET_ID, coin, NO_LOWER_BOUND).first()
+
+            // Assert
+            coVerify(exactly = 0) { yieldModuleAddressProvider.getOrFetch(any(), any()) }
+        }
     }
+
+    data class UnavailableYieldModuleModel(val error: Throwable?)
 
     /** Stubs the three express queries and captures the status each of them leaves out. */
     private fun stubQueriesCapturingExcludedStatus(): MutableList<String?> {
@@ -305,12 +407,61 @@ internal class RefactoredTxHistoryRepositoryTest {
                 every { expressHistoryDao.observeOnrampById(TX_ID) } returns flowOf(null)
 
                 // Act
-                val result = repository.getExpressTxById(USER_WALLET_ID, currency, TX_ID).first()
+                val result = repository.getExpressTxById(USER_WALLET_ID, coin, TX_ID).first()
 
                 // Assert
                 assertThat(result).isInstanceOf(ExpressTx.Swap::class.java)
                 assertThat((result as ExpressTx.Swap).isOutgoing).isTrue()
             }
+
+        @Test
+        fun `GIVEN a swap row from the yield module WHEN getExpressTxById THEN it converts to an outgoing swap`() =
+            runTest {
+                // Arrange
+                coEvery { yieldModuleAddressProvider.getOrFetch(USER_WALLET_ID, token.network) } returns YIELD_MODULE
+                every { expressHistoryDao.observeExchangeById(TX_ID) } returns
+                    flowOf(createExchangeEntity(fromAddress = YIELD_MODULE, fromAsset = ExpressAsset.ID(token)))
+                every { expressHistoryDao.observeOnrampById(TX_ID) } returns flowOf(null)
+
+                // Act
+                val result = repository.getExpressTxById(USER_WALLET_ID, token, TX_ID).first()
+
+                // Assert
+                assertThat((result as ExpressTx.Swap).isOutgoing).isTrue()
+            }
+
+        @Test
+        fun `GIVEN a token swap row from this address WHEN getExpressTxById THEN the yield module is not resolved`() =
+            runTest {
+                // Arrange
+                every { expressHistoryDao.observeExchangeById(TX_ID) } returns
+                    flowOf(createExchangeEntity(fromAddress = ADDRESS, fromAsset = ExpressAsset.ID(token)))
+                every { expressHistoryDao.observeOnrampById(TX_ID) } returns flowOf(null)
+
+                // Act
+                val result = repository.getExpressTxById(USER_WALLET_ID, token, TX_ID).first()
+
+                // Assert
+                assertThat((result as ExpressTx.Swap).isOutgoing).isTrue()
+                coVerify(exactly = 0) { yieldModuleAddressProvider.getOrFetch(any(), any()) }
+            }
+
+        @Test
+        fun `GIVEN a swap row with the contract in other casing WHEN getExpressTxById THEN it is outgoing`() = runTest {
+            // Arrange
+            val tokenAsset = ExpressAsset.ID(token)
+            val recasedAsset = tokenAsset.copy(contractAddress = tokenAsset.contractAddress.uppercase())
+            coEvery { yieldModuleAddressProvider.getOrFetch(USER_WALLET_ID, token.network) } returns null
+            every { expressHistoryDao.observeExchangeById(TX_ID) } returns
+                flowOf(createExchangeEntity(fromAddress = ADDRESS, fromAsset = recasedAsset))
+            every { expressHistoryDao.observeOnrampById(TX_ID) } returns flowOf(null)
+
+            // Act
+            val result = repository.getExpressTxById(USER_WALLET_ID, token, TX_ID).first()
+
+            // Assert
+            assertThat((result as ExpressTx.Swap).isOutgoing).isTrue()
+        }
 
         @Test
         fun `GIVEN a swap row from another address WHEN getExpressTxById THEN it converts to an incoming swap`() =
@@ -321,7 +472,22 @@ internal class RefactoredTxHistoryRepositoryTest {
                 every { expressHistoryDao.observeOnrampById(TX_ID) } returns flowOf(null)
 
                 // Act
-                val result = repository.getExpressTxById(USER_WALLET_ID, currency, TX_ID).first()
+                val result = repository.getExpressTxById(USER_WALLET_ID, coin, TX_ID).first()
+
+                // Assert
+                assertThat((result as ExpressTx.Swap).isOutgoing).isFalse()
+            }
+
+        @Test
+        fun `GIVEN a swap row from this address paid in another asset WHEN getExpressTxById THEN it is incoming`() =
+            runTest {
+                // Arrange
+                every { expressHistoryDao.observeExchangeById(TX_ID) } returns
+                    flowOf(createExchangeEntity(fromAddress = ADDRESS, fromAsset = ExpressAsset.ID(token)))
+                every { expressHistoryDao.observeOnrampById(TX_ID) } returns flowOf(null)
+
+                // Act
+                val result = repository.getExpressTxById(USER_WALLET_ID, coin, TX_ID).first()
 
                 // Assert
                 assertThat((result as ExpressTx.Swap).isOutgoing).isFalse()
@@ -354,7 +520,10 @@ internal class RefactoredTxHistoryRepositoryTest {
         }
     }
 
-    private fun createExchangeEntity(fromAddress: String) = ExpressExchangeEntity(
+    private fun createExchangeEntity(
+        fromAddress: String,
+        fromAsset: ExpressAsset.ID = ExpressAsset.ID(coin),
+    ) = ExpressExchangeEntity(
         txId = TX_ID,
         providerId = "provider",
         fromAddress = fromAddress,
@@ -376,8 +545,8 @@ internal class RefactoredTxHistoryRepositoryTest {
         payTill = null,
         averageDuration = null,
         from = ExpressExchangeEntity.AssetEmbedded(
-            contractAddress = "",
-            network = "ethereum",
+            contractAddress = fromAsset.contractAddress,
+            network = fromAsset.networkId,
             decimals = 18,
             amount = "1000000000000000000",
             actualAmount = null,
@@ -447,6 +616,7 @@ internal class RefactoredTxHistoryRepositoryTest {
         const val ADDRESS = "addr"
         const val LEGACY_ADDRESS = "addr-legacy"
         const val DYNAMIC_ADDRESS = "addr-dynamic"
+        const val YIELD_MODULE = "addr-yield-module"
         const val NO_LOWER_BOUND = 0L
         const val EPOCH_ISO = "1970-01-01T00:00:00.000Z"
         const val TX_ID = "tx-1"

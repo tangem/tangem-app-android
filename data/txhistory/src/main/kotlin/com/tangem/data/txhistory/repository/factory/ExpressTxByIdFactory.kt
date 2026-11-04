@@ -49,7 +49,7 @@ internal class ExpressTxByIdFactory @Inject constructor(
                 val input = ExpressSwapConverter.Input(
                     entity = exchange,
                     provider = exchange.providerId.expressProvider(),
-                    isOutgoing = outgoingAddresses.any { it.equals(exchange.fromAddress, ignoreCase = true) },
+                    isOutgoing = exchange.isPaidFrom(currency, outgoingAddresses),
                     fromCurrency = currencies[exchange.fromLegKey()],
                     toCurrency = currencies[exchange.toLegKey()],
                     refundCurrency = exchange.refundLegKey()?.let { currencies[it] },
@@ -76,6 +76,14 @@ internal class ExpressTxByIdFactory @Inject constructor(
             else -> null
         }
     }
+
+    /**
+     * Whether the open [currency] paid for this swap, as the outgoing-swaps query decides it: the pay-in asset is the
+     * currency and it left one of its [addresses]. The address alone is not enough, since it is shared by every asset
+     * of the network — a swap between two tokens of one network would read as outgoing from both of them.
+     */
+    private fun ExpressExchangeEntity.isPaidFrom(currency: CryptoCurrency, addresses: List<String>): Boolean =
+        currency.matches(from.toAssetId()) && addresses.any { it.equals(fromAddress, ignoreCase = true) }
 
     /** At most one of [exchange] / [onramp] is non-null: the two tables' ids are disjoint. */
     data class Sources(

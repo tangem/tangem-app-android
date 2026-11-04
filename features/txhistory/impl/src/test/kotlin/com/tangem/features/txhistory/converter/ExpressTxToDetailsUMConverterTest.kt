@@ -438,6 +438,32 @@ internal class ExpressTxToDetailsUMConverterTest : TxDetailsConverterTestBase() 
     }
 
     @Test
+    fun `GIVEN incoming express swap matched to its own pay-in tx WHEN convert THEN network-fee row from leg`() {
+        // Arrange
+        val leg = onChain(
+            type = TransactionType.Swap,
+            fee = SdkAmount(currencySymbol = "ETH", value = BigDecimal("0.0005"), decimals = 18),
+        )
+
+        // Act
+        val result = converter.convert(
+            expressSwap(
+                status = ExpressExchangeStatus.Finished,
+                isOutgoing = false,
+                txInfo = leg,
+                fromCurrency = currency,
+                payinHash = TX_HASH.uppercase(),
+            ),
+        )
+
+        // Assert
+        assertThat(result.rows.map { it.label }).containsExactly(
+            resourceReference(R.string.common_rate),
+            resourceReference(R.string.common_network_fee_title),
+        ).inOrder()
+    }
+
+    @Test
     fun `GIVEN express onramp with matched on-chain leg WHEN convert THEN no network-fee row`() {
         // Arrange — an onramp always matches its payout leg, sent and paid for by the provider.
         val leg = onChain(

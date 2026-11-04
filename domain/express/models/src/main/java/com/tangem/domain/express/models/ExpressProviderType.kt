@@ -32,6 +32,8 @@ enum class ExpressProviderType(val typeName: String) {
         -> false
     }
 
+    fun isDex(): Boolean = this == DEX || this == DEX_BRIDGE
+
     companion object {
         fun getSwapProviderTypes(): List<ExpressProviderType> {
             return listOf(CEX, DEX, DEX_BRIDGE)

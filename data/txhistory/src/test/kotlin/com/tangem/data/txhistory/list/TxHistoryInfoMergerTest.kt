@@ -1,11 +1,14 @@
 package com.tangem.data.txhistory.list
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.express.models.ExchangeTransaction
 import com.tangem.domain.express.models.ExpressAsset.ID as ExpressAssetId
 import com.tangem.domain.express.models.ExpressExchangeStatus
 import com.tangem.domain.express.models.ExpressOnrampStatus
+import com.tangem.domain.express.models.ExpressProvider
+import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.express.models.ExpressTransactionAsset
 import com.tangem.domain.express.models.OnrampTransaction
 import com.tangem.domain.jointaccount.model.FinishedJointOperation
@@ -713,6 +716,159 @@ internal class TxHistoryInfoMergerTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SameTransactionDexPayout {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN incoming swap WHEN merge THEN its pay-in tx is claimed only for a same-network DEX without payout hash`(
+            model: SameTxPayoutModel,
+        ) {
+            // Arrange
+            val onChain = listOf(createTxInfo(txHash = "h1", timestamp = 100, amount = BigDecimal.ZERO))
+            val swap = createIncomingSwap(
+                providerType = model.providerType,
+                fromCurrency = model.fromCurrency,
+                payoutHash = model.payoutHash,
+                externalTxId = model.externalTxId,
+            )
+
+            // Act
+            val result = merge(onChain, listOf(swap), currency = POLYGON_COIN)
+
+            // Assert
+            val expected = if (model.isClaimed) {
+                listOf(swap.copy(txInfo = OnChainTx.BSDK(onChain.single())))
+            } else {
+                listOf(swap, OnChainTx.BSDK(onChain.single()))
+            }
+            assertThat(result).containsExactlyElementsIn(expected)
+        }
+
+        private fun provideTestModels() = listOf(
+            SameTxPayoutModel(providerType = ExpressProviderType.DEX, isClaimed = true),
+            SameTxPayoutModel(providerType = ExpressProviderType.DEX_BRIDGE, isClaimed = true),
+            SameTxPayoutModel(providerType = ExpressProviderType.CEX, isClaimed = false),
+            SameTxPayoutModel(providerType = null, isClaimed = false),
+            SameTxPayoutModel(
+                providerType = ExpressProviderType.DEX_BRIDGE,
+                fromCurrency = FROM_CURRENCY,
+                isClaimed = false,
+            ),
+            SameTxPayoutModel(providerType = ExpressProviderType.DEX, externalTxId = "provider-id", isClaimed = false),
+            SameTxPayoutModel(providerType = ExpressProviderType.DEX, payoutHash = "not-loaded", isClaimed = false),
+        )
+
+        @Test
+        fun `GIVEN failed incoming same-network DEX swap WHEN merge THEN it stays hidden and its pay-in tx passes through`() {
+            // Arrange
+            val onChain = listOf(createTxInfo(txHash = "h1", timestamp = 100, amount = BigDecimal.ZERO))
+            val swap = createIncomingSwap(
+                providerType = ExpressProviderType.DEX,
+                status = ExpressExchangeStatus.TxFailed,
+            )
+
+            // Act
+            val result = merge(onChain, listOf(swap), currency = POLYGON_COIN)
+
+            // Assert
+            assertThat(result).containsExactly(OnChainTx.BSDK(onChain.single()))
+        }
+
+        @Test
+        fun `GIVEN DEX swap paid out in a tx of its own WHEN merge THEN the payout is claimed and the pay-in passes through`() {
+            // Arrange
+            val payIn = createTxInfo(txHash = "h1", timestamp = 100, amount = BigDecimal.ZERO)
+            val payout = createTxInfo(
+                txHash = "h2",
+                timestamp = 200,
+                isOutgoing = false,
+                sourceAddress = "provider",
+                destinationAddress = "payoutAddr",
+                amount = BigDecimal("10.7"),
+            )
+            val swap = createIncomingSwap(providerType = ExpressProviderType.DEX)
+
+            // Act
+            val result = merge(onChain = listOf(payIn, payout), express = listOf(swap), currency = POLYGON_COIN)
+
+            // Assert
+            assertThat(result).containsExactly(
+                swap.copy(txInfo = OnChainTx.BSDK(payout)),
+                OnChainTx.BSDK(payIn),
+            ).inOrder()
+        }
+
+        @Test
+        fun `GIVEN pay-in hash holding the call and the credit WHEN merge THEN the incoming credit is claimed`() {
+            // Arrange
+            val call = createTxInfo(txHash = "h1", timestamp = 100, amount = BigDecimal.ZERO)
+            val credit = createTxInfo(
+                txHash = "h1",
+                timestamp = 100,
+                isOutgoing = false,
+                type = TxInfo.TransactionType.Swap,
+            )
+            val swap = createIncomingSwap(providerType = ExpressProviderType.DEX)
+
+            // Act
+            val result = merge(onChain = listOf(call, credit), express = listOf(swap), currency = POLYGON_COIN)
+
+            // Assert
+            assertThat(result).containsExactly(
+                swap.copy(txInfo = OnChainTx.BSDK(credit)),
+                OnChainTx.BSDK(call),
+            ).inOrder()
+        }
+
+        @Test
+        fun `GIVEN incoming same-network DEX swap with payout hash WHEN merge THEN the payout tx is claimed`() {
+            // Arrange
+            val payIn = createTxInfo(txHash = "h1", timestamp = 100, amount = BigDecimal.ZERO)
+            val payout = createTxInfo(txHash = "h2", timestamp = 200, isOutgoing = false)
+            val swap = createIncomingSwap(providerType = ExpressProviderType.DEX, payoutHash = "h2")
+
+            // Act
+            val result = merge(onChain = listOf(payIn, payout), express = listOf(swap), currency = POLYGON_COIN)
+
+            // Assert
+            assertThat(result).containsExactly(
+                swap.copy(txInfo = OnChainTx.BSDK(payout)),
+                OnChainTx.BSDK(payIn),
+            ).inOrder()
+        }
+
+        private fun createIncomingSwap(
+            providerType: ExpressProviderType?,
+            fromCurrency: CryptoCurrency = POLYGON_TOKEN,
+            status: ExpressExchangeStatus = ExpressExchangeStatus.Finished,
+            payoutHash: String? = null,
+            externalTxId: String? = null,
+        ) = createSwap(
+            matchHash = null,
+            status = status,
+            isOutgoing = false,
+            fromCurrency = fromCurrency,
+            toCurrency = POLYGON_COIN,
+            toAmount = BigDecimal("10.7"),
+            payinHash = "h1",
+            payoutHash = payoutHash,
+            provider = providerType?.let(::createProvider),
+            externalTxId = externalTxId,
+        )
+
+        private fun createProvider(type: ExpressProviderType) = ExpressProvider(
+            providerId = "provider",
+            name = "Provider",
+            type = type,
+            imageLarge = "",
+            termsOfUse = null,
+            privacyPolicy = null,
+            slippage = null,
+        )
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class JointOperations {
 
         @Test
@@ -793,6 +949,14 @@ internal class TxHistoryInfoMergerTest {
     }
 
     internal data class HashCaseModel(val onChainHash: String, val expressHash: String)
+
+    internal data class SameTxPayoutModel(
+        val providerType: ExpressProviderType?,
+        val isClaimed: Boolean,
+        val fromCurrency: CryptoCurrency = POLYGON_TOKEN,
+        val externalTxId: String? = null,
+        val payoutHash: String? = null,
+    )
 
     private fun merge(
         onChain: List<TxInfo>,
@@ -880,14 +1044,18 @@ internal class TxHistoryInfoMergerTest {
         toActualAmount: BigDecimal? = null,
         fromCurrency: CryptoCurrency = FROM_CURRENCY,
         toCurrency: CryptoCurrency = TO_CURRENCY,
+        payinHash: String? = matchHash.takeIf { isOutgoing },
+        payoutHash: String? = matchHash.takeUnless { isOutgoing },
+        provider: ExpressProvider? = null,
+        externalTxId: String? = null,
     ) = ExpressTx.Swap(
         tx = ExchangeTransaction(
             txId = "tx-1",
             status = status,
             createdAtMillis = createdAtMillis,
-            provider = null,
-            payinHash = matchHash.takeIf { isOutgoing },
-            payoutHash = matchHash.takeUnless { isOutgoing },
+            provider = provider,
+            payinHash = payinHash,
+            payoutHash = payoutHash,
             fromAddress = fromAddress,
             payoutAddress = payoutAddress,
             fromAsset = ExpressTransactionAsset(
@@ -901,7 +1069,7 @@ internal class TxHistoryInfoMergerTest {
                 decimals = 8,
             ),
             externalTxUrl = null,
-            externalTxId = null,
+            externalTxId = externalTxId,
             payinAddress = payinAddress,
             updatedAtMillis = updatedAtMillis,
             refundAssetId = null,
@@ -966,5 +1134,9 @@ internal class TxHistoryInfoMergerTest {
 
         /** UTXO chain, used to exercise the pay-in dust tolerance. */
         val UTXO_CURRENCY: CryptoCurrency = currencyFactory.bitcoin
+
+        val POLYGON_TOKEN: CryptoCurrency = currencyFactory.createToken(Blockchain.Polygon)
+
+        val POLYGON_COIN: CryptoCurrency = currencyFactory.createCoin(Blockchain.Polygon)
     }
 }
