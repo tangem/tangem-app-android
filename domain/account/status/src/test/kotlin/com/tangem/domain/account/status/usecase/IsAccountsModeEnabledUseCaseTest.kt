@@ -3,8 +3,10 @@ package com.tangem.domain.account.status.usecase
 import com.google.common.truth.Truth
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.CollectiblesAccountStatusValue
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
@@ -14,6 +16,7 @@ import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -28,10 +31,11 @@ class IsAccountsModeEnabledUseCaseTest {
 
     private val multiAccountListSupplier: MultiAccountListSupplier = mockk()
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
+    private val collectiblesAccountStatusSupplier: CollectiblesAccountStatusSupplier = mockk()
 
     @AfterEach
     fun tearDown() {
-        clearMocks(multiAccountListSupplier, paymentAccountStatusSupplier)
+        clearMocks(multiAccountListSupplier, paymentAccountStatusSupplier, collectiblesAccountStatusSupplier)
     }
 
     @Nested
@@ -145,6 +149,36 @@ class IsAccountsModeEnabledUseCaseTest {
         }
 
         @Test
+        fun `GIVEN a shown collectibles account next to the main one WHEN invoke THEN returns true`() = runTest {
+            // Arrange
+            val list = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio(), mockCollectiblesAccount()))
+            every { multiAccountListSupplier.invoke() } returns MutableStateFlow(listOf(list))
+            every { collectiblesAccountStatusSupplier.invoke(WALLET_ID_1) } returns
+                MutableStateFlow(CollectiblesAccountStatusValue.Loading)
+
+            // Act
+            val actual = settledValue(createUseCase())
+
+            // Assert
+            Truth.assertThat(actual).isTrue()
+        }
+
+        @Test
+        fun `GIVEN a collectibles record without a vault WHEN invoke THEN returns false`() = runTest {
+            // Arrange
+            val list = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio(), mockCollectiblesAccount()))
+            every { multiAccountListSupplier.invoke() } returns MutableStateFlow(listOf(list))
+            every { collectiblesAccountStatusSupplier.invoke(WALLET_ID_1) } returns
+                MutableStateFlow(CollectiblesAccountStatusValue.NotOnboarded)
+
+            // Act
+            val actual = settledValue(createUseCase())
+
+            // Assert
+            Truth.assertThat(actual).isFalse()
+        }
+
+        @Test
         fun `returns true when multiple wallets and one has two crypto portfolios`() = runTest {
             val list1 = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio()))
             val list2 = createAccountList(WALLET_ID_2, listOf(mockCryptoPortfolio(), mockCryptoPortfolio()))
@@ -208,12 +242,28 @@ class IsAccountsModeEnabledUseCaseTest {
 
             Truth.assertThat(actual).isFalse()
         }
+
+        @Test
+        fun `GIVEN a collectibles status not emitted yet WHEN invokeSync on a cold flow THEN returns true`() = runTest {
+            // Arrange
+            val list = createAccountList(WALLET_ID_1, listOf(mockCryptoPortfolio(), mockCollectiblesAccount()))
+            every { multiAccountListSupplier.invoke() } returns MutableStateFlow(listOf(list))
+            every { collectiblesAccountStatusSupplier.invoke(WALLET_ID_1) } returns
+                MutableSharedFlow<CollectiblesAccountStatusValue>()
+
+            // Act
+            val actual = createUseCase().invokeSync()
+
+            // Assert
+            Truth.assertThat(actual).isTrue()
+        }
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun TestScope.createUseCase(): IsAccountsModeEnabledUseCase = IsAccountsModeEnabledUseCase(
         multiAccountListSupplier = multiAccountListSupplier,
         paymentAccountStatusSupplier = paymentAccountStatusSupplier,
+        collectiblesAccountStatusSupplier = collectiblesAccountStatusSupplier,
         appCoroutineScope = TestAppCoroutineScope(
             backgroundScope.coroutineContext + UnconfinedTestDispatcher(testScheduler),
         ),
@@ -239,6 +289,8 @@ class IsAccountsModeEnabledUseCaseTest {
     private fun mockCryptoPortfolio(): Account.CryptoPortfolio = mockk()
 
     private fun mockPaymentAccount(): Account.Payment = mockk()
+
+    private fun mockCollectiblesAccount(): Account.Collectibles = mockk()
 
     private fun mockPaymentStatus(walletId: UserWalletId, value: PaymentAccountStatusValue) {
         val status = mockk<AccountStatus.Payment> { every { this@mockk.value } returns value }
