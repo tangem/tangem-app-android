@@ -1807,6 +1807,8 @@ internal class PolymarketMainModelTest {
             predictionFundingWindow = fundingWindow,
             observePolymarketCredentialsPresenceUseCase = observeCredentialsPresence,
             getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
+            observePolymarketSportsStateUseCase = mockk(),
+            polymarketFeatureToggles = mockk { every { isPolymarketPhaseTwoEnabled } returns false },
         ).also { model = it }
     }
 
