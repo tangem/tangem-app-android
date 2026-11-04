@@ -6,7 +6,9 @@ import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import androidx.compose.ui.test.swipeDown
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.ModalStatusTestTags
+import com.tangem.core.res.R
 import com.tangem.core.ui.test.MoneyAccountTestTags
+import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
@@ -51,6 +53,11 @@ class MoneyAccountPageObject(private val semanticsProvider: SemanticsNodeInterac
     val sendButton: KNode = child {
         hasClickAction()
         hasAnyAncestor(withTestTag(MoneyAccountTestTags.SEND_BUTTON))
+    }
+
+    val balanceUnavailableBanner: KNode = child {
+        hasText(getResourceString(R.string.money_account_balance_unavailable_title))
+        useUnmergedTree = true
     }
 
     // A real tap lands on the Markets sheet once the row sits under it at the bottom of Main.
