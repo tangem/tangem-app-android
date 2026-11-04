@@ -277,17 +277,15 @@ internal class DefaultYieldSupplyTransactionRepository(
         wrapWithUpgradeIfNeeded(walletManager, callData)
     }
 
-    override suspend fun getYieldModuleVersionStatus(
-        userWalletId: UserWalletId,
-        network: Network,
-    ): YieldModuleVersionStatus = withContext(dispatchers.io) {
-        val walletManager = walletManagersFacade.getOrCreateWalletManager(
-            userWalletId = userWalletId,
-            blockchain = network.toBlockchain(),
-            derivationPath = network.derivationPath.value,
-        ) ?: error("Wallet manager not found for $network")
-        walletManager.checkModuleVersionStatus()
-    }
+    override suspend fun supportsEnterWithAmount(userWalletId: UserWalletId, network: Network): Boolean =
+        withContext(dispatchers.io) {
+            val walletManager = walletManagersFacade.getOrCreateWalletManager(
+                userWalletId = userWalletId,
+                blockchain = network.toBlockchain(),
+                derivationPath = network.derivationPath.value,
+            ) ?: error("Wallet manager not found for $network")
+            walletManager.isAtLeastV2(walletManager.checkModuleVersionStatus())
+        }
 
     override suspend fun createPartialWithdrawCallData(
         userWalletId: UserWalletId,
@@ -304,7 +302,12 @@ internal class DefaultYieldSupplyTransactionRepository(
             tokenContractAddress = cryptoCurrency.contractAddress,
             amount = amount,
         )
-        wrapWithUpgradeIfNeeded(walletManager, withdrawCallData)
+        val versionStatus = walletManager.checkModuleVersionStatus()
+        // `withdraw(token, amount)` came with V2, so a V2 module the factory can't upgrade takes it as is
+        if (versionStatus is YieldModuleVersionStatus.UpgradeUnavailable && walletManager.isAtLeastV2(versionStatus)) {
+            return@withContext withdrawCallData
+        }
+        YieldSupplyContractCallDataProviderFactory.wrapWithUpgradeIfNeeded(versionStatus, withdrawCallData)
     }
 
     private suspend fun wrapWithUpgradeIfNeeded(
