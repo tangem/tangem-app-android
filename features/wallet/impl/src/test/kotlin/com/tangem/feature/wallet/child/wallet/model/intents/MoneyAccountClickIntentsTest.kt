@@ -7,8 +7,11 @@ import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.message.ModalMessage
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.clearMocks
+import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
@@ -51,6 +54,30 @@ internal class MoneyAccountClickIntentsTest {
         assertThat(event.captured.id).isEqualTo("[Basic] Request Support")
         assertThat(event.captured.params).isEqualTo(mapOf("Source" to "Tangem Pay"))
     }
+
+    @Test
+    fun `GIVEN failed money account modal WHEN contact support clicked THEN money account support email sent`() =
+        runTest {
+            // Arrange
+            val message = slot<UiMessage>()
+            createImplementor(scope = this).onMoneyAccountFailedClicked(userWalletId = userWalletId, customerId = "id")
+            verify(exactly = 1) { uiMessageSender.send(capture(message)) }
+            val contactSupportButton = (message.captured as ModalMessage).messageModalUM.buttons.single()
+
+            // Act
+            contactSupportButton.onClick { }
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) {
+                sendFeedbackEmailUseCase(
+                    type = FeedbackEmailType.Visa.MoneyAccountRequest(
+                        walletMetaInfo = WalletMetaInfo(userWalletId = userWalletId),
+                        customerId = "id",
+                    ),
+                )
+            }
+        }
 
     @Test
     fun `GIVEN failed money account WHEN clicked THEN support analytics not sent until button clicked`() = runTest {
