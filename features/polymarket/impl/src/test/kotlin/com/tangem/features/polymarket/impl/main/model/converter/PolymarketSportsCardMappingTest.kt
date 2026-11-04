@@ -73,7 +73,7 @@ internal class PolymarketSportsCardMappingTest {
             ))),
         ).copy(gameId = "11", teams = listOf(away, home))
         val game = PolymarketSportsState.Game(
-            gameId = "11", score = PolymarketSportsState.Score(2, 1), period = "Q3", isLive = true, isEnded = false,
+            gameId = "11", score = PolymarketSportsState.Score(1, 2), period = "Q3", isLive = true, isEnded = false,
             home = PolymarketSportsState.Team(home, 1), away = PolymarketSportsState.Team(away, 0), isStale = false,
         )
         val grouped = match.copy(
@@ -104,7 +104,7 @@ internal class PolymarketSportsCardMappingTest {
                 }),
                 game,
             ),
-            Fixture("missing side", match.copy(teams = listOf(away, home.copy(ordering = null))), game),
+            Fixture("missing ordering resolved by domain", match.copy(teams = listOf(away, home.copy(ordering = null))), game, isMoneyline = true),
             Fixture("different game", match.copy(gameId = "22"), game),
         )
         return fixtures.flatMap { fixture ->

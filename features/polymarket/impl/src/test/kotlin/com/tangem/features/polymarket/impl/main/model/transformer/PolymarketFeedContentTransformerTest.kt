@@ -44,7 +44,7 @@ internal class PolymarketFeedContentTransformerTest {
 
     private fun transform(state: PolymarketEventsBatchListState): PolymarketMainUM = PolymarketFeedContentTransformer(
         batchListState = state,
-        eventUMConverter = PolymarketEventUMConverter(onEventClick = {}, onOutcomeClick = { _, _, _ -> }),
+        eventUMConverter = PolymarketEventUMConverter(onEventClick = {}, onOutcomeClick = { _, _, _ -> }, isPhaseTwoEnabled = false),
         onReloadClick = { reloadClicks++ },
         onNextPageRetryClick = { nextPageRetryClicks++ },
     ).transform(prevState = PREV_STATE)
