@@ -234,16 +234,17 @@ internal class PolymarketSportsMergerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = ["CAN", "POST", "INT", "AB"])
-    fun `GIVEN a suspended match WHEN presenting THEN its raw period stays and Live is hidden`(period: String) {
+    @ValueSource(strings = ["CAN", "POST", "INT", "AB", "int", "Post"])
+    fun `GIVEN a suspended live frame and prematch REST WHEN presenting THEN the phase survives with Live hidden`(period: String) {
         // Arrange
-        merger.setEvents(listOf(createSportsEvent()))
+        merger.setEvents(listOf(createSportsEvent(live = false)))
 
         // Act
         merger.update(createSportsScore(period = period))
 
         // Assert
-        assertThat(game()).isEqualTo(expected(1, 0, period).copy(isLive = false))
+        assertThat(game()).isEqualTo(expected(1, 0, period))
+        assertThat(game().shouldShowLiveBadge).isFalse()
     }
 
     @Test
