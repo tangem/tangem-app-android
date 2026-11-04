@@ -53,6 +53,7 @@ import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.B
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.RecentsUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.SwapSectionUM
 import com.tangem.features.tangempay.withdraw.hub.state.TangemPayWithdrawHubUM.TokenRecentsUM
+import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.test.mock.MockAccounts
@@ -95,6 +96,7 @@ internal class TangemPayWithdrawHubModelTest {
     private val moneyAccountStatusSupplier: MoneyAccountStatusSupplier = mockk()
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk()
     private val moneyAccountStatusFetcher: MoneyAccountStatusFetcher = mockk()
+    private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter = mockk(relaxUnitFun = true)
     private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
@@ -125,6 +127,7 @@ internal class TangemPayWithdrawHubModelTest {
             moneyAccountStatusSupplier,
             paymentAccountStatusFetcher,
             moneyAccountStatusFetcher,
+            txHistoryContentUpdateEmitter,
             analytics,
         )
         statusFlow.resetReplayCache()
@@ -324,11 +327,12 @@ internal class TangemPayWithdrawHubModelTest {
         // Assert
         coVerify(exactly = testModel.expectedPaymentRefreshes) { paymentAccountStatusFetcher(userWalletId) }
         coVerify(exactly = testModel.expectedMoneyRefreshes) { moneyAccountStatusFetcher(userWalletId) }
+        coVerify(exactly = testModel.expectedHistoryReloads) { txHistoryContentUpdateEmitter.triggerUpdate() }
         model.onDestroy()
     }
 
     @Test
-    fun `GIVEN money account withdraw sent WHEN hub destroyed before the delay THEN status still fetched`() =
+    fun `GIVEN money account withdraw sent WHEN hub destroyed before the delay THEN status and history still fetched`() =
         runTest {
             // Arrange
             val model = createModel(
@@ -345,6 +349,7 @@ internal class TangemPayWithdrawHubModelTest {
 
             // Assert
             coVerify(exactly = 1) { moneyAccountStatusFetcher(userWalletId) }
+            coVerify(exactly = 1) { txHistoryContentUpdateEmitter.triggerUpdate() }
         }
 
     @Test
@@ -875,6 +880,7 @@ internal class TangemPayWithdrawHubModelTest {
         ),
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
         moneyAccountStatusFetcher = moneyAccountStatusFetcher,
+        txHistoryContentUpdateEmitter = txHistoryContentUpdateEmitter,
         analytics = analytics,
     )
 
@@ -884,18 +890,21 @@ internal class TangemPayWithdrawHubModelTest {
             elapsedMillis = 0,
             expectedPaymentRefreshes = 1,
             expectedMoneyRefreshes = 0,
+            expectedHistoryReloads = 0,
         ),
         RefreshModel(
             sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, PRODUCT_INSTANCE_ID),
             elapsedMillis = ON_CHAIN_REFRESH_DELAY_MILLIS - 1,
             expectedPaymentRefreshes = 0,
             expectedMoneyRefreshes = 0,
+            expectedHistoryReloads = 0,
         ),
         RefreshModel(
             sourceAccount = BankWithdrawSourceAccount.Money(userWalletId, PRODUCT_INSTANCE_ID),
             elapsedMillis = ON_CHAIN_REFRESH_DELAY_MILLIS,
             expectedPaymentRefreshes = 0,
             expectedMoneyRefreshes = 1,
+            expectedHistoryReloads = 1,
         ),
     )
 
@@ -904,6 +913,7 @@ internal class TangemPayWithdrawHubModelTest {
         val elapsedMillis: Long,
         val expectedPaymentRefreshes: Int,
         val expectedMoneyRefreshes: Int,
+        val expectedHistoryReloads: Int,
     )
 
     private fun provideTestModels(): List<ProductModel> = listOf(

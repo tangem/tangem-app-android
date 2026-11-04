@@ -48,7 +48,12 @@ sealed interface MoneyAccountActivationState {
 
     data class AwaitingKyc(val kycStatus: CustomerSummary.KycStatus) : MoneyAccountActivationState
 
-    data object Issuing : MoneyAccountActivationState
+    data class Issuing(val step: Step) : MoneyAccountActivationState {
+        enum class Step {
+            ISSUING,
+            AWAITING_DEPOSIT,
+        }
+    }
 
     data class Failed(
         val reason: CustomerSummary.MoneyAccount.Activation.FailureReason,

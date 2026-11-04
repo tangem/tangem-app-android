@@ -2,6 +2,7 @@ package com.tangem.domain.pay.usecase
 
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.MoneyAccountStatusValue
+import com.tangem.domain.models.account.MoneyAccountStatusValue.Onboarding.Activating.Step as ActivatingStep
 import com.tangem.domain.pay.model.CustomerSummary
 import com.tangem.domain.pay.model.MoneyAccountActivationState
 import com.tangem.domain.pay.model.TangemPayCustomerState
@@ -51,12 +52,14 @@ class ResolveMoneyAccountStatusFromSummaryUseCase {
                 )
             }
 
-            MoneyAccountActivationState.Issuing -> {
-                MoneyAccountStatusValue.Onboarding.Activating(
-                    source = StatusSource.ACTUAL,
-                    customerId = summary.customerId,
-                )
-            }
+            is MoneyAccountActivationState.Issuing -> MoneyAccountStatusValue.Onboarding.Activating(
+                source = StatusSource.ACTUAL,
+                customerId = summary.customerId,
+                step = when (state.step) {
+                    MoneyAccountActivationState.Issuing.Step.ISSUING -> ActivatingStep.ISSUING
+                    MoneyAccountActivationState.Issuing.Step.AWAITING_DEPOSIT -> ActivatingStep.AWAITING_DEPOSIT
+                },
+            )
 
             MoneyAccountActivationState.Deactivated,
             MoneyAccountActivationState.Completed,

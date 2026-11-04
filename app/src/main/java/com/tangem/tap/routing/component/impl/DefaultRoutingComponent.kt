@@ -38,6 +38,7 @@ import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.features.hotwallet.HotAccessCodeRequestComponent
 import com.tangem.features.hotwallet.accesscoderequest.proxy.HotWalletPasswordRequesterProxy
+import com.tangem.features.wallet.WalletLinkComponent
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.promobanners.api.swapcashback.CampaignsComponent
 import com.tangem.features.walletconnect.components.WcRoutingComponent
@@ -86,6 +87,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val trackingContextProxy: TrackingContextProxy,
     private val scanFailsComponentFactory: ScanFailsComponent.Factory,
     private val scanFailsRequesterProxy: ScanFailsRequesterProxy,
+    private val walletLinkComponentFactory: WalletLinkComponent.Factory,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val backupServiceProvider: BackupServiceProvider,
@@ -118,6 +120,10 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         scanFailsComponentFactory
             .create(child("scanFailsComponent"), Unit)
     }
+
+    /** Created eagerly: it serves link requests from any feature, including before the first frame is drawn */
+    private val walletLinkComponent: WalletLinkComponent =
+        walletLinkComponentFactory.create(child("walletLinkComponent"), Unit)
 
     private val navigation = navigationProvider.getOrCreateTyped<AppRoute>()
 
@@ -215,6 +221,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             modifier = modifier,
             wcContent = { wcRoutingComponent.Content(it) },
             promoContent = { campaignsComponent.Content(it) },
+            walletLinkContent = { walletLinkComponent.Content(it) },
             hotAccessCodeContent = { hotAccessCodeRequestComponent.Content(it) },
             startupGateContent = { appStartupGateComponent.Content(it) },
             scanFailsContent = { scanFailsComponent.Content(it) },

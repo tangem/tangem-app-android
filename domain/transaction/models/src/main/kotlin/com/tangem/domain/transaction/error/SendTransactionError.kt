@@ -20,6 +20,9 @@ sealed class SendTransactionError {
 
     data object GaslessFeeIncreased : SendTransactionError()
 
+    /** The Solana gasless service did not take the transaction; [SolanaGaslessError.MaybeSent] may still be sent. */
+    data class SolanaGasless(val error: SolanaGaslessError) : SendTransactionError()
+
     fun getAnalyticsDescription(): String {
         return when (this) {
             is DemoCardError -> "DemoCardError"
@@ -31,6 +34,7 @@ sealed class SendTransactionError {
             is TangemSdkError -> "TangemSdkError: code $code"
             is UnknownError -> "UnknownError"
             is GaslessFeeIncreased -> "GaslessFeeIncreased"
+            is SolanaGasless -> "SolanaGasless: ${error::class.simpleName}"
         }
     }
 
