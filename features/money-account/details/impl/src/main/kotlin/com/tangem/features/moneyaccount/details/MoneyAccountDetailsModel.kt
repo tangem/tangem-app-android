@@ -221,9 +221,9 @@ internal class MoneyAccountDetailsModel @Inject constructor(
         }
     }
 
-    suspend fun retryBankCredentials(): Either<VisaApiError, BankCredentials> {
+    suspend fun retryBankCredentials(): Either<VisaApiError, Unit> {
         analytics.send(MoneyAccountAnalyticsEvents.DetailsRetryTapped())
-        return getMoneyAccountBankCredentialsUseCase(params.userWalletId)
+        return getMoneyAccountBankCredentialsUseCase(params.userWalletId).map(::onBankDetailsLoaded)
     }
 
     override fun onBankDetailsLoaded(bankCredentials: BankCredentials) {
