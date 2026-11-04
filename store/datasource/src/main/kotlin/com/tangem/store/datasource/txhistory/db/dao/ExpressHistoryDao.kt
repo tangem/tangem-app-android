@@ -122,6 +122,51 @@ interface ExpressHistoryDao {
         excludedStatus: String? = null,
     ): Flow<List<ExpressOnrampEntity>>
 
+    /**
+     * Ids of the swaps that are still in flight for one asset. The viewed currency can be either leg of a
+     * deal — and both legs of the same one — so the `from` and the `to` side are matched independently and
+     * the result is deduplicated by [ExpressExchangeEntity.txId].
+     *
+     * [activeStatuses] are the non-terminal statuses: a terminal deal expects no further update, so its
+     * status is not worth re-reading from the backend.
+     */
+    @Query(
+        """
+        SELECT DISTINCT tx_id FROM express_exchange
+        WHERE status IN (:activeStatuses)
+          AND (
+            (from_address IN (:addresses) AND from_network = :network AND from_contract_address = :contract)
+            OR (payout_address IN (:addresses) AND to_network = :network AND to_contract_address = :contract)
+          )
+        """,
+    )
+    suspend fun getActiveExchangeIds(
+        addresses: List<String>,
+        network: String,
+        contract: String,
+        activeStatuses: List<String>,
+    ): List<String>
+
+    /**
+     * Ids of the onramps that are still in flight for one asset. Onramp is always incoming, so only the
+     * payout side is matched. See [getActiveExchangeIds] for [activeStatuses].
+     */
+    @Query(
+        """
+        SELECT tx_id FROM express_onramp
+        WHERE status IN (:activeStatuses)
+          AND payout_address IN (:addresses)
+          AND to_network = :network
+          AND to_contract_address = :contract
+        """,
+    )
+    suspend fun getActiveOnrampIds(
+        addresses: List<String>,
+        network: String,
+        contract: String,
+        activeStatuses: List<String>,
+    ): List<String>
+
     /** Swap row for [txId], regardless of address/window; `null` if [txId] is not a swap. */
     @Query("SELECT * FROM express_exchange WHERE tx_id = :txId")
     fun observeExchangeById(txId: String): Flow<ExpressExchangeEntity?>

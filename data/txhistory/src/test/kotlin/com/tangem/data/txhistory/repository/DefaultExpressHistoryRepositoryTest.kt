@@ -26,9 +26,17 @@ import com.tangem.store.datasource.txhistory.db.entity.sync.HistorySyncStateEnti
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.repository.TokenInfoRepository
+import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.blockchain.common.address.Address
+import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.domain.models.wallet.UserWallet
+import arrow.core.Either
+import com.tangem.grow.datasource.express.ExpressUtils
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
@@ -49,6 +57,9 @@ internal class DefaultExpressHistoryRepositoryTest {
     private val historyIndexDao: HistoryIndexDao = mockk(relaxUnitFun = true)
     private val historySyncStateDao: HistorySyncStateDao = mockk(relaxUnitFun = true)
     private val tokenInfoRepository: TokenInfoRepository = mockk(relaxUnitFun = true)
+    private val walletManagersFacade: WalletManagersFacade = mockk()
+    private val expressUtils: ExpressUtils = mockk()
+    private val getUserWalletUseCase: GetUserWalletUseCase = mockk()
 
     private val database: TxHistoryDatabase = mockk()
 
@@ -59,12 +70,25 @@ internal class DefaultExpressHistoryRepositoryTest {
         historyIndexDao = historyIndexDao,
         historySyncStateDao = historySyncStateDao,
         tokenInfoRepository = tokenInfoRepository,
+        walletManagersFacade = walletManagersFacade,
+        expressUtils = expressUtils,
         database = database,
+        getUserWalletUseCase = getUserWalletUseCase,
     )
 
     @BeforeEach
     fun setup() {
-        clearMocks(exchangeApi, onrampApi, expressHistoryDao, historyIndexDao, historySyncStateDao, tokenInfoRepository)
+        clearMocks(
+            exchangeApi,
+            onrampApi,
+            expressHistoryDao,
+            historyIndexDao,
+            historySyncStateDao,
+            tokenInfoRepository,
+            walletManagersFacade,
+            expressUtils,
+            getUserWalletUseCase,
+        )
         // Run the withTransaction block inline so the DAO writes inside it actually happen and can be verified.
         mockkStatic("androidx.room.RoomDatabaseKt")
         val block = slot<suspend () -> Any?>()
@@ -288,6 +312,119 @@ internal class DefaultExpressHistoryRepositoryTest {
 
     // endregion
 
+
+    // region refresh active statuses
+
+    @Test
+    fun `GIVEN active exchange and onramp WHEN refreshActiveStatuses THEN both are re-read and persisted`() = runTest {
+        // Arrange
+        val exchange = createExchangeItem(txId = ACTIVE_EXCHANGE_TX_ID).copy(status = "confirming")
+        val onramp = createOnrampItem(txId = ACTIVE_ONRAMP_TX_ID).copy(status = "sending")
+        stubActiveStatuses(exchangeIds = listOf(ACTIVE_EXCHANGE_TX_ID), onrampIds = listOf(ACTIVE_ONRAMP_TX_ID))
+        stubExchangeStatus(ACTIVE_EXCHANGE_TX_ID, ApiResponse.Success(exchange))
+        stubOnrampStatus(ACTIVE_ONRAMP_TX_ID, ApiResponse.Success(onramp))
+
+        // Act
+        val actual = repository.refreshActiveStatuses(userWalletId = USER_WALLET_ID, currency = CURRENCY)
+
+        // Assert
+        assertThat(actual).isTrue()
+        coVerify(exactly = 1) {
+            exchangeApi.getExchangeStatus(
+                userWalletId = USER_WALLET_ID_VALUE,
+                refCode = REF_CODE,
+                txId = ACTIVE_EXCHANGE_TX_ID,
+            )
+        }
+        coVerify(exactly = 1) {
+            onrampApi.getStatus(
+                userWalletId = USER_WALLET_ID_VALUE,
+                refCode = REF_CODE,
+                txId = ACTIVE_ONRAMP_TX_ID,
+            )
+        }
+        coVerify(exactly = 1) { expressHistoryDao.upsertExchanges(listOfNotNull(exchange.toEntity())) }
+        coVerify(exactly = 1) { expressHistoryDao.upsertOnramps(listOf(onramp.toEntity())) }
+    }
+
+    @Test
+    fun `GIVEN only the asset is queried WHEN refreshActiveStatuses THEN lookup uses its network and contract`() =
+        runTest {
+            // Arrange
+            stubActiveStatuses(exchangeIds = emptyList(), onrampIds = emptyList())
+
+            // Act
+            repository.refreshActiveStatuses(userWalletId = USER_WALLET_ID, currency = CURRENCY)
+
+            // Assert
+            val assetId = ExpressAsset.ID(CURRENCY)
+            coVerify(exactly = 1) {
+                expressHistoryDao.getActiveExchangeIds(
+                    addresses = listOf(ADDRESS),
+                    network = assetId.networkId,
+                    contract = assetId.contractAddress,
+                    activeStatuses = any(),
+                )
+            }
+            coVerify(exactly = 1) {
+                expressHistoryDao.getActiveOnrampIds(
+                    addresses = listOf(ADDRESS),
+                    network = assetId.networkId,
+                    contract = assetId.contractAddress,
+                    activeStatuses = any(),
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN nothing in flight WHEN refreshActiveStatuses THEN no request is sent and returns false`() = runTest {
+        // Arrange
+        stubActiveStatuses(exchangeIds = emptyList(), onrampIds = emptyList())
+
+        // Act
+        val actual = repository.refreshActiveStatuses(userWalletId = USER_WALLET_ID, currency = CURRENCY)
+
+        // Assert
+        assertThat(actual).isFalse()
+        coVerify(exactly = 0) { exchangeApi.getExchangeStatus(any(), any(), any()) }
+        coVerify(exactly = 0) { onrampApi.getStatus(any(), any(), any()) }
+        coVerify(exactly = 0) { getUserWalletUseCase(any()) }
+    }
+
+    @Test
+    fun `GIVEN no address WHEN refreshActiveStatuses THEN nothing is queried and returns false`() = runTest {
+        // Arrange
+        coEvery { walletManagersFacade.getAddresses(USER_WALLET_ID, CURRENCY.network) } returns emptySet()
+        coEvery { walletManagersFacade.usedDynamicAddresses(USER_WALLET_ID, CURRENCY.network) } returns null
+
+        // Act
+        val actual = repository.refreshActiveStatuses(userWalletId = USER_WALLET_ID, currency = CURRENCY)
+
+        // Assert
+        assertThat(actual).isFalse()
+        coVerify(exactly = 0) { expressHistoryDao.getActiveExchangeIds(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { expressHistoryDao.getActiveOnrampIds(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN one status request fails WHEN refreshActiveStatuses THEN the other is still persisted`() = runTest {
+        // Arrange
+        val onramp = createOnrampItem(txId = ACTIVE_ONRAMP_TX_ID).copy(status = "sending")
+        stubActiveStatuses(exchangeIds = listOf(ACTIVE_EXCHANGE_TX_ID), onrampIds = listOf(ACTIVE_ONRAMP_TX_ID))
+        stubExchangeStatus(ACTIVE_EXCHANGE_TX_ID, ApiResponse.Error(httpError()).cast())
+        stubOnrampStatus(ACTIVE_ONRAMP_TX_ID, ApiResponse.Success(onramp))
+
+        // Act
+        val actual = repository.refreshActiveStatuses(userWalletId = USER_WALLET_ID, currency = CURRENCY)
+
+        // Assert
+        assertThat(actual).isTrue()
+        coVerify(exactly = 0) { expressHistoryDao.upsertExchanges(any()) }
+        coVerify(exactly = 1) { expressHistoryDao.upsertOnramps(listOf(onramp.toEntity())) }
+    }
+
+    // endregion
+
     private fun stubSyncState(type: HistorySyncStateEntity.Type, state: HistorySyncStateEntity?) {
         coEvery {
             historySyncStateDao.observe(type = type.name, userWalletId = USER_WALLET_ID_VALUE)
@@ -308,6 +445,33 @@ internal class DefaultExpressHistoryRepositoryTest {
 
     @Suppress("UNCHECKED_CAST")
     private fun <T : Any> ApiResponse.Error.cast(): ApiResponse<T> = this as ApiResponse<T>
+
+
+    private fun stubActiveStatuses(exchangeIds: List<String>, onrampIds: List<String>) {
+        val address: Address = mockk()
+        every { address.value } returns ADDRESS
+        coEvery { walletManagersFacade.getAddresses(USER_WALLET_ID, CURRENCY.network) } returns setOf(address)
+        coEvery { walletManagersFacade.usedDynamicAddresses(USER_WALLET_ID, CURRENCY.network) } returns null
+        coEvery { expressHistoryDao.getActiveExchangeIds(any(), any(), any(), any()) } returns exchangeIds
+        coEvery { expressHistoryDao.getActiveOnrampIds(any(), any(), any(), any()) } returns onrampIds
+
+        val userWallet: UserWallet = mockk()
+        every { userWallet.walletId } returns USER_WALLET_ID
+        every { getUserWalletUseCase(USER_WALLET_ID) } returns Either.Right(userWallet)
+        coEvery { expressUtils.getRefCode(userWallet) } returns REF_CODE
+    }
+
+    private fun stubExchangeStatus(txId: String, response: ApiResponse<ExchangeItemResponse>) {
+        coEvery {
+            exchangeApi.getExchangeStatus(userWalletId = USER_WALLET_ID_VALUE, refCode = REF_CODE, txId = txId)
+        } returns response
+    }
+
+    private fun stubOnrampStatus(txId: String, response: ApiResponse<OnrampItemResponse>) {
+        coEvery {
+            onrampApi.getStatus(userWalletId = USER_WALLET_ID_VALUE, refCode = REF_CODE, txId = txId)
+        } returns response
+    }
 
     private fun httpError() = ApiResponseError.HttpException(
         code = ApiResponseError.HttpException.Code.INTERNAL_SERVER_ERROR,
@@ -376,5 +540,10 @@ internal class DefaultExpressHistoryRepositoryTest {
         const val AFTER_CURSOR = "after-cursor"
         const val DELTA_CURSOR = "delta-cursor"
         const val DEFAULT_LIMIT = 100
+        const val ADDRESS = "0xpayout"
+        const val REF_CODE = "ref-code"
+        const val ACTIVE_EXCHANGE_TX_ID = "active-exchange-tx"
+        const val ACTIVE_ONRAMP_TX_ID = "active-onramp-tx"
+        val CURRENCY = MockCryptoCurrencyFactory().ethereum
     }
 }
