@@ -1154,6 +1154,37 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             // Assert
             coVerify(exactly = 0) { signOrderInteractor(request = any()) }
             assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+            assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+        }
+
+        @Test
+        fun `GIVEN a usable session key WHEN the summary opens THEN the button is plain`() = runTest {
+            // Arrange
+            every { featureToggles.isPolymarketSessionKeysEnabled } returns true
+            coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+            val amountModel = quotedAmountModel()
+
+            // Act
+            val model = createSummaryModel(testScope = this, amountModel = amountModel)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.PLAIN)
+        }
+
+        @Test
+        fun `GIVEN no usable session key WHEN the summary opens THEN the card is asked`() = runTest {
+            // Arrange
+            every { featureToggles.isPolymarketSessionKeysEnabled } returns true
+            coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns false
+            val amountModel = quotedAmountModel()
+
+            // Act
+            val model = createSummaryModel(testScope = this, amountModel = amountModel)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
         }
 
         private fun TestScope.quotedAmountModel(): PlacePredictionAmountModel {

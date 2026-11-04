@@ -245,7 +245,7 @@ internal abstract class PlacePredictionModelTestBase {
             urlOpener = urlOpener,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             orderSubmitterFactory = createOrderSubmitterFactory(testScope),
-            getUserWalletUseCase = getUserWalletUseCase,
+            buttonStyleFactory = createButtonStyleFactory(testScope.createTestingCoroutineDispatcherProvider()),
         ).also(models::add)
 
     protected fun createOrderSubmitterFactory(
@@ -296,12 +296,27 @@ internal abstract class PlacePredictionModelTestBase {
         dispatchers = dispatchers,
         quoteEngineFactory = createQuoteEngineFactory(dispatchers = dispatchers, router = router),
         orderSubmitterFactory = orderSubmitterFactory,
-        getUserWalletUseCase = getUserWalletUseCase,
-        featureToggles = featureToggles,
-        canSignPredictionOrderWithSessionKeyUseCase = CanSignPredictionOrderWithSessionKeyUseCase(
-            router = signingRouter,
-        ),
+        buttonStyleFactory = createButtonStyleFactory(dispatchers = dispatchers),
     ).also(models::add)
+
+    private fun createButtonStyleFactory(dispatchers: CoroutineDispatcherProvider) =
+        object : PlacePredictionButtonStyle.Factory {
+            override fun create(
+                userWalletId: UserWalletId,
+                uiState: MutableStateFlow<PlacePredictionUM>,
+                scope: CoroutineScope,
+            ) = PlacePredictionButtonStyle(
+                userWalletId = userWalletId,
+                uiState = uiState,
+                scope = scope,
+                getUserWalletUseCase = getUserWalletUseCase,
+                featureToggles = featureToggles,
+                canSignPredictionOrderWithSessionKeyUseCase = CanSignPredictionOrderWithSessionKeyUseCase(
+                    router = signingRouter,
+                ),
+                dispatchers = dispatchers,
+            )
+        }
 
     protected fun createStatusModel(
         testScope: TestScope,

@@ -87,6 +87,7 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
         if (uiState.value.submit !is SubmitUM.Idle || !uiState.value.isReadyToPlace) return null
         uiState.update(SetSubmitTransformer(submit = SubmitUM.Signing))
         val preference = confirmedWith.toSigningPreference(featureToggles.isPolymarketSessionKeysEnabled)
+            ?: return onSessionKeyLost(onKeyLost)
         return place(prepared = prepared, preference = preference, onKeyLost = onKeyLost)
     }
 
@@ -151,11 +152,7 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
                     null
                 }
                 is PredictionSubmitOrderError.NotPlaced -> onPlaceError(error = error.error)
-                PredictionSubmitOrderError.SessionKeyUnavailable -> {
-                    onKeyLost()
-                    showPlaceFailure(reason = "The session key could not sign an order confirmed for it")
-                    null
-                }
+                PredictionSubmitOrderError.SessionKeyUnavailable -> onSessionKeyLost(onKeyLost)
             }
         }
 
@@ -172,6 +169,12 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
             quotedAmount = frozen.quote.notional,
             route = submitted.route,
         )
+    }
+
+    private fun onSessionKeyLost(onKeyLost: () -> Unit): PlaceResultUM? {
+        onKeyLost()
+        showPlaceFailure(reason = "The session key could not sign an order confirmed for it")
+        return null
     }
 
     private fun onSubmitStep(step: PredictionOrderSubmitStep) {
@@ -406,8 +409,9 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
     }
 }
 
-private fun PlaceButtonStyleUM.toSigningPreference(isSessionKeysEnabled: Boolean): PredictionOrderSigningPreference =
+private fun PlaceButtonStyleUM.toSigningPreference(isSessionKeysEnabled: Boolean): PredictionOrderSigningPreference? =
     when {
+        this == PlaceButtonStyleUM.PLAIN && !isSessionKeysEnabled -> null
         this == PlaceButtonStyleUM.PLAIN -> PredictionOrderSigningPreference.SESSION_KEY_ONLY
         isSessionKeysEnabled -> PredictionOrderSigningPreference.AUTOMATIC
         else -> PredictionOrderSigningPreference.OWNER_ONLY
