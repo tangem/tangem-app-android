@@ -196,6 +196,7 @@ internal class TxHistoryModel @Inject constructor(
         val trigger = TxHistoryFetchTrigger.TokenDetailsOpen(
             walletId = params.userWalletId,
             currency = params.currency,
+            modelScope = modelScope,
         )
         appTxHistoryFetcher.invoke(trigger)
     }
@@ -221,6 +222,7 @@ internal class TxHistoryModel @Inject constructor(
         val trigger = TxHistoryFetchTrigger.TokenDetailsPTR(
             walletId = params.userWalletId,
             currency = params.currency,
+            modelScope = modelScope,
         )
         appTxHistoryFetcher.invoke(trigger)
     }

@@ -2,17 +2,20 @@ package com.tangem.domain.txhistory.fetcher
 
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import kotlinx.coroutines.CoroutineScope
 
 sealed interface TxHistoryFetchTrigger {
 
     data class TokenDetailsOpen(
         val walletId: UserWalletId,
         val currency: CryptoCurrency,
+        val modelScope: CoroutineScope,
     ) : TxHistoryFetchTrigger, TxHistoryExpressTrigger, TxHistoryJointOperationTrigger
 
     data class TokenDetailsPTR(
         val walletId: UserWalletId,
         val currency: CryptoCurrency,
+        val modelScope: CoroutineScope,
     ) : TxHistoryFetchTrigger, TxHistoryExpressTrigger, TxHistoryJointOperationTrigger
 
     data class WalletSelected(
