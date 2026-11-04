@@ -4,8 +4,11 @@ import androidx.compose.runtime.Immutable
 import com.tangem.features.polymarket.impl.common.PolymarketOutcomeAccent
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.ds2.tabnavigation.TangemTabItemUM
+import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.model.PolymarketCategoryIcon
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * @property categories empty while they load and when the backend could not serve them — the feed is then not
@@ -18,6 +21,9 @@ internal data class PolymarketMainUM(
     val categories: ImmutableList<PolymarketCategoryTabUM>,
     val content: ContentUM,
     val pullToRefreshConfig: PullToRefreshConfig,
+    val filters: ImmutableList<TangemTabItemUM.Content> = persistentListOf(),
+    val selection: PolymarketEventsListConfig? = null,
+    val onSeeAllClick: (() -> Unit)? = null,
     val isCategoriesLoading: Boolean = false,
     val pendingScrollPosition: PolymarketFeedScrollPosition? = null,
     val isAwaitingFunds: Boolean = false,
@@ -60,7 +66,7 @@ internal data class PolymarketFeedScrollPosition(val index: Int, val offset: Int
 @Immutable
 internal data class PolymarketCategoryTabUM(
     val id: Int,
-    val label: String,
+    val label: TextReference,
     val icon: PolymarketCategoryIcon?,
     val isSelected: Boolean,
     val onClick: () -> Unit,

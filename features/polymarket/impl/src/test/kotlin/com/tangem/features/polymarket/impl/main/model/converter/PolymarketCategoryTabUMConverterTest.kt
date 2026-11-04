@@ -1,6 +1,7 @@
 package com.tangem.features.polymarket.impl.main.model.converter
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.domain.polymarket.model.PolymarketCategoryIcon
 import org.junit.jupiter.api.BeforeEach
@@ -27,7 +28,7 @@ internal class PolymarketCategoryTabUMConverterTest {
 
         // Assert
         assertThat(actual.map { it.id to it.label })
-            .containsExactly(1 to "Trending", 2 to "Sport")
+            .containsExactly(1 to stringReference("Trending"), 2 to stringReference("Sport"))
             .inOrder()
     }
 
@@ -83,6 +84,15 @@ internal class PolymarketCategoryTabUMConverterTest {
 
         // Assert
         assertThat(clickedCategories).containsExactly(2)
+    }
+
+    @Test
+    fun `GIVEN subcategory tabs WHEN converted without icons THEN only labels are shown`() {
+        // Act
+        val actual = converter.convert(input(selectedCategoryId = 1).copy(shouldShowIcons = false))
+
+        // Assert
+        assertThat(actual.map { it.icon }).containsExactly(null, null)
     }
 
     private fun input(selectedCategoryId: Int?) = PolymarketCategoryTabUMConverter.Input(

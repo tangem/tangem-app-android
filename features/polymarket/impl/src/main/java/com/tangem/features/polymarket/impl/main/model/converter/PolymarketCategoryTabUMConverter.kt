@@ -1,5 +1,8 @@
 package com.tangem.features.polymarket.impl.main.model.converter
 
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.polymarket.model.PolymarketCategory
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketCategoryTabUM
 import com.tangem.utils.converter.Converter
@@ -19,13 +22,26 @@ internal class PolymarketCategoryTabUMConverter(
         .map { category ->
             PolymarketCategoryTabUM(
                 id = category.id,
-                label = category.label,
-                icon = category.icon,
+                label = stringReference(category.label),
+                icon = category.icon.takeIf { value.shouldShowIcons },
                 isSelected = category.id == value.selectedCategoryId,
                 onClick = { onCategoryClick(category.id) },
             )
         }
         .toImmutableList()
+
+    fun subcategories(parent: PolymarketCategory, selectedId: Int?): ImmutableList<PolymarketCategoryTabUM> {
+        if (parent.subcategories.isEmpty()) return emptyList<PolymarketCategoryTabUM>().toImmutableList()
+        val all = PolymarketCategoryTabUM(
+            id = parent.id,
+            label = resourceReference(R.string.common_all),
+            icon = null,
+            isSelected = selectedId == null,
+            onClick = { onCategoryClick(parent.id) },
+        )
+        val children = convert(Input(parent.subcategories, selectedId, shouldShowIcons = false))
+        return (listOf(all) + children).toImmutableList()
+    }
 
     /**
      * @property categories categories in the order the backend serves them
@@ -34,5 +50,6 @@ internal class PolymarketCategoryTabUMConverter(
     data class Input(
         val categories: List<PolymarketCategory>,
         val selectedCategoryId: Int?,
+        val shouldShowIcons: Boolean = true,
     )
 }
