@@ -301,7 +301,7 @@ document only** (a plain string is rejected).
    the PR's actual diff, not a bare `git diff` (which is empty after the commit/push): use
    `git diff origin/<base>...HEAD` (the branch's changes against the base), or `git show HEAD` for a
    single-commit PR. If the functionality is gated behind a feature toggle (detect a toggle name from
-   the diff — e.g. a new entry in `feature_toggles_config.json` or an `XxxFeatureToggles` usage),
+   the diff — e.g. a new entry in `<stream>/config-toggles/feature_toggles.json` or an `XxxFeatureToggles` usage),
    append `Закрыто тогглом "<название>"`. When appending to an existing value, produce the combined
    final text.
 
