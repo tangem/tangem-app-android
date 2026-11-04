@@ -912,7 +912,11 @@ internal class MoneyAccountDetailsModelTest {
         MoneyAccountStatusValue.Error.Unavailable,
         MoneyAccountStatusValue.Error.ExposedDevice,
         MoneyAccountStatusValue.Empty,
-        MoneyAccountStatusValue.Onboarding.Activating(source = StatusSource.ACTUAL, customerId = CUSTOMER_ID),
+        MoneyAccountStatusValue.Onboarding.Activating(
+            source = StatusSource.ACTUAL,
+            customerId = CUSTOMER_ID,
+            step = MoneyAccountStatusValue.Onboarding.Activating.Step.ISSUING,
+        ),
     )
 
     private fun activeAccount(
