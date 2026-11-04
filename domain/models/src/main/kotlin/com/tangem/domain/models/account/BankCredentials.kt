@@ -17,6 +17,7 @@ data class BankCredentials(
     val transferMessage: String?,
     val depositFee: DepositFee?,
     val depositLimit: DepositLimit?,
+    val exchangeRate: ExchangeRate? = null,
 ) {
     @Serializable
     data class DepositFee(
@@ -32,7 +33,9 @@ data class BankCredentials(
             companion object {
                 fun fromString(value: String) = when (value.uppercase(Locale.US)) {
                     "FLAT" -> FLAT
-                    "PERCENTAGE" -> PERCENTAGE
+                    "PERCENTAGE",
+                    "VARIABLE",
+                    -> PERCENTAGE
                     else -> UNKNOWN
                 }
             }
@@ -57,4 +60,11 @@ data class BankCredentials(
             }
         }
     }
+
+    @Serializable
+    data class ExchangeRate(
+        val rate: SerializedBigDecimal,
+        val base: String,
+        val quote: String,
+    )
 }
