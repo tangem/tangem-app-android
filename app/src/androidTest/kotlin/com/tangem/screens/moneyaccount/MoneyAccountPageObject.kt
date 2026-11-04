@@ -5,6 +5,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import androidx.compose.ui.test.swipeDown
 import com.tangem.common.BaseTestCase
+import com.tangem.core.ui.test.ModalStatusTestTags
 import com.tangem.core.ui.test.MoneyAccountTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
@@ -60,6 +61,11 @@ class MoneyAccountPageObject(private val semanticsProvider: SemanticsNodeInterac
     fun mainRowWithText(text: String): KNode = child {
         hasTestTag(MoneyAccountTestTags.MAIN_ROW)
         hasText(text = text, substring = true)
+    }
+
+    fun modalStatusTitle(title: String): KNode = child {
+        hasTestTag(ModalStatusTestTags.TITLE)
+        hasText(title)
     }
 }
 
