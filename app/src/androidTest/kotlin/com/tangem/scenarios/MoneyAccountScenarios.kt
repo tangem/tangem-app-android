@@ -5,6 +5,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
+import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.screens.VirtualAccountRequisitesBottomSheetPageObject
 import com.tangem.screens.moneyaccount.onMoneyAccountAddFundsSheet
 import com.tangem.screens.moneyaccount.onMoneyAccountScreen
@@ -138,6 +139,26 @@ fun BaseTestCase.waitForMoneyAccountRowWithTextNeverShowing(
         assertFalse("'Money account' row must not show '$forbiddenText'", isForbiddenShown)
         isExpectedShown
     }
+}
+
+fun BaseTestCase.setMoneyAccountWithTwoAccountsScenarios() {
+    val moneyAccountScenario = "tangem_pay_money_account"
+    val moneyAccountActiveState = "AccountActive"
+
+    setTangemPayWithTwoAccountsScenarios()
+    step("Set WireMock scenario '$moneyAccountScenario' to '$moneyAccountActiveState'") {
+        setWireMockScenarioState(moneyAccountScenario, moneyAccountActiveState)
+    }
+}
+
+fun BaseTestCase.openMainWithMoneyAccountAndTwoAccounts() {
+    val activeAccountBalance = "$25.00"
+
+    importPayWalletWithTwoSyncedAccounts()
+    step("Assert 'Money account' row shows '$activeAccountBalance'") {
+        waitForMoneyAccountRowWithText(activeAccountBalance)
+    }
+    step("Close 'Finalize wallet setup' sheet if shown") { closeFinishWalletActivationSheetIfShown() }
 }
 
 private const val DETAILS_OPEN_TIMEOUT_MILLIS = 3_000L
