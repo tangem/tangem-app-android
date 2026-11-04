@@ -1,6 +1,7 @@
 package com.tangem.test.mock.pay
 
 import com.tangem.domain.models.account.BankCredentials
+import java.math.BigDecimal
 
 object MockBankCredentials {
 
@@ -17,6 +18,7 @@ object MockBankCredentials {
         transferMessage: String? = null,
         depositFee: BankCredentials.DepositFee? = null,
         depositLimit: BankCredentials.DepositLimit? = null,
+        exchangeRate: BankCredentials.ExchangeRate? = null,
     ) = BankCredentials(
         type = type,
         beneficiaryName = beneficiaryName,
@@ -29,5 +31,36 @@ object MockBankCredentials {
         transferMessage = transferMessage,
         depositFee = depositFee,
         depositLimit = depositLimit,
+        exchangeRate = exchangeRate,
+    )
+
+    fun speiBankCredentials(
+        accountNumber: String = "646180157000000004",
+        transferMessage: String? = null,
+        depositFee: BankCredentials.DepositFee? = BankCredentials.DepositFee(
+            amount = BigDecimal("1.00"),
+            type = BankCredentials.DepositFee.Type.PERCENTAGE,
+        ),
+        depositLimit: BankCredentials.DepositLimit? = BankCredentials.DepositLimit(
+            amount = BigDecimal("10000"),
+            period = BankCredentials.DepositLimit.Period.DAY,
+        ),
+        exchangeRate: BankCredentials.ExchangeRate? = BankCredentials.ExchangeRate(
+            rate = BigDecimal("18.541575"),
+            base = "USD",
+            quote = "MXN",
+        ),
+    ) = bankCredentials(
+        beneficiaryName = "",
+        beneficiaryAddress = "",
+        beneficiaryBankName = "",
+        beneficiaryBankAddress = "",
+        accountNumber = accountNumber,
+        routingNumber = "",
+        rail = "SPEI",
+        transferMessage = transferMessage,
+        depositFee = depositFee,
+        depositLimit = depositLimit,
+        exchangeRate = exchangeRate,
     )
 }
