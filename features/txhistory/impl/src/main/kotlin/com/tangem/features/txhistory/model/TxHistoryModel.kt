@@ -82,6 +82,7 @@ internal class TxHistoryModel @Inject constructor(
         userWalletId = params.userWalletId,
         currency = params.currency,
         modelScope = modelScope,
+        shouldUseCacheWhenOffline = params.shouldUseCacheWhenOffline,
     )
 
     private val isResumed = MutableStateFlow(false)

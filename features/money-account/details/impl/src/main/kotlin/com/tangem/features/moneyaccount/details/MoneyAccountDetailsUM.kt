@@ -14,6 +14,7 @@ internal data class MoneyAccountDetailsUM(
     val subtitle: TextReference,
     val balance: MoneyAccountBalanceBlockState,
     val isBalanceHidden: Boolean,
+    val isBalanceUnavailable: Boolean,
     val messageBanner: TangemMessageBanner.State?,
     val menuItems: ImmutableList<MoneyAccountMenuItemUM>,
     val onMenuClick: () -> Unit,
@@ -24,6 +25,7 @@ internal data class MoneyAccountDetailsUM(
     val isSendEnabled: Boolean,
     val txHistoryCurrency: CryptoCurrency.Token?,
     val pullToRefreshConfig: PullToRefreshConfig,
+    val onTxHistoryReloadClick: () -> Unit,
 )
 
 @Immutable

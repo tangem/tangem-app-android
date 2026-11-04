@@ -47,6 +47,7 @@ dependencies {
 
     // region Core modules
     api(projects.core.analytics)
+    implementation(projects.core.local)
     implementation(projects.store.datasource)
     implementation(projects.grow.datasource)
     api(projects.core.utils)
