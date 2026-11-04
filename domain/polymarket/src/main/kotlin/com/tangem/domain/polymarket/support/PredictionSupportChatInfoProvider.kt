@@ -4,8 +4,6 @@ import com.tangem.domain.feedback.models.SupportChatInfoProvider
 import com.tangem.domain.models.account.PredictionAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
-import com.tangem.domain.polymarket.flow.PredictionPositionsValueSupplier
-import com.tangem.domain.models.account.PredictionPositionsValue
 import com.tangem.domain.models.account.PredictionTotalBalance
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import kotlinx.coroutines.flow.firstOrNull
@@ -13,16 +11,12 @@ import kotlinx.coroutines.withTimeoutOrNull
 
 class PredictionSupportChatInfoProvider(
     private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
-    private val predictionPositionsValueSupplier: PredictionPositionsValueSupplier,
     private val derivePolymarketAddressesUseCase: DerivePolymarketAddressesUseCase,
 ) : SupportChatInfoProvider {
 
     override suspend fun getInfo(userWalletId: UserWalletId): String {
         val status = withTimeoutOrNull(READ_TIMEOUT_MILLIS) {
             predictionAccountStatusSupplier(userWalletId = userWalletId).firstOrNull()
-        }
-        val positions = withTimeoutOrNull(READ_TIMEOUT_MILLIS) {
-            predictionPositionsValueSupplier(userWalletId = userWalletId).firstOrNull()
         }
         val depositWalletAddress = derivePolymarketAddressesUseCase.stored(userWalletId = userWalletId)
             ?.depositWalletAddress
@@ -32,7 +26,7 @@ class PredictionSupportChatInfoProvider(
             add("Polymarket account state" to describeState(status))
             add("Polymarket deposit wallet address" to depositWalletAddress)
             add("Polymarket available balance" to describeAvailableBalance(status))
-            add("Polymarket total balance" to describeTotalBalance(status, positions))
+            add("Polymarket total balance" to describeTotalBalance(status))
             if (status is PredictionAccountStatusValue.Active) {
                 add("Polymarket bridge deposit address" to (status.depositAddress ?: NOT_LOADED))
             }
@@ -60,12 +54,9 @@ class PredictionSupportChatInfoProvider(
         return active.balance.toPlainString()
     }
 
-    private fun describeTotalBalance(
-        status: PredictionAccountStatusValue?,
-        positions: PredictionPositionsValue?,
-    ): String {
+    private fun describeTotalBalance(status: PredictionAccountStatusValue?): String {
         val active = status as? PredictionAccountStatusValue.Active ?: return NOT_LOADED
-        val total = positions?.let { PredictionTotalBalance.of(status = active, positions = it) }
+        val total = PredictionTotalBalance.of(status = active, positions = active.positions)
             ?: return POSITIONS_UNKNOWN
 
         return "${total.amount.toPlainString()}, source ${total.source}"
