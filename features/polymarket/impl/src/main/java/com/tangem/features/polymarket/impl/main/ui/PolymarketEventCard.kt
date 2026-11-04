@@ -3,10 +3,12 @@ package com.tangem.features.polymarket.impl.main.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -20,8 +22,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
+import com.tangem.core.ui.ds2.button.TangemButtonGroup
+import com.tangem.features.polymarket.impl.common.PolymarketOutcomeAccent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.pluralStringResourceSafe
 import com.tangem.core.ui.extensions.resolveReference
@@ -35,6 +40,7 @@ import com.tangem.features.polymarket.impl.common.ui.PolymarketOutcomeButton
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventRowUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventUM
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketOutcomeUM
+import com.tangem.features.polymarket.impl.main.ui.state.PolymarketSportsUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -50,8 +56,17 @@ internal fun PolymarketEventCard(state: PolymarketEventUM, modifier: Modifier = 
         title = state.title,
         iconUrl = state.iconUrl,
         onClick = state.onClick,
-        meta = { VolumeMeta(volume = state.volume) },
+        titleMetaSpacing = if (state.sports != null) 8.dp else 4.dp,
+        showIcon = state.sports == null,
+        meta = { VolumeMeta(volume = state.volume, spacing = if (state.sports != null) 2.dp else 4.dp) },
     ) {
+        state.sports?.let { sports ->
+            Box(modifier = Modifier.fillMaxWidth().height(16.dp), contentAlignment = Alignment.BottomCenter) {
+                HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors3.border.primary)
+            }
+            Spacer(modifier = Modifier.size(16.dp))
+            PolymarketSportsHeader(state = sports)
+        }
         if (state.rows.isNotEmpty()) {
             Spacer(modifier = Modifier.size(16.dp))
         }
@@ -76,8 +91,8 @@ internal fun PolymarketEventCard(state: PolymarketEventUM, modifier: Modifier = 
 }
 
 @Composable
-private fun VolumeMeta(volume: TextReference) {
-    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+private fun VolumeMeta(volume: TextReference, spacing: Dp) {
+    Row(horizontalArrangement = Arrangement.spacedBy(spacing)) {
         Text(
             text = stringResourceSafe(R.string.prediction_event_total_volume),
             color = TangemTheme.colors3.text.secondary,
@@ -142,27 +157,43 @@ private fun MarketTitle(title: TextReference) {
 
 @Composable
 private fun EventOutcomes(outcomes: ImmutableList<PolymarketOutcomeUM>, isExpanded: Boolean) {
-    Row(
-        modifier = if (isExpanded) Modifier.fillMaxWidth() else Modifier,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+    val buttons: @Composable () -> Unit = {
         // The first outcome carries the info appearance, the second the error one — driven by
         // position, not by label, since upstream labels aren't always "Yes"/"No".
         outcomes.forEachIndexed { index, outcome ->
             PolymarketOutcomeButton(
-                modifier = (if (isExpanded) Modifier.weight(1f) else Modifier.widthIn(max = OutcomeButtonMaxWidth))
+                modifier = (if (isExpanded) Modifier else Modifier.widthIn(max = OutcomeButtonMaxWidth))
                     .testTag(PredictionTestTags.OUTCOME_BUTTON),
                 title = outcome.title,
                 price = outcome.price,
-                appearance = if (index == 0) {
-                    PolymarketOutcomeButton.Appearance.Info
-                } else {
-                    PolymarketOutcomeButton.Appearance.Error
+                appearance = when (outcome.accent) {
+                    PolymarketOutcomeAccent.Info -> PolymarketOutcomeButton.Appearance.Info
+                    PolymarketOutcomeAccent.Error -> PolymarketOutcomeButton.Appearance.Error
+                    PolymarketOutcomeAccent.Neutral -> PolymarketOutcomeButton.Appearance.Neutral
+                    null -> if (index == 0) {
+                        PolymarketOutcomeButton.Appearance.Info
+                    } else {
+                        PolymarketOutcomeButton.Appearance.Error
+                    }
                 },
                 size = PolymarketOutcomeButton.Size.X9,
                 onClick = outcome.onClick,
             )
+        }
+    }
+    if (isExpanded) {
+        TangemButtonGroup(
+            modifier = Modifier.fillMaxWidth(),
+            orientation = TangemButtonGroup.Orientation.Horizontal,
+            content = buttons,
+        )
+    } else {
+        // Compact market rows keep content-sized buttons rather than equalizing the available width.
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            buttons()
         }
     }
 }
@@ -203,9 +234,32 @@ private fun PolymarketEventCardPreview() {
         ) {
             PolymarketEventCard(state = groupedPreviewEvent())
             PolymarketEventCard(state = plainPreviewEvent())
+            PolymarketEventCard(state = sportsPreviewEvent())
         }
     }
 }
+
+private fun sportsPreviewEvent(): PolymarketEventUM = plainPreviewEvent().copy(
+    id = "sports",
+    title = stringReference("Eritrea vs. South Africa: who will win the match?"),
+    volume = stringReference("$6.3M"),
+    sports = PolymarketSportsUM(
+        home = PolymarketSportsUM.Team(stringReference("Eritrea"), null),
+        away = PolymarketSportsUM.Team(stringReference("South Africa"), null),
+        homeScore = "2",
+        awayScore = "1",
+        period = "1/2",
+        isLive = true,
+    ),
+    rows = persistentListOf(
+        PolymarketEventRowUM(
+            marketId = "match-winner",
+            title = null,
+            probability = null,
+            outcomes = previewOutcomes(first = "ERI", second = "RSA"),
+        ),
+    ),
+)
 
 private fun groupedPreviewEvent(): PolymarketEventUM {
     return PolymarketEventUM(
