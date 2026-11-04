@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBankCredentialsUseCase
+import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +21,7 @@ internal class MoneyAccountAddFundsOptionsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val analytics: AnalyticsEventHandler,
     private val getMoneyAccountBankCredentialsUseCase: GetMoneyAccountBankCredentialsUseCase,
+    private val moneyAccountFeatureToggles: MoneyAccountFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<MoneyAccountAddFundsOptionsComponent.Params>()
@@ -59,7 +61,10 @@ internal class MoneyAccountAddFundsOptionsModel @Inject constructor(
         sendMethodSelected(MoneyAccountAnalyticsEvents.AddFundsMethod.BANK_TRANSFER)
         setBankTransferLoading(isLoading = true)
         modelScope.launch {
-            getMoneyAccountBankCredentialsUseCase(params.userWalletId)
+            getMoneyAccountBankCredentialsUseCase(
+                userWalletId = params.userWalletId,
+                includeAllRails = moneyAccountFeatureToggles.isMxnEnabled,
+            )
                 .onRight(params.listener::onBankDetailsLoaded)
                 .onLeft {
                     setBankTransferLoading(isLoading = false)
