@@ -108,6 +108,7 @@ internal class MoneyAccountDetailsModelTest {
         every { moneyAccountFeatureToggles.isMxnEnabled } returns false
         isBalanceHiddenFlow.value = false
         every { getBalanceHidingSettingsUseCase.isBalanceHidden() } returns isBalanceHiddenFlow
+        coEvery { moneyAccountStatusFetcher(userWalletId) } returns Unit.right()
     }
 
     @Test
@@ -407,7 +408,7 @@ internal class MoneyAccountDetailsModelTest {
         model: BalanceBannerModel,
     ) = runTest {
         // Act
-        val detailsModel = createModel(model.balances.map { activeAccount(balance = it) }.asFlow())
+        val detailsModel = createModel(model.accounts.asFlow())
         advanceUntilIdle()
 
         // Assert
@@ -578,9 +579,9 @@ internal class MoneyAccountDetailsModelTest {
     fun `GIVEN account shown WHEN pulled to refresh THEN status fetched tx history reloaded and indicator hidden`() =
         runTest {
             // Arrange
-            coEvery { moneyAccountStatusFetcher(userWalletId) } returns Unit.right()
             val model = createModel(activeAccount(balance = balance()))
             advanceUntilIdle()
+            forgetOpeningRefresh()
 
             // Act
             model.pullToRefresh()
@@ -618,6 +619,7 @@ internal class MoneyAccountDetailsModelTest {
         coEvery { moneyAccountStatusFetcher(userWalletId) } coAnswers { awaitCancellation() }
         val model = createModel(activeAccount(balance = balance()))
         advanceUntilIdle()
+        forgetOpeningRefresh()
         model.pullToRefresh()
         advanceUntilIdle()
 
@@ -633,9 +635,9 @@ internal class MoneyAccountDetailsModelTest {
     @Test
     fun `GIVEN account not loaded WHEN pulled to refresh THEN status fetched without tx history reload`() = runTest {
         // Arrange
-        coEvery { moneyAccountStatusFetcher(userWalletId) } returns Unit.right()
         val model = createModel(emptyFlow())
         advanceUntilIdle()
+        forgetOpeningRefresh()
 
         // Act
         model.pullToRefresh()
@@ -664,16 +666,83 @@ internal class MoneyAccountDetailsModelTest {
         assertThat(banner?.secondaryButton != null).isEqualTo(model.hasRenewButton)
         assertThat(detailsModel.uiState.value.isAddFundsEnabled).isEqualTo(model.isAddFundsEnabled)
         assertThat(detailsModel.uiState.value.isSendEnabled).isEqualTo(model.isSendEnabled)
+        assertThat(detailsModel.uiState.value.isBalanceUnavailable).isEqualTo(model.isBalanceUnavailable)
         detailsModel.onDestroy()
     }
+
+    @Test
+    fun `GIVEN account WHEN screen opened THEN status fetched once without refresh indicator`() = runTest {
+        // Arrange
+        coEvery { moneyAccountStatusFetcher(userWalletId) } coAnswers { awaitCancellation() }
+
+        // Act
+        val model = createModel(activeAccount(balance = balance()))
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { moneyAccountStatusFetcher(userWalletId) }
+        assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN opening refresh running WHEN pulled to refresh THEN it is cancelled for the new one`() =
+        runTest {
+            // Arrange
+            var isOpeningRefreshCancelled = false
+            var fetchCount = 0
+            coEvery { moneyAccountStatusFetcher(userWalletId) } coAnswers {
+                fetchCount++
+                if (fetchCount == 1) {
+                    try {
+                        awaitCancellation()
+                    } finally {
+                        isOpeningRefreshCancelled = true
+                    }
+                }
+                Unit.right()
+            }
+            val model = createModel(activeAccount(balance = balance()))
+            advanceUntilIdle()
+
+            // Act
+            model.pullToRefresh()
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(isOpeningRefreshCancelled).isTrue()
+            assertThat(fetchCount).isEqualTo(2)
+            assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
+            model.onDestroy()
+        }
+
+    @Test
+    fun `GIVEN history failed WHEN reload clicked THEN history and status reloaded without refresh indicator`() =
+        runTest {
+            // Arrange
+            val account = activeAccount(balance = balance(), error = MoneyAccountStatusValue.Error.Unavailable)
+            val model = createModel(account)
+            advanceUntilIdle()
+            forgetOpeningRefresh()
+
+            // Act
+            model.uiState.value.onTxHistoryReloadClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 1) { txHistoryContentUpdateEmitter.triggerUpdate() }
+            coVerify(exactly = 1) { moneyAccountStatusFetcher(userWalletId) }
+            assertThat(model.uiState.value.pullToRefreshConfig.isRefreshing).isFalse()
+            model.onDestroy()
+        }
 
     @Test
     fun `GIVEN not synced banner WHEN renew session succeeds THEN status fetched and progress hidden`() = runTest {
         // Arrange
         coEvery { renewTangemPaySessionUseCase(userWalletId) } returns Unit.right()
-        coEvery { moneyAccountStatusFetcher(userWalletId) } returns Unit.right()
         val model = createModel(activeAccount(balance = balance(), error = MoneyAccountStatusValue.Error.NotSynced))
         advanceUntilIdle()
+        forgetOpeningRefresh()
 
         // Act
         model.renewSession()
@@ -692,6 +761,7 @@ internal class MoneyAccountDetailsModelTest {
         coEvery { renewTangemPaySessionUseCase(userWalletId) } returns IllegalStateException().left()
         val model = createModel(activeAccount(balance = balance(), error = MoneyAccountStatusValue.Error.NotSynced))
         advanceUntilIdle()
+        forgetOpeningRefresh()
 
         // Act
         model.renewSession()
@@ -710,6 +780,10 @@ internal class MoneyAccountDetailsModelTest {
 
     private fun MoneyAccountDetailsModel.pullToRefresh() {
         uiState.value.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
+    }
+
+    private fun forgetOpeningRefresh() {
+        clearMocks(moneyAccountStatusFetcher, answers = false)
     }
 
     private fun TestScope.createModel(status: MoneyAccountStatusValue) = createModel(flowOf(status))
@@ -745,6 +819,7 @@ internal class MoneyAccountDetailsModelTest {
             hasRenewButton = false,
             isAddFundsEnabled = true,
             isSendEnabled = true,
+            isBalanceUnavailable = false,
         ),
         ErrorBannerModel(
             balance = null,
@@ -753,6 +828,7 @@ internal class MoneyAccountDetailsModelTest {
             hasRenewButton = false,
             isAddFundsEnabled = false,
             isSendEnabled = false,
+            isBalanceUnavailable = true,
         ),
         ErrorBannerModel(
             balance = balance(),
@@ -761,6 +837,7 @@ internal class MoneyAccountDetailsModelTest {
             hasRenewButton = true,
             isAddFundsEnabled = false,
             isSendEnabled = false,
+            isBalanceUnavailable = false,
         ),
         ErrorBannerModel(
             balance = null,
@@ -769,14 +846,34 @@ internal class MoneyAccountDetailsModelTest {
             hasRenewButton = true,
             isAddFundsEnabled = false,
             isSendEnabled = false,
+            isBalanceUnavailable = true,
         ),
         ErrorBannerModel(
             balance = balance(),
             error = MoneyAccountStatusValue.Error.Unavailable,
-            expectedTitle = resourceReference(R.string.tangempay_temporarily_unavailable),
+            expectedTitle = resourceReference(R.string.money_account_balance_unavailable_title),
             hasRenewButton = false,
             isAddFundsEnabled = false,
             isSendEnabled = false,
+            isBalanceUnavailable = true,
+        ),
+        ErrorBannerModel(
+            balance = null,
+            error = MoneyAccountStatusValue.Error.Unavailable,
+            expectedTitle = resourceReference(R.string.money_account_balance_unavailable_title),
+            hasRenewButton = false,
+            isAddFundsEnabled = false,
+            isSendEnabled = false,
+            isBalanceUnavailable = true,
+        ),
+        ErrorBannerModel(
+            balance = balance(),
+            error = MoneyAccountStatusValue.Error.ExposedDevice,
+            expectedTitle = resourceReference(R.string.money_account_balance_unavailable_title),
+            hasRenewButton = false,
+            isAddFundsEnabled = false,
+            isSendEnabled = false,
+            isBalanceUnavailable = true,
         ),
     )
 
@@ -787,6 +884,7 @@ internal class MoneyAccountDetailsModelTest {
         val hasRenewButton: Boolean,
         val isAddFundsEnabled: Boolean,
         val isSendEnabled: Boolean,
+        val isBalanceUnavailable: Boolean,
     )
 
     data class AddFundsModel(val balance: MoneyAccountStatusValue.Balance?, val expectedDepositAddress: String?)
@@ -862,14 +960,51 @@ internal class MoneyAccountDetailsModelTest {
     )
 
     private fun provideBalanceBannerModels() = listOf(
-        BalanceBannerModel(balances = listOf(null), expectedEvents = 1),
-        BalanceBannerModel(balances = listOf(balance()), expectedEvents = 0),
-        BalanceBannerModel(balances = listOf(balance(), null), expectedEvents = 1),
-        BalanceBannerModel(balances = listOf(null, null), expectedEvents = 1),
-        BalanceBannerModel(balances = listOf(null, balance(), null), expectedEvents = 2),
+        BalanceBannerModel(accounts = listOf(activeAccount(balance = null)), expectedEvents = 1),
+        BalanceBannerModel(accounts = listOf(activeAccount(balance = balance())), expectedEvents = 0),
+        BalanceBannerModel(
+            accounts = listOf(activeAccount(balance = balance()), activeAccount(balance = null)),
+            expectedEvents = 1,
+        ),
+        BalanceBannerModel(
+            accounts = listOf(activeAccount(balance = null), activeAccount(balance = null)),
+            expectedEvents = 1,
+        ),
+        BalanceBannerModel(
+            accounts = listOf(
+                activeAccount(balance = null),
+                activeAccount(balance = balance()),
+                activeAccount(balance = null),
+            ),
+            expectedEvents = 2,
+        ),
+        BalanceBannerModel(
+            accounts = listOf(activeAccount(balance = balance(), error = MoneyAccountStatusValue.Error.Unavailable)),
+            expectedEvents = 1,
+        ),
+        BalanceBannerModel(
+            accounts = listOf(activeAccount(balance = balance(), error = MoneyAccountStatusValue.Error.NotSynced)),
+            expectedEvents = 0,
+        ),
+        BalanceBannerModel(
+            accounts = listOf(activeAccount(balance = null, error = MoneyAccountStatusValue.Error.NotSynced)),
+            expectedEvents = 0,
+        ),
+        BalanceBannerModel(
+            accounts = listOf(activeAccount(balance = balance(), error = MoneyAccountStatusValue.Error.ExposedDevice)),
+            expectedEvents = 1,
+        ),
+        BalanceBannerModel(
+            accounts = listOf(
+                activeAccount(balance = balance()),
+                activeAccount(balance = balance(), error = MoneyAccountStatusValue.Error.Unavailable),
+                activeAccount(balance = null),
+            ),
+            expectedEvents = 1,
+        ),
     )
 
-    data class BalanceBannerModel(val balances: List<MoneyAccountStatusValue.Balance?>, val expectedEvents: Int)
+    data class BalanceBannerModel(val accounts: List<MoneyAccountStatusValue.Account>, val expectedEvents: Int)
 
     private fun provideTransactionClickModels() = listOf(
         TransactionClickModel(

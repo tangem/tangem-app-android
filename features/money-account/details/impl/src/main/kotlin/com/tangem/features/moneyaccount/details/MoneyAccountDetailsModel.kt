@@ -39,6 +39,9 @@ import com.tangem.features.moneyaccount.details.component.MoneyAccountDetailsCom
 import com.tangem.features.moneyaccount.details.impl.R
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -73,6 +76,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
         onSupportClick = ::onSupportClick,
         onBackClick = ::onBackClick,
         onRefresh = ::onRefresh,
+        onTxHistoryReload = ::onTxHistoryReload,
         onRenewSession = ::onRenewSession,
     )
     val uiState: StateFlow<MoneyAccountDetailsUM>
@@ -81,6 +85,7 @@ internal class MoneyAccountDetailsModel @Inject constructor(
     val bottomSheetNavigation: SlotNavigation<MoneyAccountDetailsNavigation> = SlotNavigation()
 
     private var currentState: MoneyAccountStatusValue.Account? = null
+    private val statusRefreshJobHolder = JobHolder()
 
     init {
         moneyAccountStatusSupplier.invoke(params.userWalletId)
@@ -96,6 +101,8 @@ internal class MoneyAccountDetailsModel @Inject constructor(
         getBalanceHidingSettingsUseCase.isBalanceHidden()
             .onEach { isHidden -> uiState.update { it.copy(isBalanceHidden = isHidden) } }
             .launchIn(modelScope)
+
+        refreshStatus()
     }
 
     private fun onAccountLoaded(account: MoneyAccountStatusValue.Account) {
@@ -103,11 +110,14 @@ internal class MoneyAccountDetailsModel @Inject constructor(
         currentState = account
         uiState.update { state -> stateFactory.createAccountState(prevState = state, account = account) }
         if (previous == null) analytics.send(account.toScreenOpenedEvent())
-        val wasBalanceUnavailable = previous != null && previous.balance == null
-        if (account.balance == null && !wasBalanceUnavailable) {
+        val wasBannerShown = previous?.hasBalanceUnavailableBanner == true
+        if (account.hasBalanceUnavailableBanner && !wasBannerShown) {
             analytics.send(MoneyAccountAnalyticsEvents.BalanceErrorBannerShown())
         }
     }
+
+    private fun refreshStatus(): Job = modelScope.launch { moneyAccountStatusFetcher(params.userWalletId) }
+        .saveIn(statusRefreshJobHolder)
 
     private fun onBackClick() {
         router.pop()
@@ -118,16 +128,21 @@ internal class MoneyAccountDetailsModel @Inject constructor(
         updateRefreshing(isRefreshing = true)
         modelScope.launch {
             if (uiState.value.txHistoryCurrency != null) txHistoryContentUpdateEmitter.triggerUpdate()
-            moneyAccountStatusFetcher(params.userWalletId)
+            refreshStatus().join()
             updateRefreshing(isRefreshing = false)
         }
+    }
+
+    private fun onTxHistoryReload() {
+        modelScope.launch { txHistoryContentUpdateEmitter.triggerUpdate() }
+        refreshStatus()
     }
 
     private fun onRenewSession() {
         updateRenewSessionProgress(isLoading = true)
         modelScope.launch {
             renewTangemPaySessionUseCase(params.userWalletId)
-                .onRight { moneyAccountStatusFetcher(params.userWalletId) }
+                .onRight { refreshStatus().join() }
                 .onLeft { uiMessageSender.send(SnackbarMessage(resourceReference(R.string.common_error))) }
             updateRenewSessionProgress(isLoading = false)
         }
