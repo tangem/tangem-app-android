@@ -25,21 +25,18 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
     private val analytics: WalletTangemPayAnalyticsEventSender,
 ) : WalletSubscriber() {
 
-    override fun create(coroutineScope: CoroutineScope): Flow<*> {
-        coroutineScope.launch {
+    override fun create(coroutineScope: CoroutineScope): Flow<*> = channelFlow<Any> {
+        launch {
             // TODO: Doston move this logic to proper place(e.g. WalletBalanceFetcher)
             tangemPayWithdrawRepository.pollWithdrawOrdersIfNeeds(userWallet)
         }
-        coroutineScope.launch {
+        launch {
             restoreActiveCardOrdersUseCase(userWallet.walletId)
         }
         if (moneyAccountFeatureToggles.isMoneyAccountsEnabled) {
-            coroutineScope.launch {
-                pollTangemPayAccountStatusesUseCase(userWallet.walletId)
-            }
+            pollTangemPayAccountStatusesUseCase(userWallet.walletId).launchIn(this)
         }
-        subscribeToStatus(coroutineScope)
-        return emptyFlow<Any>()
+        subscribeToStatus(this)
     }
 
     private fun subscribeToStatus(coroutineScope: CoroutineScope) {
