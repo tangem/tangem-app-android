@@ -94,6 +94,30 @@ internal class DefaultWalletCardsBackupRepositoryTest {
         }
 
         @Test
+        fun `GIVEN card without role WHEN saveWalletCards THEN body is sent without role`() = runTest {
+            // Arrange
+            coEvery { tangemTechApi.saveWalletCards(any(), any()) } returns ApiResponse.Success(Unit)
+
+            // Act
+            repository.saveWalletCards(
+                userWalletId = WALLET_ID,
+                cards = listOf(domainCard(CardBackupStatus.CARD_LINKED).copy(role = null)),
+                usedSeed = false,
+            )
+
+            // Assert
+            coVerify(exactly = 1) {
+                tangemTechApi.saveWalletCards(
+                    walletId = WALLET_ID.stringValue,
+                    body = WalletCardsBody(
+                        cards = listOf(dtoCard(WalletCardDTO.BackupStatus.CARD_LINKED).copy(role = null)),
+                        usedSeed = false,
+                    ),
+                )
+            }
+        }
+
+        @Test
         fun `GIVEN no connection WHEN saveWalletCards THEN NoInternetConnection is returned`() = runTest {
             // Arrange
             coEvery {
