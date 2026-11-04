@@ -8,8 +8,8 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
-import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.isHotWallet
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.polymarket.impl.common.PolymarketConst
 import com.tangem.features.polymarket.impl.common.PolymarketLegalUrls
 import com.tangem.features.polymarket.impl.common.formatPolymarketEnteredAmount
@@ -37,8 +37,6 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -56,7 +54,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     quoteEngineFactory: PlacePredictionQuoteEngine.Factory,
     orderSubmitterFactory: PlacePredictionOrderSubmitter.Factory,
-    private val userWalletsListRepository: UserWalletsListRepository,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
 ) : Model(), PlacePredictionOrderIntents, PolymarketAddFundsComponent.ModelCallback {
 
     private val params = paramsContainer.require<PlacePredictionComponent.Params>()
@@ -85,15 +83,11 @@ internal class PlacePredictionOrderModel @Inject constructor(
     }
 
     init {
-        observeWalletType()
+        resolveWalletType()
     }
 
-    private fun observeWalletType() {
-        modelScope.launch {
-            val userWallet = userWalletsListRepository.userWallets
-                .mapNotNull { wallets -> wallets?.find { it.walletId == params.userWalletId } }
-                .first()
-
+    private fun resolveWalletType() {
+        getUserWalletUseCase(params.userWalletId).onRight { userWallet ->
             uiState.update { it.copy(isHoldToConfirm = userWallet.isHotWallet) }
         }
     }
