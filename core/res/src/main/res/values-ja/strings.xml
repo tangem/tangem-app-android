@@ -2860,9 +2860,9 @@
   <string name="tangempay_status_inactive">無効</string>
   <string name="tangempay_status_replacing">カードを交換中</string>
   <string name="tangempay_sync_needed">カードまたはリングでセッションを更新してください</string>
-  <string name="tangempay_sync_needed_body">カードまたはリングでセッションを更新してください</string>
+  <string name="tangempay_sync_needed_body">更新してカードと口座をご確認ください</string>
   <string name="tangempay_sync_needed_button">セッションを更新</string>
-  <string name="tangempay_sync_needed_title">Tangem Pay セッションの有効期限が切れました</string>
+  <string name="tangempay_sync_needed_title">セッションの有効期限が切れました</string>
   <string name="tangempay_tangem_visa_card">暗号資産をいつもの毎日で使える</string>
   <string name="tangempay_temporarily_unavailable">Tangem Payは一時的に利用できません</string>
   <string name="tangempay_title">Tangem Pay</string>
