@@ -19,6 +19,7 @@ dependencies {
 
     /** Common */
     implementation(projects.common.ui)
+    implementation(projects.common.uiCharts)
     implementation(projects.common.routing)
     implementation(projects.domain.feedback)
     implementation(projects.domain.feedback.models)
@@ -55,6 +56,8 @@ dependencies {
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
+    implementation(tangemDeps.vico.core)
+    implementation(tangemDeps.vico.compose)
 
     /** Decompose */
     implementation(deps.decompose)
