@@ -17,6 +17,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusSupplier
 import com.tangem.domain.collectibles.account.repository.CollectiblesAccountRepository
@@ -68,6 +69,7 @@ internal class CollectiblesMainModel @Inject constructor(
     private val collectiblesAccountRepository: CollectiblesAccountRepository,
     private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val sessionKey: CollectiblesSessionKey,
     private val clipboardManager: ClipboardManager,
     override val dispatchers: CoroutineDispatcherProvider,
@@ -127,11 +129,16 @@ internal class CollectiblesMainModel @Inject constructor(
         combine(
             flow = collectiblesAccountStatusSupplier(params.userWalletId),
             flow2 = getSelectedAppCurrencyUseCase.invokeOrDefault(),
-        ) { status, appCurrency ->
+            flow3 = getBalanceHidingSettingsUseCase.isBalanceHidden(),
+        ) { status, appCurrency, isBalanceHidden ->
             vaultStatus = status.balance
 
             val balance = balanceConverter.convert(
-                CollectiblesBalanceConverter.Input(status = status, appCurrency = appCurrency),
+                CollectiblesBalanceConverter.Input(
+                    status = status,
+                    appCurrency = appCurrency,
+                    isBalanceHidden = isBalanceHidden,
+                ),
             )
 
             balance to actionsConverter.convert(status)
@@ -160,6 +167,7 @@ internal class CollectiblesMainModel @Inject constructor(
                 CollectiblesBalanceConverter.Input(
                     status = CollectiblesAccountStatusValue.Loading,
                     appCurrency = AppCurrency.Default,
+                    isBalanceHidden = false,
                 ),
             ),
             actions = actionsConverter.convert(CollectiblesAccountStatusValue.Loading),
