@@ -162,8 +162,8 @@ effect of another task. Three checks come first, before you touch anything:
    A hit means shipped clients already carry this wording.
 2. **Is the feature actually live?** A key can sit in a release branch behind a *closed* toggle,
    in which case no user has ever seen the wording. Find the toggle gating the call site and look it
-   up in `core/config-toggles/src/main/assets/configs/feature_toggles_config.json` (a flat
-   `[{name, version}]` list): `"version": "undefined"` means never shipped — the change is cheap. A
+   up in the stream files `*/config-toggles/feature_toggles.json` (flat `[{name, version}]`
+   lists): `"version": "undefined"` means never shipped — the change is cheap. A
    semver value at or below the released app version means it is live, and step 1's hit is real.
 3. **Does it have translations?** `list_lokalise_keys` with `filter_keys: "<key>"` and
    `include_translations: 1`. Any non-empty non-`en` translation is now **stale** the moment the

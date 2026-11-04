@@ -1,0 +1,50 @@
+[
+    {
+        "name": "TWI_1640_COLLECTIBLES_PHASE_ONE_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1850_TRON_GASLESS_DEX_SWAP_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1858_TRON_CLIENT_ENERGY_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_17201_TRON_LOWER_FEE_TYPE_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_18712_EVM_GASLESS_DEX_SWAP_ENABLED",
+        "version": "6.8"
+    },
+    {
+        "name": "TWI_1700_POLYMARKET_PHASE_TWO_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_18650_POLYMARKET_SESSION_KEYS_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_18247_SOLANA_GASLESS_ENABLED",
+        "version": "6.8"
+    },
+    {
+        "name": "TWI_1906_EXPRESS_V2_ENABLED",
+        "version": "6.8"
+    },
+    {
+        "name": "TWI_1948_YIELD_CONTRIBUTION_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWI_1676_EARN_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "AND_18954_ONRAMP_COUNTRY_BY_IP_ENABLED",
+        "version": "undefined"
+    }
+]

@@ -105,7 +105,7 @@ Ask the user **only for what is still missing**, grouped into as few questions a
     code-level names** (no class / component / function / file names). You may include concrete
     **test cases** (step → expected result). If you know the feature toggle that gates this
     functionality (detect it from the local changes / context — e.g. a new entry in
-    `feature_toggles_config.json` or an `XxxFeatureToggles` usage), add `Закрыто тогглом "<название>"`.
+    `<stream>/config-toggles/feature_toggles.json` or an `XxxFeatureToggles` usage), add `Закрыто тогглом "<название>"`.
     Show the generated text in the Phase 3 preview for approval/editing.
   - **Enter manually** → let the user type custom QA Notes (in Russian).
   - **No QA Notes** → leave the field empty.

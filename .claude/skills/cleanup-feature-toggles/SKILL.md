@@ -11,7 +11,7 @@ Remove all feature toggles whose version is less than or equal to the target rel
 
 ## Constants
 
-- **Config file**: `core/config-toggles/src/main/assets/configs/feature_toggles_config.json`
+- **Config files**: `*/config-toggles/feature_toggles.json` — one per stream (`core`, `store`, `grow`, `spend`), merged into one enum
 - **Generated enum** (DO NOT edit): `core/config-toggles/build/generated/source/toggles/com/tangem/core/configtoggle/FeatureToggles.kt`
 - **Dry-run mode**: check if `$ARGUMENTS` contains `--dry-run`. In dry-run mode, make NO file changes — only output what WOULD be removed (including affected files and usage sites).
 - **Version**: extract the version number from `$ARGUMENTS` (e.g., `5.35`, `5.35.0`). The version is the first argument that matches a semver-like pattern (`X.Y` or `X.Y.Z`).
@@ -40,8 +40,8 @@ Initialize an internal results list to track each toggle's outcome.
 
 ## Phase 1: Identify Toggles to Remove
 
-1. Read `core/config-toggles/src/main/assets/configs/feature_toggles_config.json`.
-2. For each toggle entry in the JSON array:
+1. Read every `*/config-toggles/feature_toggles.json` (`Glob` from the repo root).
+2. For each toggle entry in the JSON arrays:
    - If `version == "undefined"` → skip (unreleased feature, must not be removed).
    - Parse the toggle's version as semver (normalize `X.Y` to `X.Y.0`).
    - If toggle version **<=** target version → mark for removal.
@@ -190,10 +190,10 @@ Record status as `Removed` with the count of usage sites simplified.
 
 ## Phase 4: Update JSON Config
 
-1. Read `feature_toggles_config.json`.
-2. Remove all entries whose `name` matches a successfully removed toggle (status = `Removed`).
+1. Read the `*/config-toggles/feature_toggles.json` files that hold the removed toggles.
+2. Remove all entries whose `name` matches a successfully removed toggle (status = `Removed`). Keep a file even when it becomes `[]` — the build requires every stream file.
 3. Write back the JSON with proper formatting:
-   - 2-space indentation
+   - 4-space indentation
    - Each entry on its own lines
    - No trailing commas
    - Match the existing file format exactly

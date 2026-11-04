@@ -6,10 +6,17 @@ features by app version; the JSON config is the source of truth and the
 
 ## How it works
 
-- **Config:** `src/main/assets/configs/feature_toggles_config.json` — a JSON array
-  of `{ "name": <STRING>, "version": <STRING> }` (`ConfigToggle`).
-- The **convention plugin** generates the `FeatureToggles` enum (one entry per
-  `name`) at build time. Reference it as `FeatureToggles.<NAME>`.
+- **Config:** one file per stream — `<stream>/config-toggles/feature_toggles.json`
+  (`core/`, `store/`, `grow/`, `spend/`), each a JSON array of
+  `{ "name": <STRING>, "version": <STRING> }` (`ConfigToggle`). The file lives in
+  the stream's directory so CODEOWNERS sends a new toggle to that stream's team,
+  not to core. The stream list is `featureTogglesStreams` in `build.gradle.kts`.
+- The **convention plugin** merges all stream files into one `FeatureToggles` enum
+  (one entry per `name`) at build time; a name in two files fails the build.
+  Reference it as `FeatureToggles.<NAME>`.
+- **New stream:** create `<stream>/config-toggles/feature_toggles.json` and add the
+  stream to `featureTogglesStreams` — `FeatureTogglesNamingConventionTest` fails on
+  a stream file that is not registered there.
 - **Entry point:** `FeatureTogglesManager.isFeatureEnabled(FeatureToggles.X)`.
   - `ProdFeatureTogglesManager` (release): a toggle is enabled when the app
     version `>=` its `version`.
@@ -22,9 +29,9 @@ features by app version; the JSON config is the source of truth and the
   - `"X.Y"` (e.g. `5.40`) → ON in prod from that app version onward
     (`currentVersion >= localVersion`, see `VersionAvailabilityContract`).
 - **CI build post:** `.github/scripts/list_build_capabilities.py` lists the
-  enabled toggles and mainnet blockchains of a build for the Slack build
-  notification. It re-implements the version rules above (for both configs) —
-  change both together.
+  enabled toggles (from all stream files) and mainnet blockchains of a build for
+  the Slack build notification. It re-implements the version rules above (for both
+  configs) — change both together.
 
 ## Naming convention (ENFORCED by a test)
 
@@ -58,8 +65,9 @@ interface, never `FeatureTogglesManager` directly:
 
 To add a toggle:
 
-1. Add `{ "name": "AND_<id>_FOO_ENABLED", "version": "undefined" }` to the config
-   JSON (the enum is regenerated at build).
+1. Add `{ "name": "AND_<id>_FOO_ENABLED", "version": "undefined" }` to your
+   stream's `<stream>/config-toggles/feature_toggles.json` (the enum is
+   regenerated at build).
 2. Add `val isFooEnabled` to the feature's `XxxFeatureToggles` and map it in
    `DefaultXxxFeatureToggles` (create the interface/impl/DI provider if the
    feature has none yet).
@@ -68,7 +76,7 @@ To add a toggle:
 ## Removing (cleanup)
 
 When a toggle ships at 100%, set its `version` to the release and run the
-`cleanup-feature-toggles` skill — it removes the JSON entry, the interface/impl
+`cleanup-feature-toggles` skill — it removes the JSON entry from the stream file, the interface/impl
 members, inlines `true`, and drops dead branches. Mark code that must be deleted
 together with a toggle using `@RemoveWithToggle("AND_<id>_FOO_ENABLED")`
 (`com.tangem.utils.annotations.RemoveWithToggle`); the cleanup skill picks it up.

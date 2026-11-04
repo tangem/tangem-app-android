@@ -46,7 +46,7 @@ from files alone are the `strings.xml` ones.
 No `files` are declared: the cases assume a checkout of this repository, which is what makes them
 meaningful — case 2 needs `send_optional_field` to really be there, case 3 needs
 `tangem_pay_transaction_details_cashback_below_min` to really be in `origin/releases/*`, and
-cases 3 and 5 need `feature_toggles_config.json`. If the loc team retexts those keys, replace the
+cases 3 and 5 need the `*/config-toggles/feature_toggles.json` files. If the loc team retexts those keys, replace the
 case rather than loosening the assertion.
 
 ## iteration-1 results (6 runs: cases 2, 3, 5 × with/without skill)

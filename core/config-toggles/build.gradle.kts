@@ -30,11 +30,13 @@ abstract class GenerateTogglesTask : DefaultTask() {
             "configFiles (${files.size}) and fileNames (${names.size}) must have the same size"
         }
 
-        files.zip(names).forEach { (inputFile, fileName) ->
-            require(inputFile.exists()) { "Config file not found: ${inputFile.absolutePath}" }
-            logger.lifecycle("Generating toggles from ${inputFile.name}")
-            TogglesGenerator.generate(inputFile, outputDir.get().asFile, fileName)
-        }
+        files.zip(names)
+            .groupBy(keySelector = { it.second }, valueTransform = { it.first })
+            .forEach { (fileName, inputFiles) ->
+                inputFiles.forEach { require(it.exists()) { "Config file not found: ${it.absolutePath}" } }
+                logger.lifecycle("Generating $fileName from ${inputFiles.joinToString { it.path }}")
+                TogglesGenerator.generate(inputFiles, outputDir.get().asFile, fileName)
+            }
     }
 }
 
@@ -43,9 +45,16 @@ android {
     sourceSets["main"].java.srcDir("build/generated/source/toggles")
 }
 
-/** Config file to generated enum class name mapping */
-val toggles = mapOf(
-    file("src/main/assets/configs/feature_toggles_config.json") to "FeatureToggles",
+/**
+ * Each stream keeps its feature toggles in `<stream>/config-toggles/feature_toggles.json`, so CODEOWNERS routes
+ * a new toggle to the stream team instead of core. All of them are merged into one `FeatureToggles` enum.
+ */
+val featureTogglesStreams = listOf("core", "store", "grow", "spend")
+
+/** Config file to generated enum class name mapping; files with the same enum name are merged in this order */
+val toggles = featureTogglesStreams.associate { stream ->
+    rootProject.file("$stream/config-toggles/feature_toggles.json") to "FeatureToggles"
+} + mapOf(
     file("src/main/assets/configs/excluded_blockchains_config.json") to "ExcludedBlockchainToggles",
 )
 
