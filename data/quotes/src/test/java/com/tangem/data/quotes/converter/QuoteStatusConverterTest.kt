@@ -20,7 +20,11 @@ internal class QuoteStatusConverterTest {
 
     private val ethQuoteDM = "ETH" to MockQuoteResponseFactory.createSinglePrice(value = BigDecimal.ONE)
 
-    private val ethEmptyQuote = QuoteStatus(rawCurrencyId = CryptoCurrency.RawID("ETH"), value = QuoteStatus.Empty)
+    private val ethZeroPriceQuote = createActualEthQuote(
+        fiatRate = BigDecimal.ZERO,
+        fiatRateUSD = BigDecimal.ZERO,
+        priceChange = BigDecimal("0.00"),
+    )
 
     @ParameterizedTest
     @ProvideTestModels
@@ -60,7 +64,7 @@ internal class QuoteStatusConverterTest {
                     priceUsd = null,
                 ),
             ),
-            expected = ethEmptyQuote,
+            expected = ethZeroPriceQuote,
         ),
         ConvertTestModel(
             source = StatusSource.ACTUAL,
@@ -73,17 +77,25 @@ internal class QuoteStatusConverterTest {
                     priceUsd = null,
                 ),
             ),
-            expected = ethEmptyQuote,
+            expected = ethZeroPriceQuote,
         ),
         ConvertTestModel(
             source = StatusSource.ACTUAL,
             value = createEntry(value = "ETH" to createQuote(price = BigDecimal.ZERO)),
-            expected = ethEmptyQuote,
+            expected = createActualEthQuote(
+                fiatRate = BigDecimal.ZERO,
+                fiatRateUSD = BigDecimal.ONE,
+                priceChange = BigDecimal("0.01"),
+            ),
         ),
         ConvertTestModel(
             source = StatusSource.ACTUAL,
             value = createEntry(value = "ETH" to createQuote(price = BigDecimal("0.00"))),
-            expected = ethEmptyQuote,
+            expected = createActualEthQuote(
+                fiatRate = BigDecimal("0.00"),
+                fiatRateUSD = BigDecimal.ONE,
+                priceChange = BigDecimal("0.01"),
+            ),
         ),
         ConvertTestModel(
             source = StatusSource.ACTUAL,
@@ -160,6 +172,17 @@ internal class QuoteStatusConverterTest {
             priceUsd = priceUsd,
         )
     }
+
+    private fun createActualEthQuote(fiatRate: BigDecimal, fiatRateUSD: BigDecimal, priceChange: BigDecimal) =
+        QuoteStatus(
+            rawCurrencyId = CryptoCurrency.RawID("ETH"),
+            value = QuoteStatus.Data(
+                source = StatusSource.ACTUAL,
+                fiatRate = fiatRate,
+                fiatRateUSD = fiatRateUSD,
+                priceChange = priceChange,
+            ),
+        )
 
     private fun createEntry(value: Pair<String, QuotesResponse.Quote>): Map.Entry<String, QuotesResponse.Quote> {
         return mapOf(value).entries.first()
