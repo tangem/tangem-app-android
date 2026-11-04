@@ -13,6 +13,7 @@ import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.CollectiblesAccountStatusValue
 import com.tangem.domain.models.account.JointAccountStatusValue
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.tokenlist.TokenList
@@ -35,7 +36,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-/** The accounts section of the wallet settings lists personal and joint accounts in the order of the document */
+/** The accounts section of the wallet settings lists personal, joint and collectibles accounts in the document order */
 internal class AccountItemsDelegateTest {
 
     private val userWalletId = MockAccounts.userWalletId
@@ -50,6 +51,7 @@ internal class AccountItemsDelegateTest {
     private val main = MockAccounts.createAccount(derivationIndex = 0)
     private val savings = MockAccounts.createAccount(derivationIndex = 1)
     private val joint = MockAccounts.createJointAccount(ownerKeyIndex = 0)
+    private val collectiblesAccount = Account.Collectibles(userWalletId = userWalletId)
 
     private val delegate = AccountItemsDelegate(
         paramsContainer = MutableParamsContainer(WalletSettingsComponent.Params(userWalletId = userWalletId)),
@@ -117,10 +119,45 @@ internal class AccountItemsDelegateTest {
         ).inOrder()
     }
 
+    @Test
+    fun `GIVEN a collectibles account WHEN loadAccount THEN it is listed in place and does not open`() = runTest {
+        // Arrange
+        every { singleAccountStatusListSupplier(userWalletId) } returns flowOf(
+            accountStatusList(collectibles(CollectiblesAccountStatusValue.Loading), personal(main), personal(savings)),
+        )
+
+        // Act
+        val actual = delegate.loadAccount(wallet, onAddAccountClick = { _, _ -> }, pushRoute = {}).first()
+
+        // Assert
+        assertThat(actual.accountIds()).containsExactly(
+            collectiblesAccount.accountId.value,
+            main.accountId.value,
+            savings.accountId.value,
+        ).inOrder()
+        val row = actual.filterIsInstance<WalletSettingsAccountsUM.CollectiblesAccount>().single()
+        assertThat(row.state.isEnabled).isFalse()
+    }
+
+    @Test
+    fun `GIVEN a collectibles account not onboarded WHEN loadAccount THEN it is not listed`() = runTest {
+        // Arrange
+        every { singleAccountStatusListSupplier(userWalletId) } returns flowOf(
+            accountStatusList(collectibles(CollectiblesAccountStatusValue.NotOnboarded), personal(main)),
+        )
+
+        // Act
+        val actual = delegate.loadAccount(wallet, onAddAccountClick = { _, _ -> }, pushRoute = {}).first()
+
+        // Assert
+        assertThat(actual.accountIds()).containsExactly(main.accountId.value)
+    }
+
     private fun List<WalletSettingsAccountsUM>.accountIds(): List<String> = mapNotNull { item ->
         when (item) {
             is WalletSettingsAccountsUM.Account -> item.id
             is WalletSettingsAccountsUM.JointAccount -> item.id
+            is WalletSettingsAccountsUM.CollectiblesAccount -> item.id
             is WalletSettingsAccountsUM.Header,
             is WalletSettingsAccountsUM.Footer,
             -> null
@@ -141,6 +178,11 @@ internal class AccountItemsDelegateTest {
         account = account,
         tokenList = TokenList.Empty,
         priceChangeLce = lceLoading(),
+    )
+
+    private fun collectibles(value: CollectiblesAccountStatusValue) = AccountStatus.Collectibles(
+        account = collectiblesAccount,
+        value = value,
     )
 
     private fun jointStatus(account: Account.Joint) = AccountStatus.Joint(
