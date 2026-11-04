@@ -8,6 +8,10 @@
         "version": "undefined"
     },
     {
+        "name": "TWI_1778_MONEY_ACCOUNT_MXN_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "WALLET_CONNECT_BITCOIN_ENABLED",
         "version": "undefined"
     },
