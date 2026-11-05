@@ -30,6 +30,7 @@ import com.tangem.feature.tester.presentation.storybook.page.placeholder.placeho
 import com.tangem.feature.tester.presentation.storybook.page.polymarket.counter.polymarketCounterStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.progress.progressIndicatorStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.polymarket.chart.probabilityChartStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.polymarket.chart.eventChartStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.searchfield.tangemSearchFieldStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.storiesv2.storiesV2StoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.tab.tangemTabStoryFactory
@@ -41,6 +42,7 @@ private data class StoryItem(val title: String, val factory: StoryPageFactory)
 
 private fun buildStories() = listOf(
     StoryItem(title = "↔ Polymarket · Spread selector", factory = polymarketCounterStoryFactory),
+    StoryItem(title = "Polymarket · Event chart", factory = eventChartStoryFactory),
     StoryItem(title = "Polymarket · Probability chart", factory = probabilityChartStoryFactory),
     StoryItem(title = "💎 DS Components", factory = dsComponentsListStoryFactory),
     StoryItem(title = "🎬 Stories Player", factory = storiesV2StoryFactory),
