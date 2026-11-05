@@ -165,14 +165,14 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
         if (exchangeIds.isEmpty() && onrampIds.isEmpty()) return false
 
         val userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: return false
-        val userWalletId = userWallet.walletId.stringValue
+        val walletIdValue = userWalletId.stringValue
         val refCode = expressUtils.getRefCode(userWallet = userWallet)
 
         coroutineScope {
             val requests = exchangeIds.map { txId ->
-                async { refreshExchangeStatus(userWalletId = userWalletId, refCode = refCode, txId = txId) }
+                async { refreshExchangeStatus(userWalletId = walletIdValue, refCode = refCode, txId = txId) }
             } + onrampIds.map { txId ->
-                async { refreshOnrampStatus(userWalletId = userWalletId, refCode = refCode, txId = txId) }
+                async { refreshOnrampStatus(userWalletId = walletIdValue, refCode = refCode, txId = txId) }
             }
             requests.awaitAll()
         }

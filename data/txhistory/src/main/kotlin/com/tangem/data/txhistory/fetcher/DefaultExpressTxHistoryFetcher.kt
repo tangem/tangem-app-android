@@ -73,6 +73,12 @@ internal class DefaultExpressTxHistoryFetcher @AssistedInject constructor(
                         fetchExchange()
                         fetchOnramp()
                     }
+                    is TxHistoryFetchTrigger.OnExpressOperationExecute -> {
+                        when (trigger.type) {
+                            TxHistoryFetchTrigger.OnExpressOperationExecute.Onramp -> fetchOnramp()
+                            TxHistoryFetchTrigger.OnExpressOperationExecute.Swap -> fetchExchange()
+                        }
+                    }
                 }
             }
         defaultLaunchIn(receiveFlow)
