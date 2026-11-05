@@ -281,6 +281,8 @@ class MoneyAccountStatusTest : BaseTestCase() {
     @Test
     fun closedAccountStaysHiddenOnMainTest() {
         val moneyAccountDeactivatedState = "AccountDeactivated"
+        val moneyAccountDeactivatedDelayedState = "AccountDeactivatedDelayed"
+        val cachedStateWindowMillis = 10_000L
         val packageName = getTargetContext().packageName
 
         setupHooks().run {
@@ -298,12 +300,17 @@ class MoneyAccountStatusTest : BaseTestCase() {
                 setWireMockScenarioState(moneyAccountScenario, moneyAccountDeactivatedState)
             }
             refreshMainUntilMoneyAccountRowHidden()
+            // The closed status reaches the persisted cache after the row hides; a kill right away restores 'Active'.
+            step("Assert 'Money account' row stays hidden") { assertMoneyAccountRowNeverShown() }
+            step("Switch WireMock scenario '$moneyAccountScenario' to '$moneyAccountDeactivatedDelayedState'") {
+                setWireMockScenarioState(moneyAccountScenario, moneyAccountDeactivatedDelayedState)
+            }
             step("Force-close and re-launch the app") { restartApp(packageName) }
+            step("Assert 'Money account' row with the cached '$initialBalance' never shows") {
+                assertMoneyAccountRowNeverShown(durationMillis = cachedStateWindowMillis)
+            }
             step("Assert Tangem Pay tile is displayed") {
                 awaitSuccess(WAIT_UNTIL_TIMEOUT_LONG) { onTangemPayMainScreen { tileBalance.assertIsDisplayed() } }
-            }
-            step("Assert 'Money account' row with the cached '$initialBalance' never shows") {
-                assertMoneyAccountRowNeverShown()
             }
             step("Click on Tangem Pay tile") { clickTangemPayTileUntilPaymentAccountOpens() }
             openTangemPayMoreActionsMenu()
