@@ -290,7 +290,7 @@ internal class SendModel @Inject constructor(
     private suspend fun prepareTransferTransaction(): Either<Throwable, TransactionData> {
         val predefinedValues = predefinedValues
         val cryptoCurrencyStatus = cryptoCurrencyStatusFlow.value
-        val amount = currentSentAmount() ?: error("Invalid amount")
+        val amount = currentSentAmount() ?: return IllegalStateException("Invalid amount").left()
         return when (predefinedValues) {
             is PredefinedValues.Content.Deeplink -> {
                 createTransferTransactionUseCase(
@@ -302,17 +302,22 @@ internal class SendModel @Inject constructor(
                 )
             }
             is PredefinedValues.Content.QrCode -> {
+                val editedDestination = editedDestinationOrNull()
                 createTransferTransactionUseCase(
                     amount = amount.convertToSdkAmount(cryptoCurrencyStatus),
-                    memo = predefinedValues.memo,
-                    destination = predefinedValues.address,
+                    memo = if (editedDestination != null) {
+                        editedDestination.memoTextField?.value
+                    } else {
+                        predefinedValues.memo
+                    },
+                    destination = editedDestination?.addressTextField?.actualAddress ?: predefinedValues.address,
                     userWalletId = userWallet.walletId,
                     network = cryptoCurrency.network,
                 )
             }
             PredefinedValues.Empty -> {
                 val destinationUM = uiState.value.destinationUM as? DestinationUM.Content
-                    ?: error("Invalid destination")
+                    ?: return IllegalStateException("Invalid destination").left()
                 val enteredDestinationAddress = destinationUM.addressTextField.actualAddress
                 val enteredMemo = destinationUM.memoTextField?.value
 
@@ -326,6 +331,9 @@ internal class SendModel @Inject constructor(
             }
         }
     }
+
+    private fun editedDestinationOrNull(): DestinationUM.Content? =
+        (uiState.value.destinationUM as? DestinationUM.Content)?.takeIf { it.isInitialized }
 
     /**
      * The amount the transfer transaction is built with, shared by [prepareTransferTransaction] and the
