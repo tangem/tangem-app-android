@@ -42,9 +42,9 @@ import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.FindMoneyAccountCreationOrderUseCase
 import com.tangem.domain.pay.usecase.GetCustomerSummaryUseCase
+import com.tangem.domain.pay.usecase.GetTangemPayFiatRateUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.pay.usecase.ResolvePaymentAccountStatusFromSummaryUseCase
-import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
@@ -74,7 +74,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
     private val tangemPayCurrencyFactory: TangemPayCurrencyFactory = mockk()
     private val eligibilityManager: TangemPayEligibilityManager = mockk(relaxed = true)
     private val reissueCardRepository: TangemPayReissueCardRepository = mockk()
-    private val singleQuoteSupplier: SingleQuoteStatusSupplier = mockk()
+    private val getTangemPayFiatRateUseCase: GetTangemPayFiatRateUseCase = mockk()
     private val closeCardRepository: TangemPayCloseCardRepository = mockk()
     private val cardDetailsRepository: TangemPayCardDetailsRepository = mockk()
     private val issueCardRepository: TangemPayIssueCardRepository = mockk()
@@ -93,7 +93,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         tangemPayCurrencyFactory = tangemPayCurrencyFactory,
         eligibilityManager = eligibilityManager,
         reissueCardRepository = reissueCardRepository,
-        singleQuoteSupplier = singleQuoteSupplier,
+        getTangemPayFiatRateUseCase = getTangemPayFiatRateUseCase,
         closeCardRepository = closeCardRepository,
         cardDetailsRepository = cardDetailsRepository,
         issueCardRepository = issueCardRepository,
@@ -247,7 +247,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             customerOrderRepository,
             tangemPayCurrencyFactory,
             reissueCardRepository,
-            singleQuoteSupplier,
+            getTangemPayFiatRateUseCase,
             closeCardRepository,
             cardDetailsRepository,
             issueCardRepository,
@@ -285,7 +285,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         every { tangemPayCurrencyFactory.create(userWalletId) } returns token
         every { tangemPayCurrencyFactory.createNetworkStatuses(any(), any(), any()) } returns emptyList()
 
-        coEvery { singleQuoteSupplier.getSyncOrNull(any()) } returns null
+        coEvery { getTangemPayFiatRateUseCase() } returns null
 
         coEvery { cardDetailsRepository.cardFrozenStateSync(any()) } returns TangemPayCardFrozenState.Unfrozen
 
@@ -945,7 +945,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             tangemPayCurrencyFactory = tangemPayCurrencyFactory,
             eligibilityManager = eligibilityManager,
             reissueCardRepository = reissueCardRepository,
-            singleQuoteSupplier = singleQuoteSupplier,
+            getTangemPayFiatRateUseCase = getTangemPayFiatRateUseCase,
             closeCardRepository = closeCardRepository,
             cardDetailsRepository = cardDetailsRepository,
             issueCardRepository = issueCardRepository,
