@@ -11,6 +11,7 @@ import com.tangem.domain.polymarket.model.PredictionOrderFailure
 import com.tangem.domain.polymarket.model.PredictionOrderValidationError
 import com.tangem.features.polymarket.impl.common.FakeSlotHost
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceButtonStyleUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.isReadyToPlace
@@ -53,8 +54,8 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
         advanceTimeBy(QUOTE_POLL_INTERVAL_MILLIS * 3)
 
         // Assert
-        assertThat(summary.uiState.value).isEqualTo(accepted)
-        summary.onPlaceClick()
+        assertThat(summary.uiState.value).isEqualTo(accepted.copy(placeButtonStyle = PlaceButtonStyleUM.CARD))
+        summary.tapPlace()
         advanceUntilIdle()
         assertThat(request.captured.quote).isEqualTo((accepted.quote as QuoteUM.Content).signable.quote)
         assertThat(request.captured.quoteReceivedAtMillis)
@@ -150,7 +151,7 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
         every { messageSender.send(capture(dialog)) } returns Unit
 
         // Act
-        summary.onPlaceClick()
+        summary.tapPlace()
         advanceUntilIdle()
         dialog.captured.secondAction?.onClick?.invoke()
         advanceTimeBy(QUOTE_POLL_INTERVAL_MILLIS * 3)
@@ -160,7 +161,7 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
         assertThat(dialog.captured.message).isEqualTo(resourceReference(R.string.prediction_place_error_description))
         assertThat(dialog.captured.firstAction.title).isEqualTo(resourceReference(R.string.common_support))
         assertThat(dialog.captured.secondAction).isNotNull()
-        assertThat(summary.uiState.value).isEqualTo(accepted.copy(submit = SubmitUM.Idle))
+        assertThat(summary.uiState.value).isEqualTo(accepted.copy(submit = SubmitUM.Idle, holdResetKey = 1))
         verify(exactly = 0) { router.popTo(any<PlacePredictionRoute>(), any()) }
         coVerify(exactly = 0) { placeOrderUseCase(any(), any(), any()) }
         coVerify(exactly = 1) { getQuoteUseCase(any(), any()) }

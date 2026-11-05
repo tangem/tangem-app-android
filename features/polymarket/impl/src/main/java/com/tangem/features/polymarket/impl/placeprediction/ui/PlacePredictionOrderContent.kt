@@ -84,11 +84,11 @@ internal fun PlacePredictionOrderContent(
                     order = state.order,
                     isLoading = !isIdle,
                     isEnabled = state.placeAction != PlaceActionUM.Unavailable,
-                    onClick = {
+                    onClick = { confirmedWith ->
                         focusManager.clearFocus()
-                        intents.onPlaceClick()
+                        intents.onPlaceClick(confirmedWith = confirmedWith)
                     },
-                    isHoldToConfirm = state.isHoldToConfirm,
+                    style = state.placeButtonStyle,
                     holdResetKey = state.holdResetKey,
                 )
             }
