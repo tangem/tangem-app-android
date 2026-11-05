@@ -18,6 +18,7 @@ internal class MultiWalletContentLoader @AssistedInject constructor(
     private val assetsDiscoverySubscriberFactory: AssetsDiscoverySubscriber.Factory,
     private val tokenListAnalyticsSubscriberFactory: TokenListAnalyticsSubscriber.Factory,
     private val jointOperationBannerSubscriberFactory: JointOperationBannerSubscriber.Factory,
+    private val jointAccountTokensSubscriberFactory: JointAccountTokensSubscriber.Factory,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> = listOfNotNull(
@@ -29,6 +30,7 @@ internal class MultiWalletContentLoader @AssistedInject constructor(
         tangemPayMainSubscriberFactory.create(userWallet),
         tokenListAnalyticsSubscriberFactory.create(userWallet),
         jointOperationBannerSubscriberFactory.create(userWallet),
+        jointAccountTokensSubscriberFactory.create(userWallet),
         if (userWallet is UserWallet.Hot) {
             assetsDiscoverySubscriberFactory.create(userWallet)
         } else {
