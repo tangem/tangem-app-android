@@ -52,6 +52,10 @@ class MarketsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         useUnmergedTree = true
     }
 
+    val tokensList: KNode = child {
+        hasTestTag(MarketsTestTags.TOKENS_LIST)
+    }
+
     val feedContent: KNode = child {
         hasTestTag(MarketsTestTags.FEED_CONTENT)
         useUnmergedTree = true
