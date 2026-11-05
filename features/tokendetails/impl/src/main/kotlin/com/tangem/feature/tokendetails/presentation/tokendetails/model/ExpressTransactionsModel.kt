@@ -38,6 +38,7 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 @Suppress("LongParameterList", "PropertyUsedBeforeDeclaration")
 @Stable
@@ -245,6 +246,30 @@ internal class ExpressTransactionsModel @Inject constructor(
                 internalUiState.value = expressStatusFactory.getStateWithUpdatedExpressTxs(
                     expressTxs = expressTxs,
                     updateBalance = ::updateNetworkToSwapBalance,
+                )
+                expressTxStatusTaskScheduler.scheduleTask(
+                    scope = modelScope,
+                    task = PeriodicTask(
+                        delay = EXPRESS_STATUS_UPDATE_DELAY,
+                        task = {
+                            try {
+                                Result.success(
+                                    expressStatusFactory.getUpdatedExpressStatuses(internalUiState.value.transactions),
+                                )
+                            } catch (exception: CancellationException) {
+                                throw exception
+                            } catch (exception: Exception) {
+                                Result.failure(exception)
+                            }
+                        },
+                        onSuccess = { updatedTxs ->
+                            internalUiState.value = expressStatusFactory.getStateWithUpdatedExpressTxs(
+                                expressTxs = updatedTxs,
+                                updateBalance = ::updateNetworkToSwapBalance,
+                            )
+                        },
+                        onError = { /* no-op */ },
+                    ),
                 )
             }
             .flowOn(dispatchers.main)

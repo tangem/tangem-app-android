@@ -41,6 +41,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkStatic
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
@@ -313,22 +314,86 @@ internal class DefaultExpressHistoryRepositoryTest {
     // endregion
 
 
+    // region observe active operation ids
+
+    @Test
+    fun `GIVEN active exchange and onramp WHEN observeActiveOperationIds THEN both are emitted with their type`() =
+        runTest {
+            // Arrange
+            stubActiveStatuses(exchangeIds = listOf(ACTIVE_EXCHANGE_TX_ID), onrampIds = listOf(ACTIVE_ONRAMP_TX_ID))
+
+            // Act
+            val actual = repository.observeActiveOperationIds(USER_WALLET_ID, CURRENCY).first()
+
+            // Assert
+            assertThat(actual).containsExactly(
+                ExpressOperationId(ACTIVE_EXCHANGE_TX_ID, ExpressOperationType.Swap),
+                ExpressOperationId(ACTIVE_ONRAMP_TX_ID, ExpressOperationType.Onramp),
+            )
+        }
+
+    @Test
+    fun `GIVEN only the asset is queried WHEN observeActiveOperationIds THEN lookup uses its network and contract`() =
+        runTest {
+            // Arrange
+            stubActiveStatuses(exchangeIds = emptyList(), onrampIds = emptyList())
+
+            // Act
+            repository.observeActiveOperationIds(USER_WALLET_ID, CURRENCY).first()
+
+            // Assert
+            val assetId = ExpressAsset.ID(CURRENCY)
+            coVerify(exactly = 1) {
+                expressHistoryDao.observeActiveExchangeIds(
+                    addresses = listOf(ADDRESS),
+                    network = assetId.networkId,
+                    contract = assetId.contractAddress,
+                    activeStatuses = any(),
+                )
+            }
+            coVerify(exactly = 1) {
+                expressHistoryDao.observeActiveOnrampIds(
+                    addresses = listOf(ADDRESS),
+                    network = assetId.networkId,
+                    contract = assetId.contractAddress,
+                    activeStatuses = any(),
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN no address WHEN observeActiveOperationIds THEN emits empty and nothing is queried`() = runTest {
+        // Arrange
+        coEvery { walletManagersFacade.getAddresses(USER_WALLET_ID, CURRENCY.network) } returns emptySet()
+        coEvery { walletManagersFacade.usedDynamicAddresses(USER_WALLET_ID, CURRENCY.network) } returns null
+
+        // Act
+        val actual = repository.observeActiveOperationIds(USER_WALLET_ID, CURRENCY).first()
+
+        // Assert
+        assertThat(actual).isEmpty()
+        coVerify(exactly = 0) { expressHistoryDao.observeActiveExchangeIds(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { expressHistoryDao.observeActiveOnrampIds(any(), any(), any(), any()) }
+    }
+
+    // endregion
+
     // region refresh active statuses
 
     @Test
-    fun `GIVEN active exchange and onramp WHEN refreshActiveStatuses THEN both are re-read and persisted`() = runTest {
+    fun `GIVEN a swap id WHEN refreshActiveStatuses THEN the exchange status is re-read and persisted`() = runTest {
         // Arrange
         val exchange = createExchangeItem(txId = ACTIVE_EXCHANGE_TX_ID).copy(status = "confirming")
-        val onramp = createOnrampItem(txId = ACTIVE_ONRAMP_TX_ID).copy(status = "sending")
-        stubActiveStatuses(exchangeIds = listOf(ACTIVE_EXCHANGE_TX_ID), onrampIds = listOf(ACTIVE_ONRAMP_TX_ID))
+        stubActiveStatuses(exchangeIds = listOf(ACTIVE_EXCHANGE_TX_ID), onrampIds = emptyList())
         stubExchangeStatus(ACTIVE_EXCHANGE_TX_ID, ApiResponse.Success(exchange))
-        stubOnrampStatus(ACTIVE_ONRAMP_TX_ID, ApiResponse.Success(onramp))
 
         // Act
-        val actual = repository.refreshActiveStatuses(userWalletId = USER_WALLET_ID, currency = CURRENCY)
+        repository.refreshActiveStatuses(
+            userWalletId = USER_WALLET_ID,
+            activeId = ExpressOperationId(ACTIVE_EXCHANGE_TX_ID, ExpressOperationType.Swap),
+        )
 
         // Assert
-        assertThat(actual).isTrue()
         coVerify(exactly = 1) {
             exchangeApi.getExchangeStatus(
                 userWalletId = USER_WALLET_ID_VALUE,
@@ -336,6 +401,24 @@ internal class DefaultExpressHistoryRepositoryTest {
                 txId = ACTIVE_EXCHANGE_TX_ID,
             )
         }
+        coVerify(exactly = 0) { onrampApi.getStatus(any(), any(), any()) }
+        coVerify(exactly = 1) { expressHistoryDao.upsertExchanges(listOfNotNull(exchange.toEntity())) }
+    }
+
+    @Test
+    fun `GIVEN an onramp id WHEN refreshActiveStatuses THEN the onramp status is re-read and persisted`() = runTest {
+        // Arrange
+        val onramp = createOnrampItem(txId = ACTIVE_ONRAMP_TX_ID).copy(status = "sending")
+        stubActiveStatuses(exchangeIds = emptyList(), onrampIds = listOf(ACTIVE_ONRAMP_TX_ID))
+        stubOnrampStatus(ACTIVE_ONRAMP_TX_ID, ApiResponse.Success(onramp))
+
+        // Act
+        repository.refreshActiveStatuses(
+            userWalletId = USER_WALLET_ID,
+            activeId = ExpressOperationId(ACTIVE_ONRAMP_TX_ID, ExpressOperationType.Onramp),
+        )
+
+        // Assert
         coVerify(exactly = 1) {
             onrampApi.getStatus(
                 userWalletId = USER_WALLET_ID_VALUE,
@@ -343,84 +426,40 @@ internal class DefaultExpressHistoryRepositoryTest {
                 txId = ACTIVE_ONRAMP_TX_ID,
             )
         }
-        coVerify(exactly = 1) { expressHistoryDao.upsertExchanges(listOfNotNull(exchange.toEntity())) }
+        coVerify(exactly = 0) { exchangeApi.getExchangeStatus(any(), any(), any()) }
         coVerify(exactly = 1) { expressHistoryDao.upsertOnramps(listOf(onramp.toEntity())) }
     }
 
     @Test
-    fun `GIVEN only the asset is queried WHEN refreshActiveStatuses THEN lookup uses its network and contract`() =
-        runTest {
-            // Arrange
-            stubActiveStatuses(exchangeIds = emptyList(), onrampIds = emptyList())
-
-            // Act
-            repository.refreshActiveStatuses(userWalletId = USER_WALLET_ID, currency = CURRENCY)
-
-            // Assert
-            val assetId = ExpressAsset.ID(CURRENCY)
-            coVerify(exactly = 1) {
-                expressHistoryDao.getActiveExchangeIds(
-                    addresses = listOf(ADDRESS),
-                    network = assetId.networkId,
-                    contract = assetId.contractAddress,
-                    activeStatuses = any(),
-                )
-            }
-            coVerify(exactly = 1) {
-                expressHistoryDao.getActiveOnrampIds(
-                    addresses = listOf(ADDRESS),
-                    network = assetId.networkId,
-                    contract = assetId.contractAddress,
-                    activeStatuses = any(),
-                )
-            }
-        }
-
-    @Test
-    fun `GIVEN nothing in flight WHEN refreshActiveStatuses THEN no request is sent and returns false`() = runTest {
+    fun `GIVEN the wallet is gone WHEN refreshActiveStatuses THEN no request is sent`() = runTest {
         // Arrange
-        stubActiveStatuses(exchangeIds = emptyList(), onrampIds = emptyList())
+        every { getUserWalletUseCase(USER_WALLET_ID) } returns Either.Left(mockk())
 
         // Act
-        val actual = repository.refreshActiveStatuses(userWalletId = USER_WALLET_ID, currency = CURRENCY)
+        repository.refreshActiveStatuses(
+            userWalletId = USER_WALLET_ID,
+            activeId = ExpressOperationId(ACTIVE_EXCHANGE_TX_ID, ExpressOperationType.Swap),
+        )
 
         // Assert
-        assertThat(actual).isFalse()
         coVerify(exactly = 0) { exchangeApi.getExchangeStatus(any(), any(), any()) }
         coVerify(exactly = 0) { onrampApi.getStatus(any(), any(), any()) }
-        coVerify(exactly = 0) { getUserWalletUseCase(any()) }
     }
 
     @Test
-    fun `GIVEN no address WHEN refreshActiveStatuses THEN nothing is queried and returns false`() = runTest {
+    fun `GIVEN the status request fails WHEN refreshActiveStatuses THEN nothing is persisted`() = runTest {
         // Arrange
-        coEvery { walletManagersFacade.getAddresses(USER_WALLET_ID, CURRENCY.network) } returns emptySet()
-        coEvery { walletManagersFacade.usedDynamicAddresses(USER_WALLET_ID, CURRENCY.network) } returns null
-
-        // Act
-        val actual = repository.refreshActiveStatuses(userWalletId = USER_WALLET_ID, currency = CURRENCY)
-
-        // Assert
-        assertThat(actual).isFalse()
-        coVerify(exactly = 0) { expressHistoryDao.getActiveExchangeIds(any(), any(), any(), any()) }
-        coVerify(exactly = 0) { expressHistoryDao.getActiveOnrampIds(any(), any(), any(), any()) }
-    }
-
-    @Test
-    fun `GIVEN one status request fails WHEN refreshActiveStatuses THEN the other is still persisted`() = runTest {
-        // Arrange
-        val onramp = createOnrampItem(txId = ACTIVE_ONRAMP_TX_ID).copy(status = "sending")
-        stubActiveStatuses(exchangeIds = listOf(ACTIVE_EXCHANGE_TX_ID), onrampIds = listOf(ACTIVE_ONRAMP_TX_ID))
+        stubActiveStatuses(exchangeIds = listOf(ACTIVE_EXCHANGE_TX_ID), onrampIds = emptyList())
         stubExchangeStatus(ACTIVE_EXCHANGE_TX_ID, ApiResponse.Error(httpError()).cast())
-        stubOnrampStatus(ACTIVE_ONRAMP_TX_ID, ApiResponse.Success(onramp))
 
         // Act
-        val actual = repository.refreshActiveStatuses(userWalletId = USER_WALLET_ID, currency = CURRENCY)
+        repository.refreshActiveStatuses(
+            userWalletId = USER_WALLET_ID,
+            activeId = ExpressOperationId(ACTIVE_EXCHANGE_TX_ID, ExpressOperationType.Swap),
+        )
 
         // Assert
-        assertThat(actual).isTrue()
         coVerify(exactly = 0) { expressHistoryDao.upsertExchanges(any()) }
-        coVerify(exactly = 1) { expressHistoryDao.upsertOnramps(listOf(onramp.toEntity())) }
     }
 
     // endregion
@@ -452,8 +491,8 @@ internal class DefaultExpressHistoryRepositoryTest {
         every { address.value } returns ADDRESS
         coEvery { walletManagersFacade.getAddresses(USER_WALLET_ID, CURRENCY.network) } returns setOf(address)
         coEvery { walletManagersFacade.usedDynamicAddresses(USER_WALLET_ID, CURRENCY.network) } returns null
-        coEvery { expressHistoryDao.getActiveExchangeIds(any(), any(), any(), any()) } returns exchangeIds
-        coEvery { expressHistoryDao.getActiveOnrampIds(any(), any(), any(), any()) } returns onrampIds
+        every { expressHistoryDao.observeActiveExchangeIds(any(), any(), any(), any()) } returns flowOf(exchangeIds)
+        every { expressHistoryDao.observeActiveOnrampIds(any(), any(), any(), any()) } returns flowOf(onrampIds)
 
         val userWallet: UserWallet = mockk()
         every { userWallet.walletId } returns USER_WALLET_ID

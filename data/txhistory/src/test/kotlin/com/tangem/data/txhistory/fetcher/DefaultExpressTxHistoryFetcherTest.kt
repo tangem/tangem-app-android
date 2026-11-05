@@ -145,11 +145,11 @@ internal class DefaultExpressTxHistoryFetcherTest {
     }
 
     /**
-     * No in-flight operation to refresh, so the status polling the token-details triggers start does a single
-     * pass and stops instead of looping over virtual time forever.
+     * Nothing in flight, so the status polling the token-details triggers start takes no hold and never loops
+     * over virtual time.
      */
     private fun stubIdleStatusPolling() {
-        coEvery { expressHistoryRepository.refreshActiveStatuses(any(), any()) } returns false
+        every { expressHistoryRepository.observeActiveOperationIds(any(), any()) } returns flowOf(emptySet())
     }
 
     private fun stubAllSuccess(hasMore: Boolean) {
