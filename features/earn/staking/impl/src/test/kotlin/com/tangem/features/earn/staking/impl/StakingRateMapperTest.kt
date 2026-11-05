@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.math.BigDecimal
 
 internal class StakingRateMapperTest {
@@ -170,19 +171,35 @@ internal class StakingRateMapperTest {
         assertThat(actual?.isActive).isFalse()
     }
 
-    @Test
-    fun `GIVEN stake source ONLY_CACHE WHEN entry THEN entry source is ONLY_CACHE`() {
+    @ParameterizedTest
+    @EnumSource(StatusSource::class)
+    fun `GIVEN a staked balance source WHEN entry THEN entry source is the balance source`(source: StatusSource) {
         // Arrange
         val status = currencyStatus(
             currency = solana,
-            stakingBalance = MockStaking.stakeKitBalance(source = StatusSource.ONLY_CACHE),
+            stakingBalance = MockStaking.stakeKitBalance(source = source),
         )
 
         // Act
         val actual = mapper.entry(userWalletId, status, StakingAvailability.Available(option(MockStaking.validator())))
 
         // Assert
-        assertThat(actual?.source).isEqualTo(StatusSource.ONLY_CACHE)
+        assertThat(actual?.source).isEqualTo(source)
+    }
+
+    @ParameterizedTest
+    @EnumSource(StatusSource::class)
+    fun `GIVEN no position and a staking balance source WHEN entry THEN entry source is that source`(
+        source: StatusSource,
+    ) {
+        // Arrange
+        val status = currencyStatus(currency = solana, stakingBalanceSource = source)
+
+        // Act
+        val actual = mapper.entry(userWalletId, status, StakingAvailability.Available(option(MockStaking.validator())))
+
+        // Assert
+        assertThat(actual?.source).isEqualTo(source)
     }
 
     @Test

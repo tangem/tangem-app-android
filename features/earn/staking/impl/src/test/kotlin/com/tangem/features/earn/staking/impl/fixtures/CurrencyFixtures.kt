@@ -28,11 +28,15 @@ internal fun currencyStatus(
     fiatRate: BigDecimal? = BigDecimal("2"),
     stakingBalance: StakingBalance? = null,
     networkSource: StatusSource = StatusSource.ACTUAL,
+    stakingBalanceSource: StatusSource = StatusSource.ACTUAL,
 ): CryptoCurrencyStatus {
     val networkAddress = NetworkAddress.Single(
         NetworkAddress.Address("address", NetworkAddress.Address.Type.Primary),
     )
-    val sources = CryptoCurrencyStatus.Sources(networkSource = networkSource)
+    val sources = CryptoCurrencyStatus.Sources(
+        networkSource = networkSource,
+        stakingBalanceSource = stakingBalanceSource,
+    )
     val value = when {
         amount == null -> CryptoCurrencyStatus.NoAmount(priceChange = null, fiatRate = fiatRate)
         fiatRate != null -> CryptoCurrencyStatus.Loaded(
