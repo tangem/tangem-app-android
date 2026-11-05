@@ -28,8 +28,12 @@ interface WalletRegistrar {
     /**
      * Registers the wallet identified by [walletId] (Base64 `UserWalletId`) in one shot: nonce
      * request, signing and POST. Use this when there is no session/UX constraint (MOBILE wallets).
+     * An already registered wallet short-circuits to [WalletRegistrationResult.AlreadyRegistered].
      */
-    suspend fun register(walletId: String, signer: WalletSigner): Either<WalletRegistrationError, Unit>
+    suspend fun register(
+        walletId: String,
+        signer: WalletSigner,
+    ): Either<WalletRegistrationError, WalletRegistrationResult>
 
     /**
      * Best-effort check of whether [walletId] (Base64 `UserWalletId`) is already registered. Lets a

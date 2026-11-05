@@ -25,6 +25,7 @@ import com.tangem.lib.auth.session.PreparedWalletRegistration
 import com.tangem.lib.auth.session.WalletNonce
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.lib.auth.session.WalletRegistrationError
+import com.tangem.lib.auth.session.WalletRegistrationResult
 import com.tangem.lib.auth.session.WalletSigner
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -52,23 +53,26 @@ internal class DefaultWalletRegistrar(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : WalletRegistrar {
 
-    override suspend fun register(walletId: String, signer: WalletSigner): Either<WalletRegistrationError, Unit> =
-        withContext(dispatchers.io) {
-            // Hold the per-wallet lock across the WHOLE one-shot flow (idempotency + nonce + sign +
-            // submit), so two concurrent register() calls for the same wallet can't both pass the
-            // idempotency check and consume/sign separate nonces.
-            locks.forWallet(walletId).withLock {
-                either {
-                    if (isAlreadyRegistered(walletId)) return@either
-                    requireSession()
-                    val nonce = fetchNonce(NonceRequestType.MOBILE_WALLET)
-                    val prepared = assemble(walletId, nonce, signer)
-                    locks.sessionRotation.withLock {
-                        handleRegisterResponse(prepared.walletId, authApi.registerWallet(prepared.request))
-                    }
+    override suspend fun register(
+        walletId: String,
+        signer: WalletSigner,
+    ): Either<WalletRegistrationError, WalletRegistrationResult> = withContext(dispatchers.io) {
+        // Hold the per-wallet lock across the WHOLE one-shot flow (idempotency + nonce + sign +
+        // submit), so two concurrent register() calls for the same wallet can't both pass the
+        // idempotency check and consume/sign separate nonces.
+        locks.forWallet(walletId).withLock {
+            either {
+                if (isAlreadyRegistered(walletId)) return@either WalletRegistrationResult.AlreadyRegistered
+                requireSession()
+                val nonce = fetchNonce(NonceRequestType.MOBILE_WALLET)
+                val prepared = assemble(walletId, nonce, signer)
+                locks.sessionRotation.withLock {
+                    handleRegisterResponse(prepared.walletId, authApi.registerWallet(prepared.request))
                 }
+                WalletRegistrationResult.Registered
             }
         }
+    }
 
     override suspend fun isRegistered(walletId: String): Boolean = withContext(dispatchers.io) {
         runSuspendCatching { walletId in registeredWalletIdsSync() }

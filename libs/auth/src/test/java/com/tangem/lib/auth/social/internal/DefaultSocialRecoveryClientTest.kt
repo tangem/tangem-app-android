@@ -17,6 +17,7 @@ import com.tangem.lib.auth.session.SessionTokens
 import com.tangem.lib.auth.session.SessionTokensStore
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.lib.auth.session.WalletRegistrationError
+import com.tangem.lib.auth.session.WalletRegistrationResult
 import com.tangem.lib.auth.session.WalletSignatureBundle
 import com.tangem.lib.auth.session.WalletSigner
 import com.tangem.lib.auth.session.internal.AuthErrorConverter
@@ -519,7 +520,8 @@ internal class DefaultSocialRecoveryClientTest {
     @Test
     fun `GIVEN the registrar succeeds WHEN registerWallet THEN the wallet is registered`() = runTest {
         // Arrange
-        coEvery { walletRegistrar.register(WALLET_ID, signer) } returns Either.Right(Unit)
+        coEvery { walletRegistrar.register(WALLET_ID, signer) } returns
+            Either.Right(WalletRegistrationResult.Registered)
 
         // Act
         val result = client.registerWallet(walletId = WALLET_ID, signer = signer)
