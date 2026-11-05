@@ -5,6 +5,7 @@ import arrow.core.Either
 import arrow.core.left
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.TangemSdkError
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.registration.WalletDeviceLinkRepository
@@ -12,6 +13,8 @@ import com.tangem.domain.wallets.registration.WalletLinkError
 import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.lib.auth.session.WalletRegistrationError
+import com.tangem.lib.auth.session.WalletRegistrationResult
+import com.tangem.tap.domain.walletregistration.BackendAuthAnalyticsEvent.WalletRegistrationFailed
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -24,6 +27,7 @@ internal class DefaultWalletDeviceLinkRepository @Inject constructor(
     private val mobileSigner: MobileWalletRegistrationSigner,
     private val coldSigner: ColdWalletRegistrationSigner,
     private val walletFeatureToggles: WalletFeatureToggles,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : WalletDeviceLinkRepository {
 
     override fun isLinked(userWallet: UserWallet): Flow<Boolean> {
@@ -44,11 +48,34 @@ internal class DefaultWalletDeviceLinkRepository @Inject constructor(
         }
 
         return walletRegistrar.register(walletId = userWallet.walletId.toBase64(), signer = signer)
-            .mapLeft { error ->
-                error.toLinkError().also { linkError ->
-                    if (linkError is WalletLinkError.Failed) TangemLogger.e("Wallet linking failed: $error")
+            .onRight { result ->
+                if (result == WalletRegistrationResult.Registered) {
+                    analyticsEventHandler.send(BackendAuthAnalyticsEvent.WalletLinked())
                 }
             }
+            .mapLeft { error ->
+                error.toLinkError().also { linkError ->
+                    if (linkError is WalletLinkError.Failed) {
+                        TangemLogger.e("Wallet linking failed: $error")
+                        sendRegistrationFailed(userWallet, linkError)
+                    }
+                }
+            }
+            .map { }
+    }
+
+    private fun sendRegistrationFailed(userWallet: UserWallet, error: WalletLinkError.Failed) {
+        val walletType = when (userWallet) {
+            is UserWallet.Cold -> WalletRegistrationFailed.WalletType.Cold
+            is UserWallet.Hot -> WalletRegistrationFailed.WalletType.Mobile
+        }
+        analyticsEventHandler.send(
+            WalletRegistrationFailed(
+                walletType = walletType,
+                stage = WalletRegistrationFailed.Stage.Register,
+                reason = error.reason,
+            ),
+        )
     }
 
     /**
