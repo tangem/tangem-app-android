@@ -117,7 +117,9 @@ private fun MoneyAccountRow(
 @Composable
 private fun MoneyAccountUnavailable(modifier: Modifier = Modifier) {
     TangemRow(
-        modifier = modifier.moneyAccountCard(),
+        modifier = modifier
+            .moneyAccountCard()
+            .testTag(MoneyAccountTestTags.MAIN_ROW),
         contentLead = TangemRowContentLead.Start,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = { MoneyAccountIcon() },
@@ -157,7 +159,9 @@ private fun MoneyAccountFiatAmount(text: String, isBalanceFlickering: Boolean, i
     ) {
         if (isBalanceFromCache) {
             Icon(
-                modifier = Modifier.size(12.dp),
+                modifier = Modifier
+                    .size(12.dp)
+                    .testTag(MoneyAccountTestTags.MAIN_ROW_CACHE_ICON),
                 painter = painterResource(CoreUiR.drawable.ic_error_sync_24),
                 tint = TangemTheme.colors3.icon.secondary,
                 contentDescription = null,
