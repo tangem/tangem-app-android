@@ -11,6 +11,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceButtonSty
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPrediction
+import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.toStatusRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.CoroutineStart
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class PlacePredictionSummaryModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -28,6 +30,7 @@ internal class PlacePredictionSummaryModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     orderSubmitterFactory: PlacePredictionOrderSubmitter.Factory,
     buttonStyleFactory: PlacePredictionButtonStyle.Factory,
+    private val quoteFreshness: PlacePredictionQuoteFreshness,
 ) : Model(), PlacePredictionSummaryIntents {
 
     private val order = paramsContainer.require<PreparedPrediction>()
@@ -59,6 +62,11 @@ internal class PlacePredictionSummaryModel @Inject constructor(
     }
 
     override fun onPlaceClick(confirmedWith: PlaceButtonStyleUM) {
+        if (uiState.value.submit is SubmitUM.Idle && quoteFreshness.refuseIfStale(quote = order.quote)) {
+            router.pop()
+            return
+        }
+
         modelScope.launch(start = CoroutineStart.UNDISPATCHED) {
             val result = orderSubmitter.submit(
                 prepared = order,
