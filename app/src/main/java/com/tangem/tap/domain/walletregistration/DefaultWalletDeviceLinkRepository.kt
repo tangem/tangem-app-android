@@ -9,6 +9,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.registration.WalletDeviceLinkRepository
 import com.tangem.domain.wallets.registration.WalletLinkError
+import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.lib.auth.session.WalletRegistrationError
 import com.tangem.utils.logging.TangemLogger
@@ -22,6 +23,7 @@ internal class DefaultWalletDeviceLinkRepository @Inject constructor(
     private val walletRegistrar: WalletRegistrar,
     private val mobileSigner: MobileWalletRegistrationSigner,
     private val coldSigner: ColdWalletRegistrationSigner,
+    private val walletFeatureToggles: WalletFeatureToggles,
 ) : WalletDeviceLinkRepository {
 
     override fun isLinked(userWallet: UserWallet): Flow<Boolean> {
@@ -53,17 +55,25 @@ internal class DefaultWalletDeviceLinkRepository @Inject constructor(
      * The cold signer signs with the card's first wallet and rejects any curve but secp256k1, so a card whose first
      * wallet is on another curve (an Ed25519-only card) could never be linked and would keep the banner forever.
      */
-    private fun UserWallet.canBeLinked(): Boolean = when (this) {
-        is UserWallet.Cold -> {
-            val card = scanResponse.card
-            card.isColdRegistrationSupported && card.wallets.firstOrNull()?.curve == EllipticCurve.Secp256k1
+    private fun UserWallet.canBeLinked(): Boolean {
+        if (!walletFeatureToggles.isWalletLinkingEnabled) return false
+
+        return when (this) {
+            is UserWallet.Cold -> {
+                val card = scanResponse.card
+                card.isColdRegistrationSupported && card.wallets.firstOrNull()?.curve == EllipticCurve.Secp256k1
+            }
+            is UserWallet.Hot -> true
         }
-        is UserWallet.Hot -> true
     }
 
     private fun WalletRegistrationError.toLinkError(): WalletLinkError {
-        val isCancelled = this is WalletRegistrationError.SigningFailed && cause is TangemSdkError.UserCancelled
-        return if (isCancelled) WalletLinkError.Cancelled else WalletLinkError.Failed(reason = toString())
+        return when ((this as? WalletRegistrationError.SigningFailed)?.cause) {
+            is TangemSdkError.UserCancelled -> WalletLinkError.Cancelled
+            // UserWalletIdPreflightReadFilter rejects a card of another wallet with this error
+            is TangemSdkError.WalletNotFound -> WalletLinkError.WrongCard
+            else -> WalletLinkError.Failed(reason = toString())
+        }
     }
 
     private fun UserWalletId.toBase64(): String = Base64.encodeToString(value, Base64.NO_WRAP)
