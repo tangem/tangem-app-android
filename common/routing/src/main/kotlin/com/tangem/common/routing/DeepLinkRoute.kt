@@ -109,6 +109,10 @@ sealed class DeepLinkRoute {
         override val host: String = "campaigns"
     }
 
+    data object PromoPage : DeepLinkRoute() {
+        override val host: String = "promo_page"
+    }
+
     data object McpAuthorization : DeepLinkRoute() {
         override val host: String = "mcp.authorization"
     }

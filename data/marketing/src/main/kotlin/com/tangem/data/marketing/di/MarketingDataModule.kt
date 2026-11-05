@@ -10,6 +10,7 @@ import com.tangem.data.marketing.DefaultDemandSurveyRepository
 import com.tangem.data.marketing.DefaultMarketingFeatureToggles
 import com.tangem.data.marketing.DefaultMarketingRepository
 import com.tangem.data.marketing.DefaultMarketingUidBindingRepository
+import com.tangem.data.marketing.DefaultPromoPageRepository
 import com.tangem.data.marketing.converter.MarketingCampaignConverter
 import com.tangem.data.marketing.store.DefaultMarketingCampaignsCacheStore
 import com.tangem.data.marketing.store.DefaultMarketingDismissStore
@@ -17,6 +18,7 @@ import com.tangem.data.marketing.store.MarketingCampaignsCacheStore
 import com.tangem.data.marketing.store.MarketingDismissStore
 import com.tangem.datasource.api.marketing.models.MarketingCampaignsCacheEntry
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.create
@@ -27,6 +29,7 @@ import com.tangem.domain.marketing.DemandSurveyRepository
 import com.tangem.domain.marketing.MarketingFeatureToggles
 import com.tangem.domain.marketing.MarketingRepository
 import com.tangem.domain.marketing.MarketingUidBindingRepository
+import com.tangem.domain.marketing.PromoPageRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -127,6 +130,11 @@ internal object MarketingDataModule {
         featureToggles = featureToggles,
         walletServerBinder = walletServerBinder,
     )
+
+    @Provides
+    @Singleton
+    fun providePromoPageRepository(appPreferencesStore: AppPreferencesStore): PromoPageRepository =
+        DefaultPromoPageRepository(appPreferencesStore = appPreferencesStore)
 
     @Provides
     @Singleton
