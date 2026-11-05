@@ -28,7 +28,6 @@ class ValidatePredictionOrderUseCase {
         marketTokenId: String,
         marketVersion: PolymarketMarketVersion,
         isNegRisk: Boolean,
-        quoteReceivedAtMillis: Long,
         nowMillis: Long,
         route: PredictionOrderSigningRoute = PredictionOrderSigningRoute.Owner,
     ): Either<PredictionOrderValidationError, Unit> = either {
@@ -50,9 +49,6 @@ class ValidatePredictionOrderUseCase {
         ensure(signatureLength > PolymarketContracts.SIGNATURE_RSV_HEX_LENGTH) {
             PredictionOrderValidationError.SignatureNotWrapped(length = signatureLength)
         }
-
-        val age = nowMillis - quoteReceivedAtMillis
-        ensure(age in 0..MAX_QUOTE_AGE_MILLIS) { PredictionOrderValidationError.StaleQuote(ageMillis = age) }
     }
 
     private fun ValidationRaise.unwrapSignature(signature: String, route: PredictionOrderSigningRoute): String {
@@ -179,8 +175,6 @@ class ValidatePredictionOrderUseCase {
 
     private companion object {
         const val MILLIS_THRESHOLD = 1_000_000_000_000L
-
-        const val MAX_QUOTE_AGE_MILLIS = 60_000L
 
         const val PRICE_SCALE = 8
     }

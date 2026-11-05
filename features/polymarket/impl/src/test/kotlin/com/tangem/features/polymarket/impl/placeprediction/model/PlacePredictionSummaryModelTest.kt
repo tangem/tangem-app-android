@@ -300,7 +300,7 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
             val model = createSummaryModel(testScope = this, amountModel = amountModel)
             coEvery { signOrderInteractor(request = any()) } returns
                 PredictionOrderFailure.Invalid(
-                    error = PredictionOrderValidationError.StaleQuote(ageMillis = 120_000),
+                    error = PredictionOrderValidationError.SignatureNotWrapped(length = 130),
                 ).left()
             amountModel.onPause()
 
@@ -767,6 +767,36 @@ internal class PlacePredictionSummaryModelTest : PlacePredictionModelTestBase() 
                 coVerify(exactly = 0) { signOrderInteractor(request = any()) }
 
                 model.onDestroy()
+            }
+    }
+
+    @Nested
+    inner class StaleQuote {
+
+        @Test
+        fun `GIVEN a summary quote older than 30 s WHEN place clicked THEN it is refused and the summary closes`() =
+            runTest {
+                // Arrange
+                val amountModel = createAmountModel(testScope = this)
+                advanceUntilIdle()
+                amountModel.onResume()
+                amountModel.onAmountChange(value = "10")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+                val model = createSummaryModel(testScope = this, amountModel = amountModel)
+                nowMillis += 30_001
+                val dialog = slot<DialogMessage>()
+                every { messageSender.send(capture(dialog)) } returns Unit
+
+                // Act
+                model.tapPlace()
+                advanceUntilIdle()
+
+                // Assert
+                coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+                assertThat(dialog.captured.message)
+                    .isEqualTo(resourceReference(R.string.prediction_place_price_changed_description))
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+                verify(exactly = 1) { router.pop(any()) }
             }
     }
 
