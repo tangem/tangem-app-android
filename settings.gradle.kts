@@ -364,6 +364,7 @@ include(":features:earn:flow:api")
 include(":features:earn:flow:impl")
 include(":features:earn:impl")
 include(":features:earn:product:api")
+include(":features:earn:staking:impl")
 
 include(":features:force-update:api")
 include(":features:force-update:impl")
