@@ -646,8 +646,10 @@ internal class SendModel @Inject constructor(
         val amount = parsedQrCode?.amount
             ?.takeIf { it.signum() > 0 }
             ?.parseBigDecimal(cryptoCurrency.decimals)
+        // A scan without an amount must not drop the one a send intent already carries: nothing else supplies it
+        val keptAmount = (predefinedValues as? PredefinedValues.Content.QrCode)?.amount
         predefinedValues = PredefinedValues.Content.QrCode(
-            amount = amount.orEmpty(),
+            amount = amount ?: keptAmount.orEmpty(),
             address = parsedQrCode?.address.orEmpty(),
             memo = parsedQrCode?.memo,
             source = PredefinedValues.Source.SEND_SCREEN,
