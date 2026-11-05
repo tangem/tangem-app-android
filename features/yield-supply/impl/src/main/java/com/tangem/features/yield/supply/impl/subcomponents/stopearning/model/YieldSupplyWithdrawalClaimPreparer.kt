@@ -6,6 +6,8 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
+import com.tangem.domain.yield.supply.INCREASE_GAS_LIMIT_FOR_SUPPLY
+import com.tangem.domain.yield.supply.increaseGasLimitBy
 import com.tangem.domain.yield.supply.models.incentives.YieldReward
 import com.tangem.domain.yield.supply.usecase.BuildYieldClaimTransactionUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyClaimTracker
@@ -90,7 +92,7 @@ internal class YieldSupplyWithdrawalClaimPreparer @Inject constructor(
         }
 
         return YieldPreClaim.Ready(
-            transactionData = transactionData.copy(fee = fee),
+            transactionData = transactionData.copy(fee = fee.increaseGasLimitBy(INCREASE_GAS_LIMIT_FOR_SUPPLY)),
             chainId = chainId,
             userAddress = userAddress,
             token = token,

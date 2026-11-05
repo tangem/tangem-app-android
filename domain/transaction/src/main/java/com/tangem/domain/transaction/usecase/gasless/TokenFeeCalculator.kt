@@ -138,6 +138,8 @@ internal class TokenFeeCalculator(
      * @param isLiquidBalanceCheckSkipped skips the checks that the liquid balance already covers the fee, for
      *   callers that settle coverage themselves. On by default on the yield path, where the balance is topped up
      *   by the appended withdraw.
+     * @param isCallGasLimitFinal the gas limit of [initialFee] already carries the safety margin, so it is signed
+     *   as is instead of being padded once more.
      */
     @Suppress("LongMethod", "CyclomaticComplexity", "LongParameterList")
     suspend fun calculateTokenFee(
@@ -148,6 +150,7 @@ internal class TokenFeeCalculator(
         isYieldActive: Boolean = false,
         userWallet: UserWallet? = null,
         isLiquidBalanceCheckSkipped: Boolean = isYieldActive,
+        isCallGasLimitFinal: Boolean = false,
     ): Either<GetFeeError, TransactionFeeExtended> {
         return either {
             // fast finish to skip calculations if no funds in token.
@@ -183,8 +186,11 @@ internal class TokenFeeCalculator(
             }
 
             // Safety margin over the raw estimation
-            val mainTransactionGasLimit = initialFee.gasLimit
-                .increaseByPercent(PERCENT_TO_INCREASE_SUB_CALL_GASLIMIT)
+            val mainTransactionGasLimit = if (isCallGasLimitFinal) {
+                initialFee.gasLimit
+            } else {
+                initialFee.gasLimit.increaseByPercent(PERCENT_TO_INCREASE_SUB_CALL_GASLIMIT)
+            }
             val withdrawGasLimit = withdrawGas.increaseByPercent(PERCENT_TO_INCREASE_SUB_CALL_GASLIMIT)
 
             val maxTokenFeeGas = mainTransactionGasLimit + feeTransferGasLimit + baseGas + withdrawGasLimit
@@ -276,10 +282,6 @@ internal class TokenFeeCalculator(
             }
         }
         return rawFeeTransferGasLimit.increaseByPercent(PERCENT_TO_INCREASE_TRANSFER_GASLIMIT)
-    }
-
-    fun withSubCallGasMargin(gasLimit: BigInteger): BigInteger {
-        return gasLimit.increaseByPercent(PERCENT_TO_INCREASE_SUB_CALL_GASLIMIT)
     }
 
     @Suppress("SwallowedException")

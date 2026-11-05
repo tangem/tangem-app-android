@@ -182,6 +182,25 @@ internal class EstimateFeeForGaslessBatchUseCaseTest {
     }
 
     @Test
+    fun `GIVEN calls with gas limits WHEN a token pays THEN the fee gas adds no margin over them`() = runTest {
+        // Arrange
+        val operationTokenStatus = usdcStatus(balance = BigDecimal("100"))
+        givenAccountStatusList(coinStatus(balance = BigDecimal.ZERO), operationTokenStatus)
+        val expectedGasLimit = BigInteger("450000") + BigInteger("66000") + BigInteger("21000")
+
+        // Act
+        val result = useCase(
+            userWallet = userWallet,
+            operationTokenStatus = operationTokenStatus,
+            calls = enterCalls(),
+            sameTokenRule = YieldModuleSameTokenRule.Enter,
+        )
+
+        // Assert
+        assertThat(result.tokenFee().gasLimit).isEqualTo(expectedGasLimit)
+    }
+
+    @Test
     fun `GIVEN Enter and the operation token liquid balance is below the fee WHEN invoke THEN native fee`() =
         runTest {
             // Arrange — the total is large, but almost all of it is still held by an inactive module.
@@ -786,7 +805,7 @@ internal class EstimateFeeForGaslessBatchUseCaseTest {
         val HIGH_MAX_FEE_PER_GAS: BigInteger = BigInteger("9020000")
         val HIGH_PRIORITY_FEE: BigInteger = BigInteger("3020000")
         val WITHDRAW_GAS: BigInteger = BigInteger("200000")
-        val ENTER_CALL_GAS_LIMITS = listOf(BigInteger("280000"), BigInteger("210000"), BigInteger("140000"))
-        val EXIT_CALL_GAS_LIMITS = listOf(BigInteger("280000"), BigInteger("210000"))
+        val ENTER_CALL_GAS_LIMITS = listOf(BigInteger("200000"), BigInteger("150000"), BigInteger("100000"))
+        val EXIT_CALL_GAS_LIMITS = listOf(BigInteger("200000"), BigInteger("150000"))
     }
 }

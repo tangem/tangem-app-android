@@ -35,7 +35,7 @@ class YieldSupplyEstimateEnterFeeUseCase(
                         userWallet = userWallet,
                         cryptoCurrency = cryptoCurrency,
                         transactionData = transaction,
-                    ).normal,
+                    ).normal.increaseGasLimitBy(INCREASE_GAS_LIMIT_FOR_SUPPLY),
                 )
             }
         } else {
@@ -97,7 +97,7 @@ class YieldSupplyEstimateEnterFeeUseCase(
                     userWallet = userWallet,
                     cryptoCurrency = cryptoCurrency,
                     transactionData = transaction,
-                ).normal,
+                ).normal.increaseGasLimitBy(INCREASE_GAS_LIMIT_FOR_SUPPLY),
             )
         }
 
