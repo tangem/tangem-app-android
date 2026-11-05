@@ -472,6 +472,7 @@
   <string name="common_retry">重试</string>
   <string name="common_save">节省</string>
   <string name="common_save_changes">保存更改</string>
+  <string name="common_scan_card">扫描卡</string>
   <string name="common_search">搜索</string>
   <string name="common_search_tokens">搜索代币</string>
   <string name="common_second_no_param">秒</string>
@@ -1351,6 +1352,24 @@
   <string name="markets_tooltip_v2_title">添加更多代币</string>
   <string name="markets_yield_supply_banner_description">增强资产性能，并使其能够即时访问。%s</string>
   <string name="markets_yield_supply_banner_title">激活收益模式</string>
+  <string name="mcp_connection_request_agent_can">该智能体将能够</string>
+  <string name="mcp_connection_request_can_view_balance">查看余额和交易记录</string>
+  <string name="mcp_connection_request_notifications_description">每笔交易您都会收到确认通知。如果没有通知，智能体将无法连接。</string>
+  <string name="mcp_connection_success_description">%s 现在可以查看您的余额并申请交易审批。您随时可在 Connections 中撤销访问权限。</string>
+  <string name="mcp_connection_success_title">智能体已连接</string>
+  <string name="mcp_intent_proceed">继续</string>
+  <string name="mcp_intent_processed_title">该意图已处理完毕</string>
+  <string name="mcp_intent_unknown_agent_name">AI</string>
+  <string name="mcp_send_intent_cant_reach_title">无法确定意图</string>
+  <string name="mcp_send_intent_offer_description">智能体要求从您的账户进行转账。接下来，您将核对相关详情。</string>
+  <string name="mcp_send_intent_offer_title">%1$s 智能体想发送 %2$s</string>
+  <string name="mcp_send_intent_processed_subtitle">发送 %1$s</string>
+  <string name="mcp_session_revoke_access">撤销访问权限</string>
+  <string name="mcp_session_title">已连接的 MCP</string>
+  <string name="mcp_swap_intent_cant_reach_title">无法确定意图</string>
+  <string name="mcp_swap_intent_offer_description">该智能体要求从您的账户进行交换。接下来，您将审核相关细节。</string>
+  <string name="mcp_swap_intent_offer_title">%1$s 智能体希望将 %2$s 更换为 %3$s</string>
+  <string name="mcp_swap_intent_processed_subtitle">交换 %1$s 到 %2$s</string>
   <string name="mobile_wallet_requires_min_os_warning_body">创建手机钱包前必须更新至 %1$s</string>
   <string name="mobile_wallet_requires_min_os_warning_title">手机钱包需要 %1$s 或更高版本</string>
   <string name="money_account_add_funds_bank_description">通过 ACH/Wire 或 SPEI 从银行账户接收 USD</string>
@@ -1389,6 +1408,7 @@
   <string name="money_account_onboarding_transfers_card_caption">入账。出账。</string>
   <string name="money_account_onboarding_transfers_card_subtitle">使用带有银行信息的专属账户</string>
   <string name="money_account_onboarding_transfers_card_title">以法币付款和收款</string>
+  <string name="money_account_send_bank_transfer_unavailable">不可用</string>
   <string name="money_account_send_fees_footer">费用包含%s服务费和预估网络费</string>
   <string name="money_account_send_network_fee_note">费用包含预估网络费%s，可能随网络活跃度变化</string>
   <string name="money_account_send_pay_button">支付 %s</string>
@@ -1657,15 +1677,16 @@
   <string name="prediction_add_funds_max_receive_amount_title">接收金额不得超过 %s</string>
   <string name="prediction_add_funds_notification_limits_description">存款金额必须至少为 %1$s。不建议单笔存入超过 $50,000 — 请将大额资金拆分为多笔小额存款。</string>
   <string name="prediction_add_funds_notification_limits_title">存款限额</string>
-  <string name="prediction_add_funds_receive_body" formatted="false">从其他钱包发送 %1s，最低 %2s</string>
+  <string name="prediction_add_funds_receive_body">从其他钱包发送 %1$s，最低 %2$s</string>
   <string name="prediction_add_funds_receive_subtitle">将 Polygon 网络上的 USDC 发送到您的 Polymarket 账户</string>
   <string name="prediction_add_funds_receive_title">从其他钱包或交易所</string>
-  <string name="prediction_add_funds_subtitle" formatted="false">%2s 上的 %1s</string>
+  <string name="prediction_add_funds_subtitle">%2$s 上的 %1$s</string>
   <string name="prediction_add_funds_swap_body">兑换您已持有的代币</string>
   <string name="prediction_add_funds_swap_subtitle">使用 Tangem 钱包中的加密货币为您的 Polymarket 账户充值</string>
   <string name="prediction_add_funds_swap_title">从您的 Tangem 钱包</string>
   <string name="prediction_balance_total">总余额</string>
   <string name="prediction_balance_withdraw">提现</string>
+  <string name="prediction_cash_out">兑现</string>
   <string name="prediction_claim_error_failed">申领未成功。您的账户资金未发生变动，可以重试。</string>
   <string name="prediction_claim_error_generic">无法发送申领请求。请重试。</string>
   <string name="prediction_claim_error_rejected">Polymarket 拒绝处理该申领。请刷新您的持仓并重试。</string>
@@ -1677,7 +1698,7 @@
   <string name="prediction_close_result_partially_sold_title">部分卖出</string>
   <string name="prediction_close_result_sold_title">已卖出 %s</string>
   <string name="prediction_close_result_tokens_sold">已卖出份额</string>
-  <string name="prediction_close_selling_of" formatted="false">正在卖出 %1s / %2s 份</string>
+  <string name="prediction_close_selling_of">正在卖出 %1$s / %2$s 份</string>
   <string name="prediction_close_selling_tokens">正在卖出 %s 份</string>
   <string name="prediction_close_summary_to">至</string>
   <string name="prediction_close_title">平仓</string>
@@ -1696,10 +1717,10 @@
   <string name="prediction_event_probability">概率</string>
   <string name="prediction_event_total_volume">总交易量：</string>
   <string name="prediction_fee_sheet_builder_fee">Tangem 服务费</string>
-  <string name="prediction_fee_sheet_buy_description" formatted="false">以每份 %2s¢ 的价格买入 %1s 份。根据市场撮合情况，最终成交份额（及相应的 %3s 成交金额）可能会在您设置的 %4s 滑点限制内浮动。</string>
+  <string name="prediction_fee_sheet_buy_description">以每份 %2$s¢ 的价格买入 %1$s 份。根据市场撮合情况，最终成交份额（及相应的 %3$s 成交金额）可能会在您设置的 %4$s 滑点限制内浮动。</string>
   <string name="prediction_fee_sheet_order">预测订单</string>
   <string name="prediction_fee_sheet_polymarket_fee">Polymarket 手续费</string>
-  <string name="prediction_fee_sheet_sell_description" formatted="false">以每份 %2s¢ 的价格卖出 %1s 份。根据市场撮合情况，最终成交份额（及相应的 %3s 成交金额）可能会在您设置的 %4s 滑点限制内浮动。</string>
+  <string name="prediction_fee_sheet_sell_description">以每份 %2$s¢ 的价格卖出 %1$s 份。根据市场撮合情况，最终成交份额（及相应的 %3$s 成交金额）可能会在您设置的 %4$s 滑点限制内浮动。</string>
   <string name="prediction_fee_sheet_total">总计</string>
   <string name="prediction_history_bought">已买入</string>
   <string name="prediction_history_csv_average_price">平均价格</string>
@@ -1752,7 +1773,7 @@
   <string name="prediction_onboarding_faq_risks_question">有哪些风险？</string>
   <string name="prediction_onboarding_faq_tap_answer">您的卡片只需签名一次，即可在 Polymarket 上创建自托管存款账户。此后，您可以直接通过 Tangem 充值、交易和提现 — 且只有您的卡片可以转移资金。</string>
   <string name="prediction_onboarding_faq_tap_question">轻触卡片时会发生什么？</string>
-  <string name="prediction_onboarding_legal" formatted="false">使用预测功能即表示您同意 %1s 和 %2s</string>
+  <string name="prediction_onboarding_legal">使用预测功能即表示您同意 %1$s 和 %2$s</string>
   <string name="prediction_onboarding_legal_polymarket_terms">Polymarket 条款与条件</string>
   <string name="prediction_onboarding_legal_tangem_terms">Tangem 条款与条件</string>
   <string name="prediction_onboarding_reconnect_benefit_safe_subtitle">相同的存款账户，相同的资金。重新关联绝不会转移您的资金</string>
@@ -1762,7 +1783,7 @@
   <string name="prediction_onboarding_reconnect_button">继续预测</string>
   <string name="prediction_onboarding_reconnect_faq_answer">访问密钥仅存储在您的设备上。当您重新安装应用、更换新手机或会话失效时，密钥会被清除。您的账户本身保存在 Polymarket 上，不受任何影响。</string>
   <string name="prediction_onboarding_reconnect_faq_question">为什么会看到此提示？</string>
-  <string name="prediction_onboarding_reconnect_legal" formatted="false">无需接受新条款 — 您与 %1s 和 %2s 的协议仍然有效</string>
+  <string name="prediction_onboarding_reconnect_legal">无需接受新条款 — 您与 %1$s 和 %2$s 的协议仍然有效</string>
   <string name="prediction_onboarding_reconnect_subtitle">您的存款账户、余额和未平仓位均安全无虞。只需重新关联此设备 — 轻触一次卡片即可恢复访问权限。</string>
   <string name="prediction_onboarding_reconnect_title">重新连接您的 Polymarket 账户</string>
   <string name="prediction_onboarding_start_button">开始预测</string>
@@ -1801,7 +1822,7 @@
   <string name="prediction_place_result_no_fill_banner_description">Polymarket 上暂无可用份额 — 您的订单无法成交。</string>
   <string name="prediction_place_result_no_fill_banner_title">未成交</string>
   <string name="prediction_place_result_no_fill_title">流动性不足</string>
-  <string name="prediction_place_result_partial_amount" formatted="false">%1s / %2s</string>
+  <string name="prediction_place_result_partial_amount">%1$s / %2$s</string>
   <string name="prediction_place_result_partial_banner_description">由于在您的滑点容差范围内 Polymarket 流动性不足，您的订单已部分成交。</string>
   <string name="prediction_place_result_partial_banner_title">部分成交</string>
   <string name="prediction_place_result_partial_title">部分下单成功</string>
@@ -1858,7 +1879,7 @@
   <string name="prediction_positions_quantity">份额</string>
   <string name="prediction_positions_realized_description">已锁定的盈利或亏损。来源于您已（部分或全部）卖出的份额，以及已结算为获胜、失败或平分的持仓。已实现盈亏包含所有手续费。</string>
   <string name="prediction_positions_realized_pnl">已实现盈亏</string>
-  <string name="prediction_positions_result_amount" formatted="false">%1s %2s</string>
+  <string name="prediction_positions_result_amount">%1$s %2$s</string>
   <string name="prediction_positions_split">平分结算</string>
   <string name="prediction_positions_status">状态</string>
   <string name="prediction_positions_title">我的持仓</string>
@@ -1885,7 +1906,7 @@
   <string name="prediction_withdraw_error_generic">无法发送提现请求。请检查您的网络连接并重试</string>
   <string name="prediction_withdraw_error_rejected">Polymarket 拒绝了此次提现。请重试</string>
   <string name="prediction_withdraw_in_progress_message">您上一笔提现仍在处理中。请等待其完成后再发起新的提现。</string>
-  <string name="prediction_withdraw_min_amount">最低提现金额为 %s。请添加资金以达到该限额。</string>
+  <string name="prediction_withdraw_min_amount">最低提现金额为 %@。请添加资金以达到该限额。</string>
   <string name="prediction_withdraw_status_failed_description">处理您的提现时出错。请重试或联系客服支持。</string>
   <string name="prediction_withdraw_status_failed_notice">提现失败。未扣除任何资金。</string>
   <string name="prediction_withdraw_status_failed_title">提现失败</string>
@@ -2341,6 +2362,7 @@
   <string name="support_chat_swap_prefilled_message">兑换操作数据：\n从： %1$s %2$s\n到： %3$s %4$s\n由： %5$s - %6$s</string>
   <string name="support_selector_view_chat_button">打开聊天</string>
   <string name="support_selector_view_email_button">打开邮件</string>
+  <string name="survey_demand_success_description">Concierge 正在按国家/地区陆续上线。在您所在地区开放后，我们会第一时间在 App 内通知您。</string>
   <string name="swap_approve_description">批准后，您即允许智能合约在未来的交易中使用您的代币。</string>
   <string name="swap_custom_slippage_info">该服务商无法自定义滑点，在极少数情况下滑点可能高达 %s</string>
   <string name="swap_detailed_mode">详细模式</string>
@@ -2858,9 +2880,9 @@
   <string name="tangempay_status_inactive">未激活</string>
   <string name="tangempay_status_replacing">更换您的卡片</string>
   <string name="tangempay_sync_needed">用卡或戒指续期会话</string>
-  <string name="tangempay_sync_needed_body">用卡或戒指续期会话</string>
+  <string name="tangempay_sync_needed_body">请更新以查看您的卡片和账户</string>
   <string name="tangempay_sync_needed_button">恢复访问权限</string>
-  <string name="tangempay_sync_needed_title">Tangem Pay 会话已过期</string>
+  <string name="tangempay_sync_needed_title">会话已过期</string>
   <string name="tangempay_tangem_visa_card">在现实生活中随心消费加密资产</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay暂时无法使用。</string>
   <string name="tangempay_title">Tangem Pay</string>
@@ -2868,27 +2890,29 @@
   <string name="tangempay_topup_bank_transfer_pending_body">正在创建您的银行账户信息...</string>
   <string name="tangempay_topup_bank_transfer_title">从银行账户</string>
   <string name="tangempay_topup_receive_body_multichain">将 USDC 或 USDT 发送至您账户的地址</string>
-  <string name="tangempay_topup_receive_title">從其他錢包或交易所</string>
+  <string name="tangempay_topup_receive_title">从其他钱包或交易所</string>
   <string name="tangempay_topup_swap_body">使用您钱包中的任意代币为支付账户充值</string>
-  <string name="tangempay_topup_swap_title">從您的 Tangem 錢包</string>
+  <string name="tangempay_topup_swap_title">从您的 Tangem Wallet</string>
   <string name="tangempay_unified_onboarding_cashback_caption">返现</string>
   <string name="tangempay_unified_onboarding_cashback_subtitle">以 USDC 支付</string>
   <string name="tangempay_unified_onboarding_cashback_title">最高 2%%。%1$s</string>
-  <string name="tangempay_unified_onboarding_description">Visa 卡与美元账户合二为一。只需验证一次，我们将开通您所在地区可用的全部产品</string>
+  <string name="tangempay_unified_onboarding_description">Visa 卡与美元账户合二为一。验证身份，即可开通您所在地区可用的产品</string>
   <string name="tangempay_unified_onboarding_everything_header">全部涵盖</string>
-  <string name="tangempay_unified_onboarding_fees_caption">所见即所付</string>
-  <string name="tangempay_unified_onboarding_fees_subtitle">1 USDC = 1 USD</string>
-  <string name="tangempay_unified_onboarding_fees_title">消费免手续费。%1$s</string>
+  <string name="tangempay_unified_onboarding_fees_caption">美元等值兑换</string>
+  <string name="tangempay_unified_onboarding_fees_subtitle">无兑换手续费和月费</string>
+  <string name="tangempay_unified_onboarding_fees_title">1 USD 兑换为 1 USDC\n%1$s</string>
   <string name="tangempay_unified_onboarding_interest_caption">利息</string>
   <string name="tangempay_unified_onboarding_interest_title">持有即可赚取最高4%的年化收益</string>
   <string name="tangempay_unified_onboarding_legal">可开通的产品取决于您所在地区。验证完成后我们会立即确认</string>
-  <string name="tangempay_unified_onboarding_money_account_caption">十分方便</string>
-  <string name="tangempay_unified_onboarding_money_account_header">美元账户</string>
+  <string name="tangempay_unified_onboarding_money_account_caption">法币入金</string>
+  <string name="tangempay_unified_onboarding_money_account_header">账户</string>
   <string name="tangempay_unified_onboarding_money_account_subtitle">接收 ACH 转账，USD 按 1:1 兑换为 USDC；固定费用 $1</string>
   <string name="tangempay_unified_onboarding_money_account_title">您专属的美国账户信息。%1$s</string>
-  <string name="tangempay_unified_onboarding_payment_account_caption">随心支付</string>
+  <string name="tangempay_unified_onboarding_money_account_title_v2">您的美国账户信息</string>
+  <string name="tangempay_unified_onboarding_payment_account_caption">支持</string>
   <string name="tangempay_unified_onboarding_payment_account_header">Visa 卡</string>
-  <string name="tangempay_unified_onboarding_payment_account_title">线上或 %1$s</string>
+  <string name="tangempay_unified_onboarding_payment_account_subtitle_android">Google Pay</string>
+  <string name="tangempay_unified_onboarding_payment_account_title">Apple Pay\nGoogle Pay</string>
   <string name="tangempay_unified_onboarding_payments_caption">支付</string>
   <string name="tangempay_unified_onboarding_payments_title">满足日常所需的ACH和电汇转账</string>
   <string name="tangempay_unified_onboarding_plan_caption">一个套餐</string>
@@ -3355,6 +3379,8 @@
   <string name="warning_kaspa_unfinished_token_transaction_message">您金额为 %1$s %2$s 的交易未完成。您可以再次尝试完成交易。</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">您有未完成的交易</string>
   <string name="warning_last_balance_updated_time">上次更新时间是 %s</string>
+  <string name="warning_link_wallet_cold_message">扫描您的卡片，将您的钱包与该设备绑定。</string>
+  <string name="warning_link_wallet_hot_message">请确认将您的钱包与该设备绑定。</string>
   <string name="warning_low_signatures_message">该卡上只剩下 %s 签名。您必须提取所有资金。</string>
   <string name="warning_low_signatures_title">签名数量少</string>
   <string name="warning_manage_tokens_legacy_derivation_message">不同网络的代币可能有不同的地址。转账时，请仔细检查您的地址是否与网络相匹配。</string>
@@ -3453,6 +3479,12 @@
   <string name="wc_connection_reqeust_would_like">希望</string>
   <string name="wc_connection_request">连接请求</string>
   <string name="wc_connections">连接</string>
+  <string name="wc_connections_agents_error_title">AI 智能体不可用</string>
+  <string name="wc_connections_agents_title">已连接的智能体</string>
+  <string name="wc_connections_dapps_title">已连接的dApp应用</string>
+  <string name="wc_connections_empty_desc">通过 WalletConnect 连接 dApp，或通过 MCP 连接 AI 智能体，在同一个地方就可管理所有连接。</string>
+  <string name="wc_connections_empty_title">尚未建立连接</string>
+  <string name="wc_connections_subtitle">连接到 dApp 或 MCP</string>
   <string name="wc_contents">内容</string>
   <string name="wc_copy_data_button_text">复制数据</string>
   <string name="wc_custom_allowance_title">自定义津贴</string>
@@ -3584,6 +3616,12 @@
   <string name="yield_module_high_network_fees_notification_description">由于市场活跃，手续费高于平时。您可以立即进行交易，也可以稍后手续费降低时再来查看。</string>
   <string name="yield_module_high_network_fees_notification_title">高昂的网络费用</string>
   <string name="yield_module_historical_returns">历史回报</string>
+  <string name="yield_module_main_promo_button">试用收益模式</string>
+  <string name="yield_module_main_promo_subtitle">让闲置资产为您赚钱。无锁定期，随时可取。</string>
+  <string name="yield_module_main_promo_title">用加密资产赚取最高 %1$s%% APY</string>
+  <plurals name="yield_module_main_promo_tokens_count">
+    <item quantity="other">超过 %d 种可用代币</item>
+  </plurals>
   <string name="yield_module_main_screen_promo_banner_message">为您的余额启用 %1$s%% APY</string>
   <string name="yield_module_main_view_approve_notification_description">您的代币在收益模式下的授权已被撤销。请打开代币以重新授予权限。</string>
   <string name="yield_module_main_view_approve_notification_title">需要代币批准</string>

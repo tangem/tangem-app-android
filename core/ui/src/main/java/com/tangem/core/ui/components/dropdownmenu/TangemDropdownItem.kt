@@ -19,6 +19,9 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.PopUpMenuTestTags
 
+@Deprecated(
+    "Use TangemMenu.Item inside the DS3 TangemMenu, or TangemMenu.UiState.Item with the state-based TangemMenu",
+)
 @Suppress("ComposableEventParameterNaming")
 @Composable
 fun TangemDropdownItem(item: TangemDropdownMenuItem, dismissParent: () -> Unit, modifier: Modifier = Modifier) {

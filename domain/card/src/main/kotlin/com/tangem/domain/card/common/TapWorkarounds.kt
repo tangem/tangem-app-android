@@ -2,7 +2,6 @@ package com.tangem.domain.card.common
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.card.FirmwareVersion
-import com.tangem.domain.card.common.visa.VisaUtilities
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.scan.CardDTO
 import java.util.Locale
@@ -24,9 +23,6 @@ object TapWorkarounds {
 
     val CardDTO.isWallet2: Boolean
         get() = firmwareVersion >= FirmwareVersion.Ed25519Slip0010Available && settings.isKeysImportAllowed
-
-    val CardDTO.isVisa: Boolean
-        get() = VisaUtilities.isVisaCard(this)
 
     val CardDTO.isTestCard: Boolean
         get() = batchId == TEST_CARD_BATCH && cardId.startsWith(TEST_CARD_ID_STARTS_WITH)

@@ -35,7 +35,6 @@ dependencies {
     // endregion
 
     // region Domain models
-    api(projects.domain.appCurrency.models)
     api(projects.domain.models)
     api(projects.domain.visa.models)
     implementation(projects.features.moneyAccount.details.api)

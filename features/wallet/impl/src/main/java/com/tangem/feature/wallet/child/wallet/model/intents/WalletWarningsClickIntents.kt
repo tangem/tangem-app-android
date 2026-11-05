@@ -14,9 +14,12 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.review.ReviewManager
 import com.tangem.core.navigation.url.AppStoreOpener
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.assetsdiscovery.usecase.AcknowledgeAssetsDiscoveryCompletionUseCase
 import com.tangem.domain.card.SetCardWasScannedUseCase
+import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -40,13 +43,16 @@ import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.stories.models.StoryContentIds
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.wallets.usecase.*
+import com.tangem.domain.wallets.registration.WalletLinkError
 import com.tangem.domain.yield.supply.usecase.YieldSupplySetShouldShowMainPromoUseCase
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
+import com.tangem.feature.wallet.presentation.wallet.state.WalletLinkProgressHolder
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
+import com.tangem.features.collectibles.api.CollectiblesFeatureToggles
 import com.tangem.features.hotwallet.HardwareUpgradeLauncher
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -61,6 +67,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.tangem.core.res.R as CoreResR
 
 @Suppress("TooManyFunctions")
 internal interface WalletWarningsClickIntents {
@@ -106,6 +113,8 @@ internal interface WalletWarningsClickIntents {
     fun onYieldBoostBannerClick(userWalletId: UserWalletId)
 
     fun onDismissYieldBoostBanner(userWalletId: UserWalletId)
+
+    fun onLinkWalletClick(userWallet: UserWallet)
 }
 
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
@@ -139,6 +148,10 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val yieldSupplySetShouldShowMainPromoUseCase: YieldSupplySetShouldShowMainPromoUseCase,
     private val hardwareUpgradeLauncher: HardwareUpgradeLauncher,
     private val screenLifecycleProvider: ScreenLifecycleProvider,
+    private val collectiblesAccountStatusFetcher: CollectiblesAccountStatusFetcher,
+    private val collectiblesFeatureToggles: CollectiblesFeatureToggles,
+    private val linkWalletToDeviceUseCase: LinkWalletToDeviceUseCase,
+    private val walletLinkProgressHolder: WalletLinkProgressHolder,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
 
     override fun onAddBackupCardClick() {
@@ -195,7 +208,14 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                         DerivationOutcome.NOTHING_DERIVED -> uiMessageSender.send(Dialogs.wrongWalletTapped())
                         DerivationOutcome.DERIVED,
                         DerivationOutcome.NOTHING_MISSING,
-                        -> fetchCryptoCurrencies(userWalletId = userWalletId, currencies = missedAddressCurrencies)
+                        -> coroutineScope {
+                            launch {
+                                fetchCryptoCurrencies(userWalletId = userWalletId, currencies = missedAddressCurrencies)
+                            }
+                            launch {
+                                refreshCollectiblesAccount(userWalletId = userWalletId)
+                            }
+                        }
                     }
                 },
             )
@@ -341,6 +361,14 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         )
     }
 
+    /** The sync may have derived the collectibles owner key, which is what the account was waiting for */
+    private suspend fun refreshCollectiblesAccount(userWalletId: UserWalletId) {
+        if (!collectiblesFeatureToggles.isCollectiblesEnabled) return
+
+        collectiblesAccountStatusFetcher(CollectiblesAccountStatusFetcher.Params(userWalletId = userWalletId))
+            .onLeft { TangemLogger.e("Unable to refresh the collectibles account: $it") }
+    }
+
     private suspend fun fetchCryptoCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
         coroutineScope {
             listOf(
@@ -442,6 +470,30 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     override fun onDismissYieldBoostBanner(userWalletId: UserWalletId) {
         modelScope.launch {
             yieldSupplySetShouldShowMainPromoUseCase(shouldShow = false)
+        }
+    }
+
+    /** On success the banner goes away by itself: the link status flow re-emits and the banner condition is false. */
+    override fun onLinkWalletClick(userWallet: UserWallet) {
+        if (!walletLinkProgressHolder.tryStart(userWallet.walletId)) return
+
+        modelScope.launch {
+            val result = try {
+                linkWalletToDeviceUseCase(userWallet)
+            } finally {
+                walletLinkProgressHolder.finish(userWallet.walletId)
+            }
+
+            result.onLeft { error ->
+                if (error !is WalletLinkError.Cancelled && error !is WalletLinkError.WrongCard) {
+                    uiMessageSender.send(
+                        DialogMessage(
+                            title = resourceReference(CoreResR.string.common_something_went_wrong),
+                            message = resourceReference(CoreResR.string.common_try_again_later),
+                        ),
+                    )
+                }
+            }
         }
     }
 }

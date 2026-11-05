@@ -77,17 +77,14 @@ class SafeCompositionChecker(
         owners: List<String>,
         threshold: Int,
     ): Either<JointOperationCreateError, Unit> = either {
-        val isAnySingletonMatching = SafeSingleton.entries.any { singleton ->
-            safeAddressCalculator.compute(owners = owners, threshold = threshold, singleton = singleton)
-                // A composition that cannot produce an address at all is broken data, not an on-chain mismatch
-                .mapLeft { error ->
-                    JointOperationCreateError.Failed(cause = IllegalStateException("Invalid composition: $error"))
-                }
-                .bind()
-                .equals(safeAddress, ignoreCase = true)
-        }
+        val computed = safeAddressCalculator.compute(owners = owners, threshold = threshold)
+            // A composition that cannot produce an address at all is broken data, not an on-chain mismatch
+            .mapLeft { error ->
+                JointOperationCreateError.Failed(cause = IllegalStateException("Invalid composition: $error"))
+            }
+            .bind()
 
-        ensure(isAnySingletonMatching) { JointOperationCreateError.CompositionMismatch }
+        ensure(computed.equals(safeAddress, ignoreCase = true)) { JointOperationCreateError.CompositionMismatch }
     }
 
     /** `address[]` return data: one offset word, one length word, then one left-padded address per word */

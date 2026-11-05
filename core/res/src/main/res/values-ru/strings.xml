@@ -1405,6 +1405,24 @@
   <string name="markets_tooltip_v2_title">Добавить ещё токены</string>
   <string name="markets_yield_supply_banner_description">Увеличивайте доход с активов, сохраняя мгновенный доступ к ним. %s</string>
   <string name="markets_yield_supply_banner_title">Активировать режим доходности</string>
+  <string name="mcp_connection_request_agent_can">Этот агент сможет</string>
+  <string name="mcp_connection_request_can_view_balance">Просматривать балансы и активность</string>
+  <string name="mcp_connection_request_notifications_description">Вы будете получать уведомления для подтверждения каждой транзакции. Без уведомлений агент не сможет подключиться.</string>
+  <string name="mcp_connection_success_description">Теперь %s может просматривать ваши балансы и запрашивать подтверждение транзакций. Отозвать доступ можно в любой момент в разделе «Подключения».</string>
+  <string name="mcp_connection_success_title">Агент подключён</string>
+  <string name="mcp_intent_proceed">Продолжить</string>
+  <string name="mcp_intent_processed_title">Этот запрос уже обработан</string>
+  <string name="mcp_intent_unknown_agent_name">ИИ</string>
+  <string name="mcp_send_intent_cant_reach_title">Запрос недоступен</string>
+  <string name="mcp_send_intent_offer_description">Агент запрашивает отправку средств с вашего счёта. Далее вы сможете проверить детали.</string>
+  <string name="mcp_send_intent_offer_title">Агент %1$s хочет отправить %2$s</string>
+  <string name="mcp_send_intent_processed_subtitle">Отправка %1$s</string>
+  <string name="mcp_session_revoke_access">Отозвать доступ</string>
+  <string name="mcp_session_title">Подключение MCP</string>
+  <string name="mcp_swap_intent_cant_reach_title">Запрос недоступен</string>
+  <string name="mcp_swap_intent_offer_description">Агент запрашивает обмен средств с вашего счёта. Далее вы сможете проверить детали.</string>
+  <string name="mcp_swap_intent_offer_title">Агент %1$s хочет обменять %2$s на %3$s</string>
+  <string name="mcp_swap_intent_processed_subtitle">Обмен %1$s на %2$s</string>
   <string name="mobile_wallet_requires_min_os_warning_body">Обновитесь до версии %1$s, чтобы создать мобильный кошелёк</string>
   <string name="mobile_wallet_requires_min_os_warning_title">Мобильный кошелек требует %1$s или новее.</string>
   <string name="money_account_add_funds_bank_description">Получайте USD с банковского счёта через ACH/Wire или SPEI</string>
@@ -1443,6 +1461,7 @@
   <string name="money_account_onboarding_transfers_card_caption">Пополнение. Вывод.</string>
   <string name="money_account_onboarding_transfers_card_subtitle">с отдельным счётом и банковскими реквизитами</string>
   <string name="money_account_onboarding_transfers_card_title">Отправляйте и получайте фиатные платежи</string>
+  <string name="money_account_send_bank_transfer_unavailable">Недоступно</string>
   <string name="money_account_send_fees_footer">Комиссии включают плату за сервис %s и расчётную комиссию сети</string>
   <string name="money_account_send_network_fee_note">Комиссии включают расчётную комиссию сети %s, которая может меняться в зависимости от нагрузки на сеть</string>
   <string name="money_account_send_pay_button">Оплатить %s</string>
@@ -1738,15 +1757,16 @@
   <string name="prediction_add_funds_max_receive_amount_title">Сумма получения не должна превышать %s</string>
   <string name="prediction_add_funds_notification_limits_description">Сумма пополнения должна составлять не менее %1$s. Пополнения свыше $50,000 не рекомендуются — разделите крупную сумму на несколько платежей поменьше.</string>
   <string name="prediction_add_funds_notification_limits_title">Лимиты на пополнение</string>
-  <string name="prediction_add_funds_receive_body" formatted="false">Отправьте %1s с другого кошелька, минимум %2s</string>
+  <string name="prediction_add_funds_receive_body">Отправьте %1$s с другого кошелька, минимум %2$s</string>
   <string name="prediction_add_funds_receive_subtitle">Отправьте USDC в сети Polygon на ваш аккаунт Polymarket</string>
   <string name="prediction_add_funds_receive_title">С другого кошелька или биржи</string>
-  <string name="prediction_add_funds_subtitle" formatted="false">%1s в сети %2s</string>
+  <string name="prediction_add_funds_subtitle">%1$s в сети %2$s</string>
   <string name="prediction_add_funds_swap_body">Обменяйте токен, который у вас уже есть</string>
   <string name="prediction_add_funds_swap_subtitle">Используйте криптовалюту в кошельке Tangem для пополнения аккаунта Polymarket</string>
   <string name="prediction_add_funds_swap_title">Из вашего кошелька Tangem</string>
   <string name="prediction_balance_total">Общий баланс</string>
   <string name="prediction_balance_withdraw">Вывести</string>
+  <string name="prediction_cash_out">Обналичить</string>
   <string name="prediction_claim_error_failed">Запрос на получение не прошел. Средства остались на счете, вы можете попробовать снова.</string>
   <string name="prediction_claim_error_generic">Не удалось отправить запрос на получение. Пожалуйста, попробуйте снова.</string>
   <string name="prediction_claim_error_rejected">Polymarket отклонил запрос на получение. Обновите свои позиции и попробуйте снова.</string>
@@ -1758,7 +1778,7 @@
   <string name="prediction_close_result_partially_sold_title">Частично продано</string>
   <string name="prediction_close_result_sold_title">Продано %s</string>
   <string name="prediction_close_result_tokens_sold">Продано долей</string>
-  <string name="prediction_close_selling_of" formatted="false">Продажа %1s из %2s долей</string>
+  <string name="prediction_close_selling_of">Продажа %1$s из %2$s долей</string>
   <string name="prediction_close_selling_tokens">Продажа %s долей</string>
   <string name="prediction_close_summary_to">Куда</string>
   <string name="prediction_close_title">Закрыть позицию</string>
@@ -1775,15 +1795,15 @@
     <item quantity="one">+%d исход</item>
     <item quantity="few">+%d исхода</item>
     <item quantity="many">+%d исходов</item>
-    <item quantity="other"></item>
+    <item quantity="other">+%d исходов</item>
   </plurals>
   <string name="prediction_event_probability">Вероятность</string>
   <string name="prediction_event_total_volume">Общий объем:</string>
   <string name="prediction_fee_sheet_builder_fee">Комиссия Tangem</string>
-  <string name="prediction_fee_sheet_buy_description" formatted="false">Покупка %1s долей по %2s¢ за штуку. Итоговое количество долей (и соответствующая сумма в %3s) может меняться в пределах вашего лимита проскальзывания %4s в зависимости от доступной ликвидности рынка.</string>
+  <string name="prediction_fee_sheet_buy_description">Покупка %1$s долей по %2$s¢ за штуку. Итоговое количество долей (и соответствующая сумма в %3$s) может меняться в пределах вашего лимита проскальзывания %4$s в зависимости от доступной ликвидности рынка.</string>
   <string name="prediction_fee_sheet_order">Ордер прогноза</string>
   <string name="prediction_fee_sheet_polymarket_fee">Комиссия Polymarket</string>
-  <string name="prediction_fee_sheet_sell_description" formatted="false">Продажа %1s долей по %2s¢ за штуку. Итоговое количество долей (и соответствующая сумма в %3s) может меняться в пределах вашего лимита проскальзывания %4s в зависимости от доступной ликвидности рынка.</string>
+  <string name="prediction_fee_sheet_sell_description">Продажа %1$s долей по %2$s¢ за штуку. Итоговое количество долей (и соответствующая сумма в %3$s) может меняться в пределах вашего лимита проскальзывания %4$s в зависимости от доступной ликвидности рынка.</string>
   <string name="prediction_fee_sheet_total">Итого</string>
   <string name="prediction_history_bought">Куплено</string>
   <string name="prediction_history_csv_average_price">Средняя цена</string>
@@ -1836,7 +1856,7 @@
   <string name="prediction_onboarding_faq_risks_question">Каковы риски?</string>
   <string name="prediction_onboarding_faq_tap_answer">Ваша карта подписывает один раз для создания некастодиального депозитного аккаунта на Polymarket. После этого вы пополняете счет, торгуете и выводите средства прямо из Tangem — и только ваша карта может перемещать средства.</string>
   <string name="prediction_onboarding_faq_tap_question">Что происходит, когда я прикладываю карту?</string>
-  <string name="prediction_onboarding_legal" formatted="false">Используя функцию «Прогнозы», вы соглашаетесь с %1s и %2s</string>
+  <string name="prediction_onboarding_legal">Используя функцию «Прогнозы», вы соглашаетесь с %1$s и %2$s</string>
   <string name="prediction_onboarding_legal_polymarket_terms">Условиями использования Polymarket</string>
   <string name="prediction_onboarding_legal_tangem_terms">Условиями использования Tangem</string>
   <string name="prediction_onboarding_reconnect_benefit_safe_subtitle">Тот же депозитный аккаунт, те же средства. Повторная привязка никогда не перемещает ваши средства</string>
@@ -1846,7 +1866,7 @@
   <string name="prediction_onboarding_reconnect_button">Продолжить прогнозирование</string>
   <string name="prediction_onboarding_reconnect_faq_answer">Ключи доступа хранятся только на вашем устройстве. Они удаляются при переустановке приложения, смене телефона или истечении сессии. Сам аккаунт находится на Polymarket и остается в сохранности.</string>
   <string name="prediction_onboarding_reconnect_faq_question">Почему я это вижу?</string>
-  <string name="prediction_onboarding_reconnect_legal" formatted="false">Принимать новые условия не нужно — ваше соглашение с %1s и %2s продолжает действовать</string>
+  <string name="prediction_onboarding_reconnect_legal">Принимать новые условия не нужно — ваше соглашение с %1$s и %2$s продолжает действовать</string>
   <string name="prediction_onboarding_reconnect_subtitle">Ваш депозитный аккаунт, баланс и открытые позиции в безопасности. Это устройство просто нужно привязать заново — приложите карту один раз, чтобы восстановить доступ.</string>
   <string name="prediction_onboarding_reconnect_title">Переподключите аккаунт Polymarket</string>
   <string name="prediction_onboarding_start_button">Начать прогнозировать</string>
@@ -1885,7 +1905,7 @@
   <string name="prediction_place_result_no_fill_banner_description">На Polymarket нет доступных долей — ваш ордер не удалось исполнить.</string>
   <string name="prediction_place_result_no_fill_banner_title">Не исполнено</string>
   <string name="prediction_place_result_no_fill_title">Недостаточная ликвидность</string>
-  <string name="prediction_place_result_partial_amount" formatted="false">%1s из %2s</string>
+  <string name="prediction_place_result_partial_amount">%1$s из %2$s</string>
   <string name="prediction_place_result_partial_banner_description">Ваш ордер был исполнен частично из-за недостаточной ликвидности на Polymarket в пределах вашего допуска проскальзывания.</string>
   <string name="prediction_place_result_partial_banner_title">Частично исполнен</string>
   <string name="prediction_place_result_partial_title">Частично размещен</string>
@@ -1942,7 +1962,7 @@
   <string name="prediction_positions_quantity">Доли</string>
   <string name="prediction_positions_realized_description">Прибыль или убыток, которые уже зафиксированы. Они формируются из проданных (частично или полностью) долей и позиций, разрешившихся выигрышем, проигрышем или разделением. Реализованный P&amp;L включает все комиссии.</string>
   <string name="prediction_positions_realized_pnl">Реализованный P&amp;L</string>
-  <string name="prediction_positions_result_amount" formatted="false">%1s %2s</string>
+  <string name="prediction_positions_result_amount">%1$s %2$s</string>
   <string name="prediction_positions_split">Разделено</string>
   <string name="prediction_positions_status">Статус</string>
   <string name="prediction_positions_title">Мои позиции</string>
@@ -1969,7 +1989,7 @@
   <string name="prediction_withdraw_error_generic">Не удалось отправить запрос на вывод. Проверьте подключение и попробуйте снова</string>
   <string name="prediction_withdraw_error_rejected">Polymarket отклонил вывод средств. Попробуйте снова</string>
   <string name="prediction_withdraw_in_progress_message">Ваш предыдущий вывод все еще обрабатывается. Дождитесь его завершения перед созданием нового.</string>
-  <string name="prediction_withdraw_min_amount">Минимальная сумма вывода — %s. Пополните счет, чтобы достичь ее.</string>
+  <string name="prediction_withdraw_min_amount">Минимальная сумма вывода — %@. Пополните счет, чтобы достичь ее.</string>
   <string name="prediction_withdraw_status_failed_description">При обработке вывода произошла ошибка. Пожалуйста, попробуйте снова или обратитесь в поддержку.</string>
   <string name="prediction_withdraw_status_failed_notice">Ошибка вывода. Средства не были списаны.</string>
   <string name="prediction_withdraw_status_failed_title">Ошибка вывода</string>
@@ -2962,9 +2982,9 @@
   <string name="tangempay_status_inactive">Неактивна</string>
   <string name="tangempay_status_replacing">Замена вашей карты</string>
   <string name="tangempay_sync_needed">Используйте карту или кольцо для обновления сессии</string>
-  <string name="tangempay_sync_needed_body">Используйте карту или кольцо для обновления сессии</string>
+  <string name="tangempay_sync_needed_body">Обновите, чтобы увидеть карту и счёт</string>
   <string name="tangempay_sync_needed_button">Обновить сессию</string>
-  <string name="tangempay_sync_needed_title">Tangem Pay · Сессия истекла</string>
+  <string name="tangempay_sync_needed_title">Сессия истекла</string>
   <string name="tangempay_tangem_visa_card">Платите за ежедневные покупки криптой</string>
   <string name="tangempay_temporarily_unavailable">Проблема с соединением</string>
   <string name="tangempay_title">Tangem Pay</string>
@@ -2974,25 +2994,27 @@
   <string name="tangempay_topup_receive_body_multichain">Отправьте USDC или USDT на адрес вашего счёта</string>
   <string name="tangempay_topup_receive_title">С другого кошелька или биржи</string>
   <string name="tangempay_topup_swap_body">Пополните платежный аккаунт любым токеном из вашего кошелька</string>
-  <string name="tangempay_topup_swap_title">Из вашего кошелька Tangem</string>
+  <string name="tangempay_topup_swap_title">Из вашего Tangem Wallet</string>
   <string name="tangempay_unified_onboarding_cashback_caption">Кэшбэк</string>
   <string name="tangempay_unified_onboarding_cashback_subtitle">Выплачивается в USDC</string>
   <string name="tangempay_unified_onboarding_cashback_title">До 2%%. %1$s</string>
-  <string name="tangempay_unified_onboarding_description">Карта Visa и долларовый счёт в одном. Пройдите верификацию один раз — мы откроем всё, что доступно в вашем регионе</string>
+  <string name="tangempay_unified_onboarding_description">Карта Visa и долларовый счёт в одном. Подтвердите личность и откройте продукты, доступные в вашем регионе</string>
   <string name="tangempay_unified_onboarding_everything_header">Для всего</string>
-  <string name="tangempay_unified_onboarding_fees_caption">Без скрытых комиссий</string>
-  <string name="tangempay_unified_onboarding_fees_subtitle">1 USDC = 1 USD</string>
-  <string name="tangempay_unified_onboarding_fees_title">Без комиссий за покупки. %1$s</string>
+  <string name="tangempay_unified_onboarding_fees_caption">Доллар за доллар</string>
+  <string name="tangempay_unified_onboarding_fees_subtitle">Без комиссий за обмен и ежемесячной платы</string>
+  <string name="tangempay_unified_onboarding_fees_title">1 USD превращается в 1 USDC\n%1$s</string>
   <string name="tangempay_unified_onboarding_interest_caption">Проценты</string>
   <string name="tangempay_unified_onboarding_interest_title">Храните средства и получайте до 4% годовых</string>
   <string name="tangempay_unified_onboarding_legal">Что вам доступно, зависит от вашего региона. Мы подтвердим это сразу после верификации</string>
-  <string name="tangempay_unified_onboarding_money_account_caption">Очень удобно</string>
-  <string name="tangempay_unified_onboarding_money_account_header">Счёт в USD</string>
+  <string name="tangempay_unified_onboarding_money_account_caption">Покупка криптовалюты</string>
+  <string name="tangempay_unified_onboarding_money_account_header">Счёт</string>
   <string name="tangempay_unified_onboarding_money_account_subtitle">Получайте ACH-переводы, USD в USDC 1:1; фиксированная комиссия $1</string>
   <string name="tangempay_unified_onboarding_money_account_title">Собственные реквизиты счёта в США. %1$s</string>
-  <string name="tangempay_unified_onboarding_payment_account_caption">Платите как удобно</string>
+  <string name="tangempay_unified_onboarding_money_account_title_v2">Ваши реквизиты счёта в США</string>
+  <string name="tangempay_unified_onboarding_payment_account_caption">Работает с</string>
   <string name="tangempay_unified_onboarding_payment_account_header">Карта Visa</string>
-  <string name="tangempay_unified_onboarding_payment_account_title">Онлайн или %1$s</string>
+  <string name="tangempay_unified_onboarding_payment_account_subtitle_android">Google Pay</string>
+  <string name="tangempay_unified_onboarding_payment_account_title">Apple Pay\nGoogle Pay</string>
   <string name="tangempay_unified_onboarding_payments_caption">Платежи</string>
   <string name="tangempay_unified_onboarding_payments_title">ACH и банковские переводы на каждый день</string>
   <string name="tangempay_unified_onboarding_plan_caption">Один тариф</string>
@@ -3509,13 +3531,19 @@
   <string name="wc_connected_app_title">Подключенное приложение</string>
   <string name="wc_connected_networks">Подключенные сети</string>
   <string name="wc_connected_to">Подключено к %1$s</string>
-  <string name="wc_connection_reqeust_can_view_balance">Посмотреть баланс кошелька и его активность</string>
-  <string name="wc_connection_reqeust_cant_sign">Подписать транзакцию без вашего участия</string>
-  <string name="wc_connection_reqeust_request_approval">Запрос разрешения на транзакцию</string>
-  <string name="wc_connection_reqeust_will_not">Не имеет возможности</string>
-  <string name="wc_connection_reqeust_would_like">Хотели бы</string>
+  <string name="wc_connection_reqeust_can_view_balance">Просматривать баланс и активность вашего кошелька</string>
+  <string name="wc_connection_reqeust_cant_sign">Подписывать транзакции без вашего ведома</string>
+  <string name="wc_connection_reqeust_request_approval">Запрашивать подтверждение транзакций</string>
+  <string name="wc_connection_reqeust_will_not">Не сможет</string>
+  <string name="wc_connection_reqeust_would_like">Запрашивает разрешение</string>
   <string name="wc_connection_request">Запрос на подключение</string>
   <string name="wc_connections">Подключения</string>
+  <string name="wc_connections_agents_error_title">ИИ-агенты недоступны</string>
+  <string name="wc_connections_agents_title">Подключённые агенты</string>
+  <string name="wc_connections_dapps_title">Подключённые dApps</string>
+  <string name="wc_connections_empty_desc">Подключайтесь к dApps через WalletConnect или к ИИ-агентам через MCP. Управляйте всеми подключениями в одном месте.</string>
+  <string name="wc_connections_empty_title">Пока нет подключений</string>
+  <string name="wc_connections_subtitle">Подключайтесь к dApps или MCP</string>
   <string name="wc_contents">Вложение</string>
   <string name="wc_copy_data_button_text">Копировать данные</string>
   <string name="wc_custom_allowance_title">Настраиваемый лимит</string>
@@ -3646,6 +3674,15 @@
   <string name="yield_module_high_network_fees_notification_description">Комиссии сейчас выше обычного из-за высокой активности на рынке. Вы можете продолжить сейчас или вернуться позже, когда комиссии снизятся.</string>
   <string name="yield_module_high_network_fees_notification_title">Высокая сетевая комиссия</string>
   <string name="yield_module_historical_returns">Историческая доходность</string>
+  <string name="yield_module_main_promo_button">Попробовать режим доходности</string>
+  <string name="yield_module_main_promo_subtitle">Пусть свободные монеты работают. Без блокировки, вывод в любой момент.</string>
+  <string name="yield_module_main_promo_title">Зарабатывайте на крипте с доходностью до %1$s%% APY</string>
+  <plurals name="yield_module_main_promo_tokens_count">
+    <item quantity="one">Более %d доступного токена</item>
+    <item quantity="few">Более %d доступных токенов</item>
+    <item quantity="many">Более %d доступных токенов</item>
+    <item quantity="other">Более %d доступного токена</item>
+  </plurals>
   <string name="yield_module_main_screen_promo_banner_message">Получай до %1$s APY на свой баланс</string>
   <string name="yield_module_main_view_approve_notification_description">Разрешение для вашего токена в режиме доходности было отозвано. Откройте токен, чтобы выдать разрешение снова.</string>
   <string name="yield_module_main_view_approve_notification_title">Необходимо разрешение для токена</string>

@@ -20,6 +20,7 @@ kotlin {
 dependencies {
 
     // region Kotlin
+    api(deps.kotlin.coroutines)
     api(deps.kotlin.serialization)
     // endregion
 

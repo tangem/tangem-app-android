@@ -3,13 +3,21 @@ package com.tangem.data.collectibles.account.flow
 import arrow.core.Option
 import arrow.core.some
 import com.tangem.data.collectibles.account.store.CollectiblesAccountStore
+import com.tangem.data.common.account.WalletAccountsFetcher
+import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
+import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
+import com.tangem.datasource.api.tangemTech.models.account.isCollectibles
 import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencies
+import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusProducer
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.CollectiblesAccountStatusValue
+import com.tangem.domain.models.account.isAccountCreated
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus
+import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -28,11 +36,18 @@ import java.math.BigDecimal
  *
  * The rate flow starts with [Rate.Pending] rather than waiting for a quote, so the first emission is immediate —
  * the store already emits on subscription for the same reason.
+ *
+ * [CollectiblesAccountStatusValue.MissedDerivation] is never stored. Like a token's, it is worked out on every
+ * emission: the account exists — recorded here or listed by the backend — and this device holds no owner key.
  */
+@Suppress("LongParameterList")
 internal class DefaultCollectiblesAccountStatusProducer @AssistedInject constructor(
     @Assisted private val params: CollectiblesAccountStatusProducer.Params,
     override val flowProducerTools: FlowProducerTools,
     private val collectiblesAccountStore: CollectiblesAccountStore,
+    private val walletAccountsFetcher: WalletAccountsFetcher,
+    private val userWalletsListRepository: UserWalletsListRepository,
+    private val collectiblesOwnerDeriver: CollectiblesOwnerDeriver,
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : CollectiblesAccountStatusProducer {
@@ -43,11 +58,42 @@ internal class DefaultCollectiblesAccountStatusProducer @AssistedInject construc
     override fun produce(): Flow<CollectiblesAccountStatusValue> {
         return combine(
             flow = collectiblesAccountStore.get(userWalletId = params.userWalletId),
-            flow2 = rate(CollectiblesVaultCurrencies.USDC_RAW_ID),
-        ) { stored, usdcRate ->
-            priced(stored = stored, usdcRate = usdcRate)
+            flow2 = isListedOnBackend(),
+            flow3 = isOwnerKeyMissing(),
+            flow4 = rate(CollectiblesVaultCurrencies.USDC_RAW_ID),
+        ) { stored, isListed, isOwnerKeyMissing, usdcRate ->
+            when {
+                stored is CollectiblesAccountStatusValue.NotOnboarded -> CollectiblesAccountStatusValue.NotOnboarded
+                !isListed && !stored.isAccountCreated -> CollectiblesAccountStatusValue.NotOnboarded
+                isOwnerKeyMissing -> CollectiblesAccountStatusValue.MissedDerivation
+                else -> priced(stored = stored, usdcRate = usdcRate)
+            }
         }
             .flowOn(dispatchers.default)
+    }
+
+    /** The saved document is read first: the flow of it stays silent while there is none */
+    private fun isListedOnBackend(): Flow<Boolean> {
+        return flow {
+            emit(walletAccountsFetcher.getSaved(userWalletId = params.userWalletId).hasCollectiblesRecord())
+            emitAll(walletAccountsFetcher.get(userWalletId = params.userWalletId).map { it.hasCollectiblesRecord() })
+        }
+            .distinctUntilChanged()
+    }
+
+    private fun GetWalletAccountsResponse?.hasCollectiblesRecord(): Boolean {
+        return this?.accounts.orEmpty().any(WalletAccountDTO::isCollectibles)
+    }
+
+    /** A locked wallet is not asked: its keys are out of reach, which says nothing about the derivation */
+    private fun isOwnerKeyMissing(): Flow<Boolean> {
+        return userWalletsListRepository.userWallets
+            .map { wallets ->
+                val userWallet = wallets?.find { it.walletId == params.userWalletId }
+                userWallet != null && !userWallet.isLocked &&
+                    collectiblesOwnerDeriver.storedOwner(params.userWalletId) == null
+            }
+            .distinctUntilChanged()
     }
 
     private fun rate(rawCurrencyId: CryptoCurrency.RawID): Flow<Rate> {
@@ -66,12 +112,12 @@ internal class DefaultCollectiblesAccountStatusProducer @AssistedInject construc
 
     /**
      * A record with nothing read yet is loading, and one whose refresh failed with nothing cached is
-     * unavailable — neither may claim the vault is empty. A balance no quote can price yet is loading too: an
-     * unpriced balance blanks the whole wallet total, not just this account.
+     * unavailable — neither may claim the vault is empty. An account listed by the backend but not recorded here
+     * yet is loading as well, until the fetcher reads its vault. A balance no quote can price yet is loading too:
+     * an unpriced balance blanks the whole wallet total, not just this account.
      */
     private fun priced(stored: CollectiblesAccountStatusValue?, usdcRate: Rate): CollectiblesAccountStatusValue {
-        val value = stored ?: return CollectiblesAccountStatusValue.NotOnboarded
-        if (value is CollectiblesAccountStatusValue.MissedDerivation) return value
+        val value = stored ?: return CollectiblesAccountStatusValue.Loading
 
         val balance = value.balance ?: return when (value.source) {
             StatusSource.ONLY_CACHE -> CollectiblesAccountStatusValue.Error.Unavailable
