@@ -88,7 +88,9 @@ internal fun MoneyAccountDetailsScreen(
             indicatorOffset = topBarTotalHeight,
         ) {
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag(MoneyAccountTestTags.DETAILS_CONTENT),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 state = listState,
                 contentPadding = PaddingValues(
@@ -257,6 +259,7 @@ private fun MenuButton(
             },
             size = TangemButton.Size.X11,
             variant = TangemButton.Variant.Material,
+            modifier = Modifier.testTag(MoneyAccountTestTags.DETAILS_MENU_BUTTON),
         )
         TangemContextMenu(
             expanded = isMenuShown,
@@ -274,6 +277,7 @@ private fun MenuButton(
 private fun MenuItem(item: MoneyAccountMenuItemUM, onMenuDismiss: () -> Unit) {
     Row(
         modifier = Modifier
+            .testTag(MoneyAccountTestTags.DETAILS_MENU_ITEM)
             .fillMaxWidth()
             .clickableSingle {
                 item.onClick()
