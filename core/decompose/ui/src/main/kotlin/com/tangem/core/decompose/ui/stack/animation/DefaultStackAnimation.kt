@@ -151,7 +151,15 @@ internal class DefaultStackAnimation<C : Any, T : Any>(
         item.transitionComposed?.let { transitionComposed ->
             SideEffect { transitionComposed.complete(Unit) }
         }
-        val isTransitionIdle = item.transitionState.isIdle()
+        var isStarted by remember { mutableStateOf(item.deferredTarget == null) }
+        item.deferredTarget?.let { target ->
+            LaunchedEffect(Unit) {
+                repeat(POP_START_DELAY_FRAMES) { withFrameNanos {} }
+                (item.transitionState as MutableTransitionState).targetState = target
+                isStarted = true
+            }
+        }
+        val isTransitionIdle = isStarted && item.transitionState.isIdle()
 
         if (isTransitionIdle) {
             LaunchedEffect(Unit) {
@@ -184,14 +192,16 @@ internal class DefaultStackAnimation<C : Any, T : Any>(
                 AnimationItem(
                     child = newStack.active,
                     direction = Direction.ENTER_BACK,
-                    transitionState = EnterExitState.PreEnter transitionTo EnterExitState.Visible,
+                    transitionState = MutableTransitionState(EnterExitState.PreEnter),
                     otherChild = oldStack.active,
+                    deferredTarget = EnterExitState.Visible,
                 ),
                 AnimationItem(
                     child = oldStack.active,
                     direction = Direction.EXIT_FRONT,
-                    transitionState = EnterExitState.Visible transitionTo EnterExitState.PostExit,
+                    transitionState = MutableTransitionState(EnterExitState.Visible),
                     otherChild = newStack.active,
+                    deferredTarget = EnterExitState.PostExit,
                 ),
             )
 
@@ -251,12 +261,14 @@ internal class DefaultStackAnimation<C : Any, T : Any>(
         isPredictiveBack: Boolean = false,
         predictiveBackAnimator: StackAnimator? = null,
         transitionComposed: CompletableDeferred<Unit>? = null,
+        deferredTarget: EnterExitState? = null,
     ): AnimationItem<C, T> = AnimationItem(
         child = child,
         direction = direction,
         transitionState = transitionState,
         animator = predictiveBackAnimator ?: selector(child, otherChild, direction, isPredictiveBack),
         transitionComposed = transitionComposed,
+        deferredTarget = deferredTarget,
     )
 
     private inner class PredictiveBackCallback(
@@ -445,7 +457,17 @@ private data class AnimationItem<out C : Any, out T : Any>(
     val transitionState: TransitionState<EnterExitState>,
     val animator: StackAnimator? = null,
     val transitionComposed: CompletableDeferred<Unit>? = null,
+    /** Set on [transitionState] a few frames after composition; see [POP_START_DELAY_FRAMES]. */
+    val deferredTarget: EnterExitState? = null,
 )
+
+/*
+ * A pop re-composes the revealed screen from scratch. Shared elements in it (a zoom source) register in their first
+ * composition and get their bounds only after its layout, so a transition started on that frame finds no match and
+ * the popped screen fades instead of shrinking back. A predictive back never hits this: it seeks only after the
+ * gesture has run for a while.
+ */
+private const val POP_START_DELAY_FRAMES = 2
 
 @ExperimentalDecomposeApi
 private fun <C : Any, T : Any> keyedItemsOf(vararg items: AnimationItem<C, T>): Map<Any, AnimationItem<C, T>> =
