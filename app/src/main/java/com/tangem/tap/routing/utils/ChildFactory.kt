@@ -12,6 +12,7 @@ import com.tangem.features.account.AccountCreateEditComponent
 import com.tangem.features.account.AccountDetailsComponent
 import com.tangem.features.account.ArchivedAccountListComponent
 import com.tangem.features.addressbook.AddressBookComponent
+import com.tangem.features.allservices.api.AllServicesComponent
 import com.tangem.features.createwalletselection.CreateWalletSelectionComponent
 import com.tangem.features.createwalletstart.CreateWalletStartComponent
 import com.tangem.features.details.component.DetailsComponent
@@ -127,6 +128,7 @@ internal class ChildFactory @Inject constructor(
     private val tangemPayDetailsContainerComponentFactory: TangemPayDetailsContainerComponent.Factory,
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
     private val tangemPayWalletOnboardingComponentFactory: TangemPayHotWalletOnboardingComponent.Factory,
+    private val allServicesComponentFactory: AllServicesComponent.Factory,
     private val tangemPayCampaignComponentFactory: TangemPayCampaignComponent.Factory,
     private val moneyAccountDetailsComponentFactory: MoneyAccountDetailsComponent.Factory,
     private val jointAccountCreationComponentFactory: JointAccountCreationComponent.Factory,
@@ -783,6 +785,13 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = Unit,
                     componentFactory = tangemPayWalletOnboardingComponentFactory,
+                )
+            }
+            is AppRoute.AllServices -> {
+                createComponentChild(
+                    context = context,
+                    params = Unit,
+                    componentFactory = allServicesComponentFactory,
                 )
             }
             is AppRoute.TangemPayCampaign -> {
