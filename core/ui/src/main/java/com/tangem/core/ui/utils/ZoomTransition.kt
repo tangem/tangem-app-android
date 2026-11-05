@@ -106,9 +106,12 @@ fun Modifier.zoomTransitionSource(key: String, shape: Shape): Modifier {
         }
 }
 
-/** The screen side of [zoomTransitionSource]; a `null` [key] leaves the screen to its stack's own animation. */
+/**
+ * The screen side of [zoomTransitionSource]; a `null` [key] leaves the screen to its stack's own animation.
+ * [isZooming] is false while the screen is revealed or covered by another one, which is not a zoom of its own.
+ */
 @Composable
-fun Modifier.zoomTransitionDestination(key: String?, shape: Shape): Modifier {
+fun Modifier.zoomTransitionDestination(key: String?, shape: Shape, isZooming: Boolean = true): Modifier {
     if (key == null) return this
     val host = LocalZoomHosts.current.lastOrNull() ?: return this
     val sharedContentState = host.sharedTransitionScope.rememberSharedContentState(key = key)
@@ -120,7 +123,7 @@ fun Modifier.zoomTransitionDestination(key: String?, shape: Shape): Modifier {
         label = "zoom fallback alpha",
     ) { state -> if (state == EnterExitState.Visible) 1f else 0f }
 
-    return graphicsLayer { alpha = if (sharedContentState.isMatchFound) 1f else fallbackAlpha }
+    return graphicsLayer { alpha = if (!isZooming || sharedContentState.isMatchFound) 1f else fallbackAlpha }
         .zoomBounds(host = host, sharedContentState = sharedContentState, shape = shape)
 }
 
