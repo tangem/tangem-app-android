@@ -57,7 +57,6 @@ import com.tangem.core.ui.R as CoreUiR
 private const val CONTENT_FADE_DURATION_MS = 300
 private val CardHorizontalPadding = 16.dp
 private val CardTopSpacing = 12.dp
-private val AddedToGoogleWalletReservedSpace = 56.dp
 
 @Composable
 internal fun TangemPayCardPageScreen(
@@ -127,8 +126,6 @@ private fun BoxScope.CardPageLayout(
     contentPadding: PaddingValues,
     cardSection: @Composable () -> Unit,
 ) {
-    // Material buttons inside the scaffold content can't blur the scaffold's own haze source (Haze skips
-    // an ancestor source of the same state), so they sample a separate state backed by the plain background.
     val buttonsHazeState = rememberHazeState()
     val isAddedToGoogleWalletShown = state.isAddedToGoogleWallet && state.cardState == TangemPayCardState.Active
     Box(
@@ -137,41 +134,44 @@ private fun BoxScope.CardPageLayout(
             .background(TangemTheme.colors3.bg.primary)
             .hazeSourceTangem(state = buttonsHazeState, zIndex = -1f),
     )
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = contentPadding.copy(
-            bottom = contentPadding.calculateBottomPadding() +
-                if (isAddedToGoogleWalletShown) AddedToGoogleWalletReservedSpace else 16.dp,
-        ),
-        verticalArrangement = Arrangement.spacedBy(0.dp),
-    ) {
-        item(key = "Card") {
-            Box(modifier = Modifier.padding(top = CardTopSpacing)) {
-                cardSection()
-            }
-        }
-        if (
-            state.settings.isNotEmpty() &&
-            state.cardState == TangemPayCardState.Active
+    Column(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            contentPadding = contentPadding.copy(
+                bottom = if (isAddedToGoogleWalletShown) 16.dp else contentPadding.calculateBottomPadding() + 16.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(0.dp),
         ) {
-            cardPageItem("Settings buttons") {
-                CompositionLocalProvider(LocalHazeState provides buttonsHazeState) {
-                    TangemPayCardPageSettingsButtonsBlock(
-                        modifier = Modifier.fillMaxWidth(),
-                        settings = state.settings,
-                    )
+            item(key = "Card") {
+                Box(modifier = Modifier.padding(top = CardTopSpacing)) {
+                    cardSection()
                 }
             }
+            if (
+                state.settings.isNotEmpty() &&
+                state.cardState == TangemPayCardState.Active
+            ) {
+                cardPageItem("Settings buttons") {
+                    CompositionLocalProvider(LocalHazeState provides buttonsHazeState) {
+                        TangemPayCardPageSettingsButtonsBlock(
+                            modifier = Modifier.fillMaxWidth(),
+                            settings = state.settings,
+                        )
+                    }
+                }
+            }
+            cardState(state = state)
         }
-        cardState(state = state)
-    }
-    if (isAddedToGoogleWalletShown) {
-        TangemPayAddedToGoogleWalletStatus(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(horizontal = 16.dp)
-                .padding(bottom = contentPadding.calculateBottomPadding() + 16.dp),
-        )
+        if (isAddedToGoogleWalletShown) {
+            TangemPayAddedToGoogleWalletStatus(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = contentPadding.calculateBottomPadding() + 16.dp),
+            )
+        }
     }
 }
 
