@@ -9,7 +9,6 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.*
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.*
-import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
@@ -25,11 +24,10 @@ import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.FindMoneyAccountCreationOrderUseCase
 import com.tangem.domain.pay.usecase.GetCustomerSummaryUseCase
+import com.tangem.domain.pay.usecase.GetTangemPayFiatRateUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.pay.usecase.ResolvePaymentAccountStatusFromSummaryUseCase
 import com.tangem.domain.pay.utils.TangemPayCustomerStateConverter
-import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
-import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
@@ -67,7 +65,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private val tangemPayCurrencyFactory: TangemPayCurrencyFactory,
     private val eligibilityManager: TangemPayEligibilityManager,
     private val reissueCardRepository: TangemPayReissueCardRepository,
-    private val singleQuoteSupplier: SingleQuoteStatusSupplier,
+    private val getTangemPayFiatRateUseCase: GetTangemPayFiatRateUseCase,
     private val closeCardRepository: TangemPayCloseCardRepository,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val issueCardRepository: TangemPayIssueCardRepository,
@@ -437,15 +435,13 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     }
 
     private suspend fun CustomerInfo.mapToPaymentAccountStatus(userWalletId: UserWalletId): PaymentAccountStatusValue {
-        val quotesData = singleQuoteSupplier.getSyncOrNull(
-            params = SingleQuoteStatusProducer.Params(rawCurrencyId = TangemPayCurrencyFactory.TOKEN_ID),
-        )?.value as? QuoteStatus.Data
+        val fiatRate = getTangemPayFiatRateUseCase()
 
         val customerId = customerId
         val isDeactivated = paymentAccountProductInstance?.status == CustomerInfo.ProductInstance.Status.DEACTIVATED
         val isFormer = state == CustomerInfo.State.FORMER
         val multichainNetworkStatuses by lazy {
-            tangemPayCurrencyFactory.createNetworkStatuses(userWalletId, networks, quotesData?.fiatRate)
+            tangemPayCurrencyFactory.createNetworkStatuses(userWalletId, networks, fiatRate)
         }
 
         return when {
@@ -477,7 +473,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     balance = resolved.balance,
                     cryptoCurrency = tangemPayCurrencyFactory.create(userWalletId),
                     networks = multichainNetworkStatuses,
-                    fiatRate = quotesData?.fiatRate,
+                    fiatRate = fiatRate,
                     error = null,
                 )
             }
@@ -489,7 +485,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                         userWalletId = userWalletId,
                         balance = resolved.balance,
                         source = resolved.source,
-                        fiatRate = quotesData?.fiatRate,
+                        fiatRate = fiatRate,
                         customerId = customerId,
                         networks = multichainNetworkStatuses,
                         isPaymentAccountIssuing = isPaymentAccountIssuing,
