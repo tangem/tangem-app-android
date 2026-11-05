@@ -129,15 +129,6 @@ internal class ExpressTransactionAssetFactory @Inject constructor(
     private fun List<CryptoCurrencyStatus>.findMatching(id: ExpressAsset.ID): CryptoCurrency? =
         firstOrNull { status -> status.currency.matches(id) }?.currency
 
-    private fun CryptoCurrency.matches(id: ExpressAsset.ID): Boolean {
-        if (network.rawId != id.networkId) return false
-        return if (id.contractAddress == ExpressAsset.EMPTY_CONTRACT_ADDRESS_VALUE) {
-            this is CryptoCurrency.Coin
-        } else {
-            this is CryptoCurrency.Token && contractAddress.equals(id.contractAddress, ignoreCase = true)
-        }
-    }
-
     /**
      * Every address of the network, not just the default one — a chain with several address formats (Bitcoin legacy /
      * segwit, Cardano) reports whichever one the deal used. Compared case-insensitively: the wallet derives EVM
@@ -188,3 +179,13 @@ internal fun ExpressOnrampEntity.AssetEmbedded.toAssetId(): ExpressAsset.ID =
 
 internal fun ExpressOnrampEntity.toLegKey(): ExpressLegKey =
     ExpressLegKey(assetId = to.toAssetId(), address = payoutAddress)
+
+/** Same asset as [id]; EVM contracts may differ in checksum casing between express and the portfolio. */
+internal fun CryptoCurrency.matches(id: ExpressAsset.ID): Boolean {
+    if (network.rawId != id.networkId) return false
+    return if (id.contractAddress == ExpressAsset.EMPTY_CONTRACT_ADDRESS_VALUE) {
+        this is CryptoCurrency.Coin
+    } else {
+        this is CryptoCurrency.Token && contractAddress.equals(id.contractAddress, ignoreCase = true)
+    }
+}

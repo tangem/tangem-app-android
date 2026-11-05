@@ -194,7 +194,7 @@ internal class CexSwapFeeCalculatorTest {
             // Extended-fee metadata is preserved.
             assertThat(loaded.fee.feeTokenId).isEqualTo(rawExtended.feeTokenId)
             assertThat(loaded.fee.gaslessFeePlan).isNull()
-            assertThat(loaded.fee.mainTransactionGasLimit).isNull()
+            assertThat(loaded.fee.callGasLimits).isNull()
             assertThat(loaded.fee.withdrawGasLimit).isNull()
         }
     }

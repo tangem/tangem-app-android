@@ -21,8 +21,10 @@ interface GaslessYieldRepository {
     suspend fun getYieldContractAddress(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): String?
 
     /**
-     * Builds an upgrade-wrapped `withdraw(yieldToken, amount)` call data for the user's yield module.
-     * @throws com.tangem.blockchain.yieldsupply.providers.YieldModuleUpgradeUnavailableException
+     * Builds an upgrade-wrapped `withdraw(yieldToken, amount)` call data for the user's yield module. A V2 module the
+     * factory can't upgrade already has the call, so it gets it unwrapped.
+     * @throws com.tangem.blockchain.yieldsupply.providers.YieldModuleUpgradeUnavailableException for a module older
+     *   than V2 the factory can't upgrade
      * @throws com.tangem.blockchain.yieldsupply.providers.YieldModuleVersionIndeterminateException
      */
     suspend fun createPartialWithdrawCallData(

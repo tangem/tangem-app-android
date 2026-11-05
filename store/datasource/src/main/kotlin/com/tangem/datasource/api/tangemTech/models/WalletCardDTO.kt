@@ -8,7 +8,7 @@ import com.squareup.moshi.JsonClass
  *
  * @property cardId         card identifier
  * @property cardPublicKey  public key of the card
- * @property role           role of the card within the wallet
+ * @property role           role of the card within the wallet, omitted when it is not known for certain
  * @property backupStatus   backup state of the card
 
  *                          e.g. `["secp256k1", "ed25519"]`. May be empty
@@ -19,7 +19,7 @@ import com.squareup.moshi.JsonClass
 data class WalletCardDTO(
     @Json(name = "cardId") val cardId: String,
     @Json(name = "cardPublicKey") val cardPublicKey: String,
-    @Json(name = "role") val role: Role,
+    @Json(name = "role") val role: Role? = null,
     @Json(name = "backupStatus") val backupStatus: BackupStatus,
     @Json(name = "curves") val curves: List<String>,
     @Json(name = "errorCode") val errorCode: String? = null,

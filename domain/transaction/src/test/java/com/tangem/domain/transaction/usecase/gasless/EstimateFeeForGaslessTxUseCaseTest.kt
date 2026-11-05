@@ -363,7 +363,7 @@ internal class EstimateFeeForGaslessTxUseCaseTest {
             // Assert
             val feeExtended = result.getOrNull()
             assertThat(feeExtended?.feeTokenId).isEqualTo(usdc.id)
-            assertThat(feeExtended?.mainTransactionGasLimit).isEqualTo(BigInteger("140000"))
+            assertThat(feeExtended?.callGasLimits).isEqualTo(listOf(BigInteger("140000")))
             assertThat(feeExtended?.nativeFee).isEqualTo(upgradeAllowedFee)
         }
 
