@@ -62,7 +62,7 @@ internal class CreateHotWalletUseCaseTest {
             getHotWalletAdditionRestrictionUseCase,
             discardUnsavedHotWalletUseCase,
         )
-        coEvery { getHotWalletAdditionRestrictionUseCase(isSocialLogin = false) } returns null
+        coEvery { getHotWalletAdditionRestrictionUseCase() } returns null
         coEvery { tangemHotSdk.generateWallet(AUTH, MNEMONIC_TYPE) } returns HOT_WALLET_ID
         every { hotUserWalletBuilderFactory.create(HOT_WALLET_ID) } returns hotUserWalletBuilder
         coEvery { hotUserWalletBuilder.build(any()) } returns USER_WALLET
@@ -73,9 +73,7 @@ internal class CreateHotWalletUseCaseTest {
     @Test
     fun `GIVEN hot wallets limit reached WHEN invoke THEN returns LimitReached without generating wallet`() = runTest {
         // Arrange
-        coEvery {
-            getHotWalletAdditionRestrictionUseCase(isSocialLogin = false)
-        } returns HotWalletAdditionRestriction.LimitReached
+        coEvery { getHotWalletAdditionRestrictionUseCase() } returns HotWalletAdditionRestriction.LimitReached
 
         // Act
         val actual = useCase(AUTH, MNEMONIC_TYPE)
@@ -86,25 +84,10 @@ internal class CreateHotWalletUseCaseTest {
     }
 
     @Test
-    fun `GIVEN social wallet restriction WHEN invoke THEN it does not block regular creation`() = runTest {
-        // Arrange
-        coEvery {
-            getHotWalletAdditionRestrictionUseCase(isSocialLogin = false)
-        } returns HotWalletAdditionRestriction.SocialWalletAlreadyAdded
-        coEvery { saveWalletUseCase(USER_WALLET) } returns Unit.right()
-
-        // Act
-        val actual = useCase(AUTH, MNEMONIC_TYPE)
-
-        // Assert
-        assertThat(actual).isEqualTo(USER_WALLET.right())
-    }
-
-    @Test
     fun `GIVEN restriction check throws WHEN invoke THEN returns Failed without generating wallet`() = runTest {
         // Arrange
         val cause = IllegalStateException("wallets not loaded")
-        coEvery { getHotWalletAdditionRestrictionUseCase(isSocialLogin = false) } throws cause
+        coEvery { getHotWalletAdditionRestrictionUseCase() } throws cause
 
         // Act
         val actual = useCase(AUTH, MNEMONIC_TYPE)
