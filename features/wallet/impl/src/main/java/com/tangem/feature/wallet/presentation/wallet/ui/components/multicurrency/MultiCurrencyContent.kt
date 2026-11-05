@@ -65,6 +65,7 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokensListItemUM2
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListUM
+import com.tangem.utils.annotations.RemoveWithToggle
 import kotlinx.collections.immutable.ImmutableList
 
 /**
@@ -167,7 +168,13 @@ internal fun LazyListScope.tokensListItems2(
                     )
                     is TokensListItemUM2.SectionV2,
                     is TokensListItemUM2.TokenV2,
-                    -> Unit
+                    -> tokenItemV2(
+                        listItem = listItem,
+                        index = index,
+                        lastIndex = walletTokensListUM.tokenList.lastIndex,
+                        isBalanceHidden = isBalanceHidden,
+                        modifier = modifier,
+                    )
                 }
             }
         }
@@ -178,6 +185,7 @@ internal fun LazyListScope.tokensListItems2(
     }
 }
 
+@RemoveWithToggle("AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED")
 private fun LazyListScope.tokenItem(
     listItem: TokensListItemUM2,
     index: Int,
@@ -219,6 +227,41 @@ private fun LazyListScope.tokenItem(
             }
             is TokensListItemUM2.GroupTitle -> TangemHeaderRow(
                 headerRowUM = listItem.tokenRowUM,
+                modifier = itemModifier,
+            )
+            else -> Unit
+        }
+    }
+}
+
+private fun LazyListScope.tokenItemV2(
+    listItem: TokensListItemUM2,
+    index: Int,
+    lastIndex: Int,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    item(key = listItem.id, contentType = listItem::class.java) {
+        val itemModifier = modifier
+            .testTag(MainScreenTestTags.TOKEN_LIST_ITEM)
+            .semantics { lazyListItemPosition = index }
+            .padding(top = if (index == 0) 12.dp else 0.dp)
+            .roundedShapeItemDecoration(
+                radius = 24.dp,
+                currentIndex = index,
+                addDefaultPadding = false,
+                lastIndex = lastIndex,
+                backgroundColor = TangemTheme.colors3.bg.secondary,
+            )
+
+        when (listItem) {
+            is TokensListItemUM2.TokenV2 -> TokenRowV2(
+                item = listItem,
+                isBalanceHidden = isBalanceHidden,
+                modifier = itemModifier,
+            )
+            is TokensListItemUM2.SectionV2 -> TangemAccountRow.Section(
+                title = listItem.title,
                 modifier = itemModifier,
             )
             else -> Unit

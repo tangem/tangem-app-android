@@ -17,6 +17,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.utils.enableButtons
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
+import com.tangem.utils.annotations.RemoveWithToggle
 import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 
@@ -33,6 +34,8 @@ internal class SetTokenListTransformer(
     private val isHotBackedUp: Boolean? = null,
     private val jointPendingOperations: List<JointPendingOperation> = emptyList(),
     private val isRedesignedAccountRowsEnabled: Boolean = false,
+    @RemoveWithToggle(toggleName = "AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED", description = "Inline true")
+    private val isRedesignedTokenRowsEnabled: Boolean = false,
 ) : WalletStateTransformer(userWallet.walletId) {
 
     private val tangemPayConverter by lazy {
@@ -202,6 +205,7 @@ internal class SetTokenListTransformer(
             expandedAccounts = params.expandedAccounts,
             jointPendingOperations = jointPendingOperations,
             isRedesignedAccountRowsEnabled = isRedesignedAccountRowsEnabled,
+            isRedesignedTokenRowsEnabled = isRedesignedTokenRowsEnabled,
         ).convert(value = params.accountList)
     }
 }
