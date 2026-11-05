@@ -1,6 +1,7 @@
 package com.tangem.screens
 
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
@@ -23,6 +24,11 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
 
     val screenContainer: KNode = child {
         hasTestTag(TokenDetailsScreenTestTags.SCREEN_CONTAINER)
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    fun scrollToText(text: String) {
+        screenContainer { performScrollToNode(withText(text = text, substring = true)) }
     }
 
     val availableStakingBlock: KNode = child {
