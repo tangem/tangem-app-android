@@ -13,8 +13,15 @@ import com.tangem.features.polymarket.impl.common.formatSlippagePercent
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SlippageUM
 import kotlinx.collections.immutable.persistentListOf
+import java.math.BigDecimal
 
 internal object PredictionFeeSheetUMConverter {
+
+    private val PredictionOrderQuote.orderAmount: BigDecimal
+        get() = when (side) {
+            PredictionOrderSide.BUY -> notional
+            PredictionOrderSide.SELL -> expectedExecutionAmount
+        }
 
     fun convert(
         quote: PredictionOrderQuote,
@@ -27,7 +34,7 @@ internal object PredictionFeeSheetUMConverter {
             rows = persistentListOf(
                 PredictionFeeSheetUM.Row(
                     title = resourceReference(quote.orderRowTitleRes(heading)),
-                    amount = quote.notional.formatPolymarketMoney(),
+                    amount = quote.orderAmount.formatPolymarketMoney(),
                     description = quote.orderDescription(slippage, tokenSymbol),
                 ),
                 PredictionFeeSheetUM.Row(
