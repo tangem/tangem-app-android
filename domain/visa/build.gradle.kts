@@ -32,6 +32,7 @@ dependencies {
     api(projects.domain.account)
     api(projects.domain.common)
     api(projects.domain.core)
+    api(projects.domain.quotes)
     // endregion
 
     // region Domain models
