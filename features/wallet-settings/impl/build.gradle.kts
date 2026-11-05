@@ -81,6 +81,7 @@ dependencies {
 
     /* Test */
     testImplementation(projects.common.test)
+    testImplementation(projects.domain.core)
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
 }

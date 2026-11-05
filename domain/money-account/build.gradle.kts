@@ -26,7 +26,6 @@ dependencies {
 
     // region Domain
     api(projects.domain.account)
-    api(projects.domain.common)
     api(projects.domain.core)
     api(projects.domain.networks)
     api(projects.domain.quotes)
@@ -45,9 +44,7 @@ dependencies {
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     testImplementation(tangemDeps.card.core)
-    testImplementation(projects.common.test)
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
-    testImplementation(projects.domain.card)
     // endregion
 }
