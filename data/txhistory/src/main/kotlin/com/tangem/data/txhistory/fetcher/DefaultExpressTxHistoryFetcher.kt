@@ -5,6 +5,7 @@ import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.default
 import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.receiveTriggerInstance
 import com.tangem.data.txhistory.fetcher.TxHistoryFetcherUtils.Companion.retryThreeTimes
 import com.tangem.data.txhistory.repository.DefaultExpressHistoryRepository
+import com.tangem.data.txhistory.repository.ExpressOperationId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.fetcher.ExpressTxHistoryFetcher
@@ -21,10 +22,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.seconds
 
@@ -42,13 +40,8 @@ internal class DefaultExpressTxHistoryFetcher @AssistedInject constructor(
     private var onrampInitialPaginationJob: Job? = null
     private var onrampDeltaPaginationJob: Job? = null
 
-    /**
-     * Status polling of the currencies, keyed so one currency is never polled twice.
-     *
-     * Concurrent because entries are dropped from [Job.invokeOnCompletion], which runs on whatever thread
-     * finished the job — not on the trigger loop that puts them in.
-     */
-    private val pullStatusJobs = ConcurrentHashMap<CryptoCurrency.ID, Job>()
+    private val pullStatusJobs = ConcurrentHashMap<ExpressOperationId, PullStatus>()
+    private val pullingJobs = ConcurrentHashMap<CryptoCurrency.ID, Job>()
 
     init {
         val receiveFlow = receiveTriggerInstance<TxHistoryExpressTrigger>()
@@ -102,22 +95,88 @@ internal class DefaultExpressTxHistoryFetcher @AssistedInject constructor(
         fetchOnramp()
 
         val key = currency.id
-        val runningJob = pullStatusJobs[key]
+        val runningJob = pullingJobs[key]
         if (isForce) runningJob?.cancel()
         if (runningJob?.isActive == true) return
 
-        val pullingJob = modelScope.launch(dispatchers.io) {
-            exchangeDeltaPaginationJob?.join()
-            onrampDeltaPaginationJob?.join()
+        val pullingJob = holdActiveStatuses(walletId, currency, isForce).launchIn(modelScope)
+        pullingJobs[key] = pullingJob
+        pullingJob.invokeOnCompletion { pullingJobs.remove(key, pullingJob) }
+    }
 
-            var shouldContinuityPulling = true
-            while (isActive && shouldContinuityPulling) {
-                shouldContinuityPulling = expressHistoryRepository.refreshActiveStatuses(walletId, currency)
-                if (shouldContinuityPulling) delay(10.seconds)
+    private fun holdActiveStatuses(
+        walletId: UserWalletId,
+        currency: CryptoCurrency,
+        isForce: Boolean,
+    ): Flow<Set<ExpressOperationId>> {
+        val heldIds = mutableSetOf<ExpressOperationId>()
+        var shouldRestart = isForce
+
+        return observeActiveIds(walletId, currency)
+            .onEach { activeIds ->
+                if (shouldRestart) {
+                    activeIds.forEach { id -> restartPulling(walletId, id) }
+                    shouldRestart = false
+                }
+                heldIds.minus(activeIds).forEach(::releasePulling)
+                activeIds.minus(heldIds).forEach { id -> acquirePulling(walletId, id) }
+                heldIds.clear()
+                heldIds += activeIds
+            }
+            .onCompletion {
+                heldIds.forEach(::releasePulling)
+                heldIds.clear()
+            }
+            .retryThreeTimes()
+            .flowOn(dispatchers.io)
+    }
+
+    private fun observeActiveIds(walletId: UserWalletId, currency: CryptoCurrency) = flow {
+        exchangeDeltaPaginationJob?.join()
+        onrampDeltaPaginationJob?.join()
+
+        emitAll(
+            expressHistoryRepository
+                .observeActiveOperationIds(walletId, currency)
+                .distinctUntilChanged(),
+        )
+    }
+
+    private fun acquirePulling(walletId: UserWalletId, id: ExpressOperationId) {
+        pullStatusJobs.compute(id) { _, current ->
+            if (current == null || !current.job.isActive) {
+                PullStatus(job = launchPulling(walletId, id), holders = 1)
+            } else {
+                current.copy(holders = current.holders + 1)
             }
         }
-        pullStatusJobs[key] = pullingJob
-        pullingJob.invokeOnCompletion { pullStatusJobs.remove(key, pullingJob) }
+    }
+
+    private fun releasePulling(id: ExpressOperationId) {
+        pullStatusJobs.computeIfPresent(id) { _, current ->
+            val holders = current.holders - 1
+
+            if (holders > 0) {
+                current.copy(holders = holders)
+            } else {
+                current.job.cancel()
+                null
+            }
+        }
+    }
+
+    private fun restartPulling(walletId: UserWalletId, id: ExpressOperationId) {
+        pullStatusJobs.computeIfPresent(id) { _, current ->
+            current.job.cancel()
+            current.copy(job = launchPulling(walletId, id))
+        }
+    }
+
+    private fun launchPulling(walletId: UserWalletId, id: ExpressOperationId): Job = fetcherScope.launch {
+        while (isActive) {
+            expressHistoryRepository.refreshActiveStatuses(walletId, id)
+            delay(POLL_INTERVAL)
+        }
     }
 
     private fun fetchExchange() {
@@ -215,5 +274,14 @@ internal class DefaultExpressTxHistoryFetcher @AssistedInject constructor(
     @AssistedFactory
     internal interface Factory {
         fun create(walletId: UserWalletId): DefaultExpressTxHistoryFetcher
+    }
+
+    private data class PullStatus(
+        val job: Job,
+        val holders: Int,
+    )
+
+    private companion object {
+        val POLL_INTERVAL = 10.seconds
     }
 }

@@ -140,16 +140,16 @@ interface ExpressHistoryDao {
           )
         """,
     )
-    suspend fun getActiveExchangeIds(
+    fun observeActiveExchangeIds(
         addresses: List<String>,
         network: String,
         contract: String,
         activeStatuses: List<String>,
-    ): List<String>
+    ): Flow<List<String>>
 
     /**
      * Ids of the onramps that are still in flight for one asset. Onramp is always incoming, so only the
-     * payout side is matched. See [getActiveExchangeIds] for [activeStatuses].
+     * payout side is matched. See [observeActiveExchangeIds] for [activeStatuses].
      */
     @Query(
         """
@@ -160,12 +160,12 @@ interface ExpressHistoryDao {
           AND to_contract_address = :contract
         """,
     )
-    suspend fun getActiveOnrampIds(
+    fun observeActiveOnrampIds(
         addresses: List<String>,
         network: String,
         contract: String,
         activeStatuses: List<String>,
-    ): List<String>
+    ): Flow<List<String>>
 
     /** Swap row for [txId], regardless of address/window; `null` if [txId] is not a swap. */
     @Query("SELECT * FROM express_exchange WHERE tx_id = :txId")

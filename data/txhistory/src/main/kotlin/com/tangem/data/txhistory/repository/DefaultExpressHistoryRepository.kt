@@ -29,10 +29,7 @@ import com.tangem.store.datasource.txhistory.db.dao.HistorySyncStateDao
 import com.tangem.store.datasource.txhistory.db.entity.sync.HistorySyncStateEntity
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 /**
@@ -134,49 +131,66 @@ internal class DefaultExpressHistoryRepository @Inject constructor(
     }
 
     /**
-     * Re-reads from the backend every express operation of [currency] that is still in flight and writes the
-     * answer back into the local database, so an operation whose status moved on while the history sync was
-     * idle stops the screen from showing a stale one.
+     * The express operations of [currency] that are still in flight, re-emitted whenever the local database
+     * changes, so a caller polling their statuses learns about a new deal and about a finished one on its own.
      *
      * The operations are looked up by the asset ([ExpressAsset.ID]) plus the wallet's addresses on its network:
      * a swap counts when the currency is either of its legs, an onramp when it is the payout side. Only
-     * non-terminal statuses are refreshed — a finished deal expects no further update.
-     *
-     * The requests run in parallel and a failed one is logged and dropped: refreshing is best-effort, and one
-     * provider that does not answer must not cost the rest their update. Returns once all of them have settled.
+     * non-terminal statuses are returned — a finished deal expects no further update.
      */
-    suspend fun refreshActiveStatuses(userWalletId: UserWalletId, currency: CryptoCurrency): Boolean {
+    internal fun observeActiveOperationIds(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+    ): Flow<Set<ExpressOperationId>> = flow {
         val addresses = getAddresses(userWalletId, currency.network)
-        if (addresses.isEmpty()) return false
-
+        if (addresses.isEmpty()) {
+            emit(emptySet())
+            return@flow
+        }
         val assetId = ExpressAsset.ID(currency)
-        val exchangeIds = expressHistoryDao.getActiveExchangeIds(
+
+        val exchangeIds = expressHistoryDao.observeActiveExchangeIds(
             addresses = addresses,
             network = assetId.networkId,
             contract = assetId.contractAddress,
             activeStatuses = ExpressStatusMapper.activeExchangeStatuses,
-        )
-        val onrampIds = expressHistoryDao.getActiveOnrampIds(
+        ).map {
+            it.mapTo(mutableSetOf()) { id -> ExpressOperationId(id, ExpressOperationType.Swap) }
+        }
+        val onrampIds = expressHistoryDao.observeActiveOnrampIds(
             addresses = addresses,
             network = assetId.networkId,
             contract = assetId.contractAddress,
             activeStatuses = ExpressStatusMapper.activeOnrampStatuses,
-        )
-        if (exchangeIds.isEmpty() && onrampIds.isEmpty()) return false
+        ).map {
+            it.mapTo(mutableSetOf()) { id -> ExpressOperationId(id, ExpressOperationType.Onramp) }
+        }
+        emitAll(combine(exchangeIds, onrampIds) { a, b -> a.plus(b) })
+    }
 
-        val userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: return false
+    /**
+     * Re-reads [activeId] from the backend and writes the answer back into the local database, so an operation
+     * whose status moved on while the history sync was idle stops the screen from showing a stale one.
+     *
+     * Best-effort: a failed request is logged and dropped, since the caller polls and will ask again.
+     */
+    internal suspend fun refreshActiveStatuses(userWalletId: UserWalletId, activeId: ExpressOperationId) {
+        val userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: return
         val walletIdValue = userWalletId.stringValue
         val refCode = expressUtils.getRefCode(userWallet = userWallet)
 
-        coroutineScope {
-            val requests = exchangeIds.map { txId ->
-                async { refreshExchangeStatus(userWalletId = walletIdValue, refCode = refCode, txId = txId) }
-            } + onrampIds.map { txId ->
-                async { refreshOnrampStatus(userWalletId = walletIdValue, refCode = refCode, txId = txId) }
-            }
-            requests.awaitAll()
+        when (activeId.type) {
+            ExpressOperationType.Swap -> refreshExchangeStatus(
+                userWalletId = walletIdValue,
+                refCode = refCode,
+                txId = activeId.id,
+            )
+            ExpressOperationType.Onramp -> refreshOnrampStatus(
+                userWalletId = walletIdValue,
+                refCode = refCode,
+                txId = activeId.id,
+            )
         }
-        return true
     }
 
     private suspend fun refreshExchangeStatus(userWalletId: String, refCode: String?, txId: String) {
