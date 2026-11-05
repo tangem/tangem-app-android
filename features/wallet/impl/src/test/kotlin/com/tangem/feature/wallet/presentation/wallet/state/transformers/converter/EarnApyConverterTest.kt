@@ -11,6 +11,7 @@ import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
+import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.staking.model.BalanceItem
 import com.tangem.domain.staking.model.StakingBalance
 import com.tangem.domain.staking.model.StakingAvailability
@@ -19,12 +20,15 @@ import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.model.common.RewardInfo
 import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 import java.util.Locale
 
@@ -197,16 +201,171 @@ internal class EarnApyConverterTest {
         assertThat(actual).isNull()
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class YieldModeAndStaking {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN yield mode and staking for one token WHEN convert THEN yield mode result wins`(
+            model: YieldAndStakingModel,
+        ) {
+            // Arrange
+            val converter = EarnApyConverter(
+                yieldModuleApyMap = mapOf(yieldToken.yieldSupplyKey() to BigDecimal("5.5")),
+                stakingApyMap = mapOf(
+                    yieldToken to StakingAvailability.Available(
+                        stakeKitOption(validator("v1", preferred = true, rate = "0.07")),
+                    ),
+                ),
+            )
+            val status = status(
+                stakingBalance = if (model.isStakingActive) stakeKitBalance("v1") else null,
+                currency = yieldToken,
+                yieldSupplyStatus = YieldSupplyStatus(model.isYieldActive, true, true, null),
+            )
+
+            // Act
+            val actual = converter.convert(status)
+
+            // Assert
+            assertThat(actual).isEqualTo(yieldModeApyInfo(isActive = model.isYieldActive))
+        }
+
+        private fun provideTestModels() = listOf(
+            YieldAndStakingModel(isYieldActive = true, isStakingActive = true),
+            YieldAndStakingModel(isYieldActive = true, isStakingActive = false),
+            YieldAndStakingModel(isYieldActive = false, isStakingActive = true),
+            YieldAndStakingModel(isYieldActive = false, isStakingActive = false),
+        )
+    }
+
+    @Test
+    fun `GIVEN a coin AND a non-empty yield map WHEN convert THEN staking is used`() {
+        // Arrange
+        val converter = converter(
+            availability = StakingAvailability.Available(
+                stakeKitOption(validator("v1", preferred = true, rate = "0.07")),
+            ),
+            yieldModuleApyMap = mapOf(yieldToken.yieldSupplyKey() to BigDecimal("5.5")),
+        )
+
+        // Act
+        val actual = converter.convert(status())
+
+        // Assert
+        assertThat(actual).isEqualTo(stakingApyInfo(isActive = false))
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class YieldKeyMatching {
+
+        private val usdcEvm = MockCryptoCurrencyFactory().createToken(
+            blockchain = Blockchain.Ethereum,
+            id = "usd-coin",
+            contractAddress = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        )
+        private val usdcSolana = MockCryptoCurrencyFactory().createToken(
+            blockchain = Blockchain.Solana,
+            id = "usd-coin",
+            contractAddress = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        )
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a yield key in some letter case WHEN convert THEN the match follows the network's address case rule`(
+            model: YieldKeyModel,
+        ) {
+            // Arrange
+            val converter = EarnApyConverter(
+                yieldModuleApyMap = mapOf(model.key to BigDecimal("5.5")),
+                stakingApyMap = emptyMap(),
+            )
+
+            // Act
+            val actual = converter.convert(status(currency = model.token))
+
+            // Assert
+            assertThat(actual).isEqualTo(model.expected)
+        }
+
+        // Pins current behaviour: yieldSupplyKey lowercases the contract, so a Solana key in original case never matches
+        private fun provideTestModels() = listOf(
+            YieldKeyModel(
+                description = "EVM token AND upper-case key -> matched",
+                token = usdcEvm,
+                key = "ETHEREUM_0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48",
+                expected = yieldModeApyInfo(isActive = false),
+            ),
+            YieldKeyModel(
+                description = "Solana token AND original-case key -> not matched",
+                token = usdcSolana,
+                key = "solana_EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+                expected = null,
+            ),
+            YieldKeyModel(
+                description = "Solana token AND lower-case key -> matched",
+                token = usdcSolana,
+                key = "solana_epjfwdd5aufqssqem2qn1xzybapc8g4weggkzwytdt1v",
+                expected = yieldModeApyInfo(isActive = false),
+            ),
+        )
+    }
+
+    @Test
+    fun `GIVEN a staking rate below one hundredth of a percent WHEN convert THEN badge shows the lower-than text`() {
+        // Arrange
+        val converter = converter(
+            StakingAvailability.Available(stakeKitOption(validator("v1", preferred = true, rate = "0.00001"))),
+        )
+
+        // Act
+        val actual = converter.convert(status())
+
+        // Assert
+        val expected = EarnApyConverter.EarnApyInfo(
+            text = resourceReference(R.string.yield_module_earn_badge, wrappedList("<0.01")),
+            isActive = false,
+            rate = BigDecimal("0.00001"),
+            isStaking = true,
+        )
+        assertThat(actual).isEqualTo(expected)
+    }
+
+    @Test
+    fun `GIVEN a token keyed StakeKit option WHEN convert THEN staking badge is shown for the token`() {
+        // Arrange
+        val converter = EarnApyConverter(
+            yieldModuleApyMap = emptyMap(),
+            stakingApyMap = mapOf(
+                yieldToken to StakingAvailability.Available(
+                    stakeKitOption(validator("v1", preferred = true, rate = "0.07")),
+                ),
+            ),
+        )
+
+        // Act
+        val actual = converter.convert(status(currency = yieldToken))
+
+        // Assert
+        assertThat(actual).isEqualTo(stakingApyInfo(isActive = false))
+    }
+
     // region Fixtures
 
-    private fun converter(availability: StakingAvailability) = EarnApyConverter(
-        yieldModuleApyMap = emptyMap(),
+    private fun converter(
+        availability: StakingAvailability,
+        yieldModuleApyMap: Map<String, BigDecimal> = emptyMap(),
+    ) = EarnApyConverter(
+        yieldModuleApyMap = yieldModuleApyMap,
         stakingApyMap = mapOf(currency to availability),
     )
 
     private fun status(
         stakingBalance: StakingBalance.Data? = null,
         currency: CryptoCurrency = this.currency,
+        yieldSupplyStatus: YieldSupplyStatus? = null,
     ): CryptoCurrencyStatus = CryptoCurrencyStatus(
         currency = currency,
         value = CryptoCurrencyStatus.Loaded(
@@ -214,7 +373,7 @@ internal class EarnApyConverterTest {
             fiatAmount = BigDecimal.ONE,
             fiatRate = BigDecimal.ONE,
             priceChange = BigDecimal.ZERO,
-            yieldSupplyStatus = null,
+            yieldSupplyStatus = yieldSupplyStatus,
             hasCurrentNetworkTransactions = false,
             pendingTransactions = emptySet(),
             networkAddress = mockk(relaxed = true),
@@ -285,6 +444,33 @@ internal class EarnApyConverterTest {
             rate = rateValue,
             isStaking = true,
         )
+    }
+
+    /** The Yield Mode badge for a 5.5% APY: the converter shifts the percent into a fraction (`0.055`). */
+    private fun yieldModeApyInfo(isActive: Boolean) = EarnApyConverter.EarnApyInfo(
+        text = resourceReference(R.string.yield_module_earn_badge, wrappedList("5.50")),
+        isActive = isActive,
+        rate = BigDecimal("0.055"),
+        isStaking = false,
+    )
+
+    /** The StakeKit badge for a 7% APY, with the text as a literal instead of the production formatter's output. */
+    private fun stakingApyInfo(isActive: Boolean) = EarnApyConverter.EarnApyInfo(
+        text = resourceReference(R.string.yield_module_earn_badge, wrappedList("7.00")),
+        isActive = isActive,
+        rate = BigDecimal("0.07"),
+        isStaking = true,
+    )
+
+    data class YieldAndStakingModel(val isYieldActive: Boolean, val isStakingActive: Boolean)
+
+    data class YieldKeyModel(
+        val description: String,
+        val token: CryptoCurrency.Token,
+        val key: String,
+        val expected: EarnApyConverter.EarnApyInfo?,
+    ) {
+        override fun toString() = description
     }
 
     // endregion
