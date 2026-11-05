@@ -20,6 +20,7 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.raiseIllegalStateError
+import com.tangem.domain.transaction.usecase.fixYieldSupplyGasLimit
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import java.math.BigDecimal
 
@@ -162,14 +163,18 @@ class EvmGaslessFeeResolver(
         transactionData: TransactionData,
         initialFee: TransactionFee,
     ): TransactionFee {
-        if (nativeTransactionData === transactionData) return initialFee
+        val nativeFee = if (nativeTransactionData === transactionData) {
+            initialFee
+        } else {
+            tokenFeeCalculator.calculateInitialFee(
+                userWallet = userWallet,
+                network = network,
+                walletManager = walletManager,
+                transactionData = nativeTransactionData,
+            ).bind()
+        }
 
-        return tokenFeeCalculator.calculateInitialFee(
-            userWallet = userWallet,
-            network = network,
-            walletManager = walletManager,
-            transactionData = nativeTransactionData,
-        ).bind()
+        return nativeFee.fixYieldSupplyGasLimit(transactionData = nativeTransactionData)
     }
 
     @Suppress("NullableToStringCall")
