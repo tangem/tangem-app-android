@@ -1,17 +1,19 @@
 package com.tangem.screens.moneyaccount
 
+import androidx.annotation.StringRes
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import androidx.compose.ui.test.swipeDown
 import com.tangem.common.BaseTestCase
+import com.tangem.core.res.R as CoreResR
 import com.tangem.core.ui.test.ModalStatusTestTags
-import com.tangem.core.res.R
 import com.tangem.core.ui.test.MoneyAccountTestTags
-import io.github.kakaocup.kakao.common.utilities.getResourceString
+import com.tangem.core.ui.test.NotificationTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
+import io.github.kakaocup.kakao.common.utilities.getResourceString
 import androidx.compose.ui.test.hasTestTag as withTestTag
 import androidx.compose.ui.test.hasText as withText
 
@@ -56,7 +58,7 @@ class MoneyAccountPageObject(private val semanticsProvider: SemanticsNodeInterac
     }
 
     val balanceUnavailableBanner: KNode = child {
-        hasText(getResourceString(R.string.money_account_balance_unavailable_title))
+        hasText(getResourceString(CoreResR.string.money_account_balance_unavailable_title))
         useUnmergedTree = true
     }
 
@@ -68,6 +70,31 @@ class MoneyAccountPageObject(private val semanticsProvider: SemanticsNodeInterac
     fun mainRowWithText(text: String): KNode = child {
         hasTestTag(MoneyAccountTestTags.MAIN_ROW)
         hasText(text = text, substring = true)
+    }
+
+    val mainRowCacheIcon: KNode = child {
+        hasTestTag(MoneyAccountTestTags.MAIN_ROW_CACHE_ICON)
+        useUnmergedTree = true
+    }
+
+    fun isMainRowCacheIconShown(): Boolean = semanticsProvider
+        .onAllNodes(withTestTag(MoneyAccountTestTags.MAIN_ROW_CACHE_ICON), useUnmergedTree = true)
+        .fetchSemanticsNodes(atLeastOneRootRequired = false)
+        .isNotEmpty()
+
+    val sessionExpiredBannerTitle: KNode = bannerTitle(CoreResR.string.tangempay_sync_needed_title)
+
+    val renewSessionButton: KNode = child {
+        hasText(getResourceString(CoreResR.string.tangempay_sync_needed_button))
+        useUnmergedTree = true
+    }
+
+    val balanceUnavailableBannerTitle: KNode = bannerTitle(CoreResR.string.money_account_balance_unavailable_title)
+
+    private fun bannerTitle(@StringRes textRes: Int): KNode = child {
+        hasTestTag(NotificationTestTags.TITLE)
+        hasText(getResourceString(textRes))
+        useUnmergedTree = true
     }
 
     fun modalStatusTitle(title: String): KNode = child {
