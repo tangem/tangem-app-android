@@ -9,6 +9,8 @@ import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.res.R as CoreResR
+import com.tangem.scenarios.assertMoneyAccountRowKeepsShowing
+import com.tangem.scenarios.assertMoneyAccountRowNeverShown
 import com.tangem.scenarios.openMainWithMoneyAccountWallet
 import com.tangem.scenarios.refreshMainUntilCustomerSummaryRequested
 import com.tangem.scenarios.refreshMainUntilMoneyAccountBalance
@@ -245,10 +247,8 @@ class MoneyAccountSummaryContractTest : BaseTestCase() {
                 setWireMockScenarioState(moneyAccountScenario, moneyAccountActiveState)
             }
             step("Refresh 'Main' screen") { refreshMainUntilCustomerSummaryRequested() }
-            step("Assert 'Money account' row still shows '$initialBalance'") {
-                flakySafely(WAIT_UNTIL_TIMEOUT) {
-                    onMoneyAccountScreen { mainRowWithText(initialBalance).assertIsDisplayed() }
-                }
+            step("Assert 'Money account' row keeps showing '$initialBalance'") {
+                assertMoneyAccountRowKeepsShowing(initialBalance)
             }
             step("Assert Tangem Pay tile still shows '$oneCardSubtitle'") {
                 onTangemPayMainScreen { tileWithSubtitle(oneCardSubtitle).assertIsDisplayed() }
@@ -273,23 +273,20 @@ class MoneyAccountSummaryContractTest : BaseTestCase() {
             }
             step("Open 'Main' screen of the wallet with Tangem Pay") { openMainWithMoneyAccountWallet() }
             step("Refresh 'Main' screen") { refreshMainUntilCustomerSummaryRequested() }
+            step("Assert 'Money account' row never shows") { assertMoneyAccountRowNeverShown() }
             step("Assert 'Main' screen is displayed") { onMainScreen { screenContainer.assertIsDisplayed() } }
-            step("Assert 'Money account' row is not displayed") {
-                onMoneyAccountScreen { mainRow.assertDoesNotExist() }
-            }
             step("Switch WireMock scenario '$moneyAccountScenario' to '$withoutPaymentAccountState'") {
                 setWireMockScenarioState(moneyAccountScenario, withoutPaymentAccountState)
             }
             step("Refresh 'Main' screen") { refreshMainUntilCustomerSummaryRequested() }
+            step("Assert 'Money account' row never shows") { assertMoneyAccountRowNeverShown() }
             step("Assert 'Main' screen is displayed") { onMainScreen { screenContainer.assertIsDisplayed() } }
             step("Switch WireMock scenario '$moneyAccountScenario' to '$withoutCardsState'") {
                 setWireMockScenarioState(moneyAccountScenario, withoutCardsState)
             }
             step("Refresh 'Main' screen") { refreshMainUntilCustomerSummaryRequested() }
+            step("Assert 'Money account' row never shows") { assertMoneyAccountRowNeverShown() }
             step("Assert 'Main' screen is displayed") { onMainScreen { screenContainer.assertIsDisplayed() } }
-            step("Assert 'Money account' row is not displayed") {
-                onMoneyAccountScreen { mainRow.assertDoesNotExist() }
-            }
         }
     }
 
@@ -319,21 +316,21 @@ class MoneyAccountSummaryContractTest : BaseTestCase() {
                 setWireMockScenarioState(summaryErrorScenario, serverErrorState)
             }
             step("Refresh 'Main' screen") { refreshMainUntilCustomerSummaryRequested() }
+            step("Assert 'Money account' row keeps showing the cached '$initialBalance'") {
+                assertMoneyAccountRowKeepsShowing(initialBalance)
+            }
             step("Assert 'Money account' row shows the cache icon") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) { onMoneyAccountScreen { mainRowCacheIcon.assertIsDisplayed() } }
-            }
-            step("Assert 'Money account' row shows the cached '$initialBalance'") {
-                onMoneyAccountScreen { mainRowWithText(initialBalance).assertIsDisplayed() }
             }
             step("Set WireMock scenario '$summaryErrorScenario' to '$connectionResetState'") {
                 setWireMockScenarioState(summaryErrorScenario, connectionResetState)
             }
             step("Refresh 'Main' screen") { refreshMainUntilCustomerSummaryRequested() }
+            step("Assert 'Money account' row keeps showing the cached '$initialBalance'") {
+                assertMoneyAccountRowKeepsShowing(initialBalance)
+            }
             step("Assert 'Money account' row shows the cache icon") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) { onMoneyAccountScreen { mainRowCacheIcon.assertIsDisplayed() } }
-            }
-            step("Assert 'Money account' row shows the cached '$initialBalance'") {
-                onMoneyAccountScreen { mainRowWithText(initialBalance).assertIsDisplayed() }
             }
             step("Reset WireMock scenario '$summaryErrorScenario'") { resetWireMockScenarioState(summaryErrorScenario) }
             step("Set WireMock scenario '$usdcBalanceScenario' to '$usdcBalanceAfterDepositState'") {

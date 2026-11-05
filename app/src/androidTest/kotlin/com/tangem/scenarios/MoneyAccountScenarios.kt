@@ -16,6 +16,7 @@ import com.tangem.screens.tangempay.onTangemPayWithdrawHubScreen
 import com.tangem.screens.onVirtualAccountRequisitesBottomSheet
 import io.qameta.allure.kotlin.Allure.step
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 
 fun BaseTestCase.openMainWithMoneyAccountWallet(dismissMarketsTooltip: Boolean = true) {
     step("Import hot wallet from Tangem Pay seed phrase") {
@@ -138,15 +139,29 @@ fun BaseTestCase.refreshMainUntilMoneyAccountRowHidden() {
 
 // Polls the whole window: a cached status or a late fetch can bring the row back after Main has settled.
 fun BaseTestCase.assertMoneyAccountRowNeverShown(durationMillis: Long = BALANCE_RELOAD_TIMEOUT_MILLIS) {
+    assertForWholeWindow(durationMillis) {
+        var isShown = false
+        onMoneyAccountScreen { isShown = isMainRowShown() }
+        assertFalse("'Money account' row must not be displayed", isShown)
+    }
+}
+
+fun BaseTestCase.assertMoneyAccountRowKeepsShowing(text: String, durationMillis: Long = BALANCE_RELOAD_TIMEOUT_MILLIS) {
+    assertForWholeWindow(durationMillis) {
+        var isShown = false
+        onMoneyAccountScreen { isShown = isMainRowWithTextShown(text) }
+        assertTrue("'Money account' row must keep showing '$text'", isShown)
+    }
+}
+
+private fun BaseTestCase.assertForWholeWindow(durationMillis: Long, assertion: () -> Unit) {
     try {
         composeTestRule.waitUntil(timeoutMillis = durationMillis) {
-            var isShown = false
-            onMoneyAccountScreen { isShown = isMainRowShown() }
-            assertFalse("'Money account' row must not be displayed", isShown)
+            assertion()
             false
         }
     } catch (_: ComposeTimeoutException) {
-        // The row stayed hidden for the whole window.
+        // The assertion held for the whole window.
     }
 }
 
