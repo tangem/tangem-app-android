@@ -57,6 +57,8 @@ internal class MoneyAccountBankDetailsAnalyticsTest {
     private fun provideTestModels() = listOf(
         FieldModel(field = RequisiteField.ACCOUNT_NUMBER, fieldName = "account_number"),
         FieldModel(field = RequisiteField.ROUTING_NUMBER, fieldName = "routing_number"),
+        FieldModel(field = RequisiteField.CLABE, fieldName = "account_number"),
+        FieldModel(field = RequisiteField.REFERENCE, fieldName = "reference"),
         FieldModel(field = RequisiteField.BENEFICIARY_NAME, fieldName = "beneficiary"),
         FieldModel(field = RequisiteField.BENEFICIARY_ADDRESS, fieldName = "beneficiary_address"),
         FieldModel(field = RequisiteField.BANK_NAME, fieldName = "bank_name"),

@@ -8,6 +8,10 @@
         "version": "undefined"
     },
     {
+        "name": "TWI_1778_MONEY_ACCOUNT_MXN_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "WALLET_CONNECT_BITCOIN_ENABLED",
         "version": "undefined"
     },
@@ -112,6 +116,10 @@
         "version": "undefined"
     },
     {
+        "name": "AND_18671_REDESIGNED_TOKEN_ROWS_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "TWI_1732_MARKETING_UID_BINDING_ENABLED",
         "version": "undefined"
     },
@@ -146,5 +154,9 @@
     {
         "name": "AND_19037_WALLET_LINKING_ENABLED",
         "version": "6.8"
+    },
+    {
+        "name": "TWI_1676_EARN_ENABLED",
+        "version": "undefined"
     }
 ]

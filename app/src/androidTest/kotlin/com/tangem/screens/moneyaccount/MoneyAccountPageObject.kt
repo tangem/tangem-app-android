@@ -7,6 +7,7 @@ import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import androidx.compose.ui.test.swipeDown
 import com.tangem.common.BaseTestCase
 import com.tangem.core.res.R as CoreResR
+import com.tangem.core.ui.test.ModalStatusTestTags
 import com.tangem.core.ui.test.MoneyAccountTestTags
 import com.tangem.core.ui.test.NotificationTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
@@ -56,6 +57,11 @@ class MoneyAccountPageObject(private val semanticsProvider: SemanticsNodeInterac
         hasAnyAncestor(withTestTag(MoneyAccountTestTags.SEND_BUTTON))
     }
 
+    val balanceUnavailableBanner: KNode = child {
+        hasText(getResourceString(CoreResR.string.money_account_balance_unavailable_title))
+        useUnmergedTree = true
+    }
+
     // A real tap lands on the Markets sheet once the row sits under it at the bottom of Main.
     fun clickMainRow() {
         mainRow { performSemanticsAction(SemanticsActions.OnClick) }
@@ -89,6 +95,11 @@ class MoneyAccountPageObject(private val semanticsProvider: SemanticsNodeInterac
         hasTestTag(NotificationTestTags.TITLE)
         hasText(getResourceString(textRes))
         useUnmergedTree = true
+    }
+
+    fun modalStatusTitle(title: String): KNode = child {
+        hasTestTag(ModalStatusTestTags.TITLE)
+        hasText(title)
     }
 }
 

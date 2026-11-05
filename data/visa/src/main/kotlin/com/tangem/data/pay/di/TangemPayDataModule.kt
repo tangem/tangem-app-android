@@ -553,6 +553,13 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
+        fun provideIsTangemPayCustomerVerifiedUseCase(
+            getCustomerSummaryUseCase: GetCustomerSummaryUseCase,
+        ): IsTangemPayCustomerVerifiedUseCase {
+            return IsTangemPayCustomerVerifiedUseCase(getCustomerSummaryUseCase = getCustomerSummaryUseCase)
+        }
+
+        @Provides
         fun provideResolvePaymentAccountStatusFromSummaryUseCase(
             onboardingRepository: OnboardingRepository,
         ): ResolvePaymentAccountStatusFromSummaryUseCase {
@@ -652,10 +659,6 @@ internal interface TangemPayDataModule {
         fun provideGetCurrentTariffUseCase(onboardingRepository: OnboardingRepository): GetCurrentTariffUseCase {
             return GetCurrentTariffUseCase(onboardingRepository = onboardingRepository)
         }
-
-        @Provides
-        @Singleton
-        fun provideBankOfframpRepository(repository: DefaultBankOfframpRepository): BankOfframpRepository = repository
 
         @Provides
         @Singleton

@@ -126,10 +126,11 @@ internal class PolymarketPositionsPreviewLoader @Inject constructor(
         onRetry: () -> Unit,
         converter: PolymarketPositionUMConverter,
     ) {
+        val isFinishedKnown = hasFinished
         val result = withContext(dispatchers.default) {
             val addresses = deriveAddresses.stored(userWalletId) ?: return@withContext null
             coroutineScope {
-                val finished = async { readHasFinished(addresses) }
+                val finished = async { if (isFinishedKnown) true else readHasFinished(addresses) }
                 val open = repository.getOpenPositions(
                     addresses = addresses,
                     request = PolymarketPositionsPageRequest.First(PREVIEW_SIZE + 1),

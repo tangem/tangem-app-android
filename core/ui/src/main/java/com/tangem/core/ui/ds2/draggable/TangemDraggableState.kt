@@ -44,6 +44,8 @@ import kotlin.time.Duration.Companion.seconds
  *   `LazyColumn` indices and describe a **move** (`add(to, removeAt(from))`), not a swap; `to` may be
  *   several items away. The caller must apply it to the list the `LazyColumn` renders — until the new
  *   order is laid out, further moves wait.
+ * @param onDragStart Called when a long press lifts an item, with its `items(key = …)` key, before any
+ *   `onMove` of that drag.
  * @param onDragEnd Called the moment the finger is lifted, before the item settles into its slot.
  *   Persist the final order here.
  */
@@ -52,11 +54,13 @@ import kotlin.time.Duration.Companion.seconds
 fun rememberTangemDraggableState(
     listState: LazyListState,
     onMove: (from: Int, to: Int) -> Unit,
+    onDragStart: (key: Any) -> Unit = {},
     onDragEnd: () -> Unit = {},
 ): TangemDraggableState {
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
     val currentOnMove by rememberUpdatedState(onMove)
+    val currentOnDragStart by rememberUpdatedState(onDragStart)
     val currentOnDragEnd by rememberUpdatedState(onDragEnd)
 
     return remember(listState, scope, density) {
@@ -64,6 +68,7 @@ fun rememberTangemDraggableState(
             listState = listState,
             scope = scope,
             onMove = { from, to -> currentOnMove(from, to) },
+            onDragStart = { key -> currentOnDragStart(key) },
             onDragEnd = { currentOnDragEnd() },
             scrollZonePx = with(density) { 48.dp.toPx() },
             maxScrollSpeedPx = with(density) { 800.dp.toPx() },
@@ -72,11 +77,13 @@ fun rememberTangemDraggableState(
 }
 
 /** Drag-to-reorder state of a vertical `LazyColumn`, created by [rememberTangemDraggableState]. */
+@Suppress("LongParameterList")
 @Stable
 class TangemDraggableState internal constructor(
     private val listState: LazyListState,
     private val scope: CoroutineScope,
     private val onMove: (from: Int, to: Int) -> Unit,
+    private val onDragStart: (key: Any) -> Unit,
     private val onDragEnd: () -> Unit,
     private val scrollZonePx: Float,
     private val maxScrollSpeedPx: Float,
@@ -126,6 +133,7 @@ class TangemDraggableState internal constructor(
         dragDelta = 0f
         this.grabY = grabY
         draggingKey = key
+        onDragStart(key)
         return true
     }
 

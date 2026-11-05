@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.card.details
 
+import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.MutableParamsContainer
@@ -16,6 +17,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.usecase.GetBankCredentialsUseCase
+import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.tangempay.account.TangemPayAccountDetailsInnerRoute
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToGoogleWalletController
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToGoogleWalletController.Entry as GoogleWalletEntry
@@ -199,33 +201,38 @@ internal class TangemPayCardPageModelTest {
     }
 
     @Test
-    fun `GIVEN banking details error sheet WHEN retry loads credentials THEN product instance credentials returned`() =
-        runTest {
-            // Arrange
-            coEvery { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) } returns BANK_CREDENTIALS.right()
-            val model = createModel()
-
-            // Act
-            val actual = model.loadBankCredentials(productInstanceId = PRODUCT_INSTANCE_ID)
-
-            // Assert
-            assertThat(actual).isEqualTo(BANK_CREDENTIALS.right())
-        }
-
-    @Test
-    fun `GIVEN loaded status WHEN banking details resolved on retry THEN account details screen opens`() = runTest {
+    fun `GIVEN credentials load WHEN banking details retried THEN account details screen opens`() = runTest {
         // Arrange
+        coEvery { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) } returns BANK_CREDENTIALS.right()
         val model = createModel()
         statusFlow.emit(paymentStatus)
         runCurrent()
 
         // Act
-        model.onVaBankingDetailsResolved(BANK_CREDENTIALS)
+        val actual = model.retryBankCredentials(productInstanceId = PRODUCT_INSTANCE_ID)
 
         // Assert
+        assertThat(actual).isEqualTo(Unit.right())
         verify(exactly = 1) {
             router.push(TangemPayAccountDetailsInnerRoute.BankTransferOnrampDetails(BANK_CREDENTIALS), any())
         }
+    }
+
+    @Test
+    fun `GIVEN credentials fail WHEN banking details retried THEN error returned and nothing opened`() = runTest {
+        // Arrange
+        coEvery { getBankCredentialsUseCase(userWalletId, PRODUCT_INSTANCE_ID) } returns
+            VisaApiError.Unspecified.left()
+        val model = createModel()
+        statusFlow.emit(paymentStatus)
+        runCurrent()
+
+        // Act
+        val actual = model.retryBankCredentials(productInstanceId = PRODUCT_INSTANCE_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(VisaApiError.Unspecified.left())
+        verify(exactly = 0) { router.push(any(), any()) }
     }
 
     @Nested

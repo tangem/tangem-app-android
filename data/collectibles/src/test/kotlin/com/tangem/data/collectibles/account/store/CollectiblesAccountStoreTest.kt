@@ -206,61 +206,61 @@ internal class CollectiblesAccountStoreTest {
 
     /** The key is created before `init_vault` runs, so it has to attach to an entry that has no status yet. */
     @Test
-    fun `GIVEN no account WHEN storeDelegate THEN it is kept and a later status does not drop it`() = runTest {
+    fun `GIVEN no account WHEN storeSessionKey THEN it is kept and a later status does not drop it`() = runTest {
         // Arrange
         val persisted = MockStateDataStore<WalletIdWithCollectiblesAccountDTO>(default = emptyMap())
         val store = createStore(testScope = this, persistenceDataStore = persisted)
 
         // Act
-        store.storeDelegate(userWalletId = WALLET_A, hotWalletId = DELEGATE)
+        store.storeSessionKey(userWalletId = WALLET_A, hotWalletId = SESSION_KEY)
         store.store(userWalletId = WALLET_A, value = ONBOARDED)
 
         // Assert
-        assertThat(store.getDelegate(WALLET_A)).isEqualTo(DELEGATE)
+        assertThat(store.getSessionKey(WALLET_A)).isEqualTo(SESSION_KEY)
         assertThat(persisted.data.first()).containsExactly(
             WALLET_A.stringValue,
-            CollectiblesAccountDTO(status = CollectiblesAccountStatusValueDTO.Onboarded(), delegateHotWalletId = DELEGATE),
+            CollectiblesAccountDTO(status = CollectiblesAccountStatusValueDTO.Onboarded(), sessionKeyHotWalletId = SESSION_KEY),
         )
     }
 
     @Test
-    fun `GIVEN a delegate WHEN removeDelegate THEN the status of the account survives`() = runTest {
+    fun `GIVEN a session key WHEN removeSessionKey THEN the status of the account survives`() = runTest {
         // Arrange
         val store = createStore(testScope = this)
         store.store(userWalletId = WALLET_A, value = ONBOARDED)
-        store.storeDelegate(userWalletId = WALLET_A, hotWalletId = DELEGATE)
+        store.storeSessionKey(userWalletId = WALLET_A, hotWalletId = SESSION_KEY)
 
         // Act
-        store.removeDelegate(WALLET_A)
+        store.removeSessionKey(WALLET_A)
 
         // Assert
-        assertThat(store.getDelegate(WALLET_A)).isNull()
+        assertThat(store.getSessionKey(WALLET_A)).isNull()
         assertThat(store.getSyncOrNull(WALLET_A)).isEqualTo(ONBOARDED)
     }
 
     @Test
-    fun `GIVEN a delegate of another wallet WHEN getDelegate THEN this wallet has none`() = runTest {
+    fun `GIVEN a session key of another wallet WHEN getSessionKey THEN this wallet has none`() = runTest {
         // Arrange
         val store = createStore(testScope = this)
-        store.storeDelegate(userWalletId = WALLET_B, hotWalletId = DELEGATE)
+        store.storeSessionKey(userWalletId = WALLET_B, hotWalletId = SESSION_KEY)
 
         // Act & Assert
-        assertThat(store.getDelegate(WALLET_A)).isNull()
-        assertThat(store.getDelegate(WALLET_B)).isEqualTo(DELEGATE)
+        assertThat(store.getSessionKey(WALLET_A)).isNull()
+        assertThat(store.getSessionKey(WALLET_B)).isEqualTo(SESSION_KEY)
     }
 
     @Test
-    fun `GIVEN a stored delegate WHEN clear THEN it goes with the account`() = runTest {
+    fun `GIVEN a stored session key WHEN clear THEN it goes with the account`() = runTest {
         // Arrange
         val store = createStore(testScope = this)
         store.store(userWalletId = WALLET_A, value = ONBOARDED)
-        store.storeDelegate(userWalletId = WALLET_A, hotWalletId = DELEGATE)
+        store.storeSessionKey(userWalletId = WALLET_A, hotWalletId = SESSION_KEY)
 
         // Act
         store.clear(WALLET_A)
 
         // Assert
-        assertThat(store.getDelegate(WALLET_A)).isNull()
+        assertThat(store.getSessionKey(WALLET_A)).isNull()
     }
 
     private fun createStore(
@@ -293,6 +293,6 @@ internal class CollectiblesAccountStoreTest {
         )
         val ONBOARDED_WITH_BALANCE_DTO = CollectiblesAccountStatusValueDTO.Onboarded(balance = BALANCE_DTO)
 
-        const val DELEGATE = "hot-1"
+        const val SESSION_KEY = "hot-1"
     }
 }

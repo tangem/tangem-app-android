@@ -97,6 +97,10 @@ dependencies {
     api(projects.libs.tangemSdkApi)
     // endregion
 
+    // region Mocked build
+    mockedImplementation(projects.test.mock)
+    // endregion
+
     // region Test
     testImplementation(projects.test.core)
     testImplementation(projects.test.mock)
