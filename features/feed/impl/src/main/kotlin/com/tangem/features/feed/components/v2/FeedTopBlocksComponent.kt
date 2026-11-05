@@ -11,7 +11,6 @@ import com.tangem.core.decompose.context.child
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 import com.tangem.feature.walletsettings.component.AddAccountTypeComponent
-import com.tangem.features.allservices.api.AllServicesFeatureToggles
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.feed.components.v2.blocks.*
 import com.tangem.features.feed.components.v2.blocks.analytics.FeedBlocksAnalytics
@@ -43,7 +42,6 @@ internal class FeedTopBlocksComponent(
     params: Params,
     portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
     addAccountTypeComponentFactory: AddAccountTypeComponent.Factory,
-    allServicesFeatureToggles: AllServicesFeatureToggles,
     private val blocksAnalytics: FeedBlocksAnalytics,
 ) : ComposableContentComponent, AppComponentContext by context {
 
@@ -52,7 +50,7 @@ internal class FeedTopBlocksComponent(
             context = child(key = ForYouBlockComponent.KEY),
             blocksAnalytics = blocksAnalytics,
         ),
-        if (allServicesFeatureToggles.isAllServicesEnabled) {
+        if (params.isServicesBlockEnabled) {
             ServicesBlockComponent(context = child(key = ServicesBlockComponent.KEY))
         } else {
             AddAccountBlockComponent(
@@ -123,5 +121,6 @@ internal class FeedTopBlocksComponent(
 
     data class Params(
         val callbacks: FeedBlockModalCallbacks,
+        val isServicesBlockEnabled: Boolean,
     )
 }
