@@ -46,6 +46,7 @@ interface Router {
 
     /**
      * Pops routes from the navigation stack until the specified [route] is found.
+     * Succeeds when it ends up on top, including when it already was.
      *
      * @param route The route to pop to.
      * @param onComplete The callback to be invoked when the operation is complete.
@@ -54,6 +55,7 @@ interface Router {
 
     /**
      * Pops routes from the navigation stack until the ***first*** specified [routeClass] is found.
+     * Succeeds when it ends up on top, including when it already was.
      *
      * @param routeClass The route class to pop to.
      * @param onComplete The callback to be invoked when the operation is complete.

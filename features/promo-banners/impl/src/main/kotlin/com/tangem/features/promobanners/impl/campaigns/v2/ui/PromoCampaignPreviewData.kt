@@ -73,7 +73,12 @@ internal object PromoCampaignPreviewData {
         title = stringReference("Enroll in Whale Swap Cashback"),
         subtitle = stringReference("Earn cashback on every swap from \$10K until the end of July"),
         blocks = persistentListOf(oddTiles, table, text, highlight),
-        tokenSelector = PromoTokenSelectorUM(selectedToken = null, selectedAccount = null, onClick = {}),
+        tokenSelector = PromoTokenSelectorUM(
+            selectedToken = null,
+            selectedAccount = null,
+            accountTitle = stringReference("Selected cashback account"),
+            onClick = {},
+        ),
         // No payout token chosen yet: the action is choosing it, so there are no terms.
         footer = PromoCampaignFooterUM(
             terms = null,
@@ -112,6 +117,7 @@ internal object PromoCampaignPreviewData {
         tokenSelector = PromoTokenSelectorUM(
             selectedToken = tokenItem,
             selectedAccount = selectedAccount,
+            accountTitle = stringReference("Selected cashback account"),
             onClick = {},
         ),
         footer = PromoCampaignFooterUM(
