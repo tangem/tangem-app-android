@@ -127,6 +127,20 @@ internal class DefaultMoneyAccountActivationRepositoryTest {
     }
 
     @Test
+    fun `GIVEN signed data WHEN saving it fails THEN returns persistence failed error`() = runTest {
+        // Arrange
+        coEvery { authDataSource.produceMoneyAccountData(userWallet) } returns activationData.right()
+        coEvery { derivationsRepository.storeDerivedKeys(userWalletId, derivedKeys) } throws
+            IllegalStateException("disk full")
+
+        // Act
+        val actual = repository.activateMoneyAccount(userWalletId)
+
+        // Assert
+        assertThat(actual).isEqualTo(MoneyAccountActivationError.PersistenceFailed.left())
+    }
+
+    @Test
     fun `GIVEN user cancelled signing WHEN activate THEN returns user cancelled error`() = runTest {
         // Arrange
         coEvery { authDataSource.produceMoneyAccountData(userWallet) } returns TangemSdkError.UserCancelled().left()

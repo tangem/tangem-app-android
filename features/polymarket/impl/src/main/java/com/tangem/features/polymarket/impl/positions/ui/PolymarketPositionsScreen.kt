@@ -44,6 +44,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.domain.polymarket.model.PolymarketPositionsFilter
+import com.tangem.domain.polymarket.model.PolymarketPositionsTab
 import com.tangem.features.polymarket.impl.common.ui.PolymarketLoadMoreEffect
 import com.tangem.features.polymarket.impl.common.ui.PolymarketNextPageLoader
 import com.tangem.features.polymarket.impl.common.ui.PolymarketReloadPrompt
@@ -55,6 +56,7 @@ import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPosition
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM.NextPage
 import com.tangem.features.polymarket.impl.positions.ui.state.PolymarketPositionsUM.Tab
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlin.math.ceil
 
 private val PositionsItemSpacing = 12.dp
@@ -126,9 +128,11 @@ private fun PositionsTopBar(state: PolymarketPositionsUM) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             PositionsTabs(state, Modifier.weight(1f))
-            if (state.selectedTab == Tab.Active) {
-                PolymarketPositionsFilterDropdown(selected = state.selectedFilter, onSelect = state.onFilterSelect)
-            }
+            PolymarketPositionsFilterDropdown(
+                options = state.filters,
+                selected = state.selectedFilter,
+                onSelect = state.onFilterSelect,
+            )
         }
     }
 }
@@ -276,6 +280,12 @@ private fun PolymarketPositionsScreenPreview(
                     selectedFilter = PolymarketPositionsFilter.ALL
                 },
                 onBackClick = {},
+                filters = PolymarketPositionsFilter.of(
+                    when (selectedTab) {
+                        Tab.Active -> PolymarketPositionsTab.ACTIVE
+                        Tab.Finished -> PolymarketPositionsTab.FINISHED
+                    },
+                ).toImmutableList(),
                 selectedFilter = selectedFilter,
                 onFilterSelect = { selectedFilter = it },
             ),

@@ -9,6 +9,7 @@ import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeFiatRate
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeItem
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeNonce
 import com.tangem.features.send.api.subcomponents.feeSelector.entity.FeeSelectorUM
+import com.tangem.features.send.api.subcomponents.feeSelector.entity.SponsoredFeeState
 import com.tangem.features.send.api.subcomponents.feeSelector.params.FeeSelectorParams
 import com.tangem.features.send.feeselector.model.FeeSelectorIntents
 import com.tangem.features.send.feeselector.model.FeeSelectorLogic
@@ -42,6 +43,9 @@ internal class FeeSelectorLoadedTransformer(
     )
 
     override fun transform(prevState: FeeSelectorUM): FeeSelectorUM {
+        // Only a sponsorable fee restores a pick lost to a reset to Loading; other fees keep what the state carries
+        val isSponsoredFeePicked = (fees as? FeeSelectorLogic.LoadedFeeResult.Sponsorable)
+            ?.isSponsoredFeePickedByUser
         val prevCustomFee = if (prevState is FeeSelectorUM.Content) {
             prevState.feeItems.find { it is FeeItem.Custom } as? FeeItem.Custom
         } else {
@@ -81,7 +85,15 @@ internal class FeeSelectorLoadedTransformer(
                 transactionFeeExtended = (fees as? FeeSelectorLogic.LoadedFeeResult.Extended)?.fee,
                 // A quote neither makes nor unmakes the user's pick; carry it across the reload.
                 isFeeTokenSelectedByUser = (prevState as? FeeSelectorUM.Content)
-                    ?.feeExtraInfo?.isFeeTokenSelectedByUser == true,
+                    ?.feeExtraInfo?.isFeeTokenSelectedByUser == true ||
+                    isSponsoredFeePicked != null,
+                sponsoredFee = SponsoredFeeState(
+                    isAvailable = fees is FeeSelectorLogic.LoadedFeeResult.Sponsorable,
+                    isSelected = (fees as? FeeSelectorLogic.LoadedFeeResult.Sponsorable)
+                        ?.isSponsoredFeeSelected == true,
+                    isSmartGasPickedByUser = isSponsoredFeePicked ?: ((prevState as? FeeSelectorUM.Content)
+                        ?.feeExtraInfo?.sponsoredFee?.isSmartGasPickedByUser == true),
+                ),
             ),
             feeFiatRateUM = feeCryptoCurrencyStatus.value.fiatRate?.let { rate ->
                 FeeFiatRateUM(

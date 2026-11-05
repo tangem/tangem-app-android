@@ -13,16 +13,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.startActivity
 import com.arkivanov.decompose.ExperimentalDecomposeApi
-import com.arkivanov.decompose.extensions.compose.stack.Children
-import com.arkivanov.decompose.extensions.compose.stack.animation.StackAnimation
-import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.androidPredictiveBackAnimatable
-import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.predictiveBackAnimation
-import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
+import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.androidPredictiveBackAnimatableV2
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackHandler
 import com.tangem.common.routing.AppRoute
 import androidx.compose.runtime.CompositionLocalProvider
+import com.tangem.core.decompose.ui.stack.ChildStack
+import com.tangem.core.decompose.ui.stack.animation.PredictiveBackParams
+import com.tangem.core.decompose.ui.stack.animation.StackAnimation
+import com.tangem.core.decompose.ui.stack.animation.stackAnimation
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.components.haze.ProvideHaze
 import com.tangem.core.ui.components.haze.hazeSourceTangem
@@ -48,6 +48,7 @@ internal fun RootContent(
     modifier: Modifier = Modifier,
     wcContent: @Composable (modifier: Modifier) -> Unit,
     promoContent: @Composable (modifier: Modifier) -> Unit,
+    walletLinkContent: @Composable (modifier: Modifier) -> Unit,
     hotAccessCodeContent: @Composable (modifier: Modifier) -> Unit,
     startupGateContent: @Composable (modifier: Modifier) -> Unit,
     scanFailsContent: @Composable (modifier: Modifier) -> Unit,
@@ -65,7 +66,7 @@ internal fun RootContent(
             CompositionLocalProvider(LocalTangemModalHost provides modalHostState) {
                 Box(Modifier.background(LocalRootBackgroundColor.current.value)) {
                     Box(Modifier.fillMaxSize().hazeSourceTangem(state = modalHazeState)) {
-                        Children(
+                        ChildStack(
                             modifier = modifier,
                             animation = childrenAnimation(backHandler = backHandler, onBack = onBack),
                             stack = stack,
@@ -90,6 +91,8 @@ internal fun RootContent(
                         wcContent(Modifier.fillMaxSize())
 
                         promoContent(Modifier.fillMaxSize())
+
+                        walletLinkContent(Modifier.fillMaxSize())
 
                         hotAccessCodeContent(Modifier.fillMaxSize())
 
@@ -122,35 +125,24 @@ internal fun RootContent(
 private fun childrenAnimation(
     backHandler: BackHandler,
     onBack: () -> Unit,
-): StackAnimation<AppRoute, RoutingComponent.Child> {
-    val routeAnimation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-        predictiveBackAnimation(
-            backHandler = backHandler,
-            onBack = onBack,
-            selector = { backEvent, _, _ ->
-                androidPredictiveBackAnimatable(backEvent)
-            },
-            fallbackAnimation = stackAnimation<AppRoute, RoutingComponent.Child> { child ->
-                RoutingTransitionAnimationFactory.create(child.configuration)
-            },
-        )
-    } else {
-        stackAnimation { child ->
+): StackAnimation<AppRoute, RoutingComponent.Child> = stackAnimation(
+    predictiveBackParams = {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            PredictiveBackParams(
+                backHandler = backHandler,
+                onBack = onBack,
+                animatable = { backEvent -> androidPredictiveBackAnimatableV2(backEvent) },
+            )
+        } else {
+            null
+        }
+    },
+    // Initial renders nothing: the first real screen replacing it appears at once, as does going back to it
+    selector = { child, otherChild, _, _ ->
+        if (child.configuration is AppRoute.Initial || otherChild.configuration is AppRoute.Initial) {
+            null
+        } else {
             RoutingTransitionAnimationFactory.create(child.configuration)
         }
-    }
-
-    return skipAnimationWhileInitial(routeAnimation)
-}
-
-private fun skipAnimationWhileInitial(
-    delegate: StackAnimation<AppRoute, RoutingComponent.Child>,
-): StackAnimation<AppRoute, RoutingComponent.Child> = StackAnimation { stack, animModifier, content ->
-    if (stack.active.configuration is AppRoute.Initial) {
-        Box(modifier = animModifier) {
-            content(stack.active)
-        }
-    } else {
-        delegate(stack, animModifier, content)
-    }
-}
+    },
+)

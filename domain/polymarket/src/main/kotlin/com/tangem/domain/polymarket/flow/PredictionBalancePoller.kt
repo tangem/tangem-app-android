@@ -16,7 +16,6 @@ import kotlinx.coroutines.launch
 
 class PredictionBalancePoller(
     private val statusFetcher: PredictionAccountStatusFetcher,
-    private val positionsValueFetcher: PredictionPositionsValueFetcher,
     private val fundingWindow: PredictionFundingWindow,
     private val config: PredictionBalancePollingConfig,
     private val appScope: AppCoroutineScope,
@@ -68,12 +67,13 @@ class PredictionBalancePoller(
         }
     }
 
-    private suspend fun refresh(userWalletId: UserWalletId, isFundingWindowOpen: Boolean) = coroutineScope {
-        launch { statusFetcher(PredictionAccountStatusFetcher.Params(userWalletId = userWalletId)) }
-
-        if (!isFundingWindowOpen) {
-            launch { positionsValueFetcher(PredictionPositionsValueFetcher.Params(userWalletId = userWalletId)) }
-        }
+    private suspend fun refresh(userWalletId: UserWalletId, isFundingWindowOpen: Boolean) {
+        statusFetcher(
+            PredictionAccountStatusFetcher.Params(
+                userWalletId = userWalletId,
+                shouldRefreshPositions = !isFundingWindowOpen,
+            ),
+        )
     }
 
     private class Loop(val job: Job, var subscribers: Int)

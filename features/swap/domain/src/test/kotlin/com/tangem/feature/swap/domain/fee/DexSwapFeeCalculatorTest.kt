@@ -6,6 +6,7 @@ import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.blockchains.solana.SolanaTransactionHelper
 import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.TransactionData
@@ -18,9 +19,13 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.GaslessApproval
+import com.tangem.domain.transaction.models.GaslessProtocolData
+import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
 import com.tangem.domain.transaction.usecase.CreateTransactionDataExtrasUseCase
 import com.tangem.domain.transaction.usecase.GetEthSpecificFeeUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetTronGaslessFeeUseCase
 import com.tangem.domain.transaction.usecase.gasless.IsTronGaslessSupportedUseCase
@@ -43,6 +48,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import com.tangem.test.core.ProvideTestModels
 import java.math.BigDecimal
 import java.math.BigInteger
+import org.junit.jupiter.api.Nested
 
 /**
  * Unit tests for [DexSwapFeeCalculator] ([REDACTED_TASK_KEY] — Phase 2).
@@ -67,6 +73,8 @@ internal class DexSwapFeeCalculatorTest {
     private val wrapYieldSwapCallDataWithUpgradeUseCase: WrapYieldSwapCallDataWithUpgradeUseCase = mockk(relaxed = true)
     private val getTronGaslessFeeUseCase: GetTronGaslessFeeUseCase = mockk()
     private val isTronGaslessSupportedUseCase: IsTronGaslessSupportedUseCase = mockk()
+    private val getFeeForGaslessUseCase: GetFeeForGaslessUseCase = mockk(relaxed = true)
+    private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase = mockk(relaxed = true)
 
     private val dexBump = PatchEthGasLimitForSwap(percentage = PatchEthGasLimitForSwap.DEX_PERCENTAGE)
 
@@ -81,6 +89,8 @@ internal class DexSwapFeeCalculatorTest {
             wrapYieldSwapCallDataWithUpgradeUseCase = wrapYieldSwapCallDataWithUpgradeUseCase,
             getTronGaslessFeeUseCase = getTronGaslessFeeUseCase,
             isTronGaslessSupportedUseCase = isTronGaslessSupportedUseCase,
+            getFeeForGaslessUseCase = getFeeForGaslessUseCase,
+            createApprovalTransactionUseCase = createApprovalTransactionUseCase,
         )
     }
 
@@ -1128,6 +1138,84 @@ internal class DexSwapFeeCalculatorTest {
     }
 
     @ParameterizedTest
+    @MethodSource("provideTronReapprovalModels")
+    fun `GIVEN allowance too high for sold token WHEN calculate gasless THEN reapproval leaves compensations`(
+        model: TronReapprovalModel,
+    ) = runTest {
+        // Arrange
+        val fromStatus = buildSwapCurrencyStatus(
+            networkRawId = tronNetwork,
+            contractAddress = TRON_USDT,
+            isCoin = false,
+        )
+        val refusal = GetFeeError.GaslessError.TronAllowanceTooHigh(
+            balance = model.balance,
+            required = BigDecimal("1.3"),
+            allowance = BigDecimal.ONE,
+            allowances = model.allowances,
+        )
+        coEvery { isTronGaslessSupportedUseCase(any(), any()) } returns true
+        coEvery { getTronGaslessFeeUseCase.forSwap(any(), any(), any()) } returns refusal.left()
+        val approveFee = model.approveCompensation?.let { compensation ->
+            mockk<TransactionFeeExtended> { every { transactionFee.normal.amount.value } returns compensation }
+        }
+        coEvery { getTronGaslessFeeUseCase.forApprove(any(), any(), any()) } returns
+            (approveFee?.right() ?: GetFeeError.UnknownError.left())
+
+        // Act
+        val result = sut.calculate(
+            fromSwapCurrencyStatus = fromStatus,
+            transaction = buildDex(
+                txData = "4c279d6b",
+                txTo = "TRouter",
+                txFrom = "TSender",
+                allowanceContract = "TSpender",
+            ),
+            isGasless = true,
+        )
+
+        // Assert
+        val expectedReapproval = model.expectedAmount?.let { amount ->
+            GetFeeError.TronReapproval(spenderAddress = "TSpender", amount = amount.setScale(18))
+        }
+        assertThat(result.leftOrNull()).isEqualTo(refusal.copy(reapproval = expectedReapproval))
+    }
+
+    @Test
+    fun `GIVEN allowance too high paid in another token WHEN calculate gasless THEN refusal has no reapproval`() =
+        runTest {
+            // Arrange
+            val fromStatus = buildSwapCurrencyStatus(
+                networkRawId = tronNetwork,
+                contractAddress = TRON_USDT,
+                isCoin = false,
+            )
+            val selectedToken = buildSwapCurrencyStatus(
+                networkRawId = tronNetwork,
+                contractAddress = "TOtherToken",
+                isCoin = false,
+            ).status
+            val refusal = GetFeeError.GaslessError.TronAllowanceTooHigh(
+                balance = BigDecimal.ONE,
+                required = BigDecimal("1.3"),
+                allowance = BigDecimal.ONE,
+            )
+            coEvery { getTronGaslessFeeUseCase.forSwap(any(), any(), any()) } returns refusal.left()
+
+            // Act
+            val result = sut.calculate(
+                fromSwapCurrencyStatus = fromStatus,
+                transaction = buildDex(txData = "4c279d6b", txTo = "TRouter", txFrom = "TSender"),
+                selectedToken = selectedToken,
+                isGasless = true,
+            )
+
+            // Assert
+            assertThat(result.leftOrNull()).isEqualTo(refusal)
+            coVerify(exactly = 0) { getTronGaslessFeeUseCase.forApprove(any(), any(), any()) }
+        }
+
+    @ParameterizedTest
     @MethodSource("provideTronGaslessNativeCostModels")
     fun `GIVEN route costs native TRX WHEN calculate gasless THEN network not supported`(
         model: TronGaslessNativeCostModel,
@@ -1341,7 +1429,264 @@ internal class DexSwapFeeCalculatorTest {
         TronGaslessNativeCostModel(txValue = "0", otherNativeFeeWei = BigDecimal("1000000")),
     )
 
+    private fun provideTronReapprovalModels() = listOf(
+        // Swap compensation 0.3 with a 10% margin: 1 - 0.33 - 0.1
+        TronReapprovalModel(
+            balance = BigDecimal.ONE,
+            approveCompensation = BigDecimal("0.1"),
+            expectedAmount = BigDecimal("0.57"),
+        ),
+        // The approval quote failed, so the swap compensation stands in for it: 1 - 0.33 - 0.3
+        TronReapprovalModel(
+            balance = BigDecimal.ONE,
+            approveCompensation = null,
+            expectedAmount = BigDecimal("0.37"),
+        ),
+        // The router allowance stays after the approval: 1 - 0.33 - 0.1 - 0.2
+        TronReapprovalModel(
+            balance = BigDecimal.ONE,
+            approveCompensation = BigDecimal("0.1"),
+            allowances = mapOf("TRouter" to BigDecimal("0.2"), "TSpender" to BigDecimal("0.8")),
+            expectedAmount = BigDecimal("0.37"),
+        ),
+        // Capped by the swap amount of 1
+        TronReapprovalModel(
+            balance = BigDecimal("5"),
+            approveCompensation = BigDecimal("0.1"),
+            expectedAmount = BigDecimal.ONE,
+        ),
+        // Nothing is left for the swap
+        TronReapprovalModel(
+            balance = BigDecimal("0.5"),
+            approveCompensation = BigDecimal("0.3"),
+            expectedAmount = null,
+        ),
+    )
+
+    data class TronReapprovalModel(
+        val balance: BigDecimal,
+        val approveCompensation: BigDecimal?,
+        val expectedAmount: BigDecimal?,
+        val allowances: Map<String, BigDecimal> = emptyMap(),
+    )
+
     data class TronGaslessNativeCostModel(val txValue: String, val otherNativeFeeWei: BigDecimal?)
+
+    // -------------------------------------------------------------------------
+    // EVM gasless (isGasless = true)
+    // -------------------------------------------------------------------------
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class EvmGasless {
+
+        // Rebuilt per test: the outer tearDown's clearAllMocks wipes the stubs of these fixture mocks
+        private lateinit var fromToken: SwapCurrencyStatus
+
+        @BeforeEach
+        fun setUpFromToken() {
+            fromToken = buildSwapCurrencyStatus(
+                networkRawId = ethNetwork,
+                contractAddress = USDT_CONTRACT,
+                isCoin = false,
+                decimals = 6,
+            )
+        }
+        private val nativeFee = TransactionFee.Single(normal = ethLegacyFee())
+        private val tokenFee = TransactionFeeExtended(
+            transactionFee = TransactionFee.Single(normal = ethLegacyFee()),
+            feeTokenId = mockk(relaxed = true),
+            gaslessProtocolData = GaslessProtocolData.Evm,
+        )
+        private val approvalTransaction: TransactionData.Uncompiled = mockk()
+
+        @Test
+        fun `GIVEN coin swap WHEN calculate gasless THEN network is not supported`() = runTest {
+            // Arrange
+            val fromCoin = buildSwapCurrencyStatus(networkRawId = ethNetwork, isCoin = true)
+
+            // Act
+            val result = sut.calculate(fromCoin, buildDex(), isGasless = true)
+
+            // Assert
+            assertThat(result.leftOrNull()).isEqualTo(GetFeeError.GaslessError.NetworkIsNotSupported)
+            coVerify(exactly = 0) { getFeeForGaslessUseCase.invoke(any(), any(), any(), any(), any(), any(), any()) }
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN swap carrying native coin WHEN calculate gasless THEN network is not supported`(
+            transaction: ExpressTransactionModel.DEX,
+        ) = runTest {
+            // Act
+            val result = sut.calculate(fromToken, transaction, isGasless = true)
+
+            // Assert
+            assertThat(result.leftOrNull()).isEqualTo(GetFeeError.GaslessError.NetworkIsNotSupported)
+            coVerify(exactly = 0) { getFeeForGaslessUseCase.invoke(any(), any(), any(), any(), any(), any(), any()) }
+        }
+
+        private fun provideTestModels() = listOf(
+            buildDex(txValue = "1000000000000000"),
+            buildDex(otherNativeFeeWei = BigDecimal("1000")),
+        )
+
+        @Test
+        fun `GIVEN no fee token and no approve WHEN calculate gasless THEN auto fee for the router call is returned as is`() =
+            runTest {
+                // Arrange
+                val transaction = buildDex(txTo = "0xRouter")
+                val capturedTxData = slot<TransactionData>()
+                coEvery {
+                    getFeeForGaslessUseCase.invoke(
+                        userWallet = any(),
+                        network = any(),
+                        transactionData = capture(capturedTxData),
+                        sentAmount = any(),
+                        sentCurrencyStatus = any(),
+                        approval = null,
+                        onNativeFeePreferred = any(),
+                    )
+                } returns tokenFee.right()
+
+                // Act
+                val result = sut.calculate(fromToken, transaction, isGasless = true)
+
+                // Assert
+                val fee = (result.getOrNull()!!.transactionFee as TransactionFeeResult.LoadedExtended).fee
+                assertThat(fee).isEqualTo(tokenFee)
+                val txData = capturedTxData.captured as TransactionData.Uncompiled
+                assertThat(txData.destinationAddress).isEqualTo("0xRouter")
+                assertThat(txData.amount.type).isEqualTo(AmountType.Coin)
+                assertThat(txData.amount.value).isEquivalentAccordingToCompareTo(BigDecimal.ZERO)
+            }
+
+        @Test
+        fun `GIVEN auto fee resolves to native coin WHEN calculate gasless THEN swap fee gets the DEX gas margin`() =
+            runTest {
+                // Arrange
+                val nativeFeeExtended = TransactionFeeExtended(
+                    transactionFee = nativeFee,
+                    feeTokenId = mockk(relaxed = true),
+                    nativeFee = nativeFee,
+                )
+                coEvery {
+                    getFeeForGaslessUseCase.invoke(any(), any(), any(), any(), any(), any(), any())
+                } returns nativeFeeExtended.right()
+
+                // Act
+                val result = sut.calculate(fromToken, buildDex(), isGasless = true)
+
+                // Assert
+                val patchedFee = dexBump(nativeFee)
+                val fee = (result.getOrNull()!!.transactionFee as TransactionFeeResult.LoadedExtended).fee
+                assertThat(fee).isEqualTo(nativeFeeExtended.copy(transactionFee = patchedFee, nativeFee = patchedFee))
+            }
+
+        @Test
+        fun `GIVEN selected fee token WHEN calculate gasless THEN fee is quoted in that token`() = runTest {
+            // Arrange
+            val selectedToken = buildSwapCurrencyStatus(
+                networkRawId = ethNetwork,
+                contractAddress = "0xUsdc",
+                isCoin = false,
+            ).status
+            coEvery {
+                getFeeForTokenUseCase.invoke(
+                    userWallet = any(),
+                    token = selectedToken.currency,
+                    transactionData = any(),
+                    sentAmount = any(),
+                    approval = null,
+                )
+            } returns tokenFee.right()
+
+            // Act
+            val result = sut.calculate(fromToken, buildDex(), selectedToken = selectedToken, isGasless = true)
+
+            // Assert
+            val fee = (result.getOrNull()!!.transactionFee as TransactionFeeResult.LoadedExtended).fee
+            assertThat(fee).isEqualTo(tokenFee)
+            coVerify(exactly = 0) { getFeeForGaslessUseCase.invoke(any(), any(), any(), any(), any(), any(), any()) }
+        }
+
+        @ParameterizedTest
+        @MethodSource("approveTypes")
+        fun `GIVEN integrated approve WHEN calculate gasless THEN approval is built for the spender and passed on`(
+            model: ApproveTypeModel,
+        ) = runTest {
+            // Arrange
+            val transaction = buildDex()
+            val permissionState = PermissionDataState.PermissionSettings(type = model.type, spenderAddress = SPENDER)
+            coEvery {
+                createApprovalTransactionUseCase.invoke(
+                    cryptoCurrencyStatus = fromToken.status,
+                    userWalletId = fromToken.userWalletId,
+                    amount = model.expectedAmount,
+                    contractAddress = USDT_CONTRACT,
+                    spenderAddress = SPENDER,
+                )
+            } returns approvalTransaction.right()
+            val capturedTxData = slot<TransactionData>()
+            coEvery {
+                getFeeForGaslessUseCase.invoke(
+                    userWallet = any(),
+                    network = any(),
+                    transactionData = capture(capturedTxData),
+                    sentAmount = any(),
+                    sentCurrencyStatus = any(),
+                    approval = GaslessApproval(spenderAddress = SPENDER, approvalTransaction = approvalTransaction),
+                    onNativeFeePreferred = any(),
+                )
+            } returns tokenFee.right()
+
+            // Act
+            val result = sut.calculate(fromToken, transaction, permissionState = permissionState, isGasless = true)
+
+            // Assert
+            assertThat(result.isRight()).isTrue()
+            // The allowance override needs a token amount: the SDK takes the token contract from it
+            val txData = capturedTxData.captured as TransactionData.Uncompiled
+            assertThat(txData.amount.type).isInstanceOf(AmountType.Token::class.java)
+        }
+
+        private fun approveTypes() = listOf(
+            // buildDex swaps exactly 1 token, which a limited approve grants
+            ApproveTypeModel(type = ApproveType.LIMITED, expectedAmount = BigDecimal.ONE),
+            ApproveTypeModel(type = ApproveType.UNLIMITED, expectedAmount = null),
+        )
+
+        @Test
+        fun `GIVEN approve transaction cannot be built WHEN calculate gasless THEN data error`() = runTest {
+            // Arrange
+            val error = IllegalStateException("approve")
+            val permissionState = PermissionDataState.PermissionSettings(
+                type = ApproveType.LIMITED,
+                spenderAddress = SPENDER,
+            )
+            coEvery {
+                createApprovalTransactionUseCase.invoke(
+                    cryptoCurrencyStatus = any(),
+                    userWalletId = any(),
+                    amount = any(),
+                    contractAddress = any(),
+                    spenderAddress = any(),
+                )
+            } returns error.left()
+
+            // Act
+            val result = sut.calculate(fromToken, buildDex(), permissionState = permissionState, isGasless = true)
+
+            // Assert
+            assertThat(result.leftOrNull()).isEqualTo(GetFeeError.DataError(error))
+            coVerify(exactly = 0) { getFeeForGaslessUseCase.invoke(any(), any(), any(), any(), any(), any(), any()) }
+        }
+    }
+
+    data class ApproveTypeModel(
+        val type: ApproveType,
+        val expectedAmount: BigDecimal?,
+    )
 
     private fun buildDex(
         txData: String = "dGVzdA==",
@@ -1368,5 +1713,7 @@ internal class DexSwapFeeCalculatorTest {
 
     private companion object {
         const val TRON_USDT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
+        const val USDT_CONTRACT = "0xUsdt"
+        const val SPENDER = "0xSpender"
     }
 }

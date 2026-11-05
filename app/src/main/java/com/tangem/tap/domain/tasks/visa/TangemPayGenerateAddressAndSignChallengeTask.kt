@@ -132,7 +132,6 @@ class TangemPayGenerateAddressAndSignChallengeTask @Inject constructor(
         val deferred = CompletableDeferred<CompletionResult<VisaSignedDataByCustomerWallet>>()
         val task = VisaCustomerWalletApproveTask(
             visaDataForApprove = VisaCustomerWalletApproveTask.Input(
-                cardId = null,
                 targetAddress = targetAddress,
                 hashToSign = dataToSign.hashToSign,
                 sign = dataToSign::sign,
