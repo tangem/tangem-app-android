@@ -356,11 +356,19 @@ internal class DefaultCollectiblesRepositoryTest {
         @Test
         fun `GIVEN api fails WHEN getTxState THEN the api error is thrown`() = runTest {
             // Arrange
-            coEvery { collectiblesApi.getTxStatus(userWalletId.stringValue, txId = "tx-id", includeNftWon = false) } returns
-                networkError<CollectibleTxResponse>()
+            coEvery {
+                collectiblesApi.getTxStatus(
+                    userWalletId = userWalletId.stringValue,
+                    txId = "tx-id",
+                    includeNftWon = false,
+                    includeAutoBuyback = true,
+                )
+            } returns networkError<CollectibleTxResponse>()
 
             // Act
-            val actual = runCatching { repository.getTxState(userWalletId, txId = "tx-id") }.exceptionOrNull()
+            val actual = runCatching {
+                repository.getTxState(userWalletId, txId = "tx-id", includeAutoBuyback = true)
+            }.exceptionOrNull()
 
             // Assert
             assertThat(actual).isInstanceOf(ApiResponseError.NetworkException::class.java)
@@ -379,6 +387,7 @@ internal class DefaultCollectiblesRepositoryTest {
                     userWalletId = userWalletId.stringValue,
                     body = CollectibleTxRequestBody(txId = "tx-id"),
                     includeNftWon = true,
+                    includeAutoBuyback = true,
                 )
             } returns ApiResponse.Success(
                 CollectibleTxResponse(
@@ -401,7 +410,7 @@ internal class DefaultCollectiblesRepositoryTest {
             )
 
             // Act
-            val actual = repository.openPack(userWalletId, txId = "tx-id")
+            val actual = repository.openPack(userWalletId, txId = "tx-id", includeAutoBuyback = true)
 
             // Assert
             assertThat(actual).isEqualTo(
@@ -427,11 +436,11 @@ internal class DefaultCollectiblesRepositoryTest {
         @Test
         fun `GIVEN no card in the answer WHEN openPack THEN only the status is returned`() = runTest {
             // Arrange
-            coEvery { collectiblesApi.openPack(any(), any(), any()) } returns
+            coEvery { collectiblesApi.openPack(any(), any(), any(), any()) } returns
                 ApiResponse.Success(CollectibleTxResponse(txId = "tx-id", status = CollectibleTxStatusDTO.PACK_OPENED))
 
             // Act
-            val actual = repository.openPack(userWalletId, txId = "tx-id")
+            val actual = repository.openPack(userWalletId, txId = "tx-id", includeAutoBuyback = true)
 
             // Assert
             assertThat(actual).isEqualTo(CollectibleTxState(status = CollectibleTxStatus.PACK_OPENED, pack = null))
@@ -440,7 +449,7 @@ internal class DefaultCollectiblesRepositoryTest {
         @Test
         fun `GIVEN an auto buyback in the answer WHEN openPack THEN the payout is returned in whole USDC`() = runTest {
             // Arrange
-            coEvery { collectiblesApi.openPack(any(), any(), any()) } returns ApiResponse.Success(
+            coEvery { collectiblesApi.openPack(any(), any(), any(), any()) } returns ApiResponse.Success(
                 CollectibleTxResponse(
                     txId = "tx-id",
                     status = CollectibleTxStatusDTO.AUTO_BUYBACKED,
@@ -460,7 +469,7 @@ internal class DefaultCollectiblesRepositoryTest {
             )
 
             // Act
-            val actual = repository.openPack(userWalletId, txId = "tx-id")
+            val actual = repository.openPack(userWalletId, txId = "tx-id", includeAutoBuyback = true)
 
             // Assert
             assertThat(actual).isEqualTo(
