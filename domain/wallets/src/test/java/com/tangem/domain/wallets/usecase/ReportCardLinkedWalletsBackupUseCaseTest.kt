@@ -38,7 +38,7 @@ internal class ReportCardLinkedWalletsBackupUseCaseTest {
     )
 
     @Test
-    fun `GIVEN unreported CardLinked wallet WHEN invoke THEN primary card is reported and flag is set`() = runTest {
+    fun `GIVEN unreported CardLinked wallet WHEN invoke THEN card is reported without role and flag is set`() = runTest {
         // Arrange
         coEvery { walletCardsBackupRepository.isCardLinkedReported(WALLET_ID) } returns false
         coEvery { reportWalletCardsBackupUseCase(any(), any(), any()) } returns Unit.right()
@@ -55,7 +55,7 @@ internal class ReportCardLinkedWalletsBackupUseCaseTest {
                     WalletCardBackup(
                         cardId = CARD_ID,
                         cardPublicKey = CARD_PUBLIC_KEY_HEX,
-                        role = WalletCardBackup.Role.PRIMARY,
+                        role = null,
                         backupStatus = CardBackupStatus.CARD_LINKED,
                         curves = listOf(EllipticCurve.Secp256k1),
                     ),
