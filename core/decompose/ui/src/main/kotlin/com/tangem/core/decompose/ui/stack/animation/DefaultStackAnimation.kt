@@ -151,9 +151,10 @@ internal class DefaultStackAnimation<C : Any, T : Any>(
         item.transitionComposed?.let { transitionComposed ->
             SideEffect { transitionComposed.complete(Unit) }
         }
-        var isStarted by remember { mutableStateOf(item.deferredTarget == null) }
+        // consecutive pops reuse the composition for a new transition
+        var isStarted by remember(item.transitionState) { mutableStateOf(item.deferredTarget == null) }
         item.deferredTarget?.let { target ->
-            LaunchedEffect(Unit) {
+            LaunchedEffect(item.transitionState) {
                 repeat(POP_START_DELAY_FRAMES) { withFrameNanos {} }
                 (item.transitionState as MutableTransitionState).targetState = target
                 isStarted = true
