@@ -11,6 +11,7 @@ data class PolymarketSportsState(
         val gameId: String,
         val score: Score?,
         val period: String?,
+        /** Provider live phase; period-specific badge visibility belongs to presentation. */
         val isLive: Boolean,
         val isEnded: Boolean,
         val home: Team?,
