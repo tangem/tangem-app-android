@@ -16,6 +16,7 @@ internal data class TangemPayCardPageUM(
     val dailyLimitState: TangemPayDailyLimitBlockState,
     val addToWalletBlockState: AddToWalletBlockState? = null,
     val addToGoogleWalletButtonState: AddToGoogleWalletButtonState? = null,
+    val isAddedToGoogleWallet: Boolean = false,
     val cardState: TangemPayCardState = TangemPayCardState.Active,
     val menuItems: ImmutableList<TangemPayDropDownItemUM>,
     val delivery: TangemPayCardDeliveryUM? = null,
