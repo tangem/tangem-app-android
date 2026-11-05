@@ -37,16 +37,16 @@ internal data class YieldSupplyChartIncentiveUM(
 /**
  * @property rewardCaps per-column slice between the base rate and the backend total, stacked on top of [y];
  * empty for the plain Aave chart
- * @property xLabels one entry per column, blank where the axis carries no label
+ * @property scale vertical axis range and grid step, sized to the tallest column
  */
 @Immutable
 internal data class YieldSupplyMarketChartDataUM(
     val y: ImmutableList<Double>,
     val x: ImmutableList<Double>,
     val avr: Double,
-    val percentFormat: String,
+    val scale: YieldSupplyChartScale,
     val rewardCaps: ImmutableList<Double> = persistentListOf(),
-    val xLabels: ImmutableList<String> = persistentListOf(),
+    val xLabels: ImmutableList<YieldSupplyChartAxisLabel> = persistentListOf(),
 ) {
     companion object {
         @Suppress("MagicNumber")
@@ -57,9 +57,20 @@ internal data class YieldSupplyMarketChartDataUM(
                 4.2, 6.7, 3.5, 2.5, 4.5, 3.4,
             ).toImmutableList()
             val x = List(y.size) { 1.0 }.toImmutableList()
-            val labels = mapOf(6 to "Jan", 13 to "Apr", 21 to "Jul", 28 to "Oct")
-            val xLabels = List(y.size) { labels[it].orEmpty() }.toImmutableList()
-            return YieldSupplyMarketChartDataUM(y = y, x = x, avr = 5.15, percentFormat = "%.1f", xLabels = xLabels)
+            val xLabels = listOf(5.6 to "Jan", 13.2 to "Apr", 20.8 to "Jul", 28.4 to "Oct").map { (position, text) ->
+                YieldSupplyChartAxisLabel(
+                    text = text,
+                    position = position,
+                    anchor = YieldSupplyChartAxisLabel.Anchor.Start,
+                )
+            }.toImmutableList()
+            return YieldSupplyMarketChartDataUM(
+                y = y,
+                x = x,
+                avr = 5.15,
+                scale = YieldSupplyChartScale(max = 9.0, step = 3.0, decimals = 0),
+                xLabels = xLabels,
+            )
         }
 
         @Suppress("MagicNumber")
@@ -73,4 +84,20 @@ internal data class YieldSupplyMarketChartDataUM(
             return mock().copy(avr = 6.4, rewardCaps = caps)
         }
     }
+}
+
+/**
+ * @property max top of the vertical axis, a whole number of [step]s at or above the tallest column
+ * @property decimals fraction digits a grid label needs to write [step] out
+ */
+@Immutable
+internal data class YieldSupplyChartScale(val max: Double, val step: Double, val decimals: Int)
+
+/**
+ * @property position in columns from the start of the plot: a [Anchor.Start] label begins there, a [Anchor.Center]
+ * one is centred on it
+ */
+@Immutable
+internal data class YieldSupplyChartAxisLabel(val text: String, val position: Double, val anchor: Anchor) {
+    enum class Anchor { Start, Center }
 }

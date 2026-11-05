@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -139,10 +140,16 @@ private fun Title(title: TextReference) {
     )
 }
 
-/** The two pills open two different sheets: the plain Aave rate and the incentivised one. */
+/**
+ * The two pills open two different sheets: the plain Aave rate and the incentivised one. A pill that does not fit
+ * beside the other moves to the next line whole instead of being squeezed into breaking mid-word.
+ */
 @Composable
 private fun RatePills(state: YieldSupplyPromoV2UM, clickIntents: YieldSupplyPromoClickIntents) {
-    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
         Label(
             state = LabelUM(
                 text = state.rate,
