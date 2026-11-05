@@ -140,6 +140,10 @@
         "version": "undefined"
     },
     {
+        "name": "TWI_1948_YIELD_CONTRIBUTION_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "AND_19037_WALLET_LINKING_ENABLED",
         "version": "6.8"
     },
