@@ -40,10 +40,12 @@ import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.error.mapToGaslessSendError
 import com.tangem.domain.transaction.models.Eip7702Authorization
+import com.tangem.domain.transaction.models.GaslessApproval
 import com.tangem.domain.transaction.models.GaslessBatchTransactionData
 import com.tangem.domain.transaction.models.GaslessFeePlan
 import com.tangem.domain.transaction.models.GaslessTransactionData
 import com.tangem.domain.transaction.models.GaslessTransactionData.*
+import com.tangem.domain.transaction.models.GaslessYieldWithdraw
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendEvmGaslessTransactionUseCase.GaslessPayload.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -371,7 +373,7 @@ class CreateAndSendEvmGaslessTransactionUseCase(
      * Discriminated union of the gasless transaction payload to sign and send.
      *
      * [Single] carries exactly one user call. [Batch] carries several user calls in execution order,
-     * followed by the yield-withdraw call when [GaslessFeePlan.TokenPayWithYieldWithdraw] is resolved.
+     * wrapped by the fee-plan sub-calls of [GaslessFeePlan.TokenPay].
      */
     internal sealed interface GaslessPayload {
         data class Single(val data: GaslessTransactionData) : GaslessPayload
@@ -428,16 +430,11 @@ class CreateAndSendEvmGaslessTransactionUseCase(
         /**
          * Assembles the [GaslessPayload] from already-built domain objects and the resolved fee plan.
          *
-         * Dispatch rules:
-         * - [GaslessFeePlan.TokenPayWithYieldWithdraw] → [GaslessPayload.Batch]: the yield-withdraw
-         *   call is appended after the user's [calls] so that the fee token balance is topped up
-         *   before the gasless service processes the fee.
-         * - [GaslessFeePlan.TokenPayWithApproval] → [GaslessPayload.Batch]: the approve call is prepended
-         *   before the user's [calls], which spend the allowance it grants.
-         * - [GaslessFeePlan.TokenPay] or `null` (plan not explicitly resolved) → [GaslessPayload.Single]
-         *   for one call, [GaslessPayload.Batch] of [calls] for several.
-         * - [GaslessFeePlan.NativePay] → error: native-pay fees must never reach this use case
-         *   (they are handled by the standard send path).
+         * The batch is ordered `[approve, calls, withdraw]`: the approve of a [GaslessFeePlan.TokenPay] runs first, as
+         * the user's [calls] spend the allowance it grants, and its yield withdraw runs last, topping up the fee token
+         * before the gasless service settles the fee. A single call without either sub-call is a
+         * [GaslessPayload.Single]. [GaslessFeePlan.NativePay] never reaches this use case — the standard send path
+         * handles it.
          */
         @Suppress("LongParameterList")
         internal fun assembleGaslessPayload(
@@ -449,30 +446,14 @@ class CreateAndSendEvmGaslessTransactionUseCase(
             approveGasLimit: BigInteger?,
         ): GaslessPayload {
             require(calls.isNotEmpty()) { "At least one call is required for a gasless transaction" }
-            val leadingTx = when (plan) {
-                // The approve must run first: the user's calls spend the allowance it grants
-                is GaslessFeePlan.TokenPayWithApproval -> GaslessTransactionData.Transaction(
-                    to = plan.approval.approvalTransaction.destinationAddress,
-                    value = BigInteger.ZERO,
-                    gasLimit = approveGasLimit ?: error("Approve gas limit is required for an approve batch"),
-                    data = (plan.approval.approvalTransaction.extras as? EthereumTransactionExtras)
-                        ?.callData?.data
-                        ?: error("Approve call data is required"),
-                )
-                else -> null
-            }
-            val trailingTx = when (plan) {
-                is GaslessFeePlan.TokenPayWithYieldWithdraw -> GaslessTransactionData.Transaction(
-                    to = plan.yieldModuleAddress,
-                    value = BigInteger.ZERO,
-                    gasLimit = withdrawGasLimit
-                        ?: error("Withdraw gas limit is required for a yield-withdraw batch"),
-                    data = plan.withdrawCallData.data,
-                )
-                is GaslessFeePlan.TokenPay, is GaslessFeePlan.TokenPayWithApproval, null -> null
+            val tokenPay = when (plan) {
+                is GaslessFeePlan.TokenPay -> plan
                 is GaslessFeePlan.NativePay -> error("NativePay must not reach the gasless send path")
+                null -> null
             }
-            val transactions = listOfNotNull(leadingTx) + calls + listOfNotNull(trailingTx)
+            val transactions = listOfNotNull(tokenPay?.approval?.toApproveTransaction(approveGasLimit)) +
+                calls +
+                listOfNotNull(tokenPay?.yieldWithdraw?.toWithdrawTransaction(withdrawGasLimit))
 
             return if (transactions.size == 1) {
                 GaslessPayload.Single(
@@ -485,8 +466,24 @@ class CreateAndSendEvmGaslessTransactionUseCase(
             }
         }
 
+        private fun GaslessApproval.toApproveTransaction(gasLimit: BigInteger?) = GaslessTransactionData.Transaction(
+            to = approvalTransaction.destinationAddress,
+            value = BigInteger.ZERO,
+            gasLimit = gasLimit ?: error("Approve gas limit is required for an approve batch"),
+            data = (approvalTransaction.extras as? EthereumTransactionExtras)?.callData?.data
+                ?: error("Approve call data is required"),
+        )
+
+        private fun GaslessYieldWithdraw.toWithdrawTransaction(gasLimit: BigInteger?) =
+            GaslessTransactionData.Transaction(
+                to = moduleAddress,
+                value = BigInteger.ZERO,
+                gasLimit = gasLimit ?: error("Withdraw gas limit is required for a yield-withdraw batch"),
+                data = callData.data,
+            )
+
         internal fun GaslessFeePlan?.upgradesYieldModule(): Boolean {
-            val withdrawCallData = (this as? GaslessFeePlan.TokenPayWithYieldWithdraw)?.withdrawCallData
+            val withdrawCallData = (this as? GaslessFeePlan.TokenPay)?.yieldWithdraw?.callData
             return withdrawCallData is EthereumYieldSupplyUpgradeToAndCallCallData
         }
 
