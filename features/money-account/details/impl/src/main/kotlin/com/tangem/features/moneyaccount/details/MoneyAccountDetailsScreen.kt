@@ -10,7 +10,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -22,19 +21,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.SpacerH24
+import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
-import com.tangem.core.ui.components.topFade
 import com.tangem.core.ui.ds.contextmenu.TangemContextMenu
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds.topbar.TangemTopBar
+import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.res.LocalHazeState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.*
@@ -47,15 +47,14 @@ import com.tangem.features.tangempay.common.TangemPayEmptyTransactionHistoryStat
 import com.tangem.features.tangempay.common.tangemPayTxHistoryNonContentItem
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.txhistory.entity.TxHistoryItemsUM
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import com.tangem.core.ui.R as CoreUiR
 
 private val InitialTopBarHeight: Dp = 64.dp
-private const val TOP_FADE_MID_STOP = 0.8f
-private const val TOP_FADE_MID_ALPHA = 0.8f
 private const val UNAVAILABLE_BALANCE_ALPHA = 0.4f
 
 @Composable
@@ -71,25 +70,25 @@ internal fun MoneyAccountDetailsScreen(
     val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }
     var topBarTotalHeight by remember { mutableStateOf(InitialTopBarHeight + statusBarHeight) }
     val rootBackground = TangemTheme.colors3.bg.primary
+    val buttonsHazeState = rememberHazeState()
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(rootBackground),
     ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(rootBackground)
+                .hazeSourceTangem(state = buttonsHazeState, zIndex = -1f),
+        )
         TangemPullToRefreshSlidingContainer(
             config = state.pullToRefreshConfig,
             indicatorOffset = topBarTotalHeight,
         ) {
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .topFade(
-                        height = topBarTotalHeight,
-                        0f to rootBackground,
-                        TOP_FADE_MID_STOP to rootBackground.copy(alpha = TOP_FADE_MID_ALPHA),
-                        1f to Color.Transparent,
-                    ),
+                modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 state = listState,
                 contentPadding = PaddingValues(
@@ -101,6 +100,7 @@ internal fun MoneyAccountDetailsScreen(
                     state = state,
                     listState = listState,
                     txHistory = txHistory,
+                    buttonsHazeState = buttonsHazeState,
                 )
             }
         }
@@ -113,7 +113,12 @@ internal fun MoneyAccountDetailsScreen(
     }
 }
 
-private fun LazyListScope.body(state: MoneyAccountDetailsUM, listState: LazyListState, txHistory: TxHistory?) {
+private fun LazyListScope.body(
+    state: MoneyAccountDetailsUM,
+    listState: LazyListState,
+    txHistory: TxHistory?,
+    buttonsHazeState: HazeState,
+) {
     val balanceAlpha = if (state.isBalanceUnavailable) UNAVAILABLE_BALANCE_ALPHA else 1f
 
     item("balanceBlock") {
@@ -129,7 +134,9 @@ private fun LazyListScope.body(state: MoneyAccountDetailsUM, listState: LazyList
     }
     item("actionButtonsBlock") {
         SpacerH24()
-        ActionBlock(state = state, modifier = Modifier.alpha(balanceAlpha))
+        CompositionLocalProvider(LocalHazeState provides buttonsHazeState) {
+            ActionBlock(state = state, modifier = Modifier.alpha(balanceAlpha))
+        }
     }
     if (state.messageBanner != null) {
         item("messageBanner") {
@@ -204,10 +211,7 @@ private fun LazyItemScope.ActionBlock(state: MoneyAccountDetailsUM, modifier: Mo
                 .padding(horizontal = 16.dp)
                 .testTag(MoneyAccountTestTags.ADD_FUNDS_BUTTON),
             title = resourceReference(R.string.common_add_funds),
-            icon = TangemIconUM.Icon(
-                imageVector = Icons.ic_arrow_down_24,
-                tintReference = { TangemTheme.colors3.icon.primary },
-            ),
+            icon = TangemIconUM.Icon(imageVector = Icons.ic_arrow_down_24),
             onClick = state.onAddFundsClick,
             isEnabled = state.isAddFundsEnabled,
         )
@@ -216,10 +220,7 @@ private fun LazyItemScope.ActionBlock(state: MoneyAccountDetailsUM, modifier: Mo
                 .padding(horizontal = 16.dp)
                 .testTag(MoneyAccountTestTags.SEND_BUTTON),
             title = resourceReference(R.string.common_send),
-            icon = TangemIconUM.Icon(
-                imageVector = Icons.ic_arrow_up_24,
-                tintReference = { TangemTheme.colors3.icon.primary },
-            ),
+            icon = TangemIconUM.Icon(imageVector = Icons.ic_arrow_up_24),
             onClick = state.onSendClick,
             isEnabled = state.isSendEnabled,
         )
@@ -229,21 +230,14 @@ private fun LazyItemScope.ActionBlock(state: MoneyAccountDetailsUM, modifier: Mo
 @Composable
 private fun TopBar(state: MoneyAccountDetailsUM, onHeightChange: (Dp) -> Unit, modifier: Modifier = Modifier) {
     val density = LocalDensity.current
-    TangemTopBar(
-        modifier = modifier
-            .onSizeChanged { size -> onHeightChange(with(density) { size.height.toDp() }) }
-            .statusBarsPadding(),
+    TangemTopNavigation(
+        modifier = modifier.onSizeChanged { size -> onHeightChange(with(density) { size.height.toDp() }) },
         title = state.title,
         subtitle = state.subtitle,
-        startContent = {
-            TangemButton(
-                iconStart = TangemIconUM.Icon(iconRes = CoreUiR.drawable.ic_arrow_back_28),
-                onClick = state.onBackClick,
-                size = TangemButton.Size.X11,
-                variant = TangemButton.Variant.Material,
-            )
-        },
-        endContent = { MenuButton(items = state.menuItems, onClick = state.onMenuClick) },
+        contentAlign = TangemTopNavigation.ContentAlign.Center,
+        blurBackground = false,
+        onBack = state.onBackClick,
+        endButton = { MenuButton(items = state.menuItems, onClick = state.onMenuClick) },
     )
 }
 
