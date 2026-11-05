@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 
 internal class DefaultEarnProjectionTest {
@@ -79,6 +80,34 @@ internal class DefaultEarnProjectionTest {
             // Assert
             assertThat(actual.total).isEqualTo(BigDecimal("2617.00"))
             assertThat(actual.earned).isEqualTo(BigDecimal("117.00"))
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = ["20", "60", "100", "140", "180", "220", "260", "300", "340", "380", "420", "460", "2500"])
+        fun `GIVEN exact half-cent gain WHEN project 1 year without top-up THEN earned agrees with yearlyEstimate`(
+            amount: String,
+        ) {
+            // Arrange
+            val projection = DefaultEarnProjection(netRate = BigDecimal("0.04675"))
+
+            // Act
+            val actual = projection.project(BigDecimal(amount), BigDecimal.ZERO, EarnHorizon.Year1)
+
+            // Assert
+            assertThat(actual.earned).isEqualTo(projection.yearlyEstimate(BigDecimal(amount)))
+        }
+
+        @Test
+        fun `GIVEN 2500 at 4 675 percent WHEN project 1 year without top-up THEN total is 2616 88`() {
+            // Arrange
+            val projection = DefaultEarnProjection(netRate = BigDecimal("0.04675"))
+
+            // Act
+            val actual = projection.project(INITIAL, BigDecimal.ZERO, EarnHorizon.Year1)
+
+            // Assert
+            assertThat(actual.total).isEqualTo(BigDecimal("2616.88"))
+            assertThat(actual.earned).isEqualTo(BigDecimal("116.88"))
         }
 
         @Test
