@@ -10,10 +10,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * The token history picks up a pending transaction only when it reloads, and leaving the Yield Mode screen does not
- * reload it. So a sent enter or exit reloads it right away, to show the pending row, and again once the transactions
- * are no longer pending, so the row stops reading as in progress. The pending copy is dropped then, while the
- * explorer may still lag behind, so one more reload follows to bring in the confirmed row.
+ * The token history picks up a confirmed Yield Mode enter or exit only when it reloads, and nothing reloads it after
+ * the transactions settle. So it reloads once they are no longer pending, and once more after that, since the explorer
+ * may still lag behind the node.
  * Runs on the app scope: the sheet that sent the transactions is closed straight after.
  */
 internal class YieldSupplyTxHistoryUpdater @Inject constructor(
@@ -24,7 +23,6 @@ internal class YieldSupplyTxHistoryUpdater @Inject constructor(
 
     fun scheduleUpdates(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency, txIds: List<String>) {
         appCoroutineScope.launch {
-            txHistoryContentUpdateEmitter.triggerUpdate()
             awaitNotPending(userWalletId, cryptoCurrency, txIds)
             txHistoryContentUpdateEmitter.triggerUpdate()
             delay(EXPLORER_LAG_MS)

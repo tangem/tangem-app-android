@@ -4,15 +4,11 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.tokenmethods.ApprovalERC20TokenCallData
 import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionExtras
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
-import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
-import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyExitCallData
-import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyInitTokenCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyUpgradeToAndCallCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.MerklClaimCallData
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
@@ -68,16 +64,6 @@ internal class RecentTransactionOwnershipTest {
         OwnershipModel(transaction = tokenTransfer(), currency = usdc, expected = true),
         OwnershipModel(transaction = tokenTransfer(), currency = usdt, expected = false),
         OwnershipModel(transaction = tokenTransfer(), currency = coin, expected = false),
-        // A Yield Mode enter or exit names no contract address, yet moves the token, so it belongs to the token.
-        OwnershipModel(transaction = yieldEnter(), currency = usdc, expected = true),
-        OwnershipModel(transaction = yieldEnter(), currency = usdt, expected = false),
-        OwnershipModel(transaction = yieldEnter(), currency = coin, expected = false),
-        OwnershipModel(transaction = yieldEnter(isUpgradeWrapped = true), currency = usdc, expected = true),
-        OwnershipModel(transaction = yieldExit(), currency = usdc, expected = true),
-        OwnershipModel(transaction = yieldExit(), currency = usdt, expected = false),
-        OwnershipModel(transaction = yieldExit(), currency = coin, expected = false),
-        // The other module calls move no token, so the token's history never reports them.
-        OwnershipModel(transaction = yieldInitToken(), currency = usdc, expected = false),
     )
 
     internal data class OwnershipModel(
@@ -103,38 +89,6 @@ internal class RecentTransactionOwnershipTest {
             extras = EthereumTransactionExtras(callData = if (isUpgradeWrapped) upgradeWrapped(callData) else callData),
         )
     }
-
-    private fun yieldEnter(isUpgradeWrapped: Boolean = false): TransactionData.Uncompiled {
-        val callData = EthereumYieldSupplyEnterCallData(tokenContractAddress = USDC_CONTRACT)
-        return yieldCall(callData = if (isUpgradeWrapped) upgradeWrapped(callData) else callData)
-    }
-
-    private fun yieldExit(): TransactionData.Uncompiled =
-        yieldCall(callData = EthereumYieldSupplyExitCallData(tokenContractAddress = USDC_CONTRACT))
-
-    private fun yieldInitToken(): TransactionData.Uncompiled = yieldCall(
-        callData = EthereumYieldSupplyInitTokenCallData(
-            tokenContractAddress = USDC_CONTRACT,
-            maxNetworkFee = Amount(token = sdkUsdc, value = BigDecimal.ONE),
-        ),
-    )
-
-    /** A module call as the Yield Mode flow builds it: a zero yield amount of the token, sent to the module. */
-    private fun yieldCall(callData: SmartContractCallData): TransactionData.Uncompiled = transaction(
-        amount = Amount(
-            currencySymbol = sdkUsdc.symbol,
-            value = BigDecimal.ZERO,
-            decimals = sdkUsdc.decimals,
-            type = AmountType.TokenYieldSupply(
-                token = sdkUsdc,
-                isActive = true,
-                isInitialized = true,
-                isAllowedToSpend = true,
-            ),
-        ),
-        destinationAddress = YIELD_MODULE_ADDRESS,
-        extras = EthereumTransactionExtras(callData = callData),
-    )
 
     private fun upgradeWrapped(callData: SmartContractCallData): SmartContractCallData =
         EthereumYieldSupplyUpgradeToAndCallCallData(newImplementation = LATEST_IMPLEMENTATION, innerCallData = callData)
