@@ -105,7 +105,7 @@ internal class EstimateFeeForTokenUseCaseTest {
         // Arrange
         val yieldStatus = activeYieldStatus(effectiveProtocolBalance = TOKEN_BALANCE)
         val feeTokenStatus = tokenStatus(balance = TOKEN_BALANCE, yieldSupplyStatus = yieldStatus)
-        val plan = mockk<GaslessFeePlan.TokenPayWithYieldWithdraw>()
+        val plan = mockk<GaslessFeePlan.TokenPay>()
         coEvery {
             resolveGaslessFeePlanUseCase(
                 userWallet = any(),
