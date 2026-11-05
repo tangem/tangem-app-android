@@ -8,7 +8,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.polymarket.model.PolymarketEventError
-import com.tangem.domain.polymarket.model.PolymarketPositionsError
 import com.tangem.domain.polymarket.model.PolymarketSigningError
 import com.tangem.domain.polymarket.model.PredictionOrderFailure
 import com.tangem.domain.polymarket.model.PredictionOrderFees
@@ -396,37 +395,6 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             }
 
         @Test
-        fun `GIVEN a tap waits for a quote WHEN the session key check answers THEN the style waits for it`() =
-            runOrderTest {
-                // Arrange
-                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } coAnswers { awaitCancellation() }
-                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } coAnswers {
-                    delay(timeMillis = SESSION_KEY_CHECK_MILLIS)
-                    true
-                }
-                val model = createOrderModel(testScope = this)
-                runCurrent()
-                model.onResume()
-                model.onAmountChange(value = "10")
-                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS)
-                runCurrent()
-                model.tapPlace()
-
-                // Act
-                advanceTimeBy(delayTimeMillis = SESSION_KEY_CHECK_MILLIS - QUOTE_DEBOUNCE_MILLIS + 1)
-                runCurrent()
-                val whilePending = model.uiState.value
-                advanceTimeBy(delayTimeMillis = PENDING_PLACEMENT_MILLIS)
-                runCurrent()
-
-                // Assert
-                assertThat(whilePending.submit).isEqualTo(SubmitUM.AwaitingQuote)
-                assertThat(whilePending.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
-                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
-                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.PLAIN)
-            }
-
-        @Test
         fun `GIVEN a hot wallet with a usable session key WHEN the screen opens THEN the button is plain`() =
             runOrderTest {
                 // Arrange
@@ -721,7 +689,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         }
 
         @Test
-        fun `GIVEN a quote on the way WHEN place clicked THEN the hold button is left as it is`() = runOrderTest {
+        fun `GIVEN a quote on the way WHEN place clicked THEN the hold button is reset`() = runOrderTest {
             // Arrange
             val model = createQuotingModel()
             val before = model.uiState.value.holdResetKey
@@ -729,68 +697,6 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             // Act
             model.tapPlace()
             runCurrent()
-
-            // Assert
-            assertThat(model.uiState.value.holdResetKey).isEqualTo(before)
-        }
-
-        @Test
-        fun `GIVEN a tap while quoting WHEN the quote arrives and is placed THEN the hold button is left as it is`() =
-            runOrderTest {
-                // Arrange
-                val model = createQuotingModel()
-                val before = model.uiState.value.holdResetKey
-                model.tapPlace()
-
-                // Act
-                advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
-                runCurrent()
-
-                // Assert
-                verify(exactly = 1) { router.replaceAll(any(), onComplete = any()) }
-                assertThat(model.uiState.value.holdResetKey).isEqualTo(before)
-            }
-
-        @Test
-        fun `GIVEN a tap waiting WHEN place clicked again THEN the hold button is reset`() = runOrderTest {
-            // Arrange
-            val model = createQuotingModel()
-            model.tapPlace()
-            runCurrent()
-            val before = model.uiState.value.holdResetKey
-
-            // Act
-            model.tapPlace()
-
-            // Assert
-            assertThat(model.uiState.value.holdResetKey).isEqualTo(before + 1)
-        }
-
-        @Test
-        fun `GIVEN a tap waiting WHEN the amount changes THEN the hold button is reset`() = runOrderTest {
-            // Arrange
-            val model = createQuotingModel()
-            model.tapPlace()
-            runCurrent()
-            val before = model.uiState.value.holdResetKey
-
-            // Act
-            model.onAmountChange(value = "25")
-
-            // Assert
-            assertThat(model.uiState.value.holdResetKey).isEqualTo(before + 1)
-        }
-
-        @Test
-        fun `GIVEN a tap waiting WHEN the screen pauses THEN the hold button is reset`() = runOrderTest {
-            // Arrange
-            val model = createQuotingModel()
-            model.tapPlace()
-            runCurrent()
-            val before = model.uiState.value.holdResetKey
-
-            // Act
-            model.onPause()
 
             // Assert
             assertThat(model.uiState.value.holdResetKey).isEqualTo(before + 1)
@@ -865,21 +771,6 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Posting)
                 assertThat(model.uiState.value.holdResetKey).isEqualTo(before)
             }
-
-        @Test
-        fun `GIVEN a tap while quoting WHEN the quote fails THEN the hold button is reset`() = runOrderTest {
-            // Arrange
-            val model = createQuotingModel(result = PredictionOrderQuoteError.Network.left())
-            val before = model.uiState.value.holdResetKey
-            model.tapPlace()
-
-            // Act
-            advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
-            runCurrent()
-
-            // Assert
-            assertThat(model.uiState.value.holdResetKey).isEqualTo(before + 1)
-        }
     }
 
     @Nested
@@ -1318,165 +1209,84 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
     }
 
     @Nested
-    inner class TapWhileQuoting {
+    inner class QuoteLock {
 
         @Test
-        fun `GIVEN a quote on the way WHEN place clicked THEN the placement waits and nothing is signed`() =
+        fun `GIVEN an amount within the debounce WHEN place clicked THEN nothing is signed once its quote arrives`() =
+            runOrderTest {
+                // Arrange
+                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } coAnswers {
+                    delay(timeMillis = QUOTE_MILLIS)
+                    createQuote().right()
+                }
+                val model = createOrderModel(testScope = this)
+                advanceUntilIdle()
+                model.onResume()
+                model.onAmountChange(value = "10")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS / 2)
+                val beforeTap = model.uiState.value.placeAction
+
+                // Act
+                model.tapPlace()
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + QUOTE_MILLIS)
+                runCurrent()
+
+                // Assert
+                assertThat(beforeTap).isEqualTo(PlaceActionUM.Unavailable)
+                assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.Ready)
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+                coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+            }
+
+        @Test
+        fun `GIVEN the first quote in flight WHEN place clicked THEN nothing is signed once it arrives`() =
             runOrderTest {
                 // Arrange
                 val model = createQuotingModel()
+                val beforeTap = model.uiState.value
 
                 // Act
                 model.tapPlace()
-                runCurrent()
-
-                // Assert
-                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.AwaitingQuote)
-                assertThat(model.isSubmitting()).isTrue()
-                coVerify(exactly = 0) { signOrderInteractor(request = any()) }
-            }
-
-        @Test
-        fun `GIVEN a tap while quoting WHEN the quote arrives THEN the order is placed`() = runOrderTest {
-            // Arrange
-            val model = createQuotingModel()
-            model.tapPlace()
-
-            // Act
-            advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
-            runCurrent()
-
-            // Assert
-            assertThat(model.uiState.value.submit).isNotEqualTo(SubmitUM.AwaitingQuote)
-            coVerify(exactly = 1) { signOrderInteractor(request = any()) }
-            verify(exactly = 1) {
-                router.replaceAll(match<PlacePredictionRoute.Status> { it.side == BUY_PARAMS.side }, onComplete = any())
-            }
-        }
-
-        @Test
-        fun `GIVEN a tap while quoting WHEN the quote fails THEN the tap is released and nothing is signed`() =
-            runOrderTest {
-                // Arrange
-                val model = createQuotingModel(result = PredictionOrderQuoteError.Network.left())
-                model.tapPlace()
-
-                // Act
                 advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
                 runCurrent()
 
                 // Assert
-                assertThat(model.uiState.value.submit).isNotEqualTo(SubmitUM.AwaitingQuote)
-                assertThat(model.isSubmitting()).isFalse()
+                assertThat(beforeTap.quote).isEqualTo(QuoteUM.Loading)
+                assertThat(beforeTap.placeAction).isEqualTo(PlaceActionUM.Unavailable)
+                assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.Ready)
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
                 coVerify(exactly = 0) { signOrderInteractor(request = any()) }
             }
 
         @Test
-        fun `GIVEN a tap while quoting WHEN the arrived quote cannot be placed THEN the tap is released`() =
-            runOrderTest {
-                // Arrange
-                val model = createQuotingModel(
-                    result = createQuote(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY).right(),
-                )
-                model.tapPlace()
-
-                // Act
-                advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
-                runCurrent()
-
-                // Assert
-                assertThat(model.uiState.value.submit).isNotEqualTo(SubmitUM.AwaitingQuote)
-                coVerify(exactly = 0) { signOrderInteractor(request = any()) }
-                verify(exactly = 0) { router.pop(any()) }
-            }
-
-        @ParameterizedTest(name = "a quote arriving {0} ms after the tap signs {1} order(s)")
-        @CsvSource("9999, 1", "10001, 0")
-        fun `GIVEN a tap while quoting WHEN the quote arrives THEN it is placed only within ten seconds`(
-            quoteMillis: Long,
-            expectedSignings: Int,
-        ) = runOrderTest {
-            // Arrange
-            val model = createQuotingModel(quoteMillis = quoteMillis)
-            model.tapPlace()
-
-            // Act
-            advanceTimeBy(delayTimeMillis = quoteMillis)
-            runCurrent()
-
-            // Assert
-            assertThat(model.uiState.value.submit).isNotEqualTo(SubmitUM.AwaitingQuote)
-            coVerify(exactly = expectedSignings) { signOrderInteractor(request = any()) }
-        }
-
-        @Test
-        fun `GIVEN a tap while quoting WHEN the screen is left THEN the tap is dropped`() = runOrderTest {
+        fun `GIVEN a priced quote WHEN the next poll is in flight THEN place stays tappable`() = runOrderTest {
             // Arrange
             val model = createQuotingModel()
-            model.tapPlace()
-
-            // Act
-            model.onPause()
-            runCurrent()
-
-            // Assert
-            assertThat(model.uiState.value.submit).isNotEqualTo(SubmitUM.AwaitingQuote)
-            model.onResume()
-            advanceTimeBy(delayTimeMillis = QUOTE_MILLIS * 2)
-            runCurrent()
-            coVerify(exactly = 0) { signOrderInteractor(request = any()) }
-        }
-
-        @Test
-        fun `GIVEN a tap while quoting WHEN the amount changes THEN the tap is dropped`() = runOrderTest {
-            // Arrange
-            val model = createQuotingModel()
-            model.tapPlace()
-
-            // Act
-            model.onAmountChange(value = "25")
-            runCurrent()
-
-            // Assert
-            assertThat(model.uiState.value.submit).isNotEqualTo(SubmitUM.AwaitingQuote)
-            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + QUOTE_MILLIS * 2)
-            runCurrent()
-            coVerify(exactly = 0) { signOrderInteractor(request = any()) }
-        }
-
-        @Test
-        fun `GIVEN a tap while quoting WHEN place clicked again THEN the order is signed once`() = runOrderTest {
-            // Arrange
-            val model = createQuotingModel()
-
-            // Act
-            model.tapPlace()
-            model.tapPlace()
             advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
             runCurrent()
 
+            // Act
+            advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS + QUOTE_MILLIS / 2)
+            runCurrent()
+
             // Assert
-            coVerify(exactly = 1) { signOrderInteractor(request = any()) }
-            coVerify(exactly = 1) { placeOrderUseCase(any(), any(), any()) }
+            coVerify(exactly = 2) { getQuoteUseCase(userWalletId = any(), request = any()) }
+            assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.Ready)
         }
 
         @Test
-        fun `GIVEN a tap while quoting WHEN place clicked again THEN the first tap still bounds the wait`() =
-            runOrderTest {
-                // Arrange
-                val model = createQuotingModel(quoteMillis = 10_001L)
-                model.tapPlace()
-                advanceTimeBy(delayTimeMillis = 5_000L)
+        fun `GIVEN the first quote in flight WHEN place then close clicked THEN the flow is left`() = runOrderTest {
+            // Arrange
+            val model = createQuotingModel()
+            model.tapPlace()
 
-                // Act
-                model.tapPlace()
-                advanceTimeBy(delayTimeMillis = 5_001L)
-                runCurrent()
+            // Act
+            model.onCloseClick()
 
-                // Assert
-                assertThat(model.uiState.value.submit).isNotEqualTo(SubmitUM.AwaitingQuote)
-                coVerify(exactly = 0) { signOrderInteractor(request = any()) }
-            }
+            // Assert
+            assertThat(model.isSubmitting()).isFalse()
+            verify(exactly = 1) { router.pop(any()) }
+        }
 
         @ParameterizedTest(name = "{0}")
         @EnumSource(MarketLoad::class)
@@ -1498,195 +1308,9 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 model.tapPlace()
 
                 // Assert
-                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading(isAnswerExpected = false))
-                assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.Unavailable)
-                assertThat(model.uiState.value.submit).isNotEqualTo(SubmitUM.AwaitingQuote)
-            }
-
-        @Test
-        fun `GIVEN the quote request hangs WHEN ten seconds pass after the tap THEN the tap is released`() =
-            runOrderTest {
-                // Arrange
-                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } coAnswers { awaitCancellation() }
-                val model = createOrderModel(testScope = this)
-                advanceUntilIdle()
-                model.onResume()
-                model.onAmountChange(value = "10")
-                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS)
-                runCurrent()
-                model.tapPlace()
-
-                // Act
-                advanceTimeBy(delayTimeMillis = PENDING_PLACEMENT_MILLIS + 1)
-                runCurrent()
-                model.onCloseClick()
-
-                // Assert
-                assertThat(model.uiState.value.submit).isNotEqualTo(SubmitUM.AwaitingQuote)
-                assertThat(model.isSubmitting()).isFalse()
+                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading)
                 assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.Unavailable)
                 coVerify(exactly = 0) { signOrderInteractor(request = any()) }
-                verify(exactly = 1) { router.pop(any()) }
-            }
-
-        @Test
-        fun `GIVEN a tap released by the timeout WHEN a new amount is requested THEN place is tappable again`() =
-            runOrderTest {
-                // Arrange
-                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } coAnswers { awaitCancellation() }
-                val model = createOrderModel(testScope = this)
-                advanceUntilIdle()
-                model.onResume()
-                model.onAmountChange(value = "10")
-                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS)
-                runCurrent()
-                model.tapPlace()
-                advanceTimeBy(delayTimeMillis = PENDING_PLACEMENT_MILLIS + 1)
-                runCurrent()
-
-                // Act
-                model.onAmountChange(value = "25")
-                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS)
-                runCurrent()
-
-                // Assert
-                assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.ReadyOnceQuoted)
-            }
-
-        @Test
-        fun `GIVEN a sell tap WHEN the position read restarts the quote mid-wait THEN the order is placed on the re-quote`() =
-            runOrderTest {
-                // Arrange
-                var positionReads = 0
-                coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } coAnswers {
-                    if (positionReads++ == 1) delay(timeMillis = POSITION_READ_MILLIS)
-                    createPosition().right()
-                }
-                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } coAnswers {
-                    delay(timeMillis = QUOTE_MILLIS)
-                    createSellQuote(shares = BigDecimal("51.234567")).right()
-                }
-                val model = createOrderModel(testScope = this, params = SELL_PARAMS)
-                runCurrent()
-                model.onResume()
-                runCurrent()
-                model.tapPlace()
-
-                // Act
-                advanceTimeBy(delayTimeMillis = POSITION_READ_MILLIS)
-                runCurrent()
-                val submitAfterRestart = model.uiState.value.submit
-                advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
-                runCurrent()
-
-                // Assert
-                assertThat(submitAfterRestart).isEqualTo(SubmitUM.AwaitingQuote)
-                coVerify(atLeast = 2) { getQuoteUseCase(userWalletId = any(), request = any()) }
-                coVerify(exactly = 1) { signOrderInteractor(request = any()) }
-            }
-
-        @ParameterizedTest(name = "{0}")
-        @EnumSource(MidWaitRead::class)
-        fun `GIVEN a sell tap WHEN the position re-read stops the quote loop mid-wait THEN the tap is released at once`(
-            read: MidWaitRead,
-        ) = runOrderTest {
-            // Arrange
-            var positionReads = 0
-            coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } coAnswers {
-                if (positionReads++ == 0) {
-                    createPosition().right()
-                } else {
-                    delay(timeMillis = POSITION_READ_MILLIS)
-                    when (read) {
-                        MidWaitRead.Fails -> PolymarketPositionsError.Network.left()
-                        MidWaitRead.StopsAcceptingOrders -> createPosition().copy(isAcceptingOrders = false).right()
-                    }
-                }
-            }
-            coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } coAnswers {
-                delay(timeMillis = QUOTE_MILLIS)
-                createSellQuote(shares = BigDecimal("51.234567")).right()
-            }
-            val model = createOrderModel(testScope = this, params = SELL_PARAMS)
-            runCurrent()
-            model.onResume()
-            runCurrent()
-            model.tapPlace()
-
-            // Act
-            advanceTimeBy(delayTimeMillis = POSITION_READ_MILLIS)
-            runCurrent()
-
-            // Assert
-            assertThat(model.uiState.value.submit).isNotEqualTo(SubmitUM.AwaitingQuote)
-            assertThat(model.isSubmitting()).isFalse()
-            coVerify(exactly = 0) { signOrderInteractor(request = any()) }
-        }
-
-        @Test
-        fun `GIVEN a pending tap WHEN the gate closes mid-wait THEN the spinner stays until the quote and the tap drops`() =
-            runOrderTest {
-                // Arrange
-                val model = createQuotingModel()
-                model.tapPlace()
-
-                // Act
-                statusFlow.value = activeStatus(balance = BigDecimal("5"))
-                runCurrent()
-                val midWait = model.uiState.value
-                advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
-                runCurrent()
-
-                // Assert
-                assertThat(midWait.placeAction).isEqualTo(PlaceActionUM.AwaitingQuote)
-                assertThat(model.uiState.value.submit).isNotEqualTo(SubmitUM.AwaitingQuote)
-                coVerify(exactly = 0) { signOrderInteractor(request = any()) }
-            }
-
-        @Test
-        fun `GIVEN a dropped tap WHEN a new tap waits for the next amount THEN it stays pending`() = runOrderTest {
-            // Arrange
-            val model = createQuotingModel()
-            model.tapPlace()
-            model.onAmountChange(value = "25")
-            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS)
-            runCurrent()
-
-            // Act
-            model.tapPlace()
-            runCurrent()
-
-            // Assert
-            assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.AwaitingQuote)
-            assertThat(model.isSubmitting()).isTrue()
-        }
-
-        @Test
-        fun `GIVEN a tap while quoting WHEN close clicked THEN the flow stays`() = runOrderTest {
-            // Arrange
-            val model = createQuotingModel()
-            model.tapPlace()
-
-            // Act
-            model.onCloseClick()
-
-            // Assert
-            verify(exactly = 0) { router.pop(any()) }
-        }
-
-        @Test
-        fun `GIVEN the balance does not cover the amount WHEN place clicked while quoting THEN nothing waits`() =
-            runOrderTest {
-                // Arrange
-                statusFlow.value = activeStatus(balance = BigDecimal("5"))
-                val model = createQuotingModel()
-
-                // Act
-                model.tapPlace()
-
-                // Assert
-                assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.Unavailable)
-                assertThat(model.uiState.value.submit).isNotEqualTo(SubmitUM.AwaitingQuote)
             }
     }
 
@@ -1714,7 +1338,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         }
 
         @Test
-        fun `GIVEN a sell WHEN the whole position is prefilled THEN place is tappable while its first quote loads`() =
+        fun `GIVEN a sell WHEN the whole position is prefilled THEN place is not tappable while its first quote loads`() =
             runOrderTest {
                 // Arrange
                 coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } coAnswers {
@@ -1730,8 +1354,8 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
 
                 // Assert
                 assertThat(model.uiState.value.amountValue).isNotEmpty()
-                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading(isAnswerExpected = true))
-                assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.ReadyOnceQuoted)
+                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading)
+                assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.Unavailable)
             }
 
         @Test
@@ -1744,7 +1368,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 model.onPause()
 
                 // Assert
-                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading(isAnswerExpected = false))
+                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading)
                 assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.Unavailable)
             }
 
@@ -1768,7 +1392,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 runCurrent()
 
                 // Assert
-                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading(isAnswerExpected = false))
+                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading)
                 assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.Unavailable)
                 coVerify(exactly = 1) { getQuoteUseCase(userWalletId = any(), request = any()) }
             }
@@ -1785,7 +1409,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 runCurrent()
 
                 // Assert
-                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading(isAnswerExpected = false))
+                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading)
                 assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.Unavailable)
             }
 
@@ -1809,7 +1433,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             }
 
         @Test
-        fun `GIVEN a failed quote WHEN a new amount is requested THEN the button is enabled while it loads`() =
+        fun `GIVEN a failed quote WHEN a new amount is requested THEN the button stays disabled while it loads`() =
             runOrderTest {
                 // Arrange
                 val model = createQuotingModel(result = PredictionOrderQuoteError.Network.left())
@@ -1822,16 +1446,14 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 runCurrent()
 
                 // Assert
-                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading(isAnswerExpected = true))
-                assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.ReadyOnceQuoted)
+                assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading)
+                assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.Unavailable)
             }
     }
 
     enum class UnplaceableResult { NoLiquidity, QuoteError }
 
     enum class MarketLoad { Hanging, Failed }
-
-    enum class MidWaitRead { Fails, StopsAcceptingOrders }
 
     private fun UnplaceableResult.toQuoteResult(): Either<PredictionOrderQuoteError, PredictionOrderQuote> =
         when (this) {
@@ -1882,9 +1504,6 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
     private companion object {
         val HELD = BigDecimal("51.234567")
         const val SIGNING_MILLIS = 1_000L
-        const val SESSION_KEY_CHECK_MILLIS = QUOTE_DEBOUNCE_MILLIS * 2
         const val QUOTE_MILLIS = 1_000L
-        const val PENDING_PLACEMENT_MILLIS = 10_000L
-        const val POSITION_READ_MILLIS = 300L
     }
 }

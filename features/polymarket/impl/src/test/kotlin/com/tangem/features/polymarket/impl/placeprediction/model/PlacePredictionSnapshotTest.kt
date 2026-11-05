@@ -112,7 +112,7 @@ internal class PlacePredictionSnapshotTest : PlacePredictionModelTestBase() {
         amount.onNextClick()
 
         // Assert
-        assertThat(amount.uiState.value.quote).isEqualTo(QuoteUM.Loading(isAnswerExpected = false))
+        assertThat(amount.uiState.value.quote).isEqualTo(QuoteUM.Loading)
         assertThat(amount.uiState.value.isReadyToPlace).isFalse()
         verify(exactly = 0) { router.push(any<PlacePredictionRoute.Summary>(), any()) }
         advanceTimeBy(1_001)

@@ -91,10 +91,8 @@ internal fun PlacePredictionUM.recomputeGate(): PlacePredictionUM {
         priced.order.allowsPlacing(entered = entered)
 
     val placeAction = when {
-        submit is SubmitUM.AwaitingQuote -> PlaceActionUM.AwaitingQuote
         !isPlaceableApartFromQuote -> PlaceActionUM.Unavailable
         quote is QuoteUM.Content && priced.order.isPlaceable(status = quote.status) -> PlaceActionUM.Ready
-        quote is QuoteUM.Loading && quote.isAnswerExpected -> PlaceActionUM.ReadyOnceQuoted
         else -> PlaceActionUM.Unavailable
     }
 
