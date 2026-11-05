@@ -25,6 +25,16 @@ fun SemanticsNode.firstTextForTestTag(testTag: String): String? {
     return null
 }
 
+/** Every non-blank text in this node's subtree (unmerged), in traversal order. */
+fun SemanticsNode.allTexts(): List<String> {
+    val result = mutableListOf<String>()
+    config.getOrNull(SemanticsProperties.Text)?.forEach { annotated ->
+        annotated.text.takeIf { it.isNotBlank() }?.let(result::add)
+    }
+    children.forEach { result.addAll(it.allTexts()) }
+    return result
+}
+
 /**
  * Reads the first text of every currently displayed node in this collection, in visual order
  * (top-to-bottom, then left-to-right). Non-displayed nodes and nodes without text are skipped.
