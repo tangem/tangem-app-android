@@ -777,6 +777,65 @@ internal class SdkTransactionTypeConverterTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class NativeYieldModuleCall {
+
+        private val converter = createConverter(currency = currencyFactory.createCoin(Blockchain.Ethereum))
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun convert(model: NativeYieldModuleCallModel) {
+            // Arrange
+            val item = item(
+                destination = singleContract(YIELD_MODULE_CONTRACT),
+                methodId = if (model.isWrappedInUpgrade) {
+                    EthereumYieldSupplyUpgradeToAndCallCallData.METHOD_ID
+                } else {
+                    model.methodId
+                },
+                callData = if (model.isWrappedInUpgrade) {
+                    upgradeToAndCallData(innerCallData = model.callData)
+                } else {
+                    model.callData
+                },
+                amount = model.amount,
+            )
+
+            // Act
+            val actual = converter.convert(item)
+
+            // Assert
+            assertThat(actual).isEqualTo(TxInfo.TransactionType.Operation(name = model.expectedName))
+        }
+
+        private fun provideTestModels() = listOf(false, true).flatMap { isWrappedInUpgrade ->
+            listOf(
+                NativeYieldModuleCallModel(
+                    methodId = ENTER_NATIVE_METHOD_ID,
+                    callData = ENTER_NATIVE_METHOD_ID,
+                    amount = BigDecimal.ONE,
+                    isWrappedInUpgrade = isWrappedInUpgrade,
+                    expectedName = "EnterProtocolByOwnerWithNative",
+                ),
+                NativeYieldModuleCallModel(
+                    methodId = WITHDRAW_NATIVE_METHOD_ID,
+                    callData = WITHDRAW_NATIVE_METHOD_ID + ZERO_WORD,
+                    amount = BigDecimal.ZERO,
+                    isWrappedInUpgrade = isWrappedInUpgrade,
+                    expectedName = "WithdrawNative",
+                ),
+                NativeYieldModuleCallModel(
+                    methodId = EXIT_NATIVE_METHOD_ID,
+                    callData = EXIT_NATIVE_METHOD_ID,
+                    amount = BigDecimal.ZERO,
+                    isWrappedInUpgrade = isWrappedInUpgrade,
+                    expectedName = "WithdrawAndDeactivateNative",
+                ),
+            )
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class Joint {
 
         private val jointNetwork: Network = currencyFactory.ethereum.network.let { network ->
@@ -1036,6 +1095,21 @@ internal class SdkTransactionTypeConverterTest {
             CLAIM_OWNER_METHOD_ID to SmartContractMethod(info = YIELD_MODULE_INFO, source = null, name = "claimMerklRewardsOwner"),
             CLAIM_PROCESSOR_METHOD_ID to SmartContractMethod(info = YIELD_MODULE_INFO, source = null, name = "claimMerklRewards"),
             YIELD_SWAP_METHOD_ID to SmartContractMethod(info = YIELD_MODULE_INFO, source = null, name = "swap"),
+            ENTER_NATIVE_METHOD_ID to SmartContractMethod(
+                info = YIELD_MODULE_INFO,
+                source = null,
+                name = "enterProtocolByOwnerWithNative",
+            ),
+            WITHDRAW_NATIVE_METHOD_ID to SmartContractMethod(
+                info = YIELD_MODULE_INFO,
+                source = null,
+                name = "withdrawNative",
+            ),
+            EXIT_NATIVE_METHOD_ID to SmartContractMethod(
+                info = YIELD_MODULE_INFO,
+                source = null,
+                name = "withdrawAndDeactivateNative",
+            ),
         ),
         yieldSupplyAddresses = emptySet(),
         gaslessFeeAddresses = gaslessFeeAddresses,
@@ -1099,6 +1173,14 @@ internal class SdkTransactionTypeConverterTest {
         val name: String,
         val callData: String?,
         val expected: TxInfo.TransactionType,
+    )
+
+    internal data class NativeYieldModuleCallModel(
+        val methodId: String,
+        val callData: String,
+        val amount: BigDecimal,
+        val isWrappedInUpgrade: Boolean,
+        val expectedName: String,
     )
 
     internal data class YieldModuleCallModel(
@@ -1249,6 +1331,9 @@ internal class SdkTransactionTypeConverterTest {
         const val CLAIM_OWNER_METHOD_ID = "0xb4701e3e"
         const val CLAIM_PROCESSOR_METHOD_ID = "0xbebc896c"
         const val YIELD_SWAP_METHOD_ID = "0x4c3f521d"
+        const val ENTER_NATIVE_METHOD_ID = "0x0921ecd4"
+        const val WITHDRAW_NATIVE_METHOD_ID = "0x84276d81"
+        const val EXIT_NATIVE_METHOD_ID = "0x4423380d"
         const val NEW_IMPLEMENTATION = "0x5555555555555555555555555555555555555555"
         const val ZERO_WORD = "0000000000000000000000000000000000000000000000000000000000000000"
         const val YIELD_MODULE_CONTRACT = "0x4444444444444444444444444444444444444444"

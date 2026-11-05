@@ -15,7 +15,18 @@ sealed interface MoneyAccountStatusValueDM {
     @SerialName("activating")
     data class Activating(
         @SerialName("customer_id") val customerId: String,
-    ) : MoneyAccountStatusValueDM
+        @SerialName("step") val step: StepDM,
+    ) : MoneyAccountStatusValueDM {
+
+        @Serializable
+        enum class StepDM {
+            @SerialName("issuing")
+            ISSUING,
+
+            @SerialName("awaiting_deposit")
+            AWAITING_DEPOSIT,
+        }
+    }
 
     @Serializable
     @SerialName("failed")

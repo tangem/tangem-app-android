@@ -90,7 +90,7 @@ internal class ProductActivationTracker(
         MoneyAccountActivationState.Unavailable -> failedForOtherReason()
         is MoneyAccountActivationState.AwaitingKyc -> kycStatus.toOutcome()
         MoneyAccountActivationState.NotStarted,
-        MoneyAccountActivationState.Issuing,
+        is MoneyAccountActivationState.Issuing,
         MoneyAccountActivationState.Deactivated,
         -> null
     }

@@ -48,8 +48,6 @@ import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
-import com.tangem.domain.polymarket.flow.PredictionPositionsValueSupplier
-import com.tangem.domain.models.account.PredictionPositionsValue
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -92,7 +90,6 @@ internal class PolymarketMainModel @Inject constructor(
     private val refreshPredictionDepositRequisitesInteractor: RefreshPredictionDepositRequisitesInteractor,
     private val regionAccess: PredictionRegionAccess,
     private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
-    private val predictionPositionsValueSupplier: PredictionPositionsValueSupplier,
     private val predictionBalancePoller: PredictionBalancePoller,
     private val predictionFundingWindow: PredictionFundingWindow,
     private val observePolymarketCredentialsPresenceUseCase: ObservePolymarketCredentialsPresenceUseCase,
@@ -129,7 +126,6 @@ internal class PolymarketMainModel @Inject constructor(
                 balance = balanceConverter.convert(
                     PredictionBalanceUMConverter.Input(
                         status = PredictionAccountStatusValue.Loading,
-                        positions = PredictionPositionsValue.Unknown,
                         requisites = RequisitesState.Loading,
                         regionStatus = PredictionRegionStatus.UNKNOWN,
                         mode = PredictionBalanceMode.AVAILABLE,
@@ -153,17 +149,15 @@ internal class PolymarketMainModel @Inject constructor(
     init {
         combine(
             flow = predictionAccountStatusSupplier(userWalletId = params.userWalletId),
-            flow2 = predictionPositionsValueSupplier(userWalletId = params.userWalletId),
-            flow3 = fundingRequisites.state,
-            flow4 = regionAccess.status,
-            flow5 = balanceMode,
-            transform = { status, positions, requisites, regionStatus, mode ->
+            flow2 = fundingRequisites.state,
+            flow3 = regionAccess.status,
+            flow4 = balanceMode,
+            transform = { status, requisites, regionStatus, mode ->
                 activeStatus.value = status as? PredictionAccountStatusValue.Active
 
                 balanceConverter.convert(
                     PredictionBalanceUMConverter.Input(
                         status = status,
-                        positions = positions,
                         requisites = requisites,
                         regionStatus = regionStatus,
                         mode = mode,

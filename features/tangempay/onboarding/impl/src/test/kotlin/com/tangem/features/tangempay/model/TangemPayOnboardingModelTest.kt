@@ -591,6 +591,7 @@ internal class TangemPayOnboardingModelTest {
                 getCustomerOffersUseCase = mockk(relaxed = true),
                 createHotWalletUseCase = mockk(relaxed = true),
                 isHotWalletCreationSupported = mockk(relaxed = true),
+                analyticsEventHandler = mockk(relaxed = true),
             ),
             userWalletsListRepository = userWalletsListRepository,
             uiMessageSender = uiMessageSender,

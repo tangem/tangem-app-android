@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
@@ -22,6 +23,10 @@ internal class PlacePredictionSummaryComponent(
     private val model: PlacePredictionSummaryModel = getOrCreateModel(params = params)
 
     private val feeSheetSlot = predictionFeeSheetSlot(feeSheet = model.feeSheet)
+
+    init {
+        lifecycle.doOnResume { model.onResume() }
+    }
 
     override fun isSubmitting(): Boolean = model.isSubmitting()
 
