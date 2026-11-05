@@ -20,6 +20,8 @@ import com.tangem.data.wallets.signing.InSessionKeyDeriver
 import com.tangem.data.wallets.signing.MockDeriveAndSignSession
 import com.tangem.data.wallets.store.PendingWalletCardsBackup
 import com.tangem.data.wallets.store.PendingWalletCardsBackupStore
+import com.tangem.data.wallets.store.RegisteredWalletCard
+import com.tangem.data.wallets.store.WalletCardsRegistryStore
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.core.remote.moshi.NetworkMoshi
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
@@ -50,6 +52,8 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Provider
 import javax.inject.Singleton
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -84,7 +88,6 @@ internal object WalletsDataModule {
     fun provideWalletCardsBackupRepository(
         tangemTechApi: TangemTechApi,
         dataStoreFactory: AppDataStoreFactory,
-        appPreferencesStore: AppPreferencesStore,
         deliveryScheduler: WalletCardsBackupDeliveryScheduler,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletCardsBackupRepository {
@@ -97,7 +100,13 @@ internal object WalletsDataModule {
                     fileName = "pending_wallet_cards_backups",
                 ),
             ),
-            appPreferencesStore = appPreferencesStore,
+            registryStore = WalletCardsRegistryStore(
+                dataStore = dataStoreFactory.create(
+                    defaultValue = emptyMap(),
+                    serializer = MapSerializer(String.serializer(), RegisteredWalletCard.serializer()),
+                    fileName = "wallet_cards_registry",
+                ),
+            ),
             deliveryScheduler = deliveryScheduler,
             dispatchers = dispatchers,
         )

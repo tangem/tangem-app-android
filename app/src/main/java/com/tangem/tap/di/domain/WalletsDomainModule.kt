@@ -493,15 +493,25 @@ internal object WalletsDomainModule {
 
     @Provides
     @Singleton
-    fun provideReportCardLinkedWalletsBackupUseCase(
-        userWalletsListRepository: UserWalletsListRepository,
+    fun provideReportSeenWalletCardUseCase(
         walletCardsBackupRepository: WalletCardsBackupRepository,
-        reportWalletCardsBackupUseCase: ReportWalletCardsBackupUseCase,
-    ): ReportCardLinkedWalletsBackupUseCase {
-        return ReportCardLinkedWalletsBackupUseCase(
-            userWalletsListRepository = userWalletsListRepository,
+        isWalletBackupProblematicUseCase: IsWalletBackupProblematicUseCase,
+    ): ReportSeenWalletCardUseCase {
+        return ReportSeenWalletCardUseCase(
             walletCardsBackupRepository = walletCardsBackupRepository,
-            reportWalletCardsBackupUseCase = reportWalletCardsBackupUseCase,
+            isWalletBackupProblematicUseCase = isWalletBackupProblematicUseCase,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideReportSavedWalletsBackupUseCase(
+        userWalletsListRepository: UserWalletsListRepository,
+        reportSeenWalletCardUseCase: ReportSeenWalletCardUseCase,
+    ): ReportSavedWalletsBackupUseCase {
+        return ReportSavedWalletsBackupUseCase(
+            userWalletsListRepository = userWalletsListRepository,
+            reportSeenWalletCardUseCase = reportSeenWalletCardUseCase,
         )
     }
 

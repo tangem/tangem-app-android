@@ -24,6 +24,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
+import com.tangem.domain.wallets.backup.SeenWalletCardReporter
 import com.tangem.domain.wallets.registration.WalletRegistrationTrigger
 import com.tangem.domain.wallets.usecase.GetCompletedBackupsUseCase
 import com.tangem.domain.wallets.usecase.IsWalletBackedUpUseCase
@@ -70,6 +71,7 @@ internal class DefaultUserWalletsListRepositoryTest {
     private val isWalletBackedUpUseCase: IsWalletBackedUpUseCase = mockk(relaxed = true)
     private val getCompletedBackupsUseCase: GetCompletedBackupsUseCase = mockk(relaxed = true)
     private val walletRegistrationTrigger: WalletRegistrationTrigger = mockk(relaxed = true)
+    private val seenWalletCardReporter: SeenWalletCardReporter = mockk(relaxed = true)
     private val hotWalletFeatureToggles: HotWalletFeatureToggles = mockk()
 
     private val walletA = MockUserWalletFactory.create().copy(walletId = UserWalletId("0011"), name = "Wallet A")
@@ -88,6 +90,7 @@ internal class DefaultUserWalletsListRepositoryTest {
             clearReferralInstallUseCase,
             userWalletSelectedHandler,
             walletRegistrationTrigger,
+            seenWalletCardReporter,
             hotWalletFeatureToggles,
         )
 
@@ -115,6 +118,7 @@ internal class DefaultUserWalletsListRepositoryTest {
             isWalletBackedUpUseCase = isWalletBackedUpUseCase,
             getCompletedBackupsUseCase = getCompletedBackupsUseCase,
             walletRegistrationTrigger = Lazy { walletRegistrationTrigger },
+            seenWalletCardReporter = Lazy { seenWalletCardReporter },
             hotWalletFeatureToggles = hotWalletFeatureToggles,
         )
     }
@@ -316,6 +320,89 @@ internal class DefaultUserWalletsListRepositoryTest {
         assertThat(result.isLeft()).isTrue()
         assertThat(repository.userWallets.value).containsExactly(storedWallet)
         coVerify(exactly = 0) { publicInformationRepository.save(any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN another card of saved wallet WHEN duplicate save rejected THEN scanned card reported as seen`() =
+        runTest {
+            // Arrange
+            val cardLinkedScanResponse = staleScanResponse.copy(
+                card = staleScanResponse.card.copy(backupStatus = CardDTO.BackupStatus.CardLinked(cardCount = 1)),
+            )
+            val storedWallet = MockUserWalletFactory.create(cardLinkedScanResponse)
+            val otherCardScanResponse = freshScanResponse.copy(
+                card = freshScanResponse.card.copy(cardId = "OTHER-CARD"),
+            )
+            repository.userWallets.value = listOf(storedWallet)
+
+            // Act
+            repository.saveWithoutLock(MockUserWalletFactory.create(otherCardScanResponse), canOverride = false)
+
+            // Assert
+            verify(exactly = 1) {
+                seenWalletCardReporter.report(
+                    userWallet = storedWallet.copy(scanResponse = otherCardScanResponse),
+                    isNewWallet = false,
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN locked wallet WHEN unlock with scanned card THEN scanned card reported as seen`() = runTest {
+        // Arrange
+        val storedWallet = MockUserWalletFactory.create(freshScanResponse).let { wallet ->
+            wallet.copy(
+                scanResponse = wallet.scanResponse.copy(card = wallet.scanResponse.card.copy(wallets = emptyList())),
+            )
+        }
+        repository.userWallets.value = listOf(storedWallet)
+        coEvery { sensitiveInformationRepository.getAll(any()) } returns CompletionResult.Success(emptyMap())
+
+        // Act
+        repository.unlock(
+            userWalletId = storedWallet.walletId,
+            unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(
+                scanResponse = freshScanResponse,
+                source = AnalyticsParam.ScreensSources.SignIn,
+            ),
+        )
+
+        // Assert
+        verify(exactly = 1) {
+            seenWalletCardReporter.report(
+                userWallet = storedWallet.copy(scanResponse = freshScanResponse),
+                isNewWallet = false,
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN new cold wallet WHEN saved THEN its card reported as seen in a new wallet`() = runTest {
+        // Arrange
+        val newCold = MockUserWalletFactory.create().copy(walletId = UserWalletId("00aa"))
+        repository.userWallets.value = listOf(walletB)
+        coEvery { publicInformationRepository.save(any(), any()) } returns CompletionResult.Success(Unit)
+        coEvery { sensitiveInformationRepository.save(any(), any()) } returns CompletionResult.Success(Unit)
+
+        // Act
+        repository.saveWithoutLock(newCold, canOverride = false)
+
+        // Assert
+        verify(exactly = 1) { seenWalletCardReporter.report(userWallet = newCold, isNewWallet = true) }
+    }
+
+    @Test
+    fun `GIVEN saved cold wallet WHEN overridden THEN no card reported as seen in a new wallet`() = runTest {
+        // Arrange
+        repository.userWallets.value = listOf(walletA)
+        coEvery { publicInformationRepository.save(any(), any()) } returns CompletionResult.Success(Unit)
+        coEvery { sensitiveInformationRepository.save(any(), any()) } returns CompletionResult.Success(Unit)
+
+        // Act
+        repository.saveWithoutLock(walletA.copy(name = "Renamed"), canOverride = true)
+
+        // Assert
+        verify(exactly = 0) { seenWalletCardReporter.report(any(), isNewWallet = true) }
     }
 
     @Test
