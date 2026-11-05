@@ -168,6 +168,7 @@ internal class PolymarketMainComponentTest {
         observePolymarketCredentialsPresenceUseCase = observeCredentialsPresence,
         getWalletMetaInfoUseCase = mockk(),
         observePolymarketSportsStateUseCase = mockk(),
+            observePolymarketLiveQuotesUseCase = mockk(),
         polymarketFeatureToggles = mockk { every { isPolymarketPhaseTwoEnabled } returns false },
     )
 }
