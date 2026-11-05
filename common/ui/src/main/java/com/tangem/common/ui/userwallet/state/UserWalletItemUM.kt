@@ -50,6 +50,8 @@ data class UserWalletItemUM(
     @Immutable
     sealed class Information {
 
+        data object None : Information()
+
         data object Failed : Information()
 
         data object Loading : Information()
@@ -68,7 +70,7 @@ data class UserWalletItemUM(
 
         data class Account(
             val name: TextReference,
-            val icon: AccountIconUM.CryptoPortfolio,
+            val icon: AccountIconUM,
         ) : ImageState()
 
         data class Image(
