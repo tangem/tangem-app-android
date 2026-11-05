@@ -14,6 +14,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPA
 import com.tangem.features.polymarket.impl.placeprediction.entity.MarketHeaderUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceActionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceButtonStyleUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionNotificationUM
@@ -128,7 +129,7 @@ internal object PlacePredictionPreviewIntents :
     override fun onPolymarketTermsClick() = Unit
     override fun onTangemTermsClick() = Unit
     override fun onNextClick() = Unit
-    override fun onPlaceClick() = Unit
+    override fun onPlaceClick(confirmedWith: PlaceButtonStyleUM) = Unit
     override fun onBackClick() = Unit
     override fun onCloseClick() = Unit
     override fun onToMainClick() = Unit

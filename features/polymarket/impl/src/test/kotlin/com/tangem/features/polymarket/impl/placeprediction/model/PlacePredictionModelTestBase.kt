@@ -26,8 +26,10 @@ import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisite
 import com.tangem.domain.polymarket.interactor.SignPredictionOrderInteractor
 import com.tangem.domain.polymarket.interactor.SubmitPredictionOrderInteractor
 import com.tangem.domain.polymarket.model.PolymarketAddresses
+import com.tangem.domain.polymarket.model.PolymarketApiCredentials
 import com.tangem.domain.polymarket.model.PolymarketBalanceAllowance
 import com.tangem.domain.polymarket.model.PolymarketChainFamily
+import com.tangem.domain.polymarket.model.PolymarketClobIdentity
 import com.tangem.domain.polymarket.model.PolymarketDepositNetwork
 import com.tangem.domain.polymarket.model.PolymarketDepositRequisites
 import com.tangem.domain.polymarket.model.PolymarketDepositToken
@@ -39,11 +41,13 @@ import com.tangem.domain.polymarket.model.PredictionCollateral
 import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderSide
+import com.tangem.domain.polymarket.model.PredictionOrderSigningRoute
 import com.tangem.domain.polymarket.model.PredictionPlaceOrderResult
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
 import com.tangem.domain.polymarket.model.PredictionSignedOrder
 import com.tangem.domain.polymarket.sessionkey.PolymarketOrderSigningRouter
 import com.tangem.domain.polymarket.usecase.AwaitDelayedPredictionOrderUseCase
+import com.tangem.domain.polymarket.usecase.CanSignPredictionOrderWithSessionKeyUseCase
 import com.tangem.domain.polymarket.usecase.CheckPolymarketGeoblockUseCase
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCollateralCurrencyUseCase
@@ -153,6 +157,7 @@ internal abstract class PlacePredictionModelTestBase {
         coEvery { signOrderInteractor(request = any()) } returns SIGNED_ORDER.right()
         coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult().right()
         every { featureToggles.isPolymarketSessionKeysEnabled } returns false
+        coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns false
         coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
             createPosition().right()
     }
@@ -240,6 +245,7 @@ internal abstract class PlacePredictionModelTestBase {
             urlOpener = urlOpener,
             dispatchers = testScope.createTestingCoroutineDispatcherProvider(),
             orderSubmitterFactory = createOrderSubmitterFactory(testScope),
+            buttonStyleFactory = createButtonStyleFactory(testScope.createTestingCoroutineDispatcherProvider()),
         ).also(models::add)
 
     protected fun createOrderSubmitterFactory(
@@ -290,8 +296,27 @@ internal abstract class PlacePredictionModelTestBase {
         dispatchers = dispatchers,
         quoteEngineFactory = createQuoteEngineFactory(dispatchers = dispatchers, router = router),
         orderSubmitterFactory = orderSubmitterFactory,
-        getUserWalletUseCase = getUserWalletUseCase,
+        buttonStyleFactory = createButtonStyleFactory(dispatchers = dispatchers),
     ).also(models::add)
+
+    private fun createButtonStyleFactory(dispatchers: CoroutineDispatcherProvider) =
+        object : PlacePredictionButtonStyle.Factory {
+            override fun create(
+                userWalletId: UserWalletId,
+                uiState: MutableStateFlow<PlacePredictionUM>,
+                scope: CoroutineScope,
+            ) = PlacePredictionButtonStyle(
+                userWalletId = userWalletId,
+                uiState = uiState,
+                scope = scope,
+                getUserWalletUseCase = getUserWalletUseCase,
+                featureToggles = featureToggles,
+                canSignPredictionOrderWithSessionKeyUseCase = CanSignPredictionOrderWithSessionKeyUseCase(
+                    router = signingRouter,
+                ),
+                dispatchers = dispatchers,
+            )
+        }
 
     protected fun createStatusModel(
         testScope: TestScope,
@@ -432,6 +457,12 @@ internal abstract class PlacePredictionModelTestBase {
         )
         val ADDRESSES: PolymarketAddresses = mockk(relaxed = true)
         val SIGNED_ORDER: PredictionSignedOrder = mockk(relaxed = true)
+        val SESSION_ROUTE = PredictionOrderSigningRoute.Session(
+            identity = PolymarketClobIdentity.Session(
+                address = "0x5e55000000000000000000000000000000000001",
+                credentials = PolymarketApiCredentials(apiKey = "session", secret = "c2VjcmV0", passphrase = "pass"),
+            ),
+        )
 
         const val ORDER_ID = "0x6b2e"
 
@@ -472,3 +503,7 @@ internal abstract class PlacePredictionModelTestBase {
         )
     }
 }
+
+internal fun PlacePredictionOrderModel.tapPlace() = onPlaceClick(confirmedWith = uiState.value.placeButtonStyle)
+
+internal fun PlacePredictionSummaryModel.tapPlace() = onPlaceClick(confirmedWith = uiState.value.placeButtonStyle)

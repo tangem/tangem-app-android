@@ -23,6 +23,7 @@ import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_logo_tangem_24
 import com.tangem.features.polymarket.impl.common.PolymarketLegalLine
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceButtonStyleUM
 import com.tangem.features.polymarket.impl.placeprediction.ui.preview.PreviewBuyOrder
 
 @Composable
@@ -52,9 +53,9 @@ internal fun PredictionPlaceButton(
     order: OrderSideUM,
     isLoading: Boolean,
     isEnabled: Boolean,
-    onClick: () -> Unit,
+    onClick: (confirmedWith: PlaceButtonStyleUM) -> Unit,
     modifier: Modifier = Modifier,
-    isHoldToConfirm: Boolean = false,
+    style: PlaceButtonStyleUM = PlaceButtonStyleUM.CARD,
     holdResetKey: Int = 0,
 ) {
     val text = resourceReference(
@@ -64,25 +65,32 @@ internal fun PredictionPlaceButton(
         },
     )
 
-    if (isHoldToConfirm) {
-        key(holdResetKey, isEnabled) {
+    when (style) {
+        PlaceButtonStyleUM.HOLD -> key(holdResetKey, isEnabled) {
             HoldToConfirmButton(
                 modifier = modifier.fillMaxWidth(),
                 text = text.resolveReference(),
                 isLoading = isLoading,
                 enabled = isEnabled,
-                onConfirm = onClick,
+                onConfirm = { onClick(PlaceButtonStyleUM.HOLD) },
             )
         }
-    } else {
-        TangemButton(
+        PlaceButtonStyleUM.CARD -> TangemButton(
             modifier = modifier.fillMaxWidth(),
             size = TangemButton.Size.X12,
             isLoading = isLoading,
             iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_logo_tangem_24),
             text = text,
             isEnabled = isEnabled,
-            onClick = onClick,
+            onClick = { onClick(PlaceButtonStyleUM.CARD) },
+        )
+        PlaceButtonStyleUM.PLAIN -> TangemButton(
+            modifier = modifier.fillMaxWidth(),
+            size = TangemButton.Size.X12,
+            isLoading = isLoading,
+            text = text,
+            isEnabled = isEnabled,
+            onClick = { onClick(PlaceButtonStyleUM.PLAIN) },
         )
     }
 }
@@ -104,7 +112,14 @@ private fun PredictionPlaceFooterPreview() {
                     isLoading = false,
                     isEnabled = true,
                     onClick = {},
-                    isHoldToConfirm = true,
+                    style = PlaceButtonStyleUM.HOLD,
+                )
+                PredictionPlaceButton(
+                    order = PreviewBuyOrder,
+                    isLoading = false,
+                    isEnabled = true,
+                    onClick = {},
+                    style = PlaceButtonStyleUM.PLAIN,
                 )
             }
         }
