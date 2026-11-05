@@ -30,6 +30,7 @@ import com.tangem.core.ui.ds2.row.TangemRowVerticalAlignment
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.res.generated.icons.Icons
@@ -87,7 +88,7 @@ fun TangemTransactionRow(
     isBalanceHidden: Boolean = false,
     onClick: (() -> Unit)? = null,
 ) {
-    val stateDescription = status.stateDescription()
+    val stateDescription = status.stateDescriptionRes()?.let { stringResourceSafe(it) }
     TangemRow(
         modifier = modifier.semantics { stateDescription?.let { this.stateDescription = it } },
         contentLead = TangemRowContentLead.Start,
