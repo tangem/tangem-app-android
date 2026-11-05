@@ -53,6 +53,7 @@ internal class PooledStakingEarnProduct @Inject constructor(
 
     override val rank: Int = 1
 
+    // Temporary plain text: becomes a Lokalise resource together with the other plain strings of this product.
     override val title: TextReference = stringReference("Pooled staking")
 
     override val provider: EarnProvider = EarnProvider(
