@@ -2,6 +2,7 @@ package com.tangem.core.ui.test
 
 object MoneyAccountTestTags {
     const val MAIN_ROW = "MONEY_ACCOUNT_MAIN_ROW"
+    const val MAIN_ROW_CACHE_ICON = "MONEY_ACCOUNT_MAIN_ROW_CACHE_ICON"
     const val DETAILS_BALANCE = "MONEY_ACCOUNT_DETAILS_BALANCE"
     const val ADD_FUNDS_BUTTON = "MONEY_ACCOUNT_ADD_FUNDS_BUTTON"
     const val SEND_BUTTON = "MONEY_ACCOUNT_SEND_BUTTON"

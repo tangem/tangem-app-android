@@ -90,13 +90,61 @@ fun BaseTestCase.refreshMainUntilMoneyAccountBalance(balance: String) {
     var rowWithBalance: SemanticsMatcher? = null
     onMoneyAccountScreen { rowWithBalance = mainRowWithTextMatcher(balance) }
     step("Refresh 'Main' until the 'Money account' row shows '$balance'") {
-        // A pull can land before the switched balance mock reaches the app, so pull until the value changes.
-        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
-            closeFinishWalletActivationSheetIfShown()
-            pullToRefreshMainScreen()
-            runCatching {
-                composeTestRule.waitUntilAtLeastOneExists(checkNotNull(rowWithBalance), BALANCE_RELOAD_TIMEOUT_MILLIS)
-            }.isSuccess
+        refreshMainUntil {
+            composeTestRule.waitUntilAtLeastOneExists(checkNotNull(rowWithBalance), BALANCE_RELOAD_TIMEOUT_MILLIS)
+        }
+    }
+}
+
+fun BaseTestCase.refreshMainUntilMoneyAccountCacheIcon() {
+    step("Refresh 'Main' until the 'Money account' row shows the cached-data icon") {
+        refreshMainUntil {
+            composeTestRule.waitUntil(timeoutMillis = BALANCE_RELOAD_TIMEOUT_MILLIS) {
+                var isShown = false
+                onMoneyAccountScreen { isShown = isMainRowCacheIconShown() }
+                isShown
+            }
+        }
+    }
+}
+
+fun BaseTestCase.refreshMainUntilMoneyAccountCacheIconHidden() {
+    step("Refresh 'Main' until the 'Money account' row hides the cached-data icon") {
+        refreshMainUntil {
+            composeTestRule.waitUntil(timeoutMillis = BALANCE_RELOAD_TIMEOUT_MILLIS) {
+                var isShown = true
+                onMoneyAccountScreen { isShown = isMainRowCacheIconShown() }
+                !isShown
+            }
+        }
+    }
+}
+
+// A pull can land before the switched mock reaches the app, so pull until the expected change shows up.
+private fun BaseTestCase.refreshMainUntil(awaitChange: () -> Unit) {
+    composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+        closeFinishWalletActivationSheetIfShown()
+        pullToRefreshMainScreen()
+        runCatching(awaitChange).isSuccess
+    }
+}
+
+fun BaseTestCase.assertMoneyAccountRowShowsCachedBalance(balance: String) {
+    step("Assert 'Money account' row shows the cached '$balance'") {
+        waitForMoneyAccountRowWithText(balance)
+    }
+    step("Assert cached-data icon is displayed on the 'Money account' row") {
+        awaitSuccess(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            onMoneyAccountScreen { mainRowCacheIcon.assertIsDisplayed() }
+        }
+    }
+}
+
+fun BaseTestCase.assertMoneyAccountActionsDisabled() {
+    step("Assert 'Add funds' and 'Send' buttons are disabled") {
+        onMoneyAccountScreen {
+            addFundsButton.assertIsNotEnabled()
+            sendButton.assertIsNotEnabled()
         }
     }
 }
