@@ -255,6 +255,7 @@ dependencyAnalysis {
                     ":features:earn:impl",
                     ":features:earn:flow:impl",
                     ":features:earn:staking:impl",
+                    ":features:earn:yield:impl",
                 )
                 // CameraX is split into runtime-wired artifacts: camera-lifecycle and camera-view back
                 // the preview/ProcessCameraProvider machinery that camera2 (runtimeOnly) drives.
