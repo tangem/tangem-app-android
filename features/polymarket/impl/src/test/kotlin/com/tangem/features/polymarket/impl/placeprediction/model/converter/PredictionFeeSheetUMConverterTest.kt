@@ -63,7 +63,7 @@ internal class PredictionFeeSheetUMConverterTest {
             slippage = SlippageUM.of(BigDecimal("2")),
             tokenSymbol = "pUSD",
             expected = createFeeSheet(
-                amounts = listOf("$11.80", "$0.20", "$0.30", "$11.30"),
+                amounts = listOf("$12.00", "$0.20", "$0.30", "$11.50"),
                 descriptionRes = R.string.prediction_fee_sheet_sell_description,
                 descriptionArgs = wrappedList("20", "99.9", "pUSD", "2%"),
             ),
@@ -86,7 +86,7 @@ internal class PredictionFeeSheetUMConverterTest {
             tokenSymbol = "pUSD",
             heading = PredictionFeeSheetUM.Heading.Total,
             expected = createFeeSheet(
-                amounts = listOf("$11.80", "$0.20", "$0.30", "$11.30"),
+                amounts = listOf("$12.00", "$0.20", "$0.30", "$11.50"),
                 descriptionRes = R.string.prediction_fee_sheet_sell_description,
                 descriptionArgs = wrappedList("20", "99.9", "pUSD", "2%"),
                 titleRes = R.string.prediction_fee_sheet_total,
@@ -106,7 +106,7 @@ internal class PredictionFeeSheetUMConverterTest {
             builder = BigDecimal("0.30"),
             total = BigDecimal("0.50"),
         ),
-        total = BigDecimal("11.30"),
+        total = BigDecimal("11.50"),
     )
 
     private fun createFeeSheet(
