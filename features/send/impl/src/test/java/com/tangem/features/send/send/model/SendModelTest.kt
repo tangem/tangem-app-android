@@ -616,6 +616,52 @@ internal class SendModelTest : SendModelTestBase() {
             model.onDestroy()
         }
 
+        @Test
+        fun `GIVEN predefined amount WHEN QR without amount scanned THEN amount kept and address replaced`() = runTest {
+            // Arrange
+            val scans = MutableSharedFlow<String>()
+            every { listenToQrScanningUseCase(SourceType.SEND) } returns scans.right()
+            every { parseQrCodeUseCase(QR_CODE, any()) } returns QrResult(address = QR_ADDRESS).right()
+            val model = createSendModel(this)
+            advanceUntilIdle()
+            model.predefinedValues = qrCode(amount = "1.0")
+
+            // Act
+            scans.emit(QR_CODE)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(model.predefinedValues).isEqualTo(
+                PredefinedValues.Content.QrCode(
+                    amount = "1.0",
+                    address = QR_ADDRESS,
+                    memo = null,
+                    source = PredefinedValues.Source.SEND_SCREEN,
+                ),
+            )
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN predefined amount WHEN QR with amount scanned THEN scanned amount wins`() = runTest {
+            // Arrange
+            val scans = MutableSharedFlow<String>()
+            every { listenToQrScanningUseCase(SourceType.SEND) } returns scans.right()
+            every { parseQrCodeUseCase(QR_CODE, any()) } returns
+                QrResult(address = QR_ADDRESS, amount = BigDecimal("2")).right()
+            val model = createSendModel(this)
+            advanceUntilIdle()
+            model.predefinedValues = qrCode(amount = "1.0")
+
+            // Act
+            scans.emit(QR_CODE)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat((model.predefinedValues as PredefinedValues.Content.QrCode).amount).isEqualTo("2")
+            model.onDestroy()
+        }
+
         private fun provideTestModels() = listOf(BigDecimal("-10"), BigDecimal("-0.5"), BigDecimal.ZERO)
     }
 
