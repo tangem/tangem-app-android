@@ -470,6 +470,7 @@
   <string name="common_retry">リトライ</string>
   <string name="common_save">保存</string>
   <string name="common_save_changes">変更内容を保存</string>
+  <string name="common_scan_card">カードをスキャン</string>
   <string name="common_search">検索</string>
   <string name="common_search_tokens">トークンを検索</string>
   <string name="common_second_no_param">秒</string>
@@ -3384,6 +3385,9 @@
   <string name="warning_kaspa_unfinished_token_transaction_message">%1$s %2$sの取引が完了しませんでした。もう一度試して完了してください。</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">未完了の取引があります</string>
   <string name="warning_last_balance_updated_time">最終更新日は%sです</string>
+  <string name="warning_link_wallet_cold_message">カードをスキャンして、ウォレットをこのデバイスに接続してください。</string>
+  <string name="warning_link_wallet_hot_message">ウォレットをこのデバイスに接続することを確認してください。</string>
+  <string name="warning_link_wallet_title">このデバイスにウォレットを接続</string>
   <string name="warning_low_signatures_message">このカードには%sの署名のみが残っています。資金をすべて引き出す必要があります。</string>
   <string name="warning_low_signatures_title">署名数が少ないです</string>
   <string name="warning_manage_tokens_legacy_derivation_message">異なるネットワーク上のトークンは、異なるアドレスを持つ場合があります。資金を送金する際には、アドレスがネットワークと一致していることを再確認してください。</string>

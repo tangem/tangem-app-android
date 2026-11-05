@@ -2,6 +2,7 @@ package com.tangem.features.mcp.impl.pair.model
 
 import arrow.core.left
 import arrow.core.right
+import com.google.common.truth.Truth.assertThat
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -9,6 +10,8 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.notifications.SystemNotificationsStateProvider
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.remote.response.ApiResponseError
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.mcp.models.McpDeviceVerification
 import com.tangem.domain.mcp.models.McpDeviceVerificationResult
 import com.tangem.domain.mcp.models.McpRequest
@@ -18,21 +21,28 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.EnableAddressesSharingUseCase
+import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioFetcher
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorController
+import com.tangem.features.mcp.impl.R
 import com.tangem.features.mcp.impl.pair.McpPairComponent
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import com.tangem.utils.coroutines.AppCoroutineScope
+import io.mockk.MockKMatcherScope
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -53,6 +63,8 @@ internal class McpPairModelTest {
     private val settingsManager: SettingsManager = mockk(relaxed = true)
     private val mcpRepository: McpRepository = mockk()
     private val enableAddressesSharingUseCase: EnableAddressesSharingUseCase = mockk(relaxed = true)
+    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase = mockk()
+    private val walletsRepository: WalletsRepository = mockk()
     private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val analytics: AnalyticsEventHandler = mockk(relaxUnitFun = true)
     private val selectorController: PortfolioSelectorController = mockk(relaxUnitFun = true)
@@ -63,6 +75,22 @@ internal class McpPairModelTest {
         every { walletId } returns WALLET_ID
         every { name } returns "Wallet"
     }
+
+    private val otherWallet: UserWallet = mockk<UserWallet.Cold> {
+        every { walletId } returns OTHER_WALLET_ID
+        every { name } returns "Other wallet"
+    }
+
+    /** A wallet the fetcher does not offer, e.g. a single-currency one. */
+    private val unofferedWallet: UserWallet = mockk<UserWallet.Cold> {
+        every { walletId } returns UNOFFERED_WALLET_ID
+        every { name } returns "Unoffered wallet"
+    }
+
+    private val selectedAccount = MutableSharedFlow<AccountId?>(
+        replay = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
 
     @BeforeEach
     fun setUp() {
@@ -75,11 +103,18 @@ internal class McpPairModelTest {
             selectorController,
             portfolioFetcher,
             portfolioFetcherFactory,
+            walletsRepository,
+            getSelectedWalletSyncUseCase,
         )
+        selectedAccount.resetReplayCache()
+        selectedAccount.tryEmit(ACCOUNT_ID)
         every { systemNotificationsStateProvider.areNotificationsEnabled() } returns true
         every { portfolioFetcherFactory.create(any(), any()) } returns portfolioFetcher
         every { portfolioFetcher.data } returns flowOf(portfolioData())
         every { selectorController.selectedAccountSync } returns ACCOUNT_ID
+        every { selectorController.selectedAccount } returns selectedAccount
+        coEvery { walletsRepository.isWalletRegistered(any()) } returns true
+        every { selectedWalletOfTheApp() } returns wallet.right()
         every { selectorController.selectedAccountWithData(any()) } returns
             flowOf(wallet to mockk<AccountStatus.CryptoPortfolio>())
         coEvery { mcpRepository.getDeviceVerification(USER_CODE) } returns verification().right()
@@ -230,6 +265,7 @@ internal class McpPairModelTest {
                 val model = createModel(testScope = this)
                 advanceUntilIdle()
                 model.agentInfo().connectButton.onClick()
+                advanceUntilIdle()
 
                 // Act
                 model.onPushPermissionResult()
@@ -251,6 +287,7 @@ internal class McpPairModelTest {
                 val model = createModel(testScope = this)
                 advanceUntilIdle()
                 model.agentInfo().connectButton.onClick()
+                advanceUntilIdle()
                 every { systemNotificationsStateProvider.areNotificationsEnabled() } returns true
 
                 // Act
@@ -264,6 +301,116 @@ internal class McpPairModelTest {
                 verify(exactly = 1) { analytics.send(McpAuthorizationAnalyticsEvent.AgentConnected(verification())) }
                 model.onDestroy()
             }
+    }
+
+    @Nested
+    inner class UnregisteredWallet {
+
+        @Test
+        fun `GIVEN wallet not registered WHEN connect clicked THEN alert is shown and approval is not requested`() =
+            runTest {
+                // Arrange
+                coEvery { walletsRepository.isWalletRegistered(WALLET_ID) } returns false
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+
+                // Act
+                model.agentInfo().connectButton.onClick()
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { messageSender.send(needsSyncAlert()) }
+                coVerify(exactly = 0) { mcpRepository.approveDeviceVerification(any(), any()) }
+                verify(exactly = 0) { analytics.send(ofType<McpAuthorizationAnalyticsEvent.AgentConnected>()) }
+                assertThat(model.agentInfo().connectButton.isLoading).isFalse()
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN wallet not registered WHEN picked in selector THEN alert is shown and the selector stays open`() =
+            runTest {
+                // Arrange
+                coEvery { walletsRepository.isWalletRegistered(OTHER_WALLET_ID) } returns false
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+                val stacks = trackStacks(model)
+
+                // Act
+                selectedAccount.tryEmit(OTHER_ACCOUNT_ID)
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { messageSender.send(needsSyncAlert()) }
+                assertThat(stacks).isEmpty()
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN registered wallet WHEN the selected one is picked again THEN the selector is closed`() = runTest {
+            // Arrange
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+            val stacks = trackStacks(model)
+
+            // Act
+            selectedAccount.tryEmit(ACCOUNT_ID)
+            advanceUntilIdle()
+
+            // Assert
+            assertThat(stacks).containsExactly(listOf(McpPairRoutes.AgentInfo))
+            verify(exactly = 0) { messageSender.send(needsSyncAlert()) }
+            model.onDestroy()
+        }
+    }
+
+    @Nested
+    inner class InitialWallet {
+
+        @Test
+        fun `GIVEN the app wallet is offered WHEN model created THEN it is preselected`() = runTest {
+            // Arrange
+            every { selectorController.selectedAccountSync } returns null
+            every { selectedWalletOfTheApp() } returns otherWallet.right()
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { selectorController.selectAccount(OTHER_ACCOUNT_ID) }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN the app wallet is not offered WHEN model created THEN the first offered one is preselected`() =
+            runTest {
+                // Arrange
+                every { selectorController.selectedAccountSync } returns null
+                every { selectedWalletOfTheApp() } returns unofferedWallet.right()
+
+                // Act
+                val model = createModel(testScope = this)
+                advanceUntilIdle()
+
+                // Assert
+                verify(exactly = 1) { selectorController.selectAccount(ACCOUNT_ID) }
+                model.onDestroy()
+            }
+
+        @Test
+        fun `GIVEN no wallet is offered WHEN model created THEN the sheet is closed`() = runTest {
+            // Arrange
+            every { portfolioFetcher.data } returns flowOf(portfolioData(balances = emptyMap()))
+
+            // Act
+            val model = createModel(testScope = this)
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) { router.pop(any()) }
+            assertThat(model.uiState.value).isEqualTo(McpPairUM.Loading)
+            model.onDestroy()
+        }
     }
 
     @Nested
@@ -339,6 +486,8 @@ internal class McpPairModelTest {
         settingsManager = settingsManager,
         mcpRepository = mcpRepository,
         enableAddressesSharingUseCase = enableAddressesSharingUseCase,
+        getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+        walletsRepository = walletsRepository,
         messageSender = messageSender,
         analytics = analytics,
         selectorController = selectorController,
@@ -346,10 +495,28 @@ internal class McpPairModelTest {
         paramsContainer = MutableParamsContainer(McpPairComponent.Params(McpRequest.Pair(userCode = USER_CODE))),
     )
 
-    private fun portfolioData(): PortfolioFetcher.Data = mockk {
-        every { balances } returns mapOf(
-            WALLET_ID to mockk { every { accountsBalance.mainAccount.accountId } returns ACCOUNT_ID },
-        )
+    private fun portfolioData(
+        balances: Map<UserWalletId, AccountId> = mapOf(WALLET_ID to ACCOUNT_ID, OTHER_WALLET_ID to OTHER_ACCOUNT_ID),
+    ): PortfolioFetcher.Data = mockk {
+        every { this@mockk.balances } returns balances.mapValues { (_, accountId) ->
+            mockk { every { accountsBalance.mainAccount.accountId } returns accountId }
+        }
+    }
+
+    /** [GetSelectedWalletSyncUseCase.invoke] is deprecated, but the pairing deep link carries no wallet. */
+    @Suppress("DEPRECATION")
+    private fun MockKMatcherScope.selectedWalletOfTheApp() = getSelectedWalletSyncUseCase()
+
+    private fun MockKMatcherScope.needsSyncAlert() = match<DialogMessage> { dialog ->
+        (dialog.title as? TextReference.Res)?.id == R.string.mcp_connection_request_wallet_needs_sync_title
+    }
+
+    private fun trackStacks(model: McpPairModel): List<List<McpPairRoutes>> {
+        val stacks = mutableListOf<List<McpPairRoutes>>()
+        model.stackNavigation.subscribe { event ->
+            stacks += event.transformer(listOf(McpPairRoutes.AgentInfo, McpPairRoutes.PortfolioSelector))
+        }
+        return stacks
     }
 
     private fun verification() = McpDeviceVerification(
@@ -371,6 +538,9 @@ internal class McpPairModelTest {
         const val AGENT_ORIGIN = "claude.ai"
         const val AGENT_NAME = "Claude"
         val WALLET_ID = UserWalletId("aabbcc")
+        val OTHER_WALLET_ID = UserWalletId("ddeeff")
+        val UNOFFERED_WALLET_ID = UserWalletId("001122")
         val ACCOUNT_ID = AccountId.forMainCryptoPortfolio(WALLET_ID)
+        val OTHER_ACCOUNT_ID = AccountId.forMainCryptoPortfolio(OTHER_WALLET_ID)
     }
 }
