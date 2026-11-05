@@ -63,8 +63,18 @@ internal class EvmGaslessFeeResolverNativeFeeTest {
     private val wrapped = wrappedYieldSendTransaction()
     private val bare = bareYieldSendTransaction()
 
+    private val plain = uncompiledWithCallData(callData = null)
+
     private val bareFee = TransactionFee.Single(normal = ethereumFee(gasLimit = 100_000L, value = "0.1"))
     private val wrappedFee = TransactionFee.Single(normal = ethereumFee(gasLimit = 160_000L, value = "0.2"))
+    private val plainFee = TransactionFee.Single(normal = ethereumFee(gasLimit = 65_000L, value = "0.065"))
+
+    private val bareFeeWithReserve = TransactionFee.Single(
+        normal = ethereumFee(gasLimit = 140_000L, value = "0.140000000000000000"),
+    )
+    private val wrappedFeeWithReserve = TransactionFee.Single(
+        normal = ethereumFee(gasLimit = 224_000L, value = "0.280000000000000000"),
+    )
 
     private val resolver = EvmGaslessFeeResolver(
         walletManagersFacade = walletManagersFacade,
@@ -80,6 +90,7 @@ internal class EvmGaslessFeeResolverNativeFeeTest {
         } returns walletManager
         coEvery { walletManager.getFee(bare) } returns Result.Success(bareFee)
         coEvery { walletManager.getFee(wrapped) } returns Result.Success(wrappedFee)
+        coEvery { walletManager.getFee(plain) } returns Result.Success(plainFee)
         coEvery { walletManager.getGasLimit(any(), any(), any()) } returns Result.Success(BigInteger("60000"))
         coEvery { gaslessTransactionRepository.getTokenFeeReceiverAddress() } returns "0xFeeReceiver"
         every { gaslessTransactionRepository.getBaseGasForTransaction() } returns BigInteger("21000")
@@ -89,7 +100,7 @@ internal class EvmGaslessFeeResolverNativeFeeTest {
     fun `GIVEN native coin covers fee WHEN resolveWithAutoFeeToken THEN fee is estimated on the original transaction`() =
         runTest {
             // Arrange
-            val expected = wrappedFee
+            val expected = wrappedFeeWithReserve
 
             // Act
             val actual = resolver.resolveWithAutoFeeToken(
@@ -125,14 +136,14 @@ internal class EvmGaslessFeeResolverNativeFeeTest {
 
             // Assert
             val fee = actual.getOrNull()
-            assertThat(fee?.nativeFee).isEqualTo(wrappedFee)
+            assertThat(fee?.nativeFee).isEqualTo(wrappedFeeWithReserve)
             assertThat(fee?.callGasLimits).isEqualTo(listOf(expectedMainGasLimit))
         }
 
     @Test
     fun `GIVEN same transaction for both WHEN resolveWithAutoFeeToken THEN fee is estimated once`() = runTest {
         // Arrange
-        val expected = bareFee.right()
+        val expected = bareFeeWithReserve.right()
 
         // Act
         val actual = resolver.resolveWithAutoFeeToken(
@@ -162,8 +173,27 @@ internal class EvmGaslessFeeResolverNativeFeeTest {
         )
 
         // Assert
-        assertThat(actual.getOrNull()?.nativeFee).isEqualTo(bareFee)
+        assertThat(actual.getOrNull()?.nativeFee).isEqualTo(bareFeeWithReserve)
         coVerify(exactly = 1) { walletManager.getFee(bare) }
+    }
+
+    @Test
+    fun `GIVEN not a yield send WHEN resolveWithAutoFeeToken THEN native fee is the bare estimate`() = runTest {
+        // Arrange
+        val expected = plainFee.right()
+
+        // Act
+        val actual = resolver.resolveWithAutoFeeToken(
+            userWallet = userWallet,
+            network = coin.network,
+            transactionData = plain,
+            nativeCurrencyStatus = nativeStatus,
+            accountStatusList = accountStatusList,
+            nativeTransactionData = plain,
+        )
+
+        // Assert
+        assertThat(actual.map { it.nativeFee }).isEqualTo(expected)
     }
 
     private fun ethereumFee(gasLimit: Long, value: String): Fee.Ethereum.EIP1559 {
