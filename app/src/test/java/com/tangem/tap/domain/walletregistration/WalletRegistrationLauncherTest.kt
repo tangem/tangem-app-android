@@ -425,7 +425,7 @@ internal class WalletRegistrationLauncherTest {
         stubColdCard()
         val prepared = mockk<PreparedWalletRegistration>()
         coEvery { walletRegistrar.prepare(any(), any(), any(), any()) } returns prepared.right()
-        coEvery { walletRegistrar.submit(prepared) } returns Unit.right()
+        coEvery { walletRegistrar.submit(prepared) } returns WalletRegistrationResult.Registered.right()
 
         // Act
         launcher.registerColdInSession(mockk<CardSession>(), mockk<Card>(relaxed = true), mockk<WalletNonce>())
@@ -435,6 +435,23 @@ internal class WalletRegistrationLauncherTest {
         verify(exactly = 1) { analyticsEventHandler.send(BackendAuthAnalyticsEvent.WalletLinked()) }
         verify(exactly = 0) { analyticsEventHandler.send(any<WalletRegistrationFailed>()) }
     }
+
+    @Test
+    fun `GIVEN server already knows the wallet WHEN registerColdInSession THEN nothing is reported to analytics`() =
+        runTest {
+            // Arrange
+            stubColdCard()
+            val prepared = mockk<PreparedWalletRegistration>()
+            coEvery { walletRegistrar.prepare(any(), any(), any(), any()) } returns prepared.right()
+            coEvery { walletRegistrar.submit(prepared) } returns WalletRegistrationResult.AlreadyRegistered.right()
+
+            // Act
+            launcher.registerColdInSession(mockk<CardSession>(), mockk<Card>(relaxed = true), mockk<WalletNonce>())
+
+            // Assert
+            coVerify(exactly = 1) { walletRegistrar.submit(prepared) }
+            verify(exactly = 0) { analyticsEventHandler.send(any()) }
+        }
 
     @Test
     fun `GIVEN wallet already registered WHEN registerColdInSession THEN nothing is reported to analytics`() = runTest {
