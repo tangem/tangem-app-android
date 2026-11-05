@@ -58,14 +58,14 @@ internal class ChooseTokenListItemConverter(
 
     private val isSearchingState: Boolean get() = config.searchQuery.isSearchingState
 
-    private val rowConverter by lazy(LazyThreadSafetyMode.NONE) {
-        ChooseTokenRowConverter(appCurrency = appCurrency, onTokenClick = onTokenClick)
-    }
-
     private val onTokenClick: (account: AccountStatus, currencyStatus: CryptoCurrencyStatus) -> Unit =
         { account, currencyStatus ->
             config.clickIntents.onTokenItemClick(account, currencyStatus)
         }
+
+    private val rowConverter by lazy(LazyThreadSafetyMode.NONE) {
+        ChooseTokenRowConverter(appCurrency = appCurrency, onTokenClick = onTokenClick)
+    }
 
     private val onAccountItemClick: (Account, isExpanded: Boolean) -> Unit = { clickedAccount, isExpanded ->
         if (isExpanded) {
