@@ -485,7 +485,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             }
 
             result.onLeft { error ->
-                if (error !is WalletLinkError.Cancelled) {
+                if (error !is WalletLinkError.Cancelled && error !is WalletLinkError.WrongCard) {
                     uiMessageSender.send(
                         DialogMessage(
                             title = resourceReference(CoreResR.string.common_something_went_wrong),

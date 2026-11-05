@@ -46,11 +46,18 @@ internal data class BackendAuthStatusUM(
     /** A full-width action button (mutates auth state, then refreshes the panel). */
     data class Action(val label: String, val onClick: () -> Unit)
 
-    /** A compact icon action shown inline at the end of a row (like the copy icon). */
+    /**
+     * A compact icon action shown inline at the end of a row (like the copy icon).
+     *
+     * @property isClosingTester the action shows its result in the main activity, so the tester menu closes on click
+     * @property disabledReason  non-null makes the action inactive; a click shows this text instead
+     */
     data class IconAction(
         val label: String,
         @DrawableRes val iconRes: Int,
         val isProgressShown: Boolean = true,
+        val isClosingTester: Boolean = false,
+        val disabledReason: String? = null,
         val onClick: () -> Unit,
     )
 }

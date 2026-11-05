@@ -30,6 +30,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class WalletLinkModelTest {
@@ -96,10 +97,13 @@ internal class WalletLinkModelTest {
         pendingLink.complete(Unit)
     }
 
-    @Test
-    fun `GIVEN user cancels WHEN link fails THEN sheet stays open without progress and error`() = runTest {
+    @ParameterizedTest
+    @MethodSource("provideSilentErrors")
+    fun `GIVEN user cancels or scans another card WHEN link fails THEN sheet stays open without progress and error`(
+        error: WalletLinkError,
+    ) = runTest {
         // Arrange
-        coEvery { linkWalletToDeviceUseCase(userWallet) } returns WalletLinkError.Cancelled.left()
+        coEvery { linkWalletToDeviceUseCase(userWallet) } returns error.left()
         requestLink(userWallet)
 
         // Act
@@ -129,6 +133,8 @@ internal class WalletLinkModelTest {
     }
 
     private fun provideTestModels() = listOf(WalletLinkError.Failed(reason = "api"), WalletLinkError.NotSupported)
+
+    private fun provideSilentErrors() = listOf(WalletLinkError.Cancelled, WalletLinkError.WrongCard)
 
     @Test
     fun `GIVEN link in progress WHEN sheet dismissed THEN sheet closes with Dismissed`() = runTest {
