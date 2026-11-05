@@ -954,17 +954,23 @@ internal data class TangemExpandableRowStory(
 @Suppress("BooleanPropertyNaming")
 internal data class TangemAvatarStory(
     val variant: Variant,
+    val accountVariant: AccountVariant,
     val fillColor: TangemAvatar.FillColor,
     val appearance: TangemAvatar.Appearance,
     val status: TangemAvatar.Status,
+    val transactionType: TransactionType,
+    val address: AddressSample,
     val hasAccountIndicator: Boolean,
     val hasLetter: Boolean,
     val isRemoteAsset: Boolean,
     val isRoundedSquare: Boolean,
     val onVariantChange: (Variant) -> Unit,
+    val onAccountVariantChange: (AccountVariant) -> Unit,
     val onFillColorChange: (TangemAvatar.FillColor) -> Unit,
     val onAppearanceChange: (TangemAvatar.Appearance) -> Unit,
     val onStatusChange: (TangemAvatar.Status) -> Unit,
+    val onTransactionTypeChange: (TransactionType) -> Unit,
+    val onAddressChange: (AddressSample) -> Unit,
     val onAccountIndicatorToggle: () -> Unit,
     val onLetterToggle: () -> Unit,
     val onRemoteAssetToggle: () -> Unit,
@@ -973,6 +979,15 @@ internal data class TangemAvatarStory(
 
     /** Which [com.tangem.core.ui.ds2.avatar.TangemAvatar.UiState] subtype is rendered. */
     enum class Variant { Account, User, Address, Icon, Transaction, Asset, Shimmer }
+
+    /** Figma `Avatar Module [Account]` variants. */
+    enum class AccountVariant { Crypto, Letter, Prediction, Gacha, Visa, Money }
+
+    /** Figma `Avatar Module [Transaction]` variants. */
+    enum class TransactionType { Send, Receive, Swap, TopUp, Staking, Delivery, Pack, Fee }
+
+    /** Seeds for the Address identicon. */
+    enum class AddressSample { First, Second, Third }
 }
 
 internal data class TangemMenuStory(

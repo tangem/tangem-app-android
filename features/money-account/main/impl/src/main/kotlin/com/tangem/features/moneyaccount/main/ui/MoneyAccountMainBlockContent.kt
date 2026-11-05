@@ -24,8 +24,6 @@ import com.tangem.core.ui.ds2.avatar.TangemAvatar
 import com.tangem.core.ui.ds2.row.*
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.generated.assets.il_account_safe
-import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.MoneyAccountTestTags
 import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
@@ -141,10 +139,7 @@ private fun MoneyAccountUnavailable(modifier: Modifier = Modifier) {
 @Composable
 private fun MoneyAccountIcon() {
     TangemAvatar(
-        state = TangemAvatar.UiState.Account(
-            imageVector = Icons.il_account_safe,
-            color = TangemAvatar.FillColor.Money,
-        ),
+        state = TangemAvatar.UiState.Account(kind = TangemAvatar.AccountKind.Money),
         size = TangemAvatar.Size.X40,
     )
 }

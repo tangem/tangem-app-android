@@ -20,19 +20,28 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds2.avatar.TangemAvatar
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.generated.assets.il_account_airplane
 import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_down_20
+import com.tangem.core.ui.res.generated.icons.ic_arrow_swap_horizontal_20
 import com.tangem.core.ui.res.generated.icons.ic_arrow_up_20
+import com.tangem.core.ui.res.generated.icons.ic_box_20
+import com.tangem.core.ui.res.generated.icons.ic_card_20
+import com.tangem.core.ui.res.generated.icons.ic_cards_star_20
 import com.tangem.core.ui.res.generated.icons.ic_grid_plus_20
+import com.tangem.core.ui.res.generated.icons.ic_percent_20
+import com.tangem.core.ui.res.generated.icons.ic_stack_20
 import com.tangem.feature.tester.presentation.storybook.entity.TangemAvatarStory
 
-private const val SAMPLE_ADDRESS = "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984"
 private const val SAMPLE_INITIAL = 'A'
 private const val SAMPLE_ASSET_URL = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/bitcoin.png"
-private const val FILL_COLORS_PER_ROW = 4
+private const val CHIPS_PER_ROW = 4
+private const val ACCOUNT_VARIANTS_PER_ROW = 3
 
 @Composable
 internal fun TangemAvatarStory(state: TangemAvatarStory, modifier: Modifier = Modifier) {
@@ -48,24 +57,13 @@ internal fun TangemAvatarStory(state: TangemAvatarStory, modifier: Modifier = Mo
             modifier = Modifier.verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            VariantSelector(selected = state.variant, onSelect = state.onVariantChange)
-            when (state.variant) {
-                TangemAvatarStory.Variant.Icon -> AppearanceSelector(
-                    selected = state.appearance,
-                    onSelect = state.onAppearanceChange,
-                )
-                TangemAvatarStory.Variant.Transaction -> StatusSelector(
-                    selected = state.status,
-                    onSelect = state.onStatusChange,
-                )
-                TangemAvatarStory.Variant.Account,
-                TangemAvatarStory.Variant.User,
-                -> FillColorSelector(selected = state.fillColor, onSelect = state.onFillColorChange)
-                TangemAvatarStory.Variant.Address,
-                TangemAvatarStory.Variant.Asset,
-                TangemAvatarStory.Variant.Shimmer,
-                -> Unit
-            }
+            Selector(
+                label = "Variant",
+                items = TangemAvatarStory.Variant.entries,
+                selected = state.variant,
+                onSelect = state.onVariantChange,
+            )
+            VariantControls(state = state)
             Toggles(state = state)
         }
     }
@@ -89,35 +87,80 @@ private fun ComponentPreview(state: TangemAvatarStory) {
     }
 }
 
-private fun TangemAvatarStory.toUiState(): TangemAvatar.UiState = when (variant) {
-    TangemAvatarStory.Variant.Account -> if (hasLetter) {
-        TangemAvatar.UiState.Account(
-            letter = SAMPLE_INITIAL,
-            color = fillColor,
-            hasIndicator = hasAccountIndicator,
-            shape = shape(),
+@Composable
+private fun VariantControls(state: TangemAvatarStory) {
+    when (state.variant) {
+        TangemAvatarStory.Variant.Account -> {
+            Selector(
+                label = "Account variant",
+                items = TangemAvatarStory.AccountVariant.entries,
+                selected = state.accountVariant,
+                onSelect = state.onAccountVariantChange,
+                perRow = ACCOUNT_VARIANTS_PER_ROW,
+            )
+            if (state.accountVariant.hasFillColor) FillColorSelector(state)
+        }
+        TangemAvatarStory.Variant.User -> FillColorSelector(state)
+        TangemAvatarStory.Variant.Address -> Selector(
+            label = "Address",
+            items = TangemAvatarStory.AddressSample.entries,
+            selected = state.address,
+            onSelect = state.onAddressChange,
         )
-    } else {
-        TangemAvatar.UiState.Account(
-            iconRes = R.drawable.ic_airplane_mode_24,
-            color = fillColor,
-            hasIndicator = hasAccountIndicator,
-            shape = shape(),
+        TangemAvatarStory.Variant.Icon -> Selector(
+            label = "Appearance",
+            items = TangemAvatar.Appearance.entries,
+            selected = state.appearance,
+            onSelect = state.onAppearanceChange,
         )
+        TangemAvatarStory.Variant.Transaction -> {
+            Selector(
+                label = "Transaction type",
+                items = TangemAvatarStory.TransactionType.entries,
+                selected = state.transactionType,
+                onSelect = state.onTransactionTypeChange,
+            )
+            Selector(
+                label = "Status",
+                items = TangemAvatar.Status.entries,
+                selected = state.status,
+                onSelect = state.onStatusChange,
+            )
+        }
+        TangemAvatarStory.Variant.Asset,
+        TangemAvatarStory.Variant.Shimmer,
+        -> Unit
     }
+}
+
+@Composable
+private fun FillColorSelector(state: TangemAvatarStory) {
+    Selector(
+        label = "Fill color",
+        items = TangemAvatar.FillColor.entries,
+        selected = state.fillColor,
+        onSelect = state.onFillColorChange,
+    )
+}
+
+private val TangemAvatarStory.AccountVariant.hasFillColor: Boolean
+    get() = this == TangemAvatarStory.AccountVariant.Crypto || this == TangemAvatarStory.AccountVariant.Letter
+
+private fun TangemAvatarStory.toUiState(): TangemAvatar.UiState = when (variant) {
+    TangemAvatarStory.Variant.Account -> toAccountUiState()
     TangemAvatarStory.Variant.User -> TangemAvatar.UiState.User(
         initial = SAMPLE_INITIAL.takeIf { hasLetter },
         color = fillColor,
         shape = shape(),
     )
-    TangemAvatarStory.Variant.Address -> TangemAvatar.UiState.Address(address = SAMPLE_ADDRESS, shape = shape())
+    TangemAvatarStory.Variant.Address -> TangemAvatar.UiState.Address(address = address.value, shape = shape())
     TangemAvatarStory.Variant.Icon -> TangemAvatar.UiState.Icon(
         imageVector = Icons.ic_grid_plus_20,
         appearance = appearance,
         shape = shape(),
     )
     TangemAvatarStory.Variant.Transaction -> TangemAvatar.UiState.Transaction(
-        imageVector = Icons.ic_arrow_up_20,
+        imageVector = transactionType.icon,
         status = status,
         shape = shape(),
     )
@@ -129,50 +172,64 @@ private fun TangemAvatarStory.toUiState(): TangemAvatar.UiState = when (variant)
     TangemAvatarStory.Variant.Shimmer -> TangemAvatar.UiState.Shimmer(shape = shape())
 }
 
+private fun TangemAvatarStory.toAccountUiState(): TangemAvatar.UiState.Account {
+    val shape = shape()
+    return when (accountVariant) {
+        TangemAvatarStory.AccountVariant.Crypto -> TangemAvatar.UiState.Account(
+            imageVector = Icons.il_account_airplane,
+            color = fillColor,
+            hasIndicator = hasAccountIndicator,
+            shape = shape,
+        )
+        TangemAvatarStory.AccountVariant.Letter -> TangemAvatar.UiState.Account(
+            letter = SAMPLE_INITIAL,
+            color = fillColor,
+            hasIndicator = hasAccountIndicator,
+            shape = shape,
+        )
+        TangemAvatarStory.AccountVariant.Prediction -> accountKind(TangemAvatar.AccountKind.Prediction, shape)
+        TangemAvatarStory.AccountVariant.Gacha -> accountKind(TangemAvatar.AccountKind.Gacha, shape)
+        TangemAvatarStory.AccountVariant.Visa -> accountKind(TangemAvatar.AccountKind.Visa, shape)
+        TangemAvatarStory.AccountVariant.Money -> accountKind(TangemAvatar.AccountKind.Money, shape)
+    }
+}
+
+private fun TangemAvatarStory.accountKind(kind: TangemAvatar.AccountKind, shape: TangemAvatar.Shape) =
+    TangemAvatar.UiState.Account(kind = kind, hasIndicator = hasAccountIndicator, shape = shape)
+
+private val TangemAvatarStory.TransactionType.icon: ImageVector
+    get() = when (this) {
+        TangemAvatarStory.TransactionType.Send -> Icons.ic_arrow_up_20
+        TangemAvatarStory.TransactionType.Receive -> Icons.ic_arrow_down_20
+        TangemAvatarStory.TransactionType.Swap -> Icons.ic_arrow_swap_horizontal_20
+        TangemAvatarStory.TransactionType.TopUp -> Icons.ic_card_20
+        TangemAvatarStory.TransactionType.Staking -> Icons.ic_stack_20
+        TangemAvatarStory.TransactionType.Delivery -> Icons.ic_box_20
+        TangemAvatarStory.TransactionType.Pack -> Icons.ic_cards_star_20
+        TangemAvatarStory.TransactionType.Fee -> Icons.ic_percent_20
+    }
+
+private val TangemAvatarStory.AddressSample.value: String
+    get() = when (this) {
+        TangemAvatarStory.AddressSample.First -> "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984"
+        TangemAvatarStory.AddressSample.Second -> "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+        TangemAvatarStory.AddressSample.Third -> "0x95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5"
+    }
+
 private fun TangemAvatarStory.shape(): TangemAvatar.Shape =
     if (isRoundedSquare) TangemAvatar.Shape.RoundedSquare else TangemAvatar.Shape.Circle
 
 @Composable
-private fun VariantSelector(selected: TangemAvatarStory.Variant, onSelect: (TangemAvatarStory.Variant) -> Unit) {
-    Section(label = "Variant") {
-        ChipGrid(
-            items = TangemAvatarStory.Variant.entries,
-            label = { it.name },
-            isSelected = { it == selected },
-            onSelect = onSelect,
-        )
-    }
-}
-
-@Composable
-private fun AppearanceSelector(selected: TangemAvatar.Appearance, onSelect: (TangemAvatar.Appearance) -> Unit) {
-    Section(label = "Appearance") {
-        ChipGrid(
-            items = TangemAvatar.Appearance.entries,
-            label = { it.name },
-            isSelected = { it == selected },
-            onSelect = onSelect,
-        )
-    }
-}
-
-@Composable
-private fun StatusSelector(selected: TangemAvatar.Status, onSelect: (TangemAvatar.Status) -> Unit) {
-    Section(label = "Status") {
-        ChipGrid(
-            items = TangemAvatar.Status.entries,
-            label = { it.name },
-            isSelected = { it == selected },
-            onSelect = onSelect,
-        )
-    }
-}
-
-@Composable
-private fun FillColorSelector(selected: TangemAvatar.FillColor, onSelect: (TangemAvatar.FillColor) -> Unit) {
-    Section(label = "Fill color") {
+private fun <T : Enum<T>> Selector(
+    label: String,
+    items: List<T>,
+    selected: T,
+    onSelect: (T) -> Unit,
+    perRow: Int = CHIPS_PER_ROW,
+) {
+    Section(label = label) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            TangemAvatar.FillColor.entries.chunked(FILL_COLORS_PER_ROW).forEach { row ->
+            items.chunked(perRow).forEach { row ->
                 ChipGrid(
                     items = row,
                     label = { it.name },
@@ -193,20 +250,33 @@ private fun Toggles(state: TangemAvatarStory) {
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            ToggleRow(
-                label = "accountIndicator",
-                checked = state.hasAccountIndicator,
-                onToggle = state.onAccountIndicatorToggle,
-            )
-            ToggleRow(label = "letter", checked = state.hasLetter, onToggle = state.onLetterToggle)
-            ToggleRow(label = "remoteAsset", checked = state.isRemoteAsset, onToggle = state.onRemoteAssetToggle)
-            if (state.variant != TangemAvatarStory.Variant.Asset || !state.isRemoteAsset) {
-                ToggleRow(
-                    label = "roundedSquare",
-                    checked = state.isRoundedSquare,
-                    onToggle = state.onRoundedSquareToggle,
+            when (state.variant) {
+                TangemAvatarStory.Variant.Account -> ToggleRow(
+                    label = "accountIndicator",
+                    checked = state.hasAccountIndicator,
+                    onToggle = state.onAccountIndicatorToggle,
                 )
+                TangemAvatarStory.Variant.User -> ToggleRow(
+                    label = "letter",
+                    checked = state.hasLetter,
+                    onToggle = state.onLetterToggle,
+                )
+                TangemAvatarStory.Variant.Asset -> ToggleRow(
+                    label = "remoteAsset",
+                    checked = state.isRemoteAsset,
+                    onToggle = state.onRemoteAssetToggle,
+                )
+                TangemAvatarStory.Variant.Address,
+                TangemAvatarStory.Variant.Icon,
+                TangemAvatarStory.Variant.Transaction,
+                TangemAvatarStory.Variant.Shimmer,
+                -> Unit
             }
+            ToggleRow(
+                label = "roundedSquare",
+                checked = state.isRoundedSquare,
+                onToggle = state.onRoundedSquareToggle,
+            )
         }
     }
 }
