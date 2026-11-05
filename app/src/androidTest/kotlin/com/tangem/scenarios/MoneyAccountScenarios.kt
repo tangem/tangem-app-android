@@ -1,5 +1,6 @@
 package com.tangem.scenarios
 
+import androidx.compose.ui.test.ComposeTimeoutException
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import com.tangem.common.BaseTestCase
@@ -115,6 +116,37 @@ fun BaseTestCase.refreshMainUntilCustomerSummaryRequested() {
                 }
             }.isSuccess
         }
+    }
+}
+
+fun BaseTestCase.refreshMainUntilMoneyAccountRowHidden() {
+    step("Refresh 'Main' until the 'Money account' row is hidden") {
+        // A pull can land before the switched mock reaches the app, so pull until the row is gone.
+        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            closeFinishWalletActivationSheetIfShown()
+            pullToRefreshMainScreen()
+            runCatching {
+                composeTestRule.waitUntil(timeoutMillis = BALANCE_RELOAD_TIMEOUT_MILLIS) {
+                    var isShown = true
+                    onMoneyAccountScreen { isShown = isMainRowShown() }
+                    !isShown
+                }
+            }.isSuccess
+        }
+    }
+}
+
+// Polls the whole window: a cached status or a late fetch can bring the row back after Main has settled.
+fun BaseTestCase.assertMoneyAccountRowNeverShown(durationMillis: Long = BALANCE_RELOAD_TIMEOUT_MILLIS) {
+    try {
+        composeTestRule.waitUntil(timeoutMillis = durationMillis) {
+            var isShown = false
+            onMoneyAccountScreen { isShown = isMainRowShown() }
+            assertFalse("'Money account' row must not be displayed", isShown)
+            false
+        }
+    } catch (_: ComposeTimeoutException) {
+        // The row stayed hidden for the whole window.
     }
 }
 
