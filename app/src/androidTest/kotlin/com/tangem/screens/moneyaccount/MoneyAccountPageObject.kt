@@ -45,6 +45,10 @@ class MoneyAccountPageObject(private val semanticsProvider: SemanticsNodeInterac
         .fetchSemanticsNodes(atLeastOneRootRequired = false)
         .isNotEmpty()
 
+    fun isMainRowShown(): Boolean = semanticsProvider.onAllNodes(withTestTag(MoneyAccountTestTags.MAIN_ROW))
+        .fetchSemanticsNodes(atLeastOneRootRequired = false)
+        .isNotEmpty()
+
     val addFundsButton: KNode = child {
         hasClickAction()
         hasAnyAncestor(withTestTag(MoneyAccountTestTags.ADD_FUNDS_BUTTON))
