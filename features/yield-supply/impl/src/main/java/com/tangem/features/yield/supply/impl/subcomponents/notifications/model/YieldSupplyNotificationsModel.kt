@@ -1,6 +1,7 @@
 package com.tangem.features.yield.supply.impl.subcomponents.notifications.model
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.ui.extensions.networkIconResId
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addExceedsBalanceNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeUnreachableNotification
@@ -14,6 +15,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
+import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsComponent
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsUpdateListener
@@ -79,6 +81,12 @@ internal class YieldSupplyNotificationsModel @Inject constructor(
                         onReload = params.callback::onFeeReload,
                     )
 
+                    // An empty fee token already gets the banner from the balance check above
+                    val isFeeCurrencyShortShown = any { it is NotificationUM.Error.TokenExceedsBalance }
+                    if (data.feeError is GetFeeError.GaslessError.NotEnoughFunds && !isFeeCurrencyShortShown) {
+                        add(feeCurrencyCannotCoverNotification(cryptoCurrencyStatus, feeCryptoCurrencyStatus))
+                    }
+
                     addHighFeeNotificationIfNoOther(
                         shouldShowHighFeeNotification = data.shouldShowHighFeeNotification,
                     )
@@ -95,6 +103,22 @@ internal class YieldSupplyNotificationsModel @Inject constructor(
                     cannotCoverFee = notifications.any { it is NotificationUM.Error.TokenExceedsBalance },
                 )
             }.launchIn(modelScope)
+    }
+
+    /** A picked fee token short of the fee gives no amount to weigh, so the refusal itself tells it can't cover. */
+    private fun feeCurrencyCannotCoverNotification(
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        feeCryptoCurrencyStatus: CryptoCurrencyStatus,
+    ): NotificationUM.Error.TokenExceedsBalance {
+        val feeCurrency = feeCryptoCurrencyStatus.currency
+        return NotificationUM.Error.TokenExceedsBalance(
+            networkIconId = feeCurrency.networkIconResId,
+            currencyName = cryptoCurrencyStatus.currency.name,
+            feeName = feeCurrency.name,
+            feeSymbol = feeCurrency.symbol,
+            networkName = feeCurrency.network.name,
+            onClick = { openTokenDetails(feeCurrency) },
+        )
     }
 
     private fun sendAnalytics(notifications: List<NotificationUM>, cryptoCurrencyStatus: CryptoCurrencyStatus) {

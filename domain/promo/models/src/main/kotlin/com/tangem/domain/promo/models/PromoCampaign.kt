@@ -36,6 +36,8 @@ data class PromoCampaignContent(
     val imageUrl: String,
     val tncLink: PromoLink,
     val actionButtonName: String,
+    val payoutButtonName: String?,
+    val payoutAccountTitle: String?,
 )
 
 data class PromoLink(

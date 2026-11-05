@@ -2,10 +2,13 @@ package com.tangem.screens
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.*
 import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.displayedTextsInVisualOrder
+import com.tangem.common.extensions.allTexts
 import com.tangem.common.extensions.firstTextForTestTag
 import com.tangem.common.extensions.firstTextOrNull
 import com.tangem.common.extensions.hasLazyListItemPosition
@@ -192,6 +195,16 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
     fun clickOnScreenAccountSection(accountName: String) {
         val matcher = withTestTag(MainScreenTestTags.ACCOUNT_LIST_ITEM) and hasAnyDescendant(withText(accountName))
         checkNotNull(onScreenPageChild(matcher)) { "Account '$accountName' is not on the on-screen wallet page" }
+            .performClick()
+    }
+
+    // Account names vary per wallet, so the E2E reveal expands accounts positionally rather than by name.
+    fun accountSectionCount(): Int =
+        semanticsProvider.onAllNodes(withTestTag(MainScreenTestTags.ACCOUNT_LIST_ITEM), useUnmergedTree = true)
+            .fetchSemanticsNodes().size
+
+    fun expandAccountSection(index: Int) {
+        semanticsProvider.onAllNodes(withTestTag(MainScreenTestTags.ACCOUNT_LIST_ITEM), useUnmergedTree = true)[index]
             .performClick()
     }
 
@@ -740,6 +753,78 @@ class MainScreenPageObject(private val semanticsProvider: SemanticsNodeInteracti
             hasAnyDescendant(withText(tokenName))
             useUnmergedTree = true
         }
+    }
+
+    /**
+     * The token's fiat amount, located by its row in any account and WITHOUT collapsing the header. Unlike
+     * [tokenFiatAmountText], this never swipes: the collapse swipe is stolen by the Markets sheet when its peek
+     * is on screen and re-opens Markets, hiding the token. Use it once the token is already revealed on Main.
+     */
+    @OptIn(ExperimentalTestApi::class)
+    fun tokenFiatAmountInAnyAccount(tokenName: String): KNode {
+        return findTokenInAnyAccountByName(tokenName)
+            .child<KNode> {
+                hasTestTag(TokenElementsTestTags.TOKEN_FIAT_AMOUNT)
+                useUnmergedTree = true
+            }.child<KNode> {
+                addSemanticsMatcher(SemanticsMatcher.keyIsDefined(SemanticsProperties.Text))
+                useUnmergedTree = true
+            }
+    }
+
+    /**
+     * Account names shown on the main screen, in order (index 0 = first/main account). The name is the first
+     * text of each account row (it precedes the balance in the header).
+     */
+    @OptIn(ExperimentalTestApi::class)
+    fun accountTitles(): List<String> =
+        semanticsProvider.onAllNodes(withTestTag(MainScreenTestTags.ACCOUNT_LIST_ITEM), useUnmergedTree = true)
+            .fetchSemanticsNodes()
+            .mapNotNull { it.firstTextOrNull() }
+
+    // The token row of [tokenName] that belongs to [accountName], found positionally: account headers and
+    // token rows are flat siblings on the main list, so a token can't be matched as a descendant of its
+    // account. Walk headers and rows top-to-bottom and return the first token row after the target header
+    // (before the next one). Needed when the same token exists in several accounts.
+    @OptIn(ExperimentalTestApi::class)
+    private fun accountTokenNode(accountName: String, tokenName: String): SemanticsNode? {
+        val nodes = semanticsProvider.onAllNodes(
+            withTestTag(MainScreenTestTags.ACCOUNT_LIST_ITEM) or withTestTag(MainScreenTestTags.TOKEN_LIST_ITEM),
+            useUnmergedTree = true,
+        ).fetchSemanticsNodes().sortedBy { it.boundsInRoot.top }
+        var inTargetAccount = false
+        for (node in nodes) {
+            when (node.config.getOrNull(SemanticsProperties.TestTag)) {
+                MainScreenTestTags.ACCOUNT_LIST_ITEM -> inTargetAccount = node.allTexts().any { it == accountName }
+                MainScreenTestTags.TOKEN_LIST_ITEM ->
+                    if (inTargetAccount && node.allTexts().any { it == tokenName }) return node
+            }
+        }
+        return null
+    }
+
+    fun isTokenInAccountOnScreen(accountName: String, tokenName: String): Boolean =
+        accountTokenNode(accountName, tokenName) != null
+
+    fun tokenCryptoAmountInAccount(accountName: String, tokenName: String): String? =
+        accountTokenNode(accountName, tokenName)?.firstTextForTestTag(TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT)
+
+    @OptIn(ExperimentalTestApi::class)
+    fun clickTokenInAccount(accountName: String, tokenName: String) {
+        val target = checkNotNull(accountTokenNode(accountName, tokenName)) {
+            "'$tokenName' is not shown in account '$accountName'"
+        }
+        val candidates = semanticsProvider.onAllNodes(
+            withTestTag(MainScreenTestTags.TOKEN_LIST_ITEM) and hasAnyDescendant(withText(tokenName)),
+            useUnmergedTree = true,
+        )
+        for (index in 0 until candidates.fetchSemanticsNodes().size) {
+            if (candidates[index].fetchSemanticsNode().boundsInRoot == target.boundsInRoot) {
+                candidates[index].performClick()
+                return
+            }
+        }
+        error("Could not click '$tokenName' in account '$accountName'")
     }
 
     fun KNode.assertIsUnreachable() {

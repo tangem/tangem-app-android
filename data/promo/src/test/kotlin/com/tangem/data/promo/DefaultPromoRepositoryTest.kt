@@ -219,6 +219,8 @@ internal class DefaultPromoRepositoryTest {
                 publicImage = "https://cdn.tangem.com/c.png",
                 tncLink = PromotionsV3Response.Link(text = "campaign.example_campaign.terms", url = "https://t.com"),
                 actionButtonName = "campaign.example_campaign.action",
+                payoutButtonName = null,
+                payoutAccountTitle = null,
             ),
         )
 
@@ -235,6 +237,8 @@ internal class DefaultPromoRepositoryTest {
                 imageUrl = "https://cdn.tangem.com/c.png",
                 tncLink = PromoLink(text = "campaign.example_campaign.terms", url = "https://t.com"),
                 actionButtonName = "campaign.example_campaign.action",
+                payoutButtonName = null,
+                payoutAccountTitle = null,
             ),
         )
     }

@@ -45,6 +45,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 import java.math.BigInteger
 import com.tangem.blockchain.yieldsupply.providers.YieldSupplyStatus as SDKYieldSupplyStatus
@@ -375,6 +376,26 @@ class DefaultYieldSupplyTransactionRepositoryTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SupportsEnterWithAmount {
+
+        @ParameterizedTest
+        @ValueSource(booleans = [true, false])
+        fun `GIVEN module V2 check WHEN supportsEnterWithAmount THEN returns it`(isAtLeastV2: Boolean) = runTest {
+            // Arrange
+            val versionStatus = YieldModuleVersionStatus.UpgradeUnavailable(currentImplementation = OLD_IMPLEMENTATION)
+            coEvery { walletManager.checkModuleVersionStatus() } returns versionStatus
+            every { walletManager.isAtLeastV2(versionStatus) } returns isAtLeastV2
+
+            // Act
+            val actual = repository.supportsEnterWithAmount(userWalletId, cryptoCurrency.network)
+
+            // Assert
+            Truth.assertThat(actual).isEqualTo(isAtLeastV2)
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class WrapYieldSwapCallDataWithUpgradeIfNeeded {
 
         private val callData = YieldSupplyContractCallDataProviderFactory.getExitCallData(
@@ -448,6 +469,61 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         // Assert
         Truth.assertThat(actual.methodId).isEqualTo(EthereumYieldSupplyUpgradeToAndCallCallData.METHOD_ID)
         Truth.assertThat(actual.unwrapYieldModuleUpgrade().methodId).isEqualTo("0xf3fef3a3")
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CreatePartialWithdrawCallDataUpgradeUnavailable {
+
+        private val versionStatus = YieldModuleVersionStatus.UpgradeUnavailable(currentImplementation = OLD_IMPLEMENTATION)
+        private val token = mockk<CryptoCurrency.Token>(relaxed = true) {
+            every { contractAddress } returns mockedContractAddress
+        }
+        private val amount = Amount(
+            currencySymbol = "USDC",
+            value = BigDecimal("1.5"),
+            decimals = 6,
+            type = AmountType.Token(
+                token = Token(symbol = "USDC", contractAddress = mockedContractAddress, decimals = 6),
+            ),
+        )
+
+        @Test
+        fun `GIVEN V2 module the factory can't upgrade WHEN createPartialWithdrawCallData THEN withdraw is not wrapped`() =
+            runTest {
+                // Arrange
+                coEvery { walletManager.checkModuleVersionStatus() } returns versionStatus
+                every { walletManager.isAtLeastV2(versionStatus) } returns true
+
+                // Act
+                val actual = repository.createPartialWithdrawCallData(
+                    userWalletId = userWalletId,
+                    cryptoCurrency = token,
+                    amount = amount,
+                )
+
+                // Assert
+                Truth.assertThat(actual.methodId).isEqualTo("0xf3fef3a3")
+            }
+
+        @Test
+        fun `GIVEN pre-V2 module the factory can't upgrade WHEN createPartialWithdrawCallData THEN throws`() = runTest {
+            // Arrange
+            coEvery { walletManager.checkModuleVersionStatus() } returns versionStatus
+            every { walletManager.isAtLeastV2(versionStatus) } returns false
+
+            // Act
+            val actual = runCatching {
+                repository.createPartialWithdrawCallData(
+                    userWalletId = userWalletId,
+                    cryptoCurrency = token,
+                    amount = amount,
+                )
+            }.exceptionOrNull()
+
+            // Assert
+            Truth.assertThat(actual).isInstanceOf(YieldModuleUpgradeUnavailableException::class.java)
+        }
     }
 
     @Nested

@@ -71,6 +71,7 @@ dependencies {
     implementation(projects.domain.moneyAccount)
     implementation(projects.domain.quotes)
     implementation(projects.domain.visa)
+    implementation(projects.domain.yieldSupply)
     // endregion
 
     // region Domain models
