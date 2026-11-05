@@ -46,6 +46,7 @@ import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRow
 import com.tangem.core.ui.ds2.tokenrow.TangemTokenRowMarket
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
+import com.tangem.core.ui.ds2.transactionrow.TangemTransactionRow
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tester.presentation.storybook.entity.StoryPageFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.accountrow.tangemAccountRowStoryFactory
@@ -82,6 +83,7 @@ import com.tangem.feature.tester.presentation.storybook.page.ds.tokenicon.tangem
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenrowmarket.tangemTokenRowMarketStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.tokenrowv2.tangemTokenRowV2StoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.ds.topnavigation.tangemTopNavigationStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.ds.transactionrow.tangemTransactionRowStoryFactory
 
 /** [version] is `null` for entries that showcase tokens rather than a versioned DS component. */
 private data class DsStoryItem(val title: String, val version: DsVersion?, val factory: StoryPageFactory)
@@ -100,6 +102,7 @@ private fun buildDsStories() = listOf(
     DsStoryItem("📋 TangemRow", TangemRow.version, tangemRowStoryFactory),
     DsStoryItem("🪙 TangemTokenRow", TangemTokenRow.version, tangemTokenRowV2StoryFactory),
     DsStoryItem("📈 TangemTokenRowMarket", TangemTokenRowMarket.version, tangemTokenRowMarketStoryFactory),
+    DsStoryItem("🧾 TangemTransactionRow", TangemTransactionRow.version, tangemTransactionRowStoryFactory),
     DsStoryItem("🗃️ TangemAccountRow", TangemAccountRow.version, tangemAccountRowStoryFactory),
     DsStoryItem("📂 TangemExpandableRow", TangemExpandableRow.version, tangemExpandableRowStoryFactory),
     DsStoryItem("✋ TangemDraggable", TangemDraggable.version, tangemDraggableStoryFactory),

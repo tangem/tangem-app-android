@@ -20,6 +20,7 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.AmountPresetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.MIN_QUOTABLE_AMOUNT
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceActionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceButtonStyleUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPrediction
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
@@ -35,6 +36,7 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import java.math.BigDecimal
@@ -42,7 +44,7 @@ import java.math.RoundingMode
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LongParameterList")
 @ModelScoped
 internal class PlacePredictionOrderModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -51,6 +53,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     quoteEngineFactory: PlacePredictionQuoteEngine.Factory,
     orderSubmitterFactory: PlacePredictionOrderSubmitter.Factory,
+    buttonStyleFactory: PlacePredictionButtonStyle.Factory,
 ) : Model(), PlacePredictionOrderIntents, PolymarketAddFundsComponent.ModelCallback {
 
     private val params = paramsContainer.require<PlacePredictionComponent.Params>()
@@ -63,6 +66,12 @@ internal class PlacePredictionOrderModel @Inject constructor(
     private val orderSubmitter = orderSubmitterFactory.create(params = params, uiState = uiState, scope = modelScope)
 
     private var pendingPlacement: Job? = null
+
+    private val buttonStyle = buttonStyleFactory.create(
+        userWalletId = params.userWalletId,
+        uiState = uiState,
+        scope = modelScope,
+    )
 
     val feeSheet = PlacePredictionFeeSheet(
         uiState = uiState,
@@ -80,6 +89,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
 
     fun onResume() {
         quoteEngine.onResume()
+        buttonStyle.checkSessionKey()
     }
 
     fun onPause() {
@@ -157,22 +167,21 @@ internal class PlacePredictionOrderModel @Inject constructor(
         quoteEngine.retryQuote()
     }
 
-    override fun onPlaceClick() {
+    override fun onPlaceClick(confirmedWith: PlaceButtonStyleUM) {
         when (uiState.value.placeAction) {
-            PlaceActionUM.Ready -> quoteEngine.prepare()?.let(::place)
-            PlaceActionUM.ReadyOnceQuoted -> placeOnceQuoted()
-            PlaceActionUM.AwaitingQuote,
-            PlaceActionUM.Unavailable,
-            -> Unit
+            PlaceActionUM.Ready -> quoteEngine.prepare()?.let { place(it, confirmedWith) } ?: settleButtonIfIdle()
+            PlaceActionUM.ReadyOnceQuoted -> placeOnceQuoted(confirmedWith)
+            PlaceActionUM.AwaitingQuote -> resetHold()
+            PlaceActionUM.Unavailable -> settleButtonIfIdle()
         }
     }
 
-    private fun placeOnceQuoted() {
+    private fun placeOnceQuoted(confirmedWith: PlaceButtonStyleUM) {
         val wait = modelScope.launch {
             when (withTimeoutOrNull(PENDING_PLACEMENT_LIFETIME) { quoteEngine.awaitFreshQuote() }) {
                 true -> {
                     releaseTap()
-                    quoteEngine.prepare()?.let(::place)
+                    quoteEngine.prepare()?.let { place(it, confirmedWith) }
                 }
                 null -> quoteEngine.abandonFreshQuote()
                 false -> Unit
@@ -189,6 +198,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
         pendingPlacement = null
         wait.cancel()
         releaseTap()
+        settleButtonIfIdle()
     }
 
     private fun releaseTap() {
@@ -197,10 +207,32 @@ internal class PlacePredictionOrderModel @Inject constructor(
         }
     }
 
-    private fun place(prepared: PreparedPrediction) {
+    private fun settleButtonIfIdle() {
+        if (!uiState.value.isIdle()) return
+
+        resetHold()
+        buttonStyle.applyIfIdle()
+    }
+
+    private fun PlacePredictionUM.isIdle(): Boolean = submit is SubmitUM.Idle
+
+    private fun resetHold() {
+        uiState.update { it.copy(holdResetKey = it.holdResetKey + 1) }
+    }
+
+    private fun place(prepared: PreparedPrediction, confirmedWith: PlaceButtonStyleUM) {
         modelScope.launch(start = CoroutineStart.UNDISPATCHED) {
             quoteEngine.holdDuring {
-                val result = orderSubmitter.submit(prepared = prepared) ?: return@holdDuring
+                val result = orderSubmitter.submit(
+                    prepared = prepared,
+                    confirmedWith = confirmedWith,
+                    onKeyLost = buttonStyle::onSessionKeyLost,
+                )
+                if (result == null) {
+                    buttonStyle.onPlacementFailed()
+                    settleButtonIfIdle()
+                    return@holdDuring
+                }
                 router.replaceAll(prepared.toStatusRoute(result = result))
             }
         }

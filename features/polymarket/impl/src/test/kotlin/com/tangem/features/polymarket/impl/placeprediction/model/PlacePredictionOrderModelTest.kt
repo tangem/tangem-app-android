@@ -5,23 +5,27 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.core.decompose.model.Model
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
-import com.tangem.domain.polymarket.model.PolymarketSigningError
-import com.tangem.domain.polymarket.model.PredictionOrderFailure
 import com.tangem.domain.polymarket.model.PolymarketEventError
 import com.tangem.domain.polymarket.model.PolymarketPositionsError
+import com.tangem.domain.polymarket.model.PolymarketSigningError
+import com.tangem.domain.polymarket.model.PredictionOrderFailure
 import com.tangem.domain.polymarket.model.PredictionOrderFees
 import com.tangem.domain.polymarket.model.PredictionOrderQuote
 import com.tangem.domain.polymarket.model.PredictionOrderQuoteError
 import com.tangem.domain.polymarket.model.PredictionOrderSide
+import com.tangem.domain.polymarket.model.PredictionOrderSigningRoute
+import com.tangem.domain.polymarket.model.PredictionPlaceOrderError
 import com.tangem.domain.polymarket.model.PredictionQuoteStatus
-import com.tangem.domain.models.StatusSource
+import com.tangem.domain.wallets.models.errors.GetUserWalletError
 import com.tangem.features.polymarket.impl.common.FakeSlotHost
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionRoute
 import com.tangem.features.polymarket.impl.placeprediction.entity.DEFAULT_SLIPPAGE_PERCENT
 import com.tangem.features.polymarket.impl.placeprediction.entity.OrderSideUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceActionUM
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceButtonStyleUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.QuoteUM
@@ -37,8 +41,11 @@ import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import java.math.BigDecimal
+import java.util.Locale
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
@@ -55,8 +62,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
-import java.math.BigDecimal
-import java.util.Locale
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
@@ -82,7 +87,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             val model = createQuotedModel()
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             runCurrent()
 
             // Assert
@@ -115,7 +120,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
                 advanceTimeBy(delayTimeMillis = QUOTE_POLL_INTERVAL_MILLIS * 3)
 
                 // Assert
@@ -132,7 +137,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             model.onAmountChange(value = "10")
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             runCurrent()
 
             // Assert
@@ -151,8 +156,8 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             val model = createQuotedModel()
 
             // Act
-            model.onPlaceClick()
-            model.onPlaceClick()
+            model.tapPlace()
+            model.tapPlace()
             advanceTimeBy(delayTimeMillis = SIGNING_MILLIS + 1)
 
             // Assert
@@ -170,7 +175,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             val model = createQuotedModel()
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
 
             // Assert
             assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Signing)
@@ -185,7 +190,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             val model = createQuotedModel()
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             runCurrent()
 
             // Assert
@@ -205,7 +210,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 }
                 val model = createQuotedModel()
                 val fundingSheet = FakeSlotHost(model.fundingSheetNavigation)
-                model.onPlaceClick()
+                model.tapPlace()
 
                 // Act
                 input.apply(model)
@@ -228,13 +233,652 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 SIGNED_ORDER.right()
             }
             val model = createQuotedModel()
-            model.onPlaceClick()
+            model.tapPlace()
 
             // Act
             model.onCloseClick()
 
             // Assert
             verify(exactly = 0) { router.pop(any()) }
+        }
+    }
+
+    @Nested
+    inner class WalletType {
+
+        @Test
+        fun `GIVEN a hot wallet WHEN the order screen opens THEN the order is placed by holding the button`() =
+            runOrderTest {
+                // Arrange
+                every { getUserWalletUseCase(any()) } returns hotWallet().right()
+
+                // Act
+                val model = createOrderModel(testScope = this)
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.HOLD)
+            }
+
+        @Test
+        fun `GIVEN a card wallet WHEN the order screen opens THEN the order is placed by tapping the button`() =
+            runOrderTest {
+                // Arrange
+                every { getUserWalletUseCase(any()) } returns coldWallet().right()
+
+                // Act
+                val model = createOrderModel(testScope = this)
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+            }
+
+        @Test
+        fun `GIVEN the wallet is not in the list WHEN the order screen opens THEN the order is placed by holding`() =
+            runOrderTest {
+                // Arrange
+                every { getUserWalletUseCase(any()) } returns GetUserWalletError.UserWalletNotFound.left()
+
+                // Act
+                val model = createOrderModel(testScope = this)
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.HOLD)
+            }
+    }
+
+    @Nested
+    inner class SessionKey {
+
+        @BeforeEach
+        fun enableSessionKeys() {
+            every { featureToggles.isPolymarketSessionKeysEnabled } returns true
+        }
+
+        @Test
+        fun `GIVEN a card wallet with a usable session key WHEN the screen opens THEN the button is plain`() =
+            runOrderTest {
+                // Arrange
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+
+                // Act
+                val model = openOrderModel()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.PLAIN)
+            }
+
+        @Test
+        fun `GIVEN a card wallet without a usable session key WHEN the screen opens THEN the card is asked`() =
+            runOrderTest {
+                // Arrange
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns false
+
+                // Act
+                val model = openOrderModel()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+            }
+
+        @Test
+        fun `GIVEN a card wallet WHEN the screen opens THEN the session key is checked once`() = runOrderTest {
+            // Act
+            openOrderModel()
+
+            // Assert
+            coVerify(exactly = 1) { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) }
+        }
+
+        @Test
+        fun `GIVEN the session key becomes usable WHEN the screen resumes THEN the button turns plain`() =
+            runOrderTest {
+                // Arrange
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returnsMany
+                    listOf(false, true)
+                val model = openOrderModel()
+                model.onPause()
+
+                // Act
+                model.onResume()
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.PLAIN)
+            }
+
+        @Test
+        fun `GIVEN the session key stops being usable WHEN the screen resumes THEN the card is asked`() =
+            runOrderTest {
+                // Arrange
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returnsMany
+                    listOf(true, false)
+                val model = openOrderModel()
+                model.onPause()
+
+                // Act
+                model.onResume()
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+            }
+
+        @Test
+        fun `GIVEN an order being signed WHEN the session key check answers THEN the style waits for idle`() =
+            runOrderTest {
+                // Arrange
+                coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
+                coEvery { signOrderInteractor(request = any()) } coAnswers {
+                    delay(timeMillis = SIGNING_MILLIS)
+                    PredictionOrderFailure.Signing(error = PolymarketSigningError.UserCancelled).left()
+                }
+                val model = createQuotedModel()
+                runCurrent()
+                model.tapPlace()
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+
+                // Act
+                model.onPause()
+                model.onResume()
+                runCurrent()
+                val whileSigning = model.uiState.value
+                advanceTimeBy(delayTimeMillis = SIGNING_MILLIS + 1)
+                runCurrent()
+
+                // Assert
+                assertThat(whileSigning.submit).isEqualTo(SubmitUM.Signing)
+                assertThat(whileSigning.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.PLAIN)
+            }
+
+        @Test
+        fun `GIVEN a tap waits for a quote WHEN the session key check answers THEN the style waits for it`() =
+            runOrderTest {
+                // Arrange
+                coEvery { getQuoteUseCase(userWalletId = any(), request = any()) } coAnswers { awaitCancellation() }
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } coAnswers {
+                    delay(timeMillis = SESSION_KEY_CHECK_MILLIS)
+                    true
+                }
+                val model = createOrderModel(testScope = this)
+                runCurrent()
+                model.onResume()
+                model.onAmountChange(value = "10")
+                advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS)
+                runCurrent()
+                model.tapPlace()
+
+                // Act
+                advanceTimeBy(delayTimeMillis = SESSION_KEY_CHECK_MILLIS - QUOTE_DEBOUNCE_MILLIS + 1)
+                runCurrent()
+                val whilePending = model.uiState.value
+                advanceTimeBy(delayTimeMillis = PENDING_PLACEMENT_MILLIS)
+                runCurrent()
+
+                // Assert
+                assertThat(whilePending.submit).isEqualTo(SubmitUM.AwaitingQuote)
+                assertThat(whilePending.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.PLAIN)
+            }
+
+        @Test
+        fun `GIVEN a hot wallet with a usable session key WHEN the screen opens THEN the button is plain`() =
+            runOrderTest {
+                // Arrange
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                every { getUserWalletUseCase(any()) } returns hotWallet().right()
+
+                // Act
+                val model = openOrderModel()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.PLAIN)
+            }
+
+        @Test
+        fun `GIVEN a hot wallet without a usable session key WHEN the screen opens THEN the button is held`() =
+            runOrderTest {
+                // Arrange
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns false
+                every { getUserWalletUseCase(any()) } returns hotWallet().right()
+
+                // Act
+                val model = openOrderModel()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.HOLD)
+            }
+
+        @Test
+        fun `GIVEN a hot wallet and session keys disabled WHEN the screen opens THEN it is held unchecked`() =
+            runOrderTest {
+                // Arrange
+                every { featureToggles.isPolymarketSessionKeysEnabled } returns false
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                every { getUserWalletUseCase(any()) } returns hotWallet().right()
+
+                // Act
+                val model = openOrderModel()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.HOLD)
+                coVerify(exactly = 0) { signingRouter.canSignWithSessionKey(userWalletId = any()) }
+            }
+
+        @Test
+        fun `GIVEN the wallet is not found WHEN the screen opens THEN the session key is not checked`() =
+            runOrderTest {
+                // Arrange
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                every { getUserWalletUseCase(any()) } returns GetUserWalletError.UserWalletNotFound.left()
+
+                // Act
+                val model = openOrderModel()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.HOLD)
+                coVerify(exactly = 0) { signingRouter.canSignWithSessionKey(userWalletId = any()) }
+            }
+
+        @Test
+        fun `GIVEN a plain button WHEN the router picks the owner key THEN nothing is signed and owner confirmation is asked`() =
+            runOrderTest {
+                // Arrange
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
+                val model = createQuotedModel()
+                runCurrent()
+
+                // Act
+                model.tapPlace()
+                runCurrent()
+
+                // Assert
+                coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+                verify(exactly = 1) { messageSender.send(any()) }
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+            }
+
+        @Test
+        fun `GIVEN the session key could not sign WHEN the screen resumes THEN a fresh check decides the style`() =
+            runOrderTest {
+                // Arrange
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
+                val model = createQuotedModel()
+                runCurrent()
+                model.tapPlace()
+                runCurrent()
+                model.onPause()
+
+                // Act
+                model.onResume()
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.PLAIN)
+            }
+
+        @Test
+        fun `GIVEN a plain hot wallet button WHEN the exchange refuses the session key THEN the owner key never signs`() =
+            runOrderTest {
+                // Arrange
+                every { getUserWalletUseCase(any()) } returns hotWallet().right()
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                coEvery { signingRouter.route(addresses = ADDRESSES) } returns SESSION_ROUTE
+                coEvery { placeOrderUseCase(any(), any(), any(), SESSION_ROUTE) } returns
+                    PredictionPlaceOrderError.Unauthorized(detail = "Unauthorized/Invalid api key").left()
+                val model = createQuotedModel()
+                runCurrent()
+
+                // Act
+                model.tapPlace()
+                runCurrent()
+
+                // Assert
+                coVerify(exactly = 1) { signOrderInteractor(request = any()) }
+                coVerify(exactly = 0) { signOrderInteractor(request = match { it.route == PredictionOrderSigningRoute.Owner }) }
+                verify(exactly = 1) { messageSender.send(any()) }
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.HOLD)
+            }
+
+        @Test
+        fun `GIVEN a card button WHEN the router picks the owner key THEN the owner key signs`() =
+            runOrderTest {
+                // Arrange
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns false
+                coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
+                val model = createQuotedModel()
+                runCurrent()
+
+                // Act
+                model.tapPlace()
+                runCurrent()
+
+                // Assert
+                coVerify(exactly = 1) { signOrderInteractor(request = match { it.route == PredictionOrderSigningRoute.Owner }) }
+            }
+
+        @Test
+        fun `GIVEN a plain tap WHEN the button already turned to the card THEN only the session key may sign`() =
+            runOrderTest {
+                // Arrange
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns false
+                coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
+                val model = createQuotedModel()
+                runCurrent()
+
+                // Act
+                model.onPlaceClick(confirmedWith = PlaceButtonStyleUM.PLAIN)
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+                coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+                verify(exactly = 1) { messageSender.send(any()) }
+            }
+
+        @Test
+        fun `GIVEN a card tap WHEN the button already turned plain THEN the owner key may sign`() = runOrderTest {
+            // Arrange
+            coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+            coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
+            val model = createQuotedModel()
+            runCurrent()
+
+            // Act
+            model.onPlaceClick(confirmedWith = PlaceButtonStyleUM.CARD)
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 1) {
+                signOrderInteractor(request = match { it.route == PredictionOrderSigningRoute.Owner })
+            }
+        }
+
+        @Test
+        fun `GIVEN session keys turned off WHEN a plain tap places THEN the owner key never signs`() = runOrderTest {
+            // Arrange
+            every { featureToggles.isPolymarketSessionKeysEnabled } returns false
+            coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
+            val model = createQuotedModel()
+            runCurrent()
+
+            // Act
+            model.onPlaceClick(confirmedWith = PlaceButtonStyleUM.PLAIN)
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 0) { signingRouter.route(addresses = any()) }
+            coVerify(exactly = 0) { signOrderInteractor(request = any()) }
+            verify(exactly = 1) { messageSender.send(any()) }
+            assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+        }
+
+        @Test
+        fun `GIVEN a cached plain style WHEN an owner placement fails THEN the session key is checked again`() =
+            runOrderTest {
+                // Arrange
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returnsMany
+                    listOf(true, false)
+                coEvery { signingRouter.route(addresses = ADDRESSES) } returns PredictionOrderSigningRoute.Owner
+                coEvery { signOrderInteractor(request = any()) } returns
+                    PredictionOrderFailure.Signing(error = PolymarketSigningError.UserCancelled).left()
+                val model = createQuotedModel()
+                runCurrent()
+
+                // Act
+                model.onPlaceClick(confirmedWith = PlaceButtonStyleUM.CARD)
+                runCurrent()
+
+                // Assert
+                coVerify(exactly = 2) { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) }
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Idle)
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+            }
+
+        @Test
+        fun `GIVEN session keys disabled WHEN the screen opens and resumes THEN the session key is not checked`() =
+            runOrderTest {
+                // Arrange
+                every { featureToggles.isPolymarketSessionKeysEnabled } returns false
+                coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns true
+                val model = openOrderModel()
+                model.onPause()
+
+                // Act
+                model.onResume()
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.placeButtonStyle).isEqualTo(PlaceButtonStyleUM.CARD)
+                coVerify(exactly = 0) { signingRouter.canSignWithSessionKey(userWalletId = any()) }
+            }
+
+        private fun TestScope.openOrderModel(): PlacePredictionOrderModel {
+            val model = createOrderModel(testScope = this)
+            runCurrent()
+            model.onResume()
+            runCurrent()
+            return model
+        }
+    }
+
+    @Nested
+    inner class HoldReset {
+
+        @Test
+        fun `GIVEN nothing to place WHEN place clicked THEN the hold button is reset`() = runOrderTest {
+            // Arrange
+            val model = createOrderModel(testScope = this)
+            advanceUntilIdle()
+            model.onResume()
+            val before = model.uiState.value.holdResetKey
+
+            // Act
+            model.tapPlace()
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.holdResetKey).isEqualTo(before + 1)
+        }
+
+        @Test
+        fun `GIVEN the signature is declined WHEN place clicked THEN the hold button is reset`() = runOrderTest {
+            // Arrange
+            coEvery { signOrderInteractor(request = any()) } returns
+                PredictionOrderFailure.Signing(error = PolymarketSigningError.UserCancelled).left()
+            val model = createQuotedModel()
+            val before = model.uiState.value.holdResetKey
+
+            // Act
+            model.tapPlace()
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.holdResetKey).isEqualTo(before + 1)
+        }
+
+        @Test
+        fun `GIVEN a priced quote WHEN the order is placed THEN the hold button is left as it is`() = runOrderTest {
+            // Arrange
+            val model = createQuotedModel()
+            val before = model.uiState.value.holdResetKey
+
+            // Act
+            model.tapPlace()
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.holdResetKey).isEqualTo(before)
+        }
+
+        @Test
+        fun `GIVEN a quote on the way WHEN place clicked THEN the hold button is left as it is`() = runOrderTest {
+            // Arrange
+            val model = createQuotingModel()
+            val before = model.uiState.value.holdResetKey
+
+            // Act
+            model.tapPlace()
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.holdResetKey).isEqualTo(before)
+        }
+
+        @Test
+        fun `GIVEN a tap while quoting WHEN the quote arrives and is placed THEN the hold button is left as it is`() =
+            runOrderTest {
+                // Arrange
+                val model = createQuotingModel()
+                val before = model.uiState.value.holdResetKey
+                model.tapPlace()
+
+                // Act
+                advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
+                runCurrent()
+
+                // Assert
+                verify(exactly = 1) { router.replaceAll(any(), onComplete = any()) }
+                assertThat(model.uiState.value.holdResetKey).isEqualTo(before)
+            }
+
+        @Test
+        fun `GIVEN a tap waiting WHEN place clicked again THEN the hold button is reset`() = runOrderTest {
+            // Arrange
+            val model = createQuotingModel()
+            model.tapPlace()
+            runCurrent()
+            val before = model.uiState.value.holdResetKey
+
+            // Act
+            model.tapPlace()
+
+            // Assert
+            assertThat(model.uiState.value.holdResetKey).isEqualTo(before + 1)
+        }
+
+        @Test
+        fun `GIVEN a tap waiting WHEN the amount changes THEN the hold button is reset`() = runOrderTest {
+            // Arrange
+            val model = createQuotingModel()
+            model.tapPlace()
+            runCurrent()
+            val before = model.uiState.value.holdResetKey
+
+            // Act
+            model.onAmountChange(value = "25")
+
+            // Assert
+            assertThat(model.uiState.value.holdResetKey).isEqualTo(before + 1)
+        }
+
+        @Test
+        fun `GIVEN a tap waiting WHEN the screen pauses THEN the hold button is reset`() = runOrderTest {
+            // Arrange
+            val model = createQuotingModel()
+            model.tapPlace()
+            runCurrent()
+            val before = model.uiState.value.holdResetKey
+
+            // Act
+            model.onPause()
+
+            // Assert
+            assertThat(model.uiState.value.holdResetKey).isEqualTo(before + 1)
+        }
+
+        @Test
+        fun `GIVEN the submitter refuses the order WHEN place clicked THEN the hold button is reset`() = runOrderTest {
+            // Arrange
+            val refusingSubmitter = mockk<PlacePredictionOrderSubmitter> {
+                coEvery { submit(prepared = any(), confirmedWith = any(), onKeyLost = any()) } returns null
+                every { isSubmitting() } returns false
+            }
+            val model = createOrderModel(
+                testScope = this,
+                orderSubmitterFactory = mockk { every { create(any(), any(), any()) } returns refusingSubmitter },
+            )
+            advanceUntilIdle()
+            model.onResume()
+            model.onAmountChange(value = "10")
+            advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
+            val before = model.uiState.value.holdResetKey
+
+            // Act
+            model.tapPlace()
+            runCurrent()
+
+            // Assert
+            coVerify(exactly = 1) { refusingSubmitter.submit(prepared = any(), confirmedWith = any(), onKeyLost = any()) }
+            assertThat(model.uiState.value.holdResetKey).isEqualTo(before + 1)
+        }
+
+        @Test
+        fun `GIVEN signing is in flight WHEN place clicked again THEN the hold button is left as it is`() =
+            runOrderTest {
+                // Arrange
+                coEvery { signOrderInteractor(request = any()) } coAnswers {
+                    delay(timeMillis = SIGNING_MILLIS)
+                    SIGNED_ORDER.right()
+                }
+                val model = createQuotedModel()
+                model.tapPlace()
+                runCurrent()
+                val before = model.uiState.value.holdResetKey
+
+                // Act
+                model.tapPlace()
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Signing)
+                assertThat(model.uiState.value.holdResetKey).isEqualTo(before)
+            }
+
+        @Test
+        fun `GIVEN posting is in flight WHEN place clicked again THEN the hold button is left as it is`() =
+            runOrderTest {
+                // Arrange
+                coEvery { placeOrderUseCase(any(), any(), any()) } coAnswers {
+                    delay(timeMillis = SIGNING_MILLIS)
+                    createPlaceResult().right()
+                }
+                val model = createQuotedModel()
+                model.tapPlace()
+                runCurrent()
+                val before = model.uiState.value.holdResetKey
+
+                // Act
+                model.tapPlace()
+                runCurrent()
+
+                // Assert
+                assertThat(model.uiState.value.submit).isEqualTo(SubmitUM.Posting)
+                assertThat(model.uiState.value.holdResetKey).isEqualTo(before)
+            }
+
+        @Test
+        fun `GIVEN a tap while quoting WHEN the quote fails THEN the hold button is reset`() = runOrderTest {
+            // Arrange
+            val model = createQuotingModel(result = PredictionOrderQuoteError.Network.left())
+            val before = model.uiState.value.holdResetKey
+            model.tapPlace()
+
+            // Act
+            advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
+            runCurrent()
+
+            // Assert
+            assertThat(model.uiState.value.holdResetKey).isEqualTo(before + 1)
         }
     }
 
@@ -280,7 +924,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 every { router.replaceAll(capture(status), onComplete = any()) } returns Unit
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
                 runCurrent()
 
                 // Assert
@@ -683,7 +1327,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 val model = createQuotingModel()
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
                 runCurrent()
 
                 // Assert
@@ -696,7 +1340,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a tap while quoting WHEN the quote arrives THEN the order is placed`() = runOrderTest {
             // Arrange
             val model = createQuotingModel()
-            model.onPlaceClick()
+            model.tapPlace()
 
             // Act
             advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
@@ -715,7 +1359,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             runOrderTest {
                 // Arrange
                 val model = createQuotingModel(result = PredictionOrderQuoteError.Network.left())
-                model.onPlaceClick()
+                model.tapPlace()
 
                 // Act
                 advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
@@ -734,7 +1378,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 val model = createQuotingModel(
                     result = createQuote(status = PredictionQuoteStatus.INSUFFICIENT_LIQUIDITY).right(),
                 )
-                model.onPlaceClick()
+                model.tapPlace()
 
                 // Act
                 advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
@@ -754,7 +1398,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         ) = runOrderTest {
             // Arrange
             val model = createQuotingModel(quoteMillis = quoteMillis)
-            model.onPlaceClick()
+            model.tapPlace()
 
             // Act
             advanceTimeBy(delayTimeMillis = quoteMillis)
@@ -769,7 +1413,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a tap while quoting WHEN the screen is left THEN the tap is dropped`() = runOrderTest {
             // Arrange
             val model = createQuotingModel()
-            model.onPlaceClick()
+            model.tapPlace()
 
             // Act
             model.onPause()
@@ -787,7 +1431,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a tap while quoting WHEN the amount changes THEN the tap is dropped`() = runOrderTest {
             // Arrange
             val model = createQuotingModel()
-            model.onPlaceClick()
+            model.tapPlace()
 
             // Act
             model.onAmountChange(value = "25")
@@ -806,8 +1450,8 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             val model = createQuotingModel()
 
             // Act
-            model.onPlaceClick()
-            model.onPlaceClick()
+            model.tapPlace()
+            model.tapPlace()
             advanceTimeBy(delayTimeMillis = QUOTE_MILLIS)
             runCurrent()
 
@@ -821,11 +1465,11 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             runOrderTest {
                 // Arrange
                 val model = createQuotingModel(quoteMillis = 10_001L)
-                model.onPlaceClick()
+                model.tapPlace()
                 advanceTimeBy(delayTimeMillis = 5_000L)
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
                 advanceTimeBy(delayTimeMillis = 5_001L)
                 runCurrent()
 
@@ -851,7 +1495,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 // Act
                 model.onAmountChange(value = "10")
                 advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS + 1)
-                model.onPlaceClick()
+                model.tapPlace()
 
                 // Assert
                 assertThat(model.uiState.value.quote).isEqualTo(QuoteUM.Loading(isAnswerExpected = false))
@@ -870,7 +1514,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 model.onAmountChange(value = "10")
                 advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS)
                 runCurrent()
-                model.onPlaceClick()
+                model.tapPlace()
 
                 // Act
                 advanceTimeBy(delayTimeMillis = PENDING_PLACEMENT_MILLIS + 1)
@@ -896,7 +1540,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 model.onAmountChange(value = "10")
                 advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS)
                 runCurrent()
-                model.onPlaceClick()
+                model.tapPlace()
                 advanceTimeBy(delayTimeMillis = PENDING_PLACEMENT_MILLIS + 1)
                 runCurrent()
 
@@ -926,7 +1570,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 runCurrent()
                 model.onResume()
                 runCurrent()
-                model.onPlaceClick()
+                model.tapPlace()
 
                 // Act
                 advanceTimeBy(delayTimeMillis = POSITION_READ_MILLIS)
@@ -967,7 +1611,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             runCurrent()
             model.onResume()
             runCurrent()
-            model.onPlaceClick()
+            model.tapPlace()
 
             // Act
             advanceTimeBy(delayTimeMillis = POSITION_READ_MILLIS)
@@ -984,7 +1628,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
             runOrderTest {
                 // Arrange
                 val model = createQuotingModel()
-                model.onPlaceClick()
+                model.tapPlace()
 
                 // Act
                 statusFlow.value = activeStatus(balance = BigDecimal("5"))
@@ -1003,13 +1647,13 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a dropped tap WHEN a new tap waits for the next amount THEN it stays pending`() = runOrderTest {
             // Arrange
             val model = createQuotingModel()
-            model.onPlaceClick()
+            model.tapPlace()
             model.onAmountChange(value = "25")
             advanceTimeBy(delayTimeMillis = QUOTE_DEBOUNCE_MILLIS)
             runCurrent()
 
             // Act
-            model.onPlaceClick()
+            model.tapPlace()
             runCurrent()
 
             // Assert
@@ -1021,7 +1665,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
         fun `GIVEN a tap while quoting WHEN close clicked THEN the flow stays`() = runOrderTest {
             // Arrange
             val model = createQuotingModel()
-            model.onPlaceClick()
+            model.tapPlace()
 
             // Act
             model.onCloseClick()
@@ -1038,7 +1682,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
                 val model = createQuotingModel()
 
                 // Act
-                model.onPlaceClick()
+                model.tapPlace()
 
                 // Assert
                 assertThat(model.uiState.value.placeAction).isEqualTo(PlaceActionUM.Unavailable)
@@ -1238,6 +1882,7 @@ internal class PlacePredictionOrderModelTest : PlacePredictionModelTestBase() {
     private companion object {
         val HELD = BigDecimal("51.234567")
         const val SIGNING_MILLIS = 1_000L
+        const val SESSION_KEY_CHECK_MILLIS = QUOTE_DEBOUNCE_MILLIS * 2
         const val QUOTE_MILLIS = 1_000L
         const val PENDING_PLACEMENT_MILLIS = 10_000L
         const val POSITION_READ_MILLIS = 300L

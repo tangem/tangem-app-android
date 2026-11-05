@@ -76,6 +76,8 @@ internal fun PlacePredictionSummaryContent(
                     isLoading = state.submit !is SubmitUM.Idle,
                     isEnabled = state.isReadyToPlace,
                     onClick = intents::onPlaceClick,
+                    style = state.placeButtonStyle,
+                    holdResetKey = state.holdResetKey,
                 )
             }
         },

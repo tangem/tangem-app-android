@@ -30,6 +30,7 @@ import com.tangem.domain.polymarket.usecase.DelayedPredictionOrderOutcome
 import com.tangem.domain.polymarket.usecase.DerivePolymarketAddressesUseCase
 import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.placeprediction.PlacePredictionComponent
+import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceButtonStyleUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlacePredictionUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PlaceResultUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPrediction
@@ -74,10 +75,20 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
     private val positionsUpdateEmitter: PredictionPositionsUpdateEmitter,
 ) {
 
-    suspend fun submit(prepared: PreparedPrediction): PlaceResultUM? {
+    /**
+     * @param confirmedWith the button the user confirmed the order on; a plain tap allows the session key only
+     * @param onKeyLost told when an order confirmed for the session key cannot be signed with it
+     */
+    suspend fun submit(
+        prepared: PreparedPrediction,
+        confirmedWith: PlaceButtonStyleUM,
+        onKeyLost: () -> Unit,
+    ): PlaceResultUM? {
         if (uiState.value.submit !is SubmitUM.Idle || !uiState.value.isReadyToPlace) return null
         uiState.update(SetSubmitTransformer(submit = SubmitUM.Signing))
-        return place(frozen = prepared.quote, isNegRisk = prepared.isNegRisk)
+        val preference = confirmedWith.toSigningPreference(featureToggles.isPolymarketSessionKeysEnabled)
+            ?: return onSessionKeyLost(onKeyLost)
+        return place(prepared = prepared, preference = preference, onKeyLost = onKeyLost)
     }
 
     fun isSubmitting(): Boolean = when (uiState.value.submit) {
@@ -91,7 +102,12 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
         -> false
     }
 
-    private suspend fun place(frozen: SignableQuoteUM, isNegRisk: Boolean): PlaceResultUM? {
+    private suspend fun place(
+        prepared: PreparedPrediction,
+        preference: PredictionOrderSigningPreference,
+        onKeyLost: () -> Unit,
+    ): PlaceResultUM? {
+        val frozen = prepared.quote
         val addresses = withContext(dispatchers.default) {
             derivePolymarketAddressesUseCase.stored(userWalletId = params.userWalletId)
         }
@@ -123,10 +139,10 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
                     quote = frozen.quote,
                     assetId = frozen.assetId,
                     side = params.side,
-                    isNegRisk = isNegRisk,
+                    isNegRisk = prepared.isNegRisk,
                     quoteReceivedAtMillis = frozen.receivedAtMillis,
                 ),
-                preference = signingPreference(),
+                preference = preference,
                 onStep = ::onSubmitStep,
             )
         }.getOrElse { error ->
@@ -136,6 +152,7 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
                     null
                 }
                 is PredictionSubmitOrderError.NotPlaced -> onPlaceError(error = error.error)
+                PredictionSubmitOrderError.SessionKeyUnavailable -> onSessionKeyLost(onKeyLost)
             }
         }
 
@@ -154,12 +171,11 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
         )
     }
 
-    private fun signingPreference(): PredictionOrderSigningPreference =
-        if (featureToggles.isPolymarketSessionKeysEnabled) {
-            PredictionOrderSigningPreference.AUTOMATIC
-        } else {
-            PredictionOrderSigningPreference.OWNER_ONLY
-        }
+    private fun onSessionKeyLost(onKeyLost: () -> Unit): PlaceResultUM? {
+        onKeyLost()
+        showPlaceFailure(reason = "The session key could not sign an order confirmed for it")
+        return null
+    }
 
     private fun onSubmitStep(step: PredictionOrderSubmitStep) {
         val submit = when (step) {
@@ -223,18 +239,6 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
         }
     }
 
-    private sealed interface SpendingPower {
-
-        data object Sufficient : SpendingPower
-
-        data object Insufficient : SpendingPower
-
-        /** @property reason what the exported log says when the order is turned away before a signature */
-        data class Refused(val reason: String) : SpendingPower
-
-        data object Unknown : SpendingPower
-    }
-
     private fun onSignFailure(failure: PredictionOrderFailure) {
         val isCancelled = failure is PredictionOrderFailure.Signing &&
             failure.error == PolymarketSigningError.UserCancelled
@@ -244,12 +248,6 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
         } else {
             showPlaceFailure(reason = failure.toReason())
         }
-    }
-
-    private fun PredictionOrderFailure.toReason(): String = when (this) {
-        is PredictionOrderFailure.Draft -> "Order could not be drafted: $error"
-        is PredictionOrderFailure.Invalid -> "Order failed its own checks: $error"
-        is PredictionOrderFailure.Signing -> "Signing failed: $error"
     }
 
     private fun onPlaceError(error: PredictionPlaceOrderError): PlaceResultUM? {
@@ -409,4 +407,30 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
     private companion object {
         val logger = TangemLogger.withTag(tag = "PlacePredictionOrderSubmitter")
     }
+}
+
+private fun PlaceButtonStyleUM.toSigningPreference(isSessionKeysEnabled: Boolean): PredictionOrderSigningPreference? =
+    when {
+        this == PlaceButtonStyleUM.PLAIN && !isSessionKeysEnabled -> null
+        this == PlaceButtonStyleUM.PLAIN -> PredictionOrderSigningPreference.SESSION_KEY_ONLY
+        isSessionKeysEnabled -> PredictionOrderSigningPreference.AUTOMATIC
+        else -> PredictionOrderSigningPreference.OWNER_ONLY
+    }
+
+private sealed interface SpendingPower {
+
+    data object Sufficient : SpendingPower
+
+    data object Insufficient : SpendingPower
+
+    /** @property reason what the exported log says when the order is turned away before a signature */
+    data class Refused(val reason: String) : SpendingPower
+
+    data object Unknown : SpendingPower
+}
+
+private fun PredictionOrderFailure.toReason(): String = when (this) {
+    is PredictionOrderFailure.Draft -> "Order could not be drafted: $error"
+    is PredictionOrderFailure.Invalid -> "Order failed its own checks: $error"
+    is PredictionOrderFailure.Signing -> "Signing failed: $error"
 }

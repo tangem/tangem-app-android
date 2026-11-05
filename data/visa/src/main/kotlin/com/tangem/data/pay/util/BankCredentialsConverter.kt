@@ -18,6 +18,7 @@ internal object BankCredentialsConverter : Converter<BankCredentialsResponse.Res
             transferMessage = value.transferMessage?.takeIf(String::isNotBlank),
             depositFee = convertDepositFee(value.fee),
             depositLimit = convertDepositLimit(value.depositLimit),
+            exchangeRate = convertExchangeRate(value.exchangeRate),
         )
     }
 
@@ -37,5 +38,12 @@ internal object BankCredentialsConverter : Converter<BankCredentialsResponse.Res
             amount = amount,
             period = period ?: BankCredentials.DepositLimit.Period.UNKNOWN,
         )
+    }
+
+    private fun convertExchangeRate(value: BankCredentialsResponse.ExchangeRate?): BankCredentials.ExchangeRate? {
+        val rate = value?.rate?.toBigDecimalOrNull() ?: return null
+        val base = value.base?.takeIf(String::isNotBlank) ?: return null
+        val quote = value.quote?.takeIf(String::isNotBlank) ?: return null
+        return BankCredentials.ExchangeRate(rate = rate, base = base, quote = quote)
     }
 }

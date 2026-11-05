@@ -1,0 +1,112 @@
+/*
+ * Copied from Decompose 3.5.0 (extensions-compose-experimental), commit d36078df71276275adc3af0ac993b575b545f932
+ * https://github.com/arkivanov/Decompose
+ *
+
+ * Licensed under the Apache License, Version 2.0: https://www.apache.org/licenses/LICENSE-2.0
+ */
+
+package com.tangem.core.decompose.ui.stack
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.SaveableStateHolder
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.ui.Modifier
+import com.arkivanov.decompose.Child
+import com.arkivanov.decompose.ExperimentalDecomposeApi
+import com.tangem.core.decompose.ui.stack.animation.LocalStackAnimationProvider
+import com.tangem.core.decompose.ui.stack.animation.StackAnimation
+import com.tangem.core.decompose.ui.stack.animation.StackAnimationScope
+import com.tangem.core.decompose.ui.stack.animation.emptyStackAnimation
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.arkivanov.decompose.router.stack.ChildStack
+import com.arkivanov.decompose.value.Value
+
+/**
+ * Displays the provided [stack] of child components, taking care of saving and restoring the UI state.
+ *
+ * @param stack a [ChildStack] to be displayed.
+ * @param modifier a [Modifier] to applied to a wrapping container.
+ * @param animation an optional [StackAnimation] for animating stack changes. If not provided (or `null`),
+ * then a default [StackAnimation] is obtained from [LocalStackAnimationProvider].
+ * If that is also `null`, then there is no animation.
+
+ * The receiver [StackAnimationScope] can be used for additional animations, such as
+ * [Shared Element Transitions](https://developer.android.com/develop/ui/compose/animation/shared-elements).
+ */
+@ExperimentalDecomposeApi
+@Composable
+fun <C : Any, T : Any> ChildStack(
+    stack: ChildStack<C, T>,
+    modifier: Modifier = Modifier,
+    animation: StackAnimation<C, T>? = null,
+    content: @Composable StackAnimationScope.(child: Child.Created<C, T>) -> Unit,
+) {
+    val holder = rememberSaveableStateHolder()
+
+    holder.RetainStates(stack.getKeys())
+
+    val animationProvider = LocalStackAnimationProvider.current
+    val anim = animation ?: remember(animationProvider, animationProvider::provide) ?: emptyStackAnimation()
+
+    anim(stack = stack, modifier = modifier) { child ->
+        holder.SaveableStateProvider(child.key) {
+            content(child)
+        }
+    }
+}
+
+/**
+ * Displays the provided [stack] of child components, taking care of saving and restoring the UI state.
+ *
+ * @param stack an observable [ChildStack] to be displayed.
+ * @param modifier a [Modifier] to applied to a wrapping container.
+ * @param animation an optional [StackAnimation] for animating stack changes. If not provided (or `null`),
+ * then a default [StackAnimation] is obtained from [LocalStackAnimationProvider].
+ * If that is also `null`, then there is no animation.
+
+ * The receiver [StackAnimationScope] can be used for additional animations, such as
+ * [Shared Element Transitions](https://developer.android.com/develop/ui/compose/animation/shared-elements).
+ */
+@ExperimentalDecomposeApi
+@Composable
+fun <C : Any, T : Any> ChildStack(
+    stack: Value<ChildStack<C, T>>,
+    modifier: Modifier = Modifier,
+    animation: StackAnimation<C, T>? = null,
+    content: @Composable StackAnimationScope.(child: Child.Created<C, T>) -> Unit,
+) {
+    val state = stack.subscribeAsState()
+
+    ChildStack(
+        stack = state.value,
+        modifier = modifier,
+        animation = animation,
+        content = content,
+    )
+}
+
+private fun ChildStack<*, *>.getKeys(): Set<String> = items.mapTo(HashSet(), Child<*, *>::key)
+
+@Composable
+private fun SaveableStateHolder.RetainStates(currentKeys: Set<String>) {
+    val keys = remember(this) { Keys(currentKeys) }
+
+    DisposableEffect(this, currentKeys) {
+        keys.set.forEach { key ->
+            if (key !in currentKeys) {
+                removeState(key)
+            }
+        }
+
+        keys.set = currentKeys
+
+        onDispose {}
+    }
+}
+
+private class Keys(
+    var set: Set<String>,
+)

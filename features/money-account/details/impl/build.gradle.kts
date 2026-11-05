@@ -37,6 +37,7 @@ dependencies {
 
     /** Features */
     implementation(projects.features.moneyAccount.details.api)
+    implementation(projects.features.tangempay.commonUi)
     implementation(projects.features.tangempay.details.api)
     implementation(projects.features.tokenRecieve.api)
     implementation(projects.features.txhistory.api)

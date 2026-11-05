@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.pay.model.bankofframp.BankOfframpError
+import com.tangem.domain.pay.model.bankofframp.BankRail
 import com.tangem.domain.pay.model.bankofframp.RecentBankAccounts
 import com.tangem.domain.pay.repository.BankOfframpRepository
 import com.tangem.test.core.ProvideTestModels
@@ -44,6 +45,20 @@ internal class GetRecentBankAccountsUseCaseTest {
         )
         assertThat(actual).isEqualTo(expected.right())
         coVerify(exactly = 1) { repository.getBankAccounts(TEST_USER_WALLET_ID) }
+    }
+
+    @Test
+    fun `GIVEN SPEI recipients among saved accounts WHEN invoke THEN they neither show nor count as more`() = runTest {
+        // Arrange
+        val usd = List(3) { bankAccount(id = "usd-$it", displayName = "usd-$it") }
+        val spei = bankAccount(id = "spei", details = bankAccountDetails(rail = BankRail.SPEI))
+        coEvery { repository.getBankAccounts(TEST_USER_WALLET_ID) } returns (listOf(spei) + usd).right()
+
+        // Act
+        val actual = useCase(TEST_USER_WALLET_ID)
+
+        // Assert
+        assertThat(actual).isEqualTo(RecentBankAccounts(recents = usd, hasMoreAccounts = false).right())
     }
 
     @Test

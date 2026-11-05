@@ -279,6 +279,7 @@ internal class WalletWarningsClickIntentsTest {
 
         private fun provideTestModels() = listOf(
             LinkFailureModel(error = WalletLinkError.Cancelled, isErrorShown = false),
+            LinkFailureModel(error = WalletLinkError.WrongCard, isErrorShown = false),
             LinkFailureModel(error = WalletLinkError.Failed(reason = "api"), isErrorShown = true),
             LinkFailureModel(error = WalletLinkError.NotSupported, isErrorShown = true),
         )

@@ -28,7 +28,11 @@ sealed class ExpressError : Throwable() {
 
     data class ExchangeNotPossibleError(override val code: Int) : ExpressError()
 
+    data class InvalidAmountError(override val code: Int) : ExpressError()
+
     data class NotEnoughBalanceError(override val code: Int) : ExpressError()
+
+    data class NotEnoughBalanceForGasFeeError(override val code: Int) : ExpressError()
 
     data class InvalidAddressError(override val code: Int) : ExpressError()
 

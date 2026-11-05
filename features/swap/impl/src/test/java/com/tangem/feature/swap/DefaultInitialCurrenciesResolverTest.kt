@@ -2164,6 +2164,7 @@ internal class DefaultInitialCurrenciesResolverTest {
             val activatingValue = MoneyAccountStatusValue.Onboarding.Activating(
                 source = StatusSource.ACTUAL,
                 customerId = "customer",
+                step = MoneyAccountStatusValue.Onboarding.Activating.Step.ISSUING,
             )
             setupSupplier(
                 listOf(
