@@ -115,7 +115,9 @@ private fun MoneyAccountRow(
 @Composable
 private fun MoneyAccountUnavailable(modifier: Modifier = Modifier) {
     TangemRow(
-        modifier = modifier.moneyAccountCard(),
+        modifier = modifier
+            .moneyAccountCard()
+            .testTag(MoneyAccountTestTags.MAIN_ROW),
         contentLead = TangemRowContentLead.Start,
         verticalAlignment = TangemRowVerticalAlignment.Center,
         startSlot = { MoneyAccountIcon() },

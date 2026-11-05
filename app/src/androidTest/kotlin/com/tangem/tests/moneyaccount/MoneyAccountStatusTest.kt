@@ -1,23 +1,35 @@
 package com.tangem.tests.moneyaccount
 
+import androidx.test.InstrumentationRegistry.getTargetContext
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
+import com.tangem.common.extensions.restartApp
+import com.tangem.common.utils.getWireMockRequestCount
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.res.R as CoreResR
+import com.tangem.scenarios.assertMoneyAccountRowNeverShown
+import com.tangem.scenarios.assertTangemPayRequestSentOnce
 import com.tangem.scenarios.clickMoneyAccountRowUntilDetailsOpen
+import com.tangem.scenarios.clickTangemPayTileUntilPaymentAccountOpens
 import com.tangem.scenarios.forgetLastHotWallet
 import com.tangem.scenarios.openMainWithMoneyAccountWallet
+import com.tangem.scenarios.openTangemPayMoreActionsMenu
+import com.tangem.scenarios.pullToRefreshMainScreen
 import com.tangem.scenarios.refreshMainUntilMoneyAccountBalance
+import com.tangem.scenarios.refreshMainUntilMoneyAccountRowHidden
 import com.tangem.scenarios.waitForMoneyAccountRowWithText
 import com.tangem.scenarios.waitForMoneyAccountRowWithTextNeverShowing
 import com.tangem.screens.moneyaccount.onMoneyAccountScreen
 import com.tangem.screens.onWarningBottomSheet
+import com.tangem.screens.tangempay.onTangemPayMainScreen
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
+import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -222,6 +234,88 @@ class MoneyAccountStatusTest : BaseTestCase() {
             }
             step("Assert 'Money account' row shows '$balanceFromBackend' and never the cached '$initialBalance'") {
                 waitForMoneyAccountRowWithTextNeverShowing(text = balanceFromBackend, forbiddenText = initialBalance)
+            }
+        }
+    }
+
+    @Ignore("[REDACTED_JIRA]")
+    @AllureId("13585")
+    @DisplayName("Money account: pulling Main to refresh requests customer/summary once")
+    @Test
+    fun mainPullToRefreshRequestsCustomerSummaryOnceTest() {
+        val customerSummaryPath = "/bff-v2/v1/customer/summary"
+        val usdcBalanceAfterDepositState = "AfterDeposit"
+        val refreshedBalance = "$35.00"
+        var summaryRequestsBefore = 0
+
+        setupHooks().run {
+            step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityState'") {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
+            }
+            step("Set WireMock scenario '$moneyAccountScenario' to '$moneyAccountActiveState'") {
+                setWireMockScenarioState(moneyAccountScenario, moneyAccountActiveState)
+            }
+            step("Open 'Main' screen of the wallet with the account") { openMainWithMoneyAccountWallet() }
+            step("Assert 'Money account' row shows '$initialBalance'") {
+                waitForMoneyAccountRowWithText(initialBalance)
+            }
+            step("Set WireMock scenario '$usdcBalanceScenario' to '$usdcBalanceAfterDepositState'") {
+                setWireMockScenarioState(usdcBalanceScenario, usdcBalanceAfterDepositState)
+            }
+            step("Count 'GET $customerSummaryPath' requests sent so far") {
+                summaryRequestsBefore = getWireMockRequestCount("GET", customerSummaryPath)
+            }
+            step("Pull 'Main' screen down to refresh") { pullToRefreshMainScreen() }
+            // The new balance is read after the summary, so once it shows every summary request of the pull is sent.
+            step("Assert 'Money account' row shows '$refreshedBalance'") {
+                waitForMoneyAccountRowWithText(refreshedBalance)
+            }
+            step("Assert 'GET $customerSummaryPath' is requested once for the pull") {
+                assertTangemPayRequestSentOnce("GET", customerSummaryPath, summaryRequestsBefore)
+            }
+        }
+    }
+
+    @AllureId("13670")
+    @DisplayName("Money account: a closed account stays hidden on Main and is not offered again")
+    @Test
+    fun closedAccountStaysHiddenOnMainTest() {
+        val moneyAccountDeactivatedState = "AccountDeactivated"
+        val moneyAccountDeactivatedDelayedState = "AccountDeactivatedDelayed"
+        val cachedStateWindowMillis = 10_000L
+        val packageName = getTargetContext().packageName
+
+        setupHooks().run {
+            step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityState'") {
+                setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
+            }
+            step("Set WireMock scenario '$moneyAccountScenario' to '$moneyAccountActiveState'") {
+                setWireMockScenarioState(moneyAccountScenario, moneyAccountActiveState)
+            }
+            step("Open 'Main' screen of the wallet with the account") { openMainWithMoneyAccountWallet() }
+            step("Assert 'Money account' row shows '$initialBalance'") {
+                waitForMoneyAccountRowWithText(initialBalance)
+            }
+            step("Switch WireMock scenario '$moneyAccountScenario' to '$moneyAccountDeactivatedState'") {
+                setWireMockScenarioState(moneyAccountScenario, moneyAccountDeactivatedState)
+            }
+            refreshMainUntilMoneyAccountRowHidden()
+            // The closed status reaches the persisted cache after the row hides; a kill right away restores 'Active'.
+            step("Assert 'Money account' row stays hidden") { assertMoneyAccountRowNeverShown() }
+            step("Switch WireMock scenario '$moneyAccountScenario' to '$moneyAccountDeactivatedDelayedState'") {
+                setWireMockScenarioState(moneyAccountScenario, moneyAccountDeactivatedDelayedState)
+            }
+            step("Force-close and re-launch the app") { restartApp(packageName) }
+            step("Assert 'Money account' row with the cached '$initialBalance' never shows") {
+                assertMoneyAccountRowNeverShown(durationMillis = cachedStateWindowMillis)
+            }
+            step("Assert Tangem Pay tile is displayed") {
+                awaitSuccess(WAIT_UNTIL_TIMEOUT_LONG) { onTangemPayMainScreen { tileBalance.assertIsDisplayed() } }
+            }
+            step("Click on Tangem Pay tile") { clickTangemPayTileUntilPaymentAccountOpens() }
+            openTangemPayMoreActionsMenu()
+            step("Assert 'Remove account' menu item is not displayed") {
+                onTangemPayMainScreen { removeAccountMenuItem.assertDoesNotExist() }
             }
         }
     }
