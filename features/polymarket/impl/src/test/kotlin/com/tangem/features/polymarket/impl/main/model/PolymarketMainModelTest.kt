@@ -2,6 +2,8 @@ package com.tangem.features.polymarket.impl.main.model
 
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.polymarket.PolymarketLiveQuotesRepository
+import com.tangem.features.polymarket.api.PolymarketFeatureToggles
+import com.tangem.features.polymarket.impl.main.addfunds.PolymarketReceiveSheetFactory
 import com.tangem.domain.polymarket.model.PolymarketLiveQuote
 import com.tangem.domain.polymarket.model.PolymarketSportsState
 import com.tangem.domain.polymarket.usecase.ObservePolymarketLiveQuotesUseCase
@@ -1115,6 +1117,22 @@ internal class PolymarketMainModelTest {
     }
 
     @Test
+    fun `GIVEN phase two WHEN receive row tapped THEN the network is chosen before an address is shown`() = runTest {
+        // Arrange
+        val model = createModel(testScope = this, isPhaseTwoEnabled = true)
+        val host = FakeSlotHost(model.fundingSheetNavigation)
+        advanceUntilIdle()
+
+        // Act
+        model.onReceiveClick()
+
+        // Assert
+        val configs = (host.configuration as PolymarketFundingSheetConfig.ChooseNetwork).receiveConfigs
+        assertThat(configs.map { it.receiveAddress.single().value }).containsExactly(REQUISITES_ADDRESS)
+        model.onDestroy()
+    }
+
+    @Test
     fun `GIVEN receive replaced the sheet WHEN the add funds sheet reports its exit THEN receive stays open`() =
         runTest {
             // Arrange
@@ -1785,6 +1803,9 @@ internal class PolymarketMainModelTest {
     )
 
     private fun createModel(testScope: TestScope, isPhaseTwoEnabled: Boolean = false): PolymarketMainModel {
+        val featureToggles = mockk<PolymarketFeatureToggles> {
+            every { isPolymarketPhaseTwoEnabled } returns isPhaseTwoEnabled
+        }
         every { predictionAccountStatusSupplier(any<UserWalletId>()) } returns statusFlow
 
         every { getEventsBatchFlowUseCase(any(), capture(contextSlot), any()) } answers {
@@ -1849,7 +1870,11 @@ internal class PolymarketMainModelTest {
             getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
             observePolymarketSportsStateUseCase = observeSports,
             observePolymarketLiveQuotesUseCase = ObservePolymarketLiveQuotesUseCase(quotesRepository),
-            polymarketFeatureToggles = mockk { every { isPolymarketPhaseTwoEnabled } returns isPhaseTwoEnabled },
+            receiveSheetFactory = PolymarketReceiveSheetFactory(
+                featureToggles = featureToggles,
+                collateralCurrencyFactory = mockk(relaxed = true),
+            ),
+            polymarketFeatureToggles = featureToggles,
         ).also { model = it }
     }
 
