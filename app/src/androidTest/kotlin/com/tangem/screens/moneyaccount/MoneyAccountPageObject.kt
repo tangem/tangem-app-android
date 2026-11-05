@@ -47,6 +47,10 @@ class MoneyAccountPageObject(private val semanticsProvider: SemanticsNodeInterac
         .fetchSemanticsNodes(atLeastOneRootRequired = false)
         .isNotEmpty()
 
+    fun isMainRowShown(): Boolean = semanticsProvider.onAllNodes(withTestTag(MoneyAccountTestTags.MAIN_ROW))
+        .fetchSemanticsNodes(atLeastOneRootRequired = false)
+        .isNotEmpty()
+
     val addFundsButton: KNode = child {
         hasClickAction()
         hasAnyAncestor(withTestTag(MoneyAccountTestTags.ADD_FUNDS_BUTTON))
@@ -100,6 +104,21 @@ class MoneyAccountPageObject(private val semanticsProvider: SemanticsNodeInterac
     fun modalStatusTitle(title: String): KNode = child {
         hasTestTag(ModalStatusTestTags.TITLE)
         hasText(title)
+    }
+
+    fun modalStatusDescription(description: String): KNode = child {
+        hasTestTag(ModalStatusTestTags.DESCRIPTION)
+        hasText(description)
+    }
+
+    val mainRowCacheIcon: KNode = child {
+        hasTestTag(MoneyAccountTestTags.MAIN_ROW_CACHE_ICON)
+        useUnmergedTree = true
+    }
+
+    val contactSupportButton: KNode = child {
+        hasText(getResourceString(R.string.common_contact_support))
+        hasClickAction()
     }
 }
 
