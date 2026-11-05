@@ -43,6 +43,7 @@ internal class PooledStakingMapper @Inject constructor() {
 
         return EarnProductSummary(
             productId = POOLED_STAKING_ID,
+            // Temporary plain text: becomes a resource taking the rate as an argument, and the APY suffix goes with it.
             rateText = stringReference("${option.apy.format { percent(canBeLower = true) }} APY"),
             risk = EarnRisk.Low,
             availability = if (availability is StakingAvailability.Full) {
@@ -69,6 +70,7 @@ internal class PooledStakingMapper @Inject constructor() {
             projection = DefaultEarnProjection(netRate = bestVault.netRate()),
             benefits = emptyList(),
             howItWorks = null,
+            // Temporary plain text: the fee value is built from a resource taking the fee as an argument.
             details = listOf(
                 row(RISK_LABEL, RISK_VALUE),
                 row(PROTOCOL_LABEL, PROTOCOL_VALUE),
@@ -125,6 +127,8 @@ internal class PooledStakingMapper @Inject constructor() {
     private companion object {
 
         const val PERCENT_SHIFT = 2
+
+        // Temporary plain strings: they become Lokalise resources in a separate strings task, and these constants go.
         const val START_EARNING_LABEL = "Start earning"
         const val MANAGE_LABEL = "Manage"
         const val DESCRIPTION = "Earn rewards by staking ETH in a P2P.org pool"
