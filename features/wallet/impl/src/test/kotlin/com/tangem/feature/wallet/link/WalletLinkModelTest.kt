@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.link
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.ds2.modal.TangemModalActionScope
 import com.tangem.core.ui.message.DialogMessage
@@ -30,6 +31,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -37,6 +39,7 @@ internal class WalletLinkModelTest {
 
     private val linkWalletToDeviceUseCase: LinkWalletToDeviceUseCase = mockk()
     private val uiMessageSender: UiMessageSender = mockk(relaxUnitFun = true)
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxUnitFun = true)
     private val userWallet: UserWallet.Hot = mockk()
     private val actionScope = TangemModalActionScope {}
 
@@ -44,11 +47,12 @@ internal class WalletLinkModelTest {
 
     @BeforeEach
     fun setup() {
-        clearMocks(linkWalletToDeviceUseCase, uiMessageSender)
+        clearMocks(linkWalletToDeviceUseCase, uiMessageSender, analyticsEventHandler)
         model = WalletLinkModel(
             dispatchers = TestingCoroutineDispatcherProvider(),
             linkWalletToDeviceUseCase = linkWalletToDeviceUseCase,
             uiMessageSender = uiMessageSender,
+            analyticsEventHandler = analyticsEventHandler,
         )
     }
 
@@ -213,6 +217,71 @@ internal class WalletLinkModelTest {
         // Assert
         assertThat(model.uiState.value).isNull()
         assertThat(isLinkCancelled).isTrue()
+    }
+
+    @Test
+    fun `GIVEN hidden sheet WHEN request THEN sheet shown is reported once`() = runTest {
+        // Arrange
+        coEvery { linkWalletToDeviceUseCase(userWallet) } returns WalletLinkError.WrongCard.left()
+
+        // Act
+        requestLink(userWallet)
+        clickLink()
+
+        // Assert
+        verify(exactly = 1) { analyticsEventHandler.send(WalletLinkAnalyticsEvent.SheetShown()) }
+    }
+
+    @Test
+    fun `GIVEN sheet shown WHEN link clicked THEN link button is reported`() = runTest {
+        // Arrange
+        coEvery { linkWalletToDeviceUseCase(userWallet) } returns Unit.right()
+        requestLink(userWallet)
+
+        // Act
+        clickLink()
+
+        // Assert
+        verify(exactly = 1) { analyticsEventHandler.send(WalletLinkAnalyticsEvent.ButtonLinkWallet()) }
+        verify(exactly = 0) { analyticsEventHandler.send(WalletLinkAnalyticsEvent.Canceled()) }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideCancelCases")
+    fun `GIVEN link fails WHEN link clicked THEN only a user cancel is reported as canceled`(
+        error: WalletLinkError,
+        isCanceledReported: Boolean,
+    ) = runTest {
+        // Arrange
+        coEvery { linkWalletToDeviceUseCase(userWallet) } returns error.left()
+        requestLink(userWallet)
+
+        // Act
+        clickLink()
+
+        // Assert
+        verify(exactly = if (isCanceledReported) 1 else 0) {
+            analyticsEventHandler.send(WalletLinkAnalyticsEvent.Canceled())
+        }
+    }
+
+    private fun provideCancelCases() = listOf(
+        Arguments.of(WalletLinkError.Cancelled, true),
+        Arguments.of(WalletLinkError.WrongCard, false),
+        Arguments.of(WalletLinkError.NotSupported, false),
+        Arguments.of(WalletLinkError.Failed(reason = "api"), false),
+    )
+
+    @Test
+    fun `GIVEN sheet shown WHEN sheet dismissed THEN cancel is reported`() = runTest {
+        // Arrange
+        requestLink(userWallet)
+
+        // Act
+        model.onDismiss()
+
+        // Assert
+        verify(exactly = 1) { analyticsEventHandler.send(WalletLinkAnalyticsEvent.Canceled()) }
     }
 
     private fun TestScope.requestLink(wallet: UserWallet): Deferred<WalletLinkRequester.Result> {
