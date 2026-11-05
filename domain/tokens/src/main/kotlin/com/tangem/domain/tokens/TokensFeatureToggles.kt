@@ -15,9 +15,9 @@ interface TokensFeatureToggles {
     val isPluggableBalanceSourcesEnabled: Boolean
 
     /**
-     * Yield supply status comes from the Yield Module positions source instead of the network status snapshot.
+     * Yield supply status comes from the Yield Module status contribution instead of the network status snapshot.
      *
-     * Implies [isPluggableBalanceSourcesEnabled]: the positions are fetched only through the registered
+     * Implies [isPluggableBalanceSourcesEnabled]: the statuses are fetched only through the registered
      * [com.tangem.domain.models.currency.balance.BalanceContributionFetcher] set, so without it every yield token
      * would read as inactive.
      */
