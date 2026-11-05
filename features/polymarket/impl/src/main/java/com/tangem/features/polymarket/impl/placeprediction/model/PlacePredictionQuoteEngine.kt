@@ -52,6 +52,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.logging.TangemLogger
+import com.tangem.utils.time.CurrentTimeProvider
 import com.tangem.utils.transformer.update
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -93,6 +94,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
     private val predictionFundingWindow: PredictionFundingWindow,
     private val predictionAccountStatusSupplier: PredictionAccountStatusSupplier,
     private val predictionBalancePoller: PredictionBalancePoller,
+    private val currentTimeProvider: CurrentTimeProvider,
     refreshPredictionDepositRequisitesInteractor: RefreshPredictionDepositRequisitesInteractor,
 ) {
 
@@ -197,6 +199,14 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
         cancelQuote()
         return PreparedPrediction(params = params, state = state, isNegRisk = isNegRisk, positionId = positionId)
+    }
+
+    fun requote() {
+        uiState.update { state ->
+            SetAmountTransformer(value = state.amountValue, isAmountFromFraction = state.isAmountFromFraction)
+                .transform(state)
+        }
+        restartQuoteLoop(withDebounce = false)
     }
 
     suspend fun <T> holdDuring(block: suspend () -> T): T {
@@ -429,7 +439,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         uiState.update(
             SetQuoteResultTransformer(
                 result = result,
-                receivedAtMillis = System.currentTimeMillis(),
+                receivedAtMillis = currentTimeProvider.nowMillis(),
                 assetId = tradedAssetId,
             ),
         )
