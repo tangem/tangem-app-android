@@ -14,5 +14,12 @@ dependencies {
     api(projects.core.ui)
 
     /** Domain */
+    api(projects.domain.core)
     api(projects.domain.models)
+
+    /** Kotlin */
+    api(deps.kotlin.coroutines)
+
+    /** Tests */
+    testImplementation(projects.test.core)
 }
