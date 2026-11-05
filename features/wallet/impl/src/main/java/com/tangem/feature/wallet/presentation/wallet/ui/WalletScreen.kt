@@ -69,8 +69,6 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.common.Wallet
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.lazyListStateMapSaver
 import com.tangem.features.feed.v2.FeedV2Component
 import com.tangem.features.promobanners.api.PromoBannersBlockComponent
-import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockComponent
-import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockUM
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockComponent
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
@@ -94,7 +92,6 @@ internal fun WalletScreen(
     tangemPayComponent: TangemPayMainBlockComponent,
     moneyAccountComponent: MoneyAccountMainBlockComponent,
     polymarketComponent: PolymarketWalletBlockComponent,
-    collectiblesComponent: CollectiblesWalletBlockComponent,
     modifier: Modifier = Modifier,
     @RemoveWithToggle("AND_18663_REDESIGNED_ACCOUNT_ROWS_ENABLED")
     isRedesignedAccountRowsEnabled: Boolean = false,
@@ -148,7 +145,6 @@ internal fun WalletScreen(
         promoBannersBlockComponent = promoBannersBlockComponent,
         moneyAccountComponent = moneyAccountComponent,
         polymarketComponent = polymarketComponent,
-        collectiblesComponent = collectiblesComponent,
         behavior = behavior,
         isRedesignedAccountRowsEnabled = isRedesignedAccountRowsEnabled,
         isShtorkaBlurEnabled = isShtorkaBlurEnabled,
@@ -181,7 +177,6 @@ private fun WalletContent(
     tangemPayComponent: TangemPayMainBlockComponent,
     moneyAccountComponent: MoneyAccountMainBlockComponent,
     polymarketComponent: PolymarketWalletBlockComponent,
-    collectiblesComponent: CollectiblesWalletBlockComponent,
     behavior: TangemCollapsingAppBarBehavior,
     listStates: ImmutableMap<Int, LazyListState>,
     modifier: Modifier = Modifier,
@@ -383,8 +378,9 @@ private fun WalletContent(
                                         walletId = currentWalletId,
                                         moneyAccountComponent = moneyAccountComponent,
                                         polymarketComponent = polymarketComponent,
-                                        collectiblesComponent = collectiblesComponent,
-                                        onOrganizeButtonBoundsChange = remember(currentWalletIndex) {
+                                        onOrganizeButtonBoundsChange = remember(
+                                            currentWalletIndex,
+                                        ) {
                                             { bounds ->
                                                 if (bounds != null) {
                                                     organizeButtonBounds[currentWalletIndex] = bounds
@@ -673,14 +669,6 @@ private fun WalletScreen2_Preview(@PreviewParameter(WalletScreen2PreviewProvider
             polymarketComponent = object : PolymarketWalletBlockComponent {
                 override fun LazyListScope.polymarketWalletBlockContent(
                     state: PolymarketWalletBlockUM,
-                    isBalanceHidden: Boolean,
-                    modifier: Modifier,
-                ) {
-                }
-            },
-            collectiblesComponent = object : CollectiblesWalletBlockComponent {
-                override fun LazyListScope.collectiblesWalletBlockContent(
-                    state: CollectiblesWalletBlockUM,
                     isBalanceHidden: Boolean,
                     modifier: Modifier,
                 ) {
