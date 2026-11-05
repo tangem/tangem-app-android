@@ -273,7 +273,7 @@ internal class PlacePredictionStatusModelTest : PlacePredictionModelTestBase() {
         val summary = createSummaryModel(testScope = testScope, amountModel = amountModel)
         val route = slot<PlacePredictionRoute.Status>()
         every { router.replaceAll(capture(route), onComplete = any()) } returns Unit
-        summary.onPlaceClick()
+        summary.tapPlace()
         testScope.runCurrent()
         summary.onDestroy()
         amountModel.onDestroy()

@@ -37,6 +37,8 @@ internal data class PlacePredictionUM(
     val isAwaitingFunds: Boolean = false,
     val lastFeeRate: BigDecimal = BigDecimal.ZERO,
     val isAmountFromFraction: Boolean = false,
+    val placeButtonStyle: PlaceButtonStyleUM = PlaceButtonStyleUM.HOLD,
+    val holdResetKey: Int = 0,
 ) {
 
     companion object {

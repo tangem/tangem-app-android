@@ -679,7 +679,7 @@ internal class PolymarketPositionsPreviewLoaderTest {
     }
 
     @Test
-    fun `GIVEN known finished history WHEN its check fails THEN keeps offering Finished`() = runTest {
+    fun `GIVEN known finished history WHEN polling again THEN does not check it again`() = runTest {
         // Arrange
         val loader = createLoader()
         coEvery { repository.getOpenPositions(addresses, FIRST_PAGE) } returnsMany listOf(
@@ -687,22 +687,42 @@ internal class PolymarketPositionsPreviewLoaderTest {
             page.right(),
             PolymarketPositionsError.Network.left(),
         )
-        coEvery { repository.getClosedPositions(addresses, FINISHED_PROBE) } returnsMany listOf(
-            PolymarketPositionsPage(listOf(createClosedPolymarketPosition()), nextCursor = null).right(),
-            PolymarketPositionsError.Network.left(),
-        )
+        coEvery { repository.getClosedPositions(addresses, FINISHED_PROBE) } returns
+            PolymarketPositionsPage(listOf(createClosedPolymarketPosition()), nextCursor = null).right()
         loader.resume(backgroundScope, userWalletId)
         runCurrent()
 
         // Act
         passPollInterval()
-        val afterFailedCheck = loader.state.value
+        val afterSecondPoll = loader.state.value
         passPollInterval()
 
         // Assert
-        assertThat(afterFailedCheck.hasFinished).isTrue()
+        assertThat(afterSecondPoll.hasFinished).isTrue()
         assertThat(loader.state.value.hasFinished).isTrue()
         assertThat((loader.state.value as PolymarketPositionsPreviewUM.Content).onRetry).isNotNull()
+        coVerify(exactly = 1) { repository.getClosedPositions(addresses, FINISHED_PROBE) }
+    }
+
+    @Test
+    fun `GIVEN finished check fails WHEN the next poll finds history THEN offers Finished`() = runTest {
+        // Arrange
+        val loader = createLoader()
+        coEvery { repository.getOpenPositions(addresses, FIRST_PAGE) } returns page.right()
+        coEvery { repository.getClosedPositions(addresses, FINISHED_PROBE) } returnsMany listOf(
+            PolymarketPositionsError.Network.left(),
+            PolymarketPositionsPage(listOf(createClosedPolymarketPosition()), nextCursor = null).right(),
+        )
+
+        // Act
+        loader.resume(backgroundScope, userWalletId)
+        runCurrent()
+        val afterFailedCheck = loader.state.value.hasFinished
+        passPollInterval()
+
+        // Assert
+        assertThat(afterFailedCheck).isFalse()
+        assertThat(loader.state.value.hasFinished).isTrue()
     }
 
     @Test
