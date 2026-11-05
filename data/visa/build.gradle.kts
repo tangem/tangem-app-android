@@ -33,7 +33,6 @@ dependencies {
     implementation(deps.androidx.datastore)
     implementation(deps.arrow.core)
     implementation(deps.jodatime)
-    implementation(deps.okio)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
     // endregion
 

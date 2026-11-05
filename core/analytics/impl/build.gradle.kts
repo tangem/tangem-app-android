@@ -19,6 +19,8 @@ dependencies {
 
     // region Kotlin
     implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.serialization)
+    implementation(deps.moshi)
     // endregion
 
     // region Analytics SDKs
@@ -60,6 +62,7 @@ dependencies {
 
     // region Core modules
     api(projects.core.analytics)
+    api(projects.core.analytics.models)
     // Core shouldn't depend on core, but with utils, logging and preferences storage it's necessary.
     implementation(projects.core.local)
     implementation(projects.core.utils)
@@ -72,6 +75,7 @@ dependencies {
     // endregion
 
     // region Tests
+    testImplementation(deps.androidx.datastore.core)
     testImplementation(projects.test.core)
     testRuntimeOnly(deps.orgJson)
     // endregion
