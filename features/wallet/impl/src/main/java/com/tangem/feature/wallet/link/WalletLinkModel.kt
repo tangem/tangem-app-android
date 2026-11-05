@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.link
 
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -32,6 +33,7 @@ internal class WalletLinkModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val linkWalletToDeviceUseCase: LinkWalletToDeviceUseCase,
     private val uiMessageSender: UiMessageSender,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     /** `null` while the sheet is hidden */
@@ -53,6 +55,7 @@ internal class WalletLinkModel @Inject constructor(
             pendingResult = result
             requestId++
             showSheet(userWallet, isLoading = false)
+            analyticsEventHandler.send(WalletLinkAnalyticsEvent.SheetShown())
 
             try {
                 result.await()
@@ -67,22 +70,29 @@ internal class WalletLinkModel @Inject constructor(
     }
 
     fun onDismiss() {
+        analyticsEventHandler.send(WalletLinkAnalyticsEvent.Canceled())
         linkJobHolder.cancel()
         close(WalletLinkRequester.Result.Dismissed)
     }
 
     private fun onLinkClick(userWallet: UserWallet) {
         if (linkJobHolder.isActive) return
+        analyticsEventHandler.send(WalletLinkAnalyticsEvent.ButtonLinkWallet())
         showSheet(userWallet, isLoading = true)
 
         modelScope.launch {
             linkWalletToDeviceUseCase(userWallet).fold(
                 ifLeft = { error ->
-                    if (error is WalletLinkError.Cancelled || error is WalletLinkError.WrongCard) {
-                        showSheet(userWallet, isLoading = false)
-                    } else {
-                        close(WalletLinkRequester.Result.Dismissed)
-                        showErrorDialog()
+                    when (error) {
+                        WalletLinkError.Cancelled -> {
+                            analyticsEventHandler.send(WalletLinkAnalyticsEvent.Canceled())
+                            showSheet(userWallet, isLoading = false)
+                        }
+                        WalletLinkError.WrongCard -> showSheet(userWallet, isLoading = false)
+                        else -> {
+                            close(WalletLinkRequester.Result.Dismissed)
+                            showErrorDialog()
+                        }
                     }
                 },
                 ifRight = { close(WalletLinkRequester.Result.Linked) },
