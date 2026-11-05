@@ -43,6 +43,7 @@ import com.tangem.core.ui.ds2.animation.WithoutMaterialWhileAnimating
 import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 import com.tangem.core.ui.extensions.dropWhenNoRoom
 import com.tangem.feature.walletsettings.component.AddAccountTypeComponent
+import com.tangem.features.allservices.api.AllServicesFeatureToggles
 import com.tangem.features.commonfeatures.api.portfolioselector.PortfolioSelectorComponent
 import com.tangem.features.feed.components.v2.blocks.analytics.FeedBlocksAnalytics
 import com.tangem.features.feed.nav.FeedRoute
@@ -77,6 +78,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
     private val searchBarController: DefaultFeedSearchBarController,
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
     private val addAccountTypeComponentFactory: AddAccountTypeComponent.Factory,
+    private val allServicesFeatureToggles: AllServicesFeatureToggles,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val feedEntryController: FeedEntryController,
     private val tabSet: FeedTabSet,
@@ -252,6 +254,7 @@ internal class DefaultFeedV2Component @AssistedInject constructor(
                 context = childContext,
                 portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
                 addAccountTypeComponentFactory = addAccountTypeComponentFactory,
+                allServicesFeatureToggles = allServicesFeatureToggles,
                 analyticsEventHandler = analyticsEventHandler,
                 blocksAnalytics = blocksAnalytics,
                 requestedTab = requestedTab,

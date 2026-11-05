@@ -20,6 +20,7 @@ dependencies {
     implementation(projects.core.abTests)
     implementation(projects.core.remote)
     /* Project - API */
+    implementation(projects.features.allServices.api)
     api(projects.features.commonFeatures.api)
     api(projects.features.feed.api)
     api(projects.features.feed.search.api)
