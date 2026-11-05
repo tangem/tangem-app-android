@@ -2,6 +2,7 @@ package com.tangem.domain.wallets.usecase
 
 import arrow.core.Either
 import arrow.core.raise.either
+import arrow.fx.coroutines.onCancel
 import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.builder.HotUserWalletBuilder
@@ -20,7 +21,6 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
-import kotlin.coroutines.cancellation.CancellationException
 
 @Suppress("LongParameterList")
 class CreateHotWalletUseCase @Inject constructor(
@@ -36,19 +36,17 @@ class CreateHotWalletUseCase @Inject constructor(
         auth: HotAuth,
         mnemonicType: MnemonicType,
     ): Either<CreateHotWalletError, UserWallet.Hot> = either {
-        val restriction = runSuspendCatching { getHotWalletAdditionRestrictionUseCase(isSocialLogin = false) }
+        val restriction = runSuspendCatching { getHotWalletAdditionRestrictionUseCase() }
             .getOrElse { raise(CreateHotWalletError.Failed(it)) }
         if (restriction == HotWalletAdditionRestriction.LimitReached) raise(CreateHotWalletError.LimitReached)
 
         val hotWalletId = runSuspendCatching { tangemHotSdk.generateWallet(auth, mnemonicType) }
             .getOrElse { raise(CreateHotWalletError.Failed(it)) }
 
-        val result = try {
-            buildAndSave(hotWalletId)
-        } catch (e: CancellationException) {
-            withContext(NonCancellable) { discardUnsavedHotWalletUseCase(hotWalletId) }
-            throw e
-        }
+        val result = onCancel(
+            fa = { buildAndSave(hotWalletId) },
+            onCancel = { discardUnsavedHotWalletUseCase(hotWalletId) },
+        )
 
         result.onRight { userWallet ->
             appCoroutineScope.launch {

@@ -85,7 +85,7 @@ internal class IntroductionMobileWalletCreatorCancellationTest {
             messageSender,
             onFailed,
         )
-        coEvery { getHotWalletAdditionRestrictionUseCase(isSocialLogin = false) } returns null
+        coEvery { getHotWalletAdditionRestrictionUseCase() } returns null
         sentEvents.clear()
         every { analyticsEventHandler.send(capture(sentEvents)) } just runs
         coEvery { appsFlyerRepository.getConversionData() } returns null
