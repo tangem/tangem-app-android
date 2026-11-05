@@ -37,12 +37,15 @@ dependencies {
 
     /** Compose */
     implementation(deps.compose.foundation)
+    implementation(deps.compose.material3)
     implementation(deps.compose.runtime)
     implementation(deps.compose.ui)
+    implementation(deps.compose.ui.tooling)
 
     /** Other */
     implementation(deps.decompose)
     implementation(deps.decompose.ext.compose)
+    implementation(deps.lifecycle.compose)
 
     /** DI */
     implementation(deps.hilt.android)
