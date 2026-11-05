@@ -497,6 +497,9 @@ include(":features:collectibles:impl")
 
 include(":features:mcp:api")
 include(":features:mcp:impl")
+
+include(":features:all-services:api")
+include(":features:all-services:impl")
 // endregion Feature modules
 
 // region Domain modules

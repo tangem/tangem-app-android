@@ -1160,8 +1160,6 @@
   <string name="hw_upgrade_to_cold_badge">Wechseln Sie zu einer Cold Wallet</string>
   <string name="hw_upgrade_to_cold_banner_description">Schütze Deine Kryptowährungen mit Tangems erstklassiger Hardware-Wallet.</string>
   <string name="hw_upgrade_to_cold_banner_title">Rüste Deine Wallet auf Hardware-Sicherheit auf.</string>
-  <string name="hw_wallets_limit_alert_message">In Tangem können Sie bis zu %1$s mobile Wallets anlegen. Um eine neue Wallet anzulegen oder zu importieren, müssen Sie zunächst eine Ihrer bestehenden mobilen Wallets entfernen.</string>
-  <string name="hw_wallets_limit_alert_title">Sie haben das Limit für Ihr mobiles Portemonnaie erreicht</string>
   <string name="information_generated_with_ai">Diese Informationen wurden mithilfe von KI generiert.\nTippe hier, wenn Du Fehler findest.</string>
   <string name="initial_message_change_access_code_body">Um den Zugangscode zu ändern, halte die Karte oder Ring wie oben gezeigt an das Gerät und entferne sie erst am Ende des Vorgangs.</string>
   <string name="initial_message_change_passcode_body">Um den Passcode zu ändern, halte die Karte oder Ring wie oben gezeigt an das Gerät und entferne sie erst am Ende des Vorgangs.</string>
@@ -1177,7 +1175,7 @@
   <string name="introduction_button_buy_tangem">Tangem kaufen</string>
   <string name="introduction_button_create_wallet">Wallet erstellen</string>
   <string name="introduction_button_i_have_a_wallet">Ich habe eine Wallet</string>
-  <string name="introduction_create_wallet_hardware_description">Falls Sie bereits eine Tangem Wallet besitzen</string>
+  <string name="introduction_create_wallet_hardware_description">Verbinden oder neue Tangem Wallet holen</string>
   <string name="introduction_create_wallet_hardware_title">Tangem-Karte oder -Ring</string>
   <string name="introduction_create_wallet_seed_phrase_description">Ohne Hardware-Wallet beginnen</string>
   <string name="introduction_create_wallet_seed_phrase_title">Wallet mit Seed-Phrase erstellen</string>
@@ -2481,7 +2479,6 @@
   <string name="social_login_error_cloud_access_description">Stellen Sie sicher, dass Tangem Zugriff auf %s hat, und versuchen Sie es dann erneut.</string>
   <string name="social_login_error_cloud_access_title">Die Wallet konnte nicht wiederhergestellt werden</string>
   <string name="social_login_error_generic">Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.</string>
-  <string name="social_login_error_generic_v2">Bitte überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.</string>
   <string name="social_login_error_network_description">Überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.</string>
   <string name="social_login_error_network_title">Keine Internetverbindung</string>
   <string name="social_login_error_no_account">Fügen Sie diesem Gerät ein %s-Konto hinzu, um fortzufahren.</string>

@@ -1007,7 +1007,7 @@
   <string name="introduction_button_buy_tangem">Comprar Tangem</string>
   <string name="introduction_button_create_wallet">Crear wallet</string>
   <string name="introduction_button_i_have_a_wallet">Ya tengo una wallet</string>
-  <string name="introduction_create_wallet_hardware_description">Si ya tienes una Tangem Wallet</string>
+  <string name="introduction_create_wallet_hardware_description">Conecta o consigue una Tangem Wallet</string>
   <string name="introduction_create_wallet_hardware_title">Tangem Card o Ring</string>
   <string name="introduction_create_wallet_seed_phrase_description">Empieza sin una wallet de hardware</string>
   <string name="introduction_create_wallet_seed_phrase_title">Crear wallet con frase semilla</string>
