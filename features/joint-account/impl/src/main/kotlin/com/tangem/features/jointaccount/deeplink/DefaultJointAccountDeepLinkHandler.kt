@@ -67,7 +67,12 @@ internal class DefaultJointAccountDeepLinkHandler @AssistedInject constructor(
         val type = NotificationType.getType(queryParams[TYPE_KEY])
 
         scope.launch {
-            val userWalletId = walletId?.let(::UserWalletId)
+            val userWalletId = walletId?.let(UserWalletId::fromHexOrNull)
+            if (walletId != null && userWalletId == null) {
+                TangemLogger.e("Malformed $WALLET_ID_KEY in joint account deeplink")
+                appRouter.popTo(AppRoute.Wallet)
+                return@launch
+            }
             val userWallet = resolveAndSelectUserWalletUseCase(userWalletId) ?: return@launch
 
             val account = findJointAccount(userWallet, accountId)
