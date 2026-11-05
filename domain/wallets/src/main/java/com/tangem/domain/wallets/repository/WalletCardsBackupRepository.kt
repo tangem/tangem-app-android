@@ -14,12 +14,13 @@ import com.tangem.domain.wallets.models.errors.WalletCardsBackupError
 interface WalletCardsBackupRepository {
 
     /**
-     * Reports the cards known to the app for [userWalletId] and the state of their backup.
+     * Reports [cards] of [userWalletId] together with every other card of the wallet this device has seen.
      *
-     * The report is queued first and then sent behind everything already waiting, so a report held up
-     * earlier is never overtaken by a newer one. A report that does not reach the backend stays queued and
-     * [sendPendingWalletCards] resends it later — the returned [Either.Left] says the report has not landed
-     * yet, not that it has been lost.
+     * The cards are remembered first, so a later report about any card of the wallet carries them too. A card
+     * reported without a role or an error keeps the ones remembered for it. The report is then queued and sent
+     * behind everything already waiting, so a report held up earlier is never overtaken by a newer one. A report
+     * that does not reach the backend stays queued and [sendPendingWalletCards] resends it later — the returned
+     * [Either.Left] says the report has not landed yet, not that it has been lost.
      *
      * @param usedSeed `true` if a seed phrase was used to create or import the wallet
      */
@@ -52,8 +53,16 @@ interface WalletCardsBackupRepository {
      */
     suspend fun getWalletCards(userWalletId: UserWalletId): Either<WalletCardsBackupError, List<WalletCardBackup>>
 
-    /** Whether this device has already delivered the stored `CardLinked` state of [userWalletId] to the backend */
-    suspend fun isCardLinkedReported(userWalletId: UserWalletId): Boolean
+    /**
+     * Same as [saveWalletCards] for a single [card] seen outside onboarding, but sends nothing when this device
+     * already knows the card in exactly this state — scanning the same card again must not repeat the report.
+     */
+    suspend fun saveSeenWalletCard(
+        userWalletId: UserWalletId,
+        card: WalletCardBackup,
+        usedSeed: Boolean,
+    ): Either<WalletCardsBackupError, Unit>
 
-    suspend fun setCardLinkedReported(userWalletId: UserWalletId)
+    /** Whether this device has seen a card of [userWalletId] whose backup is not complete */
+    suspend fun hasCardWithIncompleteBackup(userWalletId: UserWalletId): Boolean
 }
