@@ -130,58 +130,68 @@ internal fun LazyListScope.tokensListItems2(
                 }
             }
         }
-        is WalletTokensListUM.Content -> {
-            walletTokensListUM.tokenList.fastForEachIndexed { index, listItem ->
-                when (listItem) {
-                    is TokensListItemUM2.GroupTitle,
-                    is TokensListItemUM2.Token,
-                    -> tokenItem(
-                        listItem = listItem,
-                        index = index,
-                        lastIndex = walletTokensListUM.tokenList.lastIndex,
-                        isBalanceHidden = isBalanceHidden,
-                        modifier = modifier,
-                    )
-                    is TokensListItemUM2.Portfolio -> portfolioItem(
-                        listItem = listItem,
-                        index = index,
-                        isBalanceHidden = isBalanceHidden,
-                        modifier = modifier,
-                    )
-                    is TokensListItemUM2.JointPending -> jointPendingItem(
-                        listItem = listItem,
-                        index = index,
-                        isBalanceHidden = isBalanceHidden,
-                        modifier = modifier,
-                    )
-                    is TokensListItemUM2.Collectibles -> collectiblesItem(
-                        listItem = listItem,
-                        index = index,
-                        isBalanceHidden = isBalanceHidden,
-                        modifier = modifier,
-                    )
-                    is TokensListItemUM2.AccountV2 -> accountItemV2(
-                        listItem = listItem,
-                        index = index,
-                        isBalanceHidden = isBalanceHidden,
-                        modifier = modifier,
-                    )
-                    is TokensListItemUM2.SectionV2,
-                    is TokensListItemUM2.TokenV2,
-                    -> tokenItemV2(
-                        listItem = listItem,
-                        index = index,
-                        lastIndex = walletTokensListUM.tokenList.lastIndex,
-                        isBalanceHidden = isBalanceHidden,
-                        modifier = modifier,
-                    )
-                }
-            }
-        }
+        is WalletTokensListUM.Content -> contentItems2(
+            tokenList = walletTokensListUM.tokenList,
+            isBalanceHidden = isBalanceHidden,
+            modifier = modifier,
+        )
         is WalletTokensListUM.Empty -> nonContentItem2(
             onEmptyClick = walletTokensListUM.onEmptyClick,
             modifier = modifier,
         )
+    }
+}
+
+private fun LazyListScope.contentItems2(
+    tokenList: ImmutableList<TokensListItemUM2>,
+    isBalanceHidden: Boolean,
+    modifier: Modifier,
+) {
+    tokenList.fastForEachIndexed { index, listItem ->
+        when (listItem) {
+            is TokensListItemUM2.GroupTitle,
+            is TokensListItemUM2.Token,
+            -> tokenItem(
+                listItem = listItem,
+                index = index,
+                lastIndex = tokenList.lastIndex,
+                isBalanceHidden = isBalanceHidden,
+                modifier = modifier,
+            )
+            is TokensListItemUM2.Portfolio -> portfolioItem(
+                listItem = listItem,
+                index = index,
+                isBalanceHidden = isBalanceHidden,
+                modifier = modifier,
+            )
+            is TokensListItemUM2.JointPending -> jointPendingItem(
+                listItem = listItem,
+                index = index,
+                isBalanceHidden = isBalanceHidden,
+                modifier = modifier,
+            )
+            is TokensListItemUM2.Collectibles -> collectiblesItem(
+                listItem = listItem,
+                index = index,
+                isBalanceHidden = isBalanceHidden,
+                modifier = modifier,
+            )
+            is TokensListItemUM2.AccountV2 -> accountItemV2(
+                listItem = listItem,
+                index = index,
+                isBalanceHidden = isBalanceHidden,
+                modifier = modifier,
+            )
+            is TokensListItemUM2.SectionV2,
+            is TokensListItemUM2.TokenV2,
+            -> tokenItemV2(
+                listItem = listItem,
+                index = index,
+                lastIndex = tokenList.lastIndex,
+                isBalanceHidden = isBalanceHidden,
+                modifier = modifier,
+            )
+        }
     }
 }
 
