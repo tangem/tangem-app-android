@@ -10,6 +10,7 @@ import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.earn.EarnToken
 import com.tangem.domain.models.earn.EarnYieldOffers
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.yield.supply.yieldSupplySource
 import com.tangem.features.yield.supply.api.promobottomsheet.ResolveYieldModePromoUseCase
 import com.tangem.features.yield.supply.api.promobottomsheet.YieldModePromoOffer
 import com.tangem.features.yield.supply.api.promobottomsheet.YieldModePromoResolution
@@ -83,7 +84,8 @@ internal class DefaultResolveYieldModePromoUseCase @Inject constructor() : Resol
     private fun CryptoCurrencyStatus.isLoading(): Boolean {
         return value is CryptoCurrencyStatus.Loading ||
             value.sources.networkSource == StatusSource.CACHE ||
-            value.sources.quoteSource == StatusSource.CACHE
+            value.sources.quoteSource == StatusSource.CACHE ||
+            value.yieldSupplySource == StatusSource.CACHE
     }
 
     /**
@@ -92,7 +94,9 @@ internal class DefaultResolveYieldModePromoUseCase @Inject constructor() : Resol
      */
     private fun CryptoCurrencyStatus.isFailed(): Boolean {
         val isFailedState = value.isError && value !is CryptoCurrencyStatus.MissedDerivation
-        return isFailedState || value.sources.networkSource == StatusSource.ONLY_CACHE
+        return isFailedState ||
+            value.sources.networkSource == StatusSource.ONLY_CACHE ||
+            value.yieldSupplySource == StatusSource.ONLY_CACHE
     }
 
     private fun Network.isYieldModeSupported(): Boolean {
