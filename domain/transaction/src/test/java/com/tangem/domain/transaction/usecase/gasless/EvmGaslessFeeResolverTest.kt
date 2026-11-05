@@ -28,9 +28,10 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.GaslessYieldRepository
-import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.GaslessApproval
 import com.tangem.domain.transaction.models.GaslessFeePlan
+import com.tangem.domain.transaction.models.GaslessYieldWithdraw
+import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -45,7 +46,10 @@ import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
 import java.math.BigInteger
 
-/** Covers the integrated-approve paths: the approve either joins the gasless batch or stays a native transaction. */
+/**
+ * Covers the integrated-approve paths: the approve either joins the gasless batch or stays a native transaction, and a
+ * fee token in yield adds its withdraw to the same batch.
+ */
 internal class EvmGaslessFeeResolverTest {
 
     private val walletManagersFacade: WalletManagersFacade = mockk()
@@ -109,7 +113,17 @@ internal class EvmGaslessFeeResolverTest {
                 sendAmountInFeeToken = any(),
                 approval = approval,
             )
-        } answers { GaslessFeePlan.TokenPayWithApproval(feeToken = usdc, fee = arg(2), approval = approval).right() }
+        } returns approvePlan.right()
+        coEvery {
+            resolveGaslessFeePlanUseCase(
+                userWallet = any(),
+                tokenStatus = any(),
+                tokenFee = any(),
+                isYieldActive = true,
+                sendAmountInFeeToken = any(),
+                approval = approval,
+            )
+        } returns approveAndWithdrawPlan.right()
     }
 
     @Nested
@@ -163,19 +177,28 @@ internal class EvmGaslessFeeResolverTest {
                 val feeExtended = result.getOrNull()!!
                 assertThat(feeExtended.feeTokenId).isEqualTo(usdc.id)
                 assertThat(feeExtended.nativeFee).isEqualTo(SWAP_WITH_APPROVE_FEE)
-                assertThat(feeExtended.gaslessFeePlan).isInstanceOf(GaslessFeePlan.TokenPayWithApproval::class.java)
+                assertThat(feeExtended.gaslessFeePlan).isEqualTo(approvePlan)
                 assertThat(feeExtended.approveGasLimit).isEqualTo(PADDED_APPROVE_GAS)
+                assertThat(feeExtended.withdrawGasLimit).isNull()
                 coVerify(exactly = 1) {
-                    resolveGaslessFeePlanUseCase(any(), any(), any(), isYieldActive = false, any(), approval = approval)
+                    resolveGaslessFeePlanUseCase(
+                        userWallet = any(),
+                        tokenStatus = any(),
+                        tokenFee = feeExtended.tokenFee(),
+                        isYieldActive = false,
+                        sendAmountInFeeToken = any(),
+                        approval = approval,
+                    )
                 }
             }
 
         @Test
-        fun `GIVEN approval and the only fee token has active yield WHEN resolve THEN no supported tokens found`() =
+        fun `GIVEN approval and the only fee token has active yield WHEN resolve THEN token fee with approve and withdraw plan`() =
             runTest {
                 // Arrange
                 val nativeStatus = coinStatus(balance = BigDecimal.ZERO)
                 val accountStatusList = accountStatusList(nativeStatus, tokenStatus(yieldSupplyStatus = activeYield))
+                givenUnknownYieldModule()
 
                 // Act
                 val result = sut.resolveWithAutoFeeToken(
@@ -189,7 +212,21 @@ internal class EvmGaslessFeeResolverTest {
                 )
 
                 // Assert
-                assertThat(result.leftOrNull()).isEqualTo(GetFeeError.GaslessError.NoSupportedTokensFound)
+                val feeExtended = result.getOrNull()!!
+                assertThat(feeExtended.feeTokenId).isEqualTo(usdc.id)
+                assertThat(feeExtended.gaslessFeePlan).isEqualTo(approveAndWithdrawPlan)
+                assertThat(feeExtended.approveGasLimit).isEqualTo(PADDED_APPROVE_GAS)
+                assertThat(feeExtended.withdrawGasLimit).isEqualTo(PADDED_FALLBACK_WITHDRAW_GAS)
+                coVerify(exactly = 1) {
+                    resolveGaslessFeePlanUseCase(
+                        userWallet = any(),
+                        tokenStatus = any(),
+                        tokenFee = feeExtended.tokenFee(),
+                        isYieldActive = true,
+                        sendAmountInFeeToken = any(),
+                        approval = approval,
+                    )
+                }
             }
     }
 
@@ -218,40 +255,81 @@ internal class EvmGaslessFeeResolverTest {
                 val feeExtended = result.getOrNull()!!
                 assertThat(feeExtended.feeTokenId).isEqualTo(usdc.id)
                 assertThat(feeExtended.nativeFee).isEqualTo(SWAP_WITH_APPROVE_FEE)
-                assertThat(feeExtended.gaslessFeePlan).isInstanceOf(GaslessFeePlan.TokenPayWithApproval::class.java)
+                assertThat(feeExtended.gaslessFeePlan).isEqualTo(approvePlan)
                 assertThat(feeExtended.approveGasLimit).isEqualTo(PADDED_APPROVE_GAS)
+                assertThat(feeExtended.withdrawGasLimit).isNull()
                 coVerify(exactly = 1) {
                     walletManager.estimateFeeWithOverride(swapTransactionData, SPENDER, isSimulate = true)
                 }
                 coVerify(exactly = 1) {
-                    resolveGaslessFeePlanUseCase(any(), any(), any(), isYieldActive = false, any(), approval = approval)
+                    resolveGaslessFeePlanUseCase(
+                        userWallet = any(),
+                        tokenStatus = any(),
+                        tokenFee = feeExtended.tokenFee(),
+                        isYieldActive = false,
+                        sendAmountInFeeToken = any(),
+                        approval = approval,
+                    )
                 }
             }
 
         @Test
-        fun `GIVEN approval and fee token with active yield WHEN resolve THEN network is not supported`() = runTest {
-            // Act
-            val result = sut.resolveWithSelectedFeeToken(
-                userWallet = userWallet,
-                network = network,
-                transactionData = swapTransactionData,
-                nativeCurrencyStatus = coinStatus(balance = BigDecimal.ZERO),
-                tokenCurrencyStatus = tokenStatus(yieldSupplyStatus = activeYield),
-                nativeTransactionData = swapTransactionData,
-                approval = approval,
-            )
+        fun `GIVEN approval and fee token with active yield WHEN resolve THEN token fee with approve and withdraw plan`() =
+            runTest {
+                // Arrange
+                givenUnknownYieldModule()
 
-            // Assert
-            assertThat(result.leftOrNull()).isEqualTo(GetFeeError.GaslessError.NetworkIsNotSupported)
-            coVerify(exactly = 0) { walletManager.estimateFeeWithOverride(any(), any(), any()) }
-        }
+                // Act
+                val result = sut.resolveWithSelectedFeeToken(
+                    userWallet = userWallet,
+                    network = network,
+                    transactionData = swapTransactionData,
+                    nativeCurrencyStatus = coinStatus(balance = BigDecimal.ZERO),
+                    tokenCurrencyStatus = tokenStatus(yieldSupplyStatus = activeYield),
+                    nativeTransactionData = swapTransactionData,
+                    approval = approval,
+                )
+
+                // Assert
+                val feeExtended = result.getOrNull()!!
+                assertThat(feeExtended.feeTokenId).isEqualTo(usdc.id)
+                assertThat(feeExtended.gaslessFeePlan).isEqualTo(approveAndWithdrawPlan)
+                assertThat(feeExtended.approveGasLimit).isEqualTo(PADDED_APPROVE_GAS)
+                assertThat(feeExtended.withdrawGasLimit).isEqualTo(PADDED_FALLBACK_WITHDRAW_GAS)
+                coVerify(exactly = 1) {
+                    walletManager.estimateFeeWithOverride(swapTransactionData, SPENDER, isSimulate = true)
+                }
+                coVerify(exactly = 1) {
+                    resolveGaslessFeePlanUseCase(
+                        userWallet = any(),
+                        tokenStatus = any(),
+                        tokenFee = feeExtended.tokenFee(),
+                        isYieldActive = true,
+                        sendAmountInFeeToken = any(),
+                        approval = approval,
+                    )
+                }
+            }
     }
 
     // region Fixtures
 
+    /** An unknown module makes TokenFeeCalculator fall back to its fixed withdraw gas, see [PADDED_FALLBACK_WITHDRAW_GAS]. */
+    private fun givenUnknownYieldModule() {
+        coEvery { gaslessYieldRepository.getYieldContractAddress(any(), any()) } returns null
+    }
+
+    private fun TransactionFeeExtended.tokenFee() = transactionFee.normal as Fee.Ethereum.TokenCurrency
+
     private fun approveCallData() = object : SmartContractCallData {
         override val methodId = "0x095ea7b3"
         override val data = byteArrayOf(0x09, 0x5e)
+        override fun validate(blockchain: com.tangem.blockchain.common.Blockchain) = true
+    }
+
+    private fun withdrawCallData() = object : SmartContractCallData {
+        override val methodId = "0xf3fef3a3"
+        override val data = byteArrayOf(0x0f, 0x3f)
         override fun validate(blockchain: com.tangem.blockchain.common.Blockchain) = true
     }
 
@@ -359,6 +437,16 @@ internal class EvmGaslessFeeResolverTest {
         contractAddress = USDC_CONTRACT,
     )
 
+    private val approvePlan = GaslessFeePlan.TokenPay(feeToken = usdc, fee = mockk(), approval = approval)
+
+    private val approveAndWithdrawPlan = approvePlan.copy(
+        yieldWithdraw = GaslessYieldWithdraw(
+            amount = BigInteger.ONE,
+            callData = withdrawCallData(),
+            moduleAddress = "0xModule",
+        ),
+    )
+
     // endregion
 
     private companion object {
@@ -371,6 +459,9 @@ internal class EvmGaslessFeeResolverTest {
 
         /** [APPROVE_GAS] after TokenFeeCalculator's 40% sub-call safety margin. */
         val PADDED_APPROVE_GAS: BigInteger = BigInteger("64400")
+
+        /** TokenFeeCalculator's 150 000 withdraw fallback, used when the module address is unknown, plus 40%. */
+        val PADDED_FALLBACK_WITHDRAW_GAS: BigInteger = BigInteger("210000")
 
         val SWAP_FEE = TransactionFee.Single(normal = ethFee(value = "0.001", gasLimit = "100000"))
         val APPROVE_FEE = TransactionFee.Single(normal = ethFee(value = "0.0005", gasLimit = "46000"))
