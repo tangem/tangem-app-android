@@ -119,6 +119,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             WalletNotificationUM.TestnetCard -> TestnetCard()
             WalletNotificationUM.DemoCard -> DemoCard()
             is WalletNotificationUM.MissingAddresses -> MissingAddresses()
+            is WalletNotificationUM.LinkWalletToDevice -> NoticeLinkWallet()
             is WalletNotificationUM.RateApp -> HowDoYouLikeTangem()
             is WalletNotificationUM.BackupError -> BackupError()
             is WalletNotificationUM.NoteMigration -> NotePromo()
@@ -149,7 +150,6 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotificationUM.UsedOutdatedData,
             is WalletNotificationUM.CloreMigration,
             is WalletNotificationUM.TangemPayRefreshNeeded,
-            is WalletNotificationUM.LinkWalletToDevice,
             WalletNotificationUM.TangemPayUnreachable,
             is WalletNotificationUM.YieldBoostPromo,
             is WalletNotificationUM.AssetsDiscoveryCompleted,

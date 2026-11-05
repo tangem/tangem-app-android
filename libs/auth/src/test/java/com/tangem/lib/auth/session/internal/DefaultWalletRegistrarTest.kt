@@ -23,6 +23,7 @@ import com.tangem.lib.auth.performance.NonceRequestType
 import com.tangem.lib.auth.session.WalletNonce
 import com.tangem.lib.auth.session.AuthError
 import com.tangem.lib.auth.session.WalletRegistrationError
+import com.tangem.lib.auth.session.WalletRegistrationResult
 import com.tangem.lib.auth.session.WalletSignatureBundle
 import com.tangem.lib.auth.session.WalletSigner
 import com.tangem.lib.auth.session.SessionTokens
@@ -148,7 +149,7 @@ class DefaultWalletRegistrarTest {
 
         val result = registrar.register(WALLET_ID, mobileSigner)
 
-        assertThat(result.isRight()).isTrue()
+        assertThat(result.getOrNull()).isEqualTo(WalletRegistrationResult.Registered)
         coVerify { authApi.requestWalletNonce(any()) }
         coVerify { store.save(any()) }
         assertThat(registeredIds()).contains(WALLET_ID)
@@ -230,7 +231,7 @@ class DefaultWalletRegistrarTest {
 
         val result = registrar.register(WALLET_ID, mobileSigner)
 
-        assertThat(result.isRight()).isTrue()
+        assertThat(result.getOrNull()).isEqualTo(WalletRegistrationResult.AlreadyRegistered)
         coVerify(exactly = 0) { authApi.requestWalletNonce(any()) }
         coVerify(exactly = 0) { authApi.registerWallet(any()) }
         coVerify(exactly = 0) { store.save(any()) }
@@ -324,7 +325,7 @@ class DefaultWalletRegistrarTest {
 
         val result = registrar.register(WALLET_ID, mobileSigner)
 
-        assertThat(result.isRight()).isTrue()
+        assertThat(result.getOrNull()).isEqualTo(WalletRegistrationResult.AlreadyRegistered)
         assertThat(registeredIds()).contains(WALLET_ID)
         coVerify(exactly = 0) { store.save(any()) }
     }
@@ -503,7 +504,7 @@ class DefaultWalletRegistrarTest {
 
         val result = registrar.submit(prepared)
 
-        assertThat(result.isRight()).isTrue()
+        assertThat(result.getOrNull()).isEqualTo(WalletRegistrationResult.Registered)
         coVerify { store.save(any()) }
         assertThat(registeredIds()).contains(WALLET_ID)
     }
@@ -524,7 +525,7 @@ class DefaultWalletRegistrarTest {
 
         val result = registrar.submit(prepared)
 
-        assertThat(result.isRight()).isTrue()
+        assertThat(result.getOrNull()).isEqualTo(WalletRegistrationResult.AlreadyRegistered)
         assertThat(registeredIds()).contains(WALLET_ID)
         coVerify(exactly = 0) { store.save(any()) }
     }

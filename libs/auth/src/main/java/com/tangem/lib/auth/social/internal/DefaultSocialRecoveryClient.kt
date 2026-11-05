@@ -224,7 +224,7 @@ internal class DefaultSocialRecoveryClient(
                     is WalletRegistrationError.NonceDecodingFailed -> SocialRecoveryError.Unknown(error.cause)
                     is WalletRegistrationError.NonceDecryptionFailed -> SocialRecoveryError.Unknown(error.cause)
                 }
-            }
+            }.map { }
         }
 
     /**

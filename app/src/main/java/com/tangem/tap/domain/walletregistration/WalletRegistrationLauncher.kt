@@ -16,6 +16,7 @@ import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.auth.session.WalletNonce
 import com.tangem.lib.auth.session.WalletRegistrar
 import com.tangem.lib.auth.session.WalletRegistrationError
+import com.tangem.lib.auth.session.WalletRegistrationResult
 import com.tangem.tap.domain.walletregistration.BackendAuthAnalyticsEvent.WalletRegistrationFailed
 import com.tangem.tap.domain.walletregistration.BackendAuthAnalyticsEvent.WalletRegistrationFailed.Stage
 import com.tangem.tap.domain.walletregistration.BackendAuthAnalyticsEvent.WalletRegistrationFailed.WalletType
@@ -51,7 +52,9 @@ class WalletRegistrationLauncher @Inject internal constructor(
             walletRegistrar.register(
                 walletId = userWallet.walletId.toBase64(),
                 signer = mobileSigner.signerFor(userWallet),
-            ).onLeft { error ->
+            ).onRight { result ->
+                if (result == WalletRegistrationResult.Registered) sendWalletLinked()
+            }.onLeft { error ->
                 TangemLogger.e("Mobile wallet registration deferred: $error")
                 sendRegistrationFailed(WalletType.Mobile, Stage.Register, error)
             }
@@ -192,6 +195,9 @@ class WalletRegistrationLauncher @Inject internal constructor(
         appCoroutineScope.launch {
             runSuspendCatching {
                 walletRegistrar.submit(prepared)
+                    .onRight { result ->
+                        if (result == WalletRegistrationResult.Registered) sendWalletLinked()
+                    }
                     .onLeft { error ->
                         TangemLogger.e("Cold wallet registration submit deferred: $error")
                         sendRegistrationFailed(WalletType.Cold, Stage.Submit, error)
@@ -226,6 +232,10 @@ class WalletRegistrationLauncher @Inject internal constructor(
     suspend fun unregister(userWalletId: UserWalletId) {
         walletRegistrar.unregister(userWalletId.toBase64())
             .onLeft { TangemLogger.e("Wallet unregister deferred: $it") }
+    }
+
+    private fun sendWalletLinked() {
+        analyticsEventHandler.send(BackendAuthAnalyticsEvent.WalletLinked())
     }
 
     private fun sendRegistrationFailed(walletType: WalletType, stage: Stage, error: WalletRegistrationError) {
