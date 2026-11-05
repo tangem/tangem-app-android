@@ -1,5 +1,12 @@
 package com.tangem.features.polymarket.impl.main.model
 
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.polymarket.PolymarketLiveQuotesRepository
+import com.tangem.domain.polymarket.model.PolymarketLiveQuote
+import com.tangem.domain.polymarket.model.PolymarketSportsState
+import com.tangem.domain.polymarket.usecase.ObservePolymarketLiveQuotesUseCase
+import com.tangem.domain.polymarket.usecase.ObservePolymarketSportsStateUseCase
+import kotlinx.coroutines.test.advanceTimeBy
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
@@ -114,6 +121,15 @@ internal class PolymarketMainModelTest {
         every { this@mockk.invoke(USER_WALLET_ID) } returns hasCredentials
     }
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk()
+    private val liveQuotes = MutableStateFlow(emptyMap<String, PolymarketLiveQuote>())
+    private val quotesRepository: PolymarketLiveQuotesRepository = mockk {
+        every { observeLiveQuotes(any()) } returns liveQuotes
+    }
+    private val sportsState = MutableStateFlow(PolymarketSportsState(emptyMap()))
+    private val observeSports: ObservePolymarketSportsStateUseCase = mockk {
+        every { this@mockk.invoke(any(), any()) } returns sportsState
+    }
+
 
     private val statusFlow = MutableStateFlow<PredictionAccountStatusValue>(
         value = activeStatus(depositAddress = DEPOSIT_ADDRESS),
@@ -1722,6 +1738,37 @@ internal class PolymarketMainModelTest {
             assertThat(model.uiState.value.balance.balance.plainText()).isEqualTo("$15.50")
         }
 
+    @Test
+    fun `GIVEN D2 enabled WHEN visible quotes arrive THEN the model renders them and releases subscriptions on pause`() = runTest {
+        // Arrange
+        val event = createPolymarketEvent(isLive = true)
+        val outcome = event.markets.single().outcomes.single()
+        batchState.value = BatchListState(
+            data = listOf(Batch(0, PolymarketEventsBatch(listOf(event), requestCursor = null))),
+            status = PaginationStatus.EndOfPagination,
+        )
+        val model = createModel(this, isPhaseTwoEnabled = true)
+        runCurrent()
+        model.onVisibleEventsChange(setOf(event.id))
+        model.onResume()
+        runCurrent()
+
+        // Act
+        liveQuotes.value = mapOf(outcome.assetId to PolymarketLiveQuote(
+            assetId = outcome.assetId, bestAsk = BigDecimal("0.55"), status = PolymarketLiveQuote.Status.LIVE,
+        ))
+        advanceTimeBy(300)
+        runCurrent()
+        val content = model.uiState.value.content as PolymarketMainUM.ContentUM.Content
+        model.onPause()
+        runCurrent()
+
+        // Assert
+        assertThat(content.events.single().rows.single().outcomes.single().price).isEqualTo(stringReference("55¢"))
+        assertThat(liveQuotes.subscriptionCount.value).isEqualTo(0)
+        verify(exactly = 1) { observeSports(any(), any()) }
+    }
+
     private fun positions(amount: String) = PredictionPositionsValue.Known(amount = BigDecimal(amount), source = StatusSource.ACTUAL)
 
     private fun activeStatus(
@@ -1737,7 +1784,7 @@ internal class PolymarketMainModelTest {
         positions = positions,
     )
 
-    private fun createModel(testScope: TestScope): PolymarketMainModel {
+    private fun createModel(testScope: TestScope, isPhaseTwoEnabled: Boolean = false): PolymarketMainModel {
         every { predictionAccountStatusSupplier(any<UserWalletId>()) } returns statusFlow
 
         every { getEventsBatchFlowUseCase(any(), capture(contextSlot), any()) } answers {
@@ -1800,8 +1847,9 @@ internal class PolymarketMainModelTest {
             predictionFundingWindow = fundingWindow,
             observePolymarketCredentialsPresenceUseCase = observeCredentialsPresence,
             getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
-            observePolymarketSportsStateUseCase = mockk(),
-            polymarketFeatureToggles = mockk { every { isPolymarketPhaseTwoEnabled } returns false },
+            observePolymarketSportsStateUseCase = observeSports,
+            observePolymarketLiveQuotesUseCase = ObservePolymarketLiveQuotesUseCase(quotesRepository),
+            polymarketFeatureToggles = mockk { every { isPolymarketPhaseTwoEnabled } returns isPhaseTwoEnabled },
         ).also { model = it }
     }
 
