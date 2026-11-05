@@ -5,6 +5,7 @@ import com.tangem.data.polymarket.DefaultPolymarketActivityRepository
 import com.tangem.data.polymarket.DefaultPolymarketLiveScoresRepository
 import com.tangem.data.polymarket.DefaultPolymarketLiveQuotesRepository
 import com.tangem.data.polymarket.DefaultPolymarketRepository
+import com.tangem.data.polymarket.DefaultPolymarketPriceHistoryRepository
 import com.tangem.data.polymarket.DefaultPolymarketPositionsRepository
 import com.tangem.data.polymarket.DefaultPolymarketRedeemRepository
 import com.tangem.data.polymarket.DefaultPolymarketSessionKeyRepository
@@ -27,6 +28,7 @@ import com.tangem.domain.polymarket.PolymarketRedeemRepository
 import com.tangem.domain.polymarket.PolymarketLiveScoresRepository
 import com.tangem.domain.polymarket.PolymarketLiveQuotesRepository
 import com.tangem.domain.polymarket.PolymarketRepository
+import com.tangem.domain.polymarket.PolymarketPriceHistoryRepository
 import com.tangem.domain.polymarket.PolymarketSessionKeyRepository
 import com.tangem.domain.polymarket.PolymarketWithdrawRepository
 import com.tangem.domain.polymarket.PredictionDepositAddressWriter
@@ -46,6 +48,7 @@ import com.tangem.domain.polymarket.interactor.SubmitPredictionWithdrawalInterac
 import com.tangem.domain.polymarket.model.PredictionBalancePollingConfig
 import com.tangem.domain.polymarket.model.PredictionTransferCallCodec
 import com.tangem.domain.polymarket.model.PredictionWithdrawalTrackingConfig
+import com.tangem.domain.polymarket.usecase.GetPolymarketPriceHistoryUseCase
 import com.tangem.domain.polymarket.usecase.GetPredictionWithdrawalStateUseCase
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Binds
@@ -72,6 +75,9 @@ internal interface PolymarketDataModule {
     @Binds
     @Singleton
     fun bindPolymarketRepository(impl: DefaultPolymarketRepository): PolymarketRepository
+
+    @Binds
+    fun bindPriceHistoryRepository(impl: DefaultPolymarketPriceHistoryRepository): PolymarketPriceHistoryRepository
 
     @Binds
     @Singleton
@@ -140,6 +146,10 @@ internal interface PolymarketDataModule {
     fun bindPredictionTransferCallCodec(impl: DefaultPredictionTransferCallCodec): PredictionTransferCallCodec
 
     companion object {
+
+        @Provides
+        fun providePriceHistoryUseCase(repository: PolymarketPriceHistoryRepository): GetPolymarketPriceHistoryUseCase =
+            GetPolymarketPriceHistoryUseCase(repository)
 
         @Provides
         @Singleton
