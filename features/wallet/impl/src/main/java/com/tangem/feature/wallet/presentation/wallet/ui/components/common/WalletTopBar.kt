@@ -69,36 +69,10 @@ internal fun WalletTopBar(
         modifier = Modifier.testTag(MainScreenTestTags.TOP_BAR),
         contentAlign = TangemTopNavigation.ContentAlign.Center,
         startButton = {
-            val onAllServicesClick = topBarConfig.onAllServicesClick
-            if (onAllServicesClick != null) {
-                TangemButton(
-                    modifier = Modifier.zoomTransitionSource(
-                        key = WalletTopBarConfig.ALL_SERVICES_SHARED_TRANSITION_KEY,
-                        shape = CircleShape,
-                    ),
-                    variant = if (wrappedBalance != null) {
-                        TangemButton.Variant.Material
-                    } else {
-                        TangemButton.Variant.Ghost
-                    },
-                    size = TangemButton.Size.X11,
-                    iconStart = TangemIconUM.Icon(imageVector = Icons.ic_sign_plus_24),
-                    contentDescription = stringResourceSafe(R.string.all_services_title),
-                    onClick = {
-                        hapticManager.perform(TangemHapticEffect.View.ContextClick)
-                        onAllServicesClick()
-                    },
-                )
-            } else {
-                // Non-clickable brand mark, sized to align with the trailing action buttons.
-                Box(modifier = Modifier.size(TangemTopNavigation.ButtonSlotSize), contentAlignment = Alignment.Center) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_tangem_24),
-                        contentDescription = null,
-                        tint = TangemTheme.colors3.icon.primary,
-                    )
-                }
-            }
+            WalletTopBarStartButton(
+                onAllServicesClick = topBarConfig.onAllServicesClick,
+                isMaterial = wrappedBalance != null,
+            )
         },
         endButtonsGroup = if (topBarConfig.endActions.isNotEmpty()) {
             {
@@ -125,6 +99,37 @@ internal fun WalletTopBar(
                     TangemNavigationText(text = balance, role = TangemNavigationText.Role.Title)
                 }
             }
+        },
+    )
+}
+
+@Composable
+private fun WalletTopBarStartButton(onAllServicesClick: (() -> Unit)?, isMaterial: Boolean) {
+    if (onAllServicesClick == null) {
+        // Non-clickable brand mark, sized to align with the trailing action buttons.
+        Box(modifier = Modifier.size(TangemTopNavigation.ButtonSlotSize), contentAlignment = Alignment.Center) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_tangem_24),
+                contentDescription = null,
+                tint = TangemTheme.colors3.icon.primary,
+            )
+        }
+        return
+    }
+
+    val hapticManager = LocalHapticManager.current
+    TangemButton(
+        modifier = Modifier.zoomTransitionSource(
+            key = WalletTopBarConfig.ALL_SERVICES_SHARED_TRANSITION_KEY,
+            shape = CircleShape,
+        ),
+        variant = if (isMaterial) TangemButton.Variant.Material else TangemButton.Variant.Ghost,
+        size = TangemButton.Size.X11,
+        iconStart = TangemIconUM.Icon(imageVector = Icons.ic_sign_plus_24),
+        contentDescription = stringResourceSafe(R.string.all_services_title),
+        onClick = {
+            hapticManager.perform(TangemHapticEffect.View.ContextClick)
+            onAllServicesClick()
         },
     )
 }
