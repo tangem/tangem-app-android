@@ -6,6 +6,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.models.wallet.isMultiCurrency
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 
 /**
@@ -19,10 +20,13 @@ class GetWalletsUseCase(
     private val userWalletsListRepository: UserWalletsListRepository,
 ) {
 
-    @Throws(IllegalArgumentException::class)
-    operator fun invoke(): Flow<List<UserWallet>> = userWalletsListRepository.userWallets.map { requireNotNull(it) }
+    /**
+     * A null list means the wallets are not loaded yet, which happens on every cold start and on a
+     * process restore, where a screen may be rebuilt before the load finishes. The flow stays silent
+     * until the list arrives instead of failing the collector.
+     */
+    operator fun invoke(): Flow<List<UserWallet>> = userWalletsListRepository.userWallets.filterNotNull()
 
-    @Throws(IllegalArgumentException::class)
     fun invokeAsMap(
         isOnlyMultiCurrency: Boolean = true,
         filterLocked: Boolean = false,
