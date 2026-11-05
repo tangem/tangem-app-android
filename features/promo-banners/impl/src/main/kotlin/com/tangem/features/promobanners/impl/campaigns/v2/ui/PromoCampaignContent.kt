@@ -163,11 +163,7 @@ private fun PromoTokenSelector(state: PromoTokenSelectorUM) {
     if (state.selectedToken != null) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(
-                text = if (state.selectedAccount != null) {
-                    state.accountTitle.resolveReference()
-                } else {
-                    stringResourceSafe(R.string.promo_campaign_selected_token)
-                },
+                text = state.accountTitle.resolveReference(),
                 style = TangemTheme.typography3.heading.small,
                 color = TangemTheme.colors3.text.primary,
                 modifier = Modifier
