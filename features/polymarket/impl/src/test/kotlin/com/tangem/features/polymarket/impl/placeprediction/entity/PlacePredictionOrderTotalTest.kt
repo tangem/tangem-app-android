@@ -45,7 +45,7 @@ internal class PlacePredictionOrderTotalTest {
         OrderTotalModel(side = PredictionOrderSide.BUY, quote = QuoteUM.Empty, expected = null),
         OrderTotalModel(
             side = PredictionOrderSide.BUY,
-            quote = QuoteUM.Loading(isAnswerExpected = false),
+            quote = QuoteUM.Loading,
             expected = null,
         ),
         OrderTotalModel(
