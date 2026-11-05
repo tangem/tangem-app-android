@@ -16,6 +16,7 @@ dependencies {
 
     // region Other libraries
     api(deps.arrow.core)
+    implementation(deps.arrow.fx)
     api(tangemDeps.blockchain) // android-library
     api(tangemDeps.card.core)
     api(tangemDeps.hot.core)
