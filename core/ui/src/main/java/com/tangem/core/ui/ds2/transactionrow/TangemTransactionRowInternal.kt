@@ -2,6 +2,7 @@
 
 package com.tangem.core.ui.ds2.transactionrow
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -32,7 +33,6 @@ import com.tangem.core.ui.ds2.expandable.ExpandableDot
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_warning_16_filled
@@ -228,11 +228,11 @@ private fun subtitleAvatarIcon(avatar: TangemAvatar.UiState): @Composable () -> 
     TangemAvatar(state = avatar, size = TangemAvatar.Size.X16)
 }
 
-@Composable
-internal fun TangemTransactionRow.Status.stateDescription(): String? = when (this) {
-    TangemTransactionRow.Status.Progress -> stringResourceSafe(R.string.common_in_progress)
-    TangemTransactionRow.Status.Pending -> stringResourceSafe(R.string.transaction_history_pending)
-    TangemTransactionRow.Status.Failed -> stringResourceSafe(R.string.common_transaction_failed)
+@StringRes
+internal fun TangemTransactionRow.Status.stateDescriptionRes(): Int? = when (this) {
+    TangemTransactionRow.Status.Progress -> R.string.common_in_progress
+    TangemTransactionRow.Status.Pending -> R.string.transaction_history_pending
+    TangemTransactionRow.Status.Failed -> R.string.common_transaction_failed
     TangemTransactionRow.Status.Finished -> null
 }
 
