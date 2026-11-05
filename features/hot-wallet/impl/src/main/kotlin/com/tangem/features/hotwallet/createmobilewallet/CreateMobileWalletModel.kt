@@ -13,26 +13,28 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.res.R
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.dialog.Dialogs.hotWalletCreationNotSupportedDialog
+import com.tangem.core.ui.message.dialog.Dialogs.hotWalletsLimitReachedDialog
 import com.tangem.domain.appsflyer.repository.AppsFlyerRepository
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
-import com.tangem.domain.wallets.builder.HotUserWalletBuilder
-import com.tangem.domain.wallets.usecase.SaveWalletUseCase
-import com.tangem.domain.wallets.usecase.SyncWalletWithRemoteUseCase
+import com.tangem.domain.wallets.analytics.Settings.NoticeMobileWalletLimit
+import com.tangem.domain.wallets.models.CreateHotWalletError
+import com.tangem.domain.wallets.usecase.CreateHotWalletUseCase
 import com.tangem.features.hotwallet.CreateMobileWalletComponent
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.createmobilewallet.entity.CreateMobileWalletUM
 import com.tangem.features.hotwallet.createmobilewallet.importoptions.ImportOptionsBottomSheetConfig
-import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.MnemonicType
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.runSuspendCatching
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
@@ -41,11 +43,8 @@ import javax.inject.Inject
 internal class CreateMobileWalletModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val hotUserWalletBuilderFactory: HotUserWalletBuilder.Factory,
-    private val saveUserWalletUseCase: SaveWalletUseCase,
-    private val syncWalletWithRemoteUseCase: SyncWalletWithRemoteUseCase,
+    private val createHotWalletUseCase: CreateHotWalletUseCase,
     private val router: Router,
-    private val tangemHotSdk: TangemHotSdk,
     private val trackingContextProxy: TrackingContextProxy,
     private val isHotWalletCreationSupported: IsHotWalletCreationSupported,
     private val uiMessageSender: UiMessageSender,
@@ -123,13 +122,7 @@ internal class CreateMobileWalletModel @Inject constructor(
                 it.copy(isCreateButtonLoading = true)
             }
 
-            runSuspendCatching {
-                val hotWalletId = tangemHotSdk.generateWallet(HotAuth.NoAuth, mnemonicType = MnemonicType.Words12)
-                val hotUserWalletBuilder = hotUserWalletBuilderFactory.create(hotWalletId)
-                val userWallet = hotUserWalletBuilder.build()
-
-                saveUserWalletUseCase(userWallet)
-
+            createHotWalletUseCase(auth = HotAuth.NoAuth, mnemonicType = MnemonicType.Words12).onRight {
                 analyticsEventHandler.send(
                     OnboardingAnalyticsEvent.Onboarding.Finished(source = params.source),
                 )
@@ -139,22 +132,40 @@ internal class CreateMobileWalletModel @Inject constructor(
                         creationType = AnalyticsParam.WalletCreationType.NewSeed,
                         seedPhraseLength = SEED_PHRASE_LENGTH,
                         passPhraseState = AnalyticsParam.EmptyFull.Empty,
-                        referralId = appsFlyerRepository.getConversionData()?.refcode,
+                        referralId = readReferralId(),
                     ),
                 )
 
-                launch(dispatchers.main + NonCancellable) {
-                    syncWalletWithRemoteUseCase(userWalletId = userWallet.walletId)
-                }
-
                 router.replaceAll(AppRoute.Wallet)
-            }.onFailure { throwable ->
-                TangemLogger.e("Error", throwable)
+            }.onLeft { error ->
+                val cause = (error as? CreateHotWalletError.Failed)?.cause
+                TangemLogger.e("Unable to create the mobile wallet: $error", cause)
 
                 uiState.update { it.copy(isCreateButtonLoading = false) }
+                val message = when (error) {
+                    CreateHotWalletError.LimitReached -> {
+                        analyticsEventHandler.send(
+                            NoticeMobileWalletLimit(
+                                type = NoticeMobileWalletLimit.Type.Create,
+                                limit = NoticeMobileWalletLimit.Limit.MobileWallets,
+                            ),
+                        )
+                        hotWalletsLimitReachedDialog()
+                    }
+                    is CreateHotWalletError.Failed -> DialogMessage(
+                        title = resourceReference(R.string.common_something_went_wrong),
+                        message = resourceReference(R.string.common_unknown_error),
+                    )
+                }
+                uiMessageSender.send(message)
             }
         }
     }
+
+    private suspend fun readReferralId(): String? =
+        runSuspendCatching { appsFlyerRepository.getConversionData()?.refcode }
+            .onFailure { error -> TangemLogger.e("Failed to read the referral for the wallet created event", error) }
+            .getOrNull()
 
     private inline fun checkHotWalletCreationSupported(notSupported: () -> Unit) {
         if (!isHotWalletCreationSupported()) {

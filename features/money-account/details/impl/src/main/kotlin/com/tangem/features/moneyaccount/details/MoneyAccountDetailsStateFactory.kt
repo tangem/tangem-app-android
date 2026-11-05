@@ -2,6 +2,7 @@ package com.tangem.features.moneyaccount.details
 
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -10,25 +11,32 @@ import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.generated.icons.Icons
 import com.tangem.core.ui.res.generated.icons.ic_document_20
+import com.tangem.core.ui.res.generated.icons.ic_error_20
 import com.tangem.core.ui.res.generated.icons.ic_mail_20
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.MoneyAccountStatusValue
 import com.tangem.features.moneyaccount.details.impl.R
 import kotlinx.collections.immutable.persistentListOf
 
+@Suppress("LongParameterList")
 internal class MoneyAccountDetailsStateFactory(
     private val onAddFundsClick: () -> Unit,
     private val onSendClick: () -> Unit,
+    private val onMenuClick: () -> Unit,
     private val onTermsClick: () -> Unit,
     private val onSupportClick: () -> Unit,
     private val onBackClick: () -> Unit,
     private val onRefresh: () -> Unit,
+    private val onTxHistoryReload: () -> Unit,
+    private val onRenewSession: () -> Unit,
 ) {
     fun createInitialState(): MoneyAccountDetailsUM = MoneyAccountDetailsUM(
         title = resourceReference(R.string.virtual_account_title),
         subtitle = resourceReference(R.string.tangempay_usdc_on_polygon_network),
         balance = MoneyAccountBalanceBlockState.Loading,
         isBalanceHidden = false,
+        isBalanceUnavailable = false,
+        messageBanner = null,
         menuItems = persistentListOf(
             MoneyAccountMenuItemUM(
                 title = stringReference("Terms and Limits"),
@@ -47,11 +55,15 @@ internal class MoneyAccountDetailsStateFactory(
                 onClick = onSupportClick,
             ),
         ),
+        onMenuClick = onMenuClick,
         onBackClick = onBackClick,
         onAddFundsClick = onAddFundsClick,
         onSendClick = onSendClick,
+        isAddFundsEnabled = true,
+        isSendEnabled = true,
         txHistoryCurrency = null,
         pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = { onRefresh() }),
+        onTxHistoryReloadClick = onTxHistoryReload,
     )
 
     fun createAccountState(
@@ -59,6 +71,7 @@ internal class MoneyAccountDetailsStateFactory(
         account: MoneyAccountStatusValue.Account,
     ): MoneyAccountDetailsUM {
         val balance = account.balance
+        val isActionAvailable = account.error == null && balance != null
         return prevState.copy(
             balance = if (balance == null) {
                 MoneyAccountBalanceBlockState.Unavailable
@@ -76,6 +89,47 @@ internal class MoneyAccountDetailsStateFactory(
                 )
             },
             txHistoryCurrency = account.cryptoCurrency,
+            isBalanceUnavailable = account.isBalanceUnavailable,
+            isAddFundsEnabled = isActionAvailable,
+            isSendEnabled = isActionAvailable,
+            messageBanner = when {
+                account.error == MoneyAccountStatusValue.Error.NotSynced -> createRenewSessionBanner()
+                account.hasBalanceUnavailableBanner -> createBalanceUnavailableBanner()
+                else -> null
+            },
         )
     }
+
+    private fun createRenewSessionBanner() = TangemMessageBanner.State(
+        title = resourceReference(R.string.tangempay_sync_needed_title),
+        variant = TangemMessageBanner.Variant.Error,
+        description = resourceReference(R.string.tangempay_sync_needed_body),
+        secondaryButton = TangemMessageBanner.Button(
+            text = resourceReference(R.string.tangempay_sync_needed_button),
+            onClick = onRenewSession,
+            iconEnd = TangemIconUM.Icon(
+                iconRes = R.drawable.ic_tangem_24,
+                tintReference = { TangemTheme.colors3.icon.primary },
+            ),
+        ),
+    )
+
+    private fun createBalanceUnavailableBanner() = TangemMessageBanner.State(
+        title = resourceReference(R.string.money_account_balance_unavailable_title),
+        variant = TangemMessageBanner.Variant.Error,
+        description = resourceReference(R.string.money_account_balance_unavailable_description),
+        iconEnd = TangemIconUM.Icon(
+            imageVector = Icons.ic_error_20,
+            tintReference = { TangemTheme.colors3.icon.primary },
+        ),
+    )
 }
+
+internal val MoneyAccountStatusValue.Account.isBalanceUnavailable: Boolean
+    get() = when (error) {
+        null, MoneyAccountStatusValue.Error.NotSynced -> balance == null
+        MoneyAccountStatusValue.Error.Unavailable, MoneyAccountStatusValue.Error.ExposedDevice -> true
+    }
+
+internal val MoneyAccountStatusValue.Account.hasBalanceUnavailableBanner: Boolean
+    get() = isBalanceUnavailable && error != MoneyAccountStatusValue.Error.NotSynced

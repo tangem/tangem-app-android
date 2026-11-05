@@ -411,6 +411,9 @@ internal class SwapNotificationsFactory(
         }
 
         when (feeError) {
+            is GetFeeError.GaslessError.TronAllowanceTooHigh -> add(
+                feeError.toReapprovalNotification(quoteModel.fromTokenInfo.swapCurrencyStatus.currency),
+            )
             is GetFeeError.BlockchainErrors.TooLargeSolanaTransactionError -> {
                 add(
                     getWarningForError(
@@ -451,6 +454,17 @@ internal class SwapNotificationsFactory(
                 onClick = actions.openTokenDetailsScreen,
             )
         }
+    }
+
+    private fun GetFeeError.GaslessError.TronAllowanceTooHigh.toReapprovalNotification(
+        fromCurrency: CryptoCurrency,
+    ): NotificationUM {
+        val reapproval = reapproval ?: return NotificationUM.Error.TotalExceedsBalance
+        val leaveAmount = (balance - reapproval.amount).format { crypto(fromCurrency) }
+        return SwapNotificationUM.Error.TronReapprovalRequired(
+            leaveAmount = leaveAmount,
+            onConfirmClick = { actions.onTronReapproveClick(reapproval.spenderAddress, reapproval.amount) },
+        )
     }
 
     private fun MutableList<NotificationUM>.addReduceAmountNotification(
@@ -519,7 +533,9 @@ internal fun ExpressDataError.toExpressError(): ExpressError = when (this) {
     is ExpressDataError.ExchangeProviderNotAvailableError -> ExpressError.ProviderNotAvailableError(code)
     is ExpressDataError.ExchangeProviderProviderInternalError -> ExpressError.ProviderInternalError(code)
     is ExpressDataError.ExchangeNotPossibleError -> ExpressError.ExchangeNotPossibleError(code)
+    is ExpressDataError.ExchangeInvalidAmountError -> ExpressError.InvalidAmountError(code)
     is ExpressDataError.ExchangeNotEnoughBalanceError -> ExpressError.NotEnoughBalanceError(code)
+    is ExpressDataError.ExchangeNotEnoughBalanceForGasFeeError -> ExpressError.NotEnoughBalanceForGasFeeError(code)
     is ExpressDataError.ExchangeInvalidAddressError -> ExpressError.InvalidAddressError(code)
     is ExpressDataError.ExchangeProviderAddressBannedByAmlError ->
         ExpressError.ExchangeProviderAddressBannedByAmlError(code)

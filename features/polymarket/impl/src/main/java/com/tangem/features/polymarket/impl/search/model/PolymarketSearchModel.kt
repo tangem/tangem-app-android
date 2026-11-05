@@ -10,6 +10,7 @@ import com.tangem.domain.polymarket.model.PolymarketSearchConfig
 import com.tangem.domain.polymarket.usecase.SearchPolymarketEventsUseCase
 import com.tangem.features.polymarket.impl.common.region.PredictionRegionAccess
 import com.tangem.features.polymarket.impl.common.region.regionRestrictionsMessage
+import com.tangem.features.polymarket.api.PolymarketFeatureToggles
 import com.tangem.features.polymarket.impl.main.model.converter.PolymarketEventUMConverter
 import com.tangem.features.polymarket.impl.navigation.PolymarketRoute
 import com.tangem.features.polymarket.impl.search.PolymarketSearchComponent
@@ -40,6 +41,7 @@ import javax.inject.Inject
  * restarts the paginated search; a shorter one resets it back to the "start typing" prompt.
  */
 @ModelScoped
+@Suppress("LongParameterList")
 internal class PolymarketSearchModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val router: Router,
@@ -47,6 +49,7 @@ internal class PolymarketSearchModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val regionAccess: PredictionRegionAccess,
     searchPolymarketEventsUseCase: SearchPolymarketEventsUseCase,
+    polymarketFeatureToggles: PolymarketFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<PolymarketSearchComponent.Params>()
@@ -64,6 +67,7 @@ internal class PolymarketSearchModel @Inject constructor(
     private val eventUMConverter = PolymarketEventUMConverter(
         onEventClick = ::onEventClick,
         onOutcomeClick = ::onOutcomeClick,
+        isPhaseTwoEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled,
     )
 
     // Replays the latest action: a Reload can be dispatched while the pagination is still subscribing,

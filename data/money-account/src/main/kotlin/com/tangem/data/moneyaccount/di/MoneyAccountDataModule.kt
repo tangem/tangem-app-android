@@ -10,11 +10,13 @@ import com.tangem.data.moneyaccount.flow.DefaultMoneyAccountStatusFetcher
 import com.tangem.data.moneyaccount.flow.DefaultMoneyAccountStatusProducer
 import com.tangem.data.moneyaccount.repository.DefaultMoneyAccountActivationRepository
 import com.tangem.data.moneyaccount.store.MoneyAccountStatusesStore
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.local.datastore.KotlinxDataStoreSerializer
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.domain.account.status.provider.NonPortfolioCurrenciesProvider
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.spend.datasource.visa.entity.MoneyAccountStatusValueDM
 import com.tangem.datasource.utils.AppDataStoreFactory
 import com.tangem.domain.moneyaccount.currency.MoneyAccountCurrencyFactory
@@ -29,6 +31,7 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.GetCustomerSummaryUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayProductsAvailabilityForCustomerUseCase
+import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.moneyaccount.repository.MoneyAccountActivationRepository
 import com.tangem.domain.moneyaccount.usecase.ActivateMoneyAccountUseCase
 import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountBalanceUseCase
@@ -37,6 +40,7 @@ import com.tangem.domain.moneyaccount.usecase.GetMoneyAccountCryptoCurrencyStatu
 import com.tangem.domain.moneyaccount.usecase.GetTangemPayProductsAvailabilityUseCase
 import com.tangem.domain.moneyaccount.usecase.IsMoneyAccountPathOccupiedUseCase
 import com.tangem.domain.moneyaccount.usecase.PollTangemPayAccountStatusesUseCase
+import com.tangem.domain.moneyaccount.usecase.RenewTangemPaySessionUseCase
 import com.tangem.domain.moneyaccount.usecase.StartTangemPayOnboardingUseCase
 import com.tangem.domain.pay.usecase.CreateOnboardingOrderUseCase
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -50,6 +54,7 @@ import dagger.multibindings.IntoSet
 import javax.inject.Singleton
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
+import kotlin.time.TimeSource
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -134,12 +139,16 @@ internal interface MoneyAccountDataModule {
             activateMoneyAccountUseCase: ActivateMoneyAccountUseCase,
             createOnboardingOrderUseCase: CreateOnboardingOrderUseCase,
             pollTangemPayAccountStatusesUseCase: PollTangemPayAccountStatusesUseCase,
+            userWalletsListRepository: UserWalletsListRepository,
+            analytics: AnalyticsEventHandler,
             appCoroutineScope: AppCoroutineScope,
         ): StartTangemPayOnboardingUseCase {
             return StartTangemPayOnboardingUseCase(
                 activateMoneyAccountUseCase = activateMoneyAccountUseCase,
                 createOnboardingOrderUseCase = createOnboardingOrderUseCase,
                 pollTangemPayAccountStatusesUseCase = pollTangemPayAccountStatusesUseCase,
+                userWalletsListRepository = userWalletsListRepository,
+                analytics = analytics,
                 appCoroutineScope = appCoroutineScope,
             )
         }
@@ -168,6 +177,20 @@ internal interface MoneyAccountDataModule {
         ): PollTangemPayAccountStatusesUseCase {
             return PollTangemPayAccountStatusesUseCase(
                 getCustomerSummaryUseCase = getCustomerSummaryUseCase,
+                paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+                moneyAccountStatusFetcher = moneyAccountStatusFetcher,
+                timeSource = TimeSource.Monotonic,
+            )
+        }
+
+        @Provides
+        fun provideRenewTangemPaySessionUseCase(
+            produceTangemPayInitialDataUseCase: ProduceTangemPayInitialDataUseCase,
+            paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+            moneyAccountStatusFetcher: MoneyAccountStatusFetcher,
+        ): RenewTangemPaySessionUseCase {
+            return RenewTangemPaySessionUseCase(
+                produceTangemPayInitialDataUseCase = produceTangemPayInitialDataUseCase,
                 paymentAccountStatusFetcher = paymentAccountStatusFetcher,
                 moneyAccountStatusFetcher = moneyAccountStatusFetcher,
             )

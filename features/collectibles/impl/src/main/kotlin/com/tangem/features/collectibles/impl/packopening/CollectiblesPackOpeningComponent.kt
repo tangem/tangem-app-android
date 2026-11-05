@@ -69,6 +69,7 @@ internal class CollectiblesPackOpeningComponent @AssistedInject constructor(
             config = config,
             onOpenPack = model::onReopenPack,
             onEnableTurboMode = model::onEnableTurboMode,
+            onOpenAgain = model::onOpenAgain,
             onExplorePacks = model::onExplorePacks,
             onDismiss = model::onDismissBottomSheet,
         ),

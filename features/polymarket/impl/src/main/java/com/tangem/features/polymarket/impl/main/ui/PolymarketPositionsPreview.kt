@@ -55,7 +55,7 @@ internal fun PolymarketPositionsPreview(
                 color = TangemTheme.colors3.text.primary,
                 style = TangemTheme.typography3.heading.small,
             )
-            onFinishedClick?.let { onClick ->
+            onFinishedClick?.takeIf { state.hasFinished }?.let { onClick ->
                 TangemButton(
                     text = resourceReference(R.string.prediction_positions_finished),
                     iconEnd = TangemIconUM.Icon(imageVector = Icons.ic_chevron_right_16),
@@ -90,7 +90,7 @@ internal fun PolymarketPositionsPreview(
                 }
             }
         }
-        if (state.isVisible) {
+        if (state is PolymarketPositionsPreviewUM.Content && state.hasMoreActive) {
             onActiveClick?.let { onClick ->
                 TangemButton(
                     modifier = Modifier.align(Alignment.CenterHorizontally),
@@ -112,7 +112,7 @@ internal fun PolymarketPositionsPreview(
 private fun PolymarketPositionsEmptyPreview() {
     TangemThemePreviewRedesign {
         PolymarketPositionsPreview(
-            state = PolymarketPositionsPreviewUM.Content(persistentListOf()),
+            state = PolymarketPositionsPreviewUM.Content(persistentListOf(), hasFinished = true),
             modifier = Modifier.background(TangemTheme.colors3.bg.primary).padding(vertical = 16.dp),
             onActiveClick = {},
             onFinishedClick = {},

@@ -6,9 +6,12 @@ import com.tangem.domain.pay.model.bankofframp.BankOfframpError
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderRequest
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderResult
 import com.tangem.domain.pay.model.bankofframp.BankOfframpOrderState
+import com.tangem.domain.pay.model.bankofframp.BankOfframpQuote
 import com.tangem.domain.pay.model.bankofframp.BankOfframpRecipient
 import com.tangem.domain.pay.model.bankofframp.BankOfframpRoute
+import com.tangem.domain.pay.model.bankofframp.BankOfframpTransfer
 import com.tangem.domain.pay.model.bankofframp.BankRail
+import java.math.BigDecimal
 
 /**
  * Placing a bank off-ramp withdrawal: create the order, follow it until it asks for a signature, then sign
@@ -48,4 +51,17 @@ interface BankOfframpOrderRepository {
         recipient: BankOfframpRecipient,
         idempotencyKey: String,
     ): Either<BankOfframpError, BankOfframpRoute>
+
+    suspend fun createQuote(
+        userWalletId: UserWalletId,
+        productInstanceId: String,
+        amount: BigDecimal,
+        recipient: BankOfframpRecipient,
+        idempotencyKey: String,
+    ): Either<BankOfframpError, BankOfframpQuote>
+
+    suspend fun createTransfer(
+        userWalletId: UserWalletId,
+        quoteId: String,
+    ): Either<BankOfframpError, BankOfframpTransfer>
 }

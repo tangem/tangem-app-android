@@ -69,6 +69,11 @@ internal class FeeSelectorModel @Inject constructor(
         stackNavigation.pop()
     }
 
+    override fun onSponsoredFeeSelected() {
+        feeSelectorLogic.onSponsoredFeeSelected()
+        stackNavigation.pop()
+    }
+
     override fun onCustomFeeValueChange(index: Int, value: String) {
         feeSelectorLogic.onCustomFeeValueChange(index, value)
     }
@@ -139,6 +144,8 @@ internal class FeeSelectorModel @Inject constructor(
             params.shouldShowOnlySpeedOption -> FeeSelectorRoute.ChooseSpeed
             params.shouldShowOnlyTokenOption && feeSelectorLogic.isGaslessEnabled -> FeeSelectorRoute.ChooseToken
             feeSelectorLogic.isGaslessEnabled -> FeeSelectorRoute.NetworkFee
+            (uiState.value as? FeeSelectorUM.Content)?.feeExtraInfo?.sponsoredFee?.isAvailable == true ->
+                FeeSelectorRoute.NetworkFee
             else -> FeeSelectorRoute.ChooseSpeed
         }
     }

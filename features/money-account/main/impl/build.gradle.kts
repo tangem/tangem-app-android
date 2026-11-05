@@ -16,9 +16,6 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.utils)
 
-    /** Common */
-    implementation(projects.common.ui)
-
     /** Features api */
     implementation(projects.features.moneyAccount.main.api)
 

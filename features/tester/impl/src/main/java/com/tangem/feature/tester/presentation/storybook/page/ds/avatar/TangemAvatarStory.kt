@@ -31,6 +31,7 @@ import com.tangem.feature.tester.presentation.storybook.entity.TangemAvatarStory
 
 private const val SAMPLE_ADDRESS = "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984"
 private const val SAMPLE_INITIAL = 'A'
+private const val SAMPLE_ASSET_URL = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/bitcoin.png"
 private const val FILL_COLORS_PER_ROW = 4
 
 @Composable
@@ -61,6 +62,7 @@ internal fun TangemAvatarStory(state: TangemAvatarStory, modifier: Modifier = Mo
                 TangemAvatarStory.Variant.User,
                 -> FillColorSelector(selected = state.fillColor, onSelect = state.onFillColorChange)
                 TangemAvatarStory.Variant.Address,
+                TangemAvatarStory.Variant.Asset,
                 TangemAvatarStory.Variant.Shimmer,
                 -> Unit
             }
@@ -88,32 +90,47 @@ private fun ComponentPreview(state: TangemAvatarStory) {
 }
 
 private fun TangemAvatarStory.toUiState(): TangemAvatar.UiState = when (variant) {
-    TangemAvatarStory.Variant.Account -> TangemAvatar.UiState.Account(
-        iconRes = R.drawable.ic_airplane_mode_24,
-        color = fillColor,
-    )
+    TangemAvatarStory.Variant.Account -> if (hasLetter) {
+        TangemAvatar.UiState.Account(
+            letter = SAMPLE_INITIAL,
+            color = fillColor,
+            hasIndicator = hasAccountIndicator,
+            shape = shape(),
+        )
+    } else {
+        TangemAvatar.UiState.Account(
+            iconRes = R.drawable.ic_airplane_mode_24,
+            color = fillColor,
+            hasIndicator = hasAccountIndicator,
+            shape = shape(),
+        )
+    }
     TangemAvatarStory.Variant.User -> TangemAvatar.UiState.User(
-        initial = SAMPLE_INITIAL.takeIf { hasUserInitial },
+        initial = SAMPLE_INITIAL.takeIf { hasLetter },
         color = fillColor,
+        shape = shape(),
     )
-    TangemAvatarStory.Variant.Address -> TangemAvatar.UiState.Address(address = SAMPLE_ADDRESS)
+    TangemAvatarStory.Variant.Address -> TangemAvatar.UiState.Address(address = SAMPLE_ADDRESS, shape = shape())
     TangemAvatarStory.Variant.Icon -> TangemAvatar.UiState.Icon(
         imageVector = Icons.ic_grid_plus_20,
         appearance = appearance,
+        shape = shape(),
     )
     TangemAvatarStory.Variant.Transaction -> TangemAvatar.UiState.Transaction(
         imageVector = Icons.ic_arrow_up_20,
         status = status,
-        hasPendingIndicator = hasPendingIndicator,
+        shape = shape(),
     )
-    TangemAvatarStory.Variant.Shimmer -> TangemAvatar.UiState.Shimmer(
-        shape = if (isShimmerRounded) {
-            TangemAvatar.UiState.Shimmer.Shape.RoundedSquare
-        } else {
-            TangemAvatar.UiState.Shimmer.Shape.Circle
-        },
-    )
+    TangemAvatarStory.Variant.Asset -> if (isRemoteAsset) {
+        TangemAvatar.UiState.Asset(url = SAMPLE_ASSET_URL, shape = shape())
+    } else {
+        TangemAvatar.UiState.Asset(iconRes = R.drawable.img_collectibles_welcome_hero, shape = shape())
+    }
+    TangemAvatarStory.Variant.Shimmer -> TangemAvatar.UiState.Shimmer(shape = shape())
 }
+
+private fun TangemAvatarStory.shape(): TangemAvatar.Shape =
+    if (isRoundedSquare) TangemAvatar.Shape.RoundedSquare else TangemAvatar.Shape.Circle
 
 @Composable
 private fun VariantSelector(selected: TangemAvatarStory.Variant, onSelect: (TangemAvatarStory.Variant) -> Unit) {
@@ -177,16 +194,19 @@ private fun Toggles(state: TangemAvatarStory) {
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             ToggleRow(
-                label = "pendingIndicator",
-                checked = state.hasPendingIndicator,
-                onToggle = state.onPendingIndicatorToggle,
+                label = "accountIndicator",
+                checked = state.hasAccountIndicator,
+                onToggle = state.onAccountIndicatorToggle,
             )
-            ToggleRow(label = "userInitial", checked = state.hasUserInitial, onToggle = state.onUserInitialToggle)
-            ToggleRow(
-                label = "shimmerRoundedSquare",
-                checked = state.isShimmerRounded,
-                onToggle = state.onShimmerRoundedToggle,
-            )
+            ToggleRow(label = "letter", checked = state.hasLetter, onToggle = state.onLetterToggle)
+            ToggleRow(label = "remoteAsset", checked = state.isRemoteAsset, onToggle = state.onRemoteAssetToggle)
+            if (state.variant != TangemAvatarStory.Variant.Asset || !state.isRemoteAsset) {
+                ToggleRow(
+                    label = "roundedSquare",
+                    checked = state.isRoundedSquare,
+                    onToggle = state.onRoundedSquareToggle,
+                )
+            }
         }
     }
 }

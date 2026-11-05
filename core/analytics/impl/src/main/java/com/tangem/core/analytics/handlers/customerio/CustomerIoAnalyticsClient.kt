@@ -5,4 +5,4 @@ import com.tangem.core.analytics.api.UserIdHolder
 /**
  * Client interface for Customer.io SDK operations.
  */
-interface CustomerIoAnalyticsClient : UserIdHolder
+internal interface CustomerIoAnalyticsClient : UserIdHolder

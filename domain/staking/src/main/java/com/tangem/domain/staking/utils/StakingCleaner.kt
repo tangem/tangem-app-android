@@ -3,12 +3,17 @@ package com.tangem.domain.staking.utils
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.utils.annotations.RemoveWithToggle
 
 /**
  * Cleans up staking-related data for a specific user wallet and a set of staking IDs.
  *
 [REDACTED_AUTHOR]
  */
+@RemoveWithToggle(
+    toggleName = "AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED",
+    description = "Replaced by the CryptoCurrencyDataCleaner set; delete withCryptoCurrencyMetadataCleaner branch.",
+)
 interface StakingCleaner {
 
     /**

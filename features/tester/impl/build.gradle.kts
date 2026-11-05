@@ -48,6 +48,7 @@ dependencies {
     implementation(projects.domain.markets.models)
     implementation(projects.domain.models)
     implementation(projects.domain.offramp)
+    implementation(projects.domain.polymarket)
     implementation(projects.domain.socialLogin)
     implementation(projects.domain.walletManager)
     runtimeOnly(projects.domain.card)
@@ -85,6 +86,7 @@ dependencies {
     api(projects.features.tester.api)
     implementation(projects.features.hotWallet.api)
     implementation(projects.features.pushNotifications.api)
+    implementation(projects.features.polymarket.impl)
 
     /* SDK */
     implementation(tangemDeps.blockchain)

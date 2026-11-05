@@ -13,6 +13,7 @@ import com.tangem.domain.transaction.TronGaslessTransactionRepository
 import com.tangem.domain.transaction.error.GaslessServiceException
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.TronActivationRefusal
+import com.tangem.domain.transaction.error.TronAllowanceTooHigh
 import com.tangem.domain.transaction.models.GaslessProtocolData
 import com.tangem.domain.transaction.models.tron.TronGaslessApprove
 import com.tangem.domain.transaction.models.tron.TronGaslessApproveEstimateParams
@@ -211,6 +212,35 @@ internal class GetTronGaslessFeeUseCaseTest {
         }
 
         @Test
+        fun `GIVEN allowance too high WHEN forSwap THEN amounts are in the fee token`() = runTest {
+            // Arrange
+            coEvery { repository.estimateSwap(any()) } throws GaslessServiceException(
+                httpCode = 422,
+                message = "error",
+                tronAllowanceTooHigh = TronAllowanceTooHigh(
+                    balanceRaw = BigInteger("5000000000"),
+                    requiredRaw = BigInteger("5100000000"),
+                    allowanceRaw = BigInteger("4900000000"),
+                    allowancesRaw = mapOf("TRouter" to BigInteger("4900000000")),
+                ),
+            )
+
+            // Act
+            val result = useCase.forSwap(userWalletId = userWalletId, swap = swap, feeToken = usdtToken)
+
+            // Assert
+            // The mock fee token has 8 decimals.
+            assertThat(result.leftOrNull()).isEqualTo(
+                GetFeeError.GaslessError.TronAllowanceTooHigh(
+                    balance = BigDecimal("50.00000000"),
+                    required = BigDecimal("51.00000000"),
+                    allowance = BigDecimal("49.00000000"),
+                    allowances = mapOf("TRouter" to BigDecimal("49.00000000")),
+                ),
+            )
+        }
+
+        @Test
         fun `GIVEN swap estimate fails WHEN forSwap THEN gasless data error`() = runTest {
             // Arrange
             val failure = IllegalStateException("TRON_SWAP_NOT_ALLOWED")
@@ -276,6 +306,27 @@ internal class GetTronGaslessFeeUseCaseTest {
                 )
             }
             coVerify(exactly = 0) { repository.estimate(any()) }
+        }
+
+        @Test
+        fun `GIVEN approval estimate succeeds WHEN forApprove THEN fee carries the approval quote`() = runTest {
+            // Arrange
+            val approve = TronGaslessApprove(
+                fromAddress = "TFrom",
+                tokenContract = usdtContract,
+                amount = BigInteger("100000000"),
+                spenderAddress = "TRouter",
+            )
+            val approveQuote = quote.copy(quotedApprove = approve)
+            coEvery { repository.estimateApprove(any()) } returns approveQuote
+
+            // Act
+            val result = useCase.forApprove(userWalletId = userWalletId, approve = approve, feeToken = usdtToken)
+
+            // Assert
+            assertThat(result.getOrNull()?.gaslessProtocolData).isEqualTo(GaslessProtocolData.Tron(quote = approveQuote))
+            assertThat(result.getOrNull()?.transactionFee?.normal?.amount?.value)
+                .isEquivalentAccordingToCompareTo(BigDecimal("2.75"))
         }
 
         @Test
