@@ -2,7 +2,6 @@ package com.tangem.features.polymarket.impl.common.funding
 
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.interactor.RefreshPredictionDepositRequisitesInteractor
-import com.tangem.domain.polymarket.model.PolymarketDepositTarget
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.coroutines.CoroutineScope
@@ -20,8 +19,8 @@ internal class PredictionFundingRequisites(
     val state: StateFlow<RequisitesState>
         field = MutableStateFlow<RequisitesState>(RequisitesState.Loading)
 
-    val target: PolymarketDepositTarget?
-        get() = (state.value as? RequisitesState.Ready)?.target
+    val ready: RequisitesState.Ready?
+        get() = state.value as? RequisitesState.Ready
 
     private val jobHolder = JobHolder()
 
@@ -45,7 +44,7 @@ internal class PredictionFundingRequisites(
             ifRight = { requisites ->
                 state.value = requisites.default
                     ?.takeIf { it.token.minCheckoutUsd != null }
-                    ?.let(RequisitesState::Ready)
+                    ?.let { target -> RequisitesState.Ready(target = target, options = requisites.options) }
                     ?: RequisitesState.Failed
             },
         )
