@@ -17,7 +17,6 @@ dependencies {
 
     /** Core */
     implementation(projects.core.decompose)
-    implementation(projects.core.ui)
 
     /** Domain */
     implementation(projects.domain.account)
