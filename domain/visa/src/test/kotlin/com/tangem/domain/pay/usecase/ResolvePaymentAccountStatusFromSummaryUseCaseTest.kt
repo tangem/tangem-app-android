@@ -1,40 +1,74 @@
 package com.tangem.domain.pay.usecase
 
+import arrow.core.left
+import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
+import com.tangem.domain.models.account.PaymentNetworkStatus
+import com.tangem.domain.models.account.TangemPayCustomerTariffPlan
+import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.pay.TangemPayCustomerResidency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.TangemPayCurrencyFactory
+import com.tangem.domain.pay.flow.PaymentAccountStatusCache
+import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.CustomerSummary
 import com.tangem.domain.pay.model.CustomerSummary.MoneyAccount
 import com.tangem.domain.pay.model.CustomerSummary.CustomerStatus
 import com.tangem.domain.pay.model.CustomerSummary.PaymentAccount
 import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import java.math.BigDecimal
 import com.tangem.domain.pay.model.CustomerSummary.KycStatus as SummaryKycStatus
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class ResolvePaymentAccountStatusFromSummaryUseCaseTest {
 
     private val onboardingRepository: OnboardingRepository = mockk()
+    private val getTangemPayTariffPlanStateUseCase: GetTangemPayTariffPlanStateUseCase = mockk()
+    private val tangemPayCurrencyFactory: TangemPayCurrencyFactory = mockk()
+    private val getTangemPayFiatRateUseCase: GetTangemPayFiatRateUseCase = mockk()
+    private val paymentAccountStatusCache: PaymentAccountStatusCache = mockk()
 
-    private val useCase = ResolvePaymentAccountStatusFromSummaryUseCase(onboardingRepository = onboardingRepository)
+    private val useCase = ResolvePaymentAccountStatusFromSummaryUseCase(
+        onboardingRepository = onboardingRepository,
+        getTangemPayTariffPlanStateUseCase = getTangemPayTariffPlanStateUseCase,
+        tangemPayCurrencyFactory = tangemPayCurrencyFactory,
+        getTangemPayFiatRateUseCase = getTangemPayFiatRateUseCase,
+        paymentAccountStatusCache = paymentAccountStatusCache,
+    )
 
     private val userWalletId = UserWalletId("011")
     private val residency = TangemPayCustomerResidency(countryCode = "US", regionCode = "NY")
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(onboardingRepository)
+        clearMocks(
+            onboardingRepository,
+            getTangemPayTariffPlanStateUseCase,
+            tangemPayCurrencyFactory,
+            getTangemPayFiatRateUseCase,
+            paymentAccountStatusCache,
+        )
         coEvery { onboardingRepository.getCustomerResidency(userWalletId) } returns residency
+        coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns VisaApiError.Unspecified.left()
+        coEvery { paymentAccountStatusCache.getSyncOrNull(userWalletId) } returns null
     }
 
     @ParameterizedTest
@@ -131,11 +165,21 @@ internal class ResolvePaymentAccountStatusFromSummaryUseCaseTest {
             expected = null,
         ),
         ResolveModel(
-            name = "failed requires full fetch",
+            name = "failed shows card issue failure",
             summary = summary(
                 kycStatus = SummaryKycStatus.APPROVED,
                 payment = PaymentAccount.Activation.Status.FAILED,
                 paymentStep = PaymentAccount.Activation.Step.ISSUING,
+                paymentFailureReason = PaymentAccount.Activation.FailureReason.RAIN_REJECTED,
+            ),
+            expected = PaymentAccountStatusValue.Error.CardIssueFailed(customerId = CUSTOMER_ID),
+        ),
+        ResolveModel(
+            name = "closed with failed account requires full fetch",
+            summary = summary(
+                customerStatus = CustomerStatus.FORMER,
+                kycStatus = SummaryKycStatus.APPROVED,
+                payment = PaymentAccount.Activation.Status.FAILED,
                 paymentFailureReason = PaymentAccount.Activation.FailureReason.RAIN_REJECTED,
             ),
             expected = null,
@@ -158,6 +202,117 @@ internal class ResolvePaymentAccountStatusFromSummaryUseCaseTest {
             expected = null,
         ),
     )
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CardIssueFailedDetails {
+
+        private val failedSummary = summary(
+            kycStatus = SummaryKycStatus.APPROVED,
+            payment = PaymentAccount.Activation.Status.FAILED,
+            paymentStep = PaymentAccount.Activation.Step.ISSUING,
+            paymentFailureReason = PaymentAccount.Activation.FailureReason.RAIN_REJECTED,
+        )
+        private val tariff: TangemPayCustomerTariffPlan = mockk()
+        private val tariffState: TangemPayTariffPlanState = mockk()
+        private val networkInfos: List<CustomerInfo.NetworkInfo> = listOf(mockk())
+        private val networkStatuses: List<PaymentNetworkStatus> = listOf(mockk())
+        private val fiatRate = BigDecimal("0.99")
+        private val fiatBalance = PaymentAccountStatusValue.FiatBalance(
+            availableBalance = BigDecimal.TEN,
+            currency = "USD",
+        )
+
+        @BeforeEach
+        fun setUpDetails() {
+            coEvery { getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = tariff) } returns
+                tariffState
+            coEvery { getTangemPayFiatRateUseCase() } returns fiatRate
+            every {
+                tangemPayCurrencyFactory.createNetworkStatuses(userWalletId, networkInfos, fiatRate)
+            } returns networkStatuses
+        }
+
+        @Test
+        fun `GIVEN customer info with balance WHEN invoke THEN card issue failure built from it`() = runTest {
+            // Arrange
+            coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns
+                customerInfo(fiatBalance = fiatBalance).right()
+
+            // Act
+            val actual = useCase(userWalletId = userWalletId, summary = failedSummary)
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                PaymentAccountStatusValue.Error.CardIssueFailed(
+                    customerId = CUSTOMER_ID,
+                    tariffPlan = tariffState,
+                    balance = PaymentAccountStatusValue.Balance(fiatBalance = fiatBalance),
+                    networks = networkStatuses,
+                    fiatRate = fiatRate,
+                ),
+            )
+        }
+
+        @Test
+        fun `GIVEN customer info with balance WHEN invoke THEN cache is not read`() = runTest {
+            // Arrange
+            coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns
+                customerInfo(fiatBalance = fiatBalance).right()
+
+            // Act
+            useCase(userWalletId = userWalletId, summary = failedSummary)
+
+            // Assert
+            coVerify(exactly = 0) { paymentAccountStatusCache.getSyncOrNull(any()) }
+        }
+
+        @Test
+        fun `GIVEN customer info without balance WHEN invoke THEN cached balance used`() = runTest {
+            // Arrange
+            val cachedBalance = PaymentAccountStatusValue.Balance(fiatBalance = fiatBalance)
+            val cached = AccountStatus.Payment(
+                account = Account.Payment(userWalletId = userWalletId),
+                value = PaymentAccountStatusValue.Error.CardIssueFailed(
+                    customerId = CUSTOMER_ID,
+                    balance = cachedBalance,
+                ),
+            )
+            coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns
+                customerInfo(fiatBalance = null).right()
+            coEvery { paymentAccountStatusCache.getSyncOrNull(userWalletId) } returns cached
+
+            // Act
+            val actual = useCase(userWalletId = userWalletId, summary = failedSummary)
+
+            // Assert
+            assertThat(actual).isEqualTo(
+                PaymentAccountStatusValue.Error.CardIssueFailed(
+                    customerId = CUSTOMER_ID,
+                    tariffPlan = tariffState,
+                    balance = cachedBalance,
+                    networks = networkStatuses,
+                    fiatRate = fiatRate,
+                ),
+            )
+        }
+
+        @Test
+        fun `GIVEN customer info fails WHEN invoke THEN bare card issue failure returned`() = runTest {
+            // Act
+            val actual = useCase(userWalletId = userWalletId, summary = failedSummary)
+
+            // Assert
+            assertThat(actual).isEqualTo(PaymentAccountStatusValue.Error.CardIssueFailed(customerId = CUSTOMER_ID))
+            coVerify(exactly = 0) { getTangemPayTariffPlanStateUseCase(any(), any()) }
+        }
+
+        private fun customerInfo(fiatBalance: PaymentAccountStatusValue.FiatBalance?): CustomerInfo = mockk {
+            every { tariffPlan } returns tariff
+            every { this@mockk.fiatBalance } returns fiatBalance
+            every { networks } returns networkInfos
+        }
+    }
 
     private fun verified() = PaymentAccountStatusValue.Verified(source = StatusSource.ACTUAL)
 
