@@ -9,7 +9,9 @@ import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.polymarket.model.PolymarketDisplayMode
 import com.tangem.domain.polymarket.model.PolymarketEvent
 import com.tangem.domain.polymarket.model.PolymarketMarket
+import com.tangem.domain.polymarket.model.PolymarketSportsState
 import com.tangem.domain.polymarket.model.PolymarketOutcome
+import com.tangem.features.polymarket.impl.common.PolymarketOutcomeButtonTitle
 import com.tangem.features.polymarket.impl.common.formatPolymarketPrice
 import com.tangem.features.polymarket.impl.common.formatPolymarketVolume
 import com.tangem.features.polymarket.impl.main.ui.state.PolymarketEventRowUM
@@ -28,15 +30,23 @@ import java.math.BigDecimal
 internal class PolymarketEventUMConverter(
     private val onEventClick: (String) -> Unit,
     private val onOutcomeClick: (eventId: String, marketId: String, assetId: String) -> Unit,
+    private val isPhaseTwoEnabled: Boolean,
 ) : Converter<PolymarketEvent, PolymarketEventUM> {
 
-    override fun convert(value: PolymarketEvent): PolymarketEventUM {
+    private val sportsConverter = PolymarketSportsUMConverter(isPhaseTwoEnabled, onOutcomeClick)
+
+    override fun convert(value: PolymarketEvent): PolymarketEventUM = convert(value, sports = null)
+
+    fun convert(value: PolymarketEvent, sports: PolymarketSportsState.Game?): PolymarketEventUM {
+        val game = sports?.takeIf { isPhaseTwoEnabled && it.gameId == value.gameId }
+        val sportsRow = sportsConverter.outcomes(value, game)
         return PolymarketEventUM(
             id = value.id,
             title = stringReference(value.title),
             iconUrl = value.iconUrl,
             volume = stringReference(value.volume.formatPolymarketVolume()),
-            rows = value.markets
+            sports = game?.takeIf { sportsRow != null }?.let { sportsConverter.convert(it) },
+            rows = sportsRow?.let(::listOf)?.toImmutableList() ?: value.markets
                 .map { convertRow(event = value, market = it) }
                 .toImmutableList(),
             hiddenMarketsCount = (value.totalMarketsCount - value.markets.size).coerceAtLeast(minimumValue = 0),
@@ -47,6 +57,11 @@ internal class PolymarketEventUMConverter(
     private fun convertRow(event: PolymarketEvent, market: PolymarketMarket): PolymarketEventRowUM {
         val shouldShowPrices = market.groupItemTitle.isNullOrBlank() ||
             market.groupItemTitle == MATCH_WINNER_GROUP_ITEM_TITLE
+        val titles = PolymarketOutcomeButtonTitle.convert(
+            market.outcomes.map { it.title },
+            event.teams,
+            isPhaseTwoEnabled,
+        )
         return PolymarketEventRowUM(
             marketId = market.id,
             title = if (shouldShowPrices) {
@@ -60,7 +75,15 @@ internal class PolymarketEventUMConverter(
                 stringReference(market.outcomes.firstOrNull()?.probability.formatProbability())
             },
             outcomes = market.outcomes
-                .map { convertOutcome(event = event, market = market, outcome = it, showPrice = shouldShowPrices) }
+                .mapIndexed { index, outcome ->
+                    convertOutcome(
+                        event = event,
+                        market = market,
+                        outcome = outcome,
+                        title = titles[index],
+                        showPrice = shouldShowPrices,
+                    )
+                }
                 .toImmutableList(),
         )
     }
@@ -86,11 +109,12 @@ internal class PolymarketEventUMConverter(
         event: PolymarketEvent,
         market: PolymarketMarket,
         outcome: PolymarketOutcome,
+        title: String,
         showPrice: Boolean,
     ): PolymarketOutcomeUM {
         return PolymarketOutcomeUM(
             assetId = outcome.assetId,
-            title = stringReference(outcome.title),
+            title = stringReference(title),
             price = if (showPrice) stringReference(outcome.probability.formatPolymarketPrice()) else null,
             onClick = { onOutcomeClick(event.id, market.id, outcome.assetId) },
         )
