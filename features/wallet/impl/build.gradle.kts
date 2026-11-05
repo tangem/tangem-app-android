@@ -132,6 +132,7 @@ dependencies {
 
     /** Feature Apis */
     api(projects.features.biometry.api)
+    api(projects.features.allServices.api)
     api(projects.features.collectibles.api)
     api(projects.features.commonFeatures.api)
     api(projects.features.feed.api)
