@@ -74,6 +74,21 @@ class MoneyAccountPageObject(private val semanticsProvider: SemanticsNodeInterac
         hasTestTag(ModalStatusTestTags.TITLE)
         hasText(title)
     }
+
+    fun modalStatusDescription(description: String): KNode = child {
+        hasTestTag(ModalStatusTestTags.DESCRIPTION)
+        hasText(description)
+    }
+
+    val mainRowCacheIcon: KNode = child {
+        hasTestTag(MoneyAccountTestTags.MAIN_ROW_CACHE_ICON)
+        useUnmergedTree = true
+    }
+
+    val contactSupportButton: KNode = child {
+        hasText(getResourceString(R.string.common_contact_support))
+        hasClickAction()
+    }
 }
 
 private const val PULL_DISTANCE_FACTOR = 6f

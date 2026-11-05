@@ -5,6 +5,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.SVS_SEED_PHRASE_12
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
+import com.tangem.common.utils.getWireMockRequestCount
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.screens.VirtualAccountRequisitesBottomSheetPageObject
 import com.tangem.screens.moneyaccount.onMoneyAccountAddFundsSheet
@@ -101,6 +102,22 @@ fun BaseTestCase.refreshMainUntilMoneyAccountBalance(balance: String) {
     }
 }
 
+fun BaseTestCase.refreshMainUntilCustomerSummaryRequested() {
+    val requestCountBefore = getWireMockRequestCount(method = "GET", urlPathPattern = CUSTOMER_SUMMARY_PATH)
+    step("Refresh 'Main' until 'customer/summary' is requested") {
+        // A pull during a refresh that is still running is dropped, so pull until the journal shows a new request.
+        composeTestRule.waitUntil(timeoutMillis = WAIT_UNTIL_TIMEOUT_LONG) {
+            closeFinishWalletActivationSheetIfShown()
+            pullToRefreshMainScreen()
+            runCatching {
+                composeTestRule.waitUntil(timeoutMillis = BALANCE_RELOAD_TIMEOUT_MILLIS) {
+                    getWireMockRequestCount(method = "GET", urlPathPattern = CUSTOMER_SUMMARY_PATH) > requestCountBefore
+                }
+            }.isSuccess
+        }
+    }
+}
+
 fun BaseTestCase.refreshMoneyAccountUntilTransaction(title: String) {
     step("Refresh 'Money account' screen until the '$title' transaction is displayed") {
         // Reopening the account shows the cached history; only a pull re-reads it, and a pull can land too early.
@@ -163,3 +180,4 @@ fun BaseTestCase.openMainWithMoneyAccountAndTwoAccounts() {
 
 private const val DETAILS_OPEN_TIMEOUT_MILLIS = 3_000L
 private const val BALANCE_RELOAD_TIMEOUT_MILLIS = 5_000L
+private const val CUSTOMER_SUMMARY_PATH = "/bff-v2/v1/customer/summary"
