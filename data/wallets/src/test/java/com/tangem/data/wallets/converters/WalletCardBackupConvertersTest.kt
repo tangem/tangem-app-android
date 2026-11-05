@@ -48,6 +48,15 @@ internal class WalletCardBackupConvertersTest {
         }
 
         @Test
+        fun `GIVEN card without role WHEN convert THEN dto role is null`() {
+            // Act
+            val actual = WalletCardDTOConverter.convert(domainCard(CardBackupStatus.CARD_LINKED).copy(role = null))
+
+            // Assert
+            assertThat(actual.role).isNull()
+        }
+
+        @Test
         fun `GIVEN card without error WHEN convert THEN error fields are null`() {
             // Act
             val actual = WalletCardDTOConverter.convert(domainCard(CardBackupStatus.ACTIVE))
@@ -126,6 +135,15 @@ internal class WalletCardBackupConvertersTest {
 
             // Assert
             assertThat(actual.curves).containsExactly(EllipticCurve.Secp256k1)
+        }
+
+        @Test
+        fun `GIVEN backend card without role WHEN convert THEN domain role is null`() {
+            // Act
+            val actual = WalletCardBackupConverter.convert(dtoCard(WalletCardDTO.BackupStatus.CARD_LINKED).copy(role = null))
+
+            // Assert
+            assertThat(actual.role).isNull()
         }
 
         @Test
