@@ -69,7 +69,6 @@ internal class DefaultWalletRegistrar(
                 locks.sessionRotation.withLock {
                     handleRegisterResponse(prepared.walletId, authApi.registerWallet(prepared.request))
                 }
-                WalletRegistrationResult.Registered
             }
         }
     }
@@ -142,14 +141,15 @@ internal class DefaultWalletRegistrar(
         }
     }
 
-    override suspend fun submit(prepared: PreparedWalletRegistration): Either<WalletRegistrationError, Unit> =
-        withContext(dispatchers.io) {
-            locks.forWallet(prepared.walletId).withLock {
-                locks.sessionRotation.withLock {
-                    either { handleRegisterResponse(prepared.walletId, authApi.registerWallet(prepared.request)) }
-                }
+    override suspend fun submit(
+        prepared: PreparedWalletRegistration,
+    ): Either<WalletRegistrationError, WalletRegistrationResult> = withContext(dispatchers.io) {
+        locks.forWallet(prepared.walletId).withLock {
+            locks.sessionRotation.withLock {
+                either { handleRegisterResponse(prepared.walletId, authApi.registerWallet(prepared.request)) }
             }
         }
+    }
 
     override suspend fun unregister(
         walletId: String,
@@ -317,7 +317,7 @@ internal class DefaultWalletRegistrar(
     private suspend fun Raise<WalletRegistrationError>.handleRegisterResponse(
         walletId: String,
         response: ApiResponse<TokenApiResponse>,
-    ) {
+    ): WalletRegistrationResult {
         when (response) {
             is ApiResponse.Success -> {
                 val tokens = SessionTokensConverter.convertBack(response.data)
@@ -331,6 +331,7 @@ internal class DefaultWalletRegistrar(
                     raise(WalletRegistrationError.PersistenceFailed(e))
                 }
                 TangemLogger.i("Wallet registered successfully")
+                return WalletRegistrationResult.Registered
             }
             is ApiResponse.Error -> {
                 val authError = errorConverter.convert(response.cause)
@@ -344,7 +345,7 @@ internal class DefaultWalletRegistrar(
                         TangemLogger.e("Failed to persist wallet-registration marker after 409", e)
                         raise(WalletRegistrationError.PersistenceFailed(e))
                     }
-                    return
+                    return WalletRegistrationResult.AlreadyRegistered
                 }
                 TangemLogger.e("/wallet request failed: $authError")
                 raise(WalletRegistrationError.Api(authError))
