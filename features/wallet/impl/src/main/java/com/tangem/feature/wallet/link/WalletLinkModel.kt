@@ -78,7 +78,7 @@ internal class WalletLinkModel @Inject constructor(
         modelScope.launch {
             linkWalletToDeviceUseCase(userWallet).fold(
                 ifLeft = { error ->
-                    if (error is WalletLinkError.Cancelled) {
+                    if (error is WalletLinkError.Cancelled || error is WalletLinkError.WrongCard) {
                         showSheet(userWallet, isLoading = false)
                     } else {
                         close(WalletLinkRequester.Result.Dismissed)
