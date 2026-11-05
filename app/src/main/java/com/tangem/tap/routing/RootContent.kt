@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -76,7 +77,7 @@ internal fun RootContent(
 
             val zoomSources = remember { RootZoomSources() }
             val currentStack by stack.subscribeAsState()
-            SideEffect { zoomSources.retainAround(currentStack) }
+            SideEffect { zoomSources.onStackChanged(currentStack) }
 
             CompositionLocalProvider(LocalTangemModalHost provides modalHostState) {
                 Box(Modifier.background(LocalRootBackgroundColor.current.value)) {
@@ -91,11 +92,21 @@ internal fun RootContent(
                                 ),
                                 stack = stack,
                             ) { child ->
+                                DisposableEffect(child.key) {
+                                    zoomSources.onChildComposed(child.key)
+                                    onDispose { zoomSources.onChildDisposed(child.key) }
+                                }
                                 ZoomTransitionChild(
                                     sharedTransitionScope = this@SharedTransitionLayout,
                                     animatedVisibilityScope = this,
                                 ) {
-                                    RootChildContent(child = child, zoomSource = zoomSources.of(child))
+                                    RootChildContent(
+                                        child = child,
+                                        zoomSource = zoomSources.of(child),
+                                        // only the screen in front zooms; one revealed by a pop above it moves with
+                                        // the stack's own animation
+                                        isZooming = stackAnimationDirection?.isFront != false,
+                                    )
                                 }
                             }
                         }
@@ -134,7 +145,11 @@ internal fun RootContent(
 }
 
 @Composable
-private fun RootChildContent(child: Child.Created<AppRoute, RoutingComponent.Child>, zoomSource: String?) {
+private fun RootChildContent(
+    child: Child.Created<AppRoute, RoutingComponent.Child>,
+    zoomSource: String?,
+    isZooming: Boolean,
+) {
     val context = LocalContext.current
 
     when (val instance = child.instance) {
@@ -143,7 +158,11 @@ private fun RootChildContent(child: Child.Created<AppRoute, RoutingComponent.Chi
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .zoomTransitionDestination(key = zoomSource, shape = RoundedCornerShape(size = 20.dp)),
+                    .zoomTransitionDestination(
+                        key = zoomSource,
+                        shape = RoundedCornerShape(size = 20.dp),
+                        isZooming = isZooming,
+                    ),
             ) {
                 ProvideHaze {
                     instance.component.Content(Modifier.fillMaxSize())
@@ -162,24 +181,33 @@ private fun RootChildContent(child: Child.Created<AppRoute, RoutingComponent.Chi
 
 /**
  * Zoom source of each root child, claimed from [ZoomTransitions] the first time the stack meets the child.
- * A popped child leaves the stack before its zoom back has played, so its source is kept until the stack
- * changes again.
+ * A child keeps it while it is in the stack or still composed: a popped child plays its zoom back after leaving
+ * the stack, and the stack can change again before that ends.
  */
 private class RootZoomSources {
     private val byChildKey = mutableMapOf<String, String>()
-    private var previousChildKeys = emptySet<String>()
-    private var lastStack: ChildStack<AppRoute, *>? = null
+    private val composedChildKeys = mutableSetOf<String>()
+    private var stackChildKeys = emptySet<String>()
 
     fun of(child: Child.Created<AppRoute, *>): String? = byChildKey[child.key]
         ?: ZoomTransitions.claim(child.configuration)?.also { sourceKey -> byChildKey[child.key] = sourceKey }
 
-    fun retainAround(stack: ChildStack<AppRoute, *>) {
-        if (stack == lastStack) return
-        lastStack = stack
+    fun onStackChanged(stack: ChildStack<AppRoute, *>) {
+        stackChildKeys = stack.items.mapTo(mutableSetOf()) { it.key }
+        release()
+    }
 
-        val childKeys = stack.items.mapTo(mutableSetOf()) { it.key }
-        byChildKey.keys.retainAll(childKeys + previousChildKeys)
-        previousChildKeys = childKeys
+    fun onChildComposed(childKey: String) {
+        composedChildKeys += childKey
+    }
+
+    fun onChildDisposed(childKey: String) {
+        composedChildKeys -= childKey
+        release()
+    }
+
+    private fun release() {
+        byChildKey.keys.retainAll(stackChildKeys + composedChildKeys)
     }
 }
 
