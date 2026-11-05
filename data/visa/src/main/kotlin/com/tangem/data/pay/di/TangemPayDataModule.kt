@@ -39,6 +39,7 @@ import com.tangem.domain.pay.usecase.bankofframp.*
 import com.tangem.domain.pay.usecase.recents.GetRecentTokenTransfersUseCase
 import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSendUseCase
 import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSwapUseCase
+import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
@@ -560,10 +561,27 @@ internal interface TangemPayDataModule {
         }
 
         @Provides
+        fun provideGetTangemPayFiatRateUseCase(
+            singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
+        ): GetTangemPayFiatRateUseCase {
+            return GetTangemPayFiatRateUseCase(singleQuoteStatusSupplier = singleQuoteStatusSupplier)
+        }
+
+        @Provides
         fun provideResolvePaymentAccountStatusFromSummaryUseCase(
             onboardingRepository: OnboardingRepository,
+            getTangemPayTariffPlanStateUseCase: GetTangemPayTariffPlanStateUseCase,
+            tangemPayCurrencyFactory: TangemPayCurrencyFactory,
+            getTangemPayFiatRateUseCase: GetTangemPayFiatRateUseCase,
+            paymentAccountStatusesStore: PaymentAccountStatusesStore,
         ): ResolvePaymentAccountStatusFromSummaryUseCase {
-            return ResolvePaymentAccountStatusFromSummaryUseCase(onboardingRepository = onboardingRepository)
+            return ResolvePaymentAccountStatusFromSummaryUseCase(
+                onboardingRepository = onboardingRepository,
+                getTangemPayTariffPlanStateUseCase = getTangemPayTariffPlanStateUseCase,
+                tangemPayCurrencyFactory = tangemPayCurrencyFactory,
+                getTangemPayFiatRateUseCase = getTangemPayFiatRateUseCase,
+                paymentAccountStatusCache = paymentAccountStatusesStore,
+            )
         }
 
         @Provides
