@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -25,11 +26,15 @@ import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_sign_plus_24
 import com.tangem.core.ui.test.MainScreenTestTags
+import com.tangem.core.ui.utils.zoomTransitionSource
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTopBarConfig
 import kotlinx.collections.immutable.persistentListOf
@@ -64,13 +69,35 @@ internal fun WalletTopBar(
         modifier = Modifier.testTag(MainScreenTestTags.TOP_BAR),
         contentAlign = TangemTopNavigation.ContentAlign.Center,
         startButton = {
-            // Non-clickable brand mark, sized to align with the trailing action buttons.
-            Box(modifier = Modifier.size(TangemTopNavigation.ButtonSlotSize), contentAlignment = Alignment.Center) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_tangem_24),
-                    contentDescription = null,
-                    tint = TangemTheme.colors3.icon.primary,
+            val onAllServicesClick = topBarConfig.onAllServicesClick
+            if (onAllServicesClick != null) {
+                TangemButton(
+                    modifier = Modifier.zoomTransitionSource(
+                        key = WalletTopBarConfig.ALL_SERVICES_SHARED_TRANSITION_KEY,
+                        shape = CircleShape,
+                    ),
+                    variant = if (wrappedBalance != null) {
+                        TangemButton.Variant.Material
+                    } else {
+                        TangemButton.Variant.Ghost
+                    },
+                    size = TangemButton.Size.X11,
+                    iconStart = TangemIconUM.Icon(imageVector = Icons.ic_sign_plus_24),
+                    contentDescription = stringResourceSafe(R.string.all_services_title),
+                    onClick = {
+                        hapticManager.perform(TangemHapticEffect.View.ContextClick)
+                        onAllServicesClick()
+                    },
                 )
+            } else {
+                // Non-clickable brand mark, sized to align with the trailing action buttons.
+                Box(modifier = Modifier.size(TangemTopNavigation.ButtonSlotSize), contentAlignment = Alignment.Center) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_tangem_24),
+                        contentDescription = null,
+                        tint = TangemTheme.colors3.icon.primary,
+                    )
+                }
             }
         },
         endButtonsGroup = if (topBarConfig.endActions.isNotEmpty()) {
@@ -124,6 +151,7 @@ private fun WalletTopBar_WithQrButton_Preview() {
     TangemThemePreviewRedesign {
         WalletTopBar(
             topBarConfig = WalletTopBarConfig(
+                onAllServicesClick = {},
                 endActions = persistentListOf(
                     TangemTopBarActionUM(
                         iconRes = R.drawable.ic_qrcode_scaner_24,
