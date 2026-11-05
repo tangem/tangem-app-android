@@ -4,8 +4,10 @@ import android.os.SystemClock
 import androidx.compose.ui.test.ComposeTimeoutException
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
+import io.github.kakaocup.compose.intercept.interaction.ComposeInteraction
 import io.github.kakaocup.compose.node.core.BaseNode
 import io.github.kakaocup.compose.node.element.KNode
+import androidx.compose.ui.test.assertIsDisplayed as composeAssertIsDisplayed
 
 fun BaseNode<*>.clickWithAssertion() {
     assertIsDisplayed()
@@ -34,6 +36,17 @@ fun KNode.isDisplayedSafely(): Boolean {
     } catch (_: AssertionError) {
         false
     }
+}
+
+/**
+ * Instant present/absent probe: reads the node once through the raw Compose interaction, bypassing the
+ * flaky-safety interceptor that otherwise retries an *absent* node for the full ~10 s timeout before
+ * reporting `false`. Use in polling loops that probe nodes expected to be absent (e.g. deciding which
+ * screen is on top), where [isDisplayedSafely] would pay that retry per absent node.
+ */
+fun BaseNode<*>.isDisplayedNow(): Boolean {
+    val interaction = delegate.interaction as ComposeInteraction
+    return runCatching { interaction.semanticsNodeInteraction.composeAssertIsDisplayed() }.isSuccess
 }
 
 /**
