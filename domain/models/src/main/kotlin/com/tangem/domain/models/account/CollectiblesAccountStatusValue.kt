@@ -133,6 +133,13 @@ sealed class CollectiblesAccountStatusValue {
 }
 
 /**
+ * Whether the account is shown wherever the wallet's accounts are listed. Only a vault found missing hides it; a
+ * status not read yet still shows the row, the rare record without a vault drops out once the read says so.
+ */
+val CollectiblesAccountStatusValue.isShown: Boolean
+    get() = this !is CollectiblesAccountStatusValue.NotOnboarded
+
+/**
  * Whether the wallet has a collectibles account at all — the vault exists on chain, whichever device it currently
  * answers to. `null` is the absence of any record, which is not an account.
  */
