@@ -234,16 +234,16 @@ internal class PolymarketSportsMergerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = ["CAN", "POST", "INT", "AB"])
-    fun `GIVEN a suspended match WHEN presenting THEN its raw period stays and Live is hidden`(period: String) {
+    @ValueSource(strings = ["CAN", "POST", "INT", "AB", "int", "Post"])
+    fun `GIVEN a suspended live frame and prematch REST WHEN merging THEN provider phase and period remain separate`(period: String) {
         // Arrange
-        merger.setEvents(listOf(createSportsEvent()))
+        merger.setEvents(listOf(createSportsEvent(live = false)))
 
         // Act
         merger.update(createSportsScore(period = period))
 
         // Assert
-        assertThat(game()).isEqualTo(expected(1, 0, period).copy(isLive = false))
+        assertThat(game()).isEqualTo(expected(1, 0, period))
     }
 
     @Test
@@ -270,10 +270,58 @@ internal class PolymarketSportsMergerTest {
         assertThat(merger.snapshot().events).containsExactly("event", expected(1, 0), "other", expected(1, 0))
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = [false, true])
+    fun `GIVEN REST provider order WHEN scores are merged THEN numbers belong to resolved sides`(homeFirst: Boolean) {
+        // Arrange
+        val home = createSportsTeam("Home", "home")
+        val away = createSportsTeam("Away", "away")
+        val teams = if (homeFirst) listOf(home, away) else listOf(away, home)
+        merger.setEvents(listOf(createSportsEvent(score = "2-1", teams = teams)))
+        val restScore = game().score
+
+        // Act
+        merger.update(createSportsScore(score = "3-1"))
+
+        // Assert
+        assertThat(restScore).isEqualTo(if (homeFirst) PolymarketSportsState.Score(2, 1) else PolymarketSportsState.Score(1, 2))
+        assertThat(game().score).isEqualTo(if (homeFirst) PolymarketSportsState.Score(3, 1) else PolymarketSportsState.Score(1, 3))
+    }
+
+    @Test
+    fun `GIVEN missing ordering WHEN socket identifies teams THEN score follows the resolved REST indices`() {
+        // Arrange
+        val away = createSportsTeam("Away")
+        val home = createSportsTeam("Home")
+        merger.setEvents(listOf(createSportsEvent(teams = listOf(away, home))))
+
+        // Act
+        merger.update(createSportsScore(score = "3-1").copy(homeTeam = "Home", awayTeam = "Away"))
+
+        // Assert
+        assertThat(game().home).isEqualTo(PolymarketSportsState.Team(home, 1))
+        assertThat(game().away).isEqualTo(PolymarketSportsState.Team(away, 0))
+        assertThat(game().score).isEqualTo(PolymarketSportsState.Score(1, 3))
+    }
+
+    @Test
+    fun `GIVEN ambiguous provider team count WHEN scores are merged THEN orientation is not invented`() {
+        // Arrange
+        val teams = listOf(createSportsTeam("Home", "home"), createSportsTeam("Away", "away"), createSportsTeam("Other"))
+        merger.setEvents(listOf(createSportsEvent(teams = teams)))
+
+        // Act
+        merger.update(createSportsScore(score = "3-1"))
+
+        // Assert
+        assertThat(game().score).isNull()
+    }
+
     private fun game() = merger.snapshot().events.getValue("event")
 
     private fun expected(home: Int, away: Int, period: String? = "Q2") = PolymarketSportsState.Game(
         "1", PolymarketSportsState.Score(home, away), period, isLive = true, isEnded = false,
-        home = null, away = null, isStale = false,
+        home = PolymarketSportsState.Team(createSportsTeam("Home", "home"), 0),
+        away = PolymarketSportsState.Team(createSportsTeam("Away", "away"), 1), isStale = false,
     )
 }
