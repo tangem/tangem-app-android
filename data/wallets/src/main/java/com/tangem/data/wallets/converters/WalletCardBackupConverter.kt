@@ -14,7 +14,7 @@ internal object WalletCardBackupConverter : Converter<WalletCardDTO, WalletCardB
         return WalletCardBackup(
             cardId = value.cardId,
             cardPublicKey = value.cardPublicKey,
-            role = value.role.toDomain(),
+            role = value.role?.toDomain(),
             backupStatus = value.backupStatus.toDomain(),
             curves = value.curves.mapNotNull(::toCurve),
             error = value.toError(),

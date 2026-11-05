@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.error.GetFeeError
@@ -77,6 +78,13 @@ sealed class FeeSelectorParams {
         override val onLoadSponsoredFee: (suspend (TransactionFee) -> SponsoredFeeAvailability)? = null,
         override val onDisableCustomFee: () -> Boolean = { false },
         val callback: FeeSelectorModelCallback,
+        /**
+         * Opens straight on the fee token list and returns the picked token through [callback] at once, for hosts
+         * that quote the fee in it themselves. Applies only where gasless fee tokens are offered.
+         */
+        val shouldShowOnlyTokenOption: Boolean = false,
+        /** Token this transaction puts into Yield Mode, offered for the fee although its module is not active yet. */
+        val enteringYieldTokenId: CryptoCurrency.ID? = null,
     ) : FeeSelectorParams()
 
     sealed class FeeStateConfiguration {
