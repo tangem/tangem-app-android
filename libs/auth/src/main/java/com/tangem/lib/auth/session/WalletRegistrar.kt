@@ -28,7 +28,8 @@ interface WalletRegistrar {
     /**
      * Registers the wallet identified by [walletId] (Base64 `UserWalletId`) in one shot: nonce
      * request, signing and POST. Use this when there is no session/UX constraint (MOBILE wallets).
-     * An already registered wallet short-circuits to [WalletRegistrationResult.AlreadyRegistered].
+     * A wallet registered locally or already known to the server comes back as
+     * [WalletRegistrationResult.AlreadyRegistered].
      */
     suspend fun register(
         walletId: String,
@@ -94,9 +95,10 @@ interface WalletRegistrar {
 
     /**
      * Phase 2: sends the [prepared] registration, persists the reissued tokens, and marks the wallet
-     * registered. No card needed — safe to run after the session has closed.
+     * registered. No card needed — safe to run after the session has closed. A wallet the server already
+     * knows comes back as [WalletRegistrationResult.AlreadyRegistered].
      */
-    suspend fun submit(prepared: PreparedWalletRegistration): Either<WalletRegistrationError, Unit>
+    suspend fun submit(prepared: PreparedWalletRegistration): Either<WalletRegistrationError, WalletRegistrationResult>
 
     /**
      * Unbinds a previously registered wallet from the authenticated device. Persists the fresh

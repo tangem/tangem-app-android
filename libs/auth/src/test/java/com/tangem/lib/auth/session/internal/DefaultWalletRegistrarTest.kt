@@ -325,7 +325,7 @@ class DefaultWalletRegistrarTest {
 
         val result = registrar.register(WALLET_ID, mobileSigner)
 
-        assertThat(result.isRight()).isTrue()
+        assertThat(result.getOrNull()).isEqualTo(WalletRegistrationResult.AlreadyRegistered)
         assertThat(registeredIds()).contains(WALLET_ID)
         coVerify(exactly = 0) { store.save(any()) }
     }
@@ -504,7 +504,7 @@ class DefaultWalletRegistrarTest {
 
         val result = registrar.submit(prepared)
 
-        assertThat(result.isRight()).isTrue()
+        assertThat(result.getOrNull()).isEqualTo(WalletRegistrationResult.Registered)
         coVerify { store.save(any()) }
         assertThat(registeredIds()).contains(WALLET_ID)
     }
@@ -525,7 +525,7 @@ class DefaultWalletRegistrarTest {
 
         val result = registrar.submit(prepared)
 
-        assertThat(result.isRight()).isTrue()
+        assertThat(result.getOrNull()).isEqualTo(WalletRegistrationResult.AlreadyRegistered)
         assertThat(registeredIds()).contains(WALLET_ID)
         coVerify(exactly = 0) { store.save(any()) }
     }

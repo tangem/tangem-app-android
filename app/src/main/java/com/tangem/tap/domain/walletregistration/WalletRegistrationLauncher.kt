@@ -195,7 +195,9 @@ class WalletRegistrationLauncher @Inject internal constructor(
         appCoroutineScope.launch {
             runSuspendCatching {
                 walletRegistrar.submit(prepared)
-                    .onRight { sendWalletLinked() }
+                    .onRight { result ->
+                        if (result == WalletRegistrationResult.Registered) sendWalletLinked()
+                    }
                     .onLeft { error ->
                         TangemLogger.e("Cold wallet registration submit deferred: $error")
                         sendRegistrationFailed(WalletType.Cold, Stage.Submit, error)
