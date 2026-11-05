@@ -27,8 +27,8 @@ internal class MoneyAccountStatusesStoreTest {
         val persistenceDataStore = MockStateDataStore<WalletIdWithMoneyAccountStatusDM>(default = emptyMap())
         val store = createStore(persistenceDataStore)
         advanceUntilIdle()
-        store.storeNotCreated(WALLET_A)
-        store.storeNotCreated(WALLET_B)
+        store.storeEmpty(WALLET_A)
+        store.storeEmpty(WALLET_B)
         advanceUntilIdle()
 
         // Act
@@ -47,8 +47,8 @@ internal class MoneyAccountStatusesStoreTest {
         val persistenceDataStore = MockStateDataStore<WalletIdWithMoneyAccountStatusDM>(default = emptyMap())
         val store = createStore(persistenceDataStore)
         advanceUntilIdle()
-        store.storeNotCreated(WALLET_A)
-        store.storeNotCreated(WALLET_B)
+        store.storeEmpty(WALLET_A)
+        store.storeEmpty(WALLET_B)
         advanceUntilIdle()
 
         // Act
@@ -70,12 +70,12 @@ internal class MoneyAccountStatusesStoreTest {
         scope = TestAppCoroutineScope(this),
     )
 
-    private suspend fun MoneyAccountStatusesStore.storeNotCreated(userWalletId: UserWalletId) {
+    private suspend fun MoneyAccountStatusesStore.storeEmpty(userWalletId: UserWalletId) {
         store(
             userWalletId = userWalletId,
             status = AccountStatus.Money(
                 account = Account.Money(userWalletId),
-                value = MoneyAccountStatusValue.NotCreated,
+                value = MoneyAccountStatusValue.Empty,
             ),
         )
     }

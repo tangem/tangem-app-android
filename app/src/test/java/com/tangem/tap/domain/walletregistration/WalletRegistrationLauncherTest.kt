@@ -266,6 +266,20 @@ internal class WalletRegistrationLauncherTest {
     }
 
     @Test
+    fun `GIVEN twin card WHEN forced registerColdInSession THEN registration is skipped`() = runTest {
+        // Arrange
+        stubColdCard()
+        val card = mockk<Card>(relaxed = true) { every { cardId } returns TWIN_CARD_ID }
+
+        // Act
+        launcher.registerColdInSession(mockk<CardSession>(), card, mockk<WalletNonce>(), shouldForce = true)
+
+        // Assert
+        coVerify(exactly = 0) { walletRegistrar.forgetRegistration(any()) }
+        coVerify(exactly = 0) { walletRegistrar.prepare(any(), any(), any(), any()) }
+    }
+
+    @Test
     fun `prefetchColdNonce returns the registrar nonce`() = runTest {
         val expected = mockk<WalletNonce>()
         coEvery { walletRegistrar.requestNonce() } returns expected.right()
@@ -424,5 +438,6 @@ internal class WalletRegistrationLauncherTest {
     private companion object {
         val COLD_WALLET_ID = ByteArray(32) { 3 }
         val COLD_WALLET_ID_BASE64: String = java.util.Base64.getEncoder().encodeToString(COLD_WALLET_ID)
+        const val TWIN_CARD_ID = "CB61000000000001"
     }
 }

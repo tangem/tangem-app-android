@@ -87,7 +87,9 @@ internal class UserWalletSaver @Inject constructor(
                     is SaveWalletError.WalletAlreadySaved -> {
                         selectUserWallet()
                     }
-                    is SaveWalletError.DataError -> {
+                    is SaveWalletError.DataError,
+                    is SaveWalletError.HotWalletsLimitReached,
+                    -> {
                         val messageRef = ensureNotNull(error.messageId?.let(::resourceReference)) {
                             Error.Unknown
                         }

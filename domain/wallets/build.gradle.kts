@@ -16,6 +16,7 @@ dependencies {
 
     // region Other libraries
     api(deps.arrow.core)
+    implementation(deps.arrow.fx)
     api(tangemDeps.blockchain) // android-library
     api(tangemDeps.card.core)
     api(tangemDeps.hot.core)
@@ -37,6 +38,7 @@ dependencies {
     api(projects.domain.socialLogin)
     api(projects.domain.walletManager)
     api(projects.domain.core)
+    implementation(projects.domain.collectibles)
     implementation(projects.domain.jointAccount)
     implementation(projects.domain.notifications)
     implementation(projects.domain.pushNotificationPreferences)

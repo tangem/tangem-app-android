@@ -2,6 +2,7 @@ package com.tangem.data.moneyaccount.flow
 
 import arrow.core.Either
 import arrow.core.getOrElse
+import com.tangem.core.local.connection.NetworkConnectionManager
 import com.tangem.data.moneyaccount.store.MoneyAccountStatusesStore
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.models.StatusSource
@@ -18,10 +19,12 @@ import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.GetCustomerSummaryUseCase
 import com.tangem.domain.pay.usecase.ResolveMoneyAccountStatusFromSummaryUseCase
+import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import javax.inject.Inject
@@ -36,6 +39,7 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
     private val moneyAccountCurrencyFactory: MoneyAccountCurrencyFactory,
     private val resolveMoneyAccountStatusFromSummaryUseCase: ResolveMoneyAccountStatusFromSummaryUseCase,
     private val getCustomerSummaryUseCase: GetCustomerSummaryUseCase,
+    private val networkConnectionManager: NetworkConnectionManager,
 ) : MoneyAccountStatusFetcher {
 
     override suspend fun invoke(params: MoneyAccountStatusFetcher.Params): Either<Throwable, Unit> {
@@ -48,13 +52,18 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
                     value = fetch(params.userWalletId),
                 ),
             )
-        }.onLeft {
+        }.onLeft { throwable ->
+            TangemLogger.e("Money account status fetch ${params.userWalletId} threw, falling back to cache", throwable)
             runSuspendCatching {
+                val cached = getCachedAccountOrNull(
+                    userWalletId = params.userWalletId,
+                    error = MoneyAccountStatusValue.Error.Unavailable,
+                )
                 moneyAccountStatusesStore.store(
                     userWalletId = params.userWalletId,
                     status = AccountStatus.Money(
                         account = account,
-                        value = MoneyAccountStatusValue.Empty,
+                        value = cached ?: MoneyAccountStatusValue.Empty,
                     ),
                 )
             }
@@ -64,7 +73,8 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
     private suspend fun fetch(userWalletId: UserWalletId): MoneyAccountStatusValue {
         if (deviceSecurity.isSecurityExposed()) return MoneyAccountStatusValue.Error.ExposedDevice
 
-        val summary = getCustomerSummaryUseCase.invoke(userWalletId, CachePolicy.REFRESH).getOrNull()
+        val summary = getCustomerSummaryUseCase.invoke(userWalletId, CachePolicy.REFRESH)
+            .getOrElse { error -> return error.toCachedStatusOrEmpty(userWalletId) }
             ?: return MoneyAccountStatusValue.Empty
 
         resolveMoneyAccountStatusFromSummaryUseCase(summary)?.let { return it }
@@ -76,10 +86,10 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
         val cryptoCurrency = moneyAccountCurrencyFactory.create(userWalletId)
         val balanceDeferred = async { getMoneyAccountBalanceUseCase.invoke(userWalletId, cryptoCurrency) }
         val channelsDeferred = async { onboardingRepository.fetchCustomerEligibility(userWalletId) }
-        val customerInfo = onboardingRepository.getCustomerInfo(userWalletId).getOrElse {
+        val customerInfo = onboardingRepository.getCustomerInfo(userWalletId).getOrElse { error ->
             balanceDeferred.cancel()
             channelsDeferred.cancel()
-            return@coroutineScope MoneyAccountStatusValue.Empty
+            return@coroutineScope error.toCachedStatusOrEmpty(userWalletId)
         }
         val balance = balanceDeferred.await().getOrNull()
         val channels = channelsDeferred.await().getOrNull()
@@ -87,14 +97,8 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
         val isFormer = customerInfo.state == CustomerInfo.State.FORMER
 
         when {
-            instance == null && isFormer -> MoneyAccountStatusValue.Empty
             isFormer || instance?.status == CustomerInfo.ProductInstance.Status.DEACTIVATED -> {
-                MoneyAccountStatusValue.Account.Deactivated(
-                    source = StatusSource.ACTUAL,
-                    cryptoCurrency = cryptoCurrency,
-                    balance = balance,
-                    customerId = customerInfo.customerId,
-                )
+                MoneyAccountStatusValue.Empty
             }
             instance?.status == CustomerInfo.ProductInstance.Status.ACTIVE -> {
                 MoneyAccountStatusValue.Account.Active(
@@ -103,13 +107,37 @@ internal class DefaultMoneyAccountStatusFetcher @Inject constructor(
                     balance = balance,
                     customerId = customerInfo.customerId,
                     productInstanceId = instance.id,
+                    error = null,
                     isBankOfframpAvailable = channels?.contains(TangemPayEligibilityType.BANK_OFFRAMP),
                 )
             }
             else -> MoneyAccountStatusValue.Onboarding.Activating(
                 source = StatusSource.ACTUAL,
                 customerId = customerInfo.customerId,
+                step = MoneyAccountStatusValue.Onboarding.Activating.Step.ISSUING,
             )
         }
+    }
+
+    private suspend fun VisaApiError.toCachedStatusOrEmpty(userWalletId: UserWalletId): MoneyAccountStatusValue {
+        return getCachedAccountOrNull(userWalletId = userWalletId, error = toAccountError())
+            ?: MoneyAccountStatusValue.Empty
+    }
+
+    private fun VisaApiError.toAccountError(): MoneyAccountStatusValue.Error {
+        val isSessionExpired = this is VisaApiError.RefreshTokenExpired && networkConnectionManager.isOnlineSync
+        return if (isSessionExpired) {
+            MoneyAccountStatusValue.Error.NotSynced
+        } else {
+            MoneyAccountStatusValue.Error.Unavailable
+        }
+    }
+
+    private suspend fun getCachedAccountOrNull(
+        userWalletId: UserWalletId,
+        error: MoneyAccountStatusValue.Error,
+    ): MoneyAccountStatusValue.Account? {
+        val cached = moneyAccountStatusesStore.getSyncOrNull(userWalletId)?.value as? MoneyAccountStatusValue.Account
+        return cached?.copySealed(source = StatusSource.ONLY_CACHE, error = error)
     }
 }

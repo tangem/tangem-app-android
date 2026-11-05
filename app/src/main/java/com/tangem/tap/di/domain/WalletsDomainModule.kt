@@ -24,10 +24,12 @@ import com.tangem.domain.wallets.repository.WalletsPromoRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.domain.yield.supply.YieldSupplyRepository
+import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyUpdateUseCase
 import com.tangem.feature.wallet.presentation.wallet.domain.IsWalletNFTEnabledSyncUseCase
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletNameMigrationUseCase
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.operations.attestation.CardArtworksProvider
 import com.tangem.tap.domain.DefaultUserWalletSelectedHandler
 import com.tangem.utils.coroutines.AppCoroutineScope
@@ -119,6 +121,30 @@ internal object WalletsDomainModule {
         return IsWalletAlreadySavedUseCase(
             userWalletsListRepository = userWalletsListRepository,
             dispatchers = dispatchers,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesGetHotWalletAdditionRestrictionUseCase(
+        userWalletsListRepository: UserWalletsListRepository,
+        hotWalletFeatureToggles: HotWalletFeatureToggles,
+    ): GetHotWalletAdditionRestrictionUseCase {
+        return GetHotWalletAdditionRestrictionUseCase(
+            userWalletsListRepository = userWalletsListRepository,
+            isMultipleHotWalletsEnabled = { hotWalletFeatureToggles.isMultipleHotWalletsEnabled },
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesDiscardUnsavedHotWalletUseCase(
+        tangemHotSdk: TangemHotSdk,
+        userWalletsListRepository: UserWalletsListRepository,
+    ): DiscardUnsavedHotWalletUseCase {
+        return DiscardUnsavedHotWalletUseCase(
+            tangemHotSdk = tangemHotSdk,
+            userWalletsListRepository = userWalletsListRepository,
         )
     }
 

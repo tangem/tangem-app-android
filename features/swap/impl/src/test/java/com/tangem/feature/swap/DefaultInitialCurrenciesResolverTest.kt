@@ -2164,6 +2164,7 @@ internal class DefaultInitialCurrenciesResolverTest {
             val activatingValue = MoneyAccountStatusValue.Onboarding.Activating(
                 source = StatusSource.ACTUAL,
                 customerId = "customer",
+                step = MoneyAccountStatusValue.Onboarding.Activating.Step.ISSUING,
             )
             setupSupplier(
                 listOf(
@@ -2362,7 +2363,7 @@ internal class DefaultInitialCurrenciesResolverTest {
         val accountCurrency = mockAccountToken()
         val inactiveStatus = AccountStatus.Money(
             account = Account.Money(userWalletId),
-            value = MoneyAccountStatusValue.NotCreated,
+            value = MoneyAccountStatusValue.Empty,
         )
         setupSupplier(listOf(createCryptoPortfolioAccountStatus(listOf(walletStatus)), inactiveStatus))
         setupAvailability(linkedMapOf(walletCurrency to true))
@@ -2437,6 +2438,7 @@ internal class DefaultInitialCurrenciesResolverTest {
         ),
         customerId = "customer",
         productInstanceId = "instance",
+        error = null,
     )
 
     private fun createCollectiblesAccountStatus(vaultStatus: CryptoCurrencyStatus?): AccountStatus.Collectibles {

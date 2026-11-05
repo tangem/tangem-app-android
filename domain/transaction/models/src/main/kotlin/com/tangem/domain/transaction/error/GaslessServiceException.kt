@@ -11,10 +11,13 @@ package com.tangem.domain.transaction.error
  * answered with an unsuccessful result, the request never got a response (no connectivity, timeout), or
  * the status was not recognised.
  * @property tronActivationRefusal set when the service refused to sponsor a Tron account activation.
+ * @property tronAllowanceTooHigh set when the service refused a Tron quote whose allowances leave no room for the
+ * compensation.
  */
 class GaslessServiceException(
     val httpCode: Int?,
     message: String?,
     cause: Throwable? = null,
     val tronActivationRefusal: TronActivationRefusal? = null,
+    val tronAllowanceTooHigh: TronAllowanceTooHigh? = null,
 ) : Exception(message, cause)

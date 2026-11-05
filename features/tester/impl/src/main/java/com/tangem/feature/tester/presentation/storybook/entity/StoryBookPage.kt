@@ -18,6 +18,8 @@ import com.tangem.core.ui.ds2.filter.TangemFilterItem
 import com.tangem.core.ui.ds2.glowring.TangemGlowRing
 import com.tangem.core.ui.ds2.loader.TangemLoaderSize
 import com.tangem.core.ui.ds2.messagebanner.TangemMessageBanner
+import com.tangem.core.ui.ds2.menu.TangemMenu
+import com.tangem.core.ui.ds2.messagebubble.TangemMessageBubble
 import com.tangem.core.ui.ds2.modal.TangemModal
 import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus
 import com.tangem.core.ui.ds2.row.TangemRowContentLead
@@ -27,6 +29,7 @@ import com.tangem.core.ui.ds2.surface.TangemSurface
 import com.tangem.core.ui.ds2.tabnavigation.TangemTabItem
 import com.tangem.core.ui.ds2.tokenicon.TangemTokenIcon
 import com.tangem.core.ui.ds2.topnavigation.TangemTopNavigation
+import com.tangem.core.ui.ds2.transactionrow.TangemTransactionRow
 import com.tangem.core.ui.ds2.util.TangemPriceChange
 import kotlinx.collections.immutable.ImmutableSet
 
@@ -445,6 +448,13 @@ internal data class TangemCheckboxV2Story(
     val onEnabledToggle: () -> Unit,
 ) : DsStoryBookPage
 
+internal data class TangemSwitchStory(
+    val isChecked: Boolean,
+    val isEnabled: Boolean,
+    val onCheckedChange: (Boolean) -> Unit,
+    val onEnabledToggle: () -> Unit,
+) : DsStoryBookPage
+
 internal data class TangemCheckmarkStory(
     val isChecked: Boolean,
     val isEnabled: Boolean,
@@ -535,6 +545,43 @@ internal data class TangemMessageBannerStory(
     }
 }
 
+@Suppress("BooleanPropertyNaming")
+internal data class TangemMessageBubbleStory(
+    val variant: TangemMessageBubble.Variant,
+    val message: Message,
+    val trailingButton: TrailingButton,
+    val background: Background,
+    val showTip: Boolean,
+    val hasIcon: Boolean,
+    val isClickable: Boolean,
+    val onVariantChange: (TangemMessageBubble.Variant) -> Unit,
+    val onMessageChange: (Message) -> Unit,
+    val onTrailingButtonChange: (TrailingButton) -> Unit,
+    val onBackgroundChange: (Background) -> Unit,
+    val onTipToggle: () -> Unit,
+    val onIconToggle: () -> Unit,
+    val onClickableToggle: () -> Unit,
+) : DsStoryBookPage {
+
+    enum class Message(val label: String) {
+        Short("Short"),
+        Long("Long"),
+        OneLine("Long, 1 line"),
+    }
+
+    enum class TrailingButton(val label: String) {
+        None("None"),
+        Close("Close"),
+        Chevron("Chevron"),
+    }
+
+    /** Backdrop the bubble preview is rendered on top of. */
+    enum class Background(val label: String) {
+        BgPrimary("bg.primary"),
+        BgSecondary("bg.secondary"),
+    }
+}
+
 internal data class TextStyleStory(
     val style: Style,
     val textScale: Float,
@@ -610,6 +657,35 @@ internal data class TangemTokenRowMarketStory(
     val onChartToggle: () -> Unit,
     val onLongTitleToggle: () -> Unit,
 ) : DsStoryBookPage
+
+@Suppress("BooleanPropertyNaming")
+internal data class TangemTransactionRowStory(
+    val variant: Variant,
+    val status: TangemTransactionRow.Status,
+    val subtitle: Subtitle,
+    val hasDescription: Boolean,
+    val hasAmount: Boolean,
+    val hasCaption: Boolean,
+    val hasBadge: Boolean,
+    val hasStatusMessage: Boolean,
+    val isBalanceHidden: Boolean,
+    val onVariantChange: (Variant) -> Unit,
+    val onStatusChange: (TangemTransactionRow.Status) -> Unit,
+    val onSubtitleChange: (Subtitle) -> Unit,
+    val onDescriptionToggle: () -> Unit,
+    val onAmountToggle: () -> Unit,
+    val onCaptionToggle: () -> Unit,
+    val onBadgeToggle: () -> Unit,
+    val onStatusMessageToggle: () -> Unit,
+    val onBalanceHiddenToggle: () -> Unit,
+) : DsStoryBookPage {
+
+    /** Which [TangemTransactionRow] variant is rendered. */
+    enum class Variant { Content, Shimmer }
+
+    /** Which [TangemTransactionRow.Subtitle] variant is shown under the title. */
+    enum class Subtitle { None, Entity, Address, Stack, Text }
+}
 
 internal data class TangemFilterGroupStory(
     val variant: TangemFilterItem.Variant,
@@ -723,6 +799,21 @@ internal data class TangemBadgeV2Story(
         BgInverse("bg.inverse"),
     }
 }
+
+internal data class TangemToggleBadgeStory(
+    val isSelected: Boolean,
+    val isEnabled: Boolean,
+    val size: TangemBadge.Size,
+    val hasIconStart: Boolean,
+    val hasIconEnd: Boolean,
+    val textScale: Float,
+    val onSelectedChange: (Boolean) -> Unit,
+    val onEnabledToggle: () -> Unit,
+    val onSizeChange: (TangemBadge.Size) -> Unit,
+    val onIconStartToggle: () -> Unit,
+    val onIconEndToggle: () -> Unit,
+    val onTextScaleChange: (Float) -> Unit,
+) : DsStoryBookPage
 
 internal data class TangemSegmentedControlStory(
     val segmentCount: Int,
@@ -866,18 +957,45 @@ internal data class TangemAvatarStory(
     val fillColor: TangemAvatar.FillColor,
     val appearance: TangemAvatar.Appearance,
     val status: TangemAvatar.Status,
-    val hasPendingIndicator: Boolean,
-    val hasUserInitial: Boolean,
-    val isShimmerRounded: Boolean,
+    val hasAccountIndicator: Boolean,
+    val hasLetter: Boolean,
+    val isRemoteAsset: Boolean,
+    val isRoundedSquare: Boolean,
     val onVariantChange: (Variant) -> Unit,
     val onFillColorChange: (TangemAvatar.FillColor) -> Unit,
     val onAppearanceChange: (TangemAvatar.Appearance) -> Unit,
     val onStatusChange: (TangemAvatar.Status) -> Unit,
-    val onPendingIndicatorToggle: () -> Unit,
-    val onUserInitialToggle: () -> Unit,
-    val onShimmerRoundedToggle: () -> Unit,
+    val onAccountIndicatorToggle: () -> Unit,
+    val onLetterToggle: () -> Unit,
+    val onRemoteAssetToggle: () -> Unit,
+    val onRoundedSquareToggle: () -> Unit,
 ) : DsStoryBookPage {
 
     /** Which [com.tangem.core.ui.ds2.avatar.TangemAvatar.UiState] subtype is rendered. */
-    enum class Variant { Account, User, Address, Icon, Transaction, Shimmer }
+    enum class Variant { Account, User, Address, Icon, Transaction, Asset, Shimmer }
 }
+
+internal data class TangemMenuStory(
+    val variant: TangemMenu.Variant,
+    val isExpanded: Boolean,
+    val isSelectable: Boolean,
+    val selectedIndex: Int,
+    val hasIconStart: Boolean,
+    val hasIconEnd: Boolean,
+    val hasDescription: Boolean,
+    val hasDivider: Boolean,
+    val hasDividerTitle: Boolean,
+    val lastItemVariant: TangemMenu.ItemVariant,
+    val isLastItemEnabled: Boolean,
+    val onVariantChange: (TangemMenu.Variant) -> Unit,
+    val onExpandedChange: (Boolean) -> Unit,
+    val onItemSelect: (Int) -> Unit,
+    val onSelectableToggle: () -> Unit,
+    val onIconStartToggle: () -> Unit,
+    val onIconEndToggle: () -> Unit,
+    val onDescriptionToggle: () -> Unit,
+    val onDividerToggle: () -> Unit,
+    val onDividerTitleToggle: () -> Unit,
+    val onLastItemVariantChange: (TangemMenu.ItemVariant) -> Unit,
+    val onLastItemEnabledToggle: () -> Unit,
+) : DsStoryBookPage

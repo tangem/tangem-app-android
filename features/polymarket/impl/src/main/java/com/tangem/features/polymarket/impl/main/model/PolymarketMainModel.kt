@@ -21,6 +21,8 @@ import com.tangem.domain.polymarket.model.PolymarketEventsListConfig
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
 import com.tangem.domain.polymarket.flow.PredictionBalancePoller
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
+import com.tangem.features.polymarket.api.PolymarketFeatureToggles
+import com.tangem.domain.polymarket.usecase.ObservePolymarketSportsStateUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketCategoriesUseCase
 import com.tangem.domain.polymarket.usecase.GetPolymarketEventsBatchFlowUseCase
 import com.tangem.domain.polymarket.usecase.ObservePolymarketCredentialsPresenceUseCase
@@ -48,9 +50,6 @@ import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
-import com.tangem.domain.polymarket.flow.PredictionPositionsValueFetcher
-import com.tangem.domain.polymarket.flow.PredictionPositionsValueSupplier
-import com.tangem.domain.polymarket.model.PredictionPositionsValue
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -93,12 +92,12 @@ internal class PolymarketMainModel @Inject constructor(
     private val refreshPredictionDepositRequisitesInteractor: RefreshPredictionDepositRequisitesInteractor,
     private val regionAccess: PredictionRegionAccess,
     private val predictionAccountStatusFetcher: PredictionAccountStatusFetcher,
-    private val predictionPositionsValueSupplier: PredictionPositionsValueSupplier,
-    private val predictionPositionsValueFetcher: PredictionPositionsValueFetcher,
     private val predictionBalancePoller: PredictionBalancePoller,
     private val predictionFundingWindow: PredictionFundingWindow,
     private val observePolymarketCredentialsPresenceUseCase: ObservePolymarketCredentialsPresenceUseCase,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
+    observePolymarketSportsStateUseCase: ObservePolymarketSportsStateUseCase,
+    polymarketFeatureToggles: PolymarketFeatureToggles,
 ) : Model(), PolymarketAddFundsComponent.ModelCallback {
 
     private val params = paramsContainer.require<PolymarketMainParams>()
@@ -131,7 +130,6 @@ internal class PolymarketMainModel @Inject constructor(
                 balance = balanceConverter.convert(
                     PredictionBalanceUMConverter.Input(
                         status = PredictionAccountStatusValue.Loading,
-                        positions = PredictionPositionsValue.Unknown,
                         requisites = RequisitesState.Loading,
                         regionStatus = PredictionRegionStatus.UNKNOWN,
                         mode = PredictionBalanceMode.AVAILABLE,
@@ -146,6 +144,7 @@ internal class PolymarketMainModel @Inject constructor(
     private val eventUMConverter = PolymarketEventUMConverter(
         onEventClick = ::onEventClick,
         onOutcomeClick = ::onOutcomeClick,
+        isPhaseTwoEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled,
     )
 
     private val categoryTabConverter = PolymarketCategoryTabUMConverter(onCategoryClick = ::onCategorySelected)
@@ -155,17 +154,15 @@ internal class PolymarketMainModel @Inject constructor(
     init {
         combine(
             flow = predictionAccountStatusSupplier(userWalletId = params.userWalletId),
-            flow2 = predictionPositionsValueSupplier(userWalletId = params.userWalletId),
-            flow3 = fundingRequisites.state,
-            flow4 = regionAccess.status,
-            flow5 = balanceMode,
-            transform = { status, positions, requisites, regionStatus, mode ->
+            flow2 = fundingRequisites.state,
+            flow3 = regionAccess.status,
+            flow4 = balanceMode,
+            transform = { status, requisites, regionStatus, mode ->
                 activeStatus.value = status as? PredictionAccountStatusValue.Active
 
                 balanceConverter.convert(
                     PredictionBalanceUMConverter.Input(
                         status = status,
-                        positions = positions,
                         requisites = requisites,
                         regionStatus = regionStatus,
                         mode = mode,
@@ -208,7 +205,11 @@ internal class PolymarketMainModel @Inject constructor(
 
     private var categories: List<PolymarketCategory> = emptyList()
     private var selectedCategoryId: Int? = null
-    private var isScreenResumed = false
+    private val isScreenResumed = MutableStateFlow(false)
+    private val feedSports = PolymarketFeedSports(
+        observeSports = observePolymarketSportsStateUseCase,
+        isEnabled = polymarketFeatureToggles.isPolymarketPhaseTwoEnabled,
+    )
 
     private val categoriesJob = JobHolder()
 
@@ -278,7 +279,7 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     fun onResume() {
-        isScreenResumed = true
+        isScreenResumed.value = true
         activeFeed.value?.poller?.resume()
         fundingRequisites.retryIfFailed()
         predictionBalancePoller.subscribe(userWalletId = params.userWalletId)
@@ -292,7 +293,7 @@ internal class PolymarketMainModel @Inject constructor(
     }
 
     fun onPause() {
-        isScreenResumed = false
+        isScreenResumed.value = false
         activeFeed.value?.poller?.pause()
         balancePollJobHolder.cancel()
     }
@@ -337,7 +338,7 @@ internal class PolymarketMainModel @Inject constructor(
         uiState.update { it.copy(pendingScrollPosition = feed.scrollPosition) }
 
         if (visited == null || reloadVisited) reloadEvents(feed = feed)
-        if (isScreenResumed) feed.poller.resume()
+        if (isScreenResumed.value) feed.poller.resume()
     }
 
     private fun createFeed(config: PolymarketEventsListConfig): PolymarketCategoryFeed {
@@ -378,16 +379,18 @@ internal class PolymarketMainModel @Inject constructor(
     private fun observeEvents() {
         activeFeed
             .filterNotNull()
-            .flatMapLatest { feed -> feed.batchFlow.state }
-            .onEach { batchState ->
-                val transformer = PolymarketFeedContentTransformer(
-                    batchListState = batchState,
-                    eventUMConverter = eventUMConverter,
-                    onReloadClick = ::reload,
-                    onNextPageRetryClick = ::onLoadMore,
-                )
-                uiState.update(transformer::transform)
+            .flatMapLatest { feed ->
+                combine(feed.batchFlow.state, feedSports.observe(feed, isScreenResumed)) { batchState, sports ->
+                    PolymarketFeedContentTransformer(
+                        batchListState = batchState,
+                        eventUMConverter = eventUMConverter,
+                        onReloadClick = ::reload,
+                        onNextPageRetryClick = ::onLoadMore,
+                        sports = sports,
+                    )
+                }
             }
+            .onEach { transformer -> uiState.update(transformer::transform) }
             .flowOn(dispatchers.default)
             .launchIn(modelScope)
     }
@@ -426,11 +429,6 @@ internal class PolymarketMainModel @Inject constructor(
                         async {
                             predictionAccountStatusFetcher(
                                 PredictionAccountStatusFetcher.Params(userWalletId = params.userWalletId),
-                            )
-                        },
-                        async {
-                            predictionPositionsValueFetcher(
-                                PredictionPositionsValueFetcher.Params(userWalletId = params.userWalletId),
                             )
                         },
                     ).awaitAll()

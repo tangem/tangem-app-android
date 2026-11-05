@@ -1,12 +1,12 @@
 package com.tangem.feature.wallet.presentation.wallet.analytics.utils
 
 import arrow.core.getOrElse
-import com.google.firebase.perf.FirebasePerformance
-import com.google.firebase.perf.metrics.Trace
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.extensions.isZero
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.api.PerformanceTrace
+import com.tangem.core.analytics.api.PerformanceTracer
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
@@ -33,13 +33,14 @@ internal class TokenListAnalyticsSender @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val checkIsWalletToppedUpUseCase: CheckIsWalletToppedUpUseCase,
     private val screenLifecycleProvider: ScreenLifecycleProvider,
+    private val performanceTracer: PerformanceTracer,
 ) {
 
     private val balanceWasSentMap = mutableMapOf<String, Boolean>()
     private val sentBalanceLoaded = ConcurrentHashMap<UserWalletId, BalanceLoadedPayload>()
     private val yieldPromoShownMap = mutableMapOf<String, Boolean>()
     private val mutex = Mutex()
-    private val loadingTraces = mutableMapOf<UserWalletId, Trace>()
+    private val loadingTraces = mutableMapOf<UserWalletId, PerformanceTrace>()
 
     suspend fun send(
         displayedUiState: WalletState?,
@@ -72,8 +73,7 @@ internal class TokenListAnalyticsSender @Inject constructor(
     ) {
         mutex.withLock {
             if (!loadingTraces.containsKey(userWalletId)) {
-                val trace = FirebasePerformance.getInstance().newTrace(BALANCE_LOADED_TRACE_NAME)
-                trace.start()
+                val trace = performanceTracer.start(BALANCE_LOADED_TRACE_NAME)
                 trace.putAttribute(TOKENS_COUNT, flattenCurrencies.size.toString())
                 loadingTraces[userWalletId] = trace
             }

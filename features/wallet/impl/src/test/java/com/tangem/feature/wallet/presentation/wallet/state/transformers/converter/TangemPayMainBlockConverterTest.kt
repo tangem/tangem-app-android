@@ -77,6 +77,20 @@ internal class TangemPayMainBlockConverterTest {
     }
 
     @Test
+    fun `GIVEN loaded account still issuing WHEN convert THEN issuing block opens the payment account`() {
+        // Arrange
+        val status = paymentAccount(loadedValue(cardsCount = 0, isPaymentAccountIssuing = true))
+
+        // Act
+        val result = converter.convert(status)
+
+        // Assert
+        assertThat(result).isInstanceOf(TangemPayMainUM.IssuingCard::class.java)
+        (result as TangemPayMainUM.IssuingCard).onClick()
+        verify(exactly = 1) { tangemPayIntents.openDetails(status) }
+    }
+
+    @Test
     fun `GIVEN card issue failed WHEN convert THEN block click opens the payment account`() {
         // Arrange
         val status = paymentAccount(PaymentAccountStatusValue.Error.CardIssueFailed(customerId = "customer"))
@@ -134,7 +148,10 @@ internal class TangemPayMainBlockConverterTest {
         return AccountStatus.Payment(account = mockk(), value = value)
     }
 
-    private fun loadedValue(cardsCount: Int = 1): PaymentAccountStatusValue.Loaded {
+    private fun loadedValue(
+        cardsCount: Int = 1,
+        isPaymentAccountIssuing: Boolean = false,
+    ): PaymentAccountStatusValue.Loaded {
         return PaymentAccountStatusValue.Loaded(
             source = StatusSource.ACTUAL,
             customerId = "customer",
@@ -148,6 +165,7 @@ internal class TangemPayMainBlockConverterTest {
             virtualAccount = null,
             isBankOfframpAvailable = null,
             tariffPlan = null,
+            isPaymentAccountIssuing = isPaymentAccountIssuing,
         )
     }
 

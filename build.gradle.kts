@@ -247,6 +247,14 @@ dependencyAnalysis {
                 // provider repository). Nothing references it by type until the social login feature
                 // modules land.
                 exclude(":data:social-login")
+                // Same reason: the Earn modules are wired for Hilt only, nothing references them by type
+                // until the Earn navigation integration (AppRoute.EarnEntry and the ChildFactory branch),
+                // which must remove this exclusion.
+                exclude(
+                    ":features:earn:api",
+                    ":features:earn:impl",
+                    ":features:earn:flow:impl",
+                )
                 // CameraX is split into runtime-wired artifacts: camera-lifecycle and camera-view back
                 // the preview/ProcessCameraProvider machinery that camera2 (runtimeOnly) drives.
                 exclude(
@@ -391,60 +399,49 @@ val unitTest by tasks.registering {
     description = "Run unit tests for debug/googleDebug variant and all JVM modules"
 }
 
-// Implementation modules such as :core:datasource-impl are wired in only by :app (like a feature `impl`).
-// This guard keeps them out of every other module's dependencies, so modules keep compiling against the
-// contracts and never against an implementation.
-fun registerAppOnlyDependencyCheck(taskName: String, targets: Set<String>, contractHint: String) =
-    tasks.register(taskName) {
-        group = "verification"
-        description = "Fails if any module other than :app depends on ${targets.joinToString()}"
-        notCompatibleWithConfigurationCache("Reads the declared dependencies of every project")
+// Implementation modules wired in only by :app (like a feature `impl`), each mapped to the hint shown on a
+// violation. This guard keeps them out of every other module's dependencies, so modules keep compiling against
+// the contracts and never against an implementation.
+val appOnlyModules = mapOf(
+    ":core:datasource-impl" to "Depend on the contracts in :core:local / :core:remote instead.",
+    ":core:analytics:impl" to "Depend on the contracts in :core:analytics / :core:analytics:models instead.",
+    ":spend:push-provisioning:impl" to "Depend on :spend:push-provisioning:api instead.",
+    ":spend:push-provisioning:mock" to "Depend on :spend:push-provisioning:api instead.",
+    ":spend:push-provisioning:no-op" to "Depend on :spend:push-provisioning:api instead.",
+)
 
-        doLast {
-            val allowedDependents = setOf(":app")
+tasks.register("verifyAppOnlyModules") {
+    group = "verification"
+    description = "Fails if any module other than :app depends on ${appOnlyModules.keys.joinToString()}"
+    notCompatibleWithConfigurationCache("Reads the declared dependencies of every project")
 
-            targets.forEach { target ->
-                val offenders = rootProject.subprojects
-                    .filter { it.path !in targets && it.path !in allowedDependents }
-                    .filter { module ->
-                        module.configurations.any { configuration ->
-                            configuration.dependencies.any { dependency ->
-                                dependency is ProjectDependency && dependency.path == target
-                            }
+    doLast {
+        val violations = appOnlyModules.mapNotNull { (target, contractHint) ->
+            val offenders = rootProject.subprojects
+                .filter { it.path != target && it.path != ":app" }
+                .filter { module ->
+                    module.configurations.any { configuration ->
+                        configuration.dependencies.any { dependency ->
+                            dependency is ProjectDependency && dependency.path == target
                         }
                     }
-                    .map { it.path }
-                    .sorted()
-
-                if (offenders.isNotEmpty()) {
-                    throw GradleException(
-                        buildString {
-                            appendLine("$target is an implementation module — only :app may depend on it.")
-                            appendLine(contractHint)
-                            appendLine("Offending modules:")
-                            offenders.forEach { appendLine("  - $it") }
-                        }.trim(),
-                    )
                 }
-            }
+                .map { it.path }
+                .sorted()
+
+            if (offenders.isEmpty()) return@mapNotNull null
+
+            buildString {
+                appendLine("$target is an implementation module — only :app may depend on it.")
+                appendLine(contractHint)
+                appendLine("Offending modules:")
+                offenders.forEach { appendLine("  - $it") }
+            }.trim()
         }
+
+        if (violations.isNotEmpty()) throw GradleException(violations.joinToString(separator = "\n\n"))
     }
-
-registerAppOnlyDependencyCheck(
-    taskName = "verifyDatasourceImplIsolation",
-    targets = setOf(":core:datasource-impl"),
-    contractHint = "Depend on the contracts in :core:local / :core:remote instead.",
-)
-
-registerAppOnlyDependencyCheck(
-    taskName = "verifyPushProvisioningIsolation",
-    targets = setOf(
-        ":spend:push-provisioning:impl",
-        ":spend:push-provisioning:mock",
-        ":spend:push-provisioning:no-op",
-    ),
-    contractHint = "Depend on :spend:push-provisioning:api instead.",
-)
+}
 
 subprojects {
     // Dependency Analysis (DAGP) registers `projectHealth`/`reason` on each module. In 3.x the

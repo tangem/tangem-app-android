@@ -1,0 +1,51 @@
+plugins {
+    alias(deps.plugins.android.library)
+    alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.hilt.android)
+    id("configuration")
+}
+
+android {
+    namespace = "com.tangem.features.earn.impl"
+}
+
+dependencies {
+    /** Feature */
+    api(projects.features.earn.api)
+    api(projects.features.earn.product.api)
+
+    /** Core */
+    implementation(projects.core.configToggles)
+    implementation(projects.core.decompose)
+    implementation(projects.core.ui)
+
+    /** Domain */
+    implementation(projects.domain.models)
+    implementation(projects.domain.transaction)
+    implementation(projects.domain.transaction.models)
+
+    /** SDK */
+    implementation(tangemDeps.blockchain)
+
+    /** Kotlin */
+    implementation(deps.arrow.core)
+    implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.datetime)
+
+    /** Compose */
+    implementation(deps.compose.foundation)
+    implementation(deps.compose.runtime)
+    implementation(deps.compose.ui)
+
+    /** Other */
+    implementation(deps.decompose)
+    implementation(deps.decompose.ext.compose)
+
+    /** DI */
+    implementation(deps.hilt.android)
+    kapt(deps.hilt.kapt)
+
+    /** Tests */
+    testImplementation(projects.test.core)
+}
