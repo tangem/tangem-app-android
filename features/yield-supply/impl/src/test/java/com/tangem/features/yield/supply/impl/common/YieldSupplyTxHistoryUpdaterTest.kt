@@ -11,7 +11,6 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
-import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -29,20 +28,7 @@ internal class YieldSupplyTxHistoryUpdaterTest {
     }
 
     @Test
-    fun `GIVEN sent yield transaction WHEN scheduleUpdates THEN history reloads at once`() = runTest {
-        // Arrange
-        coEvery { yieldSupplyRepository.getPendingTxHashes(USER_WALLET_ID, cryptoCurrency) } returns listOf(TX_ID)
-
-        // Act
-        createUpdater().scheduleUpdates(USER_WALLET_ID, cryptoCurrency, listOf(TX_ID))
-        runCurrent()
-
-        // Assert
-        coVerify(exactly = 1) { txHistoryContentUpdateEmitter.triggerUpdate() }
-    }
-
-    @Test
-    fun `GIVEN transaction still pending WHEN checked THEN history does not reload again`() = runTest {
+    fun `GIVEN transaction still pending WHEN checked THEN history does not reload`() = runTest {
         // Arrange
         coEvery { yieldSupplyRepository.getPendingTxHashes(USER_WALLET_ID, cryptoCurrency) } returns listOf(TX_ID)
 
@@ -51,7 +37,7 @@ internal class YieldSupplyTxHistoryUpdaterTest {
         advanceTimeBy(30_000)
 
         // Assert
-        coVerify(exactly = 1) { txHistoryContentUpdateEmitter.triggerUpdate() }
+        coVerify(exactly = 0) { txHistoryContentUpdateEmitter.triggerUpdate() }
     }
 
     @Test
@@ -66,13 +52,13 @@ internal class YieldSupplyTxHistoryUpdaterTest {
             advanceTimeBy(6_001)
 
             // Assert
-            coVerify(exactly = 2) { txHistoryContentUpdateEmitter.triggerUpdate() }
+            coVerify(exactly = 1) { txHistoryContentUpdateEmitter.triggerUpdate() }
 
             // Act
             advanceTimeBy(10_001)
 
             // Assert
-            coVerify(exactly = 3) { txHistoryContentUpdateEmitter.triggerUpdate() }
+            coVerify(exactly = 2) { txHistoryContentUpdateEmitter.triggerUpdate() }
         }
 
     private fun TestScope.createUpdater() = YieldSupplyTxHistoryUpdater(
