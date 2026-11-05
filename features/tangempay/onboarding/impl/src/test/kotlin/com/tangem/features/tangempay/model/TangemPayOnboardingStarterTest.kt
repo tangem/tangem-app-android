@@ -6,6 +6,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.message.DialogMessage
@@ -24,6 +25,7 @@ import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.wallets.analytics.Settings.NoticeMobileWalletLimit
 import com.tangem.domain.wallets.models.CreateHotWalletError
 import com.tangem.domain.wallets.usecase.CreateHotWalletUseCase
 import io.mockk.clearMocks
@@ -52,6 +54,7 @@ internal class TangemPayOnboardingStarterTest {
     private val getCustomerOffersUseCase: GetCustomerOffersUseCase = mockk()
     private val createHotWalletUseCase: CreateHotWalletUseCase = mockk()
     private val isHotWalletCreationSupported: IsHotWalletCreationSupported = mockk()
+    private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
 
     private val loadingChanges = mutableListOf<Boolean>()
     private var exitCount = 0
@@ -78,6 +81,7 @@ internal class TangemPayOnboardingStarterTest {
         getCustomerOffersUseCase = getCustomerOffersUseCase,
         createHotWalletUseCase = createHotWalletUseCase,
         isHotWalletCreationSupported = isHotWalletCreationSupported,
+        analyticsEventHandler = analyticsEventHandler,
     )
 
     @BeforeEach
@@ -90,6 +94,7 @@ internal class TangemPayOnboardingStarterTest {
             getCustomerOffersUseCase,
             createHotWalletUseCase,
             isHotWalletCreationSupported,
+            analyticsEventHandler,
         )
         loadingChanges.clear()
         exitCount = 0
@@ -546,7 +551,8 @@ internal class TangemPayOnboardingStarterTest {
             runTest {
                 // Arrange
                 every { isHotWalletCreationSupported() } returns true
-                coEvery { createHotWalletUseCase(any(), any()) } returns CreateHotWalletError.Failed(RuntimeException("boom")).left()
+                coEvery { createHotWalletUseCase(any(), any()) } returns
+                    CreateHotWalletError.Failed(RuntimeException("boom")).left()
 
                 // Act
                 val actual = starter.createHotWallet(onLoadingChange = callbacks.onLoadingChange)
@@ -558,7 +564,7 @@ internal class TangemPayOnboardingStarterTest {
             }
 
         @Test
-        fun `GIVEN hot wallets limit reached WHEN createHotWallet THEN limit dialog shown AND null returned`() =
+        fun `GIVEN hot wallets limit reached WHEN createHotWallet THEN limit reported AND dialog shown`() =
             runTest {
                 // Arrange
                 every { isHotWalletCreationSupported() } returns true
@@ -573,6 +579,14 @@ internal class TangemPayOnboardingStarterTest {
                 assertThat(actual).isNull()
                 assertThat(loadingChanges).containsExactly(false)
                 assertThat(dialog.captured.message).isEqualTo(Dialogs.hotWalletsLimitReachedDialog().message)
+                verify(exactly = 1) {
+                    analyticsEventHandler.send(
+                        NoticeMobileWalletLimit(
+                            type = NoticeMobileWalletLimit.Type.Create,
+                            limit = NoticeMobileWalletLimit.Limit.MobileWallets,
+                        ),
+                    )
+                }
             }
     }
 
