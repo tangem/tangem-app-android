@@ -252,6 +252,34 @@ class TokenFeeCalculatorTest {
     }
 
     @Test
+    fun `GIVEN call gas limit is final WHEN calculateTokenFee THEN it is signed and priced without margin`() = runTest {
+        // Arrange
+        val tokenStatus = createMockTokenStatus(balance = BigDecimal("1000"), fiatRate = BigDecimal("1"))
+        val nativeStatus = createMockNativeCurrencyStatus(fiatRate = BigDecimal("2000"))
+        val initialFee = createMockEIP1559Fee() // gasLimit = 100_000
+
+        coEvery { mockWalletManager.getGasLimit(any(), any(), any()) } returns Result.Success(BigInteger("60000"))
+        coEvery { gaslessTransactionRepository.getTokenFeeReceiverAddress() } returns "0xFeeReceiver"
+        every { gaslessTransactionRepository.getBaseGasForTransaction() } returns BigInteger("21000")
+
+        // Act
+        val result = tokenFeeCalculator.calculateTokenFee(
+            walletManager = mockWalletManager,
+            tokenForPayFeeStatus = tokenStatus,
+            nativeCurrencyStatus = nativeStatus,
+            initialFee = initialFee,
+            isCallGasLimitFinal = true,
+        )
+
+        // Assert
+        val feeExtended = result.getOrNull()
+        val fee = feeExtended?.transactionFee?.normal as Fee.Ethereum.TokenCurrency
+        // 100_000 call + 66_000 fee transfer (60_000 * 1.10) + 21_000 base gas
+        assertEquals(BigInteger("187000"), fee.gasLimit)
+        assertEquals(listOf(BigInteger("100000")), feeExtended.callGasLimits)
+    }
+
+    @Test
     fun `calculateTokenFee should return error when token balance is insufficient`() = runTest {
         // Given
         val tokenStatus = createMockTokenStatus(
