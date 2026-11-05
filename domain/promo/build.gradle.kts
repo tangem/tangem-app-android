@@ -7,6 +7,7 @@ dependencies {
 
     // region Kotlin
     api(deps.arrow.core)
+    api(deps.kotlin.coroutines)
     // endregion
 
     // region Domain models
