@@ -252,8 +252,7 @@ internal sealed interface QuoteUM {
 
     data object Empty : QuoteUM
 
-    /** @property isAnswerExpected a request for the amount just entered is in flight, so a tap may wait for it */
-    data class Loading(val isAnswerExpected: Boolean) : QuoteUM
+    data object Loading : QuoteUM
 
     /**
      * @property expected the leg the user receives at the average price — shares on a buy, collateral on a sell
@@ -287,8 +286,6 @@ internal sealed interface SubmitUM {
 
     data object Idle : SubmitUM
 
-    data object AwaitingQuote : SubmitUM
-
     data object Signing : SubmitUM
 
     data object Posting : SubmitUM
@@ -299,7 +296,7 @@ internal sealed interface SubmitUM {
 }
 
 internal val SubmitUM.canAcceptQuote: Boolean
-    get() = this is SubmitUM.Idle || this is SubmitUM.AwaitingQuote
+    get() = this is SubmitUM.Idle
 
 @Immutable
 internal sealed interface PlaceActionUM {
@@ -307,8 +304,4 @@ internal sealed interface PlaceActionUM {
     data object Unavailable : PlaceActionUM
 
     data object Ready : PlaceActionUM
-
-    data object ReadyOnceQuoted : PlaceActionUM
-
-    data object AwaitingQuote : PlaceActionUM
 }

@@ -45,7 +45,6 @@ import com.tangem.features.polymarket.impl.placeprediction.model.transformers.Se
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetPositionTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetPriceErrorTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteLoadingTransformer
-import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteRequestEndedTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetQuoteResultTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetSellPositionStateTransformer
 import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetTradingPermissionTransformer
@@ -58,12 +57,10 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -127,8 +124,6 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
     private var isHeld = false
 
-    private val freshQuote = FreshQuoteSignal(uiState = uiState)
-
     private var isResumeSkipped = false
 
     init {
@@ -164,12 +159,10 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
     fun onPause() {
         isResumed = false
         cancelQuote()
-        freshQuote.settle()
         balancePollJobHolder.cancel()
     }
 
     fun onAmountChange(value: String, isPicked: Boolean = false) {
-        freshQuote.onAmountEntered()
         uiState.update(SetAmountTransformer(value = value, isAmountFromFraction = isPicked))
         restartQuoteLoop(withDebounce = !isPicked)
     }
@@ -195,10 +188,6 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         restartQuoteLoop(withDebounce = false)
     }
 
-    suspend fun awaitFreshQuote(): Boolean = freshQuote.awaitQuoted()
-
-    fun abandonFreshQuote() = freshQuote.settle()
-
     fun prepare(): PreparedPrediction? {
         if (isHeld) return null
 
@@ -214,7 +203,6 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         isHeld = true
         cancelQuote()
         balancePollJobHolder.cancel()
-        freshQuote.settle()
         return try {
             block()
         } finally {
@@ -355,9 +343,7 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
             isNegRiskMarket = position.isNegRisk
 
-            val amountBefore = uiState.value.amountValue
             uiState.update(SetPositionTransformer(position = position))
-            if (uiState.value.amountValue != amountBefore) freshQuote.onAmountEntered()
 
             restartQuoteLoop(withDebounce = false)
         }.saveIn(positionJobHolder)
@@ -365,14 +351,13 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
     private fun cancelQuote() {
         quoteJobHolder.cancel()
-        freshQuote.endRequest()
     }
 
     private fun restartQuoteLoop(withDebounce: Boolean) {
         cancelQuote()
 
         if (!isResumed || !isTradedAssetResolved || isHeld) return
-        if (!uiState.value.isMarketAcceptingOrders || !uiState.value.canPollPrice()) return freshQuote.settle()
+        if (!uiState.value.isMarketAcceptingOrders || !uiState.value.canPollPrice()) return
 
         scope.launch {
             if (withDebounce && uiState.value.isQuotable()) delay(timeMillis = QUOTE_DEBOUNCE_MILLIS)
@@ -427,29 +412,27 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
         val amount = state.enteredAmount() ?: return
         if (!state.isQuotable()) return
 
-        freshQuote.during { isFresh ->
-            uiState.update(SetQuoteLoadingTransformer(isAnswerExpected = isFresh))
-            val result = withContext(dispatchers.default) {
-                getPredictionOrderQuoteUseCase(
-                    userWalletId = params.userWalletId,
-                    request = PredictionOrderQuoteRequest(
-                        marketId = params.marketId,
-                        assetId = tradedAssetId,
-                        side = params.side,
-                        amount = amount,
-                        slippagePercent = state.slippage.percent,
-                    ),
-                )
-            }
-
-            uiState.update(
-                SetQuoteResultTransformer(
-                    result = result,
-                    receivedAtMillis = System.currentTimeMillis(),
+        uiState.update(SetQuoteLoadingTransformer)
+        val result = withContext(dispatchers.default) {
+            getPredictionOrderQuoteUseCase(
+                userWalletId = params.userWalletId,
+                request = PredictionOrderQuoteRequest(
+                    marketId = params.marketId,
                     assetId = tradedAssetId,
+                    side = params.side,
+                    amount = amount,
+                    slippagePercent = state.slippage.percent,
                 ),
             )
         }
+
+        uiState.update(
+            SetQuoteResultTransformer(
+                result = result,
+                receivedAtMillis = System.currentTimeMillis(),
+                assetId = tradedAssetId,
+            ),
+        )
     }
 
     @AssistedFactory
@@ -463,57 +446,5 @@ internal class PlacePredictionQuoteEngine @AssistedInject constructor(
 
     private companion object {
         val logger = TangemLogger.withTag(tag = "PlacePredictionQuoteEngine")
-    }
-}
-
-private class FreshQuoteSignal(private val uiState: MutableStateFlow<PlacePredictionUM>) {
-
-    private val amount = MutableStateFlow(FreshAmount(id = 0, status = FreshAmount.Status.Settled))
-
-    private var request: Any? = null
-
-    fun onAmountEntered() {
-        amount.update { FreshAmount(id = it.id + 1, status = FreshAmount.Status.Pending) }
-    }
-
-    fun settle() {
-        amount.update { it.copy(status = FreshAmount.Status.Settled) }
-        endRequest()
-    }
-
-    suspend fun awaitQuoted(): Boolean {
-        val awaited = amount.value
-        if (awaited.status != FreshAmount.Status.Pending) return false
-
-        val ended = amount.first { it != awaited }
-        return ended.id == awaited.id && ended.status == FreshAmount.Status.Quoted
-    }
-
-    suspend fun during(block: suspend (isFresh: Boolean) -> Unit) {
-        val requested = amount.value
-        val fresh = Any().takeIf { requested.status == FreshAmount.Status.Pending }
-        if (fresh != null) request = fresh
-
-        var status = FreshAmount.Status.Settled
-        try {
-            block(fresh != null)
-            status = FreshAmount.Status.Quoted
-        } finally {
-            if (status == FreshAmount.Status.Quoted || currentCoroutineContext().isActive) {
-                amount.update { if (it == requested) it.copy(status = status) else it }
-            }
-            if (fresh != null && request === fresh) endRequest()
-        }
-    }
-
-    fun endRequest() {
-        if (request == null) return
-
-        request = null
-        uiState.update(SetQuoteRequestEndedTransformer)
-    }
-
-    private data class FreshAmount(val id: Long, val status: Status) {
-        enum class Status { Pending, Quoted, Settled }
     }
 }
