@@ -13,7 +13,6 @@ import com.tangem.core.ui.coil.ImagePreloader
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.collectibles.account.covers
@@ -327,9 +326,10 @@ internal class CollectiblesPackOpeningModel @Inject constructor(
             OpenPackStep.Failed.LowInventory -> bottomSheetNavigation.activate(
                 CollectiblesConfirmOrderBottomSheetConfig.LowInventory,
             )
-            // TODO an expired and a refunded purchase will likely open screens of their own; not localized yet
-            OpenPackStep.Failed.Expired -> showSnackbar(stringReference("Your purchase has expired"))
-            OpenPackStep.Failed.Refunded -> showSnackbar(stringReference("Your payment has been refunded"))
+            OpenPackStep.Failed.OpenFailed -> router.replaceCurrent(CollectiblesRoute.PackOpenFailed)
+            OpenPackStep.Failed.Refunded,
+            OpenPackStep.Failed.Refunding,
+            -> bottomSheetNavigation.activate(CollectiblesConfirmOrderBottomSheetConfig.RefundOnTheWay)
             OpenPackStep.Failed.PurchaseFailed,
             OpenPackStep.Failed.Unexpected,
             -> showSnackbar(resourceReference(R.string.common_something_went_wrong))
