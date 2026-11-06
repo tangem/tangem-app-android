@@ -918,6 +918,7 @@ private fun LazyListScope.predefinedTokensListItems(state: PredefinedTokensUM) {
     )
 }
 
+// TODO [REDACTED_TASK_KEY] Move to TangemTokenRow once it supports a network subtitle and a trailing action
 @Composable
 private fun PredefinedTokenItem(state: PredefinedTokenItemUM, modifier: Modifier = Modifier) {
     val tokenRowUM = remember(state) {
