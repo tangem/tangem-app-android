@@ -57,6 +57,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.domain.models.earn.EarnProductId
 import com.tangem.features.earn.impl.fake.FakeEarnPosition
 import com.tangem.features.earn.impl.fake.FakeEarnProductPreset
 import com.tangem.features.earn.impl.fake.createFakeEarnProduct
@@ -64,12 +65,17 @@ import com.tangem.features.earn.impl.fake.fakeReadyState
 import com.tangem.features.earn.impl.fake.fakeSummary
 import com.tangem.features.earn.impl.overview.EarnProductsRegistry
 import com.tangem.features.earn.impl.picker.EarnPickerTexts
+import com.tangem.features.earn.impl.picker.model.EarnPickerClickIntents
 import com.tangem.features.earn.impl.picker.model.EarnPickerConverter
 import com.tangem.features.earn.impl.picker.model.EarnPickerCta
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerTab
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerUM
 import com.tangem.features.earn.impl.picker.ui.state.EarnPickerUM.ContentUM
 import com.tangem.features.earn.impl.ui.EarnDetailRow
+import com.tangem.features.earn.product.api.product.EarnBlock
+import com.tangem.features.earn.product.api.product.EarnProduct
+import com.tangem.features.earn.product.api.product.EarnTextBlock
+import com.tangem.features.earn.product.api.session.EarnAction
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -550,16 +556,17 @@ private object PreviewData {
         registry = EarnProductsRegistry(products = setOf(lending, vault), rateSources = emptySet()),
         cta = EarnPickerCta(),
     )
-    private val callbacks = EarnPickerConverter.Callbacks(
-        onProductClick = {},
-        onActionClick = { _, _ -> },
-        onBlocked = {},
-        onAddFunds = {},
-        onRetryClick = {},
-        onInfoClick = {},
-        onLinkClick = {},
-        onClose = {},
-    )
+    private val intents = object : EarnPickerClickIntents {
+        override fun onProductClick(id: EarnProductId) = Unit
+        override fun onActionClick(product: EarnProduct, action: EarnAction) = Unit
+        override fun onBlockedClick(block: EarnBlock) = Unit
+        override fun onAddFundsClick() = Unit
+        override fun onRetryClick(product: EarnProduct) = Unit
+        override fun onOverviewRetryClick() = Unit
+        override fun onInfoClick(block: EarnTextBlock) = Unit
+        override fun onLinkClick(url: String) = Unit
+        override fun onCloseClick() = Unit
+    }
     private val summaries = listOf(
         fakeSummary(FakeEarnProductPreset.Lending, FakeEarnPosition.None),
         fakeSummary(FakeEarnProductPreset.Vault, FakeEarnPosition.None),
@@ -574,12 +581,12 @@ private object PreviewData {
         summaries = summaries,
         selectedId = lending.id,
         ethBalance = ethBalance,
-        callbacks = callbacks,
+        intents = intents,
     )
 
-    fun loading(): EarnPickerUM = converter.initial(onClose = {})
+    fun loading(): EarnPickerUM = converter.initial(intents)
 
-    fun unavailable(): EarnPickerUM = converter.unavailable(onRetryClick = {}, onClose = {})
+    fun unavailable(): EarnPickerUM = converter.unavailable(intents)
 }
 
 @Preview(name = "Light")

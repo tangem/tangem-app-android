@@ -23,6 +23,7 @@ import com.tangem.features.earn.impl.picker.ui.state.EarnPickerUM
 import com.tangem.features.earn.impl.showReason
 import com.tangem.features.earn.product.api.navigation.EarnInfoRoute
 import com.tangem.features.earn.product.api.product.EarnActionHandler
+import com.tangem.features.earn.product.api.product.EarnBlock
 import com.tangem.features.earn.product.api.product.EarnProduct
 import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnProductSummary
@@ -68,7 +69,7 @@ internal class EarnPickerModel @Inject constructor(
     private val router: Router,
     private val uiMessageSender: UiMessageSender,
     private val urlOpener: UrlOpener,
-) : Model() {
+) : Model(), EarnPickerClickIntents {
 
     private val params: EarnYieldPickerComponent.Params = paramsContainer.require()
 
@@ -120,18 +121,7 @@ internal class EarnPickerModel @Inject constructor(
         .distinctUntilChanged()
 
     val uiState: StateFlow<EarnPickerUM>
-        field = MutableStateFlow(converter.initial(onClose = ::onClose))
-
-    private val callbacks = EarnPickerConverter.Callbacks(
-        onProductClick = { selectedId.value = it },
-        onActionClick = ::onActionClick,
-        onBlocked = { uiMessageSender.showReason(it) },
-        onAddFunds = ::onAddFunds,
-        onRetryClick = ::onRetryClick,
-        onInfoClick = ::onInfoClick,
-        onLinkClick = urlOpener::openUrl,
-        onClose = ::onClose,
-    )
+        field = MutableStateFlow(converter.initial(intents = this))
 
     init {
         summaries
@@ -187,20 +177,16 @@ internal class EarnPickerModel @Inject constructor(
         val chosen = selectedId?.let(registry::find)
 
         return when {
-            isRedirecting(currencySummaries, frame.source) -> converter.initial(onClose = ::onClose)
-            currencySummaries.isEmpty() && frame.source != StatusSource.CACHE -> converter.unavailable(
-                onRetryClick = ::onEmptyRetryClick,
-                onClose = ::onClose,
-            )
-            chosen == null || isAwaitingSelection(chosen, currencySummaries) ->
-                converter.initial(onClose = ::onClose)
+            isRedirecting(currencySummaries, frame.source) -> converter.initial(intents = this)
+            currencySummaries.isEmpty() && frame.source != StatusSource.CACHE -> converter.unavailable(intents = this)
+            chosen == null || isAwaitingSelection(chosen, currencySummaries) -> converter.initial(intents = this)
             else -> converter.convert(
                 product = chosen,
                 state = selection?.takeIf { it.product.id == chosen.id }?.state ?: EarnProductState.Loading,
                 summaries = currencySummaries,
                 selectedId = chosen.id,
                 ethBalance = ethBalance,
-                callbacks = callbacks,
+                intents = this,
             )
         }
     }
@@ -217,13 +203,21 @@ internal class EarnPickerModel @Inject constructor(
     private fun isAwaitingSelection(chosen: EarnProduct, currencySummaries: List<EarnProductSummary>): Boolean =
         currencySummaries.none { it.productId == chosen.id }
 
-    private fun onActionClick(product: EarnProduct, action: EarnAction) {
+    override fun onProductClick(id: EarnProductId) {
+        selectedId.value = id
+    }
+
+    override fun onActionClick(product: EarnProduct, action: EarnAction) {
         handlers
             .getOrPut(product.id) { product.actionHandler(productParams, navigator) }
             .onActionClick(action)
     }
 
-    private fun onRetryClick(product: EarnProduct) {
+    override fun onBlockedClick(block: EarnBlock) {
+        uiMessageSender.showReason(block)
+    }
+
+    override fun onRetryClick(product: EarnProduct) {
         modelScope.launch {
             product.refresh(productParams).onLeft {
                 TangemLogger.e("Earn picker: refresh of ${product.id.value} failed", it)
@@ -232,7 +226,7 @@ internal class EarnPickerModel @Inject constructor(
         }
     }
 
-    private fun onEmptyRetryClick() {
+    override fun onOverviewRetryClick() {
         modelScope.launch {
             overviewFetcher(EarnOverviewFetcher.Params(params.userWalletId, params.cryptoCurrency)).onLeft {
                 TangemLogger.e("Earn picker: overview fetch failed", it)
@@ -240,7 +234,7 @@ internal class EarnPickerModel @Inject constructor(
         }
     }
 
-    private fun onInfoClick(block: EarnTextBlock) {
+    override fun onInfoClick(block: EarnTextBlock) {
         uiMessageSender.send(
             modalMessage {
                 informer { item(title = block.title, description = block.description) }
@@ -248,11 +242,15 @@ internal class EarnPickerModel @Inject constructor(
         )
     }
 
-    private fun onAddFunds() {
+    override fun onLinkClick(url: String) {
+        urlOpener.openUrl(url)
+    }
+
+    override fun onAddFundsClick() {
         TangemLogger.i("Earn picker: Add funds has no destination yet")
     }
 
-    private fun onClose() {
+    override fun onCloseClick() {
         router.pop()
     }
 
