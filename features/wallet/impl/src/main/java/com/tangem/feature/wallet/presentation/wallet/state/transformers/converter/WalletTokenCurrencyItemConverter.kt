@@ -121,18 +121,18 @@ internal class WalletTokenCurrencyItemConverter(
             TangemTokenRowUM.TitleUM.Content(
                 text = stringReference(currencyStatus.currency.name),
                 hasPending = value.hasCurrentNetworkTransactions,
-                badge = headline?.let {
-                    TangemBadgeUM(
-                        type = TangemBadgeType.Solid,
-                        color = if (it.isActive) TangemBadgeColor.Blue else TangemBadgeColor.Gray,
-                        shape = TangemBadgeShape.Rounded,
-                        size = TangemBadgeSize.X4,
-                        text = it.badge,
-                    )
-                },
+                badge = headline?.toBadgeUM(),
             )
         }
     }
+
+    private fun EarnHeadline.toBadgeUM() = TangemBadgeUM(
+        type = TangemBadgeType.Solid,
+        color = if (isActive) TangemBadgeColor.Blue else TangemBadgeColor.Gray,
+        shape = TangemBadgeShape.Rounded,
+        size = TangemBadgeSize.X4,
+        text = badge,
+    )
 
     private fun toCurrencyRowSubtitle(currencyStatus: CryptoCurrencyStatus): TangemTokenRowUM.SubtitleUM {
         return when (currencyStatus.value) {
