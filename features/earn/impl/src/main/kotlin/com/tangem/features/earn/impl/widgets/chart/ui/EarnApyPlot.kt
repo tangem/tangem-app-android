@@ -4,10 +4,8 @@ import android.graphics.Typeface
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFontFamilyResolver
@@ -32,6 +31,7 @@ import androidx.compose.ui.text.font.FontSynthesis
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.resolveAsTypeface
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
@@ -83,10 +83,8 @@ private val MIN_COLUMN_SPACING = 1.dp
 /** Width of the column the axis labels stand in; the plot starts right after it. */
 private val AXIS_LABELS_WIDTH = 40.dp
 
-private val AXIS_LABEL_HEIGHT = 16.dp
-
-/** The top grid line sits at the middle of the top axis label, so that label stays inside the chart. */
-private val PLOT_TOP = AXIS_LABEL_HEIGHT / 2
+/** Room above the top grid line for the upper half of the top axis label: a 16dp caption at the default font size. */
+private val PLOT_TOP = 8.dp
 
 /** From the top grid line to the bottom of the bars. */
 private val PLOT_HEIGHT = 116.dp
@@ -316,7 +314,7 @@ private fun rememberSelectionListener(onBarSelect: (Int?) -> Unit): CartesianMar
 
 /**
  * Grid lines on every labelled value but the lowest, which is the bottom of the bars. The labels stand at the left
- * edge of the chart, each centred on its line.
+ * edge of the chart, each centred on its line by its measured height, so a larger system font keeps them on the lines.
  */
 @Composable
 private fun PlotGrid(scale: EarnApyScale, modifier: Modifier = Modifier) {
@@ -344,17 +342,29 @@ private fun PlotGrid(scale: EarnApyScale, modifier: Modifier = Modifier) {
                 )
             }
         }
-        Column(
-            modifier = Modifier.height(PLOT_HEIGHT + AXIS_LABEL_HEIGHT),
-            verticalArrangement = Arrangement.SpaceBetween,
-        ) {
-            labels.forEach { label ->
-                Text(
-                    text = label,
-                    style = TangemTheme.typography3.caption.medium,
-                    color = TangemTheme.colors3.text.secondary,
-                    maxLines = 1,
-                )
+        Layout(
+            content = {
+                labels.forEach { label ->
+                    Text(
+                        text = label,
+                        style = TangemTheme.typography3.caption.medium,
+                        color = TangemTheme.colors3.text.secondary,
+                        maxLines = 1,
+                    )
+                }
+            },
+            modifier = Modifier.height(PLOT_AREA_HEIGHT),
+        ) { measurables, constraints ->
+            val placeables = measurables.map { it.measure(Constraints()) }
+            val plotTop = PLOT_TOP.roundToPx()
+            val plotHeight = PLOT_HEIGHT.roundToPx()
+
+            layout(width = placeables.maxOfOrNull { it.width } ?: 0, height = constraints.maxHeight) {
+                placeables.forEachIndexed { index, placeable ->
+                    val lineY = plotTop + plotHeight * index / intervals
+
+                    placeable.placeRelative(x = 0, y = lineY - placeable.height / 2)
+                }
             }
         }
     }
