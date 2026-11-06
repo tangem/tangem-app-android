@@ -170,6 +170,7 @@
   <string name="alert_manage_tokens_unsupported_message">Token im %1$s-Netzwerk werden von dieser Karte oder diesem Ring aufgrund einer Firmware-Einschränkung nicht unterstützt.</string>
   <string name="alert_troubleshooting_scan_card_title">Hast du Probleme beim Scannen deiner Karte oder Ring?</string>
   <string name="alert_unsupported_card">Diese Karte oder Ring ist für die Zusammenarbeit mit Tangem nicht geeignet</string>
+  <string name="all_services_title">Dienstleistungen</string>
   <string name="app_settings_access_code_warning">Lege einen Zugangscode fest, um die Biometrie zu aktivieren.</string>
   <string name="app_settings_biometrics_footer">Verwende die %1$s um Deine Wallet zu entsperren und sensible Aktionen wie das Signieren von Transaktionen zu bestätigen. Bei Hardware-Wallets ist zum Signieren weiterhin eine Karte oder ein Ring erforderlich.</string>
   <string name="app_settings_default_fee">Standardgebühr</string>
@@ -1160,8 +1161,8 @@
   <string name="hw_upgrade_to_cold_badge">Wechseln Sie zu einer Cold Wallet</string>
   <string name="hw_upgrade_to_cold_banner_description">Schütze Deine Kryptowährungen mit Tangems erstklassiger Hardware-Wallet.</string>
   <string name="hw_upgrade_to_cold_banner_title">Rüste Deine Wallet auf Hardware-Sicherheit auf.</string>
-  <string name="hw_wallets_limit_alert_message">In Tangem können Sie bis zu %1$s mobile Wallets anlegen. Um eine neue Wallet anzulegen oder zu importieren, müssen Sie zunächst eine Ihrer bestehenden mobilen Wallets entfernen.</string>
-  <string name="hw_wallets_limit_alert_title">Sie haben das Limit für Ihr mobiles Portemonnaie erreicht</string>
+  <string name="hw_wallets_limit_alert_message">In Tangem können Sie bis zu %1$s mobile Wallets anlegen. Um ein weiteres hinzuzufügen, müssen Sie zunächst eines Ihrer bestehenden mobilen Wallets entfernen.</string>
+  <string name="hw_wallets_limit_alert_title">Limit für die mobile Geldbörse erreicht</string>
   <string name="information_generated_with_ai">Diese Informationen wurden mithilfe von KI generiert.\nTippe hier, wenn Du Fehler findest.</string>
   <string name="initial_message_change_access_code_body">Um den Zugangscode zu ändern, halte die Karte oder Ring wie oben gezeigt an das Gerät und entferne sie erst am Ende des Vorgangs.</string>
   <string name="initial_message_change_passcode_body">Um den Passcode zu ändern, halte die Karte oder Ring wie oben gezeigt an das Gerät und entferne sie erst am Ende des Vorgangs.</string>
@@ -1177,7 +1178,7 @@
   <string name="introduction_button_buy_tangem">Tangem kaufen</string>
   <string name="introduction_button_create_wallet">Wallet erstellen</string>
   <string name="introduction_button_i_have_a_wallet">Ich habe eine Wallet</string>
-  <string name="introduction_create_wallet_hardware_description">Falls Sie bereits eine Tangem Wallet besitzen</string>
+  <string name="introduction_create_wallet_hardware_description">Verbinden oder neue Tangem Wallet holen</string>
   <string name="introduction_create_wallet_hardware_title">Tangem-Karte oder -Ring</string>
   <string name="introduction_create_wallet_seed_phrase_description">Ohne Hardware-Wallet beginnen</string>
   <string name="introduction_create_wallet_seed_phrase_title">Wallet mit Seed-Phrase erstellen</string>
@@ -1605,6 +1606,8 @@
   <string name="mcp_connection_request_agent_can">Dieser Mitarbeiter wird in der Lage sein,</string>
   <string name="mcp_connection_request_can_view_balance">Guthaben und Transaktionen anzeigen</string>
   <string name="mcp_connection_request_notifications_description">Sie erhalten eine Benachrichtigung, um jede Transaktion zu genehmigen. Ohne Benachrichtigungen kann der Agent keine Verbindung herstellen.</string>
+  <string name="mcp_connection_request_wallet_needs_sync_description">Kehren Sie zum Hauptbildschirm der Wallet zurück, synchronisieren Sie Ihre Wallet und versuchen Sie es dann erneut.</string>
+  <string name="mcp_connection_request_wallet_needs_sync_title">Diese Wallet muss synchronisiert werden</string>
   <string name="mcp_connection_success_description">%s Sie können nun Ihre Kontostände einsehen und die Genehmigung von Transaktionen beantragen. Den Zugriff können Sie jederzeit in Connections widerrufen.</string>
   <string name="mcp_connection_success_title">Agent verbunden</string>
   <string name="mcp_intent_cant_reach_title">Absicht kann nicht ermittelt werden</string>
@@ -1617,6 +1620,7 @@
   <string name="mcp_send_intent_processed_subtitle">Senden %1$s</string>
   <string name="mcp_session_revoke_access">Zugriff widerrufen</string>
   <string name="mcp_session_revoke_failed">Der Zugriff konnte nicht widerrufen werden</string>
+  <string name="mcp_session_revoked">Verbindung aufgehoben</string>
   <string name="mcp_session_title">Vernetztes MCP</string>
   <string name="mcp_swap_intent_cant_reach_title">Absicht kann nicht ermittelt werden</string>
   <string name="mcp_swap_intent_offer_description">Der Makler bittet darum, die Transaktion über Ihr Konto abzuwickeln. Die Details werden Sie im Anschluss prüfen.</string>
@@ -2176,6 +2180,7 @@
   <string name="prediction_search_initial_subtitle">Veranstaltungen oder deine Vorhersagen suchen</string>
   <string name="prediction_search_initial_title">Beginnen Sie mit der Eingabe, um zu suchen</string>
   <string name="prediction_search_results_title">Suchergebnisse</string>
+  <string name="prediction_sports_draw">Unentschieden</string>
   <string name="prediction_withdraw_balance_unavailable">Der Saldo Ihres Prognosekontos konnte nicht geladen werden. Bitte aktualisieren Sie die Seite oder öffnen Sie diesen Bildschirm erneut.</string>
   <string name="prediction_withdraw_confirm_fee_footer">Für diese Auszahlung fällt keine Netzwerkgebühr an. Der Betrag, den Sie erhalten, kann aufgrund der Währungsumrechnung geringfügig abweichen.</string>
   <string name="prediction_withdraw_confirm_title">Auszahlung bestätigen</string>
@@ -2481,7 +2486,7 @@
   <string name="social_login_error_cloud_access_description">Stellen Sie sicher, dass Tangem Zugriff auf %s hat, und versuchen Sie es dann erneut.</string>
   <string name="social_login_error_cloud_access_title">Die Wallet konnte nicht wiederhergestellt werden</string>
   <string name="social_login_error_generic">Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.</string>
-  <string name="social_login_error_generic_v2">Bitte überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.</string>
+  <string name="social_login_error_generic_v2">Bitte versuchen Sie es erneut. Sollte das Problem weiterhin bestehen, überprüfen Sie bitte Ihre Internetverbindung.</string>
   <string name="social_login_error_network_description">Überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.</string>
   <string name="social_login_error_network_title">Keine Internetverbindung</string>
   <string name="social_login_error_no_account">Fügen Sie diesem Gerät ein %s-Konto hinzu, um fortzufahren.</string>
@@ -2885,7 +2890,7 @@
   <string name="tangempay_campaign_spend_description">Bei Zahlung mit digitaler Karte über Apple Pay oder Google Pay fallen keine zusätzlichen Gebühren für Einkäufe an.</string>
   <string name="tangempay_campaign_unavailable_description">Du kannst ein normales Exemplar bestellen</string>
   <string name="tangempay_campaign_unavailable_title">Spezialkarte kann nicht erhalten werden</string>
-  <string name="tangempay_cancel_kyc">Verifizierung auf dem Hauptbildschirm ausblenden</string>
+  <string name="tangempay_cancel_kyc">Status ausblenden</string>
   <string name="tangempay_card_activation_attempts_exceeded_description">Bitte wenden Sie sich an den Support.</string>
   <string name="tangempay_card_activation_attempts_exceeded_title">Sie haben Ihr Aktivierungslimit überschritten.</string>
   <string name="tangempay_card_activation_description">Geben Sie die letzten 4 Ziffern Ihrer Kartennummer ein.</string>
@@ -2908,6 +2913,7 @@
   <string name="tangempay_card_details_add_to_wallet_error_rate_limit">Zu viele Versuche. Bitte versuche es in 24 Stunden erneut.</string>
   <string name="tangempay_card_details_add_to_wallet_error_title">Karte konnte nicht hinzugefügt werden</string>
   <string name="tangempay_card_details_add_to_wallet_error_wallet_unavailable">Google Wallet ist nicht verfügbar. Überprüfen Sie die Systemeinstellungen.</string>
+  <string name="tangempay_card_details_added_to_google_wallet_text">Karte zu Google Wallet hinzugefügt</string>
   <string name="tangempay_card_details_awaiting_deposit_cancel_button">Stornieren %1$s, umziehen nach %2$s</string>
   <string name="tangempay_card_details_awaiting_deposit_subtitle">Um die monatliche Gebühr für den Tarif zu bezahlen und die Karte zu nutzen</string>
   <string name="tangempay_card_details_awaiting_deposit_title">Laden Sie Ihr Konto auf unter %1$s</string>
@@ -3089,7 +3095,7 @@
   <string name="tangempay_kyc_in_progress_notification_title">Identitätsprüfung für Tangem Pay in Arbeit</string>
   <string name="tangempay_kyc_in_progress_popup_description">Dokumente werden in der Regel innerhalb von 5 Minuten automatisch überprüft. In seltenen Fällen, wenn eine manuelle Überprüfung erforderlich ist, kann es bis zu 48 Stunden dauern.</string>
   <string name="tangempay_kyc_rejected">Abgelehnt</string>
-  <string name="tangempay_kyc_rejected_button_text">Verifizierung ausblenden</string>
+  <string name="tangempay_kyc_rejected_button_text">Status ausblenden</string>
   <string name="tangempay_kyc_rejected_description">Leider konnten wir Ihre Identität</string>
   <string name="tangempay_kyc_rejected_description_span">nicht verifizieren.</string>
   <string name="tangempay_main_select_plan">Tarif auswählen</string>
@@ -3483,12 +3489,14 @@
   <string name="transaction_history_status_rewards_claim_failed">Prämienanspruch fehlgeschlagen</string>
   <string name="transaction_history_status_rewards_claimed">Prämien beansprucht</string>
   <string name="transaction_history_status_rewards_restake_failed">Belohnungswiederholung fehlgeschlagen</string>
+  <string name="transaction_history_status_send_cancelled">Senden abgebrochen</string>
   <string name="transaction_history_status_send_failed">Senden fehlgeschlagen</string>
   <string name="transaction_history_status_stake_failed">Einsatz gescheitert</string>
   <string name="transaction_history_status_supply_failed">Lieferung fehlgeschlagen</string>
   <string name="transaction_history_status_swap_failed">Tausch fehlgeschlagen</string>
   <string name="transaction_history_status_top_up_failed">Aufladung fehlgeschlagen</string>
   <string name="transaction_history_status_topping_up">Aufladen</string>
+  <string name="transaction_history_status_transfer_cancelled">Überweisung storniert</string>
   <string name="transaction_history_status_transfer_failed">Übertragung fehlgeschlagen</string>
   <string name="transaction_history_status_transferring">Übertragung</string>
   <string name="transaction_history_status_unstake_failed">Unstake fehlgeschlagen</string>
@@ -3917,11 +3925,17 @@
   <string name="wc_connection_reqeust_would_like">Möchte</string>
   <string name="wc_connection_request">Verbindungsanfrage</string>
   <string name="wc_connections">Verbindungen</string>
+  <string name="wc_connections_agents_error_subtitle">Zum Neuladen antippen</string>
   <string name="wc_connections_agents_error_title">KI-Agenten nicht verfügbar</string>
   <string name="wc_connections_agents_title">Vernetzte Agenten</string>
   <string name="wc_connections_dapps_title">Verbundene dApps</string>
+  <string name="wc_connections_disconnect_all_alert_desc">Alle dApps und KI-Agenten werden von Ihren Wallets getrennt.</string>
+  <string name="wc_connections_disconnect_all_alert_title">Alle trennen</string>
+  <string name="wc_connections_disconnect_all_success">Alle Verbindungen wurden getrennt</string>
   <string name="wc_connections_empty_desc">Stellen Sie über WalletConnect eine Verbindung zu dApps oder über MCP zu KI-Agenten her. Verwalten Sie alle Ihre Verbindungen an einem Ort.</string>
   <string name="wc_connections_empty_title">Noch keine Verbindungen</string>
+  <string name="wc_connections_no_walletconnect_wallets">Keine Ihrer Wallets unterstützt WalletConnect.</string>
+  <string name="wc_connections_qr_scan_hint">Öffnen Sie die dApp oder den KI-Agenten und scannen Sie den QR-Code für die Verbindung.</string>
   <string name="wc_connections_subtitle">Mit dApps oder MCP verbinden</string>
   <string name="wc_contents">Inhalt</string>
   <string name="wc_copy_data_button_text">Daten kopieren</string>
