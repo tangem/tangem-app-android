@@ -30,7 +30,7 @@ import com.tangem.features.tangempay.onboarding.impl.R
 import com.tangem.features.tangempay.ui.TangemPayOnboardingNavigation
 import com.tangem.features.tangempay.ui.TangemPayOnboardingScreenState
 import com.tangem.test.core.ProvideTestModels
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
@@ -38,7 +38,6 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -559,16 +558,9 @@ internal class TangemPayOnboardingModelTest {
     )
 
     private fun TestScope.createModel(params: TangemPayOnboardingComponent.Params): TangemPayOnboardingModel {
-        val testDispatcher = StandardTestDispatcher(testScheduler)
         return TangemPayOnboardingModel(
             paramsContainer = MutableParamsContainer(params),
-            dispatchers = TestingCoroutineDispatcherProvider(
-                main = testDispatcher,
-                mainImmediate = testDispatcher,
-                io = testDispatcher,
-                default = testDispatcher,
-                single = testDispatcher,
-            ),
+            dispatchers = createTestingCoroutineDispatcherProvider(),
             analytics = analytics,
             router = router,
             repository = repository,
