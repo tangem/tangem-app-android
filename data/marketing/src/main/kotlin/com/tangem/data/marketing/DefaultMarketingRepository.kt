@@ -14,13 +14,12 @@ import com.tangem.domain.marketing.models.MarketingCampaign
 import com.tangem.domain.marketing.models.MarketingScreen
 import com.tangem.domain.marketing.models.MarketingScreenType
 import com.tangem.utils.SupportedLanguages
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -35,6 +34,7 @@ internal class DefaultMarketingRepository(
     private val dismissStore: MarketingDismissStore,
     private val converter: MarketingCampaignConverter,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val appCoroutineScope: AppCoroutineScope,
 ) : MarketingRepository {
 
     // In-memory per-session cache for background (cacheable) types. Serves repeated reads within a session
@@ -42,7 +42,6 @@ internal class DefaultMarketingRepository(
     private val sessionCache = MutableStateFlow<Map<MarketingScreenType, List<MarketingCampaign>>>(emptyMap())
     private val cacheMutex = Mutex()
 
-    private val requestScope = CoroutineScope(SupervisorJob() + dispatchers.io)
     private val inFlightRequests = ConcurrentHashMap<MarketingScreen, Deferred<List<MarketingCampaign>>>()
 
     override suspend fun getCampaigns(screen: MarketingScreen): Either<Throwable, List<MarketingCampaign>> =
@@ -74,12 +73,12 @@ internal class DefaultMarketingRepository(
 
     /**
      * The Onramp screen hosts several banner models that request the same campaigns at once. They await a single
-     * request, which runs in [requestScope] so a cancelled caller doesn't fail the others. It is lazy so its cleanup
+     * request, which runs in [appCoroutineScope] so a cancelled caller doesn't fail the others. It is lazy so its cleanup
      * is registered before it can finish, and it leaves the map only when it completes, not when a waiter is cancelled.
      */
     private suspend fun loadFreshShared(screen: MarketingScreen): List<MarketingCampaign> {
         val request = inFlightRequests.computeIfAbsent(screen) {
-            requestScope.async(start = CoroutineStart.LAZY) { loadFresh(screen) }
+            appCoroutineScope.async(start = CoroutineStart.LAZY) { loadFresh(screen) }
                 .also { deferred -> deferred.invokeOnCompletion { inFlightRequests.remove(screen, deferred) } }
         }
         return request.await()
