@@ -26,10 +26,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 import kotlin.reflect.KClass
 
-/**
- * The earn badge in the title of a token row comes from `earnBadgeProvider`: the converter knows no earn rule, it only
- * puts the badge it is given into the statuses that carry a balance.
- */
 internal class TokenItemStateConverterEarnBadgeTest {
 
     private val factory = MockCryptoCurrencyFactory()

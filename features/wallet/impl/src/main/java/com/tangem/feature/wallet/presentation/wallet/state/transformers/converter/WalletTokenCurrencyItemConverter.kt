@@ -287,7 +287,6 @@ internal class WalletTokenCurrencyItemConverter(
             iconRes = R.drawable.ic_yield_mode_mini_12,
             type = TangemTokenRowUM.PromoBannerUM.Content.Type.Yield,
             onPromoBannerClick = {
-                // The earn screen takes the rate in percent, as the backend reports it
                 clickIntents.onYieldPromoClicked(accountId, currencyStatus, yieldApyPercent.toPlainString())
             },
             onCloseClick = clickIntents::onYieldPromoCloseClick,
