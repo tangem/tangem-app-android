@@ -47,14 +47,14 @@ internal class WalletCardsRegistryStore(
     ): RegisteredWalletCard {
         val storedCard = stored?.takeIf { it.walletId == walletId }?.card
         val hasError = incoming.errorCode != null || incoming.errorMessage != null
-        val keepsStoredError = !hasError && storedCard?.backupStatus == incoming.backupStatus
+        val shouldKeepStoredError = !hasError && storedCard?.backupStatus == incoming.backupStatus
 
         return RegisteredWalletCard(
             walletId = walletId,
             card = incoming.copy(
                 role = incoming.role ?: storedCard?.role,
-                errorCode = if (keepsStoredError) storedCard?.errorCode else incoming.errorCode,
-                errorMessage = if (keepsStoredError) storedCard?.errorMessage else incoming.errorMessage,
+                errorCode = if (shouldKeepStoredError) storedCard?.errorCode else incoming.errorCode,
+                errorMessage = if (shouldKeepStoredError) storedCard?.errorMessage else incoming.errorMessage,
             ),
         )
     }
