@@ -363,19 +363,6 @@ internal class RestoreCloudBackupModel @Inject constructor(
         else -> buildEnterPasswordUM()
     }
 
-    private fun errorDialog(error: CloudBackupError): DialogMessage {
-        val messageRes = if (error == CloudBackupError.NetworkError) {
-            R.string.hw_cloud_backup_error_network
-        } else {
-            R.string.hw_cloud_backup_restore_error_with_recovery
-        }
-        return DialogMessage(
-            title = resourceReference(R.string.hw_cloud_backup_restore_error_title),
-            message = resourceReference(messageRes),
-            firstAction = EventMessageAction(title = resourceReference(R.string.common_ok), onClick = {}),
-        )
-    }
-
     private fun onRootBack() {
         wipeSecrets()
         params.callbacks.onBack()
@@ -410,3 +397,16 @@ private fun importLimitReachedEvent() = NoticeMobileWalletLimit(
     type = NoticeMobileWalletLimit.Type.Import,
     limit = NoticeMobileWalletLimit.Limit.MobileWallets,
 )
+
+private fun errorDialog(error: CloudBackupError): DialogMessage {
+    val messageRes = if (error == CloudBackupError.NetworkError) {
+        R.string.hw_cloud_backup_error_network
+    } else {
+        R.string.hw_cloud_backup_restore_error_with_recovery
+    }
+    return DialogMessage(
+        title = resourceReference(R.string.hw_cloud_backup_restore_error_title),
+        message = resourceReference(messageRes),
+        firstAction = EventMessageAction(title = resourceReference(R.string.common_ok), onClick = {}),
+    )
+}
