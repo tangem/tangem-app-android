@@ -59,7 +59,6 @@ internal class SubmitPredictionOrderInteractorTest {
         assetId = "1",
         side = PredictionOrderSide.BUY,
         isNegRisk = false,
-        quoteReceivedAtMillis = 0,
     )
     private val ownerRequest = request.copy(route = PredictionOrderSigningRoute.Owner)
     private val sessionRequest = request.copy(route = SESSION_ROUTE)

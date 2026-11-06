@@ -232,7 +232,6 @@ internal class ValidatePredictionOrderUseCaseTest {
         marketTokenId = input.marketTokenId,
         marketVersion = input.marketVersion,
         isNegRisk = input.isNegRisk,
-        quoteReceivedAtMillis = input.quoteReceivedAtMillis,
         nowMillis = input.nowMillis,
         route = input.route,
     )
@@ -288,7 +287,6 @@ internal class ValidatePredictionOrderUseCaseTest {
         val marketTokenId: String = TOKEN_ID,
         val marketVersion: PolymarketMarketVersion = PolymarketMarketVersion.V1,
         val isNegRisk: Boolean = false,
-        val quoteReceivedAtMillis: Long = NOW_MILLIS - 5_000,
         val nowMillis: Long = NOW_MILLIS,
         val route: PredictionOrderSigningRoute = PredictionOrderSigningRoute.Owner,
     )
@@ -435,14 +433,6 @@ internal class ValidatePredictionOrderUseCaseTest {
                 expected = SESSION_KEY,
                 found = SOMEONE_ELSE,
             ),
-        ),
-        ValidationModel(
-            input = Input(quoteReceivedAtMillis = NOW_MILLIS - 60_001),
-            expected = PredictionOrderValidationError.StaleQuote(ageMillis = 60_001),
-        ),
-        ValidationModel(
-            input = Input(quoteReceivedAtMillis = NOW_MILLIS + 1),
-            expected = PredictionOrderValidationError.StaleQuote(ageMillis = -1),
         ),
     )
 
