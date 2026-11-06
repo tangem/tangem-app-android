@@ -31,6 +31,7 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
 import java.util.Locale
+import kotlin.reflect.KClass
 
 internal class WalletTokenRowConverterTest {
 
@@ -204,6 +205,58 @@ internal class WalletTokenRowConverterTest {
             // Assert
             assertThat((actual.state as TangemTokenRow.State.Content).messageBubble).isNull()
         }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class StatusesWithoutBalance {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a headline AND a status without balance WHEN convert THEN the row carries no earn badge`(
+            model: NoBalanceStatusModel,
+        ) {
+            // Arrange
+            val rowConverter = createConverter(earnOverviews = earnOverviewsOf(coin, earnHeadline(isActive = true)))
+
+            // Act
+            val actual = rowConverter.convert(CryptoCurrencyStatus(coin, model.value), shouldShowPromo = false)
+
+            // Assert
+            assertThat(actual.state).isInstanceOf(model.expectedState.java)
+            assertThat((actual.state as? TangemTokenRow.State.Content)?.badge).isNull()
+        }
+
+        private fun provideTestModels() = listOf(
+            NoBalanceStatusModel(
+                description = "Loading",
+                value = CryptoCurrencyStatus.Loading,
+                expectedState = TangemTokenRow.State.Shimmer::class,
+            ),
+            NoBalanceStatusModel(
+                description = "Unreachable",
+                value = CryptoCurrencyStatus.Unreachable(priceChange = null, fiatRate = null, networkAddress = null),
+                expectedState = TangemTokenRow.State.Unreachable::class,
+            ),
+            NoBalanceStatusModel(
+                description = "NoAmount",
+                value = CryptoCurrencyStatus.NoAmount(priceChange = null, fiatRate = null),
+                expectedState = TangemTokenRow.State.Content::class,
+            ),
+            NoBalanceStatusModel(
+                description = "MissedDerivation",
+                value = CryptoCurrencyStatus.MissedDerivation(priceChange = null, fiatRate = null),
+                expectedState = TangemTokenRow.State.NoAddress::class,
+            ),
+        )
+    }
+
+    internal data class NoBalanceStatusModel(
+        val description: String,
+        val value: CryptoCurrencyStatus.Value,
+        val expectedState: KClass<out TangemTokenRow.State>,
+    ) {
+        override fun toString(): String = description
     }
 
     internal data class BadgeStatusModel(

@@ -65,12 +65,13 @@ internal class WalletTokenRowConverter(
 
     private fun EarnHeadline.toBadge() = TangemTokenRow.Badge(
         text = badge,
-        status = when {
-            !isActive -> TangemBadge.Status.Neutral
-            badgeAccent == EarnBadgeAccent.Info -> TangemBadge.Status.Info
-            else -> TangemBadge.Status.Success
-        },
+        status = if (isActive) badgeAccent.toStatus() else TangemBadge.Status.Neutral,
     )
+
+    private fun EarnBadgeAccent.toStatus() = when (this) {
+        EarnBadgeAccent.Info -> TangemBadge.Status.Info
+        EarnBadgeAccent.Success -> TangemBadge.Status.Success
+    }
 
     private fun toPendingOperationBubble(currencyStatus: CryptoCurrencyStatus): TangemTokenRow.MessageBubble? {
         val operation = jointPendingOperations.firstOrNull { it.transfer.currency.id == currencyStatus.currency.id }

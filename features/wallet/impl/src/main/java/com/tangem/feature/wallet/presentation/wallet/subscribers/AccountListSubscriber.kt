@@ -121,7 +121,6 @@ internal class AccountListSubscriber @AssistedInject constructor(
         .distinctUntilChanged()
 
     private fun earnOverviewFlow(): Flow<EarnOverviews> = earnOverviewSupplier(userWallet.walletId)
-        .distinctUntilChanged()
 
     private fun yieldSupplyApyFlow(): Flow<Map<String, BigDecimal>> {
         return yieldSupplyApyFlowUseCase().distinctUntilChanged()
