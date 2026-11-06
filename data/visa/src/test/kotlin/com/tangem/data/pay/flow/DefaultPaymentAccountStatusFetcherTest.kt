@@ -9,6 +9,7 @@ import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.store.WalletIdWithPaymentStatus
 import com.tangem.data.pay.store.WalletIdWithPaymentStatusDM
 import com.tangem.core.local.datastore.RuntimeSharedStore
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
@@ -53,6 +54,7 @@ import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.test.core.datastore.MockStateDataStore
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -933,6 +935,9 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             runtimeStore = runtimeStore,
             persistenceDataStore = persistenceStore,
             converter = converter,
+            userWalletsListRepository = mockk<UserWalletsListRepository> {
+                every { userWallets } returns MutableStateFlow(emptyList())
+            },
             scope = TestAppCoroutineScope(),
         )
 
