@@ -366,14 +366,6 @@ dependencyAnalysis {
                 exclude("com.google.android.material:material")
             }
         }
-        // core:error exposes UniversalError, a supertype of VisaActivationError that card consumes via
-        // domain:visa:models. The compiler needs the supertype on the classpath, but DAGP sees no direct
-        // reference and flags it unused — false positive, keep it `implementation`.
-        project(":domain:card") {
-            onUnusedDependencies {
-                exclude(":core:error")
-            }
-        }
         // The processor tests compile source snippets that import com.tangem.core.socket with kctfork's
         // inheritClassPath, so :core:socket is needed on the test classpath without any bytecode reference.
         project(":core:socket:processor") {

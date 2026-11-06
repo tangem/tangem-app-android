@@ -18,7 +18,6 @@ import com.tangem.data.pay.store.CashbackSummaryStore
 import com.tangem.data.pay.store.DefaultAccountRecentsStore
 import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.store.TangemPayStorage
-import com.tangem.data.pay.usecase.DefaultGetTangemPayCurrencyStatusUseCase
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCustomerIdUseCase
 import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawUseCase
 import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawWithSwapUseCase
@@ -40,7 +39,6 @@ import com.tangem.domain.pay.usecase.recents.GetRecentTokenTransfersUseCase
 import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSendUseCase
 import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSwapUseCase
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
-import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawWithSwapUseCase
@@ -87,12 +85,6 @@ internal interface TangemPayDataModule {
     @Binds
     @Singleton
     fun bindTangemPayCryptoCurrencyFactory(factory: DefaultTangemPayCurrencyFactory): TangemPayCurrencyFactory
-
-    @Binds
-    @Singleton
-    fun bindGetTangemPayCurrencyStatusUseCase(
-        impl: DefaultGetTangemPayCurrencyStatusUseCase,
-    ): GetTangemPayCurrencyStatusUseCase
 
     @Binds
     @Singleton
@@ -450,14 +442,6 @@ internal interface TangemPayDataModule {
                 startTangemPayOrderPollingUseCase = startTangemPayOrderPollingUseCase,
                 appCoroutineScope = appCoroutineScope,
             )
-        }
-
-        @Provides
-        fun provideValidateLocalOrderHintUseCase(
-            customerOrderRepository: CustomerOrderRepository,
-            onboardingRepository: OnboardingRepository,
-        ): ValidateLocalOrderHintUseCase {
-            return ValidateLocalOrderHintUseCase(customerOrderRepository, onboardingRepository)
         }
 
         @Provides

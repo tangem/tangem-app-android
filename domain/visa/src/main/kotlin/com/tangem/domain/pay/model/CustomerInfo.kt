@@ -12,18 +12,6 @@ import com.tangem.domain.models.pay.TangemPayCardType
 import java.math.BigDecimal
 import java.util.Locale
 
-sealed class MainCustomerInfoContentState {
-    object Loading : MainCustomerInfoContentState()
-    object OnboardingBanner : MainCustomerInfoContentState()
-    data class Content(val info: MainScreenCustomerInfo) : MainCustomerInfoContentState()
-    object Empty : MainCustomerInfoContentState()
-}
-
-data class MainScreenCustomerInfo(
-    val info: CustomerInfo,
-    val orderStatus: OrderStatus,
-)
-
 data class CustomerInfo(
     val customerId: String,
     val paymentAccount: PaymentAccount?,

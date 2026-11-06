@@ -10,7 +10,7 @@ interface TangemPayRemoteDataSource {
     suspend fun getCustomerWalletAuthChallenge(
         customerWalletAddress: String,
         customerWalletId: String,
-    ): Either<VisaApiError, VisaAuthChallenge.Wallet>
+    ): Either<VisaApiError, VisaAuthChallenge>
 
     suspend fun getTokenWithCustomerWallet(
         sessionId: String,

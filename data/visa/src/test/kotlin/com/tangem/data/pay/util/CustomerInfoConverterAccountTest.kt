@@ -174,9 +174,7 @@ internal class CustomerInfoConverterAccountTest {
     ) =
         CustomerMeResponse.ProductInstance(
             id = "pi_1",
-            cid = null,
             cardId = "card_1",
-            cardWalletAddress = null,
             status = status,
             updatedAt = "2026-01-01T00:00:00Z",
             paymentAccountId = "pa_1",

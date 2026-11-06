@@ -108,11 +108,6 @@ internal class OrderRequestSerializationTest {
             expectedKeys = setOf("deposit_address", "specification_name"),
         ),
         EncodeModel(
-            data = OrderRequest.BankingAccountIssue(depositAddress = "0xdeposit", signature = "0xsig"),
-            expectedType = "ACCOUNT_ISSUE_BANKING_RAIN",
-            expectedKeys = setOf("deposit_address", "signature", "specification_name"),
-        ),
-        EncodeModel(
             data = OrderRequest.Onboarding(
                 customerWalletAddress = WALLET,
                 tariffPlanTransition = OrderRequest.OnboardingTariffPlanTransition(

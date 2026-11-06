@@ -29,7 +29,7 @@ internal class DefaultTangemPayRemoteDataSource @Inject constructor(
     override suspend fun getCustomerWalletAuthChallenge(
         customerWalletAddress: String,
         customerWalletId: String,
-    ): Either<VisaApiError, VisaAuthChallenge.Wallet> = withContext(dispatchers.io) {
+    ): Either<VisaApiError, VisaAuthChallenge> = withContext(dispatchers.io) {
         request {
             tangemPayAuthApi.generateNonceByCustomerWallet(
                 request = GenerateNonceByCustomerWalletRequest(
@@ -38,7 +38,7 @@ internal class DefaultTangemPayRemoteDataSource @Inject constructor(
                 ),
             ).getOrThrow()
         }.map { response ->
-            VisaAuthChallenge.Wallet(
+            VisaAuthChallenge(
                 challenge = response.nonce,
                 session = VisaAuthSession(response.sessionId),
             )
