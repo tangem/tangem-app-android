@@ -18,6 +18,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
@@ -73,15 +74,15 @@ internal class DefaultMarketingRepository(
 
     /**
      * The Onramp screen hosts several banner models that request the same campaigns at once. They await a single
-     * request, which runs in [requestScope] so a cancelled caller doesn't fail the others.
+     * request, which runs in [requestScope] so a cancelled caller doesn't fail the others. It is lazy so its cleanup
+     * is registered before it can finish, and it leaves the map only when it completes, not when a waiter is cancelled.
      */
     private suspend fun loadFreshShared(screen: MarketingScreen): List<MarketingCampaign> {
-        val request = inFlightRequests.computeIfAbsent(screen) { requestScope.async { loadFresh(screen) } }
-        return try {
-            request.await()
-        } finally {
-            inFlightRequests.remove(screen, request)
+        val request = inFlightRequests.computeIfAbsent(screen) {
+            requestScope.async(start = CoroutineStart.LAZY) { loadFresh(screen) }
+                .also { deferred -> deferred.invokeOnCompletion { inFlightRequests.remove(screen, deferred) } }
         }
+        return request.await()
     }
 
     private suspend fun loadFresh(screen: MarketingScreen): List<MarketingCampaign> =

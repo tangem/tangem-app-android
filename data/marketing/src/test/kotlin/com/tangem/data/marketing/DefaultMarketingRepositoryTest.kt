@@ -324,6 +324,42 @@ internal class DefaultMarketingRepositoryTest {
     }
 
     @Test
+    fun `GIVEN one of three onramp waiters cancelled WHEN request still in flight THEN later call reuses it`() = runTest {
+        // Arrange
+        val gate = CompletableDeferred<Unit>()
+        val screen = MarketingScreen.Onramp(fromFiat = "EUR", toNetwork = "ethereum", toContractAddress = "")
+        coEvery {
+            tangemTechApi.getMarketingCampaigns(
+                type = "onramp", language = language,
+                fromFiat = "EUR", toNetwork = "ethereum", toContractAddress = null,
+            )
+        } coAnswers {
+            gate.await()
+            ApiResponse.Success(data = response(id = 4))
+        }
+        val cancelled = async { repository.getCampaigns(screen) }
+        val waiting = List(size = 2) { async { repository.getCampaigns(screen) } }
+        runCurrent()
+
+        // Act
+        cancelled.cancel()
+        runCurrent()
+        val late = async { repository.getCampaigns(screen) }
+        runCurrent()
+        gate.complete(Unit)
+        val results = (waiting + late).map { it.await() }
+
+        // Assert
+        results.forEach { assertThat(it.getOrNull()!!.map { campaign -> campaign.id }).containsExactly(4) }
+        coVerify(exactly = 1) {
+            tangemTechApi.getMarketingCampaigns(
+                type = "onramp", language = language,
+                fromFiat = "EUR", toNetwork = "ethereum", toContractAddress = null,
+            )
+        }
+    }
+
+    @Test
     fun `GIVEN onramp request failed WHEN getCampaigns again THEN api called again`() = runTest {
         // Arrange
         val screen = MarketingScreen.Onramp(fromFiat = "EUR", toNetwork = "ethereum", toContractAddress = "")
