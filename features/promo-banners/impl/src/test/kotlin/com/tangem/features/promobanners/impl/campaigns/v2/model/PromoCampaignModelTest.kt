@@ -47,6 +47,7 @@ import com.tangem.features.promobanners.impl.campaigns.v2.component.PromoCampaig
 import com.tangem.features.promobanners.impl.campaigns.v2.createPromoCampaign
 import com.tangem.features.promobanners.impl.campaigns.v2.entity.PromoCampaignStatusUM
 import com.tangem.features.promobanners.impl.repository.PromoBannersRepository
+import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.test.core.createTestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -84,6 +85,7 @@ internal class PromoCampaignModelTest {
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val analyticsEventHandler: AnalyticsEventHandler = mockk(relaxed = true)
+    private val walletFeatureToggles: WalletFeatureToggles = mockk()
 
     private val mainWallet = MockUserWalletFactory.create()
     private val linkedWallet = MockUserWalletFactory.create().copy(walletId = UserWalletId("0b"), name = "Linked")
@@ -109,7 +111,9 @@ internal class PromoCampaignModelTest {
             sendFeedbackEmailUseCase,
             messageSender,
             analyticsEventHandler,
+            walletFeatureToggles,
         )
+        every { walletFeatureToggles.isRedesignedTokenRowsEnabled } returns false
         val bridge = mockk<ChooseTokenBridge>(relaxed = true) {
             every { onCurrencyChosen } returns this@PromoCampaignModelTest.onCurrencyChosen
             every { onClose } returns this@PromoCampaignModelTest.onClose
@@ -168,9 +172,30 @@ internal class PromoCampaignModelTest {
         val state = model.uiState.value
         assertThat(state.tokenSelector?.selectedToken).isNotNull()
         assertThat(state.tokenSelector?.selectedAccount).isNull()
+        assertThat(state.tokenSelector?.selectedTokenRow).isNull()
         assertThat(state.footer.terms).isNotNull()
         assertThat(state.footer.buttonText).isEqualTo(stringReference("Enroll"))
         verify(exactly = 1) { router.pop(any()) }
+        model.onDestroy()
+    }
+
+    @Test
+    fun `GIVEN redesigned token rows enabled WHEN token chosen THEN selector shows the DS3 token row`() = runTest {
+        // Arrange
+        every { walletFeatureToggles.isRedesignedTokenRowsEnabled } returns true
+        val model = createModel(isPayoutNeeded = true)
+        advanceUntilIdle()
+        model.uiState.value.tokenSelector?.onClick?.invoke()
+        val result = chooseTokenResult()
+
+        // Act
+        onCurrencyChosen.send(result)
+        advanceUntilIdle()
+
+        // Assert
+        val row = model.uiState.value.tokenSelector?.selectedTokenRow
+        assertThat(row).isNotNull()
+        assertThat(row?.id).isEqualTo(result.currency.currency.id.value)
         model.onDestroy()
     }
 
@@ -655,5 +680,6 @@ internal class PromoCampaignModelTest {
         sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
         messageSender = messageSender,
         analyticsEventHandler = analyticsEventHandler,
+        walletFeatureToggles = walletFeatureToggles,
     )
 }
