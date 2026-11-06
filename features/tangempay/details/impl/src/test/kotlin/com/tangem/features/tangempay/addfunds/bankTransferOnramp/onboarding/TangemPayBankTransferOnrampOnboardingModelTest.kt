@@ -4,10 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
-import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -25,6 +22,7 @@ import com.tangem.domain.tangempay.usecase.GetOnrampFeesUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.OUTCOME_UNKNOWN_ERRORS
+import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesUM
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.onrampFee
@@ -53,18 +51,15 @@ import java.util.Locale
 import com.tangem.core.ui.R as CoreUiR
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class TangemPayBankTransferOnrampOnboardingModelTest {
+internal class TangemPayBankTransferOnrampOnboardingModelTest : TangemPayModelTestBase() {
 
     private val userWalletId = UserWalletId("1234567890ABCDEF")
     private val product = TangemPayProduct.PAYMENT_ACCOUNT
 
-    private val router: Router = mockk(relaxed = true)
     private val getOnrampFeesUseCase: GetOnrampFeesUseCase = mockk()
     private val createVirtualAccountOrderUseCase: CreateVirtualAccountOrderUseCase = mockk()
     private val paymentAccountStatusSupplier: PaymentAccountStatusSupplier = mockk()
-    private val uiMessageSender: UiMessageSender = mockk(relaxed = true)
     private val urlOpener: UrlOpener = mockk(relaxed = true)
-    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
 
     private val defaultLocale = Locale.getDefault()
 

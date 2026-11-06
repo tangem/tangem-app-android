@@ -1395,7 +1395,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         @Test
         fun `GIVEN local issue order missing on backend WHEN invoke THEN placeholder dropped and order forgotten`() =
             runTest {
-                // GIVEN
+                // Arrange
                 val customerInfo = buildCustomerInfo()
                 stubHappyPath(customerInfo)
                 coEvery { issueCardRepository.getIssueOrderIds(userWalletId) } returns listOf("order_gone")
@@ -1405,10 +1405,10 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 coEvery { issueCardRepository.removeIssueOrderId(userWalletId, "order_gone") } just Runs
                 val storedStatuses = captureStoredStatuses()
 
-                // WHEN
+                // Act
                 fetcher.invoke(params)
 
-                // THEN
+                // Assert
                 val loaded = storedStatuses.lastLoaded()
                 assertThat(loaded.cards.map { it.state }).doesNotContain(TangemPayCardState.Issuing)
                 coVerify(exactly = 1) { issueCardRepository.removeIssueOrderId(userWalletId, "order_gone") }

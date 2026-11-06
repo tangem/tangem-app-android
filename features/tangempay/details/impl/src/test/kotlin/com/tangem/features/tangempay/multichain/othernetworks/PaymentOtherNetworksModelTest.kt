@@ -1,19 +1,17 @@
 package com.tangem.features.tangempay.multichain.othernetworks
 
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.MutableParamsContainer
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.features.tangempay.TangemPayModelTestBase
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
 
-internal class PaymentOtherNetworksModelTest {
-
-    private val analytics: AnalyticsEventHandler = mockk(relaxed = true)
+internal class PaymentOtherNetworksModelTest : TangemPayModelTestBase() {
 
     @Test
-    fun `WHEN model created THEN the 1 to 1 swap popup showed event is sent`() {
+    fun `GIVEN the other networks popup WHEN model created THEN the 1 to 1 swap popup showed event is sent`() {
         // Act
         createModel()
 
