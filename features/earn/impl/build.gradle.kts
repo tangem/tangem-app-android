@@ -45,6 +45,8 @@ dependencies {
     implementation(deps.compose.runtime)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
+    implementation(tangemDeps.vico.core)
+    implementation(tangemDeps.vico.compose)
 
     /** Other */
     implementation(deps.decompose)
