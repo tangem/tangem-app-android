@@ -15,6 +15,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
+import com.tangem.features.polymarket.impl.main.addfunds.PolymarketReceiveSheetFactory
 import com.tangem.domain.polymarket.PolymarketPositionsRepository
 import com.tangem.domain.polymarket.approval.PolymarketContracts
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusSupplier
@@ -157,6 +158,7 @@ internal abstract class PlacePredictionModelTestBase {
         coEvery { signOrderInteractor(request = any()) } returns SIGNED_ORDER.right()
         coEvery { placeOrderUseCase(any(), any(), any()) } returns createPlaceResult().right()
         every { featureToggles.isPolymarketSessionKeysEnabled } returns false
+        every { featureToggles.isPolymarketPhaseTwoEnabled } returns false
         coEvery { signingRouter.canSignWithSessionKey(userWalletId = USER_WALLET_ID) } returns false
         coEvery { positionsRepository.getPosition(addresses = ADDRESSES, id = POSITION_ID) } returns
             createPosition().right()
@@ -206,6 +208,10 @@ internal abstract class PlacePredictionModelTestBase {
                 predictionAccountStatusSupplier = statusSupplier,
                 predictionBalancePoller = balancePoller,
                 refreshPredictionDepositRequisitesInteractor = refreshRequisites,
+                receiveSheetFactory = PolymarketReceiveSheetFactory(
+                    featureToggles = featureToggles,
+                    collateralCurrencyFactory = mockk(relaxed = true),
+                ),
             )
         }
 
