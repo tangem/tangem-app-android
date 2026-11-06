@@ -47,6 +47,9 @@ interface CollectiblesRepository {
      */
     suspend fun openPack(userWalletId: UserWalletId, txId: String, includeAutoBuyback: Boolean): CollectibleTxState
 
+    /** A failed request gives the last answer read in this process, if there is one. */
+    suspend fun getActiveTxs(userWalletId: UserWalletId): List<CollectibleActiveTx>
+
     /** `null` while the backend has no offer for [nftAddress] yet. */
     suspend fun getBuybackOffer(userWalletId: UserWalletId, nftAddress: String): CollectibleBuybackOffer?
 

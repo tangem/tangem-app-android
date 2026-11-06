@@ -51,10 +51,13 @@ data class CollectibleTxState(
 enum class CollectibleTxStatus {
     CREATED,
     WAITING_TX_HASH,
-    PURCHASE_TX_HASH,
+    PURCHASE_TX_SENT,
     WAITING_FOR_PAYMENT,
     PACK_PURCHASED,
     PACK_OPENING_ERROR,
+
+    /** `pack-opening-error` + `REFUND_IN_PROGRESS` code */
+    REFUNDING,
     PACK_OPENED,
     NFT_RECEIVED,
     AUTO_BUYBACKED,
@@ -71,9 +74,21 @@ enum class CollectibleTxStatus {
     val isPaymentInProgress: Boolean
         get() = this == CREATED ||
             this == WAITING_TX_HASH ||
-            this == PURCHASE_TX_HASH ||
+            this == PURCHASE_TX_SENT ||
             this == WAITING_FOR_PAYMENT
 }
+
+/**
+ * A purchase that has not reached a final status yet.
+ *
+ * @property machineId the machine's external id, absent when the backend no longer knows the machine
+ */
+data class CollectibleActiveTx(
+    val txId: String,
+    val status: CollectibleTxStatus,
+    val machineId: String?,
+    val isTurboModeEnabled: Boolean,
+)
 
 /**
  * The card a spin won.
