@@ -35,6 +35,10 @@ import com.tangem.features.earn.product.api.product.EarnRisk
 import com.tangem.features.earn.product.api.product.EarnRow
 import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.res.generated.icons.Icons
+import com.tangem.core.ui.res.generated.icons.ic_arrow_refresh_20
+import com.tangem.core.ui.res.generated.icons.ic_lightning_20
 import com.tangem.features.earn.product.api.product.ProductAvailability
 import com.tangem.features.earn.product.api.session.Deposit
 import com.tangem.features.earn.product.api.session.EarnAction
@@ -144,15 +148,35 @@ internal fun fakeReadyState(preset: FakeEarnProductPreset, position: FakeEarnPos
     val isStaking = preset == FakeEarnProductPreset.Staking
     return EarnProductState.Ready(
         rate = fakeRate(),
-        description = stringReference("Earn interest on your ETH while keeping it liquid"),
+        description = stringReference(
+            if (preset == FakeEarnProductPreset.Lending) {
+                "Earn variable yield on ETH by lending it directly on Aave, an on-chain self-custodial lending " +
+                    "protocol. Withdrawals are usually instant."
+            } else {
+                "Earn interest on your ETH while keeping it liquid"
+            },
+        ),
         projection = FakeEarnProjection().takeUnless { isStaking },
         benefits = listOf(
-            EarnTextBlock(stringReference("No lock-ups"), stringReference("Send, swap, or sell your funds anytime")),
-            EarnTextBlock(stringReference("Withdraw anytime"), stringReference("Subject to protocol liquidity")),
+            EarnTextBlock(
+                title = stringReference("No lock-ups."),
+                description = stringReference("Send, swap, or sell your funds anytime"),
+                icon = TangemIconUM.Icon(Icons.ic_lightning_20),
+            ),
+            EarnTextBlock(
+                title = stringReference("Withdraw anytime."),
+                description = stringReference("Subject to protocol liquidity"),
+                icon = TangemIconUM.Icon(Icons.ic_arrow_refresh_20),
+            ),
         ),
         howItWorks = fakeHowItWorks().takeUnless { isStaking },
         details = listOf(
             fakeRow("Risk", "Low", info = "How risky the product is"),
+            EarnRow(
+                label = stringReference("Protocol"),
+                value = EarnValue.Link(text = stringReference("Aave"), url = "https://aave.com"),
+            ),
+            fakeRow("Withdrawals", "Usually instant", info = "How fast you can withdraw"),
             fakeRow("Performance fee", "15% of yield", info = "Taken from the earned yield"),
         ),
         limits = EarnLimits(
@@ -164,6 +188,8 @@ internal fun fakeReadyState(preset: FakeEarnProductPreset, position: FakeEarnPos
         secondary = fakeSecondary(preset, position),
         freshness = null,
         position = fakePositionState(preset, position),
+        incentiveRate = EarnProductRate(fraction = BigDecimal("0.014"), type = EarnRateType.APY)
+            .takeIf { preset == FakeEarnProductPreset.Lending },
     )
 }
 
