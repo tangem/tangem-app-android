@@ -27,6 +27,7 @@ import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnProductSummary
 import com.tangem.features.earn.product.api.product.EarnRisk
 import com.tangem.features.earn.product.api.product.EarnRow
+import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.product.api.product.ProductAvailability
 import java.math.BigDecimal
@@ -61,7 +62,7 @@ internal class PooledStakingMapper @Inject constructor() {
     }
 
     fun state(status: CryptoCurrencyStatus, availability: StakingAvailability): EarnProductState {
-        // A Loading status has no balances yet: a stake cannot be told from none, and a full pool would look unavailable.
+        // A Loading status has no balances yet: a stake cannot be told from none, a full pool looks unavailable.
         if (status.value is CryptoCurrencyStatus.Loading) return EarnProductState.Loading
 
         val option = offerOf(status, availability) ?: return EarnProductState.Unavailable
@@ -72,14 +73,9 @@ internal class PooledStakingMapper @Inject constructor() {
             rate = EarnProductRate(fraction = option.apy, type = EarnRateType.APY),
             description = stringReference(DESCRIPTION),
             projection = DefaultEarnProjection(netRate = bestVault.netRate()),
-            benefits = emptyList(),
+            benefits = listOf(textBlock(BENEFIT_TITLE, BENEFIT_TEXT)),
             howItWorks = null,
-            // Temporary plain text: the fee value is built from a resource taking the fee as an argument.
-            details = listOf(
-                row(RISK_LABEL, RISK_VALUE),
-                row(PROTOCOL_LABEL, PROTOCOL_VALUE),
-                row(FEE_LABEL, "${bestVault.feePercent.stripTrailingZeros().toPlainString()}%"),
-            ),
+            details = details(feePercent = bestVault.feePercent.stripTrailingZeros().toPlainString()),
             limits = EarnLimits(minDeposit = P2PEthPoolIntegration.DEFAULT_MINIMUM_STAKE, remainingCap = null),
             apyPeriods = emptyList(),
             primary = EarnActionItem(PooledStakingAction(buttonLabel(status.hasPossibleStake()))),
@@ -115,9 +111,28 @@ internal class PooledStakingMapper @Inject constructor() {
             else -> EarnPositionState.None
         }
 
-    private fun row(label: String, value: String): EarnRow = EarnRow(
+    // Temporary plain text: the fee texts become resources taking the fee as an argument.
+    private fun details(feePercent: String): List<EarnRow> = listOf(
+        row(RISK_LABEL, RISK_VALUE),
+        // The p2p.org link needs a link value in the contract; plain text until it exists.
+        row(VALIDATOR_LABEL, VALIDATOR_VALUE),
+        row(WITHDRAWALS_LABEL, WITHDRAWALS_VALUE, info = textBlock(WITHDRAWALS_LABEL, WITHDRAWALS_INFO)),
+        row(
+            label = FEE_LABEL,
+            value = "$feePercent% of yield",
+            info = textBlock(title = FEE_LABEL, description = "$feePercent$FEE_INFO_SUFFIX"),
+        ),
+    )
+
+    private fun row(label: String, value: String, info: EarnTextBlock? = null): EarnRow = EarnRow(
         label = stringReference(label),
         value = EarnValue.Text(stringReference(value)),
+        info = info,
+    )
+
+    private fun textBlock(title: String, description: String): EarnTextBlock = EarnTextBlock(
+        title = stringReference(title),
+        description = stringReference(description),
     )
 
     /** A stake that is known or could not be read: "Start earning" must not be offered over a possible balance. */
@@ -135,11 +150,20 @@ internal class PooledStakingMapper @Inject constructor() {
         // Temporary plain strings: they become Lokalise resources in a separate strings task, and these constants go.
         const val START_EARNING_LABEL = "Start earning"
         const val MANAGE_LABEL = "Manage"
-        const val DESCRIPTION = "Earn rewards by staking ETH in a P2P.org pool"
+        const val DESCRIPTION = "Earn variable yield on ETH by staking with P2P, a professional validator that helps " +
+            "secure Ethereum. Withdrawals take up to 5 days, and a small risk of loss applies if the validator is " +
+            "penalised by the network."
+        const val BENEFIT_TITLE = "Yield from Ethereum itself."
+        const val BENEFIT_TEXT = "You earn from securing the network, not from lending."
         const val RISK_LABEL = "Risk"
         const val RISK_VALUE = "Low"
-        const val PROTOCOL_LABEL = "Protocol"
-        const val PROTOCOL_VALUE = "P2P.org"
+        const val VALIDATOR_LABEL = "Validator"
+        const val VALIDATOR_VALUE = "P2P"
+        const val WITHDRAWALS_LABEL = "Withdrawals"
+        const val WITHDRAWALS_VALUE = "Up to 5 days"
+        const val WITHDRAWALS_INFO = "Withdrawals take up to 5 days, because Ethereum releases staked ETH through an " +
+            "exit queue."
         const val FEE_LABEL = "Performance fee"
+        const val FEE_INFO_SUFFIX = "% of the yield you earn. It is not charged on the amount you deposit."
     }
 }

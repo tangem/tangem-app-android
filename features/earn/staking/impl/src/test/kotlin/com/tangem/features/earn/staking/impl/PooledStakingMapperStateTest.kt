@@ -17,6 +17,7 @@ import com.tangem.features.earn.product.api.product.EarnPosition
 import com.tangem.features.earn.product.api.product.EarnPositionState
 import com.tangem.features.earn.product.api.product.EarnProductState
 import com.tangem.features.earn.product.api.product.EarnRow
+import com.tangem.features.earn.product.api.product.EarnTextBlock
 import com.tangem.features.earn.product.api.product.EarnValue
 import com.tangem.features.earn.staking.impl.fixtures.coin
 import com.tangem.features.earn.staking.impl.fixtures.currencyStatus
@@ -50,7 +51,7 @@ internal class PooledStakingMapperStateTest {
 
         // Assert
         assertThat(actual.rate).isEqualTo(EarnProductRate(BigDecimal("0.06"), EarnRateType.APY))
-        assertThat(actual.details).contains(row("Performance fee", "5%"))
+        assertThat(actual.details).contains(feeRow(percent = "5"))
         assertThat(actual.projection?.netRate).isEquivalentAccordingToCompareTo(BigDecimal("0.057"))
     }
 
@@ -65,11 +66,33 @@ internal class PooledStakingMapperStateTest {
         // Assert
         val expected = EarnProductState.Ready(
             rate = EarnProductRate(BigDecimal("0.03"), EarnRateType.APY),
-            description = stringReference("Earn rewards by staking ETH in a P2P.org pool"),
+            description = stringReference(
+                "Earn variable yield on ETH by staking with P2P, a professional validator that helps secure " +
+                    "Ethereum. Withdrawals take up to 5 days, and a small risk of loss applies if the validator is " +
+                    "penalised by the network.",
+            ),
             projection = null,
-            benefits = emptyList(),
+            benefits = listOf(
+                textBlock(
+                    title = "Yield from Ethereum itself.",
+                    description = "You earn from securing the network, not from lending.",
+                ),
+            ),
             howItWorks = null,
-            details = listOf(row("Risk", "Low"), row("Protocol", "P2P.org"), row("Performance fee", "10%")),
+            details = listOf(
+                row("Risk", "Low"),
+                row("Validator", "P2P"),
+                row(
+                    label = "Withdrawals",
+                    value = "Up to 5 days",
+                    info = textBlock(
+                        title = "Withdrawals",
+                        description = "Withdrawals take up to 5 days, because Ethereum releases staked ETH through " +
+                            "an exit queue.",
+                    ),
+                ),
+                feeRow(percent = "10"),
+            ),
             limits = EarnLimits(minDeposit = BigDecimal("0.01"), remainingCap = null),
             apyPeriods = emptyList(),
             primary = EarnActionItem(PooledStakingAction(stringReference("Start earning"))),
@@ -256,9 +279,24 @@ internal class PooledStakingMapperStateTest {
             vaults = listOf(MockStaking.vault(apy = BigDecimal(apy)).copy(feePercent = BigDecimal(feePercent))),
         )
 
-    private fun row(label: String, value: String): EarnRow = EarnRow(
+    private fun row(label: String, value: String, info: EarnTextBlock? = null): EarnRow = EarnRow(
         label = stringReference(label),
         value = EarnValue.Text(stringReference(value)),
+        info = info,
+    )
+
+    private fun textBlock(title: String, description: String): EarnTextBlock = EarnTextBlock(
+        title = stringReference(title),
+        description = stringReference(description),
+    )
+
+    private fun feeRow(percent: String): EarnRow = row(
+        label = "Performance fee",
+        value = "$percent% of yield",
+        info = textBlock(
+            title = "Performance fee",
+            description = "$percent% of the yield you earn. It is not charged on the amount you deposit.",
+        ),
     )
 
     internal data class NetRateModel(val apy: String, val feePercent: String, val expectedNetRate: String) {
