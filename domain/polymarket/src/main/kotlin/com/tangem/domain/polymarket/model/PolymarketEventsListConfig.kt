@@ -7,4 +7,5 @@ package com.tangem.domain.polymarket.model
  */
 data class PolymarketEventsListConfig(
     val category: Int? = null,
+    val filter: PolymarketCategoryFilter? = null,
 )
