@@ -57,9 +57,9 @@ import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
 import com.tangem.features.polymarket.api.PolymarketComponent
 import com.tangem.features.yield.supply.api.YieldSupplyEntryComponent
+import com.tangem.store.features.cardsettings.api.CardSettingsComponent
 import com.tangem.tap.features.details.ui.appcurrency.api.AppCurrencySelectorComponent
 import com.tangem.tap.features.details.ui.appsettings.api.AppSettingsComponent
-import com.tangem.tap.features.details.ui.cardsettings.api.CardSettingsComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
 import dagger.hilt.android.scopes.ActivityScoped
 import javax.inject.Inject
