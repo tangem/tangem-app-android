@@ -2,6 +2,7 @@ package com.tangem.tests.moneyaccount
 
 import androidx.test.InstrumentationRegistry.getTargetContext
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.PROVIDERS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.TANGEM_PAY_ELIGIBILITY_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
@@ -283,9 +284,14 @@ class MoneyAccountStatusTest : BaseTestCase() {
         val moneyAccountDeactivatedState = "AccountDeactivated"
         val moneyAccountDeactivatedDelayedState = "AccountDeactivatedDelayed"
         val cachedStateWindowMillis = 10_000L
+        val providersPolygonMockOnlyState = "PolygonMockOnly"
         val packageName = getTargetContext().packageName
 
-        setupHooks().run {
+        setupHooks(
+            additionalBeforeAppLaunchSection = {
+                setWireMockScenarioState(PROVIDERS_API_SCENARIO, providersPolygonMockOnlyState)
+            },
+        ).run {
             step("Set WireMock scenario '$TANGEM_PAY_ELIGIBILITY_SCENARIO' to '$eligibilityState'") {
                 setWireMockScenarioState(TANGEM_PAY_ELIGIBILITY_SCENARIO, eligibilityState)
             }
