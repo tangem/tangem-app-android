@@ -41,6 +41,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -75,6 +76,7 @@ internal class OpenCollectiblePackUseCaseTest {
             sessionKey,
         )
         coEvery { gachaVaultRepository.getVaultSessionKey(userWallet) } returns SESSION_KEY.base58.right()
+        coEvery { gachaVaultRepository.getVaultAddress(userWallet) } returns VAULT.right()
         coEvery { sessionKey.getPublicKeyOrNull(ACCOUNT_ID) } returns SESSION_KEY
         coEvery { accountRepository.getStatusSync(WALLET_ID) } returns ONBOARDED
         coEvery { accountRepository.saveAccount(any(), any()) } just runs
@@ -86,14 +88,14 @@ internal class OpenCollectiblePackUseCaseTest {
             TX_HASH.right()
         coEvery { collectiblesRepository.reportPurchaseTxSent(WALLET_ID, TX_ID, TX_HASH) } returns
             CollectibleTxStatus.PURCHASE_TX_HASH
-        coEvery { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any()) } returns PURCHASED
-        coEvery { collectiblesRepository.openPack(WALLET_ID, TX_ID) } returns OPENED
+        coEvery { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any(), any()) } returns PURCHASED
+        coEvery { collectiblesRepository.openPack(WALLET_ID, TX_ID, any()) } returns OPENED
     }
 
     @Test
     fun `GIVEN the pack opens WHEN invoked THEN the vault balance is refreshed`() = runTest {
         // Act
-        useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList()
+        useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList()
 
         // Assert
         coVerify(exactly = 1) { accountStatusFetcher(CollectiblesAccountStatusFetcher.Params(WALLET_ID)) }
@@ -106,7 +108,7 @@ internal class OpenCollectiblePackUseCaseTest {
             CollectiblesAccountError.SessionKeyNotProvisioned.left()
 
         // Act
-        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList().last()
 
         // Assert
         assertThat(actual).isEqualTo(OpenPackStep.Failed.PurchaseFailed)
@@ -119,7 +121,7 @@ internal class OpenCollectiblePackUseCaseTest {
         coEvery { accountStatusFetcher(any()) } returns IllegalStateException().left()
 
         // Act
-        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList().last()
 
         // Assert
         assertThat(actual).isEqualTo(OpenPackStep.Opened(PACK))
@@ -128,7 +130,7 @@ internal class OpenCollectiblePackUseCaseTest {
     @Test
     fun `GIVEN every step succeeds WHEN invoked THEN steps go generating confirming opening opened`() = runTest {
         // Act
-        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList()
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList()
 
         // Assert
         assertThat(actual).containsExactly(
@@ -146,9 +148,9 @@ internal class OpenCollectiblePackUseCaseTest {
     }
 
     @Test
-    fun `GIVEN turbo enabled WHEN invoked THEN auto-sell proceeds go to the owner`() = runTest {
+    fun `GIVEN turbo enabled WHEN invoked THEN auto-sell proceeds go to the vault`() = runTest {
         // Act
-        useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = true)).toList()
+        useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = true).toList()
 
         // Assert
         coVerify(exactly = 1) {
@@ -158,9 +160,38 @@ internal class OpenCollectiblePackUseCaseTest {
                     fromAddress = OWNER,
                     machineId = MACHINE_ID,
                     toAddress = OWNER,
-                    collectibleTurboMode = CollectibleTurboMode(isEnabled = true, buybackAddress = OWNER),
+                    collectibleTurboMode = CollectibleTurboMode(isEnabled = true, buybackAddress = VAULT),
                 ),
             )
+        }
+    }
+
+    @Test
+    fun `GIVEN turbo enabled and the vault unread WHEN invoked THEN the purchase fails before generating`() = runTest {
+        // Arrange
+        coEvery { gachaVaultRepository.getVaultAddress(userWallet) } returns
+            CollectiblesAccountError.SessionKeyNotProvisioned.left()
+
+        // Act
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = true).toList().last()
+
+        // Assert
+        assertThat(actual).isEqualTo(OpenPackStep.Failed.PurchaseFailed)
+        coVerify(exactly = 0) { collectiblesRepository.generatePurchaseTx(any(), any()) }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `GIVEN turbo mode WHEN invoked THEN the status and the opening ask for the payout only in turbo`(
+        isTurboEnabled: Boolean,
+    ) = runTest {
+        // Act
+        useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled).toList()
+
+        // Assert
+        coVerify(exactly = 1) {
+            collectiblesRepository.getTxState(WALLET_ID, TX_ID, includeAutoBuyback = isTurboEnabled, any())
+            collectiblesRepository.openPack(WALLET_ID, TX_ID, includeAutoBuyback = isTurboEnabled)
         }
     }
 
@@ -170,7 +201,7 @@ internal class OpenCollectiblePackUseCaseTest {
         coEvery { ownerDeriver.storedOwner(WALLET_ID) } returns null
 
         // Act
-        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList().last()
 
         // Assert
         assertThat(actual).isEqualTo(OpenPackStep.Failed.PurchaseFailed)
@@ -183,7 +214,7 @@ internal class OpenCollectiblePackUseCaseTest {
         coEvery { collectiblesRepository.generatePurchaseTx(any(), any()) } throws CollectibleException.LowInventory()
 
         // Act
-        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList().last()
 
         // Assert
         assertThat(actual).isEqualTo(OpenPackStep.Failed.LowInventory)
@@ -196,7 +227,7 @@ internal class OpenCollectiblePackUseCaseTest {
         coEvery { collectiblesRepository.generatePurchaseTx(any(), any()) } throws IllegalStateException()
 
         // Act
-        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList().last()
 
         // Assert
         assertThat(actual).isEqualTo(OpenPackStep.Failed.PurchaseFailed)
@@ -210,7 +241,7 @@ internal class OpenCollectiblePackUseCaseTest {
             CollectiblesAccountError.Vault(GachaVaultError.WalletUnavailable).left()
 
         // Act
-        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList().last()
 
         // Assert
         assertThat(actual).isEqualTo(OpenPackStep.Failed.PurchaseFailed)
@@ -223,7 +254,7 @@ internal class OpenCollectiblePackUseCaseTest {
             coEvery { gachaVaultRepository.getVaultSessionKey(userWallet) } returns OTHER_SESSION_KEY.right()
 
             // Act
-            val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+            val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList().last()
 
             // Assert
             assertThat(actual).isEqualTo(OpenPackStep.Failed.PurchaseFailed)
@@ -238,7 +269,7 @@ internal class OpenCollectiblePackUseCaseTest {
         every { accountRepository.isRelinkPending(WALLET_ID) } returns true
 
         // Act
-        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList().last()
 
         // Assert
         assertThat(actual).isEqualTo(OpenPackStep.Failed.PurchaseFailed)
@@ -255,7 +286,7 @@ internal class OpenCollectiblePackUseCaseTest {
             CollectiblesAccountError.Vault(GachaVaultError.WalletUnavailable).left()
 
         // Act
-        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList().last()
 
         // Assert
         assertThat(actual).isEqualTo(OpenPackStep.Failed.PurchaseFailed)
@@ -272,7 +303,7 @@ internal class OpenCollectiblePackUseCaseTest {
             CollectiblesAccountError.Vault(GachaVaultError.WalletUnavailable).left()
 
         // Act
-        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList().last()
 
         // Assert
         assertThat(actual).isEqualTo(OpenPackStep.Failed.PurchaseFailed)
@@ -286,7 +317,7 @@ internal class OpenCollectiblePackUseCaseTest {
             CollectiblesAccountError.Vault(GachaVaultError.WalletUnavailable).left()
 
         // Act
-        useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList()
+        useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList()
 
         // Assert
         coVerify(exactly = 2) { gachaVaultRepository.getVaultSessionKey(userWallet) }
@@ -300,7 +331,7 @@ internal class OpenCollectiblePackUseCaseTest {
             CollectiblesAccountError.SessionKeyNotProvisioned.left()
 
         // Act
-        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList().last()
 
         // Assert
         assertThat(actual).isEqualTo(OpenPackStep.Failed.PurchaseFailed)
@@ -313,7 +344,7 @@ internal class OpenCollectiblePackUseCaseTest {
             CollectiblesAccountError.SessionKeySigningFailed(IllegalStateException()).left()
 
         // Act
-        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList().last()
 
         // Assert
         assertThat(actual).isEqualTo(OpenPackStep.Failed.PurchaseFailed)
@@ -325,7 +356,7 @@ internal class OpenCollectiblePackUseCaseTest {
         coEvery { collectiblesRepository.reportPurchaseTxSent(any(), any(), any()) } throws IllegalStateException()
 
         // Act
-        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList().last()
 
         // Assert
         assertThat(actual).isEqualTo(OpenPackStep.Failed.PackUnopened(TX_ID))
@@ -334,56 +365,56 @@ internal class OpenCollectiblePackUseCaseTest {
     @Test
     fun `GIVEN the payment is pending then confirmed WHEN invoked THEN it polls until purchased`() = runTest {
         // Arrange
-        coEvery { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any()) } returnsMany listOf(
+        coEvery { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any(), any()) } returnsMany listOf(
             state(CollectibleTxStatus.WAITING_FOR_PAYMENT),
             state(CollectibleTxStatus.WAITING_FOR_PAYMENT),
             PURCHASED,
         )
 
         // Act
-        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList().last()
 
         // Assert
         assertThat(actual).isEqualTo(OpenPackStep.Opened(PACK))
-        coVerify(exactly = 3) { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any()) }
+        coVerify(exactly = 3) { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any(), any()) }
     }
 
     @Test
     fun `GIVEN a status request fails WHEN invoked THEN polling goes on`() = runTest {
         // Arrange
-        coEvery { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any()) } throws IllegalStateException() andThen
-            PURCHASED
+        coEvery { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any(), any()) } throws
+            IllegalStateException() andThen PURCHASED
 
         // Act
-        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList().last()
 
         // Assert
         assertThat(actual).isEqualTo(OpenPackStep.Opened(PACK))
-        coVerify(exactly = 2) { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any()) }
+        coVerify(exactly = 2) { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any(), any()) }
     }
 
     @Test
     fun `GIVEN an unknown status WHEN invoked THEN polling stops and the opening is tried`() = runTest {
         // Arrange
-        coEvery { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any()) } returns
+        coEvery { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any(), any()) } returns
             state(CollectibleTxStatus.UNKNOWN)
 
         // Act
-        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList().last()
 
         // Assert
         assertThat(actual).isEqualTo(OpenPackStep.Opened(PACK))
-        coVerify(exactly = 1) { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any()) }
+        coVerify(exactly = 1) { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any(), any()) }
     }
 
     @Test
     fun `GIVEN the payment never lands WHEN invoked THEN the pack is left unopened`() = runTest {
         // Arrange
-        coEvery { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any()) } returns
+        coEvery { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any(), any()) } returns
             state(CollectibleTxStatus.WAITING_FOR_PAYMENT)
 
         // Act
-        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList().last()
 
         // Assert
         assertThat(actual).isEqualTo(OpenPackStep.Failed.PackUnopened(TX_ID))
@@ -395,23 +426,23 @@ internal class OpenCollectiblePackUseCaseTest {
         model: ClosedStatusModel,
     ) = runTest {
         // Arrange
-        coEvery { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any()) } returns state(model.status)
+        coEvery { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any(), any()) } returns state(model.status)
 
         // Act
-        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList().last()
 
         // Assert
         assertThat(actual).isEqualTo(model.expected)
-        coVerify(exactly = 0) { collectiblesRepository.openPack(any(), any()) }
+        coVerify(exactly = 0) { collectiblesRepository.openPack(any(), any(), any()) }
     }
 
     @Test
     fun `GIVEN the opening answers refunded WHEN invoked THEN it fails as refunded`() = runTest {
         // Arrange
-        coEvery { collectiblesRepository.openPack(WALLET_ID, TX_ID) } returns state(CollectibleTxStatus.REFUNDED)
+        coEvery { collectiblesRepository.openPack(WALLET_ID, TX_ID, any()) } returns state(CollectibleTxStatus.REFUNDED)
 
         // Act
-        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList().last()
 
         // Assert
         assertThat(actual).isEqualTo(OpenPackStep.Failed.Refunded)
@@ -430,27 +461,27 @@ internal class OpenCollectiblePackUseCaseTest {
     @Test
     fun `GIVEN opening fails WHEN invoked THEN it is not retried and the pack is left unopened`() = runTest {
         // Arrange
-        coEvery { collectiblesRepository.openPack(WALLET_ID, TX_ID) } throws IllegalStateException()
+        coEvery { collectiblesRepository.openPack(WALLET_ID, TX_ID, any()) } throws IllegalStateException()
 
         // Act
-        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList().last()
 
         // Assert
         assertThat(actual).isEqualTo(OpenPackStep.Failed.PackUnopened(TX_ID))
-        coVerify(exactly = 1) { collectiblesRepository.openPack(WALLET_ID, TX_ID) }
+        coVerify(exactly = 1) { collectiblesRepository.openPack(WALLET_ID, TX_ID, any()) }
     }
 
     @Test
     fun `GIVEN the opening answers auto-buybacked with a payout WHEN invoked THEN it ends auto-buybacked`() = runTest {
         // Arrange
-        coEvery { collectiblesRepository.openPack(WALLET_ID, TX_ID) } returns CollectibleTxState(
+        coEvery { collectiblesRepository.openPack(WALLET_ID, TX_ID, any()) } returns CollectibleTxState(
             status = CollectibleTxStatus.AUTO_BUYBACKED,
             pack = PACK,
             autoBuybackAmount = BigDecimal("42.5"),
         )
 
         // Act
-        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = true)).toList().last()
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = true).toList().last()
 
         // Assert
         assertThat(actual).isEqualTo(OpenPackStep.AutoBuybacked(BigDecimal("42.5")))
@@ -460,11 +491,11 @@ internal class OpenCollectiblePackUseCaseTest {
     fun `GIVEN the opening answers auto-buybacked with the card but no payout WHEN invoked THEN it fails as unexpected`() =
         runTest {
             // Arrange
-            coEvery { collectiblesRepository.openPack(WALLET_ID, TX_ID) } returns
+            coEvery { collectiblesRepository.openPack(WALLET_ID, TX_ID, any()) } returns
                 state(CollectibleTxStatus.AUTO_BUYBACKED, pack = PACK)
 
             // Act
-            val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = true)).toList().last()
+            val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = true).toList().last()
 
             // Assert
             assertThat(actual).isEqualTo(OpenPackStep.Failed.Unexpected)
@@ -473,10 +504,11 @@ internal class OpenCollectiblePackUseCaseTest {
     @Test
     fun `GIVEN the pack opens without the card WHEN invoked THEN the pack is left unopened`() = runTest {
         // Arrange
-        coEvery { collectiblesRepository.openPack(WALLET_ID, TX_ID) } returns state(CollectibleTxStatus.PACK_OPENED)
+        coEvery { collectiblesRepository.openPack(WALLET_ID, TX_ID, any()) } returns
+            state(CollectibleTxStatus.PACK_OPENED)
 
         // Act
-        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID, isTurboEnabled = false)).toList().last()
+        val actual = useCase(userWallet, OpenPackRequest.Buy(MACHINE_ID), isTurboEnabled = false).toList().last()
 
         // Assert
         assertThat(actual).isEqualTo(OpenPackStep.Failed.PackUnopened(TX_ID))
@@ -485,7 +517,7 @@ internal class OpenCollectiblePackUseCaseTest {
     @Test
     fun `GIVEN a pack left unopened WHEN reopen requested THEN it waits for the payment and opens without paying`() = runTest {
         // Act
-        val actual = useCase(userWallet, OpenPackRequest.Reopen(TX_ID)).toList()
+        val actual = useCase(userWallet, OpenPackRequest.Reopen(TX_ID), isTurboEnabled = false).toList()
 
         // Assert
         assertThat(actual).containsExactly(
@@ -497,37 +529,37 @@ internal class OpenCollectiblePackUseCaseTest {
             collectiblesRepository.generatePurchaseTx(any(), any())
             gachaVaultRepository.sendPurchasePack(any(), any(), any(), any())
         }
-        coVerify(exactly = 1) { collectiblesRepository.openPack(WALLET_ID, TX_ID) }
+        coVerify(exactly = 1) { collectiblesRepository.openPack(WALLET_ID, TX_ID, any()) }
     }
 
     @Test
     fun `GIVEN the status answers auto-buybacked with a payout WHEN reopen requested THEN it ends auto-buybacked without opening`() =
         runTest {
             // Arrange
-            coEvery { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any()) } returns CollectibleTxState(
+            coEvery { collectiblesRepository.getTxState(WALLET_ID, TX_ID, any(), any()) } returns CollectibleTxState(
                 status = CollectibleTxStatus.AUTO_BUYBACKED,
                 pack = null,
                 autoBuybackAmount = BigDecimal("42.5"),
             )
 
             // Act
-            val actual = useCase(userWallet, OpenPackRequest.Reopen(TX_ID)).toList()
+            val actual = useCase(userWallet, OpenPackRequest.Reopen(TX_ID), isTurboEnabled = true).toList()
 
             // Assert
             assertThat(actual).containsExactly(
                 OpenPackStep.Confirming,
                 OpenPackStep.AutoBuybacked(BigDecimal("42.5")),
             ).inOrder()
-            coVerify(exactly = 0) { collectiblesRepository.openPack(any(), any()) }
+            coVerify(exactly = 0) { collectiblesRepository.openPack(any(), any(), any()) }
         }
 
     @Test
     fun `GIVEN opening fails again WHEN reopen requested THEN the pack is still left unopened`() = runTest {
         // Arrange
-        coEvery { collectiblesRepository.openPack(WALLET_ID, TX_ID) } throws IllegalStateException()
+        coEvery { collectiblesRepository.openPack(WALLET_ID, TX_ID, any()) } throws IllegalStateException()
 
         // Act
-        val actual = useCase(userWallet, OpenPackRequest.Reopen(TX_ID)).toList().last()
+        val actual = useCase(userWallet, OpenPackRequest.Reopen(TX_ID), isTurboEnabled = false).toList().last()
 
         // Assert
         assertThat(actual).isEqualTo(OpenPackStep.Failed.PackUnopened(TX_ID))
@@ -537,6 +569,7 @@ internal class OpenCollectiblePackUseCaseTest {
 
         val WALLET_ID = UserWalletId("aa")
         const val OWNER = "HoRGkYTxNBbufFhzGzaP8Bek6kJHcTdbYMSMPGN9Mk66"
+        const val VAULT = "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU"
         const val MACHINE_ID = "pokemon_50"
         const val TX_ID = "tx-id"
         const val MEMO = "cc-uuid"
