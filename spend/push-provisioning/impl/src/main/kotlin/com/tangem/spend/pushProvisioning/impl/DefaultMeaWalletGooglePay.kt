@@ -7,12 +7,9 @@ import android.os.Build
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import com.google.android.gms.common.api.ApiException
-import com.google.android.gms.common.api.CommonStatusCodes
 import com.google.android.gms.tapandpay.TapAndPay
 import com.google.android.gms.tapandpay.TapAndPayClient
 import com.google.android.gms.tapandpay.issuer.TokenInfo
-import com.google.android.gms.tasks.Task
 import com.meawallet.mpp.GooglePayDataChangedListener
 import com.meawallet.mpp.GooglePayHasEligibleTokenizationTargetListener
 import com.meawallet.mpp.GooglePayRegisteredTokensListener
@@ -60,17 +57,17 @@ internal class DefaultMeaWalletGooglePay @Inject constructor(
         )
     }
 
-    override fun checkStableHardwareId(onComplete: (errorCode: Int?) -> Unit) {
-        tapAndPay.stableHardwareId.addOnCompleteListener { onComplete(it.errorCode) }
+    override fun checkStableHardwareId(onComplete: (failure: TapAndPayFailure?) -> Unit) {
+        tapAndPay.stableHardwareId.addOnCompleteListener { onComplete(it.toTapAndPayFailure()) }
     }
 
-    override fun checkActiveWallet(onComplete: (errorCode: Int?) -> Unit) {
-        tapAndPay.activeWalletId.addOnCompleteListener { onComplete(it.errorCode) }
+    override fun checkActiveWallet(onComplete: (failure: TapAndPayFailure?) -> Unit) {
+        tapAndPay.activeWalletId.addOnCompleteListener { onComplete(it.toTapAndPayFailure()) }
     }
 
-    override fun getEnvironment(onComplete: (environment: Either<Int, String>) -> Unit) {
+    override fun getEnvironment(onComplete: (environment: Either<TapAndPayFailure, String>) -> Unit) {
         tapAndPay.environment.addOnCompleteListener { task ->
-            onComplete(task.errorCode?.left() ?: task.result.orEmpty().right())
+            onComplete(task.toTapAndPayFailure()?.left() ?: task.result.orEmpty().right())
         }
     }
 
@@ -119,6 +116,3 @@ internal class DefaultMeaWalletGooglePay @Inject constructor(
         const val PROD_SDK_VERSION_PREFIX = "mpp-prod"
     }
 }
-
-private val Task<*>.errorCode: Int?
-    get() = if (isSuccessful) null else (exception as? ApiException)?.statusCode ?: CommonStatusCodes.ERROR
