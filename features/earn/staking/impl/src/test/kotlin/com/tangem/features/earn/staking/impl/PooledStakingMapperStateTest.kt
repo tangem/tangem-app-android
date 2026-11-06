@@ -212,6 +212,30 @@ internal class PooledStakingMapperStateTest {
         }
     }
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class LoadingStatus {
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN a Loading status WHEN state THEN Loading whatever the availability`(model: AvailabilityModel) {
+            // Arrange
+            val status = CryptoCurrencyStatus(currency = ethereum, value = CryptoCurrencyStatus.Loading)
+
+            // Act
+            val actual = mapper.state(status, model.availability)
+
+            // Assert
+            assertThat(actual).isEqualTo(EarnProductState.Loading)
+        }
+
+        private fun provideTestModels() = listOf(
+            AvailabilityModel("Available", StakingAvailability.Available(option())),
+            AvailabilityModel("Full", StakingAvailability.Full(option())),
+            AvailabilityModel("Unavailable", StakingAvailability.Unavailable),
+        )
+    }
+
     private fun status(position: StakingBalance? = null): CryptoCurrencyStatus =
         currencyStatus(currency = ethereum, stakingBalance = position)
 
@@ -230,6 +254,10 @@ internal class PooledStakingMapperStateTest {
     }
 
     internal data class NoOfferModel(val name: String, val availability: StakingAvailability) {
+        override fun toString(): String = name
+    }
+
+    internal data class AvailabilityModel(val name: String, val availability: StakingAvailability) {
         override fun toString(): String = name
     }
 

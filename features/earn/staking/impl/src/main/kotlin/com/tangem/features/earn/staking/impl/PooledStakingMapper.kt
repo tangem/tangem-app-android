@@ -60,6 +60,9 @@ internal class PooledStakingMapper @Inject constructor() {
     }
 
     fun state(status: CryptoCurrencyStatus, availability: StakingAvailability): EarnProductState {
+        // A Loading status has no balances yet: a stake cannot be told from none, and a full pool would look unavailable.
+        if (status.value is CryptoCurrencyStatus.Loading) return EarnProductState.Loading
+
         val option = offerOf(status, availability) ?: return EarnProductState.Unavailable
         val position = status.value.stakingBalanceData as? StakingBalance.Data.P2PEthPool
         val bestVault = option.vaults.maxBy { it.apy }
