@@ -5,6 +5,7 @@ import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class VisaApiErrorTest {
@@ -25,6 +26,18 @@ internal class VisaApiErrorTest {
 
         // Assert
         assertThat(error).isEqualTo(VisaApiError.Unknown(errorCode = 104140199))
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = [110208, 110209])
+    fun `GIVEN legacy product instance code WHEN fromBackendError THEN maps to Unknown with the same code`(
+        backendCode: Int,
+    ) {
+        // Act
+        val error = VisaApiError.fromBackendError(backendErrorCode = backendCode)
+
+        // Assert
+        assertThat(error).isEqualTo(VisaApiError.Unknown(errorCode = 104_000_000 + backendCode))
     }
 
     @ParameterizedTest
@@ -70,8 +83,6 @@ internal class VisaApiErrorTest {
         Case(VisaApiError.CustomerIdUnavailable, isOutcomeUnknown = false),
         Case(VisaApiError.CustomerIsBlocked, isOutcomeUnknown = false),
         Case(VisaApiError.ProductInstanceNotFoundActivationRequired, isOutcomeUnknown = false),
-        Case(VisaApiError.ProductInstanceIsBlocked, isOutcomeUnknown = false),
-        Case(VisaApiError.ProductInstanceIsNotActivated, isOutcomeUnknown = false),
         Case(VisaApiError.ProductInstanceIsAlreadyActivated, isOutcomeUnknown = false),
         Case(VisaApiError.CardIssueActiveOrderExists, isOutcomeUnknown = false),
         Case(VisaApiError.CardIssueOfferNotAvailable, isOutcomeUnknown = false),

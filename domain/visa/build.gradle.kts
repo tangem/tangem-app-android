@@ -18,7 +18,6 @@ dependencies {
     api(deps.arrow.core)
     api(deps.jodatime)
     implementation(deps.kotlin.datetime)
-    runtimeOnly(deps.spongecastle.core)
     // endregion
 
     // region Core modules

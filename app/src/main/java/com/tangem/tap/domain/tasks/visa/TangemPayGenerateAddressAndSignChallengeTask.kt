@@ -15,12 +15,11 @@ import com.tangem.domain.visa.datasource.TangemPayRemoteDataSource
 import com.tangem.domain.visa.error.VisaActivationError
 import com.tangem.domain.visa.model.TangemPayInitialCredentials
 import com.tangem.domain.visa.model.TangemPayInitialData
-import com.tangem.domain.visa.model.VisaDataToSignByCustomerWallet
-import com.tangem.domain.visa.model.VisaSignedDataByCustomerWallet
-import com.tangem.domain.visa.model.sign
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
+import com.tangem.operations.sign.SignHashCommand
+import com.tangem.operations.sign.SignHashResponse
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.CompletableDeferred
@@ -51,14 +50,13 @@ class TangemPayGenerateAddressAndSignChallengeTask @Inject constructor(
         val publicKey =
             wallet.publicKey ?: return CompletionResult.Failure(VisaActivationError.PublicKeyIsEmpty.tangemError)
 
-        val address = when (
+        val customerWalletKey = when (
             val derivationResult = runDerivationTask(session, publicKey, VisaUtilities.customDerivationPath)
         ) {
             is CompletionResult.Failure<*> -> return CompletionResult.Failure(derivationResult.error)
-            is CompletionResult.Success<ExtendedPublicKey> -> VisaUtilities.generateAddressFromExtendedKey(
-                extendedPublicKey = derivationResult.data,
-            )
+            is CompletionResult.Success<ExtendedPublicKey> -> derivationResult.data
         }
+        val address = VisaUtilities.generateAddressFromExtendedKey(extendedPublicKey = customerWalletKey)
 
         val moneyAccountKey = when (
             val derivationResult = runDerivationTask(session, publicKey, VisaUtilities.moneyAccountDerivationPath)
@@ -75,22 +73,23 @@ class TangemPayGenerateAddressAndSignChallengeTask @Inject constructor(
             )
         }.getOrElse { return CompletionResult.Failure(it.tangemError) }
 
-        val dataToSign = VisaDataToSignByCustomerWallet(hashToSign = challenge.challenge)
-        val approveResult = runVisaCustomerWalletApproveTask(
-            session = session,
-            targetAddress = address,
-            dataToSign = dataToSign,
-        )
-        val signedData = when (approveResult) {
-            is CompletionResult.Failure<*> -> return CompletionResult.Failure(approveResult.error)
-            is CompletionResult.Success<VisaSignedDataByCustomerWallet> -> approveResult.data
+        val signature = when (
+            val signResult = signChallenge(
+                session = session,
+                walletPublicKey = publicKey,
+                challenge = challenge.challenge,
+                customerWalletKey = customerWalletKey,
+            )
+        ) {
+            is CompletionResult.Failure<*> -> return CompletionResult.Failure(signResult.error)
+            is CompletionResult.Success<String> -> signResult.data
         }
 
         val authTokens = withContext(dispatchersProvider.io) {
             tangemPayRemoteDataSource.getTokenWithCustomerWallet(
                 sessionId = challenge.session.sessionId,
-                signature = signedData.signature,
-                nonce = signedData.dataToSign.hashToSign,
+                signature = signature,
+                nonce = challenge.challenge,
             )
         }.getOrNull() ?: return CompletionResult.Failure(VisaActivationError.FailedRemoteState.tangemError)
 
@@ -124,20 +123,32 @@ class TangemPayGenerateAddressAndSignChallengeTask @Inject constructor(
         return deferred.await()
     }
 
-    private suspend fun runVisaCustomerWalletApproveTask(
+    private suspend fun signChallenge(
         session: CardSession,
-        targetAddress: String,
-        dataToSign: VisaDataToSignByCustomerWallet,
-    ): CompletionResult<VisaSignedDataByCustomerWallet> {
-        val deferred = CompletableDeferred<CompletionResult<VisaSignedDataByCustomerWallet>>()
-        val task = VisaCustomerWalletApproveTask(
-            visaDataForApprove = VisaCustomerWalletApproveTask.Input(
-                targetAddress = targetAddress,
-                hashToSign = dataToSign.hashToSign,
-                sign = dataToSign::sign,
-            ),
+        walletPublicKey: ByteArray,
+        challenge: String,
+        customerWalletKey: ExtendedPublicKey,
+    ): CompletionResult<String> {
+        val message = VisaUtilities.signWithNonceMessage(nonce = challenge)
+        val hash = VisaUtilities.hashPersonalMessage(message.toByteArray(Charsets.UTF_8))
+
+        val deferred = CompletableDeferred<CompletionResult<SignHashResponse>>()
+        val signCommand = SignHashCommand(
+            hash = hash,
+            walletPublicKey = walletPublicKey,
+            derivationPath = VisaUtilities.customDerivationPath,
         )
-        task.run(session = session, callback = deferred::complete)
-        return deferred.await()
+        signCommand.run(session = session, callback = deferred::complete)
+
+        return when (val result = deferred.await()) {
+            is CompletionResult.Failure<*> -> CompletionResult.Failure(result.error)
+            is CompletionResult.Success<SignHashResponse> -> CompletionResult.Success(
+                data = VisaUtilities.unmarshallSignature(
+                    signature = result.data.signature,
+                    hash = hash,
+                    extendedPublicKey = customerWalletKey,
+                ),
+            )
+        }
     }
 }
