@@ -23,6 +23,8 @@ dependencies {
     implementation(projects.core.utils)
 
     /** Domain */
+    implementation(projects.domain.appCurrency)
+    implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.common)
     implementation(projects.domain.models)
     implementation(projects.domain.transaction)
@@ -39,12 +41,15 @@ dependencies {
 
     /** Compose */
     implementation(deps.compose.foundation)
+    implementation(deps.compose.material3)
     implementation(deps.compose.runtime)
     implementation(deps.compose.ui)
+    implementation(deps.compose.ui.tooling)
 
     /** Other */
     implementation(deps.decompose)
     implementation(deps.decompose.ext.compose)
+    implementation(deps.lifecycle.compose)
 
     /** DI */
     implementation(deps.hilt.android)
