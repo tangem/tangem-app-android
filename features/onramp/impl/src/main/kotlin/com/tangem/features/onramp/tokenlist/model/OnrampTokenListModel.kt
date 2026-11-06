@@ -39,6 +39,7 @@ import com.tangem.features.onramp.utils.ClearSearchBarTransformer
 import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
 import com.tangem.features.onramp.utils.UpdateSearchBarCallbacksTransformer
 import com.tangem.features.onramp.utils.UpdateSearchQueryTransformer
+import com.tangem.features.wallet.WalletFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.isZero
 import kotlinx.coroutines.async
@@ -64,6 +65,7 @@ internal class OnrampTokenListModel @Inject constructor(
     private val getAssetRequirementsUseCase: GetAssetRequirementsUseCase,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
+    private val walletFeatureToggles: WalletFeatureToggles,
 ) : Model() {
 
     val state: StateFlow<TokenListUM> = tokenListUMController.state
@@ -109,6 +111,7 @@ internal class OnrampTokenListModel @Inject constructor(
                         appCurrency = appCurrency,
                         accountList = accountList.portfoliosForOperation(),
                         isAccountsMode = isAccountsMode,
+                        isRedesignedTokenRowsEnabled = walletFeatureToggles.isRedesignedTokenRowsEnabled,
                     ),
                 )
                 updateTokenListUM(
@@ -123,6 +126,7 @@ internal class OnrampTokenListModel @Inject constructor(
                             isInsufficientBalanceForSell = accountList.isInsufficientBalanceForSell(),
                         ),
                         isAccountsMode = isAccountsMode,
+                        isRedesignedTokenRowsEnabled = walletFeatureToggles.isRedesignedTokenRowsEnabled,
                     ),
                 )
             }
