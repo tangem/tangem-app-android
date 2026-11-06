@@ -1379,6 +1379,13 @@
   <string name="joint_account_send_slot_busy_title">Operation already in progress</string>
   <string name="joint_account_settings_networks_info">This account works only in the supported networks.</string>
   <string name="joint_account_waiting_activation">Waiting for activation</string>
+  <string name="joint_blockaid_create_anyway">Create anyway</string>
+  <string name="joint_blockaid_decline_transaction">Decline transaction</string>
+  <string name="joint_blockaid_malicious_body">This address has been flagged as malicious. If you send funds to it, you\'ll most likely lose them.</string>
+  <string name="joint_blockaid_malicious_title">Malicious transaction</string>
+  <string name="joint_blockaid_risky_body">This recipient address may be unsafe. Only proceed if you trust the recipient.</string>
+  <string name="joint_blockaid_risky_title">Potentially risky address</string>
+  <string name="joint_blockaid_sign_anyway">Sign anyway</string>
   <string name="joint_operation_auto_sends_footer">Auto-sends once %1$s of %2$s members sign</string>
   <string name="joint_operation_banner_subtitle">%1$s → %2$s</string>
   <string name="joint_operation_banner_title">%1$s wants to send %2$s</string>

@@ -13,6 +13,9 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.ds2.modal.TangemModal
+import com.tangem.common.ui.blockaid.BlockaidSheetContent
+import com.tangem.common.ui.blockaid.BlockaidSheetUM
+import com.tangem.common.ui.blockaid.BlockaidTopNavigation
 import com.tangem.features.txhistory.joint.operation.route.JointOperationRoutes
 import com.tangem.features.txhistory.joint.operation.signers.ui.JointOperationSignersTopNavigation
 import com.tangem.features.txhistory.joint.operation.ui.state.JointOperationUM
@@ -22,6 +25,7 @@ import com.tangem.features.txhistory.ui.TxHistoryDetailsTopNavigation
 @Composable
 internal fun JointOperationContentSheet(
     state: JointOperationUM.Content?,
+    blockaid: BlockaidSheetUM?,
     contentStack: ChildStack<JointOperationRoutes, ComposableContentComponent>,
     onBackClick: () -> Unit,
     onCloseClick: () -> Unit,
@@ -34,26 +38,34 @@ internal fun JointOperationContentSheet(
         ),
         onBack = onBackClick,
         title = {
-            when (contentStack.active.configuration) {
-                JointOperationRoutes.Operation -> state?.let { content ->
-                    TxHistoryDetailsTopNavigation(header = content.operation.header, onCloseClick = onCloseClick)
+            if (blockaid != null) {
+                BlockaidTopNavigation(onCloseClick = blockaid.onClose)
+            } else {
+                when (contentStack.active.configuration) {
+                    JointOperationRoutes.Operation -> state?.let { content ->
+                        TxHistoryDetailsTopNavigation(header = content.operation.header, onCloseClick = onCloseClick)
+                    }
+                    JointOperationRoutes.Signers -> JointOperationSignersTopNavigation(
+                        membersCount = state?.signers?.membersCount,
+                        onBackClick = onBackClick,
+                        onCloseClick = onCloseClick,
+                    )
                 }
-                JointOperationRoutes.Signers -> JointOperationSignersTopNavigation(
-                    membersCount = state?.signers?.membersCount,
-                    onBackClick = onBackClick,
-                    onCloseClick = onCloseClick,
-                )
             }
         },
         content = {
-            Children(
-                stack = contentStack,
-                animation = stackAnimation(fade(animationSpec = tween(durationMillis = ANIMATION_MILLIS))),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .animateContentSize(),
-            ) { child ->
-                child.instance.Content(Modifier.fillMaxWidth())
+            if (blockaid != null) {
+                BlockaidSheetContent(state = blockaid)
+            } else {
+                Children(
+                    stack = contentStack,
+                    animation = stackAnimation(fade(animationSpec = tween(durationMillis = ANIMATION_MILLIS))),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateContentSize(),
+                ) { child ->
+                    child.instance.Content(Modifier.fillMaxWidth())
+                }
             }
         },
     )

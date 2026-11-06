@@ -19,7 +19,7 @@ internal class JointOperationErrorMessage(
 ) : Converter<JointOperationSignError, DialogMessage?> {
 
     override fun convert(value: JointOperationSignError): DialogMessage? = when (value) {
-        JointOperationSignError.UserCancelled -> null
+        JointOperationSignError.UserCancelled, JointOperationSignError.Malicious -> null
         JointOperationSignError.OperationNotFound -> gone(
             title = CoreUiR.string.joint_operation_completed_title,
             message = CoreUiR.string.joint_operation_completed_subtitle,
@@ -27,11 +27,6 @@ internal class JointOperationErrorMessage(
         JointOperationSignError.ThresholdReached -> gone(
             title = CoreUiR.string.joint_operation_threshold_reached_title,
             message = CoreUiR.string.joint_operation_threshold_reached_subtitle,
-        )
-        JointOperationSignError.Malicious -> DialogMessage(
-            title = resourceReference(CoreUiR.string.joint_operation_malicious_title),
-            message = resourceReference(CoreUiR.string.joint_operation_malicious_subtitle),
-            firstActionBuilder = { closeAction() },
         )
         is JointOperationSignError.VerificationFailed -> when (value.reason) {
             Reason.OWNER_KEY_NOT_DERIVED -> generic()
