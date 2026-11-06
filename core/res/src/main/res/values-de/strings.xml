@@ -1066,7 +1066,7 @@
   <string name="hw_cloud_backup_permissions_title_v2">Vollzugriff auf %1$s gewähren</string>
   <string name="hw_cloud_backup_remove_title">%1$s %2$s Backup</string>
   <string name="hw_cloud_backup_removed">Backup entfernt</string>
-  <string name="hw_cloud_backup_restore_all_added_hint">Alle Backups in diesem „ %1$s “-Konto befinden sich bereits in Tangem</string>
+  <string name="hw_cloud_backup_restore_all_added_hint">Alle Backups in diesem %1$s-Konto befinden sich bereits in Tangem</string>
   <string name="hw_cloud_backup_restore_error_title">Etwas ist schiefgelaufen.</string>
   <string name="hw_cloud_backup_restore_error_with_recovery">Bitte versuchen Sie es später erneut oder importieren Sie Ihre Wiederherstellungsphrase.</string>
   <string name="hw_cloud_backup_restore_navtitle">Cloud-Backup</string>
@@ -1162,7 +1162,7 @@
   <string name="hw_upgrade_to_cold_banner_description">Schütze Deine Kryptowährungen mit Tangems erstklassiger Hardware-Wallet.</string>
   <string name="hw_upgrade_to_cold_banner_title">Rüste Deine Wallet auf Hardware-Sicherheit auf.</string>
   <string name="hw_wallets_limit_alert_message">In Tangem können Sie bis zu %1$s mobile Wallets anlegen. Um ein weiteres hinzuzufügen, müssen Sie zunächst eines Ihrer bestehenden mobilen Wallets entfernen.</string>
-  <string name="hw_wallets_limit_alert_title">Limit für die mobile Geldbörse erreicht</string>
+  <string name="hw_wallets_limit_alert_title">Limit für mobile Wallets erreicht</string>
   <string name="information_generated_with_ai">Diese Informationen wurden mithilfe von KI generiert.\nTippe hier, wenn Du Fehler findest.</string>
   <string name="initial_message_change_access_code_body">Um den Zugangscode zu ändern, halte die Karte oder Ring wie oben gezeigt an das Gerät und entferne sie erst am Ende des Vorgangs.</string>
   <string name="initial_message_change_passcode_body">Um den Passcode zu ändern, halte die Karte oder Ring wie oben gezeigt an das Gerät und entferne sie erst am Ende des Vorgangs.</string>
@@ -2223,7 +2223,7 @@
   <string name="promo_campaign_whale_swap_summary_description">Erhalten Sie bis Ende August bei jedem Swap ab 10.000 $ Cashback.\n\nDie Sätze steigen mit dem Volumen: 0,10% ab 10.000 $, 0,20% ab 20.000 $, 0,50% ab 100.000 $.\n\nMaximale Auszahlung: 500 $ pro Swap und 10.000 $ pro Wallet und Swap-Richtung, solange die Aktion läuft. Swaps von Stablecoins in andere Stablecoins sind ausgeschlossen.\n\nDie Auszahlung erfolgt wöchentlich an eine USDT- oder USDC-Adresse Ihrer Wahl.</string>
   <string name="promo_code_activation_success">Ihr Aktionscode wurde erfolgreich aktiviert. Die Prämie wird Ihrem Konto gutgeschrieben. %s Konto.</string>
   <string name="promo_code_no_address">Um den Bonus zu erhalten, ist eine „ %1$s “-Adresse erforderlich. Bitte fügen Sie %1$s zu Ihrer Wallet hinzu und versuchen Sie die Aktivierung erneut.</string>
-  <string name="promo_code_no_address_title">%s Adresse erforderlich  </string>
+  <string name="promo_code_no_address_title">%s Adresse erforderlich</string>
   <string name="provider_name_support">%s Unterstützung</string>
   <string name="push_notification_settings_banner_description">Push-Benachrichtigungen sind aktiviert, funktionieren aber erst, nachdem du Benachrichtigungen in den Geräteeinstellungen zugelassen hast.</string>
   <string name="push_notification_settings_banner_title">Benachrichtigungen zulassen</string>
@@ -2490,7 +2490,7 @@
   <string name="social_login_error_network_description">Überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.</string>
   <string name="social_login_error_network_title">Keine Internetverbindung</string>
   <string name="social_login_error_no_account">Fügen Sie diesem Gerät ein %s-Konto hinzu, um fortzufahren.</string>
-  <string name="social_login_error_no_account_title">Auf diesem Gerät ist kein „ %1$s “-Konto eingerichtet.</string>
+  <string name="social_login_error_no_account_title">Auf diesem Gerät ist kein %1$s-Konto eingerichtet.</string>
   <string name="social_login_error_restore_failed_description">Wir konnten die Wallet für dieses Konto nicht wiederherstellen. Versuchen Sie es erneut oder wenden Sie sich an den Support.</string>
   <string name="social_login_error_session_expired">Die Sitzung ist abgelaufen. Bitte versuchen Sie es erneut.</string>
   <string name="social_login_error_support">Support kontaktieren</string>
@@ -2891,6 +2891,7 @@
   <string name="tangempay_campaign_unavailable_description">Du kannst ein normales Exemplar bestellen</string>
   <string name="tangempay_campaign_unavailable_title">Spezialkarte kann nicht erhalten werden</string>
   <string name="tangempay_cancel_kyc">Status ausblenden</string>
+  <string name="tangempay_card_actions_more">Aktionen</string>
   <string name="tangempay_card_activation_attempts_exceeded_description">Bitte wenden Sie sich an den Support.</string>
   <string name="tangempay_card_activation_attempts_exceeded_title">Sie haben Ihr Aktivierungslimit überschritten.</string>
   <string name="tangempay_card_activation_description">Geben Sie die letzten 4 Ziffern Ihrer Kartennummer ein.</string>
@@ -2900,11 +2901,19 @@
   <string name="tangempay_card_activation_error_not_physical">Dies ist keine physische Karte</string>
   <string name="tangempay_card_activation_error_not_ready">Diese Karte kann noch nicht aktiviert werden. Versuchen Sie es erneut, sobald Sie sie erhalten haben.</string>
   <string name="tangempay_card_activation_in_progress">Aktivierung Ihrer Karte</string>
+  <string name="tangempay_card_close">Kündigen</string>
+  <string name="tangempay_card_close_error_message">Versuchen Sie es später erneut oder kontaktieren Sie den Support. Wir helfen Ihnen, die Karte zu kündigen.</string>
+  <string name="tangempay_card_close_error_title">Karte konnte nicht gekündigt werden</string>
+  <string name="tangempay_card_close_last_card_disabled">Sie können Ihre letzte Karte nicht kündigen</string>
+  <string name="tangempay_card_closed_toast">Karte gekündigt</string>
   <string name="tangempay_card_default_name">Tangem Pay Karte 1</string>
+  <string name="tangempay_card_delivery_activate_after_delivery_toast">Sie können Ihre Karte nach der Zustellung aktivieren</string>
   <string name="tangempay_card_delivery_banner_description">Aktivieren Sie es nach Erhalt.</string>
   <string name="tangempay_card_delivery_banner_description_many">Aktivieren Sie sie bei Ihrer Ankunft</string>
   <string name="tangempay_card_delivery_banner_title">Ihre Karte ist auf dem Weg zur Zustellung</string>
   <string name="tangempay_card_delivery_banner_title_many">Ihre Karten sind auf dem Weg zur Zustellung</string>
+  <string name="tangempay_card_delivery_email_note">Sie erhalten E-Mail-Updates vom Zustelldienst an %s</string>
+  <string name="tangempay_card_delivery_got_card_button">Karte erhalten</string>
   <string name="tangempay_card_details_activate">Karte aktivieren</string>
   <string name="tangempay_card_details_add_funds">Guthaben hinzufügen</string>
   <string name="tangempay_card_details_add_funds_subtitle">Aufladeoptionen</string>
@@ -2922,7 +2931,7 @@
   <string name="tangempay_card_details_change_pin_success_description">Die Karte ist vollständig für Zahlungen bereit.</string>
   <string name="tangempay_card_details_change_pin_success_title">PIN-Code erstellt</string>
   <string name="tangempay_card_details_cvc">CVC</string>
-  <string name="tangempay_card_details_delivery_description">Ihre Karte ist unterwegs zur Zustellung. Sie erhalten am [Datum einfügen] eine E-Mail mit Statusaktualisierungen vom Logistikunternehmen. %s</string>
+  <string name="tangempay_card_details_delivery_description">Ihre Karte ist unterwegs. Sie erhalten E-Mail-Updates vom Zustelldienst an %s.</string>
   <string name="tangempay_card_details_error_text">Daten konnten nicht geladen werden. Versuche es später noch einmal.</string>
   <string name="tangempay_card_details_expiry">Ablauf</string>
   <string name="tangempay_card_details_freeze_card">Karte einfrieren</string>
@@ -2982,6 +2991,8 @@
   <string name="tangempay_card_page_daily_limit_success_title">Tageslimit ist festgelegt</string>
   <string name="tangempay_card_page_daily_limit_title">Tageslimit</string>
   <string name="tangempay_card_page_settings_title">Einstellungen der Karte</string>
+  <string name="tangempay_card_replace">Ersetzen</string>
+  <string name="tangempay_card_support_button">Support</string>
   <plurals name="tangempay_cards_count">
     <item quantity="one">%d Karte</item>
     <item quantity="other">%d Karten</item>
@@ -2990,7 +3001,7 @@
   <string name="tangempay_cashback_accruals_calc_title">Wie berechnen wir Cashback?</string>
   <string name="tangempay_cashback_accruals_exceptions_description">Aktuell gibt es kein Cashback für Kartenzahlungen am Terminal vor Ort in der EU. Kein Cashback gilt zudem für Bargeldabhebungen, Quasi-Cash, Mobilfunkaufladungen, Behördendienste und bestimmte weitere Kategorien.</string>
   <string name="tangempay_cashback_accruals_exceptions_title">Ausnahmen</string>
-  <string name="tangempay_cashback_accruals_pay_description">Bis zum 10. des Folgemonats, nachdem die Transaktionen auf Einhaltung der Cashback-Regeln geprüft wurden</string>
+  <string name="tangempay_cashback_accruals_pay_description">Bis zum 11. des Folgemonats, nachdem die Transaktionen auf Einhaltung der Cashback-Regeln geprüft wurden</string>
   <string name="tangempay_cashback_accruals_pay_title">Wie erfolgt die Auszahlung von Cashback?</string>
   <string name="tangempay_cashback_accruals_subtitle">Grenzen und Ausnahmen</string>
   <string name="tangempay_cashback_accruals_title">Abgrenzungen</string>
@@ -3028,6 +3039,12 @@
   <string name="tangempay_choose_network_other_ways">Andere Wege</string>
   <string name="tangempay_choose_network_row_error">Adresse nicht abrufbar, bitte erneut versuchen</string>
   <string name="tangempay_choose_network_row_loading">Adresse wird vorbereitet…</string>
+  <string name="tangempay_close_card_sheet_confirm">Karte kündigen</string>
+  <string name="tangempay_close_card_sheet_description">Die Karte wird gekündigt und kann nicht mehr verwendet werden</string>
+  <string name="tangempay_close_card_sheet_description_with_freeze_hint">Die Karte wird gekündigt und kann nicht mehr verwendet werden. Möchten Sie sie nur vorübergehend sperren? Sperren Sie sie stattdessen.</string>
+  <string name="tangempay_close_card_sheet_freeze_instead">Stattdessen sperren</string>
+  <string name="tangempay_close_card_sheet_keep">Karte behalten</string>
+  <string name="tangempay_close_card_sheet_title">%s kündigen?</string>
   <string name="tangempay_come_back_if_forget_pin">Kehren Sie zur App zurück, falls Sie ihn vergessen.</string>
   <string name="tangempay_common_card">Karte</string>
   <string name="tangempay_common_error_list_loading">Die Liste konnte nicht geladen werden.\nZum Neuladen tippen</string>
@@ -3099,7 +3116,7 @@
   <string name="tangempay_kyc_rejected_description">Leider konnten wir Ihre Identität</string>
   <string name="tangempay_kyc_rejected_description_span">nicht verifizieren.</string>
   <string name="tangempay_main_select_plan">Tarif auswählen</string>
-  <string name="tangempay_maximum_cards_issued_description">Lösche eine, um eine neue Karte hinzuzufügen</string>
+  <string name="tangempay_maximum_cards_issued_description">Kündigen Sie eine Karte, um eine neue hinzuzufügen</string>
   <string name="tangempay_maximum_cards_issued_for_plan_description">Upgrade-Plan für mehr Karten</string>
   <string name="tangempay_maximum_cards_issued_for_plan_title">Das Kartenlimit für diesen Tarif wurde erreicht</string>
   <string name="tangempay_maximum_cards_issued_for_plan_upgrade_btn">Upgrade-Plan</string>
@@ -3196,6 +3213,7 @@
   <string name="tangempay_payment_account">Zahlungskonto</string>
   <string name="tangempay_payment_account_sync_needed">Tangem Pay sitzung abgelaufen</string>
   <string name="tangempay_pin_validation_error_message">Ungültige PIN: Sequenzen oder Wiederholungen vermeiden</string>
+  <string name="tangempay_plan_menu_subtitle">Aktueller Tarif: %s</string>
   <string name="tangempay_region_unavailable_description">Wir arbeiten daran, in weitere Regionen zu expandieren.\nTragen Sie sich in die Warteliste ein, um als Erster zu erfahren, wann der Dienst verfügbar ist.</string>
   <string name="tangempay_region_unavailable_primary_button">Auf die Warteliste setzen</string>
   <string name="tangempay_region_unavailable_secondary_button">Wählen Sie eine andere Region aus</string>
@@ -3247,6 +3265,7 @@
   <string name="tangempay_status_deactivated">Konto geschlossen</string>
   <string name="tangempay_status_inactive">Inaktiv</string>
   <string name="tangempay_status_replacing">Ersetzen deine Karte</string>
+  <string name="tangempay_support_copy_email_accessibility">%s kopieren</string>
   <string name="tangempay_sync_needed">Karte oder Ring verwenden, um die Sitzung zu verlängern</string>
   <string name="tangempay_sync_needed_body">Erneuern, um Karte und Konto zu sehen</string>
   <string name="tangempay_sync_needed_button">Zugang wiederherstellen</string>
@@ -3263,14 +3282,14 @@
   <string name="tangempay_topup_swap_title">Aus Ihrer Tangem Wallet</string>
   <string name="tangempay_unified_onboarding_cashback_caption">Cashback</string>
   <string name="tangempay_unified_onboarding_cashback_subtitle">Auszahlung in USDC</string>
-  <string name="tangempay_unified_onboarding_cashback_title">Bis zu 2%%. %1$s</string>
+  <string name="tangempay_unified_onboarding_cashback_title">Bis zu 2%%\n%1$s</string>
   <string name="tangempay_unified_onboarding_description">Visa-Karte und USD-Konto in einem. Bestätigen Sie Ihre Identität und nutzen Sie die an Ihrem Wohnort verfügbaren Angebote</string>
   <string name="tangempay_unified_onboarding_everything_header">Für alles</string>
   <string name="tangempay_unified_onboarding_fees_caption">Dollar für Dollar</string>
   <string name="tangempay_unified_onboarding_fees_subtitle">Keine Wechsel- oder Monatsgebühren</string>
   <string name="tangempay_unified_onboarding_fees_title">1 USD wird zu 1 USDC\n%1$s</string>
-  <string name="tangempay_unified_onboarding_interest_caption">Zinsen</string>
-  <string name="tangempay_unified_onboarding_interest_title">Guthaben halten, bis zu 4% APY erhalten</string>
+  <string name="tangempay_unified_onboarding_interest_caption">Demnächst verfügbar</string>
+  <string name="tangempay_unified_onboarding_interest_title">Verdienen Sie mit dem Renditemodus bis zu 4% pro Jahr</string>
   <string name="tangempay_unified_onboarding_legal">Was Sie eröffnen können, hängt davon ab, wo Sie wohnen. Wir werden Ihnen dies unmittelbar nach der Überprüfung mitteilen.</string>
   <string name="tangempay_unified_onboarding_money_account_caption">Krypto-Kauf</string>
   <string name="tangempay_unified_onboarding_money_account_header">Konto</string>
@@ -3589,7 +3608,7 @@
   <string name="virtual_account_requisites_reference">Referenz</string>
   <string name="virtual_account_requisites_routing_number">Routingnummer</string>
   <string name="virtual_account_title">USD-Konto</string>
-  <string name="virtual_account_transactions_empty">Noch keine Transaktionen. Beginnen Sie mit dem Einkaufen und sehen Sie sich hier den Verlauf an</string>
+  <string name="virtual_account_transactions_empty">Noch keine Transaktionen. Beginnen Sie mit dem Einkaufen und sehen Sie sich hier den Verlauf an.</string>
   <string name="visa_balance_limits_details_aml_verified">AML-geprüft</string>
   <string name="visa_balance_limits_details_available">Verfügbar</string>
   <string name="visa_balance_limits_details_blocked">Gesperrt</string>
