@@ -8,7 +8,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.res.R
 import com.tangem.core.ui.ds2.modalstatus.TangemModalStatus
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.collectibles.impl.common.ui.CollectiblesBottomSheet
@@ -22,17 +21,13 @@ internal fun CollectiblesRefundOnTheWaySheet(onCloseClick: () -> Unit, onDismiss
     }
 }
 
-// TODO([REDACTED_TASK_KEY]): localize the title and the description
 @Composable
 private fun RefundOnTheWayContent(onCloseClick: () -> Unit, modifier: Modifier = Modifier) {
     CollectiblesBottomSheetContent(
         variant = TangemModalStatus.Variant.Info,
         icon = null,
-        title = stringReference("Your refund is on the way"),
-        description = stringReference(
-            "Our partner should have issued refund for your unopened pack. " +
-                "If you haven’t received a refund within a day, please contact support",
-        ),
+        title = resourceReference(R.string.collectibles_refund_on_the_way_title),
+        description = resourceReference(R.string.collectibles_refund_on_the_way_subtitle),
         modifier = modifier,
     ) {
         CollectiblesBottomSheetPrimaryButton(

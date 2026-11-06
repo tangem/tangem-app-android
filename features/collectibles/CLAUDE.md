@@ -422,7 +422,7 @@ sheet component is destroyed; without it "Open pack" closed the confirm order in
 **Trust `/buyback/status`, not the send.** Blink, the first Solana provider, sends with `skipPreflight = true`,
 so a transaction that fails on chain can still look sent.
 
-The `PackOpenFailed` screen and the refund sheet show hardcoded English. The buyback copy is localized:
+The buyback copy is localized:
 `collectibles_open_pack_buyback_unavailable` (the disabled button) and `collectibles_open_pack_sell_back_success`.
 
 **A few strings are still literals.** Most copy is in `core/res` (`collectibles_*`), but some

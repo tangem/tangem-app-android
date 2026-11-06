@@ -16,7 +16,6 @@ internal class CollectiblesPackOpenFailedComponent(
 ) : ComposableContentComponent, AppComponentContext by context {
 
     init {
-        // Back would otherwise land on the machine details the confirm order was opened from
         backHandler.register(BackCallback(onBack = ::onCloseClick))
     }
 
