@@ -27,6 +27,7 @@ import com.tangem.features.foryou.impl.components.MarketChart
 import com.tangem.features.foryou.impl.entity.PortfolioReviewUM
 import com.tangem.features.foryou.impl.entity.forYouPeriodPickerItems
 import com.tangem.features.foryou.impl.ui.components.ForYouPortfolioTokenList
+import com.tangem.features.foryou.impl.ui.components.ForYouPortfolioTokenListV2
 import com.tangem.features.foryou.impl.ui.preview.ForYouPortfolioReviewPreviewData
 import com.tangem.features.foryou.model.ForYouPeriod
 import kotlinx.collections.immutable.ImmutableList
@@ -37,6 +38,7 @@ internal fun ForYouPortfolioReview(
     portfolioReviewUM: PortfolioReviewUM,
     portfolioFilter: TangemFilterItemUM,
     modifier: Modifier = Modifier,
+    isRedesignedTokenRowsEnabled: Boolean = false,
 ) {
     Column(modifier = modifier) {
         Row(
@@ -74,7 +76,11 @@ internal fun ForYouPortfolioReview(
         }
 
         SpacerH8()
-        ForYouPortfolioTokenList(items = portfolioReviewUM.tokenList)
+        if (isRedesignedTokenRowsEnabled) {
+            ForYouPortfolioTokenListV2(items = portfolioReviewUM.tokenList)
+        } else {
+            ForYouPortfolioTokenList(items = portfolioReviewUM.tokenList)
+        }
 
         if (portfolioReviewUM is PortfolioReviewUM.Content && portfolioReviewUM.onAddFundsClick != null) {
             TangemButton(
