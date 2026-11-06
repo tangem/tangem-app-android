@@ -16,6 +16,7 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.domain.marketing.models.MarketingScreen
 import com.tangem.domain.marketing.models.MarketingScreenType
 import com.tangem.utils.SupportedLanguages
+import com.tangem.test.core.TestAppCoroutineScope
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -51,6 +52,7 @@ internal class DefaultMarketingRepositoryTest {
             dismissStore = dismissStore,
             converter = MarketingCampaignConverter(),
             dispatchers = TestingCoroutineDispatcherProvider(),
+            appCoroutineScope = TestAppCoroutineScope(),
         )
     }
 
