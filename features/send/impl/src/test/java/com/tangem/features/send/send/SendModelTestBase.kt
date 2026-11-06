@@ -1,5 +1,6 @@
 package com.tangem.features.send.send
 
+import com.tangem.features.jointaccount.analytics.JointBlockaidAnalyticsSender
 import arrow.core.Either
 import arrow.core.right
 import com.tangem.blockchain.common.TransactionData
@@ -260,6 +261,7 @@ internal abstract class SendModelTestBase {
             createAndSendGaslessTransactionUseCase = createAndSendGaslessTransactionUseCase,
             isHighNetworkFeeUseCase = isHighNetworkFeeUseCase,
             jointSendDelegate = jointSendDelegate,
+            blockaidAnalyticsSender = JointBlockaidAnalyticsSender(analyticsEventHandler = analyticsEventHandler),
             recordTokenTransferFromSendUseCase = recordTokenTransferFromSendUseCase,
             reportSendIntentHashUseCase = reportSendIntentHashUseCase,
             sendBalanceUpdaterFactory = sendBalanceUpdaterFactory,

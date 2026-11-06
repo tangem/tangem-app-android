@@ -26,7 +26,6 @@ import com.tangem.domain.jointaccount.model.SafeInnerCall
 import com.tangem.domain.jointaccount.safe.JointTransferPayloadCodec
 import com.tangem.domain.jointaccount.supplier.SingleJointAccountListSupplier
 import com.tangem.domain.jointaccount.usecase.CreateJointOperationUseCase
-import com.tangem.domain.jointaccount.usecase.CreateJointOperationUseCase.SubmitResult
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
@@ -40,8 +39,6 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -93,10 +90,9 @@ internal class JointSendDelegateTest {
         coEvery {
             createJointOperationUseCase.prepare(account, fixtureCoin.network, expectedIntent, SafeGasToken.Coin)
         } returns prepared.right()
-        coEvery { createJointOperationUseCase.submit(prepared) } returns SubmitResult.Created.right()
 
         // Act
-        val actual = delegate.createOperation(
+        val actual = delegate.prepareOperation(
             account = account,
             currency = fixtureCoin,
             amount = BigDecimal.ONE,
@@ -105,83 +101,24 @@ internal class JointSendDelegateTest {
         )
 
         // Assert
-        assertThat(actual).isEqualTo(Unit.right())
+        assertThat(actual).isEqualTo(prepared.right())
         coVerify(exactly = 1) {
             createJointOperationUseCase.prepare(account, fixtureCoin.network, expectedIntent, SafeGasToken.Coin)
         }
-        coVerify(exactly = 1) { createJointOperationUseCase.submit(prepared) }
+        coVerify(exactly = 0) { createJointOperationUseCase.submit(any()) }
     }
 
     @Test
-    fun `GIVEN the retry rebuilt a risky payload WHEN the operation is created THEN the rebuilt one is submitted`() =
-        runTest {
-            // Arrange
-            val prepared = prepared(verdict = JointOperationBlockaidGate.Verdict.Safe)
-            val rebuilt = prepared(verdict = JointOperationBlockaidGate.Verdict.Warning)
-            coEvery { createJointOperationUseCase.prepare(any(), any(), any(), any()) } returns prepared.right()
-            coEvery { createJointOperationUseCase.submit(prepared) } returns
-                SubmitResult.Rebuilt(prepared = rebuilt).right()
-            coEvery { createJointOperationUseCase.submit(rebuilt) } returns SubmitResult.Created.right()
-
-            // Act
-            val actual = delegate.createOperation(
-                account = mockk(),
-                currency = fixtureCoin,
-                amount = BigDecimal.ONE,
-                destinationUM = createDestinationContent(),
-                feeToken = null,
-            )
-
-            // Assert
-            assertThat(actual).isEqualTo(Unit.right())
-            coVerify(exactly = 1) { createJointOperationUseCase.submit(rebuilt) }
-        }
-
-    @Test
-    fun `GIVEN blockaid says malicious WHEN the operation is created THEN Malicious and nothing is submitted`() =
-        runTest {
-            // Arrange
-            val account: Account.Joint = mockk()
-            coEvery { createJointOperationUseCase.prepare(account, fixtureCoin.network, any(), SafeGasToken.Coin) } returns
-                prepared(verdict = JointOperationBlockaidGate.Verdict.Malicious).right()
-
-            // Act
-            val actual = delegate.createOperation(
-                account = account,
-                currency = fixtureCoin,
-                amount = BigDecimal.ONE,
-                destinationUM = createDestinationContent(),
-                feeToken = null,
-            )
-
-            // Assert
-            assertThat(actual).isEqualTo(JointOperationCreateError.Malicious.left())
-            coVerify(exactly = 0) { createJointOperationUseCase.submit(any()) }
-        }
-
-    @ParameterizedTest
-    @MethodSource("submittedVerdicts")
-    fun `GIVEN a verdict short of malicious WHEN the operation is created THEN it is submitted`(
-        verdict: JointOperationBlockaidGate.Verdict,
-    ) = runTest {
+    fun `GIVEN a prepared operation WHEN it is submitted THEN the use case submits exactly it`() = runTest {
         // Arrange
-        val account: Account.Joint = mockk()
-        val prepared = prepared(verdict = verdict)
-        coEvery { createJointOperationUseCase.prepare(account, fixtureCoin.network, any(), SafeGasToken.Coin) } returns
-            prepared.right()
-        coEvery { createJointOperationUseCase.submit(prepared) } returns SubmitResult.Created.right()
+        val prepared = prepared(verdict = JointOperationBlockaidGate.Verdict.Warning)
+        coEvery { createJointOperationUseCase.submit(prepared) } returns JointOperationCreateError.Malicious.left()
 
         // Act
-        val actual = delegate.createOperation(
-            account = account,
-            currency = fixtureCoin,
-            amount = BigDecimal.ONE,
-            destinationUM = createDestinationContent(),
-            feeToken = null,
-        )
+        val actual = delegate.submitOperation(prepared = prepared)
 
         // Assert
-        assertThat(actual).isEqualTo(Unit.right())
+        assertThat(actual).isEqualTo(JointOperationCreateError.Malicious.left())
         coVerify(exactly = 1) { createJointOperationUseCase.submit(prepared) }
     }
 
@@ -189,7 +126,7 @@ internal class JointSendDelegateTest {
     fun `GIVEN an incomplete form WHEN the operation is created THEN the payload is rejected without a use case call`() =
         runTest {
             // Act
-            val actual = delegate.createOperation(
+            val actual = delegate.prepareOperation(
                 account = mockk(),
                 currency = fixtureCoin,
                 amount = BigDecimal.ONE,
@@ -484,10 +421,9 @@ internal class JointSendDelegateTest {
         val prepared = prepared(verdict = JointOperationBlockaidGate.Verdict.Safe)
         coEvery { createJointOperationUseCase.prepare(account, fixtureUsdc.network, any(), gasToken) } returns
             prepared.right()
-        coEvery { createJointOperationUseCase.submit(prepared) } returns SubmitResult.Created.right()
 
         // Act
-        val actual = delegate.createOperation(
+        val actual = delegate.prepareOperation(
             account = account,
             currency = fixtureUsdc,
             amount = BigDecimal.ONE,
@@ -496,7 +432,7 @@ internal class JointSendDelegateTest {
         )
 
         // Assert
-        assertThat(actual).isEqualTo(Unit.right())
+        assertThat(actual).isEqualTo(prepared.right())
         coVerify(exactly = 1) { createJointOperationUseCase.prepare(account, fixtureUsdc.network, any(), gasToken) }
     }
 
@@ -523,17 +459,6 @@ internal class JointSendDelegateTest {
     }
 
     private companion object {
-        @JvmStatic
-        fun submittedVerdicts() = listOf(
-            JointOperationBlockaidGate.Verdict.Safe,
-            JointOperationBlockaidGate.Verdict.Warning,
-            JointOperationBlockaidGate.Verdict.NoVerdict(JointOperationBlockaidGate.Verdict.NoVerdict.Reason.ERROR),
-            JointOperationBlockaidGate.Verdict.NoVerdict(JointOperationBlockaidGate.Verdict.NoVerdict.Reason.TIMEOUT),
-            JointOperationBlockaidGate.Verdict.NoVerdict(
-                JointOperationBlockaidGate.Verdict.NoVerdict.Reason.UNSUPPORTED_NETWORK,
-            ),
-        )
-
         val USDC_GAS_TOKEN = SafeGasToken.Token(
             address = fixtureUsdc.contractAddress,
             decimals = fixtureUsdc.decimals,
