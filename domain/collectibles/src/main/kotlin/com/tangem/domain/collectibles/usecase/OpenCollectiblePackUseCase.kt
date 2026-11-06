@@ -239,8 +239,11 @@ class OpenCollectiblePackUseCase @Inject constructor(
 
     private fun Raise<OpenPackStep.Failed>.failIfClosed(txId: String, status: CollectibleTxStatus) {
         when (status) {
-            CollectibleTxStatus.EXPIRED -> fail(OpenPackStep.Failed.OpenFailed, cause = status)
+            CollectibleTxStatus.EXPIRED,
+            CollectibleTxStatus.PACK_OPENING_ERROR,
+            -> fail(OpenPackStep.Failed.OpenFailed, cause = status)
             CollectibleTxStatus.REFUNDED -> fail(OpenPackStep.Failed.Refunded, cause = status)
+            CollectibleTxStatus.REFUNDING -> fail(OpenPackStep.Failed.Refunding, cause = status)
             CollectibleTxStatus.PAUSED -> fail(OpenPackStep.Failed.PackUnopened(txId), cause = status)
             CollectibleTxStatus.MANUALLY_BUYBACKED -> fail(OpenPackStep.Failed.Unexpected, cause = status)
             else -> Unit

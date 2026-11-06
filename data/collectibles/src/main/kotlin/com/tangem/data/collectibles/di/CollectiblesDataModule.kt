@@ -10,6 +10,8 @@ import com.tangem.data.collectibles.account.converter.CollectiblesAccountStatusV
 import com.tangem.data.collectibles.account.entity.CollectiblesAccountDTO
 import com.tangem.data.collectibles.account.store.CollectiblesAccountStore
 import com.tangem.data.collectibles.store.CollectiblesMachineStore
+import com.tangem.data.collectibles.store.DefaultCollectiblesDismissedTxRepository
+import com.tangem.data.collectibles.store.DismissedTxsDTO
 import com.tangem.data.collectibles.account.cleaner.CollectiblesUserWalletDataCleaner
 import com.tangem.data.collectibles.account.derivation.DefaultCollectiblesOwnerDeriver
 import com.tangem.data.collectibles.account.derivation.DefaultCollectiblesOwnerKeysRepository
@@ -25,8 +27,10 @@ import com.tangem.domain.collectibles.account.CollectiblesVaultCurrencyFactory
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerDeriver
 import com.tangem.domain.collectibles.account.derivation.CollectiblesOwnerKeysRepository
 import com.tangem.domain.collectibles.vault.repository.GachaVaultRepository
+import com.tangem.domain.collectibles.repository.CollectiblesDismissedTxRepository
 import com.tangem.domain.collectibles.repository.CollectiblesRepository
 import com.tangem.datasource.utils.AppDataStoreFactory
+import com.tangem.datasource.utils.create
 import com.tangem.domain.common.wallets.UserWalletDataCleaner
 import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Binds
@@ -95,6 +99,19 @@ internal interface CollectiblesDataModule {
         @Singleton
         fun provideCollectiblesMachineStore(): CollectiblesMachineStore {
             return CollectiblesMachineStore(store = RuntimeSharedStore())
+        }
+
+        @Provides
+        @Singleton
+        fun provideCollectiblesDismissedTxRepository(
+            dataStoreFactory: AppDataStoreFactory,
+        ): CollectiblesDismissedTxRepository {
+            return DefaultCollectiblesDismissedTxRepository(
+                store = dataStoreFactory.create(
+                    defaultValue = DismissedTxsDTO(),
+                    fileName = "collectibles_dismissed_txs",
+                ),
+            )
         }
 
         @Provides
