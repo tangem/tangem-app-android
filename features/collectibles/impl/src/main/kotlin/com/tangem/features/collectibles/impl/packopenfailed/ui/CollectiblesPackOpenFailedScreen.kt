@@ -15,10 +15,8 @@ import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusIcon
 import com.tangem.core.ui.ds2.statusscreen.TangemStatusScreen
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 
-// TODO([REDACTED_TASK_KEY]): localize the title, the description and the assistance button
 @Composable
 internal fun CollectiblesPackOpenFailedScreen(
     onGetAssistanceClick: () -> Unit,
@@ -28,8 +26,8 @@ internal fun CollectiblesPackOpenFailedScreen(
     TangemStatusScreen(
         modifier = modifier,
         variant = TangemStatusScreen.Variant.Error,
-        title = stringReference("Failed to open pack"),
-        description = stringReference("Our partner has an issue. Please contact support for further guidance"),
+        title = resourceReference(R.string.collectibles_open_pack_failed_title),
+        description = resourceReference(R.string.collectibles_open_pack_failed_subtitle),
         asset = {
             TangemStatusIcon(kind = TangemStatusIcon.Kind.HeartBroken, modifier = Modifier.size(40.dp))
         },
@@ -44,7 +42,7 @@ internal fun CollectiblesPackOpenFailedScreen(
                     modifier = Modifier.fillMaxWidth(),
                     variant = TangemButton.Variant.Secondary,
                     size = TangemButton.Size.X12,
-                    text = stringReference("Get assistance"),
+                    text = resourceReference(R.string.collectibles_main_menu_get_assistance),
                     onClick = onGetAssistanceClick,
                 )
                 TangemButton(
