@@ -1155,8 +1155,6 @@
   <string name="hw_upgrade_title">Faça upgrade para nossa carteira de hardware.</string>
   <string name="hw_upgrade_to_cold_banner_description">Proteja suas criptomoedas com a carteira de hardware de alta qualidade da Tangem.</string>
   <string name="hw_upgrade_to_cold_banner_title">Atualize a segurança da sua carteira para hardware.</string>
-  <string name="hw_wallets_limit_alert_message">Você pode ter até %1$s carteiras móveis na Tangem. Para criar ou importar uma nova, remova primeiro uma das suas carteiras móveis existentes.</string>
-  <string name="hw_wallets_limit_alert_title">Você atingiu o limite de carteiras móveis</string>
   <string name="information_generated_with_ai">Esta informação foi gerada com IA.\nToque aqui se encontrar algum erro.</string>
   <string name="initial_message_change_access_code_body">Para alterar o código de acesso, aproxime o cartão ou anel conforme mostrado acima e não o remova até o final da operação.</string>
   <string name="initial_message_change_passcode_body">Para alterar a senha, aproxime o cartão conforme mostrado acima e não o remova até o final da operação.</string>
@@ -1172,7 +1170,7 @@
   <string name="introduction_button_buy_tangem">Comprar Tangem</string>
   <string name="introduction_button_create_wallet">Criar carteira</string>
   <string name="introduction_button_i_have_a_wallet">Eu tenho uma carteira</string>
-  <string name="introduction_create_wallet_hardware_description">Se você já tiver uma carteira Tangem</string>
+  <string name="introduction_create_wallet_hardware_description">Conecte ou adquira uma nova Tangem Wallet</string>
   <string name="introduction_create_wallet_hardware_title">Cartão ou Anel Tangem</string>
   <string name="introduction_create_wallet_seed_phrase_description">Começar sem uma carteira de hardware</string>
   <string name="introduction_create_wallet_seed_phrase_title">Criar uma carteira com frase-semente</string>
@@ -2491,7 +2489,6 @@
   <string name="social_login_error_cloud_access_description">Verifique se a Tangem tem acesso ao seu %s e tente novamente</string>
   <string name="social_login_error_cloud_access_title">Não foi possível restaurar a carteira</string>
   <string name="social_login_error_generic">Ocorreu um problema. Por favor, tente novamente</string>
-  <string name="social_login_error_generic_v2">Por favor, verifique sua conexão com a internet e tente novamente.</string>
   <string name="social_login_error_network_description">Verifique sua conexão e tente novamente.</string>
   <string name="social_login_error_network_title">Sem conexão com a internet</string>
   <string name="social_login_error_no_account">Adicione uma conta %s a este dispositivo para continuar.</string>
@@ -2894,7 +2891,7 @@
   <string name="tangempay_campaign_spend_description">Com cartão digital via Apple Pay ou Google Pay, sem taxas adicionais nas compras</string>
   <string name="tangempay_campaign_unavailable_description">Você pode pedir um cartão comum</string>
   <string name="tangempay_campaign_unavailable_title">Não foi possível obter o cartão especial</string>
-  <string name="tangempay_cancel_kyc">Ocultar a verificação da tela principal</string>
+  <string name="tangempay_cancel_kyc">Ocultar status</string>
   <string name="tangempay_card_activation_attempts_exceeded_description">Entre em contato com o suporte</string>
   <string name="tangempay_card_activation_attempts_exceeded_title">Você excedeu o número de tentativas de ativação</string>
   <string name="tangempay_card_activation_description">Digite os 4 últimos dígitos do número do seu cartão</string>
@@ -3098,7 +3095,7 @@
   <string name="tangempay_kyc_in_progress_notification_title">O processo verificação para Tangem Pay está em andamento.</string>
   <string name="tangempay_kyc_in_progress_popup_description">Os documentos geralmente são verificados automaticamente em até 5 minutos. Em casos raros, se for necessária uma revisão manual, esse processo pode levar até 48 horas.</string>
   <string name="tangempay_kyc_rejected">Rejeitado</string>
-  <string name="tangempay_kyc_rejected_button_text">Ocultar verificação</string>
+  <string name="tangempay_kyc_rejected_button_text">Ocultar status</string>
   <string name="tangempay_kyc_rejected_description">Desculpe, não foi possível verificar.</string>
   <string name="tangempay_kyc_rejected_description_span">Seu perfil.</string>
   <string name="tangempay_main_select_plan">Selecionar plano</string>
