@@ -100,4 +100,10 @@ sealed class CollectibleException(message: String?) : Exception(message) {
 
     /** The machine has too many packs currently open. */
     class LowInventory : CollectibleException("Low inventory")
+
+    /** The gacha will not open this pack: a retry cannot help, only support can sort it out. */
+    class PackOpeningRefused : CollectibleException("Pack opening refused")
+
+    /** The gacha will not open this pack and the payment is on its way back. */
+    class RefundInProgress : CollectibleException("Refund in progress")
 }
