@@ -890,6 +890,7 @@
   <string name="hw_cloud_backup_permissions_title_v2">%1$sへのフルアクセスを許可</string>
   <string name="hw_cloud_backup_remove_title">%1$s%2$sのバックアップ</string>
   <string name="hw_cloud_backup_removed">バックアップを削除しました</string>
+  <string name="hw_cloud_backup_restore_all_added_hint">この%1$sアカウントのバックアップはすべてTangemに追加済みです</string>
   <string name="hw_cloud_backup_restore_error_title">問題が発生しました</string>
   <string name="hw_cloud_backup_restore_error_with_recovery">しばらくしてからもう一度お試しいただくか、リカバリーフレーズをインポートしてください。</string>
   <string name="hw_cloud_backup_restore_navtitle_v2">%1$sのバックアップ</string>
@@ -979,6 +980,8 @@
   <string name="hw_upgrade_title">ハードウェアウォレットにアップグレード</string>
   <string name="hw_upgrade_to_cold_banner_description">Tangemの業界最高クラスのハードウェアウォレットで、暗号資産を安全に保管しましょう。</string>
   <string name="hw_upgrade_to_cold_banner_title">ウォレットをハードウェアセキュリティにアップグレードする</string>
+  <string name="hw_wallets_limit_alert_message">Tangemに追加できるモバイルウォレットは最大%1$s個です。新しいウォレットを追加するには、既存のモバイルウォレットを1つ削除してください。</string>
+  <string name="hw_wallets_limit_alert_title">モバイルウォレットの上限に達しました</string>
   <string name="information_generated_with_ai">この情報はAIで生成されました。\nエラーが見つかった場合は、ここをタップしてください。</string>
   <string name="initial_message_change_access_code_body">アクセスコードを変更するには、上図のようにカードまたはリングをタップし、操作が終了するまで取り外さないでください。</string>
   <string name="initial_message_change_passcode_body">パスコードを変更するには、上記のようにカードをタップし、操作が終了するまで取り外さないでください。</string>
@@ -994,7 +997,7 @@
   <string name="introduction_button_buy_tangem">Tangemを購入</string>
   <string name="introduction_button_create_wallet">ウォレットを作成</string>
   <string name="introduction_button_i_have_a_wallet">ウォレットを持っている</string>
-  <string name="introduction_create_wallet_hardware_description">Tangemウォレットをお持ちの場合</string>
+  <string name="introduction_create_wallet_hardware_description">接続または新しいTangemウォレットを入手</string>
   <string name="introduction_create_wallet_hardware_title">TangemカードまたはRing</string>
   <string name="introduction_create_wallet_seed_phrase_description">ハードウェアウォレットなしで始める</string>
   <string name="introduction_create_wallet_seed_phrase_title">シードフレーズでウォレットを作成</string>
@@ -2176,10 +2179,16 @@
   <string name="social_login_creating_wallet">ウォレットを作成しています</string>
   <string name="social_login_creating_wallet_description">数秒で完了します</string>
   <string name="social_login_error_backup_not_saved">バックアップを保存できませんでした。クラウドストレージが利用できることを確認してから、もう一度お試しください</string>
+  <string name="social_login_error_backup_not_saved_description">クラウドストレージが利用可能であることを確認し、もう一度お試しください。</string>
+  <string name="social_login_error_backup_not_saved_title">バックアップを保存できませんでした</string>
   <string name="social_login_error_cloud_access_description">Tangemが%sアカウントにアクセスできることを確認してから、もう一度お試しください</string>
   <string name="social_login_error_cloud_access_title">ウォレットを復元できませんでした</string>
   <string name="social_login_error_generic">問題が発生しました。もう一度お試しください</string>
+  <string name="social_login_error_generic_v2">もう一度お試しください。問題が解決しない場合は、インターネット接続を確認してください。</string>
+  <string name="social_login_error_network_description">インターネット接続を確認し、もう一度お試しください。</string>
+  <string name="social_login_error_network_title">インターネットに接続されていません</string>
   <string name="social_login_error_no_account">続行するには、このデバイスに%sアカウントを追加してください。</string>
+  <string name="social_login_error_no_account_title">このデバイスに%1$sのアカウントがありません</string>
   <string name="social_login_error_restore_failed_description">このアカウントのウォレットを復元できませんでした。もう一度お試しいただくか、サポートにお問い合わせください</string>
   <string name="social_login_error_session_expired">セッションの有効期限が切れました。もう一度お試しください</string>
   <string name="social_login_error_support">サポートに問い合わせる</string>
@@ -2188,6 +2197,8 @@
   <string name="social_login_restoring_wallet_description">トークンを復元しています</string>
   <string name="social_login_toast_wallet_added">ウォレットを追加しました</string>
   <string name="social_login_toast_wallet_created">ウォレットを作成しました</string>
+  <string name="social_wallet_already_added_alert_message">このデバイスで%1$sを使ってサインインできるウォレットは1つだけです。別のアカウントを使用するには、先に現在のアカウントからサインアウトしてください。</string>
+  <string name="social_wallet_already_added_alert_title">すでに%1$sでサインインしています</string>
   <string name="social_wallet_delete_anyway">それでも削除する</string>
   <string name="social_wallet_delete_attention_acknowledge">リカバリーフレーズをバックアップしていない場合、このウォレットに永久にアクセスできなくなることを理解しています。</string>
   <string name="social_wallet_delete_attention_description">この操作により、このデバイスからウォレットが削除され、%1$sアカウントとの連携が解除され、暗号化された鍵がクラウドから削除されます。%1$sでサインインしても、ウォレットは復元できなくなります。</string>
@@ -2528,7 +2539,7 @@
   <string name="tangempay_campaign_spend_description">デジタルカードをApple PayまたはGoogle Payで利用でき、お買い物に追加手数料はかかりません</string>
   <string name="tangempay_campaign_unavailable_description">通常のカードをお申し込みいただけます</string>
   <string name="tangempay_campaign_unavailable_title">特別なカードを取得できません</string>
-  <string name="tangempay_cancel_kyc">メイン画面から本人確認を非表示にする</string>
+  <string name="tangempay_cancel_kyc">ステータスを非表示</string>
   <string name="tangempay_card_activation_attempts_exceeded_description">サポートにお問い合わせください</string>
   <string name="tangempay_card_activation_attempts_exceeded_title">カードの有効化を試行できる回数を超えました</string>
   <string name="tangempay_card_activation_description">カード番号の下4桁を入力してください</string>
@@ -2731,7 +2742,7 @@
   <string name="tangempay_kyc_in_progress_notification_title">Tangem Payの本人確認手続き進行中</string>
   <string name="tangempay_kyc_in_progress_popup_description">書類は通常、5分以内に自動で確認されます。手動での審査が必要な稀な場合は、最大48時間かかることがあります。</string>
   <string name="tangempay_kyc_rejected">拒否されました</string>
-  <string name="tangempay_kyc_rejected_button_text">本人確認を隠す</string>
+  <string name="tangempay_kyc_rejected_button_text">ステータスを非表示</string>
   <string name="tangempay_kyc_rejected_description">申し訳ございませんが、</string>
   <string name="tangempay_kyc_rejected_description_span">本人確認ができませんでした。</string>
   <string name="tangempay_main_select_plan">プランを選択</string>
@@ -3138,12 +3149,14 @@
   <string name="user_wallet_add_hardware_title">ハードウェアウォレットを追加</string>
   <string name="user_wallet_add_mobile_description">このデバイスで新しいウォレットを作成</string>
   <string name="user_wallet_add_mobile_title">モバイルウォレットを追加</string>
+  <string name="user_wallet_add_wallet">ウォレットを追加</string>
   <string name="user_wallet_coming_soon_dialog_description">複数のモバイルウォレットを作成できる機能を開発中です。</string>
   <string name="user_wallet_list_add_button">ウォレットを追加</string>
   <string name="user_wallet_list_delete_hw_prompt">バックアップせずにこのウォレットを削除すると、資金に永久にアクセスできなくなります。</string>
   <string name="user_wallet_list_delete_prompt">このウォレットを忘れてもよろしいですか？</string>
   <string name="user_wallet_list_error_unable_to_unlock">エラーが発生しました。カードまたはリングをスキャンしてログインしてください。</string>
   <string name="user_wallet_list_error_wallet_already_saved">このウォレットはすでに保存されています。別のウォレットを追加できます。</string>
+  <string name="user_wallet_list_error_wallet_already_saved_title">ウォレットはすでに追加されています</string>
   <string name="user_wallet_list_rename_popup_error_already_exists">%sという名前のウォレットはすでに存在します。</string>
   <string name="user_wallet_list_rename_popup_placeholder">ウォレット名</string>
   <string name="user_wallet_list_rename_popup_title">ウォレット名の変更</string>

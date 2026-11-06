@@ -509,6 +509,7 @@
   <string name="common_retry">Повторить</string>
   <string name="common_save">Сохранить</string>
   <string name="common_save_changes">Сохранить изменения</string>
+  <string name="common_scan_card">Сканировать карту</string>
   <string name="common_search">Поиск</string>
   <string name="common_search_tokens">Поиск токенов</string>
   <string name="common_second_no_param">сек</string>
@@ -931,6 +932,7 @@
   <string name="hw_cloud_backup_permissions_title_v2">Разрешить полный доступ к %1$s</string>
   <string name="hw_cloud_backup_remove_title">%1$s: резервная копия «%2$s»</string>
   <string name="hw_cloud_backup_removed">Резервная копия удалена</string>
+  <string name="hw_cloud_backup_restore_all_added_hint">Все резервные копии в этом аккаунте %1$s уже есть в Tangem</string>
   <string name="hw_cloud_backup_restore_error_title">Что-то пошло не так</string>
   <string name="hw_cloud_backup_restore_error_with_recovery">Пожалуйста, попробуйте позже или импортируйте фразу восстановления.</string>
   <string name="hw_cloud_backup_restore_navtitle_v2">Резервная копия %1$s</string>
@@ -1019,6 +1021,8 @@
   <string name="hw_upgrade_title">Апгрейд до аппаратного кошелька</string>
   <string name="hw_upgrade_to_cold_banner_description">Храните свою криптовалюту в безопасности с помощью первоклассного аппаратного кошелька Tangem.</string>
   <string name="hw_upgrade_to_cold_banner_title">Сделать апгрейд кошелька до аппаратной версии.</string>
+  <string name="hw_wallets_limit_alert_message">В Tangem можно иметь до %1$s мобильных кошельков. Чтобы добавить новый, сначала удалите один из текущих мобильных кошельков.</string>
+  <string name="hw_wallets_limit_alert_title">Достигнут лимит мобильных кошельков</string>
   <string name="information_generated_with_ai">Эта информация была сгенерирована ИИ.\nНажмите здесь, если обнаружили ошибку.</string>
   <string name="initial_message_change_access_code_body">Чтобы изменить код доступа, приложите карту или кольцо как показано выше и не убирайте до окончания операции</string>
   <string name="initial_message_change_passcode_body">Чтобы изменить пароль, приложите карту как показано выше и не убирайте до окончания операции</string>
@@ -1034,7 +1038,7 @@
   <string name="introduction_button_buy_tangem">Купить Tangem</string>
   <string name="introduction_button_create_wallet">Создайте кошелёк</string>
   <string name="introduction_button_i_have_a_wallet">У меня есть кошелёк</string>
-  <string name="introduction_create_wallet_hardware_description">Если у вас уже есть кошелёк Tangem</string>
+  <string name="introduction_create_wallet_hardware_description">Подключите свой кошелёк Tangem или получите новый</string>
   <string name="introduction_create_wallet_hardware_title">Карта или кольцо Tangem</string>
   <string name="introduction_create_wallet_seed_phrase_description">Начните без аппаратного кошелька</string>
   <string name="introduction_create_wallet_seed_phrase_title">Создайте кошелёк с сид-фразой</string>
@@ -2272,10 +2276,16 @@
   <string name="social_login_creating_wallet">Создание кошелька</string>
   <string name="social_login_creating_wallet_description">Это займёт всего несколько секунд</string>
   <string name="social_login_error_backup_not_saved">Не удалось сохранить резервную копию. Убедитесь, что облачное хранилище доступно, и попробуйте снова</string>
+  <string name="social_login_error_backup_not_saved_description">Убедитесь, что облачное хранилище доступно, и попробуйте снова.</string>
+  <string name="social_login_error_backup_not_saved_title">Не удалось сохранить резервную копию</string>
   <string name="social_login_error_cloud_access_description">Убедитесь, что у Tangem есть доступ к вашему аккаунту %s, затем попробуйте снова</string>
   <string name="social_login_error_cloud_access_title">Не удалось восстановить кошелёк</string>
   <string name="social_login_error_generic">Что-то пошло не так. Пожалуйста, попробуйте снова</string>
+  <string name="social_login_error_generic_v2">Пожалуйста, попробуйте снова. Если проблема не исчезнет, проверьте подключение к интернету.</string>
+  <string name="social_login_error_network_description">Проверьте подключение и повторите попытку.</string>
+  <string name="social_login_error_network_title">Нет соединения с интернетом</string>
   <string name="social_login_error_no_account">Чтобы продолжить, добавьте на это устройство аккаунт %s.</string>
+  <string name="social_login_error_no_account_title">На этом устройстве нет аккаунта %1$s</string>
   <string name="social_login_error_restore_failed_description">Не удалось восстановить кошелёк для этого аккаунта. Попробуйте снова или обратитесь в поддержку</string>
   <string name="social_login_error_session_expired">Сессия истекла. Пожалуйста, попробуйте снова</string>
   <string name="social_login_error_support">Обратиться в поддержку</string>
@@ -2284,6 +2294,8 @@
   <string name="social_login_restoring_wallet_description">Восстанавливаем ваши токены</string>
   <string name="social_login_toast_wallet_added">Кошелёк добавлен</string>
   <string name="social_login_toast_wallet_created">Кошелёк создан</string>
+  <string name="social_wallet_already_added_alert_message">Только один кошелёк на этом устройстве может использовать вход через %1$s. Чтобы использовать другой аккаунт, сначала выйдите из текущего.</string>
+  <string name="social_wallet_already_added_alert_title">Вы уже вошли через %1$s</string>
   <string name="social_wallet_delete_anyway">Всё равно удалить</string>
   <string name="social_wallet_delete_attention_acknowledge">Я понимаю, что если резервная копия моей фразы восстановления не сохранена, то я навсегда потеряю доступ к этому кошельку.</string>
   <string name="social_wallet_delete_attention_description">Кошелёк будет удалён с этого устройства и отвязан от вашего аккаунта %1$s, а ваши зашифрованные ключи будут удалены из облака. Вход через %1$s больше не позволит его восстановить.</string>
@@ -2622,7 +2634,7 @@
   <string name="tangempay_campaign_spend_description">С цифровой картой через Apple Pay или Google Pay, без дополнительных комиссий за покупки</string>
   <string name="tangempay_campaign_unavailable_description">Вы можете заказать обычную</string>
   <string name="tangempay_campaign_unavailable_title">Не удалось получить особую карту</string>
-  <string name="tangempay_cancel_kyc">Скрыть верификацию с главной</string>
+  <string name="tangempay_cancel_kyc">Скрыть статус</string>
   <string name="tangempay_card_activation_attempts_exceeded_description">Обратитесь в поддержку</string>
   <string name="tangempay_card_activation_attempts_exceeded_title">Вы исчерпали попытки активации</string>
   <string name="tangempay_card_activation_description">Введите последние 4 цифры номера карты</string>
@@ -2828,7 +2840,7 @@
   <string name="tangempay_kyc_in_progress_notification_title">Идёт верификация для Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_popup_description">Обычно документы проверяются автоматически в течение 5 минут, в редких случаях при необходимости ручной проверки – до 48 часов.</string>
   <string name="tangempay_kyc_rejected">Отклонено</string>
-  <string name="tangempay_kyc_rejected_button_text">Скрыть верификацию</string>
+  <string name="tangempay_kyc_rejected_button_text">Скрыть статус</string>
   <string name="tangempay_kyc_rejected_description">Извините, мы не смогли подтвердить</string>
   <string name="tangempay_kyc_rejected_description_span">ваш профиль.</string>
   <string name="tangempay_main_select_plan">Выбрать тариф</string>
@@ -3242,13 +3254,14 @@
   <string name="user_wallet_add_hardware_title">Добавить аппаратный кошелёк</string>
   <string name="user_wallet_add_mobile_description">Создайте новый кошелёк на этом устройстве</string>
   <string name="user_wallet_add_mobile_title">Добавить мобильный кошелёк</string>
-  <string name="user_wallet_add_wallet">Добавить кошелек</string>
+  <string name="user_wallet_add_wallet">Добавить кошелёк</string>
   <string name="user_wallet_coming_soon_dialog_description">Мы работаем над поддержкой нескольких мобильных кошельков.</string>
   <string name="user_wallet_list_add_button">Добавить кошелек</string>
   <string name="user_wallet_list_delete_hw_prompt">Если вы удалите этот кошелёк без резервной копии, вы навсегда потеряете доступ к своим средствам.</string>
   <string name="user_wallet_list_delete_prompt">Вы уверены, что хотите забыть этот кошелек?</string>
   <string name="user_wallet_list_error_unable_to_unlock">Произошла ошибка, пожалуйста, отсканируйте свою карту или кольцо для входа</string>
   <string name="user_wallet_list_error_wallet_already_saved">Этот кошелек уже был сохранен, вы можете добавить другой</string>
+  <string name="user_wallet_list_error_wallet_already_saved_title">Кошелёк уже добавлен</string>
   <string name="user_wallet_list_rename_popup_error_already_exists">Кошелек с именем %s уже существует</string>
   <string name="user_wallet_list_rename_popup_placeholder">Имя кошелька</string>
   <string name="user_wallet_list_rename_popup_title">Переименование кошелька</string>
@@ -3434,6 +3447,9 @@
   <string name="warning_kaspa_unfinished_token_transaction_message">Ваша транзакция %1$s %2$s не была завершена. Вы можете попробовать отправить ее еще раз.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">У вас есть незавершенная транзакция</string>
   <string name="warning_last_balance_updated_time">Последнее обновление %s</string>
+  <string name="warning_link_wallet_cold_message">Отсканируйте карту, чтобы привязать кошелёк к этому устройству.</string>
+  <string name="warning_link_wallet_hot_message">Подтвердите привязку кошелька к этому устройству.</string>
+  <string name="warning_link_wallet_title">Привяжите кошелёк к этому устройству</string>
   <string name="warning_low_signatures_message">На этой карте осталось всего %s подписей. Вам следует вывести все ваши средства.</string>
   <string name="warning_low_signatures_title">Малое количество подписей</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Токены на разных сетях могут иметь разные адреса. Пожалуйста, убедитесь при переводе средств, что ваш адрес соответствует сети.</string>

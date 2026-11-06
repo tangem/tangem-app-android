@@ -996,7 +996,7 @@
   <string name="introduction_button_buy_tangem">购买 Tangem</string>
   <string name="introduction_button_create_wallet">创建钱包</string>
   <string name="introduction_button_i_have_a_wallet">我已有钱包</string>
-  <string name="introduction_create_wallet_hardware_description">如果您已拥有 Tangem钱包</string>
+  <string name="introduction_create_wallet_hardware_description">连接或获取新的 Tangem 钱包</string>
   <string name="introduction_create_wallet_hardware_title">Tangem 卡片或指环</string>
   <string name="introduction_create_wallet_seed_phrase_description">无需硬件钱包即可开始</string>
   <string name="introduction_create_wallet_seed_phrase_title">创建助记词钱包</string>
@@ -2529,7 +2529,7 @@
   <string name="tangempay_campaign_spend_description">通过 Apple Pay 或 Google Pay 使用数字卡，购物无额外费用</string>
   <string name="tangempay_campaign_unavailable_description">您可以申请普通卡</string>
   <string name="tangempay_campaign_unavailable_title">无法获取专属卡</string>
-  <string name="tangempay_cancel_kyc">从主屏幕隐藏身份验证</string>
+  <string name="tangempay_cancel_kyc">隐藏状态</string>
   <string name="tangempay_card_activation_attempts_exceeded_description">请联系客服</string>
   <string name="tangempay_card_activation_attempts_exceeded_title">您已超过激活尝试次数</string>
   <string name="tangempay_card_activation_description">输入您卡号的最后 4 位数字</string>
@@ -2732,7 +2732,7 @@
   <string name="tangempay_kyc_in_progress_notification_title">Tangem Pay 的身份验证流程正在进行中</string>
   <string name="tangempay_kyc_in_progress_popup_description">文件通常会在 5 分钟内自动验证。极少数情况下，如果需要人工审核，则可能需要长达 48 小时。</string>
   <string name="tangempay_kyc_rejected">已拒绝</string>
-  <string name="tangempay_kyc_rejected_button_text">隐藏验证</string>
+  <string name="tangempay_kyc_rejected_button_text">隐藏状态</string>
   <string name="tangempay_kyc_rejected_description">抱歉，我们无法验证</string>
   <string name="tangempay_kyc_rejected_description_span">您的个人资料。</string>
   <string name="tangempay_main_select_plan">选择套餐</string>
