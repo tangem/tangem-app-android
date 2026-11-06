@@ -17,7 +17,7 @@ internal class SetAmountTransformer(
         val newState = prevState.copy(amountValue = value, isAmountFromFraction = isAmountFromFraction)
         val isQuotable = newState.enteredAmount() != null && !newState.isBelowMinAmount()
         return newState.copy(
-            quote = if (isQuotable) QuoteUM.Loading(isAnswerExpected = false) else QuoteUM.Empty,
+            quote = if (isQuotable) QuoteUM.Loading else QuoteUM.Empty,
         ).recomputeGate()
     }
 }

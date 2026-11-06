@@ -26,23 +26,19 @@ import com.tangem.features.polymarket.impl.placeprediction.entity.PreparedPredic
 import com.tangem.features.polymarket.impl.placeprediction.entity.PredictionFeeSheetUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.SubmitUM
 import com.tangem.features.polymarket.impl.placeprediction.entity.toStatusRoute
-import com.tangem.features.polymarket.impl.placeprediction.model.transformers.SetSubmitTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.transformer.update
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
 import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 
 @Suppress("TooManyFunctions", "LongParameterList")
 @ModelScoped
@@ -64,8 +60,6 @@ internal class PlacePredictionOrderModel @Inject constructor(
     private val quoteEngine = quoteEngineFactory.create(params = params, uiState = uiState, scope = modelScope)
 
     private val orderSubmitter = orderSubmitterFactory.create(params = params, uiState = uiState, scope = modelScope)
-
-    private var pendingPlacement: Job? = null
 
     private val buttonStyle = buttonStyleFactory.create(
         userWalletId = params.userWalletId,
@@ -93,16 +87,14 @@ internal class PlacePredictionOrderModel @Inject constructor(
     }
 
     fun onPause() {
-        dropPendingPlacement()
         quoteEngine.onPause()
     }
 
-    fun isSubmitting(): Boolean = orderSubmitter.isSubmitting() || uiState.value.submit is SubmitUM.AwaitingQuote
+    fun isSubmitting(): Boolean = orderSubmitter.isSubmitting()
 
     override fun onAmountChange(value: String) {
         if (orderSubmitter.isSubmitting() || value == uiState.value.amountValue) return
 
-        dropPendingPlacement()
         quoteEngine.onAmountChange(value = value)
     }
 
@@ -122,7 +114,6 @@ internal class PlacePredictionOrderModel @Inject constructor(
         val current = uiState.value.amountValue.parseBigDecimalOrNull()
         if (orderSubmitter.isSubmitting() || current != null && current.compareTo(amount) == 0) return
 
-        dropPendingPlacement()
         quoteEngine.onAmountChange(value = value, isPicked = true)
     }
 
@@ -170,40 +161,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
     override fun onPlaceClick(confirmedWith: PlaceButtonStyleUM) {
         when (uiState.value.placeAction) {
             PlaceActionUM.Ready -> quoteEngine.prepare()?.let { place(it, confirmedWith) } ?: settleButtonIfIdle()
-            PlaceActionUM.ReadyOnceQuoted -> placeOnceQuoted(confirmedWith)
-            PlaceActionUM.AwaitingQuote -> resetHold()
             PlaceActionUM.Unavailable -> settleButtonIfIdle()
-        }
-    }
-
-    private fun placeOnceQuoted(confirmedWith: PlaceButtonStyleUM) {
-        val wait = modelScope.launch {
-            when (withTimeoutOrNull(PENDING_PLACEMENT_LIFETIME) { quoteEngine.awaitFreshQuote() }) {
-                true -> {
-                    releaseTap()
-                    quoteEngine.prepare()?.let { place(it, confirmedWith) }
-                }
-                null -> quoteEngine.abandonFreshQuote()
-                false -> Unit
-            }
-        }
-
-        pendingPlacement = wait
-        uiState.update(SetSubmitTransformer(submit = SubmitUM.AwaitingQuote))
-        wait.invokeOnCompletion { if (pendingPlacement === wait) dropPendingPlacement() }
-    }
-
-    private fun dropPendingPlacement() {
-        val wait = pendingPlacement ?: return
-        pendingPlacement = null
-        wait.cancel()
-        releaseTap()
-        settleButtonIfIdle()
-    }
-
-    private fun releaseTap() {
-        if (uiState.value.submit is SubmitUM.AwaitingQuote) {
-            uiState.update(SetSubmitTransformer(submit = SubmitUM.Idle))
         }
     }
 
@@ -272,6 +230,5 @@ internal class PlacePredictionOrderModel @Inject constructor(
 
     private companion object {
         val BUY_PRESET_AMOUNTS = listOf(BigDecimal(100), BigDecimal(500), BigDecimal(1_000), BigDecimal(5_000))
-        val PENDING_PLACEMENT_LIFETIME = 10.seconds
     }
 }
