@@ -244,6 +244,28 @@ internal class EarnPickerModelTest {
             }
 
         @Test
+        fun `GIVEN resolved selection WHEN a later frame drops its product THEN the cards never show with none selected`() =
+            runTest {
+                // Arrange
+                val frames = MutableStateFlow(frame(summary(lending), summary(staking), summary(vault)))
+                val model = createModel(
+                    frames = frames,
+                    products = listOf(lending, staking, vault),
+                    preselected = lending.id,
+                )
+                advanceUntilIdle()
+
+                // Act
+                frames.value = frame(summary(staking), summary(vault))
+                advanceUntilIdle()
+
+                // Assert
+                val actual = model.uiState.value
+                assertThat(actual.products.isEmpty() || actual.products.count { it.isSelected } == 1).isTrue()
+                model.onDestroy()
+            }
+
+        @Test
         fun `GIVEN a later frame with another order WHEN emitted THEN selection is unchanged`() = runTest {
             // Arrange
             val frames = MutableStateFlow(frame(summary(lending), summary(vault)))
