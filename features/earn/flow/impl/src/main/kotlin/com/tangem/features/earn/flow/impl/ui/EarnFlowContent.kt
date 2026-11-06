@@ -117,7 +117,7 @@ internal fun EarnConfirmContent(
                     EarnSecondaryText(state.amountCrypto)
                 }
             }
-            items(items = state.rows, key = { it.label.hashCode() }) { row -> EarnRow(row) }
+            items(items = state.rows) { row -> EarnRow(row) }
             item(key = "fee") { feeBlock?.Content(Modifier.fillMaxWidth()) }
             state.notice?.let { notice -> item(key = "notice") { EarnSecondaryText(notice) } }
             notifications(state.notifications)

@@ -238,21 +238,6 @@ internal class EarnFlowConverterTest {
         )
     }
 
-    /** An entered 0.5 ETH: the shared transformers mark it valid. */
-    private fun validAmountState(): AmountState {
-        val status = testStatus()
-        val boundary = EnterAmountBoundary(amount = BigDecimal("0.5"), fiatRate = status.value.fiatRate)
-        val initial = AmountStateConverter(
-            clickIntents = mockk(relaxed = true),
-            appCurrency = AppCurrency.Default,
-            cryptoCurrencyStatus = status,
-            maxEnterAmount = EnterAmountBoundary(amount = TEST_BALANCE, fiatRate = status.value.fiatRate),
-            iconStateConverter = CryptoCurrencyToIconStateConverter(),
-            isBalanceHidden = false,
-            accountTitleUM = AccountTitleUM.Text(TextReference.EMPTY),
-        ).convert(AmountParameters(title = TextReference.EMPTY, value = ""))
-        return AmountFieldSetMaxAmountTransformer(status, boundary, minAmount = null).transform(initial)
-    }
 
     data class VariantModel(val status: EarnTxStatus, val expected: TangemStatusScreen.Variant)
 

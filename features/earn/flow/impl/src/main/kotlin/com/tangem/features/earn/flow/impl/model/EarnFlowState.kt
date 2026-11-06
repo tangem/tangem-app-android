@@ -67,6 +67,9 @@ internal data class EarnFlowState(
         }
 }
 
+internal fun EarnFlowState.stack(hasAmountStep: Boolean): List<EarnFlowStep> =
+    if (step == EarnFlowStep.Confirm && hasAmountStep) listOf(EarnFlowStep.Amount, step) else listOf(step)
+
 internal data class EarnSigningState(val stepLabel: TextReference?, val isExecuting: Boolean) {
 
     companion object {

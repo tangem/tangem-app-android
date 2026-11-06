@@ -7,7 +7,6 @@ import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.account.AccountTitleUM
-import com.tangem.common.ui.alerts.TransactionErrorDialogFactory
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.decompose.di.ModelScoped
@@ -68,9 +67,9 @@ internal class EarnFlowModel @Inject constructor(
     sessionFactories: EarnSessionFactories,
     private val statuses: EarnFlowStatuses,
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
-    private val transactionErrorDialogFactory: TransactionErrorDialogFactory,
     private val messageSender: UiMessageSender,
     private val converter: EarnFlowConverter,
+    private val support: EarnFlowSupport,
 ) : Model(), AmountScreenClickIntents {
 
     private val params: EarnFlowComponent.Params = paramsContainer.require()
@@ -228,13 +227,10 @@ internal class EarnFlowModel @Inject constructor(
     }
 
     fun onClose() {
-        if (state.value.signing.isExecuting) return
-        finish(EarnFlowExit.Done)
+        if (!state.value.signing.isExecuting) finish(EarnFlowExit.Done)
     }
 
-    fun onFeeReload() {
-        modelScope.launch { feeSelectorReloadTrigger.triggerUpdate() }
-    }
+    fun onFeeReload() = modelScope.launch { feeSelectorReloadTrigger.triggerUpdate() }
 
     private fun subscribeOnStatuses() {
         statuses.currency(params.product)
@@ -400,12 +396,17 @@ internal class EarnFlowModel @Inject constructor(
         if (error is SendTransactionError.UserCancelledError) return
 
         TangemLogger.e("Earn flow: ${action.id} failed: $error")
-        transactionErrorDialogFactory.create(
+        support.transactionErrorDialog(
             error = error,
-            popBackStack = { finish(EarnFlowExit.Done) },
-            onFailedTxEmailClick = {},
+            product = params.product,
+            state = state::value,
+            scope = modelScope,
+            onClose = { finish(EarnFlowExit.Done) },
         )?.let(messageSender::send)
     }
+
+    /** The stack is not saved, while this model outlives the activity: a recreated stack starts from the kept step. */
+    fun restoredStack(): List<EarnFlowStep> = state.value.stack(hasAmountStep = amountSource != null)
 
     private fun moveTo(step: EarnFlowStep) {
         state.update { it.copy(step = step) }
@@ -415,9 +416,7 @@ internal class EarnFlowModel @Inject constructor(
         }
     }
 
-    private fun finish(exit: EarnFlowExit) {
-        params.callback.onFinished(exit)
-    }
+    private fun finish(exit: EarnFlowExit) = params.callback.onFinished(exit)
 
     private fun showSessionError(error: EarnSessionError) {
         TangemLogger.e("Earn flow: ${action.id} session error: $error")

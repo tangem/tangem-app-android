@@ -16,6 +16,12 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
+import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.BlockchainErrorInfo
+import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
@@ -78,6 +84,9 @@ internal class EarnFlowModelTest {
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger = mockk(relaxed = true)
     private val messageSender: UiMessageSender = mockk(relaxed = true)
     private val callback: EarnFlowComponent.ModelCallback = mockk(relaxed = true)
+    private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase = mockk(relaxed = true)
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase = mockk()
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase = mockk(relaxed = true)
 
     private val txRef = EarnTxRef(
         version = 1,
@@ -101,6 +110,9 @@ internal class EarnFlowModelTest {
             feeSelectorReloadTrigger,
             messageSender,
             callback,
+            saveBlockchainErrorUseCase,
+            getWalletMetaInfoUseCase,
+            sendFeedbackEmailUseCase,
         )
         mockkObject(CryptoCurrencyStatusOperations)
         with(CryptoCurrencyStatusOperations) {
@@ -910,6 +922,95 @@ internal class EarnFlowModelTest {
         }
 
         @Test
+        fun `GIVEN result shown WHEN stack recreated THEN it holds only the result`() = runTest {
+            // Arrange
+            val model = createConfirmedModel()
+            model.onConfirmClick()
+            advanceUntilIdle()
+
+            // Act
+            val stack = model.restoredStack()
+
+            // Assert
+            assertThat(stack).containsExactly(EarnFlowStep.Result)
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN confirm of amount action WHEN stack recreated THEN amount stays beneath confirm`() = runTest {
+            // Arrange
+            val model = createConfirmedModel()
+
+            // Act
+            val stack = model.restoredStack()
+
+            // Assert
+            assertThat(stack).containsExactly(EarnFlowStep.Amount, EarnFlowStep.Confirm).inOrder()
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN transaction error dialog WHEN support pressed THEN email sent with the entered amount`() = runTest {
+            // Arrange
+            every { session.execute(plan = any()) } returns flowOf(
+                EarnSigningStep.Failed(SendTransactionError.BlockchainSdkError(code = 1, message = "rejected")),
+            )
+            val metaInfo: WalletMetaInfo = mockk()
+            coEvery { getWalletMetaInfoUseCase.invoke(userWalletId = testUserWalletId) } returns metaInfo.right()
+            val dialog = slot<UiMessage>()
+            every { messageSender.send(capture(dialog)) } returns Unit
+            val model = createConfirmedModel()
+            model.onConfirmClick()
+            advanceUntilIdle()
+
+            // Act
+            (dialog.captured as DialogMessage).firstAction.onClick()
+            advanceUntilIdle()
+
+            // Assert
+            verify(exactly = 1) {
+                saveBlockchainErrorUseCase.invoke(
+                    error = BlockchainErrorInfo(
+                        errorMessage = "1: rejected",
+                        networkId = testEthereum.network.id,
+                        destinationAddress = "",
+                        tokenSymbol = null,
+                        amount = "0.5 ETH",
+                        fee = "0.00033 ETH",
+                    ),
+                )
+            }
+            coVerify(exactly = 1) {
+                sendFeedbackEmailUseCase.invoke(type = FeedbackEmailType.TransactionSendingProblem(metaInfo))
+            }
+            model.onDestroy()
+        }
+
+        @Test
+        fun `GIVEN no wallet meta info WHEN support pressed THEN no email sent`() = runTest {
+            // Arrange
+            every { session.execute(plan = any()) } returns flowOf(
+                EarnSigningStep.Failed(SendTransactionError.BlockchainSdkError(code = 1, message = "rejected")),
+            )
+            coEvery {
+                getWalletMetaInfoUseCase.invoke(userWalletId = testUserWalletId)
+            } returns IllegalStateException().left()
+            val dialog = slot<UiMessage>()
+            every { messageSender.send(capture(dialog)) } returns Unit
+            val model = createConfirmedModel()
+            model.onConfirmClick()
+            advanceUntilIdle()
+
+            // Act
+            (dialog.captured as DialogMessage).firstAction.onClick()
+            advanceUntilIdle()
+
+            // Assert
+            coVerify(exactly = 0) { sendFeedbackEmailUseCase.invoke(type = any()) }
+            model.onDestroy()
+        }
+
+        @Test
         fun `GIVEN confirm step of amount action WHEN back THEN amount step again`() = runTest {
             // Arrange
             val model = createConfirmedModel()
@@ -952,9 +1053,14 @@ internal class EarnFlowModelTest {
             isAmountSubtractAvailableUseCase = isAmountSubtractAvailableUseCase,
         ),
         feeSelectorReloadTrigger = feeSelectorReloadTrigger,
-        transactionErrorDialogFactory = TransactionErrorDialogFactory(),
         messageSender = messageSender,
         converter = EarnFlowConverter(),
+        support = EarnFlowSupport(
+            transactionErrorDialogFactory = TransactionErrorDialogFactory(),
+            saveBlockchainErrorUseCase = saveBlockchainErrorUseCase,
+            getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
+            sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
+        ),
     )
 
     data class DeductionModel(val entered: String?, val fee: String, val expected: String)
