@@ -2,9 +2,9 @@ package com.tangem.features.tangempay.card.view
 
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.account.CardDisplayName
-import com.tangem.domain.models.pay.TangemPayCardFrozenState
-import com.tangem.domain.models.pay.TangemPayCardState
-import com.tangem.domain.models.pay.TangemPayCardType
+import com.tangem.domain.models.tangempay.TangemPayCardFrozenState
+import com.tangem.domain.models.tangempay.TangemPayCardState
+import com.tangem.domain.models.tangempay.TangemPayCardType
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.utils.StringsSigns
 

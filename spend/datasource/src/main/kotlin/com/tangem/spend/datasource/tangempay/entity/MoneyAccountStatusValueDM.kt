@@ -1,0 +1,52 @@
+package com.tangem.spend.datasource.tangempay.entity
+
+import com.tangem.domain.models.serialization.SerializedBigDecimal
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
+sealed interface MoneyAccountStatusValueDM {
+
+    @Serializable
+    @SerialName("empty")
+    data object Empty : MoneyAccountStatusValueDM
+
+    @Serializable
+    @SerialName("activating")
+    data class Activating(
+        @SerialName("customer_id") val customerId: String,
+        @SerialName("step") val step: StepDM,
+    ) : MoneyAccountStatusValueDM {
+
+        @Serializable
+        enum class StepDM {
+            @SerialName("issuing")
+            ISSUING,
+
+            @SerialName("awaiting_deposit")
+            AWAITING_DEPOSIT,
+        }
+    }
+
+    @Serializable
+    @SerialName("failed")
+    data class Failed(
+        @SerialName("customer_id") val customerId: String,
+    ) : MoneyAccountStatusValueDM
+
+    @Serializable
+    @SerialName("active_account")
+    data class ActiveAccount(
+        @SerialName("customer_id") val customerId: String,
+        @SerialName("product_instance_id") val productInstanceId: String? = null,
+        @SerialName("balance") val balance: BalanceDM?,
+    ) : MoneyAccountStatusValueDM
+
+    @Serializable
+    data class BalanceDM(
+        @SerialName("crypto_amount") val cryptoAmount: SerializedBigDecimal,
+        @SerialName("deposit_address") val depositAddress: String,
+        @SerialName("currency_code") val currencyCode: String,
+        @SerialName("fiat_rate") val fiatRate: SerializedBigDecimal?,
+    )
+}

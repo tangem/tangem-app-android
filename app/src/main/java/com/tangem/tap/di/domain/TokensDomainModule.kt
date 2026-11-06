@@ -11,7 +11,7 @@ import com.tangem.domain.models.currency.balance.BalanceContributionFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionAccountStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher

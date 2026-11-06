@@ -102,7 +102,7 @@ An advice whose identical line change is in `rejected.diff` for the same module 
 - `pluginAdvice[]`: `{ redundantPlugin, reason }`.
 
 The JSON gives the structure; the `.txt` gives the exact spelling to write (`implementation(deps.okio)`,
-`api(projects.domain.visa.models)`, change advice as `runtimeOnly(deps.x) (was implementation)`).
+`api(projects.domain.tangempay.models)`, change advice as `runtimeOnly(deps.x) (was implementation)`).
 
 ```bash
 cat > <W>/kinds.jq <<'EOF'

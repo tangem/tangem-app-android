@@ -77,9 +77,9 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.moneyaccount.flow.MoneyAccountStatusFetcher
-import com.tangem.domain.pay.WithdrawalResult
-import com.tangem.domain.pay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
-import com.tangem.domain.pay.usecase.recents.RecordTokenTransferFromSwapUseCase
+import com.tangem.domain.tangempay.WithdrawalResult
+import com.tangem.domain.tangempay.usecase.GetPaymentAccountCryptoCurrencyStatusUseCase
+import com.tangem.domain.tangempay.usecase.recents.RecordTokenTransferFromSwapUseCase
 import com.tangem.domain.polymarket.PolymarketCollateralCurrencyFactory
 import com.tangem.domain.collectibles.account.flow.CollectiblesAccountStatusFetcher
 import com.tangem.domain.polymarket.flow.PredictionFundingWindow
@@ -2589,7 +2589,7 @@ internal class SwapModel @Inject constructor(
         modelScope.launch {
             val metaInfo = getWalletMetaInfoUseCase(fromUserWalletId).getOrNull() ?: return@launch
             val customerId = getTangemPayCustomerIdUseCase(fromUserWalletId).getOrNull().orEmpty()
-            val email = FeedbackEmailType.Visa.Withdrawal(
+            val email = FeedbackEmailType.TangemPay.Withdrawal(
                 walletMetaInfo = metaInfo,
                 customerId = customerId,
                 providerName = dataState.selectedProvider?.name.orEmpty(),

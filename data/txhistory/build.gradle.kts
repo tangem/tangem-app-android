@@ -25,8 +25,8 @@ dependencies {
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.account)
     implementation(projects.domain.account.status)
-    implementation(projects.domain.visa)
-    implementation(projects.domain.visa.models)
+    implementation(projects.domain.tangempay)
+    implementation(projects.domain.tangempay.models)
 
     // region Other libraries
     implementation(deps.androidx.annotation)
@@ -70,7 +70,6 @@ dependencies {
     implementation(projects.domain.account.status)
     implementation(projects.domain.moneyAccount)
     implementation(projects.domain.quotes)
-    implementation(projects.domain.visa)
     implementation(projects.domain.yieldSupply)
     // endregion
 
@@ -80,7 +79,6 @@ dependencies {
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory.models)
-    implementation(projects.domain.visa.models)
     implementation(projects.core.analytics.models)
     // endregion
 

@@ -1,6 +1,6 @@
 package com.tangem.features.tangempay.deeplink
 
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryItem
 
 internal sealed class TangemPayPushAction {
 

@@ -6,7 +6,7 @@ import com.sumsub.sns.core.SNSMobileSDK
 import com.sumsub.sns.core.data.listener.TokenExpirationHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.domain.pay.KycStartInfo
+import com.tangem.domain.tangempay.KycStartInfo
 import com.tangem.features.kyc.theme.TangemSNSIconHandler
 import com.tangem.features.kyc.theme.TangemSNSTheme
 import dagger.assisted.Assisted

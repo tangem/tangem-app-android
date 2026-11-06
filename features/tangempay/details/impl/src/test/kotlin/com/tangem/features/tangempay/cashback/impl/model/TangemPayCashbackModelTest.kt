@@ -16,15 +16,15 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.CashbackDisplayMode
-import com.tangem.domain.pay.model.CashbackDocument
-import com.tangem.domain.pay.model.CashbackHistory
-import com.tangem.domain.pay.model.CashbackPromotions
-import com.tangem.domain.pay.model.CashbackSummary
-import com.tangem.domain.pay.model.TangemPayCashback
-import com.tangem.domain.pay.repository.CashbackRepository
+import com.tangem.domain.tangempay.model.CashbackDisplayMode
+import com.tangem.domain.tangempay.model.CashbackDocument
+import com.tangem.domain.tangempay.model.CashbackHistory
+import com.tangem.domain.tangempay.model.CashbackPromotions
+import com.tangem.domain.tangempay.model.CashbackSummary
+import com.tangem.domain.tangempay.model.TangemPayCashback
+import com.tangem.domain.tangempay.repository.CashbackRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.cashback.api.TangemPayCashbackComponent
 import com.tangem.features.tangempay.cashback.impl.ui.state.TangemPayCashbackScreenUM
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -114,7 +114,7 @@ internal class TangemPayCashbackModelTest {
     @Test
     fun `GIVEN promotions load fails WHEN model created THEN error state`() {
         // Arrange
-        coEvery { cashbackRepository.getCashbackPromotions(any()) } returns VisaApiError.Unspecified.left()
+        coEvery { cashbackRepository.getCashbackPromotions(any()) } returns TangemPayApiError.Unspecified.left()
 
         // Act
         val model = createModel()
@@ -126,7 +126,7 @@ internal class TangemPayCashbackModelTest {
     @Test
     fun `GIVEN summary load fails WHEN model created THEN error state`() {
         // Arrange
-        coEvery { cashbackRepository.getCashbackSummary(any()) } returns VisaApiError.Unspecified.left()
+        coEvery { cashbackRepository.getCashbackSummary(any()) } returns TangemPayApiError.Unspecified.left()
 
         // Act
         val model = createModel()
@@ -184,8 +184,8 @@ internal class TangemPayCashbackModelTest {
     @Test
     fun `GIVEN summary and promotions both return error WHEN model created THEN error state`() {
         // Arrange
-        coEvery { cashbackRepository.getCashbackSummary(any()) } returns VisaApiError.Unspecified.left()
-        coEvery { cashbackRepository.getCashbackPromotions(any()) } returns VisaApiError.Unspecified.left()
+        coEvery { cashbackRepository.getCashbackSummary(any()) } returns TangemPayApiError.Unspecified.left()
+        coEvery { cashbackRepository.getCashbackPromotions(any()) } returns TangemPayApiError.Unspecified.left()
 
         // Act
         val model = createModel()
@@ -214,7 +214,7 @@ internal class TangemPayCashbackModelTest {
     @Test
     fun `GIVEN docs load fails WHEN model created THEN error state`() {
         // Arrange
-        coEvery { cashbackRepository.getCashbackAccrualDocs(any()) } returns VisaApiError.Unspecified.left()
+        coEvery { cashbackRepository.getCashbackAccrualDocs(any()) } returns TangemPayApiError.Unspecified.left()
 
         // Act
         val model = createModel()
@@ -241,7 +241,7 @@ internal class TangemPayCashbackModelTest {
     fun `GIVEN enabled summary AND history fails WHEN model created THEN error state`() {
         // Arrange
         coEvery { cashbackRepository.getCashbackSummary(any()) } returns enabledSummary().right()
-        coEvery { cashbackRepository.getCashbackHistory(any(), any()) } returns VisaApiError.Unspecified.left()
+        coEvery { cashbackRepository.getCashbackHistory(any(), any()) } returns TangemPayApiError.Unspecified.left()
 
         // Act
         val model = createModel()

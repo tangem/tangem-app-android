@@ -11,16 +11,16 @@ import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.TangemPayTariffPlanState
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.model.CustomerInfo
-import com.tangem.domain.pay.model.CustomerOffers
-import com.tangem.domain.pay.model.Offer
-import com.tangem.domain.pay.model.OrderType
-import com.tangem.domain.pay.repository.CustomerOffersRepository
-import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.pay.usecase.GetCustomerOffersUseCase
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.model.CustomerInfo
+import com.tangem.domain.tangempay.model.CustomerOffers
+import com.tangem.domain.tangempay.model.Offer
+import com.tangem.domain.tangempay.model.OrderType
+import com.tangem.domain.tangempay.repository.CustomerOffersRepository
+import com.tangem.domain.tangempay.repository.OnboardingRepository
+import com.tangem.domain.tangempay.usecase.GetCustomerOffersUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.customerTariffPlan
 import com.tangem.features.tangempay.orderCard.impl.TangemPayOrderCardTypeComponent
 import com.tangem.features.tangempay.orderCard.impl.ui.state.OrderCardType
@@ -313,7 +313,7 @@ internal class TangemPayOrderCardTypeModelTest {
     @Test
     fun `GIVEN offers request fails WHEN model created THEN error state`() = runTest {
         // Arrange
-        coEvery { customerOffersRepository.getOffers(userWalletId) } returns VisaApiError.Unspecified.left()
+        coEvery { customerOffersRepository.getOffers(userWalletId) } returns TangemPayApiError.Unspecified.left()
 
         // Act
         val model = createModel(testScope = this)
@@ -327,7 +327,7 @@ internal class TangemPayOrderCardTypeModelTest {
     @Test
     fun `GIVEN plastic offer present but customer info fails WHEN model created THEN error state`() = runTest {
         // Arrange
-        coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns VisaApiError.Unspecified.left()
+        coEvery { onboardingRepository.getCustomerInfo(userWalletId) } returns TangemPayApiError.Unspecified.left()
 
         // Act
         val model = createModel(testScope = this)

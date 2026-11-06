@@ -1,0 +1,130 @@
+package com.tangem.spend.datasource.tangempay.models.response
+
+import com.google.common.truth.Truth.assertThat
+import com.tangem.core.remote.json.NetworkJsonFactory
+import org.junit.jupiter.api.Test
+import java.math.BigDecimal
+
+internal class CustomerMeNetworksParsingTest {
+
+    private val json = NetworkJsonFactory.create()
+
+    @Test
+    fun `GIVEN networks json WHEN parse THEN maps enabled and disabled entries`() {
+        val body = """
+            {
+              "id": "c1", "state": "ACTIVE", "created_at": "2026-01-01T00:00:00Z",
+              "product_instances": [], "cards": [],
+              "balance": {
+                "networks": [
+                  {
+                    "name": "base", "is_testnet": true, "chain_id": 84532, "status": "ENABLED",
+                    "deposit_address": "0xEED",
+                    "tokens": [ { "token": "USDC", "token_contract_address": "0x036", "available_for_withdrawal": 6 } ]
+                  },
+                  {
+                    "name": "tron", "is_testnet": false, "chain_id": 728126428, "status": "DISABLED",
+                    "deposit_address": null,
+                    "tokens": [ { "token": "USDT", "token_contract_address": "TR7", "available_for_withdrawal": null } ]
+                  }
+                ]
+              }
+            }
+        """.trimIndent()
+
+        val result = json.decodeFromString(CustomerMeResponse.Result.serializer(), body)
+
+        val networks = result.balance!!.networks
+        assertThat(networks).hasSize(2)
+        val base = networks!![0]
+        assertThat(base.name).isEqualTo("base")
+        assertThat(base.isTestnet).isTrue()
+        assertThat(base.chainId).isEqualTo(84532L)
+        assertThat(base.status).isEqualTo("ENABLED")
+        assertThat(base.depositAddress).isEqualTo("0xEED")
+        assertThat(base.tokens[0].token).isEqualTo("USDC")
+        assertThat(base.tokens[0].availableForWithdrawal).isEqualTo(BigDecimal("6"))
+        val tron = networks[1]
+        assertThat(tron.depositAddress).isNull()
+        assertThat(tron.tokens[0].availableForWithdrawal).isNull()
+    }
+
+    @Test
+    fun `GIVEN not issued network WHEN parse THEN it has no deposit address and an empty token list`() {
+        // A NOT_ISSUED network has no contract yet, so the backend reports it without a deposit address and
+        // with an empty token list — the entry itself must still survive.
+        val body = """
+            {
+              "id": "c1", "state": "ACTIVE", "created_at": "2026-01-01T00:00:00Z",
+              "product_instances": [], "cards": [],
+              "balance": {
+                "networks": [
+                  { "name": "base", "is_testnet": true, "chain_id": 84532, "status": "ENABLED",
+                    "deposit_address": "0xEED",
+                    "tokens": [ { "token": "USDC", "token_contract_address": "0x036" } ] },
+                  { "name": "ethereum", "is_testnet": true, "chain_id": 11155111, "status": "NOT_ISSUED",
+                    "deposit_address": null, "tokens": [] }
+                ]
+              }
+            }
+        """.trimIndent()
+
+        val networks = json.decodeFromString(CustomerMeResponse.Result.serializer(), body).balance!!.networks!!
+
+        assertThat(networks).hasSize(2)
+        val notIssued = networks[1]
+        assertThat(notIssued.name).isEqualTo("ethereum")
+        assertThat(notIssued.status).isEqualTo("NOT_ISSUED")
+        assertThat(notIssued.chainId).isEqualTo(11155111L)
+        assertThat(notIssued.depositAddress).isNull()
+        assertThat(notIssued.tokens).isEmpty()
+        assertThat(networks[0].tokens[0].availableForWithdrawal).isNull()
+    }
+
+    @Test
+    fun `GIVEN token without contract address WHEN parse THEN contract address is null`() {
+        val body = """
+            {
+              "id": "c1", "state": "ACTIVE", "created_at": "2026-01-01T00:00:00Z",
+              "product_instances": [], "cards": [],
+              "balance": {
+                "networks": [
+                  { "name": "base", "is_testnet": true, "chain_id": 84532, "status": "NOT_ISSUED",
+                    "tokens": [ { "token": "USDC" } ] }
+                ]
+              }
+            }
+        """.trimIndent()
+
+        val result = json.decodeFromString(CustomerMeResponse.Result.serializer(), body)
+        val token = result.balance!!.networks!![0].tokens[0]
+
+        assertThat(token.token).isEqualTo("USDC")
+        assertThat(token.tokenContractAddress).isNull()
+    }
+
+    @Test
+    fun `GIVEN balance json without networks WHEN parse THEN networks is null`() {
+        val body = """
+            { "id": "c1", "state": "ACTIVE", "created_at": "2026-01-01T00:00:00Z",
+              "product_instances": [], "cards": [],
+              "balance": {} }
+        """.trimIndent()
+
+        val result = json.decodeFromString(CustomerMeResponse.Result.serializer(), body)
+
+        assertThat(result.balance!!.networks).isNull()
+    }
+
+    @Test
+    fun `GIVEN json without balance WHEN parse THEN balance is null`() {
+        val body = """
+            { "id": "c1", "state": "ACTIVE", "created_at": "2026-01-01T00:00:00Z",
+              "product_instances": [], "cards": [] }
+        """.trimIndent()
+
+        val result = json.decodeFromString(CustomerMeResponse.Result.serializer(), body)
+
+        assertThat(result.balance).isNull()
+    }
+}

@@ -202,10 +202,10 @@ dependencyAnalysis {
                     "org.jetbrains.kotlinx:kotlinx-coroutines-test",
                     "org.junit.jupiter:junit-jupiter",
                 )
-                // wire-runtime (protobuf) and jakarta.inject-api are deep transitives of the Visa /
-                // WalletConnect (reown) SDKs. A few generated/SDK-facing types reference them, but they're
-                // never declared directly — they always arrive with their owning SDK. Don't advise
-                // declaring them per-module.
+                // wire-runtime (protobuf) and jakarta.inject-api are deep transitives of other libraries
+                // (the blockchain SDK, OpenTelemetry disk buffering, Dagger). A few generated/SDK-facing types
+                // reference them, but they're never declared directly — they always arrive with their owning
+                // library. Don't advise declaring them per-module.
                 exclude(
                     "com.squareup.wire:wire-runtime",
                     "jakarta.inject:jakarta.inject-api",

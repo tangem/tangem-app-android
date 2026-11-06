@@ -57,7 +57,7 @@ dependencies {
     implementation(projects.domain.referral)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.tokens.models)
-    implementation(projects.domain.visa)
+    implementation(projects.domain.tangempay)
     implementation(projects.domain.marketing.models)
     implementation(projects.domain.yieldSupply.models)
     runtimeOnly(projects.domain.manageTokens)

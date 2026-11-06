@@ -13,10 +13,10 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.moneyaccount.analytics.MoneyAccountAnalyticsEvents
-import com.tangem.domain.pay.model.bankofframp.BankAccount
-import com.tangem.domain.pay.model.bankofframp.BankOfframpError
-import com.tangem.domain.pay.model.bankofframp.Beneficiary
-import com.tangem.domain.pay.usecase.bankofframp.GetBankAccountsUseCase
+import com.tangem.domain.tangempay.model.bankofframp.BankAccount
+import com.tangem.domain.tangempay.model.bankofframp.BankOfframpError
+import com.tangem.domain.tangempay.model.bankofframp.Beneficiary
+import com.tangem.domain.tangempay.usecase.bankofframp.GetBankAccountsUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount

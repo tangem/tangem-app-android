@@ -25,7 +25,7 @@ dependencies {
     api(projects.domain.staking) // AND_18965_PLUGGABLE_BALANCE_SOURCES_ENABLED
     api(projects.domain.tokens)
     api(projects.domain.tokens.models)
-    api(projects.domain.visa)
+    api(projects.domain.tangempay)
     api(projects.domain.walletManager)
     api(projects.domain.wallets)
     api(projects.core.analytics)

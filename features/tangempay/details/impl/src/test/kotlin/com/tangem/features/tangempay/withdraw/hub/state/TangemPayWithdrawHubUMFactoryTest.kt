@@ -9,9 +9,9 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.bankofframp.BankAccount
-import com.tangem.domain.pay.model.bankofframp.Beneficiary
-import com.tangem.domain.pay.model.recents.RecentTokenTransfer
+import com.tangem.domain.tangempay.model.bankofframp.BankAccount
+import com.tangem.domain.tangempay.model.bankofframp.Beneficiary
+import com.tangem.domain.tangempay.model.recents.RecentTokenTransfer
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.withdraw.bank.BankWithdrawSourceAccount
 import com.tangem.features.tangempay.withdraw.bank.bankWithdrawOptions

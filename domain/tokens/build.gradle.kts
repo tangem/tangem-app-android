@@ -36,7 +36,7 @@ dependencies {
     api(projects.domain.quotes)
     api(projects.domain.staking)
     api(projects.domain.stories)
-    api(projects.domain.visa)
+    api(projects.domain.tangempay)
     api(projects.domain.walletManager)
     implementation(projects.domain.card)
     // endregion

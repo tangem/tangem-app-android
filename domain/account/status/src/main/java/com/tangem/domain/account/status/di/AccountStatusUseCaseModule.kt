@@ -19,7 +19,7 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.utils.NetworksCleaner
 import com.tangem.domain.nft.utils.NFTCleaner
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher

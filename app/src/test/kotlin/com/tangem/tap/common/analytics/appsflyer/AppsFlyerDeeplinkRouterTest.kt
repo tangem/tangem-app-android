@@ -10,7 +10,7 @@ import com.tangem.domain.appsflyer.usecase.ClearAppsFlyerDeeplinkUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
+import com.tangem.features.tangempay.deeplink.TangemPayOnboardDeepLinkHandler
 import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -42,7 +42,7 @@ internal class AppsFlyerDeeplinkRouterTest {
     private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val clearAppsFlyerDeeplinkUseCase: ClearAppsFlyerDeeplinkUseCase = mockk(relaxed = true)
     private val appRouter: AppRouter = mockk(relaxed = true)
-    private val onboardVisaDeepLink: OnboardVisaDeepLinkHandler.Factory = mockk(relaxed = true)
+    private val tangemPayOnboardDeepLink: TangemPayOnboardDeepLinkHandler.Factory = mockk(relaxed = true)
     private val urisByString = listOf(DIRECT_URI, UNSUPPORTED_URI).associateWith { mockk<Uri>() }
     private val directUri: Uri = urisByString.getValue(DIRECT_URI)
 
@@ -51,7 +51,7 @@ internal class AppsFlyerDeeplinkRouterTest {
         userWalletsListRepository = userWalletsListRepository,
         clearAppsFlyerDeeplinkUseCase = clearAppsFlyerDeeplinkUseCase,
         appRouter = appRouter,
-        onboardVisaDeepLink = onboardVisaDeepLink,
+        tangemPayOnboardDeepLink = tangemPayOnboardDeepLink,
     )
 
     @BeforeAll
@@ -72,7 +72,7 @@ internal class AppsFlyerDeeplinkRouterTest {
             userWalletsListRepository,
             clearAppsFlyerDeeplinkUseCase,
             appRouter,
-            onboardVisaDeepLink,
+            tangemPayOnboardDeepLink,
         )
         // Happy baseline: deep link pending, authorized.
         every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf("tpay_mobileonboard")
@@ -415,7 +415,7 @@ internal class AppsFlyerDeeplinkRouterTest {
     // region deferred direct deeplink
 
     @Test
-    fun `GIVEN direct uri deeplink and wallet on Wallet WHEN observe THEN onboard visa handler created`() =
+    fun `GIVEN direct uri deeplink and wallet on Wallet WHEN observe THEN tangem pay onboarding handler created`() =
         runTest(UnconfinedTestDispatcher()) {
             // Arrange
             every { appsFlyerRepository.observeNavigationDeeplink() } returns flowOf(DIRECT_URI)
@@ -426,7 +426,7 @@ internal class AppsFlyerDeeplinkRouterTest {
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 1) { onboardVisaDeepLink.create(directUri) }
+            verify(exactly = 1) { tangemPayOnboardDeepLink.create(directUri) }
             verify(exactly = 0) { appRouter.push(any(), any()) }
         }
 
@@ -443,7 +443,7 @@ internal class AppsFlyerDeeplinkRouterTest {
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 1) { onboardVisaDeepLink.create(directUri) }
+            verify(exactly = 1) { tangemPayOnboardDeepLink.create(directUri) }
             coVerify(exactly = 0) { userWalletsListRepository.userWalletsSync() }
             verify(exactly = 0) { appRouter.replaceAll(routes = anyVararg(), onComplete = any()) }
         }
@@ -460,7 +460,7 @@ internal class AppsFlyerDeeplinkRouterTest {
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 0) { onboardVisaDeepLink.create(any()) }
+            verify(exactly = 0) { tangemPayOnboardDeepLink.create(any()) }
             coVerify(exactly = 0) { clearAppsFlyerDeeplinkUseCase() }
         }
 
@@ -476,7 +476,7 @@ internal class AppsFlyerDeeplinkRouterTest {
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 0) { onboardVisaDeepLink.create(any()) }
+            verify(exactly = 0) { tangemPayOnboardDeepLink.create(any()) }
         }
 
     @Test
@@ -493,7 +493,7 @@ internal class AppsFlyerDeeplinkRouterTest {
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 1) { onboardVisaDeepLink.create(directUri) }
+            verify(exactly = 1) { tangemPayOnboardDeepLink.create(directUri) }
         }
 
     @Test
@@ -526,7 +526,7 @@ internal class AppsFlyerDeeplinkRouterTest {
             advanceUntilIdle()
 
             // Assert
-            verify(exactly = 2) { onboardVisaDeepLink.create(directUri) }
+            verify(exactly = 2) { tangemPayOnboardDeepLink.create(directUri) }
             coVerify(exactly = 2) { clearAppsFlyerDeeplinkUseCase() }
         }
 

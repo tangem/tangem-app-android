@@ -6,11 +6,11 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
-import com.tangem.domain.models.pay.TangemPayDetailsInitialRoute
+import com.tangem.domain.models.tangempay.TangemPayDetailsInitialRoute
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.logging.TangemLogger
 import io.mockk.Runs

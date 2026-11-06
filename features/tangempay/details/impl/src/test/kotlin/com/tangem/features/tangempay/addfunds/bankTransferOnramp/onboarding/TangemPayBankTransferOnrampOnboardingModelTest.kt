@@ -16,14 +16,14 @@ import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.account.VirtualAccountOnramp
-import com.tangem.domain.models.pay.TangemPayProduct
+import com.tangem.domain.models.tangempay.TangemPayProduct
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
-import com.tangem.domain.pay.model.AccountFee
-import com.tangem.domain.pay.usecase.CreateVirtualAccountOrderUseCase
-import com.tangem.domain.pay.usecase.GetOnrampFeesUseCase
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.model.AccountFee
+import com.tangem.domain.tangempay.usecase.CreateVirtualAccountOrderUseCase
+import com.tangem.domain.tangempay.usecase.GetOnrampFeesUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.tangempay.error.TangemPayApiError
 import com.tangem.features.tangempay.OUTCOME_UNKNOWN_ERRORS
 import com.tangem.features.tangempay.addfunds.bankTransferOnramp.fees.TangemPayOnrampFeesUM
 import com.tangem.features.tangempay.details.impl.R
@@ -122,7 +122,7 @@ internal class TangemPayBankTransferOnrampOnboardingModelTest {
     fun `GIVEN fees request fails WHEN retry succeeds THEN fee rows shown`() = runTest {
         // Arrange
         coEvery { getOnrampFeesUseCase(userWalletId, product) } returnsMany listOf(
-            VisaApiError.Unspecified.left(),
+            TangemPayApiError.Unspecified.left(),
             listOf(onrampFee()).right(),
         )
         val model = createModel()
@@ -141,8 +141,8 @@ internal class TangemPayBankTransferOnrampOnboardingModelTest {
     fun `GIVEN fees retry in flight WHEN retry clicked again THEN shimmer shown and fees requested once more`() =
         runTest {
             // Arrange
-            val pendingRetry = CompletableDeferred<Either<VisaApiError, List<AccountFee>>>()
-            coEvery { getOnrampFeesUseCase(userWalletId, product) } returns VisaApiError.Unspecified.left()
+            val pendingRetry = CompletableDeferred<Either<TangemPayApiError, List<AccountFee>>>()
+            coEvery { getOnrampFeesUseCase(userWalletId, product) } returns TangemPayApiError.Unspecified.left()
             val model = createModel()
             advanceUntilIdle()
             val error = model.uiState.value.fees as TangemPayOnrampFeesUM.Error
@@ -194,7 +194,7 @@ internal class TangemPayBankTransferOnrampOnboardingModelTest {
     @Test
     fun `GIVEN order creation fails WHEN continue clicked THEN error shown and screen stays`() = runTest {
         // Arrange
-        coEvery { createVirtualAccountOrderUseCase(any(), any(), any()) } returns VisaApiError.Unspecified.left()
+        coEvery { createVirtualAccountOrderUseCase(any(), any(), any()) } returns TangemPayApiError.Unspecified.left()
         val model = createModel()
         advanceUntilIdle()
 
@@ -211,7 +211,7 @@ internal class TangemPayBankTransferOnrampOnboardingModelTest {
     @ParameterizedTest
     @MethodSource(OUTCOME_UNKNOWN_ERRORS)
     fun `GIVEN outcome unknown WHEN continue clicked again THEN the same idempotency key is reused`(
-        error: VisaApiError,
+        error: TangemPayApiError,
     ) = runTest {
         // Arrange
         val idempotencyKeys = mutableListOf<String>()
@@ -238,7 +238,7 @@ internal class TangemPayBankTransferOnrampOnboardingModelTest {
         val idempotencyKeys = mutableListOf<String>()
         coEvery {
             createVirtualAccountOrderUseCase(userWalletId, PAYMENT_ACCOUNT_ADDRESS, capture(idempotencyKeys))
-        } returns VisaApiError.Unspecified.left()
+        } returns TangemPayApiError.Unspecified.left()
         val model = createModel()
         advanceUntilIdle()
         model.uiState.value.onContinueClick()

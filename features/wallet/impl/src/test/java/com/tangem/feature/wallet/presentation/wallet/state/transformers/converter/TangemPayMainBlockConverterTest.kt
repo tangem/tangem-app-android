@@ -8,8 +8,8 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.pay.TangemPayCard
-import com.tangem.domain.models.pay.TangemPayCustomerResidency
+import com.tangem.domain.models.tangempay.TangemPayCard
+import com.tangem.domain.models.tangempay.TangemPayCustomerResidency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.child.wallet.model.intents.TangemPayIntents
 import com.tangem.features.tangempay.entity.TangemPayMainUM

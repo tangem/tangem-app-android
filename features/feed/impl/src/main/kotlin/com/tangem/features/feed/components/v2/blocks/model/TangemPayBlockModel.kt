@@ -8,7 +8,7 @@ import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
+import com.tangem.domain.tangempay.flow.PaymentAccountStatusSupplier
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
