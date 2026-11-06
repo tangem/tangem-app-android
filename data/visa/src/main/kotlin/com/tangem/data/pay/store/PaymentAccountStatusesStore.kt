@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import com.tangem.data.pay.converter.PaymentAccountStatusValueDMConverter
 import com.tangem.core.local.datastore.RuntimeSharedStore
 import com.tangem.spend.datasource.visa.entity.PaymentAccountStatusValueDM
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
@@ -15,6 +16,7 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusCache
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -34,13 +36,16 @@ internal class PaymentAccountStatusesStore(
     private val runtimeStore: RuntimeSharedStore<WalletIdWithPaymentStatus>,
     private val persistenceDataStore: DataStore<WalletIdWithPaymentStatusDM>,
     private val converter: PaymentAccountStatusValueDMConverter,
+    private val userWalletsListRepository: UserWalletsListRepository,
     scope: AppCoroutineScope,
 ) : PaymentAccountStatusCache {
 
     private val logger = TangemLogger.withTag(TAG)
 
+    private val initialLoadJob: Job
+
     init {
-        scope.launch {
+        initialLoadJob = scope.launch {
             logger.i("init: loading cached payment statuses from persistence")
             try {
                 val cachedStatuses = persistenceDataStore.data.firstOrNull()
@@ -48,15 +53,11 @@ internal class PaymentAccountStatusesStore(
                     logger.i("init: persistence empty (firstOrNull == null), runtimeStore stays empty")
                     return@launch
                 }
-                logger.i("init: loaded ${cachedStatuses.size} cached entries; populating runtimeStore")
-                runtimeStore.store(
-                    value = cachedStatuses.mapValues { (rawUserWalletId, statusDM) ->
-                        val account = Account.Payment(userWalletId = UserWalletId(rawUserWalletId))
-                        val statusValue = converter.convertBack(userWalletId = account.userWalletId, value = statusDM)
-                        AccountStatus.Payment(account = account, value = statusValue)
-                    },
-                )
-                logger.i("init: runtimeStore populated with ${cachedStatuses.size} entries")
+                logger.i("init: loaded ${cachedStatuses.size} cached entries; awaiting user wallets")
+                userWalletsListRepository.userWallets.filterNotNull().first()
+                val restoredStatuses = restore(cachedStatuses)
+                runtimeStore.store(value = restoredStatuses)
+                logger.i("init: runtimeStore populated with ${restoredStatuses.size} entries")
             } catch (e: Exception) {
                 runSuspendCatching { persistenceDataStore.updateData { emptyMap() } }
                 logger.e("Error while loading cached payment account statuses", e)
@@ -66,7 +67,10 @@ internal class PaymentAccountStatusesStore(
 
     fun get(userWalletId: UserWalletId): Flow<AccountStatus.Payment?> {
         return runtimeStore.get()
-            .onStart { logger.i("get($userWalletId): subscribed to runtimeStore") }
+            .onStart {
+                awaitInitialLoad()
+                logger.i("get($userWalletId): subscribed to runtimeStore")
+            }
             .onEach { map ->
                 logger.i(
                     "get($userWalletId): runtimeStore emitted map size=${map.size}, " +
@@ -77,12 +81,14 @@ internal class PaymentAccountStatusesStore(
     }
 
     override suspend fun getSyncOrNull(userWalletId: UserWalletId): AccountStatus.Payment? {
+        awaitInitialLoad()
         val result = runtimeStore.getSyncOrNull()?.get(userWalletId.stringValue)
         logger.i("getSyncOrNull($userWalletId) valueType=${result?.value?.let { it::class.simpleName } ?: "null"}")
         return result
     }
 
     suspend fun updateStatusSource(userWalletId: UserWalletId, source: StatusSource) {
+        awaitInitialLoad()
         runtimeStore.update(emptyMap()) { stored ->
             stored.toMutableMap().apply {
                 val paymentAccountStatus = this[userWalletId.stringValue] ?: return@update stored
@@ -116,6 +122,7 @@ internal class PaymentAccountStatusesStore(
         userWalletId: UserWalletId,
         transform: (VirtualAccountOnramp?) -> VirtualAccountOnramp?,
     ) {
+        awaitInitialLoad()
         runtimeStore.update(emptyMap()) { stored ->
             stored.toMutableMap().apply {
                 val paymentAccountStatus = this[userWalletId.stringValue] ?: return@update stored
@@ -136,6 +143,7 @@ internal class PaymentAccountStatusesStore(
      */
     suspend fun markCardActivating(userWalletId: UserWalletId, productInstanceId: String) {
         logger.i("markCardActivating($userWalletId, $productInstanceId)")
+        awaitInitialLoad()
         runtimeStore.update(emptyMap()) { stored ->
             stored.toMutableMap().apply {
                 val paymentAccountStatus = this[userWalletId.stringValue] ?: return@update stored
@@ -155,6 +163,7 @@ internal class PaymentAccountStatusesStore(
 
     suspend fun store(userWalletId: UserWalletId, status: AccountStatus.Payment) {
         logger.i("store($userWalletId): valueType=${status.value::class.simpleName}")
+        awaitInitialLoad()
         coroutineScope {
             launch { storeInRuntime(userWalletId = userWalletId, status = status) }
             launch { storeInPersistence(userWalletId = userWalletId, status = status.value) }
@@ -162,6 +171,7 @@ internal class PaymentAccountStatusesStore(
     }
 
     suspend fun contains(userWalletId: UserWalletId): Boolean {
+        awaitInitialLoad()
         return runtimeStore.getSyncOrDefault(emptyMap()).containsKey(userWalletId.stringValue)
     }
 
@@ -172,6 +182,7 @@ internal class PaymentAccountStatusesStore(
 
     suspend fun remove(userWalletIds: List<UserWalletId>) {
         logger.i("remove($userWalletIds)")
+        awaitInitialLoad()
         val keys = userWalletIds.map { it.stringValue }.toSet()
         coroutineScope {
             launch { runtimeStore.update(default = emptyMap()) { it - keys } }
@@ -187,6 +198,20 @@ internal class PaymentAccountStatusesStore(
         }
     }
 
+    private fun restore(cachedStatuses: WalletIdWithPaymentStatusDM): WalletIdWithPaymentStatus {
+        return buildMap {
+            cachedStatuses.forEach { (rawUserWalletId, statusDM) ->
+                val account = Account.Payment(userWalletId = UserWalletId(rawUserWalletId))
+                try {
+                    val statusValue = converter.convertBack(userWalletId = account.userWalletId, value = statusDM)
+                    put(rawUserWalletId, AccountStatus.Payment(account = account, value = statusValue))
+                } catch (e: Exception) {
+                    logger.e("init: skipped cached payment status of ${account.userWalletId}", e)
+                }
+            }
+        }
+    }
+
     private suspend fun storeInPersistence(userWalletId: UserWalletId, status: PaymentAccountStatusValue) {
         val statusDM = converter.convert(value = status) ?: return
         persistenceDataStore.updateData { storedStatuses ->
@@ -195,4 +220,6 @@ internal class PaymentAccountStatusesStore(
             }
         }
     }
+
+    private suspend fun awaitInitialLoad() = initialLoadJob.join()
 }
