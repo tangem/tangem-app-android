@@ -16,7 +16,6 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
-import com.tangem.features.collectibles.api.walletblock.CollectiblesWalletBlockUM
 import com.tangem.features.polymarket.api.walletblock.PolymarketWalletBlockUM
 import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.features.moneyaccount.main.entity.MoneyAccountMainUM
@@ -72,7 +71,6 @@ internal class WalletLoadingStateFactory(
             tangemPayMainUM = TangemPayMainUM.Empty,
             moneyAccountMainUM = MoneyAccountMainUM.Empty,
             polymarketWalletBlockUM = PolymarketWalletBlockUM.Hidden,
-            collectiblesWalletBlockUM = CollectiblesWalletBlockUM.Hidden,
         )
     }
 
