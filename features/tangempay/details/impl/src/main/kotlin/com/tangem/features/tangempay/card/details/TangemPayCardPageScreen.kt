@@ -40,6 +40,7 @@ import com.tangem.features.tangempay.card.gpay.AddToGoogleWalletButtonState
 import com.tangem.features.tangempay.card.gpay.AddToWalletBlockState
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToGoogleWalletButton
 import com.tangem.features.tangempay.card.gpay.TangemPayAddToWalletBlock
+import com.tangem.features.tangempay.card.gpay.TangemPayAddedToGoogleWalletStatus
 import com.tangem.features.tangempay.card.reissue.TangemPayReissueBlock
 import com.tangem.features.tangempay.card.view.DisplayNameState
 import com.tangem.features.tangempay.card.view.TangemPayCard
@@ -114,42 +115,62 @@ private fun TangemPayCardPageScreen(
                     .padding(bottom = 16.dp),
             )
         } else {
-            // Material buttons inside the scaffold content can't blur the scaffold's own haze source (Haze skips
-            // an ancestor source of the same state), so they sample a separate state backed by the plain background.
-            val buttonsHazeState = rememberHazeState()
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .background(TangemTheme.colors3.bg.primary)
-                    .hazeSourceTangem(state = buttonsHazeState, zIndex = -1f),
-            )
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = contentPadding.copy(
-                    bottom = contentPadding.calculateBottomPadding() + 16.dp,
-                ),
-                verticalArrangement = Arrangement.spacedBy(0.dp),
-            ) {
-                item(key = "Card") {
-                    Box(modifier = Modifier.padding(top = CardTopSpacing)) {
-                        cardSection()
-                    }
+            CardPageLayout(state = state, contentPadding = contentPadding, cardSection = cardSection)
+        }
+    }
+}
+
+@Composable
+private fun BoxScope.CardPageLayout(
+    state: TangemPayCardPageUM,
+    contentPadding: PaddingValues,
+    cardSection: @Composable () -> Unit,
+) {
+    val buttonsHazeState = rememberHazeState()
+    val isAddedToGoogleWalletShown = state.isAddedToGoogleWallet && state.cardState == TangemPayCardState.Active
+    Box(
+        modifier = Modifier
+            .matchParentSize()
+            .background(TangemTheme.colors3.bg.primary)
+            .hazeSourceTangem(state = buttonsHazeState, zIndex = -1f),
+    )
+    Column(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            contentPadding = contentPadding.copy(
+                bottom = if (isAddedToGoogleWalletShown) 16.dp else contentPadding.calculateBottomPadding() + 16.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(0.dp),
+        ) {
+            item(key = "Card") {
+                Box(modifier = Modifier.padding(top = CardTopSpacing)) {
+                    cardSection()
                 }
-                if (
-                    state.settings.isNotEmpty() &&
-                    state.cardState == TangemPayCardState.Active
-                ) {
-                    cardPageItem("Settings buttons") {
-                        CompositionLocalProvider(LocalHazeState provides buttonsHazeState) {
-                            TangemPayCardPageSettingsButtonsBlock(
-                                modifier = Modifier.fillMaxWidth(),
-                                settings = state.settings,
-                            )
-                        }
-                    }
-                }
-                cardState(state = state)
             }
+            if (
+                state.settings.isNotEmpty() &&
+                state.cardState == TangemPayCardState.Active
+            ) {
+                cardPageItem("Settings buttons") {
+                    CompositionLocalProvider(LocalHazeState provides buttonsHazeState) {
+                        TangemPayCardPageSettingsButtonsBlock(
+                            modifier = Modifier.fillMaxWidth(),
+                            settings = state.settings,
+                        )
+                    }
+                }
+            }
+            cardState(state = state)
+        }
+        if (isAddedToGoogleWalletShown) {
+            TangemPayAddedToGoogleWalletStatus(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = contentPadding.calculateBottomPadding() + 16.dp),
+            )
         }
     }
 }
@@ -433,6 +454,7 @@ private fun previewCardPageState(
     cardState: TangemPayCardState = TangemPayCardState.Active,
     addToWalletBlockState: AddToWalletBlockState? = AddToWalletBlockState(onClick = {}, onClickClose = {}),
     addToGoogleWalletButtonState: AddToGoogleWalletButtonState? = null,
+    isAddedToGoogleWallet: Boolean = false,
     settings: ImmutableList<TangemPayCardPageSetting> = previewSettings(),
     delivery: TangemPayCardDeliveryUM? = null,
 ) = TangemPayCardPageUM(
@@ -441,6 +463,7 @@ private fun previewCardPageState(
     dailyLimitState = TangemPayDailyLimitBlockState.Content(limit = "$5,000", onChangeClick = {}),
     addToWalletBlockState = addToWalletBlockState,
     addToGoogleWalletButtonState = addToGoogleWalletButtonState,
+    isAddedToGoogleWallet = isAddedToGoogleWallet,
     cardState = cardState,
     menuItems = persistentListOf(),
     delivery = delivery,
@@ -476,6 +499,26 @@ private fun TangemPayCardPageScreenPreview() {
     TangemThemePreviewRedesign {
         TangemPayCardPageScreen(
             state = previewCardPageState(),
+            cardSection = {
+                TangemPayCard(
+                    state = previewCardDetailsState(),
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            },
+        )
+    }
+}
+
+@Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun TangemPayCardPageScreenAddedToGoogleWalletPreview() {
+    TangemThemePreviewRedesign {
+        TangemPayCardPageScreen(
+            state = previewCardPageState(
+                addToWalletBlockState = null,
+                isAddedToGoogleWallet = true,
+            ),
             cardSection = {
                 TangemPayCard(
                     state = previewCardDetailsState(),

@@ -279,6 +279,10 @@ internal class TangemPayCardPageModelTest {
                 entry = GoogleWalletEntry.Button(isLoading = true),
                 expected = AddToWalletBlocks(isBannerShown = false, button = ButtonState(isLoading = true)),
             ),
+            AddToWalletBlocksModel(
+                entry = GoogleWalletEntry.Added,
+                expected = AddToWalletBlocks(isBannerShown = false, button = null, isAddedStatusShown = true),
+            ),
         )
 
         @Test
@@ -370,6 +374,7 @@ internal class TangemPayCardPageModelTest {
             AddToWalletBlocks(
                 isBannerShown = state.addToWalletBlockState != null,
                 button = state.addToGoogleWalletButtonState?.let { ButtonState(isLoading = it.isLoading) },
+                isAddedStatusShown = state.isAddedToGoogleWallet,
             )
         }
     }
@@ -429,7 +434,11 @@ internal class TangemPayCardPageModelTest {
 
     internal data class AddToWalletBlocksModel(val entry: GoogleWalletEntry, val expected: AddToWalletBlocks)
 
-    internal data class AddToWalletBlocks(val isBannerShown: Boolean, val button: ButtonState?)
+    internal data class AddToWalletBlocks(
+        val isBannerShown: Boolean,
+        val button: ButtonState?,
+        val isAddedStatusShown: Boolean = false,
+    )
 
     internal data class ButtonState(val isLoading: Boolean)
 

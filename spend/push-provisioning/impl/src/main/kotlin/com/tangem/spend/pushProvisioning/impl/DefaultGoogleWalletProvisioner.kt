@@ -17,6 +17,7 @@ import com.tangem.spend.pushProvisioning.GoogleWalletProvisioner.Environment
 import com.tangem.spend.pushProvisioning.GoogleWalletProvisioner.FailureReason
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
+import com.tangem.utils.time.CurrentTimeProvider
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -27,6 +28,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @Singleton
@@ -34,13 +36,14 @@ internal class DefaultGoogleWalletProvisioner @Inject constructor(
     private val sdk: MeaWalletGooglePay,
     private val activityBridge: DefaultPushProvisioningActivityBridge,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val currentTimeProvider: CurrentTimeProvider,
 ) : GoogleWalletProvisioner {
 
     private val logger = TangemLogger.withTag(PUSH_PROVISIONING_LOG_TAG)
 
     private val isSdkReady: Boolean by lazy(::initializeSdk)
 
-    private val recentlyAddedCards = mutableSetOf<String>()
+    private val recentlyAddedCards = mutableMapOf<String, Long>()
 
     override val environment: Environment by lazy {
         if (sdk.isProdSdk) Environment.PROD else Environment.TEST
@@ -259,7 +262,12 @@ internal class DefaultGoogleWalletProvisioner @Inject constructor(
     }
 
     private fun reconcileWithRecentlyAdded(lastFourDigits: String, status: CardStatus): CardStatus = when (status) {
-        CardStatus.NotAdded -> if (lastFourDigits in recentlyAddedCards) CardStatus.Added else status
+        CardStatus.NotAdded -> if (isAddedRecently(lastFourDigits)) {
+            CardStatus.Added
+        } else {
+            recentlyAddedCards -= lastFourDigits
+            status
+        }
         CardStatus.Added, CardStatus.Incomplete -> {
             recentlyAddedCards -= lastFourDigits
             status
@@ -267,15 +275,21 @@ internal class DefaultGoogleWalletProvisioner @Inject constructor(
         CardStatus.Unsupported, CardStatus.Unknown -> status
     }
 
+    private fun isAddedRecently(lastFourDigits: String): Boolean {
+        val addedAtMillis = recentlyAddedCards[lastFourDigits] ?: return false
+        val elapsedMillis = currentTimeProvider.nowMillis() - addedAtMillis
+        return elapsedMillis in 0 until RECENTLY_ADDED_WINDOW.inWholeMilliseconds
+    }
+
     private fun onAddResult(lastFourDigits: String, result: AddResult): AddResult {
         when (result) {
             AddResult.Added -> {
                 logger.i("Push provisioning succeeded")
-                recentlyAddedCards += lastFourDigits
+                recentlyAddedCards[lastFourDigits] = currentTimeProvider.nowMillis()
             }
             AddResult.AlreadyAdded -> {
                 logger.i("Push provisioning found the card already in the wallet")
-                recentlyAddedCards += lastFourDigits
+                recentlyAddedCards[lastFourDigits] = currentTimeProvider.nowMillis()
             }
             AddResult.Cancelled -> logger.i("Push provisioning cancelled")
             is AddResult.Failed -> if (result.reason == FailureReason.ADDITION_IN_PROGRESS) {
@@ -301,5 +315,6 @@ internal class DefaultGoogleWalletProvisioner @Inject constructor(
         const val ELIGIBILITY_TIMEOUT_REASON = "Tokenization target check timed out"
         const val WALLET_ENVIRONMENT_TIMEOUT_REASON = "check timed out"
         val SDK_CALLBACK_TIMEOUT = 10.seconds
+        val RECENTLY_ADDED_WINDOW = 1.minutes
     }
 }
