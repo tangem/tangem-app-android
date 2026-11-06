@@ -17,6 +17,9 @@ import com.tangem.features.createwalletselection.CreateWalletSelectionComponent
 import com.tangem.features.createwalletstart.CreateWalletStartComponent
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
+import com.tangem.features.earn.api.EarnEntryComponent
+import com.tangem.features.earn.api.EarnEntrySource
+import com.tangem.features.earn.api.EarnEntryStart
 import com.tangem.features.feed.entry.components.FeedEntryComponent
 import com.tangem.features.feed.entry.components.FeedEntryRoute
 import com.tangem.features.hotwallet.*
@@ -134,6 +137,7 @@ internal class ChildFactory @Inject constructor(
     private val tangemPayOnboardingSuccessComponentFactory: TangemPayOnboardingSuccessComponent.Factory,
     private val surveyComponentFactory: SurveyComponent.Factory,
     private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
+    private val earnEntryComponentFactory: EarnEntryComponent.Factory,
     private val polymarketComponentFactory: PolymarketComponent.Factory,
     private val feedEntryComponentFactory: FeedEntryComponent.Factory,
     private val addressBookComponentFactory: AddressBookComponent.Factory,
@@ -825,6 +829,18 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = yieldSupplyEntryComponentFactory,
                 )
             }
+            is AppRoute.EarnEntry -> {
+                createComponentChild(
+                    context = context,
+                    params = EarnEntryComponent.Params(
+                        userWalletId = route.userWalletId,
+                        cryptoCurrency = route.cryptoCurrency,
+                        source = route.source.toEarnEntrySource(),
+                        start = route.start.toEarnEntryStart(),
+                    ),
+                    componentFactory = earnEntryComponentFactory,
+                )
+            }
             is AppRoute.Polymarket -> {
                 createComponentChild(
                     context = context,
@@ -882,4 +898,19 @@ internal class ChildFactory @Inject constructor(
 private fun AppRoute.Send.EntryType.toSendEntryType(): SendComponent.EntryType = when (this) {
     AppRoute.Send.EntryType.Manual -> SendComponent.EntryType.Manual
     AppRoute.Send.EntryType.QR -> SendComponent.EntryType.QR
+}
+
+internal fun AppRoute.EarnEntry.Source.toEarnEntrySource(): EarnEntrySource = when (this) {
+    AppRoute.EarnEntry.Source.TokenPage -> EarnEntrySource.TokenPage
+    AppRoute.EarnEntry.Source.Markets -> EarnEntrySource.Markets
+    AppRoute.EarnEntry.Source.Deeplink -> EarnEntrySource.Deeplink
+    AppRoute.EarnEntry.Source.EarnBanner -> EarnEntrySource.EarnBanner
+    AppRoute.EarnEntry.Source.YieldSheet -> EarnEntrySource.YieldSheet
+    AppRoute.EarnEntry.Source.ForYou -> EarnEntrySource.ForYou
+}
+
+internal fun AppRoute.EarnEntry.Start.toEarnEntryStart(): EarnEntryStart = when (this) {
+    AppRoute.EarnEntry.Start.Auto -> EarnEntryStart.Auto
+    is AppRoute.EarnEntry.Start.Picker -> EarnEntryStart.Picker(preselected = preselected)
+    is AppRoute.EarnEntry.Start.Info -> EarnEntryStart.Info(productId = productId)
 }
