@@ -43,7 +43,7 @@ internal class CollectiblesOwnerNetworkProviderTest {
         clearMocks(networkFactory, ownerDeriver)
     }
 
-    /** The owner address is the vault's `cold_owner`, so it must be built on the same chain the vault is. */
+    /** The owner address is the vault's `owner`, so it must be built on the same chain the vault is. */
     @ParameterizedTest
     @ProvideTestModels
     fun `GIVEN the owner key is stored WHEN create THEN the network is built on the card's chain and owner path`(

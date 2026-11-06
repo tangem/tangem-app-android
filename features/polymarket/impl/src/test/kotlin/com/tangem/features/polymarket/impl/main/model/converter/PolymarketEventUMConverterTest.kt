@@ -33,6 +33,7 @@ internal class PolymarketEventUMConverterTest {
     private val converter = PolymarketEventUMConverter(
         onEventClick = { clickedEvents += it },
         onOutcomeClick = { eventId, marketId, assetId -> clickedOutcomes += Triple(eventId, marketId, assetId) },
+        isPhaseTwoEnabled = false,
     )
 
     // The class is PER_CLASS, so the recorded clicks would leak between tests.

@@ -23,6 +23,8 @@ internal interface DragAndDropIntents {
 
     fun onItemDragged(from: ItemPosition, to: ItemPosition)
 
+    fun onItemMoved(from: Int, to: Int)
+
     fun canDragItemOver(dragOver: ItemPosition, dragging: ItemPosition): Boolean
 
     fun onItemDraggingStartLegacy(item: DraggableItem)

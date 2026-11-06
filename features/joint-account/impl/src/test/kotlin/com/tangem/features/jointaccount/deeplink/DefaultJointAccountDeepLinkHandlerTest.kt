@@ -373,6 +373,27 @@ class DefaultJointAccountDeepLinkHandlerTest {
             coVerify(exactly = 0) { resolveAndSelectUserWalletUseCase(any()) }
         }
 
+    @Test
+    fun `GIVEN non-hex wallet id WHEN handle deeplink THEN pop to Wallet without resolving wallet`() = runTest {
+        // Arrange
+        every { appRouter.popTo(any<AppRoute>(), any()) } just Runs
+
+        // Act
+        createHandler(
+            scope = this,
+            queryParams = mapOf(
+                WALLET_ID_KEY to "not-a-hex-id",
+                ACCOUNT_ID_KEY to notFoundAccountId,
+                ENTRY_KEY to DeepLinkRoute.JointAccount.ENTRY_OVERVIEW,
+            ),
+        )
+        advanceUntilIdle()
+
+        // Assert
+        verify { appRouter.popTo(route = AppRoute.Wallet, onComplete = any()) }
+        coVerify(exactly = 0) { resolveAndSelectUserWalletUseCase(any()) }
+    }
+
     private fun mockUserWallet(userWalletId: UserWalletId) {
         val userWallet: UserWallet = mockk { every { walletId } returns userWalletId }
         coEvery { resolveAndSelectUserWalletUseCase(userWalletId) } returns userWallet

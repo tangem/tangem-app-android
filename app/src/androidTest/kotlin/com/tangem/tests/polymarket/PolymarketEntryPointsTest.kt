@@ -4,7 +4,6 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.getWireMockRequestCount
-import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.scenarios.POLYMARKET_AB_TEST_ON
 import com.tangem.scenarios.POLYMARKET_AB_TEST_PROPERTY
 import com.tangem.scenarios.POLYMARKET_WALLET_PATH
@@ -24,10 +23,6 @@ import com.tangem.core.res.R as CoreResR
 
 @HiltAndroidTest
 class PolymarketEntryPointsTest : BaseTestCase() {
-
-    override val featureToggleOverrides = mapOf(
-        FeatureToggles.AND_16204_POLYMARKET_ENABLED.rawName to true,
-    )
 
     @Test
     @AllureId("12894")

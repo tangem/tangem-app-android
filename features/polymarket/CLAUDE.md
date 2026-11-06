@@ -5,9 +5,8 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
 
 ## Gating and wiring
 
-- `AND_16204_POLYMARKET_ENABLED` gates everything (dev builds only until release). The feed's Predictions
-  block additionally needs Amplitude `twi_1576_polymarket = on`, read once per model and only while the
-  toggle is on; accounts, balances and the wallet-screen row follow the toggle alone.
+- The feed's Predictions block is gated by Amplitude `twi_1576_polymarket = on`, read once per model.
+  Accounts, balances and the wallet-screen row are not gated.
 - Add funds (swap) and Withdraw are not screens of this module: they are `AppRoute.Swap` with
   `AccountFlow.PredictionTopUp` / `PredictionWithdraw`, and the Polymarket branches live in
   `features/swap/impl`. Withdraw ends on swap's success screen with the tracker polling in the background —
@@ -34,25 +33,28 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
 - After the gate the region lives in the process-wide `PredictionRegionAccess`, refreshed by Main on open and
   on pull-to-refresh. While it is restricted, Main shows the banner, Add funds is dimmed, and every order
   entry (feed, search, event, Buy more, Close) shows the restrictions modal instead of opening. A failed check
-  keeps the last answer and counts as allowed only when there is none; the amount step still checks on its own.
+  keeps the last answer and counts as allowed only when there is none; the Amount and Order steps still check
+  on their own.
 - Main returns here (`replaceAll(Onboarding)`) the moment the stored credentials are gone, even from under a
-  child: nothing above Main can sign without them. So the order summary answers an `Unauthorized`
-  placement with no dialog and leaves the gate to explain it.
+  child: nothing above Main can sign without them. So the submitting step (Summary or Order) answers an
+  `Unauthorized` placement with no dialog and leaves the gate to explain it.
 
 ## Main screen
 
 - **Available vs Total** (tap the header label): Available is the CLOB collateral (default); Total adds the
   positions value and is offered only once that value has been read — until then the toggle is disabled but
-  the chosen mode is kept and returns with the value. The wallet screen and wallet total count Available
-  only, as on iOS.
+  the chosen mode is kept and returns with the value. The wallet-screen row and the wallet total count
+  Total, as on iOS ([REDACTED_TASK_KEY]).
 - **Add funds** needs a confirmed deposit address; without one, report an unknown error rather than offer
   an address that may be wrong. The buy amount step offers the same sheet, shut until the region check
   answers, and shows the account-status balance only once `ACTUAL`.
 - **Withdraw** waits on the same funding requisites as Add funds (QA, [REDACTED_TASK_KEY]): disabled while they load,
   dimmed and answering with Add funds' error when they failed. Unlike Add funds it ignores the region.
 - Failed requisites are re-requested when that error is dismissed (Main and the amount step) and on resume.
+  A failed refresh fails them even after a success, as on iOS: the spec wants every refresh to end in Ready
+  or Failed.
 - **Awaiting-funds banner** opens on a completed top-up swap or a sent order, never on Receive.
-- Pull-to-refresh refreshes region, positions preview, account status and positions value, then the
+- Pull-to-refresh refreshes region, positions preview and account status (with the positions value), then the
   requisites. Feed pages are not re-requested — they are kept per visited category and refreshed by
   `PolymarketFeedPoller`.
 - A position row always opens something: `PositionResult` when resolved with a known outcome,
@@ -60,20 +62,36 @@ UI rules of "Predictions" that the code does not make evident. Read the domain i
 
 ## Order flow
 
-- **Confirmation boundary.** Amount freezes a `PreparedPrediction` snapshot on Next (displayed state, quote
-  receipt time, signing params, region decision). Summary displays and signs that snapshot and has no price
-  or quote use cases; Back returns to the retained Amount model, which re-reads immediately.
-- **Quote loop** runs only while Amount is on top and in the foreground (bound to its resume/pause). The
-  quote is never cached; a stale one (>60 s at signing) is refused before submission.
+- **Two flows**, chosen once per opening by the Phase 2 toggle (`isPolymarketPhaseTwoEnabled`, read in
+  `DefaultPolymarketComponent`): single-step `Route.Order` when on, legacy `Amount → Summary` otherwise. Both
+  share `PlacePredictionQuoteEngine`, `PlacePredictionOrderSubmitter` and the fee sheet; Slippage and Status
+  routes are the same.
+- **Confirmation boundary.** The tap that commits freezes a `PreparedPrediction` snapshot (displayed state,
+  quote receipt time, signing params, region decision) — Next on Amount, Place on Order. Summary signs that
+  snapshot and has no price or quote use cases; Back returns to the retained Amount model, which re-reads
+  immediately. Order signs it in place and holds the engine's sources (`holdDuring`) until submission ends,
+  so the NFC pause/resume cannot restart the quote loop or reload the position under the signature.
+- **Back while submitting** is swallowed: the active step implements `SubmittingStep`.
+- **Tap while quoting** (Order only, as iOS): `PlacePredictionQuoteEngine` keeps a fresh amount pending from
+  entry (typed or Sell prefill) until its first quote result or error; a pause, `holdDuring`,
+  `abandonFreshQuote()`, a loop that stops without re-requesting it or a throwing request settle it instead.
+  `QuoteUM.Loading(isAnswerExpected)` is that plus a request actually running. A tap waits in
+  `SubmitUM.AwaitingQuote` on `awaitFreshQuote()` (true only for a result of that amount) for at most 10 s: true
+  places through `prepare()`, timeout abandons the fresh amount, false drops at once. The gate derives one
+  `PlaceActionUM` (`Ready`, `ReadyOnceQuoted`, `AwaitingQuote`, `Unavailable`); the button reads only that and
+  spins while a tap waits.
+- **Quote loop** runs only while Amount or Order is on top and in the foreground (bound to its resume/pause).
+  The quote is never cached. A quote older than 30 s at the tap is refused, as on iOS: the price-changed
+  dialog shows, Order drops it and requotes, Summary closes back to Amount.
 - **Placeable** = `quote.isPlaceable` (a SELL also places on `BELOW_MIN_ORDER_SIZE`) and, for BUY only,
   the price-weighted minimum. A SELL has no floor beyond one whole share or the whole position.
 - **Shares.** The sellable size is the whole position at on-chain precision (6 decimals), not floored to
   the 2-decimal grid — the BFF quotes a whole-position sale at the position's own precision. Display cuts
   to 2 decimals, never more than held; a count below 0.01 keeps its precision so a remainder is not shown
   as `0`. Steps move in whole shares; 100 % is the position itself, so a full close reaches the last fraction.
-- **Ambiguous orders.** A transport or inconclusive HTTP error does not prove rejection. Summary shows
-  the existing error dialog with Support; keep balance/position refreshes and never resubmit
-  automatically, because the order may already be live.
+- **Ambiguous orders.** A transport or inconclusive HTTP error does not prove rejection. The submitting
+  step (Summary or Order) shows the existing error dialog with Support; keep balance/position refreshes and
+  never resubmit automatically, because the order may already be live.
 - **Position indexing.** `/positions/outcome` answers `null` until the position is indexed — for several
   seconds even for an outcome the wallet already held. Details shows Unavailable at once on a first `null`
   and retries only for a shown position whose size lags the last order. The result screen waits longer

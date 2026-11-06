@@ -15,6 +15,7 @@ import com.tangem.core.decompose.context.child
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.ds2.button.Back
+import com.tangem.core.ui.ds2.button.GroupEntry
 import com.tangem.core.ui.ds2.button.TangemButton
 import com.tangem.core.ui.ds2.shtorka.ShtorkaExpansion
 import com.tangem.core.ui.ds2.topnavigation.TangemNavigationText
@@ -29,7 +30,6 @@ import com.tangem.features.feed.nav.FeedRoute
 import com.tangem.features.feed.nav.FeedScreenComponent
 import com.tangem.features.feed.nav.expandingSheetClick
 import com.tangem.features.feed.ui.news.details.state.ArticlesStateUM
-import com.tangem.features.feed.ui.v2.FeedNavActionButton
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -64,15 +64,14 @@ internal class FeedNewsDetailsComponent @AssistedInject constructor(
             contentPadding = PaddingValues(horizontal = 16.dp),
             fadeEnabled = false,
             blurBackground = false,
-            isEndButtonsGroupBackgroundShown = false,
             startButton = {
                 TangemButton.Back(onClick = expandingSheetClick(sheetExpansion, onExpandSheet) { router.pop() })
             },
             endButtonsGroup = {
-                FeedNavActionButton(
-                    icon = Icons.ic_share_android_20,
-                    onClick = expandingSheetClick(sheetExpansion, onExpandSheet, state.onShareClick),
+                TangemButton.GroupEntry(
+                    imageVector = Icons.ic_share_android_20,
                     isEnabled = state.articlesStateUM is ArticlesStateUM.Content,
+                    onClick = expandingSheetClick(sheetExpansion, onExpandSheet, state.onShareClick),
                 )
             },
             contentColumn = {

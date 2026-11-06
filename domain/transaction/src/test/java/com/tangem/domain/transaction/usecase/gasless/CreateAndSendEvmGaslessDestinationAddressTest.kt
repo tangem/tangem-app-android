@@ -5,6 +5,7 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.tokenmethods.ApprovalERC20TokenCallData
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.smartcontract.CompiledSmartContractCallData
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.factory.EthereumYieldSupplyDeployCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
@@ -126,6 +127,23 @@ internal class CreateAndSendEvmGaslessDestinationAddressTest {
 
         // Assert
         assertThat(to).isEqualTo(model.destination)
+    }
+
+    @Test
+    fun `GIVEN compiled DEX call data WHEN getDestinationAddress THEN returns router not token contract`() {
+        // Arrange — a DEX swap with an integrated approve carries a token amount, so contractAddress is set too
+        val router = "0xrouter"
+        val txData = uncompiled(
+            destinationAddress = router,
+            extras = EthereumTransactionExtras(callData = CompiledSmartContractCallData(byteArrayOf(0x01))),
+            contractAddress = tokenContract,
+        )
+
+        // Act
+        val to = CreateAndSendEvmGaslessTransactionUseCase.getDestinationAddress(txData)
+
+        // Assert
+        assertThat(to).isEqualTo(router)
     }
 
     private fun provideTestModels(): List<YieldModeCallModel> {

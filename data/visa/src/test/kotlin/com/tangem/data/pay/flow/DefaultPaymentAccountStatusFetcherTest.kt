@@ -42,9 +42,9 @@ import com.tangem.domain.pay.model.TangemPayOrderInfo
 import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.FindMoneyAccountCreationOrderUseCase
 import com.tangem.domain.pay.usecase.GetCustomerSummaryUseCase
+import com.tangem.domain.pay.usecase.GetTangemPayFiatRateUseCase
 import com.tangem.domain.pay.usecase.GetTangemPayTariffPlanStateUseCase
 import com.tangem.domain.pay.usecase.ResolvePaymentAccountStatusFromSummaryUseCase
-import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.features.moneyaccount.MoneyAccountFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
@@ -74,7 +74,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
     private val tangemPayCurrencyFactory: TangemPayCurrencyFactory = mockk()
     private val eligibilityManager: TangemPayEligibilityManager = mockk(relaxed = true)
     private val reissueCardRepository: TangemPayReissueCardRepository = mockk()
-    private val singleQuoteSupplier: SingleQuoteStatusSupplier = mockk()
+    private val getTangemPayFiatRateUseCase: GetTangemPayFiatRateUseCase = mockk()
     private val closeCardRepository: TangemPayCloseCardRepository = mockk()
     private val cardDetailsRepository: TangemPayCardDetailsRepository = mockk()
     private val issueCardRepository: TangemPayIssueCardRepository = mockk()
@@ -93,7 +93,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         tangemPayCurrencyFactory = tangemPayCurrencyFactory,
         eligibilityManager = eligibilityManager,
         reissueCardRepository = reissueCardRepository,
-        singleQuoteSupplier = singleQuoteSupplier,
+        getTangemPayFiatRateUseCase = getTangemPayFiatRateUseCase,
         closeCardRepository = closeCardRepository,
         cardDetailsRepository = cardDetailsRepository,
         issueCardRepository = issueCardRepository,
@@ -247,7 +247,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             customerOrderRepository,
             tangemPayCurrencyFactory,
             reissueCardRepository,
-            singleQuoteSupplier,
+            getTangemPayFiatRateUseCase,
             closeCardRepository,
             cardDetailsRepository,
             issueCardRepository,
@@ -285,7 +285,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         every { tangemPayCurrencyFactory.create(userWalletId) } returns token
         every { tangemPayCurrencyFactory.createNetworkStatuses(any(), any(), any()) } returns emptyList()
 
-        coEvery { singleQuoteSupplier.getSyncOrNull(any()) } returns null
+        coEvery { getTangemPayFiatRateUseCase() } returns null
 
         coEvery { cardDetailsRepository.cardFrozenStateSync(any()) } returns TangemPayCardFrozenState.Unfrozen
 
@@ -346,6 +346,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             virtualAccount = virtualAccount,
             isBankOfframpAvailable = null,
             tariffPlan = null,
+            isPaymentAccountIssuing = false,
             networks = emptyList(),
         )
     }
@@ -944,7 +945,7 @@ internal class DefaultPaymentAccountStatusFetcherTest {
             tangemPayCurrencyFactory = tangemPayCurrencyFactory,
             eligibilityManager = eligibilityManager,
             reissueCardRepository = reissueCardRepository,
-            singleQuoteSupplier = singleQuoteSupplier,
+            getTangemPayFiatRateUseCase = getTangemPayFiatRateUseCase,
             closeCardRepository = closeCardRepository,
             cardDetailsRepository = cardDetailsRepository,
             issueCardRepository = issueCardRepository,
@@ -1412,6 +1413,146 @@ internal class DefaultPaymentAccountStatusFetcherTest {
                 assertThat(loaded.cards.map { it.state }).doesNotContain(TangemPayCardState.Issuing)
                 coVerify(exactly = 1) { issueCardRepository.removeIssueOrderId(userWalletId, "order_gone") }
             }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class PaymentAccountIssuingBySummary {
+
+        @BeforeEach
+        fun setUpSummary() {
+            every { moneyAccountFeatureToggles.isMoneyAccountsEnabled } returns true
+            coEvery { resolvePaymentAccountStatusFromSummaryUseCase(userWalletId, any()) } returns null
+            coEvery {
+                getTangemPayTariffPlanStateUseCase(userWalletId = userWalletId, tariff = customerTariffPlan)
+            } returns TangemPayTariffPlanState(tariff = customerTariffPlan, order = null)
+        }
+
+        @ParameterizedTest
+        @ProvideTestModels
+        fun `GIVEN plan transition completed and no account yet WHEN invoke THEN status follows summary activation`(
+            model: SummaryActivationModel,
+        ) = runTest {
+            // Arrange
+            stubNotEnrolledCustomerWithCompletedTransition()
+            val summary = paymentSummary(status = model.status, step = model.step)
+            coEvery { getCustomerSummaryUseCase(userWalletId, CachePolicy.REFRESH) } returns summary.right()
+            coEvery { getCustomerSummaryUseCase(userWalletId, CachePolicy.ONLY_CACHE) } returns summary.right()
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            assertThat(storedStatuses.last().value).isInstanceOf(model.expected.java)
+        }
+
+        private fun provideTestModels() = listOf(
+            SummaryActivationModel(
+                name = "payment account issuing -> Loaded",
+                status = CustomerSummary.PaymentAccount.Activation.Status.PROCESSING,
+                step = CustomerSummary.PaymentAccount.Activation.Step.ISSUING,
+                expected = PaymentAccountStatusValue.Loaded::class,
+            ),
+            SummaryActivationModel(
+                name = "payment account awaiting deposit -> AwaitingPlanSelection",
+                status = CustomerSummary.PaymentAccount.Activation.Status.PROCESSING,
+                step = CustomerSummary.PaymentAccount.Activation.Step.AWAITING_DEPOSIT,
+                expected = PaymentAccountStatusValue.AwaitingPlanSelection::class,
+            ),
+            SummaryActivationModel(
+                name = "payment account not started -> AwaitingPlanSelection",
+                status = CustomerSummary.PaymentAccount.Activation.Status.NOT_STARTED,
+                step = null,
+                expected = PaymentAccountStatusValue.AwaitingPlanSelection::class,
+            ),
+        )
+
+        @Test
+        fun `GIVEN payment account issuing WHEN invoke THEN Loaded is marked as issuing`() = runTest {
+            // Arrange
+            stubNotEnrolledCustomerWithCompletedTransition()
+            val summary = paymentSummary(
+                status = CustomerSummary.PaymentAccount.Activation.Status.PROCESSING,
+                step = CustomerSummary.PaymentAccount.Activation.Step.ISSUING,
+            )
+            coEvery { getCustomerSummaryUseCase(userWalletId, CachePolicy.REFRESH) } returns summary.right()
+            coEvery { getCustomerSummaryUseCase(userWalletId, CachePolicy.ONLY_CACHE) } returns summary.right()
+            val storedStatuses = captureStoredStatuses()
+
+            // Act
+            fetcher.invoke(params)
+
+            // Assert
+            val loaded = storedStatuses.last().value as PaymentAccountStatusValue.Loaded
+            assertThat(loaded.isPaymentAccountIssuing).isTrue()
+            assertThat(loaded.cards).isEmpty()
+            assertThat(loaded.tariffPlan).isEqualTo(TangemPayTariffPlanState(tariff = customerTariffPlan, order = null))
+        }
+
+        @Test
+        fun `GIVEN plan transition completed and no cached summary WHEN invoke THEN stores AwaitingPlanSelection`() =
+            runTest {
+                // Arrange
+                stubNotEnrolledCustomerWithCompletedTransition()
+                val summary = paymentSummary(
+                    status = CustomerSummary.PaymentAccount.Activation.Status.PROCESSING,
+                    step = CustomerSummary.PaymentAccount.Activation.Step.ISSUING,
+                )
+                coEvery { getCustomerSummaryUseCase(userWalletId, CachePolicy.REFRESH) } returns summary.right()
+                coEvery { getCustomerSummaryUseCase(userWalletId, CachePolicy.ONLY_CACHE) } returns null.right()
+                val storedStatuses = captureStoredStatuses()
+
+                // Act
+                fetcher.invoke(params)
+
+                // Assert
+                assertThat(storedStatuses.last().value)
+                    .isInstanceOf(PaymentAccountStatusValue.AwaitingPlanSelection::class.java)
+            }
+
+        private suspend fun stubNotEnrolledCustomerWithCompletedTransition() {
+            stubHappyPath(
+                buildCustomerInfo(productInstances = emptyList(), fiatBalance = null, tariffPlan = customerTariffPlan),
+            )
+            coEvery { customerOrderRepository.findOrders(any(), any(), any()) } returns Either.Right(
+                listOf(
+                    order(
+                        id = "order_1",
+                        type = OrderType.TARIFF_PLAN_TRANSITION,
+                        status = OrderStatus.COMPLETED,
+                        updatedAt = "2026-10-26T00:00:00Z",
+                    ),
+                ),
+            )
+        }
+
+        private fun paymentSummary(
+            status: CustomerSummary.PaymentAccount.Activation.Status,
+            step: CustomerSummary.PaymentAccount.Activation.Step?,
+        ) = CustomerSummary(
+            customerId = "cust_1",
+            customerStatus = CustomerSummary.CustomerStatus.NEW,
+            isHidden = false,
+            kycStatus = CustomerSummary.KycStatus.APPROVED,
+            paymentAccount = CustomerSummary.PaymentAccount(
+                id = null,
+                activation = CustomerSummary.PaymentAccount.Activation(
+                    status = status,
+                    step = step,
+                    failureReason = null,
+                ),
+                cards = CustomerSummary.Cards(active = 0, frozen = 0, pending = 0),
+            ),
+            moneyAccount = CustomerSummary.MoneyAccount(
+                id = null,
+                activation = CustomerSummary.MoneyAccount.Activation(
+                    status = CustomerSummary.MoneyAccount.Activation.Status.PROCESSING,
+                    step = null,
+                    failureReason = null,
+                ),
+            ),
+        )
     }
 
     @Nested
@@ -2117,6 +2258,15 @@ internal class DefaultPaymentAccountStatusFetcherTest {
         val failingRequest: FailingRequest,
         val error: VisaApiError,
         val expected: PaymentAccountStatusValue,
+    ) {
+        override fun toString(): String = name
+    }
+
+    internal data class SummaryActivationModel(
+        val name: String,
+        val status: CustomerSummary.PaymentAccount.Activation.Status,
+        val step: CustomerSummary.PaymentAccount.Activation.Step?,
+        val expected: KClass<out PaymentAccountStatusValue>,
     ) {
         override fun toString(): String = name
     }

@@ -40,7 +40,6 @@ import com.tangem.domain.wallets.usecase.GetSavedWalletsCountUseCase
 import com.tangem.domain.wallets.usecase.ReportCardLinkedWalletsBackupUseCase
 import com.tangem.domain.wallets.usecase.UpdateRemoteWalletsInfoUseCase
 import com.tangem.feature.swap.analytics.StoriesEvents
-import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -82,7 +81,6 @@ internal class MainViewModel @Inject constructor(
     private val offrampRepository: OfframpRepository,
     private val deviceSecurityInfoProvider: DeviceSecurityInfoProvider,
     private val reportCardLinkedWalletsBackupUseCase: ReportCardLinkedWalletsBackupUseCase,
-    private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel() {
 
@@ -184,8 +182,6 @@ internal class MainViewModel @Inject constructor(
     }
 
     private fun reportCardLinkedWalletsBackups() {
-        if (onboardingV2FeatureToggles.isCardLinkedStatusUpdateEnabled.not()) return
-
         viewModelScope.launch { reportCardLinkedWalletsBackupUseCase() }
     }
 

@@ -6,5 +6,5 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = true)
 data class PolymarketDepositReconcileResponse(
     @Json(name = "state") val state: String,
-    @Json(name = "retryAfterSeconds") val retryAfterSeconds: Long,
+    @Json(name = "retryAfterSeconds") val retryAfterSeconds: Long = 30,
 )

@@ -16,6 +16,7 @@
   <string name="access_code_create_description">Set a %s-digit access code to unlock your wallet.</string>
   <string name="access_code_create_title">Create access code</string>
   <string name="access_code_navtitle">Access code</string>
+  <string name="account_add_limit_badge">Full</string>
   <string name="account_add_limit_dialog_description">You cannot create more than %1$s accounts. Archive one to add a new one.</string>
   <string name="account_add_limit_dialog_title">Can’t add new account</string>
   <string name="account_archive_success_message">Account archived</string>
@@ -169,6 +170,7 @@
   <string name="alert_manage_tokens_unsupported_message">Tokens in %1$s network are not supported by this card or ring due to firmware limitation.</string>
   <string name="alert_troubleshooting_scan_card_title">Are you having difficulty scanning your card or ring?</string>
   <string name="alert_unsupported_card">This card is not designed to work with this app</string>
+  <string name="all_services_title">Services</string>
   <string name="app_settings_access_code_warning">Set an access code to enable biometrics</string>
   <string name="app_settings_biometrics_footer">Use %1$s to unlock your wallet and approve sensitive actions, like signing transactions. For hardware wallets, a card or ring is still required to sign.</string>
   <string name="app_settings_default_fee">Default Fee</string>
@@ -291,6 +293,9 @@
   <string name="collectibles_account_collection_row_subtitle">My collection</string>
   <string name="collectibles_account_reconnect_subtitle">Reconnect required</string>
   <string name="collectibles_account_withdraw">Withdrawal</string>
+  <string name="collectibles_auto_buyback_message">Your common card was bought back instantly. %s is in your balance</string>
+  <string name="collectibles_auto_buyback_open_again_button">Open again for %s</string>
+  <string name="collectibles_auto_buyback_title">Buyback complete</string>
   <string name="collectibles_confirm_order_approve_button">Approve</string>
   <string name="collectibles_confirm_order_confirming_transaction_button">Confirming transaction...</string>
   <string name="collectibles_confirm_order_generating_pack_button">Generating pack...</string>
@@ -607,6 +612,7 @@
   <string name="common_retry">Retry</string>
   <string name="common_save">Save</string>
   <string name="common_save_changes">Save changes</string>
+  <string name="common_scan_card">Scan card</string>
   <string name="common_search">Search</string>
   <string name="common_search_tokens">Search tokens</string>
   <string name="common_second_no_param">sec</string>
@@ -1154,10 +1160,11 @@
   <string name="hw_upgrade_start_description">You\'re about to upgrade to our hardware wallet. It will keep your assets safe in cold storage.</string>
   <string name="hw_upgrade_start_title">Tangem Wallet</string>
   <string name="hw_upgrade_title">Upgrade to our Hardware Wallet</string>
+  <string name="hw_upgrade_to_cold_badge">Upgrade to a cold wallet</string>
   <string name="hw_upgrade_to_cold_banner_description">Keep your crypto safe with Tangem\'s top-tier hardware wallet.</string>
   <string name="hw_upgrade_to_cold_banner_title">Upgrade your wallet to hardware security</string>
-  <string name="hw_wallets_limit_alert_message">You can have up to %1$s mobile wallets in Tangem. To create or import a new one, remove one of your existing mobile wallets first.</string>
-  <string name="hw_wallets_limit_alert_title">You’ve reached the mobile wallet limit</string>
+  <string name="hw_wallets_limit_alert_message">You can have up to %1$s mobile wallets in Tangem. To add another one, remove one of your current mobile wallets first.</string>
+  <string name="hw_wallets_limit_alert_title">Mobile wallet limit reached</string>
   <string name="information_generated_with_ai">This information was generated with AI.\nTap here if you find any errors.</string>
   <string name="initial_message_change_access_code_body">To change the access code tap the card or ring as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_change_passcode_body">To change the passcode tap the card as shown above and do not remove until the end of the operation</string>
@@ -1173,7 +1180,7 @@
   <string name="introduction_button_buy_tangem">Buy Tangem</string>
   <string name="introduction_button_create_wallet">Create wallet</string>
   <string name="introduction_button_i_have_a_wallet">I have a wallet</string>
-  <string name="introduction_create_wallet_hardware_description">If you already have a Tangem Wallet</string>
+  <string name="introduction_create_wallet_hardware_description">Connect yours or get a new Tangem Wallet</string>
   <string name="introduction_create_wallet_hardware_title">Tangem Card or Ring</string>
   <string name="introduction_create_wallet_seed_phrase_description">Start without a hardware wallet</string>
   <string name="introduction_create_wallet_seed_phrase_title">Create seed phrase wallet</string>
@@ -1390,6 +1397,7 @@
   <string name="joint_operation_deleted_snackbar">Transaction deleted</string>
   <string name="joint_operation_malicious_subtitle">This transaction was flagged as malicious. Signing is blocked</string>
   <string name="joint_operation_malicious_title">Dangerous transaction</string>
+  <string name="joint_operation_no_response">No response</string>
   <string name="joint_operation_sending_to_network">Sending to the network</string>
   <string name="joint_operation_sent_footer">Signed by %1$s of %2$s and sent to the network</string>
   <string name="joint_operation_signatures_progress">Signatures %1$s of %2$s</string>
@@ -1624,6 +1632,8 @@
   <string name="mcp_connection_request_agent_can">This agent will be able to</string>
   <string name="mcp_connection_request_can_view_balance">View balances and activity</string>
   <string name="mcp_connection_request_notifications_description">You\'ll get a notification to approve each transaction. Without notifications, the agent can\'t connect.</string>
+  <string name="mcp_connection_request_wallet_needs_sync_description">Go back to the main wallet screen, sync your wallet, then try again</string>
+  <string name="mcp_connection_request_wallet_needs_sync_title">This wallet needs syncing</string>
   <string name="mcp_connection_success_description">%s can now view your balances and request transaction approvals. Revoke access anytime in Connections.</string>
   <string name="mcp_connection_success_title">Agent connected</string>
   <string name="mcp_intent_cant_reach_title">Can’t reach intent</string>
@@ -1636,6 +1646,7 @@
   <string name="mcp_send_intent_processed_subtitle">Send %1$s</string>
   <string name="mcp_session_revoke_access">Revoke access</string>
   <string name="mcp_session_revoke_failed">Failed to revoke access</string>
+  <string name="mcp_session_revoked">Connection revoked</string>
   <string name="mcp_session_title">Connected MCP</string>
   <string name="mcp_swap_intent_cant_reach_title">Can’t reach intent</string>
   <string name="mcp_swap_intent_offer_description">The agent is asking to swap from your account. You’ll review the details next.</string>
@@ -1653,6 +1664,8 @@
   <string name="money_account_main_status_action_required">Action required</string>
   <string name="money_account_main_status_activating">Activating…</string>
   <string name="money_account_main_status_active">%1$s ACH</string>
+  <string name="money_account_main_status_active_v2">ACH</string>
+  <string name="money_account_main_status_awaiting_deposit">Opens after your deposit</string>
   <string name="money_account_main_status_dialog_activating_description">We\'re getting your account ready. This may take a little time</string>
   <string name="money_account_main_status_dialog_activating_title">Creating your banking account</string>
   <string name="money_account_main_status_dialog_country_not_supported_description">We\'re working on expanding to more regions. Need help?</string>
@@ -1685,7 +1698,7 @@
   <string name="money_account_onboarding_transfers_card_subtitle">with a dedicated account with banking details</string>
   <string name="money_account_onboarding_transfers_card_title">Send and receive fiat payments</string>
   <string name="money_account_send_bank_transfer_unavailable">Unavailable</string>
-  <string name="money_account_send_fees_footer">Fees include %s service charge and estimated network fee</string>
+  <string name="money_account_send_fees_footer">Fees include %s service\ncharge and estimated network fee</string>
   <string name="money_account_send_network_fee_note">Fees include an estimated %s network fee, which may vary with network activity</string>
   <string name="money_account_send_pay_button">Pay %s</string>
   <string name="money_account_send_unavailable_description">Try again in 5 minutes</string>
@@ -1975,6 +1988,14 @@
   <string name="prediction_balance_total">Total Balance</string>
   <string name="prediction_balance_withdraw">Withdraw</string>
   <string name="prediction_cash_out">Cash Out</string>
+  <string name="prediction_chart_empty_description">The chart will appear after the first predictions</string>
+  <string name="prediction_chart_empty_title">No data yet</string>
+  <string name="prediction_chart_period_1d">1d</string>
+  <string name="prediction_chart_period_1h">1h</string>
+  <string name="prediction_chart_period_1m">1m</string>
+  <string name="prediction_chart_period_1w">1w</string>
+  <string name="prediction_chart_period_6h">6h</string>
+  <string name="prediction_chart_period_max">Max</string>
   <string name="prediction_claim_error_failed">The claim did not go through. Nothing left your account, and you can try again.</string>
   <string name="prediction_claim_error_generic">The claim could not be sent. Please try again.</string>
   <string name="prediction_claim_error_rejected">Polymarket refused to relay the claim. Refresh your positions and try again.</string>
@@ -2185,6 +2206,7 @@
   <string name="prediction_search_initial_subtitle">Search events or your predictions</string>
   <string name="prediction_search_initial_title">Start typing to search</string>
   <string name="prediction_search_results_title">Search results</string>
+  <string name="prediction_sports_draw">Draw</string>
   <string name="prediction_withdraw_balance_unavailable">Couldn\'t load your prediction account balance. Refresh or reopen this screen.</string>
   <string name="prediction_withdraw_confirm_fee_footer">No network fee is charged for this withdrawal. The amount you receive may differ slightly due to bridge conversion.</string>
   <string name="prediction_withdraw_confirm_title">Confirm withdrawal</string>
@@ -2490,7 +2512,7 @@
   <string name="social_login_error_cloud_access_description">Make sure Tangem has access to your %s account, then try again</string>
   <string name="social_login_error_cloud_access_title">Couldn\'t restore wallet</string>
   <string name="social_login_error_generic">Something went wrong. Please try again</string>
-  <string name="social_login_error_generic_v2">Please check your internet connection and try again.</string>
+  <string name="social_login_error_generic_v2">Please try again. If the problem persists, check your internet connection.</string>
   <string name="social_login_error_network_description">Check your connection and try again.</string>
   <string name="social_login_error_network_title">No internet connection</string>
   <string name="social_login_error_no_account">Add your %s account to this device to continue.</string>
@@ -2856,6 +2878,7 @@
   <string name="tangempay_bank_transfer_details_daily_deposits">Daily deposits</string>
   <string name="tangempay_bank_transfer_details_daily_deposits_hint">If you want to deposit more than %s – contact support</string>
   <string name="tangempay_bank_transfer_details_daily_deposits_left">Left today</string>
+  <string name="tangempay_bank_transfer_details_exchange_rate">Exchange rate</string>
   <string name="tangempay_bank_transfer_details_fee_header">Deposit methods and fees</string>
   <string name="tangempay_bank_transfer_details_limitations">Limitations</string>
   <string name="tangempay_bank_transfer_details_minimum_deposit">Minimum deposit</string>
@@ -2893,7 +2916,7 @@
   <string name="tangempay_campaign_spend_description">With a digital card via Apple Pay or Google Pay, no additional fees for purchases</string>
   <string name="tangempay_campaign_unavailable_description">You can order a regular one</string>
   <string name="tangempay_campaign_unavailable_title">Unable to get special card</string>
-  <string name="tangempay_cancel_kyc">Hide verification from the main screen</string>
+  <string name="tangempay_cancel_kyc">Hide status</string>
   <string name="tangempay_card_activation_attempts_exceeded_description">Please contact support</string>
   <string name="tangempay_card_activation_attempts_exceeded_title">You have exceeded your attempts for activation</string>
   <string name="tangempay_card_activation_description">Enter last 4 digits of your card number</string>
@@ -2916,6 +2939,7 @@
   <string name="tangempay_card_details_add_to_wallet_error_rate_limit">Too many attempts. Try again in 24 hours</string>
   <string name="tangempay_card_details_add_to_wallet_error_title">Could Not Add Card</string>
   <string name="tangempay_card_details_add_to_wallet_error_wallet_unavailable">Google Wallet is unavailable. Check system settings</string>
+  <string name="tangempay_card_details_added_to_google_wallet_text">Card added to Google Wallet</string>
   <string name="tangempay_card_details_awaiting_deposit_cancel_button">Cancel %1$s, move to %2$s</string>
   <string name="tangempay_card_details_awaiting_deposit_subtitle">To pay monthly fee for plan and start use new card</string>
   <string name="tangempay_card_details_awaiting_deposit_title">Top-up your account on %1$s</string>
@@ -3097,7 +3121,7 @@
   <string name="tangempay_kyc_in_progress_notification_title">Verification in progress for Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_popup_description">Documents are usually verified automatically within 5 minutes. In rare cases, if manual review is required, it may take up to 48 hours.</string>
   <string name="tangempay_kyc_rejected">Rejected</string>
-  <string name="tangempay_kyc_rejected_button_text">Hide verification</string>
+  <string name="tangempay_kyc_rejected_button_text">Hide status</string>
   <string name="tangempay_kyc_rejected_description">Sorry, we couldn\'t verify</string>
   <string name="tangempay_kyc_rejected_description_span">your profile.</string>
   <string name="tangempay_main_select_plan">Select plan</string>
@@ -3250,9 +3274,9 @@
   <string name="tangempay_status_inactive">Inactive</string>
   <string name="tangempay_status_replacing">Replacing your card</string>
   <string name="tangempay_sync_needed">Use your card or ring to renew session</string>
-  <string name="tangempay_sync_needed_body">Use your card or ring to renew session</string>
+  <string name="tangempay_sync_needed_body">Renew to see your card and account</string>
   <string name="tangempay_sync_needed_button">Renew session</string>
-  <string name="tangempay_sync_needed_title">Payment account session expired</string>
+  <string name="tangempay_sync_needed_title">Session expired</string>
   <string name="tangempay_tangem_visa_card">Spend crypto anywhere in real life</string>
   <string name="tangempay_temporarily_unavailable">Connection issues</string>
   <string name="tangempay_title">Tangem Pay</string>
@@ -3266,22 +3290,23 @@
   <string name="tangempay_unified_onboarding_cashback_caption">Cashback</string>
   <string name="tangempay_unified_onboarding_cashback_subtitle">Paid in USDC</string>
   <string name="tangempay_unified_onboarding_cashback_title">Up to 2%%. %1$s</string>
-  <string name="tangempay_unified_onboarding_description">A Visa card and a US dollar account in one. Verify once — we\'ll open everything that\'s available where you live</string>
+  <string name="tangempay_unified_onboarding_description">A Visa card and a USD account in one. Verify your identity and get what\'s available where you live</string>
   <string name="tangempay_unified_onboarding_everything_header">For everything</string>
-  <string name="tangempay_unified_onboarding_fees_caption">Pay what you see</string>
-  <string name="tangempay_unified_onboarding_fees_subtitle">1 USDC = 1 USD</string>
-  <string name="tangempay_unified_onboarding_fees_title">No purchase fees. %1$s</string>
+  <string name="tangempay_unified_onboarding_fees_caption">Dollar for dollar</string>
+  <string name="tangempay_unified_onboarding_fees_subtitle">No exchange and monthly fees</string>
+  <string name="tangempay_unified_onboarding_fees_title">1 USD becomes 1 USDC\n%1$s</string>
   <string name="tangempay_unified_onboarding_interest_caption">Interest</string>
   <string name="tangempay_unified_onboarding_interest_title">Hold and earn up to 4% APY</string>
   <string name="tangempay_unified_onboarding_legal">What you can open depends on where you live. We\'ll confirm right after verification</string>
-  <string name="tangempay_unified_onboarding_money_account_caption">Quite handy</string>
-  <string name="tangempay_unified_onboarding_money_account_header">USD account</string>
+  <string name="tangempay_unified_onboarding_money_account_caption">Crypto on-ramp</string>
+  <string name="tangempay_unified_onboarding_money_account_header">Account</string>
   <string name="tangempay_unified_onboarding_money_account_subtitle">Receive ACH transfers USD to USDC 1:1; flat $1 fee</string>
   <string name="tangempay_unified_onboarding_money_account_title">Your own US account details. %1$s</string>
-  <string name="tangempay_unified_onboarding_payment_account_caption">Pay as you want</string>
+  <string name="tangempay_unified_onboarding_money_account_title_v2">Personal US account details</string>
+  <string name="tangempay_unified_onboarding_payment_account_caption">Works with</string>
   <string name="tangempay_unified_onboarding_payment_account_header">Visa Card</string>
-  <string name="tangempay_unified_onboarding_payment_account_subtitle_android">with Google Pay</string>
-  <string name="tangempay_unified_onboarding_payment_account_title">Online or %1$s</string>
+  <string name="tangempay_unified_onboarding_payment_account_subtitle_android">Google Pay</string>
+  <string name="tangempay_unified_onboarding_payment_account_title">Apple Pay\nGoogle Pay</string>
   <string name="tangempay_unified_onboarding_payments_caption">Payments</string>
   <string name="tangempay_unified_onboarding_payments_title">ACH and wire transfers for daily needs</string>
   <string name="tangempay_unified_onboarding_plan_caption">One plan</string>
@@ -3449,6 +3474,7 @@
   <string name="transaction_history_approve_high_risk_subtitle">You\'re connected. Funds may be at risk. Consider revoking access.</string>
   <string name="transaction_history_approve_high_risk_title">High Risk</string>
   <string name="transaction_history_approved_amount">Approved amount</string>
+  <string name="transaction_history_awaiting_signatures">Awaiting signatures</string>
   <string name="transaction_history_claiming_incentive_rewards">Claiming incentive rewards</string>
   <string name="transaction_history_claiming_reward">Claiming reward</string>
   <string name="transaction_history_contract_address">contract: %s</string>
@@ -3475,6 +3501,7 @@
   <string name="transaction_history_not_supported_description">Transaction history is currently not supported for this blockchain. But don\'t worry, we\'re working on it! In the meantime you can check it in the explorer.</string>
   <string name="transaction_history_operation">Operation</string>
   <string name="transaction_history_pending">Pending</string>
+  <string name="transaction_history_pending_send">Pending send</string>
   <string name="transaction_history_rewards_restaked">Rewards restaked</string>
   <string name="transaction_history_rewards_restaking">Rewards restaking</string>
   <string name="transaction_history_staking_reward">Staking reward</string>
@@ -3488,12 +3515,14 @@
   <string name="transaction_history_status_rewards_claim_failed">Rewards claim failed</string>
   <string name="transaction_history_status_rewards_claimed">Rewards claimed</string>
   <string name="transaction_history_status_rewards_restake_failed">Rewards restake failed</string>
+  <string name="transaction_history_status_send_cancelled">Send cancelled</string>
   <string name="transaction_history_status_send_failed">Send failed</string>
   <string name="transaction_history_status_stake_failed">Stake failed</string>
   <string name="transaction_history_status_supply_failed">Supply failed</string>
   <string name="transaction_history_status_swap_failed">Swap failed</string>
   <string name="transaction_history_status_top_up_failed">Top-up failed</string>
   <string name="transaction_history_status_topping_up">Topping up</string>
+  <string name="transaction_history_status_transfer_cancelled">Transfer cancelled</string>
   <string name="transaction_history_status_transfer_failed">Transfer failed</string>
   <string name="transaction_history_status_transferring">Transferring</string>
   <string name="transaction_history_status_unstake_failed">Unstake failed</string>
@@ -3817,6 +3846,9 @@
   <string name="warning_kaspa_unfinished_token_transaction_message">Your transaction with an amount of %1$s %2$s was not completed. You can try again to complete it.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">You have an unfinished transaction</string>
   <string name="warning_last_balance_updated_time">Last update was %s</string>
+  <string name="warning_link_wallet_cold_message">Scan your card to link your wallet to this device.</string>
+  <string name="warning_link_wallet_hot_message">Confirm to link your wallet to this device.</string>
+  <string name="warning_link_wallet_title">Link your wallet to this device</string>
   <string name="warning_low_signatures_message">Only %s signatures are left on this card. You must withdraw all of your funds.</string>
   <string name="warning_low_signatures_title">Low signature count</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Tokens on different networks can have different addresses. Double-check that your address matches the network when you transfer funds.</string>
@@ -3919,11 +3951,17 @@
   <string name="wc_connection_reqeust_would_like">Would like to</string>
   <string name="wc_connection_request">Connection request</string>
   <string name="wc_connections">Connections</string>
+  <string name="wc_connections_agents_error_subtitle">Tap to reload</string>
   <string name="wc_connections_agents_error_title">AI agents unavailable</string>
   <string name="wc_connections_agents_title">Connected Agents</string>
   <string name="wc_connections_dapps_title">Connected dApps</string>
+  <string name="wc_connections_disconnect_all_alert_desc">All dApps and AI agents will be disconnected from your wallets.</string>
+  <string name="wc_connections_disconnect_all_alert_title">Disconnect All</string>
+  <string name="wc_connections_disconnect_all_success">All connections disconnected</string>
   <string name="wc_connections_empty_desc">Connect to dApps via WalletConnect or AI agents via MCP. Manage all your connections in one place.</string>
   <string name="wc_connections_empty_title">No connections yet</string>
+  <string name="wc_connections_no_walletconnect_wallets">None of your wallets support WalletConnect</string>
+  <string name="wc_connections_qr_scan_hint">Open the dApp or AI agent and scan its connection QR code.</string>
   <string name="wc_connections_subtitle">Connect to dApps or MCP</string>
   <string name="wc_contents">Contents</string>
   <string name="wc_copy_data_button_text">Copy data</string>
@@ -4090,8 +4128,8 @@
   <string name="yield_module_main_promo_subtitle">Put idle coins to work. No lockups, withdraw anytime.</string>
   <string name="yield_module_main_promo_title">Earn with your crypto up to %1$s%% APY</string>
   <plurals name="yield_module_main_promo_tokens_count">
-    <item quantity="one">Choose from %d token</item>
-    <item quantity="other">Choose from %d tokens</item>
+    <item quantity="one">More than %d available token</item>
+    <item quantity="other">More than %d available tokens</item>
   </plurals>
   <string name="yield_module_main_screen_promo_banner_message">Enable %1$s%% APY on your balance</string>
   <string name="yield_module_main_view_approve_notification_description">Approval for your token in Yield Mode has been revoked. Open the token to grant permission again.</string>
