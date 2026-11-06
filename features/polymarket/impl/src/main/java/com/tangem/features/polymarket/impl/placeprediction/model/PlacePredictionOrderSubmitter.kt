@@ -139,7 +139,6 @@ internal class PlacePredictionOrderSubmitter @AssistedInject constructor(
                     assetId = frozen.assetId,
                     side = params.side,
                     isNegRisk = prepared.isNegRisk,
-                    quoteReceivedAtMillis = frozen.receivedAtMillis,
                 ),
                 preference = preference,
                 onStep = ::onSubmitStep,
