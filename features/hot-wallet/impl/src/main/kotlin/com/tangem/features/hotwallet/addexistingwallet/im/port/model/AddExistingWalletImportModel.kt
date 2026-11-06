@@ -13,7 +13,9 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.bottomSheetMessage
+import com.tangem.core.ui.message.dialog.Dialogs.hotWalletsLimitReachedDialog
 import com.tangem.crypto.bip39.Mnemonic
+import com.tangem.domain.wallets.analytics.Settings.NoticeMobileWalletLimit
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
 import com.tangem.features.hotwallet.addexistingwallet.im.port.entity.AddExistingWalletImportUM
@@ -89,16 +91,29 @@ internal class AddExistingWalletImportModel @Inject constructor(
             result.fold(
                 ifLeft = { error ->
                     val message = when (error) {
-                        HotWalletImportError.AlreadySaved -> resourceReference(
-                            R.string.hw_import_seed_phrase_already_imported,
+                        HotWalletImportError.AlreadySaved -> SnackbarMessage(
+                            resourceReference(R.string.hw_import_seed_phrase_already_imported),
                         )
-                        is HotWalletImportError.PassphraseTooLong -> resourceReference(
-                            R.string.hw_import_seed_phrase_passphrase_too_long,
-                            wrappedList(error.maxByteCount),
+                        is HotWalletImportError.PassphraseTooLong -> SnackbarMessage(
+                            resourceReference(
+                                R.string.hw_import_seed_phrase_passphrase_too_long,
+                                wrappedList(error.maxByteCount),
+                            ),
                         )
-                        is HotWalletImportError.Unknown -> resourceReference(R.string.common_unknown_error)
+                        HotWalletImportError.LimitReached -> {
+                            analyticsEventHandler.send(
+                                NoticeMobileWalletLimit(
+                                    type = NoticeMobileWalletLimit.Type.Import,
+                                    limit = NoticeMobileWalletLimit.Limit.MobileWallets,
+                                ),
+                            )
+                            hotWalletsLimitReachedDialog()
+                        }
+                        is HotWalletImportError.Unknown -> SnackbarMessage(
+                            resourceReference(R.string.common_unknown_error),
+                        )
                     }
-                    uiMessageSender.send(SnackbarMessage(message))
+                    uiMessageSender.send(message)
                 },
                 ifRight = { userWalletId -> params.callbacks.onWalletImported(userWalletId) },
             )
