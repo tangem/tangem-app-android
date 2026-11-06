@@ -17,11 +17,16 @@ import com.tangem.utils.SupportedLanguages
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.util.concurrent.ConcurrentHashMap
 
 internal class DefaultMarketingRepository(
     private val tangemTechApi: TangemTechApi,
@@ -36,17 +41,17 @@ internal class DefaultMarketingRepository(
     private val sessionCache = MutableStateFlow<Map<MarketingScreenType, List<MarketingCampaign>>>(emptyMap())
     private val cacheMutex = Mutex()
 
+    private val requestScope = CoroutineScope(SupervisorJob() + dispatchers.io)
+    private val inFlightRequests = ConcurrentHashMap<MarketingScreen, Deferred<List<MarketingCampaign>>>()
+
     override suspend fun getCampaigns(screen: MarketingScreen): Either<Throwable, List<MarketingCampaign>> =
         withContext(dispatchers.io) {
             Either.catch {
                 if (screen.type.isCacheable) {
                     loadCacheableByType(screen.type)
                 } else {
-                    // swap/onramp — always fresh, never cached
-                    when (val response = requestCampaigns(screen, eTag = null)) {
-                        is ApiResponse.Success -> convert(response.data)
-                        is ApiResponse.Error -> emptyList()
-                    }
+                    // swap/onramp — never cached, but identical concurrent requests share one network call
+                    loadFreshShared(screen)
                 }
             }
         }
@@ -65,6 +70,25 @@ internal class DefaultMarketingRepository(
     override suspend fun getDismissedBannerIds(): Set<Int> = dismissStore.getDismissedIds()
 
     override suspend fun dismissBanner(campaignId: Int) = dismissStore.dismiss(campaignId)
+
+    /**
+     * The Onramp screen hosts several banner models that request the same campaigns at once. They await a single
+     * request, which runs in [requestScope] so a cancelled caller doesn't fail the others.
+     */
+    private suspend fun loadFreshShared(screen: MarketingScreen): List<MarketingCampaign> {
+        val request = inFlightRequests.computeIfAbsent(screen) { requestScope.async { loadFresh(screen) } }
+        return try {
+            request.await()
+        } finally {
+            inFlightRequests.remove(screen, request)
+        }
+    }
+
+    private suspend fun loadFresh(screen: MarketingScreen): List<MarketingCampaign> =
+        when (val response = requestCampaigns(screen, eTag = null)) {
+            is ApiResponse.Success -> convert(response.data)
+            is ApiResponse.Error -> emptyList()
+        }
 
     private suspend fun loadCacheableByType(type: MarketingScreenType): List<MarketingCampaign> {
         sessionCache.value[type]?.let { return it }

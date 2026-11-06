@@ -252,6 +252,98 @@ internal class DefaultMarketingRepositoryTest {
     }
 
     @Test
+    fun `GIVEN three concurrent onramp getCampaigns for same screen WHEN in flight THEN api called once`() = runTest {
+        // Arrange
+        val gate = CompletableDeferred<Unit>()
+        val screen = MarketingScreen.Onramp(fromFiat = "EUR", toNetwork = "ethereum", toContractAddress = "")
+        coEvery {
+            tangemTechApi.getMarketingCampaigns(
+                type = "onramp", language = language,
+                fromFiat = "EUR", toNetwork = "ethereum", toContractAddress = null,
+            )
+        } coAnswers {
+            gate.await()
+            ApiResponse.Success(data = response(id = 4))
+        }
+
+        // Act
+        val requests = List(size = 3) { async { repository.getCampaigns(screen) } }
+        runCurrent()
+        gate.complete(Unit)
+        val results = requests.map { it.await() }
+
+        // Assert
+        results.forEach { assertThat(it.getOrNull()!!.map { campaign -> campaign.id }).containsExactly(4) }
+        coVerify(exactly = 1) {
+            tangemTechApi.getMarketingCampaigns(
+                type = "onramp", language = language,
+                fromFiat = "EUR", toNetwork = "ethereum", toContractAddress = null,
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN concurrent onramp getCampaigns for different fiat WHEN in flight THEN api called per fiat`() = runTest {
+        // Arrange
+        val gate = CompletableDeferred<Unit>()
+        coEvery {
+            tangemTechApi.getMarketingCampaigns(
+                type = "onramp", language = language,
+                fromFiat = any(), toNetwork = "ethereum", toContractAddress = null,
+            )
+        } coAnswers {
+            gate.await()
+            ApiResponse.Success(data = response(id = 4))
+        }
+
+        // Act
+        val requests = listOf("EUR", "USD").map { fiat ->
+            async {
+                repository.getCampaigns(
+                    MarketingScreen.Onramp(fromFiat = fiat, toNetwork = "ethereum", toContractAddress = ""),
+                )
+            }
+        }
+        runCurrent()
+        gate.complete(Unit)
+        requests.forEach { it.await() }
+
+        // Assert
+        coVerify(exactly = 1) {
+            tangemTechApi.getMarketingCampaigns(
+                type = "onramp", language = language,
+                fromFiat = "EUR", toNetwork = "ethereum", toContractAddress = null,
+            )
+        }
+        coVerify(exactly = 1) {
+            tangemTechApi.getMarketingCampaigns(
+                type = "onramp", language = language,
+                fromFiat = "USD", toNetwork = "ethereum", toContractAddress = null,
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN onramp request failed WHEN getCampaigns again THEN api called again`() = runTest {
+        // Arrange
+        val screen = MarketingScreen.Onramp(fromFiat = "EUR", toNetwork = "ethereum", toContractAddress = "")
+        coEvery {
+            tangemTechApi.getMarketingCampaigns(
+                type = "onramp", language = language,
+                fromFiat = "EUR", toNetwork = "ethereum", toContractAddress = null,
+            )
+        } throws IllegalStateException("boom") andThen ApiResponse.Success(data = response(id = 4))
+
+        // Act
+        val first = repository.getCampaigns(screen)
+        val second = repository.getCampaigns(screen)
+
+        // Assert
+        assertThat(first.isLeft()).isTrue()
+        assertThat(second.getOrNull()!!.map { it.id }).containsExactly(4)
+    }
+
+    @Test
     fun `GIVEN dismiss WHEN dismissBanner THEN delegates to dismiss store`() = runTest {
         // Act
         repository.dismissBanner(42)
