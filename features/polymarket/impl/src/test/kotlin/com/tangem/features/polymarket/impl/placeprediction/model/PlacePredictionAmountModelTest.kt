@@ -1343,7 +1343,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
         }
 
         @Test
-        fun `GIVEN a priced quote with steep fees WHEN Max is tapped twice THEN the fees still fit into the balance`() =
+        fun `GIVEN a priced quote with steep fees WHEN Max is tapped again once quoted THEN the fees still fit into the balance`() =
             runTest {
                 // Arrange
                 coEvery { getQuoteUseCase(any(), request = any()) } returns createQuote().copy(
@@ -1358,6 +1358,7 @@ internal class PlacePredictionAmountModelTest : PlacePredictionModelTestBase() {
                 // Act
                 model.onFractionClick(fraction = AmountFractionUM.Max)
                 val afterFirstTap = model.uiState.value.amountValue
+                runCurrent()
                 model.onFractionClick(fraction = AmountFractionUM.Max)
 
                 // Assert

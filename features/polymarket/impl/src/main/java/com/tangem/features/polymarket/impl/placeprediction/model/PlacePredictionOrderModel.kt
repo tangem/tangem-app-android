@@ -224,7 +224,7 @@ internal class PlacePredictionOrderModel @Inject constructor(
     private fun maxBuyAmount(balance: BigDecimal): BigDecimal? = BuyAmountCalculator.fraction(
         balance = balance,
         fraction = AmountFractionUM.Max,
-        feeRate = uiState.value.lastFeeRate,
+        feeRate = BuyAmountCalculator.feeRate(quote = uiState.value.quote),
     ).takeIf { it >= MIN_QUOTABLE_AMOUNT }
 
     private fun BigDecimal.toCollateralInput(): String =
